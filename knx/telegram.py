@@ -14,6 +14,18 @@ class Telegram:
 
     def read(self, data):
 
+        self.print_data(data)
+
+        self.control = data[0]
+        self.sender.set( data[10]*256+data[11] )
+        self.group   = data[12]*256+data[13]
+
+
+        len_payload = data[14]
+        for x in range(0, len_payload):
+            self.payload.append(data[16+x])
+
+    def print_data(self, data):
         i = 0;
         for b in data:
             if i in [10,11]:
@@ -26,15 +38,6 @@ class Telegram:
             print (Colors.ENDC+" ", end="")
             i=i+1
         print ("")
-
-        self.control = data[0]
-        self.sender.set( data[10]*256+data[11] )
-        self.group   = data[12]*256+data[13]
-
-
-        len_payload = data[14]
-        for x in range(0, len_payload):
-            self.payload.append(data[16+x])
 
     def dump(self):
         print('Control: {:08b}'.format(self.control))
@@ -58,8 +61,9 @@ class Telegram:
 
         data.append(0xbc)
         data.append(0xd0)
-        data.append(0x11)
-        data.append(0x01)
+        print('{0}'.format(self.sender.address))
+        data.append((self.sender.address>>8)&255)
+        data.append(self.sender.address&255)
 
         data.append(self.group >> 8)
         data.append(self.group & 255)
