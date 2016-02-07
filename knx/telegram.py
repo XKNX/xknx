@@ -6,7 +6,7 @@ class Telegram:
     """Abstraction for KNX telegrams"""
 
     def __init__(self):
-        self.control = 0x06
+
         self.sender = Address()
         self.group = 0
 
@@ -16,7 +16,6 @@ class Telegram:
 
         self.print_data(data)
 
-        self.control = data[0]
         self.sender.set( data[10]*256+data[11] )
         self.group   = data[12]*256+data[13]
 
@@ -49,7 +48,7 @@ class Telegram:
     def str(self):
         data = bytearray()
 
-        data.append(self.control)
+        data.append(0x06)
         data.append(0x10)
         data.append(0x05)
         data.append(0x30)
@@ -61,11 +60,11 @@ class Telegram:
 
         data.append(0xbc)
         data.append(0xd0)
-        print('{0}'.format(self.sender.address))
+
         data.append((self.sender.address>>8)&255)
         data.append(self.sender.address&255)
 
-        data.append(self.group >> 8)
+        data.append((self.group >> 8)&255)
         data.append(self.group & 255)
 
         data.append(len(self.payload))

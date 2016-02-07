@@ -1,8 +1,8 @@
 
 devices:
     1.1.0: IP Router
+    1.1.1: Pushbutton interface
     1.1.2: Switching actuator
-    1.1.3: Pushbutton interface
 
     1.1.255: ETS
 
