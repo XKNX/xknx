@@ -9,7 +9,7 @@ class NameResolver:
             self.doc = yaml.load(f)
 
     def device_name( self, address ):
-        if type(address) is Address: 
+        if type(address) is Address:
             return self.device_name( address.str() )
 
         if address not in self.doc["devices"].keys():

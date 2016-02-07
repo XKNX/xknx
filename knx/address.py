@@ -45,4 +45,4 @@ class Address:
         return '{0}.{1}.{2}'.format(
             ((self.address>>12)&15),
             ((self.address>>8)&15),
-            (self.address&255) ) 
+            (self.address&255) )
