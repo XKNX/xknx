@@ -19,7 +19,6 @@ class Telegram:
         self.sender.set( data[10]*256+data[11] )
         self.group   = data[12]*256+data[13]
 
-
         len_payload = data[14]
         for x in range(0, len_payload):
             self.payload.append(data[16+x])

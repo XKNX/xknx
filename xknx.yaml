@@ -6,3 +6,12 @@ devices:
 
     1.1.255: ETS
 
+groups:
+    1: Livingroom/Switch 1
+    2: Livingroom/Switch 2
+    3: Livingroom/Switch 3
+    4: Livingroom/Switch 4
+
+    65: Livingroom/Light 1
+    66: Livingroom/Light 2
+
