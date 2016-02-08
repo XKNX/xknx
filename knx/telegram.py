@@ -47,26 +47,46 @@ class Telegram:
     def str(self):
         data = bytearray()
 
+        # See: http://www.knx.org/fileadmin/template/documents/downloads_support_menu/KNX_tutor_seminar_page/tutor_documentation/08_IP%20Communication_E0510a.pdf
+
+        # KNX Header
         data.append(0x06)
+
+        #Protocol version
         data.append(0x10)
+
+        # Service identifier
         data.append(0x05)
         data.append(0x30)
 
-        data.append(0x00)
-        data.append(0x11)
+        # total length
+        total_length = 16 + len(self.payload) 
+        data.append((total_length>>8)&255)
+        data.append(total_length&255)
+
+        # Message code
         data.append(0x29)
+
+        # Length of additional information (for future usage)
         data.append(0x00)
 
-        data.append(0xbc)
+        # Control field
+        data.append(0xbc) #b4 ?
+
+        # type of target address
         data.append(0xd0)
 
         data.append((self.sender.address>>8)&255)
         data.append(self.sender.address&255)
 
+        # target address
         data.append((self.group >> 8)&255)
         data.append(self.group & 255)
 
+        # payload length
         data.append(len(self.payload))
+
+        # Zero
         data.append(0x00)
 
         for b in self.payload:
