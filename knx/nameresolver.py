@@ -10,8 +10,11 @@ class CouldNotResolve(Exception):
 
 class NameResolver:
 
-    def __init__(self, file='xknx.yaml'):
+    def __init__(self):
+        print("Initialization of NameResolver");
 
+    def init(self, file='xknx.yaml'):
+        print("Reading {0}".format(file))
         with open(file, 'r') as f:
             self.doc = yaml.load(f)
 
@@ -37,3 +40,6 @@ class NameResolver:
                 return entry
 
         raise CouldNotResolve(group_name)
+
+
+nameresolver_ = NameResolver()

@@ -1,35 +1,29 @@
 #!/usr/bin/python3
 
-import socket
-import time
-from knx import Address,Telegram,Multicast,NameResolver
-
-nameresolver = NameResolver()
-own_address = Address("1.2.4")
-
-def send(group,payload):
-    if type(group) is str:
-        send(nameresolver.group_id(group), payload)
-        return
-
-    multicast = Multicast(own_address)
-    telegram = Telegram()
-    telegram.sender.set(own_address)
-    telegram.group=group
-    telegram.payload.append(payload)
-    multicast.send(telegram)
+from knx import Telegram,Multicast,BinaryInput,BinaryOutput 
+from knx import NameResolver,nameresolver_
 
 def callback(telegram):
 
-    print( 'Message from: {0} / {1}',
-        nameresolver.device_name( telegram.sender ), 
-        nameresolver.group_name( telegram.group) )
+    if (telegram.group == nameresolver_.group_id("Livingroom/Switch 1") ):
+        binaryinput = BinaryInput(telegram)
 
-    if (telegram.group == nameresolver.group_id("Livingroom/Switch 1") ):
-        send("Livingroom/Light 1",telegram.payload[0])
+        if binaryinput.is_on():
+            BinaryOutput("Livingroom/Light 1").set_on()
 
-    if (telegram.group == nameresolver.group_id("Livingroom/Switch 2") ):
-        send("Livingroom/Light 2",telegram.payload[0])
+        elif binaryinput.is_off():
+            BinaryOutput("Livingroom/Light 1").set_off()
 
-Multicast(own_address).recv(callback)
+    if (telegram.group == nameresolver_.group_id("Livingroom/Switch 2") ):
+        binaryinput = BinaryInput(telegram)
+
+        if binaryinput.is_on():
+            BinaryOutput("Livingroom/Light 2").set_on()
+
+        elif binaryinput.is_off():
+            BinaryOutput("Livingroom/Light 2").set_off()
+
+
+nameresolver_.init()
+Multicast().recv(callback)
 

@@ -7,10 +7,10 @@ class Multicast:
     MCAST_GRP = '224.0.23.12'
     MCAST_PORT = 3671
 
-    own_address = Address()
+    own_address_ = Address("15.15.250")
 
-    def __init__(self, own_address ):
-        self.own_address.set(own_address)
+    def __init__(self):
+        pass
 
     def send(self, telegram):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -32,7 +32,7 @@ class Multicast:
                 telegram = Telegram()
                 telegram.read(telegram_data)
 
-                if telegram.sender == self.own_address:
+                if telegram.sender == self.own_address_:
                     print("Ignoring own telegram")
                 else:
                     callback(telegram)

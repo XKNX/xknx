@@ -56,10 +56,16 @@ class Telegram:
         data.append(0x10)
 
         # Service identifier
-        data.append(0x05)
+        # Known values:
+        #
+        #   0x04 0x20 -> KNXnet/IP Tunnelling: TUNNELLING_REQUEST
+        #   0x04 0x21 -> KNXnet/IP Tunnelling: TUNNELLING_ACK
+        #   0x05 0x30 KNXnet/IP Routing
+        #
+        data.append(0x05) # IP Routing 0530
         data.append(0x30)
 
-        # total length
+        # Total length
         total_length = 16 + len(self.payload) 
         data.append((total_length>>8)&255)
         data.append(total_length&255)
@@ -73,22 +79,24 @@ class Telegram:
         # Control field
         data.append(0xbc) #b4 ?
 
-        # type of target address
+        # Type of target address
         data.append(0xd0)
 
+        # Sender address
         data.append((self.sender.address>>8)&255)
         data.append(self.sender.address&255)
 
-        # target address
+        # Target address
         data.append((self.group >> 8)&255)
         data.append(self.group & 255)
 
-        # payload length
+        # Payload length
         data.append(len(self.payload))
 
         # Zero
         data.append(0x00)
 
+        # Payload
         for b in self.payload:
             data.append(b)
 
