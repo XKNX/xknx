@@ -86,5 +86,11 @@ class NameResolver:
 
         raise CouldNotResolve(group_name)
 
+    def get_outlets( self ):
+        outlets = []
+        for device in self.devices:
+            if type(device) == Outlet:
+                outlets.append(device)
+        return outlets
 
 nameresolver_ = NameResolver()

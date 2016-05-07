@@ -25,5 +25,12 @@ def callback(telegram):
 
 
 nameresolver_.init()
+outlets = nameresolver_.get_outlets()
+
+for outlet in outlets:
+    print(outlet)
+
+print("----------")
+
 Multicast().recv(callback)
 
