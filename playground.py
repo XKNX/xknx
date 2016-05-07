@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-from knx import Telegram,Multicast,BinaryInput,BinaryOutput 
-from knx import NameResolver,nameresolver_
+from xknx import Telegram,Multicast,BinaryInput,BinaryOutput 
+from xknx import NameResolver,nameresolver_
 
 def callback(telegram):
 
