@@ -7,15 +7,15 @@ devices:
     1.1.255: ETS
 
 groups:
-    dimmer:
-        Livingroom/Light 1: 1
-        Livingroom/Light 2: 2
-        Livingroom/Light 3: 3
-        Livingroom/Light 4: 4
+    switch:
+        Livingroom/Switch 1: 1
+        Livingroom/Switch 2: 2
+        Livingroom/Switch 3: 3
+        Livingroom/Switch 4: 4
 
     outlet:
-        Livingroom/Outlet 1: 5
-        Livingroom/Outlet 2: 6
+        Livingroom/Outlet 1: 65
+        Livingroom/Outlet 2: 66
         Livingroom/Outlet 3: 7
         Livingroom/Outlet 4: 8
 
@@ -30,7 +30,7 @@ groups:
         Kitchen/Outlet 3: 14
         Kitchen/Outlet 4: 15
 
-    switch:
-        Livingroom/Switch 1: 65
-        Livingroom/Switch 2: 66
+#    switch:
+#        Livingroom/Switch 1: 65
+#        Livingroom/Switch 2: 66
 

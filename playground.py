@@ -9,19 +9,19 @@ def callback(telegram):
         binaryinput = BinaryInput(telegram)
 
         if binaryinput.is_on():
-            BinaryOutput("Livingroom/Light 1").set_on()
+            BinaryOutput("Livingroom/Outlet 1").set_on()
 
         elif binaryinput.is_off():
-            BinaryOutput("Livingroom/Light 1").set_off()
+            BinaryOutput("Livingroom/Outlet 1").set_off()
 
     if (telegram.group == nameresolver_.group_id("Livingroom/Switch 2") ):
         binaryinput = BinaryInput(telegram)
 
         if binaryinput.is_on():
-            BinaryOutput("Livingroom/Light 2").set_on()
+            BinaryOutput("Livingroom/Outlet 2").set_on()
 
         elif binaryinput.is_off():
-            BinaryOutput("Livingroom/Light 2").set_off()
+            BinaryOutput("Livingroom/Outlet 2").set_off()
 
 
 nameresolver_.init()
