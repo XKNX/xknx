@@ -1,5 +1,6 @@
 import yaml
 from .address import Address
+from .binaryoutput import BinaryOutput
 
 class CouldNotResolve(Exception):
     def __init__(self, group_name):
@@ -16,8 +17,9 @@ class Dimmer:
     def __str__(self):
         return "<Dimmer group_address={0}, name={1}>".format(self.group_address,self.name)
 
-class Outlet:
+class Outlet(BinaryOutput):
     def __init__(self, name, group_address):
+        BinaryOutput.__init__(self, group_address)
         self.name = name
         self.group_address = group_address
 
@@ -58,6 +60,19 @@ class NameResolver:
                     switch = Switch(entry, self.doc["groups"][group][entry])
                     self.devices.append(switch)
 
+    def device_by_group_address( self, group_address):
+        for device in self.devices:
+            if device.group_address == group_address:
+                return device
+        raise CouldNotResolve(group_address)
+
+    def device_by_name( self, name):
+        for device in self.devices:
+            if device.name == name:
+                return device
+        raise CouldNotResolve(name)
+
+#######################################
 
     def device_name( self, address ):
         if type(address) is Address:
