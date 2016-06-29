@@ -1,12 +1,13 @@
-
-#from .nameresolver import NameResolver,nameresolver_
 from .address import Address
 from .multicast import Multicast
 from .telegram import Telegram
 from .multicast import Multicast
+from .device import Device
 
-class BinaryOutput:
+class BinaryOutput(Device):
+
     def __init__(self, group):
+        Device.__init__(self)
         self.group=group
         self.state = False
 

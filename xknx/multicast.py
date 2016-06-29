@@ -37,7 +37,10 @@ class Multicast:
                 telegram = Telegram()
                 telegram.read(telegram_data)
 
+                #telegram.dump()
+
                 if telegram.sender == self.own_address_:
-                    print("Ignoring own telegram")
+                    #print("Ignoring own telegram")
+                    pass
                 else:
                     callback(telegram)

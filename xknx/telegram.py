@@ -38,11 +38,13 @@ class Telegram:
         print ("")
 
     def dump(self):
-        print('Control: {:08b}'.format(self.control))
+        #print('Control: {:08b}'.format(self.control))
         print('Sender: {0}'.format( self.sender.str()))
         print('Group:   {0}'.format(self.group))
-        print('Payload: {:#02x}'.format(self.payload))
+        #print('Payload: {:#02x}'.format(self.payload))
 
+        for b in self.payload:
+            print('Payload: {:#02x}'.format(b))
 
     def str(self):
         data = bytearray()

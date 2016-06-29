@@ -1,36 +1,49 @@
 #!/usr/bin/python3
 
-from xknx import Telegram,Multicast,BinaryInput,BinaryOutput 
-from xknx import NameResolver,nameresolver_
-
-def callback(telegram):
-
-    if (telegram.group == nameresolver_.group_id("Livingroom/Switch 1") ):
-        binaryinput = BinaryInput(telegram)
-
-        if binaryinput.is_on():
-            BinaryOutput("Livingroom/Outlet 1").set_on()
-
-        elif binaryinput.is_off():
-            BinaryOutput("Livingroom/Outlet 1").set_off()
-
-    if (telegram.group == nameresolver_.group_id("Livingroom/Switch 2") ):
-        binaryinput = BinaryInput(telegram)
-
-        if binaryinput.is_on():
-            BinaryOutput("Livingroom/Outlet 2").set_on()
-
-        elif binaryinput.is_off():
-            BinaryOutput("Livingroom/Outlet 2").set_off()
+from xknx import Multicast,NameResolver,nameresolver_
 
 
-nameresolver_.init()
-outlets = nameresolver_.get_outlets()
+def callback( telegram):
 
-for outlet in outlets:
-    print(outlet)
+    device = nameresolver_.device_by_group_address(telegram.group)
 
-print("----------")
+    device.process(telegram)
+
+    if (device.name == "Livingroom.Switch_1" ):
+        if device.is_on():
+            nameresolver_.device_by_name("Livingroom.Outlet_1").set_on()
+        elif device.is_off():
+            nameresolver_.device_by_name("Livingroom.Outlet_1").set_off()
+
+    if (device.name == "Livingroom.Switch_2" ):
+        if device.is_on():
+            nameresolver_.device_by_name("Livingroom.Outlet_2").set_on()
+        elif device.is_off():
+            nameresolver_.device_by_name("Livingroom.Outlet_2").set_off()
+
+    if (device.name == "Livingroom.Switch_3" ):
+        if device.is_on():
+            nameresolver_.device_by_name("Livingroom.Outlet_2/1").set_on()
+            nameresolver_.device_by_name("Livingroom.Outlet_2/2").set_on()
+        elif device.is_off():
+            nameresolver_.device_by_name("Livingroom.Outlet_2/1").set_off()
+            nameresolver_.device_by_name("Livingroom.Outlet_2/2").set_off()
+
+    if (device.name == "Livingroom.Switch_4" ):
+        if device.is_on():
+            nameresolver_.device_by_name("Livingroom.Outlet_2/1").set_on()
+            nameresolver_.device_by_name("Livingroom.Outlet_2/2").set_on()
+            nameresolver_.device_by_name("Livingroom.Outlet_2/3").set_on()
+            nameresolver_.device_by_name("Livingroom.Outlet_2/4").set_on()
+        elif device.is_off():
+            nameresolver_.device_by_name("Livingroom.Outlet_2/1").set_off()
+            nameresolver_.device_by_name("Livingroom.Outlet_2/2").set_off()
+            nameresolver_.device_by_name("Livingroom.Outlet_2/3").set_off()
+            nameresolver_.device_by_name("Livingroom.Outlet_2/4").set_off()
+
+nameresolver_.read_configuration()
+
+nameresolver_.update_thread_start(60)
 
 Multicast().recv(callback)
 

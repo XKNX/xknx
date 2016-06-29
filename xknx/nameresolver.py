@@ -1,6 +1,13 @@
 import yaml
 from .address import Address
 from .binaryoutput import BinaryOutput
+from .binaryinput import BinaryInput
+from .device import Device
+from .switch import Switch
+from .dimmer import Dimmer
+from .outlet import Outlet
+import time
+import threading
 
 class CouldNotResolve(Exception):
     def __init__(self, group_name):
@@ -9,39 +16,13 @@ class CouldNotResolve(Exception):
     def __str__(self):
         return "CouldNotResolve <name={0}>".format(self.group_name)
 
-class Dimmer:
-    def __init__(self, name, group_address):
-        self.name = name
-        self.group_address = group_address
-
-    def __str__(self):
-        return "<Dimmer group_address={0}, name={1}>".format(self.group_address,self.name)
-
-class Outlet(BinaryOutput):
-    def __init__(self, name, group_address):
-        BinaryOutput.__init__(self, group_address)
-        self.name = name
-        self.group_address = group_address
-
-    def __str__(self):
-        return "<Outlet group_address={0}, name={1}>".format(self.group_address,self.name)
-
-class Switch:
-    def __init__(self, name, group_address):
-        self.name = name
-        self.group_address = group_address
-
-    def __str__(self):
-        return "<Switch group_address={0}, name={1}>".format(self.group_address,self.name)
-
-
 class NameResolver:
 
     def __init__(self):
         print("Initialization of NameResolver")
         self.devices = []
 
-    def init(self, file='xknx.yaml'):
+    def read_configuration(self, file='xknx.yaml'):
         print("Reading {0}".format(file))
         with open(file, 'r') as f:
             self.doc = yaml.load(f)
@@ -72,40 +53,24 @@ class NameResolver:
                 return device
         raise CouldNotResolve(name)
 
-#######################################
-
-    def device_name( self, address ):
-        if type(address) is Address:
-            return self.device_name( address.str() )
-
-        if address not in self.doc["devices"].keys():
-            return 'unknown device ({0})'.format(address)
-
-        return self.doc["devices"][address]
-
-
-    def group_name( self, group ):
-        for device in self.devices:
-            if device.group == group:
-                return device.group_name
-
-        if group not in self.doc["groups"].keys():
-            return 'unknown group ({0})'.format(group)
-
-        return self.doc["groups"][group]
-
-    def group_id( self, group_name ):
-        for device in self.devices:
-            if device.name == group_name: 
-                return device.group_address
-
-        raise CouldNotResolve(group_name)
-
     def get_outlets( self ):
         outlets = []
         for device in self.devices:
             if type(device) == Outlet:
                 outlets.append(device)
         return outlets
+
+    def get_devices( self ):
+        return self.devices
+
+    def update_thread_start(self,timeout):
+        def worker(timeout):
+            while True:
+                devices = nameresolver_.get_devices()
+                for device in self.devices:
+                    device.request_state()
+                time.sleep(timeout)
+        t = threading.Thread(target=worker, args=(timeout,))
+        t.start();
 
 nameresolver_ = NameResolver()
