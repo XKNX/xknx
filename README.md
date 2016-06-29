@@ -17,13 +17,26 @@ devices:
     1.1.255: ETS
 
 groups:
-    1: Livingroom/Switch 1
-    2: Livingroom/Switch 2
-    3: Livingroom/Switch 3
-    4: Livingroom/Switch 4
+    switch:
+        Livingroom.Switch_1: 1
+        Livingroom.Switch_2: 2
+        Livingroom.Switch_3: 3
+        Livingroom.Switch_4: 4
 
-    65: Livingroom/Light 1
-    66: Livingroom/Light 2
+    outlet:
+        Livingroom.Outlet_1: 65
+        Livingroom.Outlet_2: 66
+
+    dimmer:
+        Kitchen.Dimmer_1: 9
+        Kitchen.Dimmer_2: 10
+        Kitchen.Dimmer_4: 11
+
+    outlet 2:
+        Kitchen.Outlet_1: 12
+        Kitchen.Outlet_2: 13
+        Kitchen.Outlet_3: 14
+        Kitchen.Outlet_4: 15
 ```
 
 Sample Program
@@ -32,30 +45,30 @@ Sample Program
 ```python
 #!/usr/bin/python3
 
-from knx import Telegram,Multicast,BinaryInput,BinaryOutput
-from knx import NameResolver,nameresolver_
-
-def callback(telegram):
-
-    if (telegram.group == nameresolver_.group_id("Livingroom/Switch 1") ):
-        binaryinput = BinaryInput(telegram)
-
-        if binaryinput.is_on():
-            BinaryOutput("Livingroom/Light 1").set_on()
-
-        elif binaryinput.is_off():
-            BinaryOutput("Livingroom/Light 1").set_off()
-
-    if (telegram.group == nameresolver_.group_id("Livingroom/Switch 2") ):
-        binaryinput = BinaryInput(telegram)
-
-        if binaryinput.is_on():
-            BinaryOutput("Livingroom/Light 2").set_on()
-
-        elif binaryinput.is_off():
-            BinaryOutput("Livingroom/Light 2").set_off()
+from xknx import Multicast,NameResolver,nameresolver_
 
 
-nameresolver_.init()
+def callback( telegram):
+
+    device = nameresolver_.device_by_group_address(telegram.group)
+
+    device.process(telegram)
+
+    if (device.name == "Livingroom.Switch_1" ):
+        if device.is_on():
+            nameresolver_.device_by_name("Livingroom.Outlet_1").set_on()
+        elif device.is_off():
+            nameresolver_.device_by_name("Livingroom.Outlet_1").set_off()
+
+    if (device.name == "Livingroom.Switch_2" ):
+        if device.is_on():
+            nameresolver_.device_by_name("Livingroom.Outlet_2").set_on()
+        elif device.is_off():
+            nameresolver_.device_by_name("Livingroom.Outlet_2").set_off()
+
+nameresolver_.read_configuration()
+
+nameresolver_.update_thread_start(60)
+
 Multicast().recv(callback)
 ```
