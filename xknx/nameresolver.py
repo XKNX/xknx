@@ -30,15 +30,15 @@ class NameResolver:
         for group in self.doc["groups"]:
             if group.startswith("dimmer"):
                 for entry in self.doc["groups"][group]:
-                    dimmer = Dimmer(entry, self.doc["groups"][group][entry])
+                    dimmer = Dimmer(entry, self.doc["groups"][group][entry]["group_address"])
                     self.devices.append(dimmer)
             if group.startswith("outlet"):
                 for entry in self.doc["groups"][group]:
-                    outlet = Outlet(entry, self.doc["groups"][group][entry])
+                    outlet = Outlet(entry, self.doc["groups"][group][entry]["group_address"])
                     self.devices.append(outlet)
             if group.startswith("switch"):
                 for entry in self.doc["groups"][group]:
-                    switch = Switch(entry, self.doc["groups"][group][entry])
+                    switch = Switch(entry, self.doc["groups"][group][entry]["group_address"])
                     self.devices.append(switch)
 
     def device_by_group_address( self, group_address):

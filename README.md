@@ -18,25 +18,25 @@ devices:
 
 groups:
     switch:
-        Livingroom.Switch_1: 1
-        Livingroom.Switch_2: 2
-        Livingroom.Switch_3: 3
-        Livingroom.Switch_4: 4
+        Livingroom.Switch_1: {group_address: 1}
+        Livingroom.Switch_2: {group_address: 2}
+        Livingroom.Switch_3: {group_address: 3}
+        Livingroom.Switch_4: {group_address: 4}
 
     outlet:
-        Livingroom.Outlet_1: 65
-        Livingroom.Outlet_2: 66
+        Livingroom.Outlet_1: {group_address: 65}
+        Livingroom.Outlet_2: {group_address: 66}
 
     dimmer:
-        Kitchen.Dimmer_1: 9
-        Kitchen.Dimmer_2: 10
-        Kitchen.Dimmer_4: 11
+        Kitchen.Dimmer_1: {group_address: 9}
+        Kitchen.Dimmer_2: {group_address: 10}
+        Kitchen.Dimmer_4: {group_address: 11}
 
     outlet 2:
-        Kitchen.Outlet_1: 12
-        Kitchen.Outlet_2: 13
-        Kitchen.Outlet_3: 14
-        Kitchen.Outlet_4: 15
+        Kitchen.Outlet_1: {group_address: 12}
+        Kitchen.Outlet_2: {group_address: 13}
+        Kitchen.Outlet_3: {group_address: 14}
+        Kitchen.Outlet_4: {group_address: 15}
 ```
 
 Sample Program
