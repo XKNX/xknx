@@ -5,6 +5,17 @@ A Wrapper around KNX/UDP protocol written in python.
 
 This program only works with KNX/IP router.
 
+
+Supported / Tested Devices
+--------------------------
+
+The software was tested with the following devices:
+
+- [GIRA KNX/IP-Routers 216700](http://www.gira.com/en/gebaeudetechnik/systeme/knx-eib_system/knx-produkte/systemgeraete/knx-ip-router.html)
+- [GIRA KNX/Switching Actor  104000](http://katalog.gira.de/de_DE/deeplinking.html?artikelnr=104000&m=compare)
+- [GIRA KNX/Shutter Binary Actor 103800](https://katalog.gira.de/en/datenblatt.html?id=635678)
+- [GIRA KNX/Binary Input 111900 ](https://www.gira.de/gebaeudetechnik/systeme/knx-eib_system/knx-produkte/tasterschnittstellen/knxeib-universal-tasterschnittstelle.html)
+
 Sample Configuration
 --------------------
 
@@ -39,8 +50,32 @@ groups:
         Kitchen.Outlet_4: {group_address: 15}
 ```
 
+Basic Operations
+----------------
+
+```python
+
+# Outlet
+
+nameresolver_.device_by_name("Livingroom.Outlet_1").set_on()
+time.sleep(5)
+nameresolver_.device_by_name("Livingroom.Outlet_2").set_off()
+
+# Shutter
+nameresolver_.device_by_name("Livingroom.Shutter_1").set_down()
+time.sleep(2)
+nameresolver_.device_by_name("Livingroom.Shutter_1").set_up()
+time.sleep(5)
+nameresolver_.device_by_name("Livingroom.Shutter_1").set_short_down()
+time.sleep(5)
+nameresolver_.device_by_name("Livingroom.Shutter_1").set_short_up()
+
+```
+
+
 Sample Program
 --------------
+
 
 ```python
 #!/usr/bin/python3
