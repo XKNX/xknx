@@ -6,6 +6,7 @@ from .device import Device
 from .switch import Switch
 from .dimmer import Dimmer
 from .outlet import Outlet
+from .shutter import Shutter
 import time
 import threading
 
@@ -40,6 +41,13 @@ class NameResolver:
                 for entry in self.doc["groups"][group]:
                     switch = Switch(entry, self.doc["groups"][group][entry]["group_address"])
                     self.devices.append(switch)
+            if group.startswith("shutter"):
+                for entry in self.doc["groups"][group]:
+                    group_address_long = self.doc["groups"][group][entry]["group_address_long"]
+                    group_address_short = self.doc["groups"][group][entry]["group_address_short"]
+                    group_address_position = self.doc["groups"][group][entry]["group_address_position"]
+                    shutter = Shutter(entry, group_address_long, group_address_short, group_address_position) 
+                    self.devices.append(shutter)
 
     def device_by_group_address( self, group_address):
         for device in self.devices:

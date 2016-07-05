@@ -1,7 +1,6 @@
 from .address import Address
 from .multicast import Multicast
 from .telegram import Telegram
-from .multicast import Multicast
 from .device import Device
 
 class BinaryOutput(Device):

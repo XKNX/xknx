@@ -22,11 +22,6 @@ groups:
         Livingroom.Outlet_2/3: {group_address: 7}
         Livingroom.Outlet_2/4: {group_address: 8}
 
-    dimmer 2:
-        Kitchen.Dimmer_1: {group_address: 9 }
-        Kitchen.Dimmer_2: {group_address: 10}
-        Kitchen.Dimmer_4: {group_address: 11}
-
     outlet 2:
         Kitchen.Outlet_1: {group_address: 12}
         Kitchen.Outlet_2: {group_address: 13}
@@ -34,6 +29,8 @@ groups:
         Kitchen.Outlet_4: {group_address: 15}
 
 
+    shutter:
+        Livingroom.Shutter_1: {group_address_long: 9, group_address_short: 10, group_address_position: 11}
 
 #    switch:
 #        Livingroom.Switch_1: 65
