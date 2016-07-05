@@ -8,7 +8,7 @@ class Telegram:
     def __init__(self):
 
         self.sender = Address()
-        self.group = 0
+        self.group_address = 0
 
         self.payload = bytearray()
 
@@ -17,7 +17,7 @@ class Telegram:
         self.print_data(data)
 
         self.sender.set( data[10]*256+data[11] )
-        self.group   = data[12]*256+data[13]
+        self.group_address   = data[12]*256+data[13]
 
         len_payload = data[14]
         for x in range(0, len_payload):
@@ -40,7 +40,7 @@ class Telegram:
     def dump(self):
         #print('Control: {:08b}'.format(self.control))
         print('Sender: {0}'.format( self.sender.str()))
-        print('Group:   {0}'.format(self.group))
+        print('Group:   {0}'.format(self.group_address))
         #print('Payload: {:#02x}'.format(self.payload))
 
         for b in self.payload:
@@ -89,8 +89,8 @@ class Telegram:
         data.append(self.sender.address&255)
 
         # Target address
-        data.append((self.group >> 8)&255)
-        data.append(self.group & 255)
+        data.append((self.group_address >> 8)&255)
+        data.append(self.group_address & 255)
 
         # Payload length
         data.append(len(self.payload))

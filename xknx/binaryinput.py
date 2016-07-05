@@ -5,10 +5,13 @@ class CouldNotParseSwitchTelegram(Exception):
     pass
 
 class BinaryInput(Device):
-    def __init__(self, group):
+    def __init__(self, group_address):
         Device.__init__(self)
-        self.group=group
+        self.group_address=group_address
         self.state=False
+
+    def has_group_address(self, group_address):
+        return self.group_address == group_address
 
     def set_internal_state(self, state):
         if state != self.state:

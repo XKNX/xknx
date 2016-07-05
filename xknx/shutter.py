@@ -11,17 +11,18 @@ class Shutter(Device):
         self.group_address_short = group_address_short
         self.group_address_position = group_address_position
 
-        # XXX replace with "has_group_address() function
-        self.group_address = group_address_long
+    def has_group_address(self, group_address):
+        return ( self.group_address_long == group_address ) or (self.group_address_short == group_address ) or (self.group_address_position == group_address )
+
 
     def __str__(self):
-        return "<Shutter group_address_long={0}, group_address_short={0}, group_address_position={0}, name={1}>".format(self.group_address_position,self.group_address_short,self.group_address_position,self.name)
+        return "<Shutter group_address_long={0}, group_address_short={1}, group_address_position={2}, name={3}>".format(self.group_address_long,self.group_address_short,self.group_address_position,self.name)
 
     def send(self, group_address, payload):
         multicast = Multicast()
         telegram = Telegram()
         telegram.sender.set(Multicast.own_address_)
-        telegram.group=group_address
+        telegram.group_address=group_address
         telegram.payload.append(payload)
         multicast.send(telegram)
 

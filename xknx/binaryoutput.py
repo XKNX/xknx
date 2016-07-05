@@ -5,10 +5,14 @@ from .device import Device
 
 class BinaryOutput(Device):
 
-    def __init__(self, group):
+    def __init__(self, group_address):
         Device.__init__(self)
-        self.group=group
+        self.group_address=group_address
         self.state = False
+
+    def has_group_address(self, group_address):
+        return self.group_address == group_address
+
 
     def set_internal_state(self, state):
         if state != self.state:
@@ -19,7 +23,7 @@ class BinaryOutput(Device):
         multicast = Multicast()
         telegram = Telegram()
         telegram.sender.set(Multicast.own_address_)
-        telegram.group=self.group
+        telegram.group_address=self.group_address
         telegram.payload.append(payload)
         multicast.send(telegram)
 

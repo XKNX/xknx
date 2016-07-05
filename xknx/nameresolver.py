@@ -51,7 +51,7 @@ class NameResolver:
 
     def device_by_group_address( self, group_address):
         for device in self.devices:
-            if device.group_address == group_address:
+            if device.has_group_address(group_address):
                 return device
         raise CouldNotResolve(group_address)
 

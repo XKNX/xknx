@@ -23,6 +23,7 @@ class Multicast:
         sock.sendto(telegram.str(), (self.MCAST_GRP, self.MCAST_PORT))
 
     def recv(self, callback):
+        print("Starting daemon...")
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind(("", self.MCAST_PORT))
         sock.setsockopt(socket.IPPROTO_IP,
