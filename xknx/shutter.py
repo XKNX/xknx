@@ -38,6 +38,14 @@ class Shutter(Device):
     def set_short_up(self):
         self.send(self.group_address_short, 0x80)
 
+#    def request_state(self):
+#        #self.send(self.group_address_long,0x00)
+#        self.send(self.group_address_position,0x00)
+#
+#    def process(self,telegram):
+#        print("FNORD {0}".format(len(telegram.payload)))
+#        print(self)
+#
 #    def set_short_position(self,position):
 #        self.send(self.group_address_position,position)
 

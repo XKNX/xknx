@@ -10,12 +10,20 @@ from .shutter import Shutter
 import time
 import threading
 
-class CouldNotResolve(Exception):
-    def __init__(self, group_name):
-        self.group_name = group_name
+class CouldNotResolveAddress(Exception):
+    def __init__(self, group_address):
+        self.group_address = group_address
 
     def __str__(self):
-        return "CouldNotResolve <name={0}>".format(self.group_name)
+        return "CouldNotResolveAddress <name={0}>".format(self.group_address)
+
+class CouldNotResolveName(Exception):
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return "CouldNotResolveName <name={0}>".format(self.name)
+
 
 class NameResolver:
 
@@ -53,13 +61,13 @@ class NameResolver:
         for device in self.devices:
             if device.has_group_address(group_address):
                 return device
-        raise CouldNotResolve(group_address)
+        raise CouldNotResolveAddress(group_address)
 
     def device_by_name( self, name):
         for device in self.devices:
             if device.name == name:
                 return device
-        raise CouldNotResolve(name)
+        raise CouldNotResolveName(name)
 
     def get_outlets( self ):
         outlets = []
