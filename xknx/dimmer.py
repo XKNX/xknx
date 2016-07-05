@@ -1,10 +1,10 @@
 from .device import Device
 
 class Dimmer(Device):
-    def __init__(self, name, group_address):
+    def __init__(self, name, config):
         Device.__init__(self)
         self.name = name
-        self.group_address = group_address
+        self.group_address = config["group_address"]
 
     def has_group_address(self, group_address):
         return self.group_address == group_address

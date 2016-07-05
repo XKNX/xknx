@@ -4,12 +4,12 @@ from .telegram import Telegram
 from .device import Device
 
 class Shutter(Device):
-    def __init__(self, name, group_address_long, group_address_short, group_address_position):
+    def __init__(self, name, config):
         Device.__init__(self)
         self.name = name
-        self.group_address_long = group_address_long
-        self.group_address_short = group_address_short
-        self.group_address_position = group_address_position
+        self.group_address_long = config["group_address_long"]
+        self.group_address_short = config["group_address_short"]
+        self.group_address_position = config["group_address_position"]
 
     def has_group_address(self, group_address):
         return ( self.group_address_long == group_address ) or (self.group_address_short == group_address ) or (self.group_address_position == group_address )

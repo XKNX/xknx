@@ -39,22 +39,19 @@ class NameResolver:
         for group in self.doc["groups"]:
             if group.startswith("dimmer"):
                 for entry in self.doc["groups"][group]:
-                    dimmer = Dimmer(entry, self.doc["groups"][group][entry]["group_address"])
+                    dimmer = Dimmer(entry, self.doc["groups"][group][entry])
                     self.devices.append(dimmer)
             if group.startswith("outlet"):
                 for entry in self.doc["groups"][group]:
-                    outlet = Outlet(entry, self.doc["groups"][group][entry]["group_address"])
+                    outlet = Outlet(entry, self.doc["groups"][group][entry])
                     self.devices.append(outlet)
             if group.startswith("switch"):
                 for entry in self.doc["groups"][group]:
-                    switch = Switch(entry, self.doc["groups"][group][entry]["group_address"])
+                    switch = Switch(entry, self.doc["groups"][group][entry])
                     self.devices.append(switch)
             if group.startswith("shutter"):
                 for entry in self.doc["groups"][group]:
-                    group_address_long = self.doc["groups"][group][entry]["group_address_long"]
-                    group_address_short = self.doc["groups"][group][entry]["group_address_short"]
-                    group_address_position = self.doc["groups"][group][entry]["group_address_position"]
-                    shutter = Shutter(entry, group_address_long, group_address_short, group_address_position) 
+                    shutter = Shutter(entry, self.doc["groups"][group][entry]) 
                     self.devices.append(shutter)
 
     def device_by_group_address( self, group_address):

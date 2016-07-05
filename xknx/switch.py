@@ -3,7 +3,8 @@ from .device import Device
 
 
 class Switch(BinaryInput):
-    def __init__(self, name, group_address):
+    def __init__(self, name, config):
+        group_address = config["group_address"]
         BinaryInput.__init__(self, group_address)
         Device.__init__(self)
         self.name = name
