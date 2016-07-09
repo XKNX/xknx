@@ -101,34 +101,37 @@ devices_.device_by_name("Livingroom.Shutter_1").set_short_up()
 Sample Program
 --------------
 
+```
+#!/usr/bin/python3
+from xknx import Multicast,Devices,devices_,Config
+
+Config.read()
+Multicast().recv()
+```
+
+`Multicast().recv()` may also take a callback as parameter:
 
 ```python
 #!/usr/bin/python3
 
-from xknx import Multicast,Devices,devices_,Config
+from xknx import Multicast,CouldNotResolveAddress,Config
+import time
 
+def callback( device, telegram):
 
-def callback( telegram):
+    print("Callback received from {0}".format(device.name))
 
-    device = devices_.device_by_group_address(telegram.group)
+    try:
 
-    device.process(telegram)
+        if (device.name == "Livingroom.Switch_1" ):
+            if device.is_on():
+                devices_.device_by_name("Livingroom.Outlet_1").set_on()
+            elif device.is_off():
+                devices_.device_by_name("Livingroom.Outlet_1").set_off()
 
-    if (device.name == "Livingroom.Switch_1" ):
-        if device.is_on():
-            devices_.device_by_name("Livingroom.Outlet_1").set_on()
-        elif device.is_off():
-            devices_.device_by_name("Livingroom.Outlet_1").set_off()
-
-    if (device.name == "Livingroom.Switch_2" ):
-        if device.is_on():
-            devices_.device_by_name("Livingroom.Outlet_2").set_on()
-        elif device.is_off():
-            devices_.device_by_name("Livingroom.Outlet_2").set_off()
+    except CouldNotResolveAddress as c:
+        print(c)
 
 Config.read()
-
-devices_.update_thread_start(60)
-
 Multicast().recv(callback)
 ```

@@ -2,6 +2,7 @@ import socket
 import struct
 from .telegram import Telegram
 from .address import Address
+from .devices import devices_
 
 class Multicast:
     MCAST_GRP = '224.0.23.12'
@@ -22,7 +23,7 @@ class Multicast:
 
         sock.sendto(telegram.str(), (self.MCAST_GRP, self.MCAST_PORT))
 
-    def recv(self, callback):
+    def recv(self, callback = None):
         print("Starting daemon...")
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind(("", self.MCAST_PORT))
@@ -43,5 +44,10 @@ class Multicast:
                 if telegram.sender == self.own_address_:
                     #print("Ignoring own telegram")
                     pass
+
                 else:
-                    callback(telegram)
+                    device = devices_.device_by_group_address(telegram.group_address)
+                    device.process(telegram)
+
+                    if ( callback ):
+                        callback(device,telegram)

@@ -3,13 +3,9 @@
 from xknx import Multicast,Devices,devices_,CouldNotResolveAddress,Config
 import time
 
-def callback( telegram):
+def callback( device, telegram):
 
     try:
-        device = devices_.device_by_group_address(telegram.group_address)
-
-        device.process(telegram)
-
         if (device.name == "Livingroom.Switch_1" ):
             if device.is_on():
                 devices_.device_by_name("Livingroom.Shutter_1").set_down()
