@@ -9,4 +9,9 @@ class Device:
     def process(self,telegram):
         pass
 
-    
+    def get_name(self):
+        return "undefined"
+
+    def do(self,action):
+        print("{0} {1}".format( self.get_name(), action))
+        pass

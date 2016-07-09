@@ -33,6 +33,15 @@ class BinaryOutput(Device):
     def set_off(self):
         self.send(0x80)
 
+    def do(self,action):
+        if(action=="on"):
+            self.set_on()
+        elif(action=="off"):
+            self.set_off()
+        else:
+            print("{0}: Could not understand action {1}".format(self.get_name(), action))
+
+
     def request_state(self):
         self.send(0x00)
 

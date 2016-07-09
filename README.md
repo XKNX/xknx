@@ -28,26 +28,51 @@ devices:
     1.1.255: ETS
 
 groups:
+
     switch:
-        Livingroom.Switch_1: {group_address: 1}
-        Livingroom.Switch_2: {group_address: 2}
-        Livingroom.Switch_3: {group_address: 3}
-        Livingroom.Switch_4: {group_address: 4}
+        Livingroom.Switch1:
+            group_address: 1025
+            actions:
+              - {hook: "off", switch_time: "long", target: Livingroom.Shutter_1, method: up}
+              - {hook: "off", switch_time: "short", target: Livingroom.Shutter_1, method: short_up}
+
+        Livingroom.Switch2:
+            group_address: 1026
+            actions:
+              - {hook: "off", switch_time: "long", target: Livingroom.Shutter_1, method: down}
+              - {hook: "off", switch_time: "short", target: Livingroom.Shutter_1, method: short_down}
+
+        Livingroom.Switch3:
+            group_address: 1027
+            actions:
+              - {hook: "on", target: Livingroom.Outlet_1, method: "on"}
+              - {hook: "on", target: Livingroom.Outlet_2, method: "on"}
+              - {hook: "on", target: Livingroom.Outlet_3, method: "on"}
+              - {hook: "on", target: Livingroom.Outlet_4, method: "on"}
+
+        Livingroom.Switch4:
+            group_address: 1028
+            actions:
+              - {hook: "on", target: Livingroom.Outlet_1, method: "off"}
+              - {hook: "on", target: Livingroom.Outlet_2, method: "off"}
+              - {hook: "on", target: Livingroom.Outlet_3, method: "off"}
+              - {hook: "on", target: Livingroom.Outlet_4, method: "off"}
 
     outlet:
         Livingroom.Outlet_1: {group_address: 65}
         Livingroom.Outlet_2: {group_address: 66}
-
-    dimmer:
-        Kitchen.Dimmer_1: {group_address: 9}
-        Kitchen.Dimmer_2: {group_address: 10}
-        Kitchen.Dimmer_4: {group_address: 11}
+        Livingroom.Outlet_3: {group_address: 67}
+        Livingroom.Outlet_4: {group_address: 68}
 
     outlet 2:
         Kitchen.Outlet_1: {group_address: 12}
         Kitchen.Outlet_2: {group_address: 13}
         Kitchen.Outlet_3: {group_address: 14}
         Kitchen.Outlet_4: {group_address: 15}
+
+    shutter:
+        Livingroom.Shutter_1: {group_address_long: 9, group_address_short: 10, group_address_position: 11}
+
 ```
 
 Basic Operations

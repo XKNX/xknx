@@ -38,6 +38,18 @@ class Shutter(Device):
     def set_short_up(self):
         self.send(self.group_address_short, 0x80)
 
+    def do(self,action):
+        if(action=="up"):
+            self.set_up()
+        elif(action=="short_up"):
+            self.set_short_up()
+        elif(action=="down"):
+            self.set_down()
+        elif(action=="short_down"):
+            self.set_short_down()        
+        else:
+            print("{0}: Could not understand action {1}".format(self.get_name(), action))
+
 #    def request_state(self):
 #        #self.send(self.group_address_long,0x00)
 #        self.send(self.group_address_position,0x00)

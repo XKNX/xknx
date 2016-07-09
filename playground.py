@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from xknx import Multicast,NameResolver,nameresolver_
+from xknx import Multicast,NameResolver,nameresolver_,CouldNotResolveAddress,Config
 import time
 
 def callback( telegram):
@@ -49,14 +49,13 @@ def callback( telegram):
     except CouldNotResolveAddress as c:
         print(c)
         
-
-nameresolver_.read_configuration()
+Config.read()
 
 #nameresolver_.update_thread_start(20)
 
-devices = nameresolver_.get_devices()
-for device in devices:
-    print(device)
+#devices = nameresolver_.get_devices()
+#for device in devices:
+#    print(device)
 
 #print("down");
 #nameresolver_.device_by_name("Livingroom.Shutter_1").set_down()
