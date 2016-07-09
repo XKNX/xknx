@@ -2,6 +2,7 @@ from .address import Address
 from .multicast import Multicast
 from .telegram import Telegram
 from .device import Device
+from .globals import Globals
 
 class BinaryOutput(Device):
 
@@ -22,7 +23,7 @@ class BinaryOutput(Device):
     def send(self, payload):
         multicast = Multicast()
         telegram = Telegram()
-        telegram.sender.set(Multicast.own_address)
+        telegram.sender.set(Globals.get_own_address())
         telegram.group_address=self.group_address
         telegram.payload.append(payload)
         multicast.send(telegram)

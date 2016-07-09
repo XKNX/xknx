@@ -41,7 +41,7 @@ class Address:
     def set_int(self, address):
         self.address = address
 
-    def str(self):
+    def __str__(self):
         return '{0}.{1}.{2}'.format(
             ((self.address>>12)&15),
             ((self.address>>8)&15),

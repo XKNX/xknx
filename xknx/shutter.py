@@ -2,6 +2,7 @@ from .address import Address
 from .multicast import Multicast
 from .telegram import Telegram
 from .device import Device
+from .globals import Globals
 
 class Shutter(Device):
     def __init__(self, name, config):
@@ -21,7 +22,7 @@ class Shutter(Device):
     def send(self, group_address, payload):
         multicast = Multicast()
         telegram = Telegram()
-        telegram.sender.set(Multicast.own_address)
+        telegram.sender.set(Globals.get_own_address())
         telegram.group_address=group_address
         telegram.payload.append(payload)
         multicast.send(telegram)

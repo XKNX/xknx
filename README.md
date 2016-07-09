@@ -20,12 +20,9 @@ Sample Configuration
 --------------------
 
 ```yaml
-devices:
-    1.1.0: IP Router
-    1.1.1: Pushbutton interface
-    1.1.2: Switching actuator
-
-    1.1.255: ETS
+general:
+    own_address: "15.15.249"
+    own_ip: "192.168.42.1"
 
 groups:
 

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from xknx import Multicast,Devices,devices_,CouldNotResolveAddress,Config
+from xknx import Address, Multicast,Devices,devices_,CouldNotResolveAddress,Config
 import time
 
 def callback( device, telegram):
