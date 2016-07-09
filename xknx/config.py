@@ -7,7 +7,7 @@ from .switch import Switch
 from .dimmer import Dimmer
 from .outlet import Outlet
 from .shutter import Shutter
-from .nameresolver import NameResolver,nameresolver_
+from .devices import Devices,devices_
 import time
 
 class Config:
@@ -25,17 +25,17 @@ class Config:
             if group.startswith("dimmer"):
                 for entry in doc["groups"][group]:
                     dimmer = Dimmer(entry, doc["groups"][group][entry])
-                    nameresolver_.devices.append(dimmer)
+                    devices_.devices.append(dimmer)
             if group.startswith("outlet"):
                 for entry in doc["groups"][group]:
                     outlet = Outlet(entry, doc["groups"][group][entry])
-                    nameresolver_.devices.append(outlet)
+                    devices_.devices.append(outlet)
             if group.startswith("switch"):
                 for entry in doc["groups"][group]:
                     switch = Switch(entry, doc["groups"][group][entry])
-                    nameresolver_.devices.append(switch)
+                    devices_.devices.append(switch)
             if group.startswith("shutter"):
                 for entry in doc["groups"][group]:
                     shutter = Shutter(entry, doc["groups"][group][entry])
-                    nameresolver_.devices.append(shutter)
+                    devices_.devices.append(shutter)
 

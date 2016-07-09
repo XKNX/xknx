@@ -16,10 +16,10 @@ class CouldNotResolveName(Exception):
         return "CouldNotResolveName <name={0}>".format(self.name)
 
 
-class NameResolver:
+class Devices:
 
     def __init__(self):
-        print("Initialization of NameResolver")
+        print("Initialization of Devices")
         self.devices = []
 
     def device_by_group_address( self, group_address):
@@ -47,11 +47,11 @@ class NameResolver:
     def update_thread_start(self,timeout):
         def worker(timeout):
             while True:
-                devices = nameresolver_.get_devices()
+                devices = devices_.get_devices()
                 for device in self.devices:
                     device.request_state()
                 time.sleep(timeout)
         t = threading.Thread(target=worker, args=(timeout,))
         t.start();
 
-nameresolver_ = NameResolver()
+devices_ = Devices()

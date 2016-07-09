@@ -82,18 +82,18 @@ Basic Operations
 
 # Outlet
 
-nameresolver_.device_by_name("Livingroom.Outlet_1").set_on()
+devices_.device_by_name("Livingroom.Outlet_1").set_on()
 time.sleep(5)
-nameresolver_.device_by_name("Livingroom.Outlet_2").set_off()
+devices_.device_by_name("Livingroom.Outlet_2").set_off()
 
 # Shutter
-nameresolver_.device_by_name("Livingroom.Shutter_1").set_down()
+devices_.device_by_name("Livingroom.Shutter_1").set_down()
 time.sleep(2)
-nameresolver_.device_by_name("Livingroom.Shutter_1").set_up()
+devices_.device_by_name("Livingroom.Shutter_1").set_up()
 time.sleep(5)
-nameresolver_.device_by_name("Livingroom.Shutter_1").set_short_down()
+devices_.device_by_name("Livingroom.Shutter_1").set_short_down()
 time.sleep(5)
-nameresolver_.device_by_name("Livingroom.Shutter_1").set_short_up()
+devices_.device_by_name("Livingroom.Shutter_1").set_short_up()
 
 ```
 
@@ -105,30 +105,30 @@ Sample Program
 ```python
 #!/usr/bin/python3
 
-from xknx import Multicast,NameResolver,nameresolver_
+from xknx import Multicast,Devices,devices_,Config
 
 
 def callback( telegram):
 
-    device = nameresolver_.device_by_group_address(telegram.group)
+    device = devices_.device_by_group_address(telegram.group)
 
     device.process(telegram)
 
     if (device.name == "Livingroom.Switch_1" ):
         if device.is_on():
-            nameresolver_.device_by_name("Livingroom.Outlet_1").set_on()
+            devices_.device_by_name("Livingroom.Outlet_1").set_on()
         elif device.is_off():
-            nameresolver_.device_by_name("Livingroom.Outlet_1").set_off()
+            devices_.device_by_name("Livingroom.Outlet_1").set_off()
 
     if (device.name == "Livingroom.Switch_2" ):
         if device.is_on():
-            nameresolver_.device_by_name("Livingroom.Outlet_2").set_on()
+            devices_.device_by_name("Livingroom.Outlet_2").set_on()
         elif device.is_off():
-            nameresolver_.device_by_name("Livingroom.Outlet_2").set_off()
+            devices_.device_by_name("Livingroom.Outlet_2").set_off()
 
-nameresolver_.read_configuration()
+Config.read()
 
-nameresolver_.update_thread_start(60)
+devices_.update_thread_start(60)
 
 Multicast().recv(callback)
 ```

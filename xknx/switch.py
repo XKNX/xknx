@@ -3,7 +3,7 @@ from .device import Device
 import yaml
 import time
 from enum import Enum
-from .nameresolver import NameResolver,nameresolver_
+from .devices import Devices,devices_
 
 class SwitchTime(Enum):
     SHORT = 1
@@ -38,8 +38,8 @@ class Action():
 
     def execute(self):
         #print("Executing: {0}".format(self))
-        #print( nameresolver_.device_by_name(self.target))
-        nameresolver_.device_by_name(self.target).do(self.method)
+        #print( devices_.device_by_name(self.target))
+        devices_.device_by_name(self.target).do(self.method)
 
     def __str__(self):
         return "<Action hook={0} target={1} method={2}>".format(self.hook,self.target,self.method)

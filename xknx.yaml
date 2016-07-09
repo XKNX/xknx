@@ -40,6 +40,8 @@ groups:
               - {hook: "on", target: Livingroom.Outlet_2/2, method: "on"}
               - {hook: "on", target: Livingroom.Outlet_2/3, method: "on"}
               - {hook: "on", target: Livingroom.Outlet_2/4, method: "on"}
+              - {hook: "on", target: Livingroom.3Switch3.LED, method: "on"}
+              - {hook: "on", target: Livingroom.3Switch4.LED, method: "on"}
 
         Livingroom.3Switch4: 
             group_address: 1028
@@ -48,7 +50,9 @@ groups:
               - {hook: "on", target: Livingroom.Outlet_2/2, method: "off"}
               - {hook: "on", target: Livingroom.Outlet_2/3, method: "off"}
               - {hook: "on", target: Livingroom.Outlet_2/4, method: "off"}
-
+              - {hook: "on", target: Livingroom.3Switch3.LED, method: "off"}
+              - {hook: "on", target: Livingroom.3Switch4.LED, method: "off"}
+                            
 
     outlet:
         Livingroom.Outlet_1: {group_address: 65}
@@ -65,6 +69,11 @@ groups:
         Kitchen.Outlet_3: {group_address: 14}
         Kitchen.Outlet_4: {group_address: 15}
 
+    outlet 3:
+        Livingroom.3Switch1.LED: {group_address: 1029}
+        Livingroom.3Switch2.LED: {group_address: 1030}
+        Livingroom.3Switch3.LED: {group_address: 1031}
+        Livingroom.3Switch4.LED: {group_address: 1032}
 
     shutter:
         Livingroom.Shutter_1: {group_address_long: 9, group_address_short: 10, group_address_position: 11}
