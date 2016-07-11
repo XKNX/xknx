@@ -3,7 +3,17 @@ XKNX
 
 A Wrapper around KNX/UDP protocol written in python.
 
-This program only works with KNX/IP router.
+The wrapper is also intended to be used as a KNX logic module, which means to connect different KNX devices and make them interact.
+
+At the moment the wrapper works with KNX/IP router.
+
+Roadmap
+-------
+
+* Add functionality for KNX tunneling devices
+* Add functionality for auto discovery for KNX/IP router and tunneling devices
+* Add functionality for Thermostats
+* Develop plugin for [Home-assistant](https://home-assistant.io/) 
 
 
 Supported / Tested Devices
