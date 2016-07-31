@@ -34,12 +34,12 @@ class Devices:
                 return device
         raise CouldNotResolveName(name)
 
-    def get_outlets( self ):
-        outlets = []
-        for device in self.devices:
-            if type(device) == Outlet:
-                outlets.append(device)
-        return outlets
+#    def get_outlets( self ):
+#        outlets = []
+#        for device in self.devices:
+#            if type(device) == Outlet:
+#                outlets.append(device)
+#        return outlets
 
     def get_devices( self ):
         return self.devices
