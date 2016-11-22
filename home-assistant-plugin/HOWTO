@@ -1,0 +1,15 @@
+
+Installation:
+
+* "make install" will copy plugin files to ~/.homeassistant/custom_components
+
+* place xknx.xml within  ~/.homeassistant/ directory
+
+* place xknx library within ~/xknx
+
+Running:
+
+* start hass with the following command: PYTHONPATH="${PYTHONPATH}:${HOME}/xknx" hass
+* start xknx in separated loop
+
+
