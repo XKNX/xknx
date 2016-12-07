@@ -2,6 +2,7 @@ import time
 import threading
 
 class CouldNotResolveAddress(Exception):
+
     def __init__(self, group_address):
         self.group_address = group_address
 
@@ -9,6 +10,7 @@ class CouldNotResolveAddress(Exception):
         return "CouldNotResolveAddress <name={0}>".format(self.group_address)
 
 class CouldNotResolveName(Exception):
+
     def __init__(self, name):
         self.name = name
 
