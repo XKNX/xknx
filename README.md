@@ -70,6 +70,8 @@ groups:
     shutter:
         Livingroom.Shutter_1: {group_address_long: 9, group_address_short: 10, group_address_position: 11}
 
+    thermostat:
+        Kitchen.Thermostat_1: {group_address: 2049}
 ```
 
 Basic Operations
