@@ -40,6 +40,11 @@ class Multicast:
         while True:
             telegram_data = sock.recv(10240)
             if telegram_data:
+
+                if len(telegram_data) < 17:
+                    print("WARNING: Telegram has size {0} too small, ignoring".format(len(telegram_data)))
+                    continue
+
                 telegram = Telegram()
                 telegram.read(telegram_data)
 
