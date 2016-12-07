@@ -4,6 +4,7 @@ from .binaryoutput import BinaryOutput
 from .binaryinput import BinaryInput
 from .device import Device
 from .switch import Switch
+from .thermostat import Thermostat
 from .dimmer import Dimmer
 from .outlet import Outlet
 from .shutter import Shutter
@@ -50,3 +51,7 @@ class Config:
                     shutter = Shutter(entry, doc["groups"][group][entry])
                     devices_.devices.append(shutter)
 
+            if group.startswith("thermostat"):
+                for entry in doc["groups"][group]:
+                    thermostat = Thermostat(entry, doc["groups"][group][entry])
+                    devices_.devices.append(thermostat)
