@@ -6,8 +6,8 @@ from .globals import Globals
 
 class BinaryOutput(Device):
 
-    def __init__(self, group_address):
-        Device.__init__(self)
+    def __init__(self, name, group_address):
+        Device.__init__(self, name)
         self.group_address=group_address
         self.state = False
 
@@ -17,8 +17,8 @@ class BinaryOutput(Device):
 
     def set_internal_state(self, state):
         if state != self.state:
-            print("Setting state to %i" % state )
             self.state = state
+            self.after_update_callback(self)
 
     def send(self, payload):
         multicast = Multicast()
@@ -30,9 +30,11 @@ class BinaryOutput(Device):
 
     def set_on(self):
         self.send(0x81)
+        self.set_internal_state(True)
 
     def set_off(self):
         self.send(0x80)
+        self.set_internal_state(False)
 
     def do(self,action):
         if(action=="on"):
@@ -57,5 +59,3 @@ class BinaryOutput(Device):
 
         elif telegram.payload[0] == 0x41 :
             self.set_internal_state(True)
-
-    

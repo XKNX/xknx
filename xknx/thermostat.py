@@ -3,15 +3,11 @@ import time
 
 class Thermostat(Device):
     def __init__(self, name, config):
+        Device.__init__(self, name)
         group_address = config["group_address"]
-        Device.__init__(self)
-        self.name = name
         self.group_address = group_address
         self.last_set = time.time();
         self.temperature = 0
-
-    def get_name():
-        return self.name
 
     def has_group_address(self, group_address):
         return self.group_address == group_address

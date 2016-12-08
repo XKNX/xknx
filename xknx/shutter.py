@@ -6,8 +6,7 @@ from .globals import Globals
 
 class Shutter(Device):
     def __init__(self, name, config):
-        Device.__init__(self)
-        self.name = name
+        Device.__init__(self, name)
         self.group_address_long = config["group_address_long"]
         self.group_address_short = config["group_address_short"]
         self.group_address_position = config["group_address_position"]
