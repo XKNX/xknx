@@ -45,6 +45,7 @@ class Devices:
                 devices = devices_.get_devices()
                 for device in self.devices:
                     device.request_state()
+                    time.sleep(1)
                 time.sleep(timeout)
         t = threading.Thread(target=worker, args=(timeout,))
         t.start();

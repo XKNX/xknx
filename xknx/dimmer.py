@@ -2,8 +2,7 @@ from .device import Device
 
 class Dimmer(Device):
     def __init__(self, name, config):
-        Device.__init__(self)
-        self.name = name
+        Device.__init__(self, name)
         self.group_address = config["group_address"]
 
     def has_group_address(self, group_address):

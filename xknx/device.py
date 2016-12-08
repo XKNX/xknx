@@ -1,7 +1,8 @@
 
 class Device:
-    def __init__(self):
-        pass        
+    def __init__(self, name):
+        self.after_update_callback = lambda x: None
+        self.name = name
 
     def request_state(self):
         pass
@@ -10,8 +11,7 @@ class Device:
         pass
 
     def get_name(self):
-        return "undefined"
+        return self.name
 
     def do(self,action):
-        print("{0} {1}".format( self.get_name(), action))
         pass

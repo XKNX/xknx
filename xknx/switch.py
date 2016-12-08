@@ -47,9 +47,7 @@ class Action():
 class Switch(BinaryInput):
     def __init__(self, name, config):
         group_address = config["group_address"]
-        BinaryInput.__init__(self, group_address)
-        Device.__init__(self)
-        self.name = name
+        BinaryInput.__init__(self, name, group_address)
         self.group_address = group_address
         self.last_set = time.time();
 
@@ -58,10 +56,6 @@ class Switch(BinaryInput):
             for action in config["actions"]:
                 action = Action(action)
                 self.actions.append(action)
-
-    def get_name():
-        return self.name
-
 
     def get_switch_time(self):
         new_set_time = time.time()
@@ -73,12 +67,11 @@ class Switch(BinaryInput):
 
     def process(self,telegram):
         BinaryInput.process(self,telegram)
-
         state = self.process_telegram( telegram ) 
-
         switch_time = self.get_switch_time()
 
         for action in self.actions:
+            time.sleep (50.0 / 1000.0);
             if(action.test(state,switch_time)):
                 action.execute()
 
