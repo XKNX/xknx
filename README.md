@@ -12,9 +12,12 @@ Roadmap
 
 * Add functionality for KNX tunneling devices
 * Add functionality for auto discovery for KNX/IP router and tunneling devices
-* Add functionality for Thermostats
-* Develop plugin for [Home-assistant](https://home-assistant.io/) 
 
+
+Home-Assistant Plugin
+---------------------
+
+XKNX also contains a [Plugin](home-assistant-plugin) for the [Home-Assistant](https://home-assistant.io/) automation plattform
 
 Supported / Tested Devices
 --------------------------
@@ -26,6 +29,7 @@ The software was tested with the following devices:
 - [GIRA KNX/Shutter Binary Actor 103800](https://katalog.gira.de/en/datenblatt.html?id=635678)
 - [GIRA KNX/Binary Input 111900 ](https://www.gira.de/gebaeudetechnik/systeme/knx-eib_system/knx-produkte/tasterschnittstellen/knxeib-universal-tasterschnittstelle.html)
 - [GIRA Tastsensor 3 Plus 2-fach 514200 ](https://katalog.gira.de/de_DE/datenblatt.html?id=635019)
+	(This sensor is also used as Thermostat)
 
 Sample Configuration
 --------------------
