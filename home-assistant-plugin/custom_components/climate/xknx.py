@@ -26,7 +26,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for device in devices_.devices:
         if type(device) == Thermostat:
             thermostats.append(XKNX_Thermostat(hass, device))
-            print(device)
 
     add_devices(thermostats)
 

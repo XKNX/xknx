@@ -9,11 +9,11 @@ _LOGGER = logging.getLogger(__name__)
 class XKNX_Wrapper(object):
     """Representation of XKNX Object."""
 
-    def __init__(self, hass, config_file):
+    def __init__(self, hass, xknx_config):
         self.initialized = False
         self.lock = threading.Lock()
         self.hass = hass
-        self.config_file = config_file
+        self.config_file = xknx_config.config_file()
         self.i = 0
 
     @staticmethod

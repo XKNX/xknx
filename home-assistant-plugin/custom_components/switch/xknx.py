@@ -24,7 +24,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for device in devices_.devices:
         if type(device) == Outlet:
             switches.append(XKNX_Switch(device))   
-            print(device)
 
     add_devices(switches)
 
