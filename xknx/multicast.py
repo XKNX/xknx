@@ -2,7 +2,7 @@ import socket
 import struct
 from .telegram import Telegram
 from .address import Address
-from .devices import devices_
+from .devices import devices_,CouldNotResolveAddress
 from .globals import Globals
 
 class Multicast:
@@ -55,8 +55,12 @@ class Multicast:
                     pass
 
                 else:
-                    device = devices_.device_by_group_address(telegram.group_address)
-                    device.process(telegram)
+                    try:
+                        device = devices_.device_by_group_address(telegram.group_address)
+                        device.process(telegram)
 
-                    if ( callback ):
-                        callback(device,telegram)
+                        if ( callback ):
+                            callback(device,telegram)
+
+                    except CouldNotResolveAddress as c:
+                        print(c)
