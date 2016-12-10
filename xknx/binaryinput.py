@@ -10,8 +10,8 @@ class BinaryInputState(Enum):
     OFF = 2
 
 class BinaryInput(Device):
-    def __init__(self, group_address):
-        Device.__init__(self)
+    def __init__(self, name, group_address):
+        Device.__init__(self, name)
         self.group_address=group_address
         self.state=BinaryInputState.OFF
 
