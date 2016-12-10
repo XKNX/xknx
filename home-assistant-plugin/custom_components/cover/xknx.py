@@ -90,7 +90,7 @@ class XKNX_Cover(CoverDevice):
         print("close_cover_tilt")
         if self._tilt_position in (0, None):
             return
-
+        self.device.set_short_down()
         self._listen_cover_tilt()
         self._closing_tilt = True
 
@@ -110,7 +110,7 @@ class XKNX_Cover(CoverDevice):
         print("open_cover_tilt")
         if self._tilt_position in (100, None):
             return
-
+        self.device.set_short_up()
         self._listen_cover_tilt()
         self._closing_tilt = False
 
@@ -143,6 +143,7 @@ class XKNX_Cover(CoverDevice):
             self._unsub_listener_cover()
             self._unsub_listener_cover = None
             self._set_position = None
+            self.device.set_short_down()
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover tilt."""
