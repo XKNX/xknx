@@ -4,6 +4,9 @@ from .telegram import Telegram
 from .device import Device
 from .globals import Globals
 
+class CouldNotParseShutterTelegram(Exception):
+    pass
+
 class Shutter(Device):
     def __init__(self, name, config):
         Device.__init__(self, name)
@@ -87,17 +90,16 @@ class Shutter(Device):
 
     def process(self,telegram):
         if len(telegram.payload) != 2:
-            raise(CouldNotParseSwitchTelegram)
+            raise(CouldNotParseShutterTelegram)
 
         # telegram.payload[0] is 0x40 if state was requested, 0x80 if state of shutter was changed
 
         self.position = telegram.payload[1]
-
         self.after_update_callback(self)
 
     def is_open(self):
         if self.position is not None:
-            if self.position == 255:
+            if self.position == 0:
                 return True
             else:
                 return False
@@ -106,7 +108,7 @@ class Shutter(Device):
 
     def is_closed(self):
         if self.position is not None:
-            if self.position == 0:
+            if self.position == 255:
                 return True
             else:
                 return False

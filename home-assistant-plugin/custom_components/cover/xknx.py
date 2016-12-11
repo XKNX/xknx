@@ -90,10 +90,10 @@ class XKNX_Cover(CoverDevice):
     # HELPER FUNCTIONS
     #
     def from_knx(self, x):
-        return round((x/256)*100)
+        return 100-round((x/256)*100)
 
     def to_knx(self, x):
-        return round(x/100*255.5)
+        return 255-round(x/100*255.4)
 
     #
     # UNUSED FUNCTIONS
