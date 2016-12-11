@@ -42,7 +42,12 @@ class XKNX_Cover(CoverDevice):
         self._closing_tilt = True
         self._unsub_listener_cover = None
         self._unsub_listener_cover_tilt = None
+        self.register_callbacks()
 
+    def register_callbacks(self):
+        def after_update_callback(device):
+            self.update()
+        self.device.after_update_callback = after_update_callback
     @property
     def name(self):
         """Return the name of the cover."""
@@ -50,8 +55,8 @@ class XKNX_Cover(CoverDevice):
 
     @property
     def should_poll(self):
-        """No polling needed for a demo cover."""
-        return False
+        """ polling cover."""
+        return True
 
     @property
     def current_cover_position(self):
@@ -90,7 +95,7 @@ class XKNX_Cover(CoverDevice):
         print("close_cover_tilt")
         if self._tilt_position in (0, None):
             return
-
+        self.device.set_short_down()
         self._listen_cover_tilt()
         self._closing_tilt = True
 
@@ -110,7 +115,7 @@ class XKNX_Cover(CoverDevice):
         print("open_cover_tilt")
         if self._tilt_position in (100, None):
             return
-
+        self.device.set_short_up()
         self._listen_cover_tilt()
         self._closing_tilt = False
 
@@ -123,7 +128,11 @@ class XKNX_Cover(CoverDevice):
 
         self._listen_cover()
         self._closing = position < self._position
-
+        if self._closing :
+            self.device.set_down()
+        else:
+            self.device.set_up()
+			
     def set_cover_tilt_position(self, tilt_position, **kwargs):
         """Move the cover til to a specific position."""
         print("set_cover_tilt_position")
@@ -133,6 +142,7 @@ class XKNX_Cover(CoverDevice):
 
         self._listen_cover_tilt()
         self._closing_tilt = tilt_position < self._tilt_position
+		
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
@@ -143,6 +153,9 @@ class XKNX_Cover(CoverDevice):
             self._unsub_listener_cover()
             self._unsub_listener_cover = None
             self._set_position = None
+            self.device.set_short_down()
+        self.device.set_value_async('short', None)
+        self.device.set_value_async('long', None)
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover tilt."""
@@ -166,7 +179,12 @@ class XKNX_Cover(CoverDevice):
             self._position -= 10
         else:
             self._position += 10
-
+        #Limit
+		
+        if self._position > 100:
+           self._position = 100
+        if self._position < 0:
+           self._position = 0
         if self._position in (100, 0, self._set_position):
             self.stop_cover()
         self.update_ha_state()
@@ -188,3 +206,29 @@ class XKNX_Cover(CoverDevice):
             self.stop_cover_tilt()
 
         self.update_ha_state()
+		
+    def update(self):
+        """Update KNX Cover."""
+        valuelong = self.device.value_long
+        valueshort = self.device.value_short
+		
+        if valueshort != None:
+          self._closing = False   
+          if self._unsub_listener_cover is not None:
+            self._unsub_listener_cover()
+            self._unsub_listener_cover = None
+            self._set_position = None
+          self.device.set_value_async('short', None)
+          self.device.set_value_async('long', None)
+          
+        if valuelong != None:
+          if valuelong == 1:
+            self._closing = True
+            self._position = self._position - 1
+          if valuelong == 0:
+            self._closing = False
+            self._position = self._position + 1			
+          self.device.set_value_async('short', None)
+          self.device.set_value_async('long', None)
+          self._listen_cover()
+        
