@@ -54,8 +54,9 @@ class BinaryOutput(Device):
             print("Could not parse telegram for binary output %s" % telegram ) 
             return
 
-        elif telegram.payload[0] == 0x40 :
+        if telegram.payload[0] == 0x40 :
             self.set_internal_state(False)
-
         elif telegram.payload[0] == 0x41 :
             self.set_internal_state(True)
+        else:
+            print("Could not parse payload for binary output %s".format( telegram.payload[0] )
