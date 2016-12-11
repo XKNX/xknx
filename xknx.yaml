@@ -72,13 +72,13 @@ groups:
         Livingroom.3Switch4.LED: {group_address: 1032}
 
     shutter:
-        Livingroom.Shutter_1: {group_address_long: 9, group_address_short: 10, group_address_position: 11}
+        Livingroom.Shutter_1: {group_address_long: 3171, group_address_short: 3172, group_address_position_feedback: 3173, group_address_position: 3174}
+        Livingroom.Shutter_2: {group_address_long: 3175, group_address_short: 3176, group_address_position_feedback: 3177, group_address_position: 3178}
 
+        # Central Shutters dont have short or position address
+        Central.Shutter: {group_address_long: 3073 }
 
     dimmer:
          Kitchen.Dimmer_1: {group_address: 100}
 
-#    switch:
-#        Livingroom.Switch_1: 65
-#        Livingroom.Switch_2: 66
 

@@ -34,14 +34,16 @@ class XKNX_Cover(CoverDevice):
         """Initialize the cover."""
         self.hass = hass
         self.device = device
-        self._position = 100 #TODO
-        self._set_position = None
-        self._set_tilt_position = None
-        self._tilt_position = 10 #TODO
-        self._closing = True
-        self._closing_tilt = True
-        self._unsub_listener_cover = None
-        self._unsub_listener_cover_tilt = None
+
+        self.register_callbacks()
+
+    def register_callbacks(self):
+        def after_update_callback(device):
+            self.update()
+        self.device.after_update_callback = after_update_callback
+
+    def update(self):
+        self.update_ha_state()
 
     @property
     def name(self):
@@ -56,136 +58,64 @@ class XKNX_Cover(CoverDevice):
     @property
     def current_cover_position(self):
         """Return the current position of the cover."""
-        return self._position
-
-    @property
-    def current_cover_tilt_position(self):
-        """Return the current tilt position of the cover."""
-        return self._tilt_position
+        return int( self.from_knx( self.device.position ) )
 
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        if self._position is not None:
-            if self.current_cover_position > 0:
-                return False
-            else:
-                return True
-        else:
-            return None
+        return self.device.is_closed()
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        print("close_cover")
-        if self._position in (0, None):
-            return
-
-        self.device.set_down()
-
-        self._listen_cover()
-        self._closing = True
-
-    def close_cover_tilt(self, **kwargs):
-        """Close the cover tilt."""
-        print("close_cover_tilt")
-        if self._tilt_position in (0, None):
-            return
-        self.device.set_short_down()
-        self._listen_cover_tilt()
-        self._closing_tilt = True
+        if not self.device.is_closed():
+            self.device.set_down()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        print("open_cover")
-        if self._position in (100, None):
-            return
-
-        self.device.set_up()
-
-        self._listen_cover()
-        self._closing = False
-
-    def open_cover_tilt(self, **kwargs):
-        """Open the cover tilt."""
-        print("open_cover_tilt")
-        if self._tilt_position in (100, None):
-            return
-        self.device.set_short_up()
-        self._listen_cover_tilt()
-        self._closing_tilt = False
+        if not self.device.is_open():
+            self.device.set_up()
 
     def set_cover_position(self, position, **kwargs):
         print("set_cover_position")
         """Move the cover to a specific position."""
-        self._set_position = round(position, -1)
-        if self._position == position:
-            return
-
-        self._listen_cover()
-        self._closing = position < self._position
-
-    def set_cover_tilt_position(self, tilt_position, **kwargs):
-        """Move the cover til to a specific position."""
-        print("set_cover_tilt_position")
-        self._set_tilt_position = round(tilt_position, -1)
-        if self._tilt_position == tilt_position:
-            return
-
-        self._listen_cover_tilt()
-        self._closing_tilt = tilt_position < self._tilt_position
+        self.device.set_position( self.to_knx( position  ) )
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        print("stop_cover");
-        if self._position is None:
+        if self.device.position is None:
             return
-        if self._unsub_listener_cover is not None:
-            self._unsub_listener_cover()
-            self._unsub_listener_cover = None
-            self._set_position = None
-            self.device.set_short_down()
+        self.device.set_short_down()
 
+    #
+    # HELPER FUNCTIONS
+    #
+    def from_knx(self, x):
+        return round((x/256)*100)
+
+    def to_knx(self, x):
+        return round(x/100*255.5)
+
+    #
+    # UNUSED FUNCTIONS
+    #
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover tilt."""
-        if self._tilt_position is None:
-            return
+        print("stop_cover_tilt - not implemented")
 
-        if self._unsub_listener_cover_tilt is not None:
-            self._unsub_listener_cover_tilt()
-            self._unsub_listener_cover_tilt = None
-            self._set_tilt_position = None
+    def close_cover_tilt(self, **kwargs):
+        """Close the cover tilt."""
+        print("close_cover_tilt - not implemented")
 
-    def _listen_cover(self):
-        """Listen for changes in cover."""
-        if self._unsub_listener_cover is None:
-            self._unsub_listener_cover = track_utc_time_change(
-                self.hass, self._time_changed_cover)
+    def set_cover_tilt_position(self, tilt_position, **kwargs):
+        """Move the cover til to a specific position."""
+        print("close_cover_tilt_position - not implemented")
 
-    def _time_changed_cover(self, now):
-        """Track time changes."""
-        if self._closing:
-            self._position -= 10
-        else:
-            self._position += 10
+    def open_cover_tilt(self, **kwargs):
+        """Open the cover tilt."""
+        print("open_cover_tilt - not implemented")
 
-        if self._position in (100, 0, self._set_position):
-            self.stop_cover()
-        self.update_ha_state()
+    @property
+    def current_cover_tilt_position(self):
+        """Return the current tilt position of the cover."""
+        return None
 
-    def _listen_cover_tilt(self):
-        """Listen for changes in cover tilt."""
-        if self._unsub_listener_cover_tilt is None:
-            self._unsub_listener_cover_tilt = track_utc_time_change(
-                self.hass, self._time_changed_cover_tilt)
-
-    def _time_changed_cover_tilt(self, now):
-        """Track time changes."""
-        if self._closing_tilt:
-            self._tilt_position -= 10
-        else:
-            self._tilt_position += 10
-
-        if self._tilt_position in (100, 0, self._set_tilt_position):
-            self.stop_cover_tilt()
-
-        self.update_ha_state()
