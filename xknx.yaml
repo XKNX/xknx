@@ -79,6 +79,9 @@ groups:
         Central.Shutter: {group_address_long: 3073 }
 
     dimmer:
-         Kitchen.Dimmer_1: {group_address: 100}
+        Kitchen-L-1:     {group_address_switch: 332, group_address_dimm: 333, group_address_dimm_feedback: 334}
+        Dining-Room-L-1: {group_address_switch: 335, group_address_dimm: 336, group_address_dimm_feedback: 337}
+        Stairs-L-1:      {group_address_switch: 338, group_address_dimm: 339, group_address_dimm_feedback: 340}
+        Living-Room-L-1: {group_address_switch: 341, group_address_dimm: 342, group_address_dimm_feedback: 343}
 
 

@@ -30,23 +30,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return True
 
 class XKNX_Switch(SwitchDevice):
-    """Representation of KNX switches."""
+    """Representation of XKNX switches."""
 
     def __init__(self, device):
-
-        self._state = device.state
         self.device = device
-
         self.register_callbacks()
 
     def register_callbacks(self):
         def after_update_callback(device):
             self.update()
-
         self.device.after_update_callback = after_update_callback
 
     def update(self):
-        self._state = self.device.state
         self.update_ha_state()
 
     @property
@@ -56,14 +51,13 @@ class XKNX_Switch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if pin is high/on."""
-        return self._state
+        return self.device.state
 
     def turn_on(self):
         """Turn the pin to high/on."""
-        self._state = True
-        devices_.device_by_name(self.device.name).set_on()
+        self.device.set_on()
 
     def turn_off(self):
         """Turn the pin to low/off."""
-        self._state = False
-        devices_.device_by_name(self.device.name).set_off()
+        self.device.set_off()
+

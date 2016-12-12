@@ -30,6 +30,7 @@ The software was tested with the following devices:
 - [GIRA KNX/Binary Input 111900 ](https://www.gira.de/gebaeudetechnik/systeme/knx-eib_system/knx-produkte/tasterschnittstellen/knxeib-universal-tasterschnittstelle.html)
 - [GIRA Tastsensor 3 Plus 2-fach 514200 ](https://katalog.gira.de/de_DE/datenblatt.html?id=635019)
 	(This sensor is also used as Thermostat)
+- [KNX Dimmaktor 4fach](https://katalog.gira.de/de_DE/datenblatt.html?id=658701)
 
 Sample Configuration
 --------------------
@@ -82,8 +83,17 @@ groups:
         Kitchen.Outlet_3: {group_address: 14}
         Kitchen.Outlet_4: {group_address: 15}
 
+    dimmer:
+        Kitchen-L-1:     {group_address_switch: 332, group_address_dimm: 333, group_address_dimm_feedback: 334}
+        Dining-Room-L-1: {group_address_switch: 335, group_address_dimm: 336, group_address_dimm_feedback: 337}
+        Stairs-L-1:      {group_address_switch: 338, group_address_dimm: 339, group_address_dimm_feedback: 340}
+        Living-Room-L-1: {group_address_switch: 341, group_address_dimm: 342, group_address_dimm_feedback: 343}
+
     shutter:
-        Livingroom.Shutter_1: {group_address_long: 9, group_address_short: 10, group_address_position: 11}
+        Central.Shutter: {group_address_long: 3073 }
+
+        Livingroom.Shutter_1: {group_address_long: 3171, group_address_short: 3172, group_address_position_feedback: 3173, group_address_position: 3174}
+        Livingroom.Shutter_2: {group_address_long: 3175, group_address_short: 3176, group_address_position_feedback: 3177, group_address_position: 3178}
 
     thermostat:
         Kitchen.Thermostat_1: {group_address: 2049}
