@@ -1,3 +1,4 @@
+from enum import Enum
 
 class CouldNotParseAddress(Exception):
     def __init__(self):
@@ -6,43 +7,110 @@ class CouldNotParseAddress(Exception):
     def __str__(self):
         return "CouldNotParseAddress"
 
+class AddressType(Enum):
+    LEVEL2 = 1
+    LEVEL3 = 2
+    FREE = 3
+
 class Address:
 
-    address = 0
-
     def __init__(self, address = 0):
+        self.raw = 0
+        self.address_type = AddressType.FREE
         self.set(address)
 
     def __eq__(self, other):
-        return self.address == other.address
+        if type(other) is not Address:
+            raise TypeError()
+        return self.raw == other.raw
+
+    def __str__(self):
+        return self._to_str()
 
     def set(self, address):
         if type(address) is str:
-            self.set_str(address)
+            self._set_str(address)
         elif type(address) is int:
-            self.set_int(address)
+            self._set_int(address)
         elif type(address) is Address:
-            self.set_int(address.address)
+            self.raw = address.raw
+            self.address_type = address.address_type
         else:
             raise TypeError()
 
-    def set_str( self, address ):
+    def byte1(self):
+        return ( self.raw >> 8 ) & 255
+
+    def byte2(self):
+        return self.raw & 255
+
+    ##################################################
+
+    def _set_str( self, address ):
         parts = address.split(".")
-        if len(parts) != 3:
+        if any(not part.isdigit() for part in parts):
             raise CouldNotParseAddress()
-        for part in parts:
-            if not part.isnumeric():
-                raise CouldNotParseAddress()
-        area = int(parts[0])
-        line = int(parts[1])
-        device = int(parts[2])
-        self.address = (area<<12) + (line<<8) + device
+        if len(parts) == 1:
+            self._set_int( int ( parts[0] ) ) 
+        elif len(parts) == 2:
+            self._set_str_level2( parts )
+        elif len(parts) == 3:
+            self._set_str_level3( parts )
+        else:
+            raise CouldNotParseAddress()
 
-    def set_int(self, address):
-        self.address = address
+    def _set_str_level2( self, parts ):
+        main = int(parts[0])
+        sub = int(parts[1])   
+        if main > 15:
+            raise CouldNotParseAddress()
+        if sub > 4095:
+            raise CouldNotParseAddress()
+        self.raw = (main<<12) + sub
+        self.address_type = AddressType.LEVEL2
 
-    def __str__(self):
+    def _set_str_level3( self, parts ):
+        main = int(parts[0])
+        middle = int(parts[1])
+        sub = int(parts[2]) 
+        if main > 15:
+            raise CouldNotParseAddress()
+        if middle > 15:
+            raise CouldNotParseAddress()
+        if sub > 255:
+            raise CouldNotParseAddress()
+        self.raw = (main<<12) +  (middle<<8) + sub
+        self.address_type = AddressType.LEVEL3
+
+    def _set_int(self, raw):
+        if type(raw) is not int:
+            raise CouldNotParseAddress()
+        if ( raw > 65535 ):
+            raise CouldNotParseAddress()
+        self.raw = raw
+        self.address_type = AddressType.FREE
+
+    def _to_str(self):
+        if self.address_type == AddressType.FREE:
+            return self._to_str_free()
+        elif self.address_type == AddressType.LEVEL2:
+            return self._to_str_level2()
+        elif self.address_type == AddressType.LEVEL3:
+            return self._to_str_level3()
+        else:
+            raise TypeError() 
+
+    def _to_str_free(self):
+        return '{0}'.format(
+            (self.raw & 65535) )
+
+    def _to_str_level2(self):
+        return '{0}.{1}'.format(
+            ((self.raw >> 12 ) & 15),
+            (self.raw & 4095) )
+
+    def _to_str_level3(self):
         return '{0}.{1}.{2}'.format(
-            ((self.address>>12)&15),
-            ((self.address>>8)&15),
-            (self.address&255) )
+            ((self.raw >> 12 ) & 15),
+            ((self.raw >> 8) & 15),
+            (self.raw & 255) )

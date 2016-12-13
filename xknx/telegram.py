@@ -39,7 +39,7 @@ class Telegram:
 
     def dump(self):
         #print('Control: {:08b}'.format(self.control))
-        print('Sender: {0}'.format( self.sender.str()))
+        print('Sender: {0}'.format( self.sender.__str__()))
         print('Group:   {0}'.format(self.group_address))
         #print('Payload: {:#02x}'.format(self.payload))
 
@@ -85,8 +85,8 @@ class Telegram:
         data.append(0xd0)
 
         # Sender address
-        data.append((self.sender.address>>8)&255)
-        data.append(self.sender.address&255)
+        data.append( self.sender.byte1() )
+        data.append( self.sender.byte2() )
 
         # Target address
         data.append((self.group_address >> 8)&255)
