@@ -4,6 +4,9 @@ from .telegram import Telegram
 from .globals import Globals
 import time
 
+class CouldNotParseDimmerTelegram(Exception):
+    pass
+
 class Dimmer(Device):
     def __init__(self, name, config):
         Device.__init__(self, name)
@@ -21,19 +24,12 @@ class Dimmer(Device):
         return "<Dimmer group_address_switch={0}, group_address_dimm={0}, group_address_dimm_feedback={2},name={3}>".format(self.group_address_switch,self.group_address_dimm,self.group_address_dimm_feedback,self.name)
 
     def set_internal_state(self, state):
-        brightness = 255 if True else 0
-
-        if state != self.state or brightness != self.brightness:
+        if state != self.state:
             self.state = state
-            self.brightness = brightness
             self.after_update_callback(self)
 
-
     def set_internal_brightness(self, brightness):
-        state = True if brightness > 0 else False
-
-        if state != self.state or brightness != self.brightness:
-            self.state = state
+        if brightness != self.brightness:
             self.brightness = brightness
             self.after_update_callback(self)
 
@@ -76,4 +72,26 @@ class Dimmer(Device):
         self.send(self.group_address_switch,0x00)
 
     def process(self,telegram):
-        print("FEEDBACK")
+        if telegram.group_address == self.group_address_switch:
+            self._process_state(telegram)
+        elif telegram.group_address == self.group_address_dimm_feedback:
+            self._process_dimm(telegram) 
+
+    def _process_dimm(self,telegram):
+        if len(telegram.payload) != 2:
+            raise(CouldNotParseDimmerTelegram)
+
+        # telegram.payload[0] is 0x40 if state was requested, 0x80 if state of shutter was changed
+        self.set_internal_brightness(telegram.payload[1])
+
+    def _process_state(self,telegram):
+
+        if len(telegram.payload) != 1:
+            raise(CouldNotParseDimmerTelegram)
+
+        if telegram.payload[0] == 0x40 :
+            self.set_internal_state(False)
+        elif telegram.payload[0] == 0x41 :
+            self.set_internal_state(True)
+        else:
+            print("Could not parse payload for binary output %s".format( telegram.payload[0] ))
