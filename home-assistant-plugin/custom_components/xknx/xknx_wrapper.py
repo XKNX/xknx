@@ -28,7 +28,7 @@ class XKNX_Wrapper(object):
         Config.read(file=self.config_file)
 
         #TODO: Move to nicer class
-        devices_.update_thread_start(5)
+        devices_.update_thread_start(60)
 
         threading.Thread(target=self.start_knx_server, args=(self.hass,), name="XKNX Server").start()
 
