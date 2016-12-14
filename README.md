@@ -36,7 +36,67 @@ Sample Configuration
 --------------------
 
 ```yaml
+general:
+    own_address: "15.15.249"
+    own_ip: "192.168.42.1"
 
+groups:
+
+    switch:
+        Livingroom.Switch1:
+            group_address: 1025
+            actions:
+              - {hook: "off", switch_time: "long", target: Livingroom.Shutter_1, method: up}
+              - {hook: "off", switch_time: "short", target: Livingroom.Shutter_1, method: short_up}
+
+        Livingroom.Switch2:
+            group_address: 1026
+            actions:
+              - {hook: "off", switch_time: "long", target: Livingroom.Shutter_1, method: down}
+              - {hook: "off", switch_time: "short", target: Livingroom.Shutter_1, method: short_down}
+
+        Livingroom.Switch3:
+            group_address: 1027
+            actions:
+              - {hook: "on", target: Livingroom.Outlet_1, method: "on"}
+              - {hook: "on", target: Livingroom.Outlet_2, method: "on"}
+              - {hook: "on", target: Livingroom.Outlet_3, method: "on"}
+              - {hook: "on", target: Livingroom.Outlet_4, method: "on"}
+
+        Livingroom.Switch4:
+            group_address: 1028
+            actions:
+              - {hook: "on", target: Livingroom.Outlet_1, method: "off"}
+              - {hook: "on", target: Livingroom.Outlet_2, method: "off"}
+              - {hook: "on", target: Livingroom.Outlet_3, method: "off"}
+              - {hook: "on", target: Livingroom.Outlet_4, method: "off"}
+
+    outlet:
+        Livingroom.Outlet_1: {group_address: 65}
+        Livingroom.Outlet_2: {group_address: 66}
+        Livingroom.Outlet_3: {group_address: 67}
+        Livingroom.Outlet_4: {group_address: 68}
+
+    outlet 2:
+        Kitchen.Outlet_1: {group_address: 12}
+        Kitchen.Outlet_2: {group_address: 13}
+        Kitchen.Outlet_3: {group_address: 14}
+        Kitchen.Outlet_4: {group_address: 15}
+
+    dimmer:
+        Kitchen-L-1:     {group_address_switch: 332, group_address_dimm: 333, group_address_dimm_feedback: 334}
+        Dining-Room-L-1: {group_address_switch: 335, group_address_dimm: 336, group_address_dimm_feedback: 337}
+        Stairs-L-1:      {group_address_switch: 338, group_address_dimm: 339, group_address_dimm_feedback: 340}
+        Living-Room-L-1: {group_address_switch: 341, group_address_dimm: 342, group_address_dimm_feedback: 343}
+
+    shutter:
+        Central.Shutter: {group_address_long: 3073 }
+
+        Livingroom.Shutter_1: {group_address_long: 3171, group_address_short: 3172, group_address_position_feedback: 3173, group_address_position: 3174}
+        Livingroom.Shutter_2: {group_address_long: 3175, group_address_short: 3176, group_address_position_feedback: 3177, group_address_position: 3178}
+
+    thermostat:
+        Kitchen.Thermostat_1: {group_address: 2049}
 ```
 
 Basic Operations
@@ -51,64 +111,7 @@ time.sleep(5)
 devices_.device_by_name("Livingroom.Outlet_2").set_off()
 
 # Shutter
-devices_.device_by_name("Livingrooa.Shutter_1").set_down()
-wn_address: "15.15.249"
-    own_ip: "192.168.42.1"
-
-groups:
-
-    switch:
-
-        Livingroom.Switch_1:
-            group_address: "1.2.7"
-            actions:
-              - {hook: "on", target: Livingroom.Outlet_1, method: "on"}
-              - {hook: "on", target: Livingroom.Outlet_2, method: "on"}
-
-        Livingroom.Switch_2:
-            group_address: "1.2.8"
-            actions:
-              - {hook: "on", target: Livingroom.Outlet_1, method: "off"}
-              - {hook: "on", target: Livingroom.Outlet_2, method: "off"}
-
-
-        Livingroom.Switch_3:
-            group_address: "1.2.2"
-            actions:
-              - {hook: "off", switch_time: "short", target: Livingroom.Shutter_1, method: short_up}
-              - {hook: "off", switch_time: "long", target: Livingroom.Shutter_1, method: up} # Pressing more then 2 seconds
-
-        Livingroom.Switch_4:
-            group_address: "1.2.3"
-            actions:
-              - {hook: "off", switch_time: "short", target: Livingroom.Shutter_1, method: short_down}
-              - {hook: "off", switch_time: "long", target: Livingroom.Shutter_1, method: down} # Pressing more then 2 seconds
-
-    outlet:
-
-        Livingroom.Outlet_1: {group_address: "1.3.1"}
-        Livingroom.Outlet_2: {group_address: "1.3.2"}
-
-    outlet 2:
-
-        Kitchen.Outlet_1: {group_address: "1.3.7"}
-        Kitchen.Outlet_2: {group_address: "1.3.8"}
-        Kitchen.Outlet_3: {group_address: "1.3.9"}
-        Kitchen.Outlet_4: {group_address: "1.3.10"}
-
-    shutter:
-
-        Livingroom.Shutter_1: {group_address_long: "1.4.1", group_address_short: "1.4.2", group_address_position_feedback: "1.4.3", group_address_position: "1.4.4"}
-        Livingroom.Shutter_2: {group_address_long: "1.4.5", group_address_short: "1.4.6", group_address_position_feedback: "1.4.7", group_address_position: "1.4.8"}
-
-        # Central Shutters dont have short or position address
-        Central.Shutter: {group_address_long: "1.5.1" }
-
-    dimmer:
-
-        Kitchen.Light_1:     {group_address_switch: "1.6.1", group_address_dimm: "1.6.2", group_address_dimm_feedback: "1.6.3"}
-        Diningroom.Light_1:  {group_address_switch: "1.6.4", group_address_dimm: "1.6.5", group_address_dimm_feedback: "1.6.6"}
-        Living-Room.Light_1: {group_address_switch: "1.6.7", group_address_dimm: "1.6.8", group_address_dimm_feedback: "1.6.9"}
+devices_.device_by_name("Livingroom.Shutter_1").set_down()
 time.sleep(2)
 devices_.device_by_name("Livingroom.Shutter_1").set_up()
 time.sleep(5)
