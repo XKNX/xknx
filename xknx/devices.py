@@ -40,7 +40,10 @@ class Devices:
         return self.devices
 
     def update_thread_start(self,timeout):
+        
         def worker(timeout):
+            time.sleep(timeout)
+            print("Starting Update Thread")
             while True:
                 devices = devices_.get_devices()
                 for device in self.devices:
