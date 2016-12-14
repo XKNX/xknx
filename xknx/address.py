@@ -54,7 +54,9 @@ class Address:
     def _set_str( self, address ):
         parts = address.split(".")
         if any(not part.isdigit() for part in parts):
-            raise CouldNotParseAddress()
+            parts = address.split("/")
+            if any(not part.isdigit() for part in parts):
+                raise CouldNotParseAddress()
         if len(parts) == 1:
             self._set_int( int ( parts[0] ) ) 
         elif len(parts) == 2:
