@@ -77,7 +77,7 @@ class TestAddress(unittest.TestCase):
     def test_address_max_address(self):
         self.assertEqual( Address(Address("15.15.255")).raw, 65535 )
 
-    
+
     #
     # INVALID INIT STRINGS
     #
@@ -117,6 +117,23 @@ class TestAddress(unittest.TestCase):
         with self.assertRaises(CouldNotParseAddress):
             Address("65536")
 
+    #
+    # __eq__
+    #
+    def test_address_equal(self):
+         self.assertTrue( Address("2.3.4") == Address("2.3.4") )
+
+    def test_address_equal_false(self):
+        self.assertFalse( Address("2.3.4") == Address("2.3.5") )
+
+    def test_address_not_equal(self):
+         self.assertTrue( Address("2.3.4") != Address("2.3.5") )
+
+    def test_address_not_qual_false(self):
+         self.assertFalse( Address("2.3.4") != Address("2.3.4") )
+
+    def test_address_equal_diffent_source(self):
+        self.assertTrue( Address("2.3.4") == Address("2.772") )
 
     #
     # BYTE ACCESS
