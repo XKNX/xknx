@@ -2,6 +2,7 @@ from .address import Address
 from .multicast import Multicast
 from .telegram import Telegram
 from .device import Device
+from .address import Address
 from .globals import Globals
 
 class CouldNotParseShutterTelegram(Exception):
@@ -10,10 +11,10 @@ class CouldNotParseShutterTelegram(Exception):
 class Shutter(Device):
     def __init__(self, name, config):
         Device.__init__(self, name)
-        self.group_address_long = config.get("group_address_long")
-        self.group_address_short = config.get("group_address_short")
-        self.group_address_position = config.get("group_address_position")
-        self.group_address_position_feedback = config.get("group_address_position_feedback")
+        self.group_address_long = Address(config.get("group_address_long"))
+        self.group_address_short = Address(config.get("group_address_short"))
+        self.group_address_position = Address(config.get("group_address_position"))
+        self.group_address_position_feedback = Address(config.get("group_address_position_feedback"))
 
         self.position = 0
 
@@ -41,31 +42,31 @@ class Shutter(Device):
         multicast.send(telegram)
 
     def set_down(self):
-        if self.group_address_long is None:
+        if not self.group_address_long.is_set():
             print("group_address_long not defined for device {0}".format(self.get_name()))
             return
         self.send(self.group_address_long, 0x81)
 
     def set_up(self):
-        if self.group_address_long is None:
+        if not self.group_address_long.is_set():
             print("group_address_long not defined for device {0}".format(self.get_name()))
             return
         self.send(self.group_address_long, 0x80)
 
     def set_short_down(self):
-        if self.group_address_short is None:
+        if not self.group_address_short.is_set():
             print("group_address_short not defined for device {0}".format(self.get_name()))
             return
         self.send(self.group_address_short, 0x81)
 
     def set_short_up(self):
-        if self.group_address_short is None:
+        if not self.group_address_short.is_set():
             print("group_address_short not defined for device {0}".format(self.get_name()))
             return
         self.send(self.group_address_short, 0x80)
 
     def set_position(self, position):
-        if self.group_address_position is None:
+        if not self.group_address_position.is_set():
             print("group_address_position not defined for device {0}".format(self.get_name()))
             return
         self.send(self.group_address_position, [0x80, position])
@@ -83,7 +84,7 @@ class Shutter(Device):
             print("{0}: Could not understand action {1}".format(self.get_name(), action))
 
     def request_state(self):
-        if self.group_address_position_feedback is None:
+        if not self.group_address_position_feedback.is_set():
             print("group_position not defined for device {0}".format(self.get_name()))
             return
         self.send(self.group_address_position_feedback,0x00)

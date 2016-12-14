@@ -28,7 +28,9 @@ class Address:
         return self._to_str()
 
     def set(self, address):
-        if type(address) is str:
+        if address is None:
+            self.raw=0
+        elif type(address) is str:
             self._set_str(address)
         elif type(address) is int:
             self._set_int(address)
@@ -43,6 +45,9 @@ class Address:
 
     def byte2(self):
         return self.raw & 255
+
+    def is_set(self):
+        return self.raw != 0
 
     ##################################################
 

@@ -1,11 +1,11 @@
 from .device import Device
+from .address import Address
 import time
 
 class Thermostat(Device):
     def __init__(self, name, config):
         Device.__init__(self, name)
-        group_address = config["group_address"]
-        self.group_address = group_address
+        self.group_address = Address(config["group_address"])
         self.last_set = time.time();
         self.temperature = 0
 

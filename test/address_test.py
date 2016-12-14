@@ -22,6 +22,18 @@ class TestAddress(unittest.TestCase):
     def test_address_init_address(self):
         self.assertEqual( Address(Address("2.3.4")).raw, 8964 )
 
+    def test_address_init_none(self):
+        self.assertEqual( Address(None).raw,0)
+
+    #
+    # is_set
+    # 
+
+    def test_address_is_set(self):
+        self.assertTrue( Address("2.3.4").is_set() )
+
+    def test_address_is_not_set(self):
+        self.assertFalse( Address(None).is_set() ) 
 
     #
     # ADDRESS TYPE
@@ -117,6 +129,9 @@ class TestAddress(unittest.TestCase):
         with self.assertRaises(CouldNotParseAddress):
             Address("65536")
 
+    def test_address_init_empty_string(self):
+        with self.assertRaises(CouldNotParseAddress):
+            Address("")
     #
     # __eq__
     #

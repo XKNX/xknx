@@ -3,6 +3,7 @@ from .device import Device
 import yaml
 import time
 from enum import Enum
+from .address import Address
 from .devices import Devices,devices_
 
 class SwitchTime(Enum):
@@ -46,7 +47,7 @@ class Action():
 
 class Switch(BinaryInput):
     def __init__(self, name, config):
-        group_address = config["group_address"]
+        group_address = Address(config["group_address"])
         BinaryInput.__init__(self, name, group_address)
         self.group_address = group_address
         self.last_set = time.time();

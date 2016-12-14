@@ -2,6 +2,7 @@ from .device import Device
 from .multicast import Multicast
 from .telegram import Telegram
 from .globals import Globals
+from .address import Address
 import time
 
 class CouldNotParseDimmerTelegram(Exception):
@@ -10,9 +11,9 @@ class CouldNotParseDimmerTelegram(Exception):
 class Dimmer(Device):
     def __init__(self, name, config):
         Device.__init__(self, name)
-        self.group_address_switch = config["group_address_switch"]
-        self.group_address_dimm = config["group_address_dimm"]
-        self.group_address_dimm_feedback = config["group_address_dimm_feedback"]
+        self.group_address_switch = Address(config["group_address_switch"])
+        self.group_address_dimm = Address(config["group_address_dimm"])
+        self.group_address_dimm_feedback = Address(config["group_address_dimm_feedback"])
 
         self.state = False
         self.brightness = 0
@@ -63,7 +64,7 @@ class Dimmer(Device):
         self.set_internal_brightness(brightness)
 
     def request_state(self):
-        if self.group_address_dimm_feedback is None:
+        if not self.group_address_dimm_feedback.is_set():
             print("group_address_dimm_feedback not defined for device {0}".format(self.get_name()))
             return
 

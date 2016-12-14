@@ -1,8 +1,9 @@
 from .binaryoutput import BinaryOutput
+from .address import Address
 
 class Outlet(BinaryOutput):
     def __init__(self, name, config):
-        group_address = config["group_address"]
+        group_address = Address(config["group_address"])
         BinaryOutput.__init__(self, name, group_address)
         self.group_address = group_address
 
