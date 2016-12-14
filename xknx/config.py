@@ -9,6 +9,7 @@ from .dimmer import Dimmer
 from .outlet import Outlet
 from .shutter import Shutter
 from .devices import Devices,devices_
+from .address import Address,AddressType
 from .globals import Globals
 import time
 
@@ -27,7 +28,7 @@ class Config:
     def parse_general(doc):
         if "general" in doc:
             if "own_address" in doc["general"]:
-                Globals.set_own_address(doc["general"]["own_address"])
+                Globals.set_own_address(Address(doc["general"]["own_address"],AddressType.PHYSICAL))
             if "own_ip" in doc["general"]:
                 Globals.set_own_ip(doc["general"]["own_ip"])
 

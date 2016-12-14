@@ -1,6 +1,6 @@
 import time
 from .colors import Colors
-from .address import Address
+from .address import Address,AddressType
 
 class Telegram:
     """Abstraction for KNX telegrams"""
@@ -16,7 +16,7 @@ class Telegram:
 
         self.print_data(data)
 
-        self.sender = Address(data[10]*256+data[11])
+        self.sender = Address(data[10]*256+data[11],AddressType.PHYSICAL)
         self.group_address = Address(data[12]*256+data[13])
 
         len_payload = data[14]

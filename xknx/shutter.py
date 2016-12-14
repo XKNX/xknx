@@ -28,7 +28,7 @@ class Shutter(Device):
     def send(self, group_address, payload):
         multicast = Multicast()
         telegram = Telegram()
-        telegram.sender.set(Globals.get_own_address())
+        telegram.sender = Globals.get_own_address()
         telegram.group_address=group_address
 
         if isinstance(payload, list):

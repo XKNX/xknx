@@ -1,4 +1,4 @@
-from .address import Address,CouldNotParseAddress,AddressType
+from .address import Address,CouldNotParseAddress,AddressType,AddressFormat
 from .telegram import Telegram
 from .multicast import Multicast
 from .devices import Devices,devices_,CouldNotResolveAddress
