@@ -5,6 +5,7 @@ from .devices import Devices,devices_,CouldNotResolveAddress
 from .binaryinput import BinaryInput
 from .binaryoutput import BinaryOutput
 from .shutter import Shutter
+from .travelcalculator import TravelCalculator
 from .thermostat import Thermostat
 from .dimmer import Dimmer
 from .outlet import Outlet
