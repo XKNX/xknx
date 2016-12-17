@@ -81,7 +81,13 @@ class Shutter(Device):
 
     def set_position(self, position):
         if not self.supports_direct_positioning():
-            print("group_address_position not defined for device {0}".format(self.get_name()))
+            # print("group_address_position not defined for device {0}".format(self.get_name()))
+            current_knx_position = self.current_position()
+            if position > current_knx_position:
+                self.send(self.group_address_long, 0x81)
+            elif position < current_knx_position:
+                self.send(self.group_address_long, 0x80)
+            self.travelcalculator.start_travel( position )
             return
         self.send(self.group_address_position, [0x80, position])
         self.travelcalculator.start_travel( position )
