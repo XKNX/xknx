@@ -23,7 +23,7 @@ class Shutter(Device):
         return ( self.group_address_long == group_address ) or (self.group_address_short == group_address ) or (self.group_address_position_feedback == group_address )
 
     def supports_direct_positioning(self):
-        return self.group_address_position.is_set():
+        return self.group_address_position.is_set()
 
     def __str__(self):
         return "<Shutter group_address_long={0}, group_address_short={1}, group_address_position, group_address_position_feedback={2}, name={3}>".format(self.group_address_long,self.group_address_short,self.group_address_position, self.group_address_position_feedback,self.name)
