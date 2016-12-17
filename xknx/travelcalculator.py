@@ -14,12 +14,12 @@ class TravelDirection(Enum):
 class TravelCalculator:
 
 
-    def  __init__(self, travel_time_up, travel_time_down):
+    def  __init__(self, travel_time_down, travel_time_up):
         self.position_type = PositionType.UNKNOWN
         self.last_known_position = 0
 
-        self.travel_time_up  = travel_time_up
         self.travel_time_down = travel_time_down
+        self.travel_time_up  = travel_time_up
 
         self.travel_to_position = 0
         self.travel_started_time = 0
@@ -82,7 +82,7 @@ class TravelCalculator:
     def _calculate_travel_time(self, relative_position):
         travel_direction = \
                     TravelDirection.UP \
-                    if relative_position > 0 else \
+                    if relative_position < 0 else \
                     TravelDirection.DOWN
         travel_time_full = \
                     self.travel_time_up \

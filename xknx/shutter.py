@@ -17,7 +17,11 @@ class Shutter(Device):
         self.group_address_position = Address(config.get("group_address_position"))
         self.group_address_position_feedback = Address(config.get("group_address_position_feedback"))
 
-        self.travelcalculator = TravelCalculator(100,100) #todo set travel times from configuration
+        # Assuming 20 seconds is the typical travelling time of an average cover ...
+        travelling_time_down = config.get("travelling_time_down", 20)
+        travelling_time_up = config.get("travelling_time_up", 22)
+
+        self.travelcalculator = TravelCalculator(travelling_time_down,travelling_time_up)
 
     def has_group_address(self, group_address):
         return ( self.group_address_long == group_address ) or (self.group_address_short == group_address ) or (self.group_address_position_feedback == group_address )

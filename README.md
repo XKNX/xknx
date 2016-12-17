@@ -84,11 +84,11 @@ groups:
 
     shutter:
 
-        Livingroom.Shutter_1: {group_address_long: "1/4/1", group_address_short: "1/4/2", group_address_position_feedback: "1/4/3", group_address_position: "1/4/4"}
-        Livingroom.Shutter_2: {group_address_long: "1/4/5", group_address_short: "1/4/6", group_address_position_feedback: "1/4/7", group_address_position: "1/4/8"}
+        Livingroom.Shutter_1: {group_address_long: "1/4/1", group_address_short: "1/4/2", group_address_position_feedback: "1/4/3", group_address_position: "1/4/4", travelling_time_down: 50, travelling_time_up: 60 }
+        Livingroom.Shutter_2: {group_address_long: "1/4/5", group_address_short: "1/4/6", group_address_position_feedback: "1/4/7", group_address_position: "1/4/8", travelling_time_down: 50, travelling_time_up: 60 }
 
         # Shutters without direct positioning:
-        Livingroom.Shutter_3: {group_address_long: "1/4/9", group_address_short: "1/4/10", group_address_position_feedback: "1/4/11" }
+        Livingroom.Shutter_3: {group_address_long: "1/4/9", group_address_short: "1/4/10", group_address_position_feedback: "1/4/11", travelling_time_down: 50, travelling_time_up: 60 }
 
         # Central Shutters dont have short or position address
         Central.Shutter: {group_address_long: "1/5/1" }
