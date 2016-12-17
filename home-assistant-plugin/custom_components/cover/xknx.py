@@ -81,21 +81,8 @@ class XKNX_Cover(CoverDevice):
 
     def set_cover_position(self, position, **kwargs):
         """Move the cover to a specific position."""
-
         knx_position = self.to_knx( position  )
-
-        if self.device.supports_direct_positioning():
-            self.device.set_position( knx_position )
-
-        # if device does not support direct positioning, we send it to up or down
-        # end let the auto_updater stop it, when the calculated position is reached
-        else:
-            current_knx_position = self.device.current_position()
-            if knx_position > current_knx_position:
-                self.device.set_down()
-            elif knx_position < current_knx_position:
-                self.device.set_up()
-
+        self.device.set_position( knx_position )      
         self.start_auto_updater()
 
     def stop_cover(self, **kwargs):
@@ -119,7 +106,7 @@ class XKNX_Cover(CoverDevice):
 
     def auto_updater_hook(self, now):
         self.update()
-
+        print(self.device.current_position())
         if self.device.position_reached():
             self.stop_auto_updater()
 
