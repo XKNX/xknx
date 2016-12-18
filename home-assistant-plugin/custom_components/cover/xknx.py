@@ -110,16 +110,8 @@ class XKNX_Cover(CoverDevice):
         if self.device.position_reached():
             self.stop_auto_updater()
 
-            # If device does not support auto_positioning,
-            # we have to ttop the device when position is reached.
-            # unless device was travelling to fully open
-            # or fully closed state
-            if (
-                    not self.device.supports_direct_positioning() and
-                    not self.device.is_open() and
-                    not self.device.is_closed()
-                ):
-                self.device.stop()
+        self.device.auto_stop_if_necessary()
+
     #
     # HELPER FUNCTIONS
     #

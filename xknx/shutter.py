@@ -81,16 +81,29 @@ class Shutter(Device):
 
     def set_position(self, position):
         if not self.supports_direct_positioning():
-            # print("group_address_position not defined for device {0}".format(self.get_name()))
-            current_knx_position = self.current_position()
-            if position > current_knx_position:
+
+            current_position = self.current_position()
+            if position > current_position:
                 self.send(self.group_address_long, 0x81)
-            elif position < current_knx_position:
+            elif position < current_position:
                 self.send(self.group_address_long, 0x80)
             self.travelcalculator.start_travel( position )
             return
         self.send(self.group_address_position, [0x80, position])
         self.travelcalculator.start_travel( position )
+
+    def auto_stop_if_necessary(self):
+        # If device does not support auto_positioning,
+        # we have to ttop the device when position is reached.
+        # unless device was travelling to fully open
+        # or fully closed state
+        if (
+            not self.supports_direct_positioning() and
+                self.position_reached() and
+                not self.is_open() and
+                not self.is_closed()
+            ):
+            self.stop()
 
     def do(self,action):
         if(action=="up"):
