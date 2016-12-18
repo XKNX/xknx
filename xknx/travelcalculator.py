@@ -9,6 +9,7 @@ class PositionType(Enum):
 class TravelDirection(Enum):
     UP = 1
     DOWN = 2
+    STOP = 3
 
 
 class TravelCalculator:
@@ -23,7 +24,7 @@ class TravelCalculator:
 
         self.travel_to_position = 0
         self.travel_started_time = 0
-
+        self.travel_direction = TravelDirection.STOP
         #TODO: Move to DPT Types class issue #10 
         self.minimum_position_down = 256 # excluding
         self.maximum_position_up = 0
@@ -37,14 +38,18 @@ class TravelCalculator:
         self.last_known_position = self.current_position()
         self.travel_to_position = self.last_known_position
         self.position_type = PositionType.CALCULATED
-
+        self.travel_direction = TravelDirection.STOP
     def start_travel(self, travel_to_position ):
         self.stop()
-
+        
         self.travel_started_time = self.current_time()
         self.travel_to_position = travel_to_position
         self.position_type = PositionType.CALCULATED
-
+   		
+        if travel_to_position < self.last_known_position:
+            self.travel_direction = TravelDirection.UP
+        else:
+            self.travel_direction = TravelDirection.DOWN 
     def start_travel_up(self):
         self.start_travel(self.maximum_position_up)
 
@@ -70,7 +75,9 @@ class TravelCalculator:
 
     def _calculate_position(self):
         relative_position = self.travel_to_position - self.last_known_position
-        if relative_position == 0:
+        if relative_position <= 0 and self.travel_direction == TravelDirection.DOWN :
+            return self.travel_to_position
+        if relative_position >= 0 and self.travel_direction == TravelDirection.UP :
             return self.travel_to_position
         travel_time = self._calculate_travel_time( relative_position )
         if self.current_time() > self.travel_started_time + travel_time:
