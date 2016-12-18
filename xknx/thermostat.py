@@ -3,8 +3,8 @@ from .address import Address
 import time
 
 class Thermostat(Device):
-    def __init__(self, name, config):
-        Device.__init__(self, name)
+    def __init__(self, xknx, name, config):
+        Device.__init__(self, xknx, name)
         self.group_address = Address(config["group_address"])
         self.last_set = time.time();
         self.temperature = 0

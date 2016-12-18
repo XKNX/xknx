@@ -9,8 +9,8 @@ class CouldNotParseDimmerTelegram(Exception):
     pass
 
 class Dimmer(Device):
-    def __init__(self, name, config):
-        Device.__init__(self, name)
+    def __init__(self, xknx, name, config):
+        Device.__init__(self, xknx, name)
         self.group_address_switch = Address(config["group_address_switch"])
         self.group_address_dimm = Address(config["group_address_dimm"])
         self.group_address_dimm_feedback = Address(config["group_address_dimm_feedback"])
@@ -36,7 +36,7 @@ class Dimmer(Device):
 
 
     def send(self, group_address, payload):
-        multicast = Multicast()
+        multicast = Multicast(self.xknx)
         telegram = Telegram()
         telegram.sender = Globals.get_own_address()
         telegram.group_address=group_address

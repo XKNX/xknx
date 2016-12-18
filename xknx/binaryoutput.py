@@ -6,8 +6,8 @@ from .globals import Globals
 
 class BinaryOutput(Device):
 
-    def __init__(self, name, group_address):
-        Device.__init__(self, name)
+    def __init__(self, xknx, name, group_address):
+        Device.__init__(self, xknx, name)
         self.group_address=group_address
         self.state = False
 
@@ -21,7 +21,7 @@ class BinaryOutput(Device):
             self.after_update_callback(self)
 
     def send(self, payload):
-        multicast = Multicast()
+        multicast = Multicast(self.xknx)
         telegram = Telegram()
         telegram.sender = Globals.get_own_address()
         telegram.group_address=self.group_address

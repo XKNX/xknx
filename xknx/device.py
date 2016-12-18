@@ -1,6 +1,7 @@
 
 class Device:
-    def __init__(self, name):
+    def __init__(self, xknx, name):
+        self.xknx = xknx
         self.after_update_callback = lambda x: None
         self.name = name
 

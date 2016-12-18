@@ -5,13 +5,13 @@ from homeassistant.helpers.event import track_utc_time_change
 #import homeassistant.components.xknx as xknx
 import custom_components.xknx as xknx
 
-from xknx import Multicast,Devices,devices_,Config,Shutter
+from xknx import Devices,Config,Shutter
 
 DOMAIN = 'xknx'
 
 _LOGGER = logging.getLogger(__name__)
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     if xknx.xknx_wrapper is None or not xknx.xknx_wrapper.initialized:
         _LOGGER.error('A connection has not been made to the XKNX controller.')
@@ -19,11 +19,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     shutters = []
 
-    for device in devices_.devices:
+    for device in xknx.xknx_wrapper.xknx.devices.devices:
         if type(device) == Shutter:
             shutters.append(XKNX_Cover(hass, device))
 
-    add_devices(shutters)
+    add_devices_callback(shutters)
 
 
 class XKNX_Cover(CoverDevice):

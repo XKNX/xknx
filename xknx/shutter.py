@@ -9,8 +9,8 @@ class CouldNotParseShutterTelegram(Exception):
     pass
 
 class Shutter(Device):
-    def __init__(self, name, config):
-        Device.__init__(self, name)
+    def __init__(self, xknx, name, config):
+        Device.__init__(self, xknx, name)
         self.group_address_long = Address(config.get("group_address_long"))
         self.group_address_short = Address(config.get("group_address_short"))
         self.group_address_position = Address(config.get("group_address_position"))
@@ -26,7 +26,7 @@ class Shutter(Device):
         return "<Shutter group_address_long={0}, group_address_short={1}, group_address_position, group_address_position_feedback={2}, name={3}>".format(self.group_address_long,self.group_address_short,self.group_address_position, self.group_address_position_feedback,self.name)
 
     def send(self, group_address, payload):
-        multicast = Multicast()
+        multicast = Multicast(self.xknx)
         telegram = Telegram()
         telegram.sender = Globals.get_own_address()
         telegram.group_address=group_address

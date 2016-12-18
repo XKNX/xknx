@@ -4,14 +4,15 @@ import yaml
 import time
 from enum import Enum
 from .address import Address
-from .devices import Devices,devices_
+from .devices import Devices
 
 class SwitchTime(Enum):
     SHORT = 1
     LONG = 2
 
 class Action():
-    def __init__(self, config):
+    def __init__(self, xknx, config):
+        self.xknx = xknx
         self.hook = config["hook"]
         self.target = config["target"]
         self.method = config["method"]
@@ -39,23 +40,22 @@ class Action():
 
     def execute(self):
         #print("Executing: {0}".format(self))
-        #print( devices_.device_by_name(self.target))
-        devices_.device_by_name(self.target).do(self.method)
+        self.xknx.devices.device_by_name(self.target).do(self.method)
 
     def __str__(self):
         return "<Action hook={0} target={1} method={2}>".format(self.hook,self.target,self.method)
 
 class Switch(BinaryInput):
-    def __init__(self, name, config):
+    def __init__(self, xknx, name, config):
         group_address = Address(config["group_address"])
-        BinaryInput.__init__(self, name, group_address)
+        BinaryInput.__init__(self, xknx, name, group_address)
         self.group_address = group_address
         self.last_set = time.time();
 
         self.actions = []
         if "actions" in config:
             for action in config["actions"]:
-                action = Action(action)
+                action = Action(xknx, action)
                 self.actions.append(action)
 
     def get_switch_time(self):

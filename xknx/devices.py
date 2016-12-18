@@ -45,7 +45,6 @@ class Devices:
             time.sleep(timeout)
             print("Starting Update Thread")
             while True:
-                devices = devices_.get_devices()
                 for device in self.devices:
                     device.request_state()
                     time.sleep(1/20)
@@ -53,4 +52,3 @@ class Devices:
         t = threading.Thread(target=worker, args=(timeout,))
         t.start();
 
-devices_ = Devices()

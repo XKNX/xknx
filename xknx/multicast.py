@@ -2,15 +2,16 @@ import socket
 import struct
 from .telegram import Telegram
 from .address import Address
-from .devices import devices_,CouldNotResolveAddress
+from .xknx import XKNX
+from .devices import CouldNotResolveAddress
 from .globals import Globals
 
 class Multicast:
     MCAST_GRP = '224.0.23.12'
     MCAST_PORT = 3671
 
-    def __init__(self):
-        pass
+    def __init__(self, xknx):
+        self.xknx = xknx
 
     def send(self, telegram):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -56,11 +57,11 @@ class Multicast:
 
                 else:
                     try:
-                        device = devices_.device_by_group_address(telegram.group_address)
+                        device = self.xknx.devices.device_by_group_address(telegram.group_address)
                         device.process(telegram)
 
                         if ( callback ):
-                            callback(device,telegram)
+                            callback(self.xknx, device,telegram)
 
                     except CouldNotResolveAddress as c:
                         print(c)

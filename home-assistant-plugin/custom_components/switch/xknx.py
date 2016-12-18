@@ -7,13 +7,13 @@ from homeassistant.components.switch import SwitchDevice
 #import homeassistant.components.xknx as xknx
 import custom_components.xknx as xknx
 
-from xknx import Multicast,Devices,devices_,Config,Outlet
+from xknx import Devices,Config,Outlet
 
 DOMAIN = 'xknx'
 
 _LOGGER = logging.getLogger(__name__)
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     if xknx.xknx_wrapper is None or not xknx.xknx_wrapper.initialized:
         _LOGGER.error('A connection has not been made to the XKNX controller.')
@@ -21,11 +21,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     switches = []
 
-    for device in devices_.devices:
+    for device in xknx.xknx_wrapper.xknx.devices.devices:
         if type(device) == Outlet:
             switches.append(XKNX_Switch(device))   
 
-    add_devices(switches)
+    add_devices_callback(switches)
 
     return True
 
