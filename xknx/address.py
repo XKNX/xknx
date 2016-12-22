@@ -88,7 +88,7 @@ class Address:
             raise CouldNotParseAddress()
         if sub > 4095:
             raise CouldNotParseAddress()
-        self.raw = (main<<12) + sub
+        self.raw = (main<<11) + sub
         self.address_format = AddressFormat.LEVEL2
 
     def _set_str_level3( self, parts ):
@@ -101,7 +101,7 @@ class Address:
             raise CouldNotParseAddress()
         if sub > 255:
             raise CouldNotParseAddress()
-        self.raw = (main<<12) +  (middle<<8) + sub
+        self.raw = (main<<11) +  (middle<<8) + sub
         self.address_format = AddressFormat.LEVEL3
 
     def _set_int(self, raw):
@@ -130,17 +130,17 @@ class Address:
 
     def _to_str_level2(self):
         return '{0}/{1}'.format(
-            ((self.raw >> 12 ) & 15),
+            ((self.raw >> 11 ) & 15),
             (self.raw & 4095) )
 
     def _to_str_level3(self):
         return '{0}/{1}/{2}'.format(
-            ((self.raw >> 12 ) & 15),
+            ((self.raw >> 11 ) & 15),
             ((self.raw >> 8) & 15),
             (self.raw & 255) )
 
     def _to_str_physical(self):
         return '{0}.{1}.{2}'.format(
-            ((self.raw >> 12 ) & 15),
+            ((self.raw >> 11 ) & 15),
             ((self.raw >> 8) & 15),
             (self.raw & 255) )
