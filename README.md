@@ -1,5 +1,5 @@
-XKNX
-====
+XKNX - An eXtended KNX library written in Python
+================================================
 
 A Wrapper around KNX/UDP protocol written in python.
 
@@ -12,7 +12,8 @@ Roadmap
 
 * Add functionality for KNX tunneling devices
 * Add functionality for auto discovery for KNX/IP router and tunneling devices
-
+* Sending Time to KNX Bus
+* Sending Outside temperature to KNX Bus
 
 Home-Assistant Plugin
 ---------------------
