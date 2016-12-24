@@ -61,7 +61,7 @@ class Address:
 
     def byte2(self):
         return self.raw & 255
-
+				
     def is_set(self):
         return self.raw != 0
 
@@ -86,7 +86,7 @@ class Address:
         sub = int(parts[1])   
         if main > 15:
             raise CouldNotParseAddress()
-        if sub > 4095:
+        if sub > 2047:
             raise CouldNotParseAddress()
         self.raw = (main<<11) + sub
         self.address_format = AddressFormat.LEVEL2
@@ -103,7 +103,7 @@ class Address:
             raise CouldNotParseAddress()
         self.raw = (main<<11) +  (middle<<8) + sub
         self.address_format = AddressFormat.LEVEL3
-
+          		
     def _set_int(self, raw):
         if type(raw) is not int:
             raise CouldNotParseAddress()
@@ -136,11 +136,11 @@ class Address:
     def _to_str_level3(self):
         return '{0}/{1}/{2}'.format(
             ((self.raw >> 11 ) & 15),
-            ((self.raw >> 8) & 15),
+            ((self.raw >> 8) & 7),
             (self.raw & 255) )
 
     def _to_str_physical(self):
         return '{0}.{1}.{2}'.format(
             ((self.raw >> 11 ) & 15),
-            ((self.raw >> 8) & 15),
+            ((self.raw >> 8) & 7),
             (self.raw & 255) )
