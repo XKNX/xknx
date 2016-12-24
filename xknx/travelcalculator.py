@@ -39,6 +39,7 @@ class TravelCalculator:
         self.travel_to_position = self.last_known_position
         self.position_type = PositionType.CALCULATED
         self.travel_direction = TravelStatus.STOPPED
+
     def start_travel(self, travel_to_position ):
         self.stop()
 
@@ -50,6 +51,7 @@ class TravelCalculator:
             self.travel_direction = TravelStatus.DIRECTION_UP
         else:
             self.travel_direction = TravelStatus.DIRECTION_DOWN
+
     def start_travel_up(self):
         self.start_travel(self.maximum_position_up)
 
