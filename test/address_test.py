@@ -8,10 +8,10 @@ class TestAddress(unittest.TestCase):
     # INIT
     #
     def test_address_init_3level(self):
-        self.assertEqual( Address("2/3/4").raw, 8964 )
+        self.assertEqual( Address("2/3/4").raw, 2*2048 + 3*256 + 4 )
 
     def test_address_init_2level(self):
-        self.assertEqual( Address("12/500").raw, 49652 )
+        self.assertEqual( Address("12/500").raw, 12*2048 + 500 )
 
     def test_address_init_free(self):
         self.assertEqual( Address("49552").raw, 49552 )
@@ -93,10 +93,10 @@ class TestAddress(unittest.TestCase):
     # MAXIMUM ADDRESSES
     #
     def test_address_max_3level(self):
-        self.assertEqual( Address("15/15/255").raw, 65535 )
+        self.assertEqual( Address("31/7/255").raw, 65535 )
 
     def test_address_max_2level(self):
-        self.assertEqual( Address("15/4095").raw, 65535 )
+        self.assertEqual( Address("31/2047").raw, 65535 )
 
     def test_address_max_free(self):
         self.assertEqual( Address("65535").raw, 65535 )
@@ -105,7 +105,7 @@ class TestAddress(unittest.TestCase):
         self.assertEqual( Address(65535).raw, 65535 )
 
     def test_address_max_address(self):
-        self.assertEqual( Address(Address("15/15/255")).raw, 65535 )
+        self.assertEqual( Address(Address("31/7/255")).raw, 65535 )
 
 
     #
@@ -129,11 +129,11 @@ class TestAddress(unittest.TestCase):
 
     def test_address_init_failed_level3_boundaries_middle(self):
         with self.assertRaises(CouldNotParseAddress):
-            Address("1/16/3")
+            Address("1/8/3")
 
     def test_address_init_failed_level3_boundaries_main(self):
         with self.assertRaises(CouldNotParseAddress):
-            Address("16/2/3")
+            Address("32/2/3")
 
     def test_address_init_failed_level2_boundaries_sub(self):
         with self.assertRaises(CouldNotParseAddress):
@@ -172,7 +172,7 @@ class TestAddress(unittest.TestCase):
     # BYTE ACCESS
     #
     def test_address_byte1(self):
-            self.assertEqual( Address("2/3/100").byte1(), 2*16+3 )
+            self.assertEqual( Address("2/3/100").byte1(), 2*8+3 )
 
     def test_address_byte2(self):
             self.assertEqual( Address("2/3/100").byte2(), 100 )
