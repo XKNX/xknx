@@ -7,6 +7,11 @@ The wrapper is also intended to be used as a KNX logic module, which means to co
 
 At the moment the wrapper works with KNX/IP router.
 
+Chat
+----
+
+We need your help for testing and improving XKNX. Please join the chat at: https://gitter.im/XKNX/Lobby
+
 Roadmap
 -------
 
