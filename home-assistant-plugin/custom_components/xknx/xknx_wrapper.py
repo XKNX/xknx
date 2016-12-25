@@ -27,9 +27,9 @@ class XKNX_Wrapper(object):
 
         Config(self.xknx).read(file=self.config_file)
 
-        MulticastSender.start_thread(xknx)
-        MulticastReceiver.start_thread(xknx, callback)
-        StateUpdater.start_thread(xknx)
+        MulticastSender.start_thread(self.xknx)
+        MulticastReceiver.start_thread(self.xknx, self.callback)
+        StateUpdater.start_thread(self.xknx)
 
         self.initialized = True
 
