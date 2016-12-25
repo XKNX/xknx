@@ -19,6 +19,9 @@ class TestAddress(unittest.TestCase):
     def test_address_init_int(self):
         self.assertEqual( Address(49552).raw, 49552 )
 
+    def test_address_init_bytes(self):
+        self.assertEqual( Address((0x12,0x34)).raw, 0x1234 )
+
     def test_address_init_address(self):
         self.assertEqual( Address(Address("2/3/4")).raw, 8964 )
 
@@ -30,13 +33,13 @@ class TestAddress(unittest.TestCase):
 
     #
     # is_set
-    # 
+    #
 
     def test_address_is_set(self):
         self.assertTrue( Address("2/3/4").is_set() )
 
     def test_address_is_not_set(self):
-        self.assertFalse( Address(None).is_set() ) 
+        self.assertFalse( Address(None).is_set() )
 
     def test_address_is_set_physical(self):
         self.assertTrue( Address("2.3.4",AddressType.PHYSICAL).is_set() )
@@ -150,6 +153,23 @@ class TestAddress(unittest.TestCase):
     def test_address_init_empty_string(self):
         with self.assertRaises(CouldNotParseAddress):
             Address("")
+
+    def test_address_init_tuple_3_elements(self):
+        with self.assertRaises(CouldNotParseAddress):
+            Address((1,2,3))
+
+    def test_address_init_tuple_string(self):
+        with self.assertRaises(CouldNotParseAddress):
+            Address((2,"23"))
+
+    def test_address_init_tuple_range_overflow(self):
+        with self.assertRaises(CouldNotParseAddress):
+            Address((4,256))
+
+    def test_address_init_tuple_range_underflow(self):
+        with self.assertRaises(CouldNotParseAddress):
+            Address((1,-1))
+
     #
     # __eq__
     #

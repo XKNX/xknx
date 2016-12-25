@@ -53,6 +53,10 @@ class Address:
             self._set_int(address)
             self.address_format = AddressFormat.FREE
 
+        elif type(address) is tuple:
+            self._set_tuple(address)
+            self.address_format = AddressFormat.FREE
+
         else:
             raise TypeError()
 
@@ -61,7 +65,7 @@ class Address:
 
     def byte2(self):
         return self.raw & 255
-				
+
     def is_set(self):
         return self.raw != 0
 
@@ -121,7 +125,16 @@ class Address:
             raise CouldNotParseAddress()
         self.raw = (main<<11) +  (middle<<8) + sub
         self.address_format = AddressFormat.LEVEL3
-          		
+
+    def _set_tuple(self, address):
+        if len(address) != 2 \
+                or any(not isinstance(byte,int) for byte in address) \
+                or any(byte < 0 for byte in address) \
+                or any(byte > 255 for byte in address):
+            raise CouldNotParseAddress()
+
+        self._set_int(address[0] * 256 + address[1])
+
     def _set_int(self, raw):
         if type(raw) is not int:
             raise CouldNotParseAddress()
