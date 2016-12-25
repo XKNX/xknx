@@ -6,10 +6,10 @@ class PositionType(Enum):
     CALCULATED = 2
     CONFIRMED = 3
 
-class TravelDirection(Enum):
-    UP = 1
-    DOWN = 2
-    STOP = 3
+class TravelStatus(Enum):
+    DIRECTION_UP = 1
+    DIRECTION_DOWN = 2
+    STOPPED = 3
 
 
 class TravelCalculator:
@@ -24,8 +24,8 @@ class TravelCalculator:
 
         self.travel_to_position = 0
         self.travel_started_time = 0
-        self.travel_direction = TravelDirection.STOP
-        #TODO: Move to DPT Types class issue #10 
+        self.travel_direction = TravelStatus.STOPPED
+        #TODO: Move to DPT Types class issue #10
         self.minimum_position_down = 256 # excluding
         self.maximum_position_up = 0
 
@@ -38,18 +38,20 @@ class TravelCalculator:
         self.last_known_position = self.current_position()
         self.travel_to_position = self.last_known_position
         self.position_type = PositionType.CALCULATED
-        self.travel_direction = TravelDirection.STOP
+        self.travel_direction = TravelStatus.STOPPED
+
     def start_travel(self, travel_to_position ):
         self.stop()
-        
+
         self.travel_started_time = self.current_time()
         self.travel_to_position = travel_to_position
         self.position_type = PositionType.CALCULATED
-   		
+
         if travel_to_position < self.last_known_position:
-            self.travel_direction = TravelDirection.UP
+            self.travel_direction = TravelStatus.DIRECTION_UP
         else:
-            self.travel_direction = TravelDirection.DOWN 
+            self.travel_direction = TravelStatus.DIRECTION_DOWN
+
     def start_travel_up(self):
         self.start_travel(self.maximum_position_up)
 
@@ -75,10 +77,17 @@ class TravelCalculator:
 
     def _calculate_position(self):
         relative_position = self.travel_to_position - self.last_known_position
-        if relative_position <= 0 and self.travel_direction == TravelDirection.DOWN :
-            return self.travel_to_position
-        if relative_position >= 0 and self.travel_direction == TravelDirection.UP :
-            return self.travel_to_position
+
+        def position_reached_or_exceeded(relative_position):
+            if relative_position <= 0 and self.travel_direction == TravelStatus.DIRECTION_DOWN :
+                return True
+            if relative_position >= 0 and self.travel_direction == TravelStatus.DIRECTION_UP :
+                return True
+            return False
+
+        if position_reached_or_exceeded(relative_position):
+             return self.travel_to_position
+
         travel_time = self._calculate_travel_time( relative_position )
         if self.current_time() > self.travel_started_time + travel_time:
             return self.travel_to_position
@@ -88,12 +97,12 @@ class TravelCalculator:
 
     def _calculate_travel_time(self, relative_position):
         travel_direction = \
-                    TravelDirection.UP \
+                    TravelStatus.DIRECTION_UP \
                     if relative_position < 0 else \
-                    TravelDirection.DOWN
+                    TravelStatus.DIRECTION_DOWN
         travel_time_full = \
                     self.travel_time_up \
-                    if travel_direction == TravelDirection.UP else \
+                    if travel_direction == TravelStatus.DIRECTION_UP else \
                     self.travel_time_down
         return travel_time_full * abs(relative_position) / (self.minimum_position_down-self.maximum_position_up)
 
