@@ -18,7 +18,7 @@ class AddressFormat(Enum):
 
 class Address:
 
-    def __init__(self, address = 0, address_type = AddressType.GROUP):
+    def __init__(self, address = 0, address_type = None):
         self._set(address, address_type)
 
     def __eq__(self, other):
@@ -31,18 +31,19 @@ class Address:
 
     def _set(self, address, address_type):
 
+        self.address_type = \
+            address_type if address_type is not None \
+            else self._detect_address_type(address)
+
         if address is None:
             self.raw=0
             self.address_format = AddressFormat.LEVEL3
-            self.address_type = address_type
 
         elif type(address) is Address:
             self.raw = address.raw
             self.address_format = address.address_format
-            self.address_type = address.address_type
 
         elif type(address) is str:
-            self.address_type = address_type
             if address_type == AddressType.PHYSICAL:
                 self._set_str_physical(address)
             else:
@@ -51,7 +52,6 @@ class Address:
         elif type(address) is int:
             self._set_int(address)
             self.address_format = AddressFormat.FREE
-            self.address_type = address_type
 
         else:
             raise TypeError()
@@ -162,3 +162,14 @@ class Address:
             ((self.raw >> 12 ) & 15),
             ((self.raw >> 8) & 15),
             (self.raw & 255) )
+
+    @staticmethod
+    def _detect_address_type(address):
+        # Physical addresses have either be specified explicitely or
+        # in the correct notation. As default an address is a group address.
+        if type(address) is str and "." in address:
+            return AddressType.PHYSICAL
+        elif type(address) is Address:
+            return address.address_type
+        else:
+            return AddressType.GROUP
