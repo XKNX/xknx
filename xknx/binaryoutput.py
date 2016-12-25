@@ -1,5 +1,4 @@
 from .address import Address
-from .multicast import Multicast
 from .telegram import Telegram
 from .device import Device
 from .globals import Globals
@@ -21,12 +20,11 @@ class BinaryOutput(Device):
             self.after_update_callback(self)
 
     def send(self, payload):
-        multicast = Multicast(self.xknx)
         telegram = Telegram()
         telegram.sender = Globals.get_own_address()
         telegram.group_address=self.group_address
         telegram.payload.append(payload)
-        multicast.send(telegram)
+        self.xknx.out_queue.put(telegram)  
 
     def set_on(self):
         self.send(0x81)

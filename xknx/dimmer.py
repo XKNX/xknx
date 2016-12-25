@@ -1,5 +1,4 @@
 from .device import Device
-from .multicast import Multicast
 from .telegram import Telegram
 from .globals import Globals
 from .address import Address
@@ -36,7 +35,6 @@ class Dimmer(Device):
 
 
     def send(self, group_address, payload):
-        multicast = Multicast(self.xknx)
         telegram = Telegram()
         telegram.sender = Globals.get_own_address()
         telegram.group_address=group_address
@@ -49,7 +47,7 @@ class Dimmer(Device):
         else:
             print("Cannot understand payload")
 
-        multicast.send(telegram)
+        self.xknx.out_queue.put(telegram)
 
     def set_on(self):
         self.send(self.group_address_switch, 0x81)

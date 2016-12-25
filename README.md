@@ -141,7 +141,7 @@ Multicast(xknx).recv()
 ```python
 #!/usr/bin/python3
 
-from xknx import Multicast,CouldNotResolveAddress,Config
+from xknx import XKNX,Multicast,CouldNotResolveAddress,Config
 import time
 
 def callback( xknx, device, telegram):

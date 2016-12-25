@@ -1,5 +1,4 @@
 from .address import Address
-from .multicast import Multicast
 from .telegram import Telegram
 from .device import Device
 from .address import Address
@@ -33,7 +32,6 @@ class Shutter(Device):
         return "<Shutter group_address_long={0}, group_address_short={1}, group_address_position, group_address_position_feedback={2}, name={3}>".format(self.group_address_long,self.group_address_short,self.group_address_position, self.group_address_position_feedback,self.name)
 
     def send(self, group_address, payload):
-        multicast = Multicast(self.xknx)
         telegram = Telegram()
         telegram.sender = Globals.get_own_address()
         telegram.group_address=group_address
@@ -46,7 +44,7 @@ class Shutter(Device):
         else:
             print("Cannot understand payload")
 
-        multicast.send(telegram)
+        self.xknx.out_queue.put(telegram)
 
     def set_down(self):
         if not self.group_address_long.is_set():

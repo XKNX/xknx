@@ -2,7 +2,7 @@ import threading
 import time
 import logging
 
-from xknx import XKNX,Config,Multicast
+from xknx import XKNX,Config,MulticastSender,MulticastReceiver,StateUpdater
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,17 +22,14 @@ class XKNX_Wrapper(object):
     def callback(  xknx, device, telegram):
         print("{0}".format(device.name))
 
-    def start_knx_server(self,hass):
-        Multicast(self.xknx).recv(self.callback)
 
     def start(self):
 
         Config(self.xknx).read(file=self.config_file)
 
-        #TODO: Move to nicer class
-        self.xknx.devices.update_thread_start(60)
-
-        threading.Thread(target=self.start_knx_server, args=(self.hass,), name="XKNX Server").start()
+        MulticastSender.start_thread(xknx)
+        MulticastReceiver.start_thread(xknx, callback)
+        StateUpdater.start_thread(xknx)
 
         self.initialized = True
 
