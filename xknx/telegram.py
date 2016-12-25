@@ -133,12 +133,18 @@ class Telegram:
     def sender(self):
         """Return source address"""
         return self.message.src_addr
-		
+   @sender.setter
+    def sender(self, value):	
+        self.message.src_addr = Address(value)
+	
     @property
     def group_address(self):
         """Return destination address"""
         return self.message.dst_addr
-			
+    @group_address.setter
+    def group_address(self, value):	
+        self.message.dst_addr = Address(value)
+					
     def _from_telegram(self, data):
         self.headerLength = data[0]
         self.protokollVersion = data[1]
