@@ -147,7 +147,7 @@ class Telegram:
 					
     def _from_telegram(self, data):
         self.headerLength = data[0]
-        self.protokollVersion = data[1]
+        self.protocolVersion = data[1]
         self.serviceTypeIdent = ServiceType(data[2] * 256 + data[3])
         self.b4Reserve = data[4]
         self.totalLength = data[5]	
@@ -166,7 +166,7 @@ class Telegram:
             self.payload.append(data[16+x])
 			
     def __str__(self):
-        return "<KNXIPFrame IPBody->HeaderLength={0}, ProtocolVersion={1}, ServiceType={2}, Reserve={3}, TotalLength={4}>\n<CEMIBody->SourceAddress={5}, DestinationAddress={6}, Command={7}, Data={8}>".format(self.headerLength, self.protokollVersion, self.serviceTypeIdent, self.b4Reserve, self.totalLength, self.message.src_addr, self.message.dst_addr, self.message.cmd, self.message.data)
+        return "<KNXIPFrame IPBody->HeaderLength={0}, ProtocolVersion={1}, ServiceType={2}, Reserve={3}, TotalLength={4}>\n<CEMIBody->SourceAddress={5}, DestinationAddress={6}, Command={7}, Data={8}>".format(self.headerLength, self.protocolVersion, self.serviceTypeIdent, self.b4Reserve, self.totalLength, self.message.src_addr, self.message.dst_addr, self.message.cmd, self.message.data)
 	
     def print_data(self, data):
         i = 0;
