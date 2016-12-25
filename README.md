@@ -85,8 +85,11 @@ groups:
 
     shutter:
 
-        Livingroom.Shutter_1: {group_address_long: "1/4/1", group_address_short: "1/4/2", group_address_position_feedback: "1/4/3", group_address_position: "1/4/4"}
-        Livingroom.Shutter_2: {group_address_long: "1/4/5", group_address_short: "1/4/6", group_address_position_feedback: "1/4/7", group_address_position: "1/4/8"}
+        Livingroom.Shutter_1: {group_address_long: "1/4/1", group_address_short: "1/4/2", group_address_position_feedback: "1/4/3", group_address_position: "1/4/4", travelling_time_down: 50, travelling_time_up: 60 }
+        Livingroom.Shutter_2: {group_address_long: "1/4/5", group_address_short: "1/4/6", group_address_position_feedback: "1/4/7", group_address_position: "1/4/8", travelling_time_down: 50, travelling_time_up: 60 }
+
+        # Shutters without direct positioning:
+        Livingroom.Shutter_3: {group_address_long: "1/4/9", group_address_short: "1/4/10", group_address_position_feedback: "1/4/11", travelling_time_down: 50, travelling_time_up: 60 }
 
         # Central Shutters dont have short or position address
         Central.Shutter: {group_address_long: "1/5/1" }
@@ -105,18 +108,18 @@ Basic Operations
 
 # Outlet
 
-devices_.device_by_name("Livingroom.Outlet_1").set_on()
+xknx.devices.device_by_name("Livingroom.Outlet_1").set_on()
 time.sleep(5)
-devices_.device_by_name("Livingroom.Outlet_2").set_off()
+xknx.devices.device_by_name("Livingroom.Outlet_2").set_off()
 
 # Shutter
-devices_.device_by_name("Livingroom.Shutter_1").set_down()
+xknx.devices.device_by_name("Livingroom.Shutter_1").set_down()
 time.sleep(2)
-devices_.device_by_name("Livingroom.Shutter_1").set_up()
+xknx.devices.device_by_name("Livingroom.Shutter_1").set_up()
 time.sleep(5)
-devices_.device_by_name("Livingroom.Shutter_1").set_short_down()
+xknx.devices.device_by_name("Livingroom.Shutter_1").set_short_down()
 time.sleep(5)
-devices_.device_by_name("Livingroom.Shutter_1").set_short_up()
+xknx.devices.device_by_name("Livingroom.Shutter_1").set_short_up()
 
 ```
 
@@ -126,21 +129,22 @@ Sample Program
 
 ```
 #!/usr/bin/python3
-from xknx import Multicast,Devices,devices_,Config
+from xknx import Multicast,Devices,Config
 
-Config.read()
-Multicast().recv()
+xknx = XKNX()
+Config(xknx).read()
+Multicast(xknx).recv()
 ```
 
-`Multicast().recv()` may also take a callback as parameter:
+`Multicast(xknx).recv()` may also take a callback as parameter:
 
 ```python
 #!/usr/bin/python3
 
-from xknx import Multicast,CouldNotResolveAddress,Config
+from xknx import XKNX,Multicast,CouldNotResolveAddress,Config
 import time
 
-def callback( device, telegram):
+def callback( xknx, device, telegram):
 
     print("Callback received from {0}".format(device.name))
 
@@ -148,13 +152,15 @@ def callback( device, telegram):
 
         if (device.name == "Livingroom.Switch_1" ):
             if device.is_on():
-                devices_.device_by_name("Livingroom.Outlet_1").set_on()
+                xknx.devices.device_by_name("Livingroom.Outlet_1").set_on()
             elif device.is_off():
-                devices_.device_by_name("Livingroom.Outlet_1").set_off()
+                xknx.devices.device_by_name("Livingroom.Outlet_1").set_off()
 
     except CouldNotResolveAddress as c:
         print(c)
 
-Config.read()
-Multicast().recv(callback)
+xknx = XKNX()
+Config(xknx).read()
+Multicast(xknx).recv(callback)
+
 ```

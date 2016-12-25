@@ -9,13 +9,13 @@ import homeassistant.helpers.config_validation as cv
 #import homeassistant.components.xknx as xknx
 import custom_components.xknx as xknx
 
-from xknx import Multicast,Devices,devices_,Config,Thermostat
+from xknx import Devices,Config,Thermostat
 
 DOMAIN = 'xknx'
 
 _LOGGER = logging.getLogger(__name__)
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     if xknx.xknx_wrapper is None or not xknx.xknx_wrapper.initialized:
         _LOGGER.error('A connection has not been made to the XKNX controller.')
@@ -23,11 +23,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     thermostats = []
 
-    for device in devices_.devices:
+    for device in xknx.xknx_wrapper.xknx.devices.devices:
         if type(device) == Thermostat:
             thermostats.append(XKNX_Thermostat(hass, device))
 
-    add_devices(thermostats)
+    add_devices_callback(thermostats)
 
     return True
 

@@ -1,11 +1,11 @@
 from enum import Enum
 
 class CouldNotParseAddress(Exception):
-    def __init__(self):
-        pass
+    def __init__(self, address = None):
+        self.address = address
 
     def __str__(self):
-        return "CouldNotParseAddress"
+        return "<CouldNotParseAddress address='{0}'>".format(self.address)
 
 class AddressType(Enum):
     PHYSICAL = 1
@@ -73,18 +73,18 @@ class Address:
     def _set_str_physical( self, address ):
         parts = address.split(".")
         if any(not part.isdigit() for part in parts):
-            raise CouldNotParseAddress()
+            raise CouldNotParseAddress(address)
         if len(parts) != 3:
-            raise CouldNotParseAddress()
+            raise CouldNotParseAddress(address)
         main = int(parts[0])
         middle = int(parts[1])
         sub = int(parts[2])
         if main > 15:
-            raise CouldNotParseAddress()
+            raise CouldNotParseAddress(address)
         if middle > 15:
-            raise CouldNotParseAddress()
+            raise CouldNotParseAddress(address)
         if sub > 255:
-            raise CouldNotParseAddress()
+            raise CouldNotParseAddress(address)
         self.raw = (main<<12) +  (middle<<8) + sub
         self.address_format = AddressFormat.LEVEL3
 
@@ -93,7 +93,7 @@ class Address:
         parts = address.split("/")
 
         if any(not part.isdigit() for part in parts):
-            raise CouldNotParseAddress()
+            raise CouldNotParseAddress(address)
         if len(parts) == 1:
             self._set_int( int ( parts[0] ) )
         elif len(parts) == 2:
@@ -101,15 +101,15 @@ class Address:
         elif len(parts) == 3:
             self._set_str_group_level3( parts )
         else:
-            raise CouldNotParseAddress()
+            raise CouldNotParseAddress(address)
 
     def _set_str_group_level2( self, parts ):
         main = int(parts[0])
         sub = int(parts[1])
         if main > 31:
-            raise CouldNotParseAddress()
+            raise CouldNotParseAddress(parts)
         if sub > 2047:
-            raise CouldNotParseAddress()
+            raise CouldNotParseAddress(parts)
         self.raw = (main<<11) + sub
         self.address_format = AddressFormat.LEVEL2
 
@@ -118,11 +118,11 @@ class Address:
         middle = int(parts[1])
         sub = int(parts[2])
         if main > 31:
-            raise CouldNotParseAddress()
+            raise CouldNotParseAddress(parts)
         if middle > 7:
-            raise CouldNotParseAddress()
+            raise CouldNotParseAddress(parts)
         if sub > 255:
-            raise CouldNotParseAddress()
+            raise CouldNotParseAddress(parts)
         self.raw = (main<<11) +  (middle<<8) + sub
         self.address_format = AddressFormat.LEVEL3
 
@@ -131,15 +131,15 @@ class Address:
                 or any(not isinstance(byte,int) for byte in address) \
                 or any(byte < 0 for byte in address) \
                 or any(byte > 255 for byte in address):
-            raise CouldNotParseAddress()
+            raise CouldNotParseAddress(address)
 
         self._set_int(address[0] * 256 + address[1])
 
     def _set_int(self, raw):
         if type(raw) is not int:
-            raise CouldNotParseAddress()
+            raise CouldNotParseAddress(raw)
         if ( raw > 65535 ):
-            raise CouldNotParseAddress()
+            raise CouldNotParseAddress(raw)
         self.raw = raw
         self.address_format = AddressFormat.FREE
 

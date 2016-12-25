@@ -1,4 +1,5 @@
 import yaml
+from .xknx import XKNX
 from .address import Address
 from .binaryoutput import BinaryOutput
 from .binaryinput import BinaryInput
@@ -8,7 +9,7 @@ from .thermostat import Thermostat
 from .dimmer import Dimmer
 from .outlet import Outlet
 from .shutter import Shutter
-from .devices import Devices,devices_
+from .devices import Devices
 from .address import Address,AddressType
 from .globals import Globals
 import time
@@ -16,43 +17,43 @@ import time
 
 class Config:
 
-    @staticmethod
-    def read( file='xknx.yaml'):
+    def __init__(self, xknx):
+        self.xknx = xknx
+
+    def read( self, file='xknx.yaml'):
         print("Reading {0}".format(file))
         with open(file, 'r') as f:
             doc = yaml.load(f)
-            Config.parse_general(doc)
-            Config.parse_groups(doc)
+            self.parse_general(doc)
+            self.parse_groups(doc)
 
-    @staticmethod
-    def parse_general(doc):
+    def parse_general(seif, doc):
         if "general" in doc:
             if "own_address" in doc["general"]:
                 Globals.set_own_address(Address(doc["general"]["own_address"],AddressType.PHYSICAL))
             if "own_ip" in doc["general"]:
                 Globals.set_own_ip(doc["general"]["own_ip"])
 
-    @staticmethod
-    def parse_groups(doc):
+    def parse_groups(self, doc):
         for group in doc["groups"]:
             if group.startswith("dimmer"):
                 for entry in doc["groups"][group]:
-                    dimmer = Dimmer(entry, doc["groups"][group][entry])
-                    devices_.devices.append(dimmer)
+                    dimmer = Dimmer(self.xknx, entry, doc["groups"][group][entry])
+                    self.xknx.devices.devices.append(dimmer)
             if group.startswith("outlet"):
                 for entry in doc["groups"][group]:
-                    outlet = Outlet(entry, doc["groups"][group][entry])
-                    devices_.devices.append(outlet)
+                    outlet = Outlet(self.xknx, entry, doc["groups"][group][entry])
+                    self.xknx.devices.devices.append(outlet)
             if group.startswith("switch"):
                 for entry in doc["groups"][group]:
-                    switch = Switch(entry, doc["groups"][group][entry])
-                    devices_.devices.append(switch)
+                    switch = Switch(self.xknx, entry, doc["groups"][group][entry])
+                    self.xknx.devices.devices.append(switch)
             if group.startswith("shutter"):
                 for entry in doc["groups"][group]:
-                    shutter = Shutter(entry, doc["groups"][group][entry])
-                    devices_.devices.append(shutter)
+                    shutter = Shutter(self.xknx, entry, doc["groups"][group][entry])
+                    self.xknx.devices.devices.append(shutter)
 
             if group.startswith("thermostat"):
                 for entry in doc["groups"][group]:
-                    thermostat = Thermostat(entry, doc["groups"][group][entry])
-                    devices_.devices.append(thermostat)
+                    thermostat = Thermostat(self.xknx, entry, doc["groups"][group][entry])
+                    self.xknx.devices.devices.append(thermostat)

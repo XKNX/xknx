@@ -5,13 +5,13 @@ from homeassistant.helpers.event import track_utc_time_change
 #import homeassistant.components.xknx as xknx
 import custom_components.xknx as xknx
 
-from xknx import Multicast,Devices,devices_,Config,Shutter
+from xknx import Devices,Config,Shutter
 
 DOMAIN = 'xknx'
 
 _LOGGER = logging.getLogger(__name__)
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     if xknx.xknx_wrapper is None or not xknx.xknx_wrapper.initialized:
         _LOGGER.error('A connection has not been made to the XKNX controller.')
@@ -19,11 +19,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     shutters = []
 
-    for device in devices_.devices:
+    for device in xknx.xknx_wrapper.xknx.devices.devices:
         if type(device) == Shutter:
             shutters.append(XKNX_Cover(hass, device))
 
-    add_devices(shutters)
+    add_devices_callback(shutters)
 
 
 class XKNX_Cover(CoverDevice):
@@ -36,6 +36,8 @@ class XKNX_Cover(CoverDevice):
         self.device = device
 
         self.register_callbacks()
+
+        self._unsubscribe_auto_updater = None
 
     def register_callbacks(self):
         def after_update_callback(device):
@@ -58,7 +60,7 @@ class XKNX_Cover(CoverDevice):
     @property
     def current_cover_position(self):
         """Return the current position of the cover."""
-        return int( self.from_knx( self.device.position ) )
+        return int( self.from_knx( self.device.current_position() ) )
 
     @property
     def is_closed(self):
@@ -69,26 +71,57 @@ class XKNX_Cover(CoverDevice):
         """Close the cover."""
         if not self.device.is_closed():
             self.device.set_down()
+            self.start_auto_updater()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
         if not self.device.is_open():
             self.device.set_up()
+            self.start_auto_updater()
 
     def set_cover_position(self, position, **kwargs):
-        print("set_cover_position")
         """Move the cover to a specific position."""
-        self.device.set_position( self.to_knx( position  ) )
+        knx_position = self.to_knx( position  )
+        self.device.set_position( knx_position )      
+        self.start_auto_updater()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        if self.device.position is None:
-            return
-        self.device.set_short_down()
+        self.device.stop()
+        self.stop_auto_updater()
+
+    #
+    # UPDATER
+    #
+
+    def stop_auto_updater(self):
+        if self._unsubscribe_auto_updater is not None:
+            self._unsubscribe_auto_updater()
+            self._unsubscribe_auto_updater = None
+
+    def start_auto_updater(self):
+        if self._unsubscribe_auto_updater is None:
+            self._unsubscribe_auto_updater = track_utc_time_change(
+                self.hass, self.auto_updater_hook)
+
+    def auto_updater_hook(self, now):
+        self.update()
+        print(self.device.current_position())
+        if self.device.position_reached():
+            self.stop_auto_updater()
+
+        self.device.auto_stop_if_necessary()
 
     #
     # HELPER FUNCTIONS
     #
+
+    # KNX and HASS have different understanding of open and closed:
+    #
+    #            KNX     HASS
+    #    UP      0       100
+    #    DOWN    255     0
+
     def from_knx(self, x):
         return 100-round((x/256)*100)
 

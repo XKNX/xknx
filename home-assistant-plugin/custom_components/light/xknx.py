@@ -3,12 +3,12 @@ import logging
 #import homeassistant.components.xknx as xknx
 import custom_components.xknx as xknx
 
-from xknx import Multicast,Devices,devices_,Config,Dimmer
+from xknx import Devices,Config,Dimmer
 
 from homeassistant.components.light import ( ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light )
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the demo light platform."""
 
     if xknx.xknx_wrapper is None or not xknx.xknx_wrapper.initialized:
@@ -17,11 +17,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     dimmers = []
 
-    for device in devices_.devices:
+    for device in xknx.xknx_wrapper.xknx.devices.devices:
         if type(device) == Dimmer:
             dimmers.append(XKNX_Light(hass, device))
 
-    add_devices(dimmers)
+    add_devices_callback(dimmers)
 
     return True    
 
