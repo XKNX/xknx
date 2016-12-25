@@ -1,13 +1,13 @@
-from .address import Address
+from .address import Address,AddressType
 
 class Globals():
-    own_address_ = Address("15.15.250")
+    own_address_ = Address("15.15.250", AddressType.PHYSICAL)
 
     own_ip = None
 
     @staticmethod
     def set_own_address(own_address):
-        Globals.own_address_.set(own_address)
+        Globals.own_address_ = own_address
 
     @staticmethod
     def get_own_address():

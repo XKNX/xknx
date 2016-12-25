@@ -8,16 +8,18 @@ class CouldNotParseAddress(Exception):
         return "CouldNotParseAddress"
 
 class AddressType(Enum):
+    PHYSICAL = 1
+    GROUP = 2
+
+class AddressFormat(Enum):
     LEVEL2 = 1
     LEVEL3 = 2
-    FREE = 3
+    FREE = 3 
 
 class Address:
 
-    def __init__(self, address = 0):
-        self.raw = 0
-        self.address_type = AddressType.FREE
-        self.set(address)
+    def __init__(self, address = 0, address_type = AddressType.GROUP):
+        self._set(address, address_type)
 
     def __eq__(self, other):
         if type(other) is not Address:
@@ -27,16 +29,30 @@ class Address:
     def __str__(self):
         return self._to_str()
 
-    def set(self, address):
+    def _set(self, address, address_type):
+
         if address is None:
             self.raw=0
-        elif type(address) is str:
-            self._set_str(address)
-        elif type(address) is int:
-            self._set_int(address)
+            self.address_format = AddressFormat.LEVEL3
+            self.address_type = address_type
+
         elif type(address) is Address:
             self.raw = address.raw
+            self.address_format = address.address_format
             self.address_type = address.address_type
+
+        elif type(address) is str:
+            self.address_type = address_type
+            if address_type == AddressType.PHYSICAL:
+                self._set_str(address,".")
+            else:
+                self._set_str(address,"/")
+    
+        elif type(address) is int:
+            self._set_int(address)
+            self.address_format = AddressFormat.FREE
+            self.address_type = address_type
+
         else:
             raise TypeError()
 
@@ -51,8 +67,9 @@ class Address:
 
     ##################################################
 
-    def _set_str( self, address ):
-        parts = address.split(".")
+    def _set_str( self, address, delimiter ):
+        parts = address.split(delimiter)
+            
         if any(not part.isdigit() for part in parts):
             raise CouldNotParseAddress()
         if len(parts) == 1:
@@ -72,7 +89,7 @@ class Address:
         if sub > 4095:
             raise CouldNotParseAddress()
         self.raw = (main<<12) + sub
-        self.address_type = AddressType.LEVEL2
+        self.address_format = AddressFormat.LEVEL2
 
     def _set_str_level3( self, parts ):
         main = int(parts[0])
@@ -85,7 +102,7 @@ class Address:
         if sub > 255:
             raise CouldNotParseAddress()
         self.raw = (main<<12) +  (middle<<8) + sub
-        self.address_type = AddressType.LEVEL3
+        self.address_format = AddressFormat.LEVEL3
 
     def _set_int(self, raw):
         if type(raw) is not int:
@@ -93,14 +110,16 @@ class Address:
         if ( raw > 65535 ):
             raise CouldNotParseAddress()
         self.raw = raw
-        self.address_type = AddressType.FREE
+        self.address_format = AddressFormat.FREE
 
     def _to_str(self):
-        if self.address_type == AddressType.FREE:
+        if self.address_type == AddressType.PHYSICAL:
+            return self._to_str_physical()
+        elif self.address_format == AddressFormat.FREE:
             return self._to_str_free()
-        elif self.address_type == AddressType.LEVEL2:
+        elif self.address_format == AddressFormat.LEVEL2:
             return self._to_str_level2()
-        elif self.address_type == AddressType.LEVEL3:
+        elif self.address_format == AddressFormat.LEVEL3:
             return self._to_str_level3()
         else:
             raise TypeError() 
@@ -110,11 +129,17 @@ class Address:
             (self.raw & 65535) )
 
     def _to_str_level2(self):
-        return '{0}.{1}'.format(
+        return '{0}/{1}'.format(
             ((self.raw >> 12 ) & 15),
             (self.raw & 4095) )
 
     def _to_str_level3(self):
+        return '{0}/{1}/{2}'.format(
+            ((self.raw >> 12 ) & 15),
+            ((self.raw >> 8) & 15),
+            (self.raw & 255) )
+
+    def _to_str_physical(self):
         return '{0}.{1}.{2}'.format(
             ((self.raw >> 12 ) & 15),
             ((self.raw >> 8) & 15),

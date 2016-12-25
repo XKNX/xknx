@@ -2,6 +2,7 @@ import time
 from .colors import Colors
 from .address import Address,AddressType
 from enum import Enum
+
 class CouldNotParseCEMI(Exception):
     def __init__(self):
         pass
@@ -113,8 +114,7 @@ class CEMIMessage():
             return APCI_COMMAND.GROUP_RESPONSE
         else:
             return APCI_COMMAND.UNKNOWN
-		
-        	
+
 class Telegram:
     """Abstraction for KNX telegrams"""
 
@@ -150,6 +150,7 @@ class Telegram:
     def read(self, data):
 
         self.print_data(data)
+
         self._from_telegram(data)
 		
         print(self)
