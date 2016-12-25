@@ -62,8 +62,8 @@ class CEMIMessage():
         self.ctl1 = cemi[2]
         self.ctl2 = cemi[3]
         
-        self.src_addr = Address(cemi[4 + offset] * 256 + cemi[5 + offset], AddressType.PHYSICAL)
-        self.dst_addr = Address(cemi[6 + offset] * 256 + cemi[7 + offset], AddressType.GROUP)
+        self.src_addr = Address((cemi[4 + offset], cemi[5 + offset]), AddressType.PHYSICAL)
+        self.dst_addr = Address((cemi[6 + offset], cemi[7 + offset]), AddressType.GROUP)
 
         self.mpdu_len = cemi[8 + offset]
 
