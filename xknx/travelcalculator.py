@@ -77,10 +77,17 @@ class TravelCalculator:
 
     def _calculate_position(self):
         relative_position = self.travel_to_position - self.last_known_position
-        if relative_position <= 0 and self.travel_direction == TravelStatus.DIRECTION_DOWN :
-            return self.travel_to_position
-        if relative_position >= 0 and self.travel_direction == TravelStatus.DIRECTION_UP :
-            return self.travel_to_position
+
+        def position_reached_or_exceeded(relative_position):
+            if relative_position <= 0 and self.travel_direction == TravelStatus.DIRECTION_DOWN :
+                return True
+            if relative_position >= 0 and self.travel_direction == TravelStatus.DIRECTION_UP :
+                return True
+            return False
+
+        if position_reached_or_exceeded(relative_position):
+             return self.travel_to_position
+
         travel_time = self._calculate_travel_time( relative_position )
         if self.current_time() > self.travel_started_time + travel_time:
             return self.travel_to_position
