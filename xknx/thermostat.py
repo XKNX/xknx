@@ -1,6 +1,9 @@
 from .device import Device
 from .address import Address
+from .dpt import DPT_Float
+
 import time
+
 
 class Thermostat(Device):
     def __init__(self, xknx, name, config):
@@ -16,7 +19,7 @@ class Thermostat(Device):
         if len(telegram.payload) != 3:
             raise(CouldNotParseSwitchTelegram)
 
-        self.temperature = ( telegram.payload[1] * 256 + telegram.payload[2] ) / 100
+        self.temperature = DPT_Float.from_knx( telegram.payload[1] , telegram.payload[2] ) 
 
         self.after_update_callback(self)
 
