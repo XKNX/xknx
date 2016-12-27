@@ -1,4 +1,10 @@
+
+""" Implementation of Basic KNX datatypes """
+
+""" See: http://www.knx.org/fileadmin/template/documents/downloads_support_menu/KNX_tutor_seminar_page/Advanced_documentation/05_Interworking_E1209.pdf as reference """
+
 from enum import Enum
+import time
 
 class ConversionError(Exception):
     def __init__(self, i):
@@ -22,11 +28,13 @@ class DPT_Float(DPT_BASE):
     """ Abstraction for KNX 2 Octet Floating Point Numbers """
     """ DPT 9.xxx """
 
-    value_min = -671088.64 
+    value_min = -671088.64
     value_max = 670760.96
+    unit = ""
+    resolution = 1
 
-    @staticmethod
-    def from_knx(raw):
+    @classmethod
+    def from_knx(cls, raw):
         """Convert a 2 byte KNX float to a flaot value"""
         DPT_BASE.test_bytesarray(raw,2)
 
@@ -41,8 +49,8 @@ class DPT_Float(DPT_BASE):
         return float(significand << exponent) / 100
 
 
-    @staticmethod
-    def to_knx(value):
+    @classmethod
+    def to_knx(cls, value):
         """Convert a float to a 2 byte KNX float value"""
 
         if not isinstance(value, (int, float)):
@@ -86,8 +94,8 @@ class DPT_Time(DPT_BASE):
     """ Abstraction for KNX 3 Octet Time """
     """ DPT 10.001 """
 
-    @staticmethod
-    def from_knx(raw):
+    @classmethod
+    def from_knx(cls,raw):
         """Convert a 3 byte KNX date to a time dict"""
 
         DPT_BASE.test_bytesarray(raw,3)
@@ -103,8 +111,8 @@ class DPT_Time(DPT_BASE):
         return {'day':DPT_Weekday(day),'hours':hours,
             'minutes':minutes,'seconds':seconds}
 
-    @staticmethod
-    def to_knx(values):
+    @classmethod
+    def to_knx(cls,values):
         """Convert time tuple to KNX time
         @param value: dict with following elements: (day,hours,minutes,seconds)
         """
@@ -122,8 +130,8 @@ class DPT_Time(DPT_BASE):
 
         return day << 5 | hours, minutes, seconds
 
-    @staticmethod
-    def current_time():
+    @classmethod
+    def current_time(cls):
         t = time.localtime()
 
         day     = t.tm_wday + 1
