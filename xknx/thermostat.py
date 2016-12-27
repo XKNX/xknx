@@ -1,6 +1,6 @@
 from .device import Device
 from .address import Address
-from .dpt import DPT_Float
+from .dpt_float import DPT_Float
 
 import time
 
