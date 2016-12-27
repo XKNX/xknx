@@ -237,7 +237,7 @@ class CEMIFrame():
             self.tpci_apci =   0x00
 
     def __str__(self):
-            return "<CEMIFram SourceAddress={0}, DestinationAddress={1}, Command={2}, Data={3}>".format( self.src_addr, self.dst_addr, self.cmd, self.data)
+            return "<CEMIFrame SourceAddress={0}, DestinationAddress={1}, Command={2}, Data={3}>".format( self.src_addr, self.dst_addr, self.cmd, self.data)
 
 
 class Telegram:
