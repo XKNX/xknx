@@ -9,14 +9,14 @@ class CouldNotParseCEMI(Exception):
 
     def __str__(self):
         return "CouldNotParseCEMI"
-		
+
 class APCI_COMMAND(Enum):
     GROUP_READ = 1
     GROUP_WRITE = 2
     GROUP_RESPONSE = 3
     UNKNOWN = 0xff
-	
-class ServiceType(Enum):		
+
+class ServiceType(Enum):
     SEARCH_REQUEST = 0x0201
     SEARCH_RESPONSE = 0x0202
     DESCRIPTION_REQUEST = 0x0203
@@ -34,34 +34,34 @@ class ServiceType(Enum):
     ROUTING_INDICATION = 0x0530
     ROUTING_LOST_MESSAGE = 0x0531
     UNKNOWN = 0x0000
-	
-class CEMIMessage():
-    """Representation of a CEMI message."""
-	
-    def __init__(self, cemi = None):      
+
+class CEMIFrame():
+    """Representation of a CEMI Frame."""
+
+    def __init__(self, cemi = None):
         """Initialize object."""
         self.code = 0
         self.ctl1 = 0
         self.ctl2 = 0
         self.cmd = APCI_COMMAND.UNKNOWN
         self.src_addr = Address()
-        self.dst_addr = Address()  
+        self.dst_addr = Address()
         self.tpci_apci = 0
         self.mpdu_len = 0
         self.data = [0]
-        if cemi != None: 
+        if cemi != None:
             self._from_cemi_frame(cemi)
-  
+
     def _from_cemi_frame(self, cemi):
-	
-        """Create a new CEMIMessage initialized from the given CEMI data."""
+
+        """Create a new CEMIFrame initialized from the given CEMI data."""
         # TODO: check that length matches
         self.code = cemi[0]
         offset = cemi[1]
 
         self.ctl1 = cemi[2]
         self.ctl2 = cemi[3]
-        
+
         self.src_addr = Address((cemi[4 + offset], cemi[5 + offset]), AddressType.PHYSICAL)
         self.dst_addr = Address((cemi[6 + offset], cemi[7 + offset]), AddressType.GROUP)
 
@@ -83,7 +83,7 @@ class CEMIMessage():
             self.data = [apci & 0x2f]
         else:
             self.data = cemi[11 + offset:]
-			
+
 
     def _to_cemi_frame(self):
         """Convert the CEMI frame object to its byte representation. Not testet"""
@@ -101,8 +101,8 @@ class CEMIMessage():
             cemi.extend(self.data)
 
         return cemi
-		
-    @staticmethod			
+
+    @staticmethod
     def _detect_acpi_command(apci):
         # for APCI codes see KNX Standard 03/03/07 Application layer
         # table Application Layer control field
@@ -115,10 +115,14 @@ class CEMIMessage():
         else:
             return APCI_COMMAND.UNKNOWN
 
+    def __str__(self):
+            return "<CEMIFram SourceAddress={0}, DestinationAddress={1}, Command={2}, Data={3}>".format( self.src_addr, self.dst_addr, self.cmd, self.data)
+
+
 class Telegram:
     """Abstraction for KNX telegrams"""
 
-		
+
     def __init__(self):
         """Initialize object."""
         self.headerLength = 0
@@ -126,48 +130,57 @@ class Telegram:
         self.serviceTypeIdent = ServiceType.UNKNOWN
         self.b4Reserve = 0
         self.totalLength = 0
-        self.message = CEMIMessage()
-		
+        self.cemi = CEMIFrame()
+
         self.payload = bytearray()
+
+
     @property
     def sender(self):
         """Return source address"""
-        return self.message.src_addr
+        return self.cemi.src_addr
+
     @sender.setter
-    def sender(self, value):	
-        self.message.src_addr = Address(value)
-	
+    def sender(self, value):
+        self.cemi.src_addr = Address(value)
+
     @property
     def group_address(self):
         """Return destination address"""
-        return self.message.dst_addr
+        return self.cemi.dst_addr
+
     @group_address.setter
-    def group_address(self, value):	
-        self.message.dst_addr = Address(value)
-					
+    def group_address(self, value):
+        self.cemi.dst_addr = Address(value)
+
+
+
     def _from_telegram(self, data):
+
+        print(data[0:6])
+
         self.headerLength = data[0]
         self.protocolVersion = data[1]
         self.serviceTypeIdent = ServiceType(data[2] * 256 + data[3])
         self.b4Reserve = data[4]
-        self.totalLength = data[5]	
-        self.message = CEMIMessage(data[6:])		
-		
+        self.totalLength = data[5]
+        self.cemi = CEMIFrame(data[6:])
+
     def read(self, data):
 
         self.print_data(data)
 
         self._from_telegram(data)
-		
+
         print(self)
 
         len_payload = data[14]
         for x in range(0, len_payload):
             self.payload.append(data[16+x])
-			
+
     def __str__(self):
-        return "<KNXIPFrame IPBody->HeaderLength={0}, ProtocolVersion={1}, ServiceType={2}, Reserve={3}, TotalLength={4}>\n<CEMIBody->SourceAddress={5}, DestinationAddress={6}, Command={7}, Data={8}>".format(self.headerLength, self.protocolVersion, self.serviceTypeIdent, self.b4Reserve, self.totalLength, self.message.src_addr, self.message.dst_addr, self.message.cmd, self.message.data)
-	
+        return "<KNXIPFrame IPBody->HeaderLength={0}, ProtocolVersion={1}, ServiceType={2}, Reserve={3}, TotalLength={4} {5}>".format(self.headerLength, self.protocolVersion, self.serviceTypeIdent, self.b4Reserve, self.totalLength, self.cemi)
+
     def print_data(self, data):
         i = 0;
         for b in data:
@@ -213,7 +226,7 @@ class Telegram:
         data.append(0x30)
 
         # Total length
-        total_length = 16 + len(self.payload) 
+        total_length = 16 + len(self.payload)
         data.append((total_length>>8)&255)
         data.append(total_length&255)
 
