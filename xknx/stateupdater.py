@@ -3,14 +3,15 @@ import time
 
 class StateUpdater(threading.Thread):
 
-    def __init__(self, xknx, timeout):
+    def __init__(self, xknx, timeout, start_timeout=15):
         self.xknx = xknx
         self.timeout = timeout
+        self.start_timeout = start_timeout
         threading.Thread.__init__(self)
 
 
     def run(self):
-        time.sleep(self.timeout)
+        time.sleep(self.start_timeout)
         print("Starting Update Thread")
         while True:
             self.request_states()
