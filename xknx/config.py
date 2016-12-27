@@ -1,7 +1,6 @@
 import yaml
 from .xknx import XKNX
 from .address import Address
-from .binaryoutput import BinaryOutput
 from .binaryinput import BinaryInput
 from .device import Device
 from .switch import Switch
