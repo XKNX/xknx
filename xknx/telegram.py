@@ -10,6 +10,38 @@ class CouldNotParseCEMI(Exception):
     def __str__(self):
         return "CouldNotParseCEMI"
 
+class CEMIMessageCode(Enum):
+    """
+    FROM NETWORK LAYER TO DATA LINK LAYER
+    Data Link Layer  Message
+    Primitive    Code
+    ---------------  -------
+    L_Raw.req          0x10
+    L_Data.req         0x11  Data Service. Primitive used for transmitting a data frame
+    L_Poll_Data.req    0x13  Poll Data Service
+ 
+    FROM DATA LINK LAYER TO NETWORK LAYER
+    Data Link Layer  Message
+    Primitive    Code
+    ---------------  -------
+    L_Poll_Data.con    0x25  Poll Data Service
+    L_Data.ind         0x29  Data Service. Primitive used for receiving a data frame
+    L_Busmon.ind       0x2B  Bus Monitor Service
+    L_Raw.ind          0x2D
+    L_Data.con         0x2E  Data Service. Primitive used for local confirmation that a frame was sent
+                             (does not indicate a successful receive though)
+    L_Raw.con          0x2F		
+    """
+    L_RAW_REQ       =   0x10
+    L_Data_REQ      =   0x11
+    L_POLL_DATA_REQ =   0x13
+    L_POLL_DATA_CON =   0x25
+    L_DATA_IND      =   0x29
+    L_BUSMON_IND    =   0x2B
+    L_RAW_IND       =   0x2D
+    L_DATA_CON      =   0x2E
+    L_RAW_CON       =   0x2F
+
 class APCI_COMMAND(Enum):
     GROUP_READ = 1
     GROUP_WRITE = 2
@@ -38,8 +70,8 @@ class ServiceType(Enum):
 class CEMIFrame():
     """Representation of a CEMI Frame."""
 
-    def __init__(self, cemi = None):
-        """Initialize object."""
+    def __init__(self, cemi = None):      
+        """CEMIFrame __init__ object."""
         self.code = 0
         self.ctl1 = 0
         self.ctl2 = 0
@@ -52,11 +84,86 @@ class CEMIFrame():
         if cemi != None:
             self._from_cemi_frame(cemi)
 
+
+    def _init_group(self, dst_addr = Address()):
+        """CEMIMessage _init_group"""
+        """
+		Control Field 1
+         Bit  |
+		------+---------------------------------------------------------------
+          7   | Frame Type  - 0x0 for extended frame
+              |               0x1 for standard frame
+		------+---------------------------------------------------------------
+          6   | Reserved
+              |
+		------+---------------------------------------------------------------
+          5   | Repeat Flag - 0x0 repeat frame on medium in case of an error
+              |               0x1 do not repeat
+		------+---------------------------------------------------------------
+          4   | System Broadcast - 0x0 system broadcast
+              |                    0x1 broadcast
+		------+---------------------------------------------------------------
+          3   | Priority    - 0x0 system
+              |               0x1 normal
+		------+               0x2 urgent
+          2   |               0x3 low
+              |
+		------+---------------------------------------------------------------
+          1   | Acknowledge Request - 0x0 no ACK requested
+              | (L_Data.req)          0x1 ACK requested
+		------+---------------------------------------------------------------
+          0   | Confirm      - 0x0 no error
+              | (L_Data.con) - 0x1 error
+		------+---------------------------------------------------------------
+		 
+		Control Field 2
+		 
+		 Bit  |
+		------+---------------------------------------------------------------
+          7   | Destination Address Type - 0x0 individual address
+              |                          - 0x1 group address
+		------+---------------------------------------------------------------
+         6-4  | Hop Count (0-7)
+		------+---------------------------------------------------------------
+         3-0  | Extended Frame Format - 0x0 standard frame
+		------+---------------------------------------------------------------
+		"""
+        # Message Code 
+        self.code = CEMIMessageCode.L_Data_REQ
+        # Control Field 1 -> frametype 1, repeat 1, system broadcast 1, priority 3, ack-req 0, confirm-flag 0
+        self.ctl1 = 0xbc
+		# Control Field 2 -> dst_addr type 1, hop count 6, extended frame format
+        self.ctl2 = 0xe0  
+		
+        self.src_addr = Address()
+        self.dst_addr = dst_addr
+			
+    def _init_group_read(self, dst_addr):
+        """CEMIMessage _init_group_read"""
+        """Initialize group read """
+        self.init_group(dst_addr)
+		# ACPI Value		
+        _set_tpci_apci_command_value(APCI_COMMAND.GROUP_READ)
+		# DATA
+        self.data = [0]
+		
+    def _init_group_write(self, dst_addr = Address(), data=None):
+        """CEMIMessage _init_group_write"""
+        """Initialize group write """
+        self.init_group(dst_addr)
+        # ACPI Value		
+        _set_tpci_apci_command_value(APCI_COMMAND.GROUP_WRITE)
+		# DATA
+        if data is None:
+            self.data = [0]
+        else:
+            self.data = data
+		
     def _from_cemi_frame(self, cemi):
 
         """Create a new CEMIFrame initialized from the given CEMI data."""
         # TODO: check that length matches
-        self.code = cemi[0]
+        self.code = CEMIMessageCode(cemi[0])
         offset = cemi[1]
 
         self.ctl1 = cemi[2]
@@ -78,7 +185,7 @@ class CEMIFrame():
             raise CouldNotParseCEMI(
                 "APDU LEN should be {} but is {}".format(
                     self.mpdu_len, len(apdu)))
-
+        #check Date in ACPI Byte
         if len(apdu) == 1:
             self.data = [apci & 0x2f]
         else:
@@ -87,7 +194,7 @@ class CEMIFrame():
 
     def _to_cemi_frame(self):
         """Convert the CEMI frame object to its byte representation. Not testet"""
-        cemi = [self.code, 0x00, self.ctl1, self.ctl2,
+        cemi = [self.code.value, 0x00, self.ctl1, self.ctl2,
                 self.src_addr.byte1, self.src_addr.byte2,
                 self.dst_addr.byte1, self.dst_addr.byte2,
                ]
@@ -114,6 +221,20 @@ class CEMIFrame():
             return APCI_COMMAND.GROUP_RESPONSE
         else:
             return APCI_COMMAND.UNKNOWN
+			
+    @staticmethod			
+    def _set_tpci_apci_command_value(command):
+        # for APCI codes see KNX Standard 03/03/07 Application layer
+        # table Application Layer control field
+        if command == APCI_COMMAND.GROUP_WRITE :
+            self.cmd = APCI_COMMAND.GROUP_WRITE
+            self.tpci_apci =  0x00 * 256 + 0x80
+        elif command == APCI_COMMAND.GROUP_READ :
+            self.cmd = APCI_COMMAND.GROUP_READ
+            self.tpci_apci =   0x00
+        else:
+            self.cmd = APCI_COMMAND.UNKNOWN
+            self.tpci_apci =   0x00
 
     def __str__(self):
             return "<CEMIFram SourceAddress={0}, DestinationAddress={1}, Command={2}, Data={3}>".format( self.src_addr, self.dst_addr, self.cmd, self.data)
@@ -179,7 +300,7 @@ class Telegram:
             self.payload.append(data[16+x])
 
     def __str__(self):
-        return "<KNXIPFrame IPBody->HeaderLength={0}, ProtocolVersion={1}, ServiceType={2}, Reserve={3}, TotalLength={4} {5}>".format(self.headerLength, self.protocolVersion, self.serviceTypeIdent, self.b4Reserve, self.totalLength, self.cemi)
+        return "<KNXIPFrame HeaderLength={0}, ProtocolVersion={1}, ServiceType={2}, Reserve={3}, TotalLength={4} {5}>".format(self.headerLength, self.protocolVersion, self.serviceTypeIdent, self.b4Reserve, self.totalLength, self.cemi)
 
     def print_data(self, data):
         i = 0;
