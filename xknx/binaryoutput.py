@@ -1,7 +1,6 @@
 from .address import Address
 from .telegram import Telegram
 from .device import Device
-from .globals import Globals
 
 class BinaryOutput(Device):
 
@@ -21,7 +20,7 @@ class BinaryOutput(Device):
 
     def send(self, payload):
         telegram = Telegram()
-        telegram.sender = Globals.get_own_address()
+        telegram.sender = self.xknx.globals.own_address
         telegram.group_address=self.group_address
         telegram.payload.append(payload)
         self.xknx.out_queue.put(telegram)  

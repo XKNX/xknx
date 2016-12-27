@@ -3,7 +3,6 @@ from .telegram import Telegram
 from .device import Device
 from .address import Address
 from .travelcalculator import TravelCalculator
-from .globals import Globals
 
 class CouldNotParseShutterTelegram(Exception):
     pass
@@ -33,7 +32,7 @@ class Shutter(Device):
 
     def send(self, group_address, payload):
         telegram = Telegram()
-        telegram.sender = Globals.get_own_address()
+        telegram.sender = self.xknx.globals.own_address
         telegram.group_address=group_address
 
         if isinstance(payload, list):

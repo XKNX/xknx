@@ -12,7 +12,6 @@ from .outlet import Outlet
 from .shutter import Shutter
 from .devices import Devices
 from .address import Address,AddressType
-from .globals import Globals
 import time
 
 
@@ -31,9 +30,9 @@ class Config:
     def parse_general(seif, doc):
         if "general" in doc:
             if "own_address" in doc["general"]:
-                Globals.set_own_address(Address(doc["general"]["own_address"],AddressType.PHYSICAL))
+                self.xknx.globals.own_address = Address(doc["general"]["own_address"],AddressType.PHYSICAL)
             if "own_ip" in doc["general"]:
-                Globals.set_own_ip(doc["general"]["own_ip"])
+                self.xknx.globals.set_own_ip(doc["general"]["own_ip"])
 
     def parse_groups(self, doc):
         for group in doc["groups"]:
