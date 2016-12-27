@@ -27,12 +27,12 @@ class Config:
             self.parse_general(doc)
             self.parse_groups(doc)
 
-    def parse_general(seif, doc):
+    def parse_general(self, doc):
         if "general" in doc:
             if "own_address" in doc["general"]:
                 self.xknx.globals.own_address = Address(doc["general"]["own_address"],AddressType.PHYSICAL)
             if "own_ip" in doc["general"]:
-                self.xknx.globals.set_own_ip(doc["general"]["own_ip"])
+                self.xknx.globals.own_ip = doc["general"]["own_ip"]
 
     def parse_groups(self, doc):
         for group in doc["groups"]:
