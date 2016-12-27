@@ -7,7 +7,6 @@ from .device import Device
 from .switch import Switch
 from .thermostat import Thermostat
 from .time import Time
-from .time import time
 from .dimmer import Dimmer
 from .outlet import Outlet
 from .shutter import Shutter
