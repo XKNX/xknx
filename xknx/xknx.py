@@ -11,4 +11,3 @@ class XKNX:
 
         self.out_queue = queue.Queue()
 
-        
