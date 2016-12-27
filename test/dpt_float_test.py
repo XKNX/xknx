@@ -1,6 +1,6 @@
 import unittest
 
-from xknx import DPT_Float,ConversionError
+from xknx import DPT_Float,DPT_Temperature,DPT_Humidity,DPT_Lux,ConversionError
 
 class TestDPT_Float(unittest.TestCase):
 
@@ -73,6 +73,51 @@ class TestDPT_Float(unittest.TestCase):
     def test_from_knx_wrong_parameter2(self):
         with self.assertRaises(ConversionError):
             DPT_Float().from_knx((0xF8, "0x23" ))
+
+    #
+    # DPT_Temperature
+    #
+    def test_temperature_settings(self):
+        self.assertEqual( DPT_Temperature().value_min, -273)
+        self.assertEqual( DPT_Temperature().value_max, 670760)
+        self.assertEqual( DPT_Temperature().unit, "C")
+        self.assertEqual( DPT_Temperature().resolution, 1)
+
+    def test_temperature_assert_min_exceeded(self):
+        with self.assertRaises(ConversionError):
+            DPT_Temperature().to_knx( -274 )
+
+    def test_temperature_assert_min_exceeded_from_knx(self):
+        with self.assertRaises(ConversionError):
+            DPT_Temperature().from_knx((0xB1,0xE6))  # -1000
+
+    #
+    # DPT_Lux
+    #
+    def test_temperature_settings(self):
+        self.assertEqual( DPT_Lux().value_min, 0)
+        self.assertEqual( DPT_Lux().value_max, 670760)
+        self.assertEqual( DPT_Lux().unit, "Lux")
+        self.assertEqual( DPT_Lux().resolution, 1)
+
+    def test_temperature_assert_min_exceeded(self):
+        with self.assertRaises(ConversionError):
+            DPT_Lux().to_knx( -1 )
+
+    #
+    # DPT_Humidity
+    #
+    def test_temperature_settings(self):
+        self.assertEqual( DPT_Humidity().value_min, 0)
+        self.assertEqual( DPT_Humidity().value_max, 670760)
+        self.assertEqual( DPT_Humidity().unit, "%")
+        self.assertEqual( DPT_Humidity().resolution, 1)
+
+    def test_temperature_assert_min_exceeded(self):
+        with self.assertRaises(ConversionError):
+            DPT_Humidity().to_knx( -1 )
+
+
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestDPT_Float)
 unittest.TextTestRunner(verbosity=2).run(suite)

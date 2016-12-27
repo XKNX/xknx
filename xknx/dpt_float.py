@@ -29,8 +29,12 @@ class DPT_Float(DPT_Base):
         if sign == 1:
             significand = significand - 2048
 
-        return float(significand << exponent) / 100
+        value =  float(significand << exponent) / 100
 
+        if not cls.test_boundaries(value):
+            raise ConversionError(value)
+
+        return value
 
     @classmethod
     def to_knx(cls, value):
@@ -39,8 +43,7 @@ class DPT_Float(DPT_Base):
         if not isinstance(value, (int, float)):
             raise ConversionError(value)
 
-        if value < DPT_Float.value_min or \
-                value > DPT_Float.value_max:
+        if not cls.test_boundaries(value):
             raise ConversionError(value)
 
         sign = 1 if value < 0 else 0
@@ -62,4 +65,36 @@ class DPT_Float(DPT_Base):
         exponent,significand = calc_exponent(value, sign)
 
         return (sign << 7) | (exponent << 3) | (significand >> 8), significand & 0xff
+
+    @classmethod
+    def test_boundaries(cls, value):
+        return value >= cls.value_min and \
+               value <= cls.value_max
+
+class DPT_Temperature(DPT_Float):
+    """ Abstraction for KNX 2 Octet Floating Point Numbers """
+    """ DPT 9.001 """
+
+    value_min = -273
+    value_max = 670760
+    unit = "C"
+    resolution = 1
+
+class DPT_Lux(DPT_Float):
+    """ Abstraction for KNX 2 Octet Floating Point Numbers """
+    """ DPT 9.004 """
+
+    value_min = 0
+    value_max = 670760
+    unit = "Lux"
+    resolution = 1
+
+class DPT_Humidity(DPT_Float):
+    """ Abstraction for KNX 2 Octet Floating Point Numbers """
+    """ DPT 9.007 """
+
+    value_min = 0
+    value_max = 670760
+    unit = "%"
+    resolution = 1
 

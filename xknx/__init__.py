@@ -13,6 +13,6 @@ from .dimmer import Dimmer
 from .outlet import Outlet
 from .config import Config
 from .dpt import DPT_Base,ConversionError
-from .dpt_float import DPT_Float
+from .dpt_float import DPT_Float,DPT_Lux,DPT_Temperature,DPT_Humidity
 from .dpt_time import DPT_Time,DPT_Weekday
 from .globals import Globals
