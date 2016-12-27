@@ -1,6 +1,5 @@
 from .device import Device
 from .telegram import Telegram
-from .globals import Globals
 from .address import Address
 import time
 
@@ -36,7 +35,7 @@ class Dimmer(Device):
 
     def send(self, group_address, payload):
         telegram = Telegram()
-        telegram.sender = Globals.get_own_address()
+        telegram.sender = self.xknx.globals.own_address
         telegram.group_address=group_address
 
         if isinstance(payload, list):
