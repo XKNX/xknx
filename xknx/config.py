@@ -6,6 +6,8 @@ from .binaryinput import BinaryInput
 from .device import Device
 from .switch import Switch
 from .thermostat import Thermostat
+from .time import Time
+from .time import time
 from .dimmer import Dimmer
 from .outlet import Outlet
 from .shutter import Shutter
@@ -57,3 +59,7 @@ class Config:
                 for entry in doc["groups"][group]:
                     thermostat = Thermostat(self.xknx, entry, doc["groups"][group][entry])
                     self.xknx.devices.devices.append(thermostat)
+            if group.startswith("time"):
+                for entry in doc["groups"][group]:
+                    time = Time(self.xknx, entry, doc["groups"][group][entry])
+                    self.xknx.devices.devices.append(time)

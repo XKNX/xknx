@@ -104,6 +104,17 @@ groups:
         Kitchen.Light_1:     {group_address_switch: "1/6/1", group_address_dimm: "1/6/2", group_address_dimm_feedback: "1/6/3"}
         Diningroom.Light_1:  {group_address_switch: "1/6/4", group_address_dimm: "1/6/5", group_address_dimm_feedback: "1/6/6"}
         Living-Room.Light_1: {group_address_switch: "1/6/7", group_address_dimm: "1/6/8", group_address_dimm_feedback: "1/6/9"}
+
+    # Measuring temperature (setting target temperature coming soon)
+    thermostat:
+        Kitchen.Thermostat_1: {group_address: "1/7/1"}
+
+        Livingroom.Thermostat_2: {group_address: "1/7/2"}
+
+
+    # Cyclic sending of time to the KNX bus
+    time:
+        General.Time: {group_address: "1/8/1"}
 ```
 
 Basic Operations
