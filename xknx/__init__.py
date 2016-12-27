@@ -12,5 +12,5 @@ from .thermostat import Thermostat
 from .dimmer import Dimmer
 from .outlet import Outlet
 from .config import Config
-from .dpt import DPT_Float, ConversionError
+from .dpt import DPT_Float,DPT_Time,DPT_Weekday,ConversionError
 from .globals import Globals
