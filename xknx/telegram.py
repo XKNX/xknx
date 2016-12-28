@@ -195,8 +195,8 @@ class CEMIFrame():
     def _to_cemi_frame(self):
         """Convert the CEMI frame object to its byte representation. Not testet"""
         cemi = [self.code.value, 0x00, self.ctl1, self.ctl2,
-                self.src_addr.byte1, self.src_addr.byte2,
-                self.dst_addr.byte1, self.dst_addr.byte2,
+                self.src_addr.byte1(), self.src_addr.byte2(),
+                self.dst_addr.byte1(), self.dst_addr.byte2(),
                ]
         if (len(self.data) == 1) and ((self.data[0] & 3) == self.data[0]):
             # less than 6 bit of data, pack into APCI byte
