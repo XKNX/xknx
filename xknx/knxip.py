@@ -288,8 +288,6 @@ class KNXIPFrame:
 
     def _from_telegram(self, data):
 
-        print(data[0:6])
-
         self.headerLength = data[0]
         self.protocolVersion = data[1]
         self.serviceTypeIdent = ServiceType(data[2] * 256 + data[3])
