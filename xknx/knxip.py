@@ -324,16 +324,8 @@ class KNXIPFrame:
             i=i+1
         print ("")
 
-    def dump(self):
-        #print('Control: {:08b}'.format(self.control))
-        print('Sender: {0}'.format( self.sender.__str__()))
-        print('Group:   {0}'.format(self.group_address))
-        #print('Payload: {:#02x}'.format(self.payload))
 
-        for b in self.payload:
-            print('Payload: {:#02x}'.format(b))
-
-    def str(self):
+    def to_knx(self):
         data = bytearray()
 
         # See: http://www.knx.org/fileadmin/template/documents/downloads_support_menu/KNX_tutor_seminar_page/tutor_documentation/08_IP%20Communication_E0510a.pdf

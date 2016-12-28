@@ -9,7 +9,7 @@ class Test_KNXIP(unittest.TestCase):
         raw = ((0x06,0x10,0x05,0x30,0x00,0x12,0x29,0x00,0xbc,0xd0,0x12,0x02,0x01,0x51,0x02,0x00,0x40,0xf0))
 
         knxipframe = KNXIPFrame()
-        knxipframe.read(raw)
+        knxipframe.from_knx(raw)
 
         self.assertEqual( knxipframe.sender ,  Address("1.2.2") )
         self.assertEqual(knxipframe.group_address, Address(337))
@@ -23,9 +23,9 @@ class Test_KNXIP(unittest.TestCase):
         raw = ((0x06,0x10,0x05,0x30,0x00,0x12,0x29,0x00,0xbc,0xd0,0x12,0x02,0x01,0x51,0x02,0x00,0x40,0xf0))
 
         knxipframe = KNXIPFrame()
-        knxipframe.read(raw)
+        knxipframe.from_knx(raw)
 
-        self.assertEqual( knxipframe.str(), bytes(raw))
+        self.assertEqual( knxipframe.to_knx(), bytes(raw))
 
     def test_telegram_set(self):
         knxipframe = KNXIPFrame()
@@ -44,14 +44,14 @@ class Test_KNXIP(unittest.TestCase):
 
         raw = ((0x06,0x10,0x05,0x30,0x00,0x14,0x29,0x00,0xbc,0xd0,0x12,0x02,0x01,0x51,0x04,0x00,0x80,13,23,42))
 
-        self.assertEqual( knxipframe.str(), bytes(raw))
+        self.assertEqual( knxipframe.to_knx(), bytes(raw))
 
     def test_telegram_get(self):
 
         raw = ((0x06,0x10,0x05,0x30,0x00,0x12,0x29,0x00,0xbc,0xd0,0x12,0x02,0x01,0x51,0x02,0x00,0x40,0xf0))
 
         knxipframe = KNXIPFrame()
-        knxipframe.read(raw)
+        knxipframe.from_knx(raw)
 
         telegram = knxipframe.telegram
 

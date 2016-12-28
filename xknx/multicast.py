@@ -28,7 +28,7 @@ class Multicast:
         if self.xknx.globals.own_ip is not None:
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(self.xknx.globals.own_ip))
 
-        sock.sendto(knxipframe.str(), (self.MCAST_GRP, self.MCAST_PORT))
+        sock.sendto(knxipframe.to_knx(), (self.MCAST_GRP, self.MCAST_PORT))
 
     def recv(self):
         print("Starting daemon...")
@@ -55,9 +55,7 @@ class Multicast:
                     continue
 
                 knxipframe = KNXIPFrame()
-                knxipframe.read(raw)
-
-                #knxipframe.dump()
+                knxipframe.from_knx(raw)
 
                 if knxipframe.sender == self.xknx.globals.own_address:
                     #print("Ignoring own KNXIPFrame")
