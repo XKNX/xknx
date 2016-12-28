@@ -22,7 +22,7 @@ class Time(Device):
         for byte in DPT_Time.current_time_as_knx():
             telegram.payload.append(byte)
 
-        self.xknx.out_queue.put(telegram)
+        self.xknx.telegrams.put(telegram)
 
     def request_state(self):
         self.broadcast_time()

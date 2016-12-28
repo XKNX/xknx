@@ -45,7 +45,7 @@ class Dimmer(Device):
         else:
             print("Cannot understand payload")
 
-        self.xknx.out_queue.put(telegram)
+        self.xknx.telegrams.put(telegram)
 
     def set_on(self):
         self.send(self.group_address_switch, 0x81)

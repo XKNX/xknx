@@ -42,7 +42,7 @@ class Shutter(Device):
         else:
             print("Cannot understand payload")
 
-        self.xknx.out_queue.put(telegram)
+        self.xknx.telegrams.put(telegram)
 
     def set_down(self):
         if not self.group_address_long.is_set():

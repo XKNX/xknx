@@ -22,7 +22,7 @@ class StateUpdater(threading.Thread):
             device.request_state()
 
     @staticmethod
-    def start_thread(xknx, timeout = 60):
+    def start(xknx, timeout = 60):
         t = StateUpdater(xknx, timeout)
         t.setDaemon(True)
         t.start()

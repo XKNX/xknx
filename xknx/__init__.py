@@ -3,7 +3,8 @@ from .address import Address,CouldNotParseAddress,AddressType,AddressFormat
 from .telegram import Telegram
 from .knxip import KNXIPFrame,CEMIFrame
 from .stateupdater import StateUpdater
-from .multicast import Multicast,MulticastSender,MulticastReceiver
+from .multicast import Multicast,MulticastDaemon
+from .telegram_processor import TelegramProcessor
 from .devices import Devices,CouldNotResolveAddress
 from .binaryinput import BinaryInput
 from .shutter import Shutter

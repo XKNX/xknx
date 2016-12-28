@@ -24,7 +24,7 @@ class Outlet(Device):
         telegram = Telegram()
         telegram.group_address=self.group_address
         telegram.payload.append(payload)
-        self.xknx.out_queue.put(telegram)  
+        self.xknx.telegrams.put(telegram)
 
 
     def set_on(self):
@@ -53,7 +53,7 @@ class Outlet(Device):
     def process(self,telegram):
 
         if len(telegram.payload) != 1:
-            print("Could not parse telegram for binary output %s" % telegram ) 
+            print("Could not parse telegram for binary output %s" % telegram )
             return
 
         if telegram.payload[0] == 0x40 :

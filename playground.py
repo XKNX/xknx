@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from xknx import XKNX,Address, MulticastReceiver,MulticastSender,StateUpdater,Devices,CouldNotResolveAddress,Config
+from xknx import XKNX,Address, MulticastDaemon,TelegramProcessor,StateUpdater,Devices,CouldNotResolveAddress,Config
 import time
 
 def callback( xknx, device, telegram):
@@ -65,9 +65,9 @@ Config(xknx).read()
 #print("short up")
 #xknx.devices.device_by_name("Livingroom.Shutter_1").set_short_up()
 
-MulticastSender.start_thread(xknx)
-MulticastReceiver.start_thread(xknx, callback)
-StateUpdater.start_thread(xknx, 10)
+TelegramProcessor.start(xknx)
+MulticastDaemon.start(xknx, callback)
+StateUpdater.start(xknx, 10)
 
 while True:
 	pass
