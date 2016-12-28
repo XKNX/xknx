@@ -1,6 +1,6 @@
 from .xknx import XKNX
 from .address import Address,CouldNotParseAddress,AddressType,AddressFormat
-from .telegram import Telegram
+from .telegram import Telegram,TelegramType
 from .knxip import KNXIPFrame,CEMIFrame
 from .stateupdater import StateUpdater
 from .multicast import Multicast,MulticastDaemon

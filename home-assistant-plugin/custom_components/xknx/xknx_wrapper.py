@@ -19,7 +19,7 @@ class XKNX_Wrapper(object):
         self.config_file = xknx_config.config_file()
 
     @staticmethod
-    def callback(  xknx, device, telegram):
+    def telegram_received_callback(  xknx, device, telegram):
         print("{0}".format(device.name))
 
 
@@ -27,8 +27,8 @@ class XKNX_Wrapper(object):
 
         Config(self.xknx).read(file=self.config_file)
 
-        TelegramProcessor.start_thread(self.xknx)
-        MulticastDaemon.start_thread(self.xknx, self.callback)
+        TelegramProcessor.start_thread(self.xknx, self.telegram_received_callback)
+        MulticastDaemon.start_thread(self.xknx)
         StateUpdater.start_thread(self.xknx)
 
         self.initialized = True

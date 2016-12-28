@@ -160,7 +160,7 @@ Multicast(xknx).recv()
 from xknx import XKNX,Multicast,CouldNotResolveAddress,Config
 import time
 
-def callback( xknx, device, telegram):
+def telegram_received_callback( xknx, device, telegram):
 
     print("Callback received from {0}".format(device.name))
 
@@ -177,6 +177,10 @@ def callback( xknx, device, telegram):
 
 xknx = XKNX()
 Config(xknx).read()
-Multicast(xknx).recv(callback)
+
+TelegramProcessor.start_thread(self.xknx, self.telegram_received_callback)
+
+while True:
+	pass
 
 ```

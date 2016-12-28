@@ -3,7 +3,7 @@ import struct
 import threading
 import time
 
-from .telegram import Telegram
+from .telegram import Telegram,TelegramType
 from .knxip import KNXIPFrame
 from .address import Address
 from .xknx import XKNX
@@ -30,7 +30,7 @@ class Multicast:
 
         sock.sendto(knxipframe.str(), (self.MCAST_GRP, self.MCAST_PORT))
 
-    def recv(self, callback = None):
+    def recv(self):
         print("Starting daemon...")
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind(("", self.MCAST_PORT))
@@ -71,17 +71,16 @@ class Multicast:
                     self.xknx.telegrams.put(telegram)
 
 class MulticastDaemon(threading.Thread):
-    def __init__(self, xknx, callback = None):
+    def __init__(self, xknx):
         self.xknx = xknx
-        self.callback = callback
         threading.Thread.__init__(self)
 
     def run(self):
-        Multicast(self.xknx).recv(self.callback)
+        Multicast(self.xknx).recv()
 
     @staticmethod
-    def start_thread(xknx, callback = None):
-        t = MulticastDaemon(xknx, callback)
+    def start_thread(xknx):
+        t = MulticastDaemon(xknx)
         t.setDaemon(True)
         t.start()
 

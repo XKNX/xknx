@@ -1,9 +1,13 @@
 import threading
 
+from .telegram import TelegramType
+from .devices import CouldNotResolveAddress
+
 class TelegramProcessor(threading.Thread):
 
-    def __init__(self, xknx):
+    def __init__(self, xknx, telegram_received_callback = None):
         self.xknx = xknx
+        self.telegram_received_callback = telegram_received_callback
         threading.Thread.__init__(self)
 
 
@@ -34,14 +38,14 @@ class TelegramProcessor(threading.Thread):
         try:
             device = self.xknx.devices.device_by_group_address(telegram.group_address)
             device.process(telegram)
-            if ( callback ):
-                callback(self.xknx, device, telegram)
+            if ( self.telegram_received_callback ):
+                self.telegram_received_callback(self.xknx, device, telegram)
         except CouldNotResolveAddress as c:
             print(c)
 
 
     @staticmethod
-    def start_thread(xknx):
-        t = TelegramProcessor(xknx)
+    def start_thread(xknx, telegram_received_callback = None):
+        t = TelegramProcessor(xknx,telegram_received_callback)
         t.setDaemon(True)
         t.start()
