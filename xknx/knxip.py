@@ -2,29 +2,9 @@ import time
 from .colors import Colors
 from .address import Address,AddressType
 from .telegram import Telegram
-from enum import Enum
-
+from .knxip_enum import KNXIPServiceType,CEMIMessageCode,APCI_COMMAND 
 
 # # See: http://www.knx.org/fileadmin/template/documents/downloads_support_menu/KNX_tutor_seminar_page/tutor_documentation/08_IP%20Communication_E0510a.pdf
-
-class ServiceType(Enum):
-    SEARCH_REQUEST = 0x0201
-    SEARCH_RESPONSE = 0x0202
-    DESCRIPTION_REQUEST = 0x0203
-    DESCRIPTION_RESPONSE = 0x0204
-    CONNECT_REQUEST = 0x0205
-    CONNECT_RESPONSE = 0x0206
-    CONNECTIONSTATE_REQUEST = 0x0207
-    CONNECTIONSTATE_RESPONSE = 0x0208
-    DISCONNECT_REQUEST = 0x0209
-    DISCONNECT_RESPONSE = 0x020a
-    DEVICE_CONFIGURATION_REQUEST = 0x0310
-    DEVICE_CONFIGURATION_ACK = 0x0111
-    TUNNELING_REQUEST = 0x0420
-    TUNNELLING_ACK = 0x0421
-    ROUTING_INDICATION = 0x0530
-    ROUTING_LOST_MESSAGE = 0x0531
-    UNKNOWN = 0x0000
 
 class CouldNotParseKNXIP(Exception):
     def __init__(self, description = ""):
@@ -38,7 +18,7 @@ class ConnectionHeader():
     def __init__(self, data = None):
         self.headerLength = 0x06
         self.protocolVersion = 0x10
-        self.serviceTypeIdent = ServiceType.ROUTING_INDICATION
+        self.serviceTypeIdent = KNXIPServiceType.ROUTING_INDICATION
         self.b4Reserve = 0
         self.totalLength = 0 # to be set later
 
@@ -53,9 +33,10 @@ class ConnectionHeader():
 
         self.headerLength = data[0]
         self.protocolVersion = data[1]
-        self.serviceTypeIdent = ServiceType(data[2] * 256 + data[3])
+        self.serviceTypeIdent = KNXIPServiceType(data[2] * 256 + data[3])
         self.b4Reserve = data[4]
         self.totalLength = data[5]
+
 
     def to_knx(self):
         data = bytearray()
@@ -70,47 +51,11 @@ class ConnectionHeader():
         return data
 
     def __str__(self):
-        return "<Connection HeaderLength={0}, ProtocolVersion={1}, ServiceType={2}, Reserve={3}, TotalLength={4}>".format(self.headerLength, self.protocolVersion, self.serviceTypeIdent, self.b4Reserve, self.totalLength)
+        return "<Connection HeaderLength={0}, ProtocolVersion={1}, " \
+                "KNXIPServiceType={2}, Reserve={3}, TotalLength={4}>".format(
+                self.headerLength, self.protocolVersion, self.serviceTypeIdent,
+                self.b4Reserve, self.totalLength)
 
-
-
-class CEMIMessageCode(Enum):
-    """
-    FROM NETWORK LAYER TO DATA LINK LAYER
-    Data Link Layer  Message
-    Primitive    Code
-    ---------------  -------
-    L_Raw.req          0x10
-    L_Data.req         0x11  Data Service. Primitive used for transmitting a data frame
-    L_Poll_Data.req    0x13  Poll Data Service
-
-    FROM DATA LINK LAYER TO NETWORK LAYER
-    Data Link Layer  Message
-    Primitive    Code
-    ---------------  -------
-    L_Poll_Data.con    0x25  Poll Data Service
-    L_Data.ind         0x29  Data Service. Primitive used for receiving a data frame
-    L_Busmon.ind       0x2B  Bus Monitor Service
-    L_Raw.ind          0x2D
-    L_Data.con         0x2E  Data Service. Primitive used for local confirmation that a frame was sent
-                             (does not indicate a successful receive though)
-    L_Raw.con          0x2F
-    """
-    L_RAW_REQ       =   0x10
-    L_Data_REQ      =   0x11
-    L_POLL_DATA_REQ =   0x13
-    L_POLL_DATA_CON =   0x25
-    L_DATA_IND      =   0x29
-    L_BUSMON_IND    =   0x2B
-    L_RAW_IND       =   0x2D
-    L_DATA_CON      =   0x2E
-    L_RAW_CON       =   0x2F
-
-class APCI_COMMAND(Enum):
-    GROUP_READ = 1
-    GROUP_WRITE = 2
-    GROUP_RESPONSE = 3
-    UNKNOWN = 0xff
 
 
 class CEMIFrame():
@@ -284,7 +229,9 @@ class CEMIFrame():
             self.tpci_apci =   0x00
 
     def __str__(self):
-            return "<CEMIFrame SourceAddress={0}, DestinationAddress={1}, Command={2}, Data={3}>".format( self.src_addr, self.dst_addr, self.cmd, self.data)
+            return "<CEMIFrame SourceAddress={0}, DestinationAddress={1}, " \
+                   "Command={2}, Data={3}>".format( self.src_addr, self.dst_addr,
+                   self.cmd, self.data)
 
 
 class KNXIPFrame:
