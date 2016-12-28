@@ -295,7 +295,7 @@ class KNXIPFrame:
         self.totalLength = data[5]
         self.cemi = CEMIFrame(data[6:])
 
-    def read(self, data):
+    def from_knx(self, data):
 
         self.print_data(data)
 
