@@ -41,7 +41,7 @@ class TelegramProcessor(threading.Thread):
 
 
     @staticmethod
-    def start(xknx):
+    def start_thread(xknx):
         t = TelegramProcessor(xknx)
         t.setDaemon(True)
         t.start()

@@ -80,7 +80,7 @@ class MulticastDaemon(threading.Thread):
         Multicast(self.xknx).recv(self.callback)
 
     @staticmethod
-    def start(xknx, callback = None):
+    def start_thread(xknx, callback = None):
         t = MulticastDaemon(xknx, callback)
         t.setDaemon(True)
         t.start()

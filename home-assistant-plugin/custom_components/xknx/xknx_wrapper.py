@@ -27,9 +27,9 @@ class XKNX_Wrapper(object):
 
         Config(self.xknx).read(file=self.config_file)
 
-        TelegramProcessor.start(self.xknx)
-        MulticastDaemon.start(self.xknx, self.callback)
-        StateUpdater.start(self.xknx)
+        TelegramProcessor.start_thread(self.xknx)
+        MulticastDaemon.start_thread(self.xknx, self.callback)
+        StateUpdater.start_thread(self.xknx)
 
         self.initialized = True
 

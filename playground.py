@@ -65,9 +65,9 @@ Config(xknx).read()
 #print("short up")
 #xknx.devices.device_by_name("Livingroom.Shutter_1").set_short_up()
 
-TelegramProcessor.start(xknx)
-MulticastDaemon.start(xknx, callback)
-StateUpdater.start(xknx, 10)
+TelegramProcessor.start_thread(xknx)
+MulticastDaemon.start_thread(xknx, callback)
+StateUpdater.start_thread(xknx, 10)
 
 while True:
 	pass
