@@ -4,50 +4,8 @@ from .address import Address,AddressType
 from .telegram import Telegram
 from enum import Enum
 
-class CouldNotParseCEMI(Exception):
-    def __init__(self):
-        pass
 
-    def __str__(self):
-        return "CouldNotParseCEMI"
-
-class CEMIMessageCode(Enum):
-    """
-    FROM NETWORK LAYER TO DATA LINK LAYER
-    Data Link Layer  Message
-    Primitive    Code
-    ---------------  -------
-    L_Raw.req          0x10
-    L_Data.req         0x11  Data Service. Primitive used for transmitting a data frame
-    L_Poll_Data.req    0x13  Poll Data Service
- 
-    FROM DATA LINK LAYER TO NETWORK LAYER
-    Data Link Layer  Message
-    Primitive    Code
-    ---------------  -------
-    L_Poll_Data.con    0x25  Poll Data Service
-    L_Data.ind         0x29  Data Service. Primitive used for receiving a data frame
-    L_Busmon.ind       0x2B  Bus Monitor Service
-    L_Raw.ind          0x2D
-    L_Data.con         0x2E  Data Service. Primitive used for local confirmation that a frame was sent
-                             (does not indicate a successful receive though)
-    L_Raw.con          0x2F		
-    """
-    L_RAW_REQ       =   0x10
-    L_Data_REQ      =   0x11
-    L_POLL_DATA_REQ =   0x13
-    L_POLL_DATA_CON =   0x25
-    L_DATA_IND      =   0x29
-    L_BUSMON_IND    =   0x2B
-    L_RAW_IND       =   0x2D
-    L_DATA_CON      =   0x2E
-    L_RAW_CON       =   0x2F
-
-class APCI_COMMAND(Enum):
-    GROUP_READ = 1
-    GROUP_WRITE = 2
-    GROUP_RESPONSE = 3
-    UNKNOWN = 0xff
+# # See: http://www.knx.org/fileadmin/template/documents/downloads_support_menu/KNX_tutor_seminar_page/tutor_documentation/08_IP%20Communication_E0510a.pdf
 
 class ServiceType(Enum):
     SEARCH_REQUEST = 0x0201
@@ -68,10 +26,97 @@ class ServiceType(Enum):
     ROUTING_LOST_MESSAGE = 0x0531
     UNKNOWN = 0x0000
 
+class CouldNotParseKNXIP(Exception):
+    def __init__(self, description = ""):
+        self.description = description
+    def __str__(self):
+        return "<CouldNotParseKNXIP description='{0}'>".format(self.description)
+
+
+class ConnectionHeader():
+
+    def __init__(self, data = None):
+        self.headerLength = 0x06
+        self.protocolVersion = 0x10
+        self.serviceTypeIdent = ServiceType.ROUTING_INDICATION
+        self.b4Reserve = 0
+        self.totalLength = 0 # to be set later
+
+
+    def from_knx(self, data):
+        if len(data) != 6:
+            raise CouldNotParseKNXIP("wrong connection header length")
+        if data[0] != 0x06:
+            raise CouldNotParseKNXIP("wrong connection header length")
+        if data[1] != 0x10:
+            raise CouldNotParseKNXIP("wrong protocol version")
+
+        self.headerLength = data[0]
+        self.protocolVersion = data[1]
+        self.serviceTypeIdent = ServiceType(data[2] * 256 + data[3])
+        self.b4Reserve = data[4]
+        self.totalLength = data[5]
+
+    def to_knx(self):
+        data = bytearray()
+
+        data.append( self.headerLength)
+        data.append( self.protocolVersion)
+        data.append( ( self.serviceTypeIdent.value >> 8 ) & 255 )
+        data.append( self.serviceTypeIdent.value & 255 )
+        data.append( ( self.totalLength>>8 ) & 255 )
+        data.append (self.totalLength & 255 )
+
+        return data
+
+    def __str__(self):
+        return "<Connection HeaderLength={0}, ProtocolVersion={1}, ServiceType={2}, Reserve={3}, TotalLength={4}>".format(self.headerLength, self.protocolVersion, self.serviceTypeIdent, self.b4Reserve, self.totalLength)
+
+
+
+class CEMIMessageCode(Enum):
+    """
+    FROM NETWORK LAYER TO DATA LINK LAYER
+    Data Link Layer  Message
+    Primitive    Code
+    ---------------  -------
+    L_Raw.req          0x10
+    L_Data.req         0x11  Data Service. Primitive used for transmitting a data frame
+    L_Poll_Data.req    0x13  Poll Data Service
+
+    FROM DATA LINK LAYER TO NETWORK LAYER
+    Data Link Layer  Message
+    Primitive    Code
+    ---------------  -------
+    L_Poll_Data.con    0x25  Poll Data Service
+    L_Data.ind         0x29  Data Service. Primitive used for receiving a data frame
+    L_Busmon.ind       0x2B  Bus Monitor Service
+    L_Raw.ind          0x2D
+    L_Data.con         0x2E  Data Service. Primitive used for local confirmation that a frame was sent
+                             (does not indicate a successful receive though)
+    L_Raw.con          0x2F
+    """
+    L_RAW_REQ       =   0x10
+    L_Data_REQ      =   0x11
+    L_POLL_DATA_REQ =   0x13
+    L_POLL_DATA_CON =   0x25
+    L_DATA_IND      =   0x29
+    L_BUSMON_IND    =   0x2B
+    L_RAW_IND       =   0x2D
+    L_DATA_CON      =   0x2E
+    L_RAW_CON       =   0x2F
+
+class APCI_COMMAND(Enum):
+    GROUP_READ = 1
+    GROUP_WRITE = 2
+    GROUP_RESPONSE = 3
+    UNKNOWN = 0xff
+
+
 class CEMIFrame():
     """Representation of a CEMI Frame."""
 
-    def __init__(self, cemi = None):      
+    def __init__(self):
         """CEMIFrame __init__ object."""
         self.code = 0
         self.ctl1 = 0
@@ -82,85 +127,85 @@ class CEMIFrame():
         self.tpci_apci = 0
         self.mpdu_len = 0
         self.data = [0]
-        if cemi != None:
-            self._from_cemi_frame(cemi)
 
 
     def _init_group(self, dst_addr = Address()):
         """CEMIMessage _init_group"""
         """
-		Control Field 1
+        Control Field 1
          Bit  |
-		------+---------------------------------------------------------------
+        ------+---------------------------------------------------------------
           7   | Frame Type  - 0x0 for extended frame
               |               0x1 for standard frame
-		------+---------------------------------------------------------------
+        ------+---------------------------------------------------------------
           6   | Reserved
               |
-		------+---------------------------------------------------------------
+        ------+---------------------------------------------------------------
           5   | Repeat Flag - 0x0 repeat frame on medium in case of an error
               |               0x1 do not repeat
-		------+---------------------------------------------------------------
+        ------+---------------------------------------------------------------
           4   | System Broadcast - 0x0 system broadcast
               |                    0x1 broadcast
-		------+---------------------------------------------------------------
+        ------+---------------------------------------------------------------
           3   | Priority    - 0x0 system
               |               0x1 normal
-		------+               0x2 urgent
+        ------+               0x2 urgent
           2   |               0x3 low
               |
-		------+---------------------------------------------------------------
+        ------+---------------------------------------------------------------
           1   | Acknowledge Request - 0x0 no ACK requested
               | (L_Data.req)          0x1 ACK requested
-		------+---------------------------------------------------------------
+        ------+---------------------------------------------------------------
           0   | Confirm      - 0x0 no error
               | (L_Data.con) - 0x1 error
-		------+---------------------------------------------------------------
-		 
-		Control Field 2
-		 
-		 Bit  |
-		------+---------------------------------------------------------------
+        ------+---------------------------------------------------------------
+
+        Control Field 2
+
+         Bit  |
+        ------+---------------------------------------------------------------
           7   | Destination Address Type - 0x0 individual address
               |                          - 0x1 group address
-		------+---------------------------------------------------------------
+        ------+---------------------------------------------------------------
          6-4  | Hop Count (0-7)
-		------+---------------------------------------------------------------
+        ------+---------------------------------------------------------------
          3-0  | Extended Frame Format - 0x0 standard frame
-		------+---------------------------------------------------------------
-		"""
-        # Message Code 
+        ------+---------------------------------------------------------------
+        """
+        # Message Code
         self.code = CEMIMessageCode.L_Data_REQ
         # Control Field 1 -> frametype 1, repeat 1, system broadcast 1, priority 3, ack-req 0, confirm-flag 0
         self.ctl1 = 0xbc
-		# Control Field 2 -> dst_addr type 1, hop count 6, extended frame format
-        self.ctl2 = 0xe0  
-		
+        # Control Field 2 -> dst_addr type 1, hop count 6, extended frame format
+        self.ctl2 = 0xe0
+
         self.src_addr = Address()
         self.dst_addr = dst_addr
-			
+
     def _init_group_read(self, dst_addr):
         """CEMIMessage _init_group_read"""
         """Initialize group read """
         self.init_group(dst_addr)
-		# ACPI Value		
+        # ACPI Value
         _set_tpci_apci_command_value(APCI_COMMAND.GROUP_READ)
-		# DATA
+        # DATA
         self.data = [0]
-		
+
+
     def _init_group_write(self, dst_addr = Address(), data=None):
         """CEMIMessage _init_group_write"""
         """Initialize group write """
         self.init_group(dst_addr)
-        # ACPI Value		
+        # ACPI Value
         _set_tpci_apci_command_value(APCI_COMMAND.GROUP_WRITE)
-		# DATA
+        # DATA
         if data is None:
             self.data = [0]
         else:
             self.data = data
-		
-    def _from_cemi_frame(self, cemi):
+
+
+    def from_knx(self, cemi):
 
         """Create a new CEMIFrame initialized from the given CEMI data."""
         # TODO: check that length matches
@@ -183,7 +228,7 @@ class CEMIFrame():
 
         apdu = cemi[10 + offset:]
         if len(apdu) != self.mpdu_len:
-            raise CouldNotParseCEMI(
+            raise CouldNotParseKNXIP(
                 "APDU LEN should be {} but is {}".format(
                     self.mpdu_len, len(apdu)))
         #check Date in ACPI Byte
@@ -193,22 +238,23 @@ class CEMIFrame():
             self.data = cemi[11 + offset:]
 
 
-    def _to_cemi_frame(self):
+    def to_knx(self):
         """Convert the CEMI frame object to its byte representation. Not testet"""
-        cemi = [self.code.value, 0x00, self.ctl1, self.ctl2,
+        data = [self.code.value, 0x00, self.ctl1, self.ctl2,
                 self.src_addr.byte1(), self.src_addr.byte2(),
                 self.dst_addr.byte1(), self.dst_addr.byte2(),
                ]
         if (len(self.data) == 1) and ((self.data[0] & 3) == self.data[0]):
             # less than 6 bit of data, pack into APCI byte
-            cemi.extend([1, (self.tpci_apci >> 8) & 0xff,
+            data.extend([1, (self.tpci_apci >> 8) & 0xff,
                          ((self.tpci_apci >> 0) & 0xff) + self.data[0]])
         else:
-            cemi.extend([1 + len(self.data), (self.tpci_apci >> 8) &
+            data.extend([1 + len(self.data), (self.tpci_apci >> 8) &
                          0xff, (self.tpci_apci >> 0) & 0xff])
-            cemi.extend(self.data)
+            data.extend(self.data)
 
-        return cemi
+        return data
+
 
     @staticmethod
     def _detect_acpi_command(apci):
@@ -222,8 +268,8 @@ class CEMIFrame():
             return APCI_COMMAND.GROUP_RESPONSE
         else:
             return APCI_COMMAND.UNKNOWN
-			
-    @staticmethod			
+
+    @staticmethod
     def _set_tpci_apci_command_value(command):
         # for APCI codes see KNX Standard 03/03/07 Application layer
         # table Application Layer control field
@@ -247,12 +293,9 @@ class KNXIPFrame:
 
     def __init__(self):
         """Initialize object."""
-        self.headerLength = 0
-        self.protocolVersion = 0
-        self.serviceTypeIdent = ServiceType.UNKNOWN
-        self.b4Reserve = 0
-        self.totalLength = 0
+
         self.cemi = CEMIFrame()
+        self.header = ConnectionHeader()
 
         self.payload = bytearray()
 
@@ -286,20 +329,10 @@ class KNXIPFrame:
         self.group_address = telegram.group_address
         self.payload = telegram.payload
 
-    def _from_telegram(self, data):
-
-        self.headerLength = data[0]
-        self.protocolVersion = data[1]
-        self.serviceTypeIdent = ServiceType(data[2] * 256 + data[3])
-        self.b4Reserve = data[4]
-        self.totalLength = data[5]
-        self.cemi = CEMIFrame(data[6:])
-
     def from_knx(self, data):
 
-        self.print_data(data)
-
-        self._from_telegram(data)
+        self.header.from_knx(data[0:6])
+        self.cemi.from_knx(data[6:])
 
         print(self)
 
@@ -308,48 +341,16 @@ class KNXIPFrame:
             self.payload.append(data[16+x])
 
     def __str__(self):
-        return "<KNXIPFrame HeaderLength={0}, ProtocolVersion={1}, ServiceType={2}, Reserve={3}, TotalLength={4} {5}>".format(self.headerLength, self.protocolVersion, self.serviceTypeIdent, self.b4Reserve, self.totalLength, self.cemi)
-
-    def print_data(self, data):
-        i = 0;
-        for b in data:
-            if i in [10,11]:
-                print (Colors.OKBLUE, end="")
-            if i in [0,12,13]:
-                print (Colors.WARNING, end="")
-            if i == 14 or i >= 16:
-                print (Colors.BOLD, end="")
-            print (format(b, '02x'), end="")
-            print (Colors.ENDC+" ", end="")
-            i=i+1
-        print ("")
+        return "<KNXIPFrame {0} {1}>".format(self.header, self.cemi)
 
 
     def to_knx(self):
         data = bytearray()
 
-        # See: http://www.knx.org/fileadmin/template/documents/downloads_support_menu/KNX_tutor_seminar_page/tutor_documentation/08_IP%20Communication_E0510a.pdf
+        # TODO: Better calculation
+        self.header.totalLength = 16 + len(self.payload)
 
-        # KNX Header
-        data.append(0x06)
-
-        #Protocol version
-        data.append(0x10)
-
-        # Service identifier
-        # Known values:
-        #
-        #   0x04 0x20 -> KNXnet/IP Tunnelling: TUNNELLING_REQUEST
-        #   0x04 0x21 -> KNXnet/IP Tunnelling: TUNNELLING_ACK
-        #   0x05 0x30 KNXnet/IP Routing
-        #
-        data.append(0x05) # IP Routing 0530
-        data.append(0x30)
-
-        # Total length
-        total_length = 16 + len(self.payload)
-        data.append((total_length>>8)&255)
-        data.append(total_length&255)
+        data = self.header.to_knx()
 
         # Message code
         data.append(0x29)
