@@ -44,7 +44,7 @@ class Address:
             self.address_format = address.address_format
 
         elif type(address) is str:
-            if address_type == AddressType.PHYSICAL:
+            if self.address_type == AddressType.PHYSICAL:
                 self._set_str_physical(address)
             else:
                 self._set_str_group(address)
