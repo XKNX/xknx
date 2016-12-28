@@ -2,7 +2,6 @@ from .device import Device
 from .address import Address
 from .dpt_time import DPT_Time
 from .telegram import Telegram
-from .globals import Globals
 
 import time
 
@@ -17,7 +16,7 @@ class Time(Device):
 
     def broadcast_time(self):
         telegram = Telegram()
-        telegram.sender = Globals.get_own_address()
+        telegram.sender = self.xknx.globals.own_address
         telegram.group_address=self.group_address
 
         telegram.payload.append(0x80)

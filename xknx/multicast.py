@@ -7,7 +7,6 @@ from .telegram import Telegram
 from .address import Address
 from .xknx import XKNX
 from .devices import CouldNotResolveAddress
-from .globals import Globals
 
 class Multicast:
     MCAST_GRP = '224.0.23.12'
@@ -20,8 +19,8 @@ class Multicast:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
 
-        if(Globals.get_own_ip()):
-            sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(Globals.get_own_ip()))
+        if self.xknx.globals.own_ip is not None:
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(self.xknx.globals.own_ip))
 
         sock.sendto(telegram.str(), (self.MCAST_GRP, self.MCAST_PORT))
 
@@ -30,11 +29,11 @@ class Multicast:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind(("", self.MCAST_PORT))
 
-        if(Globals.get_own_ip()):
+        if self.xknx.globals.own_ip is not None:
             sock.setsockopt(socket.IPPROTO_IP,
                                  socket.IP_ADD_MEMBERSHIP,
                                  socket.inet_aton(self.MCAST_GRP) +
-                                 socket.inet_aton(Globals.get_own_ip()))
+                                 socket.inet_aton(self.xknx.globals.own_ip))
         else:
             mreq = struct.pack("4sl", socket.inet_aton(self.MCAST_GRP), socket.INADDR_ANY)
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
@@ -54,7 +53,7 @@ class Multicast:
 
                 #telegram.dump()
 
-                if telegram.sender == Globals.get_own_address():
+                if telegram.sender == self.xknx.globals.own_address:
                     #print("Ignoring own telegram")
                     pass
 
