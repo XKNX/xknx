@@ -22,7 +22,6 @@ class Outlet(Device):
 
     def send(self, payload):
         telegram = Telegram()
-        telegram.sender = self.xknx.globals.own_address
         telegram.group_address=self.group_address
         telegram.payload.append(payload)
         self.xknx.out_queue.put(telegram)  

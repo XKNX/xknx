@@ -1,9 +1,10 @@
 import socket
 import struct
-import threading 
+import threading
 import time
 
 from .telegram import Telegram
+from .knxip import KNXIPFrame
 from .address import Address
 from .xknx import XKNX
 from .devices import CouldNotResolveAddress
@@ -16,13 +17,18 @@ class Multicast:
         self.xknx = xknx
 
     def send(self, telegram):
+
+        knxipframe = KNXIPFrame()
+        knxipframe.telegram = telegram
+        knxipframe.sender = self.xknx.globals.own_address
+
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
 
         if self.xknx.globals.own_ip is not None:
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(self.xknx.globals.own_ip))
 
-        sock.sendto(telegram.str(), (self.MCAST_GRP, self.MCAST_PORT))
+        sock.sendto(knxipframe.str(), (self.MCAST_GRP, self.MCAST_PORT))
 
     def recv(self, callback = None):
         print("Starting daemon...")
@@ -41,24 +47,26 @@ class Multicast:
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
 
         while True:
-            telegram_data = sock.recv(10240)
-            if telegram_data:
+            raw = sock.recv(10240)
+            if raw:
 
-                if len(telegram_data) < 17:
-                    print("WARNING: Telegram has size {0} too small, ignoring".format(len(telegram_data)))
+                if len(raw) < 17:
+                    print("WARNING: KNXIPFrame has size {0} too small, ignoring".format(len(raw)))
                     continue
 
-                telegram = Telegram()
-                telegram.read(telegram_data)
+                knxipframe = KNXIPFrame()
+                knxipframe.read(raw)
 
-                #telegram.dump()
+                #knxipframe.dump()
 
-                if telegram.sender == self.xknx.globals.own_address:
-                    #print("Ignoring own telegram")
+                if knxipframe.sender == self.xknx.globals.own_address:
+                    #print("Ignoring own KNXIPFrame")
                     pass
 
                 else:
                     try:
+
+                        telegram = knxipframe.telegram
                         device = self.xknx.devices.device_by_group_address(telegram.group_address)
                         device.process(telegram)
 

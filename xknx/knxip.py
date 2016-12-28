@@ -1,6 +1,7 @@
 import time
 from .colors import Colors
 from .address import Address,AddressType
+from .telegram import Telegram
 from enum import Enum
 
 class CouldNotParseCEMI(Exception):
@@ -240,7 +241,7 @@ class CEMIFrame():
             return "<CEMIFrame SourceAddress={0}, DestinationAddress={1}, Command={2}, Data={3}>".format( self.src_addr, self.dst_addr, self.cmd, self.data)
 
 
-class Telegram:
+class KNXIPFrame:
     """Abstraction for KNX telegrams"""
 
 
@@ -255,15 +256,14 @@ class Telegram:
 
         self.payload = bytearray()
 
-
     @property
     def sender(self):
         """Return source address"""
         return self.cemi.src_addr
 
     @sender.setter
-    def sender(self, value):
-        self.cemi.src_addr = Address(value)
+    def sender(self, sender):
+        self.cemi.src_addr = Address(sender)
 
     @property
     def group_address(self):
@@ -271,10 +271,20 @@ class Telegram:
         return self.cemi.dst_addr
 
     @group_address.setter
-    def group_address(self, value):
-        self.cemi.dst_addr = Address(value)
+    def group_address(self, group_address):
+        self.cemi.dst_addr = Address(group_address)
 
+    @property
+    def telegram(self):
+        telegram = Telegram()
+        telegram.payload = self.payload
+        telegram.group_address = self.group_address
+        return telegram
 
+    @telegram.setter
+    def telegram(self,telegram):
+        self.group_address = telegram.group_address
+        self.payload = telegram.payload
 
     def _from_telegram(self, data):
 

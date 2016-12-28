@@ -32,7 +32,6 @@ class Shutter(Device):
 
     def send(self, group_address, payload):
         telegram = Telegram()
-        telegram.sender = self.xknx.globals.own_address
         telegram.group_address=group_address
 
         if isinstance(payload, list):
