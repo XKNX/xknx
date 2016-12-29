@@ -2,6 +2,7 @@ from .xknx import XKNX
 from .address import Address,CouldNotParseAddress,AddressType,AddressFormat
 from .telegram import Telegram,TelegramType
 from .knxip import KNXIPFrame,CEMIFrame
+from .knxip_enum import KNXIPServiceType,CEMIMessageCode,APCI_COMMAND,CEMIFlags
 from .stateupdater import StateUpdater
 from .multicast import Multicast,MulticastDaemon
 from .telegram_processor import TelegramProcessor

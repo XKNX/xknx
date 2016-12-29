@@ -2,7 +2,7 @@ import time
 from .colors import Colors
 from .address import Address,AddressType
 from .telegram import Telegram
-from .knxip_enum import KNXIPServiceType,CEMIMessageCode,APCI_COMMAND 
+from .knxip_enum import KNXIPServiceType,CEMIMessageCode,APCI_COMMAND,CEMIFlags 
 
 # # See: http://www.knx.org/fileadmin/template/documents/downloads_support_menu/KNX_tutor_seminar_page/tutor_documentation/08_IP%20Communication_E0510a.pdf
 
@@ -64,8 +64,7 @@ class CEMIFrame():
     def __init__(self):
         """CEMIFrame __init__ object."""
         self.code = 0
-        self.ctl1 = 0
-        self.ctl2 = 0
+        self.flags = 0
         self.cmd = APCI_COMMAND.UNKNOWN
         self.src_addr = Address()
         self.dst_addr = Address()
@@ -77,52 +76,14 @@ class CEMIFrame():
     def _init_group(self, dst_addr = Address()):
         """CEMIMessage _init_group"""
         """
-        Control Field 1
-         Bit  |
-        ------+---------------------------------------------------------------
-          7   | Frame Type  - 0x0 for extended frame
-              |               0x1 for standard frame
-        ------+---------------------------------------------------------------
-          6   | Reserved
-              |
-        ------+---------------------------------------------------------------
-          5   | Repeat Flag - 0x0 repeat frame on medium in case of an error
-              |               0x1 do not repeat
-        ------+---------------------------------------------------------------
-          4   | System Broadcast - 0x0 system broadcast
-              |                    0x1 broadcast
-        ------+---------------------------------------------------------------
-          3   | Priority    - 0x0 system
-              |               0x1 normal
-        ------+               0x2 urgent
-          2   |               0x3 low
-              |
-        ------+---------------------------------------------------------------
-          1   | Acknowledge Request - 0x0 no ACK requested
-              | (L_Data.req)          0x1 ACK requested
-        ------+---------------------------------------------------------------
-          0   | Confirm      - 0x0 no error
-              | (L_Data.con) - 0x1 error
-        ------+---------------------------------------------------------------
-
-        Control Field 2
-
-         Bit  |
-        ------+---------------------------------------------------------------
-          7   | Destination Address Type - 0x0 individual address
-              |                          - 0x1 group address
-        ------+---------------------------------------------------------------
-         6-4  | Hop Count (0-7)
-        ------+---------------------------------------------------------------
-         3-0  | Extended Frame Format - 0x0 standard frame
-        ------+---------------------------------------------------------------
         """
         # Message Code
         self.code = CEMIMessageCode.L_Data_REQ
-        # Control Field 1 -> frametype 1, repeat 1, system broadcast 1, priority 3, ack-req 0, confirm-flag 0
-        self.ctl1 = 0xbc
-        # Control Field 2 -> dst_addr type 1, hop count 6, extended frame format
-        self.ctl2 = 0xe0
+
+        self.flags = ( CEMIFlags.FRAME_TYPE_STANDARD | CEMIFlags.DO_NOT_REPEAT |
+                    CEMIFlags.BROADCAST | CEMIFlags.PRIORITY_LOW |
+                    CEMIFlags.NO_ACK_REQUESTED | CEMIFlags.CONFIRM_NO_ERROR |
+                    CEMIFlags.DESTINATION_GROUP_ADDRESS | CEMIFlags.HOP_COUNT_1ST)
 
         self.src_addr = Address()
         self.dst_addr = dst_addr
@@ -157,8 +118,7 @@ class CEMIFrame():
         self.code = CEMIMessageCode(cemi[0])
         offset = cemi[1]
 
-        self.ctl1 = cemi[2]
-        self.ctl2 = cemi[3]
+        self.flags = cemi[2] * 256 + cemi[3]
 
         self.src_addr = Address((cemi[4 + offset], cemi[5 + offset]), AddressType.PHYSICAL)
         self.dst_addr = Address((cemi[6 + offset], cemi[7 + offset]), AddressType.GROUP)
@@ -185,7 +145,7 @@ class CEMIFrame():
 
     def to_knx(self):
         """Convert the CEMI frame object to its byte representation. Not testet"""
-        data = [self.code.value, 0x00, self.ctl1, self.ctl2,
+        data = [self.code.value, 0x00, (self.flags >> 8 )& 255, self.flags & 255,
                 self.src_addr.byte1(), self.src_addr.byte2(),
                 self.dst_addr.byte1(), self.dst_addr.byte2(),
                ]
