@@ -25,7 +25,7 @@ class Test_KNXIP(unittest.TestCase):
         knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
 
-        self.assertEqual( knxipframe.to_knx(), bytes(raw))
+        self.assertEqual( knxipframe.to_knx(), list(raw))
 
     def test_telegram_set(self):
         knxipframe = KNXIPFrame()
@@ -44,7 +44,7 @@ class Test_KNXIP(unittest.TestCase):
 
         raw = ((0x06,0x10,0x05,0x30,0x00,0x14,0x29,0x00,0xbc,0xd0,0x12,0x02,0x01,0x51,0x04,0x00,0x80,13,23,42))
 
-        self.assertEqual( knxipframe.to_knx(), bytes(raw))
+        self.assertEqual( knxipframe.to_knx(), list(raw))
 
     def test_telegram_get(self):
 

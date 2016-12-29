@@ -1,5 +1,4 @@
 from .address import Address
-import binascii
 from enum import Enum
 
 class TelegramType(Enum):
@@ -20,9 +19,10 @@ class Telegram:
     def __init__(self,type = TelegramType.OUTGOING):
         self.type = type
         self.group_address = Address()
-        self.payload = bytearray()
+        self.payload = []
 
     def __str__(self):
-        return "<Telegram group_address={0}, payload={1} type={2}>".format(
-            self.group_address,binascii.hexlify(self.payload),
+        return "<Telegram group_address={0}, payload=[{1}] type={2}>".format(
+            self.group_address,
+            ','.join(hex(b) for b in self.payload),
             self.type)

@@ -39,7 +39,7 @@ class ConnectionHeader():
 
 
     def to_knx(self):
-        data = bytearray()
+        data = []
 
         data.append( self.headerLength)
         data.append( self.protocolVersion)
@@ -204,7 +204,7 @@ class KNXIPFrame:
         self.cemi = CEMIFrame()
         self.header = ConnectionHeader()
 
-        self.payload = bytearray()
+        self.payload = []
 
     @property
     def sender(self):
@@ -252,7 +252,7 @@ class KNXIPFrame:
 
 
     def to_knx(self):
-        data = bytearray()
+        data = []
 
         # TODO: Better calculation
         self.header.totalLength = 16 + len(self.payload)
