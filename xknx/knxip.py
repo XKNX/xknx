@@ -63,7 +63,7 @@ class CEMIFrame():
 
     def __init__(self):
         """CEMIFrame __init__ object."""
-        self.code = 0
+        self.code = CEMIMessageCode.L_Data_REQ
         self.flags = 0
         self.cmd = APCI_COMMAND.UNKNOWN
         self.src_addr = Address()
@@ -78,22 +78,21 @@ class CEMIFrame():
         """
         """
         # Message Code
-        self.code = CEMIMessageCode.L_Data_REQ
+        self.code = CEMIMessageCode.L_DATA_IND
 
         self.flags = ( CEMIFlags.FRAME_TYPE_STANDARD | CEMIFlags.DO_NOT_REPEAT |
                     CEMIFlags.BROADCAST | CEMIFlags.PRIORITY_LOW |
                     CEMIFlags.NO_ACK_REQUESTED | CEMIFlags.CONFIRM_NO_ERROR |
                     CEMIFlags.DESTINATION_GROUP_ADDRESS | CEMIFlags.HOP_COUNT_1ST)
 
-        self.src_addr = Address()
         self.dst_addr = dst_addr
 
     def _init_group_read(self, dst_addr):
         """CEMIMessage _init_group_read"""
         """Initialize group read """
-        self.init_group(dst_addr)
+        self._init_group(dst_addr)
         # ACPI Value
-        _set_tpci_apci_command_value(APCI_COMMAND.GROUP_READ)
+        self._set_tpci_apci_command_value(APCI_COMMAND.GROUP_READ)
         # DATA
         self.data = [0]
 
@@ -101,9 +100,9 @@ class CEMIFrame():
     def _init_group_write(self, dst_addr = Address(), data=None):
         """CEMIMessage _init_group_write"""
         """Initialize group write """
-        self.init_group(dst_addr)
+        self._init_group(dst_addr)
         # ACPI Value
-        _set_tpci_apci_command_value(APCI_COMMAND.GROUP_WRITE)
+        self._set_tpci_apci_command_value(APCI_COMMAND.GROUP_WRITE)
         # DATA
         if data is None:
             self.data = [0]
@@ -144,11 +143,17 @@ class CEMIFrame():
 
 
     def to_knx(self):
+        data = bytearray()
         """Convert the CEMI frame object to its byte representation. Not testet"""
-        data = [self.code.value, 0x00, (self.flags >> 8 )& 255, self.flags & 255,
-                self.src_addr.byte1(), self.src_addr.byte2(),
-                self.dst_addr.byte1(), self.dst_addr.byte2(),
-               ]
+        data.append(self.code.value)
+        data.append(0x00)
+        data.append((self.flags >> 8 )& 255)
+        data.append(self.flags & 255)
+        data.append(self.src_addr.byte1()& 255)
+        data.append(self.src_addr.byte2()& 255)
+        data.append(self.dst_addr.byte1()& 255)
+        data.append(self.dst_addr.byte2()& 255)		
+
         if (len(self.data) == 1) and ((self.data[0] & 3) == self.data[0]):
             # less than 6 bit of data, pack into APCI byte
             data.extend([1, (self.tpci_apci >> 8) & 0xff,
@@ -174,8 +179,8 @@ class CEMIFrame():
         else:
             return APCI_COMMAND.UNKNOWN
 
-    @staticmethod
-    def _set_tpci_apci_command_value(command):
+    
+    def _set_tpci_apci_command_value(self, command):
         # for APCI codes see KNX Standard 03/03/07 Application layer
         # table Application Layer control field
         if command == APCI_COMMAND.GROUP_WRITE :
@@ -204,7 +209,7 @@ class KNXIPFrame:
         self.cemi = CEMIFrame()
         self.header = ConnectionHeader()
 
-        self.payload = []
+        self.payload = None
 
     @property
     def sender(self):
@@ -213,7 +218,7 @@ class KNXIPFrame:
 
     @sender.setter
     def sender(self, sender):
-        self.cemi.src_addr = Address(sender)
+        self.cemi.src_addr = Address(sender, AddressType.PHYSICAL)
 
     @property
     def group_address(self):
@@ -222,7 +227,7 @@ class KNXIPFrame:
 
     @group_address.setter
     def group_address(self, group_address):
-        self.cemi.dst_addr = Address(group_address)
+        self.cemi.dst_addr = Address(group_address, AddressType.GROUP)
 
     @property
     def telegram(self):
@@ -240,53 +245,38 @@ class KNXIPFrame:
 
         self.header.from_knx(data[0:6])
         self.cemi.from_knx(data[6:])
-
-        print(self)
-
-        len_payload = data[14]
-        for x in range(0, len_payload):
-            self.payload.append(data[16+x])
+        self.payload = self.cemi.data
+        print(self)       
 
     def __str__(self):
-        return "<KNXIPFrame {0} {1}>".format(self.header, self.cemi)
+        return "<KNXIPFrame {0}\n{1}>".format(self.header, self.cemi)
 
 
     def to_knx(self):
+#<<<<<< HEAD
+         #data = bytearray()
+  		      
+        #Generate cEMI Frame
+        #if self.payload != None :
+        #    self.cemi._init_group_write(self.group_address, self.payload)
+        #else :
+        #    self.cemi._init_group_read(self.group_address)
+	      #		
+        #cemidata = self.cemi.to_knx()
+        
+		# calculation Header total length
+        #self.header.totalLength = self.header.headerLength + len(cemidata)
+
+        
+        #add Data		
+#=======
         data = []
 
         # TODO: Better calculation
         self.header.totalLength = 16 + len(self.payload)
 
+#>>>>>>> cemi-refactoring-tmp
         data = self.header.to_knx()
-
-        # Message code
-        data.append(0x29)
-
-        # Length of additional information (for future usage)
-        data.append(0x00)
-
-        # Control field
-        data.append(0xbc) #b4 ?
-
-        # Type of target address
-        data.append(0xd0)
-
-        # Sender address
-        data.append( self.sender.byte1() )
-        data.append( self.sender.byte2() )
-
-        # Target address
-        data.append( self.group_address.byte1() )
-        data.append( self.group_address.byte2() )
-
-        # Payload length
-        data.append(len(self.payload))
-
-        # Zero
-        data.append(0x00)
-
-        # Payload
-        for b in self.payload:
-            data.append(b)
-
+        data.extend(cemidata)
+        print(self)           
         return data
