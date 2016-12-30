@@ -66,11 +66,11 @@ class Test_KNXIP(unittest.TestCase):
 
     ########################################################
     #
-    # NEW TESTS BELOW 
+    # NEW TESTS BELOW
     #
     ########################################################
-    
-    def test_binary_switch_on(self):
+
+    def test_group_write_binary_on(self):
         # Switch on Kitchen-L1
         raw = (( 0x06,0x10,0x05,0x30,0x00,0x11,0x29,0x00,0xbc,0xd0,0xff,0xf9,0x01,0x49,0x01,0x00,0x81 ))
 
@@ -89,8 +89,27 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe2.cemi.to_knx(), list(raw[6:]))
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
+    def test_group_write_binary_off(self):
+        # Switch off Kitchen-L1
+        raw = (( 0x06,0x10,0x05,0x30,0x00,0x11,0x29,0x00,0xbc,0xd0,0xff,0xf9,0x01,0x49,0x01,0x00,0x80 ))
 
-    def test_payload_1byte(self):
+        knxipframe = KNXIPFrame()
+        knxipframe.from_knx(raw)
+        telegram = knxipframe.telegram
+        self.assertEqual(telegram, Telegram(Address("329"), payload=DPT_Binary(0) ) )
+
+        knxipframe2 = KNXIPFrame()
+        knxipframe2.sender = Address("15.15.249")
+        knxipframe2.telegram = telegram
+        knxipframe2.cemi.set_hops(5)
+        knxipframe2.normalize()
+
+        self.assertEqual(knxipframe2.header.to_knx(), list(raw[0:6]))
+        self.assertEqual(knxipframe2.cemi.to_knx(), list(raw[6:]))
+        self.assertEqual(knxipframe2.to_knx(), list(raw))
+
+
+    def test_group_write_1byte(self):
         # Dimm Kitchen L1 to 0x65
         raw = (( 0x06,0x10,0x05,0x30,0x00,0x12,0x29,0x00,0xbc,0xd0,0xff,0xf9,0x01,0x4b,0x02,0x00,0x80,0x65 ))
 
@@ -109,7 +128,7 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe2.cemi.to_knx(), list(raw[6:]))
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-    def test_payload_2bytes(self):
+    def test_group_write_2bytes(self):
         # Incoming Temperature from thermostat
         raw = (( 0x06,0x10,0x05,0x30,0x00,0x13,0x29,0x00,0xbc,0xd0,0x14,0x02,0x08,0x01,0x03,0x00,0x80,0x07,0xc1 ))
 
@@ -128,16 +147,14 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe2.cemi.to_knx(), list(raw[6:]))
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-    def test_state_request(self):
+    def test_group_read(self):
         # State request
         raw = (( 0x06,0x10,0x05,0x30,0x00,0x11,0x29,0x00,0xbc,0xd0,0xff,0xf9,0x01,0xb8,0x01,0x00,0x00 ))
 
         knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
         telegram = knxipframe.telegram
-        print(telegram)
-        print(Telegram(Address("440"), TelegramType.GROUP_WRITE ))
-        self.assertEqual(telegram, Telegram(Address("440"), TelegramType.GROUP_WRITE ) )
+        self.assertEqual(telegram, Telegram(Address("440"), TelegramType.GROUP_READ ) )
 
         knxipframe2 = KNXIPFrame()
         knxipframe2.sender = Address("15.15.249")
@@ -149,10 +166,28 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe2.cemi.to_knx(), list(raw[6:]))
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
+    def test_group_response(self):
+        # Incoming state
+        raw = (( 0x06,0x10,0x05,0x30,0x00,0x11,0x29,0x00,0xbc,0xd0,0x13,0x01,0x01,0x88,0x01,0x00,0x41 ) )
 
+        knxipframe = KNXIPFrame()
+        knxipframe.from_knx(raw)
+        telegram = knxipframe.telegram
+        self.assertEqual(telegram, Telegram(Address("392"), TelegramType.GROUP_RESPONSE, payload=DPT_Binary(1) ) )
 
-    # Incoming state 
-    # 06 10 05 30 00 11 29 00 bc d0 13 01 01 88 01 00 41
+        knxipframe2 = KNXIPFrame()
+        knxipframe2.sender = Address("1.3.1")
+        knxipframe2.telegram = telegram
+        knxipframe2.cemi.set_hops(5)
+        knxipframe2.normalize()
+
+        print(knxipframe)
+        print(knxipframe2)
+
+        self.assertEqual(knxipframe2.header.to_knx(), list(raw[0:6]))
+        self.assertEqual(knxipframe2.cemi.to_knx(), list(raw[6:]))
+        self.assertEqual(knxipframe2.to_knx(), list(raw))
+
 
 suite = unittest.TestLoader().loadTestsFromTestCase(Test_KNXIP)
 unittest.TextTestRunner(verbosity=2).run(suite)

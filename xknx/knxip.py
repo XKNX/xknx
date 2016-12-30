@@ -13,6 +13,11 @@ class CouldNotParseKNXIP(Exception):
     def __str__(self):
         return "<CouldNotParseKNXIP description='{0}'>".format(self.description)
 
+class ConversionException(Exception):
+    def __init__(self, description = ""):
+        self.description = description
+    def __str__(self):
+        return "<ConversionException description='{0}'>".format(self.description)
 
 class ConnectionHeader():
 
@@ -128,6 +133,13 @@ class CEMIFrame():
         self._set_tpci_apci_command_value(APCI_COMMAND.GROUP_WRITE)
         self.payload = payload
 
+    def _init_group_response(self, dst_addr = Address(), payload = None ):
+        """CEMIMessage _init_group_response"""
+        """Initialize group response """
+        self._init_group(dst_addr)
+
+        self._set_tpci_apci_command_value(APCI_COMMAND.GROUP_RESPONSE)
+        self.payload = payload
 
     def from_knx(self, cemi):
 
@@ -215,10 +227,13 @@ class CEMIFrame():
         # table Application Layer control field
         if command == APCI_COMMAND.GROUP_WRITE :
             self.cmd = APCI_COMMAND.GROUP_WRITE
-            self.tpci_apci =  0x00 * 256 + 0x80
+            self.tpci_apci =  0x80
         elif command == APCI_COMMAND.GROUP_READ :
             self.cmd = APCI_COMMAND.GROUP_READ
             self.tpci_apci =   0x00
+        elif command == APCI_COMMAND.GROUP_RESPONSE :
+            self.cmd = APCI_COMMAND.GROUP_RESPONSE
+            self.tpci_apci =   0x40
         else:
             self.cmd = APCI_COMMAND.UNKNOWN
             self.tpci_apci =   0x00
@@ -265,6 +280,15 @@ class KNXIPFrame:
         telegram.payload = self.cemi.payload
         telegram.group_address = self.group_address
 
+        if self.cemi.cmd == APCI_COMMAND.GROUP_WRITE:
+            telegram.type = TelegramType.GROUP_WRITE
+        elif self.cemi.cmd == APCI_COMMAND.GROUP_READ:
+            telegram.type = TelegramType.GROUP_READ
+        elif self.cemi.cmd == APCI_COMMAND.GROUP_RESPONSE:
+            telegram.type = TelegramType.GROUP_RESPONSE
+        else:
+            raise ConversionException("Telegram not implemented for {0}".format(self.cemi.cmd))
+
         # TODO: Set telegram.type
         # TODO: Set telegram.direction [additional flag within KNXIP]
         return telegram
@@ -278,6 +302,8 @@ class KNXIPFrame:
             self.cemi._init_group_read(telegram.group_address)
         elif telegram.type == TelegramType.GROUP_WRITE:
             self.cemi._init_group_write(telegram.group_address, telegram.payload)
+        elif telegram.type == TelegramType.GROUP_RESPONSE:
+            self.cemi._init_group_response(telegram.group_address, telegram.payload)
 
         # TODO: Check if correct, FIX!
         self.cemi.code = CEMIMessageCode.L_DATA_IND

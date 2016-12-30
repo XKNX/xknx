@@ -9,6 +9,7 @@ class TelegramDirection(Enum):
 class TelegramType(Enum):
     GROUP_READ = 1
     GROUP_WRITE = 2
+    GROUP_RESPONSE = 3
 
 class Telegram:
     """ Abstraction for the business logic of KNX Telegrams
