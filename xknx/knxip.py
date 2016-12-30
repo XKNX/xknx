@@ -226,7 +226,7 @@ class CEMIFrame():
     def __str__(self):
             return "<CEMIFrame SourceAddress={0}, DestinationAddress={1}, " \
                    "Command={2}, payload={3}>".format( self.src_addr, self.dst_addr,
-                   self.cmd, ','.join(hex(b) for b in self.payload))
+                   self.cmd, self.payload)
 
 
 class KNXIPFrame:
