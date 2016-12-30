@@ -4,6 +4,9 @@ import logging
 
 from xknx import XKNX,Config,TelegramProcessor,MulticastDaemon,StateUpdater
 
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+
+
 _LOGGER = logging.getLogger(__name__)
 
 class XKNX_Wrapper(object):
@@ -20,8 +23,8 @@ class XKNX_Wrapper(object):
 
     @staticmethod
     def telegram_received_callback(  xknx, device, telegram):
-        print("{0}".format(device.name))
-
+        #print("{0}".format(device.name))
+        pass
 
     def start(self):
 
@@ -31,5 +34,14 @@ class XKNX_Wrapper(object):
         MulticastDaemon.start_thread(self.xknx)
         StateUpdater.start_thread(self.xknx)
 
+        self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
+
         self.initialized = True
+
+
+    def stop(self, event):
+        """Shutdown XKNX correctly and stop all threads"""
+
+        # Proper shutdown of xknx daemon not yet implemented
+        pass
 
