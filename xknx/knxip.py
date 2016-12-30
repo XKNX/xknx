@@ -162,8 +162,9 @@ class CEMIFrame():
             self.payload = DPT_Array( cemi[11 + offset:] )
 
     def to_knx(self):
-        data = bytearray()
-        """Convert the CEMI frame object to its byte representation. Not testet"""
+        """Convert the CEMI frame object to its byte representation."""
+
+        data = []
 
         data.append(self.code.value)
         data.append(0x00)
