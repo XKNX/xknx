@@ -2,7 +2,7 @@ from .device import Device
 from .address import Address
 from .dpt_time import DPT_Time
 from .telegram import Telegram
-
+from .dpt import DPT_Array
 import time
 
 
@@ -17,11 +17,7 @@ class Time(Device):
     def broadcast_time(self):
         telegram = Telegram()
         telegram.group_address=self.group_address
-
-        telegram.payload.append(0x80)
-        for byte in DPT_Time.current_time_as_knx():
-            telegram.payload.append(byte)
-
+        telegram.payload = DPT_Array(DPT_Time.current_time_as_knx())
         self.xknx.telegrams.put(telegram)
 
     def request_state(self):

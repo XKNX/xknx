@@ -21,7 +21,6 @@ class CouldNotResolveName(Exception):
 class Devices:
 
     def __init__(self):
-        print("Initialization of Devices")
         self.devices = []
 
     def device_by_group_address( self, group_address):

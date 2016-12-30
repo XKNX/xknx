@@ -2,4 +2,4 @@
 
 
 all:
-	PYTHONPATH="${PYTHONPATH}:../" python3 -m unittest discover -s . -p "*_test.py"
+	PYTHONPATH="${PYTHONPATH}:../" python3 -m unittest discover -s . -p "*_test.py" -b

@@ -1,5 +1,7 @@
 from .address import Address
-from .telegram import Telegram
+from .telegram import Telegram,TelegramType
+from .dpt import DPT_Binary
+from .exception import CouldNotParseTelegram
 from .device import Device
 
 class Outlet(Device):
@@ -23,17 +25,16 @@ class Outlet(Device):
     def send(self, payload):
         telegram = Telegram()
         telegram.group_address=self.group_address
-        telegram.payload.append(payload)
+        telegram.payload = payload
         self.xknx.telegrams.put(telegram)
 
-
     def set_on(self):
-        self.send(0x81)
+        self.send( DPT_Binary(1) )
         self.set_internal_state(True)
 
 
     def set_off(self):
-        self.send(0x80)
+        self.send( DPT_Binary(0) )
         self.set_internal_state(False)
 
 
@@ -47,24 +48,22 @@ class Outlet(Device):
 
 
     def request_state(self):
-        self.send(0x00)
-
+        telegram = Telegram(self.group_address, TelegramType.GROUP_READ)
+        self.xknx.telegrams.put(telegram)
 
     def process(self,telegram):
 
-        if len(telegram.payload) != 1:
-            print("Could not parse telegram for binary output %s" % telegram )
-            return
+        if not isinstance( telegram.payload, DPT_Binary ):
+            raise CouldNotParseTelegram()
 
-        if telegram.payload[0] == 0x40 :
+        if telegram.payload.value == 0 :
             self.set_internal_state(False)
-        elif telegram.payload[0] == 0x41 :
+        elif telegram.payload.value == 1 :
             self.set_internal_state(True)
         else:
-            print("Could not parse payload for binary output %s".format( telegram.payload[0] ))
-
+            raise CouldNotParseTelegram()
 
 
     def __str__(self):
-        return "<Outlet group_address={0}, name={1}>".format(self.group_address,self.name)
+        return "<Outlet group_address={0}, name={1} internal_state={2}>".format(self.group_address,self.name,self.internal_state)
 

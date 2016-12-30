@@ -1,0 +1,6 @@
+
+
+
+class CouldNotParseTelegram(Exception):
+    pass
+
