@@ -67,7 +67,6 @@ class Switch(BinaryInput):
 
     def process(self,telegram):
         BinaryInput.process(self,telegram)
-        state = self.process_telegram( telegram ) 
         switch_time = self.get_switch_time()
 
         for action in self.actions:
