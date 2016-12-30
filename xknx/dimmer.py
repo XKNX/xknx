@@ -58,7 +58,7 @@ class Dimmer(Device):
         self.set_internal_state(False)
 
     def set_brightness(self, brightness):
-        self.send(self.group_address_dimm_feedback, [0x80,brightness] )
+        self.send(self.group_address_dimm_feedback, [brightness] )
         self.set_internal_brightness(brightness)
 
     def request_state(self):
