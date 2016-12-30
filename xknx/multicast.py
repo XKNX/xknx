@@ -3,7 +3,7 @@ import struct
 import threading
 import time
 
-from .telegram import Telegram,TelegramType
+from .telegram import Telegram,TelegramDirection
 from .knxip import KNXIPFrame
 from .address import Address
 from .xknx import XKNX
@@ -28,6 +28,7 @@ class Multicast:
         if self.xknx.globals.own_ip is not None:
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(self.xknx.globals.own_ip))
 
+        knxipframe.normalize()
         sock.sendto(knxipframe.to_knx(), (self.MCAST_GRP, self.MCAST_PORT))
 
     def recv(self):
@@ -58,13 +59,13 @@ class Multicast:
                 knxipframe.from_knx(raw)
 
                 if knxipframe.sender == self.xknx.globals.own_address:
-                    #print("Ignoring own KNXIPFrame")
+                    # Ignoring own KNXIPFrame
                     pass
 
                 else:
                     telegram = knxipframe.telegram
                     # TODO: This should be inside knxipframe
-                    telegram.type = TelegramType.INCOMING
+                    telegram.direction = TelegramDirection.INCOMING
 
                     self.xknx.telegrams.put(telegram)
 

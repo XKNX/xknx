@@ -1,9 +1,8 @@
 from .device import Device
+from .dpt import DPT_Binary
+from .exception import CouldNotParseTelegram
 
 from enum import Enum
-
-class CouldNotParseSwitchTelegram(Exception):
-    pass
 
 class BinaryInputState(Enum):
     ON = 1
@@ -20,23 +19,24 @@ class BinaryInput(Device):
 
     def set_internal_state(self, state):
         if state != self.state:
-            print("Setting state to %s" % state )
             self.state = state
 
-    def process_telegram(self,telegram):
-        if len(telegram.payload) != 1:
-            raise(CouldNotParseSwitchTelegram) 
-        if telegram.payload[0] == 0x80 :
-            return BinaryInputState.OFF
-        if telegram.payload[0] == 0x81 :
-            return BinaryInputState.ON
-        raise(CouldNotParseSwitchTelegram)
 
-    def process(self,telegram):
-        self.set_internal_state( self.process_telegram( telegram ) )
+    def process(self, telegram ):
+        if not isinstance( telegram.payload, DPT_Binary ):
+            raise CouldNotParseTelegram()
+
+        if telegram.payload.value == 0:
+            self.set_internal_state( BinaryInputState.OFF )
+        elif telegram.payload.value == 1:
+            self.set_internal_state( BinaryInputState.ON )
+        else:
+            raise CouldNotParseTelegram()
+
 
     def is_on(self):
         return self.state == BinaryInputState.ON
+
 
     def is_off(self):
         return self.state == BinaryInputState.OFF

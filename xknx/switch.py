@@ -39,7 +39,6 @@ class Action():
         return False
 
     def execute(self):
-        #print("Executing: {0}".format(self))
         self.xknx.devices.device_by_name(self.target).do(self.method)
 
     def __str__(self):

@@ -24,3 +24,77 @@ class DPT_Base:
                 or any(byte > 255 for byte in raw):
             raise ConversionError(raw)
 
+
+class DPT_Binary(DPT_Base):
+    """ The DPT_Binary is a base class for all datatypes encoded
+    directly into the first Byte of the payload """
+
+    def __init__( self, value ):
+        if not isinstance(value,int):
+            raise TypeError()
+        self.value = value
+
+    def __eq__(self, other):
+        return DPT_Comparator.compare(self,other)
+
+    def __str__(self):
+        return "<DPT_Binary value={0}>".format(self.value)
+
+
+
+class DPT_Array(DPT_Base):
+    """ The DPT_Array is a base class for all datatypes appended
+    to the KNX telegram """
+
+    def __init__(self, value ):
+        if isinstance(value, int):
+            self.value = (value,)
+        elif isinstance(value, list):
+            self.value = tuple(value,)
+        elif isinstance(value, tuple):
+            self.value = value
+        else:
+            raise TypeError()
+
+    def __eq__(self, other):
+        return DPT_Comparator.compare(self,other)
+
+    def __str__(self):
+        return "<DPT_Array value=[{0}]>".format( ','.join(hex(b) for b in self.value))
+
+
+
+class DPT_Comparator():
+    """ Helper class to compare different types of DPT objects"""
+
+    @staticmethod
+    def compare(a,b):
+        if a is None and b is None:
+            return True
+
+        elif a is None:
+            if isinstance(b,DPT_Binary):
+                return b.value == 0
+            elif isinstance(b,DPT_Array):
+                return len(b.value) == 0
+
+        elif b is None:
+            if isinstance(a,DPT_Binary):
+                return a.value == 0
+            elif isinstance(a,DPT_Array):
+                return len(a.value) == 0
+
+        elif isinstance(a,DPT_Array) and isinstance(b,DPT_Array):
+            return a.value == b.value
+
+        elif isinstance(a,DPT_Binary) and isinstance(b,DPT_Binary):
+            return a.value == b.value
+
+        elif isinstance(a,DPT_Binary) and isinstance(b,DPT_Array):
+            return a.value == 0 and len(b.value) == 0
+
+        elif isinstance(a,DPT_Array) and isinstance(b,DPT_Binary):
+            return len(a.value) == 0 and b.value == 0
+
+        raise TypeError()
+

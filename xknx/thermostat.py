@@ -1,6 +1,8 @@
 from .device import Device
 from .address import Address
 from .dpt_float import DPT_Temperature
+from .exception import CouldNotParseTelegram
+from .dpt import DPT_Array
 
 import time
 
@@ -16,10 +18,10 @@ class Thermostat(Device):
         return self.group_address == group_address
 
     def process(self,telegram):
-        if len(telegram.payload) != 3:
-            raise(CouldNotParseSwitchTelegram)
+        if not isinstance(telegram.payload, DPT_Array) or len(telegram.payload.value) != 2:
+            raise CouldNotParseTelegram()
 
-        self.temperature = DPT_Temperature().from_knx(( telegram.payload[1] , telegram.payload[2] ))
+        self.temperature = DPT_Temperature().from_knx(( telegram.payload.value[0] , telegram.payload.value[1] ))
 
         self.after_update_callback(self)
 

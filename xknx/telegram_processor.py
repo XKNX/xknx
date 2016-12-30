@@ -1,7 +1,7 @@
 import threading
 import time
 
-from .telegram import TelegramType
+from .telegram import TelegramDirection
 from .devices import CouldNotResolveAddress
 from .multicast import Multicast
 
@@ -19,15 +19,15 @@ class TelegramProcessor(threading.Thread):
             self.process_telegram(telegram)
             self.xknx.telegrams.task_done()
 
-            if telegram.type == TelegramType.OUTGOING:
+            if telegram.direction == TelegramDirection.OUTGOING:
                 # limit rate to knx bus to 20 per second
                 time.sleep(1/20)
 
 
     def process_telegram(self,telegram):
-        if telegram.type == TelegramType.INCOMING:
+        if telegram.direction == TelegramDirection.INCOMING:
             self.process_telegram_incoming(telegram)
-        elif telegram.type == TelegramType.OUTGOING:
+        elif telegram.direction == TelegramDirection.OUTGOING:
             self.process_telegram_outgoing(telegram)
             pass
 
