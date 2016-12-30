@@ -39,7 +39,7 @@ class ConnectionHeader():
 
 
     def to_knx(self):
-        data = bytearray()
+        data = []
 
         data.append( self.headerLength)
         data.append( self.protocolVersion)
@@ -253,21 +253,29 @@ class KNXIPFrame:
 
 
     def to_knx(self):
-        data = bytearray()
-		      
+#<<<<<< HEAD
+         #data = bytearray()
+  		      
         #Generate cEMI Frame
-        if self.payload != None :
-            self.cemi._init_group_write(self.group_address, self.payload)
-        else :
-            self.cemi._init_group_read(self.group_address)
-			
-        cemidata = self.cemi.to_knx()
+        #if self.payload != None :
+        #    self.cemi._init_group_write(self.group_address, self.payload)
+        #else :
+        #    self.cemi._init_group_read(self.group_address)
+	      #		
+        #cemidata = self.cemi.to_knx()
         
 		# calculation Header total length
-        self.header.totalLength = self.header.headerLength + len(cemidata)
+        #self.header.totalLength = self.header.headerLength + len(cemidata)
 
         
         #add Data		
+#=======
+        data = []
+
+        # TODO: Better calculation
+        self.header.totalLength = 16 + len(self.payload)
+
+#>>>>>>> cemi-refactoring-tmp
         data = self.header.to_knx()
         data.extend(cemidata)
         print(self)           
