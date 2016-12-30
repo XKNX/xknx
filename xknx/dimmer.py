@@ -17,7 +17,7 @@ class Dimmer(Device):
         self.brightness = 0
 
     def has_group_address(self, group_address):
-             return ( self.group_address_state == group_address ) or ( self.group_address_switch == group_address ) or (self.group_address_dimm == group_address ) or (self.group_address_dimm_feedback == group_address )
+        return ( self.group_address_state == group_address ) or ( self.group_address_switch == group_address ) or (self.group_address_dimm == group_address ) or (self.group_address_dimm_feedback == group_address )
 
     def __str__(self):
         return "<Dimmer group_address_switch={0}, group_address_dimm={0}, group_address_dimm_feedback={2},name={3}>".format(self.group_address_switch,self.group_address_dimm,self.group_address_dimm_feedback,self.name)
