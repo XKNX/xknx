@@ -64,13 +64,15 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(len(telegram.payload.value),1)
         self.assertEqual(telegram.payload.value[0],0xf0)
 
-    ########################################################
     #
-    # NEW TESTS BELOW
+    # End-tox-End tests:
     #
-    ########################################################
+    #   - parsing KNX telegram and check the result
+    #   - reassembling scond KNXIPFrame
+    #   - comparing both
+    #
 
-    def test_group_write_binary_on(self):
+    def test_EndTOEnd_group_write_binary_on(self):
         # Switch on Kitchen-L1
         raw = (( 0x06,0x10,0x05,0x30,0x00,0x11,0x29,0x00,0xbc,0xd0,0xff,0xf9,0x01,0x49,0x01,0x00,0x81 ))
 
@@ -89,7 +91,7 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe2.cemi.to_knx(), list(raw[6:]))
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-    def test_group_write_binary_off(self):
+    def test_EndTOEnd_group_write_binary_off(self):
         # Switch off Kitchen-L1
         raw = (( 0x06,0x10,0x05,0x30,0x00,0x11,0x29,0x00,0xbc,0xd0,0xff,0xf9,0x01,0x49,0x01,0x00,0x80 ))
 
@@ -109,7 +111,7 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
 
-    def test_group_write_1byte(self):
+    def test_EndTOEnd_group_write_1byte(self):
         # Dimm Kitchen L1 to 0x65
         raw = (( 0x06,0x10,0x05,0x30,0x00,0x12,0x29,0x00,0xbc,0xd0,0xff,0xf9,0x01,0x4b,0x02,0x00,0x80,0x65 ))
 
@@ -128,7 +130,7 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe2.cemi.to_knx(), list(raw[6:]))
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-    def test_group_write_2bytes(self):
+    def test_EndTOEnd_group_write_2bytes(self):
         # Incoming Temperature from thermostat
         raw = (( 0x06,0x10,0x05,0x30,0x00,0x13,0x29,0x00,0xbc,0xd0,0x14,0x02,0x08,0x01,0x03,0x00,0x80,0x07,0xc1 ))
 
@@ -147,7 +149,7 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe2.cemi.to_knx(), list(raw[6:]))
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-    def test_group_read(self):
+    def test_EndTOEnd_group_read(self):
         # State request
         raw = (( 0x06,0x10,0x05,0x30,0x00,0x11,0x29,0x00,0xbc,0xd0,0xff,0xf9,0x01,0xb8,0x01,0x00,0x00 ))
 
@@ -166,7 +168,7 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe2.cemi.to_knx(), list(raw[6:]))
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-    def test_group_response(self):
+    def test_EndTOEnd_group_response(self):
         # Incoming state
         raw = (( 0x06,0x10,0x05,0x30,0x00,0x11,0x29,0x00,0xbc,0xd0,0x13,0x01,0x01,0x88,0x01,0x00,0x41 ) )
 
@@ -180,9 +182,6 @@ class Test_KNXIP(unittest.TestCase):
         knxipframe2.telegram = telegram
         knxipframe2.cemi.set_hops(5)
         knxipframe2.normalize()
-
-        print(knxipframe)
-        print(knxipframe2)
 
         self.assertEqual(knxipframe2.header.to_knx(), list(raw[0:6]))
         self.assertEqual(knxipframe2.cemi.to_knx(), list(raw[6:]))
