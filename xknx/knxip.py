@@ -187,22 +187,20 @@ class CEMIFrame():
         data.append(self.dst_addr.byte1()& 255)
         data.append(self.dst_addr.byte2()& 255)		
 
-#TODO: duplicated code, make nicer ...
+        def encode_tpci_apci_and_payload( tpci_apci, encoded_payload = 0, appended_payload = []):
+            data = [
+                1 + len( appended_payload ),
+                (tpci_apci >> 8) & 0xff,
+                (tpci_apci & 0xff) | ( encoded_payload & 0x2F ) ]
+            data.extend(appended_payload)
+            return data
+
         if self.payload is None:
-            data.extend([1,
-                        (self.tpci_apci >> 8) & 0xff,
-                         ((self.tpci_apci >> 0) & 0xff)])
-
+            data.extend( encode_tpci_apci_and_payload( self.tpci_apci ) )
         elif isinstance( self.payload, DPT_Binary ):
-            data.extend([1,
-                        (self.tpci_apci >> 8) & 0xff,
-                        ((self.tpci_apci >> 0) & 0xff) | ( self.payload.value & 0x2F ) ] )
+            data.extend( encode_tpci_apci_and_payload( self.tpci_apci, encoded_payload = self.payload.value ) )
         elif isinstance( self.payload, DPT_Array ):
-            data.extend([1 + len(self.payload.value),
-                        (self.tpci_apci >> 8) & 0xff,
-                        (self.tpci_apci >> 0) & 0xff])
-
-            data.extend(self.payload.value)
+            data.extend( encode_tpci_apci_and_payload( self.tpci_apci, appended_payload = self.payload.value ) )
         else:
             raise TypeError()
 
