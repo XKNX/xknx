@@ -2,7 +2,7 @@ import time
 from .colors import Colors
 from .address import Address,AddressType
 from .telegram import Telegram,TelegramType
-from .knxip_enum import KNXIPServiceType,CEMIMessageCode,APCI_COMMAND,CEMIFlags
+from .knxip_enum import KNXIPServiceType,CEMIMessageCode,APCICommand,CEMIFlags
 from .dpt import DPT_Binary,DPT_Array
 
 # # See: http://www.knx.org/fileadmin/template/documents/downloads_support_menu/KNX_tutor_seminar_page/tutor_documentation/08_IP%20Communication_E0510a.pdf
@@ -78,27 +78,11 @@ class CEMIFrame():
         """CEMIFrame __init__ object."""
         self.code = CEMIMessageCode.L_Data_REQ
         self.flags = 0
-        self.cmd = APCI_COMMAND.UNKNOWN
+        self.cmd = APCICommand.GROUP_READ
         self.src_addr = Address()
         self.dst_addr = Address()
-        self.tpci_apci = 0
         self.mpdu_len = 0
         self.payload = None
-
-
-    def _init_group(self, dst_addr = Address()):
-        """CEMIMessage _init_group"""
-        """
-        """
-        # Message Code
-        self.code = CEMIMessageCode.L_DATA_IND
-
-        self.flags = ( CEMIFlags.FRAME_TYPE_STANDARD | CEMIFlags.DO_NOT_REPEAT |
-                    CEMIFlags.BROADCAST | CEMIFlags.PRIORITY_LOW |
-                    CEMIFlags.NO_ACK_REQUESTED | CEMIFlags.CONFIRM_NO_ERROR |
-                    CEMIFlags.DESTINATION_GROUP_ADDRESS | CEMIFlags.HOP_COUNT_1ST)
-
-        self.dst_addr = dst_addr
 
     def set_hops(self,hops):
         # Resetting hops
@@ -116,31 +100,6 @@ class CEMIFrame():
         else:
             raise TypeError()
 
-    def _init_group_read(self, dst_addr):
-        """CEMIMessage _init_group_read"""
-        """Initialize group read """
-        self._init_group(dst_addr)
-        # ACPI Value
-        self._set_tpci_apci_command_value(APCI_COMMAND.GROUP_READ)
-        self.payload = None
-
-
-    def _init_group_write(self, dst_addr = Address(), payload = None ):
-        """CEMIMessage _init_group_write"""
-        """Initialize group write """
-        self._init_group(dst_addr)
-
-        self._set_tpci_apci_command_value(APCI_COMMAND.GROUP_WRITE)
-        self.payload = payload
-
-    def _init_group_response(self, dst_addr = Address(), payload = None ):
-        """CEMIMessage _init_group_response"""
-        """Initialize group response """
-        self._init_group(dst_addr)
-
-        self._set_tpci_apci_command_value(APCI_COMMAND.GROUP_RESPONSE)
-        self.payload = payload
-
     def from_knx(self, cemi):
 
         """Create a new CEMIFrame initialized from the given CEMI data."""
@@ -155,11 +114,11 @@ class CEMIFrame():
 
         self.mpdu_len = cemi[8 + offset]
 
-        self.tpci_apci = cemi[9 + offset] * 256 + cemi[10 + offset]
-        apci = self.tpci_apci & 0x3ff  # TODO: Looks wrong,
+        tpci_apci = cemi[9 + offset] * 256 + cemi[10 + offset]
+        apci = tpci_apci & 0x3ff
 
-        #detect acpi command
-        self.cmd = self._detect_acpi_command(apci)
+        # TODO: Check correct bitlength
+        self.cmd = APCICommand(apci & 0xFFF0)
 
         apdu = cemi[10 + offset:]
         if len(apdu) != self.mpdu_len:
@@ -169,6 +128,7 @@ class CEMIFrame():
 
         if len(apdu) == 1:
             # Payload is encoded in first byte
+            # TODO: 0x2f looks wrong, shouldnt it be 0x3f or 0x1f
             self.payload = DPT_Binary( apci & 0x2f )
         else:
             self.payload = DPT_Array( cemi[11 + offset:] )
@@ -187,59 +147,30 @@ class CEMIFrame():
         data.append(self.dst_addr.byte1()& 255)
         data.append(self.dst_addr.byte2()& 255)		
 
-        def encode_tpci_apci_and_payload( tpci_apci, encoded_payload = 0, appended_payload = []):
+        def encode_cmd_and_payload( cmd, encoded_payload = 0, appended_payload = []):
             data = [
                 1 + len( appended_payload ),
-                (tpci_apci >> 8) & 0xff,
-                (tpci_apci & 0xff) | ( encoded_payload & 0x2F ) ]
+                (cmd.value >> 8) & 0xff,
+                (cmd.value & 0xff) | ( encoded_payload & 0x2F ) ]
             data.extend(appended_payload)
             return data
 
         if self.payload is None:
-            data.extend( encode_tpci_apci_and_payload( self.tpci_apci ) )
+            data.extend( encode_cmd_and_payload( self.cmd ) )
         elif isinstance( self.payload, DPT_Binary ):
-            data.extend( encode_tpci_apci_and_payload( self.tpci_apci, encoded_payload = self.payload.value ) )
+            data.extend( encode_cmd_and_payload( self.cmd, encoded_payload = self.payload.value ) )
         elif isinstance( self.payload, DPT_Array ):
-            data.extend( encode_tpci_apci_and_payload( self.tpci_apci, appended_payload = self.payload.value ) )
+            data.extend( encode_cmd_and_payload( self.cmd, appended_payload = self.payload.value ) )
         else:
             raise TypeError()
 
         return data
 
 
-    @staticmethod
-    def _detect_acpi_command(apci):
-        # for APCI codes see KNX Standard 03/03/07 Application layer
-        # table Application Layer control field
-        if apci & 0x080:
-            return APCI_COMMAND.GROUP_WRITE
-        elif apci == 0:
-            return APCI_COMMAND.GROUP_READ
-        elif apci & 0x40:
-            return APCI_COMMAND.GROUP_RESPONSE
-        else:
-            return APCI_COMMAND.UNKNOWN
-
-    def _set_tpci_apci_command_value(self,command):
-        # for APCI codes see KNX Standard 03/03/07 Application layer
-        # table Application Layer control field
-        if command == APCI_COMMAND.GROUP_WRITE :
-            self.cmd = APCI_COMMAND.GROUP_WRITE
-            self.tpci_apci =  0x80
-        elif command == APCI_COMMAND.GROUP_READ :
-            self.cmd = APCI_COMMAND.GROUP_READ
-            self.tpci_apci =   0x00
-        elif command == APCI_COMMAND.GROUP_RESPONSE :
-            self.cmd = APCI_COMMAND.GROUP_RESPONSE
-            self.tpci_apci =   0x40
-        else:
-            self.cmd = APCI_COMMAND.UNKNOWN
-            self.tpci_apci =   0x00
-
     def __str__(self):
             return "<CEMIFrame SourceAddress={0}, DestinationAddress={1}, " \
-                   "Command={2}, payload={3}>".format( self.src_addr, self.dst_addr,
-                   self.cmd, self.payload)
+                   "Flags={2:16b} Command={3}, payload={4}>".format( self.src_addr, self.dst_addr,
+                   self.flags, self.cmd, self.payload)
 
 
 class KNXIPFrame:
@@ -278,34 +209,40 @@ class KNXIPFrame:
         telegram.payload = self.cemi.payload
         telegram.group_address = self.group_address
 
-        if self.cemi.cmd == APCI_COMMAND.GROUP_WRITE:
+        if self.cemi.cmd == APCICommand.GROUP_WRITE:
             telegram.type = TelegramType.GROUP_WRITE
-        elif self.cemi.cmd == APCI_COMMAND.GROUP_READ:
+        elif self.cemi.cmd == APCICommand.GROUP_READ:
             telegram.type = TelegramType.GROUP_READ
-        elif self.cemi.cmd == APCI_COMMAND.GROUP_RESPONSE:
+        elif self.cemi.cmd == APCICommand.GROUP_RESPONSE:
             telegram.type = TelegramType.GROUP_RESPONSE
         else:
             raise ConversionException("Telegram not implemented for {0}".format(self.cemi.cmd))
 
-        # TODO: Set telegram.type
         # TODO: Set telegram.direction [additional flag within KNXIP]
         return telegram
 
     @telegram.setter
     def telegram(self,telegram):
-        self.group_address = telegram.group_address
+        self.cemi.dst_addr = telegram.group_address
+        self.cemi.payload = telegram.payload
+
+        # TODO: Move to separate function
+        self.cemi.code = CEMIMessageCode.L_DATA_IND
+        self.cemi.flags = ( CEMIFlags.FRAME_TYPE_STANDARD | CEMIFlags.DO_NOT_REPEAT |
+                    CEMIFlags.BROADCAST | CEMIFlags.PRIORITY_LOW |
+                    CEMIFlags.NO_ACK_REQUESTED | CEMIFlags.CONFIRM_NO_ERROR |
+                    CEMIFlags.DESTINATION_GROUP_ADDRESS | CEMIFlags.HOP_COUNT_1ST)
 
         # TODO: use telegram.direction
         if telegram.type == TelegramType.GROUP_READ:
-            self.cemi._init_group_read(telegram.group_address)
+            self.cemi.cmd = APCICommand.GROUP_READ
         elif telegram.type == TelegramType.GROUP_WRITE:
-            self.cemi._init_group_write(telegram.group_address, telegram.payload)
+            self.cemi.cmd = APCICommand.GROUP_WRITE
         elif telegram.type == TelegramType.GROUP_RESPONSE:
-            self.cemi._init_group_response(telegram.group_address, telegram.payload)
+            self.cemi.cmd = APCICommand.GROUP_RESPONSE
+        else:
+            raise TypeError()
 
-        # TODO: Check if correct, FIX!
-        self.cemi.code = CEMIMessageCode.L_DATA_IND
-        #self.cemi.flags -= 16
 
     def from_knx(self, data):
 

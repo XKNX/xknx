@@ -34,18 +34,17 @@ class CEMIMessageCode(Enum):
     L_POLL_DATA_CON =   0x25 # Poll Data Service
     L_DATA_IND      =   0x29 # Data Service. Primitive used for receiving a data frame
     L_BUSMON_IND    =   0x2B # Bus Monitor Service
-    L_RAW_IND       =   0x2D 
+    L_RAW_IND       =   0x2D
     L_DATA_CON      =   0x2E # Data Service. Primitive used for local confirmation that a frame was sent#
                              # (does not indicate a successful receive though)
     L_RAW_CON       =   0x2F
 
 
-class APCI_COMMAND(Enum):
+class APCICommand(Enum):
 
-    GROUP_READ = 1
-    GROUP_WRITE = 2
-    GROUP_RESPONSE = 3
-    UNKNOWN = 0xff
+    GROUP_READ     = 0x00
+    GROUP_WRITE    = 0x80
+    GROUP_RESPONSE = 0x40
 
 
 
@@ -56,7 +55,7 @@ class CEMIFlags():
         FRAME_TYPE_STANDARD = 0x8000
 
         # Bit 1/6 - Reserved
-        
+
         # Bit 1/5
         # Repeat in case of an error
         REPEAT        = 0x0000
