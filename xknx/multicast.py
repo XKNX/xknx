@@ -29,7 +29,7 @@ class Multicast:
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(self.xknx.globals.own_ip))
 
         knxipframe.normalize()
-        sock.sendto(knxipframe.to_knx(), (self.MCAST_GRP, self.MCAST_PORT))
+        sock.sendto(bytes(knxipframe.to_knx()), (self.MCAST_GRP, self.MCAST_PORT))
 
     def recv(self):
         print("Starting daemon...")

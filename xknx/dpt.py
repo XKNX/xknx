@@ -49,11 +49,12 @@ class DPT_Array(DPT_Base):
     def __init__(self, value ):
         if isinstance(value, int):
             self.value = (value,)
-        elif isinstance(value, list):
+        elif isinstance(value, (list,bytes)):
             self.value = tuple(value,)
         elif isinstance(value, tuple):
             self.value = value
         else:
+            print(value,type(value))
             raise TypeError()
 
     def __eq__(self, other):
