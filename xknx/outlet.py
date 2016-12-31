@@ -65,5 +65,5 @@ class Outlet(Device):
 
 
     def __str__(self):
-        return "<Outlet group_address={0}, name={1} internal_state={2}>".format(self.group_address,self.name,self.internal_state)
+        return "<Outlet group_address={0}, name={1} state={2}>".format(self.group_address,self.name,self.state)
 
