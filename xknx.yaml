@@ -55,7 +55,7 @@ groups:
         # Central Shutters dont have short or position address
         Central.Shutter: {group_address_long: "1/5/1" }
 
-    dimmer:
+    light:
 
         Kitchen.Light_1:     {group_address_switch: "1/6/1", group_address_dimm: "1/6/2", group_address_dimm_feedback: "1/6/3"}
         Diningroom.Light_1:  {group_address_switch: "1/6/4", group_address_dimm: "1/6/5", group_address_dimm_feedback: "1/6/6"}

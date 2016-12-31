@@ -6,7 +6,7 @@ from .device import Device
 from .switch import Switch
 from .thermostat import Thermostat
 from .time import Time
-from .dimmer import Dimmer
+from .light import Light
 from .outlet import Outlet
 from .shutter import Shutter
 from .devices import Devices
@@ -35,10 +35,10 @@ class Config:
 
     def parse_groups(self, doc):
         for group in doc["groups"]:
-            if group.startswith("dimmer"):
+            if group.startswith("light"):
                 for entry in doc["groups"][group]:
-                    dimmer = Dimmer(self.xknx, entry, doc["groups"][group][entry])
-                    self.xknx.devices.devices.append(dimmer)
+                    light = Light(self.xknx, entry, doc["groups"][group][entry])
+                    self.xknx.devices.devices.append(light)
             if group.startswith("outlet"):
                 for entry in doc["groups"][group]:
                     outlet = Outlet(self.xknx, entry, doc["groups"][group][entry])

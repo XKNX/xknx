@@ -5,7 +5,7 @@ from .exception import CouldNotParseTelegram
 from .dpt import DPT_Binary,DPT_Array
 import time
 
-class Dimmer(Device):
+class Light(Device):
     def __init__(self, xknx, name, config):
         Device.__init__(self, xknx, name)
         self.group_address_switch = Address(config.get("group_address_switch"))
@@ -20,7 +20,7 @@ class Dimmer(Device):
         return ( self.group_address_state == group_address ) or ( self.group_address_switch == group_address ) or (self.group_address_dimm == group_address ) or (self.group_address_dimm_feedback == group_address )
 
     def __str__(self):
-        return "<Dimmer group_address_switch={0}, group_address_dimm={0}, group_address_dimm_feedback={2},name={3}>".format(self.group_address_switch,self.group_address_dimm,self.group_address_dimm_feedback,self.name)
+        return "<Light group_address_switch={0}, group_address_dimm={0}, group_address_dimm_feedback={2},name={3}>".format(self.group_address_switch,self.group_address_dimm,self.group_address_dimm_feedback,self.name)
 
     def set_internal_state(self, state):
         if state != self.state:

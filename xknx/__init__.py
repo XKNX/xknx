@@ -12,7 +12,7 @@ from .switch import Switch,Action
 from .shutter import Shutter
 from .travelcalculator import TravelCalculator
 from .thermostat import Thermostat
-from .dimmer import Dimmer
+from .light import Light
 from .outlet import Outlet
 from .time import Time
 from .config import Config
