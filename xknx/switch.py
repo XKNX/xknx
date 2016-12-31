@@ -70,8 +70,7 @@ class Switch(BinaryInput):
         switch_time = self.get_switch_time()
 
         for action in self.actions:
-            time.sleep (50.0 / 1000.0);
-            if(action.test(state,switch_time)):
+            if(action.test(self.state,switch_time)):
                 action.execute()
 
     def __str__(self):

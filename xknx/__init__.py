@@ -8,6 +8,7 @@ from .multicast import Multicast,MulticastDaemon
 from .telegram_processor import TelegramProcessor
 from .devices import Devices,CouldNotResolveAddress
 from .binaryinput import BinaryInput,BinaryInputState
+from .switch import Switch,Action
 from .shutter import Shutter
 from .travelcalculator import TravelCalculator
 from .thermostat import Thermostat
