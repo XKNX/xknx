@@ -1,9 +1,9 @@
 import logging
 
-#import homeassistant.components.xknx as xknx
-import custom_components.xknx as xknx
+#import homeassistant.components.xknx as xknx_component
+import custom_components.xknx as xknx_component
 
-from xknx import Devices,Config,Light
+import xknx
 
 from homeassistant.components.light import ( ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light )
 
@@ -11,19 +11,20 @@ from homeassistant.components.light import ( ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the demo light platform."""
 
-    if xknx.xknx_wrapper is None or not xknx.xknx_wrapper.initialized:
+    if xknx_component.xknx_wrapper is None or not xknx_component.xknx_wrapper.initialized:
         _LOGGER.error('A connection has not been made to the XKNX controller.')
         return False
 
     lights = []
 
-    for device in xknx.xknx_wrapper.xknx.devices.devices:
-        if type(device) == Light:
+    for device in xknx_component.xknx_wrapper.xknx.devices.devices:
+        if isinstance(device, xknx.Light):
             lights.append(XKNX_Light(hass, device))
 
     add_devices_callback(lights)
 
     return True    
+
 
 class XKNX_Light(Light):
     """Representation of XKNX lights."""
