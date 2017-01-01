@@ -143,21 +143,28 @@ xknx.devices.device_by_name("Livingroom.Shutter_1").set_short_up()
 Sample Program
 --------------
 
+Switching on an outlet:
+
 ```
 #!/usr/bin/python3
-from xknx import Multicast,Devices,Config
+
+from xknx import XKNX,Config
 
 xknx = XKNX()
+
 Config(xknx).read()
-Multicast(xknx).recv()
+
+xknx.start()
+xknx.devices.device_by_name("Livingroom.Outlet_1").set_on()
+xknx.join()
 ```
 
-`Multicast(xknx).recv()` may also take a callback as parameter:
+Starting a daemon receiving callbacks:
 
 ```python
 #!/usr/bin/python3
 
-from xknx import XKNX,Multicast,CouldNotResolveAddress,Config
+from xknx import XKNX,CouldNotResolveAddress,Config
 import time
 
 def telegram_received_callback( xknx, device, telegram):
@@ -176,11 +183,8 @@ def telegram_received_callback( xknx, device, telegram):
         print(c)
 
 xknx = XKNX()
+
 Config(xknx).read()
 
-TelegramProcessor.start_thread(self.xknx, self.telegram_received_callback)
-
-while True:
-	pass
-
+xknx.start( True, telegram_received_callback = telegram_received_callback )
 ```

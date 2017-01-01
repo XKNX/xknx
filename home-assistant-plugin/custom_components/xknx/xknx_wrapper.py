@@ -30,9 +30,7 @@ class XKNX_Wrapper(object):
 
         Config(self.xknx).read(file=self.config_file)
 
-        TelegramProcessor.start_thread(self.xknx, self.telegram_received_callback)
-        MulticastDaemon.start_thread(self.xknx)
-        StateUpdater.start_thread(self.xknx)
+        xknx.start( telegram_received_callback = self.telegram_received_callback )
 
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
 
