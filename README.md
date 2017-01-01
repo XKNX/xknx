@@ -12,7 +12,7 @@ Sample Program
 
 Switching on an outlet:
 
-```
+```python
 #!/usr/bin/python3
 
 from xknx import XKNX,Config
