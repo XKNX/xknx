@@ -110,7 +110,12 @@ class CEMIFrame():
         self.flags = cemi[2] * 256 + cemi[3]
 
         self.src_addr = Address((cemi[4 + offset], cemi[5 + offset]), AddressType.PHYSICAL)
-        self.dst_addr = Address((cemi[6 + offset], cemi[7 + offset]), AddressType.GROUP)
+
+        dst_addr_type = \
+            AddressType.GROUP \
+            if self.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS \
+            else AddressType.PHYSICAL
+        self.dst_addr = Address((cemi[6 + offset], cemi[7 + offset]), dst_addr_type)
 
         self.mpdu_len = cemi[8 + offset]
 
