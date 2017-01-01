@@ -1,6 +1,6 @@
 import unittest
 
-from xknx import DPT_Binary,DPT_Array
+from xknx import DPT_Binary,DPT_Array,ConversionError
 
 class TestDPT(unittest.TestCase):
 
@@ -39,6 +39,14 @@ class TestDPT(unittest.TestCase):
         self.assertNotEqual( DPT_Array((2,)), DPT_Binary(2) )
         self.assertNotEqual( DPT_Binary(2), DPT_Array((2,)) )
         
+    def test_dpt_binary_assign(self):
+        self.assertEqual( DPT_Binary(8).value, 8)
+
+    def test_dpt_binary_assign_limit_exceeded(self):
+        with self.assertRaises(ConversionError):
+            DPT_Binary(DPT_Binary.APCI_MAX_VALUE + 1) 
+
+
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestDPT)
 unittest.TextTestRunner(verbosity=2).run(suite)

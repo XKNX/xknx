@@ -1,7 +1,7 @@
 
 general:
-    own_address: "15.15.249" 
-    own_ip: "192.168.42.1" 
+    own_address: "15.15.249"
+    own_ip: "127.0.0.1"
 
 groups:
 
@@ -13,15 +13,15 @@ groups:
               - {hook: "on", target: Livingroom.Outlet_1, method: "on"}
               - {hook: "on", target: Livingroom.Outlet_2, method: "on"}
 
-        Livingroom.Switch_2: 
+        Livingroom.Switch_2:
             group_address: "1/2/8"
             actions:
               - {hook: "on", target: Livingroom.Outlet_1, method: "off"}
               - {hook: "on", target: Livingroom.Outlet_2, method: "off"}
 
 
-        Livingroom.Switch_3: 
-            group_address: "1/2/2" 
+        Livingroom.Switch_3:
+            group_address: "1/2/2"
             actions:
               - {hook: "off", switch_time: "short", target: Livingroom.Shutter_1, method: short_up}
               - {hook: "off", switch_time: "long", target: Livingroom.Shutter_1, method: up} # Pressing more then 2 seconds
@@ -70,6 +70,6 @@ groups:
 
 
     # Cyclic sending of time to the KNX bus
-    time:
-        General.Time: {group_address: "1/8/1"}
+    #time:
+    #    General.Time: {group_address: "1/8/1"}
 
