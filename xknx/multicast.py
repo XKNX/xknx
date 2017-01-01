@@ -21,7 +21,11 @@ class Multicast:
         knxipframe = KNXIPFrame()
         knxipframe.telegram = telegram
         knxipframe.sender = self.xknx.globals.own_address
+        knxipframe.normalize()
 
+        self._send_knxipframe(knxipframe)
+
+    def _send_knxipframe( self, knxipframe):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
 
@@ -31,7 +35,7 @@ class Multicast:
         knxipframe.normalize()
         sock.sendto(bytes(knxipframe.to_knx()), (self.MCAST_GRP, self.MCAST_PORT))
 
-    def recv(self):
+    def start_daemon(self):
         print("Starting daemon...")
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind(("", self.MCAST_PORT))
@@ -47,6 +51,9 @@ class Multicast:
 
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
 
+        return sock
+
+    def recv(self,sock):
         while True:
             raw = sock.recv(10240)
             if raw:
@@ -74,8 +81,12 @@ class MulticastDaemon(threading.Thread):
         self.xknx = xknx
         threading.Thread.__init__(self)
 
+
     def run(self):
-        Multicast(self.xknx).recv()
+        multicast = Multicast(self.xknx)
+        sock = multicast.start_daemon()
+        multicast.recv(sock)
+
 
     @staticmethod
     def start_thread(xknx):
