@@ -29,9 +29,16 @@ class DPT_Binary(DPT_Base):
     """ The DPT_Binary is a base class for all datatypes encoded
     directly into the first Byte of the payload """
 
+    # APCI (application layer control information)  
+    APCI_BITMASK = 0x3F
+    APCI_MAX_VALUE = APCI_BITMASK 
+
     def __init__( self, value ):
         if not isinstance(value,int):
             raise TypeError()
+        if value > DPT_Binary.APCI_BITMASK:
+            raise ConversionError(value)
+
         self.value = value
 
     def __eq__(self, other):

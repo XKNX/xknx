@@ -110,15 +110,21 @@ class CEMIFrame():
         self.flags = cemi[2] * 256 + cemi[3]
 
         self.src_addr = Address((cemi[4 + offset], cemi[5 + offset]), AddressType.PHYSICAL)
-        self.dst_addr = Address((cemi[6 + offset], cemi[7 + offset]), AddressType.GROUP)
+
+        dst_addr_type = \
+            AddressType.GROUP \
+            if self.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS \
+            else AddressType.PHYSICAL
+        self.dst_addr = Address((cemi[6 + offset], cemi[7 + offset]), dst_addr_type)
 
         self.mpdu_len = cemi[8 + offset]
 
-        tpci_apci = cemi[9 + offset] * 256 + cemi[10 + offset]
-        apci = tpci_apci & 0x3ff
+        # TPCI (transport layer control information)   -> First 14 bit
+        # APCI (application layer control information) -> Last  10 bit 
 
-        # TODO: Check correct bitlength
-        self.cmd = APCICommand(apci & 0xFFF0)
+        tpci_apci = cemi[9 + offset] * 256 + cemi[10 + offset]
+
+        self.cmd = APCICommand(tpci_apci & 0xFFC0)
 
         apdu = cemi[10 + offset:]
         if len(apdu) != self.mpdu_len:
@@ -127,9 +133,8 @@ class CEMIFrame():
                     self.mpdu_len, len(apdu)))
 
         if len(apdu) == 1:
-            # Payload is encoded in first byte
-            # TODO: 0x2f looks wrong, shouldnt it be 0x3f or 0x1f
-            self.payload = DPT_Binary( apci & 0x2f )
+            apci = tpci_apci & DPT_Binary.APCI_BITMASK
+            self.payload = DPT_Binary( apci )
         else:
             self.payload = DPT_Array( cemi[11 + offset:] )
 
@@ -151,7 +156,7 @@ class CEMIFrame():
             data = [
                 1 + len( appended_payload ),
                 (cmd.value >> 8) & 0xff,
-                (cmd.value & 0xff) | ( encoded_payload & 0x2F ) ]
+                (cmd.value & 0xff) | ( encoded_payload & DPT_Binary.APCI_BITMASK ) ]
             data.extend(appended_payload)
             return data
 
