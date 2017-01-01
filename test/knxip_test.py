@@ -187,6 +187,23 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe2.cemi.to_knx(), list(raw[6:]))
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
+    def test_maximum_apci(self):
+        telegram = Telegram()
+        telegram.group_address= Address(337)
+        telegram.payload = DPT_Binary(DPT_Binary.APCI_MAX_VALUE)
+
+        knxipframe = KNXIPFrame()
+        knxipframe.sender = Address("1.3.1")
+        knxipframe.telegram = telegram
+        knxipframe.cemi.set_hops(5)
+        knxipframe.normalize()
+
+        raw = (( 0x06,0x10,0x05,0x30,0x00,0x11,0x29,0x00,0xbc,0xd0,0x13,0x01,0x01,0x51,0x1,0x0,0xbf ) )
+        self.assertEqual(knxipframe.to_knx(), list(raw))
+
+        knxipframe2 = KNXIPFrame()        
+        knxipframe2.from_knx(knxipframe.to_knx())
+        self.assertEqual(knxipframe2.telegram, telegram )
 
 suite = unittest.TestLoader().loadTestsFromTestCase(Test_KNXIP)
 unittest.TextTestRunner(verbosity=2).run(suite)
