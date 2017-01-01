@@ -30,7 +30,7 @@ class XKNX_Wrapper(object):
 
         Config(self.xknx).read(file=self.config_file)
 
-        xknx.start( telegram_received_callback = self.telegram_received_callback )
+        self.xknx.start( telegram_received_callback = self.telegram_received_callback )
 
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
 
