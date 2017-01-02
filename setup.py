@@ -4,8 +4,8 @@ setup(
         name='xknx',
         description='A Wrapper around KNX protocol.',
 
-        version='v0.3',
-        download_url='https://github.com/XKNX/xknx/tarball/v0.3',
+        version='0.3',
+        download_url='https://github.com/XKNX/xknx/tarball/0.3',
         url='http://xknx.io/',
 
         author='Julius Mittenzwei',
