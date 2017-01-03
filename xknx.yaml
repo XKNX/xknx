@@ -70,6 +70,7 @@ groups:
 
 
     # Cyclic sending of time to the KNX bus
-    #time:
-    #    General.Time: {group_address: "1/8/1"}
+
+    time:
+        General.Time: {group_address: "2/1/2"}
 
