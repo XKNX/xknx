@@ -4,8 +4,8 @@ setup(
         name='xknx',
         description='A Wrapper around KNX protocol.',
 
-        version='0.3',
-        download_url='https://github.com/XKNX/xknx/tarball/0.3',
+        version='0.3.1',
+        download_url='https://github.com/XKNX/xknx/archive/0.3.1.zip',
         url='http://xknx.io/',
 
         author='Julius Mittenzwei',
@@ -22,5 +22,5 @@ setup(
         ],
         packages=find_packages(),
         install_requires=['PyYAML'],
-        keywords = 'knx ip knxip home automation',
+        keywords = 'knx ip knxip eib home automation',
         zip_safe=False)
