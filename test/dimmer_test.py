@@ -5,13 +5,13 @@ from xknx import XKNX,Dimmer,Address,Telegram,TelegramType,DPT_Binary,DPT_Array
 class TestDimmer(unittest.TestCase):
 
     #
-    # REQUEST STATE
+    # SYNC STATE
     #
-    def test_request_state(self):
+    def test_sync_state(self):
 
         xknx = XKNX()
         dimmer = Dimmer(xknx, "TestDimmer", {'group_address_switch':'1/2/3', 'group_address_dimm':'1/2/4','group_address_dimm_feedback':'1/2/5'})
-        dimmer.request_state()
+        dimmer.sync_state()
 
         self.assertEqual( xknx.telegrams.qsize(), 2 )
 

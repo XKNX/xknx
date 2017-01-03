@@ -47,7 +47,7 @@ class Outlet(Device):
             print("{0}: Could not understand action {1}".format(self.get_name(), action))
 
 
-    def request_state(self):
+    def sync_state(self):
         telegram = Telegram(self.group_address, TelegramType.GROUP_READ)
         self.xknx.telegrams.put(telegram)
 

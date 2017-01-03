@@ -5,13 +5,13 @@ from xknx import XKNX,Time,Address,Telegram,TelegramType
 class TestTime(unittest.TestCase):
 
     #
-    # REQUEST STATE
+    # SYNC STATE
     #
-    def test_request_state(self):
+    def test_sync_state(self):
 
         xknx = XKNX()
         time = Time(xknx, "TestTime", {'group_address':'1/2/3'})
-        time.request_state()
+        time.sync_state()
 
         self.assertEqual( xknx.telegrams.qsize(), 1 )
 

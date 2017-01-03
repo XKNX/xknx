@@ -5,12 +5,12 @@ from xknx import XKNX,Shutter,Telegram,Address,TelegramType,DPT_Binary,DPT_Array
 class TestShutter(unittest.TestCase):
 
     #
-    # REQUEST STATE
+    # SYNC STATE
     #
-    def test_request_state(self):
+    def test_sync_state(self):
         xknx = XKNX()
         shutter = Shutter(xknx, 'TestShutter', {'group_address_long':'1/2/1','group_address_short':'1/2/2','group_address_position':'1/2/3','group_address_position_feedback':'1/2/4'})
-        shutter.request_state()
+        shutter.sync_state()
         self.assertEqual( xknx.telegrams.qsize(), 1 )
         telegram1 = xknx.telegrams.get()
         self.assertEqual( telegram1, Telegram(Address('1/2/4'), TelegramType.GROUP_READ) )

@@ -53,7 +53,7 @@ class Dimmer(Device):
         self.set_internal_brightness(brightness)
 
 
-    def request_state(self):
+    def sync_state(self):
         if not self.group_address_dimm_feedback.is_set():
             print("group_address_dimm_feedback not defined for device {0}".format(self.get_name()))
             return

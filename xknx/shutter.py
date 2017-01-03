@@ -118,7 +118,7 @@ class Shutter(Device):
             print("{0}: Could not understand action {1}".format(self.get_name(), action))
 
 
-    def request_state(self):
+    def sync_state(self):
         if not self.group_address_position_feedback.is_set():
             print("group_position not defined for device {0}".format(self.get_name()))
             return

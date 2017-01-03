@@ -5,13 +5,13 @@ from xknx import XKNX,Outlet,Address,Telegram,TelegramType,DPT_Binary
 class TestOutlet(unittest.TestCase):
 
     #
-    # REQUEST STATE
+    # SYNC STATE
     #
-    def test_request_state(self):
+    def test_sync_state(self):
 
         xknx = XKNX()
         outlet = Outlet(xknx, "TestOutlet", {'group_address':'1/2/3'})
-        outlet.request_state()
+        outlet.sync_state()
 
         self.assertEqual( xknx.telegrams.qsize(), 1 )
 

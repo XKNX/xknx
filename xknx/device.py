@@ -5,7 +5,7 @@ class Device:
         self.after_update_callback = lambda x: None
         self.name = name
 
-    def request_state(self):
+    def sync_state(self):
         pass
 
     def process(self,telegram):
