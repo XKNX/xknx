@@ -1,11 +1,14 @@
-XKNX - An eXtended KNX library written in Python
+XKNX - A KNX library written in Python
 ================================================
 
 A Wrapper around KNX/UDP protocol written in python.
 
 The wrapper is also intended to be used as a KNX logic module, which means to connect different KNX devices and make them interact.
 
-At the moment the wrapper works with KNX/IP router.
+At the moment the wrapper works with KNX/IP routers.
+
+See documentation at: [http://knx.io/](http://knx.io/)
+
 
 Sample Program
 --------------
