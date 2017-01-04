@@ -7,7 +7,7 @@ The wrapper is also intended to be used as a KNX logic module, which means to co
 
 At the moment the wrapper works with KNX/IP routers.
 
-See documentation at: [http://knx.io/](http://knx.io/)
+See documentation at: [http://xknx.io/](http://xknx.io/)
 
 
 Sample Program
