@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
         name='xknx',
-        description='A Wrapper around KNX protocol.',
+        description='A Wrapper around KNX protocol. Documentation: http://xknx.io/',
 
         version='0.3.1',
         download_url='https://github.com/XKNX/xknx/archive/0.3.1.zip',
