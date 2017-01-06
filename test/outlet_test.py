@@ -1,22 +1,24 @@
 import unittest
+from unittest.mock import Mock
 
-from xknx import XKNX,Outlet,Address,Telegram,TelegramType,DPT_Binary
+from xknx import XKNX, Outlet, Address, Telegram, TelegramType, DPTBinary
 
 class TestOutlet(unittest.TestCase):
 
     #
-    # REQUEST STATE
+    # SYNC STATE
     #
-    def test_request_state(self):
+    def test_sync_state(self):
 
         xknx = XKNX()
-        outlet = Outlet(xknx, "TestOutlet", {'group_address':'1/2/3'})
-        outlet.request_state()
+        outlet = Outlet(xknx, "TestOutlet", group_address='1/2/3')
+        outlet.sync_state()
 
-        self.assertEqual( xknx.telegrams.qsize(), 1 )
+        self.assertEqual(xknx.telegrams.qsize(), 1)
 
         telegram = xknx.telegrams.get()
-        self.assertEqual( telegram, Telegram(Address('1/2/3'), TelegramType.GROUP_READ) )
+        self.assertEqual(telegram,
+                         Telegram(Address('1/2/3'), TelegramType.GROUP_READ))
 
 
     #
@@ -24,45 +26,64 @@ class TestOutlet(unittest.TestCase):
     #
     def test_process(self):
         xknx = XKNX()
-        outlet = Outlet(xknx, 'TestOutlet', {'group_address':'1/2/3'})
+        outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
 
-        self.assertEqual( outlet.state, False )
+        self.assertEqual(outlet.state, False)
 
         telegram_on = Telegram()
-        telegram_on.payload = DPT_Binary(1)
-        outlet.process( telegram_on )
+        telegram_on.payload = DPTBinary(1)
+        outlet.process(telegram_on)
 
-        self.assertEqual( outlet.state, True )
+        self.assertEqual(outlet.state, True)
 
         telegram_off = Telegram()
-        telegram_off.payload = DPT_Binary(0)
-        outlet.process( telegram_off )
+        telegram_off.payload = DPTBinary(0)
+        outlet.process(telegram_off)
 
-        self.assertEqual( outlet.state, False )
+        self.assertEqual(outlet.state, False)
+
+
+    def test_process_callback(self):
+        # pylint: disable=no-self-use
+
+        xknx = XKNX()
+        outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
+
+        after_update_callback = Mock()
+        outlet.after_update_callback = after_update_callback
+
+        telegram = Telegram()
+        telegram.payload = DPTBinary(1)
+        outlet.process(telegram)
+
+        after_update_callback.assert_called_with(outlet)
+
 
     #
     # TEST SET ON
     #
     def test_set_on(self):
         xknx = XKNX()
-        outlet = Outlet(xknx, 'TestOutlet', {'group_address':'1/2/3'})
+        outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
         outlet.set_on()
-        self.assertEqual( xknx.telegrams.qsize(), 1 )
+        self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get()
-        self.assertEqual( telegram, Telegram(Address('1/2/3'),  payload=DPT_Binary(1) ) )
+        self.assertEqual(telegram,
+                         Telegram(Address('1/2/3'), payload=DPTBinary(1)))
 
     #
     # TEST SET OFF
     #
     def test_set_off(self):
         xknx = XKNX()
-        outlet = Outlet(xknx, 'TestOutlet', {'group_address':'1/2/3'})
+        outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
         outlet.set_off()
-        self.assertEqual( xknx.telegrams.qsize(), 1 )
+        self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get()
-        self.assertEqual( telegram, Telegram(Address('1/2/3'),  payload=DPT_Binary(0) ) )
+        self.assertEqual(telegram,
+                         Telegram(Address('1/2/3'), payload=DPTBinary(0)))
 
 
 
-suite = unittest.TestLoader().loadTestsFromTestCase(TestOutlet)
-unittest.TextTestRunner(verbosity=2).run(suite)
+SUITE = unittest.TestLoader().loadTestsFromTestCase(TestOutlet)
+unittest.TextTestRunner(verbosity=2).run(SUITE)

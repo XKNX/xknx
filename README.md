@@ -1,12 +1,63 @@
-XKNX - An eXtended KNX library written in Python
+XKNX - A KNX library written in Python
 ================================================
 
 A Wrapper around KNX/UDP protocol written in python.
 
 The wrapper is also intended to be used as a KNX logic module, which means to connect different KNX devices and make them interact.
 
-At the moment the wrapper works with KNX/IP router.
+At the moment the wrapper works with KNX/IP routers.
 
+See documentation at: [http://xknx.io/](http://xknx.io/)
+
+
+Sample Program
+--------------
+
+Switching on an outlet:
+
+```python
+#!/usr/bin/python3
+
+from xknx import XKNX,Config
+
+xknx = XKNX()
+
+Config(xknx).read()
+
+xknx.start()
+xknx.devices.device_by_name("Livingroom.Outlet_1").set_on()
+xknx.join()
+```
+
+Starting a daemon receiving callbacks:
+
+```python
+#!/usr/bin/python3
+
+from xknx import XKNX,CouldNotResolveAddress,Config
+import time
+
+def telegram_received_callback( xknx, device, telegram):
+
+    print("Callback received from {0}".format(device.name))
+
+    try:
+
+        if (device.name == "Livingroom.Switch_1" ):
+            if device.is_on():
+                xknx.devices.device_by_name("Livingroom.Outlet_1").set_on()
+            elif device.is_off():
+                xknx.devices.device_by_name("Livingroom.Outlet_1").set_off()
+
+    except CouldNotResolveAddress as c:
+        print(c)
+
+xknx = XKNX()
+
+Config(xknx).read()
+
+xknx.start( True, telegram_received_callback = telegram_received_callback )
+```
 Chat
 ----
 
@@ -140,51 +191,3 @@ xknx.devices.device_by_name("Livingroom.Shutter_1").set_short_up()
 ```
 
 
-Sample Program
---------------
-
-Switching on an outlet:
-
-```
-#!/usr/bin/python3
-
-from xknx import XKNX,Config
-
-xknx = XKNX()
-
-Config(xknx).read()
-
-xknx.start()
-xknx.devices.device_by_name("Livingroom.Outlet_1").set_on()
-xknx.join()
-```
-
-Starting a daemon receiving callbacks:
-
-```python
-#!/usr/bin/python3
-
-from xknx import XKNX,CouldNotResolveAddress,Config
-import time
-
-def telegram_received_callback( xknx, device, telegram):
-
-    print("Callback received from {0}".format(device.name))
-
-    try:
-
-        if (device.name == "Livingroom.Switch_1" ):
-            if device.is_on():
-                xknx.devices.device_by_name("Livingroom.Outlet_1").set_on()
-            elif device.is_off():
-                xknx.devices.device_by_name("Livingroom.Outlet_1").set_off()
-
-    except CouldNotResolveAddress as c:
-        print(c)
-
-xknx = XKNX()
-
-Config(xknx).read()
-
-xknx.start( True, telegram_received_callback = telegram_received_callback )
-```

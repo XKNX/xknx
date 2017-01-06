@@ -1,13 +1,13 @@
 import queue
+import signal
 from .devices import Devices
 from .globals import Globals
-import signal
 
 class XKNX:
 
     START_TELEGRAM_PROCESSOR = 0x01
-    START_MULITCAST_DAEMON   = 0x02
-    START_STATE_UPDATER      = 0x04
+    START_MULITCAST_DAEMON = 0x02
+    START_STATE_UPDATER = 0x04
 
     START_DEFAULT = START_TELEGRAM_PROCESSOR | \
                     START_MULITCAST_DAEMON | \
@@ -20,9 +20,9 @@ class XKNX:
 
 
     def start(self,
-            daemon_mode = False,
-            start = START_DEFAULT,
-            telegram_received_callback = None):
+              daemon_mode=False,
+              start=START_DEFAULT,
+              telegram_received_callback=None):
         from .multicast import MulticastDaemon
         from .telegram_processor import  TelegramProcessor
         from .stateupdater import StateUpdater
@@ -49,7 +49,8 @@ class XKNX:
 
 
     def loop_until_sigint(self):
-        def sigint_handler(signal, frame):
+        def sigint_handler(sig, frame):
+            #pylint: disable=unused-argument
             self.stop()
 
         signal.signal(signal.SIGINT, sigint_handler)
