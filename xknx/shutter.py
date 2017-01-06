@@ -11,7 +11,7 @@ class Shutter(Device):
     DEFAULT_TRAVEL_TIME_DOWN = 22
     DEFAULT_TRAVEL_TIME_UP = 22
 
-    #pylint disable=too-many-arguments
+    # pylint: disable=too-many-arguments
     def __init__(self,
                  xknx,
                  name,

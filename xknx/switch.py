@@ -9,6 +9,8 @@ class SwitchTime(Enum):
     LONG = 2
 
 class Action():
+
+    # pylint: disable=too-many-arguments
     def __init__(self,
                  xknx,
                  hook=None,
