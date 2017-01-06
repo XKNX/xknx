@@ -14,16 +14,15 @@ class StateUpdater(threading.Thread):
         time.sleep(self.start_timeout)
         print("Starting Update Thread")
         while True:
-            self.request_states()
+            self.sync_states()
             time.sleep(self.timeout)
 
-    def request_states(self):
+    def sync_states(self):
         for device in self.xknx.devices.devices:
-            device.request_state()
+            device.sync_state()
 
     @staticmethod
-    def start_thread(xknx, timeout = 60):
-        t = StateUpdater(xknx, timeout)
-        t.setDaemon(True)
-        t.start()
-
+    def start_thread(xknx, timeout=60):
+        stateupdater = StateUpdater(xknx, timeout)
+        stateupdater.setDaemon(True)
+        stateupdater.start()

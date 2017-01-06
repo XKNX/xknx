@@ -7,7 +7,7 @@ from .multicast import Multicast
 
 class TelegramProcessor(threading.Thread):
 
-    def __init__(self, xknx, telegram_received_callback = None):
+    def __init__(self, xknx, telegram_received_callback=None):
         self.xknx = xknx
         self.telegram_received_callback = telegram_received_callback
         threading.Thread.__init__(self)
@@ -24,31 +24,31 @@ class TelegramProcessor(threading.Thread):
                 time.sleep(1/20)
 
 
-    def process_telegram(self,telegram):
+    def process_telegram(self, telegram):
         if telegram.direction == TelegramDirection.INCOMING:
             self.process_telegram_incoming(telegram)
         elif telegram.direction == TelegramDirection.OUTGOING:
             self.process_telegram_outgoing(telegram)
-            pass
 
 
-    def process_telegram_outgoing(self,telegram):
+    def process_telegram_outgoing(self, telegram):
         multicast = Multicast(self.xknx)
         multicast.send(telegram)
 
 
-    def process_telegram_incoming(self,telegram):
+    def process_telegram_incoming(self, telegram):
         try:
-            device = self.xknx.devices.device_by_group_address(telegram.group_address)
+            device = self.xknx.devices.device_by_group_address(
+                telegram.group_address)
             device.process(telegram)
-            if ( self.telegram_received_callback ):
+            if self.telegram_received_callback:
                 self.telegram_received_callback(self.xknx, device, telegram)
-        except CouldNotResolveAddress as c:
-            print(c)
+        except CouldNotResolveAddress as couldnotresolveaddress:
+            print(couldnotresolveaddress)
 
 
     @staticmethod
-    def start_thread(xknx, telegram_received_callback = None):
-        t = TelegramProcessor(xknx,telegram_received_callback)
-        t.setDaemon(True)
-        t.start()
+    def start_thread(xknx, telegram_received_callback=None):
+        telegramprocessor = TelegramProcessor(xknx, telegram_received_callback)
+        telegramprocessor.setDaemon(True)
+        telegramprocessor.start()

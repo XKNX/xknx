@@ -1,9 +1,9 @@
+from enum import Enum
 from .device import Device
-from .dpt import DPT_Binary
+from .dpt import DPTBinary
 from .exception import CouldNotParseTelegram
 
-from enum import Enum
-
+# pylint: disable=invalid-name
 class BinaryInputState(Enum):
     ON = 1
     OFF = 2
@@ -11,8 +11,8 @@ class BinaryInputState(Enum):
 class BinaryInput(Device):
     def __init__(self, xknx, name, group_address):
         Device.__init__(self, xknx, name)
-        self.group_address=group_address
-        self.state=BinaryInputState.OFF
+        self.group_address = group_address
+        self.state = BinaryInputState.OFF
 
     def has_group_address(self, group_address):
         return self.group_address == group_address
@@ -22,14 +22,14 @@ class BinaryInput(Device):
             self.state = state
 
 
-    def process(self, telegram ):
-        if not isinstance( telegram.payload, DPT_Binary ):
+    def process(self, telegram):
+        if not isinstance(telegram.payload, DPTBinary):
             raise CouldNotParseTelegram()
 
         if telegram.payload.value == 0:
-            self.set_internal_state( BinaryInputState.OFF )
+            self.set_internal_state(BinaryInputState.OFF)
         elif telegram.payload.value == 1:
-            self.set_internal_state( BinaryInputState.ON )
+            self.set_internal_state(BinaryInputState.ON)
         else:
             raise CouldNotParseTelegram()
 

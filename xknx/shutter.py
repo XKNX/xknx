@@ -1,29 +1,35 @@
 from .address import Address
-from .telegram import Telegram,TelegramType
+from .telegram import Telegram, TelegramType
 from .device import Device
-from .address import Address
 from .travelcalculator import TravelCalculator
 from .exception import CouldNotParseTelegram
-from .dpt import DPT_Binary,DPT_Array
+from .dpt import DPTBinary, DPTArray
 
 class Shutter(Device):
 
     def __init__(self, xknx, name, config):
         Device.__init__(self, xknx, name)
-        self.group_address_long = Address(config.get("group_address_long"))
-        self.group_address_short = Address(config.get("group_address_short"))
-        self.group_address_position = Address(config.get("group_address_position"))
-        self.group_address_position_feedback = Address(config.get("group_address_position_feedback"))
+        self.group_address_long = Address(
+            config.get("group_address_long"))
+        self.group_address_short = Address(
+            config.get("group_address_short"))
+        self.group_address_position = Address(
+            config.get("group_address_position"))
+        self.group_address_position_feedback = Address(
+            config.get("group_address_position_feedback"))
 
-        # Assuming 20 seconds is the typical travelling time of an average cover ...
+        # Assuming 20 seconds is the typical travelling time
         travelling_time_down = config.get("travelling_time_down", 20)
         travelling_time_up = config.get("travelling_time_up", 22)
 
-        self.travelcalculator = TravelCalculator(travelling_time_down,travelling_time_up)
-
+        self.travelcalculator = TravelCalculator(
+            travelling_time_down,
+            travelling_time_up)
 
     def has_group_address(self, group_address):
-        return ( self.group_address_long == group_address ) or (self.group_address_short == group_address ) or (self.group_address_position_feedback == group_address )
+        return (self.group_address_long == group_address) \
+            or (self.group_address_short == group_address) \
+            or (self.group_address_position_feedback == group_address)
 
 
     def supports_direct_positioning(self):
@@ -31,44 +37,57 @@ class Shutter(Device):
 
 
     def __str__(self):
-        return "<Shutter group_address_long={0}, group_address_short={1}, group_address_position, group_address_position_feedback={2}, name={3}>".format(self.group_address_long,self.group_address_short,self.group_address_position, self.group_address_position_feedback,self.name)
+        return "<Shutter group_address_long={0}, " \
+                "group_address_short={1}, " \
+                "group_address_position={2}, " \
+                "group_address_position_feedback={3}, " \
+                "name={4}>".format(
+                    self.group_address_long,
+                    self.group_address_short,
+                    self.group_address_position,
+                    self.group_address_position_feedback,
+                    self.name)
 
 
     def send(self, group_address, payload):
         telegram = Telegram()
-        telegram.group_address=group_address
+        telegram.group_address = group_address
         telegram.payload = payload
         self.xknx.telegrams.put(telegram)
 
 
     def set_down(self):
         if not self.group_address_long.is_set():
-            print("group_address_long not defined for device {0}".format(self.get_name()))
+            print("group_address_long not defined for device {0}" \
+                .format(self.get_name()))
             return
-        self.send(self.group_address_long, DPT_Binary(1) )
+        self.send(self.group_address_long, DPTBinary(1))
         self.travelcalculator.start_travel_down()
 
 
     def set_up(self):
         if not self.group_address_long.is_set():
-            print("group_address_long not defined for device {0}".format(self.get_name()))
+            print("group_address_long not defined for device {0}" \
+                .format(self.get_name()))
             return
-        self.send(self.group_address_long, DPT_Binary(0) )
+        self.send(self.group_address_long, DPTBinary(0))
         self.travelcalculator.start_travel_up()
 
 
     def set_short_down(self):
         if not self.group_address_short.is_set():
-            print("group_address_short not defined for device {0}".format(self.get_name()))
+            print("group_address_short not defined for device {0}" \
+                .format(self.get_name()))
             return
-        self.send(self.group_address_short, DPT_Binary(1) )
+        self.send(self.group_address_short, DPTBinary(1))
 
 
     def set_short_up(self):
         if not self.group_address_short.is_set():
-            print("group_address_short not defined for device {0}".format(self.get_name()))
+            print("group_address_short not defined for device {0}" \
+                .format(self.get_name()))
             return
-        self.send(self.group_address_short, DPT_Binary(0) )
+        self.send(self.group_address_short, DPTBinary(0))
 
 
     def stop(self):
@@ -82,13 +101,13 @@ class Shutter(Device):
 
             current_position = self.current_position()
             if position > current_position:
-                self.send(self.group_address_long, DPT_Binary(1) )
+                self.send(self.group_address_long, DPTBinary(1))
             elif position < current_position:
-                self.send(self.group_address_long, DPT_Binary(0) )
-            self.travelcalculator.start_travel( position )
+                self.send(self.group_address_long, DPTBinary(0))
+            self.travelcalculator.start_travel(position)
             return
-        self.send(self.group_address_position, DPT_Array(position))
-        self.travelcalculator.start_travel( position )
+        self.send(self.group_address_position, DPTArray(position))
+        self.travelcalculator.start_travel(position)
 
 
     def auto_stop_if_necessary(self):
@@ -97,44 +116,48 @@ class Shutter(Device):
         # unless device was travelling to fully open
         # or fully closed state
         if (
-            not self.supports_direct_positioning() and
+                not self.supports_direct_positioning() and
                 self.position_reached() and
                 not self.is_open() and
-                not self.is_closed()
-            ):
+                not self.is_closed()):
             self.stop()
 
 
-    def do(self,action):
-        if(action=="up"):
+    def do(self, action):
+        if action == "up":
             self.set_up()
-        elif(action=="short_up"):
+        elif action == "short_up":
             self.set_short_up()
-        elif(action=="down"):
+        elif action == "down":
             self.set_down()
-        elif(action=="short_down"):
-            self.set_short_down()        
+        elif action == "short_down":
+            self.set_short_down()
         else:
-            print("{0}: Could not understand action {1}".format(self.get_name(), action))
+            print("{0}: Could not understand action {1}" \
+                .format(self.get_name(), action))
 
 
-    def request_state(self):
+    def sync_state(self):
         if not self.group_address_position_feedback.is_set():
-            print("group_position not defined for device {0}".format(self.get_name()))
+            print("group_position not defined for device {0}" \
+                .format(self.get_name()))
             return
         if self.travelcalculator.is_travelling():
             # Cover is travelling, requesting state will return false results
             return
 
-        telegram = Telegram(self.group_address_position_feedback, TelegramType.GROUP_READ)
+        telegram = Telegram(
+            self.group_address_position_feedback,
+            TelegramType.GROUP_READ)
         self.xknx.telegrams.put(telegram)
 
 
-    def process(self,telegram):
-        if not isinstance(telegram.payload, DPT_Array) or len(telegram.payload.value) != 1:
+    def process(self, telegram):
+        if not isinstance(telegram.payload, DPTArray) \
+                or len(telegram.payload.value) != 1:
             raise CouldNotParseTelegram()
 
-        self.travelcalculator.set_position( telegram.payload.value[0] )
+        self.travelcalculator.set_position(telegram.payload.value[0])
         self.after_update_callback(self)
 
 
@@ -156,4 +179,3 @@ class Shutter(Device):
 
     def is_closed(self):
         return self.travelcalculator.is_closed()
-

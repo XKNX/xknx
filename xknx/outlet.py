@@ -1,6 +1,6 @@
 from .address import Address
-from .telegram import Telegram,TelegramType
-from .dpt import DPT_Binary
+from .telegram import Telegram, TelegramType
+from .dpt import DPTBinary
 from .exception import CouldNotParseTelegram
 from .device import Device
 
@@ -24,46 +24,47 @@ class Outlet(Device):
 
     def send(self, payload):
         telegram = Telegram()
-        telegram.group_address=self.group_address
+        telegram.group_address = self.group_address
         telegram.payload = payload
         self.xknx.telegrams.put(telegram)
 
     def set_on(self):
-        self.send( DPT_Binary(1) )
+        self.send(DPTBinary(1))
         self.set_internal_state(True)
 
 
     def set_off(self):
-        self.send( DPT_Binary(0) )
+        self.send(DPTBinary(0))
         self.set_internal_state(False)
 
 
-    def do(self,action):
-        if(action=="on"):
+    def do(self, action):
+        if action == "on":
             self.set_on()
-        elif(action=="off"):
+        elif action == "off":
             self.set_off()
         else:
-            print("{0}: Could not understand action {1}".format(self.get_name(), action))
+            print("{0}: Could not understand action {1}" \
+                .format(self.get_name(), action))
 
 
-    def request_state(self):
+    def sync_state(self):
         telegram = Telegram(self.group_address, TelegramType.GROUP_READ)
         self.xknx.telegrams.put(telegram)
 
-    def process(self,telegram):
+    def process(self, telegram):
 
-        if not isinstance( telegram.payload, DPT_Binary ):
+        if not isinstance(telegram.payload, DPTBinary):
             raise CouldNotParseTelegram()
 
-        if telegram.payload.value == 0 :
+        if telegram.payload.value == 0:
             self.set_internal_state(False)
-        elif telegram.payload.value == 1 :
+        elif telegram.payload.value == 1:
             self.set_internal_state(True)
         else:
             raise CouldNotParseTelegram()
 
 
     def __str__(self):
-        return "<Outlet group_address={0}, name={1} state={2}>".format(self.group_address,self.name,self.state)
-
+        return "<Outlet group_address={0}, name={1} state={2}>" \
+            .format(self.group_address, self.name, self.state)

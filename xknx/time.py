@@ -1,9 +1,8 @@
 from .device import Device
 from .address import Address
-from .dpt_time import DPT_Time
+from .dpt_time import DPTTime
 from .telegram import Telegram
-from .dpt import DPT_Array
-import time
+from .dpt import DPTArray
 
 
 class Time(Device):
@@ -16,12 +15,13 @@ class Time(Device):
 
     def broadcast_time(self):
         telegram = Telegram()
-        telegram.group_address=self.group_address
-        telegram.payload = DPT_Array(DPT_Time.current_time_as_knx())
+        telegram.group_address = self.group_address
+        telegram.payload = DPTArray(DPTTime.current_time_as_knx())
         self.xknx.telegrams.put(telegram)
 
-    def request_state(self):
+    def sync_state(self):
         self.broadcast_time()
 
     def __str__(self):
-        return "<Time group_address={0}, name={1}>".format(self.group_address,self.name)
+        return "<Time group_address={0}, name={1}>" \
+            .format(self.group_address, self.name)
