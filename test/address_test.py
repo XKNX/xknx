@@ -78,17 +78,17 @@ class TestAddress(unittest.TestCase):
     # ADDRESS TYPE
     #
     def test_address_type_physical(self):
-        self.assertTrue(
+        self.assertEqual(
             Address("2.3.4", AddressType.PHYSICAL).address_type,
             AddressType.PHYSICAL)
 
     def test_address_type_physical_auto_detect(self):
-        self.assertTrue(
+        self.assertEqual(
             Address("2.3.4").address_type,
             AddressType.PHYSICAL)
 
     def test_address_type_group(self):
-        self.assertTrue(
+        self.assertEqual(
             Address("2/3/4").address_type,
             AddressType.GROUP)
 
