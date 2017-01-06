@@ -33,6 +33,7 @@ class Multicast:
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(self.xknx.globals.own_ip))
 
         knxipframe.normalize()
+
         sock.sendto(bytes(knxipframe.to_knx()), (self.MCAST_GRP, self.MCAST_PORT))
 
     def start_daemon(self):
@@ -64,6 +65,8 @@ class Multicast:
 
                 knxipframe = KNXIPFrame()
                 knxipframe.from_knx(raw)
+
+                print(knxipframe.cemi)
 
                 if knxipframe.sender == self.xknx.globals.own_address:
                     # Ignoring own KNXIPFrame
