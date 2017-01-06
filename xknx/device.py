@@ -8,11 +8,12 @@ class Device:
     def sync_state(self):
         pass
 
-    def process(self,telegram):
+    def process(self, telegram):
         pass
 
     def get_name(self):
         return self.name
 
-    def do(self,action):
+    # pylint: disable=invalid-name
+    def do(self, action):
         pass

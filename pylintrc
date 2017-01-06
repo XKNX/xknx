@@ -1,0 +1,11 @@
+[MASTER]
+
+[MESSAGES CONTROL]
+disable=C0111,duplicate-code,fixme
+
+[REPORTS]
+output-format=colorized
+
+[FORMAT]
+indent-string='    '
+max-line-length=79

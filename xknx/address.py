@@ -1,7 +1,8 @@
 from enum import Enum
 
 class CouldNotParseAddress(Exception):
-    def __init__(self, address = None):
+    def __init__(self, address=None):
+        super(CouldNotParseAddress, self).__init__("Could not parse address")
         self.address = address
 
     def __str__(self):
@@ -18,11 +19,13 @@ class AddressFormat(Enum):
 
 class Address:
 
-    def __init__(self, address = 0, address_type = None):
+    def __init__(self, address=0, address_type=None):
+        self.raw = None
+        self.address_format = None
         self._set(address, address_type)
 
     def __eq__(self, other):
-        if type(other) is not Address:
+        if not isinstance(other, Address):
             raise TypeError()
         return self.raw == other.raw
 
@@ -36,32 +39,30 @@ class Address:
             else self._detect_address_type(address)
 
         if address is None:
-            self.raw=0
+            self.raw = 0
             self.address_format = AddressFormat.LEVEL3
 
-        elif type(address) is Address:
+        elif isinstance(address, Address):
             self.raw = address.raw
             self.address_format = address.address_format
 
-        elif type(address) is str:
+        elif isinstance(address, str):
             if self.address_type == AddressType.PHYSICAL:
                 self._set_str_physical(address)
             else:
                 self._set_str_group(address)
 
-        elif type(address) is int:
+        elif isinstance(address, int):
             self._set_int(address)
-            self.address_format = AddressFormat.FREE
 
-        elif type(address) is tuple:
+        elif isinstance(address, tuple):
             self._set_tuple(address)
-            self.address_format = AddressFormat.FREE
 
         else:
             raise TypeError()
 
     def byte1(self):
-        return ( self.raw >> 8 ) & 255
+        return (self.raw >> 8) & 255
 
     def byte2(self):
         return self.raw & 255
@@ -70,7 +71,7 @@ class Address:
         return self.raw != 0
 
     ##################################################
-    def _set_str_physical( self, address ):
+    def _set_str_physical(self, address):
         parts = address.split(".")
         if any(not part.isdigit() for part in parts):
             raise CouldNotParseAddress(address)
@@ -89,21 +90,21 @@ class Address:
         self.address_format = AddressFormat.LEVEL3
 
 
-    def _set_str_group( self, address ):
+    def _set_str_group(self, address):
         parts = address.split("/")
 
         if any(not part.isdigit() for part in parts):
             raise CouldNotParseAddress(address)
         if len(parts) == 1:
-            self._set_int( int ( parts[0] ) )
+            self._set_int(int(parts[0]))
         elif len(parts) == 2:
-            self._set_str_group_level2( parts )
+            self._set_str_group_level2(parts)
         elif len(parts) == 3:
-            self._set_str_group_level3( parts )
+            self._set_str_group_level3(parts)
         else:
             raise CouldNotParseAddress(address)
 
-    def _set_str_group_level2( self, parts ):
+    def _set_str_group_level2(self, parts):
         main = int(parts[0])
         sub = int(parts[1])
         if main > 31:
@@ -113,7 +114,7 @@ class Address:
         self.raw = (main<<11) + sub
         self.address_format = AddressFormat.LEVEL2
 
-    def _set_str_group_level3( self, parts ):
+    def _set_str_group_level3(self, parts):
         main = int(parts[0])
         middle = int(parts[1])
         sub = int(parts[2])
@@ -128,7 +129,7 @@ class Address:
 
     def _set_tuple(self, address):
         if len(address) != 2 \
-                or any(not isinstance(byte,int) for byte in address) \
+                or any(not isinstance(byte, int) for byte in address) \
                 or any(byte < 0 for byte in address) \
                 or any(byte > 255 for byte in address):
             raise CouldNotParseAddress(address)
@@ -136,9 +137,9 @@ class Address:
         self._set_int(address[0] * 256 + address[1])
 
     def _set_int(self, raw):
-        if type(raw) is not int:
+        if not isinstance(raw, int):
             raise CouldNotParseAddress(raw)
-        if ( raw > 65535 ):
+        if raw > 65535:
             raise CouldNotParseAddress(raw)
         self.raw = raw
         self.address_format = AddressFormat.FREE
@@ -156,33 +157,32 @@ class Address:
             raise TypeError()
 
     def _to_str_free(self):
-        return '{0}'.format(
-            (self.raw & 65535) )
+        return '{0}'.format((self.raw & 65535))
 
     def _to_str_level2(self):
         return '{0}/{1}'.format(
-            ((self.raw >> 11 ) & 15),
-            (self.raw & 4095) )
+            ((self.raw >> 11) & 15),
+            (self.raw & 4095))
 
     def _to_str_level3(self):
         return '{0}/{1}/{2}'.format(
-            ((self.raw >> 11 ) & 31),
+            ((self.raw >> 11) & 31),
             ((self.raw >> 8) & 7),
-            (self.raw & 255) )
+            (self.raw & 255))
 
     def _to_str_physical(self):
         return '{0}.{1}.{2}'.format(
-            ((self.raw >> 12 ) & 15),
+            ((self.raw >> 12) & 15),
             ((self.raw >> 8) & 15),
-            (self.raw & 255) )
+            (self.raw & 255))
 
     @staticmethod
     def _detect_address_type(address):
         # Physical addresses have either be specified explicitely or
         # in the correct notation. As default an address is a group address.
-        if type(address) is str and "." in address:
+        if isinstance(address, str) and "." in address:
             return AddressType.PHYSICAL
-        elif type(address) is Address:
+        elif isinstance(address, Address):
             return address.address_type
         else:
             return AddressType.GROUP

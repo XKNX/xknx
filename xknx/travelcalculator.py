@@ -13,14 +13,14 @@ class TravelStatus(Enum):
 
 
 class TravelCalculator:
-
+    #pylint: disable=too-many-instance-attributes
 
     def  __init__(self, travel_time_down, travel_time_up):
         self.position_type = PositionType.UNKNOWN
         self.last_known_position = 0
 
         self.travel_time_down = travel_time_down
-        self.travel_time_up  = travel_time_up
+        self.travel_time_up = travel_time_up
 
         self.travel_to_position = 0
         self.travel_started_time = 0
@@ -28,6 +28,8 @@ class TravelCalculator:
         #TODO: Move to DPT Types class issue #10
         self.minimum_position_down = 256 # excluding
         self.maximum_position_up = 0
+
+        self.time_set_from_outside = None
 
     def set_position(self, position):
         self.last_known_position = position
@@ -40,17 +42,17 @@ class TravelCalculator:
         self.position_type = PositionType.CALCULATED
         self.travel_direction = TravelStatus.STOPPED
 
-    def start_travel(self, travel_to_position ):
+    def start_travel(self, travel_to_position):
         self.stop()
 
         self.travel_started_time = self.current_time()
         self.travel_to_position = travel_to_position
         self.position_type = PositionType.CALCULATED
 
-        if travel_to_position < self.last_known_position:
-            self.travel_direction = TravelStatus.DIRECTION_UP
-        else:
-            self.travel_direction = TravelStatus.DIRECTION_DOWN
+        self.travel_direction = \
+            TravelStatus.DIRECTION_UP \
+            if travel_to_position < self.last_known_position else \
+            TravelStatus.DIRECTION_DOWN
 
     def start_travel_up(self):
         self.start_travel(self.maximum_position_up)
@@ -59,15 +61,15 @@ class TravelCalculator:
         self.start_travel(self.minimum_position_down)
 
     def current_position(self):
-        if ( self.position_type == PositionType.CALCULATED ):
+        if self.position_type == PositionType.CALCULATED:
             return self._calculate_position()
         return self.last_known_position
 
     def is_travelling(self):
-        return self.current_position() !=  self.travel_to_position
+        return self.current_position() != self.travel_to_position
 
     def position_reached(self):
-        return self.current_position() ==  self.travel_to_position
+        return self.current_position() == self.travel_to_position
 
     def is_open(self):
         return self.current_position() == self.maximum_position_up
@@ -79,16 +81,18 @@ class TravelCalculator:
         relative_position = self.travel_to_position - self.last_known_position
 
         def position_reached_or_exceeded(relative_position):
-            if relative_position <= 0 and self.travel_direction == TravelStatus.DIRECTION_DOWN :
+            if relative_position <= 0 \
+                    and self.travel_direction == TravelStatus.DIRECTION_DOWN:
                 return True
-            if relative_position >= 0 and self.travel_direction == TravelStatus.DIRECTION_UP :
+            if relative_position >= 0 \
+                    and self.travel_direction == TravelStatus.DIRECTION_UP:
                 return True
             return False
 
         if position_reached_or_exceeded(relative_position):
-             return self.travel_to_position
+            return self.travel_to_position
 
-        travel_time = self._calculate_travel_time( relative_position )
+        travel_time = self._calculate_travel_time(relative_position)
         if self.current_time() > self.travel_started_time + travel_time:
             return self.travel_to_position
         progress = (self.current_time()-self.travel_started_time)/travel_time
@@ -104,12 +108,13 @@ class TravelCalculator:
                     self.travel_time_up \
                     if travel_direction == TravelStatus.DIRECTION_UP else \
                     self.travel_time_down
-        return travel_time_full * abs(relative_position) / (self.minimum_position_down-self.maximum_position_up)
+        travel_range = self.minimum_position_down - self.maximum_position_up
+
+        return travel_time_full * abs(relative_position) / travel_range
+
 
     def current_time(self):
         # time_set_from_outside is  used within unit tests
-        if hasattr(self, 'time_set_from_outside'):
+        if self.time_set_from_outside is not None:
             return self.time_set_from_outside
         return time.time()
-
-

@@ -7,6 +7,8 @@ all:
 	@echo ""
 	@echo "build - build python package"
 	@echo "" 
+	@echo "pylint -- run pylint tests"
+	@echo ""
 
 test:
 	@$(MAKE) -C test all
@@ -22,6 +24,9 @@ upload-pypitest:
 upload-pypi:
 	# python3 setup.py register -r pypi
 	python3 setup.py sdist upload -r pypi
+
+pylint:
+	pylint --rcfile=pylintrc xknx test/*.py
 
 
 .PHONY: test build

@@ -22,8 +22,7 @@ class StateUpdater(threading.Thread):
             device.sync_state()
 
     @staticmethod
-    def start_thread(xknx, timeout = 60):
-        t = StateUpdater(xknx, timeout)
-        t.setDaemon(True)
-        t.start()
-
+    def start_thread(xknx, timeout=60):
+        stateupdater = StateUpdater(xknx, timeout)
+        stateupdater.setDaemon(True)
+        stateupdater.start()
