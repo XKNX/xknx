@@ -49,47 +49,47 @@ class Config:
 
     def parse_group_light(self, entries):
         for entry in entries:
-            light = Light(self.xknx,
-                          entry,
-                          entries[entry])
+            light = Light.from_config(self.xknx,
+                                      entry,
+                                      entries[entry])
             self.xknx.devices.devices.append(light)
 
 
     def parse_group_outlet(self, entries):
         for entry in entries:
-            outlet = Outlet(self.xknx,
-                            entry,
-                            entries[entry])
+            outlet = Outlet.from_config(self.xknx,
+                                        entry,
+                                        entries[entry])
             self.xknx.devices.devices.append(outlet)
 
 
     def parse_group_switch(self, entries):
         for entry in entries:
-            switch = Switch(self.xknx,
-                            entry,
-                            entries[entry])
+            switch = Switch.from_config(self.xknx,
+                                        entry,
+                                        entries[entry])
             self.xknx.devices.devices.append(switch)
 
 
     def parse_group_shutter(self, entries):
         for entry in entries:
-            shutter = Shutter(self.xknx,
-                              entry,
-                              entries[entry])
+            shutter = Shutter.from_config(self.xknx,
+                                          entry,
+                                          entries[entry])
             self.xknx.devices.devices.append(shutter)
 
 
     def parse_group_thermostat(self, entries):
         for entry in entries:
-            thermostat = Thermostat(self.xknx,
-                                    entry,
-                                    entries[entry])
+            thermostat = Thermostat.from_config(self.xknx,
+                                                entry,
+                                                entries[entry])
             self.xknx.devices.devices.append(thermostat)
 
 
     def parse_group_time(self, entries):
         for entry in entries:
-            time = Time(self.xknx,
-                        entry,
-                        entries[entry])
+            time = Time.from_config(self.xknx,
+                                    entry,
+                                    entries[entry])
             self.xknx.devices.devices.append(time)

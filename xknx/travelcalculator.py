@@ -118,3 +118,7 @@ class TravelCalculator:
         if self.time_set_from_outside is not None:
             return self.time_set_from_outside
         return time.time()
+
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__

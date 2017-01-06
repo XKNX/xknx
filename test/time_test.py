@@ -10,7 +10,7 @@ class TestTime(unittest.TestCase):
     def test_sync_state(self):
 
         xknx = XKNX()
-        time = Time(xknx, "TestTime", {'group_address':'1/2/3'})
+        time = Time(xknx, "TestTime", group_address='1/2/3')
         time.sync_state()
 
         self.assertEqual(xknx.telegrams.qsize(), 1)

@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import Mock
 
 from xknx import XKNX, Light, Address, Telegram, TelegramType, DPTBinary, \
     DPTArray
@@ -11,10 +12,11 @@ class TestLight(unittest.TestCase):
     def test_sync_state(self):
 
         xknx = XKNX()
-        light = Light(xknx, "TestLight",
-                      {'group_address_switch':'1/2/3',
-                       'group_address_dimm':'1/2/4',
-                       'group_address_dimm_feedback':'1/2/5'})
+        light = Light(xknx,
+                      name="TestLight",
+                      group_address_switch='1/2/3',
+                      group_address_dimm='1/2/4',
+                      group_address_dimm_feedback='1/2/5')
         light.sync_state()
 
         self.assertEqual(xknx.telegrams.qsize(), 2)
@@ -33,10 +35,11 @@ class TestLight(unittest.TestCase):
     #
     def test_set_on(self):
         xknx = XKNX()
-        light = Light(xknx, "TestLight",
-                      {'group_address_switch':'1/2/3',
-                       'group_address_dimm':'1/2/4',
-                       'group_address_dimm_feedback':'1/2/5'})
+        light = Light(xknx,
+                      name="TestLight",
+                      group_address_switch='1/2/3',
+                      group_address_dimm='1/2/4',
+                      group_address_dimm_feedback='1/2/5')
         light.set_on()
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get()
@@ -48,10 +51,11 @@ class TestLight(unittest.TestCase):
     #
     def test_set_off(self):
         xknx = XKNX()
-        light = Light(xknx, "TestLight",
-                      {'group_address_switch':'1/2/3',
-                       'group_address_dimm':'1/2/4',
-                       'group_address_dimm_feedback':'1/2/5'})
+        light = Light(xknx,
+                      name="TestLight",
+                      group_address_switch='1/2/3',
+                      group_address_dimm='1/2/4',
+                      group_address_dimm_feedback='1/2/5')
         light.set_off()
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get()
@@ -63,10 +67,11 @@ class TestLight(unittest.TestCase):
     #
     def test_set_brightness(self):
         xknx = XKNX()
-        light = Light(xknx, "TestLight",
-                      {'group_address_switch':'1/2/3',
-                       'group_address_dimm':'1/2/4',
-                       'group_address_dimm_feedback':'1/2/5'})
+        light = Light(xknx,
+                      name="TestLight",
+                      group_address_switch='1/2/3',
+                      group_address_dimm='1/2/4',
+                      group_address_dimm_feedback='1/2/5')
         light.set_brightness(23)
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get()
@@ -79,10 +84,11 @@ class TestLight(unittest.TestCase):
     #
     def test_process_switch(self):
         xknx = XKNX()
-        light = Light(xknx, "TestLight",
-                      {'group_address_switch':'1/2/3',
-                       'group_address_dimm':'1/2/4',
-                       'group_address_dimm_feedback':'1/2/5'})
+        light = Light(xknx,
+                      name="TestLight",
+                      group_address_switch='1/2/3',
+                      group_address_dimm='1/2/4',
+                      group_address_dimm_feedback='1/2/5')
         self.assertEqual(light.state, False)
 
         telegram = Telegram(Address('1/2/3'), payload=DPTBinary(1))
@@ -94,12 +100,31 @@ class TestLight(unittest.TestCase):
         self.assertEqual(light.state, False)
 
 
+    def test_process_switch_callback(self):
+        # pylint: disable=no-self-use
+        xknx = XKNX()
+        light = Light(xknx,
+                      name="TestLight",
+                      group_address_switch='1/2/3',
+                      group_address_dimm='1/2/4',
+                      group_address_dimm_feedback='1/2/5')
+
+        after_update_callback = Mock()
+        light.after_update_callback = after_update_callback
+
+        telegram = Telegram(Address('1/2/3'), payload=DPTBinary(1))
+        light.process(telegram)
+
+        after_update_callback.assert_called_with(light)
+
+
     def test_process_dimm(self):
         xknx = XKNX()
-        light = Light(xknx, "TestLight",
-                      {'group_address_switch':'1/2/3',
-                       'group_address_dimm':'1/2/4',
-                       'group_address_dimm_feedback':'1/2/5'})
+        light = Light(xknx,
+                      name="TestLight",
+                      group_address_switch='1/2/3',
+                      group_address_dimm='1/2/4',
+                      group_address_dimm_feedback='1/2/5')
         self.assertEqual(light.brightness, 0)
 
         telegram = Telegram(Address('1/2/5'), payload=DPTArray(23))

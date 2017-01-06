@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import Mock
 
 from xknx import XKNX, Shutter, Telegram, Address, TelegramType, DPTBinary, \
     DPTArray
@@ -14,10 +15,10 @@ class TestShutter(unittest.TestCase):
         shutter = Shutter(
             xknx,
             'TestShutter',
-            {'group_address_long':'1/2/1',
-             'group_address_short':'1/2/2',
-             'group_address_position':'1/2/3',
-             'group_address_position_feedback':'1/2/4'})
+            group_address_long='1/2/1',
+            group_address_short='1/2/2',
+            group_address_position='1/2/3',
+            group_address_position_feedback='1/2/4')
         shutter.sync_state()
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get()
@@ -33,10 +34,10 @@ class TestShutter(unittest.TestCase):
         shutter = Shutter(
             xknx,
             'TestShutter',
-            {'group_address_long':'1/2/1',
-             'group_address_short':'1/2/2',
-             'group_address_position':'1/2/3',
-             'group_address_position_feedback':'1/2/4'})
+            group_address_long='1/2/1',
+            group_address_short='1/2/2',
+            group_address_position='1/2/3',
+            group_address_position_feedback='1/2/4')
         shutter.set_up()
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get()
@@ -52,10 +53,10 @@ class TestShutter(unittest.TestCase):
         shutter = Shutter(
             xknx,
             'TestShutter',
-            {'group_address_long':'1/2/1',
-             'group_address_short':'1/2/2',
-             'group_address_position':'1/2/3',
-             'group_address_position_feedback':'1/2/4'})
+            group_address_long='1/2/1',
+            group_address_short='1/2/2',
+            group_address_position='1/2/3',
+            group_address_position_feedback='1/2/4')
         shutter.set_down()
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get()
@@ -71,10 +72,10 @@ class TestShutter(unittest.TestCase):
         shutter = Shutter(
             xknx,
             'TestShutter',
-            {'group_address_long':'1/2/1',
-             'group_address_short':'1/2/2',
-             'group_address_position':'1/2/3',
-             'group_address_position_feedback':'1/2/4'})
+            group_address_long='1/2/1',
+            group_address_short='1/2/2',
+            group_address_position='1/2/3',
+            group_address_position_feedback='1/2/4')
         shutter.set_short_up()
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get()
@@ -90,10 +91,10 @@ class TestShutter(unittest.TestCase):
         shutter = Shutter(
             xknx,
             'TestShutter',
-            {'group_address_long':'1/2/1',
-             'group_address_short':'1/2/2',
-             'group_address_position':'1/2/3',
-             'group_address_position_feedback':'1/2/4'})
+            group_address_long='1/2/1',
+            group_address_short='1/2/2',
+            group_address_position='1/2/3',
+            group_address_position_feedback='1/2/4')
         shutter.set_short_down()
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get()
@@ -108,10 +109,10 @@ class TestShutter(unittest.TestCase):
         xknx = XKNX()
         shutter = Shutter(
             xknx, 'TestShutter',
-            {'group_address_long':'1/2/1',
-             'group_address_short':'1/2/2',
-             'group_address_position':'1/2/3',
-             'group_address_position_feedback':'1/2/4'})
+            group_address_long='1/2/1',
+            group_address_short='1/2/2',
+            group_address_position='1/2/3',
+            group_address_position_feedback='1/2/4')
         shutter.stop()
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get()
@@ -127,10 +128,10 @@ class TestShutter(unittest.TestCase):
         shutter = Shutter(
             xknx,
             'TestShutter',
-            {'group_address_long':'1/2/1',
-             'group_address_short':'1/2/2',
-             'group_address_position':'1/2/3',
-             'group_address_position_feedback':'1/2/4'})
+            group_address_long='1/2/1',
+            group_address_short='1/2/2',
+            group_address_position='1/2/3',
+            group_address_position_feedback='1/2/4')
         shutter.set_position(50)
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get()
@@ -143,9 +144,9 @@ class TestShutter(unittest.TestCase):
         shutter = Shutter(
             xknx,
             'TestShutter',
-            {'group_address_long':'1/2/1',
-             'group_address_short':'1/2/2',
-             'group_address_position_feedback':'1/2/4'})
+            group_address_long='1/2/1',
+            group_address_short='1/2/2',
+            group_address_position_feedback='1/2/4')
         shutter.travelcalculator.set_position(40)
         shutter.set_position(50)
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -159,9 +160,9 @@ class TestShutter(unittest.TestCase):
         shutter = Shutter(
             xknx,
             'TestShutter',
-            {'group_address_long':'1/2/1',
-             'group_address_short':'1/2/2',
-             'group_address_position_feedback':'1/2/4'})
+            group_address_long='1/2/1',
+            group_address_short='1/2/2',
+            group_address_position_feedback='1/2/4')
         shutter.travelcalculator.set_position(100)
         shutter.set_position(50)
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -178,15 +179,35 @@ class TestShutter(unittest.TestCase):
         shutter = Shutter(
             xknx,
             'TestShutter',
-            {'group_address_long':'1/2/1',
-             'group_address_short':'1/2/2',
-             'group_address_position':'1/2/3',
-             'group_address_position_feedback':'1/2/4'})
+            group_address_long='1/2/1',
+            group_address_short='1/2/2',
+            group_address_position='1/2/3',
+            group_address_position_feedback='1/2/4')
 
         telegram = Telegram(Address('1/2/4'), payload=DPTArray(42))
         shutter.process(telegram)
 
         self.assertEqual(shutter.current_position(), 42)
+
+
+    def test_process_callback(self):
+        # pylint: disable=no-self-use
+        xknx = XKNX()
+        shutter = Shutter(
+            xknx,
+            'TestShutter',
+            group_address_long='1/2/1',
+            group_address_short='1/2/2',
+            group_address_position='1/2/3',
+            group_address_position_feedback='1/2/4')
+
+        after_update_callback = Mock()
+        shutter.after_update_callback = after_update_callback
+
+        telegram = Telegram(Address('1/2/4'), payload=DPTArray(42))
+        shutter.process(telegram)
+
+        after_update_callback.assert_called_with(shutter)
 
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestShutter)

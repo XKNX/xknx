@@ -5,10 +5,12 @@ class TelegramDirection(Enum):
     INCOMING = 1
     OUTGOING = 2
 
+
 class TelegramType(Enum):
     GROUP_READ = 1
     GROUP_WRITE = 2
     GROUP_RESPONSE = 3
+
 
 class Telegram:
     # pylint: disable=too-few-public-methods
@@ -32,6 +34,7 @@ class Telegram:
         self.group_address = group_address
         self.payload = payload
 
+
     def __str__(self):
         return "<Telegram group_address={0}, payload={1} " \
                 "telegramtype={2} direction={3}>".format(
@@ -40,6 +43,6 @@ class Telegram:
                     self.telegramtype,
                     self.direction)
 
-    # TODO: Add unit test
+
     def __eq__(self, other):
         return self.__dict__ == other.__dict__

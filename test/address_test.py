@@ -33,18 +33,6 @@ class TestAddress(unittest.TestCase):
         address = Address("2.3.4", AddressType.PHYSICAL)
         self.assertEqual(Address(address).raw, 8964)
 
-    #
-    # is_set
-    #
-
-    def test_address_is_set(self):
-        self.assertTrue(Address("2/3/4").is_set())
-
-    def test_address_is_not_set(self):
-        self.assertFalse(Address(None).is_set())
-
-    def test_address_is_set_physical(self):
-        self.assertTrue(Address("2.3.4", AddressType.PHYSICAL).is_set())
 
     #
     # ADDRESS FORMAT

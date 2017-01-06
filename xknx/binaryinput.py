@@ -20,7 +20,7 @@ class BinaryInput(Device):
     def set_internal_state(self, state):
         if state != self.state:
             self.state = state
-
+            self.after_update()
 
     def process(self, telegram):
         if not isinstance(telegram.payload, DPTBinary):

@@ -25,6 +25,8 @@ class Address:
         self._set(address, address_type)
 
     def __eq__(self, other):
+        if other is None:
+            return False
         if not isinstance(other, Address):
             raise TypeError()
         return self.raw == other.raw
@@ -67,8 +69,6 @@ class Address:
     def byte2(self):
         return self.raw & 255
 
-    def is_set(self):
-        return self.raw != 0
 
     ##################################################
     def _set_str_physical(self, address):
