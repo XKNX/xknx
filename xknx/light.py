@@ -32,7 +32,11 @@ class Light(Device):
         self.group_address_state = group_address_state
         self.state = False
         self.brightness = 0
+        self.supports_dimming = \
+            group_address_dimm_feedback is not None or
+            group_address_dimm is not None
 
+        print(self)
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -61,6 +65,17 @@ class Light(Device):
 
 
     def __str__(self):
+        if not self.supports_dimming:
+            return '<Light name={0}, ' \
+                    'group_address_switch={1}, ' \
+                    'group_address_state={2}, ' \
+                    'state={3}>' \
+                    .format(
+                        self.name,
+                        self.group_address_switch,
+                        self.group_address_state,
+                        self.state)
+
         return '<Light name={0}, ' \
                 'group_address_switch={1}, ' \
                 'group_address_state={2}, ' \
