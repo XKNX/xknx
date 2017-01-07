@@ -11,10 +11,10 @@ class TestBinaryInput(unittest.TestCase):
     #
     def test_process(self):
         xknx = XKNX()
-        outlet = Outlet(xknx, 'TestOutlet', {'group_address':'1/2/3'})
+        outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
         xknx.devices.devices.append(outlet)
 
-        switch = Switch(xknx, 'TestInput', {'group_address':'1/2/3'})
+        switch = Switch(xknx, 'TestInput', group_address='1/2/3')
         action_on = Action(
             xknx,
             hook='on',
