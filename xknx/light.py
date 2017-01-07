@@ -33,8 +33,8 @@ class Light(Device):
         self.state = False
         self.brightness = 0
         self.supports_dimming = \
-            group_address_dimm_feedback is not None or
-            group_address_dimm is not None
+            group_address_dimm_feedback is not None \
+            or group_address_dimm is not None
 
         print(self)
 
