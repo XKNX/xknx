@@ -29,7 +29,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 class XKNX_Cover(CoverDevice):
     """Representation of a demo cover."""
 
-    # pylint: disable=no-self-use
     def __init__(self, hass, device):
         """Initialize the cover."""
         self.hass = hass

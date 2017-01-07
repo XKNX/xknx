@@ -24,13 +24,13 @@ class Shutter(Device):
 
         Device.__init__(self, xknx, name)
 
-        if isinstance(group_address_long, str):
+        if isinstance(group_address_long, (str, int)):
             group_address_long = Address(group_address_long)
-        if isinstance(group_address_short, str):
+        if isinstance(group_address_short, (str, int)):
             group_address_short = Address(group_address_short)
-        if isinstance(group_address_position, str):
+        if isinstance(group_address_position, (str, int)):
             group_address_position = Address(group_address_position)
-        if isinstance(group_address_position_feedback, str):
+        if isinstance(group_address_position_feedback, (str, int)):
             group_address_position_feedback = \
                 Address(group_address_position_feedback)
 

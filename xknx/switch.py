@@ -90,7 +90,7 @@ class Switch(BinaryInput):
                  group_address=None,
                  actions=None):
 
-        if isinstance(group_address, str):
+        if isinstance(group_address, (str, int)):
             group_address = Address(group_address)
         if actions is None:
             actions = []

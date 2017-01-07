@@ -17,13 +17,13 @@ class Light(Device):
 
         Device.__init__(self, xknx, name)
 
-        if isinstance(group_address_switch, str):
+        if isinstance(group_address_switch, (str, int)):
             group_address_switch = Address(group_address_switch)
-        if isinstance(group_address_state, str):
+        if isinstance(group_address_state, (str, int)):
             group_address_state = Address(group_address_state)
-        if isinstance(group_address_dimm, str):
+        if isinstance(group_address_dimm, (str, int)):
             group_address_dimm = Address(group_address_dimm)
-        if isinstance(group_address_dimm_feedback, str):
+        if isinstance(group_address_dimm_feedback, (str, int)):
             group_address_dimm_feedback = Address(group_address_dimm_feedback)
 
         self.group_address_switch = group_address_switch

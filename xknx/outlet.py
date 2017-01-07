@@ -13,7 +13,7 @@ class Outlet(Device):
 
         Device.__init__(self, xknx, name)
 
-        if isinstance(group_address, str):
+        if isinstance(group_address, (str, int)):
             group_address = Address(group_address)
 
         self.group_address = group_address
