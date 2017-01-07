@@ -32,7 +32,7 @@ class Address:
         return self.raw == other.raw
 
     def __str__(self):
-        return "<Address str={0}>".format(self._to_str())
+        return "<Address str={0}>".format(self.str())
 
     def _set(self, address, address_type):
 
@@ -144,33 +144,33 @@ class Address:
         self.raw = raw
         self.address_format = AddressFormat.FREE
 
-    def _to_str(self):
+    def str(self):
         if self.address_type == AddressType.PHYSICAL:
-            return self._to_str_physical()
+            return self._str_physical()
         elif self.address_format == AddressFormat.FREE:
-            return self._to_str_free()
+            return self._str_free()
         elif self.address_format == AddressFormat.LEVEL2:
-            return self._to_str_level2()
+            return self._str_level2()
         elif self.address_format == AddressFormat.LEVEL3:
-            return self._to_str_level3()
+            return self._str_level3()
         else:
             raise TypeError()
 
-    def _to_str_free(self):
+    def _str_free(self):
         return '{0}'.format((self.raw & 65535))
 
-    def _to_str_level2(self):
+    def _str_level2(self):
         return '{0}/{1}'.format(
             ((self.raw >> 11) & 15),
             (self.raw & 4095))
 
-    def _to_str_level3(self):
+    def _str_level3(self):
         return '{0}/{1}/{2}'.format(
             ((self.raw >> 11) & 31),
             ((self.raw >> 8) & 7),
             (self.raw & 255))
 
-    def _to_str_physical(self):
+    def _str_physical(self):
         return '{0}.{1}.{2}'.format(
             ((self.raw >> 12) & 15),
             ((self.raw >> 8) & 15),

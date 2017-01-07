@@ -85,32 +85,32 @@ class TestAddress(unittest.TestCase):
     #
     def test_address_str_3level(self):
         self.assertEqual(
-            Address("2/3/4").__str__(),
+            Address("2/3/4").str(),
             "2/3/4")
 
     def test_address_str_2level(self):
         self.assertEqual(
-            Address("12/500").__str__(),
+            Address("12/500").str(),
             "12/500")
 
     def test_address_str_free(self):
         self.assertEqual(
-            Address("49552").__str__(),
+            Address("49552").str(),
             "49552")
 
     def test_address_str_int(self):
         self.assertEqual(
-            Address(49552).__str__(),
+            Address(49552).str(),
             "49552")
 
     def test_address_str_address(self):
         self.assertEqual(
-            Address(Address("2/3/4")).__str__(),
+            Address(Address("2/3/4")).str(),
             "2/3/4")
 
     def test_address_str_physical(self):
         self.assertEqual(
-            Address("2.3.4", AddressType.PHYSICAL).__str__(),
+            Address("2.3.4", AddressType.PHYSICAL).str(),
             "2.3.4")
 
     #
