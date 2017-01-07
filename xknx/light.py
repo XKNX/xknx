@@ -36,7 +36,6 @@ class Light(Device):
             group_address_dimm_feedback is not None \
             or group_address_dimm is not None
 
-        print(self)
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -119,31 +118,31 @@ class Light(Device):
         self.set_internal_state(False)
 
     def set_brightness(self, brightness):
+        if not self.supports_dimming:
+            return
         self.send(self.group_address_dimm_feedback, DPTArray(brightness))
         self.set_internal_brightness(brightness)
 
 
     def sync_state(self):
-        if self.group_address_dimm_feedback is None:
-            print('group_address_dimm_feedback not defined for device {0}'.\
-                format(self.get_name()))
-            return
 
         telegram_switch = Telegram(
             self.group_address_switch,
             TelegramType.GROUP_READ)
         self.xknx.telegrams.put(telegram_switch)
-        telegram_dimm = Telegram(
-            self.group_address_dimm_feedback,
-            TelegramType.GROUP_READ)
-        self.xknx.telegrams.put(telegram_dimm)
 
+        if self.supports_dimming:
+            telegram_dimm = Telegram(
+                self.group_address_dimm_feedback,
+                TelegramType.GROUP_READ)
+            self.xknx.telegrams.put(telegram_dimm)
 
     def process(self, telegram):
         if telegram.group_address == self.group_address_switch or \
             telegram.group_address == self.group_address_state:
             self._process_state(telegram)
-        elif telegram.group_address == self.group_address_dimm_feedback:
+        elif self.supports_dimming and \
+                telegram.group_address == self.group_address_dimm_feedback:
             self._process_dimm(telegram)
 
 
@@ -156,10 +155,8 @@ class Light(Device):
 
 
     def _process_state(self, telegram):
-
         if not isinstance(telegram.payload, DPTBinary):
             raise CouldNotParseTelegram()
-
         if telegram.payload.value == 0:
             self.set_internal_state(False)
         elif telegram.payload.value == 1:

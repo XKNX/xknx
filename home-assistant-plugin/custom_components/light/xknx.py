@@ -54,7 +54,9 @@ class XKNX_Light(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self.device.brightness
+        return self.device.brightness \
+            if self.device.supports_dimming else \
+            None
 
     @property
     def xy_color(self):
@@ -94,11 +96,15 @@ class XKNX_Light(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
+        flags = 0
+        if self.device.supports_dimming:
+            flags |= SUPPORT_BRIGHTNESS
+        return flags
+
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        if ATTR_BRIGHTNESS in kwargs:
+        if ATTR_BRIGHTNESS in kwargs and self.device.supports_dimming:
             self.device.set_brightness(int(kwargs[ATTR_BRIGHTNESS]))
         else:
             self.device.set_on()
