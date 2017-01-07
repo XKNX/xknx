@@ -32,7 +32,7 @@ class Address:
         return self.raw == other.raw
 
     def __str__(self):
-        return self._to_str()
+        return "<Address str={0}>".format(self._to_str())
 
     def _set(self, address, address_type):
 
