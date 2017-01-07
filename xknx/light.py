@@ -123,6 +123,16 @@ class Light(Device):
         self.send(self.group_address_dimm_feedback, DPTArray(brightness))
         self.set_internal_brightness(brightness)
 
+    def do(self, action):
+        if action == "on":
+            self.set_on()
+        elif action == "off":
+            self.set_off()
+        elif action.startswith("brightness:"):
+            self.set_brightness(int(action[11:]))
+        else:
+            print("{0}: Could not understand action {1}" \
+                .format(self.get_name(), action))
 
     def sync_state(self):
 

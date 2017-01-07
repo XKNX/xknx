@@ -8,7 +8,18 @@ class TestConfig(unittest.TestCase):
     #
     # XKNX Config
     #
+
     def test_config_light(self):
+        xknx = XKNX()
+        Config(xknx).read('../xknx.yaml')
+        self.assertEqual(
+            xknx.devices.device_by_name('Living-Room.Light_1'),
+            Light(xknx,
+                  'Living-Room.Light_1',
+                  group_address_switch='1/6/7'))
+
+
+    def test_config_ligh_dimm(self):
         xknx = XKNX()
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(

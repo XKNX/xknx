@@ -83,7 +83,16 @@ class TestOutlet(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(Address('1/2/3'), payload=DPTBinary(0)))
 
-
+    #
+    # TEST DO
+    #
+    def test_do(self):
+        xknx = XKNX()
+        outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
+        outlet.do("on")
+        self.assertTrue(outlet.state)
+        outlet.do("off")
+        self.assertFalse(outlet.state)
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestOutlet)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

@@ -7,10 +7,29 @@ from xknx import XKNX, Light, Address, Telegram, TelegramType, DPTBinary, \
 class TestLight(unittest.TestCase):
 
     #
+    # TEST SUPPORT DIMMING
+    #
+    def test_supports_dimm_yes(self):
+        xknx = XKNX()
+        light = Light(xknx,
+                      'Diningroom.Light_1',
+                      group_address_switch='1/6/4',
+                      group_address_dimm='1/6/5',
+                      group_address_dimm_feedback='1/6/6')
+        self.assertTrue(light.supports_dimming)
+
+    def test_supports_dimm_no(self):
+        xknx = XKNX()
+        light = Light(xknx,
+                      'Diningroom.Light_1',
+                      group_address_switch='1/6/4')
+        self.assertFalse(light.supports_dimming)
+
+
+    #
     # SYNC STATE
     #
     def test_sync_state(self):
-
         xknx = XKNX()
         light = Light(xknx,
                       name="TestLight",
@@ -130,6 +149,24 @@ class TestLight(unittest.TestCase):
         telegram = Telegram(Address('1/2/5'), payload=DPTArray(23))
         light.process(telegram)
         self.assertEqual(light.brightness, 23)
+
+
+    #
+    # TEST DO
+    #
+    def test_do(self):
+        xknx = XKNX()
+        light = Light(xknx,
+                      name="TestLight",
+                      group_address_switch='1/2/3',
+                      group_address_dimm='1/2/4',
+                      group_address_dimm_feedback='1/2/5')
+        light.do("on")
+        self.assertTrue(light.state)
+        light.do("brightness:80")
+        self.assertEqual(light.brightness, 80)
+        light.do("off")
+        self.assertFalse(light.state)
 
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestLight)
