@@ -164,7 +164,7 @@ class Shutter(Device):
     def auto_stop_if_necessary(self):
         # If device does not support auto_positioning,
         # we have to ttop the device when position is reached.
-        # unless device was travelling to fully open
+        # unless device was traveling to fully open
         # or fully closed state
         if (
                 not self.supports_direct_positioning() and
@@ -193,8 +193,8 @@ class Shutter(Device):
             print("group_position not defined for device {0}" \
                 .format(self.get_name()))
             return
-        if self.travelcalculator.is_travelling():
-            # Cover is travelling, requesting state will return false results
+        if self.travelcalculator.is_traveling():
+            # Cover is traveling, requesting state will return false results
             return
 
         telegram = Telegram(
@@ -216,8 +216,8 @@ class Shutter(Device):
         return self.travelcalculator.current_position()
 
 
-    def is_travelling(self):
-        return self.travelcalculator.is_travelling()
+    def is_traveling(self):
+        return self.travelcalculator.is_traveling()
 
 
     def position_reached(self):

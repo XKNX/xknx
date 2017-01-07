@@ -65,7 +65,7 @@ class TravelCalculator:
             return self._calculate_position()
         return self.last_known_position
 
-    def is_travelling(self):
+    def is_traveling(self):
         return self.current_position() != self.travel_to_position
 
     def position_reached(self):

@@ -185,21 +185,21 @@ class TestTravelCalculator(unittest.TestCase):
         self.assertTrue(travelcalculator.is_closed())
         self.assertFalse(travelcalculator.is_open())
 
-    def test_is_travelling(self):
+    def test_is_traveling(self):
         travelcalculator = TravelCalculator(64, 128)
-        self.assertFalse(travelcalculator.is_travelling())
+        self.assertFalse(travelcalculator.is_traveling())
 
         travelcalculator.set_position(128)
-        self.assertFalse(travelcalculator.is_travelling())
+        self.assertFalse(travelcalculator.is_traveling())
 
         travelcalculator.time_set_from_outside = 1000
         travelcalculator.start_travel_down()
 
         travelcalculator.time_set_from_outside = 1001
-        self.assertTrue(travelcalculator.is_travelling())
+        self.assertTrue(travelcalculator.is_traveling())
 
         travelcalculator.time_set_from_outside = 1032
-        self.assertFalse(travelcalculator.is_travelling())
+        self.assertFalse(travelcalculator.is_traveling())
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestTravelCalculator)
 unittest.TextTestRunner(verbosity=2).run(SUITE)
