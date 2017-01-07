@@ -3,7 +3,11 @@ import time
 
 class StateUpdater(threading.Thread):
 
-    def __init__(self, xknx, timeout, start_timeout=15, sleep_during_devices=0.5):
+    def __init__(self,
+                 xknx,
+                 timeout,
+                 start_timeout=15,
+                 sleep_during_devices=0.5):
         self.xknx = xknx
         self.timeout = timeout
         self.start_timeout = start_timeout
