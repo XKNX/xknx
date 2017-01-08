@@ -1,6 +1,5 @@
 import threading
 import time
-from .outlet import Outlet
 
 class StateUpdater(threading.Thread):
 
