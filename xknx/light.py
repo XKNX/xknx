@@ -13,7 +13,7 @@ class Light(Device):
                  group_address_switch=None,
                  group_address_state=None,
                  group_address_dimm=None,
-                 group_address_dimm_feedback=None):
+                 group_address_brightness=None):
 
         Device.__init__(self, xknx, name)
 
@@ -23,17 +23,17 @@ class Light(Device):
             group_address_state = Address(group_address_state)
         if isinstance(group_address_dimm, (str, int)):
             group_address_dimm = Address(group_address_dimm)
-        if isinstance(group_address_dimm_feedback, (str, int)):
-            group_address_dimm_feedback = Address(group_address_dimm_feedback)
+        if isinstance(group_address_brightness, (str, int)):
+            group_address_brightness = Address(group_address_brightness)
 
         self.group_address_switch = group_address_switch
         self.group_address_dimm = group_address_dimm
-        self.group_address_dimm_feedback = group_address_dimm_feedback
+        self.group_address_brightness = group_address_brightness
         self.group_address_state = group_address_state
         self.state = False
         self.brightness = 0
         self.supports_dimming = \
-            group_address_dimm_feedback is not None \
+            group_address_brightness is not None \
             or group_address_dimm is not None
 
 
@@ -43,8 +43,8 @@ class Light(Device):
             config.get('group_address_switch')
         group_address_dimm = \
             config.get('group_address_dimm')
-        group_address_dimm_feedback = \
-            config.get('group_address_dimm_feedback')
+        group_address_brightness = \
+            config.get('group_address_brightness')
         group_address_state = \
             config.get('group_address_state')
 
@@ -52,7 +52,7 @@ class Light(Device):
                    name,
                    group_address_switch=group_address_switch,
                    group_address_dimm=group_address_dimm,
-                   group_address_dimm_feedback=group_address_dimm_feedback,
+                   group_address_brightness=group_address_brightness,
                    group_address_state=group_address_state)
 
 
@@ -60,7 +60,7 @@ class Light(Device):
         return (self.group_address_state == group_address) or \
                (self.group_address_switch == group_address) or \
                (self.group_address_dimm == group_address) or \
-               (self.group_address_dimm_feedback == group_address)
+               (self.group_address_brightness == group_address)
 
 
     def __str__(self):
@@ -79,14 +79,14 @@ class Light(Device):
                 'group_address_switch={1}, ' \
                 'group_address_state={2}, ' \
                 'group_address_dimm={3}, ' \
-                'group_address_dimm_feedback={4}, ' \
+                'group_address_brightness={4}, ' \
                 'state={5}, brightness={6}>' \
                 .format(
                     self.name,
                     self.group_address_switch,
                     self.group_address_state,
                     self.group_address_dimm,
-                    self.group_address_dimm_feedback,
+                    self.group_address_brightness,
                     self.state,
                     self.brightness)
 
@@ -120,7 +120,7 @@ class Light(Device):
     def set_brightness(self, brightness):
         if not self.supports_dimming:
             return
-        self.send(self.group_address_dimm_feedback, DPTArray(brightness))
+        self.send(self.group_address_brightness, DPTArray(brightness))
         self.set_internal_brightness(brightness)
 
     def do(self, action):
@@ -143,7 +143,7 @@ class Light(Device):
 
         if self.supports_dimming:
             telegram_dimm = Telegram(
-                self.group_address_dimm_feedback,
+                self.group_address_brightness,
                 TelegramType.GROUP_READ)
             self.xknx.telegrams.put(telegram_dimm)
 
@@ -152,7 +152,7 @@ class Light(Device):
             telegram.group_address == self.group_address_state:
             self._process_state(telegram)
         elif self.supports_dimming and \
-                telegram.group_address == self.group_address_dimm_feedback:
+                telegram.group_address == self.group_address_brightness:
             self._process_dimm(telegram)
 
 

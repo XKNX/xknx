@@ -28,7 +28,7 @@ class TestConfig(unittest.TestCase):
                   'Diningroom.Light_1',
                   group_address_switch='1/6/4',
                   group_address_dimm='1/6/5',
-                  group_address_dimm_feedback='1/6/6'))
+                  group_address_brightness='1/6/6'))
 
 
     def test_config_outlet(self):
