@@ -1,5 +1,6 @@
 import threading
 import time
+from .outlet import Outlet
 
 class StateUpdater(threading.Thread):
 
@@ -7,7 +8,7 @@ class StateUpdater(threading.Thread):
                  xknx,
                  timeout,
                  start_timeout=15,
-                 sleep_during_devices=0.5):
+                 sleep_during_devices=0.2):
         self.xknx = xknx
         self.timeout = timeout
         self.start_timeout = start_timeout
