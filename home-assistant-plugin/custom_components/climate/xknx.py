@@ -38,8 +38,6 @@ class XKNX_Thermostat(ClimateDevice):
         self._unit_of_measurement = TEMP_CELSIUS
         self._away = False  # not yet supported
         self._is_fan_on = False  # not yet supported
-        self._current_temp = 15 # TODO: default temp from config 
-        self._target_temp = 21 
 
         self.device = device
 
@@ -63,17 +61,12 @@ class XKNX_Thermostat(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._current_temp
+        return self.device.temperature
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._target_temp
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        return self._target_temp
+        return self.device.setpoint
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -81,7 +74,7 @@ class XKNX_Thermostat(ClimateDevice):
         if temperature is None:
             return
 
-        self._target_temp = temperature
+        self.device.setpoint = temperature
 
         #TODO Sent to KNX bus
         
@@ -92,7 +85,6 @@ class XKNX_Thermostat(ClimateDevice):
         raise NotImplementedError()
 
     def update(self):
-        self._current_temp = self.device.temperature
         self.update_ha_state()
 
     @property

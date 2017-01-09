@@ -62,12 +62,9 @@ groups:
         Living-Room.Light_1: {group_address_switch: '1/6/7'}
 
 
-    # Measuring temperature (setting temperature coming soon)
     thermostat:
-        Kitchen.Thermostat_1: {group_address: '1/7/1'}
-
-        Livingroom.Thermostat_2: {group_address: '1/7/2'}
-
+        Kitchen.Thermostat_1: {group_address_temperature: '1/7/1'}
+        Livingroom.Thermostat_2: {group_address_temperature: '1/7/2', group_address_setpoint: '1/7/3'}
 
     # Cyclic sending of time to the KNX bus
 

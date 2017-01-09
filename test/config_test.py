@@ -56,15 +56,24 @@ class TestConfig(unittest.TestCase):
                     travel_time_up=60))
 
 
-    def test_config_thermostat(self):
+    def test_config_temperature(self):
         xknx = XKNX()
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
             xknx.devices.device_by_name('Kitchen.Thermostat_1'),
             Thermostat(xknx,
                        'Kitchen.Thermostat_1',
-                       group_address='1/7/1'))
+                       group_address_temperature='1/7/1'))
 
+    def test_config_setpoint(self):
+        xknx = XKNX()
+        Config(xknx).read('../xknx.yaml')
+        self.assertEqual(
+            xknx.devices.device_by_name('Livingroom.Thermostat_2'),
+            Thermostat(xknx,
+                       'Livingroom.Thermostat_2',
+                       group_address_temperature='1/7/2',
+                       group_address_setpoint='1/7/3'))
 
     def test_config_time(self):
         xknx = XKNX()
