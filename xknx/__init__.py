@@ -20,9 +20,11 @@ from .thermostat import Thermostat
 from .light import Light
 from .outlet import Outlet
 from .time import Time
+from .monitor import Monitor
 from .config import Config
 from .dpt import DPTBase, DPTBinary, DPTArray, ConversionError,\
     DPT_Comparator
 from .dpt_float import DPTFloat, DPTLux, DPTTemperature, DPTHumidity
+from .dpt_scaling import DPTScaling
 from .dpt_time import DPTTime, DPTWeekday
 from .globals import Globals
