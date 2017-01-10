@@ -121,6 +121,8 @@ class XKNX_Cover(CoverDevice):
     #    UP      0       100
     #    DOWN    255     0
 
+
+    #TODO: use DPTScaling
     def from_knx(self, x):
         return 100-round((x/256)*100)
 

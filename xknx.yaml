@@ -71,3 +71,10 @@ groups:
     time:
         General.Time: {group_address: '2/1/2'}
 
+
+    monitor:
+        Heating.Valve1: {group_address: '2/0/0', value_type: 'percent'}
+        Heating.Valve2: {group_address: '2/0/1', value_type: 'percent'}
+        Some.Other.Value: {group_address: '2/0/2'}
+
+
