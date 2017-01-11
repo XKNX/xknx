@@ -2,7 +2,6 @@ import threading
 import time
 
 from .telegram import TelegramDirection
-from .devices import CouldNotResolveAddress
 from .multicast import Multicast
 
 class TelegramProcessor(threading.Thread):
@@ -30,6 +29,7 @@ class TelegramProcessor(threading.Thread):
             elif telegram.direction == TelegramDirection.OUTGOING:
                 self.process_telegram_outgoing(telegram)
 
+        # pylint: disable=broad-except
         except Exception as exception:
             print("Exceptio while processing telegram:", exception)
 
