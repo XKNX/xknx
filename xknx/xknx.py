@@ -32,7 +32,7 @@ class XKNX:
         if start & XKNX.START_MULITCAST_DAEMON:
             MulticastDaemon.start_thread(self)
         if start & XKNX.START_STATE_UPDATER:
-            StateUpdater.start_thread(self, 10)
+            StateUpdater.start_thread(self)
 
         if daemon_mode:
             self.loop_until_sigint()
