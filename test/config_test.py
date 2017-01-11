@@ -127,5 +127,30 @@ class TestConfig(unittest.TestCase):
                    group_address='2/0/2'))
 
 
+    def test_config_sensor_binary_sensor_class(self):
+        xknx = XKNX()
+        Config(xknx).read('../xknx.yaml')
+        self.assertEqual(
+            xknx.devices.device_by_name('DiningRoom.Motion.Sensor'),
+            Sensor(xknx,
+                   'DiningRoom.Motion.Sensor',
+                   group_address='3/0/1',
+                   value_type='binary',
+                   sensor_class='motion'))
+
+
+    def test_config_sensor_binary_significant_bit(self):
+        xknx = XKNX()
+        Config(xknx).read('../xknx.yaml')
+        self.assertEqual(
+            xknx.devices.device_by_name('Some.Other.BinarySensor'),
+            Sensor(xknx,
+                   'Some.Other.BinarySensor',
+                   group_address='3/0/2',
+                   value_type='binary',
+                   significant_bit=2))
+
+
+
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestConfig)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

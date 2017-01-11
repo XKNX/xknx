@@ -67,7 +67,6 @@ groups:
         Livingroom.Thermostat_2: {group_address_temperature: '1/7/2', group_address_setpoint: '1/7/3'}
 
     # Cyclic sending of time to the KNX bus
-
     time:
         General.Time: {group_address: '2/1/2'}
 
@@ -77,4 +76,8 @@ groups:
         Heating.Valve2: {group_address: '2/0/1', value_type: 'percent'}
         Some.Other.Value: {group_address: '2/0/2'}
 
+        Kitchen.Motion.Sensor: {group_address: '3/0/0', value_type: 'binary', sensor_class: 'motion'}
+        DiningRoom.Motion.Sensor: {group_address: '3/0/1', value_type: 'binary', sensor_class: 'motion'}
 
+        # Defining which bit should be relevant for the binary state
+        Some.Other.BinarySensor: {group_address: '3/0/2', value_type: 'binary', significant_bit: 2}

@@ -5,13 +5,13 @@
 """
 import logging
 from homeassistant.helpers import discovery
+
 from .xknx_wrapper import XKNX_Wrapper
 from .xknx_config import XKNX_Config
 
 DOMAIN = "xknx"
 
-#SUPPORTED_DOMAINS = ['binary_sensor', 'cover', 'fan', 'light', 'lock', 'sensor', 'switch']
-SUPPORTED_DOMAINS = ['switch', 'climate', 'cover', 'light', 'sensor']
+SUPPORTED_DOMAINS = ['switch', 'climate', 'cover', 'light', 'sensor', 'binary_sensor']
 
 
 _LOGGER = logging.getLogger(__name__)

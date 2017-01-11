@@ -5,10 +5,10 @@ import custom_components.xknx as xknx_component
 
 import xknx
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.binary_sensor import BinarySensorDevice
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the demo light platform."""
+    """Setup the XKNX binary sensor platform."""
 
     if xknx_component.xknx_wrapper is None or not xknx_component.xknx_wrapper.initialized:
         _LOGGER.error('A connection has not been made to the XKNX controller.')
@@ -18,19 +18,20 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     for device in xknx_component.xknx_wrapper.xknx.devices.devices:
         if isinstance(device, xknx.Sensor) and \
-                not device.is_binary():
-            entities.append(XKNX_Sensor(hass, device))
+                device.is_binary():
+            entities.append(XKNX_Binary_Sensor(hass, device))
 
     add_devices_callback(entities)
 
     return True
 
 
-class XKNX_Sensor(Entity):
+class XKNX_Binary_Sensor(BinarySensorDevice):
 
     def __init__(self, hass, device):
         self.device = device
         self.register_callbacks()
+
 
     @property
     def should_poll(self):
@@ -45,6 +46,7 @@ class XKNX_Sensor(Entity):
 
 
     def update(self):
+        print(self.device)
         self.update_ha_state()
 
 
@@ -53,20 +55,14 @@ class XKNX_Sensor(Entity):
         """Return the name of the light if any."""
         return self.device.name
 
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self.device.resolve_state()
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return self.device.unit_of_measurement()
+    def sensor_class(self):
+        """Return the class of this sensor."""
+        return self.device.sensor_class
+
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        #return {
-        #    "FNORD": "FNORD",
-        #}
-        return None
+    def is_on(self):
+        """Return true if the binary sensor is on."""
+        return self.device.binary_state()
