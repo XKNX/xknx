@@ -21,13 +21,13 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         _LOGGER.error('A connection has not been made to the XKNX controller.')
         return False
 
-    thermostats = []
+    entities = []
 
     for device in xknx_component.xknx_wrapper.xknx.devices.devices:
         if isinstance(device, xknx.Thermostat):
-            thermostats.append(XKNX_Thermostat(hass, device))
+            entities.append(XKNX_Thermostat(hass, device))
 
-    add_devices_callback(thermostats)
+    add_devices_callback(entities)
 
     return True
 

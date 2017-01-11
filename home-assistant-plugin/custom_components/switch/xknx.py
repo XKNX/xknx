@@ -19,13 +19,13 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         _LOGGER.error('A connection has not been made to the XKNX controller.')
         return False
 
-    switches = []
+    entities = []
 
     for device in xknx_component.xknx_wrapper.xknx.devices.devices:
         if isinstance(device, xknx.Outlet):
-            switches.append(XKNX_Switch(device))   
+            entities.append(XKNX_Switch(device))
 
-    add_devices_callback(switches)
+    add_devices_callback(entities)
 
     return True
 
