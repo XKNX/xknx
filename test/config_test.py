@@ -1,7 +1,7 @@
 import unittest
 
 from xknx import XKNX, Config, Light, Outlet, Shutter, Thermostat, Time, \
-    Switch, Action, Monitor
+    Switch, Action, Sensor
 
 # pylint: disable=too-many-public-methods,invalid-name
 class TestConfig(unittest.TestCase):
@@ -106,25 +106,25 @@ class TestConfig(unittest.TestCase):
 
 
 
-    def test_config_monitor_percent(self):
+    def test_config_sensor_percent(self):
         xknx = XKNX()
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
             xknx.devices.device_by_name('Heating.Valve1'),
-            Monitor(xknx,
-                    'Heating.Valve1',
-                    group_address='2/0/0',
-                    value_type='percent'))
+            Sensor(xknx,
+                   'Heating.Valve1',
+                   group_address='2/0/0',
+                   value_type='percent'))
 
 
-    def test_config_monitor_no_value_type(self):
+    def test_config_sensor_no_value_type(self):
         xknx = XKNX()
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
             xknx.devices.device_by_name('Some.Other.Value'),
-            Monitor(xknx,
-                    'Some.Other.Value',
-                    group_address='2/0/2'))
+            Sensor(xknx,
+                   'Some.Other.Value',
+                   group_address='2/0/2'))
 
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestConfig)

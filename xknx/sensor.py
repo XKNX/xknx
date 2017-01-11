@@ -4,7 +4,7 @@ from .dpt import DPTBinary, DPTArray
 from .dpt_scaling import DPTScaling
 from .device import Device
 
-class Monitor(Device):
+class Sensor(Device):
 
     def __init__(self,
                  xknx,
@@ -83,7 +83,7 @@ class Monitor(Device):
 
 
     def __str__(self):
-        return '<Monitor name={0}, ' \
+        return '<Sensor name={0}, ' \
                'group_address={1}, ' \
                'state={2}, ' \
                'state_str={3}>' \

@@ -1,59 +1,59 @@
 import unittest
 from unittest.mock import Mock
 
-from xknx import XKNX, Monitor, Telegram, \
+from xknx import XKNX, Sensor, Telegram, \
     DPTArray, DPTBinary, Address, TelegramType
 
-class TestMonitor(unittest.TestCase):
+class TestSensor(unittest.TestCase):
 
     #
     # STR FUNCTIONS
     #
     def test_str_array(self):
         xknx = XKNX()
-        monitor = Monitor(
+        sensor = Sensor(
             xknx,
-            'TestMonitor',
+            'TestSensor',
             group_address='1/2/3')
-        monitor.state = DPTArray((0x01, 0x02, 0x03))
+        sensor.state = DPTArray((0x01, 0x02, 0x03))
 
-        self.assertEqual(monitor.state_str(), "0x01,0x02,0x03")
+        self.assertEqual(sensor.state_str(), "0x01,0x02,0x03")
 
 
     def test_str_binary(self):
         xknx = XKNX()
-        monitor = Monitor(
+        sensor = Sensor(
             xknx,
-            'TestMonitor',
+            'TestSensor',
             group_address='1/2/3')
-        monitor.state = DPTBinary(5)
+        sensor.state = DPTBinary(5)
 
-        self.assertEqual(monitor.state_str(), "101")
+        self.assertEqual(sensor.state_str(), "101")
 
 
     def test_str_scaling(self):
         xknx = XKNX()
-        monitor = Monitor(
+        sensor = Sensor(
             xknx,
-            'TestMonitor',
+            'TestSensor',
             group_address='1/2/3',
             value_type="percent")
-        monitor.state = DPTArray((0x40,))
+        sensor.state = DPTArray((0x40,))
 
-        self.assertEqual(monitor.state_str(), "25")
-        self.assertEqual(monitor.unit_of_measurement(), "%")
+        self.assertEqual(sensor.state_str(), "25")
+        self.assertEqual(sensor.unit_of_measurement(), "%")
 
     #
     # SYNC STATE
     #
     def test_sync_state(self):
         xknx = XKNX()
-        monitor = Monitor(
+        sensor = Sensor(
             xknx,
-            'TestMonitor',
+            'TestSensor',
             group_address='1/2/3')
 
-        monitor.sync_state()
+        sensor.sync_state()
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
@@ -66,36 +66,36 @@ class TestMonitor(unittest.TestCase):
     #
     def test_process(self):
         xknx = XKNX()
-        monitor = Monitor(
+        sensor = Sensor(
             xknx,
-            'TestMonitor',
+            'TestSensor',
             group_address='1/2/3')
 
         telegram = Telegram(Address('1/2/3'))
         telegram.payload = DPTArray((0x01, 0x02, 0x03))
-        monitor.process(telegram)
+        sensor.process(telegram)
 
-        self.assertEqual(monitor.state, DPTArray((0x01, 0x02, 0x03)))
+        self.assertEqual(sensor.state, DPTArray((0x01, 0x02, 0x03)))
 
 
     def test_process_callback(self):
         # pylint: disable=no-self-use
         xknx = XKNX()
-        monitor = Monitor(
+        sensor = Sensor(
             xknx,
-            'TestMonitor',
+            'TestSensor',
             group_address='1/2/3')
 
         after_update_callback = Mock()
-        monitor.after_update_callback = after_update_callback
+        sensor.after_update_callback = after_update_callback
 
         telegram = Telegram(Address('1/2/3'))
         telegram.payload = DPTArray((0x01, 0x02, 0x03))
-        monitor.process(telegram)
+        sensor.process(telegram)
 
-        after_update_callback.assert_called_with(monitor)
+        after_update_callback.assert_called_with(sensor)
 
 
 
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestMonitor)
+SUITE = unittest.TestLoader().loadTestsFromTestCase(TestSensor)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

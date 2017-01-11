@@ -17,15 +17,15 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     lights = []
 
     for device in xknx_component.xknx_wrapper.xknx.devices.devices:
-        if isinstance(device, xknx.Monitor):
-            lights.append(XKNX_Monitor(hass, device))
+        if isinstance(device, xknx.Sensor):
+            lights.append(XKNX_Sensor(hass, device))
 
     add_devices_callback(lights)
 
     return True
 
 
-class XKNX_Monitor(Entity):
+class XKNX_Sensor(Entity):
 
     def __init__(self, hass, device):
         self.device = device

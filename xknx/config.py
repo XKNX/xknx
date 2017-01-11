@@ -6,7 +6,7 @@ from .light import Light
 from .outlet import Outlet
 from .shutter import Shutter
 from .address import Address, AddressType
-from .monitor import Monitor
+from .sensor import Sensor
 
 class Config:
 
@@ -46,8 +46,8 @@ class Config:
                 self.parse_group_thermostat(doc["groups"][group])
             elif group.startswith("time"):
                 self.parse_group_time(doc["groups"][group])
-            elif group.startswith("monitor"):
-                self.parse_group_monitor(doc["groups"][group])
+            elif group.startswith("sensor"):
+                self.parse_group_sensor(doc["groups"][group])
 
     def parse_group_light(self, entries):
         for entry in entries:
@@ -97,12 +97,11 @@ class Config:
             self.xknx.devices.devices.append(time)
 
 
-    def parse_group_monitor(self, entries):
+    def parse_group_sensor(self, entries):
         for entry in entries:
-            monitor = Monitor.from_config(self.xknx,
-                                          entry,
-                                          entries[entry])
-            self.xknx.devices.devices.append(monitor)
+            sensor = Sensor.from_config(self.xknx,
+                                        entry,
+                                        entries[entry])
+            self.xknx.devices.devices.append(sensor)
 
-#TODO: create monitor-test
 #TODO: Documentation
