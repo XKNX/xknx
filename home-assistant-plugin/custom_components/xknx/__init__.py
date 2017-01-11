@@ -11,7 +11,7 @@ from .xknx_config import XKNX_Config
 DOMAIN = "xknx"
 
 #SUPPORTED_DOMAINS = ['binary_sensor', 'cover', 'fan', 'light', 'lock', 'sensor', 'switch']
-SUPPORTED_DOMAINS = ['switch', 'climate', 'cover', 'light']
+SUPPORTED_DOMAINS = ['switch', 'climate', 'cover', 'light', 'sensor']
 
 
 _LOGGER = logging.getLogger(__name__)

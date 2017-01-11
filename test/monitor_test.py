@@ -40,7 +40,8 @@ class TestMonitor(unittest.TestCase):
             value_type="percent")
         monitor.state = DPTArray((0x40,))
 
-        self.assertEqual(monitor.state_str(), "25 %")
+        self.assertEqual(monitor.state_str(), "25")
+        self.assertEqual(monitor.unit_of_measurement(), "%")
 
     #
     # SYNC STATE
