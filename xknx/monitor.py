@@ -56,12 +56,22 @@ class Monitor(Device):
         print(self)
 
 
+    def unit_of_measurement(self):
+        if self.value_type == 'percent':
+            return "%"
+        else:
+            return None
+
+
     def state_str(self):
-        if self.value_type == 'percent' and \
+        if self.state is None:
+            return None
+
+        elif self.value_type == 'percent' and \
                 isinstance(self.state, DPTArray) and \
                 len(self.state.value) == 1:
             # TODO: Instanciate DPTScaling object with DPTArray class
-            return "{0} %".format(DPTScaling().from_knx(self.state.value))
+            return "{0}".format(DPTScaling().from_knx(self.state.value))
 
         elif isinstance(self.state, DPTArray):
             return ','.join('0x%02x'%i for i in self.state.value)
