@@ -1,7 +1,7 @@
 import threading
 import time
 
-from .telegram import TelegramDirection
+from .telegram import TelegramDirection, TelegramType
 from .devices import CouldNotResolveAddress
 from .multicast import Multicast
 
@@ -40,7 +40,13 @@ class TelegramProcessor(threading.Thread):
         try:
             device = self.xknx.devices.device_by_group_address(
                 telegram.group_address)
-            device.process(telegram)
+
+            if telegram.telegramtype == TelegramType.GROUP_WRITE or \
+                    telegram.telegramtype == TelegramType.GROUP_RESPONSE:
+                device.process(telegram)
+            elif telegram.telegramtype == TelegramType.GROUP_READ:
+                print("RECEIVED GROUP READ FOR {0}".format(device.name))
+
             if self.telegram_received_callback:
                 self.telegram_received_callback(self.xknx, device, telegram)
         except CouldNotResolveAddress as couldnotresolveaddress:
