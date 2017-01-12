@@ -6,7 +6,7 @@ all:
 	@echo "test  - execute test suite"
 	@echo ""
 	@echo "build - build python package"
-	@echo "" 
+	@echo ""
 	@echo "pylint -- run pylint tests"
 	@echo ""
 
@@ -26,7 +26,9 @@ upload-pypi:
 	python3 setup.py sdist upload -r pypi
 
 pylint:
-	pylint --rcfile=pylintrc xknx test/*.py
+	pylint --rcfile=.pylintrc xknx test/*.py
 
+	# home-assistant-plugin does not have all errors solved (yet)
+	-$(MAKE) -C home-assistant-plugin pylint
 
 .PHONY: test build

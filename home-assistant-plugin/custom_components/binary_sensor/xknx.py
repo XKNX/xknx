@@ -8,7 +8,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     # pylint: disable=unused-argument
-    """Setup the demo light platform."""
+    """Setup the XKNX binary sensor platform."""
 
     if xknx_component.xknx_wrapper is None \
             or not xknx_component.xknx_wrapper.initialized:
@@ -18,8 +18,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     entities = []
 
     for device in xknx_component.xknx_wrapper.xknx.devices.devices:
-        if isinstance(device, xknx.Light):
-            entities.append(xknx_component.XKNXLight(hass, device))
+        if isinstance(device, xknx.Sensor) and \
+                device.is_binary():
+            entities.append(xknx_component.XKNXBinarySensor(hass, device))
 
     add_devices_callback(entities)
 

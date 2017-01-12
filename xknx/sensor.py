@@ -4,21 +4,28 @@ from .dpt import DPTBinary, DPTArray
 from .dpt_scaling import DPTScaling
 from .device import Device
 
-class Monitor(Device):
+class Sensor(Device):
 
+    # pylint: disable=too-many-arguments
     def __init__(self,
                  xknx,
                  name,
                  group_address=None,
-                 value_type=None):
+                 value_type=None,
+                 sensor_class=None,
+                 significant_bit=1):
 
         Device.__init__(self, xknx, name)
 
         if isinstance(group_address, (str, int)):
             group_address = Address(group_address)
+        if not isinstance(significant_bit, int):
+            raise TypeError()
 
         self.group_address = group_address
         self.value_type = value_type
+        self.sensor_class = sensor_class
+        self.significant_bit = significant_bit
         self.state = None
 
 
@@ -28,11 +35,17 @@ class Monitor(Device):
             config.get('group_address')
         value_type = \
             config.get('value_type')
+        sensor_class = \
+            config.get('sensor_class')
+        significant_bit = \
+            config.get('significant_bit', 1)
 
         return cls(xknx,
                    name,
                    group_address=group_address,
-                   value_type=value_type)
+                   value_type=value_type,
+                   sensor_class=sensor_class,
+                   significant_bit=significant_bit)
 
 
     def has_group_address(self, group_address):
@@ -53,7 +66,16 @@ class Monitor(Device):
     def process(self, telegram):
         self.set_internal_state(telegram.payload)
 
-        print(self)
+    def is_binary(self):
+        return self.value_type == 'binary'
+
+
+    def binary_state(self):
+        if not self.is_binary() or \
+                not isinstance(self.state, DPTBinary):
+            return False
+
+        return self.state.value & (1 << (self.significant_bit-1)) != 0
 
 
     def unit_of_measurement(self):
@@ -63,7 +85,7 @@ class Monitor(Device):
             return None
 
 
-    def state_str(self):
+    def resolve_state(self):
         if self.state is None:
             return None
 
@@ -72,6 +94,10 @@ class Monitor(Device):
                 len(self.state.value) == 1:
             # TODO: Instanciate DPTScaling object with DPTArray class
             return "{0}".format(DPTScaling().from_knx(self.state.value))
+
+
+        elif self.value_type == 'binary':
+            return self.binary_state()
 
         elif isinstance(self.state, DPTArray):
             return ','.join('0x%02x'%i for i in self.state.value)
@@ -83,14 +109,14 @@ class Monitor(Device):
 
 
     def __str__(self):
-        return '<Monitor name={0}, ' \
+        return '<Sensor name={0}, ' \
                'group_address={1}, ' \
                'state={2}, ' \
-               'state_str={3}>' \
+               'resolve_state={3}>' \
             .format(self.name,
                     self.group_address,
                     self.state,
-                    self.state_str())
+                    self.resolve_state())
 
 
     def __eq__(self, other):
