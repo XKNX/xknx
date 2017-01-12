@@ -5,6 +5,8 @@ help:
 	@echo ""
 	@echo "install             will copy plugin to plugindirectory .homeassistant/custom_components"
 	@echo ""
+	@echo "pylint              run pylint tests"
+	@echo ""
 
 install:
 	@mkdir -p ~/.homeassistant/custom_components/switch
@@ -23,4 +25,9 @@ install:
 	@cp custom_components/xknx/__init__.py ~/.homeassistant/custom_components/xknx
 	@cp custom_components/xknx/xknx_wrapper.py ~/.homeassistant/custom_components/xknx
 	@cp custom_components/xknx/xknx_config.py ~/.homeassistant/custom_components/xknx
+
+
+pylint:
+	pylint --rcfile=.pylintrc custom_components/*/*.py
+
 
