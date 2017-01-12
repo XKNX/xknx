@@ -11,7 +11,7 @@ from .knxip_enum import KNXIPServiceType, CEMIMessageCode, APCICommand,\
 from .stateupdater import StateUpdater
 from .multicast import Multicast, MulticastDaemon
 from .telegram_processor import TelegramProcessor
-from .devices import Devices, CouldNotResolveAddress
+from .devices import Devices
 from .binaryinput import BinaryInput, BinaryInputState
 from .switch import Switch, Action
 from .shutter import Shutter

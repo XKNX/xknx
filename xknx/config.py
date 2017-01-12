@@ -54,7 +54,7 @@ class Config:
             light = Light.from_config(self.xknx,
                                       entry,
                                       entries[entry])
-            self.xknx.devices.devices.append(light)
+            self.xknx.devices.add(light)
 
 
     def parse_group_outlet(self, entries):
@@ -62,7 +62,7 @@ class Config:
             outlet = Outlet.from_config(self.xknx,
                                         entry,
                                         entries[entry])
-            self.xknx.devices.devices.append(outlet)
+            self.xknx.devices.add(outlet)
 
 
     def parse_group_switch(self, entries):
@@ -70,7 +70,7 @@ class Config:
             switch = Switch.from_config(self.xknx,
                                         entry,
                                         entries[entry])
-            self.xknx.devices.devices.append(switch)
+            self.xknx.devices.add(switch)
 
 
     def parse_group_shutter(self, entries):
@@ -78,7 +78,7 @@ class Config:
             shutter = Shutter.from_config(self.xknx,
                                           entry,
                                           entries[entry])
-            self.xknx.devices.devices.append(shutter)
+            self.xknx.devices.add(shutter)
 
 
     def parse_group_thermostat(self, entries):
@@ -86,7 +86,7 @@ class Config:
             thermostat = Thermostat.from_config(self.xknx,
                                                 entry,
                                                 entries[entry])
-            self.xknx.devices.devices.append(thermostat)
+            self.xknx.devices.add(thermostat)
 
 
     def parse_group_time(self, entries):
@@ -94,7 +94,7 @@ class Config:
             time = Time.from_config(self.xknx,
                                     entry,
                                     entries[entry])
-            self.xknx.devices.devices.append(time)
+            self.xknx.devices.add(time)
 
 
     def parse_group_sensor(self, entries):
@@ -102,6 +102,6 @@ class Config:
             sensor = Sensor.from_config(self.xknx,
                                         entry,
                                         entries[entry])
-            self.xknx.devices.devices.append(sensor)
+            self.xknx.devices.add(sensor)
 
 #TODO: Documentation

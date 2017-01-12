@@ -143,9 +143,9 @@ class TestConfig(unittest.TestCase):
         xknx = XKNX()
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
-            xknx.devices.device_by_name('Some.Other.BinarySensor'),
+            xknx.devices.device_by_name('Kitchen.Thermostat.Presence'),
             Sensor(xknx,
-                   'Some.Other.BinarySensor',
+                   'Kitchen.Thermostat.Presence',
                    group_address='3/0/2',
                    value_type='binary',
                    significant_bit=2))

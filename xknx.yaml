@@ -79,5 +79,8 @@ groups:
         Kitchen.Motion.Sensor: {group_address: '3/0/0', value_type: 'binary', sensor_class: 'motion'}
         DiningRoom.Motion.Sensor: {group_address: '3/0/1', value_type: 'binary', sensor_class: 'motion'}
 
-        # Defining which bit should be relevant for the binary state
-        Some.Other.BinarySensor: {group_address: '3/0/2', value_type: 'binary', significant_bit: 2}
+        # Some states are encoded into different bits of the same group_address
+        # Defining which bit should be relevant for the binary state via the "significant_bit" option
+        Kitchen.Thermostat.Presence: {group_address: '3/0/2', value_type: 'binary', significant_bit: 2}
+        Kitchen.Thermostat.NightMode: {group_address: '3/0/2', value_type: 'binary', significant_bit: 1}
+
