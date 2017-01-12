@@ -26,7 +26,7 @@ upload-pypi:
 	python3 setup.py sdist upload -r pypi
 
 pylint:
-	pylint --rcfile=pylintrc xknx test/*.py
+	pylint --rcfile=.pylintrc xknx test/*.py
 
 
 .PHONY: test build
