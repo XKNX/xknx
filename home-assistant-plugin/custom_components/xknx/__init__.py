@@ -25,7 +25,6 @@ SUPPORTED_DOMAINS = [
     'sensor',
     'binary_sensor']
 
-
 _LOGGER = logging.getLogger(__name__)
 
 XKNX_MODULE = None
@@ -36,10 +35,10 @@ def setup(hass, config):
     # pylint: disable=global-statement, import-error
     global XKNX_MODULE
 
-    XKNX_MODULE = XKNXModule(hass, config)
-    XKNX_MODULE.start()
+    if XKNX_MODULE is None:
+        XKNX_MODULE = XKNXModule(hass, config)
+        XKNX_MODULE.start()
 
-    # Load platforms for the devices in the ISY controller that we support.
     for component in SUPPORTED_DOMAINS:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
