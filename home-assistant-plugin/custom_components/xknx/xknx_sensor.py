@@ -22,7 +22,7 @@ class XKNXSensor(Entity):
 
 
     def update(self):
-        self.update_ha_state()
+        self.hass.async_add_job(self.async_update_ha_state())
 
 
     @property

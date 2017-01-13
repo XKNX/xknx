@@ -16,7 +16,7 @@ class XKNXLight(Light):
         self.device.after_update_callback = after_update_callback
 
     def update(self):
-        self.update_ha_state()
+        self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def should_poll(self):
@@ -85,9 +85,9 @@ class XKNXLight(Light):
             self.device.set_brightness(int(kwargs[ATTR_BRIGHTNESS]))
         else:
             self.device.set_on()
-        self.schedule_update_ha_state()
+        self.hass.async_add_job(self.async_update_ha_state())
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
         self.device.set_off()
-        self.schedule_update_ha_state()
+        self.hass.async_add_job(self.async_update_ha_state())

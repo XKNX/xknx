@@ -23,7 +23,7 @@ class XKNXCover(CoverDevice):
         self.device.after_update_callback = after_update_callback
 
     def update(self):
-        self.update_ha_state()
+        self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def name(self):

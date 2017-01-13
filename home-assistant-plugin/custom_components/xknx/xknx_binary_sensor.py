@@ -22,9 +22,7 @@ class XKNXBinarySensor(BinarySensorDevice):
 
 
     def update(self):
-        print(self.device)
-        self.update_ha_state()
-
+        self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def name(self):
