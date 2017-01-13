@@ -1,12 +1,12 @@
 """
 "
-" Connects to XKNX plattform
+" Connects to XKNX plattforms
 "
 """
 import logging
 from homeassistant.helpers import discovery
 
-from .xknx_wrapper import XKNXWrapper
+from .xknx_module import XKNXModule
 from .xknx_config import XKNXConfig
 from .xknx_binary_sensor import XKNXBinarySensor
 from .xknx_sensor import XKNXSensor
@@ -28,14 +28,16 @@ SUPPORTED_DOMAINS = [
 
 _LOGGER = logging.getLogger(__name__)
 
+XKNX_MODULE = None
+
 def setup(hass, config):
     """Setup device tracker."""
 
-    xknx_config = XKNXConfig(hass, config)
+    # pylint: disable=global-statement, import-error
+    global XKNX_MODULE
 
-    global xknx_wrapper
-    xknx_wrapper = XKNXWrapper(hass, xknx_config)
-    xknx_wrapper.start()
+    XKNX_MODULE = XKNXModule(hass, config)
+    XKNX_MODULE.start()
 
     # Load platforms for the devices in the ISY controller that we support.
     for component in SUPPORTED_DOMAINS:

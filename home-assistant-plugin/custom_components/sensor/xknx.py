@@ -10,14 +10,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     # pylint: disable=unused-argument
     """Setup the XKNX light platform."""
 
-    if xknx_component.xknx_wrapper is None \
-            or not xknx_component.xknx_wrapper.initialized:
+    if xknx_component.XKNX_MODULE is None \
+            or not xknx_component.XKNX_MODULE.initialized:
         _LOGGER.error('A connection has not been made to the XKNX controller.')
         return False
 
     entities = []
 
-    for device in xknx_component.xknx_wrapper.xknx.devices.devices:
+    for device in xknx_component.XKNX_MODULE.xknx.devices.devices:
         if isinstance(device, xknx.Sensor) and \
                 not device.is_binary():
             entities.append(xknx_component.XKNXSensor(hass, device))
@@ -25,5 +25,3 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     add_devices_callback(entities)
 
     return True
-
-
