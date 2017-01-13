@@ -109,5 +109,32 @@ class TestDevices(unittest.TestCase):
         self.assertEqual(tuple(devices.__iter__()),
             (light1,sensor1,sensor2,light2))
 
+
+    def test_modification_of_device(self):
+        xknx = XKNX()
+        devices = Devices()
+
+        light1 = Light(xknx,
+                       'Living-Room.Light_1',
+                       group_address_switch='1/6/7')
+        devices.add(light1)
+
+        for device in devices:
+            device.set_on()
+
+        self.assertTrue(light1.state)
+
+        device2 = devices.device_by_name("Living-Room.Light_1")
+        device2.set_off()
+
+        self.assertFalse(light1.state)
+
+        for device in devices.devices_by_group_address(Address('1/6/7')):
+             device.set_on()
+
+        self.assertTrue(light1.state)
+
+
+
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDevices)
 unittest.TextTestRunner(verbosity=2).run(SUITE)
