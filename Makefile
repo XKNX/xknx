@@ -30,5 +30,6 @@ pylint:
 
 	# home-assistant-plugin does not have all errors solved (yet)
 	-@$(MAKE) -C home-assistant-plugin pylint
+	@echo "*** pylint complete ***"
 
 .PHONY: test build

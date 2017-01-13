@@ -39,7 +39,7 @@ class DPTBinary(DPTBase):
         self.value = value
 
     def __eq__(self, other):
-        return DPT_Comparator.compare(self, other)
+        return DPTComparator.compare(self, other)
 
     def __str__(self):
         return "<DPTBinary value={0}>".format(self.value)
@@ -62,20 +62,20 @@ class DPTArray(DPTBase):
             raise TypeError()
 
     def __eq__(self, other):
-        return DPT_Comparator.compare(self, other)
+        return DPTComparator.compare(self, other)
 
     def __str__(self):
         return "<DPTArray value=[{0}]>".format(
             ','.join(hex(b) for b in self.value))
 
 
-class DPT_Comparator():
+class DPTComparator():
     # pylint: disable=too-few-public-methods
-    # pylint: disable=invalid-name,too-many-return-statements
     """ Helper class to compare different types of DPT objects"""
 
     @staticmethod
     def compare(a, b):
+        # pylint: disable=invalid-name,too-many-return-statements
         if a is None and b is None:
             return True
 

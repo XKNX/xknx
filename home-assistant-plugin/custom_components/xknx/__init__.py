@@ -4,6 +4,7 @@
 "
 """
 import logging
+import asyncio
 from homeassistant.helpers import discovery
 
 from .xknx_module import XKNXModule
@@ -29,7 +30,9 @@ _LOGGER = logging.getLogger(__name__)
 
 XKNX_MODULE = None
 
-def setup(hass, config):
+
+@asyncio.coroutine
+def async_setup(hass, config):
     """Setup device tracker."""
 
     # pylint: disable=global-statement, import-error
@@ -39,7 +42,10 @@ def setup(hass, config):
         XKNX_MODULE = XKNXModule(hass, config)
         XKNX_MODULE.start()
 
+    print("FNORD")
+
     for component in SUPPORTED_DOMAINS:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+        hass.async_add_job(
+            discovery.async_load_platform(hass, component, DOMAIN, {}, config))
 
     return True

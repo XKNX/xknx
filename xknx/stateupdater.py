@@ -23,7 +23,7 @@ class StateUpdater(threading.Thread):
             time.sleep(self.timeout)
 
     def sync_states(self):
-        for device in self.xknx.devices.devices:
+        for device in self.xknx.devices:
             device.sync_state()
             time.sleep(self.sleep_during_devices)
 

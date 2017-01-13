@@ -17,11 +17,11 @@ class XKNXSensor(Entity):
     def register_callbacks(self):
         def after_update_callback(device):
             # pylint: disable=unused-argument
-            self.update()
+            self.update_ha()
         self.device.after_update_callback = after_update_callback
 
 
-    def update(self):
+    def update_ha(self):
         self.hass.async_add_job(self.async_update_ha_state())
 
 

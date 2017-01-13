@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import xknx
 
@@ -6,7 +7,9 @@ import custom_components.xknx as xknx_component
 
 _LOGGER = logging.getLogger(__name__)
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices_callback, \
+        discovery_info=None):
     # pylint: disable=unused-argument
     """Setup the XKNX binary sensor platform."""
 
@@ -17,11 +20,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     entities = []
 
-    for device in xknx_component.XKNX_MODULE.xknx.devices.devices:
+    for device in xknx_component.XKNX_MODULE.xknx.devices:
         if isinstance(device, xknx.Sensor) and \
                 device.is_binary():
             entities.append(xknx_component.XKNXBinarySensor(hass, device))
 
-    add_devices_callback(entities)
+    yield from async_add_devices_callback(entities)
 
     return True
