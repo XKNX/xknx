@@ -1,7 +1,8 @@
 [MASTER]
+reports=no
 
 [MESSAGES CONTROL]
-disable=C0111,duplicate-code,fixme
+disable=C0111,duplicate-code,fixme,locally-disabled
 
 [REPORTS]
 output-format=colorized

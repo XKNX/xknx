@@ -16,8 +16,12 @@ class XKNXClimate(ClimateDevice):
     def register_callbacks(self):
         def after_update_callback(device):
             # pylint: disable=unused-argument
-            self.update()
+            self.update_ha()
         self.device.after_update_callback = after_update_callback
+
+    def update_ha(self):
+        self.hass.async_add_job(self.async_update_ha_state())
+
 
 
     @property
@@ -54,16 +58,12 @@ class XKNXClimate(ClimateDevice):
 
         #TODO Sent to KNX bus
 
-        self.update_ha_state()
+        self.update_ha()
 
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
         raise NotImplementedError()
-
-
-    def update(self):
-        self.update_ha_state()
 
 
     @property

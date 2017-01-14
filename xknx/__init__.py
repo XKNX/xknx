@@ -23,7 +23,7 @@ from .time import Time
 from .sensor import Sensor
 from .config import Config
 from .dpt import DPTBase, DPTBinary, DPTArray, ConversionError,\
-    DPT_Comparator
+    DPTComparator
 from .dpt_float import DPTFloat, DPTLux, DPTTemperature, DPTHumidity
 from .dpt_scaling import DPTScaling
 from .dpt_time import DPTTime, DPTWeekday

@@ -6,7 +6,6 @@ from .dpt import DPTBinary, DPTArray
 
 class Light(Device):
 
-    # pylint: disable=too-many-arguments
     def __init__(self,
                  xknx,
                  name,
@@ -14,6 +13,7 @@ class Light(Device):
                  group_address_state=None,
                  group_address_dimm=None,
                  group_address_brightness=None):
+        # pylint: disable=too-many-arguments
 
         Device.__init__(self, xknx, name)
 

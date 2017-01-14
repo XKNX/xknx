@@ -11,7 +11,6 @@ class Shutter(Device):
     DEFAULT_TRAVEL_TIME_DOWN = 22
     DEFAULT_TRAVEL_TIME_UP = 22
 
-    # pylint: disable=too-many-arguments
     def __init__(self,
                  xknx,
                  name,
@@ -21,7 +20,7 @@ class Shutter(Device):
                  group_address_position_feedback=None,
                  travel_time_down=DEFAULT_TRAVEL_TIME_DOWN,
                  travel_time_up=DEFAULT_TRAVEL_TIME_UP):
-
+        # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name)
 
         if isinstance(group_address_long, (str, int)):

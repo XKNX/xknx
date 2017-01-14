@@ -1,19 +1,23 @@
 import threading
 import logging
 
-from xknx import XKNX, Config
+import xknx
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+
+from .xknx_config import XKNXConfig
 
 
 _LOGGER = logging.getLogger(__name__)
 
-class XKNXWrapper(object):
+class XKNXModule(object):
     """Representation of XKNX Object."""
 
-    def __init__(self, hass, xknx_config):
+    def __init__(self, hass, config):
 
-        self.xknx = XKNX()
+        xknx_config = XKNXConfig(hass, config)
+
+        self.xknx = xknx.XKNX()
 
         self.initialized = False
         self.lock = threading.Lock()
@@ -27,12 +31,12 @@ class XKNXWrapper(object):
 
     def start(self):
 
-        Config(self.xknx).read(file=self.config_file)
+        xknx.Config(self.xknx).read(file=self.config_file)
 
         self.xknx.start(
             telegram_received_callback=self.telegram_received_callback)
 
-        self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
 
         self.initialized = True
 

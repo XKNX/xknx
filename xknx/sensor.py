@@ -6,7 +6,6 @@ from .device import Device
 
 class Sensor(Device):
 
-    # pylint: disable=too-many-arguments
     def __init__(self,
                  xknx,
                  name,
@@ -14,6 +13,7 @@ class Sensor(Device):
                  value_type=None,
                  sensor_class=None,
                  significant_bit=1):
+        # pylint: disable=too-many-arguments
 
         Device.__init__(self, xknx, name)
 
