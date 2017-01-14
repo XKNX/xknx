@@ -85,7 +85,7 @@ class XKNXCover(CoverDevice):
 
     def auto_updater_hook(self, now):
         # pylint: disable=unused-argument
-        self.update()
+        self.update_ha()
         print(self.device.current_position())
         if self.device.position_reached():
             self.stop_auto_updater()
