@@ -28,7 +28,7 @@ class StateUpdater(threading.Thread):
             time.sleep(self.sleep_during_devices)
 
     @staticmethod
-    def start_thread(xknx, timeout=60):
+    def start_thread(xknx, timeout=600):
         stateupdater = StateUpdater(xknx, timeout)
         stateupdater.setDaemon(True)
         stateupdater.start()
