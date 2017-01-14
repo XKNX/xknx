@@ -44,18 +44,18 @@ Basic Operations
 
 # Outlet
 
-xknx.devices.device_by_name("Livingroom.Outlet_1").set_on()
+xknx.devices["Livingroom.Outlet_1"].set_on()
 time.sleep(5)
-xknx.devices.device_by_name("Livingroom.Outlet_2").set_off()
+xknx.devices["Livingroom.Outlet_2"].set_off()
 
 # Shutter
-xknx.devices.device_by_name("Livingroom.Shutter_1").set_down()
+xknx.devices["Livingroom.Shutter_1"].set_down()
 time.sleep(2)
-xknx.devices.device_by_name("Livingroom.Shutter_1").set_up()
+xknx.devices["Livingroom.Shutter_1"].set_up()
 time.sleep(5)
-xknx.devices.device_by_name("Livingroom.Shutter_1").set_short_down()
+xknx.devices["Livingroom.Shutter_1"].set_short_down()
 time.sleep(5)
-xknx.devices.device_by_name("Livingroom.Shutter_1").set_short_up()
+xknx.devices["Livingroom.Shutter_1"].set_short_up()
 
 ```
 

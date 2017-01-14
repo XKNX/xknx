@@ -69,7 +69,7 @@ class Action():
 
 
     def execute(self):
-        self.xknx.devices.device_by_name(self.target).do(self.method)
+        self.xknx.devices[self.target].do(self.method)
 
 
     def __str__(self):

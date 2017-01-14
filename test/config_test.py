@@ -14,7 +14,7 @@ class TestConfig(unittest.TestCase):
         xknx = XKNX()
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
-            xknx.devices.device_by_name('Living-Room.Light_1'),
+            xknx.devices['Living-Room.Light_1'],
             Light(xknx,
                   'Living-Room.Light_1',
                   group_address_switch='1/6/7'))
@@ -24,7 +24,7 @@ class TestConfig(unittest.TestCase):
         xknx = XKNX()
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
-            xknx.devices.device_by_name('Diningroom.Light_1'),
+            xknx.devices['Diningroom.Light_1'],
             Light(xknx,
                   'Diningroom.Light_1',
                   group_address_switch='1/6/4',
@@ -36,7 +36,7 @@ class TestConfig(unittest.TestCase):
         xknx = XKNX()
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
-            xknx.devices.device_by_name('Livingroom.Outlet_2'),
+            xknx.devices['Livingroom.Outlet_2'],
             Outlet(xknx,
                    'Livingroom.Outlet_2',
                    group_address='1/3/2'))
@@ -46,7 +46,7 @@ class TestConfig(unittest.TestCase):
         xknx = XKNX()
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
-            xknx.devices.device_by_name('Livingroom.Shutter_2'),
+            xknx.devices['Livingroom.Shutter_2'],
             Shutter(xknx,
                     'Livingroom.Shutter_2',
                     group_address_long='1/4/5',
@@ -61,7 +61,7 @@ class TestConfig(unittest.TestCase):
         xknx = XKNX()
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
-            xknx.devices.device_by_name('Kitchen.Thermostat_1'),
+            xknx.devices['Kitchen.Thermostat_1'],
             Thermostat(xknx,
                        'Kitchen.Thermostat_1',
                        group_address_temperature='1/7/1'))
@@ -70,7 +70,7 @@ class TestConfig(unittest.TestCase):
         xknx = XKNX()
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
-            xknx.devices.device_by_name('Livingroom.Thermostat_2'),
+            xknx.devices['Livingroom.Thermostat_2'],
             Thermostat(xknx,
                        'Livingroom.Thermostat_2',
                        group_address_temperature='1/7/2',
@@ -80,7 +80,7 @@ class TestConfig(unittest.TestCase):
         xknx = XKNX()
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
-            xknx.devices.device_by_name('General.Time'),
+            xknx.devices['General.Time'],
             Time(xknx,
                  'General.Time',
                  group_address='2/1/2'))
@@ -90,7 +90,7 @@ class TestConfig(unittest.TestCase):
         xknx = XKNX()
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
-            xknx.devices.device_by_name('Livingroom.Switch_1'),
+            xknx.devices['Livingroom.Switch_1'],
             Switch(xknx,
                    'Livingroom.Switch_1',
                    group_address='1/2/7',
@@ -110,7 +110,7 @@ class TestConfig(unittest.TestCase):
         xknx = XKNX()
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
-            xknx.devices.device_by_name('Heating.Valve1'),
+            xknx.devices['Heating.Valve1'],
             Sensor(xknx,
                    'Heating.Valve1',
                    group_address='2/0/0',
@@ -121,7 +121,7 @@ class TestConfig(unittest.TestCase):
         xknx = XKNX()
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
-            xknx.devices.device_by_name('Some.Other.Value'),
+            xknx.devices['Some.Other.Value'],
             Sensor(xknx,
                    'Some.Other.Value',
                    group_address='2/0/2'))
@@ -131,7 +131,7 @@ class TestConfig(unittest.TestCase):
         xknx = XKNX()
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
-            xknx.devices.device_by_name('DiningRoom.Motion.Sensor'),
+            xknx.devices['DiningRoom.Motion.Sensor'],
             Sensor(xknx,
                    'DiningRoom.Motion.Sensor',
                    group_address='3/0/1',
@@ -143,7 +143,7 @@ class TestConfig(unittest.TestCase):
         xknx = XKNX()
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
-            xknx.devices.device_by_name('Kitchen.Thermostat.Presence'),
+            xknx.devices['Kitchen.Thermostat.Presence'],
             Sensor(xknx,
                    'Kitchen.Thermostat.Presence',
                    group_address='3/0/2',

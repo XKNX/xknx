@@ -1,17 +1,5 @@
 from .device import Device
 
-class CouldNotResolveName(Exception):
-
-    def __init__(self, name):
-        super(CouldNotResolveName, self).\
-            __init__("Could not resolve name")
-        self.name = name
-
-    def __str__(self):
-        return "CouldNotResolveName <name={0}>".\
-            format(self.name)
-
-
 class Devices:
 
     def __init__(self):
@@ -28,11 +16,15 @@ class Devices:
                 yield device
 
 
-    def device_by_name(self, name):
+    def __getitem__(self, key):
         for device in self._devices:
-            if device.name == name:
+            if device.name == key:
                 return device
-        raise CouldNotResolveName(name)
+        raise KeyError
+
+
+    def __len__(self):
+        return len(self._devices)
 
 
     def add(self, device):
