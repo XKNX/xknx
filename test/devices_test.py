@@ -106,11 +106,17 @@ class TestDevices(unittest.TestCase):
 
         devices.add(light2)
 
-        self.assertEqual(tuple(devices.__iter__()),
-            (light1,sensor1,sensor2,light2))
+        self.assertEqual(
+            tuple(devices.__iter__()),
+            (light1, sensor1, sensor2, light2))
 
 
     def test_modification_of_device(self):
+        """ This test should verify that devices only
+        stores the references of an object and all
+        accessing functions only return referecenes of
+        the same object"""
+
         xknx = XKNX()
         devices = Devices()
 
@@ -130,7 +136,7 @@ class TestDevices(unittest.TestCase):
         self.assertFalse(light1.state)
 
         for device in devices.devices_by_group_address(Address('1/6/7')):
-             device.set_on()
+            device.set_on()
 
         self.assertTrue(light1.state)
 
