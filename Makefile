@@ -3,11 +3,17 @@ all:
 	@echo
 	@echo "Available targets"
 	@echo ""
-	@echo "test  - execute test suite"
+	@echo "build           -- build python package"
 	@echo ""
-	@echo "build - build python package"
+	@echo "upload-pypi     -- upload package to pypi"
 	@echo ""
-	@echo "pylint -- run pylint tests"
+	@echo "upload-pypitest -- upload package to pypi-test"
+	@echo ""
+	@echo "test            -- execute test suite"
+	@echo ""
+	@echo "pylint          -- run pylint tests"
+	@echo ""
+	@echo "pydocstyle      -- run pydocstyle tests"
 	@echo ""
 
 test:
@@ -31,5 +37,8 @@ pylint:
 	# home-assistant-plugin does not have all errors solved (yet)
 	-@$(MAKE) -C home-assistant-plugin pylint
 	@echo "*** pylint complete ***"
+
+pydocstyle:
+	 pydocstyle xknx test home-assistant-plugin	
 
 .PHONY: test build
