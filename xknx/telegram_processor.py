@@ -1,7 +1,7 @@
 import threading
 import time
 
-from .telegram import TelegramDirection
+from .telegram import TelegramDirection, TelegramType
 from .multicast import Multicast
 
 class TelegramProcessor(threading.Thread):
@@ -40,11 +40,20 @@ class TelegramProcessor(threading.Thread):
 
 
     def process_telegram_incoming(self, telegram):
-        for device in self.xknx.devices.devices_by_group_address(
-                telegram.group_address):
-            device.process(telegram)
-            if self.telegram_received_callback:
-                self.telegram_received_callback(self.xknx, device, telegram)
+        if telegram.telegramtype == TelegramType.GROUP_WRITE or \
+                telegram.telegramtype == TelegramType.GROUP_RESPONSE:
+
+            for device in self.xknx.devices.devices_by_group_address(
+                    telegram.group_address):
+
+                device.process(telegram)
+                if self.telegram_received_callback:
+                    self.telegram_received_callback(self.xknx,
+                                                    device,
+                                                    telegram)
+
+        elif telegram.telegramtype == TelegramType.GROUP_READ:
+            print("IGNORING GROUP READ FOR {0}".format(telegram.group_address))
 
 
     @staticmethod

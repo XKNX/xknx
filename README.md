@@ -1,6 +1,8 @@
 XKNX - A KNX library written in Python
 ================================================
 
+[![Build Status](https://travis-ci.org/XKNX/xknx.svg?branch=master)](https://travis-ci.org/XKNX/xknx)
+
 A Wrapper around KNX/UDP protocol written in python.
 
 The wrapper is also intended to be used as a KNX logic module, which means to connect different KNX devices and make them interact.
