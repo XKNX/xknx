@@ -3,7 +3,7 @@ import struct
 import threading
 from xknx.knx import TelegramDirection
 from .knxip import KNXIPFrame
-from .knxip_enum import KNXIPServiceType
+from .knxip_enum import KNXIPServiceType, APCICommand
 from .exception import CouldNotParseKNXIP
 
 class Multicast:
@@ -81,7 +81,7 @@ class Multicast:
                     knxipframe.from_knx(raw)
                     self.handle_frame(knxipframe)
                 except CouldNotParseKNXIP as couldnotparseknxip:
-                    print(cCouldNotParseKNXIP)
+                    print(couldnotparseknxip)
 
 
     def handle_frame(self, knxipframe):
@@ -89,13 +89,17 @@ class Multicast:
                 KNXIPServiceType.ROUTING_INDICATION:
             self.handle_frame_routing_indication(knxipframe)
         else:
-            print("NOT IMPLEMENETED - IGNORING TELEGRAM: ", knxipframe)
+            print("SERVICE TYPE NOT IMPLEMENETED: ", knxipframe)
 
 
     def handle_frame_routing_indication(self, knxipframe):
         if knxipframe.body.src_addr == self.xknx.globals.own_address:
             # Ignoring own KNXIPFrame
             pass
+        elif knxipframe.body.cmd not in [APCICommand.GROUP_READ,
+                                         APCICommand.GROUP_WRITE,
+                                         APCICommand.GROUP_RESPONSE]:
+            print("APCI NOT IMPLEMENETED: ", knxipframe)
         else:
             telegram = knxipframe.body.telegram
             telegram.direction = TelegramDirection.INCOMING
