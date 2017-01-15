@@ -96,3 +96,40 @@ class CEMIFlags():
     # Bit 0/3+2+1+0
     STANDARD_FRAME_FORMAT = 0x0000
     EXTENDED_FRAME_FORMAT = 0x0001
+
+
+class ConnectRequestType(Enum):
+    # Data connection used to configure a KNXnet/IP device
+    DEVICE_MGMT_CONNECTION = 0x03
+
+    # Data connection used to forward KNX telegrams between
+    #two KNXnet/IP devices.
+    TUNNEL_CONNECTION = 0x04
+
+    # Data connection used for configuration and data transfer
+    # with a remote logging server.
+    REMLOG_CONNECTION = 0x06
+
+    # Data connection used for data transfer with a remote
+    # configuration server.
+    REMCONF_CONNECTION = 0x07
+
+    # Data connection used for configuration and data transfer
+    # with an Object Server in a KNXnet/IP device.
+    OBJSVR_CONNECTION = 0x08
+
+class ConnectResponseStatus(Enum):
+    # The connection state is normal.
+    E_NO_ERROR = 0x00
+
+    # The KNXnet/IP Server device cannot find an active data
+    # connection with the specified ID.
+    E_CONNECTION_ID = 0x21
+
+    # The KNXnet/IP Server device detects an error concerning
+    # the data connection with the specified ID.
+    E_DATA_CONNECTION = 0x26
+
+    # The KNXnet/IP Server device detects an error concerning
+    # the KNX subnetwork connection with the specified ID.
+    E_KNX_CONNECTION = 0x27

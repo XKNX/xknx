@@ -16,7 +16,7 @@ class KNXIPHeader():
 
 
     def from_knx(self, data):
-        if len(data) != 6:
+        if len(data) < 6:
             raise CouldNotParseKNXIP("wrong connection header length")
         if data[0] != KNXIPHeader.HEADERLENGTH:
             raise CouldNotParseKNXIP("wrong connection header length")
@@ -29,11 +29,14 @@ class KNXIPHeader():
         self.b4_reserve = data[4]
         self.total_length = data[5]
 
+        return KNXIPHeader.HEADERLENGTH
+
     def set_length(self, cemi):
         if not isinstance(cemi, KNXIPBody):
             raise TypeError()
         self.total_length = KNXIPHeader.HEADERLENGTH + \
                            cemi.calculated_length()
+
 
     def to_knx(self):
         data = []
@@ -48,7 +51,7 @@ class KNXIPHeader():
         return data
 
     def __str__(self):
-        return "<Connection HeaderLength={0}, ProtocolVersion={1}, " \
+        return "<KNXIPHeader HeaderLength={0}, ProtocolVersion={1}, " \
                 "KNXIPServiceType={2}, Reserve={3}, TotalLength={4}>".format(
                     self.header_length,
                     self.protocol_version,

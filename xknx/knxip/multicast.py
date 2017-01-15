@@ -4,6 +4,7 @@ import threading
 from xknx.knx import TelegramDirection
 from .knxip import KNXIPFrame
 from .knxip_enum import KNXIPServiceType
+from .exception import CouldNotParseKNXIP
 
 class Multicast:
     MCAST_GRP = '224.0.23.12'
@@ -75,29 +76,30 @@ class Multicast:
         while True:
             raw = sock.recv(10240)
             if raw:
+                try:
+                    knxipframe = KNXIPFrame()
+                    knxipframe.from_knx(raw)
+                    self.handle_frame(knxipframe)
+                except CouldNotParseKNXIP as couldnotparseknxip:
+                    print(cCouldNotParseKNXIP)
 
-                if len(raw) < 17:
-                    print("WARNING: Ignoring KNXIPFrame with size {0}" \
-                        .format(len(raw)))
-                    continue
 
-                knxipframe = KNXIPFrame()
-                knxipframe.from_knx(raw)
+    def handle_frame(self, knxipframe):
+        if knxipframe.header.service_type_ident == \
+                KNXIPServiceType.ROUTING_INDICATION:
+            self.handle_frame_routing_indication(knxipframe)
+        else:
+            print("NOT IMPLEMENETED - IGNORING TELEGRAM: ", knxipframe)
 
-                if knxipframe.header.service_type_ident == \
-                    KNXIPServiceType.ROUTING_INDICATION:
 
-                    if knxipframe.body.sender == self.xknx.globals.own_address:
-                        # Ignoring own KNXIPFrame
-                        pass
-                    else:
-                        telegram = knxipframe.body.telegram
-                        # TODO: This should be inside knxipframe
-                        telegram.direction = TelegramDirection.INCOMING
-                        self.xknx.telegrams.put(telegram)
-
-                else:
-                    print("IGNORING TELEGRAM: ", knxipframe)
+    def handle_frame_routing_indication(self, knxipframe):
+        if knxipframe.body.src_addr == self.xknx.globals.own_address:
+            # Ignoring own KNXIPFrame
+            pass
+        else:
+            telegram = knxipframe.body.telegram
+            telegram.direction = TelegramDirection.INCOMING
+            self.xknx.telegrams.put(telegram)
 
 
 class MulticastDaemon(threading.Thread):

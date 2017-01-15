@@ -92,9 +92,10 @@ class CEMIFrame(KNXIPBody):
             raise TypeError()
 
     def from_knx(self, cemi):
-
         """Create a new CEMIFrame initialized from the given CEMI data."""
-        # TODO: check that length matches
+        if len(cemi) < 11:
+            raise CouldNotParseKNXIP("CEMI too small")
+
         self.code = CEMIMessageCode(cemi[0])
         offset = cemi[1]
 
@@ -107,6 +108,7 @@ class CEMIFrame(KNXIPBody):
             AddressType.GROUP \
             if self.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS \
             else AddressType.PHYSICAL
+
         self.dst_addr = Address((cemi[6 + offset], cemi[7 + offset]),
                                 dst_addr_type)
 
@@ -131,6 +133,8 @@ class CEMIFrame(KNXIPBody):
             self.payload = DPTBinary(apci)
         else:
             self.payload = DPTArray(cemi[11 + offset:])
+
+        return 10 + offset + len(apdu)
 
     def to_knx(self):
         """Convert the CEMI frame object to its byte representation."""

@@ -250,18 +250,5 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe2.body.telegram, telegram)
 
 
-    def test_connect_request(self):
-
-        raw = ((0x06, 0x10, 0x02, 0x05, 0x00, 0x1a, 0x08, 0x01,
-                0xc0, 0xa8, 0x2a, 0x01, 0x84, 0x95, 0x08, 0x01,
-                0xc0, 0xa8, 0x2a, 0x01, 0xcc, 0xa9, 0x04, 0x04,
-                0x02, 0x00))
-
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
-
-        print(knxipframe)
-        self.assertTrue(False)
-
 SUITE = unittest.TestLoader().loadTestsFromTestCase(Test_KNXIP)
 unittest.TextTestRunner(verbosity=2).run(SUITE)
