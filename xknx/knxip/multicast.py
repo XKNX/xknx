@@ -3,6 +3,7 @@ import struct
 import threading
 from xknx.knx import TelegramDirection
 from .knxip import KNXIPFrame
+from .knxip_enum import KNXIPServiceType
 
 class Multicast:
     MCAST_GRP = '224.0.23.12'
@@ -15,8 +16,9 @@ class Multicast:
     def send(self, telegram):
 
         knxipframe = KNXIPFrame()
-        knxipframe.telegram = telegram
-        knxipframe.sender = self.xknx.globals.own_address
+        knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
+        knxipframe.body.telegram = telegram
+        knxipframe.body.sender = self.xknx.globals.own_address
         knxipframe.normalize()
 
         self._send_knxipframe(knxipframe)
@@ -82,18 +84,20 @@ class Multicast:
                 knxipframe = KNXIPFrame()
                 knxipframe.from_knx(raw)
 
-                print(knxipframe.cemi)
+                if knxipframe.header.service_type_ident == \
+                    KNXIPServiceType.ROUTING_INDICATION:
 
-                if knxipframe.sender == self.xknx.globals.own_address:
-                    # Ignoring own KNXIPFrame
-                    pass
+                    if knxipframe.body.sender == self.xknx.globals.own_address:
+                        # Ignoring own KNXIPFrame
+                        pass
+                    else:
+                        telegram = knxipframe.body.telegram
+                        # TODO: This should be inside knxipframe
+                        telegram.direction = TelegramDirection.INCOMING
+                        self.xknx.telegrams.put(telegram)
 
                 else:
-                    telegram = knxipframe.telegram
-                    # TODO: This should be inside knxipframe
-                    telegram.direction = TelegramDirection.INCOMING
-
-                    self.xknx.telegrams.put(telegram)
+                    print("IGNORING TELEGRAM: ", knxipframe)
 
 
 class MulticastDaemon(threading.Thread):

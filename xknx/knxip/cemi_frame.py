@@ -1,11 +1,13 @@
-from xknx.knx import Address, AddressType, DPTBinary, DPTArray
-from .knxip_enum import CEMIMessageCode,\
-    APCICommand, CEMIFlags
+from xknx.knx import Address, AddressType, DPTBinary, DPTArray, \
+    Telegram, TelegramType
+
+from .knxip_enum import CEMIMessageCode, APCICommand, CEMIFlags
 from .body import KNXIPBody
 from .exception import CouldNotParseKNXIP, ConversionException
 
 class CEMIFrame(KNXIPBody):
     """Representation of a CEMI Frame."""
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(self):
         """CEMIFrame __init__ object."""
@@ -17,6 +19,61 @@ class CEMIFrame(KNXIPBody):
         self.dst_addr = Address()
         self.mpdu_len = 0
         self.payload = None
+
+
+    @property
+    def telegram(self):
+        telegram = Telegram()
+        telegram.payload = self.payload
+        telegram.group_address = self.dst_addr
+
+        def resolve_telegram_type(cmd):
+            if cmd == APCICommand.GROUP_WRITE:
+                return TelegramType.GROUP_WRITE
+            elif cmd == APCICommand.GROUP_READ:
+                return TelegramType.GROUP_READ
+            elif cmd == APCICommand.GROUP_RESPONSE:
+                return TelegramType.GROUP_RESPONSE
+            else:
+                raise ConversionException("Telegram not implemented for {0}" \
+                                      .format(self.cmd))
+
+        telegram.telegramtype = resolve_telegram_type(self.cmd)
+
+        # TODO: Set telegram.direction [additional flag within KNXIP]
+        return telegram
+
+
+    @telegram.setter
+    def telegram(self, telegram):
+
+        self.dst_addr = telegram.group_address
+        self.payload = telegram.payload
+
+        # TODO: Move to separate function
+        self.code = CEMIMessageCode.L_DATA_IND
+        self.flags = (CEMIFlags.FRAME_TYPE_STANDARD |
+                      CEMIFlags.DO_NOT_REPEAT |
+                      CEMIFlags.BROADCAST |
+                      CEMIFlags.PRIORITY_LOW |
+                      CEMIFlags.NO_ACK_REQUESTED |
+                      CEMIFlags.CONFIRM_NO_ERROR |
+                      CEMIFlags.DESTINATION_GROUP_ADDRESS |
+                      CEMIFlags.HOP_COUNT_1ST)
+
+        # TODO: use telegram.direction
+        def resolve_cmd(telegramtype):
+            if telegramtype == TelegramType.GROUP_READ:
+                return APCICommand.GROUP_READ
+            elif telegramtype == TelegramType.GROUP_WRITE:
+                return APCICommand.GROUP_WRITE
+            elif telegramtype == TelegramType.GROUP_RESPONSE:
+                return APCICommand.GROUP_RESPONSE
+            else:
+                raise TypeError()
+
+        self.cmd = resolve_cmd(telegram.telegramtype)
+
 
     def set_hops(self, hops):
         # Resetting hops
