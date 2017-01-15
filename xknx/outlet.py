@@ -1,6 +1,4 @@
-from .address import Address
-from .telegram import Telegram, TelegramType
-from .dpt import DPTBinary
+from xknx.knx import Address, Telegram, TelegramType, DPTBinary
 from .exception import CouldNotParseTelegram
 from .device import Device
 

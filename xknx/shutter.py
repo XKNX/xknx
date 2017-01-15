@@ -1,9 +1,7 @@
-from .address import Address
-from .telegram import Telegram, TelegramType
+from xknx.knx import Address, Telegram, TelegramType, DPTBinary, DPTArray
 from .device import Device
 from .travelcalculator import TravelCalculator
 from .exception import CouldNotParseTelegram
-from .dpt import DPTBinary, DPTArray
 
 class Shutter(Device):
 

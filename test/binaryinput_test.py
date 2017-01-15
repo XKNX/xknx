@@ -1,6 +1,7 @@
 import unittest
 
-from xknx import XKNX, BinaryInput, BinaryInputState, Telegram, DPTBinary
+from xknx import XKNX, BinaryInput, BinaryInputState
+from xknx.knx import Telegram, DPTBinary
 
 class TestBinaryInput(unittest.TestCase):
 

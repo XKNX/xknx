@@ -1,7 +1,5 @@
-from .address import Address
-from .telegram import Telegram, TelegramType
-from .dpt import DPTBinary, DPTArray
-from .dpt_scaling import DPTScaling
+from xknx.knx import Address, Telegram, TelegramType, DPTBinary, DPTArray, \
+    DPTScaling
 from .device import Device
 
 class Sensor(Device):

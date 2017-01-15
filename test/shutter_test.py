@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import Mock
 
-from xknx import XKNX, Shutter, Telegram, Address, TelegramType, DPTBinary, \
-    DPTArray
+from xknx import XKNX, Shutter
+from xknx.knx import Telegram, Address, TelegramType, DPTBinary, DPTArray
 
 class TestShutter(unittest.TestCase):
     # pylint: disable=too-many-public-methods,invalid-name

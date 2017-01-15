@@ -23,7 +23,7 @@ class XKNX:
               daemon_mode=False,
               start=START_DEFAULT,
               telegram_received_callback=None):
-        from .multicast import MulticastDaemon
+        from xknx.knxip import MulticastDaemon
         from .telegram_processor import  TelegramProcessor
         from .stateupdater import StateUpdater
 

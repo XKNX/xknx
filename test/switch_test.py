@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import Mock
 
-from xknx import XKNX, Switch, Action, Outlet, Telegram, DPTBinary, \
-    BinaryInputState
+from xknx import XKNX, Switch, Action, Outlet, BinaryInputState
+from xknx.knx import Telegram, DPTBinary
 
 class TestBinaryInput(unittest.TestCase):
 

@@ -1,8 +1,8 @@
 import threading
 import time
 
-from .telegram import TelegramDirection, TelegramType
-from .multicast import Multicast
+from xknx.knx import TelegramDirection, TelegramType
+from xknx.knxip import Multicast
 
 class TelegramProcessor(threading.Thread):
 

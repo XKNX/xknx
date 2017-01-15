@@ -1,6 +1,6 @@
 import unittest
 
-from xknx import DPTFloat, DPTTemperature, DPTHumidity, DPTLux, \
+from xknx.knx import DPTFloat, DPTTemperature, DPTHumidity, DPTLux, \
     ConversionError
 
 class TestDPTFloat(unittest.TestCase):

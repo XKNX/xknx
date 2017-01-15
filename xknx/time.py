@@ -1,8 +1,5 @@
+from xknx.knx import Address, Telegram, DPTArray, DPTTime
 from .device import Device
-from .address import Address
-from .dpt_time import DPTTime
-from .telegram import Telegram
-from .dpt import DPTArray
 
 
 class Time(Device):

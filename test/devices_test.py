@@ -1,6 +1,7 @@
 import unittest
 
-from xknx import XKNX, Devices, Address, Light, Outlet, Sensor
+from xknx import XKNX, Devices, Light, Outlet, Sensor
+from xknx.knx import Address
 
 # pylint: disable=too-many-public-methods,invalid-name
 class TestDevices(unittest.TestCase):

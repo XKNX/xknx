@@ -1,4 +1,4 @@
-from .address import Address, AddressType
+from xknx.knx import Address, AddressType
 
 class Globals():
     # pylint: disable=too-few-public-methods

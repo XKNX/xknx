@@ -1,8 +1,6 @@
+from xknx.knx  import Address, Telegram, TelegramType, DPTBinary, DPTArray
 from .device import Device
-from .telegram import Telegram, TelegramType
-from .address import Address
 from .exception import CouldNotParseTelegram
-from .dpt import DPTBinary, DPTArray
 
 class Light(Device):
 

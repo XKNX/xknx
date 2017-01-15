@@ -1,6 +1,7 @@
 import unittest
 
-from xknx import KNXIPFrame, Address, DPTTime, DPTBinary, DPTArray, \
+from xknx.knxip import KNXIPFrame
+from xknx.knx import Address, DPTTime, DPTBinary, DPTArray, \
     DPTTemperature, Telegram, TelegramType
 
 class Test_KNXIP(unittest.TestCase):

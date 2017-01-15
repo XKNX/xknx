@@ -1,6 +1,7 @@
 import unittest
 
-from xknx import XKNX, Time, Address, TelegramType
+from xknx import XKNX, Time
+from xknx.knx import Address, TelegramType
 
 class TestTime(unittest.TestCase):
 

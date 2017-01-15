@@ -1,6 +1,6 @@
 import unittest
 
-from xknx import Address, AddressFormat, AddressType, CouldNotParseAddress
+from xknx.knx import Address, AddressFormat, AddressType, CouldNotParseAddress
 
 class TestAddress(unittest.TestCase):
     # pylint: disable=too-many-public-methods,invalid-name

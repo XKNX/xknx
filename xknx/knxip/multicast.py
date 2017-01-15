@@ -1,7 +1,7 @@
 import socket
 import struct
 import threading
-from .telegram import TelegramDirection
+from xknx.knx import TelegramDirection
 from .knxip import KNXIPFrame
 
 class Multicast:

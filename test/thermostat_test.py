@@ -1,8 +1,9 @@
 import unittest
 from unittest.mock import Mock
 
-from xknx import XKNX, Thermostat, Telegram, DPTTemperature, \
-    DPTArray, Address, TelegramType
+from xknx.knx import Telegram, DPTTemperature, DPTArray, Address, \
+    TelegramType
+from xknx import XKNX, Thermostat
 
 class TestThermostat(unittest.TestCase):
 

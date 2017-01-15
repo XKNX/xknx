@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import Mock
 
-from xknx import XKNX, Light, Address, Telegram, TelegramType, DPTBinary, \
-    DPTArray
+from xknx import XKNX, Light
+from xknx.knx import Address, Telegram, TelegramType, DPTBinary, DPTArray
 
 class TestLight(unittest.TestCase):
 

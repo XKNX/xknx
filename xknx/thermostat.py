@@ -1,10 +1,7 @@
 import time
+from xknx.knx import Address, Telegram, TelegramType, DPTArray, DPTTemperature
 from .device import Device
-from .telegram import Telegram, TelegramType
-from .address import Address
-from .dpt_float import DPTTemperature
 from .exception import CouldNotParseTelegram
-from .dpt import DPTArray
 
 
 class Thermostat(Device):

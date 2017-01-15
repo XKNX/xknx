@@ -1,8 +1,7 @@
-from .address import Address, AddressType
-from .telegram import Telegram, TelegramType
+from xknx.knx import Address, AddressType, Telegram, TelegramType, \
+    DPTBinary, DPTArray
 from .knxip_enum import KNXIPServiceType, CEMIMessageCode,\
     APCICommand, CEMIFlags
-from .dpt import DPTBinary, DPTArray
 
 class CouldNotParseKNXIP(Exception):
     def __init__(self, description=""):

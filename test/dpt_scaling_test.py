@@ -1,6 +1,6 @@
 import unittest
 
-from xknx import DPTScaling, ConversionError
+from xknx.knx import DPTScaling, ConversionError
 
 class TestDPTScaling(unittest.TestCase):
     # pylint: disable=too-many-public-methods,invalid-name

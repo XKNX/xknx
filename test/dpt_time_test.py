@@ -1,6 +1,6 @@
 import unittest
 
-from xknx import DPTTime, DPTWeekday, ConversionError
+from xknx.knx import DPTTime, DPTWeekday, ConversionError
 
 class TestDPTTime(unittest.TestCase):
 

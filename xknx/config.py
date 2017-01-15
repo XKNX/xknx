@@ -1,11 +1,11 @@
 import yaml
+from xknx.knx import Address, AddressType
 from .switch import Switch
 from .thermostat import Thermostat
 from .time import Time
 from .light import Light
 from .outlet import Outlet
 from .shutter import Shutter
-from .address import Address, AddressType
 from .sensor import Sensor
 
 class Config:

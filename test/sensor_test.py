@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import Mock
 
-from xknx import XKNX, Sensor, Telegram, \
-    DPTArray, DPTBinary, Address, TelegramType
+from xknx import XKNX, Sensor
+from xknx.knx import Telegram, Address, TelegramType, DPTArray, DPTBinary
 
 class TestSensor(unittest.TestCase):
 

@@ -1,7 +1,9 @@
 import unittest
 from unittest.mock import Mock
 
-from xknx import XKNX, Outlet, Address, Telegram, TelegramType, DPTBinary
+from xknx import XKNX, Outlet
+from xknx.knx import Address, Telegram, TelegramType, DPTBinary
+
 
 class TestOutlet(unittest.TestCase):
 
