@@ -6,7 +6,7 @@ class TunnellingRequest(KNXIPBody):
     """Representation of a KNX Connect Request."""
     # pylint: disable=too-many-instance-attributes
 
-    CONNECTION_HEADER_LENTH = 4
+    HEADER_LENGTH = 4
 
     def __init__(self):
         """TunnellingRequest __init__ object."""
@@ -18,7 +18,7 @@ class TunnellingRequest(KNXIPBody):
         self.cemi.code = CEMIMessageCode.L_Data_REQ
 
     def calculated_length(self):
-        return TunnellingRequest.CONNECTION_HEADER_LENTH + \
+        return TunnellingRequest.HEADER_LENGTH + \
             self.cemi.calculated_length()
 
 
@@ -26,9 +26,9 @@ class TunnellingRequest(KNXIPBody):
         """Create a new TunnellingRequest KNXIP raw data."""
 
         def header_from_knx(header):
-            if header[0] != TunnellingRequest.CONNECTION_HEADER_LENTH:
+            if header[0] != TunnellingRequest.HEADER_LENGTH:
                 raise CouldNotParseKNXIP("connection header wrong length")
-            if len(header) < TunnellingRequest.CONNECTION_HEADER_LENTH:
+            if len(header) < TunnellingRequest.HEADER_LENGTH:
                 raise CouldNotParseKNXIP("connection header wrong length")
             self.communication_channel_id = header[1]
             self.sequence_counter = header[2]
@@ -45,7 +45,7 @@ class TunnellingRequest(KNXIPBody):
 
         def header_to_knx():
             cri = []
-            cri.append(TunnellingRequest.CONNECTION_HEADER_LENTH)
+            cri.append(TunnellingRequest.HEADER_LENGTH)
             cri.append(self.communication_channel_id)
             cri.append(self.sequence_counter)
             cri.append(0x00) # Reserved

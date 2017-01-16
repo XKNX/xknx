@@ -133,3 +133,12 @@ class ConnectResponseStatus(Enum):
     # The KNXnet/IP Server device detects an error concerning
     # the KNX subnetwork connection with the specified ID.
     E_KNX_CONNECTION = 0x27
+
+class TunnelAckStatus(Enum):
+
+    # The message was received successfully.
+    E_NO_ERROR = 0x00
+
+    # The requested tunnelling layer is not supported by the
+    # KNXnet/IP Server device.
+    E_TUNNELLING_LAYER = 0x29

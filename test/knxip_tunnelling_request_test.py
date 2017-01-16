@@ -18,8 +18,8 @@ class Test_KNXIP_TunnelingReq(unittest.TestCase):
         knxipframe.from_knx(raw)
 
         self.assertTrue(isinstance(knxipframe.body, TunnellingRequest))
-        self.assertTrue(knxipframe.body.communication_channel_id, 1)
-        self.assertTrue(knxipframe.body.sequence_counter, 23)
+        self.assertEqual(knxipframe.body.communication_channel_id, 1)
+        self.assertEqual(knxipframe.body.sequence_counter, 23)
         self.assertTrue(isinstance(knxipframe.body.cemi, CEMIFrame))
 
         self.assertEqual(knxipframe.body.cemi.telegram,
@@ -34,7 +34,6 @@ class Test_KNXIP_TunnelingReq(unittest.TestCase):
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-        #self.assertTrue(False)
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(Test_KNXIP_TunnelingReq)
 unittest.TextTestRunner(verbosity=2).run(SUITE)
