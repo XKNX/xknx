@@ -3,6 +3,7 @@ from .header import KNXIPHeader
 from .cemi_frame import CEMIFrame
 from .connect_request import ConnectRequest
 from .connect_response import ConnectResponse
+from .tunnelling_request import TunnellingRequest
 from .exception import CouldNotParseKNXIP
 
 class KNXIPFrame:
@@ -28,6 +29,9 @@ class KNXIPFrame:
         elif service_type_ident == \
                 KNXIPServiceType.CONNECT_RESPONSE:
             self.body = ConnectResponse()
+        elif service_type_ident == \
+                KNXIPServiceType.TUNNELLING_REQUEST:
+            self.body = TunnellingRequest()
         else:
             raise TypeError()
 
@@ -50,6 +54,11 @@ class KNXIPFrame:
         elif self.header.service_type_ident == \
                 KNXIPServiceType.CONNECT_RESPONSE:
             self.body = ConnectResponse()
+            pos += self.body.from_knx(data[pos:])
+
+        elif self.header.service_type_ident == \
+                KNXIPServiceType.TUNNELLING_REQUEST:
+            self.body = TunnellingRequest()
             pos += self.body.from_knx(data[pos:])
 
         else:

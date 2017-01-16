@@ -12,14 +12,13 @@ class CEMIFrame(KNXIPBody):
     def __init__(self):
         """CEMIFrame __init__ object."""
         super(CEMIFrame, self).__init__()
-        self.code = CEMIMessageCode.L_Data_REQ
+        self.code = CEMIMessageCode.L_DATA_IND
         self.flags = 0
         self.cmd = APCICommand.GROUP_READ
         self.src_addr = Address()
         self.dst_addr = Address()
         self.mpdu_len = 0
         self.payload = None
-
 
     @property
     def telegram(self):
@@ -50,8 +49,8 @@ class CEMIFrame(KNXIPBody):
         self.dst_addr = telegram.group_address
         self.payload = telegram.payload
 
-        # TODO: Move to separate function
-        self.code = CEMIMessageCode.L_DATA_IND
+        # TODO: Move to separate function, together with setting of
+        # CEMIMessageCode
         self.flags = (CEMIFlags.FRAME_TYPE_STANDARD |
                       CEMIFlags.DO_NOT_REPEAT |
                       CEMIFlags.BROADCAST |
