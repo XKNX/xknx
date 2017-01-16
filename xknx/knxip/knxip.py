@@ -5,6 +5,7 @@ from .connect_request import ConnectRequest
 from .connect_response import ConnectResponse
 from .tunnelling_request import TunnellingRequest
 from .tunnelling_ack import TunnellingAck
+from .search_request import SearchRequest
 from .exception import CouldNotParseKNXIP
 
 class KNXIPFrame:
@@ -41,45 +42,24 @@ class KNXIPFrame:
                 KNXIPServiceType.TUNNELLING_ACK:
             self.body = TunnellingAck()
 
+        elif service_type_ident == \
+                KNXIPServiceType.SEARCH_REQUEST:
+            self.body = SearchRequest()
+
         else:
-            raise TypeError()
+            raise TypeError(self.header.service_type_ident)
 
 
     def from_knx(self, data):
 
         pos = self.header.from_knx(data)
 
-        # pylint: disable=redefined-variable-type
-        if self.header.service_type_ident == \
-                KNXIPServiceType.ROUTING_INDICATION:
-            self.body = CEMIFrame()
-            pos += self.body.from_knx(data[pos:])
-
-        elif self.header.service_type_ident == \
-                KNXIPServiceType.CONNECT_REQUEST:
-            self.body = ConnectRequest()
-            pos += self.body.from_knx(data[pos:])
-
-        elif self.header.service_type_ident == \
-                KNXIPServiceType.CONNECT_RESPONSE:
-            self.body = ConnectResponse()
-            pos += self.body.from_knx(data[pos:])
-
-        elif self.header.service_type_ident == \
-                KNXIPServiceType.TUNNELLING_REQUEST:
-            self.body = TunnellingRequest()
-            pos += self.body.from_knx(data[pos:])
-
-        elif self.header.service_type_ident == \
-                KNXIPServiceType.TUNNELLING_ACK:
-            self.body = TunnellingAck()
-            pos += self.body.from_knx(data[pos:])
-
-        else:
-            raise TypeError()
+        self.init(self.header.service_type_ident)
+        pos += self.body.from_knx(data[pos:])
 
         if pos != len(data):
             raise CouldNotParseKNXIP("KNXIP data has wrong length")
+
 
     def __str__(self):
         return "<KNXIPFrame {0}\n body={1}>" \
