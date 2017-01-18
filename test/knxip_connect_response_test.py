@@ -38,8 +38,6 @@ class Test_KNXIP_ConnectResponse(unittest.TestCase):
         knxipframe2.body.identifier = 4607
         knxipframe2.normalize()
 
-        print(knxipframe)
-        print(knxipframe2)
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(Test_KNXIP_ConnectResponse)

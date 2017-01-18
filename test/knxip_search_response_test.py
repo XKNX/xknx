@@ -1,7 +1,7 @@
 import unittest
 
-from xknx.knxip import KNXIPFrame, KNXIPServiceType, SearchRequest, \
-    SearchResponse, HPAI, DIBDeviceInformation, DIBSuppSVCFamilies
+from xknx.knxip import KNXIPFrame, KNXIPServiceType, SearchResponse, \
+    HPAI, DIBDeviceInformation, DIBSuppSVCFamilies
 
 
 class Test_KNXIP_Discovery(unittest.TestCase):
@@ -27,7 +27,7 @@ class Test_KNXIP_Discovery(unittest.TestCase):
         self.assertTrue(isinstance(knxipframe.body, SearchResponse))
         self.assertEqual(
             knxipframe.body.control_endpoint,
-            HPAI("192.168.42.10",3671))
+            HPAI("192.168.42.10", 3671))
         self.assertEqual(len(knxipframe.body.dibs), 2)
         # Specific testing of parsing and serializing of
         # DIBDeviceInformation and DIBSuppSVCFamilies is

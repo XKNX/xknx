@@ -9,12 +9,13 @@ class Test_KNXIP_DIB(unittest.TestCase):
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_dib_base(self):
-        raw = ((0x0c, 0x02, 0x02, 0x01, 0x03, 0x02, 0x04, 0x01, 0x05, 0x01, 0x07, 0x01))
+        raw = ((0x0c, 0x02, 0x02, 0x01, 0x03, 0x02, 0x04, 0x01,
+                0x05, 0x01, 0x07, 0x01))
         dib = DIBGeneric()
         self.assertEqual(dib.from_knx(raw), 12)
         self.assertEqual(dib.dtc, DIBTypeCode.SUPP_SVC_FAMILIES)
         self.assertEqual(dib.to_knx(), list(raw))
-
+        self.assertEqual(dib.calculated_length(), 12)
 
     def test_dib_wrong_input(self):
         raw = ((0x08, 0x01, 0xc0, 0xa8, 0x2a))
@@ -34,10 +35,10 @@ class Test_KNXIP_DIB(unittest.TestCase):
 
         dib = DIB.determine_dib(raw)
         self.assertTrue(isinstance(dib, DIBDeviceInformation))
-        self.assertEqual(dib.from_knx(raw), DIBDeviceInformation.LENGTH) 
+        self.assertEqual(dib.from_knx(raw), DIBDeviceInformation.LENGTH)
         self.assertEqual(dib.knx_medium, KNXMedium.TP1)
         self.assertEqual(dib.programming_mode, False)
-        self.assertEqual(dib.individual_address, Address('1.1.0')) 
+        self.assertEqual(dib.individual_address, Address('1.1.0'))
         self.assertEqual(dib.name, 'Gira KNX/IP-Router')
         self.assertEqual(dib.mac_address, '00:01:02:03:04:05')
         self.assertEqual(dib.multicast_address, '224.0.23.12')
@@ -49,18 +50,24 @@ class Test_KNXIP_DIB(unittest.TestCase):
 
 
     def test_dib_sup_svc_families(self):
-        raw = ((0x0c, 0x02, 0x02, 0x01, 0x03, 0x02, 0x04, 0x01, 0x05, 0x01, 0x07, 0x01))
+        raw = ((0x0c, 0x02, 0x02, 0x01, 0x03, 0x02, 0x04, 0x01,
+                0x05, 0x01, 0x07, 0x01))
 
         dib = DIB.determine_dib(raw)
         self.assertTrue(isinstance(dib, DIBSuppSVCFamilies))
         self.assertEqual(dib.from_knx(raw), 12)
 
         self.assertEqual(dib.families, [
-            DIBSuppSVCFamilies.Family(DIBServiceFamily.CORE, 1),
-            DIBSuppSVCFamilies.Family(DIBServiceFamily.DEVICE_MANAGEMENT, 2),
-            DIBSuppSVCFamilies.Family(DIBServiceFamily.TUNNELING, 1),
-            DIBSuppSVCFamilies.Family(DIBServiceFamily.ROUTING, 1),
-            DIBSuppSVCFamilies.Family(DIBServiceFamily.REMOTE_CONFIGURATION_DIAGNOSIS, 1)
+            DIBSuppSVCFamilies.Family(
+                DIBServiceFamily.CORE, 1),
+            DIBSuppSVCFamilies.Family(
+                DIBServiceFamily.DEVICE_MANAGEMENT, 2),
+            DIBSuppSVCFamilies.Family(
+                DIBServiceFamily.TUNNELING, 1),
+            DIBSuppSVCFamilies.Family(
+                DIBServiceFamily.ROUTING, 1),
+            DIBSuppSVCFamilies.Family(
+                DIBServiceFamily.REMOTE_CONFIGURATION_DIAGNOSIS, 1)
         ])
 
         self.assertEqual(dib.to_knx(), list(raw))

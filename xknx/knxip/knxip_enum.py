@@ -168,13 +168,14 @@ class DIBTypeCode(Enum):
 class KNXMedium(Enum):
     TP1 = 0x02
     PL110 = 0x04
+    # pylint: disable=invalid-name
     RF = 0x10
     KNX_IP = 0x20
 
 
 class DIBServiceFamily(Enum):
     #  Core
-    CORE = 0x02;
+    CORE = 0x02
 
     # Device Management
     DEVICE_MANAGEMENT = 0x03

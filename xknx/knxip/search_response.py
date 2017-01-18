@@ -22,7 +22,7 @@ class SearchResponse(KNXIPBody):
         pos = self.control_endpoint.from_knx(raw)
         while len(raw[pos:]) > 0:
             dib = DIB.determine_dib(raw[pos:])
-            pos +=  dib.from_knx(raw[pos:])
+            pos += dib.from_knx(raw[pos:])
             self.dibs.append(dib)
         return pos
 
@@ -39,4 +39,4 @@ class SearchResponse(KNXIPBody):
     def __str__(self):
         return "<SearchResponse control_endpoint={0} dibs=[\n{1}\n]>" \
             .format(self.control_endpoint,
-                ',\n'.join(dib.__str__() for dib in self.dibs) )
+                    ',\n'.join(dib.__str__() for dib in self.dibs))
