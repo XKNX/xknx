@@ -6,6 +6,7 @@ from .connect_response import ConnectResponse
 from .tunnelling_request import TunnellingRequest
 from .tunnelling_ack import TunnellingAck
 from .search_request import SearchRequest
+from .search_response import SearchResponse
 from .exception import CouldNotParseKNXIP
 
 class KNXIPFrame:
@@ -46,6 +47,10 @@ class KNXIPFrame:
                 KNXIPServiceType.SEARCH_REQUEST:
             self.body = SearchRequest()
 
+        elif service_type_ident == \
+                KNXIPServiceType.SEARCH_RESPONSE:
+            self.body = SearchResponse()
+
         else:
             raise TypeError(self.header.service_type_ident)
 
@@ -60,6 +65,7 @@ class KNXIPFrame:
         if pos != len(data):
             raise CouldNotParseKNXIP("KNXIP data has wrong length")
 
+        return pos
 
     def __str__(self):
         return "<KNXIPFrame {0}\n body={1}>" \

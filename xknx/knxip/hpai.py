@@ -28,14 +28,10 @@ class HPAI():
         """Convert the HPAI object to its byte representation."""
 
         def ip_addr_to_bytes(ip_addr):
-            ret = []
             if not isinstance(ip_addr, str):
                 raise ConversionException("ip_addr is not a string")
             for i in ip_addr.split("."):
-                ret.append(int(i))
-            if len(ret) != 4:
-                raise ConversionException("ip_addr has not 4 parts")
-            return ret
+                yield int(i)
 
         data = []
         data.append(HPAI.LENGTH)

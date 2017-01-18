@@ -149,10 +149,8 @@ class CEMIFrame(KNXIPBody):
         data.append(0x00)
         data.append((self.flags >> 8) & 255)
         data.append(self.flags & 255)
-        data.append(self.src_addr.byte1()& 255)
-        data.append(self.src_addr.byte2()& 255)
-        data.append(self.dst_addr.byte1()& 255)
-        data.append(self.dst_addr.byte2()& 255)
+        data.extend(self.src_addr.to_knx())
+        data.extend(self.dst_addr.to_knx())
 
         def encode_cmd_and_payload(cmd, encoded_payload=0,\
                                    appended_payload=None):

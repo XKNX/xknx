@@ -210,13 +210,11 @@ class TestAddress(unittest.TestCase):
         self.assertTrue(Address("2/3/4") == Address("2/772"))
 
     #
-    # BYTE ACCESS
+    # TO KNX
     #
-    def test_address_byte1(self):
-        self.assertEqual(Address("2/3/100").byte1(), 2*8+3)
 
-    def test_address_byte2(self):
-        self.assertEqual(Address("2/3/100").byte2(), 100)
+    def test_address_to_knx(self):
+        self.assertEqual(Address("2/3/100").to_knx(), (2*8+3, 100))
 
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestAddress)

@@ -16,7 +16,7 @@ class KNXIPHeader():
 
 
     def from_knx(self, data):
-        if len(data) < 6:
+        if len(data) < KNXIPHeader.HEADERLENGTH:
             raise CouldNotParseKNXIP("wrong connection header length")
         if data[0] != KNXIPHeader.HEADERLENGTH:
             raise CouldNotParseKNXIP("wrong connection header length")

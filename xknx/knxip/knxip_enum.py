@@ -29,19 +29,19 @@ class CEMIMessageCode(Enum):
     # FROM NETWORK LAYER TO DATA LINK LAYER
     L_RAW_REQ = 0x10
     L_Data_REQ = 0x11      # Data Service.
-                           # Primitive used for transmitting a data frame
+               # Primitive used for transmitting a data frame
     L_POLL_DATA_REQ = 0x13 # Poll Data Service
 
     # FROM DATA LINK LAYER TO NETWORK LAYER
     L_POLL_DATA_CON = 0x25 # Poll Data Service
     L_DATA_IND = 0x29      # Data Service.
-                           # Primitive used for receiving a data frame
+               # Primitive used for receiving a data frame
     L_BUSMON_IND = 0x2B    # Bus Monitor Service
     L_RAW_IND = 0x2D
     L_DATA_CON = 0x2E      # Data Service.
-                           # Primitive used for local confirmation
-                           # that a frame was sent
-                           # (does not indicate a successful receive though)
+               # Primitive used for local confirmation
+               # that a frame was sent
+               # (does not indicate a successful receive though)
     L_RAW_CON = 0x2F
 
 
@@ -118,6 +118,7 @@ class ConnectRequestType(Enum):
     # with an Object Server in a KNXnet/IP device.
     OBJSVR_CONNECTION = 0x08
 
+
 class ConnectResponseStatus(Enum):
     # The connection state is normal.
     E_NO_ERROR = 0x00
@@ -134,11 +135,61 @@ class ConnectResponseStatus(Enum):
     # the KNX subnetwork connection with the specified ID.
     E_KNX_CONNECTION = 0x27
 
-class TunnelAckStatus(Enum):
 
+class TunnelAckStatus(Enum):
     # The message was received successfully.
     E_NO_ERROR = 0x00
 
     # The requested tunnelling layer is not supported by the
     # KNXnet/IP Server device.
     E_TUNNELLING_LAYER = 0x29
+
+
+class DIBTypeCode(Enum):
+    # Device information e.g. KNX medium.
+    DEVICE_INFO = 0x01
+
+    # Service families supported by the device.
+    SUPP_SVC_FAMILIES = 0x02
+
+    # IP configuration
+    IP_CONFIG = 0x03
+
+    # current configuration
+    IP_CUR_CONFIG = 0x04
+
+    # KNX addresses
+    KNX_ADDRESSES = 0x05
+
+    # DIB structure for further data defined by device manufacturer.
+    MFR_DATA = 0xFE
+
+
+class KNXMedium(Enum):
+    TP1 = 0x02
+    PL110 = 0x04
+    RF = 0x10
+    KNX_IP = 0x20
+
+
+class DIBServiceFamily(Enum):
+    #  Core
+    CORE = 0x02;
+
+    # Device Management
+    DEVICE_MANAGEMENT = 0x03
+
+    # Tunnelling
+    TUNNELING = 0x04
+
+    #Routing
+    ROUTING = 0x05
+
+    # Remote Logging
+    REMOTE_LOGGING = 0x06
+
+    # Configuration and Diagnosis
+    REMOTE_CONFIGURATION_DIAGNOSIS = 0x07
+
+    # Object Server'.
+    OBJECT_SERVER = 0x08
