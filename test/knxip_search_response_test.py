@@ -36,6 +36,7 @@ class Test_KNXIP_Discovery(unittest.TestCase):
             knxipframe.body.dibs[0], DIBDeviceInformation))
         self.assertTrue(isinstance(
             knxipframe.body.dibs[1], DIBSuppSVCFamilies))
+        self.assertEqual(knxipframe.body.device_name, "Gira KNX/IP-Router")
 
         knxipframe2 = KNXIPFrame()
         knxipframe2.init(KNXIPServiceType.SEARCH_RESPONSE)

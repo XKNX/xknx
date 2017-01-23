@@ -1,6 +1,6 @@
 from .body import KNXIPBody
 from .hpai import HPAI
-from .dib import DIB
+from .dib import DIB, DIBDeviceInformation
 
 class SearchResponse(KNXIPBody):
     """Representation of a KNX Connect Request."""
@@ -25,6 +25,14 @@ class SearchResponse(KNXIPBody):
             pos += dib.from_knx(raw[pos:])
             self.dibs.append(dib)
         return pos
+
+
+    @property
+    def device_name(self):
+        for dib in self.dibs:
+            if isinstance(dib, DIBDeviceInformation):
+                return dib.name
+        return "UKNOWN"
 
 
     def to_knx(self):
