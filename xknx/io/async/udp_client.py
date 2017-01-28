@@ -47,7 +47,7 @@ class UDPClient:
         self.transport = None
 
     @asyncio.coroutine
-    def send(self, own_ip_addr, remote_addr, knxipframei, multicast=False):
+    def send(self, own_ip_addr, remote_addr, knxipframe, multicast=False):
 
         udp_client_factory = UDPClient.UDPClientFactory(
             knxipframe, own_ip_addr, multicast=multicast)
