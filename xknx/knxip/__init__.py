@@ -13,5 +13,4 @@ from .search_request import SearchRequest
 from .search_response import SearchResponse
 from .hpai import HPAI
 from .dib import DIB, DIBGeneric, DIBDeviceInformation, DIBSuppSVCFamilies
-from .multicast import Multicast, MulticastDaemon
 from .exception import CouldNotParseKNXIP, ConversionException

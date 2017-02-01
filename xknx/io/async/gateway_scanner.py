@@ -7,33 +7,35 @@ from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 
 class GatewayScanner():
 
-    def __init__(self, xknx, loop):
+    def __init__(self, xknx):
         self.xknx = xknx
-        self.loop = loop
         self.search_response_recieved = asyncio.Event()
         self.found = False
         self.found_ip_addr = None
         self.found_port = None
+        self.found_name = None
 
     def response_rec_callback(self, knxipframe):
         if not isinstance(knxipframe.body, SearchResponse):
             print("Cant understand knxipframe")
             return
 
-        print("FOUND: {0}:{1} ({2})".format(
-            knxipframe.body.control_endpoint.ip_addr,
-            knxipframe.body.control_endpoint.port,
-            knxipframe.body.device_name))
-
         if not self.found:
-            self.found_ip_addr=knxipframe.body.control_endpoint.ip_addr
-            self.found_port=knxipframe.body.control_endpoint.port
+            self.found_ip_addr = knxipframe.body.control_endpoint.ip_addr
+            self.found_port = knxipframe.body.control_endpoint.port
+            self.found_name = knxipframe.body.device_name
             self.search_response_recieved.set()
             self.found = True
 
+
+    def start(self):
+        task = asyncio.Task(self.async_start())
+        self.xknx.loop.run_until_complete(task)
+
+
     @asyncio.coroutine
-    def start_scan(self):
-        udpserver = UDPServer(self.xknx, self.loop)
+    def async_start(self):
+        udpserver = UDPServer(self.xknx)
         udpserver.register_callback(
             self.response_rec_callback, [KNXIPServiceType.SEARCH_RESPONSE])
 
@@ -44,6 +46,7 @@ class GatewayScanner():
 
     @asyncio.coroutine
     def send_search_requests(self):
+        # pylint: disable=no-member
         for interface in netifaces.interfaces():
             af_inet = netifaces.ifaddresses(interface)[netifaces.AF_INET]
             ip_addr = af_inet[0]["addr"]
@@ -60,9 +63,9 @@ class GatewayScanner():
             HPAI(ip_addr=DEFAULT_MCAST_GRP, port=DEFAULT_MCAST_PORT)
         knxipframe.normalize()
 
-        udpclient = UDPClient(self.xknx, self.loop)
-        yield from udpclient.send(
+        udpclient = UDPClient(self.xknx)
+        yield from udpclient.connect(
             ip_addr,
             (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
-            knxipframe,
             multicast=True)
+        udpclient.send(knxipframe)

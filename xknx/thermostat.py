@@ -1,3 +1,4 @@
+import asyncio
 import time
 from xknx.knx import Address, Telegram, TelegramType, DPTArray, DPTTemperature
 from .device import Device
@@ -81,19 +82,19 @@ class Thermostat(Device):
              telegram.payload.value[1]))
         self.after_update()
 
+    @asyncio.coroutine
     def sync_state(self):
-
         if self.supports_temperature:
             telegram = Telegram(
                 self.group_address_temperature,
                 TelegramType.GROUP_READ)
-            self.xknx.telegrams.put(telegram)
+            yield from self.xknx.telegrams.put(telegram)
 
         if self.supports_setpoint:
             telegram = Telegram(
                 self.group_address_setpoint,
                 TelegramType.GROUP_READ)
-            self.xknx.telegrams.put(telegram)
+            yield from self.xknx.telegrams.put(telegram)
 
 
     def __str__(self):

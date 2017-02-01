@@ -1,24 +1,32 @@
 import unittest
 from unittest.mock import Mock
-
+import asyncio
 from xknx import XKNX, Outlet
 from xknx.knx import Address, Telegram, TelegramType, DPTBinary
 
 
 class TestOutlet(unittest.TestCase):
 
+    def setUp(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
+    def tearDown(self):
+        self.loop.close()
+
     #
     # SYNC STATE
     #
     def test_sync_state(self):
 
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         outlet = Outlet(xknx, "TestOutlet", group_address='1/2/3')
-        outlet.sync_state()
+        task = asyncio.Task(outlet.sync_state())
+        self.loop.run_until_complete(task)
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
-        telegram = xknx.telegrams.get()
+        telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/3'), TelegramType.GROUP_READ))
 
@@ -27,7 +35,7 @@ class TestOutlet(unittest.TestCase):
     # TEST PROCESS
     #
     def test_process(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
 
         self.assertEqual(outlet.state, False)
@@ -48,7 +56,7 @@ class TestOutlet(unittest.TestCase):
     def test_process_callback(self):
         # pylint: disable=no-self-use
 
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
 
         after_update_callback = Mock()
@@ -65,11 +73,11 @@ class TestOutlet(unittest.TestCase):
     # TEST SET ON
     #
     def test_set_on(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
         outlet.set_on()
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get()
+        telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/3'), payload=DPTBinary(1)))
 
@@ -77,11 +85,11 @@ class TestOutlet(unittest.TestCase):
     # TEST SET OFF
     #
     def test_set_off(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
         outlet.set_off()
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get()
+        telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/3'), payload=DPTBinary(0)))
 
@@ -89,7 +97,7 @@ class TestOutlet(unittest.TestCase):
     # TEST DO
     #
     def test_do(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
         outlet.do("on")
         self.assertTrue(outlet.state)

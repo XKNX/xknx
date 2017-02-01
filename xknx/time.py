@@ -1,3 +1,4 @@
+import asyncio
 from xknx.knx import Address, Telegram, DPTArray, DPTTime
 from .device import Device
 
@@ -31,15 +32,16 @@ class Time(Device):
         return self.group_address == group_address
 
 
+    @asyncio.coroutine
     def broadcast_time(self):
         telegram = Telegram()
         telegram.group_address = self.group_address
         telegram.payload = DPTArray(DPTTime.current_time_as_knx())
-        self.xknx.telegrams.put(telegram)
+        yield from self.xknx.telegrams.put(telegram)
 
-
+    @asyncio.coroutine
     def sync_state(self):
-        self.broadcast_time()
+        yield from self.broadcast_time()
 
 
     def __str__(self):

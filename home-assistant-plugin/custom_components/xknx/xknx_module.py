@@ -1,6 +1,6 @@
 import threading
 import logging
-
+import asyncio
 import xknx
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -17,7 +17,7 @@ class XKNXModule(object):
 
         xknx_config = XKNXConfig(hass, config)
 
-        self.xknx = xknx.XKNX()
+        self.xknx = xknx.XKNX(hass.loop)
 
         self.initialized = False
         self.lock = threading.Lock()
@@ -29,11 +29,12 @@ class XKNXModule(object):
         #print("{0}".format(device.name))
         pass
 
+    @asyncio.coroutine
     def start(self):
 
         xknx.Config(self.xknx).read(file=self.config_file)
 
-        self.xknx.start(
+        yield from self.xknx.async_start(
             telegram_received_callback=self.telegram_received_callback)
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)

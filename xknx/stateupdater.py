@@ -1,34 +1,32 @@
-import threading
-import time
+import asyncio
 
-class StateUpdater(threading.Thread):
+class StateUpdater():
 
     def __init__(self,
                  xknx,
-                 timeout,
+                 timeout=600,
                  start_timeout=15,
                  sleep_during_devices=0.2):
         self.xknx = xknx
         self.timeout = timeout
         self.start_timeout = start_timeout
         self.sleep_during_devices = sleep_during_devices
-        threading.Thread.__init__(self)
 
+    @asyncio.coroutine
+    def start(self):
+        self.xknx.loop.create_task(
+            self.run())
 
+    @asyncio.coroutine
     def run(self):
-        time.sleep(self.start_timeout)
+        yield from asyncio.sleep(self.start_timeout)
         print("Starting Update Thread")
         while True:
-            self.sync_states()
-            time.sleep(self.timeout)
+            yield from self.sync_states()
+            yield from asyncio.sleep(self.timeout)
 
+    @asyncio.coroutine
     def sync_states(self):
         for device in self.xknx.devices:
-            device.sync_state()
-            time.sleep(self.sleep_during_devices)
-
-    @staticmethod
-    def start_thread(xknx, timeout=600):
-        stateupdater = StateUpdater(xknx, timeout)
-        stateupdater.setDaemon(True)
-        stateupdater.start()
+            yield from device.sync_state()
+            yield from asyncio.sleep(self.sleep_during_devices)

@@ -1,15 +1,15 @@
 import asyncio
 import socket
-import struct
-from xknx.knxip import KNXIPFrame, CouldNotParseKNXIP, KNXIPServiceType
+from xknx.knxip import KNXIPFrame, CouldNotParseKNXIP
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 
 class UDPServer:
+    # pylint: disable=too-few-public-methods
 
     class Callback:
-        def __init__(self, callback, service_types=[]):
+        def __init__(self, callback, service_types=None):
             self.callback = callback
-            self.service_types = service_types
+            self.service_types = service_types or []
 
         def has_service(self, service_type):
             return \
@@ -17,27 +17,15 @@ class UDPServer:
                 service_type in self.service_types
 
 
-    class UDPServerFactory:
+    class UDPServerFactory(asyncio.DatagramProtocol):
 
-        def __init__(self,
-                     multicast_group=None,
-                     data_received_callback=None):
-            self.multicast_group = multicast_group
+        def __init__(self, data_received_callback=None):
             self.data_received_callback = data_received_callback
+            self.transport = None
 
 
         def connection_made(self, transport):
             self.transport = transport
-
-            if self.multicast_group is not None:
-                self.init_multicast(self.multicast_group)
-
-
-        def init_multicast(self, multicast_group):
-            sock = self.transport.get_extra_info('socket')
-            group = socket.inet_aton(multicast_group)
-            mreq = struct.pack('4sL', group, socket.INADDR_ANY)
-            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
 
         def datagram_received(self, raw, addr):
@@ -48,13 +36,16 @@ class UDPServer:
         def error_received(self, exc):
             print('Error received:', exc)
 
+
         def connection_lost(self, exc):
             print('stop', exc)
 
 
-    def __init__(self, xknx, loop):
+    def __init__(self, xknx, multicast=False, own_ip=None):
         self.xknx = xknx
-        self.loop = loop
+        self.multicast = multicast
+        self.own_ip = own_ip
+        self.loop = xknx.loop
         self.transport = None
         self.callbacks = []
 
@@ -80,24 +71,44 @@ class UDPServer:
             pass
 
 
-    def register_callback(self, callback, service_types=[]):
+    def register_callback(self, callback, service_types=None):
+        if service_types is None:
+            service_types = []
         self.callbacks.append(UDPServer.Callback(callback, service_types))
+
+
+    def create_sock(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.setblocking(False)
+
+        if self.own_ip is not None:
+            sock.setsockopt(
+                socket.SOL_IP,
+                socket.IP_MULTICAST_IF,
+                socket.inet_aton(self.own_ip))
+            sock.setsockopt(
+                socket.SOL_IP,
+                socket.IP_ADD_MEMBERSHIP,
+                socket.inet_aton(DEFAULT_MCAST_GRP) +
+                socket.inet_aton(self.own_ip))
+
+        sock.bind(("", DEFAULT_MCAST_PORT))
+        sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
+        return sock
 
 
     @asyncio.coroutine
     def start(self):
 
-        addr = (DEFAULT_MCAST_GRP,DEFAULT_MCAST_PORT)
-
         udp_server_factory = UDPServer.UDPServerFactory(
-            multicast_group=DEFAULT_MCAST_GRP,
             data_received_callback=self.data_received_callback)
 
-        # Add reuse_address at a later stage. Looks like these
-        # parameters are not yet supported by python 3.5
-        # , reuse_address=True, reuse_port=True)) 
+        sock = self.create_sock()
+
         (transport, _) = yield from self.loop.create_datagram_endpoint(
-            lambda: udp_server_factory, local_addr=addr)
+            lambda: udp_server_factory, sock=sock)
+
         self.transport = transport
 
 

@@ -1,17 +1,24 @@
 import unittest
 from unittest.mock import Mock
-
+import asyncio
 from xknx.knx import Telegram, DPTTemperature, DPTArray, Address, \
     TelegramType
 from xknx import XKNX, Thermostat
 
 class TestThermostat(unittest.TestCase):
 
+    def setUp(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
+    def tearDown(self):
+        self.loop.close()
+
     #
     # SUPPORTS TEMPERATURE / SETPOINT
     #
     def test_support_temperature(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         thermostat = Thermostat(
             xknx,
             'TestThermostat',
@@ -22,7 +29,7 @@ class TestThermostat(unittest.TestCase):
 
 
     def test_support_setpoint(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         thermostat = Thermostat(
             xknx,
             'TestThermostat',
@@ -34,14 +41,16 @@ class TestThermostat(unittest.TestCase):
     #
     # SYNC STATE
     #
+    @asyncio.coroutine
     def test_sync_state(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         thermostat = Thermostat(
             xknx,
             'TestThermostat',
             group_address_temperature='1/2/3',
             group_address_setpoint='1/2/4')
-        thermostat.sync_state()
+        task = asyncio.Task(thermostat.sync_state())
+        self.loop.run_until_complete(task)
 
         self.assertEqual(xknx.telegrams.qsize(), 2)
 
@@ -57,7 +66,7 @@ class TestThermostat(unittest.TestCase):
     # TEST PROCESS
     #
     def test_process_temperature(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         thermostat = Thermostat(
             xknx,
             'TestThermostat',
@@ -71,7 +80,7 @@ class TestThermostat(unittest.TestCase):
 
 
     def test_process_setpoint(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         thermostat = Thermostat(
             xknx,
             'TestThermostat',
@@ -86,7 +95,7 @@ class TestThermostat(unittest.TestCase):
 
     def test_process_callback_temp(self):
         # pylint: disable=no-self-use
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         thermostat = Thermostat(
             xknx,
             'TestThermostat',
@@ -105,7 +114,7 @@ class TestThermostat(unittest.TestCase):
 
     def test_process_callback_setpoint(self):
         # pylint: disable=no-self-use
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         thermostat = Thermostat(
             xknx,
             'TestThermostat',

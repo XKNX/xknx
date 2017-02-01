@@ -6,12 +6,11 @@ class UDPClient:
     class UDPClientFactory:
 
         def __init__(self,
-                     knxipframe,
                      own_ip,
                      multicast=False):
-            self.knxipframe = knxipframe
             self.own_ip = own_ip
             self.multicast = multicast
+            self.transport = None
 
         def connection_made(self, transport):
             self.transport = transport
@@ -27,31 +26,46 @@ class UDPClient:
                     socket.IP_MULTICAST_IF,
                     socket.inet_aton(self.own_ip))
 
-            self.transport.sendto(bytes(self.knxipframe.to_knx()))
 
         def datagram_received(self, data, addr):
-            print('received "{}"'.format(data.decode()))
+            print('received "{0} from {1}"'.format(
+                data.decode(), addr))
             self.transport.close()
 
         def error_received(self, exc):
+            # pylint: disable=no-self-use
             print('Error received:', exc)
 
         def connection_lost(self, exc):
+            # pylint: disable=no-self-use
             print('closing transport', exc)
-            loop = asyncio.get_event_loop()
-            loop.stop()
 
-    def __init__(self, xknx, loop):
+    def __init__(self, xknx):
         self.xknx = xknx
-        self.loop = loop
         self.transport = None
 
+
     @asyncio.coroutine
-    def send(self, own_ip_addr, remote_addr, knxipframe, multicast=False):
+    def connect(self, own_ip_addr, remote_addr, multicast=False):
 
         udp_client_factory = UDPClient.UDPClientFactory(
-            knxipframe, own_ip_addr, multicast=multicast)
+            own_ip_addr, multicast=multicast)
 
-        yield from self.loop.create_datagram_endpoint(
-            lambda: udp_client_factory, local_addr=(own_ip_addr, 3671), remote_addr=remote_addr)
+        (transport, _) = yield from self.xknx.loop.create_datagram_endpoint(
+            lambda: udp_client_factory,
+            local_addr=(own_ip_addr, 3671),
+            remote_addr=remote_addr)
 
+        self.transport = transport
+
+
+    def send(self, knxipframe):
+        if self.transport is None:
+            raise Exception("Transport not connected")
+        self.transport.sendto(bytes(knxipframe.to_knx()))
+
+
+    @asyncio.coroutine
+    def stop(self):
+        yield from asyncio.sleep(1/20)
+        self.transport.close()

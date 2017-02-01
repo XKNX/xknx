@@ -40,7 +40,7 @@ def async_setup(hass, config):
 
     if XKNX_MODULE is None:
         XKNX_MODULE = XKNXModule(hass, config)
-        XKNX_MODULE.start()
+        yield from XKNX_MODULE.start()
 
     for component in SUPPORTED_DOMAINS:
         hass.async_add_job(

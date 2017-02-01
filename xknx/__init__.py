@@ -1,7 +1,7 @@
 """XKNX is a Python 3 library for KNX/IP protocol."""
 from .xknx import XKNX
 from .stateupdater import StateUpdater
-from .telegram_processor import TelegramProcessor
+from .telegram_queue import TelegramQueue
 from .devices import Devices
 from .binaryinput import BinaryInput, BinaryInputState
 from .switch import Switch, Action

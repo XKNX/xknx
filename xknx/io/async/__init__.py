@@ -1,3 +1,4 @@
+from .knxip_interface import KNXIPInterface
 from .udp_server import UDPServer
 from .udp_client import UDPClient
 from .gateway_scanner import GatewayScanner

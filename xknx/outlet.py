@@ -1,3 +1,4 @@
+import asyncio
 from xknx.knx import Address, Telegram, TelegramType, DPTBinary
 from .exception import CouldNotParseTelegram
 from .device import Device
@@ -42,7 +43,7 @@ class Outlet(Device):
         telegram = Telegram()
         telegram.group_address = self.group_address
         telegram.payload = payload
-        self.xknx.telegrams.put(telegram)
+        self.xknx.telegrams.put_nowait(telegram)
 
 
     def set_on(self):
@@ -64,10 +65,10 @@ class Outlet(Device):
             print("{0}: Could not understand action {1}" \
                 .format(self.get_name(), action))
 
-
+    @asyncio.coroutine
     def sync_state(self):
         telegram = Telegram(self.group_address, TelegramType.GROUP_READ)
-        self.xknx.telegrams.put(telegram)
+        yield from self.xknx.telegrams.put(telegram)
 
 
     def process(self, telegram):

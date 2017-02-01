@@ -1,3 +1,4 @@
+import asyncio
 
 class Device:
     def __init__(self, xknx, name):
@@ -10,6 +11,7 @@ class Device:
             #pylint: disable=not-callable
             self.after_update_callback(self)
 
+    @asyncio.coroutine
     def sync_state(self):
         pass
 

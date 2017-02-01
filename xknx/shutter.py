@@ -1,3 +1,4 @@
+import asyncio
 from xknx.knx import Address, Telegram, TelegramType, DPTBinary, DPTArray
 from .device import Device
 from .travelcalculator import TravelCalculator
@@ -101,7 +102,7 @@ class Shutter(Device):
         telegram = Telegram()
         telegram.group_address = group_address
         telegram.payload = payload
-        self.xknx.telegrams.put(telegram)
+        self.xknx.telegrams.put_nowait(telegram)
 
 
     def set_down(self):
@@ -185,6 +186,7 @@ class Shutter(Device):
                 .format(self.get_name(), action))
 
 
+    @asyncio.coroutine
     def sync_state(self):
         if self.group_address_position_feedback is None:
             print("group_position not defined for device {0}" \
@@ -197,7 +199,7 @@ class Shutter(Device):
         telegram = Telegram(
             self.group_address_position_feedback,
             TelegramType.GROUP_READ)
-        self.xknx.telegrams.put(telegram)
+        yield from self.xknx.telegrams.put(telegram)
 
 
     def process(self, telegram):
