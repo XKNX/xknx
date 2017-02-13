@@ -14,6 +14,7 @@ class GatewayScanner():
         self.found_ip_addr = None
         self.found_port = None
         self.found_name = None
+        self.udpservers = []
 
     def response_rec_callback(self, knxipframe):
         if not isinstance(knxipframe.body, SearchResponse):
@@ -37,6 +38,13 @@ class GatewayScanner():
     def async_start(self):
         yield from self.send_search_requests()
         yield from self.search_response_recieved.wait()
+        yield from self.stop()
+
+
+    @asyncio.coroutine
+    def stop(self):
+        for udpserver in self.udpservers:
+            udpserver.stop()
 
 
     @asyncio.coroutine
@@ -57,6 +65,8 @@ class GatewayScanner():
             self.response_rec_callback, [KNXIPServiceType.SEARCH_RESPONSE])
 
         yield from udpserver.start()
+
+        self.udpservers.append(udpserver)
 
         knxipframe = KNXIPFrame()
         knxipframe.init(KNXIPServiceType.SEARCH_REQUEST)

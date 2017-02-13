@@ -38,7 +38,8 @@ class UDPServer:
 
 
         def connection_lost(self, exc):
-            print('stop', exc)
+            #print('stop', exc)
+            pass
 
 
     def __init__(self, xknx, multicast=False, own_ip=None):
