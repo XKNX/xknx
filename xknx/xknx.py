@@ -2,6 +2,7 @@ import asyncio
 import signal
 from .devices import Devices
 from .globals import Globals
+from xknx.knx import Address
 
 class XKNX:
     # pylint: disable=too-many-instance-attributes
@@ -15,7 +16,7 @@ class XKNX:
                     START_STATE_UPDATER
 
 
-    def __init__(self, loop=None):
+    def __init__(self, loop=None, own_address=None, own_ip=None):
         self.globals = Globals()
         self.devices = Devices()
         self.telegrams = asyncio.Queue()
@@ -24,6 +25,11 @@ class XKNX:
         self.telegram_queue = None
         self.knxip_interface = None
         self.state_updater = None
+
+        if own_address is not None:
+            self.globals.own_address = Address(own_address)
+        if own_ip is not None:
+            self.globals.own_ip = own_ip
 
 
     def start(self,
