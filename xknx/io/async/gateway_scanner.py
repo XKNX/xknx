@@ -35,11 +35,6 @@ class GatewayScanner():
 
     @asyncio.coroutine
     def async_start(self):
-        udpserver = UDPServer(self.xknx)
-        udpserver.register_callback(
-            self.response_rec_callback, [KNXIPServiceType.SEARCH_RESPONSE])
-
-        yield from udpserver.start()
         yield from self.send_search_requests()
         yield from self.search_response_recieved.wait()
 
@@ -56,6 +51,12 @@ class GatewayScanner():
     @asyncio.coroutine
     def search_interface(self, interface, ip_addr):
         print("Searching on {0} / {1}".format(interface, ip_addr))
+
+        udpserver = UDPServer(self.xknx, own_ip=ip_addr)
+        udpserver.register_callback(
+            self.response_rec_callback, [KNXIPServiceType.SEARCH_RESPONSE])
+
+        yield from udpserver.start()
 
         knxipframe = KNXIPFrame()
         knxipframe.init(KNXIPServiceType.SEARCH_REQUEST)
