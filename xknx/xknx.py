@@ -65,13 +65,15 @@ class XKNX:
             yield from self.loop_until_sigint()
 
 
+    @asyncio.coroutine
     def join(self):
         """ Wait until all telegrams were processed """
-        self.telegrams.join()
+        yield from self.telegrams.join()
 
 
+    @asyncio.coroutine
     def stop(self):
-        self.join()
+        yield from self.join()
         #self.loop.stop()
         print("Shutdown process ...")
 
