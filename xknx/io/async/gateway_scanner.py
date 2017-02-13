@@ -7,14 +7,17 @@ from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 
 class GatewayScanner():
 
-    def __init__(self, xknx):
+    def __init__(self, xknx, timeout_in_seconds=1):
         self.xknx = xknx
-        self.search_response_recieved = asyncio.Event()
+        self.search_response_recieved_or_timeout = asyncio.Event()
         self.found = False
         self.found_ip_addr = None
         self.found_port = None
         self.found_name = None
         self.udpservers = []
+        self.timeout_in_seconds = timeout_in_seconds
+        self.timeout_callback = None
+        self.timeout_handle = None
 
     def response_rec_callback(self, knxipframe):
         if not isinstance(knxipframe.body, SearchResponse):
@@ -25,7 +28,7 @@ class GatewayScanner():
             self.found_ip_addr = knxipframe.body.control_endpoint.ip_addr
             self.found_port = knxipframe.body.control_endpoint.port
             self.found_name = knxipframe.body.device_name
-            self.search_response_recieved.set()
+            self.search_response_recieved_or_timeout.set()
             self.found = True
 
 
@@ -37,9 +40,10 @@ class GatewayScanner():
     @asyncio.coroutine
     def async_start(self):
         yield from self.send_search_requests()
-        yield from self.search_response_recieved.wait()
+        yield from self.start_timeout()
+        yield from self.search_response_recieved_or_timeout.wait()
         yield from self.stop()
-
+        yield from self.stop_timeout()
 
     @asyncio.coroutine
     def stop(self):
@@ -80,3 +84,16 @@ class GatewayScanner():
             (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
             multicast=True)
         udpclient.send(knxipframe)
+
+
+    def timeout(self):
+        self.search_response_recieved_or_timeout.set()
+
+    @asyncio.coroutine
+    def start_timeout(self):
+        self.timeout_handle = self.xknx.loop.call_later(
+            self.timeout_in_seconds, self.timeout)
+
+    @asyncio.coroutine
+    def stop_timeout(self):
+        self.timeout_handle.cancel()

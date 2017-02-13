@@ -11,3 +11,5 @@ if gatewayscanner.found:
         gatewayscanner.found_ip_addr,
         gatewayscanner.found_port,
         gatewayscanner.found_name))
+else:
+    print("No Gateways found")
