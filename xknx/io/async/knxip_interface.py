@@ -42,6 +42,7 @@ class KNXIPInterface():
     def send_telegram(self, telegram):
         knxipframe = KNXIPFrame()
         knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
+        knxipframe.body.src_addr = self.xknx.globals.own_address
         knxipframe.body.telegram = telegram
         knxipframe.body.sender = self.xknx.globals.own_address
         knxipframe.normalize()
