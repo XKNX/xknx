@@ -104,8 +104,7 @@ class TestSensor(unittest.TestCase):
             'TestSensor',
             group_address='1/2/3')
 
-        task = asyncio.Task(sensor.sync_state())
-        self.loop.run_until_complete(task)
+        sensor.sync_state()
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 

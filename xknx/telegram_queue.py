@@ -26,6 +26,12 @@ class TelegramQueue():
                 # limit rate to knx bus to 20 per second
                 yield from asyncio.sleep(1/20)
 
+    @asyncio.coroutine
+    def process_all_telegrams(self):
+        while not self.xknx.telegrams.empty():
+            telegram = self.xknx.telegrams.get_nowait()
+            yield from self.process_telegram(telegram)
+            self.xknx.telegrams.task_done()
 
     @asyncio.coroutine
     def process_telegram(self, telegram):

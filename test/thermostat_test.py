@@ -49,8 +49,7 @@ class TestThermostat(unittest.TestCase):
             'TestThermostat',
             group_address_temperature='1/2/3',
             group_address_setpoint='1/2/4')
-        task = asyncio.Task(thermostat.sync_state())
-        self.loop.run_until_complete(task)
+        thermostat.sync_state()
 
         self.assertEqual(xknx.telegrams.qsize(), 2)
 

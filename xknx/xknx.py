@@ -1,8 +1,10 @@
 import asyncio
 import signal
+from xknx.knx import Address
+from xknx.io.async import KNXIPInterface
 from .devices import Devices
 from .globals import Globals
-from xknx.knx import Address
+from .telegram_queue import  TelegramQueue
 
 class XKNX:
     # pylint: disable=too-many-instance-attributes
@@ -22,8 +24,8 @@ class XKNX:
         self.telegrams = asyncio.Queue()
         self.loop = loop or asyncio.get_event_loop()
         self.sigint_recieved = asyncio.Event()
-        self.telegram_queue = None
-        self.knxip_interface = None
+        self.telegram_queue = TelegramQueue(self)
+        self.knxip_interface = KNXIPInterface(self)
         self.state_updater = None
 
         if own_address is not None:
@@ -49,18 +51,13 @@ class XKNX:
                     daemon_mode=False,
                     start=START_DEFAULT,
                     telegram_received_callback=None):
-        from .telegram_queue import  TelegramQueue
         from .stateupdater import StateUpdater
-        from xknx.io.async import KNXIPInterface
 
         if start & XKNX.START_TELEGRAM_QUEUE:
-            self.telegram_queue = TelegramQueue(
-                self,
-                telegram_received_callback)
+            self.telegram_queue.telegram_received_callback = telegram_received_callback
             yield from self.telegram_queue.start()
 
         if start & XKNX.START_MULITCAST_DAEMON:
-            self.knxip_interface = KNXIPInterface(self)
             yield from self.knxip_interface.start()
 
         if start & XKNX.START_STATE_UPDATER:
@@ -70,6 +67,10 @@ class XKNX:
         if daemon_mode:
             yield from self.loop_until_sigint()
 
+    def process_all_telegrams(self):
+        task = asyncio.Task(
+            self.telegram_queue.process_all_telegrams())
+        self.loop.run_until_complete(task)
 
     @asyncio.coroutine
     def join(self):

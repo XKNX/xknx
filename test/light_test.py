@@ -43,8 +43,7 @@ class TestLight(unittest.TestCase):
                       group_address_switch='1/2/3',
                       group_address_dimm='1/2/4',
                       group_address_brightness='1/2/5')
-        task = asyncio.Task(light.sync_state())
-        self.loop.run_until_complete(task)
+        light.sync_state()
 
         self.assertEqual(xknx.telegrams.qsize(), 2)
 

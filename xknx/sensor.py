@@ -1,4 +1,3 @@
-import asyncio
 from xknx.knx import Address, Telegram, TelegramType, DPTBinary, DPTArray, \
     DPTScaling
 from .device import Device
@@ -56,10 +55,9 @@ class Sensor(Device):
             self.state = state
             self.after_update()
 
-    @asyncio.coroutine
     def sync_state(self):
         telegram = Telegram(self.group_address, TelegramType.GROUP_READ)
-        yield from self.xknx.telegrams.put(telegram)
+        self.xknx.telegrams.put_nowait(telegram)
 
 
     def process(self, telegram):

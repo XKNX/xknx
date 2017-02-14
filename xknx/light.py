@@ -1,4 +1,3 @@
-import asyncio
 from xknx.knx  import Address, Telegram, TelegramType, DPTBinary, DPTArray
 from .device import Device
 from .exception import CouldNotParseTelegram
@@ -133,18 +132,17 @@ class Light(Device):
             print("{0}: Could not understand action {1}" \
                 .format(self.get_name(), action))
 
-    @asyncio.coroutine
     def sync_state(self):
         telegram_switch = Telegram(
             self.group_address_switch,
             TelegramType.GROUP_READ)
-        yield from self.xknx.telegrams.put(telegram_switch)
+        self.xknx.telegrams.put_nowait(telegram_switch)
 
         if self.supports_dimming:
             telegram_dimm = Telegram(
                 self.group_address_brightness,
                 TelegramType.GROUP_READ)
-            yield from self.xknx.telegrams.put(telegram_dimm)
+            self.xknx.telegrams.put_nowait(telegram_dimm)
 
     def process(self, telegram):
         if telegram.group_address == self.group_address_switch or \

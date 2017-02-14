@@ -28,5 +28,5 @@ class StateUpdater():
     @asyncio.coroutine
     def sync_states(self):
         for device in self.xknx.devices:
-            yield from device.sync_state()
+            device.sync_state()
             yield from asyncio.sleep(self.sleep_during_devices)

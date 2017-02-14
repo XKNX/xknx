@@ -21,8 +21,7 @@ class TestOutlet(unittest.TestCase):
 
         xknx = XKNX(self.loop)
         outlet = Outlet(xknx, "TestOutlet", group_address='1/2/3')
-        task = asyncio.Task(outlet.sync_state())
-        self.loop.run_until_complete(task)
+        outlet.sync_state()
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 

@@ -20,8 +20,7 @@ class TestTime(unittest.TestCase):
 
         xknx = XKNX(self.loop)
         time = Time(xknx, "TestTime", group_address='1/2/3')
-        task = asyncio.Task(time.sync_state())
-        self.loop.run_until_complete(task)
+        time.sync_state()
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 

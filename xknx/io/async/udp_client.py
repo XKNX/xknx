@@ -38,7 +38,8 @@ class UDPClient:
 
         def connection_lost(self, exc):
             # pylint: disable=no-self-use
-            print('closing transport', exc)
+            #print('closing transport', exc)
+            pass
 
     def __init__(self, xknx):
         self.xknx = xknx

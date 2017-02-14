@@ -26,8 +26,7 @@ class TestShutter(unittest.TestCase):
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_feedback='1/2/4')
-        task = asyncio.Task(shutter.sync_state())
-        self.loop.run_until_complete(task)
+        shutter.sync_state()
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram1,

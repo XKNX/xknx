@@ -1,7 +1,7 @@
 
 general:
     own_address: '15.15.249'
-    own_ip: '127.0.0.1'
+    own_ip: '192.168.42.1'
 
 groups:
 
