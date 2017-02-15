@@ -55,7 +55,8 @@ class KNXIPInterface():
         yield from udpclient.connect(
             self.xknx.globals.own_ip,
             (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
-            multicast=True)
+            multicast=True,
+            local_port=DEFAULT_MCAST_PORT)
         udpclient.send(knxipframe)
         yield from udpclient.stop()
 

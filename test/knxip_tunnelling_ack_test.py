@@ -1,7 +1,7 @@
 import unittest
 
 from xknx.knxip import KNXIPFrame, KNXIPServiceType, TunnellingAck, \
-    TunnelAckStatus
+    ErrorCode
 
 
 class Test_KNXIP_TunnelingReq(unittest.TestCase):
@@ -20,7 +20,7 @@ class Test_KNXIP_TunnelingReq(unittest.TestCase):
         self.assertEqual(knxipframe.body.sequence_counter, 23)
         self.assertEqual(
             knxipframe.body.error_code,
-            TunnelAckStatus.E_NO_ERROR)
+            ErrorCode.E_NO_ERROR)
 
         knxipframe2 = KNXIPFrame()
         knxipframe2.init(KNXIPServiceType.TUNNELLING_ACK)

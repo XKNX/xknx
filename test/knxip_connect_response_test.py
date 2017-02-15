@@ -1,7 +1,7 @@
 import unittest
 
 from xknx.knxip import KNXIPFrame, KNXIPServiceType, ConnectRequestType, \
-    HPAI, ConnectResponse, ConnectResponseStatus
+    HPAI, ConnectResponse, ErrorCode
 
 class Test_KNXIP_ConnectResponse(unittest.TestCase):
     # pylint: disable=too-many-public-methods,invalid-name
@@ -18,7 +18,7 @@ class Test_KNXIP_ConnectResponse(unittest.TestCase):
         self.assertEqual(knxipframe.body.communication_channel, 1)
         self.assertEqual(
             knxipframe.body.status_code,
-            ConnectResponseStatus.E_NO_ERROR)
+            ErrorCode.E_NO_ERROR)
         self.assertEqual(
             knxipframe.body.control_endpoint,
             HPAI(ip_addr='192.168.42.10', port=3671))
@@ -30,7 +30,7 @@ class Test_KNXIP_ConnectResponse(unittest.TestCase):
 
         knxipframe2 = KNXIPFrame()
         knxipframe2.init(KNXIPServiceType.CONNECT_RESPONSE)
-        knxipframe2.status_code = ConnectResponseStatus.E_NO_ERROR
+        knxipframe2.status_code = ErrorCode.E_NO_ERROR
         knxipframe2.body.communication_channel = 1
         knxipframe2.body.request_type = ConnectRequestType.TUNNEL_CONNECTION
         knxipframe2.body.control_endpoint = HPAI(

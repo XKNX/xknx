@@ -1,6 +1,6 @@
 from .body import KNXIPBody
 from .exception import CouldNotParseKNXIP
-from .knxip_enum import TunnelAckStatus
+from .error_code import ErrorCode
 
 class TunnellingAck(KNXIPBody):
     """Representation of a KNX Connect Request."""
@@ -14,7 +14,7 @@ class TunnellingAck(KNXIPBody):
 
         self.communication_channel_id = 1
         self.sequence_counter = 0
-        self.error_code = TunnelAckStatus.E_NO_ERROR
+        self.error_code = ErrorCode.E_NO_ERROR
 
 
     def calculated_length(self):
@@ -32,7 +32,7 @@ class TunnellingAck(KNXIPBody):
                 raise CouldNotParseKNXIP("connection header wrong length")
             self.communication_channel_id = header[1]
             self.sequence_counter = header[2]
-            self.error_code = TunnelAckStatus(header[3])
+            self.error_code = ErrorCode(header[3])
             return 4
 
         pos = ack_from_knx(raw)

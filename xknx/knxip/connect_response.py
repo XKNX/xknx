@@ -1,6 +1,7 @@
 from .body import KNXIPBody
 from .hpai import HPAI
-from .knxip_enum import ConnectRequestType, ConnectResponseStatus
+from .knxip_enum import ConnectRequestType
+from .error_code import ErrorCode
 from .exception import CouldNotParseKNXIP
 
 class ConnectResponse(KNXIPBody):
@@ -14,7 +15,7 @@ class ConnectResponse(KNXIPBody):
         super(ConnectResponse, self).__init__()
 
         self.communication_channel = 0
-        self.status_code = ConnectResponseStatus.E_NO_ERROR
+        self.status_code = ErrorCode.E_NO_ERROR
         self.request_type = None
         self.control_endpoint = HPAI()
         self.identifier = None
@@ -39,7 +40,7 @@ class ConnectResponse(KNXIPBody):
             return 4
 
         self.communication_channel = raw[0]
-        self.status_code = ConnectResponseStatus(raw[1])
+        self.status_code = ErrorCode(raw[1])
         pos = 2
 
         pos += self.control_endpoint.from_knx(raw[pos:])

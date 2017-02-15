@@ -7,6 +7,8 @@ from .tunnelling_request import TunnellingRequest
 from .tunnelling_ack import TunnellingAck
 from .search_request import SearchRequest
 from .search_response import SearchResponse
+from .disconnect_request import DisconnectRequest
+from .disconnect_response import DisconnectResponse
 from .exception import CouldNotParseKNXIP
 
 class KNXIPFrame:
@@ -50,6 +52,16 @@ class KNXIPFrame:
         elif service_type_ident == \
                 KNXIPServiceType.SEARCH_RESPONSE:
             self.body = SearchResponse()
+
+        elif service_type_ident == \
+                KNXIPServiceType.DISCONNECT_REQUEST:
+            self.body = DisconnectRequest()
+
+        elif service_type_ident == \
+                KNXIPServiceType.DISCONNECT_RESPONSE:
+            self.body = DisconnectResponse()
+
+
 
         else:
             raise TypeError(self.header.service_type_ident)

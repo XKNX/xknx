@@ -83,19 +83,20 @@ class UDPServer:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.setblocking(False)
 
-        if self.own_ip is not None:
-            sock.setsockopt(
-                socket.SOL_IP,
-                socket.IP_MULTICAST_IF,
-                socket.inet_aton(self.own_ip))
-            sock.setsockopt(
-                socket.SOL_IP,
-                socket.IP_ADD_MEMBERSHIP,
-                socket.inet_aton(DEFAULT_MCAST_GRP) +
-                socket.inet_aton(self.own_ip))
+        if self.multicast:
+            if self.own_ip is not None:
+                sock.setsockopt(
+                    socket.SOL_IP,
+                    socket.IP_MULTICAST_IF,
+                    socket.inet_aton(self.own_ip))
+                sock.setsockopt(
+                    socket.SOL_IP,
+                    socket.IP_ADD_MEMBERSHIP,
+                    socket.inet_aton(DEFAULT_MCAST_GRP) +
+                    socket.inet_aton(self.own_ip))
+            sock.bind(("", DEFAULT_MCAST_PORT))
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
 
-        sock.bind(("", DEFAULT_MCAST_PORT))
-        sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
         return sock
 
 

@@ -119,32 +119,6 @@ class ConnectRequestType(Enum):
     OBJSVR_CONNECTION = 0x08
 
 
-class ConnectResponseStatus(Enum):
-    # The connection state is normal.
-    E_NO_ERROR = 0x00
-
-    # The KNXnet/IP Server device cannot find an active data
-    # connection with the specified ID.
-    E_CONNECTION_ID = 0x21
-
-    # The KNXnet/IP Server device detects an error concerning
-    # the data connection with the specified ID.
-    E_DATA_CONNECTION = 0x26
-
-    # The KNXnet/IP Server device detects an error concerning
-    # the KNX subnetwork connection with the specified ID.
-    E_KNX_CONNECTION = 0x27
-
-
-class TunnelAckStatus(Enum):
-    # The message was received successfully.
-    E_NO_ERROR = 0x00
-
-    # The requested tunnelling layer is not supported by the
-    # KNXnet/IP Server device.
-    E_TUNNELLING_LAYER = 0x29
-
-
 class DIBTypeCode(Enum):
     # Device information e.g. KNX medium.
     DEVICE_INFO = 0x01
