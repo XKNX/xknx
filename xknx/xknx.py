@@ -54,7 +54,8 @@ class XKNX:
         from .stateupdater import StateUpdater
 
         if start & XKNX.START_TELEGRAM_QUEUE:
-            self.telegram_queue.telegram_received_callback = telegram_received_callback
+            self.telegram_queue.telegram_received_callback =\
+                telegram_received_callback
             yield from self.telegram_queue.start()
 
         if start & XKNX.START_MULITCAST_DAEMON:

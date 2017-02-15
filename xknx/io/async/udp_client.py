@@ -22,7 +22,7 @@ class UDPClient:
         def __init__(self,
                      own_ip,
                      multicast=False,
-                     data_received_callback = None):
+                     data_received_callback=None):
             self.own_ip = own_ip
             self.multicast = multicast
             self.transport = None
@@ -43,7 +43,7 @@ class UDPClient:
                     socket.inet_aton(self.own_ip))
 
 
-        def datagram_received(self, raw, addr):
+        def datagram_received(self, raw, _):
             if self.data_received_callback is not None:
                 self.data_received_callback(raw)
 
@@ -67,7 +67,6 @@ class UDPClient:
             try:
                 knxipframe = KNXIPFrame()
                 knxipframe.from_knx(raw)
-                print("UDP_CLIENT_RECIEVED: ", knxipframe)
                 self.handle_knxipframe(knxipframe)
             except CouldNotParseKNXIP as couldnotparseknxip:
                 print(couldnotparseknxip)
@@ -87,7 +86,7 @@ class UDPClient:
     def register_callback(self, callback, service_types=None):
         if service_types is None:
             service_types = []
-        self.callbacks.append(UDPServer.Callback(callback, service_types))
+        self.callbacks.append(UDPClient.Callback(callback, service_types))
 
 
 
@@ -111,6 +110,11 @@ class UDPClient:
         if self.transport is None:
             raise Exception("Transport not connected")
         self.transport.sendto(bytes(knxipframe.to_knx()))
+
+
+    def getsockname(self):
+        sock = self.transport.get_extra_info("socket")
+        return sock.getsockname()
 
 
     @asyncio.coroutine
