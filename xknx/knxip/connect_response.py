@@ -30,7 +30,6 @@ class ConnectResponse(KNXIPBody):
 
         # CRD: Connection Response Data Block
         def crd_from_knx(crd):
-            print(crd)
             if crd[0] != ConnectResponse.CRD_LENGTH:
                 raise CouldNotParseKNXIP("CRD has wrong length")
             if len(crd) < ConnectResponse.CRD_LENGTH:
