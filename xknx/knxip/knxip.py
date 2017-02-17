@@ -9,6 +9,8 @@ from .search_request import SearchRequest
 from .search_response import SearchResponse
 from .disconnect_request import DisconnectRequest
 from .disconnect_response import DisconnectResponse
+from .connectionstate_request import ConnectionStateRequest
+from .connectionstate_response import ConnectionStateResponse
 from .exception import CouldNotParseKNXIP
 
 class KNXIPFrame:
@@ -60,6 +62,14 @@ class KNXIPFrame:
         elif service_type_ident == \
                 KNXIPServiceType.DISCONNECT_RESPONSE:
             self.body = DisconnectResponse()
+
+        elif service_type_ident == \
+                KNXIPServiceType.CONNECTIONSTATE_REQUEST:
+            self.body = ConnectionStateRequest()
+
+        elif service_type_ident == \
+                KNXIPServiceType.CONNECTIONSTATE_RESPONSE:
+            self.body = ConnectionStateResponse()
 
 
 

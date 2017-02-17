@@ -13,6 +13,8 @@ from .search_request import SearchRequest
 from .search_response import SearchResponse
 from .disconnect_request import DisconnectRequest
 from .disconnect_response import DisconnectResponse
+from .connectionstate_request import ConnectionStateRequest
+from .connectionstate_response import ConnectionStateResponse
 from .hpai import HPAI
 from .dib import DIB, DIBGeneric, DIBDeviceInformation, DIBSuppSVCFamilies
 from .exception import CouldNotParseKNXIP, ConversionException

@@ -19,13 +19,13 @@ class Test_KNXIP_DisconnectResp(unittest.TestCase):
         self.assertEqual(
             knxipframe.body.communication_channel_id, 21)
         self.assertEqual(
-            knxipframe.body.status_code, ErrorCode.E_NO_FREE_CHANNEL)
+            knxipframe.body.status_code, ErrorCode.E_NO_MORE_UNIQUE_CONNECTIONS)
 
 
         knxipframe2 = KNXIPFrame()
         knxipframe2.init(KNXIPServiceType.DISCONNECT_RESPONSE)
         knxipframe2.body.communication_channel_id = 21
-        knxipframe2.body.status_code = ErrorCode.E_NO_FREE_CHANNEL
+        knxipframe2.body.status_code = E_NO_MORE_UNIQUE_CONNECTIONS
         knxipframe2.normalize()
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
