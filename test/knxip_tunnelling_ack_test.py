@@ -19,7 +19,7 @@ class Test_KNXIP_TunnelingReq(unittest.TestCase):
         self.assertEqual(knxipframe.body.communication_channel_id, 42)
         self.assertEqual(knxipframe.body.sequence_counter, 23)
         self.assertEqual(
-            knxipframe.body.error_code,
+            knxipframe.body.status_code,
             ErrorCode.E_NO_ERROR)
 
         knxipframe2 = KNXIPFrame()

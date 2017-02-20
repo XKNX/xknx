@@ -9,4 +9,4 @@ output-format=colorized
 
 [FORMAT]
 indent-string='    '
-max-line-length=79
+max-line-length=150

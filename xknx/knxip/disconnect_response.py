@@ -1,3 +1,4 @@
+from .knxip_enum import KNXIPServiceType
 from .body import KNXIPBody
 from .exception import CouldNotParseKNXIP
 from .error_code import ErrorCode
@@ -5,6 +6,8 @@ from .error_code import ErrorCode
 class DisconnectResponse(KNXIPBody):
     """Representation of a KNX Disconnect Response."""
     # pylint: disable=too-many-instance-attributes
+
+    service_type = KNXIPServiceType.DISCONNECT_RESPONSE
 
     def __init__(self):
         """DisconnectResponse __init__ object."""

@@ -1,15 +1,18 @@
 from .body import KNXIPBody
 from .hpai import HPAI
 from .dib import DIB, DIBDeviceInformation
+from .knxip_enum import KNXIPServiceType
 
 class SearchResponse(KNXIPBody):
     """Representation of a KNX Connect Request."""
     # pylint: disable=too-many-instance-attributes
 
+    service_type = KNXIPServiceType.SEARCH_RESPONSE
+
     def __init__(self):
         """SearchResponse __init__ object."""
         super(SearchResponse, self).__init__()
-        self.control_endpoint = HPAI(ip_addr="224.0.23.12", port=3671)
+        self.control_endpoint = HPAI()
         self.dibs = []
 
     def calculated_length(self):

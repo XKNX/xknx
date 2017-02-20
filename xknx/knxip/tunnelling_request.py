@@ -1,10 +1,14 @@
 from .body import KNXIPBody
 from .exception import CouldNotParseKNXIP
 from .cemi_frame import CEMIFrame, CEMIMessageCode
+from .knxip_enum import KNXIPServiceType
+
 
 class TunnellingRequest(KNXIPBody):
     """Representation of a KNX Connect Request."""
     # pylint: disable=too-many-instance-attributes
+
+    service_type = KNXIPServiceType.TUNNELLING_REQUEST
 
     HEADER_LENGTH = 4
 

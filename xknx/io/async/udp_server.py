@@ -65,7 +65,7 @@ class UDPServer:
         handled = False
         for callback in self.callbacks:
             if callback.has_service(knxipframe.header.service_type_ident):
-                callback.callback(knxipframe)
+                callback.callback(knxipframe, self)
                 handled = True
         if not handled:
             #print("UNHANDLED: ", knxipframe.header.service_type_ident)
@@ -112,6 +112,21 @@ class UDPServer:
             lambda: udp_server_factory, sock=sock)
 
         self.transport = transport
+
+
+    def send(self, knxipframe):
+        if self.transport is None:
+            raise Exception("Transport not connected")
+        self.transport.sendto(bytes(knxipframe.to_knx()))
+
+
+    def getsockname(self):
+        sock = self.transport.get_extra_info("socket")
+        return sock.getsockname()
+
+    def getremote(self):
+        peer = self.transport.get_extra_info('peername')
+        return peer
 
 
     def stop(self):

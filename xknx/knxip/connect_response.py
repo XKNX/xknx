@@ -1,12 +1,14 @@
 from .body import KNXIPBody
 from .hpai import HPAI
-from .knxip_enum import ConnectRequestType
+from .knxip_enum import ConnectRequestType, KNXIPServiceType
 from .error_code import ErrorCode
 from .exception import CouldNotParseKNXIP
 
 class ConnectResponse(KNXIPBody):
     """Representation of a KNX Connect Request."""
     # pylint: disable=too-many-instance-attributes
+
+    service_type = KNXIPServiceType.CONNECT_RESPONSE
 
     CRD_LENGTH = 4
 

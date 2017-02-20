@@ -76,7 +76,7 @@ class UDPClient:
         handled = False
         for callback in self.callbacks:
             if callback.has_service(knxipframe.header.service_type_ident):
-                callback.callback(knxipframe)
+                callback.callback(knxipframe, self)
                 handled = True
         if not handled:
             #print("UNHANDLED: ", knxipframe.header.service_type_ident)
@@ -86,9 +86,14 @@ class UDPClient:
     def register_callback(self, callback, service_types=None):
         if service_types is None:
             service_types = []
-        self.callbacks.append(UDPClient.Callback(callback, service_types))
+
+        cb = UDPClient.Callback(callback, service_types)
+        self.callbacks.append(cb)
+        return cb
 
 
+    def unregister_callback(self, cb):
+        self.callbacks.remove(cb)
 
 
     @asyncio.coroutine
@@ -116,6 +121,9 @@ class UDPClient:
         sock = self.transport.get_extra_info("socket")
         return sock.getsockname()
 
+    def getremote(self):
+        peer = self.transport.get_extra_info('peername')
+        return peer
 
     @asyncio.coroutine
     def stop(self):

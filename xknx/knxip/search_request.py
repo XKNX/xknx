@@ -1,9 +1,12 @@
 from .body import KNXIPBody
 from .hpai import HPAI
+from .knxip_enum import KNXIPServiceType
 
 class SearchRequest(KNXIPBody):
     """Representation of a KNX Connect Request."""
     # pylint: disable=too-many-instance-attributes
+
+    service_type = KNXIPServiceType.SEARCH_REQUEST
 
     def __init__(self):
         """SearchRequest __init__ object."""

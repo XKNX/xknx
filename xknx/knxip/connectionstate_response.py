@@ -1,3 +1,4 @@
+from .knxip_enum import KNXIPServiceType
 from .body import KNXIPBody
 from .exception import CouldNotParseKNXIP
 from .error_code import ErrorCode
@@ -5,6 +6,8 @@ from .error_code import ErrorCode
 class ConnectionStateResponse(KNXIPBody):
     """Representation of a KNX Connection State Response."""
     # pylint: disable=too-many-instance-attributes
+
+    service_type = KNXIPServiceType.CONNECTIONSTATE_RESPONSE
 
     def __init__(self):
         """ConnectionStateResponse __init__ object."""

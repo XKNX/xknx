@@ -1,10 +1,14 @@
+from .knxip_enum import KNXIPServiceType
 from .body import KNXIPBody
 from .hpai import HPAI
 from .exception import CouldNotParseKNXIP
 
+
 class ConnectionStateRequest(KNXIPBody):
     """Representation of a KNX Connection State Request."""
     # pylint: disable=too-many-instance-attributes
+
+    service_type = KNXIPServiceType.CONNECTIONSTATE_REQUEST
 
     def __init__(self):
         """ConnectionStateRequest __init__ object."""

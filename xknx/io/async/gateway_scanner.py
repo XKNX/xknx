@@ -20,7 +20,7 @@ class GatewayScanner():
         self.timeout_callback = None
         self.timeout_handle = None
 
-    def response_rec_callback(self, knxipframe):
+    def response_rec_callback(self, knxipframe, udp_client):
         if not isinstance(knxipframe.body, SearchResponse):
             print("Cant understand knxipframe")
             return

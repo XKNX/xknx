@@ -1,10 +1,14 @@
 from .body import KNXIPBody
 from .exception import CouldNotParseKNXIP
 from .error_code import ErrorCode
+from .knxip_enum import KNXIPServiceType
+
 
 class TunnellingAck(KNXIPBody):
     """Representation of a KNX Connect Request."""
     # pylint: disable=too-many-instance-attributes
+
+    service_type = KNXIPServiceType.TUNNELLING_ACK
 
     BODY_LENGTH = 4
 
@@ -14,7 +18,7 @@ class TunnellingAck(KNXIPBody):
 
         self.communication_channel_id = 1
         self.sequence_counter = 0
-        self.error_code = ErrorCode.E_NO_ERROR
+        self.status_code = ErrorCode.E_NO_ERROR
 
 
     def calculated_length(self):
@@ -32,7 +36,7 @@ class TunnellingAck(KNXIPBody):
                 raise CouldNotParseKNXIP("connection header wrong length")
             self.communication_channel_id = header[1]
             self.sequence_counter = header[2]
-            self.error_code = ErrorCode(header[3])
+            self.status_code = ErrorCode(header[3])
             return 4
 
         pos = ack_from_knx(raw)
@@ -48,7 +52,7 @@ class TunnellingAck(KNXIPBody):
             ack.append(TunnellingAck.BODY_LENGTH)
             ack.append(self.communication_channel_id)
             ack.append(self.sequence_counter)
-            ack.append(self.error_code.value)
+            ack.append(self.status_code.value)
             return ack
 
         data = []
@@ -58,6 +62,6 @@ class TunnellingAck(KNXIPBody):
 
     def __str__(self):
         return "<TunnellingAck communication_channel_id={0}, " \
-            "sequence_counter={1}, error_code={2}>" \
+            "sequence_counter={1}, status_code={2}>" \
             .format(self.communication_channel_id, self.sequence_counter,
-                    self.error_code)
+                    self.status_code)
