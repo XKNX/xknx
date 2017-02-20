@@ -13,7 +13,7 @@ class KNXIPInterface():
         self.udp_server = None
 
 
-    def response_rec_callback(self, knxipframe):
+    def response_rec_callback(self, knxipframe, _):
         #print(knxipframe)
         if knxipframe.header.service_type_ident == \
                 KNXIPServiceType.ROUTING_INDICATION:
