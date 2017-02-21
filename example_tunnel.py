@@ -1,83 +1,41 @@
 import asyncio
 from xknx import XKNX
-from xknx.io.async import Connect, ConnectionState, Disconnect, Tunnelling, UDPClient
+from xknx.io.async import Tunnel, GatewayScanner
 from xknx.knx import Telegram, Address, DPTBinary
 
 
+@asyncio.coroutine
 def build_and_destroy_tunnel(xknx):
 
-    own_ip="192.168.42.1"
-    gateway_ip="192.168.42.10"
-    gateway_port=3671
+    gatewayscanner = GatewayScanner(xknx)
+    yield from gatewayscanner.async_start()
 
-    udp_client = UDPClient(xknx)
+    if not gatewayscanner.found:
+        print("No Gateways found")
+        return
 
-    yield from udp_client.connect(
-             own_ip,
-             (gateway_ip, gateway_port),
-            multicast=False)
+    src_address = Address("15.15.249")
 
-    connect = Connect(
+    tunnel = Tunnel(
         xknx,
-        udp_client)
-    yield from connect.async_start()
+        src_address,
+        local_ip=gatewayscanner.found_local_ip,
+        gateway_ip=gatewayscanner.found_ip_addr,
+        gateway_port=gatewayscanner.found_port)
 
-    if not connect.success:
-        raise Exception("Could not establish connection")
+    yield from tunnel.connect_udp()
+    yield from tunnel.connect()
 
-    print("Tunnel established communication_channel={0}, id={1}".format(
-        connect.communication_channel, connect.identifier))
+    yield from tunnel.send_telegram(Telegram(Address('1/0/15'), payload=DPTBinary(0)))
+    yield from asyncio.sleep(2)
+    yield from tunnel.send_telegram(Telegram(Address('1/0/15'), payload=DPTBinary(1)))
+    yield from asyncio.sleep(2)
 
-    #----------------------
-
-    conn_state = ConnectionState(
-        xknx,
-        udp_client,
-        communication_channel_id=connect.communication_channel)
-
-    yield from conn_state.async_start()
-
-    if not conn_state.success:
-        raise Exception("Could not get connection state of connection")
-
-    print("Communication state channel ",  connect.communication_channel)
-
-    #---------------------
-
-    sequence_number = 0
-
-    tunnelling = Tunnelling(
-        xknx,
-        udp_client,
-        Telegram(Address('1/0/15'), payload=DPTBinary(0)),
-        Address("15.15.249"),
-        sequence_number)
-
-    yield from tunnelling.async_start()
-
-    if not tunnelling.success:
-        #raise Exception("Could not send telegram to tunnel")
-        print("Did not receive ack")
-
-
-    #---------------------
-
-    disconnect = Disconnect(
-        xknx,
-        udp_client,
-        communication_channel_id=connect.communication_channel)
-
-    yield from disconnect.async_start()
-
-    if not disconnect.success:
-        raise Exception("Could not disconnect channel")
-
-    print("Disconnected ", connect.communication_channel)
+    yield from tunnel.connectionstate()
+    yield from tunnel.disconnect()
 
 
 xknx = XKNX()
-
-task = asyncio.Task(
-    build_and_destroy_tunnel(xknx))
+task = asyncio.Task(build_and_destroy_tunnel(xknx))
 xknx.loop.run_until_complete(task)
 

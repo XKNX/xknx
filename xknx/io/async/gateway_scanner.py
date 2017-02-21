@@ -15,6 +15,7 @@ class GatewayScanner():
         self.found_ip_addr = None
         self.found_port = None
         self.found_name = None
+        self.found_local_ip = None
         self.udpservers = []
         self.timeout_in_seconds = timeout_in_seconds
         self.timeout_callback = None
@@ -29,6 +30,11 @@ class GatewayScanner():
             self.found_ip_addr = knxipframe.body.control_endpoint.ip_addr
             self.found_port = knxipframe.body.control_endpoint.port
             self.found_name = knxipframe.body.device_name
+
+            # TODO: This does not work yet. Should work when switching to udp_client
+            #(self.found_local_ip, _) = udp_client.getsockname()
+            self.found_local_ip = udp_client.own_ip
+
             self.response_recieved_or_timeout.set()
             self.found = True
 
