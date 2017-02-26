@@ -16,7 +16,10 @@ class Tunnel():
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
 
-        self.udp_client = UDPClient(self.xknx)
+        self.udp_client = UDPClient(self.xknx,
+            (self.local_ip, 0),
+            (self.gateway_ip, self.gateway_port))
+
         self.udp_client.register_callback(
             self.tunnel_reqest_received, [TunnellingRequest.service_type])
 
@@ -40,10 +43,7 @@ class Tunnel():
 
     @asyncio.coroutine
     def connect_udp(self):
-        yield from self.udp_client.connect(
-                 self.local_ip,
-                 (self.gateway_ip, self.gateway_port))
-
+        yield from self.udp_client.connect()
 
 
     @asyncio.coroutine

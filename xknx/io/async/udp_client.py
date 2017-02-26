@@ -2,7 +2,7 @@ import asyncio
 import socket
 
 from xknx.knxip import KNXIPFrame, CouldNotParseKNXIP
-from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
+
 
 class UDPClient:
 
@@ -57,11 +57,19 @@ class UDPClient:
             #print('closing transport', exc)
             pass
 
-    def __init__(self, xknx, multicast=False):
+    def __init__(self, xknx, local_addr, remote_addr, multicast=False):
+        if not isinstance(local_addr, tuple):
+            raise TypeError()
+        if not isinstance(remote_addr, tuple):
+            raise TypeError()
+
         self.xknx = xknx
+        self.local_addr = local_addr
+        self.remote_addr = remote_addr
+        self.multicast = multicast
+
         self.transport = None
         self.callbacks = []
-        self.multicast = multicast
 
     def data_received_callback(self, raw):
         if raw:
@@ -97,7 +105,7 @@ class UDPClient:
         self.callbacks.remove(cb)
 
 
-    def create_multicast_sock(self, own_ip):
+    def create_multicast_sock(self, own_ip, remote_addr):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.setblocking(False)
@@ -109,22 +117,22 @@ class UDPClient:
         sock.setsockopt(
                 socket.SOL_IP,
                 socket.IP_ADD_MEMBERSHIP,
-                socket.inet_aton(DEFAULT_MCAST_GRP) +
+                socket.inet_aton(remote_addr[0]) +
                 socket.inet_aton(own_ip))
-        sock.bind(("", DEFAULT_MCAST_PORT))
+        sock.bind(("", remote_addr[1]))
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
 
         return sock
 
     @asyncio.coroutine
-    def connect(self, own_ip_addr, remote_addr, local_port=0):
+    def connect(self):
 
         udp_client_factory = UDPClient.UDPClientFactory(
-            own_ip_addr, multicast=self.multicast,
+            self.local_addr[0], multicast=self.multicast,
             data_received_callback=self.data_received_callback)
 
         if self.multicast:
-            sock = self.create_multicast_sock(own_ip_addr)
+            sock = self.create_multicast_sock(self.local_addr[0], self.remote_addr)
             (transport, _) = yield from self.xknx.loop.create_datagram_endpoint(
                 lambda: udp_client_factory, sock=sock)
             self.transport = transport
@@ -132,8 +140,8 @@ class UDPClient:
         else:
             (transport, _) = yield from self.xknx.loop.create_datagram_endpoint(
                 lambda: udp_client_factory,
-                local_addr=(own_ip_addr, local_port),
-                remote_addr=remote_addr)
+                local_addr=self.local_addr,
+                remote_addr=self.remote_addr)
             self.transport = transport
 
 
@@ -142,7 +150,7 @@ class UDPClient:
             raise Exception("Transport not connected")
 
         if self.multicast:
-            self.transport.sendto(bytes(knxipframe.to_knx()), (DEFAULT_MCAST_GRP,DEFAULT_MCAST_PORT) )
+            self.transport.sendto(bytes(knxipframe.to_knx()), self.remote_addr)
         else:
             self.transport.sendto(bytes(knxipframe.to_knx()))
 

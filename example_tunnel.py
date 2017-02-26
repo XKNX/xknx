@@ -16,6 +16,11 @@ def build_and_destroy_tunnel(xknx):
 
     src_address = Address("15.15.249")
 
+    print("Connecting to {}:{} from {}".format(
+        gatewayscanner.found_ip_addr,
+        gatewayscanner.found_port,
+        gatewayscanner.found_local_ip))
+
     tunnel = Tunnel(
         xknx,
         src_address,

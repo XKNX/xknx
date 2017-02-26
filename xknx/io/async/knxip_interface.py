@@ -9,7 +9,12 @@ class KNXIPInterface():
 
     def __init__(self, xknx):
         self.xknx = xknx
-        self.udpclient = UDPClient(self.xknx, multicast=True)
+
+        self.udpclient = UDPClient(self.xknx,
+            (self.xknx.globals.own_ip, DEFAULT_MCAST_PORT),
+            (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+            multicast=True)
+
         self.udpclient.register_callback(
             self.response_rec_callback,
             [KNXIPServiceType.ROUTING_INDICATION])
@@ -59,8 +64,4 @@ class KNXIPInterface():
     @asyncio.coroutine
     def start(self):
 
-        yield from self.udpclient.connect(
-            self.xknx.globals.own_ip,
-            (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
-            local_port=DEFAULT_MCAST_PORT)
-
+        yield from self.udpclient.connect()

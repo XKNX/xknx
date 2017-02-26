@@ -25,8 +25,8 @@ class XKNX:
         self.loop = loop or asyncio.get_event_loop()
         self.sigint_recieved = asyncio.Event()
         self.telegram_queue = TelegramQueue(self)
-        self.knxip_interface = KNXIPInterface(self)
         self.state_updater = None
+        self.knxip_interface = None
 
         if own_address is not None:
             self.globals.own_address = Address(own_address)
@@ -34,10 +34,10 @@ class XKNX:
             self.globals.own_ip = own_ip
 
 
+
     def start(self,
               daemon_mode=False,
               telegram_received_callback=None):
-
         task = asyncio.Task(
             self.async_start(
                 daemon_mode,
@@ -59,6 +59,7 @@ class XKNX:
             yield from self.telegram_queue.start()
 
         if start & XKNX.START_MULITCAST_DAEMON:
+            self.knxip_interface = KNXIPInterface(self)
             yield from self.knxip_interface.start()
 
         if start & XKNX.START_STATE_UPDATER:

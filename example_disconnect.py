@@ -9,12 +9,13 @@ own_ip="192.168.42.1"
 gateway_ip="192.168.42.10"
 gateway_port=3671
 
-udp_client = UDPClient(xknx)
+udp_client = UDPClient(
+    xknx,
+    (own_ip,0),
+    (gateway_ip, gateway_port))
 
 task = asyncio.Task(
-    udp_client.connect(
-             own_ip,
-             (gateway_ip, gateway_port)))
+    udp_client.connect())
 
 xknx.loop.run_until_complete(task)
 

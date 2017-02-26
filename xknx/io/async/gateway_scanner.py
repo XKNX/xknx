@@ -68,13 +68,14 @@ class GatewayScanner():
     def search_interface(self, interface, ip_addr):
         print("Searching on {0} / {1}".format(interface, ip_addr))
 
-        udpclient = UDPClient(self.xknx, multicast=True)
+        udpclient = UDPClient(self.xknx,
+            (ip_addr, DEFAULT_MCAST_PORT),
+            (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+            multicast=True)
+
         udpclient.register_callback(
             self.response_rec_callback, [KNXIPServiceType.SEARCH_RESPONSE])
-        yield from udpclient.connect(
-            ip_addr,
-            (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
-            local_port=DEFAULT_MCAST_PORT)
+        yield from udpclient.connect()
 
         self.udpclients.append(udpclient)
 
