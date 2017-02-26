@@ -17,7 +17,7 @@ class UDPClient:
                 service_type in self.service_types
 
 
-    class UDPClientFactory:
+    class UDPClientFactory(asyncio.DatagramProtocol):
 
         def __init__(self,
                      own_ip,
@@ -94,6 +94,7 @@ class UDPClient:
 
     def unregister_callback(self, cb):
         self.callbacks.remove(cb)
+
 
 
     @asyncio.coroutine

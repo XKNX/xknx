@@ -15,7 +15,6 @@ class Connect(RequestResponse):
 
     def create_knxipframe(self):
         (local_addr, local_port) = self.udp_client.getsockname()
-        (remote_addr, remote_port) = self.udp_client.getremote()
         knxipframe = KNXIPFrame()
         knxipframe.init(KNXIPServiceType.CONNECT_REQUEST)
         knxipframe.body.request_type = ConnectRequestType.TUNNEL_CONNECTION
