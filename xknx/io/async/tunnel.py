@@ -42,8 +42,8 @@ class Tunnel():
     def connect_udp(self):
         yield from self.udp_client.connect(
                  self.local_ip,
-                 (self.gateway_ip, self.gateway_port),
-                multicast=False)
+                 (self.gateway_ip, self.gateway_port))
+
 
 
     @asyncio.coroutine

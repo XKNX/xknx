@@ -1,6 +1,5 @@
 import asyncio
 from xknx.knxip import KNXIPServiceType, KNXIPFrame, ConnectRequestType, HPAI, ConnectResponse, ErrorCode
-from .udp_client import UDPClient
 from .request_response import RequestResponse
 
 class Connect(RequestResponse):

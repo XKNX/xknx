@@ -2,7 +2,6 @@ import asyncio
 from xknx.knx import TelegramDirection
 from xknx.knxip import KNXIPFrame, KNXIPServiceType, APCICommand
 from .udp_client import UDPClient
-from .udp_server import UDPServer
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 
 
@@ -10,7 +9,10 @@ class KNXIPInterface():
 
     def __init__(self, xknx):
         self.xknx = xknx
-        self.udp_server = None
+        self.udpclient = UDPClient(self.xknx, multicast=True)
+        self.udpclient.register_callback(
+            self.response_rec_callback,
+            [KNXIPServiceType.ROUTING_INDICATION])
 
 
     def response_rec_callback(self, knxipframe, _):
@@ -51,23 +53,14 @@ class KNXIPInterface():
 
     @asyncio.coroutine
     def send_knxipframe(self, knxipframe):
-        udpclient = UDPClient(self.xknx)
-        yield from udpclient.connect(
-            self.xknx.globals.own_ip,
-            (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
-            multicast=True,
-            local_port=DEFAULT_MCAST_PORT)
-        udpclient.send(knxipframe)
-        yield from udpclient.stop()
+        self.udpclient.send(knxipframe)
 
 
     @asyncio.coroutine
     def start(self):
-        self.udp_server = UDPServer(
-            self.xknx,
-            own_ip=self.xknx.globals.own_ip,
-            multicast=True)
-        self.udp_server.register_callback(
-            self.response_rec_callback,
-            [KNXIPServiceType.ROUTING_INDICATION])
-        yield from self.udp_server.start()
+
+        yield from self.udpclient.connect(
+            self.xknx.globals.own_ip,
+            (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+            local_port=DEFAULT_MCAST_PORT)
+

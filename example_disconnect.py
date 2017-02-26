@@ -14,8 +14,7 @@ udp_client = UDPClient(xknx)
 task = asyncio.Task(
     udp_client.connect(
              own_ip,
-             (gateway_ip, gateway_port),
-             multicast=False))
+             (gateway_ip, gateway_port)))
 
 xknx.loop.run_until_complete(task)
 

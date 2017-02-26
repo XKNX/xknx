@@ -1,7 +1,6 @@
 import asyncio
 import netifaces
 from xknx.knxip import HPAI, KNXIPFrame, SearchResponse, KNXIPServiceType
-from .udp_server import UDPServer
 from .udp_client import UDPClient
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 
@@ -16,7 +15,7 @@ class GatewayScanner():
         self.found_port = None
         self.found_name = None
         self.found_local_ip = None
-        self.udpservers = []
+        self.udpclients = []
         self.timeout_in_seconds = timeout_in_seconds
         self.timeout_callback = None
         self.timeout_handle = None
@@ -31,9 +30,7 @@ class GatewayScanner():
             self.found_port = knxipframe.body.control_endpoint.port
             self.found_name = knxipframe.body.device_name
 
-            # TODO: This does not work yet. Should work when switching to udp_client
-            #(self.found_local_ip, _) = udp_client.getsockname()
-            self.found_local_ip = udp_client.own_ip
+            (self.found_local_ip, _) = udp_client.getsockname()
 
             self.response_recieved_or_timeout.set()
             self.found = True
@@ -54,8 +51,8 @@ class GatewayScanner():
 
     @asyncio.coroutine
     def stop(self):
-        for udpserver in self.udpservers:
-            udpserver.stop()
+        for udpclient in self.udpclients:
+            udpclient.stop()
 
 
     @asyncio.coroutine
@@ -71,13 +68,15 @@ class GatewayScanner():
     def search_interface(self, interface, ip_addr):
         print("Searching on {0} / {1}".format(interface, ip_addr))
 
-        udpserver = UDPServer(self.xknx, own_ip=ip_addr, multicast=True)
-        udpserver.register_callback(
+        udpclient = UDPClient(self.xknx, multicast=True)
+        udpclient.register_callback(
             self.response_rec_callback, [KNXIPServiceType.SEARCH_RESPONSE])
+        yield from udpclient.connect(
+            ip_addr,
+            (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+            local_port=DEFAULT_MCAST_PORT)
 
-        yield from udpserver.start()
-
-        self.udpservers.append(udpserver)
+        self.udpclients.append(udpclient)
 
         knxipframe = KNXIPFrame()
         knxipframe.init(KNXIPServiceType.SEARCH_REQUEST)
@@ -85,17 +84,12 @@ class GatewayScanner():
             HPAI(ip_addr=DEFAULT_MCAST_GRP, port=DEFAULT_MCAST_PORT)
         knxipframe.normalize()
 
-        udpclient = UDPClient(self.xknx)
-        yield from udpclient.connect(
-            ip_addr,
-            (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
-            multicast=True,
-            local_port=DEFAULT_MCAST_PORT)
         udpclient.send(knxipframe)
 
 
     def timeout(self):
         self.response_recieved_or_timeout.set()
+
 
     @asyncio.coroutine
     def start_timeout(self):

@@ -1,7 +1,6 @@
 import asyncio
 from xknx.knxip import KNXIPServiceType, KNXIPFrame, HPAI,\
     DisconnectResponse, ErrorCode
-from .udp_client import UDPClient
 from .request_response import RequestResponse
 
 class Disconnect(RequestResponse):
