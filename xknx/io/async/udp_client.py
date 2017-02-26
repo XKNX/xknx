@@ -31,17 +31,6 @@ class UDPClient:
         def connection_made(self, transport):
             self.transport = transport
 
-            sock = self.transport.get_extra_info('socket')
-            sock.setsockopt(
-                socket.IPPROTO_IP,
-                socket.IP_MULTICAST_TTL, 2)
-
-            if self.multicast:
-                sock.setsockopt(
-                    socket.IPPROTO_IP,
-                    socket.IP_MULTICAST_IF,
-                    socket.inet_aton(self.own_ip))
-
 
         def datagram_received(self, raw, _):
             if self.data_received_callback is not None:
@@ -119,6 +108,14 @@ class UDPClient:
                 socket.IP_ADD_MEMBERSHIP,
                 socket.inet_aton(remote_addr[0]) +
                 socket.inet_aton(own_ip))
+        sock.setsockopt(
+                socket.IPPROTO_IP,
+                socket.IP_MULTICAST_TTL, 2)
+        sock.setsockopt(
+                socket.IPPROTO_IP,
+                socket.IP_MULTICAST_IF,
+                socket.inet_aton(own_ip))
+
         sock.bind(("", remote_addr[1]))
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
 
