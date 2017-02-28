@@ -69,7 +69,7 @@ class GatewayScanner():
         print("Searching on {0} / {1}".format(interface, ip_addr))
 
         udpclient = UDPClient(self.xknx,
-            (ip_addr, DEFAULT_MCAST_PORT),
+            (ip_addr, 0),
             (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
             multicast=True)
 
@@ -79,10 +79,11 @@ class GatewayScanner():
 
         self.udpclients.append(udpclient)
 
+        (local_addr, local_port) = udpclient.getsockname()
         knxipframe = KNXIPFrame()
         knxipframe.init(KNXIPServiceType.SEARCH_REQUEST)
         knxipframe.body.discovery_endpoint = \
-            HPAI(ip_addr=DEFAULT_MCAST_GRP, port=DEFAULT_MCAST_PORT)
+            HPAI(ip_addr=local_addr, port=local_port)
         knxipframe.normalize()
 
         udpclient.send(knxipframe)
