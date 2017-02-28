@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 def async_setup_platform(hass, config, async_add_devices_callback, \
         discovery_info=None):
     # pylint: disable=unused-argument
-    """Setup the XKNX cover platform."""
+    """Setup the XKNX binary sensor platform."""
 
     if xknx_component.XKNX_MODULE is None \
             or not xknx_component.XKNX_MODULE.initialized:
@@ -21,8 +21,9 @@ def async_setup_platform(hass, config, async_add_devices_callback, \
     entities = []
 
     for device in xknx_component.XKNX_MODULE.xknx.devices:
-        if isinstance(device, xknx.Shutter):
-            entities.append(xknx_component.XKNXCover(hass, device))
+        if isinstance(device, xknx.Sensor) and \
+                device.is_binary():
+            entities.append(xknx_component.XKNXBinarySensor(hass, device))
 
     yield from async_add_devices_callback(entities)
 

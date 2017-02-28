@@ -149,6 +149,11 @@ class CEMIFrame():
     def to_knx(self):
         """Convert the CEMI frame object to its byte representation."""
 
+        if not isinstance(self.src_addr, Address):
+            raise ConversionException("src_add not set")
+        if not isinstance(self.dst_addr, Address):
+            raise ConversionException("dst_add not set")
+
         data = []
 
         data.append(self.code.value)

@@ -1,43 +1,33 @@
-
-class CouldNotResolveAddress(Exception):
-
-    def __init__(self, group_address):
-        super(CouldNotResolveAddress, self).\
-            __init__("Could not resolve address")
-        self.group_address = group_address
-
-    def __str__(self):
-        return "CouldNotResolveAddress <name={0}>".\
-            format(self.group_address)
-
-class CouldNotResolveName(Exception):
-
-    def __init__(self, name):
-        super(CouldNotResolveName, self).\
-            __init__("Could not resolve name")
-        self.name = name
-
-    def __str__(self):
-        return "CouldNotResolveName <name={0}>".\
-            format(self.name)
-
+from .device import Device
 
 class Devices:
 
     def __init__(self):
-        self.devices = []
+        self.__devices = []
 
-    def device_by_group_address(self, group_address):
-        for device in self.devices:
+
+    def __iter__(self):
+        yield from self.__devices
+
+
+    def devices_by_group_address(self, group_address):
+        for device in self.__devices:
             if device.has_group_address(group_address):
-                return device
-        raise CouldNotResolveAddress(group_address)
+                yield device
 
-    def device_by_name(self, name):
-        for device in self.devices:
-            if device.name == name:
-                return device
-        raise CouldNotResolveName(name)
 
-    def get_devices(self):
-        return self.devices
+    def __getitem__(self, key):
+        for device in self.__devices:
+            if device.name == key:
+                return device
+        raise KeyError
+
+
+    def __len__(self):
+        return len(self.__devices)
+
+
+    def add(self, device):
+        if not isinstance(device, Device):
+            raise TypeError()
+        self.__devices.append(device)

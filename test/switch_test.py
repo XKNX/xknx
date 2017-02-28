@@ -12,7 +12,7 @@ class TestBinaryInput(unittest.TestCase):
     def test_process(self):
         xknx = XKNX()
         outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
-        xknx.devices.devices.append(outlet)
+        xknx.devices.add(outlet)
 
         switch = Switch(xknx, 'TestInput', group_address='1/2/3')
         action_on = Action(
@@ -27,13 +27,13 @@ class TestBinaryInput(unittest.TestCase):
             target='TestOutlet',
             method='off')
         switch.actions.append(action_off)
-        xknx.devices.devices.append(switch)
+        xknx.devices.add(switch)
 
         self.assertEqual(
-            xknx.devices.device_by_name('TestInput').state,
+            xknx.devices['TestInput'].state,
             BinaryInputState.OFF)
         self.assertEqual(
-            xknx.devices.device_by_name('TestOutlet').state,
+            xknx.devices['TestOutlet'].state,
             False)
 
         telegram_on = Telegram()
@@ -41,10 +41,10 @@ class TestBinaryInput(unittest.TestCase):
         switch.process(telegram_on)
 
         self.assertEqual(
-            xknx.devices.device_by_name('TestInput').state,
+            xknx.devices['TestInput'].state,
             BinaryInputState.ON)
         self.assertEqual(
-            xknx.devices.device_by_name('TestOutlet').state,
+            xknx.devices['TestOutlet'].state,
             True)
 
         telegram_off = Telegram()
@@ -52,10 +52,10 @@ class TestBinaryInput(unittest.TestCase):
         switch.process(telegram_off)
 
         self.assertEqual(
-            xknx.devices.device_by_name('TestInput').state,
+            xknx.devices['TestInput'].state,
             BinaryInputState.OFF)
         self.assertEqual(
-            xknx.devices.device_by_name('TestOutlet').state,
+            xknx.devices['TestOutlet'].state,
             False)
 
 

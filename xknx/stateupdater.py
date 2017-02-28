@@ -7,7 +7,7 @@ class StateUpdater(threading.Thread):
                  xknx,
                  timeout,
                  start_timeout=15,
-                 sleep_during_devices=0.5):
+                 sleep_during_devices=0.2):
         self.xknx = xknx
         self.timeout = timeout
         self.start_timeout = start_timeout
@@ -23,12 +23,12 @@ class StateUpdater(threading.Thread):
             time.sleep(self.timeout)
 
     def sync_states(self):
-        for device in self.xknx.devices.devices:
+        for device in self.xknx.devices:
             device.sync_state()
             time.sleep(self.sleep_during_devices)
 
     @staticmethod
-    def start_thread(xknx, timeout=60):
+    def start_thread(xknx, timeout=600):
         stateupdater = StateUpdater(xknx, timeout)
         stateupdater.setDaemon(True)
         stateupdater.start()
