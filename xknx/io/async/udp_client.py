@@ -116,7 +116,7 @@ class UDPClient:
                 socket.IP_MULTICAST_IF,
                 socket.inet_aton(own_ip))
 
-        sock.bind(("", remote_addr[1]))
+        sock.bind((own_ip, 0))
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
 
         return sock
@@ -153,8 +153,8 @@ class UDPClient:
 
 
     def getsockname(self):
-        sock = self.transport.get_extra_info("socket")
-        return sock.getsockname()
+        sock = self.transport.get_extra_info("sockname")
+        return sock
 
     def getremote(self):
         peer = self.transport.get_extra_info('peername')
