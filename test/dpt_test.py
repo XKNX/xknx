@@ -1,6 +1,6 @@
 import unittest
 
-from xknx import DPTBinary, DPTArray, ConversionError
+from xknx.knx import DPTBinary, DPTArray, ConversionError
 
 class TestDPT(unittest.TestCase):
      # pylint: disable=too-many-public-methods,invalid-name

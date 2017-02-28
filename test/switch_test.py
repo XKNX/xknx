@@ -1,16 +1,24 @@
 import unittest
 from unittest.mock import Mock
-
-from xknx import XKNX, Switch, Action, Outlet, Telegram, DPTBinary, \
-    BinaryInputState
+import asyncio
+from xknx import XKNX, Switch, Action, Outlet, BinaryInputState
+from xknx.knx import Telegram, DPTBinary
 
 class TestBinaryInput(unittest.TestCase):
+
+    def setUp(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
+    def tearDown(self):
+        self.loop.close()
+
 
     #
     # TEST PROCESS
     #
     def test_process(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
         xknx.devices.add(outlet)
 
@@ -61,7 +69,7 @@ class TestBinaryInput(unittest.TestCase):
 
     def test_process_callback(self):
         # pylint: disable=no-self-use
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         switch = Switch(xknx, 'TestInput', group_address='1/2/3')
 
         after_update_callback = Mock()

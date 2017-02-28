@@ -1,8 +1,5 @@
+from xknx.knx import Address, Telegram, DPTArray, DPTTime
 from .device import Device
-from .address import Address
-from .dpt_time import DPTTime
-from .telegram import Telegram
-from .dpt import DPTArray
 
 
 class Time(Device):
@@ -38,8 +35,7 @@ class Time(Device):
         telegram = Telegram()
         telegram.group_address = self.group_address
         telegram.payload = DPTArray(DPTTime.current_time_as_knx())
-        self.xknx.telegrams.put(telegram)
-
+        self.xknx.telegrams.put_nowait(telegram)
 
     def sync_state(self):
         self.broadcast_time()

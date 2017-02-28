@@ -1,9 +1,7 @@
-from .address import Address
-from .telegram import Telegram, TelegramType
+from xknx.knx import Address, Telegram, TelegramType, DPTBinary, DPTArray
 from .device import Device
 from .travelcalculator import TravelCalculator
 from .exception import CouldNotParseTelegram
-from .dpt import DPTBinary, DPTArray
 
 class Shutter(Device):
 
@@ -103,7 +101,7 @@ class Shutter(Device):
         telegram = Telegram()
         telegram.group_address = group_address
         telegram.payload = payload
-        self.xknx.telegrams.put(telegram)
+        self.xknx.telegrams.put_nowait(telegram)
 
 
     def set_down(self):
@@ -199,7 +197,7 @@ class Shutter(Device):
         telegram = Telegram(
             self.group_address_position_feedback,
             TelegramType.GROUP_READ)
-        self.xknx.telegrams.put(telegram)
+        self.xknx.telegrams.put_nowait(telegram)
 
 
     def process(self, telegram):

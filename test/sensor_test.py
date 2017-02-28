@@ -1,16 +1,23 @@
 import unittest
 from unittest.mock import Mock
-
-from xknx import XKNX, Sensor, Telegram, \
-    DPTArray, DPTBinary, Address, TelegramType
+import asyncio
+from xknx import XKNX, Sensor
+from xknx.knx import Telegram, Address, TelegramType, DPTArray, DPTBinary
 
 class TestSensor(unittest.TestCase):
+
+    def setUp(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
+    def tearDown(self):
+        self.loop.close()
 
     #
     # STR FUNCTIONS
     #
     def test_str_array(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -21,7 +28,7 @@ class TestSensor(unittest.TestCase):
 
 
     def test_str_binary(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -32,7 +39,7 @@ class TestSensor(unittest.TestCase):
 
 
     def test_str_scaling(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -44,7 +51,7 @@ class TestSensor(unittest.TestCase):
         self.assertEqual(sensor.unit_of_measurement(), "%")
 
     def test_not_binary(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -58,7 +65,7 @@ class TestSensor(unittest.TestCase):
         self.assertFalse(sensor.binary_state())
 
     def test_binary(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         sensor = Sensor(
             xknx,
             'DiningRoom.Motion.Sensor',
@@ -91,7 +98,7 @@ class TestSensor(unittest.TestCase):
     # SYNC STATE
     #
     def test_sync_state(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -101,7 +108,7 @@ class TestSensor(unittest.TestCase):
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
-        telegram = xknx.telegrams.get()
+        telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/3'), TelegramType.GROUP_READ))
 
@@ -109,7 +116,7 @@ class TestSensor(unittest.TestCase):
     # TEST PROCESS
     #
     def test_process(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -124,7 +131,7 @@ class TestSensor(unittest.TestCase):
 
     def test_process_callback(self):
         # pylint: disable=no-self-use
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         sensor = Sensor(
             xknx,
             'TestSensor',

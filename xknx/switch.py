@@ -1,8 +1,7 @@
 import time
 from enum import Enum
-
+from xknx.knx import Address
 from .binaryinput import BinaryInput, BinaryInputState
-from .address import Address
 
 class SwitchTime(Enum):
     SHORT = 1

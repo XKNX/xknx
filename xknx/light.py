@@ -1,8 +1,6 @@
+from xknx.knx  import Address, Telegram, TelegramType, DPTBinary, DPTArray
 from .device import Device
-from .telegram import Telegram, TelegramType
-from .address import Address
 from .exception import CouldNotParseTelegram
-from .dpt import DPTBinary, DPTArray
 
 class Light(Device):
 
@@ -107,7 +105,7 @@ class Light(Device):
         telegram.group_address = group_address
 
         telegram.payload = payload
-        self.xknx.telegrams.put(telegram)
+        self.xknx.telegrams.put_nowait(telegram)
 
     def set_on(self):
         self.send(self.group_address_switch, DPTBinary(1))
@@ -135,17 +133,16 @@ class Light(Device):
                 .format(self.get_name(), action))
 
     def sync_state(self):
-
         telegram_switch = Telegram(
             self.group_address_switch,
             TelegramType.GROUP_READ)
-        self.xknx.telegrams.put(telegram_switch)
+        self.xknx.telegrams.put_nowait(telegram_switch)
 
         if self.supports_dimming:
             telegram_dimm = Telegram(
                 self.group_address_brightness,
                 TelegramType.GROUP_READ)
-            self.xknx.telegrams.put(telegram_dimm)
+            self.xknx.telegrams.put_nowait(telegram_dimm)
 
     def process(self, telegram):
         if telegram.group_address == self.group_address_switch or \

@@ -1,16 +1,25 @@
 import unittest
+import asyncio
 
-from xknx import XKNX, Devices, Address, Light, Outlet, Sensor
+from xknx import XKNX, Devices, Light, Outlet, Sensor
+from xknx.knx import Address
 
 # pylint: disable=too-many-public-methods,invalid-name
 class TestDevices(unittest.TestCase):
+
+    def setUp(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
+    def tearDown(self):
+        self.loop.close()
 
     #
     # XKNX Config
     #
 
     def test_get_item(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         devices = Devices()
 
         light1 = Light(xknx,
@@ -40,7 +49,7 @@ class TestDevices(unittest.TestCase):
 
 
     def test_device_by_group_address(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         devices = Devices()
 
         light1 = Light(xknx,
@@ -78,7 +87,7 @@ class TestDevices(unittest.TestCase):
             (sensor1, sensor2))
 
     def test_iter(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         devices = Devices()
 
         light1 = Light(xknx,
@@ -112,7 +121,7 @@ class TestDevices(unittest.TestCase):
 
 
     def test_len(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         devices = Devices()
         self.assertEqual(len(devices), 0)
 
@@ -152,7 +161,7 @@ class TestDevices(unittest.TestCase):
         accessing functions only return referecenes of
         the same object"""
 
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         devices = Devices()
 
         light1 = Light(xknx,

@@ -63,11 +63,10 @@ class Address:
         else:
             raise TypeError()
 
-    def byte1(self):
-        return (self.raw >> 8) & 255
 
-    def byte2(self):
-        return self.raw & 255
+    def to_knx(self):
+        return (self.raw >> 8) & 255, self.raw & 255
+
 
 
     ##################################################

@@ -1,16 +1,23 @@
 import unittest
 from unittest.mock import Mock
-
-from xknx import XKNX, Light, Address, Telegram, TelegramType, DPTBinary, \
-    DPTArray
+import asyncio
+from xknx import XKNX, Light
+from xknx.knx import Address, Telegram, TelegramType, DPTBinary, DPTArray
 
 class TestLight(unittest.TestCase):
+
+    def setUp(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
+    def tearDown(self):
+        self.loop.close()
 
     #
     # TEST SUPPORT DIMMING
     #
     def test_supports_dimm_yes(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         light = Light(xknx,
                       'Diningroom.Light_1',
                       group_address_switch='1/6/4',
@@ -19,7 +26,7 @@ class TestLight(unittest.TestCase):
         self.assertTrue(light.supports_dimming)
 
     def test_supports_dimm_no(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         light = Light(xknx,
                       'Diningroom.Light_1',
                       group_address_switch='1/6/4')
@@ -30,7 +37,7 @@ class TestLight(unittest.TestCase):
     # SYNC STATE
     #
     def test_sync_state(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
@@ -40,11 +47,11 @@ class TestLight(unittest.TestCase):
 
         self.assertEqual(xknx.telegrams.qsize(), 2)
 
-        telegram1 = xknx.telegrams.get()
+        telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram1,
                          Telegram(Address('1/2/3'), TelegramType.GROUP_READ))
 
-        telegram2 = xknx.telegrams.get()
+        telegram2 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram2,
                          Telegram(Address('1/2/5'), TelegramType.GROUP_READ))
 
@@ -53,7 +60,7 @@ class TestLight(unittest.TestCase):
     # TEST SET ON
     #
     def test_set_on(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
@@ -61,7 +68,7 @@ class TestLight(unittest.TestCase):
                       group_address_brightness='1/2/5')
         light.set_on()
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get()
+        telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/3'), payload=DPTBinary(1)))
 
@@ -69,7 +76,7 @@ class TestLight(unittest.TestCase):
     # TEST SET OFF
     #
     def test_set_off(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
@@ -77,7 +84,7 @@ class TestLight(unittest.TestCase):
                       group_address_brightness='1/2/5')
         light.set_off()
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get()
+        telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/3'), payload=DPTBinary(0)))
 
@@ -85,7 +92,7 @@ class TestLight(unittest.TestCase):
     # TEST SET BRIGHTNESS
     #
     def test_set_brightness(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
@@ -93,7 +100,7 @@ class TestLight(unittest.TestCase):
                       group_address_brightness='1/2/5')
         light.set_brightness(23)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get()
+        telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/5'), payload=DPTArray(23)))
 
@@ -102,7 +109,7 @@ class TestLight(unittest.TestCase):
     # TEST PROCESS
     #
     def test_process_switch(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
@@ -121,7 +128,7 @@ class TestLight(unittest.TestCase):
 
     def test_process_switch_callback(self):
         # pylint: disable=no-self-use
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
@@ -138,7 +145,7 @@ class TestLight(unittest.TestCase):
 
 
     def test_process_dimm(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
@@ -155,7 +162,7 @@ class TestLight(unittest.TestCase):
     # TEST DO
     #
     def test_do(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',

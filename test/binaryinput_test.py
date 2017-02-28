@@ -1,14 +1,22 @@
 import unittest
-
-from xknx import XKNX, BinaryInput, BinaryInputState, Telegram, DPTBinary
+import asyncio
+from xknx import XKNX, BinaryInput, BinaryInputState
+from xknx.knx import Telegram, DPTBinary
 
 class TestBinaryInput(unittest.TestCase):
+
+    def setUp(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
+    def tearDown(self):
+        self.loop.close()
 
     #
     # TEST PROCESS
     #
     def test_process(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         binaryinput = BinaryInput(xknx, 'TestInput', '1/2/3')
 
         self.assertEqual(binaryinput.state, BinaryInputState.OFF)
@@ -29,7 +37,7 @@ class TestBinaryInput(unittest.TestCase):
     # TEST SWITCHED ON
     #
     def test_is_on(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         binaryinput = BinaryInput(xknx, 'TestInput', '1/2/3')
         binaryinput.set_internal_state(BinaryInputState.ON)
         self.assertTrue(binaryinput.is_on())
@@ -39,7 +47,7 @@ class TestBinaryInput(unittest.TestCase):
     # TEST SWITCHED OFF
     #
     def test_is_off(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         binaryinput = BinaryInput(xknx, 'TestInput', '1/2/3')
         binaryinput.set_internal_state(BinaryInputState.OFF)
         self.assertFalse(binaryinput.is_on())

@@ -1,44 +1,60 @@
-import threading
-import time
+import asyncio
+import traceback
 
-from .telegram import TelegramDirection, TelegramType
-from .multicast import Multicast
+from xknx.knx import TelegramDirection, TelegramType
 
-class TelegramProcessor(threading.Thread):
+class TelegramQueue():
 
     def __init__(self, xknx, telegram_received_callback=None):
         self.xknx = xknx
         self.telegram_received_callback = telegram_received_callback
-        threading.Thread.__init__(self)
 
 
+    @asyncio.coroutine
+    def start(self):
+        self.xknx.loop.create_task(self.run())
+
+
+    @asyncio.coroutine
     def run(self):
         while True:
-            telegram = self.xknx.telegrams.get()
-            self.process_telegram(telegram)
+            telegram = yield from self.xknx.telegrams.get()
+            yield from self.process_telegram(telegram)
             self.xknx.telegrams.task_done()
+
             if telegram.direction == TelegramDirection.OUTGOING:
                 # limit rate to knx bus to 20 per second
-                time.sleep(1/20)
+                yield from asyncio.sleep(1/20)
 
+    @asyncio.coroutine
+    def process_all_telegrams(self):
+        while not self.xknx.telegrams.empty():
+            telegram = self.xknx.telegrams.get_nowait()
+            yield from self.process_telegram(telegram)
+            self.xknx.telegrams.task_done()
+
+    @asyncio.coroutine
     def process_telegram(self, telegram):
         try:
-
             if telegram.direction == TelegramDirection.INCOMING:
-                self.process_telegram_incoming(telegram)
+                yield from self.process_telegram_incoming(telegram)
             elif telegram.direction == TelegramDirection.OUTGOING:
-                self.process_telegram_outgoing(telegram)
+                yield from self.process_telegram_outgoing(telegram)
 
         # pylint: disable=broad-except
         except Exception as exception:
             print("Exceptio while processing telegram:", exception)
+            traceback.print_exc()
 
 
+    @asyncio.coroutine
     def process_telegram_outgoing(self, telegram):
-        multicast = Multicast(self.xknx)
-        multicast.send(telegram)
+        if self.xknx.knxip_interface is not None:
+            yield from self.xknx.knxip_interface.send_telegram(telegram)
+        else:
+            print("WARNING, NO KNXIP INTERFACE DEFINED")
 
-
+    @asyncio.coroutine
     def process_telegram_incoming(self, telegram):
         if telegram.telegramtype == TelegramType.GROUP_WRITE or \
                 telegram.telegramtype == TelegramType.GROUP_RESPONSE:
@@ -54,10 +70,3 @@ class TelegramProcessor(threading.Thread):
 
         elif telegram.telegramtype == TelegramType.GROUP_READ:
             print("IGNORING GROUP READ FOR {0}".format(telegram.group_address))
-
-
-    @staticmethod
-    def start_thread(xknx, telegram_received_callback=None):
-        telegramprocessor = TelegramProcessor(xknx, telegram_received_callback)
-        telegramprocessor.setDaemon(True)
-        telegramprocessor.start()

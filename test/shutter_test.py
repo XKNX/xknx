@@ -1,17 +1,24 @@
 import unittest
 from unittest.mock import Mock
-
-from xknx import XKNX, Shutter, Telegram, Address, TelegramType, DPTBinary, \
-    DPTArray
+import asyncio
+from xknx import XKNX, Shutter
+from xknx.knx import Telegram, Address, TelegramType, DPTBinary, DPTArray
 
 class TestShutter(unittest.TestCase):
     # pylint: disable=too-many-public-methods,invalid-name
+
+    def setUp(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
+    def tearDown(self):
+        self.loop.close()
 
     #
     # SYNC STATE
     #
     def test_sync_state(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         shutter = Shutter(
             xknx,
             'TestShutter',
@@ -21,7 +28,7 @@ class TestShutter(unittest.TestCase):
             group_address_position_feedback='1/2/4')
         shutter.sync_state()
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram1 = xknx.telegrams.get()
+        telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram1,
                          Telegram(Address('1/2/4'), TelegramType.GROUP_READ))
 
@@ -30,7 +37,7 @@ class TestShutter(unittest.TestCase):
     # TEST SET UP
     #
     def test_set_up(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         shutter = Shutter(
             xknx,
             'TestShutter',
@@ -40,7 +47,7 @@ class TestShutter(unittest.TestCase):
             group_address_position_feedback='1/2/4')
         shutter.set_up()
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get()
+        telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/1'), payload=DPTBinary(0)))
 
@@ -49,7 +56,7 @@ class TestShutter(unittest.TestCase):
     # TEST SET DOWN
     #
     def test_set_short_down(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         shutter = Shutter(
             xknx,
             'TestShutter',
@@ -59,7 +66,7 @@ class TestShutter(unittest.TestCase):
             group_address_position_feedback='1/2/4')
         shutter.set_down()
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get()
+        telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/1'), payload=DPTBinary(1)))
 
@@ -68,7 +75,7 @@ class TestShutter(unittest.TestCase):
     # TEST SET SHORT UP
     #
     def test_set_short_up(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         shutter = Shutter(
             xknx,
             'TestShutter',
@@ -78,7 +85,7 @@ class TestShutter(unittest.TestCase):
             group_address_position_feedback='1/2/4')
         shutter.set_short_up()
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get()
+        telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/2'), payload=DPTBinary(0)))
 
@@ -87,7 +94,7 @@ class TestShutter(unittest.TestCase):
     # TEST SET SHORT DOWN
     #
     def test_set_down(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         shutter = Shutter(
             xknx,
             'TestShutter',
@@ -97,7 +104,7 @@ class TestShutter(unittest.TestCase):
             group_address_position_feedback='1/2/4')
         shutter.set_short_down()
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get()
+        telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/2'), payload=DPTBinary(1)))
 
@@ -106,7 +113,7 @@ class TestShutter(unittest.TestCase):
     # TEST STOP
     #
     def test_stop(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         shutter = Shutter(
             xknx, 'TestShutter',
             group_address_long='1/2/1',
@@ -115,7 +122,7 @@ class TestShutter(unittest.TestCase):
             group_address_position_feedback='1/2/4')
         shutter.stop()
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get()
+        telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/2'), payload=DPTBinary(1)))
 
@@ -124,7 +131,7 @@ class TestShutter(unittest.TestCase):
     # TEST POSITION
     #
     def test_position(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         shutter = Shutter(
             xknx,
             'TestShutter',
@@ -134,13 +141,13 @@ class TestShutter(unittest.TestCase):
             group_address_position_feedback='1/2/4')
         shutter.set_position(50)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get()
+        telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/3'), payload=DPTArray(50)))
 
 
     def test_position_without_position_address_up(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         shutter = Shutter(
             xknx,
             'TestShutter',
@@ -150,13 +157,13 @@ class TestShutter(unittest.TestCase):
         shutter.travelcalculator.set_position(40)
         shutter.set_position(50)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get()
+        telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/1'), payload=DPTBinary(1)))
 
 
     def test_position_without_position_address_down(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         shutter = Shutter(
             xknx,
             'TestShutter',
@@ -166,7 +173,7 @@ class TestShutter(unittest.TestCase):
         shutter.travelcalculator.set_position(100)
         shutter.set_position(50)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get()
+        telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/1'), payload=DPTBinary(0)))
 
@@ -175,7 +182,7 @@ class TestShutter(unittest.TestCase):
     # TEST PROCESS
     #
     def test_process(self):
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         shutter = Shutter(
             xknx,
             'TestShutter',
@@ -192,7 +199,7 @@ class TestShutter(unittest.TestCase):
 
     def test_process_callback(self):
         # pylint: disable=no-self-use
-        xknx = XKNX()
+        xknx = XKNX(self.loop)
         shutter = Shutter(
             xknx,
             'TestShutter',

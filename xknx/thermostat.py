@@ -1,10 +1,7 @@
 import time
+from xknx.knx import Address, Telegram, TelegramType, DPTArray, DPTTemperature
 from .device import Device
-from .telegram import Telegram, TelegramType
-from .address import Address
-from .dpt_float import DPTTemperature
 from .exception import CouldNotParseTelegram
-from .dpt import DPTArray
 
 
 class Thermostat(Device):
@@ -85,18 +82,17 @@ class Thermostat(Device):
         self.after_update()
 
     def sync_state(self):
-
         if self.supports_temperature:
             telegram = Telegram(
                 self.group_address_temperature,
                 TelegramType.GROUP_READ)
-            self.xknx.telegrams.put(telegram)
+            self.xknx.telegrams.put_nowait(telegram)
 
         if self.supports_setpoint:
             telegram = Telegram(
                 self.group_address_setpoint,
                 TelegramType.GROUP_READ)
-            self.xknx.telegrams.put(telegram)
+            self.xknx.telegrams.put_nowait(telegram)
 
 
     def __str__(self):

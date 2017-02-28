@@ -1,6 +1,7 @@
 from enum import Enum
+from xknx.knx import DPTBinary
+
 from .device import Device
-from .dpt import DPTBinary
 from .exception import CouldNotParseTelegram
 
 # pylint: disable=invalid-name

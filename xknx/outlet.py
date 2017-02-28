@@ -1,6 +1,4 @@
-from .address import Address
-from .telegram import Telegram, TelegramType
-from .dpt import DPTBinary
+from xknx.knx import Address, Telegram, TelegramType, DPTBinary
 from .exception import CouldNotParseTelegram
 from .device import Device
 
@@ -44,7 +42,7 @@ class Outlet(Device):
         telegram = Telegram()
         telegram.group_address = self.group_address
         telegram.payload = payload
-        self.xknx.telegrams.put(telegram)
+        self.xknx.telegrams.put_nowait(telegram)
 
 
     def set_on(self):
@@ -66,10 +64,9 @@ class Outlet(Device):
             print("{0}: Could not understand action {1}" \
                 .format(self.get_name(), action))
 
-
     def sync_state(self):
         telegram = Telegram(self.group_address, TelegramType.GROUP_READ)
-        self.xknx.telegrams.put(telegram)
+        self.xknx.telegrams.put_nowait(telegram)
 
 
     def process(self, telegram):
