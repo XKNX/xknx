@@ -65,7 +65,8 @@ class Tunnel():
             self.udp_client,
             telegram,
             self.src_address,
-            self.sequence_number)
+            self.sequence_number,
+            self.communication_channel)
         self.sequence_number += 1
         yield from tunnelling.async_start()
         if not tunnelling.success:
