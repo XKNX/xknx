@@ -46,7 +46,7 @@ class UDPClient:
             #print('closing transport', exc)
             pass
 
-    def __init__(self, xknx, local_addr, remote_addr, multicast=False):
+    def __init__(self, xknx, local_addr, remote_addr, multicast=False, bind_to_multicast_addr=False):
         if not isinstance(local_addr, tuple):
             raise TypeError()
         if not isinstance(remote_addr, tuple):
@@ -56,6 +56,8 @@ class UDPClient:
         self.local_addr = local_addr
         self.remote_addr = remote_addr
         self.multicast = multicast
+
+        self.bind_to_multicast_addr = bind_to_multicast_addr
 
         self.transport = None
         self.callbacks = []
@@ -94,7 +96,7 @@ class UDPClient:
         self.callbacks.remove(cb)
 
 
-    def create_multicast_sock(self, own_ip, remote_addr):
+    def create_multicast_sock(self, own_ip, remote_addr, bind_to_multicast_addr):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.setblocking(False)
@@ -116,7 +118,16 @@ class UDPClient:
                 socket.IP_MULTICAST_IF,
                 socket.inet_aton(own_ip))
 
-        sock.bind((own_ip, 0))
+        # I have no idea why we have to use different bind calls here
+        # - bind() with multicast addr does not work with gateway search requests
+        #   on some machines. It only works if called with own ip.
+        # - bind() with own_ip does not work with ROUTING_INDICATIONS on Gira
+        #   knx router - for an unknown reason.
+        if bind_to_multicast_addr:
+            sock.bind((remote_addr[0], remote_addr[1]))
+        else:
+            sock.bind((own_ip, 0))
+
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
 
         return sock
@@ -129,7 +140,7 @@ class UDPClient:
             data_received_callback=self.data_received_callback)
 
         if self.multicast:
-            sock = self.create_multicast_sock(self.local_addr[0], self.remote_addr)
+            sock = self.create_multicast_sock(self.local_addr[0], self.remote_addr, self.bind_to_multicast_addr)
             (transport, _) = yield from self.xknx.loop.create_datagram_endpoint(
                 lambda: udp_client_factory, sock=sock)
             self.transport = transport

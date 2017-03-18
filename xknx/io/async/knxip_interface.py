@@ -13,7 +13,7 @@ class KNXIPInterface():
         self.udpclient = UDPClient(self.xknx,
             (self.xknx.globals.own_ip, DEFAULT_MCAST_PORT),
             (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
-            multicast=True)
+            multicast=True, bind_to_multicast_addr=True)
 
         self.udpclient.register_callback(
             self.response_rec_callback,
