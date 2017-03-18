@@ -24,6 +24,6 @@ def async_setup_platform(hass, config, async_add_devices_callback, \
         if isinstance(device, xknx.Thermostat):
             entities.append(xknx_component.XKNXClimate(hass, device))
 
-    yield from async_add_devices_callback(entities)
+    async_add_devices_callback(entities)
 
     return True

@@ -25,6 +25,6 @@ def async_setup_platform(hass, config, async_add_devices_callback, \
                 not device.is_binary():
             entities.append(xknx_component.XKNXSensor(hass, device))
 
-    yield from async_add_devices_callback(entities)
+    async_add_devices_callback(entities)
 
     return True
