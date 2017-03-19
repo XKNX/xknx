@@ -2,66 +2,54 @@ import asyncio
 from xknx.knx import TelegramDirection
 from xknx.knxip import KNXIPFrame, KNXIPServiceType, APCICommand
 from .udp_client import UDPClient
+from .gateway_scanner import GatewayScanner
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
+
+from .routing import Routing
+from .tunnel import Tunnel
 
 
 class KNXIPInterface():
 
     def __init__(self, xknx):
         self.xknx = xknx
-
-        self.udpclient = UDPClient(self.xknx,
-            (self.xknx.globals.own_ip, DEFAULT_MCAST_PORT),
-            (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
-            multicast=True, bind_to_multicast_addr=True)
-
-        self.udpclient.register_callback(
-            self.response_rec_callback,
-            [KNXIPServiceType.ROUTING_INDICATION])
-
-
-    def response_rec_callback(self, knxipframe, _):
-        #print(knxipframe)
-        if knxipframe.header.service_type_ident == \
-                KNXIPServiceType.ROUTING_INDICATION:
-            self.handle_frame_routing_indication(knxipframe)
-        else:
-            print("SERVICE TYPE NOT IMPLEMENETED: ", knxipframe)
-
-
-    def handle_frame_routing_indication(self, knxipframe):
-        if knxipframe.body.src_addr == self.xknx.globals.own_address:
-            # Ignoring own KNXIPFrame
-            pass
-        elif knxipframe.body.cmd not in [APCICommand.GROUP_READ,
-                                         APCICommand.GROUP_WRITE,
-                                         APCICommand.GROUP_RESPONSE]:
-            print("APCI NOT IMPLEMENETED: ", knxipframe)
-
-        else:
-            telegram = knxipframe.body.telegram
-            telegram.direction = TelegramDirection.INCOMING
-            self.xknx.loop.create_task(
-                self.xknx.telegrams.put(telegram))
-
-
-    @asyncio.coroutine
-    def send_telegram(self, telegram):
-        knxipframe = KNXIPFrame()
-        knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe.body.src_addr = self.xknx.globals.own_address
-        knxipframe.body.telegram = telegram
-        knxipframe.body.sender = self.xknx.globals.own_address
-        knxipframe.normalize()
-        yield from self.send_knxipframe(knxipframe)
-
-
-    @asyncio.coroutine
-    def send_knxipframe(self, knxipframe):
-        self.udpclient.send(knxipframe)
+        self.interface = None
 
 
     @asyncio.coroutine
     def start(self):
+        gatewayscanner = GatewayScanner(self.xknx)
+        yield from gatewayscanner.async_start()
+        gatewayscanner.stop()
 
-        yield from self.udpclient.connect()
+        if not gatewayscanner.found:
+            raise Exception("No Gateways found")
+
+        print("Connecting to {}:{} from {}".format(
+            gatewayscanner.found_ip_addr,
+            gatewayscanner.found_port,
+            gatewayscanner.found_local_ip))
+
+        self.interface = Tunnel(
+            self.xknx,
+            self.xknx.globals.own_address,
+            local_ip=gatewayscanner.found_local_ip,
+            gateway_ip=gatewayscanner.found_ip_addr,
+            gateway_port=gatewayscanner.found_port,
+            telegram_received_callback=self.telegram_received)
+        yield from self.interface.start()
+
+        #self.interface = Routing(
+        #    self.xknx,
+        #    self.telegram_received,
+        #    gatewayscanner.found_local_ip)
+        #yield from self.interface.start()
+
+    def telegram_received(self, telegram):
+        self.xknx.loop.create_task(
+            self.xknx.telegrams.put(telegram))
+
+
+    @asyncio.coroutine
+    def send_telegram(self, telegram):
+        yield from self.interface.send_telegram(telegram) 

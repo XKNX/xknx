@@ -1,5 +1,5 @@
 import asyncio
-from xknx.knx import Telegram, Address, DPTBinary
+from xknx.knx import Telegram, Address, DPTBinary, TelegramDirection
 from xknx.knxip import TunnellingRequest, KNXIPFrame, KNXIPServiceType
 from .disconnect import Disconnect
 from .connectionstate import ConnectionState
@@ -9,12 +9,13 @@ from .udp_client import UDPClient
 
 class Tunnel():
 
-    def __init__(self, xknx, src_address, local_ip, gateway_ip, gateway_port):
+    def __init__(self, xknx, src_address, local_ip, gateway_ip, gateway_port, telegram_received_callback=None):
         self.xknx = xknx
         self.src_address = src_address 
         self.local_ip = local_ip
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
+        self.telegram_received_callback = telegram_received_callback
 
         self.udp_client = UDPClient(self.xknx,
             (self.local_ip, 0),
@@ -28,8 +29,15 @@ class Tunnel():
 
 
     def tunnel_reqest_received(self, knxipframe, udp_client):
-        print(knxipframe)
-        self.send_ack( knxipframe.body.communication_channel_id, knxipframe.body.sequence_counter )
+        if knxipframe.header.service_type_ident != \
+                KNXIPServiceType.TUNNELLING_REQUEST:
+            print("SERVICE TYPE NOT IMPLEMENETED: ", knxipframe)
+        else:
+            self.send_ack( knxipframe.body.communication_channel_id, knxipframe.body.sequence_counter )
+            telegram = knxipframe.body.cemi.telegram
+            telegram.direction = TelegramDirection.INCOMING
+            if self.telegram_received_callback is not None:
+                self.telegram_received_callback(telegram)
 
 
     def send_ack(self, communication_channel_id, sequence_counter):
@@ -39,6 +47,11 @@ class Tunnel():
         ack_knxipframe.body.sequence_counter = sequence_counter
         ack_knxipframe.normalize()
         self.udp_client.send(ack_knxipframe)
+
+    @asyncio.coroutine
+    def start(self):
+        yield from self.connect_udp()
+        yield from self.connect()
 
 
     @asyncio.coroutine
