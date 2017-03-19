@@ -81,6 +81,8 @@ class Tunnel():
             self.sequence_number,
             self.communication_channel)
         self.sequence_number += 1
+        if self.sequence_number == 256:
+            self.sequence_number = 0
         yield from tunnelling.async_start()
         if not tunnelling.success:
             raise Exception("Could not send telegram to tunnel")
