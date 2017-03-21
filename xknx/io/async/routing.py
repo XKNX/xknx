@@ -63,3 +63,8 @@ class Routing():
     @asyncio.coroutine
     def start(self):
         yield from self.udpclient.connect()
+
+
+    @asyncio.coroutine
+    def async_stop(self):
+        yield from self.udpclient.stop()

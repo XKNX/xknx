@@ -173,5 +173,5 @@ class UDPClient:
 
     @asyncio.coroutine
     def stop(self):
-        yield from asyncio.sleep(1/20)
+        #yield from asyncio.sleep(1/20)
         self.transport.close()

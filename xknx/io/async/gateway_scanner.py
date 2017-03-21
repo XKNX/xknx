@@ -52,7 +52,7 @@ class GatewayScanner():
     @asyncio.coroutine
     def stop(self):
         for udpclient in self.udpclients:
-            udpclient.stop()
+            yield from udpclient.stop()
 
 
     @asyncio.coroutine

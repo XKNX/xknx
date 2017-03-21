@@ -1,7 +1,7 @@
 from xknx import XKNX
 from xknx.io.async import GatewayScanner
 
-xknx = XKNX()
+xknx = XKNX(start=False)
 
 gatewayscanner = GatewayScanner(xknx)
 gatewayscanner.start()

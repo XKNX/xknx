@@ -108,3 +108,9 @@ class Tunnel():
         yield from disconnect.async_start()
         if not disconnect.success:
             raise Exception("Could not disconnect channel")
+        print("Tunnel disconnected (communication_channel: {0})".format(self.communication_channel))
+
+    @asyncio.coroutine
+    def async_stop(self):
+        yield from self.disconnect()
+        yield from self.udp_client.stop()

@@ -45,6 +45,13 @@ class KNXIPInterface():
         #    gatewayscanner.found_local_ip)
         #yield from self.interface.start()
 
+
+    @asyncio.coroutine
+    def async_stop(self):
+        if self.interface is not None:
+            yield from self.interface.async_stop()
+            self.interface = None
+
     def telegram_received(self, telegram):
         self.xknx.loop.create_task(
             self.xknx.telegrams.put(telegram))

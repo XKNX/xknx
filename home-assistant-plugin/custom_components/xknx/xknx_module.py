@@ -17,7 +17,7 @@ class XKNXModule(object):
 
         xknx_config = XKNXConfig(hass, config)
 
-        self.xknx = xknx.XKNX(hass.loop)
+        self.xknx = xknx.XKNX(hass.loop, start=False)
 
         self.initialized = False
         self.lock = threading.Lock()
@@ -35,14 +35,13 @@ class XKNXModule(object):
         xknx.Config(self.xknx).read(file=self.config_file)
 
         yield from self.xknx.async_start(
+            state_updater=True,
             telegram_received_callback=self.telegram_received_callback)
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
 
         self.initialized = True
 
-
+    @asyncio.coroutine
     def stop(self, event):
-        """Shutdown XKNX correctly and stop all threads"""
-        # TODO: Proper shutdown of xknx daemon not yet implemented
-        pass
+        yield from self.xknx.async_stop()

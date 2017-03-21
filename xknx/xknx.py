@@ -9,16 +9,14 @@ from .telegram_queue import  TelegramQueue
 class XKNX:
     # pylint: disable=too-many-instance-attributes
 
-    START_TELEGRAM_QUEUE = 0x01
-    START_MULITCAST_DAEMON = 0x02
-    START_STATE_UPDATER = 0x04
+    def __init__(self,
+                 loop=None,
+                 own_address=None,
+                 start=True,
+                 state_updater=False,
+                 daemon_mode=False,
+                 telegram_received_callback=None):
 
-    START_DEFAULT = START_TELEGRAM_QUEUE | \
-                    START_MULITCAST_DAEMON | \
-                    START_STATE_UPDATER
-
-
-    def __init__(self, loop=None, own_address=None, own_ip=None):
         self.globals = Globals()
         self.devices = Devices()
         self.telegrams = asyncio.Queue()
@@ -30,49 +28,65 @@ class XKNX:
 
         if own_address is not None:
             self.globals.own_address = Address(own_address)
-        if own_ip is not None:
-            self.globals.own_ip = own_ip
 
+        if start:
+            self.start(
+                state_updater=state_updater,
+                daemon_mode=daemon_mode,
+                telegram_received_callback=telegram_received_callback)
+
+
+    def __del__(self):
+        try:
+            task = asyncio.Task(
+                self.stop_knxip_interface_if_exists())
+            self.loop.run_until_complete(task)
+        except:
+            pass
 
 
     def start(self,
+              state_updater=False,
               daemon_mode=False,
               telegram_received_callback=None):
         task = asyncio.Task(
             self.async_start(
-                daemon_mode,
+                state_updater=state_updater,
+                daemon_mode=daemon_mode,
                 telegram_received_callback=telegram_received_callback))
-
         self.loop.run_until_complete(task)
 
 
     @asyncio.coroutine
     def async_start(self,
+                    state_updater=False,
                     daemon_mode=False,
-                    start=START_DEFAULT,
                     telegram_received_callback=None):
-        from .stateupdater import StateUpdater
 
-        if start & XKNX.START_TELEGRAM_QUEUE:
+
+        self.knxip_interface = KNXIPInterface(self)
+        yield from self.knxip_interface.start()
+
+        if telegram_received_callback is not None:
             self.telegram_queue.telegram_received_callback =\
                 telegram_received_callback
-            yield from self.telegram_queue.start()
+        yield from self.telegram_queue.start()
 
-        if start & XKNX.START_MULITCAST_DAEMON:
-            self.knxip_interface = KNXIPInterface(self)
-            yield from self.knxip_interface.start()
-
-        if start & XKNX.START_STATE_UPDATER:
-            self.state_updater = StateUpdater(self)
-            yield from self.state_updater.start()
+        if state_updater:
+           from .stateupdater import StateUpdater
+           self.state_updater = StateUpdater(self)
+           yield from self.state_updater.start()
 
         if daemon_mode:
             yield from self.loop_until_sigint()
+
+
 
     def process_all_telegrams(self):
         task = asyncio.Task(
             self.telegram_queue.process_all_telegrams())
         self.loop.run_until_complete(task)
+
 
     @asyncio.coroutine
     def join(self):
@@ -80,11 +94,21 @@ class XKNX:
         yield from self.telegrams.join()
 
 
-    @asyncio.coroutine
+    def stop_knxip_interface_if_exists(self):
+        if self.knxip_interface is not None:
+            yield from self.knxip_interface.async_stop()
+            self.knxip_interface = None
+
+
     def stop(self):
+        task = asyncio.Task(self.async_stop())
+        self.loop.run_until_complete(task)
+
+
+    @asyncio.coroutine
+    def async_stop(self):
         yield from self.join()
-        #self.loop.stop()
-        print("Shutdown process ...")
+        yield from self.stop_knxip_interface_if_exists()
 
 
     @asyncio.coroutine
@@ -97,3 +121,5 @@ class XKNX:
 
         print('Press Ctrl+C to stop')
         yield from self.sigint_recieved.wait()
+
+        yield from self.async_stop()
