@@ -3,8 +3,8 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 class XKNXBinarySensor(BinarySensorDevice):
 
     def __init__(self, hass, device):
-        # pylint: disable=unused-argument
         self.device = device
+        self.hass = hass
         self.register_callbacks()
 
 

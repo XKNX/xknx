@@ -5,9 +5,10 @@ class XKNXLight(Light):
     """Representation of XKNX lights."""
 
     def __init__(self, hass, device):
-        # pylint: disable=unused-argument
         self.device = device
+        self.hass = hass
         self.register_callbacks()
+
 
     def register_callbacks(self):
         def after_update_callback(device):
@@ -15,13 +16,16 @@ class XKNXLight(Light):
             self.update_ha()
         self.device.after_update_callback = after_update_callback
 
+
     def update_ha(self):
         self.hass.async_add_job(self.async_update_ha_state())
+
 
     @property
     def should_poll(self):
         """No polling needed for a demo light."""
         return False
+
 
     @property
     def name(self):

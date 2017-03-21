@@ -4,9 +4,10 @@ from homeassistant.helpers.entity import Entity
 class XKNXSensor(Entity):
 
     def __init__(self, hass, device):
-        # pylint: disable=unused-argument
         self.device = device
+        self.hass = hass
         self.register_callbacks()
+
 
     @property
     def should_poll(self):

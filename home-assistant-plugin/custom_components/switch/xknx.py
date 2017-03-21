@@ -22,7 +22,7 @@ def async_setup_platform(hass, config, async_add_devices_callback, \
 
     for device in xknx_component.XKNX_MODULE.xknx.devices:
         if isinstance(device, xknx.Outlet):
-            entities.append(xknx_component.XKNXSwitch(device))
+            entities.append(xknx_component.XKNXSwitch(hass, device))
 
     async_add_devices_callback(entities)
 

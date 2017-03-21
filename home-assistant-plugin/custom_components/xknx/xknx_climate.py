@@ -3,14 +3,13 @@ from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
 class XKNXClimate(ClimateDevice):
     def __init__(self, hass, device):
-        # pylint: disable=unused-argument
+        self.device = device
+        self.hass = hass
+        self.register_callbacks()
+
         self._unit_of_measurement = TEMP_CELSIUS
         self._away = False  # not yet supported
         self._is_fan_on = False  # not yet supported
-
-        self.device = device
-
-        self.register_callbacks()
 
 
     def register_callbacks(self):

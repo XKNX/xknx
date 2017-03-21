@@ -9,9 +9,8 @@ class XKNXCover(CoverDevice):
 
     def __init__(self, hass, device):
         """Initialize the cover."""
-        self.hass = hass
         self.device = device
-
+        self.hass = hass
         self.register_callbacks()
 
         self._unsubscribe_auto_updater = None
