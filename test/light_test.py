@@ -17,7 +17,7 @@ class TestLight(unittest.TestCase):
     # TEST SUPPORT DIMMING
     #
     def test_supports_dimm_yes(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         light = Light(xknx,
                       'Diningroom.Light_1',
                       group_address_switch='1/6/4',
@@ -26,7 +26,7 @@ class TestLight(unittest.TestCase):
         self.assertTrue(light.supports_dimming)
 
     def test_supports_dimm_no(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         light = Light(xknx,
                       'Diningroom.Light_1',
                       group_address_switch='1/6/4')
@@ -37,7 +37,7 @@ class TestLight(unittest.TestCase):
     # SYNC STATE
     #
     def test_sync_state(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
@@ -60,7 +60,7 @@ class TestLight(unittest.TestCase):
     # TEST SET ON
     #
     def test_set_on(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
@@ -76,7 +76,7 @@ class TestLight(unittest.TestCase):
     # TEST SET OFF
     #
     def test_set_off(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
@@ -92,7 +92,7 @@ class TestLight(unittest.TestCase):
     # TEST SET BRIGHTNESS
     #
     def test_set_brightness(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
@@ -109,7 +109,7 @@ class TestLight(unittest.TestCase):
     # TEST PROCESS
     #
     def test_process_switch(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
@@ -128,7 +128,7 @@ class TestLight(unittest.TestCase):
 
     def test_process_switch_callback(self):
         # pylint: disable=no-self-use
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
@@ -145,7 +145,7 @@ class TestLight(unittest.TestCase):
 
 
     def test_process_dimm(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
@@ -162,7 +162,7 @@ class TestLight(unittest.TestCase):
     # TEST DO
     #
     def test_do(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',

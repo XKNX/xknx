@@ -19,7 +19,7 @@ class TestOutlet(unittest.TestCase):
     #
     def test_sync_state(self):
 
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         outlet = Outlet(xknx, "TestOutlet", group_address='1/2/3')
         outlet.sync_state()
 
@@ -34,7 +34,7 @@ class TestOutlet(unittest.TestCase):
     # TEST PROCESS
     #
     def test_process(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
 
         self.assertEqual(outlet.state, False)
@@ -55,7 +55,7 @@ class TestOutlet(unittest.TestCase):
     def test_process_callback(self):
         # pylint: disable=no-self-use
 
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
 
         after_update_callback = Mock()
@@ -72,7 +72,7 @@ class TestOutlet(unittest.TestCase):
     # TEST SET ON
     #
     def test_set_on(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
         outlet.set_on()
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -84,7 +84,7 @@ class TestOutlet(unittest.TestCase):
     # TEST SET OFF
     #
     def test_set_off(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
         outlet.set_off()
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -96,7 +96,7 @@ class TestOutlet(unittest.TestCase):
     # TEST DO
     #
     def test_do(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
         outlet.do("on")
         self.assertTrue(outlet.state)

@@ -18,7 +18,7 @@ class TestBinaryInput(unittest.TestCase):
     # TEST PROCESS
     #
     def test_process(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
         xknx.devices.add(outlet)
 
@@ -69,7 +69,7 @@ class TestBinaryInput(unittest.TestCase):
 
     def test_process_callback(self):
         # pylint: disable=no-self-use
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         switch = Switch(xknx, 'TestInput', group_address='1/2/3')
 
         after_update_callback = Mock()

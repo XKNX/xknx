@@ -18,7 +18,7 @@ class TestTime(unittest.TestCase):
     #
     def test_sync_state(self):
 
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         time = Time(xknx, "TestTime", group_address='1/2/3')
         time.sync_state()
 

@@ -19,7 +19,7 @@ class TestConfig(unittest.TestCase):
     #
 
     def test_config_light(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
             xknx.devices['Living-Room.Light_1'],
@@ -29,7 +29,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_ligh_dimm(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
             xknx.devices['Diningroom.Light_1'],
@@ -41,7 +41,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_outlet(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
             xknx.devices['Livingroom.Outlet_2'],
@@ -51,7 +51,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_shutter(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
             xknx.devices['Livingroom.Shutter_2'],
@@ -66,7 +66,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_temperature(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
             xknx.devices['Kitchen.Thermostat_1'],
@@ -75,7 +75,7 @@ class TestConfig(unittest.TestCase):
                        group_address_temperature='1/7/1'))
 
     def test_config_setpoint(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
             xknx.devices['Livingroom.Thermostat_2'],
@@ -85,7 +85,7 @@ class TestConfig(unittest.TestCase):
                        group_address_setpoint='1/7/3'))
 
     def test_config_time(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
             xknx.devices['General.Time'],
@@ -95,7 +95,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_switch(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
             xknx.devices['Livingroom.Switch_1'],
@@ -115,7 +115,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_sensor_percent(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
             xknx.devices['Heating.Valve1'],
@@ -126,7 +126,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_sensor_no_value_type(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
             xknx.devices['Some.Other.Value'],
@@ -136,7 +136,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_sensor_binary_sensor_class(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
             xknx.devices['DiningRoom.Motion.Sensor'],
@@ -148,7 +148,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_sensor_binary_significant_bit(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
             xknx.devices['Kitchen.Thermostat.Presence'],

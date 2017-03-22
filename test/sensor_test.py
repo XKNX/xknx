@@ -17,7 +17,7 @@ class TestSensor(unittest.TestCase):
     # STR FUNCTIONS
     #
     def test_str_array(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -28,7 +28,7 @@ class TestSensor(unittest.TestCase):
 
 
     def test_str_binary(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -39,7 +39,7 @@ class TestSensor(unittest.TestCase):
 
 
     def test_str_scaling(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -51,7 +51,7 @@ class TestSensor(unittest.TestCase):
         self.assertEqual(sensor.unit_of_measurement(), "%")
 
     def test_not_binary(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -65,7 +65,7 @@ class TestSensor(unittest.TestCase):
         self.assertFalse(sensor.binary_state())
 
     def test_binary(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         sensor = Sensor(
             xknx,
             'DiningRoom.Motion.Sensor',
@@ -98,7 +98,7 @@ class TestSensor(unittest.TestCase):
     # SYNC STATE
     #
     def test_sync_state(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -116,7 +116,7 @@ class TestSensor(unittest.TestCase):
     # TEST PROCESS
     #
     def test_process(self):
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -131,7 +131,7 @@ class TestSensor(unittest.TestCase):
 
     def test_process_callback(self):
         # pylint: disable=no-self-use
-        xknx = XKNX(self.loop)
+        xknx = XKNX(self.loop, start=False)
         sensor = Sensor(
             xknx,
             'TestSensor',
