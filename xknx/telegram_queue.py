@@ -43,7 +43,7 @@ class TelegramQueue():
 
         # pylint: disable=broad-except
         except Exception as exception:
-            print("Exceptio while processing telegram:", exception)
+            print("Exception while processing telegram:", exception)
             traceback.print_exc()
 
 

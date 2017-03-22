@@ -6,7 +6,6 @@ xknx = XKNX()
 
 Config(xknx).read()
 
-xknx.start()
 xknx.devices["Livingroom.Outlet_1"].set_on()
 xknx.join()
 
