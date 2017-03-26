@@ -59,9 +59,13 @@ class GatewayScanner():
     def send_search_requests(self):
         # pylint: disable=no-member
         for interface in netifaces.interfaces():
-            af_inet = netifaces.ifaddresses(interface)[netifaces.AF_INET]
-            ip_addr = af_inet[0]["addr"]
-            yield from self.search_interface(interface, ip_addr)
+            try:
+                af_inet = netifaces.ifaddresses(interface)[netifaces.AF_INET]
+                ip_addr = af_inet[0]["addr"]
+                yield from self.search_interface(interface, ip_addr)
+            except KeyError:
+                #print("NOT CONNECTED", interface)
+                continue
 
 
     @asyncio.coroutine
