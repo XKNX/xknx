@@ -40,7 +40,7 @@ def build_and_destroy_tunnel(xknx):
     yield from tunnel.disconnect()
 
 
-xknx = XKNX()
+xknx = XKNX(start=False)
 task = asyncio.Task(build_and_destroy_tunnel(xknx))
 xknx.loop.run_until_complete(task)
 
