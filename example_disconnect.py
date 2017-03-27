@@ -3,7 +3,7 @@ from xknx import XKNX
 from xknx.io.async import ConnectionState, Disconnect
 from xknx.io.async import UDPClient, GatewayScanner
 
-xknx = XKNX()
+xknx = XKNX(start=False)
 
 gatewayscanner = GatewayScanner(xknx)
 gatewayscanner.start()
