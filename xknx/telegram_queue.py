@@ -9,6 +9,7 @@ class TelegramQueue():
         self.xknx = xknx
         self.telegram_received_callback = telegram_received_callback
 
+        self.queue_stopped = asyncio.Event()
 
     @asyncio.coroutine
     def start(self):
@@ -19,12 +20,26 @@ class TelegramQueue():
     def run(self):
         while True:
             telegram = yield from self.xknx.telegrams.get()
+
+            # Breaking up queue if None is pushed to the queue
+            if telegram is None:
+                break
+
             yield from self.process_telegram(telegram)
             self.xknx.telegrams.task_done()
 
             if telegram.direction == TelegramDirection.OUTGOING:
                 # limit rate to knx bus to 20 per second
                 yield from asyncio.sleep(1/20)
+
+        self.queue_stopped.set()
+
+    @asyncio.coroutine
+    def stop(self):
+        print("STOPPING TelegramQueue")
+        # If a None object is pushed to the queue, the queue stops
+        yield from self.xknx.telegrams.put(None)
+        yield from self.queue_stopped.wait()
 
     @asyncio.coroutine
     def process_all_telegrams(self):

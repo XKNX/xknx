@@ -21,6 +21,7 @@ class XKNX:
         self.devices = Devices()
         self.telegrams = asyncio.Queue()
         self.loop = loop or asyncio.get_event_loop()
+        #self.loop.set_debug(True)
         self.sigint_recieved = asyncio.Event()
         self.telegram_queue = TelegramQueue(self)
         self.state_updater = None
@@ -39,7 +40,7 @@ class XKNX:
     def __del__(self):
         try:
             task = asyncio.Task(
-                self.stop_knxip_interface_if_exists())
+                self.async_stop())
             self.loop.run_until_complete(task)
         except:
             pass
@@ -73,9 +74,9 @@ class XKNX:
         yield from self.telegram_queue.start()
 
         if state_updater:
-           from .stateupdater import StateUpdater
-           self.state_updater = StateUpdater(self)
-           yield from self.state_updater.start()
+            from .stateupdater import StateUpdater
+            self.state_updater = StateUpdater(self)
+            yield from self.state_updater.start()
 
         if daemon_mode:
             yield from self.loop_until_sigint()
@@ -108,8 +109,8 @@ class XKNX:
     @asyncio.coroutine
     def async_stop(self):
         yield from self.join()
+        yield from self.telegram_queue.stop()
         yield from self.stop_knxip_interface_if_exists()
-
 
     @asyncio.coroutine
     def loop_until_sigint(self):
