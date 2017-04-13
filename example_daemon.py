@@ -13,10 +13,9 @@ def telegram_received_callback( xknx, device, telegram):
         elif device.is_off():
             xknx.devices["Livingroom.Outlet_1"].set_off()
 
-
 xknx = XKNX()
 
-Config(xknx).read()
+Config(xknx).read("/path/to/xknx.yaml")
 
-xknx.start( True, telegram_received_callback = telegram_received_callback )
+xknx.start( daemon_mode=True, telegram_received_callback = telegram_received_callback )
 
