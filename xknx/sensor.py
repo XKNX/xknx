@@ -1,5 +1,5 @@
 from xknx.knx import Address, Telegram, TelegramType, DPTBinary, DPTArray, \
-    DPTScaling
+    DPTScaling, DPTTemperature
 from .device import Device
 
 class Sensor(Device):
@@ -78,6 +78,8 @@ class Sensor(Device):
     def unit_of_measurement(self):
         if self.value_type == 'percent':
             return "%"
+        elif self.value_type == 'temperature':
+            return "°C"
         else:
             return None
 
@@ -95,6 +97,9 @@ class Sensor(Device):
 
         elif self.value_type == 'binary':
             return self.binary_state()
+
+        elif self.value_type == 'temperature':
+           return DPTTemperature().from_knx(self.state.value)
 
         elif isinstance(self.state, DPTArray):
             return ','.join('0x%02x'%i for i in self.state.value)
