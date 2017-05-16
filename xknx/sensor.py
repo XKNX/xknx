@@ -80,7 +80,7 @@ class Sensor(Device):
             return "%"
         elif self.value_type == 'temperature':
             return "°C"
-        elif self.value_type == 'illuminance':
+        elif self.value_type == 'brightness':
             return "lx"
         elif self.value_type == 'speed_ms':
             return "m/s"
@@ -100,8 +100,8 @@ class Sensor(Device):
         elif self.value_type == 'binary':
             return self.binary_state()
         elif self.value_type == 'temperature':
-           return DPTTemperature().from_knx(self.state.value)
-        elif self.value_type == 'illuminance':
+            return DPTTemperature().from_knx(self.state.value)
+        elif self.value_type == 'brightness':
            return DPTLux().from_knx(self.state.value)
         elif self.value_type == 'speed_ms':
            return DPTWsp().from_knx(self.state.value)
