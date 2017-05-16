@@ -92,6 +92,17 @@ class DPTLux(DPTFloat):
     unit = "Lux"
     resolution = 1
 
+class DPTWsp(DPTFloat):
+    """
+    Abstraction for KNX 2 Octet Floating Point Numbers
+    DPT 9.005
+    """
+
+    value_min = 0
+    value_max = 670760
+    unit = "m/s"
+    resolution = 1
+
 class DPTHumidity(DPTFloat):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers
