@@ -32,5 +32,5 @@ class SearchRequest(KNXIPBody):
 
 
     def __str__(self):
-        return "<SearchRequest discovery_endpoint={0}>" \
+        return '<SearchRequest discovery_endpoint="{0}" />' \
             .format(self.discovery_endpoint)

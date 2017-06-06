@@ -72,7 +72,7 @@ class Action():
 
 
     def __str__(self):
-        return "<Action hook={0} target={1} method={2}>" \
+        return '<Action hook="{0}" target="{1}" method="{2}" />' \
             .format(self.hook, self.target, self.method)
 
 
@@ -138,7 +138,7 @@ class Switch(BinaryInput):
 
 
     def __str__(self):
-        return "<Switch group_address={0}, name={1}>" \
+        return '<Switch group_address="{0}" name="{1}" />' \
             .format(self.group_address, self.name)
 
 

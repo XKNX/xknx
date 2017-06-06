@@ -96,10 +96,10 @@ class Thermostat(Device):
 
 
     def __str__(self):
-        return "<Thermostat name={0}, " \
-               "group_address_temperature={1}, " \
-               "group_address_setpoint={2}, " \
-               "temperature={3}, last_set={4}>" \
+        return '<Thermostat name="{0}" ' \
+               'group_address_temperature="{1}"  ' \
+               'group_address_setpoint="{2}" ' \
+               'temperature="{3}" last_set="{4}" />' \
                .format(self.name,
                        self.group_address_temperature,
                        self.group_address_setpoint,

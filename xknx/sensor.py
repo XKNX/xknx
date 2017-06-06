@@ -115,10 +115,10 @@ class Sensor(Device):
 
 
     def __str__(self):
-        return '<Sensor name={0}, ' \
-               'group_address={1}, ' \
-               'state={2}, ' \
-               'resolve_state={3}>' \
+        return '<Sensor name="{0}" ' \
+               'group_address="{1}" ' \
+               'state="{2}" ' \
+               'resolve_state="{3}" />' \
             .format(self.name,
                     self.group_address,
                     self.state,

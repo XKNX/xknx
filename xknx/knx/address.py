@@ -6,7 +6,7 @@ class CouldNotParseAddress(Exception):
         self.address = address
 
     def __str__(self):
-        return "<CouldNotParseAddress address='{0}'>".format(self.address)
+        return '<CouldNotParseAddress address="{0}" />'.format(self.address)
 
 class AddressType(Enum):
     PHYSICAL = 1
@@ -32,7 +32,7 @@ class Address:
         return self.raw == other.raw
 
     def __str__(self):
-        return "<Address str={0}>".format(self.str())
+        return '<Address str="{0}" />'.format(self.str())
 
     def _set(self, address, address_type):
 

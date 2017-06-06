@@ -62,8 +62,8 @@ class TunnellingRequest(KNXIPBody):
 
 
     def __str__(self):
-        return "<TunnellingRequest communication_channel_id={0}, " \
-            "sequence_counter={1}, cemi={2}>" \
+        return '<TunnellingRequest communication_channel_id="{0}" ' \
+            'sequence_counter="{1}" cemi="{2}" />' \
             .format(self.communication_channel_id,
                     self.sequence_counter,
                     self.cemi)

@@ -49,7 +49,7 @@ class DisconnectResponse(KNXIPBody):
 
 
     def __str__(self):
-        return "<DisconnectResponse CommunicationChannelID={0}, " \
-            "status_code={1}".format(
+        return '<DisconnectResponse CommunicationChannelID="{0}" ' \
+            'status_code="{1}" />'.format(
                 self.communication_channel_id,
                 self.status_code)
