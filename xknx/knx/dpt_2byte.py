@@ -9,8 +9,8 @@ class DPT2Byte(DPTBase):
     DPT 7.xxx
     """
 
-    value_min = -670760
-    value_max = 670760
+    value_min = 0
+    value_max = 65535
     unit = ""
     resolution = 1
 
@@ -74,7 +74,7 @@ class DPTCurrent(DPT2Byte):
     DPT 7.012
     """
 
-    value_min = -670760
-    value_max = 670760
+    value_min = 0
+    value_max = 65535
     unit = "mA"
     resolution = 1
