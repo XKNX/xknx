@@ -90,7 +90,7 @@ class KNXIPFrame:
         return pos
 
     def __str__(self):
-        return "<KNXIPFrame {0}\n body={1}>" \
+        return '<KNXIPFrame {0}\n body="{1}" />' \
             .format(self.header, self.body)
 
 

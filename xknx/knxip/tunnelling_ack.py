@@ -61,7 +61,7 @@ class TunnellingAck(KNXIPBody):
 
 
     def __str__(self):
-        return "<TunnellingAck communication_channel_id={0}, " \
-            "sequence_counter={1}, status_code={2}>" \
+        return '<TunnellingAck communication_channel_id="{0}" ' \
+            'sequence_counter="{1}" status_code="{2}" />' \
             .format(self.communication_channel_id, self.sequence_counter,
                     self.status_code)

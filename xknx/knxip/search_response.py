@@ -48,6 +48,6 @@ class SearchResponse(KNXIPBody):
 
 
     def __str__(self):
-        return "<SearchResponse control_endpoint={0} dibs=[\n{1}\n]>" \
+        return '<SearchResponse control_endpoint="{0}" dibs="[\n{1}\n]" />' \
             .format(self.control_endpoint,
                     ',\n'.join(dib.__str__() for dib in self.dibs))

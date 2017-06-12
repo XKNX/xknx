@@ -79,7 +79,7 @@ class DIBGeneric(DIB):
 
 
     def __str__(self):
-        return '<DIB dtc={0} data=\'{1}\'>'.format(
+        return '<DIB dtc="{0}" data="\'{1}\'" />'.format(
             self.dtc,
             ','.join('0x%02x'%i for i in self.data))
 
@@ -93,7 +93,7 @@ class DIBSuppSVCFamilies(DIB):
             self.name = name
             self.version = version
         def __str__(self):
-            return "<Family name={0} version={1}>" \
+            return '<Family name="{0}" version="{1}" />' \
                 .format(self.name, self.version)
         def __eq__(self, other):
             return self.__dict__ == other.__dict__
@@ -136,7 +136,7 @@ class DIBSuppSVCFamilies(DIB):
 
 
     def __str__(self):
-        return "<DIBSuppSVCFamilies families=[{0}]>" \
+        return '<DIBSuppSVCFamilies families="[{0}]" />' \
             .format(", ".join("\n\t{0} version: {1}".format(
                 family.name, family.version) for family in self.families))
 
@@ -227,15 +227,15 @@ class DIBDeviceInformation(DIB):
 
     def __str__(self):
         return '<DIBDeviceInformation ' \
-               '\n\tknx_medium={0}, ' \
-               '\n\tprogramming_mode={1}, ' \
-               '\n\tindividual_address={2}, ' \
-               '\n\tinstallation_number={3}, ' \
-               '\n\tproject_number={4}, ' \
-               '\n\tserial_number={5}, ' \
-               '\n\tmulticast_address={6}, ' \
-               '\n\tmac_address={7}, ' \
-               '\n\tname={8}>'.format(
+               '\n\tknx_medium="{0}" ' \
+               '\n\tprogramming_mode="{1}" ' \
+               '\n\tindividual_address="{2}" ' \
+               '\n\tinstallation_number="{3}" ' \
+               '\n\tproject_number="{4}" ' \
+               '\n\tserial_number="{5}" ' \
+               '\n\tmulticast_address="{6}" ' \
+               '\n\tmac_address="{7}" ' \
+               '\n\tname="{8}" />'.format(
                    self.knx_medium, self.programming_mode,
                    self.individual_address, self.installation_number,
                    self.project_number, self.serial_number,

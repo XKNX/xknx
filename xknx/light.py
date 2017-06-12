@@ -63,22 +63,22 @@ class Light(Device):
 
     def __str__(self):
         if not self.supports_dimming:
-            return '<Light name={0}, ' \
-                    'group_address_switch={1}, ' \
-                    'group_address_state={2}, ' \
-                    'state={3}>' \
+            return '<Light name="{0}" ' \
+                    'group_address_switch="{1}" ' \
+                    'group_address_state="{2}" ' \
+                    'state="{3}" />' \
                     .format(
                         self.name,
                         self.group_address_switch,
                         self.group_address_state,
                         self.state)
 
-        return '<Light name={0}, ' \
-                'group_address_switch={1}, ' \
-                'group_address_state={2}, ' \
-                'group_address_dimm={3}, ' \
-                'group_address_brightness={4}, ' \
-                'state={5}, brightness={6}>' \
+        return '<Light name="{0}" ' \
+                'group_address_switch="{1}" ' \
+                'group_address_state="{2}" ' \
+                'group_address_dimm="{3}" ' \
+                'group_address_brightness="{4}" ' \
+                'state="{5}" brightness="{6}" />' \
                 .format(
                     self.name,
                     self.group_address_switch,

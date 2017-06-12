@@ -52,7 +52,7 @@ class ConnectionStateRequest(KNXIPBody):
 
 
     def __str__(self):
-        return "<ConnectionStateRequest CommunicationChannelID={0}, " \
-            "control_endpoint={1}".format(
+        return '<ConnectionStateRequest CommunicationChannelID="{0}", ' \
+            'control_endpoint="{1}" />'.format(
                 self.communication_channel_id,
                 self.control_endpoint)
