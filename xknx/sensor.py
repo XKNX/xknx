@@ -1,5 +1,5 @@
 from xknx.knx import Address, Telegram, TelegramType, DPTBinary, DPTArray, \
-    DPTScaling, DPTTemperature, DPTLux, DPTWsp, DPTCurrent
+    DPTScaling, DPTTemperature, DPTLux, DPTWsp, DPT_UElCurrentmA
 from .device import Device
 
 class Sensor(Device):
@@ -108,7 +108,7 @@ class Sensor(Device):
         elif self.value_type == 'speed_ms':
            return DPTWsp().from_knx(self.state.value)
         elif self.value_type == 'current':
-           return DPTCurrent().from_knx(self.state.value)
+           return DPT_UElCurrentmA().from_knx(self.state.value)
         elif isinstance(self.state, DPTArray):
             return ','.join('0x%02x'%i for i in self.state.value)
 
