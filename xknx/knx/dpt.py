@@ -6,7 +6,7 @@ class ConversionError(Exception):
         super(ConversionError, self).__init__("Conversion Error")
         self.i = i
     def __str__(self):
-        return "<ConversionError input='{0}'>".format(self.i)
+        return '<ConversionError input="{0}" />'.format(self.i)
 
 
 class DPTBase:
@@ -42,7 +42,7 @@ class DPTBinary(DPTBase):
         return DPTComparator.compare(self, other)
 
     def __str__(self):
-        return "<DPTBinary value={0}>".format(self.value)
+        return '<DPTBinary value="{0}" />'.format(self.value)
 
 
 
@@ -65,7 +65,7 @@ class DPTArray(DPTBase):
         return DPTComparator.compare(self, other)
 
     def __str__(self):
-        return "<DPTArray value=[{0}]>".format(
+        return '<DPTArray value="[{0}]" />'.format(
             ','.join(hex(b) for b in self.value))
 
 

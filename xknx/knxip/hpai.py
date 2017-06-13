@@ -44,7 +44,7 @@ class HPAI():
 
 
     def __str__(self):
-        return "<HPAI {0}:{1}>".format(self.ip_addr, self.port)
+        return '<HPAI {0}:{1} />'.format(self.ip_addr, self.port)
 
 
     def __eq__(self, other):

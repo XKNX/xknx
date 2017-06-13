@@ -51,8 +51,8 @@ class KNXIPHeader():
         return data
 
     def __str__(self):
-        return "<KNXIPHeader HeaderLength={0}, ProtocolVersion={1}, " \
-                "KNXIPServiceType={2}, Reserve={3}, TotalLength={4}>".format(
+        return '<KNXIPHeader HeaderLength="{0}" ProtocolVersion="{1}" ' \
+                'KNXIPServiceType="{2}" Reserve="{3}" TotalLength="{4}" />'.format(
                     self.header_length,
                     self.protocol_version,
                     self.service_type_ident,

@@ -3,7 +3,7 @@ class CouldNotParseKNXIP(Exception):
         super(CouldNotParseKNXIP, self).__init__("Could not parse KNXIP")
         self.description = description
     def __str__(self):
-        return "<CouldNotParseKNXIP description='{0}'>" \
+        return '<CouldNotParseKNXIP description="{0}" />' \
             .format(self.description)
 
 class ConversionException(Exception):
@@ -11,5 +11,5 @@ class ConversionException(Exception):
         super(ConversionException, self).__init__("Conversion Exception")
         self.description = description
     def __str__(self):
-        return "<ConversionException description='{0}'>" \
+        return '<ConversionException description="{0}" />' \
             .format(self.description)

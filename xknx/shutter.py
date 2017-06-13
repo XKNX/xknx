@@ -80,13 +80,13 @@ class Shutter(Device):
 
 
     def __str__(self):
-        return "<Shutter name={0}, " \
-                "group_address_long={1}, " \
-                "group_address_short={2}, " \
-                "group_address_position={3}, " \
-                "group_address_position_feedback={4}, " \
-                "travel_time_down={5}, " \
-                "travel_time_up={6}>" \
+        return '<Shutter name="{0}" ' \
+                'group_address_long="{1}" ' \
+                'group_address_short="{2}" ' \
+                'group_address_position="{3}" ' \
+                'group_address_position_feedback="{4}" ' \
+                'travel_time_down="{5}" ' \
+                'travel_time_up="{6}" />' \
                 .format(
                     self.name,
                     self.group_address_long,

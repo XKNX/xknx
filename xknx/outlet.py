@@ -82,7 +82,7 @@ class Outlet(Device):
 
 
     def __str__(self):
-        return "<Outlet name={0}, group_address={1}, state={2}>" \
+        return '<Outlet name="{0}" group_address="{1}" state="{2}" />' \
             .format(self.name, self.group_address, self.state)
 
 
