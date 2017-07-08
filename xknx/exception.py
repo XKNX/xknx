@@ -1,3 +1,6 @@
 
-class CouldNotParseTelegram(Exception):
+class XKNXException(Exception):
+    pass
+
+class CouldNotParseTelegram(XKNXException):
     pass
