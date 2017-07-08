@@ -71,7 +71,7 @@ class TestSensor(unittest.TestCase):
             'DiningRoom.Motion.Sensor',
             group_address='3/0/1',
             value_type='binary',
-            sensor_class='motion')
+            device_class='motion')
         self.assertEqual(sensor.significant_bit, 1)
         self.assertTrue(sensor.is_binary())
 

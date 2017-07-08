@@ -31,9 +31,9 @@ class XKNXBinarySensor(BinarySensorDevice):
 
 
     @property
-    def sensor_class(self):
+    def device_class(self):
         """Return the class of this sensor."""
-        return self.device.sensor_class
+        return self.device.device_class
 
 
     @property
