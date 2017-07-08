@@ -70,9 +70,9 @@ class ConnectResponse(KNXIPBody):
 
 
     def __str__(self):
-        return "<ConnectResponse communication_channel={0}, " \
-            "status_code={1}, control_endpoint={2}, " \
-            "request_type={3}, identifier={4}>" \
+        return '<ConnectResponse communication_channel="{0}" ' \
+            'status_code="{1}" control_endpoint="{2}" ' \
+            'request_type="{3}" identifier="{4}" />' \
             .format(self.communication_channel, self.status_code,
                     self.control_endpoint, self.request_type,
                     self.identifier)

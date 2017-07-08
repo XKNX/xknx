@@ -4,8 +4,8 @@ setup(
         name='xknx',
         description='A Wrapper around KNX protocol. Documentation: http://xknx.io/',
 
-        version='0.4.0',
-        download_url='https://github.com/XKNX/xknx/archive/0.4.0.zip',
+        version='0.5.0',
+        download_url='https://github.com/XKNX/xknx/archive/0.5.0.zip',
         url='http://xknx.io/',
 
         author='Julius Mittenzwei',

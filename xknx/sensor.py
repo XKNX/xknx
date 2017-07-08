@@ -1,5 +1,5 @@
 from xknx.knx import Address, Telegram, TelegramType, DPTBinary, DPTArray, \
-    DPTScaling
+    DPTScaling, DPTTemperature, DPTLux, DPTWsp
 from .device import Device
 
 class Sensor(Device):
@@ -78,6 +78,12 @@ class Sensor(Device):
     def unit_of_measurement(self):
         if self.value_type == 'percent':
             return "%"
+        elif self.value_type == 'temperature':
+            return "°C"
+        elif self.value_type == 'brightness':
+            return "lx"
+        elif self.value_type == 'speed_ms':
+            return "m/s"
         else:
             return None
 
@@ -91,11 +97,14 @@ class Sensor(Device):
                 len(self.state.value) == 1:
             # TODO: Instanciate DPTScaling object with DPTArray class
             return "{0}".format(DPTScaling().from_knx(self.state.value))
-
-
         elif self.value_type == 'binary':
             return self.binary_state()
-
+        elif self.value_type == 'temperature':
+            return DPTTemperature().from_knx(self.state.value)
+        elif self.value_type == 'brightness':
+           return DPTLux().from_knx(self.state.value)
+        elif self.value_type == 'speed_ms':
+           return DPTWsp().from_knx(self.state.value)
         elif isinstance(self.state, DPTArray):
             return ','.join('0x%02x'%i for i in self.state.value)
 
@@ -106,10 +115,10 @@ class Sensor(Device):
 
 
     def __str__(self):
-        return '<Sensor name={0}, ' \
-               'group_address={1}, ' \
-               'state={2}, ' \
-               'resolve_state={3}>' \
+        return '<Sensor name="{0}" ' \
+               'group_address="{1}" ' \
+               'state="{2}" ' \
+               'resolve_state="{3}" />' \
             .format(self.name,
                     self.group_address,
                     self.state,

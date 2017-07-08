@@ -68,8 +68,8 @@ class ConnectRequest(KNXIPBody):
 
 
     def __str__(self):
-        return "<ConnectRequest control_endpoint={0}, data_endpoint={1}, " \
-            "request_type={2}>" .format(
+        return '<ConnectRequest control_endpoint="{0}" data_endpoint="{1}" ' \
+            'request_type="{2}" />' .format(
                 self.control_endpoint,
                 self.data_endpoint,
                 self.request_type)

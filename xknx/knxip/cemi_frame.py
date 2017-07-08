@@ -179,8 +179,8 @@ class CEMIFrame(KNXIPBody):
 
 
     def __str__(self):
-        return "<CEMIFrame SourceAddress={0}, DestinationAddress={1}, " \
-               "Flags={2:16b} Command={3}, payload={4}>".format(
+        return '<CEMIFrame SourceAddress="{0}" DestinationAddress="{1}" ' \
+               'Flags="{2:16b}" Command="{3}" payload="{4}" />'.format(
                    self.src_addr,
                    self.dst_addr,
                    self.flags,
