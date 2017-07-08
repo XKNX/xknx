@@ -55,6 +55,22 @@ class TestLight(unittest.TestCase):
         self.assertEqual(telegram2,
                          Telegram(Address('1/2/5'), TelegramType.GROUP_READ))
 
+    #
+    # SYNC STATE WITH STATE ADDRESS
+    #
+    def test_sync_state_state_address(self):
+        xknx = XKNX(self.loop, start=False)
+        light = Light(xknx,
+                      name="TestLight",
+                      group_address_switch='1/2/3',
+                      group_address_state='1/2/6')
+        light.sync_state()
+
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+
+        telegram1 = xknx.telegrams.get_nowait()
+        self.assertEqual(telegram1,
+                         Telegram(Address('1/2/6'), TelegramType.GROUP_READ))
 
     #
     # TEST SET ON

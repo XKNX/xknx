@@ -133,8 +133,9 @@ class Light(Device):
                 .format(self.get_name(), action))
 
     def sync_state(self):
+        group_address = self.group_address_state or self.group_address_switch
         telegram_switch = Telegram(
-            self.group_address_switch,
+            group_address,
             TelegramType.GROUP_READ)
         self.xknx.telegrams.put_nowait(telegram_switch)
 
