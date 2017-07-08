@@ -14,3 +14,4 @@ from .time import Time
 from .sensor import Sensor
 from .config import Config
 from .globals import Globals
+from .exception import XKNXException

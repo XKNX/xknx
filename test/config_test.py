@@ -135,7 +135,7 @@ class TestConfig(unittest.TestCase):
                    group_address='2/0/2'))
 
 
-    def test_config_sensor_binary_sensor_class(self):
+    def test_config_sensor_binary_device_class(self):
         xknx = XKNX(self.loop, start=False)
         Config(xknx).read('../xknx.yaml')
         self.assertEqual(
@@ -144,7 +144,7 @@ class TestConfig(unittest.TestCase):
                    'DiningRoom.Motion.Sensor',
                    group_address='3/0/1',
                    value_type='binary',
-                   sensor_class='motion'))
+                   device_class='motion'))
 
 
     def test_config_sensor_binary_significant_bit(self):

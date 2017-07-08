@@ -76,8 +76,8 @@ groups:
         Heating.Valve2: {group_address: '2/0/1', value_type: 'percent'}
         Some.Other.Value: {group_address: '2/0/2'}
 
-        Kitchen.Motion.Sensor: {group_address: '3/0/0', value_type: 'binary', sensor_class: 'motion'}
-        DiningRoom.Motion.Sensor: {group_address: '3/0/1', value_type: 'binary', sensor_class: 'motion'}
+        Kitchen.Motion.Sensor: {group_address: '3/0/0', value_type: 'binary', device_class: 'motion'}
+        DiningRoom.Motion.Sensor: {group_address: '3/0/1', value_type: 'binary', device_class: 'motion'}
 
         # Some states are encoded into different bits of the same group_address
         # Defining which bit should be relevant for the binary state via the "significant_bit" option

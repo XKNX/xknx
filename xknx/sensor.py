@@ -9,7 +9,7 @@ class Sensor(Device):
                  name,
                  group_address=None,
                  value_type=None,
-                 sensor_class=None,
+                 device_class=None,
                  significant_bit=1):
         # pylint: disable=too-many-arguments
 
@@ -22,7 +22,7 @@ class Sensor(Device):
 
         self.group_address = group_address
         self.value_type = value_type
-        self.sensor_class = sensor_class
+        self.device_class = device_class
         self.significant_bit = significant_bit
         self.state = None
 
@@ -33,8 +33,8 @@ class Sensor(Device):
             config.get('group_address')
         value_type = \
             config.get('value_type')
-        sensor_class = \
-            config.get('sensor_class')
+        device_class = \
+            config.get('device_class')
         significant_bit = \
             config.get('significant_bit', 1)
 
@@ -42,7 +42,7 @@ class Sensor(Device):
                    name,
                    group_address=group_address,
                    value_type=value_type,
-                   sensor_class=sensor_class,
+                   device_class=device_class,
                    significant_bit=significant_bit)
 
 
