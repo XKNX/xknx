@@ -21,6 +21,6 @@ setup(
           'Programming Language :: Python :: 3.5'
         ],
         packages=find_packages(),
-        install_requires=['PyYAML'],
+        install_requires=['PyYAML','netifaces'],
         keywords = 'knx ip knxip eib home automation',
         zip_safe=False)
