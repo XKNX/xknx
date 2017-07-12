@@ -87,13 +87,13 @@ class UDPClient:
         if service_types is None:
             service_types = []
 
-        cb = UDPClient.Callback(callback, service_types)
-        self.callbacks.append(cb)
-        return cb
+        callb = UDPClient.Callback(callback, service_types)
+        self.callbacks.append(callb)
+        return callb
 
 
-    def unregister_callback(self, cb):
-        self.callbacks.remove(cb)
+    def unregister_callback(self, callb):
+        self.callbacks.remove(callb)
 
 
     def create_multicast_sock(self, own_ip, remote_addr, bind_to_multicast_addr):

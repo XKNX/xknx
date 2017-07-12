@@ -25,7 +25,7 @@ class RequestResponse():
     @asyncio.coroutine
     def async_start(self):
 
-        cb = self.udpclient.register_callback(
+        callb = self.udpclient.register_callback(
             self.response_rec_callback, [self.awaited_response_class.service_type])
 
         yield from self.send_request()
@@ -33,7 +33,7 @@ class RequestResponse():
         yield from self.response_recieved_or_timeout.wait()
         yield from self.stop_timeout()
 
-        self.udpclient.unregister_callback(cb)
+        self.udpclient.unregister_callback(callb)
 
 
     @asyncio.coroutine
