@@ -17,6 +17,9 @@ class RequestResponse():
         self.timeout_handle = None
 
 
+    def create_knxipframe(self):
+        raise NotImplementedError('create_knxipframe has to be implemented')
+
     def start(self):
         task = asyncio.Task(self.async_start())
         self.xknx.loop.run_until_complete(task)
