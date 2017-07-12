@@ -30,6 +30,20 @@ class TestOutlet(unittest.TestCase):
                          Telegram(Address('1/2/3'), TelegramType.GROUP_READ))
 
 
+    def test_sync_state_state_address(self):
+
+        xknx = XKNX(loop=self.loop, start=False)
+        outlet = Outlet(xknx, "TestOutlet",
+            group_address='1/2/3',
+            group_address_state='1/2/4')
+        outlet.sync_state()
+
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+
+        telegram = xknx.telegrams.get_nowait()
+        self.assertEqual(telegram,
+                         Telegram(Address('1/2/4'), TelegramType.GROUP_READ))
+
     #
     # TEST PROCESS
     #

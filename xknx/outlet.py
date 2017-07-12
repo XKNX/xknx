@@ -7,14 +7,18 @@ class Outlet(Device):
     def __init__(self,
                  xknx,
                  name,
-                 group_address=None):
+                 group_address=None,
+                 group_address_state=None):
 
         Device.__init__(self, xknx, name)
 
         if isinstance(group_address, (str, int)):
             group_address = Address(group_address)
+        if isinstance(group_address_state, (str, int)):
+            group_address_state = Address(group_address_state)
 
         self.group_address = group_address
+        self.group_address_state = group_address_state
         self.state = False
 
 
@@ -22,14 +26,18 @@ class Outlet(Device):
     def from_config(cls, xknx, name, config):
         group_address = \
             config.get('group_address')
+        group_address_state = \
+            config.get('group_address_state')
 
         return cls(xknx,
                    name,
-                   group_address=group_address)
+                   group_address=group_address,
+                   group_address_state=group_address_state)
 
 
     def has_group_address(self, group_address):
-        return self.group_address == group_address
+        return (self.group_address == group_address) or \
+               (self.group_address_state == group_address_state)
 
 
     def set_internal_state(self, state):
@@ -65,7 +73,8 @@ class Outlet(Device):
                 .format(self.get_name(), action))
 
     def sync_state(self):
-        telegram = Telegram(self.group_address, TelegramType.GROUP_READ)
+        group_address = self.group_address_state or self.group_address
+        telegram = Telegram(group_address, TelegramType.GROUP_READ)
         self.xknx.telegrams.put_nowait(telegram)
 
 
@@ -82,8 +91,12 @@ class Outlet(Device):
 
 
     def __str__(self):
-        return '<Outlet name="{0}" group_address="{1}" state="{2}" />' \
-            .format(self.name, self.group_address, self.state)
+        return '<Outlet name="{0}" group_address="{1}" ' \
+               'group_address_state="{2}" state="{3}" />' \
+            .format(self.name,
+                    self.group_address,
+                    self.group_address_state,
+                    self.state)
 
 
     def __eq__(self, other):
