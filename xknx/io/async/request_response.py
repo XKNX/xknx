@@ -38,9 +38,6 @@ class RequestResponse():
 
     @asyncio.coroutine
     def send_request(self):
-
-        (local_addr, local_port) = self.udpclient.getsockname()
-
         knxipframe = self.create_knxipframe()
         knxipframe.normalize()
 

@@ -16,7 +16,6 @@ class Tunnelling(RequestResponse):
 
 
     def create_knxipframe(self):
-        (local_addr, local_port) = self.udpclient.getsockname()
         knxipframe = KNXIPFrame()
         knxipframe.init(KNXIPServiceType.TUNNELLING_REQUEST)
         knxipframe.body.communication_channel_id = self.communication_channel
