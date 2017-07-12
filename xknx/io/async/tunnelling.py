@@ -1,6 +1,4 @@
-import asyncio
-from xknx.knxip import KNXIPServiceType, KNXIPFrame, HPAI, TunnellingAck, ErrorCode
-from xknx.knx import Address
+from xknx.knxip import KNXIPServiceType, KNXIPFrame, TunnellingAck
 from .request_response import RequestResponse
 
 class Tunnelling(RequestResponse):

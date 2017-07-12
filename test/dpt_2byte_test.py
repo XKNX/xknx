@@ -23,7 +23,7 @@ class TestDPT2byte(unittest.TestCase):
         with self.assertRaises(ConversionError):
             DPT_UElCurrentmA().to_knx(65536)
 
-    def test_current_to_knx_exceed_limits(self):
+    def test_current_to_knx_exceed_limits2(self):
         with self.assertRaises(ConversionError):
             DPT_UElCurrentmA().to_knx(-1)
 

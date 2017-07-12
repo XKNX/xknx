@@ -102,21 +102,21 @@ class UDPClient:
         sock.setblocking(False)
 
         sock.setsockopt(
-                socket.SOL_IP,
-                socket.IP_MULTICAST_IF,
-                socket.inet_aton(own_ip))
+            socket.SOL_IP,
+            socket.IP_MULTICAST_IF,
+            socket.inet_aton(own_ip))
         sock.setsockopt(
-                socket.SOL_IP,
-                socket.IP_ADD_MEMBERSHIP,
-                socket.inet_aton(remote_addr[0]) +
-                socket.inet_aton(own_ip))
+            socket.SOL_IP,
+            socket.IP_ADD_MEMBERSHIP,
+            socket.inet_aton(remote_addr[0]) +
+            socket.inet_aton(own_ip))
         sock.setsockopt(
-                socket.IPPROTO_IP,
-                socket.IP_MULTICAST_TTL, 2)
+            socket.IPPROTO_IP,
+            socket.IP_MULTICAST_TTL, 2)
         sock.setsockopt(
-                socket.IPPROTO_IP,
-                socket.IP_MULTICAST_IF,
-                socket.inet_aton(own_ip))
+            socket.IPPROTO_IP,
+            socket.IP_MULTICAST_IF,
+            socket.inet_aton(own_ip))
 
         # I have no idea why we have to use different bind calls here
         # - bind() with multicast addr does not work with gateway search requests

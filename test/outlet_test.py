@@ -34,8 +34,8 @@ class TestOutlet(unittest.TestCase):
 
         xknx = XKNX(loop=self.loop, start=False)
         outlet = Outlet(xknx, "TestOutlet",
-            group_address='1/2/3',
-            group_address_state='1/2/4')
+                        group_address='1/2/3',
+                        group_address_state='1/2/4')
         outlet.sync_state()
 
         self.assertEqual(xknx.telegrams.qsize(), 1)

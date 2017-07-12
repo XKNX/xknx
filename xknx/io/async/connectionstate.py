@@ -1,6 +1,5 @@
-import asyncio
 from xknx.knxip import KNXIPServiceType, KNXIPFrame, HPAI,\
-    ConnectionStateResponse, ErrorCode
+    ConnectionStateResponse
 from .request_response import RequestResponse
 
 class ConnectionState(RequestResponse):

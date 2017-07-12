@@ -1,6 +1,5 @@
-import asyncio
 from xknx.knxip import KNXIPServiceType, KNXIPFrame, HPAI,\
-    DisconnectResponse, ErrorCode
+    DisconnectResponse
 from .request_response import RequestResponse
 
 class Disconnect(RequestResponse):

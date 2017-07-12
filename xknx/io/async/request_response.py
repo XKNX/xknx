@@ -1,5 +1,5 @@
 import asyncio
-from xknx.knxip import KNXIPServiceType, KNXIPFrame, HPAI, ErrorCode
+from xknx.knxip import ErrorCode
 
 
 class RequestResponse():
@@ -34,7 +34,7 @@ class RequestResponse():
         yield from self.stop_timeout()
 
         self.udpclient.unregister_callback(cb)
-        
+
 
     @asyncio.coroutine
     def send_request(self):

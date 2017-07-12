@@ -1,7 +1,7 @@
 import unittest
 import asyncio
 
-from xknx import XKNX, Config, Light, Outlet, Shutter, Thermostat, Time, \
+from xknx import XKNX, Light, Outlet, Shutter, Thermostat, Time, \
     Switch, Action, Sensor
 
 # pylint: disable=too-many-public-methods,invalid-name

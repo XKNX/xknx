@@ -1,5 +1,4 @@
-import asyncio
-from xknx.knxip import KNXIPServiceType, KNXIPFrame, ConnectRequestType, HPAI, ConnectResponse, ErrorCode
+from xknx.knxip import KNXIPServiceType, KNXIPFrame, ConnectRequestType, HPAI, ConnectResponse
 from .request_response import RequestResponse
 
 class Connect(RequestResponse):
@@ -29,4 +28,3 @@ class Connect(RequestResponse):
     def on_success_hook(self, knxipframe):
         self.communication_channel = knxipframe.body.communication_channel
         self.identifier = knxipframe.body.identifier
-

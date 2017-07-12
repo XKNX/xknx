@@ -1,5 +1,5 @@
 import asyncio
-from xknx.knx import Telegram, Address, DPTBinary, TelegramDirection
+from xknx.knx import TelegramDirection
 from xknx.knxip import TunnellingRequest, KNXIPFrame, KNXIPServiceType
 from .disconnect import Disconnect
 from .connectionstate import ConnectionState
@@ -11,15 +11,15 @@ class Tunnel():
 
     def __init__(self, xknx, src_address, local_ip, gateway_ip, gateway_port, telegram_received_callback=None):
         self.xknx = xknx
-        self.src_address = src_address 
+        self.src_address = src_address
         self.local_ip = local_ip
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
         self.telegram_received_callback = telegram_received_callback
 
         self.udp_client = UDPClient(self.xknx,
-            (self.local_ip, 0),
-            (self.gateway_ip, self.gateway_port))
+                                    (self.local_ip, 0),
+                                    (self.gateway_ip, self.gateway_port))
 
         self.udp_client.register_callback(
             self.tunnel_reqest_received, [TunnellingRequest.service_type])
@@ -33,7 +33,7 @@ class Tunnel():
                 KNXIPServiceType.TUNNELLING_REQUEST:
             print("SERVICE TYPE NOT IMPLEMENETED: ", knxipframe)
         else:
-            self.send_ack( knxipframe.body.communication_channel_id, knxipframe.body.sequence_counter )
+            self.send_ack(knxipframe.body.communication_channel_id, knxipframe.body.sequence_counter)
             telegram = knxipframe.body.cemi.telegram
             telegram.direction = TelegramDirection.INCOMING
             if self.telegram_received_callback is not None:
@@ -43,7 +43,7 @@ class Tunnel():
     def send_ack(self, communication_channel_id, sequence_counter):
         ack_knxipframe = KNXIPFrame()
         ack_knxipframe.init(KNXIPServiceType.TUNNELLING_ACK)
-        ack_knxipframe.body.communication_channel_id = communication_channel_id  
+        ack_knxipframe.body.communication_channel_id = communication_channel_id
         ack_knxipframe.body.sequence_counter = sequence_counter
         ack_knxipframe.normalize()
         self.udp_client.send(ack_knxipframe)

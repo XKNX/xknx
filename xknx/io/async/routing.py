@@ -13,9 +13,10 @@ class Routing():
         self.local_ip = local_ip
 
         self.udpclient = UDPClient(self.xknx,
-            (local_ip, 0),
-            (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
-            multicast=True, bind_to_multicast_addr=True)
+                                   (local_ip, 0),
+                                   (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+                                   multicast=True,
+                                   bind_to_multicast_addr=True)
 
         self.udpclient.register_callback(
             self.response_rec_callback,

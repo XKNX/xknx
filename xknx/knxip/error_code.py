@@ -42,4 +42,3 @@ class ErrorCode(Enum):
     # The requested tunnelling layer is not supported by the
     # KNXnet/IP Server device.
     E_TUNNELLING_LAYER = 0x29
-

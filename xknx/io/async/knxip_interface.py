@@ -1,9 +1,5 @@
 import asyncio
-from xknx.knx import TelegramDirection
-from xknx.knxip import KNXIPFrame, KNXIPServiceType, APCICommand
-from .udp_client import UDPClient
 from .gateway_scanner import GatewayScanner
-from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 
 from .routing import Routing
 from .tunnel import Tunnel
@@ -59,4 +55,4 @@ class KNXIPInterface():
 
     @asyncio.coroutine
     def send_telegram(self, telegram):
-        yield from self.interface.send_telegram(telegram) 
+        yield from self.interface.send_telegram(telegram)
