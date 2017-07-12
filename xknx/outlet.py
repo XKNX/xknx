@@ -37,7 +37,7 @@ class Outlet(Device):
 
     def has_group_address(self, group_address):
         return (self.group_address == group_address) or \
-               (self.group_address_state == group_address_state)
+               (self.group_address_state == group_address)
 
 
     def set_internal_state(self, state):
