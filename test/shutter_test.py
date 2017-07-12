@@ -18,7 +18,7 @@ class TestShutter(unittest.TestCase):
     # SYNC STATE
     #
     def test_sync_state(self):
-        xknx = XKNX(self.loop, start=False)
+        xknx = XKNX(loop=self.loop, start=False)
         shutter = Shutter(
             xknx,
             'TestShutter',
@@ -37,7 +37,7 @@ class TestShutter(unittest.TestCase):
     # TEST SET UP
     #
     def test_set_up(self):
-        xknx = XKNX(self.loop, start=False)
+        xknx = XKNX(loop=self.loop, start=False)
         shutter = Shutter(
             xknx,
             'TestShutter',
@@ -56,7 +56,7 @@ class TestShutter(unittest.TestCase):
     # TEST SET DOWN
     #
     def test_set_short_down(self):
-        xknx = XKNX(self.loop, start=False)
+        xknx = XKNX(loop=self.loop, start=False)
         shutter = Shutter(
             xknx,
             'TestShutter',
@@ -75,7 +75,7 @@ class TestShutter(unittest.TestCase):
     # TEST SET SHORT UP
     #
     def test_set_short_up(self):
-        xknx = XKNX(self.loop, start=False)
+        xknx = XKNX(loop=self.loop, start=False)
         shutter = Shutter(
             xknx,
             'TestShutter',
@@ -94,7 +94,7 @@ class TestShutter(unittest.TestCase):
     # TEST SET SHORT DOWN
     #
     def test_set_down(self):
-        xknx = XKNX(self.loop, start=False)
+        xknx = XKNX(loop=self.loop, start=False)
         shutter = Shutter(
             xknx,
             'TestShutter',
@@ -113,7 +113,7 @@ class TestShutter(unittest.TestCase):
     # TEST STOP
     #
     def test_stop(self):
-        xknx = XKNX(self.loop, start=False)
+        xknx = XKNX(loop=self.loop, start=False)
         shutter = Shutter(
             xknx, 'TestShutter',
             group_address_long='1/2/1',
@@ -131,7 +131,7 @@ class TestShutter(unittest.TestCase):
     # TEST POSITION
     #
     def test_position(self):
-        xknx = XKNX(self.loop, start=False)
+        xknx = XKNX(loop=self.loop, start=False)
         shutter = Shutter(
             xknx,
             'TestShutter',
@@ -147,7 +147,7 @@ class TestShutter(unittest.TestCase):
 
 
     def test_position_without_position_address_up(self):
-        xknx = XKNX(self.loop, start=False)
+        xknx = XKNX(loop=self.loop, start=False)
         shutter = Shutter(
             xknx,
             'TestShutter',
@@ -163,7 +163,7 @@ class TestShutter(unittest.TestCase):
 
 
     def test_position_without_position_address_down(self):
-        xknx = XKNX(self.loop, start=False)
+        xknx = XKNX(loop=self.loop, start=False)
         shutter = Shutter(
             xknx,
             'TestShutter',
@@ -182,7 +182,7 @@ class TestShutter(unittest.TestCase):
     # TEST PROCESS
     #
     def test_process(self):
-        xknx = XKNX(self.loop, start=False)
+        xknx = XKNX(loop=self.loop, start=False)
         shutter = Shutter(
             xknx,
             'TestShutter',
@@ -199,7 +199,7 @@ class TestShutter(unittest.TestCase):
 
     def test_process_callback(self):
         # pylint: disable=no-self-use
-        xknx = XKNX(self.loop, start=False)
+        xknx = XKNX(loop=self.loop, start=False)
         shutter = Shutter(
             xknx,
             'TestShutter',

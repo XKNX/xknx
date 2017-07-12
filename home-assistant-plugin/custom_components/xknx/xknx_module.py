@@ -17,7 +17,7 @@ class XKNXModule(object):
 
         xknx_config = XKNXConfig(hass, config)
 
-        self.xknx = xknx.XKNX(hass.loop, start=False)
+        self.xknx = xknx.XKNX(loop=hass.loop, start=False)
 
         self.initialized = False
         self.lock = threading.Lock()

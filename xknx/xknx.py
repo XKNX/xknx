@@ -5,11 +5,13 @@ from xknx.io.async import KNXIPInterface
 from .devices import Devices
 from .globals import Globals
 from .telegram_queue import  TelegramQueue
+from .config import Config
 
 class XKNX:
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self,
+                 config=None,
                  loop=None,
                  own_address=None,
                  start=True,
@@ -26,6 +28,9 @@ class XKNX:
         self.telegram_queue = TelegramQueue(self)
         self.state_updater = None
         self.knxip_interface = None
+
+        if config is not None:
+            Config(self).read(config)
 
         if own_address is not None:
             self.globals.own_address = Address(own_address)

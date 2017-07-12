@@ -18,7 +18,7 @@ class TestThermostat(unittest.TestCase):
     # SUPPORTS TEMPERATURE / SETPOINT
     #
     def test_support_temperature(self):
-        xknx = XKNX(self.loop, start=False)
+        xknx = XKNX(loop=self.loop, start=False)
         thermostat = Thermostat(
             xknx,
             'TestThermostat',
@@ -29,7 +29,7 @@ class TestThermostat(unittest.TestCase):
 
 
     def test_support_setpoint(self):
-        xknx = XKNX(self.loop, start=False)
+        xknx = XKNX(loop=self.loop, start=False)
         thermostat = Thermostat(
             xknx,
             'TestThermostat',
@@ -43,7 +43,7 @@ class TestThermostat(unittest.TestCase):
     #
     @asyncio.coroutine
     def test_sync_state(self):
-        xknx = XKNX(self.loop, start=False)
+        xknx = XKNX(loop=self.loop, start=False)
         thermostat = Thermostat(
             xknx,
             'TestThermostat',
@@ -65,7 +65,7 @@ class TestThermostat(unittest.TestCase):
     # TEST PROCESS
     #
     def test_process_temperature(self):
-        xknx = XKNX(self.loop, start=False)
+        xknx = XKNX(loop=self.loop, start=False)
         thermostat = Thermostat(
             xknx,
             'TestThermostat',
@@ -79,7 +79,7 @@ class TestThermostat(unittest.TestCase):
 
 
     def test_process_setpoint(self):
-        xknx = XKNX(self.loop, start=False)
+        xknx = XKNX(loop=self.loop, start=False)
         thermostat = Thermostat(
             xknx,
             'TestThermostat',
@@ -94,7 +94,7 @@ class TestThermostat(unittest.TestCase):
 
     def test_process_callback_temp(self):
         # pylint: disable=no-self-use
-        xknx = XKNX(self.loop, start=False)
+        xknx = XKNX(loop=self.loop, start=False)
         thermostat = Thermostat(
             xknx,
             'TestThermostat',
@@ -113,7 +113,7 @@ class TestThermostat(unittest.TestCase):
 
     def test_process_callback_setpoint(self):
         # pylint: disable=no-self-use
-        xknx = XKNX(self.loop, start=False)
+        xknx = XKNX(loop=self.loop, start=False)
         thermostat = Thermostat(
             xknx,
             'TestThermostat',
