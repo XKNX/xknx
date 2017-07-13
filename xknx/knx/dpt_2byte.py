@@ -35,9 +35,9 @@ class DPT2Byte(DPTBase):
                value <= cls.value_max
 
 
-class DPT_UElCurrentmA(DPT2Byte):
+class DPTUElCurrentmA(DPT2Byte):
     """
-    Abstraction for KNX 2 Byte DPT_UElCurrentmA
+    Abstraction for KNX 2 Byte DPTUElCurrentmA
     DPT 7.012
     """
 

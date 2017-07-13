@@ -43,10 +43,12 @@ class XKNX:
 
 
     def __del__(self):
-        task = asyncio.Task(
-            self.async_stop())
-        self.loop.run_until_complete(task)
-
+        try:
+            task = asyncio.Task(
+                self.async_stop())
+            self.loop.run_until_complete(task)
+        except RuntimeError:
+            print("Could not close loop")
 
     def start(self,
               state_updater=False,
