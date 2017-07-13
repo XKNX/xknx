@@ -8,8 +8,10 @@ from .tunnelling import Tunnelling
 from .udp_client import UDPClient
 
 class Tunnel():
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(self, xknx, src_address, local_ip, gateway_ip, gateway_port, telegram_received_callback=None):
+        # pylint: disable=too-many-arguments
         self.xknx = xknx
         self.src_address = src_address
         self.local_ip = local_ip
@@ -29,6 +31,7 @@ class Tunnel():
 
 
     def tunnel_reqest_received(self, knxipframe, udp_client):
+        # pylint: disable=unused-argument
         if knxipframe.header.service_type_ident != \
                 KNXIPServiceType.TUNNELLING_REQUEST:
             print("SERVICE TYPE NOT IMPLEMENETED: ", knxipframe)

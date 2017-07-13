@@ -18,7 +18,7 @@ class XKNX:
                  state_updater=False,
                  daemon_mode=False,
                  telegram_received_callback=None):
-
+        # pylint: disable=too-many-arguments
         self.globals = Globals()
         self.devices = Devices()
         self.telegrams = asyncio.Queue()
@@ -43,12 +43,9 @@ class XKNX:
 
 
     def __del__(self):
-        try:
-            task = asyncio.Task(
-                self.async_stop())
-            self.loop.run_until_complete(task)
-        except:
-            pass
+        task = asyncio.Task(
+            self.async_stop())
+        self.loop.run_until_complete(task)
 
 
     def start(self,

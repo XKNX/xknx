@@ -3,6 +3,7 @@ from xknx.knxip import ErrorCode
 
 
 class RequestResponse():
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(self, xknx, udp_client, awaited_response_class, timeout_in_seconds=1):
         self.xknx = xknx

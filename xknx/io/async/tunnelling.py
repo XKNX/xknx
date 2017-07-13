@@ -4,6 +4,7 @@ from .request_response import RequestResponse
 class Tunnelling(RequestResponse):
 
     def __init__(self, xknx, udp_client, telegram, src_address, sequence_counter, communication_channel):
+        # pylint: disable=too-many-arguments
         self.xknx = xknx
         self.udp_client = udp_client
         self.src_address = src_address

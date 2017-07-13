@@ -35,7 +35,7 @@ class GatewayScanner():
 
             for dib in knxipframe.body.dibs:
                 if isinstance(dib, DIBSuppSVCFamilies):
-                    self.supports_routing =  dib.supports(DIBServiceFamily.ROUTING)
+                    self.supports_routing = dib.supports(DIBServiceFamily.ROUTING)
                     self.supports_tunneling = dib.supports(DIBServiceFamily.TUNNELING)
 
             (self.found_local_ip, _) = udp_client.getsockname()
