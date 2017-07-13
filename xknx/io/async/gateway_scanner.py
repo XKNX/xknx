@@ -1,6 +1,7 @@
 import asyncio
 import netifaces
-from xknx.knxip import HPAI, KNXIPFrame, SearchResponse, KNXIPServiceType
+from xknx.knxip import HPAI, KNXIPFrame, SearchResponse, KNXIPServiceType, \
+    DIBSuppSVCFamilies, DIBServiceFamily
 from .udp_client import UDPClient
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 
@@ -15,6 +16,8 @@ class GatewayScanner():
         self.found_port = None
         self.found_name = None
         self.found_local_ip = None
+        self.supports_routing = False
+        self.supports_tunneling = False
         self.udpclients = []
         self.timeout_in_seconds = timeout_in_seconds
         self.timeout_callback = None
@@ -29,6 +32,11 @@ class GatewayScanner():
             self.found_ip_addr = knxipframe.body.control_endpoint.ip_addr
             self.found_port = knxipframe.body.control_endpoint.port
             self.found_name = knxipframe.body.device_name
+
+            for dib in knxipframe.body.dibs:
+                if isinstance(dib, DIBSuppSVCFamilies):
+                    self.supports_routing =  dib.supports(DIBServiceFamily.ROUTING)
+                    self.supports_tunneling = dib.supports(DIBServiceFamily.TUNNELING)
 
             (self.found_local_ip, _) = udp_client.getsockname()
 

@@ -26,20 +26,22 @@ class KNXIPInterface():
             gatewayscanner.found_port,
             gatewayscanner.found_local_ip))
 
-        self.interface = Tunnel(
-            self.xknx,
-            self.xknx.globals.own_address,
-            local_ip=gatewayscanner.found_local_ip,
-            gateway_ip=gatewayscanner.found_ip_addr,
-            gateway_port=gatewayscanner.found_port,
-            telegram_received_callback=self.telegram_received)
-        yield from self.interface.start()
+        if gatewayscanner.supports_tunneling:
+            self.interface = Tunnel(
+                self.xknx,
+                self.xknx.globals.own_address,
+                local_ip=gatewayscanner.found_local_ip,
+                gateway_ip=gatewayscanner.found_ip_addr,
+                gateway_port=gatewayscanner.found_port,
+                telegram_received_callback=self.telegram_received)
+            yield from self.interface.start()
 
-        #self.interface = Routing(
-        #    self.xknx,
-        #    self.telegram_received,
-        #    gatewayscanner.found_local_ip)
-        #yield from self.interface.start()
+        elif gatewayscanner.supports_routing:
+            self.interface = Routing(
+                self.xknx,
+                self.telegram_received,
+                gatewayscanner.found_local_ip)
+            yield from self.interface.start()
 
 
     @asyncio.coroutine

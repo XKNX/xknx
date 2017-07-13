@@ -1,7 +1,7 @@
 import unittest
 
 from xknx.knxip import KNXIPFrame, KNXIPServiceType, SearchResponse, \
-    HPAI, DIBDeviceInformation, DIBSuppSVCFamilies
+    HPAI, DIBDeviceInformation, DIBSuppSVCFamilies, DIBServiceFamily
 
 
 class Test_KNXIP_Discovery(unittest.TestCase):
@@ -37,6 +37,9 @@ class Test_KNXIP_Discovery(unittest.TestCase):
         self.assertTrue(isinstance(
             knxipframe.body.dibs[1], DIBSuppSVCFamilies))
         self.assertEqual(knxipframe.body.device_name, "Gira KNX/IP-Router")
+        self.assertTrue(knxipframe.body.dibs[1].supports(DIBServiceFamily.ROUTING))
+        self.assertTrue(knxipframe.body.dibs[1].supports(DIBServiceFamily.TUNNELING))
+        self.assertFalse(knxipframe.body.dibs[1].supports(DIBServiceFamily.OBJECT_SERVER))
 
         knxipframe2 = KNXIPFrame()
         knxipframe2.init(KNXIPServiceType.SEARCH_RESPONSE)

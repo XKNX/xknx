@@ -104,6 +104,13 @@ class DIBSuppSVCFamilies(DIB):
         self.families = []
 
 
+    def supports(self, name):
+        for family in self.families:
+            if name == family.name:
+                return True
+        return False
+
+
     def calculated_length(self):
         return len(self.families)*2+2
 
