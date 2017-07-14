@@ -22,27 +22,38 @@ class KNXIPInterface():
         if not gatewayscanner.found:
             raise Exception("No Gateways found")
 
-        print("Connecting to {}:{} from {}".format(
-            gatewayscanner.found_ip_addr,
-            gatewayscanner.found_port,
-            gatewayscanner.found_local_ip))
-
         if gatewayscanner.supports_tunneling:
-            self.interface = Tunnel(
-                self.xknx,
-                self.xknx.globals.own_address,
-                local_ip=gatewayscanner.found_local_ip,
-                gateway_ip=gatewayscanner.found_ip_addr,
-                gateway_port=gatewayscanner.found_port,
-                telegram_received_callback=self.telegram_received)
-            yield from self.interface.start()
+            yield from self.start_tunnelling(gatewayscanner.found_local_ip,
+                                             gatewayscanner.found_ip_addr,
+                                             gatewayscanner.found_port)
 
         elif gatewayscanner.supports_routing:
-            self.interface = Routing(
-                self.xknx,
-                self.telegram_received,
-                gatewayscanner.found_local_ip)
-            yield from self.interface.start()
+            yield from self.start_routing(gatewayscanner.found_local_ip)
+
+
+    @asyncio.coroutine
+    def start_tunnelling(self, local_ip, gateway_ip, gateway_port):
+        print("Starting tunnel to {}:{} from {}".format(
+            gateway_ip,
+            gateway_port,
+            local_ip))
+        self.interface = Tunnel(
+            self.xknx,
+            self.xknx.globals.own_address,
+            local_ip=local_ip,
+            gateway_ip=gateway_ip,
+            gateway_port=gateway_port,
+            telegram_received_callback=self.telegram_received)
+        yield from self.interface.start()
+
+    @asyncio.coroutine
+    def start_routing(self, local_ip):
+        print("Starting Routing from {}".format(local_ip))
+        self.interface = Routing(
+            self.xknx,
+            self.telegram_received,
+            local_ip)
+        yield from self.interface.start()
 
 
     @asyncio.coroutine
