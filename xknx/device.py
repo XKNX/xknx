@@ -7,7 +7,7 @@ class Device:
 
     def after_update(self):
         if self.after_update_callback is not None:
-            #pylint: disable=not-callable
+            # pylint: disable=not-callable
             self.after_update_callback(self)
 
     def sync_state(self):

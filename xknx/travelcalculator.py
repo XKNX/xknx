@@ -13,7 +13,7 @@ class TravelStatus(Enum):
 
 
 class TravelCalculator:
-    #pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-instance-attributes
 
     def  __init__(self, travel_time_down, travel_time_up):
         self.position_type = PositionType.UNKNOWN

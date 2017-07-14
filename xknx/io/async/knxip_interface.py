@@ -14,6 +14,7 @@ class KNXIPInterface():
 
     @asyncio.coroutine
     def start(self):
+        # pylint: disable=redefined-variable-type
         gatewayscanner = GatewayScanner(self.xknx)
         yield from gatewayscanner.async_start()
         gatewayscanner.stop()

@@ -126,7 +126,7 @@ class CEMIFrame(KNXIPBody):
                 "APDU LEN should be {} but is {}".format(
                     self.mpdu_len, len(apdu)))
 
-        #pylint: disable=redefined-variable-type
+        # pylint: disable=redefined-variable-type
         if len(apdu) == 1:
             apci = tpci_apci & DPTBinary.APCI_BITMASK
             self.payload = DPTBinary(apci)

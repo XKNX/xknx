@@ -51,9 +51,9 @@ class Routing():
         yield from self.send_knxipframe(knxipframe)
 
 
-    @asyncio.coroutine
-    def send_knxipframe(self, knxipframe):
-        yield from self.interface.send_knxipframe(knxipframe)
+    #@asyncio.coroutine
+    #def send_knxipframe(self, knxipframe):
+    #    yield from self.interface.send_knxipframe(knxipframe)
 
 
     @asyncio.coroutine

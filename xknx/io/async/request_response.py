@@ -67,6 +67,7 @@ class RequestResponse():
 
 
     def on_error_hook(self, knxipframe):
+        # pylint: disable=no-self-use
         print("Error connection state failed: ", knxipframe.body.status_code)
 
 

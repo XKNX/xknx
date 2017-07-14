@@ -91,6 +91,7 @@ class Sensor(Device):
 
 
     def resolve_state(self):
+        # pylint: disable=invalid-name,too-many-return-statements
         if self.state is None:
             return None
 

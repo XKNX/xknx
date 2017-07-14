@@ -5,6 +5,7 @@ from xknx.knxip import KNXIPFrame, CouldNotParseKNXIP
 
 
 class UDPClient:
+    # pylint: disable=too-few-public-methods
 
     class Callback:
         def __init__(self, callback, service_types=None):
@@ -47,6 +48,7 @@ class UDPClient:
             pass
 
     def __init__(self, xknx, local_addr, remote_addr, multicast=False, bind_to_multicast_addr=False):
+        # pylint: disable=too-many-arguments
         if not isinstance(local_addr, tuple):
             raise TypeError()
         if not isinstance(remote_addr, tuple):
@@ -96,7 +98,8 @@ class UDPClient:
         self.callbacks.remove(callb)
 
 
-    def create_multicast_sock(self, own_ip, remote_addr, bind_to_multicast_addr):
+    @staticmethod
+    def create_multicast_sock(own_ip, remote_addr, bind_to_multicast_addr):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.setblocking(False)
@@ -140,7 +143,7 @@ class UDPClient:
             data_received_callback=self.data_received_callback)
 
         if self.multicast:
-            sock = self.create_multicast_sock(self.local_addr[0], self.remote_addr, self.bind_to_multicast_addr)
+            sock = UDPClient.create_multicast_sock(self.local_addr[0], self.remote_addr, self.bind_to_multicast_addr)
             (transport, _) = yield from self.xknx.loop.create_datagram_endpoint(
                 lambda: udp_client_factory, sock=sock)
             self.transport = transport

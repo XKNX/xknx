@@ -32,11 +32,7 @@ upload-pypi:
 	@python3 setup.py sdist upload -r pypi
 
 pylint:
-	@pylint --rcfile=.pylintrc xknx test/*.py
-
-	# home-assistant-plugin does not have all errors solved (yet)
-	-@$(MAKE) -C home-assistant-plugin pylint
-	@echo "*** pylint complete ***"
+	@pylint -j 8 --rcfile=.pylintrc xknx test/*.py
 
 pydocstyle:
 	 @pydocstyle xknx test home-assistant-plugin	
