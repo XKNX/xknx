@@ -43,9 +43,18 @@ class TestDevices(unittest.TestCase):
         devices.add(outlet2)
 
         self.assertEqual(devices["Living-Room.Light_1"], light1)
-        self.assertEqual(devices["Living-Room.Light_2"], light2)
         self.assertEqual(devices["TestOutlet_1"], outlet1)
+        self.assertEqual(devices["Living-Room.Light_2"], light2)
         self.assertEqual(devices["TestOutlet_2"], outlet2)
+        with self.assertRaises(KeyError):
+            devices["TestOutlet_X"]
+
+        self.assertEqual(devices[0], light1)
+        self.assertEqual(devices[1], outlet1)
+        self.assertEqual(devices[2], light2)
+        self.assertEqual(devices[3], outlet2)
+        with self.assertRaises(IndexError):
+            devices[4]
 
 
     def test_device_by_group_address(self):

@@ -20,6 +20,8 @@ class Devices:
         for device in self.__devices:
             if device.name == key:
                 return device
+        if isinstance(key, int):
+            return self.__devices[key]
         raise KeyError
 
 
