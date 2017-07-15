@@ -47,6 +47,7 @@ class TestDevices(unittest.TestCase):
         self.assertEqual(devices["Living-Room.Light_2"], light2)
         self.assertEqual(devices["TestOutlet_2"], outlet2)
         with self.assertRaises(KeyError):
+            # pylint: disable=pointless-statement
             devices["TestOutlet_X"]
 
         self.assertEqual(devices[0], light1)
@@ -54,6 +55,7 @@ class TestDevices(unittest.TestCase):
         self.assertEqual(devices[2], light2)
         self.assertEqual(devices[3], outlet2)
         with self.assertRaises(IndexError):
+            # pylint: disable=pointless-statement
             devices[4]
 
 
