@@ -5,11 +5,16 @@ from xknx.knx import TelegramDirection, TelegramType
 
 class TelegramQueue():
 
-    def __init__(self, xknx, telegram_received_callback=None):
+    def __init__(self, xknx):
         self.xknx = xknx
-        self.telegram_received_callback = telegram_received_callback
-
+        self.telegram_received_cbs = []
         self.queue_stopped = asyncio.Event()
+
+    def register_telegram_received_cb(self, telegram_received_cb):
+        self.telegram_received_cbs.append(telegram_received_cb)
+
+    def unregister_telegram_received_cb(self, telegram_received_cb):
+        self.telegram_received_cbs.remove(telegram_received_cb)
 
     @asyncio.coroutine
     def start(self):
@@ -74,14 +79,16 @@ class TelegramQueue():
         if telegram.telegramtype == TelegramType.GROUP_WRITE or \
                 telegram.telegramtype == TelegramType.GROUP_RESPONSE:
 
-            for device in self.xknx.devices.devices_by_group_address(
-                    telegram.group_address):
+            processed = False
+            for telegram_received_cb in self.telegram_received_cbs:
+                if telegram_received_cb(self.xknx, telegram):
+                    processed = True
 
-                device.process(telegram)
-                if self.telegram_received_callback:
-                    self.telegram_received_callback(self.xknx,
-                                                    device,
-                                                    telegram)
+            if not processed:
+                for device in self.xknx.devices.devices_by_group_address(
+                        telegram.group_address):
+                    device.process(telegram)
 
         elif telegram.telegramtype == TelegramType.GROUP_READ:
-            print("IGNORING GROUP READ FOR {0}".format(telegram.group_address))
+            #print("IGNORING GROUP READ FOR {0}".format(telegram.group_address))
+            pass

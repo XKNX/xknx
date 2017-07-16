@@ -39,17 +39,17 @@ class TestThermostat(unittest.TestCase):
         self.assertTrue(thermostat.supports_setpoint)
 
     #
-    # SYNC STATE
+    # SYNC
     #
     @asyncio.coroutine
-    def test_sync_state(self):
+    def test_synce(self):
         xknx = XKNX(loop=self.loop, start=False)
         thermostat = Thermostat(
             xknx,
             'TestThermostat',
             group_address_temperature='1/2/3',
             group_address_setpoint='1/2/4')
-        thermostat.sync_state()
+        self.loop.run_until_complete(asyncio.Task(thermostat.sync(False)))
 
         self.assertEqual(xknx.telegrams.qsize(), 2)
 
@@ -102,7 +102,7 @@ class TestThermostat(unittest.TestCase):
             group_address_setpoint='1/2/4')
 
         after_update_callback = Mock()
-        thermostat.after_update_callback = after_update_callback
+        thermostat.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(Address('1/2/3'))
         telegram.payload = DPTArray(DPTTemperature().to_knx(21.34))
@@ -121,7 +121,7 @@ class TestThermostat(unittest.TestCase):
             group_address_setpoint='1/2/4')
 
         after_update_callback = Mock()
-        thermostat.after_update_callback = after_update_callback
+        thermostat.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(Address('1/2/4'))
         telegram.payload = DPTArray(DPTTemperature().to_knx(21.34))

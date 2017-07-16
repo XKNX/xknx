@@ -73,7 +73,7 @@ class TestBinaryInput(unittest.TestCase):
         switch = Switch(xknx, 'TestInput', group_address='1/2/3')
 
         after_update_callback = Mock()
-        switch.after_update_callback = after_update_callback
+        switch.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram()
         telegram.payload = DPTBinary(1)

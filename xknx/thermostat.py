@@ -1,5 +1,6 @@
 import time
-from xknx.knx import Address, Telegram, TelegramType, DPTArray, DPTTemperature
+import datetime
+from xknx.knx import Address, DPTArray, DPTTemperature
 from .device import Device
 from .exception import CouldNotParseTelegram
 
@@ -11,9 +12,11 @@ class Thermostat(Device):
                  xknx,
                  name,
                  group_address_temperature=None,
-                 group_address_setpoint=None):
+                 group_address_setpoint=None,
+                 device_updated_cb=None):
+        # pylint: disable=too-many-arguments
 
-        Device.__init__(self, xknx, name)
+        Device.__init__(self, xknx, name, device_updated_cb)
 
         if isinstance(group_address_temperature, (str, int)):
             group_address_temperature = Address(group_address_temperature)
@@ -81,21 +84,18 @@ class Thermostat(Device):
              telegram.payload.value[1]))
         self.after_update()
 
-    def sync_state(self):
+    def state_addresses(self):
+        state_addresses = []
         if self.supports_temperature:
-            telegram = Telegram(
-                self.group_address_temperature,
-                TelegramType.GROUP_READ)
-            self.xknx.telegrams.put_nowait(telegram)
-
+            state_addresses.append(self.group_address_temperature)
         if self.supports_setpoint:
-            telegram = Telegram(
-                self.group_address_setpoint,
-                TelegramType.GROUP_READ)
-            self.xknx.telegrams.put_nowait(telegram)
-
+            state_addresses.append(self.group_address_setpoint)
+        return state_addresses
 
     def __str__(self):
+        last_set_formatted = \
+                datetime.datetime.fromtimestamp(
+                    self.last_set).strftime('%Y-%m-%d %H:%M:%S')
         return '<Thermostat name="{0}" ' \
                'group_address_temperature="{1}"  ' \
                'group_address_setpoint="{2}" ' \
@@ -104,7 +104,7 @@ class Thermostat(Device):
                        self.group_address_temperature,
                        self.group_address_setpoint,
                        self.temperature,
-                       self.last_set)
+                       last_set_formatted)
 
 
     def __eq__(self, other):

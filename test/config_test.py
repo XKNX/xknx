@@ -24,7 +24,8 @@ class TestConfig(unittest.TestCase):
             xknx.devices['Living-Room.Light_1'],
             Light(xknx,
                   'Living-Room.Light_1',
-                  group_address_switch='1/6/7'))
+                  group_address_switch='1/6/7',
+                  device_updated_cb=xknx.devices.device_updated))
 
 
     def test_config_ligh_dimm(self):
@@ -35,7 +36,8 @@ class TestConfig(unittest.TestCase):
                   'Diningroom.Light_1',
                   group_address_switch='1/6/4',
                   group_address_dimm='1/6/5',
-                  group_address_brightness='1/6/6'))
+                  group_address_brightness='1/6/6',
+                  device_updated_cb=xknx.devices.device_updated))
 
 
     def test_config_outlet(self):
@@ -44,7 +46,8 @@ class TestConfig(unittest.TestCase):
             xknx.devices['Livingroom.Outlet_2'],
             Outlet(xknx,
                    'Livingroom.Outlet_2',
-                   group_address='1/3/2'))
+                   group_address='1/3/2',
+                   device_updated_cb=xknx.devices.device_updated))
 
 
     def test_config_shutter(self):
@@ -58,7 +61,8 @@ class TestConfig(unittest.TestCase):
                     group_address_position_feedback='1/4/7',
                     group_address_position='1/4/8',
                     travel_time_down=50,
-                    travel_time_up=60))
+                    travel_time_up=60,
+                    device_updated_cb=xknx.devices.device_updated))
 
 
     def test_config_temperature(self):
@@ -67,7 +71,8 @@ class TestConfig(unittest.TestCase):
             xknx.devices['Kitchen.Thermostat_1'],
             Thermostat(xknx,
                        'Kitchen.Thermostat_1',
-                       group_address_temperature='1/7/1'))
+                       group_address_temperature='1/7/1',
+                       device_updated_cb=xknx.devices.device_updated))
 
     def test_config_setpoint(self):
         xknx = XKNX(config='../xknx.yaml', loop=self.loop, start=False)
@@ -76,7 +81,8 @@ class TestConfig(unittest.TestCase):
             Thermostat(xknx,
                        'Livingroom.Thermostat_2',
                        group_address_temperature='1/7/2',
-                       group_address_setpoint='1/7/3'))
+                       group_address_setpoint='1/7/3',
+                       device_updated_cb=xknx.devices.device_updated))
 
     def test_config_time(self):
         xknx = XKNX(config='../xknx.yaml', loop=self.loop, start=False)
@@ -84,7 +90,8 @@ class TestConfig(unittest.TestCase):
             xknx.devices['General.Time'],
             Time(xknx,
                  'General.Time',
-                 group_address='2/1/2'))
+                 group_address='2/1/2',
+                 device_updated_cb=xknx.devices.device_updated))
 
 
     def test_config_switch(self):
@@ -102,7 +109,8 @@ class TestConfig(unittest.TestCase):
                        Action(xknx,
                               hook="on",
                               target="Livingroom.Outlet_2",
-                              method="on")]))
+                              method="on")],
+                   device_updated_cb=xknx.devices.device_updated))
 
 
 
@@ -113,7 +121,8 @@ class TestConfig(unittest.TestCase):
             Sensor(xknx,
                    'Heating.Valve1',
                    group_address='2/0/0',
-                   value_type='percent'))
+                   value_type='percent',
+                   device_updated_cb=xknx.devices.device_updated))
 
 
     def test_config_sensor_no_value_type(self):
@@ -122,7 +131,8 @@ class TestConfig(unittest.TestCase):
             xknx.devices['Some.Other.Value'],
             Sensor(xknx,
                    'Some.Other.Value',
-                   group_address='2/0/2'))
+                   group_address='2/0/2',
+                   device_updated_cb=xknx.devices.device_updated))
 
 
     def test_config_sensor_binary_device_class(self):
@@ -133,7 +143,8 @@ class TestConfig(unittest.TestCase):
                    'DiningRoom.Motion.Sensor',
                    group_address='3/0/1',
                    value_type='binary',
-                   device_class='motion'))
+                   device_class='motion',
+                   device_updated_cb=xknx.devices.device_updated))
 
 
     def test_config_sensor_binary_significant_bit(self):
@@ -144,7 +155,8 @@ class TestConfig(unittest.TestCase):
                    'Kitchen.Thermostat.Presence',
                    group_address='3/0/2',
                    value_type='binary',
-                   significant_bit=2))
+                   significant_bit=2,
+                   device_updated_cb=xknx.devices.device_updated))
 
 
 

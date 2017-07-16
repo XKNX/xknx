@@ -86,14 +86,15 @@ class Switch(BinaryInput):
                  xknx,
                  name,
                  group_address=None,
-                 actions=None):
-
+                 actions=None,
+                 device_updated_cb=None):
+        # pylint: disable=too-many-arguments
         if isinstance(group_address, (str, int)):
             group_address = Address(group_address)
         if actions is None:
             actions = []
 
-        BinaryInput.__init__(self, xknx, name, group_address)
+        BinaryInput.__init__(self, xknx, name, group_address, device_updated_cb)
         self.last_set = None
         self.actions = actions
 

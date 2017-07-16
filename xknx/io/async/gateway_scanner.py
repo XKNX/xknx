@@ -10,7 +10,7 @@ class GatewayScanner():
     # pylint: disable=too-many-instance-attributes
     def __init__(self, xknx, timeout_in_seconds=1):
         self.xknx = xknx
-        self.response_recieved_or_timeout = asyncio.Event()
+        self.response_received_or_timeout = asyncio.Event()
         self.found = False
         self.found_ip_addr = None
         self.found_port = None
@@ -40,7 +40,7 @@ class GatewayScanner():
 
             (self.found_local_ip, _) = udp_client.getsockname()
 
-            self.response_recieved_or_timeout.set()
+            self.response_received_or_timeout.set()
             self.found = True
 
 
@@ -53,7 +53,7 @@ class GatewayScanner():
     def async_start(self):
         yield from self.send_search_requests()
         yield from self.start_timeout()
-        yield from self.response_recieved_or_timeout.wait()
+        yield from self.response_received_or_timeout.wait()
         yield from self.stop()
         yield from self.stop_timeout()
 
@@ -102,7 +102,7 @@ class GatewayScanner():
 
 
     def timeout(self):
-        self.response_recieved_or_timeout.set()
+        self.response_received_or_timeout.set()
 
 
     @asyncio.coroutine

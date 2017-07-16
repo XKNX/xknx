@@ -4,7 +4,13 @@ class Devices:
 
     def __init__(self):
         self.__devices = []
+        self.device_updated_cbs = []
 
+    def register_device_updated_cb(self, device_updated_cb):
+        self.device_updated_cbs.append(device_updated_cb)
+
+    def unregister_device_updated_cb(self, device_updated_cb):
+        self.device_updated_cbs.remove(device_updated_cb)
 
     def __iter__(self):
         yield from self.__devices
@@ -32,4 +38,9 @@ class Devices:
     def add(self, device):
         if not isinstance(device, Device):
             raise TypeError()
+        device.register_device_updated_cb(self.device_updated)
         self.__devices.append(device)
+
+    def device_updated(self, device):
+        for device_updated_cb in self.device_updated_cbs:
+            device_updated_cb(device)

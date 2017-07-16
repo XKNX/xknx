@@ -15,9 +15,9 @@ class TestShutter(unittest.TestCase):
         self.loop.close()
 
     #
-    # SYNC STATE
+    # SYNC
     #
-    def test_sync_state(self):
+    def test_sync(self):
         xknx = XKNX(loop=self.loop, start=False)
         shutter = Shutter(
             xknx,
@@ -26,7 +26,7 @@ class TestShutter(unittest.TestCase):
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_feedback='1/2/4')
-        shutter.sync_state()
+        self.loop.run_until_complete(asyncio.Task(shutter.sync(False)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram1,
@@ -209,7 +209,7 @@ class TestShutter(unittest.TestCase):
             group_address_position_feedback='1/2/4')
 
         after_update_callback = Mock()
-        shutter.after_update_callback = after_update_callback
+        shutter.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(Address('1/2/4'), payload=DPTArray(42))
         shutter.process(telegram)

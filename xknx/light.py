@@ -1,4 +1,4 @@
-from xknx.knx  import Address, Telegram, TelegramType, DPTBinary, DPTArray
+from xknx.knx  import Address, Telegram, DPTBinary, DPTArray
 from .device import Device
 from .exception import CouldNotParseTelegram
 
@@ -10,10 +10,11 @@ class Light(Device):
                  group_address_switch=None,
                  group_address_state=None,
                  group_address_dimm=None,
-                 group_address_brightness=None):
+                 group_address_brightness=None,
+                 device_updated_cb=None):
         # pylint: disable=too-many-arguments
 
-        Device.__init__(self, xknx, name)
+        Device.__init__(self, xknx, name, device_updated_cb)
 
         if isinstance(group_address_switch, (str, int)):
             group_address_switch = Address(group_address_switch)
@@ -132,18 +133,13 @@ class Light(Device):
             print("{0}: Could not understand action {1}" \
                 .format(self.get_name(), action))
 
-    def sync_state(self):
-        group_address = self.group_address_state or self.group_address_switch
-        telegram_switch = Telegram(
-            group_address,
-            TelegramType.GROUP_READ)
-        self.xknx.telegrams.put_nowait(telegram_switch)
+    def state_addresses(self):
+        state_addresses = [self.group_address_state or self.group_address_switch,]
 
         if self.supports_dimming:
-            telegram_dimm = Telegram(
-                self.group_address_brightness,
-                TelegramType.GROUP_READ)
-            self.xknx.telegrams.put_nowait(telegram_dimm)
+            state_addresses.append(self.group_address_brightness)
+        return state_addresses
+
 
     def process(self, telegram):
         if telegram.group_address == self.group_address_switch or \

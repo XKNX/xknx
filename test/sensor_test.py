@@ -95,16 +95,16 @@ class TestSensor(unittest.TestCase):
 
 
     #
-    # SYNC STATE
+    # SYNC
     #
-    def test_sync_state(self):
+    def test_sync(self):
         xknx = XKNX(loop=self.loop, start=False)
         sensor = Sensor(
             xknx,
             'TestSensor',
             group_address='1/2/3')
 
-        sensor.sync_state()
+        self.loop.run_until_complete(asyncio.Task(sensor.sync(False)))
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
@@ -138,7 +138,7 @@ class TestSensor(unittest.TestCase):
             group_address='1/2/3')
 
         after_update_callback = Mock()
-        sensor.after_update_callback = after_update_callback
+        sensor.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(Address('1/2/3'))
         telegram.payload = DPTArray((0x01, 0x02, 0x03))

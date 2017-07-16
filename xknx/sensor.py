@@ -1,4 +1,4 @@
-from xknx.knx import Address, Telegram, TelegramType, DPTBinary, DPTArray, \
+from xknx.knx import Address, DPTBinary, DPTArray, \
     DPTScaling, DPTTemperature, DPTLux, DPTWsp, DPTUElCurrentmA
 from .device import Device
 
@@ -10,10 +10,11 @@ class Sensor(Device):
                  group_address=None,
                  value_type=None,
                  device_class=None,
-                 significant_bit=1):
+                 significant_bit=1,
+                 device_updated_cb=None):
         # pylint: disable=too-many-arguments
 
-        Device.__init__(self, xknx, name)
+        Device.__init__(self, xknx, name, device_updated_cb)
 
         if isinstance(group_address, (str, int)):
             group_address = Address(group_address)
@@ -55,9 +56,8 @@ class Sensor(Device):
             self.state = state
             self.after_update()
 
-    def sync_state(self):
-        telegram = Telegram(self.group_address, TelegramType.GROUP_READ)
-        self.xknx.telegrams.put_nowait(telegram)
+    def state_addresses(self):
+        return [self.group_address,]
 
 
     def process(self, telegram):

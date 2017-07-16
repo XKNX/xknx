@@ -1,20 +1,52 @@
 import asyncio
+from enum import Enum
 from .gateway_scanner import GatewayScanner
 
 from .routing import Routing
 from .tunnel import Tunnel
 
+class ConnectionType(Enum):
+    AUTOMATIC = 0
+    TUNNEL = 1
+    ROUTING = 2
+
+
+class ConnectionConfig:
+    # pylint: disable=too-few-public-methods
+    def __init__(self,
+                 connection_type=ConnectionType.AUTOMATIC,
+                 local_ip=None,
+                 gateway_ip=None,
+                 gateway_port=3671):
+        self.connection_type = connection_type
+        self.local_ip = local_ip
+        self.gateway_ip = gateway_ip
+        self.gateway_port = gateway_port
+
+
 
 class KNXIPInterface():
 
-    def __init__(self, xknx):
+    def __init__(self, xknx, connection_config=ConnectionConfig()):
         self.xknx = xknx
         self.interface = None
-
+        self.connection_config = connection_config
 
     @asyncio.coroutine
     def start(self):
-        # pylint: disable=redefined-variable-type
+        if self.connection_config.connection_type == ConnectionType.AUTOMATIC:
+            yield from self.start_automatic()
+        elif self.connection_config.connection_type == ConnectionType.ROUTING:
+            yield from self.start_routing(
+                self.connection_config.local_ip)
+        elif self.connection_config.connection_type == ConnectionType.TUNNEL:
+            yield from self.start_tunnelling(
+                self.connection_config.local_ip,
+                self.connection_config.gateway_ip,
+                self.connection_config.gateway_port)
+
+    @asyncio.coroutine
+    def start_automatic(self):
         gatewayscanner = GatewayScanner(self.xknx)
         yield from gatewayscanner.async_start()
         gatewayscanner.stop()

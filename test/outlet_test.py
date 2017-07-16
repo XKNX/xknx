@@ -15,13 +15,13 @@ class TestOutlet(unittest.TestCase):
         self.loop.close()
 
     #
-    # SYNC STATE
+    # SYNC
     #
-    def test_sync_state(self):
+    def test_sync(self):
 
         xknx = XKNX(loop=self.loop, start=False)
         outlet = Outlet(xknx, "TestOutlet", group_address='1/2/3')
-        outlet.sync_state()
+        self.loop.run_until_complete(asyncio.Task(outlet.sync(False)))
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
@@ -30,13 +30,13 @@ class TestOutlet(unittest.TestCase):
                          Telegram(Address('1/2/3'), TelegramType.GROUP_READ))
 
 
-    def test_sync_state_state_address(self):
+    def test_sync_state_address(self):
 
         xknx = XKNX(loop=self.loop, start=False)
         outlet = Outlet(xknx, "TestOutlet",
                         group_address='1/2/3',
                         group_address_state='1/2/4')
-        outlet.sync_state()
+        self.loop.run_until_complete(asyncio.Task(outlet.sync(False)))
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
@@ -73,7 +73,7 @@ class TestOutlet(unittest.TestCase):
         outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
 
         after_update_callback = Mock()
-        outlet.after_update_callback = after_update_callback
+        outlet.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram()
         telegram.payload = DPTBinary(1)

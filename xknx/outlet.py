@@ -1,4 +1,4 @@
-from xknx.knx import Address, Telegram, TelegramType, DPTBinary
+from xknx.knx import Address, Telegram, DPTBinary
 from .exception import CouldNotParseTelegram
 from .device import Device
 
@@ -8,9 +8,10 @@ class Outlet(Device):
                  xknx,
                  name,
                  group_address=None,
-                 group_address_state=None):
-
-        Device.__init__(self, xknx, name)
+                 group_address_state=None,
+                 device_updated_cb=None):
+        # pylint: disable=too-many-arguments
+        Device.__init__(self, xknx, name, device_updated_cb)
 
         if isinstance(group_address, (str, int)):
             group_address = Address(group_address)
@@ -72,10 +73,8 @@ class Outlet(Device):
             print("{0}: Could not understand action {1}" \
                 .format(self.get_name(), action))
 
-    def sync_state(self):
-        group_address = self.group_address_state or self.group_address
-        telegram = Telegram(group_address, TelegramType.GROUP_READ)
-        self.xknx.telegrams.put_nowait(telegram)
+    def state_addresses(self):
+        return [self.group_address_state or self.group_address,]
 
 
     def process(self, telegram):

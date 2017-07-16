@@ -3,7 +3,7 @@
 from xknx import XKNX,Config
 import time
 
-def telegram_received_callback( xknx, device, telegram):
+def device_updated_callback( xknx, device):
 
     print("Callback received from {0}".format(device.name))
 
@@ -15,5 +15,5 @@ def telegram_received_callback( xknx, device, telegram):
 
 xknx = XKNX(config = "/path/tox/xknx.yaml")
 
-xknx.start( daemon_mode=True, telegram_received_callback = telegram_received_callback )
+xknx.start( daemon_mode=True, device_updated_callback=device_updated_callback )
 

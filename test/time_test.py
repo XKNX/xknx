@@ -14,13 +14,13 @@ class TestTime(unittest.TestCase):
         self.loop.close()
 
     #
-    # SYNC STATE
+    # SYNC
     #
-    def test_sync_state(self):
+    def test_sync(self):
 
         xknx = XKNX(loop=self.loop, start=False)
         time = Time(xknx, "TestTime", group_address='1/2/3')
-        time.sync_state()
+        self.loop.run_until_complete(asyncio.Task(time.sync(False)))
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 

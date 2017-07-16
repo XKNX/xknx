@@ -1,4 +1,4 @@
-from xknx.knx import Address, Telegram, TelegramType, DPTBinary, DPTArray
+from xknx.knx import Address, Telegram, DPTBinary, DPTArray
 from .device import Device
 from .travelcalculator import TravelCalculator
 from .exception import CouldNotParseTelegram
@@ -17,9 +17,10 @@ class Shutter(Device):
                  group_address_position=None,
                  group_address_position_feedback=None,
                  travel_time_down=DEFAULT_TRAVEL_TIME_DOWN,
-                 travel_time_up=DEFAULT_TRAVEL_TIME_UP):
+                 travel_time_up=DEFAULT_TRAVEL_TIME_UP,
+                 device_updated_cb=None):
         # pylint: disable=too-many-arguments
-        Device.__init__(self, xknx, name)
+        Device.__init__(self, xknx, name, device_updated_cb)
 
         if isinstance(group_address_long, (str, int)):
             group_address_long = Address(group_address_long)
@@ -185,19 +186,16 @@ class Shutter(Device):
                 .format(self.get_name(), action))
 
 
-    def sync_state(self):
+    def state_addresses(self):
         if self.group_address_position_feedback is None:
             print("group_position not defined for device {0}" \
                 .format(self.get_name()))
-            return
+            return[]
         if self.travelcalculator.is_traveling():
             # Cover is traveling, requesting state will return false results
-            return
+            return[]
 
-        telegram = Telegram(
-            self.group_address_position_feedback,
-            TelegramType.GROUP_READ)
-        self.xknx.telegrams.put_nowait(telegram)
+        return [self.group_address_position_feedback,]
 
 
     def process(self, telegram):

@@ -10,7 +10,7 @@ class RequestResponse():
         self.udpclient = udp_client
         self.awaited_response_class = awaited_response_class
 
-        self.response_recieved_or_timeout = asyncio.Event()
+        self.response_received_or_timeout = asyncio.Event()
         self.success = False
 
         self.timeout_in_seconds = timeout_in_seconds
@@ -34,7 +34,7 @@ class RequestResponse():
 
         yield from self.send_request()
         yield from self.start_timeout()
-        yield from self.response_recieved_or_timeout.wait()
+        yield from self.response_received_or_timeout.wait()
         yield from self.stop_timeout()
 
         self.udpclient.unregister_callback(callb)
@@ -53,7 +53,7 @@ class RequestResponse():
             print("Cant understand knxipframe")
             return
 
-        self.response_recieved_or_timeout.set()
+        self.response_received_or_timeout.set()
 
         if knxipframe.body.status_code == ErrorCode.E_NO_ERROR:
             self.success = True
@@ -72,7 +72,7 @@ class RequestResponse():
 
 
     def timeout(self):
-        self.response_recieved_or_timeout.set()
+        self.response_received_or_timeout.set()
 
 
     @asyncio.coroutine

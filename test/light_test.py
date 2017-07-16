@@ -34,16 +34,16 @@ class TestLight(unittest.TestCase):
 
 
     #
-    # SYNC STATE
+    # SYNC
     #
-    def test_sync_state(self):
+    def test_sync(self):
         xknx = XKNX(loop=self.loop, start=False)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
                       group_address_dimm='1/2/4',
                       group_address_brightness='1/2/5')
-        light.sync_state()
+        self.loop.run_until_complete(asyncio.Task(light.sync(False)))
 
         self.assertEqual(xknx.telegrams.qsize(), 2)
 
@@ -56,15 +56,15 @@ class TestLight(unittest.TestCase):
                          Telegram(Address('1/2/5'), TelegramType.GROUP_READ))
 
     #
-    # SYNC STATE WITH STATE ADDRESS
+    # SYNC WITH STATE ADDRESS
     #
-    def test_sync_state_state_address(self):
+    def test_sync_state_address(self):
         xknx = XKNX(loop=self.loop, start=False)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
                       group_address_state='1/2/6')
-        light.sync_state()
+        self.loop.run_until_complete(asyncio.Task(light.sync(False)))
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
@@ -152,7 +152,7 @@ class TestLight(unittest.TestCase):
                       group_address_brightness='1/2/5')
 
         after_update_callback = Mock()
-        light.after_update_callback = after_update_callback
+        light.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(Address('1/2/3'), payload=DPTBinary(1))
         light.process(telegram)
