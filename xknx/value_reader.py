@@ -15,12 +15,8 @@ class ValueReader:
         self.timeout_handle = None
         self.received_telegram = None
 
-    def start(self):
-        task = asyncio.Task(self.async_start())
-        self.xknx.loop.run_until_complete(task)
-
     @asyncio.coroutine
-    def async_start(self):
+    def read(self):
 
         def telegram_received_callback(_, telegram):
             return self.telegram_received(telegram)
@@ -35,6 +31,11 @@ class ValueReader:
 
         self.xknx.telegram_queue.unregister_telegram_received_cb(
             telegram_received_callback)
+
+        if not self.success:
+            return None
+        return self.received_telegram
+
 
     @asyncio.coroutine
     def send_group_read(self):

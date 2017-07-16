@@ -26,11 +26,11 @@ class Device:
         for group_address in self.state_addresses():
             value_reader = ValueReader(self.xknx, group_address)
             if wait_for_result:
-                yield from value_reader.async_start()
-                if value_reader.success:
+                telegram = yield from value_reader.read()
+                if telegram is not None:
                     self.process(value_reader.received_telegram)
                 else:
-                    print("Could not sync state for {0} {1}".format(self, group_address))
+                    print("Could not read value of {0} {1}".format(self, group_address))
             else:
                 yield from value_reader.send_group_read()
 
