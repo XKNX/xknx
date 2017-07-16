@@ -2,28 +2,23 @@ import asyncio
 import logging
 import xknx
 
-#import homeassistant.components.xknx as xknx_component
-import custom_components.xknx as xknx_component
-
-_LOGGER = logging.getLogger(__name__)
+from custom_components.xknx import _LOGGER, DATA_XKNX, \
+    XKNXClimate
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices_callback, \
+def async_setup_platform(hass, config, add_devices, \
         discovery_info=None):
-    # pylint: disable=unused-argument
     """Setup the XKNX climate platform."""
-
-    if xknx_component.XKNX_MODULE is None \
-            or not xknx_component.XKNX_MODULE.initialized:
-        _LOGGER.error('A connection has not been made to the XKNX controller.')
+    if DATA_XKNX not in hass.data \
+            or not hass.data[DATA_XKNX].initialized:
         return False
 
     entities = []
 
-    for device in xknx_component.XKNX_MODULE.xknx.devices:
+    for device in hass.data[DATA_XKNX].xknx.devices:
         if isinstance(device, xknx.Thermostat):
-            entities.append(xknx_component.XKNXClimate(hass, device))
+            entities.append(XKNXClimate(hass, device))
 
-    async_add_devices_callback(entities)
+    add_devices(entities)
 
     return True
