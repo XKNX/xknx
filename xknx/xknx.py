@@ -44,22 +44,21 @@ class XKNX:
             self.devices.register_device_updated_cb(device_updated_cb)
 
         if start:
-            self.start(
-                state_updater=state_updater,
-                daemon_mode=daemon_mode)
+            task = asyncio.Task(self.start(
+                state_updater=state_updater, daemon_mode=daemon_mode))
+            self.loop.run_until_complete(task)
 
 
     def __del__(self):
         try:
-            task = asyncio.Task(
-                self.stop())
+            task = asyncio.Task(self.stop())
             self.loop.run_until_complete(task)
         except RuntimeError as exp:
             print("Could not close loop, reason: ", exp)
 
 
     @asyncio.coroutine
-    def async(self,
+    def start(self,
               state_updater=False,
               daemon_mode=False):
 
