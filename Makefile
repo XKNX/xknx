@@ -32,7 +32,7 @@ upload-pypi:
 	@python3 setup.py sdist upload -r pypi
 
 pylint:
-	@pylint -j 8 --rcfile=.pylintrc xknx test/*.py
+	@pylint -j 8 --rcfile=.pylintrc xknx test/*.py *.py
 
 pydocstyle:
 	 @pydocstyle xknx test home-assistant-plugin	
