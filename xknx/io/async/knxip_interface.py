@@ -48,7 +48,7 @@ class KNXIPInterface():
     @asyncio.coroutine
     def start_automatic(self):
         gatewayscanner = GatewayScanner(self.xknx)
-        yield from gatewayscanner.async_start()
+        yield from gatewayscanner.start()
         gatewayscanner.stop()
 
         if not gatewayscanner.found:
@@ -89,9 +89,9 @@ class KNXIPInterface():
 
 
     @asyncio.coroutine
-    def async_stop(self):
+    def stop(self):
         if self.interface is not None:
-            yield from self.interface.async_stop()
+            yield from self.interface.stop()
             self.interface = None
 
     def telegram_received(self, telegram):

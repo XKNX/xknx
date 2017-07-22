@@ -67,7 +67,7 @@ class Tunnel():
         connect = Connect(
             self.xknx,
             self.udp_client)
-        yield from connect.async_start()
+        yield from connect.start()
         if not connect.success:
             raise Exception("Could not establish connection")
         print("Tunnel established communication_channel={0}, id={1}".format(
@@ -86,7 +86,7 @@ class Tunnel():
         self.sequence_number += 1
         if self.sequence_number == 256:
             self.sequence_number = 0
-        yield from tunnelling.async_start()
+        yield from tunnelling.start()
         if not tunnelling.success:
             raise Exception("Could not send telegram to tunnel")
 
@@ -97,7 +97,7 @@ class Tunnel():
             self.xknx,
             self.udp_client,
             communication_channel_id=self.communication_channel)
-        yield from conn_state.async_start()
+        yield from conn_state.start()
         if not conn_state.success:
             raise Exception("Could not get connection state of connection")
 
@@ -108,12 +108,12 @@ class Tunnel():
             self.xknx,
             self.udp_client,
             communication_channel_id=self.communication_channel)
-        yield from disconnect.async_start()
+        yield from disconnect.start()
         if not disconnect.success:
             raise Exception("Could not disconnect channel")
         print("Tunnel disconnected (communication_channel: {0})".format(self.communication_channel))
 
     @asyncio.coroutine
-    def async_stop(self):
+    def stop(self):
         yield from self.disconnect()
         yield from self.udp_client.stop()

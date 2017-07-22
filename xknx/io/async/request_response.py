@@ -21,13 +21,9 @@ class RequestResponse():
     def create_knxipframe(self):
         raise NotImplementedError('create_knxipframe has to be implemented')
 
-    def start(self):
-        task = asyncio.Task(self.async_start())
-        self.xknx.loop.run_until_complete(task)
-
 
     @asyncio.coroutine
-    def async_start(self):
+    def start(self):
 
         callb = self.udpclient.register_callback(
             self.response_rec_callback, [self.awaited_response_class.service_type])

@@ -44,13 +44,8 @@ class GatewayScanner():
             self.found = True
 
 
-    def start(self):
-        task = asyncio.Task(self.async_start())
-        self.xknx.loop.run_until_complete(task)
-
-
     @asyncio.coroutine
-    def async_start(self):
+    def start(self):
         yield from self.send_search_requests()
         yield from self.start_timeout()
         yield from self.response_received_or_timeout.wait()

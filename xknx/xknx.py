@@ -52,25 +52,16 @@ class XKNX:
     def __del__(self):
         try:
             task = asyncio.Task(
-                self.async_stop())
+                self.stop())
             self.loop.run_until_complete(task)
         except RuntimeError as exp:
             print("Could not close loop, reason: ", exp)
 
-    def start(self,
-              state_updater=False,
-              daemon_mode=False):
-        task = asyncio.Task(
-            self.async_start(
-                state_updater=state_updater,
-                daemon_mode=daemon_mode))
-        self.loop.run_until_complete(task)
-
 
     @asyncio.coroutine
-    def async_start(self,
-                    state_updater=False,
-                    daemon_mode=False):
+    def async(self,
+              state_updater=False,
+              daemon_mode=False):
 
         self.knxip_interface = KNXIPInterface(self)
         yield from self.knxip_interface.start()
@@ -85,11 +76,6 @@ class XKNX:
         if daemon_mode:
             yield from self.loop_until_sigint()
 
-    def process_all_telegrams(self):
-        task = asyncio.Task(
-            self.telegram_queue.process_all_telegrams())
-        self.loop.run_until_complete(task)
-
 
     @asyncio.coroutine
     def join(self):
@@ -99,17 +85,12 @@ class XKNX:
 
     def stop_knxip_interface_if_exists(self):
         if self.knxip_interface is not None:
-            yield from self.knxip_interface.async_stop()
+            yield from self.knxip_interface.stop()
             self.knxip_interface = None
 
 
-    def stop(self):
-        task = asyncio.Task(self.async_stop())
-        self.loop.run_until_complete(task)
-
-
     @asyncio.coroutine
-    def async_stop(self):
+    def stop(self):
         yield from self.join()
         yield from self.telegram_queue.stop()
         yield from self.stop_knxip_interface_if_exists()
@@ -125,4 +106,4 @@ class XKNX:
         print('Press Ctrl+C to stop')
         yield from self.sigint_received.wait()
 
-        yield from self.async_stop()
+        yield from self.stop()
