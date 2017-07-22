@@ -19,7 +19,7 @@ class TestDevices(unittest.TestCase):
     #
 
     def test_get_item(self):
-        xknx = XKNX(loop=self.loop, start=False)
+        xknx = XKNX(loop=self.loop)
         devices = Devices()
 
         light1 = Light(xknx,
@@ -60,7 +60,7 @@ class TestDevices(unittest.TestCase):
 
 
     def test_device_by_group_address(self):
-        xknx = XKNX(loop=self.loop, start=False)
+        xknx = XKNX(loop=self.loop)
         devices = Devices()
 
         light1 = Light(xknx,
@@ -98,7 +98,7 @@ class TestDevices(unittest.TestCase):
             (sensor1, sensor2))
 
     def test_iter(self):
-        xknx = XKNX(loop=self.loop, start=False)
+        xknx = XKNX(loop=self.loop)
         devices = Devices()
 
         light1 = Light(xknx,
@@ -132,7 +132,7 @@ class TestDevices(unittest.TestCase):
 
 
     def test_len(self):
-        xknx = XKNX(loop=self.loop, start=False)
+        xknx = XKNX(loop=self.loop)
         devices = Devices()
         self.assertEqual(len(devices), 0)
 
@@ -172,7 +172,7 @@ class TestDevices(unittest.TestCase):
         accessing functions only return referecenes of
         the same object"""
 
-        xknx = XKNX(loop=self.loop, start=False)
+        xknx = XKNX(loop=self.loop)
         devices = Devices()
 
         light1 = Light(xknx,

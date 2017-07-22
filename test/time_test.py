@@ -18,7 +18,7 @@ class TestTime(unittest.TestCase):
     #
     def test_sync(self):
 
-        xknx = XKNX(loop=self.loop, start=False)
+        xknx = XKNX(loop=self.loop)
         time = Time(xknx, "TestTime", group_address='1/2/3')
         self.loop.run_until_complete(asyncio.Task(time.sync(False)))
 

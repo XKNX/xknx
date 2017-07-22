@@ -19,7 +19,7 @@ class TestConfig(unittest.TestCase):
     #
 
     def test_config_light(self):
-        xknx = XKNX(config='../xknx.yaml', loop=self.loop, start=False)
+        xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Living-Room.Light_1'],
             Light(xknx,
@@ -29,7 +29,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_ligh_dimm(self):
-        xknx = XKNX(config='../xknx.yaml', loop=self.loop, start=False)
+        xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Diningroom.Light_1'],
             Light(xknx,
@@ -41,7 +41,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_outlet(self):
-        xknx = XKNX(config='../xknx.yaml', loop=self.loop, start=False)
+        xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Livingroom.Outlet_2'],
             Outlet(xknx,
@@ -51,7 +51,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_shutter(self):
-        xknx = XKNX(config='../xknx.yaml', loop=self.loop, start=False)
+        xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Livingroom.Shutter_2'],
             Shutter(xknx,
@@ -66,7 +66,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_temperature(self):
-        xknx = XKNX(config='../xknx.yaml', loop=self.loop, start=False)
+        xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Kitchen.Thermostat_1'],
             Thermostat(xknx,
@@ -75,7 +75,7 @@ class TestConfig(unittest.TestCase):
                        device_updated_cb=xknx.devices.device_updated))
 
     def test_config_setpoint(self):
-        xknx = XKNX(config='../xknx.yaml', loop=self.loop, start=False)
+        xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Livingroom.Thermostat_2'],
             Thermostat(xknx,
@@ -85,7 +85,7 @@ class TestConfig(unittest.TestCase):
                        device_updated_cb=xknx.devices.device_updated))
 
     def test_config_time(self):
-        xknx = XKNX(config='../xknx.yaml', loop=self.loop, start=False)
+        xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['General.Time'],
             Time(xknx,
@@ -95,7 +95,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_switch(self):
-        xknx = XKNX(config='../xknx.yaml', loop=self.loop, start=False)
+        xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Livingroom.Switch_1'],
             Switch(xknx,
@@ -115,7 +115,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_sensor_percent(self):
-        xknx = XKNX(config='../xknx.yaml', loop=self.loop, start=False)
+        xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Heating.Valve1'],
             Sensor(xknx,
@@ -126,7 +126,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_sensor_no_value_type(self):
-        xknx = XKNX(config='../xknx.yaml', loop=self.loop, start=False)
+        xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Some.Other.Value'],
             Sensor(xknx,
@@ -136,7 +136,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_sensor_binary_device_class(self):
-        xknx = XKNX(config='../xknx.yaml', loop=self.loop, start=False)
+        xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['DiningRoom.Motion.Sensor'],
             Sensor(xknx,
@@ -148,7 +148,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_sensor_binary_significant_bit(self):
-        xknx = XKNX(config='../xknx.yaml', loop=self.loop, start=False)
+        xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Kitchen.Thermostat.Presence'],
             Sensor(xknx,

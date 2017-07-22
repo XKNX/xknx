@@ -16,7 +16,7 @@ class TestBinaryInput(unittest.TestCase):
     # TEST PROCESS
     #
     def test_process(self):
-        xknx = XKNX(loop=self.loop, start=False)
+        xknx = XKNX(loop=self.loop)
         binaryinput = BinaryInput(xknx, 'TestInput', '1/2/3')
 
         self.assertEqual(binaryinput.state, BinaryInputState.OFF)
@@ -37,7 +37,7 @@ class TestBinaryInput(unittest.TestCase):
     # TEST SWITCHED ON
     #
     def test_is_on(self):
-        xknx = XKNX(loop=self.loop, start=False)
+        xknx = XKNX(loop=self.loop)
         binaryinput = BinaryInput(xknx, 'TestInput', '1/2/3')
         binaryinput.set_internal_state(BinaryInputState.ON)
         self.assertTrue(binaryinput.is_on())
@@ -47,7 +47,7 @@ class TestBinaryInput(unittest.TestCase):
     # TEST SWITCHED OFF
     #
     def test_is_off(self):
-        xknx = XKNX(loop=self.loop, start=False)
+        xknx = XKNX(loop=self.loop)
         binaryinput = BinaryInput(xknx, 'TestInput', '1/2/3')
         binaryinput.set_internal_state(BinaryInputState.OFF)
         self.assertFalse(binaryinput.is_on())
