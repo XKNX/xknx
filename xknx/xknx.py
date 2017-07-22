@@ -1,7 +1,7 @@
 import asyncio
 import signal
 from xknx.knx import Address
-from xknx.io.async import KNXIPInterface
+from xknx.io import KNXIPInterface
 from .devices import Devices
 from .globals import Globals
 from .telegram_queue import  TelegramQueue
