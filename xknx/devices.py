@@ -1,3 +1,4 @@
+import asyncio
 from .device import Device
 
 class Devices:
@@ -44,3 +45,8 @@ class Devices:
     def device_updated(self, device):
         for device_updated_cb in self.device_updated_cbs:
             device_updated_cb(device)
+
+    @asyncio.coroutine
+    def sync(self):
+        for device in self.__devices:
+            yield from device.sync()

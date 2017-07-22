@@ -20,10 +20,5 @@ class StateUpdater():
         yield from asyncio.sleep(self.start_timeout)
         print("Starting Update Thread")
         while True:
-            yield from self.sync_devices()
+            yield from self.xknx.devices.sync()
             yield from asyncio.sleep(self.timeout)
-
-    @asyncio.coroutine
-    def sync_devices(self):
-        for device in self.xknx.devices:
-            yield from device.sync()

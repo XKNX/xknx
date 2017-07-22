@@ -18,7 +18,7 @@ class ValueReader:
     @asyncio.coroutine
     def read(self):
 
-        def telegram_received_callback(_, telegram):
+        def telegram_received_callback(telegram):
             return self.telegram_received(telegram)
 
         self.xknx.telegram_queue.register_telegram_received_cb(

@@ -14,9 +14,6 @@ class XKNX:
                  config=None,
                  loop=None,
                  own_address=None,
-                 start=True,
-                 state_updater=False,
-                 daemon_mode=False,
                  telegram_received_cb=None,
                  device_updated_cb=None):
         # pylint: disable=too-many-arguments
@@ -29,10 +26,10 @@ class XKNX:
         self.telegram_queue = TelegramQueue(self)
         self.state_updater = None
         self.knxip_interface = None
+        self.started = False
 
         if config is not None:
             Config(self).read(config)
-
 
         if own_address is not None:
             self.globals.own_address = Address(own_address)
@@ -43,18 +40,14 @@ class XKNX:
         if device_updated_cb is not None:
             self.devices.register_device_updated_cb(device_updated_cb)
 
-        if start:
-            task = asyncio.Task(self.start(
-                state_updater=state_updater, daemon_mode=daemon_mode))
-            self.loop.run_until_complete(task)
-
 
     def __del__(self):
-        try:
-            task = asyncio.Task(self.stop())
-            self.loop.run_until_complete(task)
-        except RuntimeError as exp:
-            print("Could not close loop, reason: ", exp)
+        if self.started:
+            try:
+                task = asyncio.Task(self.stop())
+                self.loop.run_until_complete(task)
+            except RuntimeError as exp:
+                print("Could not close loop, reason: ", exp)
 
 
     @asyncio.coroutine
@@ -75,6 +68,7 @@ class XKNX:
         if daemon_mode:
             yield from self.loop_until_sigint()
 
+        self.started = True
 
     @asyncio.coroutine
     def join(self):
@@ -93,16 +87,12 @@ class XKNX:
         yield from self.join()
         yield from self.telegram_queue.stop()
         yield from self.stop_knxip_interface_if_exists()
+        self.started = False
 
     @asyncio.coroutine
     def loop_until_sigint(self):
-
         def sigint_handler():
             self.sigint_received.set()
-
         self.loop.add_signal_handler(signal.SIGINT, sigint_handler)
-
         print('Press Ctrl+C to stop')
         yield from self.sigint_received.wait()
-
-        yield from self.stop()

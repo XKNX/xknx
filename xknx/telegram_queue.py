@@ -81,7 +81,7 @@ class TelegramQueue():
 
             processed = False
             for telegram_received_cb in self.telegram_received_cbs:
-                if telegram_received_cb(self.xknx, telegram):
+                if telegram_received_cb(telegram):
                     processed = True
 
             if not processed:
