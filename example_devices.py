@@ -7,9 +7,11 @@ async def main():
     outlet = Outlet(xknx,
                     name='TestOutlet',
                     group_address='1/1/11')
-    outlet.set_on()
+    xknx.devices.add(outlet)
+
+    xknx.devices["TestOutlet"].set_on()
     await asyncio.sleep(2)
-    outlet.set_off()
+    xknx.devices["TestOutlet"].set_off()
     await xknx.stop()
 
 # pylint: disable=invalid-name

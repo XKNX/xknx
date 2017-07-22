@@ -3,7 +3,7 @@ XKNX - A KNX library written in Python
 
 [![Build Status](https://travis-ci.org/XKNX/xknx.svg?branch=master)](https://travis-ci.org/XKNX/xknx)
 
-A Wrapper around KNX/UDP protocol written in python.
+A Asynchronous Wrapper around KNX/UDP protocol written in python.
 
 The wrapper is also intended to be used as a KNX logic module, which means to connect different KNX devices and make them interact.
 
@@ -37,26 +37,29 @@ The software was tested with the following devices:
 - [KNX Dimmaktor 4fach](https://katalog.gira.de/de_DE/datenblatt.html?id=658701)
 
 
-Basic Operations
-----------------
+Example
+-------
 
 ```python
+import asyncio
+from xknx import XKNX, Light
 
-# Outlet
+async def main():
+    xknx = XKNX()
+    await xknx.start()
+    light = Light(xknx,
+                  name='TestLight',
+                  group_address_switch='1/0/9')
+    light.set_on()
+    await asyncio.sleep(2)
+    light.set_off()
+    await xknx.stop()
 
-xknx.devices["Livingroom.Outlet_1"].set_on()
-time.sleep(5)
-xknx.devices["Livingroom.Outlet_2"].set_off()
 
-# Shutter
-xknx.devices["Livingroom.Shutter_1"].set_down()
-time.sleep(2)
-xknx.devices["Livingroom.Shutter_1"].set_up()
-time.sleep(5)
-xknx.devices["Livingroom.Shutter_1"].set_short_down()
-time.sleep(5)
-xknx.devices["Livingroom.Shutter_1"].set_short_up()
-
+# pylint: disable=invalid-name
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
+loop.close()
 ```
 
 

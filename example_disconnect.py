@@ -1,53 +1,49 @@
 import asyncio
 from xknx import XKNX
-from xknx.io.async import ConnectionState, Disconnect
-from xknx.io.async import UDPClient, GatewayScanner
+from xknx.io import GatewayScanner, UDPClient, Disconnect, ConnectionState
 
-xknx = XKNX(start=False)
+async def main():
+    xknx = XKNX()
+    gatewayscanner = GatewayScanner(xknx)
+    await gatewayscanner.start()
 
-gatewayscanner = GatewayScanner(xknx)
-gatewayscanner.start()
-gatewayscanner.stop()
+    if not gatewayscanner.found:
+        print("No Gateways found")
+        return
 
-if not gatewayscanner.found:
-    raise Exception("No Gateways found")
+    if not gatewayscanner.supports_tunneling:
+        print("Gateway does not support tunneling")
+        return
 
-print("Connecting to {}:{} from {}".format(
-    gatewayscanner.found_ip_addr,
-    gatewayscanner.found_port,
-    gatewayscanner.found_local_ip))
-
-own_ip="192.168.42.1"
-gateway_ip="192.168.42.10"
-gateway_port=3671
-
-udp_client = UDPClient(
-    xknx,
-    (gatewayscanner.found_local_ip, 0),
-    (gatewayscanner.found_ip_addr, gatewayscanner.found_port))
-
-task = asyncio.Task(
-    udp_client.connect())
-
-xknx.loop.run_until_complete(task)
-
-for i in range(0,255):
-
-    conn_state = ConnectionState(
+    udp_client = UDPClient(
         xknx,
-		udp_client,
-        communication_channel_id=i)
+        (gatewayscanner.found_local_ip, 0),
+        (gatewayscanner.found_ip_addr, gatewayscanner.found_port))
 
-    conn_state.start()
+    await udp_client.connect()
 
-    if conn_state.success:
-        print("Disconnecting ",i)
-        disconnect = Disconnect(
+    for i in range(0, 255):
+
+        conn_state = ConnectionState(
             xknx,
             udp_client,
             communication_channel_id=i)
 
-        disconnect.start()
+        await conn_state.start()
 
-        if disconnect.success:
-            print("Disconnected ", i)
+        if conn_state.success:
+            print("Disconnecting ", i)
+            disconnect = Disconnect(
+                xknx,
+                udp_client,
+                communication_channel_id=i)
+
+            await disconnect.start()
+
+            if disconnect.success:
+                print("Disconnected ", i)
+
+# pylint: disable=invalid-name
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
+loop.close()

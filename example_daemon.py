@@ -1,19 +1,23 @@
-#!/usr/bin/python3
+import asyncio
+from xknx import XKNX, Outlet
 
-from xknx import XKNX,Config
-import time
 
-def device_updated_callback( xknx, device):
-
+def device_updated_cb(device):
     print("Callback received from {0}".format(device.name))
 
-    if (device.name == "Livingroom.Switch_1" ):
-        if device.is_on():
-            xknx.devices["Livingroom.Outlet_1"].set_on()
-        elif device.is_off():
-            xknx.devices["Livingroom.Outlet_1"].set_off()
 
-xknx = XKNX(config = "/path/tox/xknx.yaml")
+async def main():
+    xknx = XKNX(device_updated_cb=device_updated_cb)
+    outlet = Outlet(xknx,
+                    name='TestOutlet',
+                    group_address='1/1/11')
+    xknx.devices.add(outlet)
 
-xknx.start( daemon_mode=True, device_updated_callback=device_updated_callback )
+    await xknx.start(daemon_mode=True)
 
+    await xknx.stop()
+
+# pylint: disable=invalid-name
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
+loop.close()

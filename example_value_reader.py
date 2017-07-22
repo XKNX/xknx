@@ -4,15 +4,15 @@ from xknx.knx import Address
 
 
 async def main():
-    xknx = XKNX(start=False)
-    await xknx.async_start()
+    xknx = XKNX()
+    await xknx.start()
 
     value_reader = ValueReader(xknx, Address('6/2/1'))
     telegram = await value_reader.read()
     if telegram is not None:
         print(telegram)
 
-    await xknx.async_stop()
+    await xknx.stop()
 
 
 # pylint: disable=invalid-name
