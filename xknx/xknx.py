@@ -1,7 +1,7 @@
 import asyncio
 import signal
 from xknx.knx import Address
-from xknx.io import KNXIPInterface
+from xknx.io import KNXIPInterface, ConnectionConfig
 from .devices import Devices
 from .globals import Globals
 from .telegram_queue import  TelegramQueue
@@ -53,9 +53,10 @@ class XKNX:
     @asyncio.coroutine
     def start(self,
               state_updater=False,
-              daemon_mode=False):
+              daemon_mode=False,
+              connection_config=ConnectionConfig()):
 
-        self.knxip_interface = KNXIPInterface(self)
+        self.knxip_interface = KNXIPInterface(self,connection_config=connection_config)
         yield from self.knxip_interface.start()
 
         yield from self.telegram_queue.start()
