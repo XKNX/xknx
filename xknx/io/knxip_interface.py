@@ -4,10 +4,11 @@ from .gateway_scanner import GatewayScanner
 
 from .routing import Routing
 from .tunnel import Tunnel
+from .const import DEFAULT_MCAST_PORT
 
 class ConnectionType(Enum):
     AUTOMATIC = 0
-    TUNNEL = 1
+    TUNNELING = 1
     ROUTING = 2
 
 
@@ -17,7 +18,7 @@ class ConnectionConfig:
                  connection_type=ConnectionType.AUTOMATIC,
                  local_ip=None,
                  gateway_ip=None,
-                 gateway_port=3671):
+                 gateway_port=DEFAULT_MCAST_PORT):
         self.connection_type = connection_type
         self.local_ip = local_ip
         self.gateway_ip = gateway_ip
@@ -39,7 +40,7 @@ class KNXIPInterface():
         elif self.connection_config.connection_type == ConnectionType.ROUTING:
             yield from self.start_routing(
                 self.connection_config.local_ip)
-        elif self.connection_config.connection_type == ConnectionType.TUNNEL:
+        elif self.connection_config.connection_type == ConnectionType.TUNNELING:
             yield from self.start_tunnelling(
                 self.connection_config.local_ip,
                 self.connection_config.gateway_ip,

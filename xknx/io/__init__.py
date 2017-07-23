@@ -1,4 +1,4 @@
-from .knxip_interface import KNXIPInterface, ConnectionType
+from .knxip_interface import KNXIPInterface, ConnectionType, ConnectionConfig
 from .udp_client import UDPClient
 from .gateway_scanner import GatewayScanner
 from .disconnect import Disconnect
