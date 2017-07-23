@@ -95,7 +95,8 @@ class Thermostat(Device):
     def __str__(self):
         last_set_formatted = \
                 datetime.datetime.fromtimestamp(
-                    self.last_set).strftime('%Y-%m-%d %H:%M:%S')
+                    self.last_set).strftime('%Y-%m-%d %H:%M:%S') \
+                if self.last_set else None
         return '<Thermostat name="{0}" ' \
                'group_address_temperature="{1}"  ' \
                'group_address_setpoint="{2}" ' \
