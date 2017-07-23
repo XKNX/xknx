@@ -1,11 +1,15 @@
 from setuptools import setup, find_packages
 
+VERSION = '0.6.0'
+
+REQUIRES = ['PyYAML', 'netifaces']
+
 setup(
     name='xknx',
-    description='A Wrapper around KNX protocol. Documentation: http://xknx.io/',
+    description='An Asynchronous Library for the KNX protocol. Documentation: http://xknx.io/',
 
-    version='0.5.0',
-    download_url='https://github.com/XKNX/xknx/archive/0.5.0.zip',
+    version=VERSION,
+    download_url='https://github.com/XKNX/xknx/archive/'+VERSION+'.zip',
     url='http://xknx.io/',
 
     author='Julius Mittenzwei',
@@ -17,10 +21,10 @@ setup(
         'Intended Audience :: Developers',
         'Topic :: System :: Hardware :: Hardware Drivers',
         'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5'
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6'
     ],
     packages=find_packages(),
-    install_requires=['PyYAML', 'netifaces'],
+    install_requires=REQUIRES,
     keywords='knx ip knxip eib home automation',
     zip_safe=False)
