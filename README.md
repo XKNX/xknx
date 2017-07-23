@@ -1,5 +1,5 @@
-XKNX - A KNX library written in Python
-================================================
+XKNX - An Asynchronous KNX Library Written in Python
+====================================================
 
 [![Build Status](https://travis-ci.org/XKNX/xknx.svg?branch=master)](https://travis-ci.org/XKNX/xknx)
 
