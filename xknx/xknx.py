@@ -56,7 +56,7 @@ class XKNX:
               daemon_mode=False,
               connection_config=ConnectionConfig()):
 
-        self.knxip_interface = KNXIPInterface(self,connection_config=connection_config)
+        self.knxip_interface = KNXIPInterface(self, connection_config=connection_config)
         yield from self.knxip_interface.start()
 
         yield from self.telegram_queue.start()
