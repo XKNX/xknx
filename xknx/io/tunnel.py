@@ -19,15 +19,20 @@ class Tunnel():
         self.gateway_port = gateway_port
         self.telegram_received_callback = telegram_received_callback
 
+        self.udp_client = None
+        self.init_udp_client()
+
+        self.sequence_number = 0
+        self.communication_channel = None
+        self.number_heartbeat_failed = 0
+
+    def init_udp_client(self):
         self.udp_client = UDPClient(self.xknx,
                                     (self.local_ip, 0),
                                     (self.gateway_ip, self.gateway_port))
 
         self.udp_client.register_callback(
             self.tunnel_reqest_received, [TunnellingRequest.service_type])
-
-        self.sequence_number = 0
-        self.communication_channel = None
 
 
     def tunnel_reqest_received(self, knxipframe, udp_client):
@@ -73,6 +78,8 @@ class Tunnel():
         print("Tunnel established communication_channel={0}, id={1}".format(
             connect.communication_channel, connect.identifier))
         self.communication_channel = connect.communication_channel
+        self.sequence_number = 0
+        yield from self.start_heartbeat()
 
     @asyncio.coroutine
     def send_telegram(self, telegram):
@@ -90,7 +97,6 @@ class Tunnel():
         if not tunnelling.success:
             raise Exception("Could not send telegram to tunnel")
 
-
     @asyncio.coroutine
     def connectionstate(self):
         conn_state = ConnectionState(
@@ -98,22 +104,52 @@ class Tunnel():
             self.udp_client,
             communication_channel_id=self.communication_channel)
         yield from conn_state.start()
-        if not conn_state.success:
-            raise Exception("Could not get connection state of connection")
-
+        return conn_state.success
 
     @asyncio.coroutine
-    def disconnect(self):
+    def disconnect(self, ignore_error=False):
         disconnect = Disconnect(
             self.xknx,
             self.udp_client,
             communication_channel_id=self.communication_channel)
         yield from disconnect.start()
-        if not disconnect.success:
+        if not disconnect.success and not ignore_error:
             raise Exception("Could not disconnect channel")
-        print("Tunnel disconnected (communication_channel: {0})".format(self.communication_channel))
+        else:
+            print("Tunnel disconnected (communication_channel: {0})".format(self.communication_channel))
 
     @asyncio.coroutine
     def stop(self):
         yield from self.disconnect()
         yield from self.udp_client.stop()
+
+    @asyncio.coroutine
+    def start_heartbeat(self):
+        self.xknx.loop.create_task(
+            self.do_heartbeat())
+
+    @asyncio.coroutine
+    def do_heartbeat(self):
+        """Heartbeat Monitoring, as suggested by 03.08.02 KNX Core 5.4."""
+        while True:
+            connectionsstate = yield from self.connectionstate()
+            if connectionsstate:
+                yield from self.do_heartbeat_success()
+            else:
+                yield from self.do_heartbeat_failed()
+
+            yield from asyncio.sleep(15)
+
+    @asyncio.coroutine
+    def do_heartbeat_success(self):
+        self.number_heartbeat_failed = 0
+
+    @asyncio.coroutine
+    def do_heartbeat_failed(self):
+        self.number_heartbeat_failed = self.number_heartbeat_failed + 1
+        if self.number_heartbeat_failed > 3:
+            print("HEARTBEAT FAILED - RECONNECTING")
+            yield from self.disconnect(True)
+            self.init_udp_client()
+            yield from self.start()
+            self.number_heartbeat_failed = 0
