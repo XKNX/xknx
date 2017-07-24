@@ -3,8 +3,7 @@ from .xknx import XKNX
 from .stateupdater import StateUpdater
 from .telegram_queue import TelegramQueue
 from .devices import Devices
-from .binaryinput import BinaryInput, BinaryInputState
-from .switch import Switch
+from .switch import Switch, SwitchState
 from .action import Action
 from .shutter import Shutter
 from .travelcalculator import TravelCalculator

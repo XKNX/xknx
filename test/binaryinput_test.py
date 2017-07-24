@@ -1,9 +1,9 @@
 import unittest
 import asyncio
-from xknx import XKNX, BinaryInput, BinaryInputState
+from xknx import XKNX, Switch, SwitchState
 from xknx.knx import Telegram, DPTBinary
 
-class TestBinaryInput(unittest.TestCase):
+class TestSwitch(unittest.TestCase):
 
     def setUp(self):
         self.loop = asyncio.new_event_loop()
@@ -17,29 +17,29 @@ class TestBinaryInput(unittest.TestCase):
     #
     def test_process(self):
         xknx = XKNX(loop=self.loop)
-        binaryinput = BinaryInput(xknx, 'TestInput', '1/2/3')
+        binaryinput = Switch(xknx, 'TestInput', '1/2/3')
 
-        self.assertEqual(binaryinput.state, BinaryInputState.OFF)
+        self.assertEqual(binaryinput.state, SwitchState.OFF)
 
         telegram_on = Telegram()
         telegram_on.payload = DPTBinary(1)
         binaryinput.process(telegram_on)
 
-        self.assertEqual(binaryinput.state, BinaryInputState.ON)
+        self.assertEqual(binaryinput.state, SwitchState.ON)
 
         telegram_off = Telegram()
         telegram_off.payload = DPTBinary(0)
         binaryinput.process(telegram_off)
 
-        self.assertEqual(binaryinput.state, BinaryInputState.OFF)
+        self.assertEqual(binaryinput.state, SwitchState.OFF)
 
     #
     # TEST SWITCHED ON
     #
     def test_is_on(self):
         xknx = XKNX(loop=self.loop)
-        binaryinput = BinaryInput(xknx, 'TestInput', '1/2/3')
-        binaryinput.set_internal_state(BinaryInputState.ON)
+        binaryinput = Switch(xknx, 'TestInput', '1/2/3')
+        binaryinput.set_internal_state(SwitchState.ON)
         self.assertTrue(binaryinput.is_on())
         self.assertFalse(binaryinput.is_off())
 
@@ -48,11 +48,11 @@ class TestBinaryInput(unittest.TestCase):
     #
     def test_is_off(self):
         xknx = XKNX(loop=self.loop)
-        binaryinput = BinaryInput(xknx, 'TestInput', '1/2/3')
-        binaryinput.set_internal_state(BinaryInputState.OFF)
+        binaryinput = Switch(xknx, 'TestInput', '1/2/3')
+        binaryinput.set_internal_state(SwitchState.OFF)
         self.assertFalse(binaryinput.is_on())
         self.assertTrue(binaryinput.is_off())
 
 
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestBinaryInput)
+SUITE = unittest.TestLoader().loadTestsFromTestCase(TestSwitch)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

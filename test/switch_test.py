@@ -1,10 +1,10 @@
 import unittest
 from unittest.mock import Mock
 import asyncio
-from xknx import XKNX, Switch, Action, Outlet, BinaryInputState
+from xknx import XKNX, Switch, Action, Outlet, SwitchState
 from xknx.knx import Telegram, DPTBinary
 
-class TestBinaryInput(unittest.TestCase):
+class TestSwitch(unittest.TestCase):
 
     def setUp(self):
         self.loop = asyncio.new_event_loop()
@@ -39,7 +39,7 @@ class TestBinaryInput(unittest.TestCase):
 
         self.assertEqual(
             xknx.devices['TestInput'].state,
-            BinaryInputState.OFF)
+            SwitchState.OFF)
         self.assertEqual(
             xknx.devices['TestOutlet'].state,
             False)
@@ -50,7 +50,7 @@ class TestBinaryInput(unittest.TestCase):
 
         self.assertEqual(
             xknx.devices['TestInput'].state,
-            BinaryInputState.ON)
+            SwitchState.ON)
         self.assertEqual(
             xknx.devices['TestOutlet'].state,
             True)
@@ -61,7 +61,7 @@ class TestBinaryInput(unittest.TestCase):
 
         self.assertEqual(
             xknx.devices['TestInput'].state,
-            BinaryInputState.OFF)
+            SwitchState.OFF)
         self.assertEqual(
             xknx.devices['TestOutlet'].state,
             False)
@@ -82,5 +82,5 @@ class TestBinaryInput(unittest.TestCase):
         after_update_callback.assert_called_with(switch)
 
 
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestBinaryInput)
+SUITE = unittest.TestLoader().loadTestsFromTestCase(TestSwitch)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

@@ -1,10 +1,17 @@
 import time
-from xknx.knx import Address
-from .binaryinput import BinaryInput
+from enum import Enum
+from xknx.knx import Address, DPTBinary
 from .action import Action
 from .switchtime import SwitchTime
+from .device import Device
+from .exception import CouldNotParseTelegram
 
-class Switch(BinaryInput):
+# pylint: disable=invalid-name
+class SwitchState(Enum):
+    ON = 1
+    OFF = 2
+
+class Switch(Device):
 
     def __init__(self,
                  xknx,
@@ -18,7 +25,9 @@ class Switch(BinaryInput):
         if actions is None:
             actions = []
 
-        BinaryInput.__init__(self, xknx, name, group_address, device_updated_cb)
+        Device.__init__(self, xknx, name, device_updated_cb)
+        self.group_address = group_address
+        self.state = SwitchState.OFF
         self.last_set = None
         self.actions = actions
 
@@ -39,6 +48,13 @@ class Switch(BinaryInput):
                    group_address=group_address,
                    actions=actions)
 
+    def has_group_address(self, group_address):
+        return self.group_address == group_address
+
+    def set_internal_state(self, state):
+        if state != self.state:
+            self.state = state
+            self.after_update()
 
     def get_switch_time(self):
         if self.last_set is None:
@@ -54,12 +70,28 @@ class Switch(BinaryInput):
 
 
     def process(self, telegram):
-        BinaryInput.process(self, telegram)
+        if not isinstance(telegram.payload, DPTBinary):
+            raise CouldNotParseTelegram()
+
+        if telegram.payload.value == 0:
+            self.set_internal_state(SwitchState.OFF)
+        elif telegram.payload.value == 1:
+            self.set_internal_state(SwitchState.ON)
+        else:
+            raise CouldNotParseTelegram()
+
         switch_time = self.get_switch_time()
 
         for action in self.actions:
             if action.test(self.state, switch_time):
                 action.execute()
+
+
+    def is_on(self):
+        return self.state == SwitchState.ON
+
+    def is_off(self):
+        return self.state == SwitchState.OFF
 
 
     def __str__(self):

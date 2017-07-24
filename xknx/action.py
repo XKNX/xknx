@@ -1,5 +1,4 @@
 from .switchtime import SwitchTime
-from .binaryinput import BinaryInputState
 
 class Action():
 
@@ -47,12 +46,13 @@ class Action():
 
 
     def test(self, state, switch_time):
-        if (state == BinaryInputState.ON) \
+        from .switch import SwitchState
+        if (state == SwitchState.ON) \
                 and (self.hook == "on") \
                 and self.test_switch_time(switch_time):
             return True
 
-        if (state == BinaryInputState.OFF) \
+        if (state == SwitchState.OFF) \
                 and (self.hook == "off") \
                 and self.test_switch_time(switch_time):
             return True
