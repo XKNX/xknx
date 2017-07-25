@@ -132,13 +132,16 @@ class Tunnel():
     def do_heartbeat(self):
         """Heartbeat Monitoring, as suggested by 03.08.02 KNX Core 5.4."""
         while True:
-            connectionsstate = yield from self.connectionstate()
-            if connectionsstate:
-                yield from self.do_heartbeat_success()
-            else:
-                yield from self.do_heartbeat_failed()
-
             yield from asyncio.sleep(15)
+            yield from self.do_heartbeat_impl()
+
+    @asyncio.coroutine
+    def do_heartbeat_impl(self):
+        connectionsstate = yield from self.connectionstate()
+        if connectionsstate:
+            yield from self.do_heartbeat_success()
+        else:
+            yield from self.do_heartbeat_failed()
 
     @asyncio.coroutine
     def do_heartbeat_success(self):
