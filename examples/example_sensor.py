@@ -1,15 +1,14 @@
 import asyncio
-from xknx import XKNX, Sensor
+from xknx import XKNX, Sensor, BinarySensor
 
 async def main():
     xknx = XKNX()
     await xknx.start()
 
-    sensor1 = Sensor(
+    sensor1 = BinarySensor(
         xknx,
         'DiningRoom.Motion.Sensor',
         group_address='6/0/2',
-        value_type='binary',
         device_class='motion')
     await sensor1.sync()
     print(sensor1)
