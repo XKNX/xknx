@@ -1,7 +1,7 @@
 import unittest
 import asyncio
 
-from xknx import XKNX, Devices, Light, Outlet, Sensor
+from xknx import XKNX, Devices, Light, Outlet, BinarySensor
 from xknx.knx import Address
 
 # pylint: disable=too-many-public-methods,invalid-name
@@ -68,18 +68,16 @@ class TestDevices(unittest.TestCase):
                        group_address_switch='1/6/7')
         devices.add(light1)
 
-        sensor1 = Sensor(xknx,
-                         'DiningRoom.Motion.Sensor',
-                         group_address='3/0/1',
-                         value_type='binary',
-                         significant_bit=2)
+        sensor1 = BinarySensor(xknx,
+                               'DiningRoom.Motion.Sensor',
+                               group_address='3/0/1',
+                               significant_bit=2)
         devices.add(sensor1)
 
-        sensor2 = Sensor(xknx,
-                         'DiningRoom.Motion.Sensor',
-                         group_address='3/0/1',
-                         value_type='binary',
-                         significant_bit=3)
+        sensor2 = BinarySensor(xknx,
+                               'DiningRoom.Motion.Sensor',
+                               group_address='3/0/1',
+                               significant_bit=3)
         devices.add(sensor2)
 
         light2 = Light(xknx,
@@ -106,18 +104,16 @@ class TestDevices(unittest.TestCase):
                        group_address_switch='1/6/7')
         devices.add(light1)
 
-        sensor1 = Sensor(xknx,
-                         'DiningRoom.Motion.Sensor',
-                         group_address='3/0/1',
-                         value_type='binary',
-                         significant_bit=2)
+        sensor1 = BinarySensor(xknx,
+                               'DiningRoom.Motion.Sensor',
+                               group_address='3/0/1',
+                               significant_bit=2)
         devices.add(sensor1)
 
-        sensor2 = Sensor(xknx,
-                         'DiningRoom.Motion.Sensor',
-                         group_address='3/0/1',
-                         value_type='binary',
-                         significant_bit=3)
+        sensor2 = BinarySensor(xknx,
+                               'DiningRoom.Motion.Sensor',
+                               group_address='3/0/1',
+                               significant_bit=3)
         devices.add(sensor2)
 
         light2 = Light(xknx,
@@ -142,19 +138,17 @@ class TestDevices(unittest.TestCase):
         devices.add(light1)
         self.assertEqual(len(devices), 1)
 
-        sensor1 = Sensor(xknx,
-                         'DiningRoom.Motion.Sensor',
-                         group_address='3/0/1',
-                         value_type='binary',
-                         significant_bit=2)
+        sensor1 = BinarySensor(xknx,
+                               'DiningRoom.Motion.Sensor',
+                               group_address='3/0/1',
+                               significant_bit=2)
         devices.add(sensor1)
         self.assertEqual(len(devices), 2)
 
-        sensor2 = Sensor(xknx,
-                         'DiningRoom.Motion.Sensor',
-                         group_address='3/0/1',
-                         value_type='binary',
-                         significant_bit=3)
+        sensor2 = BinarySensor(xknx,
+                               'DiningRoom.Motion.Sensor',
+                               group_address='3/0/1',
+                               significant_bit=3)
         devices.add(sensor2)
         self.assertEqual(len(devices), 3)
 

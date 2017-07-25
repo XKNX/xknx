@@ -5,7 +5,7 @@ general:
 
 groups:
 
-    switch:
+    binary_sensor:
 
         Livingroom.Switch_1:
             group_address: '1/2/7'
@@ -31,6 +31,17 @@ groups:
             actions:
               - {hook: 'off', switch_time: 'short', target: Livingroom.Shutter_1, method: short_down}
               - {hook: 'off', switch_time: 'long', target: Livingroom.Shutter_1, method: down} # Pressing more then 2 seconds
+
+
+    binary_sensor_motion_dection:
+        Kitchen.Motion.Sensor: {group_address: '3/0/0', device_class: 'motion'}
+        DiningRoom.Motion.Sensor: {group_address: '3/0/1', device_class: 'motion'}
+
+        # Some states are encoded into different bits of the same group_address
+        # Defining which bit should be relevant for the binary state via the "significant_bit" option
+        Kitchen.Thermostat.Presence: {group_address: '3/0/2', device_class: 'motion', significant_bit: 2}
+        Kitchen.Thermostat.NightMode: {group_address: '3/0/2', device_class: 'motion', significant_bit: 1}
+
 
     outlet:
 
@@ -75,12 +86,4 @@ groups:
         Heating.Valve1: {group_address: '2/0/0', value_type: 'percent'}
         Heating.Valve2: {group_address: '2/0/1', value_type: 'percent'}
         Some.Other.Value: {group_address: '2/0/2'}
-
-        Kitchen.Motion.Sensor: {group_address: '3/0/0', value_type: 'binary', device_class: 'motion'}
-        DiningRoom.Motion.Sensor: {group_address: '3/0/1', value_type: 'binary', device_class: 'motion'}
-
-        # Some states are encoded into different bits of the same group_address
-        # Defining which bit should be relevant for the binary state via the "significant_bit" option
-        Kitchen.Thermostat.Presence: {group_address: '3/0/2', value_type: 'binary', significant_bit: 2}
-        Kitchen.Thermostat.NightMode: {group_address: '3/0/2', value_type: 'binary', significant_bit: 1}
 

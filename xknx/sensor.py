@@ -10,7 +10,6 @@ class Sensor(Device):
                  group_address=None,
                  value_type=None,
                  device_class=None,
-                 significant_bit=1,
                  device_updated_cb=None):
         # pylint: disable=too-many-arguments
 
@@ -18,13 +17,10 @@ class Sensor(Device):
 
         if isinstance(group_address, (str, int)):
             group_address = Address(group_address)
-        if not isinstance(significant_bit, int):
-            raise TypeError()
 
         self.group_address = group_address
         self.value_type = value_type
         self.device_class = device_class
-        self.significant_bit = significant_bit
         self.state = None
 
 
@@ -36,16 +32,12 @@ class Sensor(Device):
             config.get('value_type')
         device_class = \
             config.get('device_class')
-        significant_bit = \
-            config.get('significant_bit', 1)
 
         return cls(xknx,
                    name,
                    group_address=group_address,
                    value_type=value_type,
-                   device_class=device_class,
-                   significant_bit=significant_bit)
-
+                   device_class=device_class)
 
     def has_group_address(self, group_address):
         return self.group_address == group_address
@@ -62,17 +54,6 @@ class Sensor(Device):
 
     def process(self, telegram):
         self.set_internal_state(telegram.payload)
-
-    def is_binary(self):
-        return self.value_type == 'binary'
-
-
-    def binary_state(self):
-        if not self.is_binary() or \
-                not isinstance(self.state, DPTBinary):
-            return False
-
-        return self.state.value & (1 << (self.significant_bit-1)) != 0
 
 
     def unit_of_measurement(self):
@@ -100,8 +81,6 @@ class Sensor(Device):
                 len(self.state.value) == 1:
             # TODO: Instanciate DPTScaling object with DPTArray class
             return "{0}".format(DPTScaling().from_knx(self.state.value))
-        elif self.value_type == 'binary':
-            return self.binary_state()
         elif self.value_type == 'temperature':
             return DPTTemperature().from_knx(self.state.value)
         elif self.value_type == 'brightness':

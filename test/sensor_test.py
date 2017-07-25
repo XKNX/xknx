@@ -50,49 +50,6 @@ class TestSensor(unittest.TestCase):
         self.assertEqual(sensor.resolve_state(), "25")
         self.assertEqual(sensor.unit_of_measurement(), "%")
 
-    def test_not_binary(self):
-        xknx = XKNX(loop=self.loop)
-        sensor = Sensor(
-            xknx,
-            'TestSensor',
-            group_address='1/2/3',
-            value_type="percent")
-        self.assertFalse(sensor.is_binary())
-        self.assertFalse(sensor.binary_state())
-        # Even after setting a binary value,
-        # binary state should not return true
-        sensor.state = DPTBinary(5)
-        self.assertFalse(sensor.binary_state())
-
-    def test_binary(self):
-        xknx = XKNX(loop=self.loop)
-        sensor = Sensor(
-            xknx,
-            'DiningRoom.Motion.Sensor',
-            group_address='3/0/1',
-            value_type='binary',
-            device_class='motion')
-        self.assertEqual(sensor.significant_bit, 1)
-        self.assertTrue(sensor.is_binary())
-
-        # No sensor set, binary_state should resolve to False
-        self.assertFalse(sensor.binary_state())
-
-        # First bit is set
-        sensor.state = DPTBinary(5)
-        self.assertTrue(sensor.binary_state())
-
-        # State with the wrong bit set
-        sensor.state = DPTBinary(8)
-        self.assertFalse(sensor.binary_state())
-
-        # Shifting significant bit to 4th position
-        sensor.significant_bit = 4
-        sensor.state = DPTBinary(8)
-        self.assertTrue(sensor.binary_state())
-        sensor.state = DPTBinary(7)
-        self.assertFalse(sensor.binary_state())
-
 
     #
     # SYNC

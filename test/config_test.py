@@ -2,7 +2,7 @@ import unittest
 import asyncio
 
 from xknx import XKNX, Light, Outlet, Shutter, Thermostat, Time, \
-    Switch, Action, Sensor
+    BinarySensor, Action, Sensor
 
 # pylint: disable=too-many-public-methods,invalid-name
 class TestConfig(unittest.TestCase):
@@ -98,19 +98,19 @@ class TestConfig(unittest.TestCase):
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Livingroom.Switch_1'],
-            Switch(xknx,
-                   'Livingroom.Switch_1',
-                   group_address='1/2/7',
-                   actions=[
-                       Action(xknx,
-                              hook="on",
-                              target="Livingroom.Outlet_1",
-                              method="on"),
-                       Action(xknx,
-                              hook="on",
-                              target="Livingroom.Outlet_2",
-                              method="on")],
-                   device_updated_cb=xknx.devices.device_updated))
+            BinarySensor(xknx,
+                         'Livingroom.Switch_1',
+                         group_address='1/2/7',
+                         actions=[
+                             Action(xknx,
+                                    hook="on",
+                                    target="Livingroom.Outlet_1",
+                                    method="on"),
+                             Action(xknx,
+                                    hook="on",
+                                    target="Livingroom.Outlet_2",
+                                    method="on")],
+                         device_updated_cb=xknx.devices.device_updated))
 
 
 
@@ -139,24 +139,23 @@ class TestConfig(unittest.TestCase):
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['DiningRoom.Motion.Sensor'],
-            Sensor(xknx,
-                   'DiningRoom.Motion.Sensor',
-                   group_address='3/0/1',
-                   value_type='binary',
-                   device_class='motion',
-                   device_updated_cb=xknx.devices.device_updated))
+            BinarySensor(xknx,
+                         'DiningRoom.Motion.Sensor',
+                         group_address='3/0/1',
+                         device_class='motion',
+                         device_updated_cb=xknx.devices.device_updated))
 
 
     def test_config_sensor_binary_significant_bit(self):
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Kitchen.Thermostat.Presence'],
-            Sensor(xknx,
-                   'Kitchen.Thermostat.Presence',
-                   group_address='3/0/2',
-                   value_type='binary',
-                   significant_bit=2,
-                   device_updated_cb=xknx.devices.device_updated))
+            BinarySensor(xknx,
+                         'Kitchen.Thermostat.Presence',
+                         group_address='3/0/2',
+                         significant_bit=2,
+                         device_class='motion',
+                         device_updated_cb=xknx.devices.device_updated))
 
 
 

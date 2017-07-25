@@ -1,4 +1,3 @@
-from .switchtime import SwitchTime
 
 class Action():
 
@@ -22,6 +21,7 @@ class Action():
         method = config.get("method")
 
         def get_switch_time_from_config(config):
+            from .binary_sensor import SwitchTime
             if "switch_time" in config:
                 if config["switch_time"] == "long":
                     return SwitchTime.LONG
@@ -46,13 +46,13 @@ class Action():
 
 
     def test(self, state, switch_time):
-        from .switch import SwitchState
-        if (state == SwitchState.ON) \
+        from .binary_sensor import BinarySensorState
+        if (state == BinarySensorState.ON) \
                 and (self.hook == "on") \
                 and self.test_switch_time(switch_time):
             return True
 
-        if (state == SwitchState.OFF) \
+        if (state == BinarySensorState.OFF) \
                 and (self.hook == "off") \
                 and self.test_switch_time(switch_time):
             return True

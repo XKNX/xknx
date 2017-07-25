@@ -1,33 +1,44 @@
 import time
 from enum import Enum
-from xknx.knx import Address, DPTBinary
+from xknx.knx import Address
 from .action import Action
-from .switchtime import SwitchTime
 from .device import Device
 from .exception import CouldNotParseTelegram
 
 # pylint: disable=invalid-name
-class SwitchState(Enum):
+class BinarySensorState(Enum):
     ON = 1
     OFF = 2
 
-class Switch(Device):
+
+class SwitchTime(Enum):
+    SHORT = 1
+    LONG = 2
+
+
+class BinarySensor(Device):
 
     def __init__(self,
                  xknx,
                  name,
                  group_address=None,
+                 device_class=None,
+                 significant_bit=1,
                  actions=None,
                  device_updated_cb=None):
         # pylint: disable=too-many-arguments
+        Device.__init__(self, xknx, name, device_updated_cb)
         if isinstance(group_address, (str, int)):
             group_address = Address(group_address)
+        if not isinstance(significant_bit, int):
+            raise TypeError()
         if actions is None:
             actions = []
 
-        Device.__init__(self, xknx, name, device_updated_cb)
         self.group_address = group_address
-        self.state = SwitchState.OFF
+        self.device_class = device_class
+        self.significant_bit = significant_bit
+        self.state = BinarySensorState.OFF
         self.last_set = None
         self.actions = actions
 
@@ -36,6 +47,10 @@ class Switch(Device):
     def from_config(cls, xknx, name, config):
         group_address = \
             config.get('group_address')
+        device_class = \
+            config.get('device_class')
+        significant_bit = \
+            config.get('significant_bit', 1)
 
         actions = []
         if "actions" in config:
@@ -46,6 +61,8 @@ class Switch(Device):
         return cls(xknx,
                    name,
                    group_address=group_address,
+                   device_class=device_class,
+                   significant_bit=significant_bit,
                    actions=actions)
 
     def has_group_address(self, group_address):
@@ -70,13 +87,14 @@ class Switch(Device):
 
 
     def process(self, telegram):
-        if not isinstance(telegram.payload, DPTBinary):
-            raise CouldNotParseTelegram()
 
-        if telegram.payload.value == 0:
-            self.set_internal_state(SwitchState.OFF)
-        elif telegram.payload.value == 1:
-            self.set_internal_state(SwitchState.ON)
+        bit_masq = 1 << (self.significant_bit-1)
+        binary_value = telegram.payload.value & bit_masq != 0
+
+        if binary_value == 0:
+            self.set_internal_state(BinarySensorState.OFF)
+        elif binary_value == 1:
+            self.set_internal_state(BinarySensorState.ON)
         else:
             raise CouldNotParseTelegram()
 
@@ -88,15 +106,15 @@ class Switch(Device):
 
 
     def is_on(self):
-        return self.state == SwitchState.ON
+        return self.state == BinarySensorState.ON
 
     def is_off(self):
-        return self.state == SwitchState.OFF
+        return self.state == BinarySensorState.OFF
 
 
     def __str__(self):
-        return '<Switch group_address="{0}" name="{1}" />' \
-            .format(self.group_address, self.name)
+        return '<BinarySensor group_address="{0}" name="{1}" state="{2}"/>' \
+            .format(self.group_address, self.name, self.state)
 
 
     def __eq__(self, other):
