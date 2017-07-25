@@ -1,15 +1,15 @@
 import asyncio
-from xknx import XKNX, Outlet
+from xknx import XKNX, Switch
 
 async def main():
     xknx = XKNX()
     await xknx.start()
-    outlet = Outlet(xknx,
+    switch = Switch(xknx,
                     name='TestOutlet',
                     group_address='1/1/11')
-    outlet.set_on()
+    switch.set_on()
     await asyncio.sleep(2)
-    outlet.set_off()
+    switch.set_off()
     await xknx.stop()
 
 # pylint: disable=invalid-name

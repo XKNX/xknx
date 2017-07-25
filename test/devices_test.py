@@ -1,7 +1,7 @@
 import unittest
 import asyncio
 
-from xknx import XKNX, Devices, Light, Outlet, BinarySensor
+from xknx import XKNX, Devices, Light, Switch, BinarySensor
 from xknx.knx import Address
 
 # pylint: disable=too-many-public-methods,invalid-name
@@ -27,33 +27,33 @@ class TestDevices(unittest.TestCase):
                        group_address_switch='1/6/7')
         devices.add(light1)
 
-        outlet1 = Outlet(xknx,
+        switch1 = Switch(xknx,
                          "TestOutlet_1",
                          group_address='1/2/3')
-        devices.add(outlet1)
+        devices.add(switch1)
 
         light2 = Light(xknx,
                        'Living-Room.Light_2',
                        group_address_switch='1/6/8')
         devices.add(light2)
 
-        outlet2 = Outlet(xknx,
+        switch2 = Switch(xknx,
                          "TestOutlet_2",
                          group_address='1/2/4')
-        devices.add(outlet2)
+        devices.add(switch2)
 
         self.assertEqual(devices["Living-Room.Light_1"], light1)
-        self.assertEqual(devices["TestOutlet_1"], outlet1)
+        self.assertEqual(devices["TestOutlet_1"], switch1)
         self.assertEqual(devices["Living-Room.Light_2"], light2)
-        self.assertEqual(devices["TestOutlet_2"], outlet2)
+        self.assertEqual(devices["TestOutlet_2"], switch2)
         with self.assertRaises(KeyError):
             # pylint: disable=pointless-statement
             devices["TestOutlet_X"]
 
         self.assertEqual(devices[0], light1)
-        self.assertEqual(devices[1], outlet1)
+        self.assertEqual(devices[1], switch1)
         self.assertEqual(devices[2], light2)
-        self.assertEqual(devices[3], outlet2)
+        self.assertEqual(devices[3], switch2)
         with self.assertRaises(IndexError):
             # pylint: disable=pointless-statement
             devices[4]

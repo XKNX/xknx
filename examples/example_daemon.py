@@ -1,5 +1,5 @@
 import asyncio
-from xknx import XKNX, Outlet
+from xknx import XKNX, Switch
 
 
 def device_updated_cb(device):
@@ -8,10 +8,10 @@ def device_updated_cb(device):
 
 async def main():
     xknx = XKNX(device_updated_cb=device_updated_cb)
-    outlet = Outlet(xknx,
+    switch = Switch(xknx,
                     name='TestOutlet',
                     group_address='1/1/11')
-    xknx.devices.add(outlet)
+    xknx.devices.add(switch)
 
     await xknx.start(daemon_mode=True)
 

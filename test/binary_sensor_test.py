@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock
 import asyncio
-from xknx import XKNX, BinarySensor, Action, Outlet, BinarySensorState
+from xknx import XKNX, BinarySensor, Action, Switch, BinarySensorState
 from xknx.knx import Telegram, DPTBinary
 
 class TestBinarySensor(unittest.TestCase):
@@ -62,23 +62,23 @@ class TestBinarySensor(unittest.TestCase):
 
     def test_process_action(self):
         xknx = XKNX(loop=self.loop)
-        outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
-        xknx.devices.add(outlet)
+        switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
+        xknx.devices.add(switch)
 
-        switch = BinarySensor(xknx, 'TestInput', group_address='1/2/3')
+        binary_sensor = BinarySensor(xknx, 'TestInput', group_address='1/2/3')
         action_on = Action(
             xknx,
             hook='on',
             target='TestOutlet',
             method='on')
-        switch.actions.append(action_on)
+        binary_sensor.actions.append(action_on)
         action_off = Action(
             xknx,
             hook='off',
             target='TestOutlet',
             method='off')
-        switch.actions.append(action_off)
-        xknx.devices.add(switch)
+        binary_sensor.actions.append(action_off)
+        xknx.devices.add(binary_sensor)
 
         self.assertEqual(
             xknx.devices['TestInput'].state,
@@ -89,7 +89,7 @@ class TestBinarySensor(unittest.TestCase):
 
         telegram_on = Telegram()
         telegram_on.payload = DPTBinary(1)
-        switch.process(telegram_on)
+        binary_sensor.process(telegram_on)
 
         self.assertEqual(
             xknx.devices['TestInput'].state,
@@ -100,7 +100,7 @@ class TestBinarySensor(unittest.TestCase):
 
         telegram_off = Telegram()
         telegram_off.payload = DPTBinary(0)
-        switch.process(telegram_off)
+        binary_sensor.process(telegram_off)
 
         self.assertEqual(
             xknx.devices['TestInput'].state,

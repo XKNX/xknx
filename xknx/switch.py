@@ -2,7 +2,7 @@ from xknx.knx import Address, Telegram, DPTBinary
 from .exception import CouldNotParseTelegram
 from .device import Device
 
-class Outlet(Device):
+class Switch(Device):
 
     def __init__(self,
                  xknx,
@@ -90,7 +90,7 @@ class Outlet(Device):
 
 
     def __str__(self):
-        return '<Outlet name="{0}" group_address="{1}" ' \
+        return '<Switch name="{0}" group_address="{1}" ' \
                'group_address_state="{2}" state="{3}" />' \
             .format(self.name,
                     self.group_address,

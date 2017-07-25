@@ -4,7 +4,7 @@ from .binary_sensor import BinarySensor
 from .thermostat import Thermostat
 from .time import Time
 from .light import Light
-from .outlet import Outlet
+from .switch import Switch
 from .shutter import Shutter
 from .sensor import Sensor
 
@@ -36,8 +36,8 @@ class Config:
         for group in doc["groups"]:
             if group.startswith("light"):
                 self.parse_group_light(doc["groups"][group])
-            elif group.startswith("outlet"):
-                self.parse_group_outlet(doc["groups"][group])
+            elif group.startswith("switch"):
+                self.parse_group_switch(doc["groups"][group])
             elif group.startswith("shutter"):
                 self.parse_group_shutter(doc["groups"][group])
             elif group.startswith("thermostat"):
@@ -57,12 +57,12 @@ class Config:
             self.xknx.devices.add(light)
 
 
-    def parse_group_outlet(self, entries):
+    def parse_group_switch(self, entries):
         for entry in entries:
-            outlet = Outlet.from_config(self.xknx,
+            switch = Switch.from_config(self.xknx,
                                         entry,
                                         entries[entry])
-            self.xknx.devices.add(outlet)
+            self.xknx.devices.add(switch)
 
 
     def parse_group_binary_sensor(self, entries):

@@ -1,13 +1,13 @@
 import asyncio
-from xknx import XKNX, Outlet
+from xknx import XKNX, Switch
 
 async def main():
     xknx = XKNX()
     await xknx.start()
-    outlet = Outlet(xknx,
+    switch = Switch(xknx,
                     name='TestOutlet',
                     group_address='1/1/11')
-    xknx.devices.add(outlet)
+    xknx.devices.add(switch)
 
     xknx.devices["TestOutlet"].set_on()
     await asyncio.sleep(2)

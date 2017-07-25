@@ -1,7 +1,7 @@
 import unittest
 import asyncio
 
-from xknx import XKNX, Light, Outlet, Shutter, Thermostat, Time, \
+from xknx import XKNX, Light, Switch, Shutter, Thermostat, Time, \
     BinarySensor, Action, Sensor
 
 # pylint: disable=too-many-public-methods,invalid-name
@@ -40,11 +40,11 @@ class TestConfig(unittest.TestCase):
                   device_updated_cb=xknx.devices.device_updated))
 
 
-    def test_config_outlet(self):
+    def test_config_switch(self):
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Livingroom.Outlet_2'],
-            Outlet(xknx,
+            Switch(xknx,
                    'Livingroom.Outlet_2',
                    group_address='1/3/2',
                    device_updated_cb=xknx.devices.device_updated))
@@ -94,7 +94,7 @@ class TestConfig(unittest.TestCase):
                  device_updated_cb=xknx.devices.device_updated))
 
 
-    def test_config_switch(self):
+    def test_config_binary_sensor(self):
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Livingroom.Switch_1'],

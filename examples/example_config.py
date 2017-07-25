@@ -1,5 +1,5 @@
 import asyncio
-from xknx import XKNX, Outlet
+from xknx import XKNX
 
 async def main():
     xknx = XKNX(config='xknx.yaml')

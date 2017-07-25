@@ -8,7 +8,7 @@ from .shutter import Shutter
 from .travelcalculator import TravelCalculator
 from .thermostat import Thermostat
 from .light import Light
-from .outlet import Outlet
+from .switch import Switch
 from .time import Time
 from .sensor import Sensor
 from .binary_sensor import BinarySensor, BinarySensorState
