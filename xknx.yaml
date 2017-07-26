@@ -67,10 +67,11 @@ groups:
 
     light:
 
-        Kitchen.Light_1:     {group_address_switch: '1/6/1', group_address_dimm: '1/6/2', group_address_brightness: '1/6/3'}
-        Diningroom.Light_1:  {group_address_switch: '1/6/4', group_address_dimm: '1/6/5', group_address_brightness: '1/6/6'}
+        Kitchen.Light_1:     {group_address_switch: '1/6/1', group_address_brightness: '1/6/3'}
+        Diningroom.Light_1:  {group_address_switch: '1/6/4', group_address_brightness: '1/6/6'}
         Living-Room.Light_1: {group_address_switch: '1/6/7'}
-
+        # Light with extra addresses for states:
+        Office.Light_1:  {group_address_switch: '1/7/4', group_address_switch_state: '1/7/5', group_address_brightness: '1/7/6', group_address_brightness_state: '1/7/7'}
 
     thermostat:
         Kitchen.Thermostat_1: {group_address_temperature: '1/7/1'}

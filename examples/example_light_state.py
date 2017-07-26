@@ -8,7 +8,6 @@ async def main():
     light = Light(xknx,
                   name='TestLight2',
                   group_address_switch='1/0/12',
-                  group_address_dimm='1/0/13',
                   group_address_brightness='1/0/14')
     light.set_brightness(128)
 

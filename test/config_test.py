@@ -28,15 +28,16 @@ class TestConfig(unittest.TestCase):
                   device_updated_cb=xknx.devices.device_updated))
 
 
-    def test_config_ligh_dimm(self):
+    def test_config_light_state(self):
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
-            xknx.devices['Diningroom.Light_1'],
+            xknx.devices['Office.Light_1'],
             Light(xknx,
-                  'Diningroom.Light_1',
-                  group_address_switch='1/6/4',
-                  group_address_dimm='1/6/5',
-                  group_address_brightness='1/6/6',
+                  'Office.Light_1',
+                  group_address_switch='1/7/4',
+                  group_address_switch_state='1/7/5',
+                  group_address_brightness='1/7/6',
+                  group_address_brightness_state='1/7/7',
                   device_updated_cb=xknx.devices.device_updated))
 
 

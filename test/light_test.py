@@ -21,7 +21,6 @@ class TestLight(unittest.TestCase):
         light = Light(xknx,
                       'Diningroom.Light_1',
                       group_address_switch='1/6/4',
-                      group_address_dimm='1/6/5',
                       group_address_brightness='1/6/6')
         self.assertTrue(light.supports_dimming)
 
@@ -41,7 +40,6 @@ class TestLight(unittest.TestCase):
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
-                      group_address_dimm='1/2/4',
                       group_address_brightness='1/2/5')
         self.loop.run_until_complete(asyncio.Task(light.sync(False)))
 
@@ -63,14 +61,19 @@ class TestLight(unittest.TestCase):
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
-                      group_address_state='1/2/6')
+                      group_address_switch_state='1/2/6',
+                      group_address_brightness='1/2/8',
+                      group_address_brightness_state='1/2/9')
         self.loop.run_until_complete(asyncio.Task(light.sync(False)))
 
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(xknx.telegrams.qsize(), 2)
 
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram1,
                          Telegram(Address('1/2/6'), TelegramType.GROUP_READ))
+        telegram2 = xknx.telegrams.get_nowait()
+        self.assertEqual(telegram2,
+                         Telegram(Address('1/2/9'), TelegramType.GROUP_READ))
 
     #
     # TEST SET ON
@@ -80,7 +83,6 @@ class TestLight(unittest.TestCase):
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
-                      group_address_dimm='1/2/4',
                       group_address_brightness='1/2/5')
         light.set_on()
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -96,7 +98,6 @@ class TestLight(unittest.TestCase):
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
-                      group_address_dimm='1/2/4',
                       group_address_brightness='1/2/5')
         light.set_off()
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -112,7 +113,6 @@ class TestLight(unittest.TestCase):
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
-                      group_address_dimm='1/2/4',
                       group_address_brightness='1/2/5')
         light.set_brightness(23)
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -129,7 +129,6 @@ class TestLight(unittest.TestCase):
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
-                      group_address_dimm='1/2/4',
                       group_address_brightness='1/2/5')
         self.assertEqual(light.state, False)
 
@@ -148,7 +147,6 @@ class TestLight(unittest.TestCase):
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
-                      group_address_dimm='1/2/4',
                       group_address_brightness='1/2/5')
 
         after_update_callback = Mock()
@@ -165,7 +163,6 @@ class TestLight(unittest.TestCase):
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
-                      group_address_dimm='1/2/4',
                       group_address_brightness='1/2/5')
         self.assertEqual(light.brightness, 0)
 
@@ -182,7 +179,6 @@ class TestLight(unittest.TestCase):
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
-                      group_address_dimm='1/2/4',
                       group_address_brightness='1/2/5')
         light.do("on")
         self.assertTrue(light.state)
