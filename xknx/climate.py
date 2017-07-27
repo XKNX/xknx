@@ -5,7 +5,7 @@ from .device import Device
 from .exception import CouldNotParseTelegram
 
 
-class Thermostat(Device):
+class Climate(Device):
 
 
     def __init__(self,
@@ -97,7 +97,7 @@ class Thermostat(Device):
                 datetime.datetime.fromtimestamp(
                     self.last_set).strftime('%Y-%m-%d %H:%M:%S') \
                 if self.last_set else None
-        return '<Thermostat name="{0}" ' \
+        return '<Climate name="{0}" ' \
                'group_address_temperature="{1}"  ' \
                'group_address_setpoint="{2}" ' \
                'temperature="{3}" last_set="{4}" />' \

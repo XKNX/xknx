@@ -39,8 +39,8 @@ groups:
 
         # Some states are encoded into different bits of the same group_address
         # Defining which bit should be relevant for the binary state via the "significant_bit" option
-        Kitchen.Thermostat.Presence: {group_address: '3/0/2', device_class: 'motion', significant_bit: 2}
-        Kitchen.Thermostat.NightMode: {group_address: '3/0/2', device_class: 'motion', significant_bit: 1}
+        Kitchen.Presence: {group_address: '3/0/2', device_class: 'motion', significant_bit: 2}
+        Kitchen.ThermostatNightMode: {group_address: '3/0/2', device_class: 'motion', significant_bit: 1}
 
 
     switch:
@@ -73,9 +73,9 @@ groups:
         # Light with extra addresses for states:
         Office.Light_1:  {group_address_switch: '1/7/4', group_address_switch_state: '1/7/5', group_address_brightness: '1/7/6', group_address_brightness_state: '1/7/7'}
 
-    thermostat:
-        Kitchen.Thermostat_1: {group_address_temperature: '1/7/1'}
-        Livingroom.Thermostat_2: {group_address_temperature: '1/7/2', group_address_setpoint: '1/7/3'}
+    climate:
+        Kitchen.Climate_1: {group_address_temperature: '1/7/1'}
+        Livingroom.Climate_2: {group_address_temperature: '1/7/2', group_address_setpoint: '1/7/3'}
 
     # Cyclic sending of time to the KNX bus
     time:

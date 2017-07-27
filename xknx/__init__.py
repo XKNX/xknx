@@ -6,7 +6,7 @@ from .devices import Devices
 from .action import Action
 from .shutter import Shutter
 from .travelcalculator import TravelCalculator
-from .thermostat import Thermostat
+from .climate import Climate
 from .light import Light
 from .switch import Switch
 from .time import Time

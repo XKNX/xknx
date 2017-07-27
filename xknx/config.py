@@ -1,7 +1,7 @@
 import yaml
 from xknx.knx import Address, AddressType
 from .binary_sensor import BinarySensor
-from .thermostat import Thermostat
+from .climate import Climate
 from .time import Time
 from .light import Light
 from .switch import Switch
@@ -40,8 +40,8 @@ class Config:
                 self.parse_group_switch(doc["groups"][group])
             elif group.startswith("shutter"):
                 self.parse_group_shutter(doc["groups"][group])
-            elif group.startswith("thermostat"):
-                self.parse_group_thermostat(doc["groups"][group])
+            elif group.startswith("climate"):
+                self.parse_group_climate(doc["groups"][group])
             elif group.startswith("time"):
                 self.parse_group_time(doc["groups"][group])
             elif group.startswith("sensor"):
@@ -81,12 +81,12 @@ class Config:
             self.xknx.devices.add(shutter)
 
 
-    def parse_group_thermostat(self, entries):
+    def parse_group_climate(self, entries):
         for entry in entries:
-            thermostat = Thermostat.from_config(self.xknx,
-                                                entry,
-                                                entries[entry])
-            self.xknx.devices.add(thermostat)
+            climate = Climate.from_config(self.xknx,
+                                          entry,
+                                          entries[entry])
+            self.xknx.devices.add(climate)
 
 
     def parse_group_time(self, entries):

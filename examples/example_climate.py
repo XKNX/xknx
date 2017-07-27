@@ -1,18 +1,18 @@
 import asyncio
-from xknx import XKNX, Thermostat
+from xknx import XKNX, Climate
 
 async def main():
     xknx = XKNX()
     await xknx.start()
 
-    thermostat = Thermostat(
+    climate = Climate(
         xknx,
-        'TestThermostat',
+        'TestClimate',
         group_address_temperature='6/2/1')
-    await thermostat.sync()
+    await climate.sync()
 
-    # Will print out state of thermostat including current temperature:
-    print(thermostat)
+    # Will print out state of climate including current temperature:
+    print(climate)
 
     await xknx.stop()
 
