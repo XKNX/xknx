@@ -71,19 +71,19 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(
             xknx.devices['Kitchen.Climate_1'],
             Climate(xknx,
-                   'Kitchen.Climate_1',
-                   group_address_temperature='1/7/1',
-                   device_updated_cb=xknx.devices.device_updated))
+                    'Kitchen.Climate_1',
+                    group_address_temperature='1/7/1',
+                    device_updated_cb=xknx.devices.device_updated))
 
     def test_config_setpoint(self):
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Livingroom.Climate_2'],
             Climate(xknx,
-                   'Livingroom.Climate_2',
-                   group_address_temperature='1/7/2',
-                   group_address_setpoint='1/7/3',
-                   device_updated_cb=xknx.devices.device_updated))
+                    'Livingroom.Climate_2',
+                    group_address_temperature='1/7/2',
+                    group_address_setpoint='1/7/3',
+                    device_updated_cb=xknx.devices.device_updated))
 
     def test_config_time(self):
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
