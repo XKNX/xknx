@@ -1,10 +1,10 @@
 import unittest
 from unittest.mock import Mock
 import asyncio
-from xknx import XKNX, Shutter
+from xknx import XKNX, Cover
 from xknx.knx import Telegram, Address, TelegramType, DPTBinary, DPTArray
 
-class TestShutter(unittest.TestCase):
+class TestCover(unittest.TestCase):
     # pylint: disable=too-many-public-methods,invalid-name
 
     def setUp(self):
@@ -19,14 +19,14 @@ class TestShutter(unittest.TestCase):
     #
     def test_sync(self):
         xknx = XKNX(loop=self.loop)
-        shutter = Shutter(
+        cover = Cover(
             xknx,
-            'TestShutter',
+            'TestCover',
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_feedback='1/2/4')
-        self.loop.run_until_complete(asyncio.Task(shutter.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(cover.sync(False)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram1,
@@ -38,14 +38,14 @@ class TestShutter(unittest.TestCase):
     #
     def test_set_up(self):
         xknx = XKNX(loop=self.loop)
-        shutter = Shutter(
+        cover = Cover(
             xknx,
-            'TestShutter',
+            'TestCover',
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_feedback='1/2/4')
-        shutter.set_up()
+        cover.set_up()
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -57,14 +57,14 @@ class TestShutter(unittest.TestCase):
     #
     def test_set_short_down(self):
         xknx = XKNX(loop=self.loop)
-        shutter = Shutter(
+        cover = Cover(
             xknx,
-            'TestShutter',
+            'TestCover',
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_feedback='1/2/4')
-        shutter.set_down()
+        cover.set_down()
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -76,14 +76,14 @@ class TestShutter(unittest.TestCase):
     #
     def test_set_short_up(self):
         xknx = XKNX(loop=self.loop)
-        shutter = Shutter(
+        cover = Cover(
             xknx,
-            'TestShutter',
+            'TestCover',
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_feedback='1/2/4')
-        shutter.set_short_up()
+        cover.set_short_up()
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -95,14 +95,14 @@ class TestShutter(unittest.TestCase):
     #
     def test_set_down(self):
         xknx = XKNX(loop=self.loop)
-        shutter = Shutter(
+        cover = Cover(
             xknx,
-            'TestShutter',
+            'TestCover',
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_feedback='1/2/4')
-        shutter.set_short_down()
+        cover.set_short_down()
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -114,13 +114,13 @@ class TestShutter(unittest.TestCase):
     #
     def test_stop(self):
         xknx = XKNX(loop=self.loop)
-        shutter = Shutter(
-            xknx, 'TestShutter',
+        cover = Cover(
+            xknx, 'TestCover',
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_feedback='1/2/4')
-        shutter.stop()
+        cover.stop()
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -132,14 +132,14 @@ class TestShutter(unittest.TestCase):
     #
     def test_position(self):
         xknx = XKNX(loop=self.loop)
-        shutter = Shutter(
+        cover = Cover(
             xknx,
-            'TestShutter',
+            'TestCover',
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_feedback='1/2/4')
-        shutter.set_position(50)
+        cover.set_position(50)
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -148,14 +148,14 @@ class TestShutter(unittest.TestCase):
 
     def test_position_without_position_address_up(self):
         xknx = XKNX(loop=self.loop)
-        shutter = Shutter(
+        cover = Cover(
             xknx,
-            'TestShutter',
+            'TestCover',
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position_feedback='1/2/4')
-        shutter.travelcalculator.set_position(40)
-        shutter.set_position(50)
+        cover.travelcalculator.set_position(40)
+        cover.set_position(50)
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -164,14 +164,14 @@ class TestShutter(unittest.TestCase):
 
     def test_position_without_position_address_down(self):
         xknx = XKNX(loop=self.loop)
-        shutter = Shutter(
+        cover = Cover(
             xknx,
-            'TestShutter',
+            'TestCover',
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position_feedback='1/2/4')
-        shutter.travelcalculator.set_position(100)
-        shutter.set_position(50)
+        cover.travelcalculator.set_position(100)
+        cover.set_position(50)
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -183,39 +183,39 @@ class TestShutter(unittest.TestCase):
     #
     def test_process(self):
         xknx = XKNX(loop=self.loop)
-        shutter = Shutter(
+        cover = Cover(
             xknx,
-            'TestShutter',
+            'TestCover',
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_feedback='1/2/4')
 
         telegram = Telegram(Address('1/2/4'), payload=DPTArray(42))
-        shutter.process(telegram)
+        cover.process(telegram)
 
-        self.assertEqual(shutter.current_position(), 42)
+        self.assertEqual(cover.current_position(), 42)
 
 
     def test_process_callback(self):
         # pylint: disable=no-self-use
         xknx = XKNX(loop=self.loop)
-        shutter = Shutter(
+        cover = Cover(
             xknx,
-            'TestShutter',
+            'TestCover',
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_feedback='1/2/4')
 
         after_update_callback = Mock()
-        shutter.register_device_updated_cb(after_update_callback)
+        cover.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(Address('1/2/4'), payload=DPTArray(42))
-        shutter.process(telegram)
+        cover.process(telegram)
 
-        after_update_callback.assert_called_with(shutter)
+        after_update_callback.assert_called_with(cover)
 
 
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestShutter)
+SUITE = unittest.TestLoader().loadTestsFromTestCase(TestCover)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

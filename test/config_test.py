@@ -1,7 +1,7 @@
 import unittest
 import asyncio
 
-from xknx import XKNX, Light, Switch, Shutter, Climate, Time, \
+from xknx import XKNX, Light, Switch, Cover, Climate, Time, \
     BinarySensor, Action, Sensor
 
 # pylint: disable=too-many-public-methods,invalid-name
@@ -51,19 +51,19 @@ class TestConfig(unittest.TestCase):
                    device_updated_cb=xknx.devices.device_updated))
 
 
-    def test_config_shutter(self):
+    def test_config_cover(self):
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Livingroom.Shutter_2'],
-            Shutter(xknx,
-                    'Livingroom.Shutter_2',
-                    group_address_long='1/4/5',
-                    group_address_short='1/4/6',
-                    group_address_position_feedback='1/4/7',
-                    group_address_position='1/4/8',
-                    travel_time_down=50,
-                    travel_time_up=60,
-                    device_updated_cb=xknx.devices.device_updated))
+            Cover(xknx,
+                  'Livingroom.Shutter_2',
+                  group_address_long='1/4/5',
+                  group_address_short='1/4/6',
+                  group_address_position_feedback='1/4/7',
+                  group_address_position='1/4/8',
+                  travel_time_down=50,
+                  travel_time_up=60,
+                  device_updated_cb=xknx.devices.device_updated))
 
 
     def test_config_temperature(self):

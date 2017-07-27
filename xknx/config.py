@@ -5,7 +5,7 @@ from .climate import Climate
 from .time import Time
 from .light import Light
 from .switch import Switch
-from .shutter import Shutter
+from .cover import Cover
 from .sensor import Sensor
 
 class Config:
@@ -38,8 +38,8 @@ class Config:
                 self.parse_group_light(doc["groups"][group])
             elif group.startswith("switch"):
                 self.parse_group_switch(doc["groups"][group])
-            elif group.startswith("shutter"):
-                self.parse_group_shutter(doc["groups"][group])
+            elif group.startswith("cover"):
+                self.parse_group_cover(doc["groups"][group])
             elif group.startswith("climate"):
                 self.parse_group_climate(doc["groups"][group])
             elif group.startswith("time"):
@@ -73,12 +73,12 @@ class Config:
             self.xknx.devices.add(binary_sensor)
 
 
-    def parse_group_shutter(self, entries):
+    def parse_group_cover(self, entries):
         for entry in entries:
-            shutter = Shutter.from_config(self.xknx,
-                                          entry,
-                                          entries[entry])
-            self.xknx.devices.add(shutter)
+            cover = Cover.from_config(self.xknx,
+                                      entry,
+                                      entries[entry])
+            self.xknx.devices.add(cover)
 
 
     def parse_group_climate(self, entries):

@@ -4,7 +4,7 @@ from .stateupdater import StateUpdater
 from .telegram_queue import TelegramQueue
 from .devices import Devices
 from .action import Action
-from .shutter import Shutter
+from .cover import Cover
 from .travelcalculator import TravelCalculator
 from .climate import Climate
 from .light import Light

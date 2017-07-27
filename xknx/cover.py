@@ -3,9 +3,9 @@ from .device import Device
 from .travelcalculator import TravelCalculator
 from .exception import CouldNotParseTelegram
 
-class Shutter(Device):
+class Cover(Device):
 
-    # Average typical travel time of a shutter
+    # Average typical travel time of a cover
     DEFAULT_TRAVEL_TIME_DOWN = 22
     DEFAULT_TRAVEL_TIME_UP = 22
 
@@ -81,7 +81,7 @@ class Shutter(Device):
 
 
     def __str__(self):
-        return '<Shutter name="{0}" ' \
+        return '<Cover name="{0}" ' \
                 'group_address_long="{1}" ' \
                 'group_address_short="{2}" ' \
                 'group_address_position="{3}" ' \
