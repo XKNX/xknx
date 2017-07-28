@@ -7,6 +7,7 @@ from xknx.knxip import KNXIPFrame, KNXIPServiceType, DisconnectResponse,\
 
 class Test_KNXIP_DisconnectResp(unittest.TestCase):
     """Test class for KNX/IP DisconnectResponse objects."""
+
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_disconnect_response(self):

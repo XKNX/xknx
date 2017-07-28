@@ -6,6 +6,7 @@ from xknx.knxip import KNXIPFrame, KNXIPServiceType, ConnectionStateRequest, HPA
 
 class Test_KNXIP_ConnStateReq(unittest.TestCase):
     """Test class for KNX/IP ConnectionStateRequests."""
+
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_disconnect_request(self):

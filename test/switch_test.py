@@ -10,12 +10,12 @@ class TestSwitch(unittest.TestCase):
     """Test class for Switch object."""
 
     def setUp(self):
-        """set up test class."""
+        """Set up test class."""
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
     def tearDown(self):
-        """tear down test class."""
+        """Tear down test class."""
         self.loop.close()
 
     #

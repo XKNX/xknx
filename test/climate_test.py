@@ -10,12 +10,12 @@ class TestClimate(unittest.TestCase):
     """Test class for Climate objects."""
 
     def setUp(self):
-        """set up test class."""
+        """Set up test class."""
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
     def tearDown(self):
-        """tear down test class."""
+        """Tear down test class."""
         self.loop.close()
 
     #
@@ -73,7 +73,7 @@ class TestClimate(unittest.TestCase):
     # TEST SET SETPOINT
     #
     def test_set_setpoint(self):
-        """Test set_setpoint"""
+        """Test set_setpoint."""
         xknx = XKNX(loop=self.loop)
         climate = Climate(
             xknx,

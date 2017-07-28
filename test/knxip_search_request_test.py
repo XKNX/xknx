@@ -7,6 +7,7 @@ from xknx.knxip import KNXIPFrame, KNXIPServiceType, SearchRequest, \
 
 class Test_KNXIP_Discovery(unittest.TestCase):
     """Test class for KNX/IP SearchRequest objects."""
+
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_connect_request(self):

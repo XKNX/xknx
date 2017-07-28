@@ -5,7 +5,8 @@ from xknx.knx import DPTBinary, DPTArray, ConversionError
 
 class TestDPT(unittest.TestCase):
     """Test class for KNX binary/integer objects."""
-     # pylint: disable=too-many-public-methods,invalid-name
+
+    # pylint: disable=too-many-public-methods,invalid-name
 
     def test_compare_binary(self):
         """Test comparison of DPTBinary objects."""

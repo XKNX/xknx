@@ -198,7 +198,7 @@ class TestTravelCalculator(unittest.TestCase):
         self.assertFalse(travelcalculator.is_open())
 
     def test_is_traveling(self):
-        """Test if cover is traveling"""
+        """Test if cover is traveling."""
         travelcalculator = TravelCalculator(64, 128)
         self.assertFalse(travelcalculator.is_traveling())
 

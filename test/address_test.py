@@ -5,6 +5,7 @@ from xknx.knx import Address, AddressFormat, AddressType, CouldNotParseAddress
 
 class TestAddress(unittest.TestCase):
     """Test class for Address."""
+
     # pylint: disable=too-many-public-methods,invalid-name
 
     #

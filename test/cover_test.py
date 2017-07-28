@@ -1,4 +1,5 @@
 """Unit test for Cover objects."""
+
 import unittest
 from unittest.mock import Mock
 import asyncio
@@ -7,15 +8,16 @@ from xknx.knx import Telegram, Address, TelegramType, DPTBinary, DPTArray
 
 class TestCover(unittest.TestCase):
     """Test class for Cover objects."""
+
     # pylint: disable=too-many-public-methods,invalid-name
 
     def setUp(self):
-        """set up test class."""
+        """Set up test class."""
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
     def tearDown(self):
-        """tear down test class."""
+        """Tear down test class."""
         self.loop.close()
 
     #

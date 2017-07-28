@@ -8,6 +8,7 @@ from xknx.knx import Address
 
 class Test_KNXIP_DIB(unittest.TestCase):
     """Test class for KNX/IP DIB objects."""
+
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_dib_base(self):

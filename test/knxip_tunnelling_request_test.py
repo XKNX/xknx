@@ -8,6 +8,7 @@ from xknx.knx import Telegram, Address, DPTBinary
 
 class Test_KNXIP_TunnelingReq(unittest.TestCase):
     """Test class for KNX/IP TunelingRequest objects."""
+
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_connect_request(self):

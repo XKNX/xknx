@@ -10,12 +10,12 @@ class TestDevices(unittest.TestCase):
     """Test class for devices container within XKNX."""
 
     def setUp(self):
-        """set up test class."""
+        """Set up test class."""
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
     def tearDown(self):
-        """tear down test class."""
+        """Tear down test class."""
         self.loop.close()
 
     #
@@ -169,11 +169,7 @@ class TestDevices(unittest.TestCase):
 
 
     def test_modification_of_device(self):
-        """ This test should verify that devices only
-        stores the references of an object and all
-        accessing functions only return referecenes of
-        the same object"""
-
+        """Test if devices object does store references and not copies of objects."""
         xknx = XKNX(loop=self.loop)
         devices = Devices()
 

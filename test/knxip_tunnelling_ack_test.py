@@ -7,14 +7,13 @@ from xknx.knxip import KNXIPFrame, KNXIPServiceType, TunnellingAck, \
 
 class Test_KNXIP_TunnelingReq(unittest.TestCase):
     """Test class for KNX/IP TunelingAck objects."""
+
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_connect_request(self):
         """Test parsing and streaming tunneling ACK KNX/IP packet."""
-
         raw = ((0x06, 0x10, 0x04, 0x21, 0x00, 0x0a, 0x04, 0x2a,
                 0x17, 0x00))
-
         knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
 

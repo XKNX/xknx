@@ -7,6 +7,7 @@ from xknx.knx import Address, DPTTime, DPTBinary, DPTArray, \
 
 class Test_KNXIP(unittest.TestCase):
     """Class for KNX/IP RoutingIndication test."""
+
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_from_knx(self):

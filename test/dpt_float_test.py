@@ -6,6 +6,7 @@ from xknx.knx import DPTFloat, DPTTemperature, DPTHumidity, DPTLux, \
 
 class TestDPTFloat(unittest.TestCase):
     """Test class for KNX float object."""
+
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_value_from_documentation(self):
@@ -37,7 +38,7 @@ class TestDPTFloat(unittest.TestCase):
         self.assertEqual(DPTFloat().to_knx(500.16), (0x2E, 0x1B))
 
     def test_minor_negative_temperature(self):
-        """Test parsing and streaming of DPTFloat -10.00. Testing negative values"""
+        """Test parsing and streaming of DPTFloat -10.00. Testing negative values."""
         self.assertEqual(DPTFloat().to_knx(-10.00), (0x84, 0x18))
         self.assertEqual(DPTFloat().from_knx((0x84, 0x18)), -10.00)
 

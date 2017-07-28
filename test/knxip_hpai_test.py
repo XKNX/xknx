@@ -5,6 +5,7 @@ from xknx.knxip import HPAI, CouldNotParseKNXIP
 
 class Test_KNXIP_HPAI(unittest.TestCase):
     """Test class for KNX/IP HPAI objects."""
+
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_hpai(self):

@@ -6,6 +6,7 @@ from xknx.knx import DPTUElCurrentmA, \
 
 class TestDPT2byte(unittest.TestCase):
     """Test class for KNX 2 byte objects."""
+
     # pylint: disable=too-many-public-methods,invalid-name
 
     #

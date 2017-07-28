@@ -5,6 +5,7 @@ from xknx.knx import DPTScaling, ConversionError
 
 class TestDPTScaling(unittest.TestCase):
     """Test class for KNX scaling value."""
+
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_value_50(self):

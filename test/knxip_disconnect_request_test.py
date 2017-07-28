@@ -11,10 +11,8 @@ class Test_KNXIP_DisconnectReq(unittest.TestCase):
 
     def test_disconnect_request(self):
         """Test parsing and streaming DisconnectRequest KNX/IP packet."""
-
         raw = ((0x06, 0x10, 0x02, 0x09, 0x00, 0x10, 0x15, 0x00,
                 0x08, 0x01, 0xC0, 0xA8, 0xC8, 0x0C, 0xC3, 0xB4))
-
         knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
 
