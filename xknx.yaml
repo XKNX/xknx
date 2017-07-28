@@ -10,27 +10,27 @@ groups:
         Livingroom.Switch_1:
             group_address: '1/2/7'
             actions:
-              - {hook: 'on', target: Livingroom.Outlet_1, method: 'on'}
-              - {hook: 'on', target: Livingroom.Outlet_2, method: 'on'}
+              - {target: Livingroom.Outlet_1, method: 'on'}
+              - {target: Livingroom.Outlet_2, counter: 2, method: 'on'}
 
         Livingroom.Switch_2:
             group_address: '1/2/8'
             actions:
-              - {hook: 'on', target: Livingroom.Outlet_1, method: 'off'}
-              - {hook: 'on', target: Livingroom.Outlet_2, method: 'off'}
+              - {target: Livingroom.Outlet_1, method: 'off'}
+              - {target: Livingroom.Outlet_2, counter: 2, method: 'off'}
 
 
         Livingroom.Switch_3:
             group_address: '1/2/2'
             actions:
-              - {hook: 'off', switch_time: 'short', target: Livingroom.Shutter_1, method: short_up}
-              - {hook: 'off', switch_time: 'long', target: Livingroom.Shutter_1, method: up} # Pressing more then 2 seconds
+              - {hook: 'off', target: Livingroom.Shutter_1, method: short_up}
+              - {hook: 'off', counter: 2, target: Livingroom.Shutter_1, method: up} # Pressing more then 2 seconds
 
         Livingroom.Switch_4:
             group_address: '1/2/3'
             actions:
-              - {hook: 'off', switch_time: 'short', target: Livingroom.Shutter_1, method: short_down}
-              - {hook: 'off', switch_time: 'long', target: Livingroom.Shutter_1, method: down} # Pressing more then 2 seconds
+              - {hook: 'off', target: Livingroom.Shutter_1, method: short_down}
+              - {hook: 'off', counter: 2, target: Livingroom.Shutter_1, method: down} # Pressing more then 2 seconds
 
 
     binary_sensor_motion_dection:

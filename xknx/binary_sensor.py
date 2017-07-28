@@ -10,13 +10,10 @@ class BinarySensorState(Enum):
     ON = 1
     OFF = 2
 
-
-class SwitchTime(Enum):
-    SHORT = 1
-    LONG = 2
-
-
 class BinarySensor(Device):
+    # pylint: disable=too-many-instance-attributes
+
+    CONTEXT_TIMEOUT = 1
 
     def __init__(self,
                  xknx,
@@ -39,9 +36,11 @@ class BinarySensor(Device):
         self.device_class = device_class
         self.significant_bit = significant_bit
         self.state = BinarySensorState.OFF
-        self.last_set = None
         self.actions = actions
 
+        self.last_set = None
+        self.count_set_on = 0
+        self.count_set_off = 0
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -71,23 +70,46 @@ class BinarySensor(Device):
     def set_internal_state(self, state):
         if state != self.state:
             self.state = state
+            counter = self.get_counter(state)
             self.after_update()
 
-    def get_switch_time(self):
-        if self.last_set is None:
-            self.last_set = time.time()
-            return SwitchTime.LONG
+            for action in self.actions:
+                if action.test_if_applicable(self.state, counter):
+                    action.execute()
 
-        new_set_time = time.time()
-        time_diff = new_set_time - self.last_set
-        self.last_set = new_set_time
-        if time_diff < 0.2:
-            return SwitchTime.SHORT
-        return SwitchTime.LONG
+    def get_counter(self, state):
+        """
+        Returns the number of times a state was set to the same
+        value within CONTEXT_TIMEOUT.
+        Untechnically: Returns how often a button was pressed
+        """
+        def within_same_context():
+            if self.last_set is None:
+                self.last_set = time.time()
+                return False
+            new_set_time = time.time()
+            time_diff = new_set_time - self.last_set
+            self.last_set = new_set_time
+            return time_diff < self.CONTEXT_TIMEOUT
 
+        if within_same_context():
+            if state == BinarySensorState.ON:
+                self.count_set_on = self.count_set_on + 1
+                return self.count_set_on
+            else:
+                self.count_set_off = self.count_set_off + 1
+                return self.count_set_off
+        else:
+            if state == BinarySensorState.ON:
+                self.count_set_on = 1
+                self.count_set_off = 0
+            else:
+                self.count_set_on = 0
+                self.count_set_off = 1
+            return 1
 
     def process(self, telegram):
-
+        """Process incoming telegram."""
         bit_masq = 1 << (self.significant_bit-1)
         binary_value = telegram.payload.value & bit_masq != 0
 
@@ -98,11 +120,6 @@ class BinarySensor(Device):
         else:
             raise CouldNotParseTelegram()
 
-        switch_time = self.get_switch_time()
-
-        for action in self.actions:
-            if action.test(self.state, switch_time):
-                action.execute()
 
 
     def is_on(self):

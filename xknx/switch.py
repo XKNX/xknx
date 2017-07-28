@@ -68,8 +68,8 @@ class Switch(Device):
     def state_addresses(self):
         return [self.group_address_state or self.group_address,]
 
-
     def process(self, telegram):
+        """Process incoming telegram."""
         if not isinstance(telegram.payload, DPTBinary):
             raise CouldNotParseTelegram()
 

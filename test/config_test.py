@@ -104,12 +104,11 @@ class TestConfig(unittest.TestCase):
                          group_address='1/2/7',
                          actions=[
                              Action(xknx,
-                                    hook="on",
                                     target="Livingroom.Outlet_1",
                                     method="on"),
                              Action(xknx,
-                                    hook="on",
                                     target="Livingroom.Outlet_2",
+                                    counter=2,
                                     method="on")],
                          device_updated_cb=xknx.devices.device_updated))
 

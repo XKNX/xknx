@@ -3,58 +3,51 @@ class Action():
 
     def __init__(self,
                  xknx,
-                 hook=None,
+                 hook="on",
                  target=None,
                  method=None,
-                 switch_time=None):
+                 counter=1):
         # pylint: disable=too-many-arguments
         self.xknx = xknx
         self.hook = hook
         self.target = target
         self.method = method
-        self.switch_time = switch_time
+        self.counter = counter
 
     @classmethod
     def from_config(cls, xknx, config):
-        hook = config.get("hook")
+        hook = config.get("hook", "on")
         target = config.get("target")
         method = config.get("method")
-
-        def get_switch_time_from_config(config):
-            from .binary_sensor import SwitchTime
-            if "switch_time" in config:
-                if config["switch_time"] == "long":
-                    return SwitchTime.LONG
-                elif config["switch_time"] == "short":
-                    return SwitchTime.SHORT
-            return None
-        switch_time = get_switch_time_from_config(config)
+        counter = config.get("counter", 1)
 
         return cls(xknx,
                    hook=hook,
                    target=target,
                    method=method,
-                   switch_time=switch_time)
+                   counter=counter)
 
 
-    def test_switch_time(self, switch_time):
-        if switch_time is not None:
-            # no specific switch_time -> always true
+    def test_counter(self, counter):
+        """Test if action filters for specific counter."""
+        if self.counter is None:
+            # no specific counter_filter -> always true
             return True
+        if counter is None:
+            return True
+        return counter == self.counter
 
-        return switch_time == self.switch_time
 
-
-    def test(self, state, switch_time):
+    def test_if_applicable(self, state, counter=None):
         from .binary_sensor import BinarySensorState
         if (state == BinarySensorState.ON) \
                 and (self.hook == "on") \
-                and self.test_switch_time(switch_time):
+                and self.test_counter(counter):
             return True
 
         if (state == BinarySensorState.OFF) \
                 and (self.hook == "off") \
-                and self.test_switch_time(switch_time):
+                and self.test_counter(counter):
             return True
 
         return False

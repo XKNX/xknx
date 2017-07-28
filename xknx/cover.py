@@ -191,31 +191,36 @@ class Cover(Device):
 
 
     def process(self, telegram):
+        """Process incoming telegram."""
         if not isinstance(telegram.payload, DPTArray) \
                 or len(telegram.payload.value) != 1:
             raise CouldNotParseTelegram()
-
         self.travelcalculator.set_position(telegram.payload.value[0])
         self.after_update()
 
 
     def current_position(self):
+        """Returns current position of cover."""
         return self.travelcalculator.current_position()
 
 
     def is_traveling(self):
+        """Returns if cover is traveling at the moment."""
         return self.travelcalculator.is_traveling()
 
 
     def position_reached(self):
+        """Returns if cover has reached its final position."""
         return self.travelcalculator.position_reached()
 
 
     def is_open(self):
+        """Returns if cover is open."""
         return self.travelcalculator.is_open()
 
 
     def is_closed(self):
+        """Returns if cover is closed."""
         return self.travelcalculator.is_closed()
 
 

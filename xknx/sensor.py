@@ -53,6 +53,7 @@ class Sensor(Device):
 
 
     def process(self, telegram):
+        """Process incoming telegram."""
         self.set_internal_state(telegram.payload)
 
 

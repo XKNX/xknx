@@ -136,18 +136,18 @@ class Light(Device):
             state_addresses.append(state_address_brightness)
         return state_addresses
 
-
     def process(self, telegram):
+        """Process incoming telegram."""
         if telegram.group_address == self.group_address_switch or \
             telegram.group_address == self.group_address_switch_state:
             self._process_state(telegram)
         elif self.supports_dimming and \
                 telegram.group_address == self.group_address_brightness or \
                 telegram.group_address == self.group_address_brightness_state:
-            self._process_dimm(telegram)
+            self._process_brightness(telegram)
 
-
-    def _process_dimm(self, telegram):
+    def _process_brightness(self, telegram):
+        """Process incoming telegram for brightness state."""
         print(telegram)
         if not isinstance(telegram.payload, DPTArray) or \
             len(telegram.payload.value) != 1:
@@ -155,8 +155,8 @@ class Light(Device):
 
         self.set_internal_brightness(telegram.payload.value[0])
 
-
     def _process_state(self, telegram):
+        """Process incoming telegram for on/off state."""
         if not isinstance(telegram.payload, DPTBinary):
             raise CouldNotParseTelegram()
         if telegram.payload.value == 0:

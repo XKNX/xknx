@@ -64,6 +64,7 @@ class Climate(Device):
         self.set_internal_setpoint(setpoint)
 
     def process(self, telegram):
+        """Process incoming telegram."""
         if telegram.group_address == self.group_address_temperature and \
                 self.supports_temperature:
             self._process_temperature(telegram)
@@ -73,23 +74,22 @@ class Climate(Device):
 
 
     def _process_temperature(self, telegram):
+        """Process incoming telegram for temperature."""
         if not isinstance(telegram.payload, DPTArray) \
                 or len(telegram.payload.value) != 2:
             raise CouldNotParseTelegram()
-
         self.temperature = DPTTemperature().from_knx(
             (telegram.payload.value[0],
              telegram.payload.value[1]))
         self.last_set = time.time()
-
         self.after_update()
 
 
     def _process_setpoint(self, telegram):
+        """Process incoming telegram for setpoint."""
         if not isinstance(telegram.payload, DPTArray) \
                 or len(telegram.payload.value) != 2:
             raise CouldNotParseTelegram()
-
         self.setpoint = DPTTemperature().from_knx(
             (telegram.payload.value[0],
              telegram.payload.value[1]))

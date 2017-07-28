@@ -48,9 +48,11 @@ class Device:
         return []
 
     def process(self, telegram):
+        """Process incoming telegram."""
         pass
 
     def get_name(self):
+        """Returns name of device."""
         return self.name
 
     # pylint: disable=invalid-name
