@@ -1,3 +1,4 @@
+"""Unit test for Switch objects."""
 import unittest
 from unittest.mock import Mock
 import asyncio
@@ -6,19 +7,22 @@ from xknx.knx import Address, Telegram, TelegramType, DPTBinary
 
 
 class TestSwitch(unittest.TestCase):
+    """Test class for Switch object."""
 
     def setUp(self):
+        """set up test class."""
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
     def tearDown(self):
+        """tear down test class."""
         self.loop.close()
 
     #
     # SYNC
     #
     def test_sync(self):
-
+        """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX(loop=self.loop)
         switch = Switch(xknx, "TestOutlet", group_address='1/2/3')
         self.loop.run_until_complete(asyncio.Task(switch.sync(False)))
@@ -31,7 +35,7 @@ class TestSwitch(unittest.TestCase):
 
 
     def test_sync_state_address(self):
-
+        """Test sync function / sending group reads to KNX bus. Test with Switch with explicit state address."""
         xknx = XKNX(loop=self.loop)
         switch = Switch(xknx, "TestOutlet",
                         group_address='1/2/3',
@@ -48,6 +52,7 @@ class TestSwitch(unittest.TestCase):
     # TEST PROCESS
     #
     def test_process(self):
+        """Test process / reading telegrams from telegram queue. Test if device was updated."""
         xknx = XKNX(loop=self.loop)
         switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
 
@@ -67,6 +72,7 @@ class TestSwitch(unittest.TestCase):
 
 
     def test_process_callback(self):
+        """Test process / reading telegrams from telegram queue. Test if callback was called."""
         # pylint: disable=no-self-use
 
         xknx = XKNX(loop=self.loop)
@@ -86,6 +92,7 @@ class TestSwitch(unittest.TestCase):
     # TEST SET ON
     #
     def test_set_on(self):
+        """Test switching on switch."""
         xknx = XKNX(loop=self.loop)
         switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
         switch.set_on()
@@ -98,6 +105,7 @@ class TestSwitch(unittest.TestCase):
     # TEST SET OFF
     #
     def test_set_off(self):
+        """Test switching off switch."""
         xknx = XKNX(loop=self.loop)
         switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
         switch.set_off()
@@ -110,6 +118,7 @@ class TestSwitch(unittest.TestCase):
     # TEST DO
     #
     def test_do(self):
+        """Test 'do' functionality."""
         xknx = XKNX(loop=self.loop)
         switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
         switch.do("on")

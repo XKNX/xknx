@@ -1,16 +1,17 @@
+"""Unit test for KNX/IP ConnectionStateRequests."""
 import unittest
 
 from xknx.knxip import KNXIPFrame, KNXIPServiceType, ConnectionStateRequest, HPAI
 
 
 class Test_KNXIP_ConnStateReq(unittest.TestCase):
+    """Test class for KNX/IP ConnectionStateRequests."""
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_disconnect_request(self):
-
+        """Test parsing and streaming connection state request KNX/IP packet."""
         raw = ((0x06, 0x10, 0x02, 0x07, 0x00, 0x10, 0x15, 0x00,
                 0x08, 0x01, 0xC0, 0xA8, 0xC8, 0x0C, 0xC3, 0xB4))
-
         knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
 

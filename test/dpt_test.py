@@ -1,11 +1,14 @@
+"""Unit test for KNX binary/integer objects."""
 import unittest
 
 from xknx.knx import DPTBinary, DPTArray, ConversionError
 
 class TestDPT(unittest.TestCase):
+    """Test class for KNX binary/integer objects."""
      # pylint: disable=too-many-public-methods,invalid-name
 
     def test_compare_binary(self):
+        """Test comparison of DPTBinary objects."""
         self.assertEqual(DPTBinary(0), DPTBinary(0))
         self.assertEqual(DPTBinary(2), DPTBinary(2))
         self.assertNotEqual(DPTBinary(1), DPTBinary(4))
@@ -13,6 +16,7 @@ class TestDPT(unittest.TestCase):
         self.assertNotEqual(DPTBinary(0), DPTBinary(2))
 
     def test_compare_array(self):
+        """Test comparison of DPTArray objects."""
         self.assertEqual(DPTArray(()), DPTArray(()))
         self.assertEqual(DPTArray([1]), DPTArray((1,)))
         self.assertEqual(DPTArray([1, 2, 3]), DPTArray([1, 2, 3]))
@@ -23,6 +27,7 @@ class TestDPT(unittest.TestCase):
         self.assertNotEqual(DPTArray((1, 2, 3)), DPTArray([1, 2, 4]))
 
     def test_compare_none(self):
+        """Test comparison of empty DPTArray objects with None."""
         self.assertEqual(DPTArray(()), None)
         self.assertEqual(None, DPTArray(()))
         self.assertEqual(DPTBinary(0), None)
@@ -33,6 +38,7 @@ class TestDPT(unittest.TestCase):
         self.assertNotEqual(None, DPTBinary(1))
 
     def test_compare_array_binary(self):
+        """Test comparison of empty DPTArray objects with DPTBinary objects."""
         self.assertEqual(DPTArray(()), DPTBinary(0))
         self.assertEqual(DPTBinary(0), DPTArray(()))
         self.assertNotEqual(DPTArray((1, 2, 3)), DPTBinary(2))
@@ -41,13 +47,13 @@ class TestDPT(unittest.TestCase):
         self.assertNotEqual(DPTBinary(2), DPTArray((2,)))
 
     def test_dpt_binary_assign(self):
+        """Test initialization of DPTBinary objects."""
         self.assertEqual(DPTBinary(8).value, 8)
 
     def test_dpt_binary_assign_limit_exceeded(self):
+        """Test initialization of DPTBinary objects with wrong value."""
         with self.assertRaises(ConversionError):
             DPTBinary(DPTBinary.APCI_MAX_VALUE + 1)
-
-
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPT)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

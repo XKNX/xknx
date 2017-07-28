@@ -1,3 +1,4 @@
+"""Unit test for Configuration logic."""
 import unittest
 import asyncio
 
@@ -6,12 +7,15 @@ from xknx import XKNX, Light, Switch, Cover, Climate, Time, \
 
 # pylint: disable=too-many-public-methods,invalid-name
 class TestConfig(unittest.TestCase):
+    """Test class for Configuration logic."""
 
     def setUp(self):
+        """set up test class."""
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
     def tearDown(self):
+        """tear down test class."""
         self.loop.close()
 
     #
@@ -19,6 +23,7 @@ class TestConfig(unittest.TestCase):
     #
 
     def test_config_light(self):
+        """Test reading Light from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Living-Room.Light_1'],
@@ -29,6 +34,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_light_state(self):
+        """Test reading Light with dimming address from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Office.Light_1'],
@@ -42,6 +48,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_switch(self):
+        """Test reading Switch from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Livingroom.Outlet_2'],
@@ -52,6 +59,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_cover(self):
+        """Test reading Cover from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Livingroom.Shutter_2'],
@@ -67,6 +75,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_temperature(self):
+        """Test reading Climate object from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Kitchen.Climate_1'],
@@ -76,6 +85,7 @@ class TestConfig(unittest.TestCase):
                     device_updated_cb=xknx.devices.device_updated))
 
     def test_config_setpoint(self):
+        """Test reading Climate object with setpoint_address from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Livingroom.Climate_2'],
@@ -86,6 +96,7 @@ class TestConfig(unittest.TestCase):
                     device_updated_cb=xknx.devices.device_updated))
 
     def test_config_time(self):
+        """Test reading Time object from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['General.Time'],
@@ -96,6 +107,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_binary_sensor(self):
+        """Test reading BinarySensor from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Livingroom.Switch_1'],
@@ -115,6 +127,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_sensor_percent(self):
+        """Test reading Sensor with value_type from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Heating.Valve1'],
@@ -126,6 +139,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_sensor_no_value_type(self):
+        """Test reading Sensor without value_type from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Some.Other.Value'],
@@ -136,6 +150,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_sensor_binary_device_class(self):
+        """Test reading Sensor with device_class from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['DiningRoom.Motion.Sensor'],
@@ -147,6 +162,7 @@ class TestConfig(unittest.TestCase):
 
 
     def test_config_sensor_binary_significant_bit(self):
+        """Test reading Sensor with differing significant bit from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Kitchen.Presence'],

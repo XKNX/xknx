@@ -1,3 +1,4 @@
+"""Unit test for KNX/IP SearchResponse objects."""
 import unittest
 
 from xknx.knxip import KNXIPFrame, KNXIPServiceType, SearchResponse, \
@@ -5,10 +6,11 @@ from xknx.knxip import KNXIPFrame, KNXIPServiceType, SearchResponse, \
 
 
 class Test_KNXIP_Discovery(unittest.TestCase):
+    """Test class for KNX/IP SearchResponse objects."""
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_connect_request(self):
-
+        """Test parsing and streaming SearchResponse KNX/IP packet."""
         raw = ((0x06, 0x10, 0x02, 0x02, 0x00, 0x50, 0x08, 0x01,
                 0xc0, 0xa8, 0x2a, 0x0a, 0x0e, 0x57, 0x36, 0x01,
                 0x02, 0x00, 0x11, 0x00, 0x00, 0x00, 0x11, 0x22,
@@ -19,7 +21,6 @@ class Test_KNXIP_Discovery(unittest.TestCase):
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x00, 0x00, 0x00, 0x00, 0x0c, 0x02, 0x02, 0x01,
                 0x03, 0x02, 0x04, 0x01, 0x05, 0x01, 0x07, 0x01))
-
         knxipframe = KNXIPFrame()
         self.assertEqual(knxipframe.from_knx(raw), 80)
         self.assertEqual(knxipframe.to_knx(), list(raw))

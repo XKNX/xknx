@@ -1,8 +1,10 @@
+"""Example for GateayScanner."""
 import asyncio
 from xknx import XKNX
 from xknx.io import GatewayScanner
 
 async def main():
+    """Search for available KNX/IP devices with GatewayScanner and print out result if a device was found."""
     xknx = XKNX()
     gatewayscanner = GatewayScanner(xknx)
     await gatewayscanner.start()

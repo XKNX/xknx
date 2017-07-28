@@ -1,3 +1,4 @@
+"""Unit test for KNX/IP ConnectRequests."""
 import unittest
 
 from xknx.knxip import KNXIPFrame, KNXIPServiceType, ConnectRequestType, \
@@ -5,10 +6,11 @@ from xknx.knxip import KNXIPFrame, KNXIPServiceType, ConnectRequestType, \
 
 
 class Test_KNXIP_ConnectRequest(unittest.TestCase):
+    """Test class for KNX/IP ConnectRequests."""
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_connect_request(self):
-
+        """Test parsing and streaming connection request KNX/IP packet."""
         raw = ((0x06, 0x10, 0x02, 0x05, 0x00, 0x1a, 0x08, 0x01,
                 0xc0, 0xa8, 0x2a, 0x01, 0x84, 0x95, 0x08, 0x01,
                 0xc0, 0xa8, 0x2a, 0x01, 0xcc, 0xa9, 0x04, 0x04,

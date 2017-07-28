@@ -1,7 +1,9 @@
+"""Example for reading the state from the KNX bus."""
 import asyncio
 from xknx import XKNX, Light
 
 async def main():
+    """Connect to KNX/IP bus and read the state of a Light device."""
     xknx = XKNX()
     await xknx.start()
 
@@ -11,6 +13,7 @@ async def main():
                   group_address_brightness='1/0/14')
     light.set_brightness(128)
 
+    # Will do a group read of both addresses
     await light.sync()
 
     print(light)

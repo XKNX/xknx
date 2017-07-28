@@ -1,20 +1,24 @@
+"""Unit test for KNX/IP RountingIndication objects."""
 import unittest
 
-from xknx.knxip import KNXIPFrame, KNXIPServiceType
+from xknx.knxip import KNXIPFrame, KNXIPServiceType, CEMIFrame
 from xknx.knx import Address, DPTTime, DPTBinary, DPTArray, \
     DPTTemperature, Telegram, TelegramType
 
 class Test_KNXIP(unittest.TestCase):
+    """Class for KNX/IP RoutingIndication test."""
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_from_knx(self):
-
+        """Test parsing and streaming CEMIFrame KNX/IP packet (payload=0xf0)."""
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x12, 0x29, 0x00,
                 0xbc, 0xd0, 0x12, 0x02, 0x01, 0x51, 0x02, 0x00,
                 0x40, 0xf0))
 
         knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
+
+        self.assertTrue(isinstance(knxipframe.body, CEMIFrame))
 
         self.assertEqual(knxipframe.body.src_addr, Address("1.2.2"))
         self.assertEqual(knxipframe.body.dst_addr, Address(337))
@@ -23,7 +27,7 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe.body.payload.value[0], 0xf0)
 
     def test_from_knx_to_knx(self):
-
+        """Test parsing and streaming CEMIFrame KNX/IP."""
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x12, 0x29, 0x00,
                 0xbc, 0xd0, 0x12, 0x02, 0x01, 0x51, 0x02, 0x00,
                 0x40, 0xf0))
@@ -38,6 +42,7 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe.to_knx(), list(raw))
 
     def test_telegram_set(self):
+        """Test parsing and streaming CEMIFrame KNX/IP packet with DPTArray/DPTTime as payload."""
         knxipframe = KNXIPFrame()
         knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
         knxipframe.body.src_addr = Address("1.2.2")
@@ -62,7 +67,7 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe.to_knx(), list(raw))
 
     def test_telegram_get(self):
-
+        """Test parsing and streaming CEMIFrame KNX/IP packet, group read."""
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x12, 0x29, 0x00,
                 0xbc, 0xd0, 0x12, 0x02, 0x01, 0x51, 0x02, 0x00,
                 0x40, 0xf0))
@@ -85,6 +90,7 @@ class Test_KNXIP(unittest.TestCase):
     #
 
     def test_EndTOEnd_group_write_binary_on(self):
+        """Test parsing and streaming CEMIFrame KNX/IP packet, switch on light in my kitchen."""
         # Switch on Kitchen-L1
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x11, 0x29, 0x00,
                 0xbc, 0xd0, 0xff, 0xf9, 0x01, 0x49, 0x01, 0x00,
@@ -108,6 +114,7 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
     def test_EndTOEnd_group_write_binary_off(self):
+        """Test parsing and streaming CEMIFrame KNX/IP packet, switch off light in my kitchen."""
         # Switch off Kitchen-L1
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x11, 0x29, 0x00,
                 0xbc, 0xd0, 0xff, 0xf9, 0x01, 0x49, 0x01, 0x00,
@@ -132,6 +139,7 @@ class Test_KNXIP(unittest.TestCase):
 
 
     def test_EndTOEnd_group_write_1byte(self):
+        """Test parsing and streaming CEMIFrame KNX/IP packet, dimm light in my kitchen."""
         # Dimm Kitchen L1 to 0x65
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x12, 0x29, 0x00,
                 0xbc, 0xd0, 0xff, 0xf9, 0x01, 0x4b, 0x02, 0x00,
@@ -155,6 +163,7 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
     def test_EndTOEnd_group_write_2bytes(self):
+        """Test parsing and streaming CEMIFrame KNX/IP packet, setting value of thermostat."""
         # Incoming Temperature from thermostat
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x13, 0x29, 0x00,
                 0xbc, 0xd0, 0x14, 0x02, 0x08, 0x01, 0x03, 0x00,
@@ -180,6 +189,7 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
     def test_EndTOEnd_group_read(self):
+        """Test parsing and streaming CEMIFrame KNX/IP packet, group read."""
         # State request
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x11, 0x29, 0x00,
                 0xbc, 0xd0, 0xff, 0xf9, 0x01, 0xb8, 0x01, 0x00,
@@ -203,6 +213,7 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
     def test_EndTOEnd_group_response(self):
+        """Test parsing and streaming CEMIFrame KNX/IP packet, group response."""
         # Incoming state
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x11, 0x29, 0x00,
                 0xbc, 0xd0, 0x13, 0x01, 0x01, 0x88, 0x01, 0x00,
@@ -228,6 +239,7 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
     def test_maximum_apci(self):
+        """Test parsing and streaming CEMIFrame KNX/IP packet, testing maximum APCI."""
         telegram = Telegram()
         telegram.group_address = Address(337)
         telegram.payload = DPTBinary(DPTBinary.APCI_MAX_VALUE)

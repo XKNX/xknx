@@ -1,3 +1,4 @@
+"""Unit test for Sensor objects."""
 import unittest
 from unittest.mock import Mock
 import asyncio
@@ -5,18 +6,22 @@ from xknx import XKNX, Sensor
 from xknx.knx import Telegram, Address, TelegramType, DPTArray, DPTBinary
 
 class TestSensor(unittest.TestCase):
+    """Test class for Sensor objects."""
 
     def setUp(self):
+        """set up test class."""
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
     def tearDown(self):
+        """tear down test class."""
         self.loop.close()
 
     #
     # STR FUNCTIONS
     #
     def test_str_array(self):
+        """Test resolve_state fallback method with DPTArray."""
         xknx = XKNX(loop=self.loop)
         sensor = Sensor(
             xknx,
@@ -28,6 +33,7 @@ class TestSensor(unittest.TestCase):
 
 
     def test_str_binary(self):
+        """Test resolve_state fallback method with integer object."""
         xknx = XKNX(loop=self.loop)
         sensor = Sensor(
             xknx,
@@ -39,6 +45,7 @@ class TestSensor(unittest.TestCase):
 
 
     def test_str_scaling(self):
+        """Test resolve state with percent sensor."""
         xknx = XKNX(loop=self.loop)
         sensor = Sensor(
             xknx,
@@ -55,6 +62,7 @@ class TestSensor(unittest.TestCase):
     # SYNC
     #
     def test_sync(self):
+        """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX(loop=self.loop)
         sensor = Sensor(
             xknx,
@@ -73,6 +81,7 @@ class TestSensor(unittest.TestCase):
     # TEST PROCESS
     #
     def test_process(self):
+        """Test process / reading telegrams from telegram queue."""
         xknx = XKNX(loop=self.loop)
         sensor = Sensor(
             xknx,
@@ -87,6 +96,7 @@ class TestSensor(unittest.TestCase):
 
 
     def test_process_callback(self):
+        """Test process / reading telegrams from telegram queue. Test if callback is called."""
         # pylint: disable=no-self-use
         xknx = XKNX(loop=self.loop)
         sensor = Sensor(

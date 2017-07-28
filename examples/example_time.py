@@ -1,7 +1,9 @@
+"""Example for Time device."""
 import asyncio
 from xknx import XKNX, Time
 
 async def main():
+    """Connect to KNX/IP device and broadcast time."""
     xknx = XKNX()
     time = Time(xknx, 'TimeTest', group_address='1/2/3')
     xknx.devices.add(time)

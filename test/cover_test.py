@@ -1,3 +1,4 @@
+"""Unit test for Cover objects."""
 import unittest
 from unittest.mock import Mock
 import asyncio
@@ -5,19 +6,23 @@ from xknx import XKNX, Cover
 from xknx.knx import Telegram, Address, TelegramType, DPTBinary, DPTArray
 
 class TestCover(unittest.TestCase):
+    """Test class for Cover objects."""
     # pylint: disable=too-many-public-methods,invalid-name
 
     def setUp(self):
+        """set up test class."""
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
     def tearDown(self):
+        """tear down test class."""
         self.loop.close()
 
     #
     # SYNC
     #
     def test_sync(self):
+        """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX(loop=self.loop)
         cover = Cover(
             xknx,
@@ -37,6 +42,7 @@ class TestCover(unittest.TestCase):
     # TEST SET UP
     #
     def test_set_up(self):
+        """Test moving cover to 'up' position."""
         xknx = XKNX(loop=self.loop)
         cover = Cover(
             xknx,
@@ -56,6 +62,7 @@ class TestCover(unittest.TestCase):
     # TEST SET DOWN
     #
     def test_set_short_down(self):
+        """Test moving cover to 'down' position."""
         xknx = XKNX(loop=self.loop)
         cover = Cover(
             xknx,
@@ -75,6 +82,7 @@ class TestCover(unittest.TestCase):
     # TEST SET SHORT UP
     #
     def test_set_short_up(self):
+        """Test moving cover 'short up'."""
         xknx = XKNX(loop=self.loop)
         cover = Cover(
             xknx,
@@ -94,6 +102,7 @@ class TestCover(unittest.TestCase):
     # TEST SET SHORT DOWN
     #
     def test_set_down(self):
+        """Test moving cover 'short down'."""
         xknx = XKNX(loop=self.loop)
         cover = Cover(
             xknx,
@@ -113,6 +122,7 @@ class TestCover(unittest.TestCase):
     # TEST STOP
     #
     def test_stop(self):
+        """Test stopping cover."""
         xknx = XKNX(loop=self.loop)
         cover = Cover(
             xknx, 'TestCover',
@@ -131,6 +141,7 @@ class TestCover(unittest.TestCase):
     # TEST POSITION
     #
     def test_position(self):
+        """Test moving cover to absolute position."""
         xknx = XKNX(loop=self.loop)
         cover = Cover(
             xknx,
@@ -147,6 +158,7 @@ class TestCover(unittest.TestCase):
 
 
     def test_position_without_position_address_up(self):
+        """Test moving cover to absolute position - with no absolute positioning supported."""
         xknx = XKNX(loop=self.loop)
         cover = Cover(
             xknx,
@@ -163,6 +175,7 @@ class TestCover(unittest.TestCase):
 
 
     def test_position_without_position_address_down(self):
+        """Test moving cover down - with no absolute positioning supported."""
         xknx = XKNX(loop=self.loop)
         cover = Cover(
             xknx,
@@ -182,6 +195,7 @@ class TestCover(unittest.TestCase):
     # TEST PROCESS
     #
     def test_process(self):
+        """Test process / reading telegrams from telegram queue. Test if position is processed correctly."""
         xknx = XKNX(loop=self.loop)
         cover = Cover(
             xknx,
@@ -198,6 +212,7 @@ class TestCover(unittest.TestCase):
 
 
     def test_process_callback(self):
+        """Test process / reading telegrams from telegram queue. Test if callback is executed."""
         # pylint: disable=no-self-use
         xknx = XKNX(loop=self.loop)
         cover = Cover(

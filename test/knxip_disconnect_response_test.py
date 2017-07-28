@@ -1,3 +1,4 @@
+"""Unit test for KNX/IP DisconnectResponse objects."""
 import unittest
 
 from xknx.knxip import KNXIPFrame, KNXIPServiceType, DisconnectResponse,\
@@ -5,11 +6,12 @@ from xknx.knxip import KNXIPFrame, KNXIPServiceType, DisconnectResponse,\
 
 
 class Test_KNXIP_DisconnectResp(unittest.TestCase):
+    """Test class for KNX/IP DisconnectResponse objects."""
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_disconnect_response(self):
+        """Test parsing and streaming DisconnectResponse KNX/IP packet."""
         raw = ((0x06, 0x10, 0x02, 0x0A, 0x00, 0x08, 0x15, 0x25))
-
 
         knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)

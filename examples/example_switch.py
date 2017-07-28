@@ -1,7 +1,9 @@
+"""Example for Switch device."""
 import asyncio
 from xknx import XKNX, Switch
 
 async def main():
+    """Connect to KNX/IP device, switch on outlet, wait 2 seconds and switch of off again."""
     xknx = XKNX()
     await xknx.start()
     switch = Switch(xknx,

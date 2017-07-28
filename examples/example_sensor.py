@@ -1,7 +1,9 @@
+"""Example for Sensor device."""
 import asyncio
 from xknx import XKNX, Sensor, BinarySensor
 
 async def main():
+    """Connect to KNX/IP device and read the value of a temperature and a motion sensor."""
     xknx = XKNX()
     await xknx.start()
 

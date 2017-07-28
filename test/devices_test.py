@@ -1,3 +1,4 @@
+"""Unit test for devices container within XKNX."""
 import unittest
 import asyncio
 
@@ -6,12 +7,15 @@ from xknx.knx import Address
 
 # pylint: disable=too-many-public-methods,invalid-name
 class TestDevices(unittest.TestCase):
+    """Test class for devices container within XKNX."""
 
     def setUp(self):
+        """set up test class."""
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
     def tearDown(self):
+        """tear down test class."""
         self.loop.close()
 
     #
@@ -19,6 +23,7 @@ class TestDevices(unittest.TestCase):
     #
 
     def test_get_item(self):
+        """Test get item by name or by index."""
         xknx = XKNX(loop=self.loop)
         devices = Devices()
 
@@ -60,6 +65,7 @@ class TestDevices(unittest.TestCase):
 
 
     def test_device_by_group_address(self):
+        """Test get devices by group address."""
         xknx = XKNX(loop=self.loop)
         devices = Devices()
 
@@ -96,6 +102,7 @@ class TestDevices(unittest.TestCase):
             (sensor1, sensor2))
 
     def test_iter(self):
+        """Test __iter__() function."""
         xknx = XKNX(loop=self.loop)
         devices = Devices()
 
@@ -128,6 +135,7 @@ class TestDevices(unittest.TestCase):
 
 
     def test_len(self):
+        """Test len() function."""
         xknx = XKNX(loop=self.loop)
         devices = Devices()
         self.assertEqual(len(devices), 0)

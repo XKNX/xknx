@@ -1,11 +1,14 @@
+"""Unit test for KNX/IP HPAI objects."""
 import unittest
 
 from xknx.knxip import HPAI, CouldNotParseKNXIP
 
 class Test_KNXIP_HPAI(unittest.TestCase):
+    """Test class for KNX/IP HPAI objects."""
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_hpai(self):
+        """Test parsing and streaming HPAI KNX/IP fragment."""
         raw = ((0x08, 0x01, 0xc0, 0xa8, 0x2a, 0x01, 0x84, 0x95))
 
         hpai = HPAI()
@@ -18,6 +21,7 @@ class Test_KNXIP_HPAI(unittest.TestCase):
 
 
     def test_hpai_wrong_input(self):
+        """Test parsing of wrong HPAI KNX/IP packet."""
         raw = ((0x08, 0x01, 0xc0, 0xa8, 0x2a))
 
         with self.assertRaises(CouldNotParseKNXIP):

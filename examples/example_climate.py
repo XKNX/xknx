@@ -1,7 +1,9 @@
+"""Example for Climate device."""
 import asyncio
 from xknx import XKNX, Climate
 
 async def main():
+    """Connect to KNX/IP and read the state of a Climate device."""
     xknx = XKNX()
     await xknx.start()
 

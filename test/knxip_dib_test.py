@@ -1,3 +1,4 @@
+"""Unit test for KNX/IP DIB objects."""
 import unittest
 
 from xknx.knxip import DIB, DIBGeneric, DIBDeviceInformation, \
@@ -6,9 +7,11 @@ from xknx.knxip import DIB, DIBGeneric, DIBDeviceInformation, \
 from xknx.knx import Address
 
 class Test_KNXIP_DIB(unittest.TestCase):
+    """Test class for KNX/IP DIB objects."""
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_dib_base(self):
+        """Test parsing and streaming KNX/IP DIB packet."""
         raw = ((0x0c, 0x02, 0x02, 0x01, 0x03, 0x02, 0x04, 0x01,
                 0x05, 0x01, 0x07, 0x01))
         dib = DIBGeneric()
@@ -18,6 +21,7 @@ class Test_KNXIP_DIB(unittest.TestCase):
         self.assertEqual(dib.calculated_length(), 12)
 
     def test_dib_wrong_input(self):
+        """Test parsing of wrong KNX/IP DIB packet."""
         raw = ((0x08, 0x01, 0xc0, 0xa8, 0x2a))
         with self.assertRaises(CouldNotParseKNXIP):
             DIBGeneric().from_knx(raw)
@@ -25,6 +29,7 @@ class Test_KNXIP_DIB(unittest.TestCase):
 
 
     def test_device_info(self):
+        """Test parsing of device info."""
         raw = ((0x36, 0x01, 0x02, 0x00, 0x11, 0x00, 0x23, 0x42,
                 0x13, 0x37, 0x13, 0x37, 0x13, 0x37, 0xE0, 0x00,
                 0x17, 0x0c, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
@@ -50,6 +55,7 @@ class Test_KNXIP_DIB(unittest.TestCase):
 
 
     def test_dib_sup_svc_families(self):
+        """Test parsing of svc families."""
         raw = ((0x0c, 0x02, 0x02, 0x01, 0x03, 0x02, 0x04, 0x01,
                 0x05, 0x01, 0x07, 0x01))
 

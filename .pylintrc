@@ -2,7 +2,7 @@
 reports=no
 
 [MESSAGES CONTROL]
-disable=missing-docstring,fixme,locally-disabled
+disable=duplicate-code,missing-docstring,fixme,locally-disabled
 
 [REPORTS]
 output-format=colorized

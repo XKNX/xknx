@@ -1,3 +1,4 @@
+"""Unit test for Climate objects."""
 import unittest
 from unittest.mock import Mock
 import asyncio
@@ -6,18 +7,22 @@ from xknx.knx import Telegram, DPTTemperature, DPTArray, Address, \
 from xknx import XKNX, Climate
 
 class TestClimate(unittest.TestCase):
+    """Test class for Climate objects."""
 
     def setUp(self):
+        """set up test class."""
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
     def tearDown(self):
+        """tear down test class."""
         self.loop.close()
 
     #
     # SUPPORTS TEMPERATURE / SETPOINT
     #
     def test_support_temperature(self):
+        """Test supports_temperature flag."""
         xknx = XKNX(loop=self.loop)
         climate = Climate(
             xknx,
@@ -29,6 +34,7 @@ class TestClimate(unittest.TestCase):
 
 
     def test_support_setpoint(self):
+        """Test supports_setpoint flag."""
         xknx = XKNX(loop=self.loop)
         climate = Climate(
             xknx,
@@ -42,6 +48,7 @@ class TestClimate(unittest.TestCase):
     # TEST CALLBACK
     #
     def test_process_callback(self):
+        """Test if after_update_callback is called after update of Climate object."""
         # pylint: disable=no-self-use
         xknx = XKNX(loop=self.loop)
         climate = Climate(
@@ -91,7 +98,7 @@ class TestClimate(unittest.TestCase):
 
     @asyncio.coroutine
     def test_synce(self):
-        """Test sync function."""
+        """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX(loop=self.loop)
         climate = Climate(
             xknx,
@@ -114,6 +121,7 @@ class TestClimate(unittest.TestCase):
     # TEST PROCESS
     #
     def test_process_temperature(self):
+        """Test process / reading telegrams from telegram queue. Test if temperature is processed correctly."""
         xknx = XKNX(loop=self.loop)
         climate = Climate(
             xknx,
@@ -128,6 +136,7 @@ class TestClimate(unittest.TestCase):
 
 
     def test_process_setpoint(self):
+        """Test process / reading telegrams from telegram queue. Test if setpoint is processed correctly."""
         xknx = XKNX(loop=self.loop)
         climate = Climate(
             xknx,
@@ -142,6 +151,7 @@ class TestClimate(unittest.TestCase):
 
 
     def test_process_callback_temp(self):
+        """Test process / reading telegrams from telegram queue. Test if callback is executed when receiving temperature."""
         # pylint: disable=no-self-use
         xknx = XKNX(loop=self.loop)
         climate = Climate(
@@ -161,6 +171,7 @@ class TestClimate(unittest.TestCase):
 
 
     def test_process_callback_setpoint(self):
+        """Test process / reading telegrams from telegram queue. Test if callback is executed when receiving setpoint."""
         # pylint: disable=no-self-use
         xknx = XKNX(loop=self.loop)
         climate = Climate(

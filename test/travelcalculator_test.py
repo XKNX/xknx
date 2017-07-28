@@ -1,8 +1,10 @@
+"""Unit test for TravelCalculator objects."""
 import unittest
 import time
 from xknx import TravelCalculator
 
 class TestTravelCalculator(unittest.TestCase):
+    """Test class for TravelCalculator objects."""
 
     # TravelCalculator(64, 128) means:
     #
@@ -12,23 +14,27 @@ class TestTravelCalculator(unittest.TestCase):
     # INIT
     #
     def test_time_default(self):
+        """Test default time settings (no time set from outside)."""
         travelcalculator = TravelCalculator(64, 128)
         self.assertLess(
             abs(time.time()-travelcalculator.current_time()),
             0.001)
 
     def test_time_set_from_outside(self):
+        """Test setting the current time from outside."""
         travelcalculator = TravelCalculator(64, 128)
         travelcalculator.time_set_from_outside = 1000
         self.assertEqual(travelcalculator.current_time(), 1000)
 
     def test_set_position(self):
+        """Test set position."""
         travelcalculator = TravelCalculator(64, 128)
         travelcalculator.set_position(128)
         self.assertTrue(travelcalculator.position_reached())
         self.assertEqual(travelcalculator.current_position(), 128)
 
     def test_set_position_after_travel(self):
+        """Set explicit position after start_travel should stop traveling."""
         travelcalculator = TravelCalculator(64, 128)
         travelcalculator.start_travel(100)
         travelcalculator.set_position(128)
@@ -36,6 +42,7 @@ class TestTravelCalculator(unittest.TestCase):
         self.assertEqual(travelcalculator.current_position(), 128)
 
     def test_travel_up(self):
+        """Test travel up."""
         travelcalculator = TravelCalculator(64, 128)
         travelcalculator.set_position(100)
 
@@ -69,6 +76,7 @@ class TestTravelCalculator(unittest.TestCase):
         self.assertTrue(travelcalculator.position_reached())
 
     def test_travel_down(self):
+        """Test travel down."""
         travelcalculator = TravelCalculator(64, 128)
         travelcalculator.set_position(120)
 
@@ -101,6 +109,7 @@ class TestTravelCalculator(unittest.TestCase):
         self.assertTrue(travelcalculator.position_reached())
 
     def test_stop(self):
+        """Test stopping."""
         travelcalculator = TravelCalculator(64, 128)
         travelcalculator.set_position(120)
 
@@ -130,6 +139,7 @@ class TestTravelCalculator(unittest.TestCase):
 
 
     def test_change_direction(self):
+        """Test changing direction while travelling."""
         travelcalculator = TravelCalculator(64, 128)
         travelcalculator.set_position(120)
 
@@ -152,6 +162,7 @@ class TestTravelCalculator(unittest.TestCase):
         self.assertTrue(travelcalculator.position_reached())
 
     def test_travel_full_up(self):
+        """Test travelling to the full up position."""
         travelcalculator = TravelCalculator(64, 128)
         travelcalculator.set_position(128)
 
@@ -169,6 +180,7 @@ class TestTravelCalculator(unittest.TestCase):
         self.assertFalse(travelcalculator.is_closed())
 
     def test_travel_full_down(self):
+        """Test travelling to the full down position."""
         travelcalculator = TravelCalculator(64, 128)
         travelcalculator.set_position(128)
 
@@ -186,6 +198,7 @@ class TestTravelCalculator(unittest.TestCase):
         self.assertFalse(travelcalculator.is_open())
 
     def test_is_traveling(self):
+        """Test if cover is traveling"""
         travelcalculator = TravelCalculator(64, 128)
         self.assertFalse(travelcalculator.is_traveling())
 

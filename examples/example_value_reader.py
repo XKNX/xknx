@@ -1,9 +1,11 @@
+"""Example on how to read a value from KNX bus"""
 import asyncio
 from xknx import XKNX, ValueReader
 from xknx.knx import Address
 
 
 async def main():
+    """Connect and read value from KNX bus."""
     xknx = XKNX()
     await xknx.start()
 

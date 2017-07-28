@@ -1,3 +1,4 @@
+"""Unit test for BinarySensor objects"""
 import unittest
 from unittest.mock import Mock
 import asyncio
@@ -5,18 +6,22 @@ from xknx import XKNX, BinarySensor, Action, Switch, BinarySensorState
 from xknx.knx import Telegram, DPTBinary
 
 class TestBinarySensor(unittest.TestCase):
+    """Test class for BinarySensor objects."""
 
     def setUp(self):
+        """set up test class."""
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
     def tearDown(self):
+        """tear down test class."""
         self.loop.close()
 
     #
     # TEST PROCESS
     #
     def test_process(self):
+        """Test process / reading telegrams from telegram queue."""
         xknx = XKNX(loop=self.loop)
         binaryinput = BinarySensor(xknx, 'TestInput', '1/2/3')
 
@@ -36,6 +41,7 @@ class TestBinarySensor(unittest.TestCase):
 
 
     def test_process_significant_bit(self):
+        """Test process / reading telegrams from telegram queue with specific significant bit set."""
         xknx = XKNX(loop=self.loop)
         binaryinput = BinarySensor(xknx, 'TestInput', '1/2/3', significant_bit=3)
 
@@ -61,6 +67,7 @@ class TestBinarySensor(unittest.TestCase):
 
 
     def test_process_action(self):
+        """Test process / reading telegrams from telegram queue. Test if action is executed."""
         xknx = XKNX(loop=self.loop)
         switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
         xknx.devices.add(switch)
@@ -113,6 +120,7 @@ class TestBinarySensor(unittest.TestCase):
     # TEST SWITCHED ON
     #
     def test_is_on(self):
+        """Test is_on() and is_off() of a BinarySensor with state 'on'."""
         xknx = XKNX(loop=self.loop)
         binaryinput = BinarySensor(xknx, 'TestInput', '1/2/3')
         binaryinput.set_internal_state(BinarySensorState.ON)
@@ -123,6 +131,7 @@ class TestBinarySensor(unittest.TestCase):
     # TEST SWITCHED OFF
     #
     def test_is_off(self):
+        """Test is_on() and is_off() of a BinarySensor with state 'off'."""
         xknx = XKNX(loop=self.loop)
         binaryinput = BinarySensor(xknx, 'TestInput', '1/2/3')
         binaryinput.set_internal_state(BinarySensorState.OFF)
@@ -134,6 +143,7 @@ class TestBinarySensor(unittest.TestCase):
     # TEST PROCESS CALLBACK
     #
     def test_process_callback(self):
+        """Test after_update_callback after state of switch was changed."""
         # pylint: disable=no-self-use
         xknx = XKNX(loop=self.loop)
         switch = BinarySensor(xknx, 'TestInput', group_address='1/2/3')

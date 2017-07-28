@@ -1,7 +1,9 @@
+"""Example for internal devices storage."""
 import asyncio
 from xknx import XKNX, Switch
 
 async def main():
+    """Add test Switch to devices storage and access it by name."""
     xknx = XKNX()
     await xknx.start()
     switch = Switch(xknx,

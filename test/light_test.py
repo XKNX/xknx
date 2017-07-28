@@ -1,3 +1,4 @@
+"""Unit test for Light objects."""
 import unittest
 from unittest.mock import Mock
 import asyncio
@@ -5,6 +6,7 @@ from xknx import XKNX, Light
 from xknx.knx import Address, Telegram, TelegramType, DPTBinary, DPTArray
 
 class TestLight(unittest.TestCase):
+    """Class for testing Light objects."""
 
     def setUp(self):
         self.loop = asyncio.new_event_loop()
@@ -17,6 +19,7 @@ class TestLight(unittest.TestCase):
     # TEST SUPPORT DIMMING
     #
     def test_supports_dimm_yes(self):
+        """Test supports_dimm attribute with a light with dimmer."""
         xknx = XKNX(loop=self.loop)
         light = Light(xknx,
                       'Diningroom.Light_1',
@@ -25,6 +28,7 @@ class TestLight(unittest.TestCase):
         self.assertTrue(light.supports_dimming)
 
     def test_supports_dimm_no(self):
+        """Test supports_dimm attribute with a Light without dimmer."""
         xknx = XKNX(loop=self.loop)
         light = Light(xknx,
                       'Diningroom.Light_1',
@@ -36,6 +40,7 @@ class TestLight(unittest.TestCase):
     # SYNC
     #
     def test_sync(self):
+        """Test sync function / sending group reads to KNX bus. Testing with a Light without dimm functionality."""
         xknx = XKNX(loop=self.loop)
         light = Light(xknx,
                       name="TestLight",
@@ -57,6 +62,7 @@ class TestLight(unittest.TestCase):
     # SYNC WITH STATE ADDRESS
     #
     def test_sync_state_address(self):
+        """Test sync function / sending group reads to KNX bus. Testing with a Light with dimm functionality."""
         xknx = XKNX(loop=self.loop)
         light = Light(xknx,
                       name="TestLight",
@@ -79,6 +85,7 @@ class TestLight(unittest.TestCase):
     # TEST SET ON
     #
     def test_set_on(self):
+        """Test switching on a Light."""
         xknx = XKNX(loop=self.loop)
         light = Light(xknx,
                       name="TestLight",
@@ -94,6 +101,7 @@ class TestLight(unittest.TestCase):
     # TEST SET OFF
     #
     def test_set_off(self):
+        """Test switching off a Light."""
         xknx = XKNX(loop=self.loop)
         light = Light(xknx,
                       name="TestLight",
@@ -109,6 +117,7 @@ class TestLight(unittest.TestCase):
     # TEST SET BRIGHTNESS
     #
     def test_set_brightness(self):
+        """Test setting the brightness of a Light."""
         xknx = XKNX(loop=self.loop)
         light = Light(xknx,
                       name="TestLight",
@@ -125,6 +134,7 @@ class TestLight(unittest.TestCase):
     # TEST PROCESS
     #
     def test_process_switch(self):
+        """Test process / reading telegrams from telegram queue. Test if switch position is processed correctly."""
         xknx = XKNX(loop=self.loop)
         light = Light(xknx,
                       name="TestLight",
@@ -142,6 +152,7 @@ class TestLight(unittest.TestCase):
 
 
     def test_process_switch_callback(self):
+        """Test process / reading telegrams from telegram queue. Test if callback is called."""
         # pylint: disable=no-self-use
         xknx = XKNX(loop=self.loop)
         light = Light(xknx,
@@ -159,6 +170,7 @@ class TestLight(unittest.TestCase):
 
 
     def test_process_dimm(self):
+        """Test process / reading telegrams from telegram queue. Test if brightness is processed."""
         xknx = XKNX(loop=self.loop)
         light = Light(xknx,
                       name="TestLight",
@@ -175,6 +187,7 @@ class TestLight(unittest.TestCase):
     # TEST DO
     #
     def test_do(self):
+        """Test 'do' functionality."""
         xknx = XKNX(loop=self.loop)
         light = Light(xknx,
                       name="TestLight",
