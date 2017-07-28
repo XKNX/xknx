@@ -1,3 +1,9 @@
+"""
+Support for KNX/IP climate devices via XKNX
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/climate.xknx/
+"""
 import asyncio
 import xknx
 import voluptuous as vol
@@ -22,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, add_devices, \
         discovery_info=None):
-    """Setup the XKNX climate platform."""
+    """Set up climate(s) for XKNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
         return False
@@ -36,6 +42,7 @@ def async_setup_platform(hass, config, add_devices, \
 
 @asyncio.coroutine
 def add_devices_from_component(hass, add_devices):
+    """Set up climates for XKNX platform configured within plattform."""
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
         if isinstance(device, xknx.Climate) and \
@@ -45,20 +52,20 @@ def add_devices_from_component(hass, add_devices):
 
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
-    from xknx import Climate
-    climate = Climate(hass.data[DATA_XKNX].xknx,
-                         name= \
-                             config.get(CONF_NAME),
-                         group_address_temperature= \
-                             config.get(CONF_TEMPERATURE_ADDRESS),
-                         group_address_setpoint= \
-                             config.get(CONF_SETPOINT_ADDRESS))
+    """Set up climate for XKNX platform configured within plattform."""
+    climate = xknx.Climate(
+        hass.data[DATA_XKNX].xknx,
+        name=config.get(CONF_NAME),
+        group_address_temperature=config.get(CONF_TEMPERATURE_ADDRESS),
+        group_address_setpoint=config.get(CONF_SETPOINT_ADDRESS))
     climate.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(climate)
     add_devices([XKNXClimate(hass, climate)])
 
 
 class XKNXClimate(ClimateDevice):
+    """Representation of a XKNX climate."""
+
     def __init__(self, hass, device):
         self.device = device
         self.hass = hass
@@ -70,39 +77,37 @@ class XKNXClimate(ClimateDevice):
 
 
     def register_callbacks(self):
+        """Register callbacks to update hass after device was changed."""
         def after_update_callback(device):
+            """Callback after device was updated."""
             # pylint: disable=unused-argument
-            self.update_ha()
+            self.schedule_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
 
-    def update_ha(self):
-        self.hass.async_add_job(self.async_update_ha_state())
-
-
+    @property
+    def name(self):
+        """Return the name of the XKNX device."""
+        return self.device.name
 
     @property
     def should_poll(self):
-        """Polling not needed """
+        """No polling needed within XKNX."""
         return False
-
 
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
-
     @property
     def current_temperature(self):
         """Return the current temperature."""
         return self.device.temperature
 
-
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self.device.setpoint
-
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -110,18 +115,8 @@ class XKNXClimate(ClimateDevice):
         if temperature is None:
             return
 
-        self.device.setpoint = temperature
-
-        #TODO Sent to KNX bus
-
-        self.update_ha()
-
+        self.device.set_setpoint(temperature)
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
         raise NotImplementedError()
-
-
-    @property
-    def name(self):
-        return self.device.name

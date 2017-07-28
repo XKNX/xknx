@@ -1,3 +1,9 @@
+"""
+Support for KNX/IP lights via XKNX
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.xknx/
+"""
 import asyncio
 import xknx
 import voluptuous as vol
@@ -27,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, add_devices, \
         discovery_info=None):
-    """Setup the XKNX light platform."""
+    """Set up light(s) for XKNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
         return False
@@ -41,6 +47,7 @@ def async_setup_platform(hass, config, add_devices, \
 
 @asyncio.coroutine
 def add_devices_from_component(hass, add_devices):
+    """Set up lights for XKNX platform configured via xknx.yaml."""
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
         if isinstance(device, xknx.Light) and \
@@ -50,53 +57,44 @@ def add_devices_from_component(hass, add_devices):
 
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
-    from xknx import Light
-    light = Light(hass.data[DATA_XKNX].xknx,
-                  name= \
-                      config.get(CONF_NAME),
-                  group_address_switch= \
-                      config.get(CONF_ADDRESS),
-                  group_address_switch_state= \
-                      config.get(CONF_STATE_ADDRESS),
-                  group_address_brightness= \
-                      config.get(CONF_BRIGHTNESS_ADDRESS),
-                  group_address_brightness_state= \
-                      config.get(CONF_BRIGHTNESS_STATE_ADDRESS))
+    """Set up light for XKNX platform configured within plattform."""
+    light = xknx.Light(
+        hass.data[DATA_XKNX].xknx,
+        name=config.get(CONF_NAME),
+        group_address_switch=config.get(CONF_ADDRESS),
+        group_address_switch_state=config.get(CONF_STATE_ADDRESS),
+        group_address_brightness=config.get(CONF_BRIGHTNESS_ADDRESS),
+        group_address_brightness_state=config.get(CONF_BRIGHTNESS_STATE_ADDRESS))
     light.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(light)
     add_devices([XKNXLight(hass, light)])
 
 
 class XKNXLight(Light):
-    """Representation of XKNX lights."""
+    """Representation of a XKNX light."""
 
     def __init__(self, hass, device):
         self.device = device
         self.hass = hass
         self.register_callbacks()
 
-
     def register_callbacks(self):
+        """Register callbacks to update hass after device was changed."""
         def after_update_callback(device):
+            """Callback after device was updated."""
             # pylint: disable=unused-argument
-            self.update_ha()
+            self.schedule_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
-
-
-    def update_ha(self):
-        self.hass.async_add_job(self.async_update_ha_state())
-
-
-    @property
-    def should_poll(self):
-        """No polling needed for a demo light."""
-        return False
-
 
     @property
     def name(self):
-        """Return the name of the light if any."""
+        """Return the name of the XKNX device."""
         return self.device.name
+
+    @property
+    def should_poll(self):
+        """No polling needed within XKNX."""
+        return False
 
     @property
     def brightness(self):
@@ -148,16 +146,13 @@ class XKNXLight(Light):
             flags |= SUPPORT_BRIGHTNESS
         return flags
 
-
     def turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs and self.device.supports_dimming:
             self.device.set_brightness(int(kwargs[ATTR_BRIGHTNESS]))
         else:
             self.device.set_on()
-        self.update_ha()
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
         self.device.set_off()
-        self.update_ha()

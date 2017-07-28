@@ -1,3 +1,9 @@
+"""
+Support for KNX/IP covers via XKNX
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/cover.xknx/
+"""
 import asyncio
 import xknx
 import voluptuous as vol
@@ -34,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, add_devices, \
         discovery_info=None):
-    """Setup the XKNX cover platform."""
+    """Set up cover(s) for XKNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
         return False
@@ -48,6 +54,7 @@ def async_setup_platform(hass, config, add_devices, \
 
 @asyncio.coroutine
 def add_devices_from_component(hass, add_devices):
+    """Set up covers for XKNX platform configured via xknx.yaml."""
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
         if isinstance(device, xknx.Cover) and \
@@ -57,22 +64,16 @@ def add_devices_from_component(hass, add_devices):
 
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
-    from xknx import Cover
-    cover = Cover(hass.data[DATA_XKNX].xknx,
-                  name= \
-                      config.get(CONF_NAME),
-                  group_address_long= \
-                      config.get(CONF_MOVE_LONG_ADDRESS),
-                  group_address_short= \
-                      config.get(CONF_MOVE_SHORT_ADDRESS),
-                  group_address_position_feedback= \
-                      config.get(CONF_POSITION_STATE_ADDRESS),
-                  group_address_position= \
-                      config.get(CONF_POSITION_ADDRESS),
-                  travel_time_down= \
-                      config.get(CONF_TRAVELLING_TIME_DOWN),
-                  travel_time_up= \
-                      config.get(CONF_TRAVELLING_TIME_UP))
+    """Set up cover for XKNX platform configured within plattform."""
+    cover = xknx.Cover(
+        hass.data[DATA_XKNX].xknx,
+        name=config.get(CONF_NAME),
+        group_address_long=config.get(CONF_MOVE_LONG_ADDRESS),
+        group_address_short=config.get(CONF_MOVE_SHORT_ADDRESS),
+        group_address_position_feedback=config.get(CONF_POSITION_STATE_ADDRESS),
+        group_address_position=config.get(CONF_POSITION_ADDRESS),
+        travel_time_down=config.get(CONF_TRAVELLING_TIME_DOWN),
+        travel_time_up=config.get(CONF_TRAVELLING_TIME_UP))
 
     cover.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(cover)
@@ -80,7 +81,7 @@ def add_devices_from_platform(hass, config, add_devices):
 
 
 class XKNXCover(CoverDevice):
-    """Representation of XKNX shutters"""
+    """Representation of a XKNX cover."""
 
     def __init__(self, hass, device):
         """Initialize the cover."""
@@ -91,29 +92,27 @@ class XKNXCover(CoverDevice):
         self._unsubscribe_auto_updater = None
 
     def register_callbacks(self):
+        """Register callbacks to update hass after device was changed."""
         def after_update_callback(device):
+            """Callback after device was updated."""
             #pylint: disable=unused-argument
-            self.update_ha()
+            self.schedule_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
-
-
-    def update_ha(self):
-        self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def name(self):
-        """Return the name of the cover."""
+        """Return the name of the XKNX device."""
         return self.device.name
 
     @property
     def should_poll(self):
-        """No polling needed for a demo cover."""
+        """No polling needed within XKNX."""
         return False
 
     @property
     def current_cover_position(self):
         """Return the current position of the cover."""
-        return int(self.from_knx(self.device.current_position()))
+        return int(self.from_xknx_position(self.device.current_position()))
 
     @property
     def is_closed(self):
@@ -134,7 +133,7 @@ class XKNXCover(CoverDevice):
 
     def set_cover_position(self, position, **kwargs):
         """Move the cover to a specific position."""
-        knx_position = self.to_knx(position)
+        knx_position = self.to_xknx_position(position)
         self.device.set_position(knx_position)
         self.start_auto_updater()
 
@@ -143,52 +142,37 @@ class XKNXCover(CoverDevice):
         self.device.stop()
         self.stop_auto_updater()
 
-    #
-    # UPDATER
-    #
-
-    def stop_auto_updater(self):
-        if self._unsubscribe_auto_updater is not None:
-            self._unsubscribe_auto_updater()
-            self._unsubscribe_auto_updater = None
-
     def start_auto_updater(self):
+        """Start the autoupdater to update HASS while cover is moving."""
         if self._unsubscribe_auto_updater is None:
             self._unsubscribe_auto_updater = track_utc_time_change(
                 self.hass, self.auto_updater_hook)
 
+    def stop_auto_updater(self):
+        """Stop the autoupdater."""
+        if self._unsubscribe_auto_updater is not None:
+            self._unsubscribe_auto_updater()
+            self._unsubscribe_auto_updater = None
+
     def auto_updater_hook(self, now):
+        """Callback for autoupdater."""
         # pylint: disable=unused-argument
-        self.update_ha()
-        print(self.device.current_position())
+        self.schedule_update_ha_state()
         if self.device.position_reached():
             self.stop_auto_updater()
 
         self.device.auto_stop_if_necessary()
 
-    #
-    # HELPER FUNCTIONS
-    #
-
-    # KNX and HASS have different understanding of open and closed:
-    #
-    #            KNX     HASS
-    #    UP      0       100
-    #    DOWN    255     0
-
-
-    #TODO: use DPTScaling
     @staticmethod
-    def from_knx(raw):
+    def from_xknx_position(raw):
+        """Converts XKNX position [0...255] to hass position [100...0]."""
         return 100-round((raw/256)*100)
 
     @staticmethod
-    def to_knx(value):
+    def to_xknx_position(value):
+        """Converts hass position [100...0] to XKNX position [0...255]."""
         return 255-round(value/100*255.4)
 
-    #
-    # UNUSED FUNCTIONS
-    #
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover tilt."""
         print("stop_cover_tilt - not implemented")

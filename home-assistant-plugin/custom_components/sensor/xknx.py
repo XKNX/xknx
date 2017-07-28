@@ -1,3 +1,9 @@
+"""
+Support for KNX/IP sensors via XKNX
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.xknx/
+"""
 import asyncio
 import xknx
 import voluptuous as vol
@@ -23,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, add_devices, \
         discovery_info=None):
-    """Setup the XKNX light platform."""
+    """Set up sensor(s) for XKNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
         return False
@@ -37,6 +43,7 @@ def async_setup_platform(hass, config, add_devices, \
 
 @asyncio.coroutine
 def add_devices_from_component(hass, add_devices):
+    """Set up sensors for XKNX platform configured via xknx.yaml."""
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
         if isinstance(device, xknx.Sensor) and \
@@ -46,48 +53,42 @@ def add_devices_from_component(hass, add_devices):
 
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
-    from xknx import Sensor
-    sensor = Sensor(hass.data[DATA_XKNX].xknx,
-                    name= \
-                        config.get(CONF_NAME),
-                    group_address= \
-                        config.get(CONF_ADDRESS),
-                    value_type= \
-                        config.get(CONF_VALUE_TYPE))
+    """Set up sensor for XKNX platform configured within plattform."""
+    sensor = xknx.Sensor(
+        hass.data[DATA_XKNX].xknx,
+        name=config.get(CONF_NAME),
+        group_address=config.get(CONF_ADDRESS),
+        value_type=config.get(CONF_VALUE_TYPE))
     sensor.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(sensor)
     add_devices([XKNXSensor(hass, sensor)])
 
 
 class XKNXSensor(Entity):
+    """Representation of a XKNX sensor."""
 
     def __init__(self, hass, device):
         self.device = device
         self.hass = hass
         self.register_callbacks()
 
-
-    @property
-    def should_poll(self):
-        """No polling needed for a demo sensor."""
-        return False
-
-
     def register_callbacks(self):
+        """Register callbacks to update hass after device was changed."""
         def after_update_callback(device):
+            """Callback after device was updated."""
             # pylint: disable=unused-argument
-            self.update_ha()
+            self.schedule_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
-
-
-    def update_ha(self):
-        self.hass.async_add_job(self.async_update_ha_state())
-
 
     @property
     def name(self):
-        """Return the name of the light if any."""
+        """Return the name of the XKNX device."""
         return self.device.name
+
+    @property
+    def should_poll(self):
+        """No polling needed within XKNX."""
+        return False
 
     @property
     def state(self):
@@ -102,7 +103,4 @@ class XKNXSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        #return {
-        #    "FNORD": "FNORD",
-        #}
         return None
