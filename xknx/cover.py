@@ -1,4 +1,4 @@
-from xknx.knx import Address, Telegram, DPTBinary, DPTArray
+from xknx.knx import Address, DPTBinary, DPTArray
 from .device import Device
 from .travelcalculator import TravelCalculator
 from .exception import CouldNotParseTelegram
@@ -96,14 +96,6 @@ class Cover(Device):
                     self.group_address_position_feedback,
                     self.travel_time_down,
                     self.travel_time_up)
-
-
-    def send(self, group_address, payload):
-        telegram = Telegram()
-        telegram.group_address = group_address
-        telegram.payload = payload
-        self.xknx.telegrams.put_nowait(telegram)
-
 
     def set_down(self):
         if self.group_address_long is None:

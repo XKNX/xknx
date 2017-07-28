@@ -52,6 +52,17 @@ class Climate(Device):
                self.group_address_setpoint == group_address
 
 
+    def set_internal_setpoint(self, setpoint):
+        if setpoint != self.setpoint:
+            self.setpoint = setpoint
+            self.after_update()
+
+    def set_setpoint(self, setpoint):
+        if not self.supports_setpoint:
+            return
+        self.send(self.group_address_setpoint, DPTArray(setpoint))
+        self.set_internal_setpoint(setpoint)
+
     def process(self, telegram):
         if telegram.group_address == self.group_address_temperature and \
                 self.supports_temperature:

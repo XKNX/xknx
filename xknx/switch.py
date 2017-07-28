@@ -1,4 +1,4 @@
-from xknx.knx import Address, Telegram, DPTBinary
+from xknx.knx import Address, DPTBinary
 from .exception import CouldNotParseTelegram
 from .device import Device
 
@@ -46,21 +46,13 @@ class Switch(Device):
             self.state = state
             self.after_update()
 
-
-    def send(self, payload):
-        telegram = Telegram()
-        telegram.group_address = self.group_address
-        telegram.payload = payload
-        self.xknx.telegrams.put_nowait(telegram)
-
-
     def set_on(self):
-        self.send(DPTBinary(1))
+        self.send(self.group_address, DPTBinary(1))
         self.set_internal_state(True)
 
 
     def set_off(self):
-        self.send(DPTBinary(0))
+        self.send(self.group_address, DPTBinary(0))
         self.set_internal_state(False)
 
 

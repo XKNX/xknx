@@ -1,4 +1,4 @@
-from xknx.knx  import Address, Telegram, DPTBinary, DPTArray
+from xknx.knx  import Address, DPTBinary, DPTArray
 from .device import Device
 from .exception import CouldNotParseTelegram
 
@@ -98,14 +98,6 @@ class Light(Device):
         if brightness != self.brightness:
             self.brightness = brightness
             self.after_update()
-
-
-    def send(self, group_address, payload=None):
-        telegram = Telegram()
-        telegram.group_address = group_address
-
-        telegram.payload = payload
-        self.xknx.telegrams.put_nowait(telegram)
 
     def set_on(self):
         self.send(self.group_address_switch, DPTBinary(1))

@@ -1,5 +1,5 @@
 import asyncio
-from xknx.knx import Address, Telegram, DPTArray, DPTTime
+from xknx.knx import Address, DPTArray, DPTTime
 from .device import Device
 
 
@@ -35,10 +35,10 @@ class Time(Device):
 
     @asyncio.coroutine
     def broadcast_time(self):
-        telegram = Telegram()
-        telegram.group_address = self.group_address
-        telegram.payload = DPTArray(DPTTime.current_time_as_knx())
-        yield from self.xknx.telegrams.put(telegram)
+        """Broadcast time to KNX bus."""
+        self.send(
+            self.group_address,
+            DPTArray(DPTTime.current_time_as_knx()))
 
     @asyncio.coroutine
     def sync(self, wait_for_result=True):

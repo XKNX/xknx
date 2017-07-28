@@ -39,10 +39,59 @@ class TestClimate(unittest.TestCase):
         self.assertTrue(climate.supports_setpoint)
 
     #
-    # SYNC
+    # TEST CALLBACK
     #
+    def test_process_callback(self):
+        # pylint: disable=no-self-use
+        xknx = XKNX(loop=self.loop)
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            group_address_setpoint='1/2/4')
+
+        after_update_callback = Mock()
+        climate.register_device_updated_cb(after_update_callback)
+        climate.set_setpoint(23)
+        after_update_callback.assert_called_with(climate)
+        after_update_callback.reset_mock()
+
+        climate.set_setpoint(24)
+        after_update_callback.assert_called_with(climate)
+        after_update_callback.reset_mock()
+
+        climate.set_setpoint(24)
+        after_update_callback.assert_not_called()
+
+
+    # TEST SET SETPOINT
+    #
+    def test_set_setpoint(self):
+        """Test set_setpoint"""
+        xknx = XKNX(loop=self.loop)
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            group_address_temperature='1/2/3',
+            group_address_setpoint='1/2/4')
+        climate.set_setpoint(23)
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        telegram = xknx.telegrams.get_nowait()
+        self.assertEqual(telegram,
+                         Telegram(Address('1/2/4'), payload=DPTArray(23)))
+
+    def test_set_setpoint_no_setpoint(self):
+        """Test set_sepoint with no setpoint defined."""
+        xknx = XKNX(loop=self.loop)
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            group_address_temperature='1/2/3')
+        climate.set_setpoint(23)
+        self.assertEqual(xknx.telegrams.qsize(), 0)
+
     @asyncio.coroutine
     def test_synce(self):
+        """Test sync function."""
         xknx = XKNX(loop=self.loop)
         climate = Climate(
             xknx,

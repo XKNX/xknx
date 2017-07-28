@@ -1,4 +1,5 @@
 import asyncio
+from xknx.knx import Telegram
 from .value_reader import ValueReader
 
 class Device:
@@ -34,10 +35,15 @@ class Device:
             else:
                 yield from value_reader.send_group_read()
 
+    def send(self, group_address, payload=None):
+        """Sends payload as telegram to KNX bus."""
+        telegram = Telegram()
+        telegram.group_address = group_address
+        telegram.payload = payload
+        self.xknx.telegrams.put_nowait(telegram)
 
-
-    # returning group_addresses which should be requested to sync state
     def state_addresses(self):
+        """Returns group addresses which should be requested to sync state."""
         # pylint: disable=no-self-use
         return []
 
