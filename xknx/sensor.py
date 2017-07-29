@@ -42,7 +42,7 @@ class Sensor(Device):
         return self.group_address == group_address
 
 
-    def set_internal_state(self, state):
+    def _set_internal_state(self, state):
         """Set the internal state of the device. If state was changed after update hooks are executed."""
         if state != self.state:
             self.state = state
@@ -55,7 +55,7 @@ class Sensor(Device):
 
     def process(self, telegram):
         """Process incoming telegram."""
-        self.set_internal_state(telegram.payload)
+        self._set_internal_state(telegram.payload)
 
 
     def unit_of_measurement(self):

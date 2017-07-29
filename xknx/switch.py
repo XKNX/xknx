@@ -44,7 +44,7 @@ class Switch(Device):
                (self.group_address_state == group_address)
 
 
-    def set_internal_state(self, state):
+    def _set_internal_state(self, state):
         """Set the internal state of the device. If state was changed after update hooks are executed."""
         if state != self.state:
             self.state = state
@@ -52,12 +52,12 @@ class Switch(Device):
 
     def set_on(self):
         self.send(self.group_address, DPTBinary(1))
-        self.set_internal_state(True)
+        self._set_internal_state(True)
 
 
     def set_off(self):
         self.send(self.group_address, DPTBinary(0))
-        self.set_internal_state(False)
+        self._set_internal_state(False)
 
 
     def do(self, action):
@@ -80,9 +80,9 @@ class Switch(Device):
             raise CouldNotParseTelegram()
 
         if telegram.payload.value == 0:
-            self.set_internal_state(False)
+            self._set_internal_state(False)
         elif telegram.payload.value == 1:
-            self.set_internal_state(True)
+            self._set_internal_state(True)
         else:
             raise CouldNotParseTelegram()
 

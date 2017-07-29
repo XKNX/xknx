@@ -86,7 +86,7 @@ class BinarySensor(Device):
         """Test if device has given group address."""
         return self.group_address == group_address
 
-    def set_internal_state(self, state):
+    def _set_internal_state(self, state):
         """Set the internal state of the device. If state was changed after update hooks and connected Actions are executed."""
         if state != self.state:
             self.state = state
@@ -131,9 +131,9 @@ class BinarySensor(Device):
         binary_value = telegram.payload.value & bit_masq != 0
 
         if binary_value == 0:
-            self.set_internal_state(BinarySensorState.OFF)
+            self._set_internal_state(BinarySensorState.OFF)
         elif binary_value == 1:
-            self.set_internal_state(BinarySensorState.ON)
+            self._set_internal_state(BinarySensorState.ON)
         else:
             raise CouldNotParseTelegram()
 

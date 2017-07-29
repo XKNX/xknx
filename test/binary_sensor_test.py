@@ -123,7 +123,7 @@ class TestBinarySensor(unittest.TestCase):
         """Test is_on() and is_off() of a BinarySensor with state 'on'."""
         xknx = XKNX(loop=self.loop)
         binaryinput = BinarySensor(xknx, 'TestInput', '1/2/3')
-        binaryinput.set_internal_state(BinarySensorState.ON)
+        binaryinput._set_internal_state(BinarySensorState.ON)
         self.assertTrue(binaryinput.is_on())
         self.assertFalse(binaryinput.is_off())
 
@@ -134,7 +134,7 @@ class TestBinarySensor(unittest.TestCase):
         """Test is_on() and is_off() of a BinarySensor with state 'off'."""
         xknx = XKNX(loop=self.loop)
         binaryinput = BinarySensor(xknx, 'TestInput', '1/2/3')
-        binaryinput.set_internal_state(BinarySensorState.OFF)
+        binaryinput._set_internal_state(BinarySensorState.OFF)
         self.assertFalse(binaryinput.is_on())
         self.assertTrue(binaryinput.is_off())
 
