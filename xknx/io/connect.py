@@ -1,6 +1,4 @@
-"""
-Abstraction to send ConnectRequest and wait for ConnectResponse.
-"""
+"""Abstraction to send ConnectRequest and wait for ConnectResponse."""
 from xknx.knxip import KNXIPServiceType, KNXIPFrame, ConnectRequestType, HPAI, ConnectResponse
 from .request_response import RequestResponse
 
@@ -32,5 +30,6 @@ class Connect(RequestResponse):
 
 
     def on_success_hook(self, knxipframe):
+        """Hook for having received a valid answer."""
         self.communication_channel = knxipframe.body.communication_channel
         self.identifier = knxipframe.body.identifier

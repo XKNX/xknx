@@ -1,7 +1,7 @@
 """
-Base class for sending a specific type of KNX/IP Packet to a KNX/IP
-device and wait for the corresponding answer. Will report if the
-corresponding answer was not received.
+Base class for sending a specific type of KNX/IP Packet to a KNX/IP device and wait for the corresponding answer.
+
+Will report if the corresponding answer was not received.
 """
 import asyncio
 from xknx.knxip import ErrorCode
@@ -28,7 +28,7 @@ class RequestResponse():
 
     @asyncio.coroutine
     def start(self):
-
+        """Start. Sending and waiting for answer."""
         callb = self.udpclient.register_callback(
             self.response_rec_callback, [self.awaited_response_class.service_type])
 
@@ -42,6 +42,7 @@ class RequestResponse():
 
     @asyncio.coroutine
     def send_request(self):
+        """Build knxipframe (within derived class) and send via UDP."""
         knxipframe = self.create_knxipframe()
         knxipframe.normalize()
 
@@ -49,6 +50,7 @@ class RequestResponse():
 
 
     def response_rec_callback(self, knxipframe, _):
+        """Callback for receiving answer. Checks if answer is of correct type."""
         if not isinstance(knxipframe.body, self.awaited_response_class):
             print("Cant understand knxipframe")
             return
@@ -63,23 +65,28 @@ class RequestResponse():
 
 
     def on_success_hook(self, knxipframe):
+        """Hook for having received a valid answer. May be overwritten in derived class."""
         pass
 
 
     def on_error_hook(self, knxipframe):
+        """Hook for having received an invalid answer. May be overwritten in derived class."""
         # pylint: disable=no-self-use
         print("Error connection state failed: ", knxipframe.body.status_code)
 
 
     def timeout(self):
+        """Handle timeout."""
         self.response_received_or_timeout.set()
 
 
     @asyncio.coroutine
     def start_timeout(self):
+        """Start timeout."""
         self.timeout_handle = self.xknx.loop.call_later(
             self.timeout_in_seconds, self.timeout)
 
     @asyncio.coroutine
     def stop_timeout(self):
+        """Stop timeout."""
         self.timeout_handle.cancel()

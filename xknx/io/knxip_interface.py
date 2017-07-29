@@ -1,3 +1,12 @@
+"""
+KNXIPInterface manages KNX/IP Tunneling or Routing connections.
+
+* It searches for available devices and connects with the corresponding connect method.
+* It passes KNX telegrams from the network and
+* provides callbacks after having received a telegram from the network.
+
+"""
+
 import asyncio
 from enum import Enum
 from .gateway_scanner import GatewayScanner
@@ -7,12 +16,25 @@ from .tunnel import Tunnel
 from .const import DEFAULT_MCAST_PORT
 
 class ConnectionType(Enum):
+    """Enum class for different types of KNX/IP Connections."""
+
     AUTOMATIC = 0
     TUNNELING = 1
     ROUTING = 2
 
-
 class ConnectionConfig:
+    """
+    Connection configuration.
+
+    Handles:
+    * type of connection:
+        * AUTOMATIC for using GatewayScanner for searching and finding KNX/IP devices in the network.
+        * TUNNELING connect to a specific KNX/IP tunneling device.
+        * ROUTING use KNX/IP multicast routing.
+    * local_ip: Local ip of the interface though which KNXIPInterface should connect.
+    * gateway_ip: IP of KNX/IP tunneling device.
+    * gateway_port: Port of KNX/IP tunneling device.
+    """
 
     # pylint: disable=too-few-public-methods
 
@@ -30,6 +52,7 @@ class ConnectionConfig:
 
 
 class KNXIPInterface():
+    """Class for managing KNX/IP Tunneling or Routing connections."""
 
     def __init__(self, xknx, connection_config=ConnectionConfig()):
         """Initialize KNXIPInterface class."""
@@ -39,6 +62,7 @@ class KNXIPInterface():
 
     @asyncio.coroutine
     def start(self):
+        """Start interface. Connecting KNX/IP device with the selected method."""
         if self.connection_config.connection_type == ConnectionType.AUTOMATIC:
             yield from self.start_automatic()
         elif self.connection_config.connection_type == ConnectionType.ROUTING:
@@ -52,6 +76,7 @@ class KNXIPInterface():
 
     @asyncio.coroutine
     def start_automatic(self):
+        """Start GatewayScanner and connect to the found device."""
         gatewayscanner = GatewayScanner(self.xknx)
         yield from gatewayscanner.start()
         gatewayscanner.stop()
@@ -70,6 +95,7 @@ class KNXIPInterface():
 
     @asyncio.coroutine
     def start_tunnelling(self, local_ip, gateway_ip, gateway_port):
+        """Start KNX/IP tunnel."""
         print("Starting tunnel to {}:{} from {}".format(
             gateway_ip,
             gateway_port,
@@ -85,6 +111,7 @@ class KNXIPInterface():
 
     @asyncio.coroutine
     def start_routing(self, local_ip):
+        """Start KNX/IP Routing."""
         print("Starting Routing from {}".format(local_ip))
         self.interface = Routing(
             self.xknx,
@@ -95,15 +122,18 @@ class KNXIPInterface():
 
     @asyncio.coroutine
     def stop(self):
+        """Stop connected interfae (either Tunneling or Routing)."""
         if self.interface is not None:
             yield from self.interface.stop()
             self.interface = None
 
     def telegram_received(self, telegram):
+        """Callback for having received telegram."""
         self.xknx.loop.create_task(
             self.xknx.telegrams.put(telegram))
 
 
     @asyncio.coroutine
     def send_telegram(self, telegram):
+        """Send telegram to connected device (either Tunneling or Routing)."""
         yield from self.interface.send_telegram(telegram)

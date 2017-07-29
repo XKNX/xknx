@@ -1,6 +1,4 @@
-"""
-Abstraction to send DisconnectRequest and wait for DisconnectResponse.
-"""
+"""Abstraction to send DisconnectRequest and wait for DisconnectResponse."""
 from xknx.knxip import KNXIPServiceType, KNXIPFrame, HPAI,\
     DisconnectResponse
 from .request_response import RequestResponse

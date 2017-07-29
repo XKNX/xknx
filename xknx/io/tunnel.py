@@ -1,3 +1,8 @@
+"""
+Abstraction for handling KNX/IP tunnels.
+
+Tunnels connect to KNX/IP devices directly via UDP and build a static UDP connection.
+"""
 import asyncio
 from xknx.knx import TelegramDirection
 from xknx.knxip import TunnellingRequest, KNXIPFrame, KNXIPServiceType
@@ -8,6 +13,8 @@ from .tunnelling import Tunnelling
 from .udp_client import UDPClient
 
 class Tunnel():
+    """Class for handling KNX/IP tunnels."""
+
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, xknx, src_address, local_ip, gateway_ip, gateway_port, telegram_received_callback=None):
@@ -28,6 +35,7 @@ class Tunnel():
         self.number_heartbeat_failed = 0
 
     def init_udp_client(self):
+        """Initialize udp_client."""
         self.udp_client = UDPClient(self.xknx,
                                     (self.local_ip, 0),
                                     (self.gateway_ip, self.gateway_port))
@@ -37,6 +45,7 @@ class Tunnel():
 
 
     def tunnel_reqest_received(self, knxipframe, udp_client):
+        """Callback for tunnel request received."""
         # pylint: disable=unused-argument
         if knxipframe.header.service_type_ident != \
                 KNXIPServiceType.TUNNELLING_REQUEST:
@@ -48,8 +57,8 @@ class Tunnel():
             if self.telegram_received_callback is not None:
                 self.telegram_received_callback(telegram)
 
-
     def send_ack(self, communication_channel_id, sequence_counter):
+        """Send tunneling ACK after tunneling request received."""
         ack_knxipframe = KNXIPFrame()
         ack_knxipframe.init(KNXIPServiceType.TUNNELLING_ACK)
         ack_knxipframe.body.communication_channel_id = communication_channel_id
@@ -59,17 +68,19 @@ class Tunnel():
 
     @asyncio.coroutine
     def start(self):
+        """Start tunneling."""
         yield from self.connect_udp()
         yield from self.connect()
 
-
     @asyncio.coroutine
     def connect_udp(self):
+        """Connect udp_client."""
         yield from self.udp_client.connect()
 
 
     @asyncio.coroutine
     def connect(self):
+        """Connect/build tunnel."""
         connect = Connect(
             self.xknx,
             self.udp_client)
@@ -84,6 +95,7 @@ class Tunnel():
 
     @asyncio.coroutine
     def send_telegram(self, telegram):
+        """Send Telegram to routing tunelling device."""
         tunnelling = Tunnelling(
             self.xknx,
             self.udp_client,
@@ -100,6 +112,7 @@ class Tunnel():
 
     @asyncio.coroutine
     def connectionstate(self):
+        """Return state of tunnel. True if tunnel is in good shape."""
         conn_state = ConnectionState(
             self.xknx,
             self.udp_client,
@@ -109,6 +122,7 @@ class Tunnel():
 
     @asyncio.coroutine
     def disconnect(self, ignore_error=False):
+        """Disconnect from tunnel device."""
         disconnect = Disconnect(
             self.xknx,
             self.udp_client,
@@ -121,23 +135,26 @@ class Tunnel():
 
     @asyncio.coroutine
     def stop(self):
+        """Stop tunneling."""
         yield from self.disconnect()
         yield from self.udp_client.stop()
 
     @asyncio.coroutine
     def start_heartbeat(self):
+        """Start heartbeat for monitoring state of tunnel, as suggested by 03.08.02 KNX Core 5.4."""
         self.xknx.loop.create_task(
             self.do_heartbeat())
 
     @asyncio.coroutine
     def do_heartbeat(self):
-        """Heartbeat Monitoring, as suggested by 03.08.02 KNX Core 5.4."""
+        """Heartbeat: Worker 'thread', endless loop for sending heartbeat requests."""
         while True:
             yield from asyncio.sleep(15)
             yield from self.do_heartbeat_impl()
 
     @asyncio.coroutine
     def do_heartbeat_impl(self):
+        """Heartbeat: checking connection state and handling result."""
         connectionsstate = yield from self.connectionstate()
         if connectionsstate:
             yield from self.do_heartbeat_success()
@@ -146,10 +163,12 @@ class Tunnel():
 
     @asyncio.coroutine
     def do_heartbeat_success(self):
+        """Heartbeat: handling success."""
         self.number_heartbeat_failed = 0
 
     @asyncio.coroutine
     def do_heartbeat_failed(self):
+        """Heartbeat: handling error."""
         self.number_heartbeat_failed = self.number_heartbeat_failed + 1
         if self.number_heartbeat_failed > 3:
             print("HEARTBEAT FAILED - RECONNECTING")

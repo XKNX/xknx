@@ -1,3 +1,8 @@
+"""
+Abstraction for handling KNX/IP routing.
+
+Routing uses UDP Multicast to broadcast and receive KNX/IP messages.
+"""
 import asyncio
 from xknx.knx import TelegramDirection
 from xknx.knxip import KNXIPFrame, KNXIPServiceType, APCICommand
@@ -6,6 +11,7 @@ from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 
 
 class Routing():
+    """Class for handling KNX/IP routing."""
 
     def __init__(self, xknx, telegram_received_callback, local_ip):
         """Initialize Routing class."""
@@ -23,8 +29,8 @@ class Routing():
             self.response_rec_callback,
             [KNXIPServiceType.ROUTING_INDICATION])
 
-
     def response_rec_callback(self, knxipframe, _):
+        """Callback for receiving knxipframe from internal udpclient."""
         if knxipframe.body.src_addr == self.xknx.globals.own_address:
             print("Ignoring own packet")
         elif knxipframe.header.service_type_ident != \
@@ -43,6 +49,7 @@ class Routing():
 
     @asyncio.coroutine
     def send_telegram(self, telegram):
+        """Send Telegram to routing connected device."""
         knxipframe = KNXIPFrame()
         knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
         knxipframe.body.src_addr = self.xknx.globals.own_address
@@ -51,17 +58,17 @@ class Routing():
         knxipframe.normalize()
         yield from self.send_knxipframe(knxipframe)
 
-
     @asyncio.coroutine
     def send_knxipframe(self, knxipframe):
+        """Send KNXIPFrame to connected routing device."""
         self.udpclient.send(knxipframe)
-
 
     @asyncio.coroutine
     def start(self):
+        """Start routing."""
         yield from self.udpclient.connect()
-
 
     @asyncio.coroutine
     def stop(self):
+        """Stop routing."""
         yield from self.udpclient.stop()

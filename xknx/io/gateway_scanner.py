@@ -1,3 +1,11 @@
+"""
+GatewayScanner is an abstraction for searching for KNX/IP devices on the local network.
+
+* It walks through all network interfaces
+* and sends UDP multicast search requests
+* it returns the first found device
+"""
+
 import asyncio
 import netifaces
 from xknx.knxip import HPAI, KNXIPFrame, SearchResponse, KNXIPServiceType, \
@@ -6,6 +14,7 @@ from .udp_client import UDPClient
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 
 class GatewayScanner():
+    """Class for searching KNX/IP devices."""
 
     # pylint: disable=too-many-instance-attributes
     def __init__(self, xknx, timeout_in_seconds=1):
@@ -25,6 +34,7 @@ class GatewayScanner():
         self.timeout_handle = None
 
     def response_rec_callback(self, knxipframe, udp_client):
+        """Callback for receiving a SearchResponse."""
         if not isinstance(knxipframe.body, SearchResponse):
             print("Cant understand knxipframe")
             return
@@ -47,6 +57,7 @@ class GatewayScanner():
 
     @asyncio.coroutine
     def start(self):
+        """Start searching."""
         yield from self.send_search_requests()
         yield from self.start_timeout()
         yield from self.response_received_or_timeout.wait()
@@ -55,12 +66,14 @@ class GatewayScanner():
 
     @asyncio.coroutine
     def stop(self):
+        """Stop tearing down udpclient."""
         for udpclient in self.udpclients:
             yield from udpclient.stop()
 
 
     @asyncio.coroutine
     def send_search_requests(self):
+        """Send search requests on all connected interfaces."""
         # pylint: disable=no-member
         for interface in netifaces.interfaces():
             try:
@@ -74,6 +87,7 @@ class GatewayScanner():
 
     @asyncio.coroutine
     def search_interface(self, interface, ip_addr):
+        """Search on a specific interface."""
         print("Searching on {0} / {1}".format(interface, ip_addr))
 
         udpclient = UDPClient(self.xknx,
@@ -98,14 +112,17 @@ class GatewayScanner():
 
 
     def timeout(self):
+        """Handle timeout for not having received a SearchResponse."""
         self.response_received_or_timeout.set()
 
 
     @asyncio.coroutine
     def start_timeout(self):
+        """Start time out."""
         self.timeout_handle = self.xknx.loop.call_later(
             self.timeout_in_seconds, self.timeout)
 
     @asyncio.coroutine
     def stop_timeout(self):
+        """Stop/cancel timeout."""
         self.timeout_handle.cancel()
