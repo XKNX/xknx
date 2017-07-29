@@ -1,3 +1,13 @@
+"""
+Module for serialization and deserialization of KNX DIB (Description Information Block) information.
+
+A KNX/IP Search Response may contain several DIBs of different types:
+
+* DIBSuppSVCFamilies:   Supported features of device
+* DIBDeviceInformation: Name, serial number, some unimportant flags
+* DIBGeneric:           General Information (fallback for unknown dib type codes)
+
+"""
 from xknx.knx import Address, AddressType
 from .exception import CouldNotParseKNXIP
 from .knxip_enum import DIBTypeCode, KNXMedium, DIBServiceFamily
@@ -27,6 +37,7 @@ class DIB():
 
     @staticmethod
     def determine_dib(raw):
+        """Determine dib type out of dib type code."""
         if len(raw) < 2:
             raise CouldNotParseKNXIP("could not parse DIB header")
         dtc = DIBTypeCode(raw[1])
@@ -41,10 +52,7 @@ class DIB():
 
 
 class DIBGeneric(DIB):
-    """
-    DIB abstraction for all unimplemented DIB types. This class
-    does not do any specific handling of the data
-    """
+    """Module for serialization and deserialization of KNX DIB Generic. Fallback for not implemented DIBTypeCodes."""
 
     def __init__(self):
         super(DIBGeneric, self).__init__()
@@ -89,9 +97,12 @@ class DIBGeneric(DIB):
 
 
 class DIBSuppSVCFamilies(DIB):
+    """Class for serialization and deserialization of KNX DIB Supported Services."""
+
     # pylint: disable=too-few-public-methods
 
     class Family:
+        """Class for storing a supported device family."""
         def __init__(self, name=None, version=None):
             self.name = name
             self.version = version
@@ -103,18 +114,17 @@ class DIBSuppSVCFamilies(DIB):
             """Equal operator."""
             return self.__dict__ == other.__dict__
 
-
     def __init__(self):
+        """Initialization of DIBSuppSVCFamilies."""
         super(DIBSuppSVCFamilies, self).__init__()
         self.families = []
 
-
     def supports(self, name):
+        """Return if device supports a given service family by name."""
         for family in self.families:
             if name == family.name:
                 return True
         return False
-
 
     def calculated_length(self):
         """Get length of KNX/IP object."""
@@ -158,11 +168,13 @@ class DIBSuppSVCFamilies(DIB):
 
 
 class DIBDeviceInformation(DIB):
+    """Class for serialization and deserialization of KNX DIB Device Information Block."""
     # pylint: disable=too-many-instance-attributes
 
     LENGTH = 54
 
     def __init__(self):
+        """Initialization of DIBDeviceInformation."""
         super(DIBDeviceInformation, self).__init__()
         self.knx_medium = KNXMedium.TP1
         self.programming_mode = False

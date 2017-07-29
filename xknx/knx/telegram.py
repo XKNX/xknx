@@ -1,29 +1,38 @@
+"""
+Module for KNX Telegrams.
+
+The telegram class is the leightweight interaction object between
+
+* business logic (Lights, Covers, etc) and
+* underlaying KNX/IP abstraction (KNX-Routing/KNX-Tunneling).
+
+It contains
+
+* the telegram type (e.g. GROUP_WRITE)
+* the direction (incoming or outgoing)
+* the group address (e.g. 1/2/3)
+* and the payload (e.g. "12%" or "23.23 C".
+
+"""
 from enum import Enum
 from .address import Address
 
 class TelegramDirection(Enum):
+    """Enum class for the communication direction of a telegram (from KNX bus or to KNX bus)."""
     INCOMING = 1
     OUTGOING = 2
 
 
 class TelegramType(Enum):
+    """Enum class for type of telegram."""
     GROUP_READ = 1
     GROUP_WRITE = 2
     GROUP_RESPONSE = 3
 
 
 class Telegram:
+    """Class for KNX telegrams."""
     # pylint: disable=too-few-public-methods
-
-    """ Abstraction for the business logic of KNX Telegrams
-
-        This is a leightweight object for business logic,
-        only containing group address and payload.
-
-        The telegram direction marks if a telegram originates from
-        XKNX abstraction or was sent from outside for internal
-        processing.
-    """
 
     def __init__(self, group_address=Address(),
                  telegramtype=TelegramType.GROUP_WRITE,

@@ -1,3 +1,8 @@
+"""
+Module for serialization and deserialization of KNX/IP CEMI Frame.
+
+A CEMI frame is the container to transport a KNX/IP Telegram to/from the KNX bus.
+"""
 from xknx.knx import Address, AddressType, DPTBinary, DPTArray, \
     Telegram, TelegramType
 
@@ -22,11 +27,13 @@ class CEMIFrame(KNXIPBody):
 
     @property
     def telegram(self):
+        """Return telegram."""
         telegram = Telegram()
         telegram.payload = self.payload
         telegram.group_address = self.dst_addr
 
         def resolve_telegram_type(cmd):
+            """Return telegram type from APCI Command."""
             if cmd == APCICommand.GROUP_WRITE:
                 return TelegramType.GROUP_WRITE
             elif cmd == APCICommand.GROUP_READ:
@@ -45,7 +52,7 @@ class CEMIFrame(KNXIPBody):
 
     @telegram.setter
     def telegram(self, telegram):
-
+        """Set telegram."""
         self.dst_addr = telegram.group_address
         self.payload = telegram.payload
 
@@ -62,6 +69,7 @@ class CEMIFrame(KNXIPBody):
 
         # TODO: use telegram.direction
         def resolve_cmd(telegramtype):
+            """Resolve APCICommand from TelegramType."""
             if telegramtype == TelegramType.GROUP_READ:
                 return APCICommand.GROUP_READ
             elif telegramtype == TelegramType.GROUP_WRITE:
@@ -73,6 +81,7 @@ class CEMIFrame(KNXIPBody):
         self.cmd = resolve_cmd(telegram.telegramtype)
 
     def set_hops(self, hops):
+        """Set hops."""
         # Resetting hops
         self.flags &= 0xFFFF ^ 0x0070
         # Setting new hops
@@ -150,8 +159,8 @@ class CEMIFrame(KNXIPBody):
         data.extend(self.src_addr.to_knx())
         data.extend(self.dst_addr.to_knx())
 
-        def encode_cmd_and_payload(cmd, encoded_payload=0,\
-                                   appended_payload=None):
+        def encode_cmd_and_payload(cmd, encoded_payload=0, appended_payload=None):
+            """Encode cmd and payload."""
             if appended_payload is None:
                 appended_payload = []
             data = [
@@ -172,9 +181,7 @@ class CEMIFrame(KNXIPBody):
                         appended_payload=self.payload.value))
         else:
             raise TypeError()
-
         return data
-
 
     def __str__(self):
         """Return object as readable string."""

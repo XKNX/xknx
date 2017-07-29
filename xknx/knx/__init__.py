@@ -1,3 +1,11 @@
+"""
+Module for handling KNX primitves like:
+
+* KNX Addresses
+* KNX Values like Int, Float, Time
+* Derived KNX Values like Scaling, Time, Temperature
+
+"""
 from .address import Address, CouldNotParseAddress, AddressType, AddressFormat
 from .telegram import Telegram, TelegramDirection, TelegramType
 from .dpt import DPTBase, DPTBinary, DPTArray, ConversionError,\

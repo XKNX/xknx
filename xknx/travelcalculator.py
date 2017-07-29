@@ -1,18 +1,33 @@
+"""
+Module TravelCalculator provides functionality for predicting the current position of a Cover.
+
+E.g.:
+
+* Given a Cover that takes 100 seconds to travel from top to bottom.
+* Starting from position 90, directed to position 60 at time 0.
+* At time 10 TravelCalculator will return position 80 (final position not reached).
+* At time 20 TravelCalculator will return position 70 (final position not reached).
+* At time 30 TravelCalculator will return position 60 (final position reached).
+"""
 from enum import Enum
 import time
 
 class PositionType(Enum):
+    """Enum class for different type of calculated positions."""
     UNKNOWN = 1
     CALCULATED = 2
     CONFIRMED = 3
 
 class TravelStatus(Enum):
+    """Enum class for travel status."""
     DIRECTION_UP = 1
     DIRECTION_DOWN = 2
     STOPPED = 3
 
 
 class TravelCalculator:
+    """Class for calculating the current position of a cover."""
+
     # pylint: disable=too-many-instance-attributes
 
     def  __init__(self, travel_time_down, travel_time_up):
@@ -33,19 +48,21 @@ class TravelCalculator:
         self.time_set_from_outside = None
 
     def set_position(self, position):
+        """Set known position of cover."""
         self.last_known_position = position
         self.travel_to_position = position
         self.position_type = PositionType.CONFIRMED
 
     def stop(self):
+        """Stop traveling."""
         self.last_known_position = self.current_position()
         self.travel_to_position = self.last_known_position
         self.position_type = PositionType.CALCULATED
         self.travel_direction = TravelStatus.STOPPED
 
     def start_travel(self, travel_to_position):
+        """Start traveling to position."""
         self.stop()
-
         self.travel_started_time = self.current_time()
         self.travel_to_position = travel_to_position
         self.position_type = PositionType.CALCULATED
@@ -56,32 +73,41 @@ class TravelCalculator:
             TravelStatus.DIRECTION_DOWN
 
     def start_travel_up(self):
+        """Start traveling up."""
         self.start_travel(self.maximum_position_up)
 
     def start_travel_down(self):
+        """Start traveling down."""
         self.start_travel(self.minimum_position_down)
 
     def current_position(self):
+        """Return current (calculated or known) position."""
         if self.position_type == PositionType.CALCULATED:
             return self._calculate_position()
         return self.last_known_position
 
     def is_traveling(self):
+        """Return if cover is traveling."""
         return self.current_position() != self.travel_to_position
 
     def position_reached(self):
+        """Return if cover has reached designated position."""
         return self.current_position() == self.travel_to_position
 
     def is_open(self):
+        """Return if cover is (fully) open."""
         return self.current_position() == self.maximum_position_up
 
     def is_closed(self):
+        """Return if cover is (fully) closed."""
         return self.current_position() == self.minimum_position_down
 
     def _calculate_position(self):
+        """Return calculated position."""
         relative_position = self.travel_to_position - self.last_known_position
 
         def position_reached_or_exceeded(relative_position):
+            """Return if designated position was reached."""
             if relative_position <= 0 \
                     and self.travel_direction == TravelStatus.DIRECTION_DOWN:
                 return True
@@ -101,6 +127,7 @@ class TravelCalculator:
         return int(position)
 
     def _calculate_travel_time(self, relative_position):
+        """Calculate time to travel to relative position."""
         travel_direction = \
                     TravelStatus.DIRECTION_UP \
                     if relative_position < 0 else \
@@ -115,6 +142,7 @@ class TravelCalculator:
 
 
     def current_time(self):
+        """Get current time. May be modified from outside (for unit tests)."""
         # time_set_from_outside is  used within unit tests
         if self.time_set_from_outside is not None:
             return self.time_set_from_outside
