@@ -41,10 +41,13 @@ Example
 -------
 
 ```python
+"""Example for switching a light on and off."""
 import asyncio
-from xknx import XKNX, Light
+from xknx import XKNX
+from xknx.devices import Light
 
 async def main():
+    """Connect to KNX/IP bus, switch on light, wait 2 seconds and switch of off again."""
     xknx = XKNX()
     await xknx.start()
     light = Light(xknx,
