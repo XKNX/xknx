@@ -28,7 +28,7 @@ class DPTFloat(DPTBase):
 
         value = float(significand << exponent) / 100
 
-        if not cls.test_boundaries(value):
+        if not cls._test_boundaries(value):
             raise ConversionError(value)
 
         return value
@@ -38,7 +38,7 @@ class DPTFloat(DPTBase):
         """Serialize to KNX/IP raw data."""
         if not isinstance(value, (int, float)):
             raise ConversionError(value)
-        if not cls.test_boundaries(value):
+        if not cls._test_boundaries(value):
             raise ConversionError(value)
         sign = 1 if value < 0 else 0
         def calc_exponent(value, sign):
@@ -61,7 +61,8 @@ class DPTFloat(DPTBase):
                significand & 0xff
 
     @classmethod
-    def test_boundaries(cls, value):
+    def _test_boundaries(cls, value):
+        """Test if value is within defined range for this object."""
         return value >= cls.value_min and \
                value <= cls.value_max
 

@@ -1,4 +1,3 @@
-
 """ Implementation of Basic KNX 2-Byte """
 
 from .dpt import DPTBase, ConversionError
@@ -23,12 +22,13 @@ class DPT2Byte(DPTBase):
     @classmethod
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
-        if not cls.test_boundaries(value):
+        if not cls._test_boundaries(value):
             raise ConversionError(value)
         return value >> 8, value  & 0xff
 
     @classmethod
-    def test_boundaries(cls, value):
+    def _test_boundaries(cls, value):
+        """Test if value is within defined range for this object."""
         return value >= cls.value_min and \
                value <= cls.value_max
 

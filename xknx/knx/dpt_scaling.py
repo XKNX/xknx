@@ -21,7 +21,7 @@ class DPTScaling(DPTBase):
 
         value = round((raw[0]/256)*100)
 
-        if not cls.test_boundaries(value):
+        if not cls._test_boundaries(value):
             raise ConversionError(value)
 
         return value
@@ -31,12 +31,13 @@ class DPTScaling(DPTBase):
         """Serialize to KNX/IP raw data."""
         if not isinstance(value, (int, float)):
             raise ConversionError(value)
-        if not cls.test_boundaries(value):
+        if not cls._test_boundaries(value):
             raise ConversionError(value)
         knx_value = round(value/100*255.4)
         return (knx_value,)
 
     @classmethod
-    def test_boundaries(cls, value):
+    def _test_boundaries(cls, value):
+        """Test if value is within defined range for this object."""
         return value >= cls.value_min and \
                value <= cls.value_max
