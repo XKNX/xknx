@@ -45,6 +45,7 @@ class BinarySensor(Device):
 
     @classmethod
     def from_config(cls, xknx, name, config):
+        """Initialize object from configuration structure."""
         group_address = \
             config.get('group_address')
         device_class = \
@@ -66,6 +67,7 @@ class BinarySensor(Device):
                    actions=actions)
 
     def has_group_address(self, group_address):
+        """Test if device has given group address."""
         return self.group_address == group_address
 
     def set_internal_state(self, state):

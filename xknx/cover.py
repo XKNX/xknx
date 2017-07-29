@@ -47,6 +47,7 @@ class Cover(Device):
 
     @classmethod
     def from_config(cls, xknx, name, config):
+        """Initialize object from configuration structure."""
         group_address_long = \
             config.get('group_address_long')
         group_address_short = \
@@ -72,6 +73,7 @@ class Cover(Device):
 
 
     def has_group_address(self, group_address):
+        """Test if device has given group address."""
         return (self.group_address_long == group_address) \
             or (self.group_address_short == group_address) \
             or (self.group_address_position_feedback == group_address)
@@ -181,6 +183,7 @@ class Cover(Device):
 
 
     def state_addresses(self):
+        """Returns group addresses which should be requested to sync state."""
         if self.group_address_position_feedback is None:
             print("group_position not defined for device {0}" \
                 .format(self.get_name()))

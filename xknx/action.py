@@ -17,6 +17,7 @@ class Action():
 
     @classmethod
     def from_config(cls, xknx, config):
+        """Initialize object from configuration structure."""
         hook = config.get("hook", "on")
         target = config.get("target")
         method = config.get("method")

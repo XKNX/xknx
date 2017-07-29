@@ -36,6 +36,7 @@ class Light(Device):
 
     @classmethod
     def from_config(cls, xknx, name, config):
+        """Initialize object from configuration structure."""
         group_address_switch = \
             config.get('group_address_switch')
         group_address_switch_state = \
@@ -54,6 +55,7 @@ class Light(Device):
 
 
     def has_group_address(self, group_address):
+        """Test if device has given group address."""
         return (self.group_address_switch == group_address) or \
                (self.group_address_switch_state == group_address) or \
                (self.group_address_brightness == group_address) or \
@@ -125,6 +127,7 @@ class Light(Device):
                 .format(self.get_name(), action))
 
     def state_addresses(self):
+        """Returns group addresses which should be requested to sync state."""
         state_address_switch = \
             self.group_address_switch_state or \
             self.group_address_switch

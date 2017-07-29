@@ -21,6 +21,7 @@ class Time(Device):
 
     @classmethod
     def from_config(cls, xknx, name, config):
+        """Initialize object from configuration structure."""
         group_address = \
             config.get('group_address')
 
@@ -30,6 +31,7 @@ class Time(Device):
 
 
     def has_group_address(self, group_address):
+        """Test if device has given group address."""
         return self.group_address == group_address
 
 

@@ -1,6 +1,8 @@
+"""Module for reading the values of all devices from device vector from KNX bus in periodic cycles."""
 import asyncio
 
 class StateUpdater():
+    """Class for reading the values of all devices from KNX bus."""
 
     def __init__(self,
                  xknx,

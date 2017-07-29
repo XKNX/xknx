@@ -1,3 +1,10 @@
+"""
+Module for managing the climate within a room.
+
+* It reads/listens to a temperature address from KNX bus.
+* Manages and sends the desired setpoint to KNX bus.
+"""
+
 import time
 import datetime
 from xknx.knx import Address, DPTArray, DPTTemperature
@@ -6,7 +13,7 @@ from .exception import CouldNotParseTelegram
 
 
 class Climate(Device):
-
+    """Class for managing the climate."""
 
     def __init__(self,
                  xknx,
@@ -16,9 +23,7 @@ class Climate(Device):
                  device_updated_cb=None):
         """Initialize Climate class."""
         # pylint: disable=too-many-arguments
-
         Device.__init__(self, xknx, name, device_updated_cb)
-
         if isinstance(group_address_temperature, (str, int)):
             group_address_temperature = Address(group_address_temperature)
         if isinstance(group_address_setpoint, (str, int)):
@@ -37,6 +42,7 @@ class Climate(Device):
 
     @classmethod
     def from_config(cls, xknx, name, config):
+        """Initialize object from configuration structure."""
         group_address_temperature = \
             config.get('group_address_temperature')
         group_address_setpoint = \
@@ -49,6 +55,7 @@ class Climate(Device):
 
 
     def has_group_address(self, group_address):
+        """Test if device has given group address."""
         return self.group_address_temperature == group_address or \
                self.group_address_setpoint == group_address
 
@@ -97,6 +104,7 @@ class Climate(Device):
         self.after_update()
 
     def state_addresses(self):
+        """Returns group addresses which should be requested to sync state."""
         state_addresses = []
         if self.supports_temperature:
             state_addresses.append(self.group_address_temperature)
@@ -119,7 +127,6 @@ class Climate(Device):
                        self.group_address_setpoint,
                        self.temperature,
                        last_set_formatted)
-
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__

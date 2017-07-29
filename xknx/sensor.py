@@ -23,6 +23,7 @@ class Sensor(Device):
 
     @classmethod
     def from_config(cls, xknx, name, config):
+        """Initialize object from configuration structure."""
         group_address = \
             config.get('group_address')
         value_type = \
@@ -37,6 +38,7 @@ class Sensor(Device):
                    device_class=device_class)
 
     def has_group_address(self, group_address):
+        """Test if device has given group address."""
         return self.group_address == group_address
 
 
@@ -46,6 +48,7 @@ class Sensor(Device):
             self.after_update()
 
     def state_addresses(self):
+        """Returns group addresses which should be requested to sync state."""
         return [self.group_address,]
 
 

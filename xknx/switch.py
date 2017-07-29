@@ -26,6 +26,7 @@ class Switch(Device):
 
     @classmethod
     def from_config(cls, xknx, name, config):
+        """Initialize object from configuration structure."""
         group_address = \
             config.get('group_address')
         group_address_state = \
@@ -38,6 +39,7 @@ class Switch(Device):
 
 
     def has_group_address(self, group_address):
+        """Test if device has given group address."""
         return (self.group_address == group_address) or \
                (self.group_address_state == group_address)
 
@@ -67,6 +69,7 @@ class Switch(Device):
                 .format(self.get_name(), action))
 
     def state_addresses(self):
+        """Returns group addresses which should be requested to sync state."""
         return [self.group_address_state or self.group_address,]
 
     def process(self, telegram):
