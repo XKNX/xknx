@@ -28,7 +28,7 @@ class Device:
         self.device_updated_cbs.remove(device_updated_cb)
 
     def after_update(self):
-        """This method should be called by derived classes after the internal state has been changed."""
+        """Method is be called by derived classes after the internal state has been changed."""
         for device_updated_cb in self.device_updated_cbs:
             # pylint: disable=not-callable
             device_updated_cb(self)
@@ -49,14 +49,14 @@ class Device:
                 yield from value_reader.send_group_read()
 
     def send(self, group_address, payload=None):
-        """Sends payload as telegram to KNX bus."""
+        """Send payload as telegram to KNX bus."""
         telegram = Telegram()
         telegram.group_address = group_address
         telegram.payload = payload
         self.xknx.telegrams.put_nowait(telegram)
 
     def state_addresses(self):
-        """Returns group addresses which should be requested to sync state."""
+        """Return group addresses which should be requested to sync state."""
         # pylint: disable=no-self-use
         return []
 
@@ -65,7 +65,7 @@ class Device:
         pass
 
     def get_name(self):
-        """Returns name of device."""
+        """Return name of device."""
         return self.name
 
     # pylint: disable=invalid-name

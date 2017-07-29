@@ -104,7 +104,7 @@ class Climate(Device):
         self.after_update()
 
     def state_addresses(self):
-        """Returns group addresses which should be requested to sync state."""
+        """Return group addresses which should be requested to sync state."""
         state_addresses = []
         if self.supports_temperature:
             state_addresses.append(self.group_address_temperature)

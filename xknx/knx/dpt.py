@@ -1,10 +1,13 @@
-""" Implementation of Basic KNX datatypes """
+"""Implementation of Basic KNX datatypes."""
 from xknx.exceptions import ConversionError
 
 class DPTBase:
+    """Base class for KNX data types."""
+
     # pylint: disable=too-few-public-methods
     @staticmethod
     def test_bytesarray(raw, length):
+        """Test if array of raw bytes has the correct length and values of correct type."""
         if not isinstance(raw, tuple) \
                 or len(raw) != length \
                 or any(not isinstance(byte, int) for byte in raw) \
@@ -14,9 +17,9 @@ class DPTBase:
 
 
 class DPTBinary(DPTBase):
+    """The DPTBinary is a base class for all datatypes encoded directly into the first Byte of the payload (mostly integer)."""
+
     # pylint: disable=too-few-public-methods
-    """ The DPTBinary is a base class for all datatypes encoded
-    directly into the first Byte of the payload """
 
     # APCI (application layer control information)
     APCI_BITMASK = 0x3F
@@ -42,10 +45,9 @@ class DPTBinary(DPTBase):
 
 
 class DPTArray(DPTBase):
-    # pylint: disable=too-few-public-methods
-    """ The DPTArray is a base class for all datatypes appended
-    to the KNX telegram """
+    """The DPTArray is a base class for all datatypes appended to the KNX telegram."""
 
+    # pylint: disable=too-few-public-methods
     def __init__(self, value):
         """Initialize DPTArray class."""
         if isinstance(value, int):
@@ -73,6 +75,7 @@ class DPTComparator():
 
     @staticmethod
     def compare(a, b):
+        """Test if 'a' and 'b' are the same."""
         # pylint: disable=invalid-name,too-many-return-statements
         if a is None and b is None:
             return True

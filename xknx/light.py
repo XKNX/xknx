@@ -143,7 +143,7 @@ class Light(Device):
                 .format(self.get_name(), action))
 
     def state_addresses(self):
-        """Returns group addresses which should be requested to sync state."""
+        """Return group addresses which should be requested to sync state."""
         state_address_switch = \
             self.group_address_switch_state or \
             self.group_address_switch

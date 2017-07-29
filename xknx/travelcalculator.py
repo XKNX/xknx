@@ -14,6 +14,7 @@ import time
 
 class PositionType(Enum):
     """Enum class for different type of calculated positions."""
+
     UNKNOWN = 1
     CALCULATED = 2
     CONFIRMED = 3

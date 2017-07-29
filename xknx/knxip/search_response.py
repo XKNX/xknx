@@ -38,7 +38,7 @@ class SearchResponse(KNXIPBody):
 
     @property
     def device_name(self):
-        """Returns name of device."""
+        """Return name of device."""
         for dib in self.dibs:
             if isinstance(dib, DIBDeviceInformation):
                 return dib.name

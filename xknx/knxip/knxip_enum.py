@@ -1,8 +1,9 @@
+"""Module for KNX/IP Enum classes."""
+
 from enum import Enum
 
-
-
 class KNXIPServiceType(Enum):
+    """Enum class for KNX/IP Service Types."""
 
     SEARCH_REQUEST = 0x0201
     SEARCH_RESPONSE = 0x0202
@@ -24,6 +25,8 @@ class KNXIPServiceType(Enum):
 
 
 class CEMIMessageCode(Enum):
+    """Enum class for KNX/IP CEMI Message Codes."""
+
     # pylint disable=line-too-long
 
     # FROM NETWORK LAYER TO DATA LINK LAYER
@@ -46,6 +49,7 @@ class CEMIMessageCode(Enum):
 
 
 class APCICommand(Enum):
+    """Enum class for KNX/IP APCI Commands."""
 
     GROUP_READ = 0x00
     GROUP_WRITE = 0x80
@@ -53,6 +57,8 @@ class APCICommand(Enum):
 
 
 class CEMIFlags():
+    """Enum class for KNX/IP CEMI Flags."""
+
     # pylint: disable=too-few-public-methods
 
     # Bit 1/7
@@ -99,6 +105,8 @@ class CEMIFlags():
 
 
 class ConnectRequestType(Enum):
+    """Enum class for KNX/IP Connect Rquest Typess."""
+
     # Data connection used to configure a KNXnet/IP device
     DEVICE_MGMT_CONNECTION = 0x03
 
@@ -120,6 +128,8 @@ class ConnectRequestType(Enum):
 
 
 class DIBTypeCode(Enum):
+    """Enum class for KNX/IP DIB Type Codes."""
+
     # Device information e.g. KNX medium.
     DEVICE_INFO = 0x01
 
@@ -140,6 +150,8 @@ class DIBTypeCode(Enum):
 
 
 class KNXMedium(Enum):
+    """Enum class for KNX Medium."""
+
     TP1 = 0x02
     PL110 = 0x04
     # pylint: disable=invalid-name
@@ -148,6 +160,8 @@ class KNXMedium(Enum):
 
 
 class DIBServiceFamily(Enum):
+    """Enum class for KNX/IP DIB Service Family."""
+
     #  Core
     CORE = 0x02
 

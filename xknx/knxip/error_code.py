@@ -1,6 +1,10 @@
+"""Module for KNX/IP Error codes."""
+
 from enum import Enum
 
 class ErrorCode(Enum):
+    """Enum class for KNX/IP error codes."""
+
     # The connection state is normal.
     E_NO_ERROR = 0x00
 

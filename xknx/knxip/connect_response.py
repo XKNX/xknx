@@ -19,7 +19,7 @@ class ConnectResponse(KNXIPBody):
     CRD_LENGTH = 4
 
     def __init__(self):
-        """ConnectResponse __init__ object."""
+        """Initialization of ConnectResponse class."""
         super(ConnectResponse, self).__init__()
 
         self.communication_channel = 0

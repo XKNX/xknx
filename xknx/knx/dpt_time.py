@@ -1,4 +1,3 @@
-
 """ Implementation of Basic KNX Time """
 
 from enum import Enum
@@ -8,6 +7,8 @@ from xknx.exceptions import ConversionError
 from .dpt import DPTBase
 
 class DPTWeekday(Enum):
+    """Enum class for week days."""
+
     MONDAY = 1
     TUESDAY = 2
     WEDNESDAY = 3
@@ -33,7 +34,7 @@ class DPTTime(DPTBase):
         minutes = raw[1] & 0x3F
         seconds = raw[2] & 0x3F
 
-        if not DPTTime.test_range(day, hours, minutes, seconds):
+        if not DPTTime._test_range(day, hours, minutes, seconds):
             raise ConversionError(raw)
 
         return {'day':DPTWeekday(day),
@@ -51,20 +52,19 @@ class DPTTime(DPTBase):
         minutes = values.get('minutes', 0)
         seconds = values.get('seconds', 0)
 
-        if not DPTTime.test_range(day, hours, minutes, seconds):
+        if not DPTTime._test_range(day, hours, minutes, seconds):
             raise ConversionError(values)
 
         return day << 5 | hours, minutes, seconds
 
     @classmethod
-    def current_time(cls):
+    def _current_time(cls):
+        """Return current local time as struct."""
         localtime = time.localtime()
-
         day = localtime.tm_wday + 1
         hours = localtime.tm_hour
         minutes = localtime.tm_min
         seconds = localtime.tm_sec
-
         return {'day':DPTWeekday(day),
                 'hours':hours,
                 'minutes':minutes,
@@ -72,10 +72,12 @@ class DPTTime(DPTBase):
 
     @classmethod
     def current_time_as_knx(cls):
-        return cls.to_knx(cls.current_time())
+        """Return current local time as KNX bytes."""
+        return cls.to_knx(cls._current_time())
 
     @staticmethod
-    def test_range(day, hours, minutes, seconds):
+    def _test_range(day, hours, minutes, seconds):
+        """Test if values are in the correct value range."""
         if day < 0 or day > 7:
             return False
         if hours < 0 or hours > 23:

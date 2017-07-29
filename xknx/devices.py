@@ -28,14 +28,14 @@ class Devices:
 
 
     def devices_by_group_address(self, group_address):
-        """Returns device(s) by group address."""
+        """Return device(s) by group address."""
         for device in self.__devices:
             if device.has_group_address(group_address):
                 yield device
 
 
     def __getitem__(self, key):
-        """Returns device by name or by index."""
+        """Return device by name or by index."""
         for device in self.__devices:
             if device.name == key:
                 return device
@@ -45,7 +45,7 @@ class Devices:
 
 
     def __len__(self):
-        """Returns number of devices within vector."""
+        """Return number of devices within vector."""
         return len(self.__devices)
 
     def add(self, device):

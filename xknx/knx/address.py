@@ -138,7 +138,7 @@ class Address:
         self.address_format = AddressFormat.FREE
 
     def str(self):
-        """Returns the address in the written string representation."""
+        """Return the address in the written string representation."""
         if self.address_type == AddressType.PHYSICAL:
             return self._str_physical()
         elif self.address_format == AddressFormat.FREE:
@@ -151,24 +151,24 @@ class Address:
             raise TypeError()
 
     def _str_free(self):
-        """Returns the address in the written string representation in free format."""
+        """Return the address in the written string representation in free format."""
         return '{0}'.format((self.raw & 65535))
 
     def _str_level2(self):
-        """Returns the address in the written string representation in 2nd level format."""
+        """Return the address in the written string representation in 2nd level format."""
         return '{0}/{1}'.format(
             ((self.raw >> 11) & 15),
             (self.raw & 4095))
 
     def _str_level3(self):
-        """Returns the address in the written string representation 3rd level format."""
+        """Return the address in the written string representation 3rd level format."""
         return '{0}/{1}/{2}'.format(
             ((self.raw >> 11) & 31),
             ((self.raw >> 8) & 7),
             (self.raw & 255))
 
     def _str_physical(self):
-        """Returns the address in the written string representation in the format for physical addresses."""
+        """Return the address in the written string representation in the format for physical addresses."""
         return '{0}.{1}.{2}'.format(
             ((self.raw >> 12) & 15),
             ((self.raw >> 8) & 15),

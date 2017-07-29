@@ -202,7 +202,7 @@ class Cover(Device):
 
 
     def state_addresses(self):
-        """Returns group addresses which should be requested to sync state."""
+        """Return group addresses which should be requested to sync state."""
         if self.group_address_position_feedback is None:
             print("group_position not defined for device {0}" \
                 .format(self.get_name()))
@@ -224,27 +224,27 @@ class Cover(Device):
 
 
     def current_position(self):
-        """Returns current position of cover."""
+        """Return current position of cover."""
         return self.travelcalculator.current_position()
 
 
     def is_traveling(self):
-        """Returns if cover is traveling at the moment."""
+        """Return if cover is traveling at the moment."""
         return self.travelcalculator.is_traveling()
 
 
     def position_reached(self):
-        """Returns if cover has reached its final position."""
+        """Return if cover has reached its final position."""
         return self.travelcalculator.position_reached()
 
 
     def is_open(self):
-        """Returns if cover is open."""
+        """Return if cover is open."""
         return self.travelcalculator.is_open()
 
 
     def is_closed(self):
-        """Returns if cover is closed."""
+        """Return if cover is closed."""
         return self.travelcalculator.is_closed()
 
 

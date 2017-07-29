@@ -57,7 +57,7 @@ class Sensor(Device):
             self.after_update()
 
     def state_addresses(self):
-        """Returns group addresses which should be requested to sync state."""
+        """Return group addresses which should be requested to sync state."""
         return [self.group_address,]
 
     def process(self, telegram):

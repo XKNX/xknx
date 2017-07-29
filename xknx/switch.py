@@ -78,7 +78,7 @@ class Switch(Device):
                 .format(self.get_name(), action))
 
     def state_addresses(self):
-        """Returns group addresses which should be requested to sync state."""
+        """Return group addresses which should be requested to sync state."""
         return [self.group_address_state or self.group_address,]
 
     def process(self, telegram):
