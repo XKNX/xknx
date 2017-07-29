@@ -4,7 +4,8 @@ from unittest.mock import Mock
 import asyncio
 from xknx.knx import Telegram, DPTTemperature, DPTArray, Address, \
     TelegramType
-from xknx import XKNX, Climate
+from xknx import XKNX
+from xknx.devices import Climate
 
 class TestClimate(unittest.TestCase):
     """Test class for Climate objects."""

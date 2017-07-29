@@ -2,7 +2,8 @@
 import unittest
 from unittest.mock import Mock
 import asyncio
-from xknx import XKNX, BinarySensor, Action, Switch, BinarySensorState
+from xknx import XKNX
+from xknx.devices import BinarySensor, Action, Switch, BinarySensorState
 from xknx.knx import Telegram, DPTBinary
 
 class TestBinarySensor(unittest.TestCase):

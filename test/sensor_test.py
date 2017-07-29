@@ -2,7 +2,8 @@
 import unittest
 from unittest.mock import Mock
 import asyncio
-from xknx import XKNX, Sensor
+from xknx import XKNX
+from xknx.devices import Sensor
 from xknx.knx import Telegram, Address, TelegramType, DPTArray, DPTBinary
 
 class TestSensor(unittest.TestCase):

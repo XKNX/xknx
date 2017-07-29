@@ -6,7 +6,6 @@ It provides basis functionality for reading the state from the KNX bus.
 
 import asyncio
 from xknx.knx import Telegram
-from .value_reader import ValueReader
 
 class Device:
     """Base class for devices."""
@@ -38,6 +37,7 @@ class Device:
         """Read state of device from KNX bus."""
         print("Sync {0}".format(self.name))
         for group_address in self.state_addresses():
+            from xknx.core import ValueReader
             value_reader = ValueReader(self.xknx, group_address)
             if wait_for_result:
                 telegram = yield from value_reader.read()

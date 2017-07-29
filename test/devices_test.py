@@ -2,7 +2,8 @@
 import unittest
 import asyncio
 
-from xknx import XKNX, Devices, Light, Switch, BinarySensor
+from xknx import XKNX
+from xknx.devices import Devices, Light, Switch, BinarySensor
 from xknx.knx import Address
 
 # pylint: disable=too-many-public-methods,invalid-name

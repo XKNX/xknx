@@ -5,10 +5,8 @@ import asyncio
 import signal
 from xknx.knx import Address
 from xknx.io import KNXIPInterface, ConnectionConfig
-from .devices import Devices
-from .globals import Globals
-from .telegram_queue import  TelegramQueue
-from .config import Config
+from xknx.core import Globals, TelegramQueue, Config
+from xknx.devices import Devices
 
 class XKNX:
     """Class for reading and writing KNX/IP packets."""
@@ -68,7 +66,7 @@ class XKNX:
         yield from self.telegram_queue.start()
 
         if state_updater:
-            from .stateupdater import StateUpdater
+            from xknx.core import StateUpdater
             self.state_updater = StateUpdater(self)
             yield from self.state_updater.start()
 

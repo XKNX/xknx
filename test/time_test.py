@@ -2,7 +2,8 @@
 import unittest
 import asyncio
 
-from xknx import XKNX, Time
+from xknx import XKNX
+from xknx.devices import Time
 from xknx.knx import Address, TelegramType
 
 class TestTime(unittest.TestCase):

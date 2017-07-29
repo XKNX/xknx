@@ -7,13 +7,7 @@ Module for reading configfiles (xknx.yaml).
 
 import yaml
 from xknx.knx import Address, AddressType
-from .binary_sensor import BinarySensor
-from .climate import Climate
-from .time import Time
-from .light import Light
-from .switch import Switch
-from .cover import Cover
-from .sensor import Sensor
+from xknx.devices import BinarySensor, Climate, Time, Light, Switch, Cover, Sensor
 
 class Config:
     """Class for parsing xknx.yaml."""

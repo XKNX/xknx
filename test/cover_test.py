@@ -3,7 +3,8 @@
 import unittest
 from unittest.mock import Mock
 import asyncio
-from xknx import XKNX, Cover
+from xknx import XKNX
+from xknx.devices import Cover
 from xknx.knx import Telegram, Address, TelegramType, DPTBinary, DPTArray
 
 class TestCover(unittest.TestCase):

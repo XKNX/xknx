@@ -2,7 +2,8 @@
 import unittest
 from unittest.mock import Mock
 import asyncio
-from xknx import XKNX, Light
+from xknx import XKNX
+from xknx.devices import Light
 from xknx.knx import Address, Telegram, TelegramType, DPTBinary, DPTArray
 
 class TestLight(unittest.TestCase):

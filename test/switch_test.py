@@ -2,7 +2,8 @@
 import unittest
 from unittest.mock import Mock
 import asyncio
-from xknx import XKNX, Switch
+from xknx import XKNX
+from xknx.devices import Switch
 from xknx.knx import Address, Telegram, TelegramType, DPTBinary
 
 

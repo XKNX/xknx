@@ -1,7 +1,7 @@
 """Unit test for TravelCalculator objects."""
 import unittest
 import time
-from xknx import TravelCalculator
+from xknx.devices import TravelCalculator
 
 class TestTravelCalculator(unittest.TestCase):
     """Test class for TravelCalculator objects."""
