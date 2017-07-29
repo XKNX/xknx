@@ -1,3 +1,9 @@
+"""
+Module for Serialization and Deserialization of a KNX Disconnect Response information.
+
+Disconnect requests are used to disconnect a tunnel from a KNX/IP device.
+With a Disconnect Response the receiving party acknowledges the valid processing of the request.
+"""
 from .knxip_enum import KNXIPServiceType
 from .body import KNXIPBody
 from .exception import CouldNotParseKNXIP
@@ -23,6 +29,7 @@ class DisconnectResponse(KNXIPBody):
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
         def info_from_knx(info):
+            """Parse info bytes."""
             if len(info) < 2:
                 raise CouldNotParseKNXIP("Disconnect info has wrong length")
             self.communication_channel_id = info[0]

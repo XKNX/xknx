@@ -1,9 +1,19 @@
+"""
+Module for managing a cover via KNX.
+
+It provides functionality for
+
+* moving cover up/down or to a specific position
+* reading the current state from KNX bus.
+* Cover will also predict the current position.
+"""
 from xknx.knx import Address, DPTBinary, DPTArray
 from .device import Device
 from .travelcalculator import TravelCalculator
 from .exception import CouldNotParseTelegram
 
 class Cover(Device):
+    """Class for managing a cover."""
 
     # Average typical travel time of a cover
     DEFAULT_TRAVEL_TIME_DOWN = 22

@@ -1,3 +1,9 @@
+"""
+Module for serialization and deserialization of KNX/IP packets.
+
+It consists of a header and a body.
+Depending on the service_type_ident different types of body classes are instanciated.
+"""
 from .knxip_enum import KNXIPServiceType
 from .header import KNXIPHeader
 from .cemi_frame import CEMIFrame
@@ -14,8 +20,7 @@ from .connectionstate_response import ConnectionStateResponse
 from .exception import CouldNotParseKNXIP
 
 class KNXIPFrame:
-    """Abstraction for KNX IP Frames"""
-
+    """Class for KNX/IP Frames"""
 
     def __init__(self):
         """Initialize object."""
@@ -24,6 +29,7 @@ class KNXIPFrame:
 
 
     def init(self, service_type_ident):
+        """Init object by service_type_ident. Will instanciate a body object depending on service_type_ident."""
         self.header.service_type_ident = service_type_ident
 
         # pylint: disable=redefined-variable-type

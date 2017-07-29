@@ -1,3 +1,10 @@
+"""
+Module for Serialization and Deserialization of KNX Search Response.
+
+Search Requests are used to search for KNX/IP devices within the network.
+With a search response the receiving party acknowledges the valid processing of the request.
+The search response contains all information of the found device (Name, serial number, supported features.).
+"""
 from .body import KNXIPBody
 from .hpai import HPAI
 from .dib import DIB, DIBDeviceInformation

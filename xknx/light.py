@@ -1,8 +1,18 @@
+"""
+Module for managing a light via KNX.
+
+It provides functionality for
+
+* switching light 'on' and 'off'.
+* setting the brightness.
+* reading the current state from KNX bus.
+"""
 from xknx.knx  import Address, DPTBinary, DPTArray
 from .device import Device
 from .exception import CouldNotParseTelegram
 
 class Light(Device):
+    """Class for managing a light."""
 
     def __init__(self,
                  xknx,

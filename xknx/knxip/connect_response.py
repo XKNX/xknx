@@ -1,3 +1,9 @@
+"""
+Module for Serialization and Deserialization of a KNX Connect Response information.
+
+Connect requests are used to start a new tunnel connection on a KNX/IP device.
+With an Connect Response the receiving party acknowledges the valid processing of the request.
+"""
 from .body import KNXIPBody
 from .hpai import HPAI
 from .knxip_enum import ConnectRequestType, KNXIPServiceType
@@ -5,7 +11,7 @@ from .error_code import ErrorCode
 from .exception import CouldNotParseKNXIP
 
 class ConnectResponse(KNXIPBody):
-    """Representation of a KNX Connect Request."""
+    """Representation of a KNX Connect Response."""
     # pylint: disable=too-many-instance-attributes
 
     service_type = KNXIPServiceType.CONNECT_RESPONSE

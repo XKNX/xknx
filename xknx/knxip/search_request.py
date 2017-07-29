@@ -1,3 +1,8 @@
+"""
+Module for Serialization and Deserialization of KNX Search Requests.
+
+Search Requests are used to search for KNX/IP devices within the network.
+"""
 from .body import KNXIPBody
 from .hpai import HPAI
 from .knxip_enum import KNXIPServiceType

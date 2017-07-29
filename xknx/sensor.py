@@ -1,8 +1,17 @@
+"""
+Module for managing a sensor via KNX.
+
+It provides functionality for
+
+* reading the current state from KNX bus.
+* watching for state updates from KNX bus.
+"""
 from xknx.knx import Address, DPTBinary, DPTArray, \
     DPTScaling, DPTTemperature, DPTLux, DPTWsp, DPTUElCurrentmA
 from .device import Device
 
 class Sensor(Device):
+    """Class for managing a sensor."""
 
     def __init__(self,
                  xknx,
@@ -41,7 +50,6 @@ class Sensor(Device):
         """Test if device has given group address."""
         return self.group_address == group_address
 
-
     def _set_internal_state(self, state):
         """Set the internal state of the device. If state was changed after update hooks are executed."""
         if state != self.state:
@@ -52,13 +60,12 @@ class Sensor(Device):
         """Returns group addresses which should be requested to sync state."""
         return [self.group_address,]
 
-
     def process(self, telegram):
         """Process incoming telegram."""
         self._set_internal_state(telegram.payload)
 
-
     def unit_of_measurement(self):
+        """Return the unit of measurement."""
         if self.value_type == 'percent':
             return "%"
         elif self.value_type == 'temperature':
@@ -72,12 +79,11 @@ class Sensor(Device):
         else:
             return None
 
-
     def resolve_state(self):
+        """Return the current state of the sensor as a human readable string."""
         # pylint: disable=invalid-name,too-many-return-statements
         if self.state is None:
             return None
-
         elif self.value_type == 'percent' and \
                 isinstance(self.state, DPTArray) and \
                 len(self.state.value) == 1:
@@ -93,12 +99,9 @@ class Sensor(Device):
             return DPTUElCurrentmA().from_knx(self.state.value)
         elif isinstance(self.state, DPTArray):
             return ','.join('0x%02x'%i for i in self.state.value)
-
         elif isinstance(self.state, DPTBinary):
             return "{0:b}".format(self.state.value)
-
         raise TypeError()
-
 
     def __str__(self):
         """Return object as readable string."""
@@ -110,7 +113,6 @@ class Sensor(Device):
                     self.group_address,
                     self.state,
                     self.resolve_state())
-
 
     def __eq__(self, other):
         """Equal operator."""

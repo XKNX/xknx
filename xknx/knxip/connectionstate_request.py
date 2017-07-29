@@ -1,3 +1,8 @@
+"""
+Module for Serialization and Deserialization of a KNX Connetionstate Request information.
+
+Connectionstate requests are used to determine if a tunnel connection is still active and valid.
+"""
 from .knxip_enum import KNXIPServiceType
 from .body import KNXIPBody
 from .hpai import HPAI

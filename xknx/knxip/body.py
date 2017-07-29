@@ -1,6 +1,7 @@
 """Basis class for all KNX/IP bodies."""
 
 class KNXIPBody():
+    """Basis class for all KNX/IP bodies."""
 
     def calculated_length(self):
         """Get length of KNX/IP body."""

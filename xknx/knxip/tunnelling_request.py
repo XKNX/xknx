@@ -1,3 +1,8 @@
+"""
+Module for Serialization and Deserialization of a KNX Tunnel Request information.
+
+Connect requests are used to transmit a KNX telegram within an existing KNX tunnel connection.
+"""
 from .body import KNXIPBody
 from .exception import CouldNotParseKNXIP
 from .cemi_frame import CEMIFrame, CEMIMessageCode

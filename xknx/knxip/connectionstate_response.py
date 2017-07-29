@@ -1,3 +1,9 @@
+"""
+Module for Serialization and Deserialization of a KNX Connectionstate Response information.
+
+Connectionstate requests are used to determine if a tunnel connection is still active and valid.
+With a connectionstate response the receiving party acknowledges the valid processing of the request.
+"""
 from .knxip_enum import KNXIPServiceType
 from .body import KNXIPBody
 from .exception import CouldNotParseKNXIP

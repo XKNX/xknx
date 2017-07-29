@@ -1,8 +1,17 @@
+"""
+Module for managing a switch via KNX.
+
+It provides functionality for
+
+* switching 'on' and 'off'.
+* reading the current state from KNX bus.
+"""
 from xknx.knx import Address, DPTBinary
 from .exception import CouldNotParseTelegram
 from .device import Device
 
 class Switch(Device):
+    """Class for managing a switch."""
 
     def __init__(self,
                  xknx,
@@ -37,12 +46,10 @@ class Switch(Device):
                    group_address=group_address,
                    group_address_state=group_address_state)
 
-
     def has_group_address(self, group_address):
         """Test if device has given group address."""
         return (self.group_address == group_address) or \
                (self.group_address_state == group_address)
-
 
     def _set_internal_state(self, state):
         """Set the internal state of the device. If state was changed after update hooks are executed."""
@@ -51,14 +58,14 @@ class Switch(Device):
             self.after_update()
 
     def set_on(self):
+        """Switch on switch."""
         self.send(self.group_address, DPTBinary(1))
         self._set_internal_state(True)
 
-
     def set_off(self):
+        """Switch off switch."""
         self.send(self.group_address, DPTBinary(0))
         self._set_internal_state(False)
-
 
     def do(self, action):
         """Method for executing 'do' commands."""

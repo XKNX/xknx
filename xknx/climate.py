@@ -4,7 +4,6 @@ Module for managing the climate within a room.
 * It reads/listens to a temperature address from KNX bus.
 * Manages and sends the desired setpoint to KNX bus.
 """
-
 import time
 import datetime
 from xknx.knx import Address, DPTArray, DPTTemperature

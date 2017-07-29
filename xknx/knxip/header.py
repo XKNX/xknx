@@ -1,13 +1,16 @@
+"""Module for serialization and deserialization of KNX/IP Header."""
 from .knxip_enum import KNXIPServiceType
 from .body import KNXIPBody
 from .exception import CouldNotParseKNXIP
 
 class KNXIPHeader():
+    """Class for serialization and deserialization of KNX/IP Header."""
 
     HEADERLENGTH = 0x06
     PROTOCOLVERSION = 0x10
 
     def __init__(self):
+        """Initialize KNXIPHeader class."""
         self.header_length = KNXIPHeader.HEADERLENGTH
         self.protocol_version = KNXIPHeader.PROTOCOLVERSION
         self.service_type_ident = KNXIPServiceType.ROUTING_INDICATION
@@ -32,11 +35,12 @@ class KNXIPHeader():
 
         return KNXIPHeader.HEADERLENGTH
 
-    def set_length(self, cemi):
-        if not isinstance(cemi, KNXIPBody):
+    def set_length(self, body):
+        """Set length of full KNX/IP packet from body + fixed header length."""
+        if not isinstance(body, KNXIPBody):
             raise TypeError()
         self.total_length = KNXIPHeader.HEADERLENGTH + \
-                           cemi.calculated_length()
+                           body.calculated_length()
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""

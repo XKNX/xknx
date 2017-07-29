@@ -1,3 +1,8 @@
+"""
+Module for Serialization and Deserialization of a KNX Connect Request information.
+
+Connect requests are used to start a new tunnel connection on a KNX/IP device.
+"""
 from .body import KNXIPBody
 from .hpai import HPAI
 from .knxip_enum import ConnectRequestType, KNXIPServiceType
