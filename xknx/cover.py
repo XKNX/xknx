@@ -81,6 +81,7 @@ class Cover(Device):
 
 
     def __str__(self):
+        """Return object as readable string."""
         return '<Cover name="{0}" ' \
                 'group_address_long="{1}" ' \
                 'group_address_short="{2}" ' \

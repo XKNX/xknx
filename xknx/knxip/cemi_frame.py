@@ -70,9 +70,7 @@ class CEMIFrame(KNXIPBody):
                 return APCICommand.GROUP_RESPONSE
             else:
                 raise TypeError()
-
         self.cmd = resolve_cmd(telegram.telegramtype)
-
 
     def set_hops(self, hops):
         # Resetting hops
@@ -81,6 +79,7 @@ class CEMIFrame(KNXIPBody):
         self.flags |= hops << 4
 
     def calculated_length(self):
+        """Get length of KNX/IP body."""
         if self.payload is None:
             return 11
         elif isinstance(self.payload, DPTBinary):
@@ -91,7 +90,7 @@ class CEMIFrame(KNXIPBody):
             raise TypeError()
 
     def from_knx(self, cemi):
-        """Create a new CEMIFrame initialized from the given CEMI data."""
+        """Parse/deserialize from KNX/IP raw data."""
         if len(cemi) < 11:
             raise CouldNotParseKNXIP("CEMI too small")
 
@@ -136,8 +135,7 @@ class CEMIFrame(KNXIPBody):
         return 10 + offset + len(apdu)
 
     def to_knx(self):
-        """Convert the CEMI frame object to its byte representation."""
-
+        """Serialize to KNX/IP raw data."""
         if not isinstance(self.src_addr, Address):
             raise ConversionException("src_add not set")
         if not isinstance(self.dst_addr, Address):
@@ -179,6 +177,7 @@ class CEMIFrame(KNXIPBody):
 
 
     def __str__(self):
+        """Return object as readable string."""
         return '<CEMIFrame SourceAddress="{0}" DestinationAddress="{1}" ' \
                'Flags="{2:16b}" Command="{3}" payload="{4}" />'.format(
                    self.src_addr,

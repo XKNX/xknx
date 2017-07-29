@@ -46,6 +46,7 @@ class Time(Device):
 
 
     def __str__(self):
+        """Return object as readable string."""
         return '<Time name="{0}" group_address="{1}" />' \
             .format(self.name, self.group_address)
 

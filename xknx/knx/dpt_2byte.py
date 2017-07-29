@@ -16,24 +16,21 @@ class DPT2Byte(DPTBase):
 
     @classmethod
     def from_knx(cls, raw):
-        """Convert a 2 byte KNX int to a int value"""
+        """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw, 2)
         return (raw[0] * 256) + raw[1]
 
     @classmethod
     def to_knx(cls, value):
-        """Convert a int to a 2 byte KNX value"""
-
+        """Serialize to KNX/IP raw data."""
         if not cls.test_boundaries(value):
             raise ConversionError(value)
-
         return value >> 8, value  & 0xff
 
     @classmethod
     def test_boundaries(cls, value):
         return value >= cls.value_min and \
                value <= cls.value_max
-
 
 class DPTUElCurrentmA(DPT2Byte):
     """

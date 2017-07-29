@@ -17,12 +17,11 @@ class DisconnectRequest(KNXIPBody):
         self.control_endpoint = HPAI()
 
     def calculated_length(self):
+        """Get length of KNX/IP body."""
         return 2 + HPAI.LENGTH
 
-
     def from_knx(self, raw):
-        """Create a new DisconnectRequest KNXIP raw data."""
-
+        """Parse/deserialize from KNX/IP raw data."""
         def info_from_knx(info):
             if len(info) < 2:
                 raise CouldNotParseKNXIP("Disconnect info has wrong length")
@@ -34,23 +33,21 @@ class DisconnectRequest(KNXIPBody):
         pos += self.control_endpoint.from_knx(raw[pos:])
         return pos
 
-
     def to_knx(self):
-        """Convert the DisconnectRequest to its byte representation."""
-
+        """Serialize to KNX/IP raw data."""
         def info_to_knx():
+            """Serialize information bytes."""
             info = []
             info.append(self.communication_channel_id)
             info.append(0x00) # Reserved
             return info
-
         data = []
         data.extend(info_to_knx())
         data.extend(self.control_endpoint.to_knx())
         return data
 
-
     def __str__(self):
+        """Return object as readable string."""
         return '<DisconnectRequest CommunicationChannelID="{0}" ' \
             'control_endpoint="{1}" />'.format(
                 self.communication_channel_id,

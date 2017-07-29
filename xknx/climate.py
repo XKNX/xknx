@@ -104,6 +104,7 @@ class Climate(Device):
         return state_addresses
 
     def __str__(self):
+        """Return object as readable string."""
         last_set_formatted = \
                 datetime.datetime.fromtimestamp(
                     self.last_set).strftime('%Y-%m-%d %H:%M:%S') \

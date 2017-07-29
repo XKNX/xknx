@@ -30,55 +30,42 @@ class KNXIPFrame:
         if service_type_ident == \
                 KNXIPServiceType.ROUTING_INDICATION:
             self.body = CEMIFrame()
-
         elif service_type_ident == \
                 KNXIPServiceType.CONNECT_REQUEST:
             self.body = ConnectRequest()
-
         elif service_type_ident == \
                 KNXIPServiceType.CONNECT_RESPONSE:
             self.body = ConnectResponse()
-
         elif service_type_ident == \
                 KNXIPServiceType.TUNNELLING_REQUEST:
             self.body = TunnellingRequest()
-
         elif service_type_ident == \
                 KNXIPServiceType.TUNNELLING_ACK:
             self.body = TunnellingAck()
-
         elif service_type_ident == \
                 KNXIPServiceType.SEARCH_REQUEST:
             self.body = SearchRequest()
-
         elif service_type_ident == \
                 KNXIPServiceType.SEARCH_RESPONSE:
             self.body = SearchResponse()
-
         elif service_type_ident == \
                 KNXIPServiceType.DISCONNECT_REQUEST:
             self.body = DisconnectRequest()
-
         elif service_type_ident == \
                 KNXIPServiceType.DISCONNECT_RESPONSE:
             self.body = DisconnectResponse()
-
         elif service_type_ident == \
                 KNXIPServiceType.CONNECTIONSTATE_REQUEST:
             self.body = ConnectionStateRequest()
-
         elif service_type_ident == \
                 KNXIPServiceType.CONNECTIONSTATE_RESPONSE:
             self.body = ConnectionStateResponse()
-
-
-
         else:
             raise TypeError(self.header.service_type_ident)
 
 
     def from_knx(self, data):
-
+        """Parse/deserialize from KNX/IP raw data."""
         pos = self.header.from_knx(data)
 
         self.init(self.header.service_type_ident)
@@ -89,17 +76,18 @@ class KNXIPFrame:
 
         return pos
 
-    def __str__(self):
-        return '<KNXIPFrame {0}\n body="{1}" />' \
-            .format(self.header, self.body)
-
-
     def normalize(self):
+        """Normalize internal data. Necessary step for serialization."""
         self.header.set_length(self.body)
 
     def to_knx(self):
-
+        """Serialize to KNX/IP raw data."""
         data = []
         data.extend(self.header.to_knx())
         data.extend(self.body.to_knx())
         return data
+
+    def __str__(self):
+        """Return object as readable string."""
+        return '<KNXIPFrame {0}\n body="{1}" />' \
+            .format(self.header, self.body)

@@ -16,9 +16,8 @@ class DPTFloat(DPTBase):
 
     @classmethod
     def from_knx(cls, raw):
-        """Convert a 2 byte KNX float to a flaot value"""
+        """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw, 2)
-
         data = (raw[0] * 256) + raw[1]
         exponent = (data >> 11) & 0x0f
         significand = data & 0x7ff
@@ -36,16 +35,12 @@ class DPTFloat(DPTBase):
 
     @classmethod
     def to_knx(cls, value):
-        """Convert a float to a 2 byte KNX float value"""
-
+        """Serialize to KNX/IP raw data."""
         if not isinstance(value, (int, float)):
             raise ConversionError(value)
-
         if not cls.test_boundaries(value):
             raise ConversionError(value)
-
         sign = 1 if value < 0 else 0
-
         def calc_exponent(value, sign):
             exponent = 0
             significand = abs(int(value * 100))

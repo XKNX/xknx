@@ -15,22 +15,22 @@ class SearchRequest(KNXIPBody):
 
 
     def calculated_length(self):
+        """Get length of KNX/IP body."""
         return  HPAI.LENGTH
 
-
     def from_knx(self, raw):
-        """Create a new SearchRequest KNXIP raw data."""
+        """Parse/deserialize from KNX/IP raw data."""
         pos = self.discovery_endpoint.from_knx(raw)
         return pos
 
-
     def to_knx(self):
-        """Convert the SearchRequest to its byte representation."""
+        """Serialize to KNX/IP raw data."""
         data = []
         data.extend(self.discovery_endpoint.to_knx())
         return data
 
 
     def __str__(self):
+        """Return object as readable string."""
         return '<SearchRequest discovery_endpoint="{0}" />' \
             .format(self.discovery_endpoint)

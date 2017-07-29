@@ -16,6 +16,7 @@ class KNXIPHeader():
 
 
     def from_knx(self, data):
+        """Parse/deserialize from KNX/IP raw data."""
         if len(data) < KNXIPHeader.HEADERLENGTH:
             raise CouldNotParseKNXIP("wrong connection header length")
         if data[0] != KNXIPHeader.HEADERLENGTH:
@@ -37,20 +38,19 @@ class KNXIPHeader():
         self.total_length = KNXIPHeader.HEADERLENGTH + \
                            cemi.calculated_length()
 
-
     def to_knx(self):
+        """Serialize to KNX/IP raw data."""
         data = []
-
         data.append(self.header_length)
         data.append(self.protocol_version)
         data.append((self.service_type_ident.value >> 8) & 255)
         data.append(self.service_type_ident.value & 255)
         data.append((self.total_length>>8) & 255)
         data.append(self.total_length & 255)
-
         return data
 
     def __str__(self):
+        """Return object as readable string."""
         return '<KNXIPHeader HeaderLength="{0}" ProtocolVersion="{1}" ' \
                 'KNXIPServiceType="{2}" Reserve="{3}" TotalLength="{4}" />'.format(
                     self.header_length,

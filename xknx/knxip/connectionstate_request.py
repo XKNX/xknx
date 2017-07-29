@@ -13,45 +13,41 @@ class ConnectionStateRequest(KNXIPBody):
     def __init__(self):
         """ConnectionStateRequest __init__ object."""
         super(ConnectionStateRequest, self).__init__()
-
         self.communication_channel_id = 1
         self.control_endpoint = HPAI()
 
     def calculated_length(self):
+        """Get length of KNX/IP body."""
         return 2 + HPAI.LENGTH
 
-
     def from_knx(self, raw):
-        """Create a new ConnectionStateRequest KNXIP raw data."""
-
+        """Parse/deserialize from KNX/IP raw data."""
         def info_from_knx(info):
+            """Parse info bytes."""
             if len(info) < 2:
                 raise CouldNotParseKNXIP("Info has wrong length")
             self.communication_channel_id = info[0]
             # info[1] is reserved
             return 2
-
         pos = info_from_knx(raw)
         pos += self.control_endpoint.from_knx(raw[pos:])
         return pos
 
-
     def to_knx(self):
-        """Convert the ConnectionStateRequest to its byte representation."""
-
+        """Serialize to KNX/IP raw data."""
         def info_to_knx():
+            """Serialize information bytes."""
             info = []
             info.append(self.communication_channel_id)
             info.append(0x00) # Reserved
             return info
-
         data = []
         data.extend(info_to_knx())
         data.extend(self.control_endpoint.to_knx())
         return data
 
-
     def __str__(self):
+        """Return object as readable string."""
         return '<ConnectionStateRequest CommunicationChannelID="{0}", ' \
             'control_endpoint="{1}" />'.format(
                 self.communication_channel_id,

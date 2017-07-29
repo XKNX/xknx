@@ -13,12 +13,15 @@ class DIB():
         pass
 
     def calculated_length(self):
+        """Get length of KNX/IP object."""
         pass
 
     def from_knx(self, raw):
+        """Parse/deserialize from KNX/IP raw data."""
         pass
 
     def to_knx(self):
+        """Serialize to KNX/IP raw data."""
         pass
 
 
@@ -51,10 +54,11 @@ class DIBGeneric(DIB):
         self.data = []
 
     def calculated_length(self):
+        """Get length of KNX/IP object."""
         return len(self.data)
 
     def from_knx(self, raw):
-        """Create a new DIB from raw data."""
+        """Parse/deserialize from KNX/IP raw data."""
         if len(raw) < 2:
             raise CouldNotParseKNXIP("could not parse DIB header")
 
@@ -69,16 +73,15 @@ class DIBGeneric(DIB):
 
 
     def to_knx(self):
-        """Convert the DIB object to its byte representation."""
-
+        """Serialize to KNX/IP raw data."""
         data = []
         data.append(len(self.data))
         data.append(self.dtc.value)
         data.extend(self.data[2:])
         return data
 
-
     def __str__(self):
+        """Return object as readable string."""
         return '<DIB dtc="{0}" data="\'{1}\'" />'.format(
             self.dtc,
             ','.join('0x%02x'%i for i in self.data))
@@ -93,6 +96,7 @@ class DIBSuppSVCFamilies(DIB):
             self.name = name
             self.version = version
         def __str__(self):
+        """Return object as readable string."""
             return '<Family name="{0}" version="{1}" />' \
                 .format(self.name, self.version)
         def __eq__(self, other):
@@ -112,10 +116,12 @@ class DIBSuppSVCFamilies(DIB):
 
 
     def calculated_length(self):
+        """Get length of KNX/IP object."""
         return len(self.families)*2+2
 
 
     def from_knx(self, raw):
+        """Parse/deserialize from KNX/IP raw data."""
         if len(raw) < 2:
             raise CouldNotParseKNXIP("DIB header too small")
         length = raw[0]
@@ -133,6 +139,7 @@ class DIBSuppSVCFamilies(DIB):
 
 
     def to_knx(self):
+        """Serialize to KNX/IP raw data."""
         data = []
         data.append(len(self.families)*2+2)
         data.append(DIBTypeCode.SUPP_SVC_FAMILIES.value)
@@ -143,6 +150,7 @@ class DIBSuppSVCFamilies(DIB):
 
 
     def __str__(self):
+        """Return object as readable string."""
         return '<DIBSuppSVCFamilies families="[{0}]" />' \
             .format(", ".join("\n\t{0} version: {1}".format(
                 family.name, family.version) for family in self.families))
@@ -167,10 +175,12 @@ class DIBDeviceInformation(DIB):
 
 
     def calculated_length(self):
+        """Get length of KNX/IP object."""
         return DIBDeviceInformation.LENGTH
 
 
     def from_knx(self, raw):
+        """Parse/deserialize from KNX/IP raw data."""
         if len(raw) < DIBDeviceInformation.LENGTH:
             raise CouldNotParseKNXIP("wrong connection header length")
         if raw[0] != DIBDeviceInformation.LENGTH:
@@ -195,28 +205,26 @@ class DIBDeviceInformation(DIB):
 
 
     def to_knx(self):
-        """Convert the DIB object to its byte representation."""
-
+        """Serialize to KNX/IP raw data."""
         def hex_notation_to_knx(serial_number):
+            """Serialize hex notation."""
             for part in serial_number.split(":"):
                 yield int(part, 16)
-
         def ip_to_knx(ip_addr):
+            """Serialize ip."""
             for part in ip_addr.split("."):
                 yield int(part)
-
         def str_to_knx(string, length):
+            """Serialize string."""
             if len(string) > length-1:
                 string = string[:length-1]
             for char in string:
                 yield ord(char)
             for _ in range(0, 30-len(string)):
                 yield 0x00
-
         installation_project_identifier = \
             (self.project_number * 16) + \
             self.installation_number
-
         data = []
         data.append(DIBDeviceInformation.LENGTH)
         data.append(DIBTypeCode.DEVICE_INFO.value)
@@ -231,8 +239,8 @@ class DIBDeviceInformation(DIB):
         data.extend(str_to_knx(self.name, 30))
         return data
 
-
     def __str__(self):
+        """Return object as readable string."""
         return '<DIBDeviceInformation ' \
                '\n\tknx_medium="{0}" ' \
                '\n\tprogramming_mode="{1}" ' \

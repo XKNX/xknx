@@ -16,7 +16,7 @@ class DPTScaling(DPTBase):
 
     @classmethod
     def from_knx(cls, raw):
-        """Convert a 1 byte KNX Value to a scaling / percentage value"""
+        """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw, 1)
 
         value = round((raw[0]/256)*100)
@@ -28,16 +28,12 @@ class DPTScaling(DPTBase):
 
     @classmethod
     def to_knx(cls, value):
-        """Convert a scaling / percentage value to a 1 byte KNX value"""
-
+        """Serialize to KNX/IP raw data."""
         if not isinstance(value, (int, float)):
             raise ConversionError(value)
-
         if not cls.test_boundaries(value):
             raise ConversionError(value)
-
         knx_value = round(value/100*255.4)
-
         return (knx_value,)
 
     @classmethod

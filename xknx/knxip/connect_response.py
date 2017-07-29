@@ -24,14 +24,14 @@ class ConnectResponse(KNXIPBody):
 
 
     def calculated_length(self):
+        """Get length of KNX/IP body."""
         return 2 + HPAI.LENGTH + \
            ConnectResponse.CRD_LENGTH
 
     def from_knx(self, raw):
-        """Create a new ConnectResponse KNXIP raw data."""
-
-        # CRD: Connection Response Data Block
+        """Parse/deserialize from KNX/IP raw data."""
         def crd_from_knx(crd):
+            """Parse CRD (Connection Response Data Block)."""
             if crd[0] != ConnectResponse.CRD_LENGTH:
                 raise CouldNotParseKNXIP("CRD has wrong length")
             if len(crd) < ConnectResponse.CRD_LENGTH:
@@ -50,17 +50,15 @@ class ConnectResponse(KNXIPBody):
 
 
     def to_knx(self):
-        """Convert the ConnectResponse to its byte representation."""
-
-        # CRD: Connection Response Data Block
+        """Serialize to KNX/IP raw data."""
         def crd_to_knx():
+            """Serialize CRD (Connect Response Data Block)."""
             crd = []
             crd.append(ConnectResponse.CRD_LENGTH)
             crd.append(self.request_type.value)
             crd.append((self.identifier >> 8) & 255)
             crd.append(self.identifier & 255)
             return crd
-
         data = []
         data.append(self.communication_channel)
         data.append(self.status_code.value)
@@ -70,6 +68,7 @@ class ConnectResponse(KNXIPBody):
 
 
     def __str__(self):
+        """Return object as readable string."""
         return '<ConnectResponse communication_channel="{0}" ' \
             'status_code="{1}" control_endpoint="{2}" ' \
             'request_type="{3}" identifier="{4}" />' \

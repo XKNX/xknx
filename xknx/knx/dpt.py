@@ -6,6 +6,7 @@ class ConversionError(Exception):
         super(ConversionError, self).__init__("Conversion Error")
         self.i = i
     def __str__(self):
+        """Return object as readable string."""
         return '<ConversionError input="{0}" />'.format(self.i)
 
 
@@ -42,6 +43,7 @@ class DPTBinary(DPTBase):
         return DPTComparator.compare(self, other)
 
     def __str__(self):
+        """Return object as readable string."""
         return '<DPTBinary value="{0}" />'.format(self.value)
 
 
@@ -65,6 +67,7 @@ class DPTArray(DPTBase):
         return DPTComparator.compare(self, other)
 
     def __str__(self):
+        """Return object as readable string."""
         return '<DPTArray value="[{0}]" />'.format(
             ','.join(hex(b) for b in self.value))
 

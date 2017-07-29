@@ -1,8 +1,12 @@
+"""
+Abstraction to send ConnectonStateRequest and wait for ConnectionStateResponse.
+"""
 from xknx.knxip import KNXIPServiceType, KNXIPFrame, HPAI,\
     ConnectionStateResponse
 from .request_response import RequestResponse
 
 class ConnectionState(RequestResponse):
+    """Class to send ConnectonStateRequest and wait for ConnectionStateResponse."""
 
     def __init__(self, xknx, udp_client, communication_channel_id):
         self.xknx = xknx
@@ -14,6 +18,7 @@ class ConnectionState(RequestResponse):
 
 
     def create_knxipframe(self):
+        """Create KNX/IP Frame object to be sent to device."""
         (local_addr, local_port) = self.udpclient.getsockname()
         knxipframe = KNXIPFrame()
         knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_REQUEST)

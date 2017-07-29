@@ -100,6 +100,7 @@ class Sensor(Device):
 
 
     def __str__(self):
+        """Return object as readable string."""
         return '<Sensor name="{0}" ' \
                'group_address="{1}" ' \
                'state="{2}" ' \

@@ -58,6 +58,7 @@ class Action():
 
 
     def __str__(self):
+        """Return object as readable string."""
         return '<Action hook="{0}" target="{1}" method="{2}" />' \
             .format(self.hook, self.target, self.method)
 

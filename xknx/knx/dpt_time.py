@@ -24,8 +24,7 @@ class DPTTime(DPTBase):
 
     @classmethod
     def from_knx(cls, raw):
-        """Convert a 3 byte KNX date to a time dict"""
-
+        """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw, 3)
 
         day = (raw[0] & 0xE0) >> 5
@@ -43,13 +42,9 @@ class DPTTime(DPTBase):
 
     @classmethod
     def to_knx(cls, values):
-        """Convert time tuple to KNX time
-        @param value: dict with following elements: (day,hours,minutes,seconds)
-        """
-
+        """Serialize to KNX/IP raw data from dict with elements day,hours,minutes,seconds."""
         if not isinstance(values, dict):
             raise ConversionError(values)
-
         day = values.get('day', DPTWeekday.NONE).value
         hours = values.get('hours', 0)
         minutes = values.get('minutes', 0)

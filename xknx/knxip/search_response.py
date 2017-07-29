@@ -16,12 +16,12 @@ class SearchResponse(KNXIPBody):
         self.dibs = []
 
     def calculated_length(self):
+        """Get length of KNX/IP body."""
         return HPAI.LENGTH + \
             sum([dib.calculated_length() for dib in self.dibs])
 
-
     def from_knx(self, raw):
-        """Create a new SearchResponse KNXIP raw data."""
+        """Parse/deserialize from KNX/IP raw data."""
         pos = self.control_endpoint.from_knx(raw)
         while len(raw[pos:]) > 0:
             dib = DIB.determine_dib(raw[pos:])
@@ -29,9 +29,9 @@ class SearchResponse(KNXIPBody):
             self.dibs.append(dib)
         return pos
 
-
     @property
     def device_name(self):
+        """Returns name of device."""
         for dib in self.dibs:
             if isinstance(dib, DIBDeviceInformation):
                 return dib.name
@@ -39,7 +39,7 @@ class SearchResponse(KNXIPBody):
 
 
     def to_knx(self):
-        """Convert the SearchResponse to its byte representation."""
+        """Serialize to KNX/IP raw data."""
         data = []
         data.extend(self.control_endpoint.to_knx())
         for dib in self.dibs:
@@ -48,6 +48,7 @@ class SearchResponse(KNXIPBody):
 
 
     def __str__(self):
+        """Return object as readable string."""
         return '<SearchResponse control_endpoint="{0}" dibs="[\n{1}\n]" />' \
             .format(self.control_endpoint,
                     ',\n'.join(dib.__str__() for dib in self.dibs))

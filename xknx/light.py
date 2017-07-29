@@ -62,6 +62,7 @@ class Light(Device):
 
 
     def __str__(self):
+        """Return object as readable string."""
         if not self.supports_dimming:
             return '<Light name="{0}" ' \
                     'group_address_switch="{1}" ' \

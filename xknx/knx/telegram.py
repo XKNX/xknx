@@ -36,6 +36,7 @@ class Telegram:
 
 
     def __str__(self):
+        """Return object as readable string."""
         return '<Telegram group_address="{0}", payload="{1}" ' \
                 'telegramtype="{2}" direction="{3}" />'.format(
                     self.group_address,

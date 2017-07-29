@@ -35,6 +35,6 @@ pylint:
 	@pylint -j 8 --rcfile=.pylintrc xknx test/*.py *.py examples/*.py
 
 pydocstyle:
-	 @pydocstyle xknx test home-assistant-plugin	
+	 @pydocstyle xknx test/*.py test/*.py *.py examples/*.py home-assistant-plugin
 
 .PHONY: test build

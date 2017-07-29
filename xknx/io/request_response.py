@@ -1,26 +1,29 @@
+"""
+Base class for sending a specific type of KNX/IP Packet to a KNX/IP
+device and wait for the corresponding answer. Will report if the
+corresponding answer was not received.
+"""
 import asyncio
 from xknx.knxip import ErrorCode
 
-
 class RequestResponse():
+    """Class for ending a specific type of KNX/IP Packet to a KNX/IP and wait for the corresponding answer."""
+
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, xknx, udp_client, awaited_response_class, timeout_in_seconds=1):
         self.xknx = xknx
         self.udpclient = udp_client
         self.awaited_response_class = awaited_response_class
-
         self.response_received_or_timeout = asyncio.Event()
         self.success = False
-
         self.timeout_in_seconds = timeout_in_seconds
         self.timeout_callback = None
         self.timeout_handle = None
 
-
     def create_knxipframe(self):
+        """Create KNX/IP Frame object to be sent to device."""
         raise NotImplementedError('create_knxipframe has to be implemented')
-
 
     @asyncio.coroutine
     def start(self):

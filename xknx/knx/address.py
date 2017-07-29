@@ -6,6 +6,7 @@ class CouldNotParseAddress(Exception):
         self.address = address
 
     def __str__(self):
+        """Return object as readable string."""
         return '<CouldNotParseAddress address="{0}" />'.format(self.address)
 
 class AddressType(Enum):
@@ -32,6 +33,7 @@ class Address:
         return self.raw == other.raw
 
     def __str__(self):
+        """Return object as readable string."""
         return '<Address str="{0}" />'.format(self.str())
 
     def _set(self, address, address_type):
@@ -65,6 +67,7 @@ class Address:
 
 
     def to_knx(self):
+        """Serialize to KNX/IP raw data."""
         return (self.raw >> 8) & 255, self.raw & 255
 
 

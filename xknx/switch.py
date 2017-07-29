@@ -82,6 +82,7 @@ class Switch(Device):
 
 
     def __str__(self):
+        """Return object as readable string."""
         return '<Switch name="{0}" group_address="{1}" ' \
                'group_address_state="{2}" state="{3}" />' \
             .format(self.name,

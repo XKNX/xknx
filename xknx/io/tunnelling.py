@@ -1,7 +1,11 @@
+"""
+Abstraction to send a TunnelingRequest and wait for TunnelingResponse.
+"""
 from xknx.knxip import KNXIPServiceType, KNXIPFrame, TunnellingAck
 from .request_response import RequestResponse
 
 class Tunnelling(RequestResponse):
+    """Class to TunnelingRequest and wait for TunnelingResponse."""
 
     def __init__(self, xknx, udp_client, telegram, src_address, sequence_counter, communication_channel):
         # pylint: disable=too-many-arguments
@@ -17,6 +21,7 @@ class Tunnelling(RequestResponse):
 
 
     def create_knxipframe(self):
+        """Create KNX/IP Frame object to be sent to device."""
         knxipframe = KNXIPFrame()
         knxipframe.init(KNXIPServiceType.TUNNELLING_REQUEST)
         knxipframe.body.communication_channel_id = self.communication_channel

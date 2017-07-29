@@ -10,7 +10,7 @@ class HPAI():
         self.port = port
 
     def from_knx(self, raw):
-        """Create a new HPAI from raw data."""
+        """Parse/deserialize from KNX/IP raw data."""
         if len(raw) < HPAI.LENGTH:
             raise CouldNotParseKNXIP("wrong HPAI length")
         if raw[0] != HPAI.LENGTH:
@@ -25,8 +25,7 @@ class HPAI():
         return HPAI.LENGTH
 
     def to_knx(self):
-        """Convert the HPAI object to its byte representation."""
-
+        """Serialize to KNX/IP raw data."""
         def ip_addr_to_bytes(ip_addr):
             if not isinstance(ip_addr, str):
                 raise ConversionException("ip_addr is not a string")
@@ -42,10 +41,9 @@ class HPAI():
 
         return data
 
-
     def __str__(self):
+        """Return object as readable string."""
         return '<HPAI {0}:{1} />'.format(self.ip_addr, self.port)
-
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__

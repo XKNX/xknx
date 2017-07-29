@@ -22,14 +22,15 @@ class TunnellingRequest(KNXIPBody):
         self.cemi.code = CEMIMessageCode.L_Data_REQ
 
     def calculated_length(self):
+        """Get length of KNX/IP body."""
         return TunnellingRequest.HEADER_LENGTH + \
             self.cemi.calculated_length()
 
 
     def from_knx(self, raw):
-        """Create a new TunnellingRequest KNXIP raw data."""
-
+        """Parse/deserialize from KNX/IP raw data."""
         def header_from_knx(header):
+            """Parse header bytes."""
             if header[0] != TunnellingRequest.HEADER_LENGTH:
                 raise CouldNotParseKNXIP("connection header wrong length")
             if len(header) < TunnellingRequest.HEADER_LENGTH:
@@ -37,17 +38,14 @@ class TunnellingRequest(KNXIPBody):
             self.communication_channel_id = header[1]
             self.sequence_counter = header[2]
             return 4
-
         pos = header_from_knx(raw)
-
         pos += self.cemi.from_knx(raw[pos:])
-
         return pos
 
     def to_knx(self):
-        """Convert the TunnellingRequest to its byte representation."""
-
+        """Serialize to KNX/IP raw data."""
         def header_to_knx():
+            """Serialize header."""
             cri = []
             cri.append(TunnellingRequest.HEADER_LENGTH)
             cri.append(self.communication_channel_id)
@@ -62,6 +60,7 @@ class TunnellingRequest(KNXIPBody):
 
 
     def __str__(self):
+        """Return object as readable string."""
         return '<TunnellingRequest communication_channel_id="{0}" ' \
             'sequence_counter="{1}" cemi="{2}" />' \
             .format(self.communication_channel_id,
