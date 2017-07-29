@@ -96,7 +96,7 @@ class DIBSuppSVCFamilies(DIB):
             self.name = name
             self.version = version
         def __str__(self):
-        """Return object as readable string."""
+            """Return object as readable string."""
             return '<Family name="{0}" version="{1}" />' \
                 .format(self.name, self.version)
         def __eq__(self, other):
