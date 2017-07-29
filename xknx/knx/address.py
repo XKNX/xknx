@@ -27,17 +27,6 @@ class Address:
         self.address_format = None
         self._set(address, address_type)
 
-    def __eq__(self, other):
-        if other is None:
-            return False
-        if not isinstance(other, Address):
-            raise TypeError()
-        return self.raw == other.raw
-
-    def __str__(self):
-        """Return object as readable string."""
-        return '<Address str="{0}" />'.format(self.str())
-
     def _set(self, address, address_type):
 
         self.address_type = \
@@ -67,14 +56,6 @@ class Address:
         else:
             raise TypeError()
 
-
-    def to_knx(self):
-        """Serialize to KNX/IP raw data."""
-        return (self.raw >> 8) & 255, self.raw & 255
-
-
-
-    ##################################################
     def _set_str_physical(self, address):
         parts = address.split(".")
         if any(not part.isdigit() for part in parts):
@@ -189,4 +170,20 @@ class Address:
         elif isinstance(address, Address):
             return address.address_type
         else:
+
+    def to_knx(self):
+        """Serialize to KNX/IP raw data."""
+        return (self.raw >> 8) & 255, self.raw & 255
+
+    def __str__(self):
+        """Return object as readable string."""
+        return '<Address str="{0}" />'.format(self.str())
             return AddressType.GROUP
+
+    def __eq__(self, other):
+        """Equals operator."""
+        if other is None:
+            return False
+        if not isinstance(other, Address):
+            raise TypeError()
+        return self.raw == other.raw
