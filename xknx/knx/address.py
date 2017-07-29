@@ -1,6 +1,22 @@
+"""
+Module for serialization/deserialization and handling of KNX addresses.
+
+The module can handle:
+
+* physical addresses of devices.
+* (logical) group addresses.
+
+The module supports all different writings of group addresses:
+
+* 3rn level: "1/2/3"
+* 2nd level: "1/2"
+* Free format: "123"
+"""
 from enum import Enum
 
 class CouldNotParseAddress(Exception):
+    """Exception class for wrong address format."""
+
     def __init__(self, address=None):
         """Initialize CouldNotParseAddress class."""
         super(CouldNotParseAddress, self).__init__("Could not parse address")
@@ -11,15 +27,18 @@ class CouldNotParseAddress(Exception):
         return '<CouldNotParseAddress address="{0}" />'.format(self.address)
 
 class AddressType(Enum):
+    """Enum class for different type of addresses."""
     PHYSICAL = 1
     GROUP = 2
 
 class AddressFormat(Enum):
+    """Enum class for different writing of addresses."""
     LEVEL2 = 1
     LEVEL3 = 2
     FREE = 3
 
 class Address:
+    """Class for handling KNX pyhsical and group addresses."""
 
     def __init__(self, address=0, address_type=None):
         """Initialize Address class."""
@@ -130,6 +149,7 @@ class Address:
         self.address_format = AddressFormat.FREE
 
     def str(self):
+        """Returns the address in the written string representation."""
         if self.address_type == AddressType.PHYSICAL:
             return self._str_physical()
         elif self.address_format == AddressFormat.FREE:
@@ -142,20 +162,24 @@ class Address:
             raise TypeError()
 
     def _str_free(self):
+        """Returns the address in the written string representation in free format."""
         return '{0}'.format((self.raw & 65535))
 
     def _str_level2(self):
+        """Returns the address in the written string representation in 2nd level format."""
         return '{0}/{1}'.format(
             ((self.raw >> 11) & 15),
             (self.raw & 4095))
 
     def _str_level3(self):
+        """Returns the address in the written string representation 3rd level format."""
         return '{0}/{1}/{2}'.format(
             ((self.raw >> 11) & 31),
             ((self.raw >> 8) & 7),
             (self.raw & 255))
 
     def _str_physical(self):
+        """Returns the address in the written string representation in the format for physical addresses."""
         return '{0}.{1}.{2}'.format(
             ((self.raw >> 12) & 15),
             ((self.raw >> 8) & 15),
@@ -163,6 +187,7 @@ class Address:
 
     @staticmethod
     def _detect_address_type(address):
+        """Return the type of address from the style of writing."""
         # Physical addresses have either be specified explicitely or
         # in the correct notation. As default an address is a group address.
         if isinstance(address, str) and "." in address:
