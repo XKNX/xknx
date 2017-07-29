@@ -1,3 +1,6 @@
+"""
+XKNX is an Asynchronous Python module for reading and writing KNX/IP packets.
+"""
 import asyncio
 import signal
 from xknx.knx import Address
@@ -8,6 +11,8 @@ from .telegram_queue import  TelegramQueue
 from .config import Config
 
 class XKNX:
+    """Class for reading and writing KNX/IP packets."""
+
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self,
@@ -43,6 +48,7 @@ class XKNX:
 
 
     def __del__(self):
+        """Destructor. Cleaning up if this was not done before."""
         if self.started:
             try:
                 task = asyncio.Task(self.stop())
@@ -56,10 +62,9 @@ class XKNX:
               state_updater=False,
               daemon_mode=False,
               connection_config=ConnectionConfig()):
-
+        """Start XKNX module. Connect to KNX/IP devices and start state updater."""
         self.knxip_interface = KNXIPInterface(self, connection_config=connection_config)
         yield from self.knxip_interface.start()
-
         yield from self.telegram_queue.start()
 
         if state_updater:
@@ -74,26 +79,29 @@ class XKNX:
 
     @asyncio.coroutine
     def join(self):
-        """ Wait until all telegrams were processed """
+        """Wait until all telegrams were processed."""
         yield from self.telegrams.join()
 
 
-    def stop_knxip_interface_if_exists(self):
+    def _stop_knxip_interface_if_exists(self):
+        """Stop KNXIPInterface if initialized."""
         if self.knxip_interface is not None:
             yield from self.knxip_interface.stop()
             self.knxip_interface = None
 
-
     @asyncio.coroutine
     def stop(self):
+        """Stop XKNX module."""
         yield from self.join()
         yield from self.telegram_queue.stop()
-        yield from self.stop_knxip_interface_if_exists()
+        yield from self._stop_knxip_interface_if_exists()
         self.started = False
 
     @asyncio.coroutine
     def loop_until_sigint(self):
+        """Loop until Crtl-C was pressed."""
         def sigint_handler():
+            """Callback for having Ctrl-C received."""
             self.sigint_received.set()
         self.loop.add_signal_handler(signal.SIGINT, sigint_handler)
         print('Press Ctrl+C to stop')
