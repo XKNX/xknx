@@ -3,11 +3,10 @@ Module for Serialization and Deserialization of a KNX Connetionstate Request inf
 
 Connectionstate requests are used to determine if a tunnel connection is still active and valid.
 """
+from xknx.exceptions import CouldNotParseKNXIP
 from .knxip_enum import KNXIPServiceType
 from .body import KNXIPBody
 from .hpai import HPAI
-from .exception import CouldNotParseKNXIP
-
 
 class ConnectionStateRequest(KNXIPBody):
     """Representation of a KNX Connection State Request."""

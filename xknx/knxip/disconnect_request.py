@@ -3,10 +3,10 @@ Module for Serialization and Deserialization of a KNX Disconnect Request informa
 
 Connect requests are used to disconnect a tunnel from a KNX/IP device.
 """
+from xknx.exceptions import CouldNotParseKNXIP
 from .knxip_enum import KNXIPServiceType
 from .body import KNXIPBody
 from .hpai import HPAI
-from .exception import CouldNotParseKNXIP
 
 class DisconnectRequest(KNXIPBody):
     """Representation of a KNX Disconnect Request."""

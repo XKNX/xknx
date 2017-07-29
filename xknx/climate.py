@@ -7,8 +7,8 @@ Module for managing the climate within a room.
 import time
 import datetime
 from xknx.knx import Address, DPTArray, DPTTemperature
+from xknx.exceptions import CouldNotParseTelegram
 from .device import Device
-from .exception import CouldNotParseTelegram
 
 
 class Climate(Device):

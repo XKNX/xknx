@@ -8,8 +8,8 @@ A KNX/IP Search Response may contain several DIBs of different types:
 * DIBGeneric:           General Information (fallback for unknown dib type codes)
 
 """
+from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knx import Address, AddressType
-from .exception import CouldNotParseKNXIP
 from .knxip_enum import DIBTypeCode, KNXMedium, DIBServiceFamily
 
 class DIB():

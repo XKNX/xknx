@@ -1,8 +1,8 @@
 """Unit test for KNX float object."""
 import unittest
 
-from xknx.knx import DPTFloat, DPTTemperature, DPTHumidity, DPTLux, \
-    ConversionError
+from xknx.exceptions import ConversionError
+from xknx.knx import DPTFloat, DPTTemperature, DPTHumidity, DPTLux
 
 class TestDPTFloat(unittest.TestCase):
     """Test class for KNX float object."""

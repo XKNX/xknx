@@ -1,6 +1,7 @@
 """ Implementation of Basic KNX 2-Byte """
 
-from .dpt import DPTBase, ConversionError
+from xknx.exceptions import ConversionError
+from .dpt import DPTBase
 
 class DPT2Byte(DPTBase):
     """

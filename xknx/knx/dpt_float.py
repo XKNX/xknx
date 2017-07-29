@@ -1,7 +1,8 @@
 
 """ Implementation of Basic KNX Floats """
 
-from .dpt import DPTBase, ConversionError
+from xknx.exceptions import ConversionError
+from .dpt import DPTBase
 
 class DPTFloat(DPTBase):
     """

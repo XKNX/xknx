@@ -12,9 +12,9 @@ A BinarySensor may also have Actions attached which are executed after state was
 import time
 from enum import Enum
 from xknx.knx import Address
+from xknx.exceptions import CouldNotParseTelegram
 from .action import Action
 from .device import Device
-from .exception import CouldNotParseTelegram
 
 # pylint: disable=invalid-name
 class BinarySensorState(Enum):

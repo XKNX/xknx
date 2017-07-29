@@ -7,7 +7,8 @@ Due to lame support of UDP multicast within asyncio some special treatment for m
 import asyncio
 import socket
 
-from xknx.knxip import KNXIPFrame, CouldNotParseKNXIP
+from xknx.knxip import KNXIPFrame
+from xknx.exceptions import CouldNotParseKNXIP
 
 class UDPClient:
     """Class for handling (sending and receiving) UDP packets."""

@@ -8,9 +8,9 @@ It provides functionality for
 * Cover will also predict the current position.
 """
 from xknx.knx import Address, DPTBinary, DPTArray
+from xknx.exceptions import CouldNotParseTelegram
 from .device import Device
 from .travelcalculator import TravelCalculator
-from .exception import CouldNotParseTelegram
 
 class Cover(Device):
     """Class for managing a cover."""

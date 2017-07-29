@@ -1,9 +1,9 @@
 """Unit test for KNX/IP DIB objects."""
 import unittest
 
+from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import DIB, DIBGeneric, DIBDeviceInformation, \
-    DIBSuppSVCFamilies, DIBTypeCode, CouldNotParseKNXIP, \
-    KNXMedium, DIBServiceFamily
+    DIBSuppSVCFamilies, DIBTypeCode, KNXMedium, DIBServiceFamily
 from xknx.knx import Address
 
 class Test_KNXIP_DIB(unittest.TestCase):

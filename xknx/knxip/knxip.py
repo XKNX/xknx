@@ -4,6 +4,7 @@ Module for serialization and deserialization of KNX/IP packets.
 It consists of a header and a body.
 Depending on the service_type_ident different types of body classes are instanciated.
 """
+from xknx.exceptions import CouldNotParseKNXIP
 from .knxip_enum import KNXIPServiceType
 from .header import KNXIPHeader
 from .cemi_frame import CEMIFrame
@@ -17,7 +18,6 @@ from .disconnect_request import DisconnectRequest
 from .disconnect_response import DisconnectResponse
 from .connectionstate_request import ConnectionStateRequest
 from .connectionstate_response import ConnectionStateResponse
-from .exception import CouldNotParseKNXIP
 
 class KNXIPFrame:
     """Class for KNX/IP Frames"""

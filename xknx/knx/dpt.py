@@ -1,15 +1,5 @@
-
 """ Implementation of Basic KNX datatypes """
-
-class ConversionError(Exception):
-    def __init__(self, i):
-        """Initialize ConversionError class."""
-        super(ConversionError, self).__init__("Conversion Error")
-        self.i = i
-    def __str__(self):
-        """Return object as readable string."""
-        return '<ConversionError input="{0}" />'.format(self.i)
-
+from xknx.exceptions import ConversionError
 
 class DPTBase:
     # pylint: disable=too-few-public-methods

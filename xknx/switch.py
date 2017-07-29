@@ -7,7 +7,7 @@ It provides functionality for
 * reading the current state from KNX bus.
 """
 from xknx.knx import Address, DPTBinary
-from .exception import CouldNotParseTelegram
+from xknx.exceptions import CouldNotParseTelegram
 from .device import Device
 
 class Switch(Device):

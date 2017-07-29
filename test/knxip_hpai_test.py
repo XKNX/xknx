@@ -1,7 +1,8 @@
 """Unit test for KNX/IP HPAI objects."""
 import unittest
 
-from xknx.knxip import HPAI, CouldNotParseKNXIP
+from xknx.knxip import HPAI
+from xknx.exceptions import CouldNotParseKNXIP
 
 class Test_KNXIP_HPAI(unittest.TestCase):
     """Test class for KNX/IP HPAI objects."""

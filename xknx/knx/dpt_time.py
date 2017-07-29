@@ -4,7 +4,8 @@
 from enum import Enum
 import time
 
-from .dpt import DPTBase, ConversionError
+from xknx.exceptions import ConversionError
+from .dpt import DPTBase
 
 class DPTWeekday(Enum):
     MONDAY = 1

@@ -14,5 +14,4 @@ from .sensor import Sensor
 from .binary_sensor import BinarySensor, BinarySensorState
 from .config import Config
 from .globals import Globals
-from .exception import XKNXException
 from .value_reader import ValueReader

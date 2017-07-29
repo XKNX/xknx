@@ -13,18 +13,7 @@ The module supports all different writings of group addresses:
 * Free format: "123"
 """
 from enum import Enum
-
-class CouldNotParseAddress(Exception):
-    """Exception class for wrong address format."""
-
-    def __init__(self, address=None):
-        """Initialize CouldNotParseAddress class."""
-        super(CouldNotParseAddress, self).__init__("Could not parse address")
-        self.address = address
-
-    def __str__(self):
-        """Return object as readable string."""
-        return '<CouldNotParseAddress address="{0}" />'.format(self.address)
+from xknx.exceptions import CouldNotParseAddress
 
 class AddressType(Enum):
     """Enum class for different type of addresses."""

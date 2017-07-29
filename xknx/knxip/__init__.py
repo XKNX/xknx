@@ -20,4 +20,3 @@ from .connectionstate_request import ConnectionStateRequest
 from .connectionstate_response import ConnectionStateResponse
 from .hpai import HPAI
 from .dib import DIB, DIBGeneric, DIBDeviceInformation, DIBSuppSVCFamilies
-from .exception import CouldNotParseKNXIP, ConversionException

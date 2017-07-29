@@ -1,7 +1,7 @@
 """Module for serialization and deserialization of KNX/IP Header."""
+from xknx.exceptions import CouldNotParseKNXIP
 from .knxip_enum import KNXIPServiceType
 from .body import KNXIPBody
-from .exception import CouldNotParseKNXIP
 
 class KNXIPHeader():
     """Class for serialization and deserialization of KNX/IP Header."""

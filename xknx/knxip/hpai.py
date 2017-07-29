@@ -4,7 +4,7 @@ Module for serialization and deserialization of KNX HPAI (Host Protocol Address 
 A HPAI contains an IP address and a port.
 """
 
-from .exception import CouldNotParseKNXIP, ConversionException
+from xknx.exceptions import ConversionError, CouldNotParseKNXIP
 
 class HPAI():
     """Class for Module for Serialization and Deserialization."""
@@ -36,7 +36,7 @@ class HPAI():
         def ip_addr_to_bytes(ip_addr):
             """Serialize ip address to byte array."""
             if not isinstance(ip_addr, str):
-                raise ConversionException("ip_addr is not a string")
+                raise ConversionError("ip_addr is not a string")
             for i in ip_addr.split("."):
                 yield int(i)
         data = []

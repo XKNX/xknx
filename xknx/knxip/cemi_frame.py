@@ -3,12 +3,12 @@ Module for serialization and deserialization of KNX/IP CEMI Frame.
 
 A CEMI frame is the container to transport a KNX/IP Telegram to/from the KNX bus.
 """
+from xknx.exceptions import ConversionError, CouldNotParseKNXIP
 from xknx.knx import Address, AddressType, DPTBinary, DPTArray, \
     Telegram, TelegramType
 
 from .knxip_enum import CEMIMessageCode, APCICommand, CEMIFlags
 from .body import KNXIPBody
-from .exception import CouldNotParseKNXIP, ConversionException
 
 class CEMIFrame(KNXIPBody):
     """Representation of a CEMI Frame."""
@@ -41,7 +41,7 @@ class CEMIFrame(KNXIPBody):
             elif cmd == APCICommand.GROUP_RESPONSE:
                 return TelegramType.GROUP_RESPONSE
             else:
-                raise ConversionException("Telegram not implemented for {0}" \
+                raise ConversionError("Telegram not implemented for {0}" \
                                       .format(self.cmd))
 
         telegram.telegramtype = resolve_telegram_type(self.cmd)
@@ -146,9 +146,9 @@ class CEMIFrame(KNXIPBody):
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
         if not isinstance(self.src_addr, Address):
-            raise ConversionException("src_add not set")
+            raise ConversionError("src_add not set")
         if not isinstance(self.dst_addr, Address):
-            raise ConversionException("dst_add not set")
+            raise ConversionError("dst_add not set")
 
         data = []
 

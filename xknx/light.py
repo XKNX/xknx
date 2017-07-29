@@ -8,8 +8,8 @@ It provides functionality for
 * reading the current state from KNX bus.
 """
 from xknx.knx  import Address, DPTBinary, DPTArray
+from xknx.exceptions import CouldNotParseTelegram
 from .device import Device
-from .exception import CouldNotParseTelegram
 
 class Light(Device):
     """Class for managing a light."""

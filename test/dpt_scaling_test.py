@@ -1,7 +1,8 @@
 """Unit test for KNX scaling value."""
 import unittest
 
-from xknx.knx import DPTScaling, ConversionError
+from xknx.exceptions import ConversionError
+from xknx.knx import DPTScaling
 
 class TestDPTScaling(unittest.TestCase):
     """Test class for KNX scaling value."""

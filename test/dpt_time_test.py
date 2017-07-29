@@ -1,7 +1,8 @@
 """Unit test for KNX time objects."""
 import unittest
 
-from xknx.knx import DPTTime, DPTWeekday, ConversionError
+from xknx.exceptions import ConversionError
+from xknx.knx import DPTTime, DPTWeekday
 
 class TestDPTTime(unittest.TestCase):
     """Test class for KNX time objects."""
