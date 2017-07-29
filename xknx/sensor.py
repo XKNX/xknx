@@ -11,18 +11,15 @@ class Sensor(Device):
                  value_type=None,
                  device_class=None,
                  device_updated_cb=None):
+        """Initialize Sensor class."""
         # pylint: disable=too-many-arguments
-
         Device.__init__(self, xknx, name, device_updated_cb)
-
         if isinstance(group_address, (str, int)):
             group_address = Address(group_address)
-
         self.group_address = group_address
         self.value_type = value_type
         self.device_class = device_class
         self.state = None
-
 
     @classmethod
     def from_config(cls, xknx, name, config):

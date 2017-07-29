@@ -12,6 +12,7 @@ class RequestResponse():
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, xknx, udp_client, awaited_response_class, timeout_in_seconds=1):
+        """Initialize RequstResponse class."""
         self.xknx = xknx
         self.udpclient = udp_client
         self.awaited_response_class = awaited_response_class

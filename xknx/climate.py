@@ -14,6 +14,7 @@ class Climate(Device):
                  group_address_temperature=None,
                  group_address_setpoint=None,
                  device_updated_cb=None):
+        """Initialize Climate class."""
         # pylint: disable=too-many-arguments
 
         Device.__init__(self, xknx, name, device_updated_cb)

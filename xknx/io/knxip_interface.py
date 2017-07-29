@@ -13,12 +13,15 @@ class ConnectionType(Enum):
 
 
 class ConnectionConfig:
+
     # pylint: disable=too-few-public-methods
+
     def __init__(self,
                  connection_type=ConnectionType.AUTOMATIC,
                  local_ip=None,
                  gateway_ip=None,
                  gateway_port=DEFAULT_MCAST_PORT):
+        """Initialize ConnectionConfig class."""
         self.connection_type = connection_type
         self.local_ip = local_ip
         self.gateway_ip = gateway_ip
@@ -29,6 +32,7 @@ class ConnectionConfig:
 class KNXIPInterface():
 
     def __init__(self, xknx, connection_config=ConnectionConfig()):
+        """Initialize KNXIPInterface class."""
         self.xknx = xknx
         self.interface = None
         self.connection_config = connection_config

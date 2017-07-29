@@ -1,4 +1,4 @@
-"""Example on how to read a value from KNX bus"""
+"""Example on how to read a value from KNX bus."""
 import asyncio
 from xknx import XKNX, ValueReader
 from xknx.knx import Address

@@ -9,6 +9,7 @@ class UDPClient:
 
     class Callback:
         def __init__(self, callback, service_types=None):
+            """Initialize Callback class."""
             self.callback = callback
             self.service_types = service_types or []
 
@@ -24,6 +25,7 @@ class UDPClient:
                      own_ip,
                      multicast=False,
                      data_received_callback=None):
+            """Initialize UDPClientFactory class."""
             self.own_ip = own_ip
             self.multicast = multicast
             self.transport = None
@@ -48,6 +50,7 @@ class UDPClient:
             pass
 
     def __init__(self, xknx, local_addr, remote_addr, multicast=False, bind_to_multicast_addr=False):
+        """Initialize UDPClient class."""
         # pylint: disable=too-many-arguments
         if not isinstance(local_addr, tuple):
             raise TypeError()

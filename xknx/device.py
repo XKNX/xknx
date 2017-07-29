@@ -4,6 +4,7 @@ from .value_reader import ValueReader
 
 class Device:
     def __init__(self, xknx, name, device_updated_cb=None):
+        """Initialize Device class."""
         self.xknx = xknx
         self.name = name
         self.device_updated_cbs = []

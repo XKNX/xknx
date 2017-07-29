@@ -16,6 +16,7 @@ class XKNX:
                  own_address=None,
                  telegram_received_cb=None,
                  device_updated_cb=None):
+        """Initialize XKNX class."""
         # pylint: disable=too-many-arguments
         self.globals = Globals()
         self.devices = Devices()

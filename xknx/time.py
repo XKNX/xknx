@@ -10,7 +10,7 @@ class Time(Device):
                  name,
                  group_address=None,
                  device_updated_cb=None):
-
+        """Initialize Time class."""
         Device.__init__(self, xknx, name, device_updated_cb)
 
         if isinstance(group_address, (str, int)):

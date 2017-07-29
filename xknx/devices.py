@@ -4,6 +4,7 @@ from .device import Device
 class Devices:
 
     def __init__(self):
+        """Initialize Devices class."""
         self.__devices = []
         self.device_updated_cbs = []
 

@@ -9,6 +9,7 @@ class GatewayScanner():
 
     # pylint: disable=too-many-instance-attributes
     def __init__(self, xknx, timeout_in_seconds=1):
+        """Initialize GatewayScanner class."""
         self.xknx = xknx
         self.response_received_or_timeout = asyncio.Event()
         self.found = False

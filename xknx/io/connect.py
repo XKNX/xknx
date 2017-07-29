@@ -8,6 +8,7 @@ class Connect(RequestResponse):
     """Class to send a ConnectRequest and wait for ConnectResponse.."""
 
     def __init__(self, xknx, udp_client):
+        """Initialize Connect class."""
         self.xknx = xknx
         self.udp_client = udp_client
         super(Connect, self).__init__(self.xknx, self.udp_client, ConnectResponse)

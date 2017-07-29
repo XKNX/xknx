@@ -11,6 +11,7 @@ from .sensor import Sensor
 class Config:
 
     def __init__(self, xknx):
+        """Initialize Config class."""
         self.xknx = xknx
 
 

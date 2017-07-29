@@ -9,6 +9,7 @@ class ConnectionState(RequestResponse):
     """Class to send ConnectonStateRequest and wait for ConnectionStateResponse."""
 
     def __init__(self, xknx, udp_client, communication_channel_id):
+        """Initialize ConnectionState class."""
         self.xknx = xknx
         self.udp_client = udp_client
 

@@ -4,6 +4,7 @@ class Globals():
     # pylint: disable=too-few-public-methods
 
     def __init__(self):
+        """Initialize Globals class."""
         """
         own_address is the own group address of the XKNX daemon
         """

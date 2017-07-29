@@ -10,6 +10,7 @@ class Switch(Device):
                  group_address=None,
                  group_address_state=None,
                  device_updated_cb=None):
+        """Initialize Switch class."""
         # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name, device_updated_cb)
 

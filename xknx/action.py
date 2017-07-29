@@ -7,6 +7,7 @@ class Action():
                  target=None,
                  method=None,
                  counter=1):
+        """Initialize Action class."""
         # pylint: disable=too-many-arguments
         self.xknx = xknx
         self.hook = hook

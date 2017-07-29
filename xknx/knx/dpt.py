@@ -3,6 +3,7 @@
 
 class ConversionError(Exception):
     def __init__(self, i):
+        """Initialize ConversionError class."""
         super(ConversionError, self).__init__("Conversion Error")
         self.i = i
     def __str__(self):
@@ -32,6 +33,7 @@ class DPTBinary(DPTBase):
     APCI_MAX_VALUE = APCI_BITMASK
 
     def __init__(self, value):
+        """Initialize DPTBinary class."""
         if not isinstance(value, int):
             raise TypeError()
         if value > DPTBinary.APCI_BITMASK:
@@ -54,6 +56,7 @@ class DPTArray(DPTBase):
     to the KNX telegram """
 
     def __init__(self, value):
+        """Initialize DPTArray class."""
         if isinstance(value, int):
             self.value = (value,)
         elif isinstance(value, (list, bytes)):

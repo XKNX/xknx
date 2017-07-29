@@ -29,6 +29,7 @@ class Telegram:
                  telegramtype=TelegramType.GROUP_WRITE,
                  direction=TelegramDirection.OUTGOING,
                  payload=None):
+        """Initialize Telegram class."""
         self.direction = direction
         self.telegramtype = telegramtype
         self.group_address = group_address

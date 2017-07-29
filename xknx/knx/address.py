@@ -2,6 +2,7 @@ from enum import Enum
 
 class CouldNotParseAddress(Exception):
     def __init__(self, address=None):
+        """Initialize CouldNotParseAddress class."""
         super(CouldNotParseAddress, self).__init__("Could not parse address")
         self.address = address
 
@@ -21,6 +22,7 @@ class AddressFormat(Enum):
 class Address:
 
     def __init__(self, address=0, address_type=None):
+        """Initialize Address class."""
         self.raw = None
         self.address_format = None
         self._set(address, address_type)

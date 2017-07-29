@@ -23,6 +23,7 @@ class BinarySensor(Device):
                  significant_bit=1,
                  actions=None,
                  device_updated_cb=None):
+        """Initialize BinarySensor class."""
         # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name, device_updated_cb)
         if isinstance(group_address, (str, int)):

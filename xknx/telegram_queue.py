@@ -6,6 +6,7 @@ from xknx.knx import TelegramDirection, TelegramType
 class TelegramQueue():
 
     def __init__(self, xknx):
+        """Initialize TelegramQueue class."""
         self.xknx = xknx
         self.telegram_received_cbs = []
         self.queue_stopped = asyncio.Event()

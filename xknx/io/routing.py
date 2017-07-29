@@ -8,6 +8,7 @@ from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 class Routing():
 
     def __init__(self, xknx, telegram_received_callback, local_ip):
+        """Initialize Routing class."""
         self.xknx = xknx
         self.telegram_received_callback = telegram_received_callback
         self.local_ip = local_ip

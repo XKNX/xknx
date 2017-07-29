@@ -16,6 +16,7 @@ class TravelCalculator:
     # pylint: disable=too-many-instance-attributes
 
     def  __init__(self, travel_time_down, travel_time_up):
+        """Initialize TravelCalculator class."""
         self.position_type = PositionType.UNKNOWN
         self.last_known_position = 0
 

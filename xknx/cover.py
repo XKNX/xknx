@@ -19,6 +19,7 @@ class Cover(Device):
                  travel_time_down=DEFAULT_TRAVEL_TIME_DOWN,
                  travel_time_up=DEFAULT_TRAVEL_TIME_UP,
                  device_updated_cb=None):
+        """Initialize Cover class."""
         # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name, device_updated_cb)
 
