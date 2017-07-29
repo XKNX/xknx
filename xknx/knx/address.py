@@ -170,6 +170,7 @@ class Address:
         elif isinstance(address, Address):
             return address.address_type
         else:
+            return AddressType.GROUP
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
@@ -178,7 +179,6 @@ class Address:
     def __str__(self):
         """Return object as readable string."""
         return '<Address str="{0}" />'.format(self.str())
-            return AddressType.GROUP
 
     def __eq__(self, other):
         """Equal operator."""
