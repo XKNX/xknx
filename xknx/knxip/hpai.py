@@ -31,14 +31,12 @@ class HPAI():
                 raise ConversionException("ip_addr is not a string")
             for i in ip_addr.split("."):
                 yield int(i)
-
         data = []
         data.append(HPAI.LENGTH)
         data.append(HPAI.TYPE_UDP)
         data.extend(ip_addr_to_bytes(self.ip_addr))
         data.append((self.port >> 8) & 255)
         data.append(self.port & 255)
-
         return data
 
     def __str__(self):
@@ -46,4 +44,5 @@ class HPAI():
         return '<HPAI {0}:{1} />'.format(self.ip_addr, self.port)
 
     def __eq__(self, other):
+        """Equals operator."""
         return self.__dict__ == other.__dict__

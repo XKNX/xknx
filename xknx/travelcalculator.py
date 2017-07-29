@@ -120,6 +120,6 @@ class TravelCalculator:
             return self.time_set_from_outside
         return time.time()
 
-
     def __eq__(self, other):
+        """Equals operator."""
         return self.__dict__ == other.__dict__

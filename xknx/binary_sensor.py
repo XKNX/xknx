@@ -123,20 +123,19 @@ class BinarySensor(Device):
         else:
             raise CouldNotParseTelegram()
 
-
-
     def is_on(self):
+        """Returns if binary sensor is 'on'."""
         return self.state == BinarySensorState.ON
 
     def is_off(self):
+        """Returns if binary sensor is 'off'."""
         return self.state == BinarySensorState.OFF
-
 
     def __str__(self):
         """Return object as readable string."""
         return '<BinarySensor group_address="{0}" name="{1}" state="{2}"/>' \
             .format(self.group_address, self.name, self.state)
 
-
     def __eq__(self, other):
+        """Equals operator."""
         return self.__dict__ == other.__dict__

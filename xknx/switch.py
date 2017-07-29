@@ -94,6 +94,6 @@ class Switch(Device):
                     self.group_address_state,
                     self.state)
 
-
     def __eq__(self, other):
+        """Equals operator."""
         return self.__dict__ == other.__dict__

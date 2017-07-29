@@ -112,4 +112,5 @@ class Sensor(Device):
 
 
     def __eq__(self, other):
+        """Equals operator."""
         return self.__dict__ == other.__dict__

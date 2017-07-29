@@ -46,12 +46,11 @@ class Time(Device):
     def sync(self, wait_for_result=True):
         yield from self.broadcast_time()
 
-
     def __str__(self):
         """Return object as readable string."""
         return '<Time name="{0}" group_address="{1}" />' \
             .format(self.name, self.group_address)
 
-
     def __eq__(self, other):
+        """Equals operator."""
         return self.__dict__ == other.__dict__

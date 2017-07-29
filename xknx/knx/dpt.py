@@ -42,6 +42,7 @@ class DPTBinary(DPTBase):
         self.value = value
 
     def __eq__(self, other):
+        """Equals operator."""
         return DPTComparator.compare(self, other)
 
     def __str__(self):
@@ -67,6 +68,7 @@ class DPTArray(DPTBase):
             raise TypeError()
 
     def __eq__(self, other):
+        """Equals operator."""
         return DPTComparator.compare(self, other)
 
     def __str__(self):
