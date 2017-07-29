@@ -42,6 +42,7 @@ class DPTFloat(DPTBase):
             raise ConversionError(value)
         sign = 1 if value < 0 else 0
         def calc_exponent(value, sign):
+            """Return float exponent."""
             exponent = 0
             significand = abs(int(value * 100))
 

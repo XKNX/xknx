@@ -90,6 +90,7 @@ class Cover(Device):
 
 
     def supports_direct_positioning(self):
+        """Return if cover is supporting direct positioning."""
         return self.group_address_position is not None
 
 
@@ -112,6 +113,7 @@ class Cover(Device):
                     self.travel_time_up)
 
     def set_down(self):
+        """Move cover down."""
         if self.group_address_long is None:
             print("group_address_long not defined for device {0}" \
                 .format(self.get_name()))
@@ -121,6 +123,7 @@ class Cover(Device):
 
 
     def set_up(self):
+        """Move cover up."""
         if self.group_address_long is None:
             print("group_address_long not defined for device {0}" \
                 .format(self.get_name()))
@@ -130,6 +133,7 @@ class Cover(Device):
 
 
     def set_short_down(self):
+        """Move cover short down."""
         if self.group_address_short is None:
             print("group_address_short not defined for device {0}" \
                 .format(self.get_name()))
@@ -138,6 +142,7 @@ class Cover(Device):
 
 
     def set_short_up(self):
+        """Move cover short up."""
         if self.group_address_short is None:
             print("group_address_short not defined for device {0}" \
                 .format(self.get_name()))
@@ -146,12 +151,14 @@ class Cover(Device):
 
 
     def stop(self):
+        """Stop cover."""
         # Thats the KNX way of doing this. electrical engineers ... m-)
         self.set_short_down()
         self.travelcalculator.stop()
 
 
     def set_position(self, position):
+        """Move dover to a desginated postion."""
         if not self.supports_direct_positioning():
 
             current_position = self.current_position()
@@ -166,6 +173,7 @@ class Cover(Device):
 
 
     def auto_stop_if_necessary(self):
+        """Do auto stop if necessary."""
         # If device does not support auto_positioning,
         # we have to ttop the device when position is reached.
         # unless device was traveling to fully open
