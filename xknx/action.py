@@ -1,5 +1,7 @@
+"""Module for handling commands which may be attached to BinarySensor class."""
 
 class Action():
+    """Class for handling commands."""
 
     def __init__(self,
                  xknx,
@@ -22,13 +24,11 @@ class Action():
         target = config.get("target")
         method = config.get("method")
         counter = config.get("counter", 1)
-
         return cls(xknx,
                    hook=hook,
                    target=target,
                    method=method,
                    counter=counter)
-
 
     def test_counter(self, counter):
         """Test if action filters for specific counter."""
@@ -39,32 +39,28 @@ class Action():
             return True
         return counter == self.counter
 
-
     def test_if_applicable(self, state, counter=None):
+        """Test if should be executed for this state and this counter number."""
         from .binary_sensor import BinarySensorState
         if (state == BinarySensorState.ON) \
                 and (self.hook == "on") \
                 and self.test_counter(counter):
             return True
-
         if (state == BinarySensorState.OFF) \
                 and (self.hook == "off") \
                 and self.test_counter(counter):
             return True
-
         return False
 
-
     def execute(self):
+        """Execute action."""
         self.xknx.devices[self.target].do(self.method)
-
 
     def __str__(self):
         """Return object as readable string."""
         return '<Action hook="{0}" target="{1}" method="{2}" />' \
             .format(self.hook, self.target, self.method)
 
-
     def __eq__(self, other):
-        """Equals operator."""
+        """Equal operator."""
         return self.__dict__ == other.__dict__

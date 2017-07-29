@@ -92,30 +92,36 @@ class Light(Device):
 
 
     def set_internal_state(self, state):
+        """Set the internal state of the device. If state was changed after update hooks are executed."""
         if state != self.state:
             self.state = state
             self.after_update()
 
     def set_internal_brightness(self, brightness):
+        """Set the internal brightness of the device. If state was changed after update hooks are executed."""
         if brightness != self.brightness:
             self.brightness = brightness
             self.after_update()
 
     def set_on(self):
+        """Switch light on."""
         self.send(self.group_address_switch, DPTBinary(1))
         self.set_internal_state(True)
 
     def set_off(self):
+        """Switch light off."""
         self.send(self.group_address_switch, DPTBinary(0))
         self.set_internal_state(False)
 
     def set_brightness(self, brightness):
+        """Set brightness of light."""
         if not self.supports_dimming:
             return
         self.send(self.group_address_brightness, DPTArray(brightness))
         self.set_internal_brightness(brightness)
 
     def do(self, action):
+        """Method for executing 'do' commands."""
         if action == "on":
             self.set_on()
         elif action == "off":
@@ -171,5 +177,5 @@ class Light(Device):
 
 
     def __eq__(self, other):
-        """Equals operator."""
+        """Equal operator."""
         return self.__dict__ == other.__dict__

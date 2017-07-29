@@ -1,9 +1,18 @@
+"""
+Module for broadcasting time to KNX bus.
+
+Time is a virtual/pseudo device, using the infrastructure for
+beeing configured via xknx.yaml and synchronized periodically
+by StateUpdate.
+"""
+
 import asyncio
 from xknx.knx import Address, DPTArray, DPTTime
 from .device import Device
 
 
 class Time(Device):
+    """Class for virtual time device."""
 
     def __init__(self,
                  xknx,
@@ -44,6 +53,7 @@ class Time(Device):
 
     @asyncio.coroutine
     def sync(self, wait_for_result=True):
+        """Read state of device from KNX bus. Used here to broadcast time to KNX bus."""
         yield from self.broadcast_time()
 
     def __str__(self):
@@ -52,5 +62,5 @@ class Time(Device):
             .format(self.name, self.group_address)
 
     def __eq__(self, other):
-        """Equals operator."""
+        """Equal operator."""
         return self.__dict__ == other.__dict__

@@ -44,5 +44,5 @@ class HPAI():
         return '<HPAI {0}:{1} />'.format(self.ip_addr, self.port)
 
     def __eq__(self, other):
-        """Equals operator."""
+        """Equal operator."""
         return self.__dict__ == other.__dict__

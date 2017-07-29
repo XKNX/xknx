@@ -181,7 +181,7 @@ class Address:
             return AddressType.GROUP
 
     def __eq__(self, other):
-        """Equals operator."""
+        """Equal operator."""
         if other is None:
             return False
         if not isinstance(other, Address):

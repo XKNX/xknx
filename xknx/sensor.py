@@ -43,6 +43,7 @@ class Sensor(Device):
 
 
     def set_internal_state(self, state):
+        """Set the internal state of the device. If state was changed after update hooks are executed."""
         if state != self.state:
             self.state = state
             self.after_update()
@@ -112,5 +113,5 @@ class Sensor(Device):
 
 
     def __eq__(self, other):
-        """Equals operator."""
+        """Equal operator."""
         return self.__dict__ == other.__dict__

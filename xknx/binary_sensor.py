@@ -1,3 +1,14 @@
+"""
+Module for managing a binary sensor.
+
+A binary sensor can be:
+* A switch in the wall (as in the thing you press to switch on the light)
+* A motion detector
+* A reed sensor for detecting of a window/door is opened or closed.
+
+A BinarySensor may also have Actions attached which are executed after state was changed.
+"""
+
 import time
 from enum import Enum
 from xknx.knx import Address
@@ -7,10 +18,15 @@ from .exception import CouldNotParseTelegram
 
 # pylint: disable=invalid-name
 class BinarySensorState(Enum):
+    """Enum class for the state of a binary sensor."""
+
     ON = 1
     OFF = 2
 
+
 class BinarySensor(Device):
+    """Class for binary sensor."""
+
     # pylint: disable=too-many-instance-attributes
 
     CONTEXT_TIMEOUT = 1
@@ -71,6 +87,7 @@ class BinarySensor(Device):
         return self.group_address == group_address
 
     def set_internal_state(self, state):
+        """Set the internal state of the device. If state was changed after update hooks and connected Actions are executed."""
         if state != self.state:
             self.state = state
             counter = self.get_counter(state)
@@ -81,12 +98,9 @@ class BinarySensor(Device):
                     action.execute()
 
     def get_counter(self, state):
-        """
-        Returns the number of times a state was set to the same
-        value within CONTEXT_TIMEOUT.
-        Untechnically: Returns how often a button was pressed
-        """
+        """Return the number of times a state was set to the same value within CONTEXT_TIMEOUT."""
         def within_same_context():
+            """Check if state change was within same context (e.g. 'Button was pressed twice')."""
             if self.last_set is None:
                 self.last_set = time.time()
                 return False
@@ -124,11 +138,11 @@ class BinarySensor(Device):
             raise CouldNotParseTelegram()
 
     def is_on(self):
-        """Returns if binary sensor is 'on'."""
+        """Return if binary sensor is 'on'."""
         return self.state == BinarySensorState.ON
 
     def is_off(self):
-        """Returns if binary sensor is 'off'."""
+        """Return if binary sensor is 'off'."""
         return self.state == BinarySensorState.OFF
 
     def __str__(self):
@@ -137,5 +151,5 @@ class BinarySensor(Device):
             .format(self.group_address, self.name, self.state)
 
     def __eq__(self, other):
-        """Equals operator."""
+        """Equal operator."""
         return self.__dict__ == other.__dict__

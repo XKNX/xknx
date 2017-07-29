@@ -169,6 +169,7 @@ class Cover(Device):
 
 
     def do(self, action):
+        """Method for executing 'do' commands."""
         if action == "up":
             self.set_up()
         elif action == "short_up":
@@ -230,5 +231,5 @@ class Cover(Device):
 
 
     def __eq__(self, other):
-        """Equals operator."""
+        """Equal operator."""
         return self.__dict__ == other.__dict__

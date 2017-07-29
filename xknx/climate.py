@@ -59,13 +59,14 @@ class Climate(Device):
         return self.group_address_temperature == group_address or \
                self.group_address_setpoint == group_address
 
-
     def set_internal_setpoint(self, setpoint):
+        """Set internal value of setpoint. Call hooks if setpoint was changed."""
         if setpoint != self.setpoint:
             self.setpoint = setpoint
             self.after_update()
 
     def set_setpoint(self, setpoint):
+        """Send setpoint to KNX bus."""
         if not self.supports_setpoint:
             return
         self.send(self.group_address_setpoint, DPTArray(setpoint))
@@ -129,5 +130,5 @@ class Climate(Device):
                        last_set_formatted)
 
     def __eq__(self, other):
-        """Equals operator."""
+        """Equal operator."""
         return self.__dict__ == other.__dict__

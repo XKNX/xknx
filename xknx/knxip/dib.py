@@ -100,7 +100,7 @@ class DIBSuppSVCFamilies(DIB):
             return '<Family name="{0}" version="{1}" />' \
                 .format(self.name, self.version)
         def __eq__(self, other):
-            """Equals operator."""
+            """Equal operator."""
             return self.__dict__ == other.__dict__
 
 

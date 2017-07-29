@@ -121,5 +121,5 @@ class TravelCalculator:
         return time.time()
 
     def __eq__(self, other):
-        """Equals operator."""
+        """Equal operator."""
         return self.__dict__ == other.__dict__
