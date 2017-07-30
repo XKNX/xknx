@@ -42,7 +42,7 @@ class Device:
             if wait_for_result:
                 telegram = yield from value_reader.read()
                 if telegram is not None:
-                    self.process(value_reader.received_telegram)
+                    yield from self.process(value_reader.received_telegram)
                 else:
                     print("Could not read value of {0} {1}".format(self, group_address))
             else:
