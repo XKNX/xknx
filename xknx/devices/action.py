@@ -1,34 +1,17 @@
 """Module for handling commands which may be attached to BinarySensor class."""
+import asyncio
 
-class Action():
-    """Class for handling commands."""
+class ActionBase():
+    """Base Class for handling commands."""
 
     def __init__(self,
                  xknx,
                  hook="on",
-                 target=None,
-                 method=None,
                  counter=1):
-        """Initialize Action class."""
-        # pylint: disable=too-many-arguments
+        """Initialize Action_Base class."""
         self.xknx = xknx
         self.hook = hook
-        self.target = target
-        self.method = method
         self.counter = counter
-
-    @classmethod
-    def from_config(cls, xknx, config):
-        """Initialize object from configuration structure."""
-        hook = config.get("hook", "on")
-        target = config.get("target")
-        method = config.get("method")
-        counter = config.get("counter", 1)
-        return cls(xknx,
-                   hook=hook,
-                   target=target,
-                   method=method,
-                   counter=counter)
 
     def test_counter(self, counter):
         """Test if action filters for specific counter."""
@@ -52,15 +35,57 @@ class Action():
             return True
         return False
 
+    @asyncio.coroutine
+    def execute(self):
+        """Execute action. To be overwritten in derived classes."""
+        # pylint: disable=no-self-use
+        pass
+
+    def __str__(self):
+        """Return object as readable string."""
+        return '<ActionBase hook="{0}" counter="{1}"/>' \
+            .format(self.hook, self.counter)
+
+    def __eq__(self, other):
+        """Equal operator."""
+        return self.__dict__ == other.__dict__
+
+
+class Action(ActionBase):
+    """Class for handling commands."""
+
+    def __init__(self,
+                 xknx,
+                 hook="on",
+                 target=None,
+                 method=None,
+                 counter=1):
+        """Initialize Action class."""
+        # pylint: disable=too-many-arguments
+        super(Action, self).__init__(xknx, hook, counter)
+        self.xknx = xknx
+        self.target = target
+        self.method = method
+
+    @classmethod
+    def from_config(cls, xknx, config):
+        """Initialize object from configuration structure."""
+        hook = config.get("hook", "on")
+        target = config.get("target")
+        method = config.get("method")
+        counter = config.get("counter", 1)
+        return cls(xknx,
+                   hook=hook,
+                   target=target,
+                   method=method,
+                   counter=counter)
+
+    @asyncio.coroutine
     def execute(self):
         """Execute action."""
         self.xknx.devices[self.target].do(self.method)
 
     def __str__(self):
         """Return object as readable string."""
-        return '<Action hook="{0}" target="{1}" method="{2}" />' \
-            .format(self.hook, self.target, self.method)
-
-    def __eq__(self, other):
-        """Equal operator."""
-        return self.__dict__ == other.__dict__
+        return '<Action target="{1}" method="{2}" {3}/>' \
+            .format(self.hook, self.target, self.method, super(Action, self).__str__())
