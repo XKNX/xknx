@@ -47,42 +47,42 @@ class Climate(Device):
             config.get('group_address_temperature')
         group_address_setpoint = \
             config.get('group_address_setpoint')
-
         return cls(xknx,
                    name,
                    group_address_temperature=group_address_temperature,
                    group_address_setpoint=group_address_setpoint)
-
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
         return self.group_address_temperature == group_address or \
                self.group_address_setpoint == group_address
 
+    @asyncio.coroutine
     def set_internal_setpoint(self, setpoint):
         """Set internal value of setpoint. Call hooks if setpoint was changed."""
         if setpoint != self.setpoint:
             self.setpoint = setpoint
-            self.after_update()
+            yield from self.after_update()
 
+    @asyncio.coroutine
     def set_setpoint(self, setpoint):
         """Send setpoint to KNX bus."""
         if not self.supports_setpoint:
             return
-        self.send(self.group_address_setpoint, DPTArray(setpoint))
-        self.set_internal_setpoint(setpoint)
+        yield from self.send(self.group_address_setpoint, DPTArray(setpoint))
+        yield from self.set_internal_setpoint(setpoint)
 
     @asyncio.coroutine
     def process(self, telegram):
         """Process incoming telegram."""
         if telegram.group_address == self.group_address_temperature and \
                 self.supports_temperature:
-            self._process_temperature(telegram)
+            yield from self._process_temperature(telegram)
         elif telegram.group_address == self.group_address_setpoint and \
                 self.supports_setpoint:
-            self._process_setpoint(telegram)
+            yield from self._process_setpoint(telegram)
 
-
+    @asyncio.coroutine
     def _process_temperature(self, telegram):
         """Process incoming telegram for temperature."""
         if not isinstance(telegram.payload, DPTArray) \
@@ -92,9 +92,9 @@ class Climate(Device):
             (telegram.payload.value[0],
              telegram.payload.value[1]))
         self.last_set = time.time()
-        self.after_update()
+        yield from self.after_update()
 
-
+    @asyncio.coroutine
     def _process_setpoint(self, telegram):
         """Process incoming telegram for setpoint."""
         if not isinstance(telegram.payload, DPTArray) \
@@ -103,7 +103,7 @@ class Climate(Device):
         self.setpoint = DPTTemperature().from_knx(
             (telegram.payload.value[0],
              telegram.payload.value[1]))
-        self.after_update()
+        yield from self.after_update()
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""

@@ -12,9 +12,9 @@ async def main():
                     group_address='1/1/11')
     xknx.devices.add(switch)
 
-    xknx.devices["TestOutlet"].set_on()
+    await xknx.devices["TestOutlet"].set_on()
     await asyncio.sleep(2)
-    xknx.devices["TestOutlet"].set_off()
+    await xknx.devices["TestOutlet"].set_off()
     await xknx.stop()
 
 # pylint: disable=invalid-name

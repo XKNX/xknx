@@ -10,9 +10,9 @@ async def main():
     light = Light(xknx,
                   name='TestLight',
                   group_address_switch='1/0/9')
-    light.set_on()
+    await light.set_on()
     await asyncio.sleep(2)
-    light.set_off()
+    await light.set_off()
     await xknx.stop()
 
 

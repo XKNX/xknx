@@ -14,10 +14,10 @@ async def main():
                   group_address_brightness='1/0/14')
 
     for i in [0, 31, 63, 95, 127, 159, 191, 223, 255]:
-        light.set_brightness(i)
+        await light.set_brightness(i)
         await asyncio.sleep(1)
 
-    light.set_off()
+    await light.set_off()
 
     await xknx.stop()
 

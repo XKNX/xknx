@@ -58,16 +58,21 @@ class TestClimate(unittest.TestCase):
             group_address_setpoint='1/2/4')
 
         after_update_callback = Mock()
-        climate.register_device_updated_cb(after_update_callback)
-        climate.set_setpoint(23)
+        @asyncio.coroutine
+        def async_after_update_callback(device):
+            """Async callback."""
+            after_update_callback(device)
+        climate.register_device_updated_cb(async_after_update_callback)
+
+        self.loop.run_until_complete(asyncio.Task(climate.set_setpoint(23)))
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
-        climate.set_setpoint(24)
+        self.loop.run_until_complete(asyncio.Task(climate.set_setpoint(24)))
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
-        climate.set_setpoint(24)
+        self.loop.run_until_complete(asyncio.Task(climate.set_setpoint(24)))
         after_update_callback.assert_not_called()
 
 
@@ -81,7 +86,7 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_temperature='1/2/3',
             group_address_setpoint='1/2/4')
-        climate.set_setpoint(23)
+        self.loop.run_until_complete(asyncio.Task(climate.set_setpoint(23)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -94,7 +99,7 @@ class TestClimate(unittest.TestCase):
             xknx,
             'TestClimate',
             group_address_temperature='1/2/3')
-        climate.set_setpoint(23)
+        self.loop.run_until_complete(asyncio.Task(climate.set_setpoint(23)))
         self.assertEqual(xknx.telegrams.qsize(), 0)
 
     @asyncio.coroutine
@@ -162,7 +167,11 @@ class TestClimate(unittest.TestCase):
             group_address_setpoint='1/2/4')
 
         after_update_callback = Mock()
-        climate.register_device_updated_cb(after_update_callback)
+        @asyncio.coroutine
+        def async_after_update_callback(device):
+            """Async callback."""
+            after_update_callback(device)
+        climate.register_device_updated_cb(async_after_update_callback)
 
         telegram = Telegram(Address('1/2/3'))
         telegram.payload = DPTArray(DPTTemperature().to_knx(21.34))
@@ -182,7 +191,11 @@ class TestClimate(unittest.TestCase):
             group_address_setpoint='1/2/4')
 
         after_update_callback = Mock()
-        climate.register_device_updated_cb(after_update_callback)
+        @asyncio.coroutine
+        def async_after_update_callback(device):
+            """Async callback."""
+            after_update_callback(device)
+        climate.register_device_updated_cb(async_after_update_callback)
 
         telegram = Telegram(Address('1/2/4'))
         telegram.payload = DPTArray(DPTTemperature().to_knx(21.34))

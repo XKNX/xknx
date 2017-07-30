@@ -113,66 +113,67 @@ class Cover(Device):
                     self.travel_time_down,
                     self.travel_time_up)
 
+    @asyncio.coroutine
     def set_down(self):
         """Move cover down."""
         if self.group_address_long is None:
             print("group_address_long not defined for device {0}" \
                 .format(self.get_name()))
             return
-        self.send(self.group_address_long, DPTBinary(1))
+        yield from self.send(self.group_address_long, DPTBinary(1))
         self.travelcalculator.start_travel_down()
 
-
+    @asyncio.coroutine
     def set_up(self):
         """Move cover up."""
         if self.group_address_long is None:
             print("group_address_long not defined for device {0}" \
                 .format(self.get_name()))
             return
-        self.send(self.group_address_long, DPTBinary(0))
+        yield from self.send(self.group_address_long, DPTBinary(0))
         self.travelcalculator.start_travel_up()
 
-
+    @asyncio.coroutine
     def set_short_down(self):
         """Move cover short down."""
         if self.group_address_short is None:
             print("group_address_short not defined for device {0}" \
                 .format(self.get_name()))
             return
-        self.send(self.group_address_short, DPTBinary(1))
+        yield from self.send(self.group_address_short, DPTBinary(1))
 
-
+    @asyncio.coroutine
     def set_short_up(self):
         """Move cover short up."""
         if self.group_address_short is None:
             print("group_address_short not defined for device {0}" \
                 .format(self.get_name()))
             return
-        self.send(self.group_address_short, DPTBinary(0))
+        yield from self.send(self.group_address_short, DPTBinary(0))
 
-
+    @asyncio.coroutine
     def stop(self):
         """Stop cover."""
         # Thats the KNX way of doing this. electrical engineers ... m-)
-        self.set_short_down()
+        yield from self.set_short_down()
         self.travelcalculator.stop()
 
-
+    @asyncio.coroutine
     def set_position(self, position):
         """Move dover to a desginated postion."""
         if not self.supports_direct_positioning():
 
             current_position = self.current_position()
             if position > current_position:
-                self.send(self.group_address_long, DPTBinary(1))
+                yield from self.send(self.group_address_long, DPTBinary(1))
             elif position < current_position:
-                self.send(self.group_address_long, DPTBinary(0))
+                yield from self.send(self.group_address_long, DPTBinary(0))
             self.travelcalculator.start_travel(position)
             return
-        self.send(self.group_address_position, DPTArray(position))
+        yield from self.send(self.group_address_position, DPTArray(position))
         self.travelcalculator.start_travel(position)
 
-
+    @asyncio.coroutine
     def auto_stop_if_necessary(self):
         """Do auto stop if necessary."""
         # If device does not support auto_positioning,
@@ -184,19 +185,19 @@ class Cover(Device):
                 self.position_reached() and
                 not self.is_open() and
                 not self.is_closed()):
-            self.stop()
+            yield from self.stop()
 
-
+    @asyncio.coroutine
     def do(self, action):
         """Method for executing 'do' commands."""
         if action == "up":
-            self.set_up()
+            yield from self.set_up()
         elif action == "short_up":
-            self.set_short_up()
+            yield from self.set_short_up()
         elif action == "down":
-            self.set_down()
+            yield from self.set_down()
         elif action == "short_down":
-            self.set_short_down()
+            yield from self.set_short_down()
         else:
             print("{0}: Could not understand action {1}" \
                 .format(self.get_name(), action))
@@ -221,7 +222,7 @@ class Cover(Device):
                 or len(telegram.payload.value) != 1:
             raise CouldNotParseTelegram()
         self.travelcalculator.set_position(telegram.payload.value[0])
-        self.after_update()
+        yield from self.after_update()
 
 
     def current_position(self):

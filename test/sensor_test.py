@@ -106,7 +106,11 @@ class TestSensor(unittest.TestCase):
             group_address='1/2/3')
 
         after_update_callback = Mock()
-        sensor.register_device_updated_cb(after_update_callback)
+        @asyncio.coroutine
+        def async_after_update_callback(device):
+            """Async callback."""
+            after_update_callback(device)
+        sensor.register_device_updated_cb(async_after_update_callback)
 
         telegram = Telegram(Address('1/2/3'))
         telegram.payload = DPTArray((0x01, 0x02, 0x03))

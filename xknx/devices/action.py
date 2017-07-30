@@ -83,9 +83,9 @@ class Action(ActionBase):
     @asyncio.coroutine
     def execute(self):
         """Execute action."""
-        self.xknx.devices[self.target].do(self.method)
+        yield from self.xknx.devices[self.target].do(self.method)
 
     def __str__(self):
         """Return object as readable string."""
         return '<Action target="{1}" method="{2}" {3}/>' \
-            .format(self.hook, self.target, self.method, super(Action, self).__str__())
+            .format(self.target, self.method, super(Action, self).__str__())

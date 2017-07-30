@@ -101,44 +101,49 @@ class Light(Device):
                     self.state,
                     self.brightness)
 
-
+    @asyncio.coroutine
     def _set_internal_state(self, state):
         """Set the internal state of the device. If state was changed after update hooks are executed."""
         if state != self.state:
             self.state = state
-            self.after_update()
+            yield from self.after_update()
 
+    @asyncio.coroutine
     def _set_internal_brightness(self, brightness):
         """Set the internal brightness of the device. If state was changed after update hooks are executed."""
         if brightness != self.brightness:
             self.brightness = brightness
-            self.after_update()
+            yield from self.after_update()
 
+    @asyncio.coroutine
     def set_on(self):
         """Switch light on."""
-        self.send(self.group_address_switch, DPTBinary(1))
-        self._set_internal_state(True)
+        yield from self.send(self.group_address_switch, DPTBinary(1))
+        yield from self._set_internal_state(True)
 
+    @asyncio.coroutine
     def set_off(self):
         """Switch light off."""
-        self.send(self.group_address_switch, DPTBinary(0))
-        self._set_internal_state(False)
+        yield from self.send(self.group_address_switch, DPTBinary(0))
+        yield from self._set_internal_state(False)
 
+    @asyncio.coroutine
     def set_brightness(self, brightness):
         """Set brightness of light."""
         if not self.supports_dimming:
             return
-        self.send(self.group_address_brightness, DPTArray(brightness))
-        self._set_internal_brightness(brightness)
+        yield from self.send(self.group_address_brightness, DPTArray(brightness))
+        yield from self._set_internal_brightness(brightness)
 
+    @asyncio.coroutine
     def do(self, action):
         """Method for executing 'do' commands."""
         if action == "on":
-            self.set_on()
+            yield from self.set_on()
         elif action == "off":
-            self.set_off()
+            yield from self.set_off()
         elif action.startswith("brightness:"):
-            self.set_brightness(int(action[11:]))
+            yield from self.set_brightness(int(action[11:]))
         else:
             print("{0}: Could not understand action {1}" \
                 .format(self.get_name(), action))
@@ -161,12 +166,13 @@ class Light(Device):
         """Process incoming telegram."""
         if telegram.group_address == self.group_address_switch or \
             telegram.group_address == self.group_address_switch_state:
-            self._process_state(telegram)
+            yield from self._process_state(telegram)
         elif self.supports_dimming and \
                 telegram.group_address == self.group_address_brightness or \
                 telegram.group_address == self.group_address_brightness_state:
-            self._process_brightness(telegram)
+            yield from self._process_brightness(telegram)
 
+    @asyncio.coroutine
     def _process_brightness(self, telegram):
         """Process incoming telegram for brightness state."""
         print(telegram)
@@ -174,19 +180,19 @@ class Light(Device):
             len(telegram.payload.value) != 1:
             raise CouldNotParseTelegram()
 
-        self._set_internal_brightness(telegram.payload.value[0])
+        yield from self._set_internal_brightness(telegram.payload.value[0])
 
+    @asyncio.coroutine
     def _process_state(self, telegram):
         """Process incoming telegram for on/off state."""
         if not isinstance(telegram.payload, DPTBinary):
             raise CouldNotParseTelegram()
         if telegram.payload.value == 0:
-            self._set_internal_state(False)
+            yield from self._set_internal_state(False)
         elif telegram.payload.value == 1:
-            self._set_internal_state(True)
+            yield from self._set_internal_state(True)
         else:
             raise CouldNotParseTelegram()
-
 
     def __eq__(self, other):
         """Equal operator."""

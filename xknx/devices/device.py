@@ -26,11 +26,12 @@ class Device:
         """Unregister device updated callback."""
         self.device_updated_cbs.remove(device_updated_cb)
 
+    @asyncio.coroutine
     def after_update(self):
         """Method is be called by derived classes after the internal state has been changed."""
         for device_updated_cb in self.device_updated_cbs:
             # pylint: disable=not-callable
-            device_updated_cb(self)
+            yield from device_updated_cb(self)
 
     @asyncio.coroutine
     def sync(self, wait_for_result=True):
@@ -48,12 +49,13 @@ class Device:
             else:
                 yield from value_reader.send_group_read()
 
+    @asyncio.coroutine
     def send(self, group_address, payload=None):
         """Send payload as telegram to KNX bus."""
         telegram = Telegram()
         telegram.group_address = group_address
         telegram.payload = payload
-        self.xknx.telegrams.put_nowait(telegram)
+        yield from self.xknx.telegrams.put(telegram)
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
@@ -70,6 +72,7 @@ class Device:
         return self.name
 
     # pylint: disable=invalid-name
+    @asyncio.coroutine
     def do(self, action):
         """Abstract method for executing 'do' commands (e.g. do('position:10') ). Has to be implemented by derived class."""
         pass

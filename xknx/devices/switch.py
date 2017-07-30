@@ -52,28 +52,32 @@ class Switch(Device):
         return (self.group_address == group_address) or \
                (self.group_address_state == group_address)
 
+    @asyncio.coroutine
     def _set_internal_state(self, state):
         """Set the internal state of the device. If state was changed after update hooks are executed."""
         if state != self.state:
             self.state = state
-            self.after_update()
+            yield from self.after_update()
 
+    @asyncio.coroutine
     def set_on(self):
         """Switch on switch."""
-        self.send(self.group_address, DPTBinary(1))
-        self._set_internal_state(True)
+        yield from self.send(self.group_address, DPTBinary(1))
+        yield from self._set_internal_state(True)
 
+    @asyncio.coroutine
     def set_off(self):
         """Switch off switch."""
-        self.send(self.group_address, DPTBinary(0))
-        self._set_internal_state(False)
+        yield from self.send(self.group_address, DPTBinary(0))
+        yield from self._set_internal_state(False)
 
+    @asyncio.coroutine
     def do(self, action):
         """Method for executing 'do' commands."""
         if action == "on":
-            self.set_on()
+            yield from self.set_on()
         elif action == "off":
-            self.set_off()
+            yield from self.set_off()
         else:
             print("{0}: Could not understand action {1}" \
                 .format(self.get_name(), action))
@@ -89,9 +93,9 @@ class Switch(Device):
             raise CouldNotParseTelegram()
 
         if telegram.payload.value == 0:
-            self._set_internal_state(False)
+            yield from self._set_internal_state(False)
         elif telegram.payload.value == 1:
-            self._set_internal_state(True)
+            yield from self._set_internal_state(True)
         else:
             raise CouldNotParseTelegram()
 

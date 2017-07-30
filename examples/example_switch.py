@@ -10,9 +10,9 @@ async def main():
     switch = Switch(xknx,
                     name='TestOutlet',
                     group_address='1/1/11')
-    switch.set_on()
+    await switch.set_on()
     await asyncio.sleep(2)
-    switch.set_off()
+    await switch.set_off()
     await xknx.stop()
 
 # pylint: disable=invalid-name

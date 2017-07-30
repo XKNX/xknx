@@ -180,17 +180,17 @@ class TestDevices(unittest.TestCase):
         devices.add(light1)
 
         for device in devices:
-            device.set_on()
+            self.loop.run_until_complete(asyncio.Task(device.set_on()))
 
         self.assertTrue(light1.state)
 
         device2 = devices["Living-Room.Light_1"]
-        device2.set_off()
+        self.loop.run_until_complete(asyncio.Task(device2.set_off()))
 
         self.assertFalse(light1.state)
 
         for device in devices.devices_by_group_address(Address('1/6/7')):
-            device.set_on()
+            self.loop.run_until_complete(asyncio.Task(device.set_on()))
 
         self.assertTrue(light1.state)
 

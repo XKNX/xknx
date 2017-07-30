@@ -47,7 +47,7 @@ class Time(Device):
     @asyncio.coroutine
     def broadcast_time(self):
         """Broadcast time to KNX bus."""
-        self.send(
+        yield from self.send(
             self.group_address,
             DPTArray(DPTTime.current_time_as_knx()))
 

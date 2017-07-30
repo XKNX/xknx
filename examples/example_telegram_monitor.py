@@ -2,9 +2,11 @@
 import asyncio
 from xknx import XKNX
 
+@asyncio.coroutine
 def telegram_received_cb(telegram):
     """Callback invoked after a telegram was received."""
     print("Telegram received: {0}".format(telegram))
+    return True
 
 async def main():
     """Set telegram_received_cb within XKNX and connect to KNX/IP device in daemon mode."""

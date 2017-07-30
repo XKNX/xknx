@@ -26,13 +26,11 @@ class Devices:
         """Iterator."""
         yield from self.__devices
 
-
     def devices_by_group_address(self, group_address):
         """Return device(s) by group address."""
         for device in self.__devices:
             if device.has_group_address(group_address):
                 yield device
-
 
     def __getitem__(self, key):
         """Return device by name or by index."""
@@ -55,10 +53,11 @@ class Devices:
         device.register_device_updated_cb(self.device_updated)
         self.__devices.append(device)
 
+    @asyncio.coroutine
     def device_updated(self, device):
         """Callback for device being updated. Calls registered callbacks if invoked."""
         for device_updated_cb in self.device_updated_cbs:
-            device_updated_cb(device)
+            yield from device_updated_cb(device)
 
     @asyncio.coroutine
     def sync(self):

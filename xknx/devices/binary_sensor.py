@@ -8,7 +8,6 @@ A binary sensor can be:
 
 A BinarySensor may also have Actions attached which are executed after state was changed.
 """
-
 import time
 import asyncio
 from enum import Enum
@@ -93,7 +92,7 @@ class BinarySensor(Device):
         if state != self.state:
             self.state = state
             counter = self.get_counter(state)
-            self.after_update()
+            yield from self.after_update()
 
             for action in self.actions:
                 if action.test_if_applicable(self.state, counter):

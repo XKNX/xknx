@@ -31,6 +31,7 @@ class ValueReader:
     @asyncio.coroutine
     def read(self):
         """Send group read and wait for response."""
+        @asyncio.coroutine
         def telegram_received_callback(telegram):
             """Callback for having received a telegram."""
             return self.telegram_received(telegram)

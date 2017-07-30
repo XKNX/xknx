@@ -94,7 +94,7 @@ class TestLight(unittest.TestCase):
                       name="TestLight",
                       group_address_switch='1/2/3',
                       group_address_brightness='1/2/5')
-        light.set_on()
+        self.loop.run_until_complete(asyncio.Task(light.set_on()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -110,7 +110,7 @@ class TestLight(unittest.TestCase):
                       name="TestLight",
                       group_address_switch='1/2/3',
                       group_address_brightness='1/2/5')
-        light.set_off()
+        self.loop.run_until_complete(asyncio.Task(light.set_off()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -126,7 +126,7 @@ class TestLight(unittest.TestCase):
                       name="TestLight",
                       group_address_switch='1/2/3',
                       group_address_brightness='1/2/5')
-        light.set_brightness(23)
+        self.loop.run_until_complete(asyncio.Task(light.set_brightness(23)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -164,13 +164,17 @@ class TestLight(unittest.TestCase):
                       group_address_brightness='1/2/5')
 
         after_update_callback = Mock()
-        light.register_device_updated_cb(after_update_callback)
+        @asyncio.coroutine
+        def async_after_update_callback(device):
+            """Async callback."""
+            after_update_callback(device)
+
+        light.register_device_updated_cb(async_after_update_callback)
 
         telegram = Telegram(Address('1/2/3'), payload=DPTBinary(1))
         self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
 
         after_update_callback.assert_called_with(light)
-
 
     def test_process_dimm(self):
         """Test process / reading telegrams from telegram queue. Test if brightness is processed."""
@@ -196,11 +200,11 @@ class TestLight(unittest.TestCase):
                       name="TestLight",
                       group_address_switch='1/2/3',
                       group_address_brightness='1/2/5')
-        light.do("on")
+        self.loop.run_until_complete(asyncio.Task(light.do("on")))
         self.assertTrue(light.state)
-        light.do("brightness:80")
+        self.loop.run_until_complete(asyncio.Task(light.do("brightness:80")))
         self.assertEqual(light.brightness, 80)
-        light.do("off")
+        self.loop.run_until_complete(asyncio.Task(light.do("off")))
         self.assertFalse(light.state)
 
 

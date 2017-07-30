@@ -51,11 +51,12 @@ class Sensor(Device):
         """Test if device has given group address."""
         return self.group_address == group_address
 
+    @asyncio.coroutine
     def _set_internal_state(self, state):
         """Set the internal state of the device. If state was changed after update hooks are executed."""
         if state != self.state:
             self.state = state
-            self.after_update()
+            yield from self.after_update()
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
@@ -64,7 +65,7 @@ class Sensor(Device):
     @asyncio.coroutine
     def process(self, telegram):
         """Process incoming telegram."""
-        self._set_internal_state(telegram.payload)
+        yield from self._set_internal_state(telegram.payload)
 
     def unit_of_measurement(self):
         """Return the unit of measurement."""
