@@ -6,6 +6,7 @@ It provides functionality for
 * switching 'on' and 'off'.
 * reading the current state from KNX bus.
 """
+import asyncio
 from xknx.knx import Address, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
 from .device import Device
@@ -81,6 +82,7 @@ class Switch(Device):
         """Return group addresses which should be requested to sync state."""
         return [self.group_address_state or self.group_address,]
 
+    @asyncio.coroutine
     def process(self, telegram):
         """Process incoming telegram."""
         if not isinstance(telegram.payload, DPTBinary):

@@ -1,6 +1,6 @@
 """Module for handling devices like Lights, Switches or Covers."""
 from .devices import Devices
-from .action import Action
+from .action import Action, ActionBase
 from .cover import Cover
 from .travelcalculator import TravelCalculator
 from .climate import Climate

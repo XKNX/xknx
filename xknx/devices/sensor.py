@@ -6,6 +6,7 @@ It provides functionality for
 * reading the current state from KNX bus.
 * watching for state updates from KNX bus.
 """
+import asyncio
 from xknx.knx import Address, DPTBinary, DPTArray, \
     DPTScaling, DPTTemperature, DPTLux, DPTWsp, DPTUElCurrentmA
 from .device import Device
@@ -60,6 +61,7 @@ class Sensor(Device):
         """Return group addresses which should be requested to sync state."""
         return [self.group_address,]
 
+    @asyncio.coroutine
     def process(self, telegram):
         """Process incoming telegram."""
         self._set_internal_state(telegram.payload)

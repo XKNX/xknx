@@ -30,13 +30,13 @@ class TestBinarySensor(unittest.TestCase):
 
         telegram_on = Telegram()
         telegram_on.payload = DPTBinary(1)
-        binaryinput.process(telegram_on)
+        self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_on)))
 
         self.assertEqual(binaryinput.state, BinarySensorState.ON)
 
         telegram_off = Telegram()
         telegram_off.payload = DPTBinary(0)
-        binaryinput.process(telegram_off)
+        self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_off)))
 
         self.assertEqual(binaryinput.state, BinarySensorState.OFF)
 
@@ -51,19 +51,19 @@ class TestBinarySensor(unittest.TestCase):
         # Wrong significant bit: 0000 1011 = 11
         telegram_on = Telegram()
         telegram_on.payload = DPTBinary(11)
-        binaryinput.process(telegram_on)
+        self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_on)))
         self.assertEqual(binaryinput.state, BinarySensorState.OFF)
 
         # Correct significant bit: 0000 1101 = 13
         telegram_on = Telegram()
         telegram_on.payload = DPTBinary(13)
-        binaryinput.process(telegram_on)
+        self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_on)))
         self.assertEqual(binaryinput.state, BinarySensorState.ON)
 
         # Resetting, significant bit: 0000 0011 = 3
         telegram_off = Telegram()
         telegram_off.payload = DPTBinary(3)
-        binaryinput.process(telegram_off)
+        self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_off)))
         self.assertEqual(binaryinput.state, BinarySensorState.OFF)
 
 
@@ -97,7 +97,7 @@ class TestBinarySensor(unittest.TestCase):
 
         telegram_on = Telegram()
         telegram_on.payload = DPTBinary(1)
-        binary_sensor.process(telegram_on)
+        self.loop.run_until_complete(asyncio.Task(binary_sensor.process(telegram_on)))
 
         self.assertEqual(
             xknx.devices['TestInput'].state,
@@ -108,7 +108,7 @@ class TestBinarySensor(unittest.TestCase):
 
         telegram_off = Telegram()
         telegram_off.payload = DPTBinary(0)
-        binary_sensor.process(telegram_off)
+        self.loop.run_until_complete(asyncio.Task(binary_sensor.process(telegram_off)))
 
         self.assertEqual(
             xknx.devices['TestInput'].state,
@@ -125,7 +125,7 @@ class TestBinarySensor(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         binaryinput = BinarySensor(xknx, 'TestInput', '1/2/3')
         # pylint: disable=protected-access
-        binaryinput._set_internal_state(BinarySensorState.ON)
+        self.loop.run_until_complete(asyncio.Task(binaryinput._set_internal_state(BinarySensorState.ON)))
         self.assertTrue(binaryinput.is_on())
         self.assertFalse(binaryinput.is_off())
 
@@ -137,7 +137,7 @@ class TestBinarySensor(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         binaryinput = BinarySensor(xknx, 'TestInput', '1/2/3')
         # pylint: disable=protected-access
-        binaryinput._set_internal_state(BinarySensorState.OFF)
+        self.loop.run_until_complete(asyncio.Task(binaryinput._set_internal_state(BinarySensorState.OFF)))
         self.assertFalse(binaryinput.is_on())
         self.assertTrue(binaryinput.is_off())
 
@@ -156,7 +156,7 @@ class TestBinarySensor(unittest.TestCase):
 
         telegram = Telegram()
         telegram.payload = DPTBinary(1)
-        switch.process(telegram)
+        self.loop.run_until_complete(asyncio.Task(switch.process(telegram)))
 
         after_update_callback.assert_called_with(switch)
 

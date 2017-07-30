@@ -60,6 +60,7 @@ class Device:
         # pylint: disable=no-self-use
         return []
 
+    @asyncio.coroutine
     def process(self, telegram):
         """Process incoming telegram."""
         pass

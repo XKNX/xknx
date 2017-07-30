@@ -131,7 +131,7 @@ class TestClimate(unittest.TestCase):
 
         telegram = Telegram(Address('1/2/3'))
         telegram.payload = DPTArray(DPTTemperature().to_knx(21.34))
-        climate.process(telegram)
+        self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
 
         self.assertEqual(climate.temperature, 21.34)
 
@@ -146,7 +146,7 @@ class TestClimate(unittest.TestCase):
 
         telegram = Telegram(Address('1/2/3'))
         telegram.payload = DPTArray(DPTTemperature().to_knx(21.34))
-        climate.process(telegram)
+        self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
 
         self.assertEqual(climate.setpoint, 21.34)
 
@@ -166,7 +166,7 @@ class TestClimate(unittest.TestCase):
 
         telegram = Telegram(Address('1/2/3'))
         telegram.payload = DPTArray(DPTTemperature().to_knx(21.34))
-        climate.process(telegram)
+        self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
 
         after_update_callback.assert_called_with(climate)
 
@@ -186,7 +186,7 @@ class TestClimate(unittest.TestCase):
 
         telegram = Telegram(Address('1/2/4'))
         telegram.payload = DPTArray(DPTTemperature().to_knx(21.34))
-        climate.process(telegram)
+        self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
 
         after_update_callback.assert_called_with(climate)
 

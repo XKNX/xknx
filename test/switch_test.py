@@ -61,13 +61,13 @@ class TestSwitch(unittest.TestCase):
 
         telegram_on = Telegram()
         telegram_on.payload = DPTBinary(1)
-        switch.process(telegram_on)
+        self.loop.run_until_complete(asyncio.Task(switch.process(telegram_on)))
 
         self.assertEqual(switch.state, True)
 
         telegram_off = Telegram()
         telegram_off.payload = DPTBinary(0)
-        switch.process(telegram_off)
+        self.loop.run_until_complete(asyncio.Task(switch.process(telegram_off)))
 
         self.assertEqual(switch.state, False)
 
@@ -84,7 +84,7 @@ class TestSwitch(unittest.TestCase):
 
         telegram = Telegram()
         telegram.payload = DPTBinary(1)
-        switch.process(telegram)
+        self.loop.run_until_complete(asyncio.Task(switch.process(telegram)))
 
         after_update_callback.assert_called_with(switch)
 

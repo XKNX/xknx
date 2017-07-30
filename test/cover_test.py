@@ -209,7 +209,7 @@ class TestCover(unittest.TestCase):
             group_address_position_feedback='1/2/4')
 
         telegram = Telegram(Address('1/2/4'), payload=DPTArray(42))
-        cover.process(telegram)
+        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
 
         self.assertEqual(cover.current_position(), 42)
 
@@ -230,7 +230,7 @@ class TestCover(unittest.TestCase):
         cover.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(Address('1/2/4'), payload=DPTArray(42))
-        cover.process(telegram)
+        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
 
         after_update_callback.assert_called_with(cover)
 

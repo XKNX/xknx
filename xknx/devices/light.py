@@ -7,6 +7,7 @@ It provides functionality for
 * setting the brightness.
 * reading the current state from KNX bus.
 """
+import asyncio
 from xknx.knx  import Address, DPTBinary, DPTArray
 from xknx.exceptions import CouldNotParseTelegram
 from .device import Device
@@ -155,6 +156,7 @@ class Light(Device):
             state_addresses.append(state_address_brightness)
         return state_addresses
 
+    @asyncio.coroutine
     def process(self, telegram):
         """Process incoming telegram."""
         if telegram.group_address == self.group_address_switch or \

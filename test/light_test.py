@@ -146,11 +146,11 @@ class TestLight(unittest.TestCase):
         self.assertEqual(light.state, False)
 
         telegram = Telegram(Address('1/2/3'), payload=DPTBinary(1))
-        light.process(telegram)
+        self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
         self.assertEqual(light.state, True)
 
         telegram = Telegram(Address('1/2/3'), payload=DPTBinary(0))
-        light.process(telegram)
+        self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
         self.assertEqual(light.state, False)
 
 
@@ -167,7 +167,7 @@ class TestLight(unittest.TestCase):
         light.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(Address('1/2/3'), payload=DPTBinary(1))
-        light.process(telegram)
+        self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
 
         after_update_callback.assert_called_with(light)
 
@@ -182,7 +182,7 @@ class TestLight(unittest.TestCase):
         self.assertEqual(light.brightness, 0)
 
         telegram = Telegram(Address('1/2/5'), payload=DPTArray(23))
-        light.process(telegram)
+        self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
         self.assertEqual(light.brightness, 23)
 
 

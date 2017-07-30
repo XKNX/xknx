@@ -91,7 +91,7 @@ class TestSensor(unittest.TestCase):
 
         telegram = Telegram(Address('1/2/3'))
         telegram.payload = DPTArray((0x01, 0x02, 0x03))
-        sensor.process(telegram)
+        self.loop.run_until_complete(asyncio.Task(sensor.process(telegram)))
 
         self.assertEqual(sensor.state, DPTArray((0x01, 0x02, 0x03)))
 
@@ -110,7 +110,7 @@ class TestSensor(unittest.TestCase):
 
         telegram = Telegram(Address('1/2/3'))
         telegram.payload = DPTArray((0x01, 0x02, 0x03))
-        sensor.process(telegram)
+        self.loop.run_until_complete(asyncio.Task(sensor.process(telegram)))
 
         after_update_callback.assert_called_with(sensor)
 

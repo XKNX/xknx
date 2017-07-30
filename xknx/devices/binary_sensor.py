@@ -10,6 +10,7 @@ A BinarySensor may also have Actions attached which are executed after state was
 """
 
 import time
+import asyncio
 from enum import Enum
 from xknx.knx import Address
 from xknx.exceptions import CouldNotParseTelegram
@@ -86,6 +87,7 @@ class BinarySensor(Device):
         """Test if device has given group address."""
         return self.group_address == group_address
 
+    @asyncio.coroutine
     def _set_internal_state(self, state):
         """Set the internal state of the device. If state was changed after update hooks and connected Actions are executed."""
         if state != self.state:
@@ -95,7 +97,7 @@ class BinarySensor(Device):
 
             for action in self.actions:
                 if action.test_if_applicable(self.state, counter):
-                    action.execute()
+                    yield from action.execute()
 
     def get_counter(self, state):
         """Return the number of times a state was set to the same value within CONTEXT_TIMEOUT."""
@@ -125,15 +127,16 @@ class BinarySensor(Device):
                 self.count_set_off = 1
             return 1
 
+    @asyncio.coroutine
     def process(self, telegram):
         """Process incoming telegram."""
         bit_masq = 1 << (self.significant_bit-1)
         binary_value = telegram.payload.value & bit_masq != 0
 
         if binary_value == 0:
-            self._set_internal_state(BinarySensorState.OFF)
+            yield from self._set_internal_state(BinarySensorState.OFF)
         elif binary_value == 1:
-            self._set_internal_state(BinarySensorState.ON)
+            yield from self._set_internal_state(BinarySensorState.ON)
         else:
             raise CouldNotParseTelegram()
 

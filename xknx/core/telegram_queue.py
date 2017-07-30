@@ -106,7 +106,7 @@ class TelegramQueue():
             if not processed:
                 for device in self.xknx.devices.devices_by_group_address(
                         telegram.group_address):
-                    device.process(telegram)
+                    yield from device.process(telegram)
 
         elif telegram.telegramtype == TelegramType.GROUP_READ:
             #print("IGNORING GROUP READ FOR {0}".format(telegram.group_address))

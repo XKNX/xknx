@@ -7,6 +7,7 @@ It provides functionality for
 * reading the current state from KNX bus.
 * Cover will also predict the current position.
 """
+import asyncio
 from xknx.knx import Address, DPTBinary, DPTArray
 from xknx.exceptions import CouldNotParseTelegram
 from .device import Device
@@ -213,7 +214,7 @@ class Cover(Device):
 
         return [self.group_address_position_feedback,]
 
-
+    @asyncio.coroutine
     def process(self, telegram):
         """Process incoming telegram."""
         if not isinstance(telegram.payload, DPTArray) \

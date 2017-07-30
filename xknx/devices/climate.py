@@ -6,6 +6,7 @@ Module for managing the climate within a room.
 """
 import time
 import datetime
+import asyncio
 from xknx.knx import Address, DPTArray, DPTTemperature
 from xknx.exceptions import CouldNotParseTelegram
 from .device import Device
@@ -71,6 +72,7 @@ class Climate(Device):
         self.send(self.group_address_setpoint, DPTArray(setpoint))
         self.set_internal_setpoint(setpoint)
 
+    @asyncio.coroutine
     def process(self, telegram):
         """Process incoming telegram."""
         if telegram.group_address == self.group_address_temperature and \
