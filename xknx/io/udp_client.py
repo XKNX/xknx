@@ -8,7 +8,7 @@ import asyncio
 import socket
 
 from xknx.knxip import KNXIPFrame
-from xknx.exceptions import CouldNotParseKNXIP
+from xknx.exceptions import CouldNotParseKNXIP, XKNXException
 
 class UDPClient:
     """Class for handling (sending and receiving) UDP packets."""
@@ -174,7 +174,7 @@ class UDPClient:
     def send(self, knxipframe):
         """Send KNXIPFrame to socket."""
         if self.transport is None:
-            raise Exception("Transport not connected")
+            raise XKNXException("Transport not connected")
 
         if self.multicast:
             self.transport.sendto(bytes(knxipframe.to_knx()), self.remote_addr)
