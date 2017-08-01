@@ -6,6 +6,7 @@ Tunnels connect to KNX/IP devices directly via UDP and build a static UDP connec
 import asyncio
 from xknx.knx import TelegramDirection
 from xknx.knxip import TunnellingRequest, KNXIPFrame, KNXIPServiceType
+from xknx.exceptions import XKNXException
 from .disconnect import Disconnect
 from .connectionstate import ConnectionState
 from .connect import Connect
@@ -86,7 +87,7 @@ class Tunnel():
             self.udp_client)
         yield from connect.start()
         if not connect.success:
-            raise Exception("Could not establish connection")
+            raise XKNXException("Could not establish connection")
         print("Tunnel established communication_channel={0}, id={1}".format(
             connect.communication_channel, connect.identifier))
         self.communication_channel = connect.communication_channel
@@ -108,7 +109,7 @@ class Tunnel():
             self.sequence_number = 0
         yield from tunnelling.start()
         if not tunnelling.success:
-            raise Exception("Could not send telegram to tunnel")
+            raise XKNXException("Could not send telegram to tunnel")
 
     @asyncio.coroutine
     def connectionstate(self):
@@ -129,7 +130,7 @@ class Tunnel():
             communication_channel_id=self.communication_channel)
         yield from disconnect.start()
         if not disconnect.success and not ignore_error:
-            raise Exception("Could not disconnect channel")
+            raise XKNXException("Could not disconnect channel")
         else:
             print("Tunnel disconnected (communication_channel: {0})".format(self.communication_channel))
 
