@@ -9,6 +9,7 @@ KNXIPInterface manages KNX/IP Tunneling or Routing connections.
 
 import asyncio
 from enum import Enum
+from xknx.exceptions import XKNXException
 from .gateway_scanner import GatewayScanner
 
 from .routing import Routing
@@ -82,7 +83,7 @@ class KNXIPInterface():
         gatewayscanner.stop()
 
         if not gatewayscanner.found:
-            raise Exception("No Gateways found")
+            raise XKNXException("No Gateways found")
 
         if gatewayscanner.supports_tunneling:
             yield from self.start_tunnelling(gatewayscanner.found_local_ip,
