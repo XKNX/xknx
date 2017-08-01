@@ -36,7 +36,7 @@ class GatewayScanner():
     def response_rec_callback(self, knxipframe, udp_client):
         """Callback for receiving a SearchResponse."""
         if not isinstance(knxipframe.body, SearchResponse):
-            print("Cant understand knxipframe")
+            self.xknx.logger.warning("Cant understand knxipframe")
             return
 
         if not self.found:
@@ -81,14 +81,14 @@ class GatewayScanner():
                 ip_addr = af_inet[0]["addr"]
                 yield from self.search_interface(interface, ip_addr)
             except KeyError:
-                #print("NOT CONNECTED", interface)
+                self.xknx.logger.info("Could not connect to an KNX/IP device on %s", interface)
                 continue
 
 
     @asyncio.coroutine
     def search_interface(self, interface, ip_addr):
         """Search on a specific interface."""
-        print("Searching on {0} / {1}".format(interface, ip_addr))
+        self.xknx.logger.debug("Searching on %s / %s", interface, ip_addr)
 
         udpclient = UDPClient(self.xknx,
                               (ip_addr, 0),

@@ -97,10 +97,7 @@ class KNXIPInterface():
     @asyncio.coroutine
     def start_tunnelling(self, local_ip, gateway_ip, gateway_port):
         """Start KNX/IP tunnel."""
-        print("Starting tunnel to {}:{} from {}".format(
-            gateway_ip,
-            gateway_port,
-            local_ip))
+        self.xknx.logger.debug("Starting tunnel to %s:%s from %s", gateway_ip, gateway_port, local_ip)
         self.interface = Tunnel(
             self.xknx,
             self.xknx.globals.own_address,
@@ -113,7 +110,7 @@ class KNXIPInterface():
     @asyncio.coroutine
     def start_routing(self, local_ip):
         """Start KNX/IP Routing."""
-        print("Starting Routing from {}".format(local_ip))
+        self.xknx.logger.debug("Starting Routing from %s", local_ip)
         self.interface = Routing(
             self.xknx,
             self.telegram_received,

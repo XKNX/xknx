@@ -50,7 +50,7 @@ class Tunnel():
         # pylint: disable=unused-argument
         if knxipframe.header.service_type_ident != \
                 KNXIPServiceType.TUNNELLING_REQUEST:
-            print("SERVICE TYPE NOT IMPLEMENETED: ", knxipframe)
+            self.xknx.logger.warning("Service not implemented: %s", knxipframe)
         else:
             self.send_ack(knxipframe.body.communication_channel_id, knxipframe.body.sequence_counter)
             telegram = knxipframe.body.cemi.telegram
@@ -88,8 +88,10 @@ class Tunnel():
         yield from connect.start()
         if not connect.success:
             raise XKNXException("Could not establish connection")
-        print("Tunnel established communication_channel={0}, id={1}".format(
-            connect.communication_channel, connect.identifier))
+        self.xknx.logger.debug(
+            "Tunnel established communication_channel=%s, id=%s",
+            connect.communication_channel,
+            connect.identifier)
         self.communication_channel = connect.communication_channel
         self.sequence_number = 0
         yield from self.start_heartbeat()
@@ -132,7 +134,7 @@ class Tunnel():
         if not disconnect.success and not ignore_error:
             raise XKNXException("Could not disconnect channel")
         else:
-            print("Tunnel disconnected (communication_channel: {0})".format(self.communication_channel))
+            self.xknx.logger.debug("Tunnel disconnected (communication_channel: %s)", self.communication_channel)
 
     @asyncio.coroutine
     def stop(self):
@@ -172,7 +174,7 @@ class Tunnel():
         """Heartbeat: handling error."""
         self.number_heartbeat_failed = self.number_heartbeat_failed + 1
         if self.number_heartbeat_failed > 3:
-            print("HEARTBEAT FAILED - RECONNECTING")
+            self.xknx.logger.warning("Heartbeat failed - reconnecting")
             yield from self.disconnect(True)
             self.init_udp_client()
             yield from self.start()

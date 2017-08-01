@@ -145,8 +145,7 @@ class Light(Device):
         elif action.startswith("brightness:"):
             yield from self.set_brightness(int(action[11:]))
         else:
-            print("{0}: Could not understand action {1}" \
-                .format(self.get_name(), action))
+            self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
@@ -175,7 +174,6 @@ class Light(Device):
     @asyncio.coroutine
     def _process_brightness(self, telegram):
         """Process incoming telegram for brightness state."""
-        print(telegram)
         if not isinstance(telegram.payload, DPTArray) or \
             len(telegram.payload.value) != 1:
             raise CouldNotParseTelegram()

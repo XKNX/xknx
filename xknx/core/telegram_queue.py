@@ -8,7 +8,6 @@ The underlaying KNXIPInterface will poll the queue and send the packets to the c
 You may register callbacks to be notified if a telegram was pushed to the queue.
 """
 import asyncio
-import traceback
 
 from xknx.knx import TelegramDirection, TelegramType
 
@@ -56,7 +55,7 @@ class TelegramQueue():
     @asyncio.coroutine
     def stop(self):
         """Stop telegram queue."""
-        print("STOPPING TelegramQueue")
+        self.xknx.logger.debug("Stopping TelegramQueue")
         # If a None object is pushed to the queue, the queue stops
         yield from self.xknx.telegrams.put(None)
         yield from self.queue_stopped.wait()
@@ -72,6 +71,7 @@ class TelegramQueue():
     @asyncio.coroutine
     def process_telegram(self, telegram):
         """Process telegram."""
+        self.xknx.telegram_logger.debug(telegram)
         try:
             if telegram.direction == TelegramDirection.INCOMING:
                 yield from self.process_telegram_incoming(telegram)
@@ -80,8 +80,7 @@ class TelegramQueue():
 
         # pylint: disable=broad-except
         except Exception as exception:
-            print("Exception while processing telegram:", exception)
-            traceback.print_exc()
+            self.xknx.logger.exception("Exception while processing telegram: %s", exception)
 
 
     @asyncio.coroutine
@@ -90,7 +89,7 @@ class TelegramQueue():
         if self.xknx.knxip_interface is not None:
             yield from self.xknx.knxip_interface.send_telegram(telegram)
         else:
-            print("WARNING, NO KNXIP INTERFACE DEFINED")
+            self.xknx.logger.warning("No KNXIP interface defined")
 
     @asyncio.coroutine
     def process_telegram_incoming(self, telegram):
@@ -110,5 +109,4 @@ class TelegramQueue():
                     yield from device.process(telegram)
 
         elif telegram.telegramtype == TelegramType.GROUP_READ:
-            #print("IGNORING GROUP READ FOR {0}".format(telegram.group_address))
-            pass
+            self.xknx.logger.info("Ignoring group read for: %s", telegram.group_address)

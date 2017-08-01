@@ -3,6 +3,7 @@ XKNX is an Asynchronous Python module for reading and writing KNX/IP packets.
 """
 import asyncio
 import signal
+import logging
 from xknx.knx import Address
 from xknx.io import KNXIPInterface, ConnectionConfig
 from xknx.core import Globals, TelegramQueue, Config
@@ -32,6 +33,10 @@ class XKNX:
         self.knxip_interface = None
         self.started = False
 
+        self.logger = logging.getLogger('xknx.log')
+        self.knx_logger = logging.getLogger('xknx.knx')
+        self.telegram_logger = logging.getLogger('xknx.telegram')
+
         if config is not None:
             Config(self).read(config)
 
@@ -52,7 +57,7 @@ class XKNX:
                 task = asyncio.Task(self.stop())
                 self.loop.run_until_complete(task)
             except RuntimeError as exp:
-                print("Could not close loop, reason: ", exp)
+                self.logger.warning("Could not close loop, reason: %s", exp)
 
 
     @asyncio.coroutine
@@ -102,5 +107,5 @@ class XKNX:
             """Callback for having Ctrl-C received."""
             self.sigint_received.set()
         self.loop.add_signal_handler(signal.SIGINT, sigint_handler)
-        print('Press Ctrl+C to stop')
+        self.logger.warning('Press Ctrl+C to stop')
         yield from self.sigint_received.wait()

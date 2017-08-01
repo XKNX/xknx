@@ -117,8 +117,7 @@ class Cover(Device):
     def set_down(self):
         """Move cover down."""
         if self.group_address_long is None:
-            print("group_address_long not defined for device {0}" \
-                .format(self.get_name()))
+            self.xknx.logger.warning("group_address_long not defined for device %s", self.get_name())
             return
         yield from self.send(self.group_address_long, DPTBinary(1))
         self.travelcalculator.start_travel_down()
@@ -127,8 +126,7 @@ class Cover(Device):
     def set_up(self):
         """Move cover up."""
         if self.group_address_long is None:
-            print("group_address_long not defined for device {0}" \
-                .format(self.get_name()))
+            self.xknx.logger.warning("group_address_long not defined for device %s", self.get_name())
             return
         yield from self.send(self.group_address_long, DPTBinary(0))
         self.travelcalculator.start_travel_up()
@@ -137,8 +135,7 @@ class Cover(Device):
     def set_short_down(self):
         """Move cover short down."""
         if self.group_address_short is None:
-            print("group_address_short not defined for device {0}" \
-                .format(self.get_name()))
+            self.xknx.logger.warning("group_address_short not defined for device %s", self.get_name())
             return
         yield from self.send(self.group_address_short, DPTBinary(1))
 
@@ -146,8 +143,7 @@ class Cover(Device):
     def set_short_up(self):
         """Move cover short up."""
         if self.group_address_short is None:
-            print("group_address_short not defined for device {0}" \
-                .format(self.get_name()))
+            self.xknx.logger.warning("group_address_short not defined for device %s", self.get_name())
             return
         yield from self.send(self.group_address_short, DPTBinary(0))
 
@@ -199,15 +195,13 @@ class Cover(Device):
         elif action == "short_down":
             yield from self.set_short_down()
         else:
-            print("{0}: Could not understand action {1}" \
-                .format(self.get_name(), action))
+            self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
         if self.group_address_position_feedback is None:
-            print("group_position not defined for device {0}" \
-                .format(self.get_name()))
+            self.xknx.logger.warning("group_position not defined for device %s", self.get_name())
             return[]
         if self.travelcalculator.is_traveling():
             # Cover is traveling, requesting state will return false results

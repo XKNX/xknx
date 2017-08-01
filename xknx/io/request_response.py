@@ -52,7 +52,7 @@ class RequestResponse():
     def response_rec_callback(self, knxipframe, _):
         """Callback for receiving answer. Checks if answer is of correct type."""
         if not isinstance(knxipframe.body, self.awaited_response_class):
-            print("Cant understand knxipframe")
+            self.xknx.logger.warning("Cant understand knxipframe")
             return
 
         self.response_received_or_timeout.set()
@@ -72,7 +72,7 @@ class RequestResponse():
     def on_error_hook(self, knxipframe):
         """Hook for having received an invalid answer. May be overwritten in derived class."""
         # pylint: disable=no-self-use
-        print("Error connection state failed: ", knxipframe.body.status_code)
+        self.xknx.logger.warning("Error: reading rading group address from KNX bus failed: %s", knxipframe.body.status_code)
 
 
     def timeout(self):
