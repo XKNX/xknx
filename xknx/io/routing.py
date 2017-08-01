@@ -32,14 +32,14 @@ class Routing():
     def response_rec_callback(self, knxipframe, _):
         """Callback for receiving knxipframe from internal udpclient."""
         if knxipframe.body.src_addr == self.xknx.globals.own_address:
-            print("Ignoring own packet")
+            self.xknx.logger.info("Ignoring own packet")
         elif knxipframe.header.service_type_ident != \
                 KNXIPServiceType.ROUTING_INDICATION:
-            print("SERVICE TYPE NOT IMPLEMENETED: ", knxipframe)
+            self.xknx.logger.warning("Service type not implemented: %s", knxipframe)
         elif knxipframe.body.cmd not in [APCICommand.GROUP_READ,
                                          APCICommand.GROUP_WRITE,
                                          APCICommand.GROUP_RESPONSE]:
-            print("APCI NOT IMPLEMENETED: ", knxipframe)
+            self.xknx.logger.warning("APCI not implemented: %s", knxipframe)
         else:
             telegram = knxipframe.body.telegram
             telegram.direction = TelegramDirection.INCOMING

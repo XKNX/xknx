@@ -23,7 +23,7 @@ class StateUpdater():
     def run(self):
         """StateUpdater thread. Endless loop for updating states."""
         yield from asyncio.sleep(self.start_timeout)
-        print("Starting Update Thread")
+        self.xknx.logger.debug("Starting StateUpdater")
         while True:
             yield from self.xknx.devices.sync()
             yield from asyncio.sleep(self.timeout)

@@ -18,7 +18,7 @@ class Config:
 
     def read(self, file='xknx.yaml'):
         """Read config."""
-        print("Reading {0}".format(file))
+        self.xknx.logger.debug("Reading %s", file)
         with open(file, 'r') as filehandle:
             doc = yaml.load(filehandle)
             self.parse_general(doc)

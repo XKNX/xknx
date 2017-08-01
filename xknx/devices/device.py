@@ -36,7 +36,7 @@ class Device:
     @asyncio.coroutine
     def sync(self, wait_for_result=True):
         """Read state of device from KNX bus."""
-        print("Sync {0}".format(self.name))
+        self.xknx.logger.debug("Sync %s", self.name)
         for group_address in self.state_addresses():
             from xknx.core import ValueReader
             value_reader = ValueReader(self.xknx, group_address)
@@ -45,7 +45,7 @@ class Device:
                 if telegram is not None:
                     yield from self.process(value_reader.received_telegram)
                 else:
-                    print("Could not read value of {0} {1}".format(self, group_address))
+                    self.xknx.logger.warning("Could not read value of %s %s", self, group_address)
             else:
                 yield from value_reader.send_group_read()
 

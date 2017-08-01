@@ -79,8 +79,7 @@ class Switch(Device):
         elif action == "off":
             yield from self.set_off()
         else:
-            print("{0}: Could not understand action {1}" \
-                .format(self.get_name(), action))
+            self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
