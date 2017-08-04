@@ -98,7 +98,34 @@ class Tunnel():
 
     @asyncio.coroutine
     def send_telegram(self, telegram):
-        """Send Telegram to routing tunelling device."""
+        """
+        Send Telegram to routing tunelling device - retry mechanism.
+
+        If a TUNNELLING_REQUEST frame is not confirmed within the TUNNELLING_REQUEST_TIME_- OUT
+        time of one (1) second then the frame shall be repeated once with the same sequence counter
+        value by the sending KNXnet/IP device.
+
+        If the KNXnet/IP device does not receive a TUNNELLING_ACK frame within the
+        TUNNELLING_- REQUEST_TIMEOUT (= 1 second) or the status of a received
+        TUNNELLING_ACK frame signals any kind of error condition, the sending device
+        shall repeat the TUNNELLING_REQUEST frame once and then terminate the
+        connection by sending a DISCONNECT_REQUEST frame to the other device’s
+        control endpoint.
+        """
+        success = yield from self._send_telegram_impl(telegram)
+        if not success:
+            # Retry: Send telegram a second time
+            success = yield from self._send_telegram_impl(telegram)
+            if not success:
+                yield from self.reconnect()
+                success = yield from self._send_telegram_impl(telegram)
+                if not success:
+                    raise XKNXException("Could not send telegram to tunnel")
+        self.increase_sequence_number()
+
+    @asyncio.coroutine
+    def _send_telegram_impl(self, telegram):
+        """Send Telegram to routing tunelling device - implementation."""
         tunnelling = Tunnelling(
             self.xknx,
             self.udp_client,
@@ -106,12 +133,14 @@ class Tunnel():
             self.src_address,
             self.sequence_number,
             self.communication_channel)
+        yield from tunnelling.start()
+        return tunnelling.success
+
+    def increase_sequence_number(self):
+        """Increase sequence number."""
         self.sequence_number += 1
         if self.sequence_number == 256:
             self.sequence_number = 0
-        yield from tunnelling.start()
-        if not tunnelling.success:
-            raise XKNXException("Could not send telegram to tunnel")
 
     @asyncio.coroutine
     def connectionstate(self):
@@ -135,6 +164,13 @@ class Tunnel():
             raise XKNXException("Could not disconnect channel")
         else:
             self.xknx.logger.debug("Tunnel disconnected (communication_channel: %s)", self.communication_channel)
+
+    @asyncio.coroutine
+    def reconnect(self):
+        """Reconnect to tunnel device."""
+        yield from self.disconnect(True)
+        self.init_udp_client()
+        yield from self.start()
 
     @asyncio.coroutine
     def stop(self):
@@ -175,7 +211,5 @@ class Tunnel():
         self.number_heartbeat_failed = self.number_heartbeat_failed + 1
         if self.number_heartbeat_failed > 3:
             self.xknx.logger.warning("Heartbeat failed - reconnecting")
-            yield from self.disconnect(True)
-            self.init_udp_client()
-            yield from self.start()
+            yield from self.reconnect()
             self.number_heartbeat_failed = 0
