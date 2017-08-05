@@ -114,9 +114,10 @@ class Tunnel():
         """
         success = yield from self._send_telegram_impl(telegram)
         if not success:
-            # Retry: Send telegram a second time
+            self.xknx.logger.warning("Sending of telegram failed. Retrying a second time.")
             success = yield from self._send_telegram_impl(telegram)
             if not success:
+                self.xknx.logger.warning("Resending telegram failed. Reconnecting to tunnel.")
                 yield from self.reconnect()
                 success = yield from self._send_telegram_impl(telegram)
                 if not success:
