@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.xknx/
 """
 import asyncio
-import xknx
 import voluptuous as vol
 
 from custom_components.xknx import DATA_XKNX
@@ -25,9 +24,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATE_ADDRESS): cv.string,
 })
 
+
 @asyncio.coroutine
-def async_setup_platform(hass, config, add_devices, \
-        discovery_info=None):
+def async_setup_platform(hass, config, add_devices,
+                         discovery_info=None):
     """Set up switch(es) for XKNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
@@ -40,19 +40,23 @@ def async_setup_platform(hass, config, add_devices, \
 
     return True
 
+
 @asyncio.coroutine
 def add_devices_from_component(hass, add_devices):
     """Set up switches for XKNX platform configured via xknx.yaml."""
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
+        import xknx
         if isinstance(device, xknx.devices.Switch) and \
-			    not hasattr(device, "already_added_to_hass"):
+                not hasattr(device, "already_added_to_hass"):
             entities.append(XKNXSwitch(hass, device))
     add_devices(entities)
+
 
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
     """Set up switch for XKNX platform configured within plattform."""
+    import xknx
     switch = xknx.devices.Switch(
         hass.data[DATA_XKNX].xknx,
         name=config.get(CONF_NAME),

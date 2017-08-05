@@ -5,11 +5,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.xknx/
 """
 import asyncio
-import xknx
 import voluptuous as vol
 
-from custom_components.xknx import DATA_XKNX
-from homeassistant.helpers.event import track_utc_time_change
+from custom_components.xknx import DATA_XKNX, _LOGGER
+from homeassistant.helpers.event import async_track_utc_time_change
+from homeassistant.core import callback
 from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -37,9 +37,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.positive_int,
 })
 
+
 @asyncio.coroutine
-def async_setup_platform(hass, config, add_devices, \
-        discovery_info=None):
+def async_setup_platform(hass, config, add_devices,
+                         discovery_info=None):
     """Set up cover(s) for XKNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
@@ -52,25 +53,30 @@ def async_setup_platform(hass, config, add_devices, \
 
     return True
 
+
 @asyncio.coroutine
 def add_devices_from_component(hass, add_devices):
     """Set up covers for XKNX platform configured via xknx.yaml."""
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
+        import xknx.devices
         if isinstance(device, xknx.devices.Cover) and \
                 not hasattr(device, "already_added_to_hass"):
             entities.append(XKNXCover(hass, device))
     add_devices(entities)
 
+
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
     """Set up cover for XKNX platform configured within plattform."""
+    import xknx
     cover = xknx.devices.Cover(
         hass.data[DATA_XKNX].xknx,
         name=config.get(CONF_NAME),
         group_address_long=config.get(CONF_MOVE_LONG_ADDRESS),
         group_address_short=config.get(CONF_MOVE_SHORT_ADDRESS),
-        group_address_position_feedback=config.get(CONF_POSITION_STATE_ADDRESS),
+        group_address_position_feedback=config.get(
+            CONF_POSITION_STATE_ADDRESS),
         group_address_position=config.get(CONF_POSITION_ADDRESS),
         travel_time_down=config.get(CONF_TRAVELLING_TIME_DOWN),
         travel_time_up=config.get(CONF_TRAVELLING_TIME_UP))
@@ -96,7 +102,7 @@ class XKNXCover(CoverDevice):
         @asyncio.coroutine
         def after_update_callback(device):
             """Callback after device was updated."""
-            #pylint: disable=unused-argument
+            # pylint: disable=unused-argument
             yield from self.async_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
 
@@ -150,7 +156,7 @@ class XKNXCover(CoverDevice):
     def start_auto_updater(self):
         """Start the autoupdater to update HASS while cover is moving."""
         if self._unsubscribe_auto_updater is None:
-            self._unsubscribe_auto_updater = track_utc_time_change(
+            self._unsubscribe_auto_updater = async_track_utc_time_change(
                 self.hass, self.auto_updater_hook)
 
     def stop_auto_updater(self):
@@ -159,10 +165,11 @@ class XKNXCover(CoverDevice):
             self._unsubscribe_auto_updater()
             self._unsubscribe_auto_updater = None
 
+    @callback
     def auto_updater_hook(self, now):
         """Callback for autoupdater."""
         # pylint: disable=unused-argument
-        self.schedule_update_ha_state()
+        self.hass.async_add_job(self.async_update_ha_state())
         if self.device.position_reached():
             self.stop_auto_updater()
 
@@ -180,20 +187,20 @@ class XKNXCover(CoverDevice):
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover tilt."""
-        print("stop_cover_tilt - not implemented")
+        _LOGGER.warning("stop_cover_tilt - not implemented")
 
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
-        print("close_cover_tilt - not implemented")
+        _LOGGER.warning("close_cover_tilt - not implemented")
 
     def set_cover_tilt_position(self, tilt_position, **kwargs):
-        #pylint: disable=unused-argument
+        # pylint: disable=unused-argument
         """Move the cover til to a specific position."""
-        print("close_cover_tilt_position - not implemented")
+        _LOGGER.warning("close_cover_tilt_position - not implemented")
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
-        print("open_cover_tilt - not implemented")
+        _LOGGER.warning("open_cover_tilt - not implemented")
 
     @property
     def current_cover_tilt_position(self):

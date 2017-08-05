@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.xknx/
 """
 import asyncio
-import xknx
 import voluptuous as vol
 
 from custom_components.xknx import DATA_XKNX
@@ -25,9 +24,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
+
 @asyncio.coroutine
-def async_setup_platform(hass, config, add_devices, \
-        discovery_info=None):
+def async_setup_platform(hass, config, add_devices,
+                         discovery_info=None):
     """Set up climate(s) for XKNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
@@ -40,19 +40,23 @@ def async_setup_platform(hass, config, add_devices, \
 
     return True
 
+
 @asyncio.coroutine
 def add_devices_from_component(hass, add_devices):
     """Set up climates for XKNX platform configured within plattform."""
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
+        import xknx
         if isinstance(device, xknx.devices.Climate) and \
                 not hasattr(device, "already_added_to_hass"):
             entities.append(XKNXClimate(hass, device))
     add_devices(entities)
 
+
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
     """Set up climate for XKNX platform configured within plattform."""
+    import xknx
     climate = xknx.devices.Climate(
         hass.data[DATA_XKNX].xknx,
         name=config.get(CONF_NAME),
@@ -75,7 +79,6 @@ class XKNXClimate(ClimateDevice):
         self._unit_of_measurement = TEMP_CELSIUS
         self._away = False  # not yet supported
         self._is_fan_on = False  # not yet supported
-
 
     def register_callbacks(self):
         """Register callbacks to update hass after device was changed."""

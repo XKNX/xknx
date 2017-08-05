@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.xknx/
 """
 import asyncio
-import xknx
 import voluptuous as vol
 
 from custom_components.xknx import DATA_XKNX
@@ -53,8 +52,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, add_devices, \
-        discovery_info=None):
+def async_setup_platform(hass, config, add_devices,
+                         discovery_info=None):
     """Set up binary sensor(s) for XKNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
@@ -67,20 +66,24 @@ def async_setup_platform(hass, config, add_devices, \
 
     return True
 
+
 @asyncio.coroutine
 def add_devices_from_component(hass, add_devices):
     """Set up binary sensors for XKNX platform configured via xknx.yaml."""
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
+        import xknx
         if isinstance(device, xknx.devices.BinarySensor) and \
                 not hasattr(device, "already_added_to_hass"):
             entities.append(XKNXBinarySensor(hass, device))
     add_devices(entities)
 
+
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
     """Set up binary senor for XKNX platform configured within plattform."""
     name = config.get(CONF_NAME)
+    import xknx
     binary_sensor = xknx.devices.BinarySensor(
         hass.data[DATA_XKNX].xknx,
         name=name,
@@ -88,39 +91,38 @@ def add_devices_from_platform(hass, config, add_devices):
         device_class=config.get(CONF_DEVICE_CLASS),
         significant_bit=config.get(CONF_SIGNIFICANT_BIT))
 
+    class XKNXAutomation(xknx.devices.ActionBase):
+        """Base Class for handling commands triggered by KNX bus."""
+
+        def __init__(self, hass, hook, action, name, counter=1):
+            """Initialize XKNXAutomation class."""
+            super(XKNXAutomation, self).__init__(
+                hass.data[DATA_XKNX].xknx, hook, counter)
+            self.hass = hass
+            self.script = Script(hass, action, name)
+
+        @asyncio.coroutine
+        def execute(self):
+            """Execute action."""
+            yield from self.script.async_run()
+
     automations = config.get(CONF_AUTOMATION)
     if automations is not None:
         for automation in automations:
-          counter = automation.get(CONF_COUNTER)
-          hook = automation.get(CONF_HOOK)
-          action = automation.get(CONF_ACTION)
-          automation = XKNXAutomation(
-              hass=hass,
-              hook=hook,
-              counter=counter,
-              action=action,
-              name="{} turn ON script".format(name))
-          binary_sensor.actions.append(automation)
+            counter = automation.get(CONF_COUNTER)
+            hook = automation.get(CONF_HOOK)
+            action = automation.get(CONF_ACTION)
+            automation = XKNXAutomation(
+                hass=hass,
+                hook=hook,
+                counter=counter,
+                action=action,
+                name="{} turn ON script".format(name))
+            binary_sensor.actions.append(automation)
 
     binary_sensor.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(binary_sensor)
     add_devices([XKNXBinarySensor(hass, binary_sensor)])
-
-
-class XKNXAutomation(xknx.devices.ActionBase):
-    """Base Class for handling commands triggered by KNX bus."""
-
-    def __init__(self, hass, hook, action, name, counter=1):
-        """Initialize XKNXAutomation class."""
-        super(XKNXAutomation, self).__init__(
-            hass.data[DATA_XKNX].xknx, hook, counter)
-        self.hass = hass
-        self.script = Script(hass, action, name)
-
-    @asyncio.coroutine
-    def execute(self):
-        """Execute action."""
-        yield from self.script.async_run()
 
 
 class XKNXBinarySensor(BinarySensorDevice):
