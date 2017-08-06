@@ -124,11 +124,11 @@ class CEMIFrame(KNXIPBody):
         # AddIL (Additional Info Length), as specified within
         # KNX Chapter 3.6.3/4.1.4.3 "Additional information."
         # Additional information is not yet parsed.
-        offset = cemi[1]
+        addil = cemi[1]
 
-        self.flags = cemi[2 + offset] * 256 + cemi[3 + offset]
+        self.flags = cemi[2 + addil] * 256 + cemi[3 + addil]
 
-        self.src_addr = Address((cemi[4 + offset], cemi[5 + offset]), \
+        self.src_addr = Address((cemi[4 + addil], cemi[5 + addil]), \
                                 AddressType.PHYSICAL)
 
         dst_addr_type = \
@@ -136,19 +136,19 @@ class CEMIFrame(KNXIPBody):
             if self.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS \
             else AddressType.PHYSICAL
 
-        self.dst_addr = Address((cemi[6 + offset], cemi[7 + offset]),
+        self.dst_addr = Address((cemi[6 + addil], cemi[7 + addil]),
                                 dst_addr_type)
 
-        self.mpdu_len = cemi[8 + offset]
+        self.mpdu_len = cemi[8 + addil]
 
         # TPCI (transport layer control information)   -> First 14 bit
         # APCI (application layer control information) -> Last  10 bit
 
-        tpci_apci = cemi[9 + offset] * 256 + cemi[10 + offset]
+        tpci_apci = cemi[9 + addil] * 256 + cemi[10 + addil]
 
         self.cmd = APCICommand(tpci_apci & 0xFFC0)
 
-        apdu = cemi[10 + offset:]
+        apdu = cemi[10 + addil:]
         if len(apdu) != self.mpdu_len:
             raise CouldNotParseKNXIP(
                 "APDU LEN should be {} but is {}".format(
@@ -159,9 +159,9 @@ class CEMIFrame(KNXIPBody):
             apci = tpci_apci & DPTBinary.APCI_BITMASK
             self.payload = DPTBinary(apci)
         else:
-            self.payload = DPTArray(cemi[11 + offset:])
+            self.payload = DPTArray(cemi[11 + addil:])
 
-        return 10 + offset + len(apdu)
+        return 10 + addil + len(apdu)
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
