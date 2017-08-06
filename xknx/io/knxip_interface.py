@@ -100,7 +100,7 @@ class KNXIPInterface():
         self.xknx.logger.debug("Starting tunnel to %s:%s from %s", gateway_ip, gateway_port, local_ip)
         self.interface = Tunnel(
             self.xknx,
-            self.xknx.globals.own_address,
+            self.xknx.own_address,
             local_ip=local_ip,
             gateway_ip=gateway_ip,
             gateway_port=gateway_port,

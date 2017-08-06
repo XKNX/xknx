@@ -28,11 +28,9 @@ class Config:
         """Parse the general section of xknx.yaml."""
         if "general" in doc:
             if "own_address" in doc["general"]:
-                self.xknx.globals.own_address = \
+                self.xknx.own_address = \
                     Address(doc["general"]["own_address"],
                             AddressType.PHYSICAL)
-            if "own_ip" in doc["general"]:
-                self.xknx.globals.own_ip = doc["general"]["own_ip"]
 
     def parse_groups(self, doc):
         """Parse the group section of xknx.yaml."""

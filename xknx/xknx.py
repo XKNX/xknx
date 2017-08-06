@@ -4,9 +4,9 @@ XKNX is an Asynchronous Python module for reading and writing KNX/IP packets.
 import asyncio
 import signal
 import logging
-from xknx.knx import Address
+from xknx.knx import Address, AddressFormat
 from xknx.io import KNXIPInterface, ConnectionConfig
-from xknx.core import Globals, TelegramQueue, Config
+from xknx.core import TelegramQueue, Config
 from xknx.devices import Devices
 
 class XKNX:
@@ -14,34 +14,33 @@ class XKNX:
 
     # pylint: disable=too-many-instance-attributes
 
+    DEFAULT_ADDRESS='15.15.250'
+
     def __init__(self,
                  config=None,
                  loop=None,
-                 own_address=None,
+                 own_address=Address(DEFAULT_ADDRESS),
+                 address_format=AddressFormat.LEVEL3,
                  telegram_received_cb=None,
                  device_updated_cb=None):
         """Initialize XKNX class."""
         # pylint: disable=too-many-arguments
-        self.globals = Globals()
         self.devices = Devices()
         self.telegrams = asyncio.Queue()
         self.loop = loop or asyncio.get_event_loop()
-        #self.loop.set_debug(True)
         self.sigint_received = asyncio.Event()
         self.telegram_queue = TelegramQueue(self)
         self.state_updater = None
         self.knxip_interface = None
         self.started = False
-
+        self.address_format = address_format
+        self.own_address = own_address
         self.logger = logging.getLogger('xknx.log')
         self.knx_logger = logging.getLogger('xknx.knx')
         self.telegram_logger = logging.getLogger('xknx.telegram')
 
         if config is not None:
             Config(self).read(config)
-
-        if own_address is not None:
-            self.globals.own_address = Address(own_address)
 
         if telegram_received_cb is not None:
             self.telegram_queue.register_telegram_received_cb(telegram_received_cb)

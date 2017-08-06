@@ -31,8 +31,8 @@ class Routing():
 
     def response_rec_callback(self, knxipframe, _):
         """Callback for receiving knxipframe from internal udpclient."""
-        if knxipframe.body.src_addr == self.xknx.globals.own_address:
-            self.xknx.logger.info("Ignoring own packet")
+        if knxipframe.body.src_addr == self.xknx.own_address:
+            self.xknx.logger.debug("Ignoring own packet")
         elif knxipframe.header.service_type_ident != \
                 KNXIPServiceType.ROUTING_INDICATION:
             self.xknx.logger.warning("Service type not implemented: %s", knxipframe)
@@ -52,9 +52,9 @@ class Routing():
         """Send Telegram to routing connected device."""
         knxipframe = KNXIPFrame(self.xknx)
         knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe.body.src_addr = self.xknx.globals.own_address
+        knxipframe.body.src_addr = self.xknx.own_address
         knxipframe.body.telegram = telegram
-        knxipframe.body.sender = self.xknx.globals.own_address
+        knxipframe.body.sender = self.xknx.own_address
         knxipframe.normalize()
         yield from self.send_knxipframe(knxipframe)
 

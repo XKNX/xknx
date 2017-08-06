@@ -128,16 +128,16 @@ class CEMIFrame(KNXIPBody):
 
         self.flags = cemi[2 + addil] * 256 + cemi[3 + addil]
 
-        self.src_addr = Address((cemi[4 + addil], cemi[5 + addil]), \
+        self.src_addr = Address((cemi[4 + addil], cemi[5 + addil]),
                                 AddressType.PHYSICAL)
 
-        dst_addr_type = \
-            AddressType.GROUP \
-            if self.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS \
-            else AddressType.PHYSICAL
-
-        self.dst_addr = Address((cemi[6 + addil], cemi[7 + addil]),
-                                dst_addr_type)
+        if self.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS:
+            self.dst_addr = Address((cemi[6 + addil], cemi[7 + addil]),
+                                    address_type=AddressType.GROUP,
+                                    address_format=self.xknx.address_format)
+        else:
+            self.dst_addr = Address((cemi[6 + addil], cemi[7 + addil]),
+                                    address_type=AddressType.PHYSICAL)
 
         self.mpdu_len = cemi[8 + addil]
 

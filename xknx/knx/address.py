@@ -29,10 +29,10 @@ class AddressFormat(Enum):
 class Address:
     """Class for handling KNX pyhsical and group addresses."""
 
-    def __init__(self, address=0, address_type=None):
+    def __init__(self, address=0, address_type=None, address_format=None):
         """Initialize Address class."""
         self.raw = None
-        self.address_format = None
+        self.address_format = address_format
         self._set(address, address_type)
 
     def _set(self, address, address_type):
