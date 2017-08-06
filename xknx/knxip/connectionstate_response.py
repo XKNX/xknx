@@ -16,9 +16,9 @@ class ConnectionStateResponse(KNXIPBody):
 
     service_type = KNXIPServiceType.CONNECTIONSTATE_RESPONSE
 
-    def __init__(self):
+    def __init__(self, xknx):
         """ConnectionStateResponse __init__ object."""
-        super(ConnectionStateResponse, self).__init__()
+        super(ConnectionStateResponse, self).__init__(xknx)
         self.communication_channel_id = 1
         self.status_code = ErrorCode.E_NO_ERROR
 

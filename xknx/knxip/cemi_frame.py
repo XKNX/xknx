@@ -22,9 +22,9 @@ class CEMIFrame(KNXIPBody):
     """Representation of a CEMI Frame."""
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self):
+    def __init__(self, xknx):
         """CEMIFrame __init__ object."""
-        super(CEMIFrame, self).__init__()
+        super(CEMIFrame, self).__init__(xknx)
         self.code = CEMIMessageCode.L_DATA_IND
         self.flags = 0
         self.cmd = APCICommand.GROUP_READ

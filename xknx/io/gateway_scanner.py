@@ -102,7 +102,7 @@ class GatewayScanner():
         self.udpclients.append(udpclient)
 
         (local_addr, local_port) = udpclient.getsockname()
-        knxipframe = KNXIPFrame()
+        knxipframe = KNXIPFrame(self.xknx)
         knxipframe.init(KNXIPServiceType.SEARCH_REQUEST)
         knxipframe.body.discovery_endpoint = \
             HPAI(ip_addr=local_addr, port=local_port)

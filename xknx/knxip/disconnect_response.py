@@ -15,9 +15,9 @@ class DisconnectResponse(KNXIPBody):
 
     service_type = KNXIPServiceType.DISCONNECT_RESPONSE
 
-    def __init__(self):
+    def __init__(self, xknx):
         """DisconnectResponse __init__ object."""
-        super(DisconnectResponse, self).__init__()
+        super(DisconnectResponse, self).__init__(xknx)
 
         self.communication_channel_id = 1
         self.status_code = ErrorCode.E_NO_ERROR

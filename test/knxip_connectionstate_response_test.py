@@ -1,6 +1,7 @@
 """Unit test for KNX/IP ConnectionStateResponses."""
 import unittest
-
+import asyncio
+from xknx import XKNX
 from xknx.knxip import KNXIPFrame, KNXIPServiceType, ConnectionStateResponse,\
     ErrorCode
 
@@ -10,10 +11,20 @@ class Test_KNXIP_ConnStateResp(unittest.TestCase):
 
     # pylint: disable=too-many-public-methods,invalid-name
 
+    def setUp(self):
+        """Set up test class."""
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
+    def tearDown(self):
+        """Tear down test class."""
+        self.loop.close()
+
     def test_disconnect_response(self):
         """Test parsing and streaming connection state response KNX/IP packet."""
         raw = ((0x06, 0x10, 0x02, 0x08, 0x00, 0x08, 0x15, 0x21))
-        knxipframe = KNXIPFrame()
+        xknx = XKNX(loop=self.loop)
+        knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 
         self.assertTrue(isinstance(knxipframe.body, ConnectionStateResponse))
@@ -24,7 +35,7 @@ class Test_KNXIP_ConnStateResp(unittest.TestCase):
             knxipframe.body.status_code, ErrorCode.E_CONNECTION_ID)
 
 
-        knxipframe2 = KNXIPFrame()
+        knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.CONNECTIONSTATE_RESPONSE)
         knxipframe2.body.communication_channel_id = 21
         knxipframe2.body.status_code = ErrorCode.E_CONNECTION_ID

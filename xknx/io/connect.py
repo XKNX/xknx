@@ -9,7 +9,7 @@ class Connect(RequestResponse):
         """Initialize Connect class."""
         self.xknx = xknx
         self.udp_client = udp_client
-        super(Connect, self).__init__(self.xknx, self.udp_client, ConnectResponse)
+        super(Connect, self).__init__(xknx, self.udp_client, ConnectResponse)
         self.communication_channel = 0
         self.identifier = 0
 
@@ -17,7 +17,7 @@ class Connect(RequestResponse):
     def create_knxipframe(self):
         """Create KNX/IP Frame object to be sent to device."""
         (local_addr, local_port) = self.udp_client.getsockname()
-        knxipframe = KNXIPFrame()
+        knxipframe = KNXIPFrame(self.xknx)
         knxipframe.init(KNXIPServiceType.CONNECT_REQUEST)
         knxipframe.body.request_type = ConnectRequestType.TUNNEL_CONNECTION
 

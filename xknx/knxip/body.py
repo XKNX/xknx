@@ -3,6 +3,9 @@
 class KNXIPBody():
     """Basis class for all KNX/IP bodies."""
 
+    def __init__(self, xknx):
+        self.xknx = xknx
+
     def calculated_length(self):
         """Get length of KNX/IP body."""
         pass

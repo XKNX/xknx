@@ -14,9 +14,9 @@ class ConnectionStateRequest(KNXIPBody):
 
     service_type = KNXIPServiceType.CONNECTIONSTATE_REQUEST
 
-    def __init__(self):
+    def __init__(self, xknx):
         """ConnectionStateRequest __init__ object."""
-        super(ConnectionStateRequest, self).__init__()
+        super(ConnectionStateRequest, self).__init__(xknx)
         self.communication_channel_id = 1
         self.control_endpoint = HPAI()
 

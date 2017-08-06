@@ -17,13 +17,13 @@ class TunnellingRequest(KNXIPBody):
 
     HEADER_LENGTH = 4
 
-    def __init__(self):
+    def __init__(self, xknx):
         """TunnellingRequest __init__ object."""
-        super(TunnellingRequest, self).__init__()
+        super(TunnellingRequest, self).__init__(xknx)
 
         self.communication_channel_id = 1
         self.sequence_counter = 0
-        self.cemi = CEMIFrame()
+        self.cemi = CEMIFrame(xknx)
         self.cemi.code = CEMIMessageCode.L_Data_REQ
 
     def calculated_length(self):

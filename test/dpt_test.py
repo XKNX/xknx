@@ -1,6 +1,5 @@
 """Unit test for KNX binary/integer objects."""
 import unittest
-
 from xknx.knx import DPTBinary, DPTArray
 from xknx.exceptions import ConversionError
 

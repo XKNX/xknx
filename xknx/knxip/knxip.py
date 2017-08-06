@@ -22,9 +22,10 @@ from .connectionstate_response import ConnectionStateResponse
 class KNXIPFrame:
     """Class for KNX/IP Frames"""
 
-    def __init__(self):
+    def __init__(self, xknx):
         """Initialize object."""
-        self.header = KNXIPHeader()
+        self.xknx = xknx
+        self.header = KNXIPHeader(xknx)
         self.body = None
 
 
@@ -35,37 +36,37 @@ class KNXIPFrame:
         # pylint: disable=redefined-variable-type
         if service_type_ident == \
                 KNXIPServiceType.ROUTING_INDICATION:
-            self.body = CEMIFrame()
+            self.body = CEMIFrame(self.xknx)
         elif service_type_ident == \
                 KNXIPServiceType.CONNECT_REQUEST:
-            self.body = ConnectRequest()
+            self.body = ConnectRequest(self.xknx)
         elif service_type_ident == \
                 KNXIPServiceType.CONNECT_RESPONSE:
-            self.body = ConnectResponse()
+            self.body = ConnectResponse(self.xknx)
         elif service_type_ident == \
                 KNXIPServiceType.TUNNELLING_REQUEST:
-            self.body = TunnellingRequest()
+            self.body = TunnellingRequest(self.xknx)
         elif service_type_ident == \
                 KNXIPServiceType.TUNNELLING_ACK:
-            self.body = TunnellingAck()
+            self.body = TunnellingAck(self.xknx)
         elif service_type_ident == \
                 KNXIPServiceType.SEARCH_REQUEST:
-            self.body = SearchRequest()
+            self.body = SearchRequest(self.xknx)
         elif service_type_ident == \
                 KNXIPServiceType.SEARCH_RESPONSE:
-            self.body = SearchResponse()
+            self.body = SearchResponse(self.xknx)
         elif service_type_ident == \
                 KNXIPServiceType.DISCONNECT_REQUEST:
-            self.body = DisconnectRequest()
+            self.body = DisconnectRequest(self.xknx)
         elif service_type_ident == \
                 KNXIPServiceType.DISCONNECT_RESPONSE:
-            self.body = DisconnectResponse()
+            self.body = DisconnectResponse(self.xknx)
         elif service_type_ident == \
                 KNXIPServiceType.CONNECTIONSTATE_REQUEST:
-            self.body = ConnectionStateRequest()
+            self.body = ConnectionStateRequest(self.xknx)
         elif service_type_ident == \
                 KNXIPServiceType.CONNECTIONSTATE_RESPONSE:
-            self.body = ConnectionStateResponse()
+            self.body = ConnectionStateResponse(self.xknx)
         else:
             raise TypeError(self.header.service_type_ident)
 

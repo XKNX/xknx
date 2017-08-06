@@ -1,6 +1,7 @@
 """Unit test for KNX/IP SearchResponse objects."""
 import unittest
-
+import asyncio
+from xknx import XKNX
 from xknx.knxip import KNXIPFrame, KNXIPServiceType, SearchResponse, \
     HPAI, DIBDeviceInformation, DIBSuppSVCFamilies, DIBServiceFamily
 
@@ -9,6 +10,15 @@ class Test_KNXIP_Discovery(unittest.TestCase):
     """Test class for KNX/IP SearchResponse objects."""
 
     # pylint: disable=too-many-public-methods,invalid-name
+
+    def setUp(self):
+        """Set up test class."""
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
+    def tearDown(self):
+        """Tear down test class."""
+        self.loop.close()
 
     def test_connect_request(self):
         """Test parsing and streaming SearchResponse KNX/IP packet."""
@@ -22,7 +32,8 @@ class Test_KNXIP_Discovery(unittest.TestCase):
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x00, 0x00, 0x00, 0x00, 0x0c, 0x02, 0x02, 0x01,
                 0x03, 0x02, 0x04, 0x01, 0x05, 0x01, 0x07, 0x01))
-        knxipframe = KNXIPFrame()
+        xknx = XKNX(loop=self.loop)
+        knxipframe = KNXIPFrame(xknx)
         self.assertEqual(knxipframe.from_knx(raw), 80)
         self.assertEqual(knxipframe.to_knx(), list(raw))
 
@@ -43,7 +54,7 @@ class Test_KNXIP_Discovery(unittest.TestCase):
         self.assertTrue(knxipframe.body.dibs[1].supports(DIBServiceFamily.TUNNELING))
         self.assertFalse(knxipframe.body.dibs[1].supports(DIBServiceFamily.OBJECT_SERVER))
 
-        knxipframe2 = KNXIPFrame()
+        knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.SEARCH_RESPONSE)
         knxipframe2.body.control_endpoint = \
             HPAI(ip_addr="192.168.42.10", port=3671)

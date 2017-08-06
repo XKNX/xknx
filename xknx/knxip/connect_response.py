@@ -18,9 +18,9 @@ class ConnectResponse(KNXIPBody):
 
     CRD_LENGTH = 4
 
-    def __init__(self):
+    def __init__(self, xknx):
         """Initialization of ConnectResponse class."""
-        super(ConnectResponse, self).__init__()
+        super(ConnectResponse, self).__init__(xknx)
 
         self.communication_channel = 0
         self.status_code = ErrorCode.E_NO_ERROR

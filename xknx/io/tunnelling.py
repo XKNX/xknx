@@ -12,7 +12,7 @@ class Tunnelling(RequestResponse):
         self.udp_client = udp_client
         self.src_address = src_address
 
-        super(Tunnelling, self).__init__(self.xknx, self.udp_client, TunnellingAck)
+        super(Tunnelling, self).__init__(xknx, self.udp_client, TunnellingAck)
 
         self.telegram = telegram
         self.sequence_counter = sequence_counter
@@ -21,7 +21,7 @@ class Tunnelling(RequestResponse):
 
     def create_knxipframe(self):
         """Create KNX/IP Frame object to be sent to device."""
-        knxipframe = KNXIPFrame()
+        knxipframe = KNXIPFrame(self.xknx)
         knxipframe.init(KNXIPServiceType.TUNNELLING_REQUEST)
         knxipframe.body.communication_channel_id = self.communication_channel
         knxipframe.body.cemi.telegram = self.telegram

@@ -14,9 +14,9 @@ class DisconnectRequest(KNXIPBody):
 
     service_type = KNXIPServiceType.DISCONNECT_REQUEST
 
-    def __init__(self):
+    def __init__(self, xknx):
         """DisconnectRequest __init__ object."""
-        super(DisconnectRequest, self).__init__()
+        super(DisconnectRequest, self).__init__(xknx)
 
         self.communication_channel_id = 1
         self.control_endpoint = HPAI()

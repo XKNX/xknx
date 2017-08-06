@@ -60,7 +60,7 @@ class Tunnel():
 
     def send_ack(self, communication_channel_id, sequence_counter):
         """Send tunneling ACK after tunneling request received."""
-        ack_knxipframe = KNXIPFrame()
+        ack_knxipframe = KNXIPFrame(self.xknx)
         ack_knxipframe.init(KNXIPServiceType.TUNNELLING_ACK)
         ack_knxipframe.body.communication_channel_id = communication_channel_id
         ack_knxipframe.body.sequence_counter = sequence_counter

@@ -50,7 +50,7 @@ class Routing():
     @asyncio.coroutine
     def send_telegram(self, telegram):
         """Send Telegram to routing connected device."""
-        knxipframe = KNXIPFrame()
+        knxipframe = KNXIPFrame(self.xknx)
         knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
         knxipframe.body.src_addr = self.xknx.globals.own_address
         knxipframe.body.telegram = telegram

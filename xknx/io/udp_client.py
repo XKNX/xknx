@@ -81,7 +81,7 @@ class UDPClient:
         """Callback for having received an UDP packet. Parse and process KNXIP frame."""
         if raw:
             try:
-                knxipframe = KNXIPFrame()
+                knxipframe = KNXIPFrame(self.xknx)
                 knxipframe.from_knx(raw)
                 self.xknx.knx_logger.debug("Received: %s", knxipframe)
                 self.handle_knxipframe(knxipframe)
