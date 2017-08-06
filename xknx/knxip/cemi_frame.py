@@ -111,7 +111,7 @@ class CEMIFrame(KNXIPBody):
 
         if self.code == CEMIMessageCode.L_DATA_IND or \
             self.code == CEMIMessageCode.L_Data_REQ or \
-            self.code ==  CEMIMessageCode.L_DATA_CON:
+            self.code == CEMIMessageCode.L_DATA_CON:
             return self.from_knx_data_link_layer(cemi)
         else:
             raise CouldNotParseKNXIP("Could not understand CEMIMessageCode: {0} / {1}".format(self.code, cemi[0]))
