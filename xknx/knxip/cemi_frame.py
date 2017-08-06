@@ -1,7 +1,15 @@
 """
 Module for serialization and deserialization of KNX/IP CEMI Frame.
 
+cEMI stands for Common External Message Interface
+
 A CEMI frame is the container to transport a KNX/IP Telegram to/from the KNX bus.
+
+Documentation within:
+
+    Application Note 117/08 v02
+    KNX IP Communication Medium
+    File: AN117 v02.01 KNX IP Communication Medium DV.pdf
 """
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP
 from xknx.knx import Address, AddressType, DPTBinary, DPTArray, \
@@ -31,7 +39,6 @@ class CEMIFrame(KNXIPBody):
         telegram = Telegram()
         telegram.payload = self.payload
         telegram.group_address = self.dst_addr
-
         def resolve_telegram_type(cmd):
             """Return telegram type from APCI Command."""
             if cmd == APCICommand.GROUP_WRITE:
@@ -100,13 +107,26 @@ class CEMIFrame(KNXIPBody):
 
     def from_knx(self, cemi):
         """Parse/deserialize from KNX/IP raw data."""
+        self.code = CEMIMessageCode(cemi[0])
+
+        if self.code == CEMIMessageCode.L_DATA_IND or \
+            self.code == CEMIMessageCode.L_Data_REQ or \
+            self.code ==  CEMIMessageCode.L_DATA_CON:
+            return self.from_knx_data_link_layer(cemi)
+        else:
+            raise CouldNotParseKNXIP("Could not understand CEMIMessageCode: {0} / {1}".format(self.code, cemi[0]))
+
+    def from_knx_data_link_layer(self, cemi):
+        """Parse L_DATA_IND, CEMIMessageCode.L_Data_REQ, CEMIMessageCode.L_DATA_CON."""
         if len(cemi) < 11:
             raise CouldNotParseKNXIP("CEMI too small")
 
-        self.code = CEMIMessageCode(cemi[0])
+        # AddIL (Additional Info Length), as specified within
+        # KNX Chapter 3.6.3/4.1.4.3 "Additional information."
+        # Additional information is not yet parsed.
         offset = cemi[1]
 
-        self.flags = cemi[2] * 256 + cemi[3]
+        self.flags = cemi[2 + offset] * 256 + cemi[3 + offset]
 
         self.src_addr = Address((cemi[4 + offset], cemi[5 + offset]), \
                                 AddressType.PHYSICAL)
