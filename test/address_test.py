@@ -67,7 +67,7 @@ class TestAddress(unittest.TestCase):
         """Test address_format of Address initalized by int."""
         self.assertEqual(
             Address(49552).address_format,
-            AddressFormat.FREE)
+            AddressFormat.LEVEL3)
 
     def test_address_format_address(self):
         """Test address_format of Address initialized by Address."""
@@ -121,7 +121,7 @@ class TestAddress(unittest.TestCase):
         """Test string representation of address initialized by int."""
         self.assertEqual(
             Address(49552).str(),
-            "49552")
+            "24/1/144")
 
     def test_address_str_address(self):
         """Test string representation of address initialized by Address object."""

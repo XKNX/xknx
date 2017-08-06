@@ -29,7 +29,7 @@ class AddressFormat(Enum):
 class Address:
     """Class for handling KNX pyhsical and group addresses."""
 
-    def __init__(self, address=0, address_type=None, address_format=None):
+    def __init__(self, address=0, address_type=None, address_format=AddressFormat.LEVEL3):
         """Initialize Address class."""
         self.raw = None
         self.address_format = address_format
@@ -43,7 +43,6 @@ class Address:
 
         if address is None:
             self.raw = 0
-            self.address_format = AddressFormat.LEVEL3
 
         elif isinstance(address, Address):
             self.raw = address.raw
@@ -89,13 +88,17 @@ class Address:
         if any(not part.isdigit() for part in parts):
             raise CouldNotParseAddress(address)
         if len(parts) == 1:
-            self._set_int(int(parts[0]))
+            self._set_str_group_free(parts)
         elif len(parts) == 2:
             self._set_str_group_level2(parts)
         elif len(parts) == 3:
             self._set_str_group_level3(parts)
         else:
             raise CouldNotParseAddress(address)
+
+    def _set_str_group_free(self, parts):
+        self._set_int(int(parts[0]))
+        self.address_format = AddressFormat.FREE
 
     def _set_str_group_level2(self, parts):
         main = int(parts[0])
@@ -135,7 +138,6 @@ class Address:
         if raw > 65535:
             raise CouldNotParseAddress(raw)
         self.raw = raw
-        self.address_format = AddressFormat.FREE
 
     def str(self):
         """Return the address in the written string representation."""
