@@ -90,7 +90,9 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/4'), payload=DPTArray(23)))
+                         Telegram(
+                             Address('1/2/4'),
+                             payload=DPTArray(DPTTemperature().to_knx(23))))
 
     def test_set_setpoint_no_setpoint(self):
         """Test set_sepoint with no setpoint defined."""
