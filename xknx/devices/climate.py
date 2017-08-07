@@ -69,7 +69,8 @@ class Climate(Device):
         """Send setpoint to KNX bus."""
         if not self.supports_setpoint:
             return
-        yield from self.send(self.group_address_setpoint, DPTArray(setpoint))
+        yield from self.send(self.group_address_setpoint,
+            DPTArray(DPTTemperature().to_knx(setpoint)))
         yield from self.set_internal_setpoint(setpoint)
 
     @asyncio.coroutine
