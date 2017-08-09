@@ -119,7 +119,6 @@ class CEMIFrame(KNXIPBody):
     def from_knx_data_link_layer(self, cemi):
         """Parse L_DATA_IND, CEMIMessageCode.L_Data_REQ, CEMIMessageCode.L_DATA_CON."""
         if len(cemi) < 11:
-            print("Cemi too small ", self.code)
             raise CouldNotParseKNXIP("CEMI too small")
 
         # AddIL (Additional Info Length), as specified within
