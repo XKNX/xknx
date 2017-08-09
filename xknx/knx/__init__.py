@@ -13,4 +13,3 @@ from .dpt_float import DPTFloat, DPTLux, DPTTemperature, DPTHumidity, DPTWsp
 from .dpt_2byte import DPTUElCurrentmA
 from .dpt_scaling import DPTScaling
 from .dpt_time import DPTTime, DPTWeekday
-from .dpt_string import DPTString
