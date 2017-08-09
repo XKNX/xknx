@@ -75,25 +75,50 @@ class TestConfig(unittest.TestCase):
                   device_updated_cb=xknx.devices.device_updated))
 
 
-    def test_config_temperature(self):
+    def test_config_climate_temperature(self):
         """Test reading Climate object from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
-            xknx.devices['Kitchen.Climate_1'],
+            xknx.devices['Kitchen.Climate'],
             Climate(xknx,
-                    'Kitchen.Climate_1',
+                    'Kitchen.Climate',
                     group_address_temperature='1/7/1',
                     device_updated_cb=xknx.devices.device_updated))
 
-    def test_config_setpoint(self):
-        """Test reading Climate object with setpoint_address from config file."""
+    def test_config_climate_target_temperature(self):
+        """Test reading Climate object with target_temperature_address and setpoint from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
         self.assertEqual(
-            xknx.devices['Livingroom.Climate_2'],
+            xknx.devices['Children.Climate'],
             Climate(xknx,
-                    'Livingroom.Climate_2',
+                    'Children.Climate',
                     group_address_temperature='1/7/2',
                     group_address_setpoint='1/7/3',
+                    group_address_target_temperature='1/7/4',
+                    device_updated_cb=xknx.devices.device_updated))
+
+    def test_config_climate_operation_mode(self):
+        """Test reading Climate object with operation mode in one group address from config file."""
+        xknx = XKNX(config='../xknx.yaml', loop=self.loop)
+        self.assertEqual(
+            xknx.devices['Office.Climate'],
+            Climate(xknx,
+                    'Office.Climate',
+                    group_address_temperature='1/7/5',
+                    group_address_operation_mode='1/7/6',
+                    device_updated_cb=xknx.devices.device_updated))
+
+    def test_config_climate_operation_mode2(self):
+        """Test reading Climate object with operation mode in different group addresses  from config file."""
+        xknx = XKNX(config='../xknx.yaml', loop=self.loop)
+        self.assertEqual(
+            xknx.devices['Attic.Climate'],
+            Climate(xknx,
+                    'Attic.Climate',
+                    group_address_temperature='1/7/7',
+                    group_address_operation_mode_protection='1/7/8',
+                    group_address_operation_mode_night='1/7/9',
+                    group_address_operation_mode_comfort='1/7/10',
                     device_updated_cb=xknx.devices.device_updated))
 
     def test_config_time(self):
