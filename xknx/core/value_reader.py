@@ -36,7 +36,7 @@ class ValueReader:
             """Callback for having received a telegram."""
             return self.telegram_received(telegram)
 
-        self.xknx.telegram_queue.register_telegram_received_cb(
+        cb_obj = self.xknx.telegram_queue.register_telegram_received_cb(
             telegram_received_callback)
 
         yield from self.send_group_read()
@@ -45,7 +45,7 @@ class ValueReader:
         yield from self.stop_timeout()
 
         self.xknx.telegram_queue.unregister_telegram_received_cb(
-            telegram_received_callback)
+            cb_obj)
 
         if not self.success:
             return None

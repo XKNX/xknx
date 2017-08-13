@@ -7,6 +7,7 @@ Module for handling KNX primitves like:
 
 """
 from .address import Address, AddressType, AddressFormat
+from .address_filter import AddressFilter
 from .telegram import Telegram, TelegramDirection, TelegramType
 from .dpt import DPTBase, DPTBinary, DPTArray, DPTComparator
 from .dpt_float import DPTFloat, DPTLux, DPTTemperature, DPTHumidity, DPTWsp

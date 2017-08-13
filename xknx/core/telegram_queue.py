@@ -14,15 +14,36 @@ from xknx.knx import TelegramDirection, TelegramType
 class TelegramQueue():
     """Class for telegram queue."""
 
+    class Callback:
+        """Callback class for handling telegram received callbacks."""
+
+        # pylint: disable=too-few-public-methods
+
+        def __init__(self, callback, address_filters=None):
+            """Initialize Callback class."""
+            self.callback = callback
+            self.address_filters = address_filters
+
+        def is_within_filter(self, telegram):
+            """Test if callback is filtering for group address."""
+            if self.address_filters is None:
+                return True
+            for address_filter in self.address_filters:
+                if address_filter.match(telegram.group_address):
+                    return True
+            return False
+
     def __init__(self, xknx):
         """Initialize TelegramQueue class."""
         self.xknx = xknx
         self.telegram_received_cbs = []
         self.queue_stopped = asyncio.Event()
 
-    def register_telegram_received_cb(self, telegram_received_cb):
+    def register_telegram_received_cb(self, telegram_received_cb, address_filters=None):
         """Register callback for a telegram beeing received from KNX bus."""
-        self.telegram_received_cbs.append(telegram_received_cb)
+        callback = TelegramQueue.Callback(telegram_received_cb, address_filters)
+        self.telegram_received_cbs.append(callback)
+        return callback
 
     def unregister_telegram_received_cb(self, telegram_received_cb):
         """Unregister callback for a telegram beeing received from KNX bus."""
@@ -99,9 +120,10 @@ class TelegramQueue():
 
             processed = False
             for telegram_received_cb in self.telegram_received_cbs:
-                ret = yield from telegram_received_cb(telegram)
-                if ret:
-                    processed = True
+                if telegram_received_cb.is_within_filter(telegram):
+                    ret = yield from telegram_received_cb.callback(telegram)
+                    if ret:
+                        processed = True
 
             if not processed:
                 for device in self.xknx.devices.devices_by_group_address(
