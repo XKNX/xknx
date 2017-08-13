@@ -9,3 +9,4 @@ from .switch import Switch
 from .time import Time
 from .sensor import Sensor
 from .binary_sensor import BinarySensor, BinarySensorState
+from .notification import Notification

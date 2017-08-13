@@ -4,7 +4,7 @@ import asyncio
 
 from xknx import XKNX
 from xknx.devices import Light, Switch, Cover, Climate, Time, \
-    BinarySensor, Action, Sensor
+    BinarySensor, Action, Sensor, Notification
 
 # pylint: disable=too-many-public-methods,invalid-name
 class TestConfig(unittest.TestCase):
@@ -131,6 +131,16 @@ class TestConfig(unittest.TestCase):
                  group_address='2/1/2',
                  device_updated_cb=xknx.devices.device_updated))
 
+    def test_config_notification(self):
+        """Test reading Time object from config file."""
+        xknx = XKNX(config='../xknx.yaml', loop=self.loop)
+        self.assertEqual(
+            xknx.devices['AlarmWindow'],
+            Notification(
+                xknx,
+                'AlarmWindow',
+                group_address='2/1/3',
+                device_updated_cb=xknx.devices.device_updated))
 
     def test_config_binary_sensor(self):
         """Test reading BinarySensor from config file."""

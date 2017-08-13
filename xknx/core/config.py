@@ -7,7 +7,8 @@ Module for reading configfiles (xknx.yaml).
 
 import yaml
 from xknx.knx import Address, AddressType
-from xknx.devices import BinarySensor, Climate, Time, Light, Switch, Cover, Sensor
+from xknx.devices import Notification, BinarySensor, Climate, \
+    Time, Light, Switch, Cover, Sensor
 
 class Config:
     """Class for parsing xknx.yaml."""
@@ -49,6 +50,8 @@ class Config:
                 self.parse_group_sensor(doc["groups"][group])
             elif group.startswith("binary_sensor"):
                 self.parse_group_binary_sensor(doc["groups"][group])
+            elif group.startswith("notification"):
+                self.parse_group_notification(doc["groups"][group])
 
     def parse_group_light(self, entries):
         """Parse a light section of xknx.yaml."""
@@ -112,3 +115,12 @@ class Config:
                 entry,
                 entries[entry])
             self.xknx.devices.add(sensor)
+
+    def parse_group_notification(self, entries):
+        """Parse a sensor section of xknx.yaml."""
+        for entry in entries:
+            notification = Notification.from_config(
+                self.xknx,
+                entry,
+                entries[entry])
+            self.xknx.devices.add(notification)

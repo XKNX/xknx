@@ -81,6 +81,8 @@ groups:
     time:
         General.Time: {group_address: '2/1/2'}
 
+    notification:
+        AlarmWindow: {group_address: '2/1/3'}
 
     sensor:
         Heating.Valve1: {group_address: '2/0/0', value_type: 'percent'}

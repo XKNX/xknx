@@ -36,11 +36,12 @@ SUPPORTED_DOMAINS = [
     'cover',
     'light',
     'sensor',
-    'binary_sensor']
+    'binary_sensor',
+    'notify']
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['xknx==0.7.7']
+REQUIREMENTS = ['xknx==0.7.8']
 
 TUNNELING_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
@@ -187,7 +188,8 @@ class XKNXModule(object):
         if CONF_XKNX_FIRE_EVENT in self.config[DOMAIN] and \
                 self.config[DOMAIN][CONF_XKNX_FIRE_EVENT]:
             from xknx.knx import AddressFilter
-            address_filters = list(map(lambda af: AddressFilter(af),
+            address_filters = list(map(
+                AddressFilter,
                 self.config[DOMAIN][CONF_XKNX_FIRE_EVENT_FILTER]))
             self.xknx.telegram_queue.register_telegram_received_cb(
                 self.telegram_received_cb, address_filters)
