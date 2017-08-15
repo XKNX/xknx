@@ -3,6 +3,7 @@ import asyncio
 from xknx import XKNX
 from xknx.devices import Light
 
+
 async def main():
     """Connect to KNX/IP bus, slowly dimm on light, set it off again afterwards."""
     xknx = XKNX()

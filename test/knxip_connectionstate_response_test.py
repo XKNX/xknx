@@ -34,7 +34,6 @@ class Test_KNXIP_ConnStateResp(unittest.TestCase):
         self.assertEqual(
             knxipframe.body.status_code, ErrorCode.E_CONNECTION_ID)
 
-
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.CONNECTIONSTATE_RESPONSE)
         knxipframe2.body.communication_channel_id = 21

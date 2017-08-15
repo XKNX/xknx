@@ -27,22 +27,18 @@ class Time(Device):
 
         self.group_address = group_address
 
-
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
         group_address = \
             config.get('group_address')
-
         return cls(xknx,
                    name,
                    group_address=group_address)
 
-
     def has_group_address(self, group_address):
         """Test if device has given group address."""
         return self.group_address == group_address
-
 
     @asyncio.coroutine
     def broadcast_time(self):

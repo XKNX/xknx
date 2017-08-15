@@ -1,10 +1,11 @@
-""" Implementation of Basic KNX Time """
+"""Implementation of Basic KNX Time."""
 
 from enum import Enum
 import time
 
 from xknx.exceptions import ConversionError
 from .dpt import DPTBase
+
 
 class DPTWeekday(Enum):
     """Enum class for week days."""
@@ -18,9 +19,11 @@ class DPTWeekday(Enum):
     SUNDAY = 7
     NONE = 0
 
+
 class DPTTime(DPTBase):
     """
-    Abstraction for KNX 3 Octet Time
+    Abstraction for KNX 3 Octet Time.
+
     DPT 10.001
     """
 
@@ -37,10 +40,10 @@ class DPTTime(DPTBase):
         if not DPTTime._test_range(day, hours, minutes, seconds):
             raise ConversionError(raw)
 
-        return {'day':DPTWeekday(day),
-                'hours':hours,
-                'minutes':minutes,
-                'seconds':seconds}
+        return {'day': DPTWeekday(day),
+                'hours': hours,
+                'minutes': minutes,
+                'seconds': seconds}
 
     @classmethod
     def to_knx(cls, values):
@@ -65,10 +68,10 @@ class DPTTime(DPTBase):
         hours = localtime.tm_hour
         minutes = localtime.tm_min
         seconds = localtime.tm_sec
-        return {'day':DPTWeekday(day),
-                'hours':hours,
-                'minutes':minutes,
-                'seconds':seconds}
+        return {'day': DPTWeekday(day),
+                'hours': hours,
+                'minutes': minutes,
+                'seconds': seconds}
 
     @classmethod
     def current_time_as_knx(cls):

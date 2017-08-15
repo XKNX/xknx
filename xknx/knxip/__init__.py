@@ -1,6 +1,5 @@
-"""
-This package contains all methods for serialization and deserialization of KNX/IP packets.
-"""
+"""This package contains all methods for serialization and deserialization of KNX/IP packets."""
+# flake8: noqa
 from .knxip import KNXIPFrame
 from .knxip_enum import KNXIPServiceType, CEMIMessageCode, APCICommand,\
     CEMIFlags, ConnectRequestType, DIBTypeCode, KNXMedium, DIBServiceFamily

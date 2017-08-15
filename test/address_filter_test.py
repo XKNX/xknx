@@ -1,7 +1,7 @@
 """Unit test for Address class."""
 import unittest
-
 from xknx.knx import AddressFilter
+
 
 class TestAddressFilter(unittest.TestCase):
     """Test class for Address."""
@@ -54,7 +54,7 @@ class TestAddressFilter(unittest.TestCase):
         self.assertTrue(af3.match("1/2/5"))
 
     def test_address_filter_level3_2(self):
-        """Test AddressFilter 2nd part of level3 address.es"""
+        """Test AddressFilter 2nd part of level3 addresses."""
         af1 = AddressFilter("1/2/3")
         self.assertTrue(af1.match("1/2/3"))
         self.assertFalse(af1.match("1/3/3"))
@@ -66,7 +66,6 @@ class TestAddressFilter(unittest.TestCase):
         af3 = AddressFilter("1/*/3")
         self.assertTrue(af3.match("1/4/3"))
         self.assertTrue(af3.match("1/7/3"))
-
 
     def test_address_filter_level3_1(self):
         """Test AddressFilter 1st part of level3 addresses."""
@@ -137,6 +136,7 @@ class TestAddressFilter(unittest.TestCase):
         self.assertFalse(af1.match("1/7/10"))
         self.assertFalse(af1.match("2/4/10"))
         self.assertFalse(af1.match("2/1/10"))
+
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestAddressFilter)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

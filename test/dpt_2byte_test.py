@@ -4,6 +4,7 @@ import unittest
 from xknx.exceptions import ConversionError
 from xknx.knx import DPTUElCurrentmA
 
+
 class TestDPT2byte(unittest.TestCase):
     """Test class for KNX 2 byte objects."""
 
@@ -58,6 +59,7 @@ class TestDPT2byte(unittest.TestCase):
         """Test DPTUElCurrentmA parsing with wrong value."""
         with self.assertRaises(ConversionError):
             DPTUElCurrentmA().from_knx((0xFF, 0x4E, 0x12))
+
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPT2byte)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

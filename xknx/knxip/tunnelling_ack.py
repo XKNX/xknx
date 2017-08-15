@@ -9,8 +9,10 @@ from .body import KNXIPBody
 from .error_code import ErrorCode
 from .knxip_enum import KNXIPServiceType
 
+
 class TunnellingAck(KNXIPBody):
     """Representation of a KNX Connect Request."""
+
     # pylint: disable=too-many-instance-attributes
 
     service_type = KNXIPServiceType.TUNNELLING_ACK
@@ -18,7 +20,7 @@ class TunnellingAck(KNXIPBody):
     BODY_LENGTH = 4
 
     def __init__(self, xknx):
-        """TunnellingAck __init__ object."""
+        """Initialize TunnellingAck object."""
         super(TunnellingAck, self).__init__(xknx)
         self.communication_channel_id = 1
         self.sequence_counter = 0

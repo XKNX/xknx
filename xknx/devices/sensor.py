@@ -11,6 +11,7 @@ from xknx.knx import Address, DPTBinary, DPTArray, \
     DPTScaling, DPTTemperature, DPTLux, DPTWsp, DPTUElCurrentmA
 from .device import Device
 
+
 class Sensor(Device):
     """Class for managing a sensor."""
 
@@ -60,7 +61,7 @@ class Sensor(Device):
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
-        return [self.group_address,]
+        return [self.group_address, ]
 
     @asyncio.coroutine
     def process(self, telegram):
@@ -79,8 +80,7 @@ class Sensor(Device):
             return "m/s"
         elif self.value_type == 'current':
             return "mA"
-        else:
-            return None
+        return None
 
     def resolve_state(self):
         """Return the current state of the sensor as a human readable string."""
@@ -101,7 +101,7 @@ class Sensor(Device):
         elif self.value_type == 'current':
             return DPTUElCurrentmA().from_knx(self.state.value)
         elif isinstance(self.state, DPTArray):
-            return ','.join('0x%02x'%i for i in self.state.value)
+            return ','.join('0x%02x' % i for i in self.state.value)
         elif isinstance(self.state, DPTBinary):
             return "{0:b}".format(self.state.value)
         raise TypeError()

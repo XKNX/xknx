@@ -7,6 +7,7 @@ from xknx.knx import Telegram, DPTTemperature, DPTArray, DPTBinary, Address, \
 from xknx import XKNX
 from xknx.devices import Climate, ClimateOperationMode
 
+
 class TestClimate(unittest.TestCase):
     """Test class for Climate objects."""
 
@@ -118,10 +119,9 @@ class TestClimate(unittest.TestCase):
     #
     # TEST CALLBACK
     #
-
     def test_process_callback(self):
         """Test if after_update_callback is called after update of Climate object was changed via incoming telegram."""
-       # pylint: disable=no-self-use
+        # pylint: disable=no-self-use
         xknx = XKNX(loop=self.loop)
         climate = Climate(
             xknx,
@@ -130,6 +130,7 @@ class TestClimate(unittest.TestCase):
             group_address_operation_mode='1/2/4')
 
         after_update_callback = Mock()
+
         @asyncio.coroutine
         def async_after_update_callback(device):
             """Async callback."""
@@ -176,6 +177,7 @@ class TestClimate(unittest.TestCase):
             group_address_operation_mode='1/2/4')
 
         after_update_callback = Mock()
+
         @asyncio.coroutine
         def async_after_update_callback(device):
             """Async callback."""
@@ -201,7 +203,6 @@ class TestClimate(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
-
 
     #
     # TEST SET SETPOINT
@@ -344,7 +345,6 @@ class TestClimate(unittest.TestCase):
             telegram2,
             Telegram(Address('1/2/4'), TelegramType.GROUP_READ))
 
-
     #
     # TEST PROCESS
     #
@@ -359,9 +359,7 @@ class TestClimate(unittest.TestCase):
         telegram = Telegram(Address('1/2/3'))
         telegram.payload = DPTArray(DPTTemperature().to_knx(21.34))
         self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
-
         self.assertEqual(climate.temperature, 21.34)
-
 
     def test_process_setpoint(self):
         """Test process / reading telegrams from telegram queue. Test if setpoint is processed correctly."""
@@ -374,9 +372,7 @@ class TestClimate(unittest.TestCase):
         telegram = Telegram(Address('1/2/3'))
         telegram.payload = DPTArray(DPTTemperature().to_knx(21.34))
         self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
-
         self.assertEqual(climate.setpoint, 21.34)
-
 
     def test_process_callback_temp(self):
         """Test process / reading telegrams from telegram queue. Test if callback is executed when receiving temperature."""
@@ -389,6 +385,7 @@ class TestClimate(unittest.TestCase):
             group_address_setpoint='1/2/4')
 
         after_update_callback = Mock()
+
         @asyncio.coroutine
         def async_after_update_callback(device):
             """Async callback."""
@@ -398,9 +395,7 @@ class TestClimate(unittest.TestCase):
         telegram = Telegram(Address('1/2/3'))
         telegram.payload = DPTArray(DPTTemperature().to_knx(21.34))
         self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
-
         after_update_callback.assert_called_with(climate)
-
 
     def test_process_callback_setpoint(self):
         """Test process / reading telegrams from telegram queue. Test if callback is executed when receiving setpoint."""
@@ -413,6 +408,7 @@ class TestClimate(unittest.TestCase):
             group_address_setpoint='1/2/4')
 
         after_update_callback = Mock()
+
         @asyncio.coroutine
         def async_after_update_callback(device):
             """Async callback."""
@@ -422,9 +418,7 @@ class TestClimate(unittest.TestCase):
         telegram = Telegram(Address('1/2/4'))
         telegram.payload = DPTArray(DPTTemperature().to_knx(21.34))
         self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
-
         after_update_callback.assert_called_with(climate)
-
 
     #
     # SUPPORTED OPERATION MODES
@@ -483,6 +477,7 @@ class TestClimate(unittest.TestCase):
             climate.get_supported_operation_modes(),
             [ClimateOperationMode.STANDBY,
              ClimateOperationMode.NIGHT])
+
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestClimate)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

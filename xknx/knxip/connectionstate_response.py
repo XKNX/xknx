@@ -9,6 +9,7 @@ from .knxip_enum import KNXIPServiceType
 from .body import KNXIPBody
 from .error_code import ErrorCode
 
+
 class ConnectionStateResponse(KNXIPBody):
     """Representation of a KNX Connection State Response."""
 
@@ -17,7 +18,7 @@ class ConnectionStateResponse(KNXIPBody):
     service_type = KNXIPServiceType.CONNECTIONSTATE_RESPONSE
 
     def __init__(self, xknx):
-        """ConnectionStateResponse __init__ object."""
+        """Initialize ConnectionStateResponse object."""
         super(ConnectionStateResponse, self).__init__(xknx)
         self.communication_channel_id = 1
         self.status_code = ErrorCode.E_NO_ERROR

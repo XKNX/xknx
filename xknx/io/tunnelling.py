@@ -2,6 +2,7 @@
 from xknx.knxip import KNXIPServiceType, KNXIPFrame, TunnellingAck
 from .request_response import RequestResponse
 
+
 class Tunnelling(RequestResponse):
     """Class to TunnelingRequest and wait for TunnelingResponse."""
 
@@ -17,7 +18,6 @@ class Tunnelling(RequestResponse):
         self.telegram = telegram
         self.sequence_counter = sequence_counter
         self.communication_channel = communication_channel
-
 
     def create_knxipframe(self):
         """Create KNX/IP Frame object to be sent to device."""

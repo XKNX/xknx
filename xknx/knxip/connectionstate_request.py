@@ -8,14 +8,16 @@ from .knxip_enum import KNXIPServiceType
 from .body import KNXIPBody
 from .hpai import HPAI
 
+
 class ConnectionStateRequest(KNXIPBody):
     """Representation of a KNX Connection State Request."""
+
     # pylint: disable=too-many-instance-attributes
 
     service_type = KNXIPServiceType.CONNECTIONSTATE_REQUEST
 
     def __init__(self, xknx):
-        """ConnectionStateRequest __init__ object."""
+        """Initialize ConnectionStateRequest object."""
         super(ConnectionStateRequest, self).__init__(xknx)
         self.communication_channel_id = 1
         self.control_endpoint = HPAI()
@@ -43,7 +45,7 @@ class ConnectionStateRequest(KNXIPBody):
             """Serialize information bytes."""
             info = []
             info.append(self.communication_channel_id)
-            info.append(0x00) # Reserved
+            info.append(0x00)  # Reserved
             return info
         data = []
         data.extend(info_to_knx())

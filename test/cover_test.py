@@ -7,6 +7,7 @@ from xknx import XKNX
 from xknx.devices import Cover
 from xknx.knx import Telegram, Address, TelegramType, DPTBinary, DPTArray
 
+
 class TestCover(unittest.TestCase):
     """Test class for Cover objects."""
 
@@ -40,7 +41,6 @@ class TestCover(unittest.TestCase):
         self.assertEqual(telegram1,
                          Telegram(Address('1/2/4'), TelegramType.GROUP_READ))
 
-
     #
     # TEST SET UP
     #
@@ -59,7 +59,6 @@ class TestCover(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/1'), payload=DPTBinary(0)))
-
 
     #
     # TEST SET DOWN
@@ -80,7 +79,6 @@ class TestCover(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(Address('1/2/1'), payload=DPTBinary(1)))
 
-
     #
     # TEST SET SHORT UP
     #
@@ -99,7 +97,6 @@ class TestCover(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/2'), payload=DPTBinary(0)))
-
 
     #
     # TEST SET SHORT DOWN
@@ -120,7 +117,6 @@ class TestCover(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(Address('1/2/2'), payload=DPTBinary(1)))
 
-
     #
     # TEST STOP
     #
@@ -138,7 +134,6 @@ class TestCover(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/2'), payload=DPTBinary(1)))
-
 
     #
     # TEST POSITION
@@ -159,7 +154,6 @@ class TestCover(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(Address('1/2/3'), payload=DPTArray(50)))
 
-
     def test_position_without_position_address_up(self):
         """Test moving cover to absolute position - with no absolute positioning supported."""
         xknx = XKNX(loop=self.loop)
@@ -176,7 +170,6 @@ class TestCover(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(Address('1/2/1'), payload=DPTBinary(1)))
 
-
     def test_position_without_position_address_down(self):
         """Test moving cover down - with no absolute positioning supported."""
         xknx = XKNX(loop=self.loop)
@@ -192,7 +185,6 @@ class TestCover(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(Address('1/2/1'), payload=DPTBinary(0)))
-
 
     #
     # TEST PROCESS
@@ -213,7 +205,6 @@ class TestCover(unittest.TestCase):
 
         self.assertEqual(cover.current_position(), 42)
 
-
     def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback is executed."""
         # pylint: disable=no-self-use
@@ -227,6 +218,7 @@ class TestCover(unittest.TestCase):
             group_address_position_feedback='1/2/4')
 
         after_update_callback = Mock()
+
         @asyncio.coroutine
         def async_after_update_callback(device):
             """Async callback."""

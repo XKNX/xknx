@@ -19,8 +19,9 @@ from .disconnect_response import DisconnectResponse
 from .connectionstate_request import ConnectionStateRequest
 from .connectionstate_response import ConnectionStateResponse
 
+
 class KNXIPFrame:
-    """Class for KNX/IP Frames"""
+    """Class for KNX/IP Frames."""
 
     def __init__(self, xknx):
         """Initialize object."""
@@ -28,12 +29,10 @@ class KNXIPFrame:
         self.header = KNXIPHeader(xknx)
         self.body = None
 
-
     def init(self, service_type_ident):
         """Init object by service_type_ident. Will instanciate a body object depending on service_type_ident."""
         self.header.service_type_ident = service_type_ident
 
-        # pylint: disable=redefined-variable-type
         if service_type_ident == \
                 KNXIPServiceType.ROUTING_INDICATION:
             self.body = CEMIFrame(self.xknx)
@@ -69,7 +68,6 @@ class KNXIPFrame:
             self.body = ConnectionStateResponse(self.xknx)
         else:
             raise TypeError(self.header.service_type_ident)
-
 
     def from_knx(self, data):
         """Parse/deserialize from KNX/IP raw data."""

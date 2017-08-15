@@ -9,14 +9,16 @@ from .knxip_enum import KNXIPServiceType
 from .body import KNXIPBody
 from .error_code import ErrorCode
 
+
 class DisconnectResponse(KNXIPBody):
     """Representation of a KNX Disconnect Response."""
+
     # pylint: disable=too-many-instance-attributes
 
     service_type = KNXIPServiceType.DISCONNECT_RESPONSE
 
     def __init__(self, xknx):
-        """DisconnectResponse __init__ object."""
+        """Initialize DisconnectResponse object."""
         super(DisconnectResponse, self).__init__(xknx)
 
         self.communication_channel_id = 1

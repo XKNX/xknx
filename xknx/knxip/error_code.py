@@ -1,6 +1,6 @@
 """Module for KNX/IP Error codes."""
-
 from enum import Enum
+
 
 class ErrorCode(Enum):
     """Enum class for KNX/IP error codes."""

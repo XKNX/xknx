@@ -6,6 +6,7 @@ from xknx import XKNX
 from xknx.devices import Light
 from xknx.knx import Address, Telegram, TelegramType, DPTBinary, DPTArray
 
+
 class TestLight(unittest.TestCase):
     """Class for testing Light objects."""
 
@@ -37,7 +38,6 @@ class TestLight(unittest.TestCase):
                       'Diningroom.Light_1',
                       group_address_switch='1/6/4')
         self.assertFalse(light.supports_dimming)
-
 
     #
     # SYNC
@@ -132,7 +132,6 @@ class TestLight(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(Address('1/2/5'), payload=DPTArray(23)))
 
-
     #
     # TEST PROCESS
     #
@@ -153,7 +152,6 @@ class TestLight(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
         self.assertEqual(light.state, False)
 
-
     def test_process_switch_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
         # pylint: disable=no-self-use
@@ -164,6 +162,7 @@ class TestLight(unittest.TestCase):
                       group_address_brightness='1/2/5')
 
         after_update_callback = Mock()
+
         @asyncio.coroutine
         def async_after_update_callback(device):
             """Async callback."""
@@ -188,7 +187,6 @@ class TestLight(unittest.TestCase):
         telegram = Telegram(Address('1/2/5'), payload=DPTArray(23))
         self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
         self.assertEqual(light.brightness, 23)
-
 
     #
     # TEST DO

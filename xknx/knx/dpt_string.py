@@ -1,13 +1,12 @@
-"""
-Implementation of 3.17 Datapoint Types "String"
-"""
-
+"""Implementation of 3.17 Datapoint Types String."""
 from xknx.exceptions import ConversionError
 from .dpt import DPTBase
 
+
 class DPTString(DPTBase):
     """
-    Abstraction for KNX 14 Octet String
+    Abstraction for KNX 14 Octet String.
+
     DPT 3.17
     """
 

@@ -15,32 +15,37 @@ The module supports all different writings of group addresses:
 from enum import Enum
 from xknx.exceptions import CouldNotParseAddress
 
+
 class AddressType(Enum):
     """Enum class for different type of addresses."""
+
     PHYSICAL = 1
     GROUP = 2
 
+
 class AddressFormat(Enum):
     """Enum class for different writing of addresses."""
+
     LEVEL2 = 1
     LEVEL3 = 2
     FREE = 3
 
+
 class Address:
     """Class for handling KNX pyhsical and group addresses."""
 
-    MAX_PYHSICAL_1 = 0x0F # 15
-    MAX_PYHSICAL_2 = 0x0F # 15
-    MAX_PYHSICAL_3 = 0xFF # 255
+    MAX_PYHSICAL_1 = 0x0F  # 15
+    MAX_PYHSICAL_2 = 0x0F  # 15
+    MAX_PYHSICAL_3 = 0xFF  # 255
 
-    MAX_LEVEL3_1 = 0x1F # 31
-    MAX_LEVEL3_2 = 0x07 # 7
-    MAX_LEVEL3_3 = 0xFF # 255
+    MAX_LEVEL3_1 = 0x1F  # 31
+    MAX_LEVEL3_2 = 0x07  # 7
+    MAX_LEVEL3_3 = 0xFF  # 255
 
-    MAX_LEVEL2_1 = 0x1F # 31
-    MAX_LEVEL2_2 = 0x07FF # 2047
+    MAX_LEVEL2_1 = 0x1F  # 31
+    MAX_LEVEL2_2 = 0x07FF  # 2047
 
-    MAX_FREE = 0xFFFF # 65535
+    MAX_FREE = 0xFFFF  # 65535
 
     def __init__(self, address=0, address_type=None, address_format=AddressFormat.LEVEL3):
         """Initialize Address class."""
@@ -91,9 +96,8 @@ class Address:
             raise CouldNotParseAddress(address)
         if sub > self.MAX_PYHSICAL_3:
             raise CouldNotParseAddress(address)
-        self.raw = (main<<12) +  (middle<<8) + sub
+        self.raw = (main << 12) + (middle << 8) + sub
         self.address_format = AddressFormat.LEVEL3
-
 
     def _set_str_group(self, address):
         parts = address.split("/")
@@ -120,7 +124,7 @@ class Address:
             raise CouldNotParseAddress(parts)
         if sub > self.MAX_LEVEL2_2:
             raise CouldNotParseAddress(parts)
-        self.raw = (main<<11) + sub
+        self.raw = (main << 11) + sub
         self.address_format = AddressFormat.LEVEL2
 
     def _set_str_group_level3(self, parts):
@@ -133,7 +137,7 @@ class Address:
             raise CouldNotParseAddress(parts)
         if sub > self.MAX_LEVEL3_3:
             raise CouldNotParseAddress(parts)
-        self.raw = (main<<11) +  (middle<<8) + sub
+        self.raw = (main << 11) + (middle << 8) + sub
         self.address_format = AddressFormat.LEVEL3
 
     def _set_tuple(self, address):
@@ -156,7 +160,7 @@ class Address:
         """Return 1st part of pyhsical address."""
         return (self.raw >> 12) & self.MAX_PYHSICAL_1
 
-    def  get_physical_2(self):
+    def get_physical_2(self):
         """Return 2nd part of pyhsical address."""
         return (self.raw >> 8) & self.MAX_PYHSICAL_2
 
@@ -172,7 +176,7 @@ class Address:
         """Return 2nd part of level3 group address."""
         return (self.raw >> 8) & self.MAX_LEVEL3_2
 
-    def  get_level3_3(self):
+    def get_level3_3(self):
         """Return 3rd part of level3 group address."""
         return self.raw & self.MAX_LEVEL3_3
 
@@ -184,7 +188,7 @@ class Address:
         """Return 2nd part of level2 group address."""
         return self.raw & self.MAX_LEVEL2_2
 
-    def  get_free(self):
+    def get_free(self):
         """Return the only part of free format group address."""
         return self.raw & self.MAX_FREE
 
@@ -235,8 +239,7 @@ class Address:
             return AddressType.PHYSICAL
         elif isinstance(address, Address):
             return address.address_type
-        else:
-            return AddressType.GROUP
+        return AddressType.GROUP
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""

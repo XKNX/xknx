@@ -1,11 +1,11 @@
 """
-Device is the base class for all implemented devices (e.g. Lights/Switches/Sensors.)
+Device is the base class for all implemented devices (e.g. Lights/Switches/Sensors).
 
 It provides basis functionality for reading the state from the KNX bus.
 """
-
 import asyncio
 from xknx.knx import Telegram
+
 
 class Device:
     """Base class for devices."""
@@ -28,7 +28,7 @@ class Device:
 
     @asyncio.coroutine
     def after_update(self):
-        """Method is be called by derived classes after the internal state has been changed."""
+        """Execute callbacks after internal state has been changed."""
         for device_updated_cb in self.device_updated_cbs:
             # pylint: disable=not-callable
             yield from device_updated_cb(self)
@@ -71,8 +71,8 @@ class Device:
         """Return name of device."""
         return self.name
 
-    # pylint: disable=invalid-name
     @asyncio.coroutine
     def do(self, action):
-        """Abstract method for executing 'do' commands (e.g. do('position:10') ). Has to be implemented by derived class."""
+        """Execute 'do' commands."""
+        # pylint: disable=invalid-name
         pass

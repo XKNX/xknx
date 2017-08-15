@@ -5,6 +5,7 @@ from xknx import XKNX
 from xknx.knxip import KNXIPFrame, KNXIPServiceType, DisconnectResponse,\
     ErrorCode
 
+
 class Test_KNXIP_DisconnectResp(unittest.TestCase):
     """Test class for KNX/IP DisconnectResponse objects."""
 
@@ -32,7 +33,6 @@ class Test_KNXIP_DisconnectResp(unittest.TestCase):
             knxipframe.body.communication_channel_id, 21)
         self.assertEqual(
             knxipframe.body.status_code, ErrorCode.E_NO_MORE_UNIQUE_CONNECTIONS)
-
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.DISCONNECT_RESPONSE)

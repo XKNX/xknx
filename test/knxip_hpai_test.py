@@ -4,6 +4,7 @@ import unittest
 from xknx.knxip import HPAI
 from xknx.exceptions import CouldNotParseKNXIP
 
+
 class Test_KNXIP_HPAI(unittest.TestCase):
     """Test class for KNX/IP HPAI objects."""
 
@@ -20,7 +21,6 @@ class Test_KNXIP_HPAI(unittest.TestCase):
 
         hpai2 = HPAI(ip_addr='192.168.42.1', port=33941)
         self.assertEqual(hpai2.to_knx(), list(raw))
-
 
     def test_hpai_wrong_input(self):
         """Test parsing of wrong HPAI KNX/IP packet."""

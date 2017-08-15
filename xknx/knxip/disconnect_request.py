@@ -8,14 +8,16 @@ from .knxip_enum import KNXIPServiceType
 from .body import KNXIPBody
 from .hpai import HPAI
 
+
 class DisconnectRequest(KNXIPBody):
     """Representation of a KNX Disconnect Request."""
+
     # pylint: disable=too-many-instance-attributes
 
     service_type = KNXIPServiceType.DISCONNECT_REQUEST
 
     def __init__(self, xknx):
-        """DisconnectRequest __init__ object."""
+        """Initialize DisconnectRequest object."""
         super(DisconnectRequest, self).__init__(xknx)
 
         self.communication_channel_id = 1
@@ -45,7 +47,7 @@ class DisconnectRequest(KNXIPBody):
             """Serialize information bytes."""
             info = []
             info.append(self.communication_channel_id)
-            info.append(0x00) # Reserved
+            info.append(0x00)  # Reserved
             return info
         data = []
         data.extend(info_to_knx())

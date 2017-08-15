@@ -2,6 +2,7 @@
 
 from enum import Enum
 
+
 class KNXIPServiceType(Enum):
     """Enum class for KNX/IP Service Types."""
 
@@ -31,20 +32,20 @@ class CEMIMessageCode(Enum):
 
     # FROM NETWORK LAYER TO DATA LINK LAYER
     L_RAW_REQ = 0x10
-    L_Data_REQ = 0x11      # Data Service.
-               # Primitive used for transmitting a data frame
-    L_POLL_DATA_REQ = 0x13 # Poll Data Service
+    L_Data_REQ = 0x11       # Data Service.
+    # Primitive used for transmitting a data frame
+    L_POLL_DATA_REQ = 0x13  # Poll Data Service
 
     # FROM DATA LINK LAYER TO NETWORK LAYER
-    L_POLL_DATA_CON = 0x25 # Poll Data Service
-    L_DATA_IND = 0x29      # Data Service.
-               # Primitive used for receiving a data frame
-    L_BUSMON_IND = 0x2B    # Bus Monitor Service
+    L_POLL_DATA_CON = 0x25  # Poll Data Service
+    L_DATA_IND = 0x29       # Data Service.
+    # Primitive used for receiving a data frame
+    L_BUSMON_IND = 0x2B     # Bus Monitor Service
     L_RAW_IND = 0x2D
-    L_DATA_CON = 0x2E      # Data Service.
-               # Primitive used for local confirmation
-               # that a frame was sent
-               # (does not indicate a successful receive though)
+    L_DATA_CON = 0x2E       # Data Service.
+    # Primitive used for local confirmation
+    # that a frame was sent
+    # (does not indicate a successful receive though)
     L_RAW_CON = 0x2F
 
 
@@ -76,7 +77,6 @@ class CEMIFlags():
     SYSTEM_BROADCAST = 0x0000
     BROADCAST = 0x1000
 
-
     # Bit 1/3+2
     PRIORITY_SYSTE = 0x0000
     PRIORITY_NORMAL = 0x0400
@@ -87,7 +87,7 @@ class CEMIFlags():
     NO_ACK_REQUESTED = 0x0000
     ACK_REQUESTED = 0x0200
 
-    #Bit 1/0
+    # Bit 1/0
     CONFIRM_NO_ERROR = 0x0000
     CONFIRM_ERROR = 0x0100
 
@@ -111,7 +111,7 @@ class ConnectRequestType(Enum):
     DEVICE_MGMT_CONNECTION = 0x03
 
     # Data connection used to forward KNX telegrams between
-    #two KNXnet/IP devices.
+    # two KNXnet/IP devices.
     TUNNEL_CONNECTION = 0x04
 
     # Data connection used for configuration and data transfer
@@ -171,7 +171,7 @@ class DIBServiceFamily(Enum):
     # Tunnelling
     TUNNELING = 0x04
 
-    #Routing
+    # Routing
     ROUTING = 0x05
 
     # Remote Logging

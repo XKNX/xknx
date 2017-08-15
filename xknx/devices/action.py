@@ -1,6 +1,7 @@
 """Module for handling commands which may be attached to BinarySensor class."""
 import asyncio
 
+
 class ActionBase():
     """Base Class for handling commands."""
 

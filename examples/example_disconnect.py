@@ -3,6 +3,7 @@ import asyncio
 from xknx import XKNX
 from xknx.io import GatewayScanner, UDPClient, Disconnect, ConnectionState
 
+
 async def main():
     """Search for a Tunelling device, walk through all possible channels and disconnect them."""
     xknx = XKNX()

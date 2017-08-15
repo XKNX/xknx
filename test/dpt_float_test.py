@@ -4,6 +4,7 @@ import unittest
 from xknx.exceptions import ConversionError
 from xknx.knx import DPTFloat, DPTTemperature, DPTHumidity, DPTLux
 
+
 class TestDPTFloat(unittest.TestCase):
     """Test class for KNX float object."""
 
@@ -144,7 +145,6 @@ class TestDPTFloat(unittest.TestCase):
         """Test parsing of DPTHumidity with wrong value."""
         with self.assertRaises(ConversionError):
             DPTHumidity().to_knx(-1)
-
 
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPTFloat)

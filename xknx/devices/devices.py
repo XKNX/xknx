@@ -6,6 +6,7 @@ More or less an array with devices. Adds some search functionality to find devic
 import asyncio
 from .device import Device
 
+
 class Devices:
     """Class for handling a vector/array of devices."""
 
@@ -41,7 +42,6 @@ class Devices:
             return self.__devices[key]
         raise KeyError
 
-
     def __len__(self):
         """Return number of devices within vector."""
         return len(self.__devices)
@@ -55,7 +55,7 @@ class Devices:
 
     @asyncio.coroutine
     def device_updated(self, device):
-        """Callback for device being updated. Calls registered callbacks if invoked."""
+        """Call all registered device updated callbacks of device."""
         for device_updated_cb in self.device_updated_cbs:
             yield from device_updated_cb(device)
 

@@ -13,6 +13,7 @@ from xknx.knxip import HPAI, KNXIPFrame, SearchResponse, KNXIPServiceType, \
 from .udp_client import UDPClient
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 
+
 class GatewayScanner():
     """Class for searching KNX/IP devices."""
 
@@ -34,7 +35,7 @@ class GatewayScanner():
         self.timeout_handle = None
 
     def response_rec_callback(self, knxipframe, udp_client):
-        """Callback for receiving a SearchResponse."""
+        """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knxipframe.body, SearchResponse):
             self.xknx.logger.warning("Cant understand knxipframe")
             return
@@ -54,7 +55,6 @@ class GatewayScanner():
             self.response_received_or_timeout.set()
             self.found = True
 
-
     @asyncio.coroutine
     def start(self):
         """Start searching."""
@@ -70,7 +70,6 @@ class GatewayScanner():
         for udpclient in self.udpclients:
             yield from udpclient.stop()
 
-
     @asyncio.coroutine
     def send_search_requests(self):
         """Send search requests on all connected interfaces."""
@@ -83,7 +82,6 @@ class GatewayScanner():
             except KeyError:
                 self.xknx.logger.info("Could not connect to an KNX/IP device on %s", interface)
                 continue
-
 
     @asyncio.coroutine
     def search_interface(self, interface, ip_addr):
@@ -107,14 +105,11 @@ class GatewayScanner():
         knxipframe.body.discovery_endpoint = \
             HPAI(ip_addr=local_addr, port=local_port)
         knxipframe.normalize()
-
         udpclient.send(knxipframe)
-
 
     def timeout(self):
         """Handle timeout for not having received a SearchResponse."""
         self.response_received_or_timeout.set()
-
 
     @asyncio.coroutine
     def start_timeout(self):

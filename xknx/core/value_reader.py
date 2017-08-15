@@ -12,6 +12,7 @@ import asyncio
 
 from xknx.knx import Telegram, TelegramType
 
+
 class ValueReader:
     """Class for reading the value of a specific KNX group address from KNX bus."""
 
@@ -31,13 +32,8 @@ class ValueReader:
     @asyncio.coroutine
     def read(self):
         """Send group read and wait for response."""
-        @asyncio.coroutine
-        def telegram_received_callback(telegram):
-            """Callback for having received a telegram."""
-            return self.telegram_received(telegram)
-
         cb_obj = self.xknx.telegram_queue.register_telegram_received_cb(
-            telegram_received_callback)
+            self.telegram_received)
 
         yield from self.send_group_read()
         yield from self.start_timeout()
@@ -46,11 +42,9 @@ class ValueReader:
 
         self.xknx.telegram_queue.unregister_telegram_received_cb(
             cb_obj)
-
         if not self.success:
             return None
         return self.received_telegram
-
 
     @asyncio.coroutine
     def send_group_read(self):
@@ -58,8 +52,9 @@ class ValueReader:
         telegram = Telegram(self.group_address, TelegramType.GROUP_READ)
         yield from self.xknx.telegrams.put(telegram)
 
+    @asyncio.coroutine
     def telegram_received(self, telegram):
-        """Callback for having received a telegram. Check if group addresses match."""
+        """Test if telegram has correct group address and trigger event."""
         if self.group_address == telegram.group_address:
             self.success = True
             self.received_telegram = telegram
@@ -68,7 +63,7 @@ class ValueReader:
         return False
 
     def timeout(self):
-        """Callback for handling timeout."""
+        """Handle timeout for not having received expected group response."""
         self.response_received_or_timeout.set()
 
     @asyncio.coroutine

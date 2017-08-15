@@ -6,6 +6,7 @@ from xknx import XKNX
 from xknx.devices import BinarySensor, Action, Switch, BinarySensorState
 from xknx.knx import Telegram, DPTBinary
 
+
 class TestBinarySensor(unittest.TestCase):
     """Test class for BinarySensor objects."""
 
@@ -37,9 +38,7 @@ class TestBinarySensor(unittest.TestCase):
         telegram_off = Telegram()
         telegram_off.payload = DPTBinary(0)
         self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_off)))
-
         self.assertEqual(binaryinput.state, BinarySensorState.OFF)
-
 
     def test_process_significant_bit(self):
         """Test process / reading telegrams from telegram queue with specific significant bit set."""
@@ -65,7 +64,6 @@ class TestBinarySensor(unittest.TestCase):
         telegram_off.payload = DPTBinary(3)
         self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_off)))
         self.assertEqual(binaryinput.state, BinarySensorState.OFF)
-
 
     def test_process_action(self):
         """Test process / reading telegrams from telegram queue. Test if action is executed."""
@@ -141,7 +139,6 @@ class TestBinarySensor(unittest.TestCase):
         self.assertFalse(binaryinput.is_on())
         self.assertTrue(binaryinput.is_off())
 
-
     #
     # TEST PROCESS CALLBACK
     #
@@ -152,6 +149,7 @@ class TestBinarySensor(unittest.TestCase):
         switch = BinarySensor(xknx, 'TestInput', group_address='1/2/3')
 
         after_update_callback = Mock()
+
         @asyncio.coroutine
         def async_after_update_callback(device):
             """Async callback."""
@@ -161,7 +159,6 @@ class TestBinarySensor(unittest.TestCase):
         telegram = Telegram()
         telegram.payload = DPTBinary(1)
         self.loop.run_until_complete(asyncio.Task(switch.process(telegram)))
-
         after_update_callback.assert_called_with(switch)
 
 

@@ -3,8 +3,8 @@ Module for serialization and deserialization of KNX HPAI (Host Protocol Address 
 
 A HPAI contains an IP address and a port.
 """
-
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP
+
 
 class HPAI():
     """Class for Module for Serialization and Deserialization."""
@@ -13,6 +13,7 @@ class HPAI():
     TYPE_UDP = 0x01
 
     def __init__(self, ip_addr='0.0.0.0', port=0):
+        """Initialize HPAI object."""
         self.ip_addr = ip_addr
         self.port = port
 
@@ -24,11 +25,9 @@ class HPAI():
             raise CouldNotParseKNXIP("wrong HPAI length")
         if raw[1] != HPAI.TYPE_UDP:
             raise CouldNotParseKNXIP("wrong HPAI type")
-
         self.ip_addr = "{0}.{1}.{2}.{3}".format(
             raw[2], raw[3], raw[4], raw[5])
-        self.port = raw[6]*256 + raw[7]
-
+        self.port = raw[6] * 256 + raw[7]
         return HPAI.LENGTH
 
     def to_knx(self):

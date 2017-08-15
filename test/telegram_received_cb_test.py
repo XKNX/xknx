@@ -5,6 +5,7 @@ import asyncio
 from xknx import XKNX
 from xknx.knx import Telegram, DPTBinary, TelegramDirection, Address, AddressFilter
 
+
 class TestTelegramReceivedCallback(unittest.TestCase):
     """Test class for telegram received callbacks."""
 
@@ -26,6 +27,7 @@ class TestTelegramReceivedCallback(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
 
         telegram_received_callback = Mock()
+
         @asyncio.coroutine
         def async_telegram_received_cb(device):
             """Async callback."""
@@ -41,7 +43,6 @@ class TestTelegramReceivedCallback(unittest.TestCase):
             xknx.telegram_queue.process_telegram(telegram)))
         telegram_received_callback.assert_called_with(telegram)
 
-
     #
     # TEST POSITIVE FILTERS
     #
@@ -51,6 +52,7 @@ class TestTelegramReceivedCallback(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
 
         telegram_received_callback = Mock()
+
         @asyncio.coroutine
         def async_telegram_received_cb(device):
             """Async callback."""
@@ -76,6 +78,7 @@ class TestTelegramReceivedCallback(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
 
         telegram_received_callback = Mock()
+
         @asyncio.coroutine
         def async_telegram_received_cb(device):
             """Async callback."""
@@ -92,7 +95,6 @@ class TestTelegramReceivedCallback(unittest.TestCase):
             xknx.telegram_queue.process_telegram(telegram)))
         telegram_received_callback.assert_not_called()
 
-
     #
     # TEST UNREGISTER
     #
@@ -102,6 +104,7 @@ class TestTelegramReceivedCallback(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
 
         telegram_received_callback = Mock()
+
         @asyncio.coroutine
         def async_telegram_received_cb(device):
             """Async callback."""
@@ -117,6 +120,7 @@ class TestTelegramReceivedCallback(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(
             xknx.telegram_queue.process_telegram(telegram)))
         telegram_received_callback.assert_not_called()
+
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestTelegramReceivedCallback)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

@@ -6,6 +6,7 @@ from xknx.knxip import DIB, DIBGeneric, DIBDeviceInformation, \
     DIBSuppSVCFamilies, DIBTypeCode, KNXMedium, DIBServiceFamily
 from xknx.knx import Address
 
+
 class Test_KNXIP_DIB(unittest.TestCase):
     """Test class for KNX/IP DIB objects."""
 
@@ -26,8 +27,6 @@ class Test_KNXIP_DIB(unittest.TestCase):
         raw = ((0x08, 0x01, 0xc0, 0xa8, 0x2a))
         with self.assertRaises(CouldNotParseKNXIP):
             DIBGeneric().from_knx(raw)
-
-
 
     def test_device_info(self):
         """Test parsing of device info."""
@@ -51,9 +50,7 @@ class Test_KNXIP_DIB(unittest.TestCase):
         self.assertEqual(dib.serial_number, '13:37:13:37:13:37')
         self.assertEqual(dib.project_number, 564)
         self.assertEqual(dib.installation_number, 2)
-
         self.assertEqual(dib.to_knx(), list(raw))
-
 
     def test_dib_sup_svc_families(self):
         """Test parsing of svc families."""

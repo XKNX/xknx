@@ -12,6 +12,7 @@ E.g.:
 from enum import Enum
 import time
 
+
 class PositionType(Enum):
     """Enum class for different type of calculated positions."""
 
@@ -19,8 +20,10 @@ class PositionType(Enum):
     CALCULATED = 2
     CONFIRMED = 3
 
+
 class TravelStatus(Enum):
     """Enum class for travel status."""
+
     DIRECTION_UP = 1
     DIRECTION_DOWN = 2
     STOPPED = 3
@@ -31,7 +34,7 @@ class TravelCalculator:
 
     # pylint: disable=too-many-instance-attributes
 
-    def  __init__(self, travel_time_down, travel_time_up):
+    def __init__(self, travel_time_down, travel_time_up):
         """Initialize TravelCalculator class."""
         self.position_type = PositionType.UNKNOWN
         self.last_known_position = 0
@@ -42,8 +45,8 @@ class TravelCalculator:
         self.travel_to_position = 0
         self.travel_started_time = 0
         self.travel_direction = TravelStatus.STOPPED
-        #TODO: Move to DPT Types class issue #10
-        self.minimum_position_down = 256 # excluding
+        # TODO: Move to DPT Types class issue #10
+        self.minimum_position_down = 256  # excluding
         self.maximum_position_up = 0
 
         self.time_set_from_outside = None
@@ -130,17 +133,16 @@ class TravelCalculator:
     def _calculate_travel_time(self, relative_position):
         """Calculate time to travel to relative position."""
         travel_direction = \
-                    TravelStatus.DIRECTION_UP \
-                    if relative_position < 0 else \
-                    TravelStatus.DIRECTION_DOWN
+            TravelStatus.DIRECTION_UP \
+            if relative_position < 0 else \
+            TravelStatus.DIRECTION_DOWN
         travel_time_full = \
-                    self.travel_time_up \
-                    if travel_direction == TravelStatus.DIRECTION_UP else \
-                    self.travel_time_down
+            self.travel_time_up \
+            if travel_direction == TravelStatus.DIRECTION_UP else \
+            self.travel_time_down
         travel_range = self.minimum_position_down - self.maximum_position_up
 
         return travel_time_full * abs(relative_position) / travel_range
-
 
     def current_time(self):
         """Get current time. May be modified from outside (for unit tests)."""

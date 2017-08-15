@@ -13,6 +13,7 @@ from .connect import Connect
 from .tunnelling import Tunnelling
 from .udp_client import UDPClient
 
+
 class Tunnel():
     """Class for handling KNX/IP tunnels."""
 
@@ -44,9 +45,8 @@ class Tunnel():
         self.udp_client.register_callback(
             self.tunnel_reqest_received, [TunnellingRequest.service_type])
 
-
     def tunnel_reqest_received(self, knxipframe, udp_client):
-        """Callback for tunnel request received."""
+        """Handle incoming tunnel request."""
         # pylint: disable=unused-argument
         if knxipframe.header.service_type_ident != \
                 KNXIPServiceType.TUNNELLING_REQUEST:
@@ -77,7 +77,6 @@ class Tunnel():
     def connect_udp(self):
         """Connect udp_client."""
         yield from self.udp_client.connect()
-
 
     @asyncio.coroutine
     def connect(self):

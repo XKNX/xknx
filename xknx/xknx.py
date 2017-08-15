@@ -1,6 +1,4 @@
-"""
-XKNX is an Asynchronous Python module for reading and writing KNX/IP packets.
-"""
+"""XKNX is an Asynchronous Python module for reading and writing KNX/IP packets."""
 import asyncio
 import signal
 import logging
@@ -8,6 +6,7 @@ from xknx.knx import Address, AddressFormat
 from xknx.io import KNXIPInterface, ConnectionConfig
 from xknx.core import TelegramQueue, Config
 from xknx.devices import Devices
+
 
 class XKNX:
     """Class for reading and writing KNX/IP packets."""
@@ -48,7 +47,6 @@ class XKNX:
         if device_updated_cb is not None:
             self.devices.register_device_updated_cb(device_updated_cb)
 
-
     def __del__(self):
         """Destructor. Cleaning up if this was not done before."""
         if self.started:
@@ -57,7 +55,6 @@ class XKNX:
                 self.loop.run_until_complete(task)
             except RuntimeError as exp:
                 self.logger.warning("Could not close loop, reason: %s", exp)
-
 
     @asyncio.coroutine
     def start(self,
@@ -84,7 +81,6 @@ class XKNX:
         """Wait until all telegrams were processed."""
         yield from self.telegrams.join()
 
-
     def _stop_knxip_interface_if_exists(self):
         """Stop KNXIPInterface if initialized."""
         if self.knxip_interface is not None:
@@ -103,7 +99,7 @@ class XKNX:
     def loop_until_sigint(self):
         """Loop until Crtl-C was pressed."""
         def sigint_handler():
-            """Callback for having Ctrl-C received."""
+            """End loop."""
             self.sigint_received.set()
         self.loop.add_signal_handler(signal.SIGINT, sigint_handler)
         self.logger.warning('Press Ctrl+C to stop')

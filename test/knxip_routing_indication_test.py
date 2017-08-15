@@ -6,6 +6,7 @@ from xknx.knxip import KNXIPFrame, KNXIPServiceType, CEMIFrame
 from xknx.knx import Address, DPTTime, DPTBinary, DPTArray, \
     DPTTemperature, Telegram, TelegramType
 
+
 class Test_KNXIP(unittest.TestCase):
     """Class for KNX/IP RoutingIndication test."""
 
@@ -149,7 +150,6 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe2.header.to_knx(), list(raw[0:6]))
         self.assertEqual(knxipframe2.body.to_knx(), list(raw[6:]))
         self.assertEqual(knxipframe2.to_knx(), list(raw))
-
 
     def test_EndTOEnd_group_write_1byte(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, dimm light in my kitchen."""

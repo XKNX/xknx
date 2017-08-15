@@ -3,6 +3,7 @@ from xknx.exceptions import CouldNotParseKNXIP
 from .knxip_enum import KNXIPServiceType
 from .body import KNXIPBody
 
+
 class KNXIPHeader():
     """Class for serialization and deserialization of KNX/IP Header."""
 
@@ -16,8 +17,7 @@ class KNXIPHeader():
         self.protocol_version = KNXIPHeader.PROTOCOLVERSION
         self.service_type_ident = KNXIPServiceType.ROUTING_INDICATION
         self.b4_reserve = 0
-        self.total_length = 0 # to be set later
-
+        self.total_length = 0  # to be set later
 
     def from_knx(self, data):
         """Parse/deserialize from KNX/IP raw data."""
@@ -33,7 +33,6 @@ class KNXIPHeader():
         self.service_type_ident = KNXIPServiceType(data[2] * 256 + data[3])
         self.b4_reserve = data[4]
         self.total_length = data[5]
-
         return KNXIPHeader.HEADERLENGTH
 
     def set_length(self, body):
@@ -41,7 +40,7 @@ class KNXIPHeader():
         if not isinstance(body, KNXIPBody):
             raise TypeError()
         self.total_length = KNXIPHeader.HEADERLENGTH + \
-                           body.calculated_length()
+            body.calculated_length()
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
@@ -50,16 +49,16 @@ class KNXIPHeader():
         data.append(self.protocol_version)
         data.append((self.service_type_ident.value >> 8) & 255)
         data.append(self.service_type_ident.value & 255)
-        data.append((self.total_length>>8) & 255)
+        data.append((self.total_length >> 8) & 255)
         data.append(self.total_length & 255)
         return data
 
     def __str__(self):
         """Return object as readable string."""
         return '<KNXIPHeader HeaderLength="{0}" ProtocolVersion="{1}" ' \
-                'KNXIPServiceType="{2}" Reserve="{3}" TotalLength="{4}" />'.format(
-                    self.header_length,
-                    self.protocol_version,
-                    self.service_type_ident,
-                    self.b4_reserve,
-                    self.total_length)
+            'KNXIPServiceType="{2}" Reserve="{3}" TotalLength="{4}" />'.format(
+                self.header_length,
+                self.protocol_version,
+                self.service_type_ident,
+                self.b4_reserve,
+                self.total_length)

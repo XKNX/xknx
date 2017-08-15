@@ -1,11 +1,12 @@
 """
-Module for handling KNX primitves like:
+Module for handling KNX primitves.
 
 * KNX Addresses
 * KNX Values like Int, Float, Time
 * Derived KNX Values like Scaling, Time, Temperature
 
 """
+# flake8: noqa
 from .address import Address, AddressType, AddressFormat
 from .address_filter import AddressFilter
 from .telegram import Telegram, TelegramDirection, TelegramType

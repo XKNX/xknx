@@ -1,6 +1,5 @@
 """
-AddressFilter provides a mechanism for filtering
-KNX addresses with patterns.
+AddressFilter provides a mechanism for filtering KNX addresses with patterns.
 
 Patterns can be
 
@@ -25,19 +24,20 @@ Patterns can be
 from xknx.exceptions import ConversionError
 from .address import Address
 
+
 class AddressFilter:
     """Class for filtering Addresses according to patterns."""
 
     # pylint: disable=too-few-public-methods
 
     def __init__(self, pattern):
-        """Initialization of AddressFilter class."""
+        """Initialize AddressFilter class."""
         self.level_filters = []
         self._parse_pattern(pattern)
 
     def _parse_pattern(self, pattern):
         for part in pattern.split("/"):
-            if len(part) == 0:
+            if not part:
                 raise ConversionError("Every part of pattern must be a string.")
             self.level_filters.append(AddressFilter.LevelFilter(part))
         if len(self.level_filters) > 3:
@@ -72,10 +72,11 @@ class AddressFilter:
         return (
             self.level_filters[0].match(address.get_free()))
 
-
     class Range:
         """Class for filtering patterns like "8", "*", "8-10"."""
+
         def __init__(self, pattern):
+            """Initialize Range object."""
             self.range_from = None
             self.range_to = None
             self._parse_pattern(pattern)
@@ -103,9 +104,9 @@ class AddressFilter:
         def _init_range(self, pattern):
             (range_from, range_to) = pattern.split("-")
             self.range_from = int(range_from) \
-                if len(range_from) > 0 else 0
+                if range_from else 0
             self.range_to = int(range_to) \
-                if len(range_to) > 0 else Address.MAX_FREE
+                if range_to else Address.MAX_FREE
 
         @staticmethod
         def _adjust_range(digit):
@@ -130,17 +131,18 @@ class AddressFilter:
                 digit >= self.range_from and \
                 digit <= self.range_to
 
-
     class LevelFilter:
         """Class for filtering patterns like "8,11-14,20"."""
+
         # pylint: disable=too-few-public-methods
         def __init__(self, pattern):
+            """Initialize LevelFilter."""
             self.ranges = []
             self._parse_pattern(pattern)
 
         def _parse_pattern(self, pattern):
             for part in pattern.split(","):
-                if len(part) == 0:
+                if not part:
                     raise ConversionError("Every part of LevelFilter must be a string")
                 self.ranges.append(AddressFilter.Range(part))
 

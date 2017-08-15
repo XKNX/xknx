@@ -1,6 +1,5 @@
-"""
-Module for XKXN Exceptions.
-"""
+"""Module for XKXN Exceptions."""
+
 
 class XKNXException(Exception):
     """Default XKNX Exception."""

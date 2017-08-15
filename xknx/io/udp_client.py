@@ -10,6 +10,7 @@ import socket
 from xknx.knxip import KNXIPFrame
 from xknx.exceptions import CouldNotParseKNXIP, XKNXException
 
+
 class UDPClient:
     """Class for handling (sending and receiving) UDP packets."""
 
@@ -29,7 +30,6 @@ class UDPClient:
                 len(self.service_types) == 0 or \
                 service_type in self.service_types
 
-
     class UDPClientFactory(asyncio.DatagramProtocol):
         """Abstraction for managing the asyncio-udp transports."""
 
@@ -46,20 +46,20 @@ class UDPClient:
             self.data_received_callback = data_received_callback
 
         def connection_made(self, transport):
-            """Callback after udp connection was made."""
+            """Assign transport. Callback after udp connection was made."""
             self.transport = transport
 
-        def datagram_received(self, raw, _):
-            """Callback for datagram received. Calling callback."""
+        def datagram_received(self, data, addr):
+            """Call assigned callback. Callback for datagram received."""
             if self.data_received_callback is not None:
-                self.data_received_callback(raw)
+                self.data_received_callback(data)
 
         def error_received(self, exc):
-            """Callback for error received. Should not happen on UDP."""
+            """Handel errors. Callback for error received."""
             self.xknx.logger.warning('Error received: %s', exc)
 
         def connection_lost(self, exc):
-            """Callback for connection lost. Should not happen on UDP."""
+            """Log error. Callback for connection lost."""
             self.xknx.logger.info('closing transport %s', exc)
 
     def __init__(self, xknx, local_addr, remote_addr, multicast=False, bind_to_multicast_addr=False):
@@ -78,7 +78,7 @@ class UDPClient:
         self.callbacks = []
 
     def data_received_callback(self, raw):
-        """Callback for having received an UDP packet. Parse and process KNXIP frame."""
+        """Parse and process KNXIP frame. Callback for having received an UDP packet."""
         if raw:
             try:
                 knxipframe = KNXIPFrame(self.xknx)
@@ -110,7 +110,6 @@ class UDPClient:
     def unregister_callback(self, callb):
         """Unregister callback."""
         self.callbacks.remove(callb)
-
 
     @staticmethod
     def create_multicast_sock(own_ip, remote_addr, bind_to_multicast_addr):
@@ -145,9 +144,7 @@ class UDPClient:
             sock.bind((remote_addr[0], remote_addr[1]))
         else:
             sock.bind((own_ip, 0))
-
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
-
         return sock
 
     @asyncio.coroutine
@@ -194,5 +191,4 @@ class UDPClient:
     @asyncio.coroutine
     def stop(self):
         """Stop UDP socket."""
-        #yield from asyncio.sleep(1/20)
         self.transport.close()

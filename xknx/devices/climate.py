@@ -15,10 +15,12 @@ from .device import Device
 
 class ClimateOperationMode(Enum):
     """Enum for the different KNX climate operation modes."""
+
     COMFORT = "Comfort"
     STANDBY = "Standby"
     NIGHT = "Night"
     PROTECTION = "Frost Protection"
+
 
 class Climate(Device):
     """Class for managing the climate."""
@@ -110,12 +112,12 @@ class Climate(Device):
     def has_group_address(self, group_address):
         """Test if device has given group address."""
         return self.group_address_temperature == group_address or \
-               self.group_address_target_temperature == group_address or \
-               self.group_address_setpoint == group_address or \
-               self.group_address_operation_mode == group_address or \
-               self.group_address_operation_mode_protection == group_address or \
-               self.group_address_operation_mode_night == group_address or \
-               self.group_address_operation_mode_comfort == group_address
+            self.group_address_target_temperature == group_address or \
+            self.group_address_setpoint == group_address or \
+            self.group_address_operation_mode == group_address or \
+            self.group_address_operation_mode_protection == group_address or \
+            self.group_address_operation_mode_night == group_address or \
+            self.group_address_operation_mode_comfort == group_address
 
     @asyncio.coroutine
     def _set_internal_setpoint(self, setpoint):
@@ -190,7 +192,7 @@ class Climate(Device):
         yield from self._set_internal_operation_mode(operation_mode)
 
     def get_supported_operation_modes(self):
-        """Returns all configured operation modes."""
+        """Return all configured operation modes."""
         if not self.supports_operation_mode:
             return []
         if self.group_address_operation_mode is not None:
@@ -261,7 +263,7 @@ class Climate(Device):
     def _process_operation_mode(self, telegram):
         """Process incoming telegram for operation mode."""
         if not isinstance(telegram.payload, DPTArray) \
-            or len(telegram.payload.value) != 1:
+                or len(telegram.payload.value) != 1:
             raise CouldNotParseTelegram()
         knx_operation_mode = telegram.payload.value[0]
         operation_mode = self._from_knx_operation_mode(knx_operation_mode)
@@ -309,23 +311,23 @@ class Climate(Device):
     def __str__(self):
         """Return object as readable string."""
         last_set_formatted = \
-                datetime.datetime.fromtimestamp(
-                    self.last_set).strftime('%Y-%m-%d %H:%M:%S') \
-                if self.last_set else None
+            datetime.datetime.fromtimestamp(self.last_set).strftime('%Y-%m-%d %H:%M:%S') \
+            if self.last_set else None
         return '<Climate name="{0}" ' \
-               'group_address_temperature="{1}"  ' \
-               'group_address_target_temperature="{2}"  ' \
-               'group_address_setpoint="{3}" ' \
-               'group_address_operation_mode="{4}" ' \
-               'temperature="{5}" ' \
-               'last_set="{6}" />' \
-               .format(self.name,
-                       self.group_address_temperature,
-                       self.group_address_target_temperature,
-                       self.group_address_setpoint,
-                       self.group_address_operation_mode,
-                       self.temperature,
-                       last_set_formatted)
+            'group_address_temperature="{1}"  ' \
+            'group_address_target_temperature="{2}"  ' \
+            'group_address_setpoint="{3}" ' \
+            'group_address_operation_mode="{4}" ' \
+            'temperature="{5}" ' \
+            'last_set="{6}" />' \
+            .format(
+                self.name,
+                self.group_address_temperature,
+                self.group_address_target_temperature,
+                self.group_address_setpoint,
+                self.group_address_operation_mode,
+                self.temperature,
+                last_set_formatted)
 
     def __eq__(self, other):
         """Equal operator."""

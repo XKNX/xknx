@@ -5,6 +5,7 @@ from xknx import XKNX
 from xknx.devices import Devices, Light, Switch, BinarySensor
 from xknx.knx import Address
 
+
 # pylint: disable=too-many-public-methods,invalid-name
 class TestDevices(unittest.TestCase):
     """Test class for devices container within XKNX."""
@@ -21,7 +22,6 @@ class TestDevices(unittest.TestCase):
     #
     # XKNX Config
     #
-
     def test_get_item(self):
         """Test get item by name or by index."""
         xknx = XKNX(loop=self.loop)
@@ -62,7 +62,6 @@ class TestDevices(unittest.TestCase):
         with self.assertRaises(IndexError):
             # pylint: disable=pointless-statement
             devices[4]
-
 
     def test_device_by_group_address(self):
         """Test get devices by group address."""
@@ -133,7 +132,6 @@ class TestDevices(unittest.TestCase):
             tuple(devices.__iter__()),
             (light1, sensor1, sensor2, light2))
 
-
     def test_len(self):
         """Test len() function."""
         xknx = XKNX(loop=self.loop)
@@ -166,8 +164,6 @@ class TestDevices(unittest.TestCase):
         devices.add(light2)
         self.assertEqual(len(devices), 4)
 
-
-
     def test_modification_of_device(self):
         """Test if devices object does store references and not copies of objects."""
         xknx = XKNX(loop=self.loop)
@@ -192,7 +188,6 @@ class TestDevices(unittest.TestCase):
             self.loop.run_until_complete(asyncio.Task(device.set_on()))
 
         self.assertTrue(light1.state)
-
 
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDevices)

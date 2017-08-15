@@ -1,10 +1,9 @@
-"""
-Module for managing a notification via KNX.
-"""
+"""Module for managing a notification via KNX."""
 import asyncio
-from xknx.knx  import Address, DPTString, DPTArray
+from xknx.knx import Address, DPTString, DPTArray
 from xknx.exceptions import CouldNotParseTelegram
 from .device import Device
+
 
 class Notification(Device):
     """Class for managing a notification."""
@@ -40,12 +39,12 @@ class Notification(Device):
     def __str__(self):
         """Return object as readable string."""
         return '<Notification name="{0}" ' \
-                'group_address="{1}" ' \
-                'message="{2}" />' \
-                .format(
-                    self.name,
-                    self.group_address,
-                    self.message)
+            'group_address="{1}" ' \
+            'message="{2}" />' \
+            .format(
+                self.name,
+                self.group_address,
+                self.message)
 
     @asyncio.coroutine
     def _set_internal_message(self, message):
@@ -63,7 +62,7 @@ class Notification(Device):
 
     @asyncio.coroutine
     def do(self, action):
-        """Method for executing 'do' commands."""
+        """Execute 'do' commands."""
         if action.startswith("message:"):
             yield from self.set(int(action[8:]))
         else:
@@ -71,7 +70,7 @@ class Notification(Device):
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
-        return [self.group_address,]
+        return [self.group_address, ]
 
     @asyncio.coroutine
     def process(self, telegram):

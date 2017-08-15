@@ -18,12 +18,14 @@ from xknx.knx import Address, AddressType, DPTBinary, DPTArray, \
 from .knxip_enum import CEMIMessageCode, APCICommand, CEMIFlags
 from .body import KNXIPBody
 
+
 class CEMIFrame(KNXIPBody):
     """Representation of a CEMI Frame."""
+
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, xknx):
-        """CEMIFrame __init__ object."""
+        """Initialize CEMIFrame object."""
         super(CEMIFrame, self).__init__(xknx)
         self.code = CEMIMessageCode.L_DATA_IND
         self.flags = 0
@@ -39,6 +41,7 @@ class CEMIFrame(KNXIPBody):
         telegram = Telegram()
         telegram.payload = self.payload
         telegram.group_address = self.dst_addr
+
         def resolve_telegram_type(cmd):
             """Return telegram type from APCI Command."""
             if cmd == APCICommand.GROUP_WRITE:
@@ -48,14 +51,12 @@ class CEMIFrame(KNXIPBody):
             elif cmd == APCICommand.GROUP_RESPONSE:
                 return TelegramType.GROUP_RESPONSE
             else:
-                raise ConversionError("Telegram not implemented for {0}" \
-                                      .format(self.cmd))
+                raise ConversionError("Telegram not implemented for {0}".format(self.cmd))
 
         telegram.telegramtype = resolve_telegram_type(self.cmd)
 
         # TODO: Set telegram.direction [additional flag within KNXIP]
         return telegram
-
 
     @telegram.setter
     def telegram(self, telegram):
@@ -105,16 +106,16 @@ class CEMIFrame(KNXIPBody):
         else:
             raise TypeError()
 
-    def from_knx(self, cemi):
+    def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        self.code = CEMIMessageCode(cemi[0])
+        self.code = CEMIMessageCode(raw[0])
 
         if self.code == CEMIMessageCode.L_DATA_IND or \
-            self.code == CEMIMessageCode.L_Data_REQ or \
-            self.code == CEMIMessageCode.L_DATA_CON:
-            return self.from_knx_data_link_layer(cemi)
+                self.code == CEMIMessageCode.L_Data_REQ or \
+                self.code == CEMIMessageCode.L_DATA_CON:
+            return self.from_knx_data_link_layer(raw)
         else:
-            raise CouldNotParseKNXIP("Could not understand CEMIMessageCode: {0} / {1}".format(self.code, cemi[0]))
+            raise CouldNotParseKNXIP("Could not understand CEMIMessageCode: {0} / {1}".format(self.code, raw[0]))
 
     def from_knx_data_link_layer(self, cemi):
         """Parse L_DATA_IND, CEMIMessageCode.L_Data_REQ, CEMIMessageCode.L_DATA_CON."""
@@ -154,7 +155,6 @@ class CEMIFrame(KNXIPBody):
                 "APDU LEN should be {} but is {}".format(
                     self.mpdu_len, len(apdu)))
 
-        # pylint: disable=redefined-variable-type
         if len(apdu) == 1:
             apci = tpci_apci & DPTBinary.APCI_BITMASK
             self.payload = DPTBinary(apci)
@@ -194,11 +194,13 @@ class CEMIFrame(KNXIPBody):
         if self.payload is None:
             data.extend(encode_cmd_and_payload(self.cmd))
         elif isinstance(self.payload, DPTBinary):
-            data.extend(encode_cmd_and_payload(self.cmd, \
-                        encoded_payload=self.payload.value))
+            data.extend(encode_cmd_and_payload(
+                self.cmd,
+                encoded_payload=self.payload.value))
         elif isinstance(self.payload, DPTArray):
-            data.extend(encode_cmd_and_payload(self.cmd, \
-                        appended_payload=self.payload.value))
+            data.extend(encode_cmd_and_payload(
+                self.cmd,
+                appended_payload=self.payload.value))
         else:
             raise TypeError()
         return data
