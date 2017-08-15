@@ -32,7 +32,7 @@ class SearchResponse(KNXIPBody):
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
         pos = self.control_endpoint.from_knx(raw)
-        while len(raw[pos:]) > 0:
+        while raw[pos:]:
             dib = DIB.determine_dib(raw[pos:])
             pos += dib.from_knx(raw[pos:])
             self.dibs.append(dib)

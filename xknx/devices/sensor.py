@@ -80,8 +80,7 @@ class Sensor(Device):
             return "m/s"
         elif self.value_type == 'current':
             return "mA"
-        else:
-            return None
+        return None
 
     def resolve_state(self):
         """Return the current state of the sensor as a human readable string."""

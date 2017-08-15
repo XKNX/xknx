@@ -115,17 +115,16 @@ class BinarySensor(Device):
             if state == BinarySensorState.ON:
                 self.count_set_on = self.count_set_on + 1
                 return self.count_set_on
-            else:
-                self.count_set_off = self.count_set_off + 1
-                return self.count_set_off
+            self.count_set_off = self.count_set_off + 1
+            return self.count_set_off
+
+        if state == BinarySensorState.ON:
+            self.count_set_on = 1
+            self.count_set_off = 0
         else:
-            if state == BinarySensorState.ON:
-                self.count_set_on = 1
-                self.count_set_off = 0
-            else:
-                self.count_set_on = 0
-                self.count_set_off = 1
-            return 1
+            self.count_set_on = 0
+            self.count_set_off = 1
+        return 1
 
     @asyncio.coroutine
     def process(self, telegram):

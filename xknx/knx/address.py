@@ -239,8 +239,7 @@ class Address:
             return AddressType.PHYSICAL
         elif isinstance(address, Address):
             return address.address_type
-        else:
-            return AddressType.GROUP
+        return AddressType.GROUP
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""

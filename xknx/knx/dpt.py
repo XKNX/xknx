@@ -77,7 +77,7 @@ class DPTComparator():
     @staticmethod
     def compare(a, b):
         """Test if 'a' and 'b' are the same."""
-        # pylint: disable=invalid-name,too-many-return-statements
+        # pylint: disable=invalid-name,too-many-return-statements,len-as-condition
         if a is None and b is None:
             return True
 

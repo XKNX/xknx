@@ -49,10 +49,10 @@ class UDPClient:
             """Callback after udp connection was made."""
             self.transport = transport
 
-        def datagram_received(self, raw, _):
+        def datagram_received(self, data, addr):
             """Callback for datagram received. Calling callback."""
             if self.data_received_callback is not None:
-                self.data_received_callback(raw)
+                self.data_received_callback(data)
 
         def error_received(self, exc):
             """Callback for error received. Should not happen on UDP."""

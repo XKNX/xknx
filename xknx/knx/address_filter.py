@@ -37,7 +37,7 @@ class AddressFilter:
 
     def _parse_pattern(self, pattern):
         for part in pattern.split("/"):
-            if len(part) == 0:
+            if not part:
                 raise ConversionError("Every part of pattern must be a string.")
             self.level_filters.append(AddressFilter.LevelFilter(part))
         if len(self.level_filters) > 3:
@@ -104,9 +104,9 @@ class AddressFilter:
         def _init_range(self, pattern):
             (range_from, range_to) = pattern.split("-")
             self.range_from = int(range_from) \
-                if len(range_from) > 0 else 0
+                if range_from else 0
             self.range_to = int(range_to) \
-                if len(range_to) > 0 else Address.MAX_FREE
+                if range_to else Address.MAX_FREE
 
         @staticmethod
         def _adjust_range(digit):
@@ -142,7 +142,7 @@ class AddressFilter:
 
         def _parse_pattern(self, pattern):
             for part in pattern.split(","):
-                if len(part) == 0:
+                if not part:
                     raise ConversionError("Every part of LevelFilter must be a string")
                 self.ranges.append(AddressFilter.Range(part))
 

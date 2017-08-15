@@ -33,7 +33,6 @@ class KNXIPFrame:
         """Init object by service_type_ident. Will instanciate a body object depending on service_type_ident."""
         self.header.service_type_ident = service_type_ident
 
-        # pylint: disable=redefined-variable-type
         if service_type_ident == \
                 KNXIPServiceType.ROUTING_INDICATION:
             self.body = CEMIFrame(self.xknx)

@@ -106,16 +106,16 @@ class CEMIFrame(KNXIPBody):
         else:
             raise TypeError()
 
-    def from_knx(self, cemi):
+    def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        self.code = CEMIMessageCode(cemi[0])
+        self.code = CEMIMessageCode(raw[0])
 
         if self.code == CEMIMessageCode.L_DATA_IND or \
                 self.code == CEMIMessageCode.L_Data_REQ or \
                 self.code == CEMIMessageCode.L_DATA_CON:
-            return self.from_knx_data_link_layer(cemi)
+            return self.from_knx_data_link_layer(raw)
         else:
-            raise CouldNotParseKNXIP("Could not understand CEMIMessageCode: {0} / {1}".format(self.code, cemi[0]))
+            raise CouldNotParseKNXIP("Could not understand CEMIMessageCode: {0} / {1}".format(self.code, raw[0]))
 
     def from_knx_data_link_layer(self, cemi):
         """Parse L_DATA_IND, CEMIMessageCode.L_Data_REQ, CEMIMessageCode.L_DATA_CON."""
@@ -155,7 +155,6 @@ class CEMIFrame(KNXIPBody):
                 "APDU LEN should be {} but is {}".format(
                     self.mpdu_len, len(apdu)))
 
-        # pylint: disable=redefined-variable-type
         if len(apdu) == 1:
             apci = tpci_apci & DPTBinary.APCI_BITMASK
             self.payload = DPTBinary(apci)
