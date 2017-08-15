@@ -1,12 +1,32 @@
+sudo: false
+
+matrix:
+  fast_finish: true
+  include:
+    - python: "3.6"
+      env: TOXENV=flake8
+    - python: "3.6"
+      env: TOXENV=pylint
+    - python: "3.6"
+      env: TOXENV=pydocstyle
+    - python: "3.5"
+      env: TOXENV=py35
+    - python: "3.6"
+      env: TOXENV=py36
+    - python: "3.6-dev"
+      env: TOXENV=py36
+    - python: "3.7-dev"
+      env: TOXENV=py36
+    - python: "nightly"
+      env: TOXENV=py36
+
+cache:
+  directories:
+    - $HOME/.cache/pip
 language: python
-python:
-  - "3.5"
-  - "3.5-dev" # 3.5 development branch
-  - "3.6"     # 3.6
-  - "3.6-dev" # 3.6 development branch
-  - "3.7-dev" # 3.7 development branch
-  - "nightly" # currently points to 3.7-dev
+script: travis_wait tox
+after_success: coveralls
+
 # command to install dependencies
 install: "pip install -r requirements.txt"
-# command to run tests
-script: make test
+
