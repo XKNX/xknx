@@ -35,7 +35,7 @@ class GatewayScanner():
         self.timeout_handle = None
 
     def response_rec_callback(self, knxipframe, udp_client):
-        """Callback for receiving a SearchResponse."""
+        """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knxipframe.body, SearchResponse):
             self.xknx.logger.warning("Cant understand knxipframe")
             return

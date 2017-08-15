@@ -5,7 +5,7 @@ from xknx import XKNX
 
 @asyncio.coroutine
 def telegram_received_cb(telegram):
-    """Callback invoked after a telegram was received."""
+    """Do something with the received telegram."""
     print("Telegram received: {0}".format(telegram))
     return True
 

@@ -6,7 +6,7 @@ from xknx.devices import Switch
 
 @asyncio.coroutine
 def device_updated_cb(device):
-    """Callback if a device was updated."""
+    """Do someting with the updated device."""
     print("Callback received from {0}".format(device.name))
 
 

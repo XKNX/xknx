@@ -123,7 +123,7 @@ class KNXIPInterface():
             self.interface = None
 
     def telegram_received(self, telegram):
-        """Callback for having received telegram."""
+        """Put received telegram into queue. Callback for having received telegram."""
         self.xknx.loop.create_task(
             self.xknx.telegrams.put(telegram))
 

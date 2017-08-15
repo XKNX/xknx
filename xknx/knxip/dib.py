@@ -181,7 +181,7 @@ class DIBDeviceInformation(DIB):
     LENGTH = 54
 
     def __init__(self):
-        """Initialization of DIBDeviceInformation."""
+        """Initialize DIBDeviceInformation class."""
         super(DIBDeviceInformation, self).__init__()
         self.knx_medium = KNXMedium.TP1
         self.programming_mode = False

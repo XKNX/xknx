@@ -73,7 +73,7 @@ class Switch(Device):
 
     @asyncio.coroutine
     def do(self, action):
-        """Execute 'do' commands.""
+        """Execute 'do' commands."""
         if action == "on":
             yield from self.set_on()
         elif action == "off":

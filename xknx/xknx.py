@@ -99,7 +99,7 @@ class XKNX:
     def loop_until_sigint(self):
         """Loop until Crtl-C was pressed."""
         def sigint_handler():
-            """Callback for having Ctrl-C received."""
+            """End loop."""
             self.sigint_received.set()
         self.loop.add_signal_handler(signal.SIGINT, sigint_handler)
         self.logger.warning('Press Ctrl+C to stop')

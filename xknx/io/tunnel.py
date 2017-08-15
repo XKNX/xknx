@@ -46,7 +46,7 @@ class Tunnel():
             self.tunnel_reqest_received, [TunnellingRequest.service_type])
 
     def tunnel_reqest_received(self, knxipframe, udp_client):
-        """Callback for tunnel request received."""
+        """Handle incoming tunnel request."""
         # pylint: disable=unused-argument
         if knxipframe.header.service_type_ident != \
                 KNXIPServiceType.TUNNELLING_REQUEST:

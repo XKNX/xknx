@@ -29,6 +29,6 @@ class Connect(RequestResponse):
         return knxipframe
 
     def on_success_hook(self, knxipframe):
-        """Hook for having received a valid answer."""
+        """Set communication channel and identifier after having received a valid answer."""
         self.communication_channel = knxipframe.body.communication_channel
         self.identifier = knxipframe.body.identifier

@@ -30,7 +30,7 @@ class Routing():
             [KNXIPServiceType.ROUTING_INDICATION])
 
     def response_rec_callback(self, knxipframe, _):
-        """Callback for receiving knxipframe from internal udpclient."""
+        """Verify and handle knxipframe. Callback from internal udpclient."""
         if knxipframe.body.src_addr == self.xknx.own_address:
             self.xknx.logger.debug("Ignoring own packet")
         elif knxipframe.header.service_type_ident != \

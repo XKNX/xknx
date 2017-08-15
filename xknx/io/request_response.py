@@ -46,7 +46,7 @@ class RequestResponse():
         self.udpclient.send(knxipframe)
 
     def response_rec_callback(self, knxipframe, _):
-        """Callback for receiving answer. Checks if answer is of correct type."""
+        """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knxipframe.body, self.awaited_response_class):
             self.xknx.logger.warning("Cant understand knxipframe")
             return
@@ -58,16 +58,16 @@ class RequestResponse():
             self.on_error_hook(knxipframe)
 
     def on_success_hook(self, knxipframe):
-        """Hook for having received a valid answer. May be overwritten in derived class."""
+        """Do something after having received a valid answer. May be overwritten in derived class."""
         pass
 
     def on_error_hook(self, knxipframe):
-        """Hook for having received an invalid answer. May be overwritten in derived class."""
+        """Do somthing after not having received valid answer within given time. May be overwritten in derived class."""
         # pylint: disable=no-self-use
         self.xknx.logger.warning("Error: reading rading group address from KNX bus failed: %s", knxipframe.body.status_code)
 
     def timeout(self):
-        """Handle timeout."""
+        """Handle timeout for not having received expected knxipframe."""
         self.response_received_or_timeout.set()
 
     @asyncio.coroutine

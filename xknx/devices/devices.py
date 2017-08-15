@@ -55,7 +55,7 @@ class Devices:
 
     @asyncio.coroutine
     def device_updated(self, device):
-        """Callback for device being updated. Calls registered callbacks if invoked."""
+        """Call all registered device updated callbacks of device."""
         for device_updated_cb in self.device_updated_cbs:
             yield from device_updated_cb(device)
 

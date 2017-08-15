@@ -28,7 +28,7 @@ class Device:
 
     @asyncio.coroutine
     def after_update(self):
-        """Method is be called by derived classes after the internal state has been changed."""
+        """Execute callbacks after internal state has been changed."""
         for device_updated_cb in self.device_updated_cbs:
             # pylint: disable=not-callable
             yield from device_updated_cb(self)

@@ -46,20 +46,20 @@ class UDPClient:
             self.data_received_callback = data_received_callback
 
         def connection_made(self, transport):
-            """Callback after udp connection was made."""
+            """Assign transport. Callback after udp connection was made."""
             self.transport = transport
 
         def datagram_received(self, data, addr):
-            """Callback for datagram received. Calling callback."""
+            """Call assigned callback. Callback for datagram received."""
             if self.data_received_callback is not None:
                 self.data_received_callback(data)
 
         def error_received(self, exc):
-            """Callback for error received. Should not happen on UDP."""
+            """Handel errors. Callback for error received."""
             self.xknx.logger.warning('Error received: %s', exc)
 
         def connection_lost(self, exc):
-            """Callback for connection lost. Should not happen on UDP."""
+            """Log error. Callback for connection lost."""
             self.xknx.logger.info('closing transport %s', exc)
 
     def __init__(self, xknx, local_addr, remote_addr, multicast=False, bind_to_multicast_addr=False):
@@ -78,7 +78,7 @@ class UDPClient:
         self.callbacks = []
 
     def data_received_callback(self, raw):
-        """Callback for having received an UDP packet. Parse and process KNXIP frame."""
+        """Parse and process KNXIP frame. Callback for having received an UDP packet."""
         if raw:
             try:
                 knxipframe = KNXIPFrame(self.xknx)
