@@ -1,5 +1,5 @@
 """
-Module for managing a switch via KNX.
+Module for managing a switch via KNX. Fnord
 
 It provides functionality for
 
