@@ -16,7 +16,7 @@ class SearchRequest(KNXIPBody):
     service_type = KNXIPServiceType.SEARCH_REQUEST
 
     def __init__(self, xknx):
-        """Initializer for SearchRequest object."""
+        """Initialize SearchRequest object."""
         super(SearchRequest, self).__init__(xknx)
         self.discovery_endpoint = HPAI(ip_addr="224.0.23.12", port=3671)
 

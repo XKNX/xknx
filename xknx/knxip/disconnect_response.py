@@ -18,7 +18,7 @@ class DisconnectResponse(KNXIPBody):
     service_type = KNXIPServiceType.DISCONNECT_RESPONSE
 
     def __init__(self, xknx):
-        """Initializer for DisconnectResponse object."""
+        """Initialize DisconnectResponse object."""
         super(DisconnectResponse, self).__init__(xknx)
 
         self.communication_channel_id = 1

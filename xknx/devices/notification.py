@@ -62,7 +62,7 @@ class Notification(Device):
 
     @asyncio.coroutine
     def do(self, action):
-        """Method for executing 'do' commands."""
+        """Execute 'do' commands."""
         if action.startswith("message:"):
             yield from self.set(int(action[8:]))
         else:

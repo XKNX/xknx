@@ -20,7 +20,7 @@ class TunnellingAck(KNXIPBody):
     BODY_LENGTH = 4
 
     def __init__(self, xknx):
-        """Initializer for TunnellingAck object."""
+        """Initialize TunnellingAck object."""
         super(TunnellingAck, self).__init__(xknx)
         self.communication_channel_id = 1
         self.sequence_counter = 0

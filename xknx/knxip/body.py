@@ -5,7 +5,7 @@ class KNXIPBody():
     """Basis class for all KNX/IP bodies."""
 
     def __init__(self, xknx):
-        """Initializer for KNXIPBody."""
+        """Initialize KNXIPBody object."""
         self.xknx = xknx
 
     def calculated_length(self):

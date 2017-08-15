@@ -31,7 +31,7 @@ class AddressFilter:
     # pylint: disable=too-few-public-methods
 
     def __init__(self, pattern):
-        """Initialization of AddressFilter class."""
+        """Initialize AddressFilter class."""
         self.level_filters = []
         self._parse_pattern(pattern)
 
@@ -76,7 +76,7 @@ class AddressFilter:
         """Class for filtering patterns like "8", "*", "8-10"."""
 
         def __init__(self, pattern):
-            """Initializer for Range object."""
+            """Initialize Range object."""
             self.range_from = None
             self.range_to = None
             self._parse_pattern(pattern)
@@ -136,7 +136,7 @@ class AddressFilter:
 
         # pylint: disable=too-few-public-methods
         def __init__(self, pattern):
-            """Initializer for LevelFilter."""
+            """Initialize LevelFilter."""
             self.ranges = []
             self._parse_pattern(pattern)
 

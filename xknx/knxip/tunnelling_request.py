@@ -19,7 +19,7 @@ class TunnellingRequest(KNXIPBody):
     HEADER_LENGTH = 4
 
     def __init__(self, xknx):
-        """Initializer for TunnellingRequest object."""
+        """Initialize TunnellingRequest object."""
         super(TunnellingRequest, self).__init__(xknx)
 
         self.communication_channel_id = 1

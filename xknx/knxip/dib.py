@@ -25,7 +25,7 @@ class DIB():
     """
 
     def __init__(self):
-        """Initializer for DIB."""
+        """Initialize DIB class."""
         pass
 
     def calculated_length(self):
@@ -62,7 +62,7 @@ class DIBGeneric(DIB):
     """
 
     def __init__(self):
-        """Initializer for DIBGeneric class."""
+        """Initialize DIBGeneric class."""
         super(DIBGeneric, self).__init__()
         # DTC Description Type Code
         self.dtc = None
@@ -111,7 +111,7 @@ class DIBSuppSVCFamilies(DIB):
         """Class for storing a supported device family."""
 
         def __init__(self, name=None, version=None):
-            """Initializer for DIBSuppSVCFamilies.Family."""
+            """Initialize DIBSuppSVCFamilies.Family."""
             self.name = name
             self.version = version
 
@@ -125,7 +125,7 @@ class DIBSuppSVCFamilies(DIB):
             return self.__dict__ == other.__dict__
 
     def __init__(self):
-        """Initialization of DIBSuppSVCFamilies."""
+        """Initialize DIBSuppSVCFamilies class."""
         super(DIBSuppSVCFamilies, self).__init__()
         self.families = []
 

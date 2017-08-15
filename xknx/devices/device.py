@@ -73,6 +73,6 @@ class Device:
 
     @asyncio.coroutine
     def do(self, action):
-        """Execute commands."""
+        """Execute 'do' commands."""
         # pylint: disable=invalid-name
         pass

@@ -13,7 +13,7 @@ class HPAI():
     TYPE_UDP = 0x01
 
     def __init__(self, ip_addr='0.0.0.0', port=0):
-        """Initializer for HPAI object."""
+        """Initialize HPAI object."""
         self.ip_addr = ip_addr
         self.port = port
 

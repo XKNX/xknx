@@ -19,7 +19,7 @@ class ConnectRequest(KNXIPBody):
     CRI_LENGTH = 4
 
     def __init__(self, xknx):
-        """Initializer for ConnectRequest object."""
+        """Initialize ConnectRequest object."""
         super(ConnectRequest, self).__init__(xknx)
         self.request_type = None
         self.control_endpoint = HPAI()

@@ -182,7 +182,7 @@ class Cover(Device):
 
     @asyncio.coroutine
     def do(self, action):
-        """Method for executing 'do' commands."""
+        """Execute 'do' commands."""
         if action == "up":
             yield from self.set_up()
         elif action == "short_up":
