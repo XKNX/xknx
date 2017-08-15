@@ -8,6 +8,7 @@ from .body import KNXIPBody
 from .hpai import HPAI
 from .knxip_enum import ConnectRequestType, KNXIPServiceType
 
+
 class ConnectRequest(KNXIPBody):
     """Representation of a KNX Connect Request."""
 
@@ -18,7 +19,7 @@ class ConnectRequest(KNXIPBody):
     CRI_LENGTH = 4
 
     def __init__(self, xknx):
-        """ConnectRequest __init__ object."""
+        """Initializer for ConnectRequest object."""
         super(ConnectRequest, self).__init__(xknx)
         self.request_type = None
         self.control_endpoint = HPAI()
@@ -35,7 +36,7 @@ class ConnectRequest(KNXIPBody):
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
         def cri_from_knx(cri):
-            """ Parse CRI (Connection Request Information)."""
+            """Parse CRI (Connection Request Information)."""
             if cri[0] != ConnectRequest.CRI_LENGTH:
                 raise CouldNotParseKNXIP("CRI has wrong length")
             if len(cri) < ConnectRequest.CRI_LENGTH:
@@ -57,7 +58,7 @@ class ConnectRequest(KNXIPBody):
             cri.append(ConnectRequest.CRI_LENGTH)
             cri.append(self.request_type.value)
             cri.append(self.flags)
-            cri.append(0x00) # Reserved
+            cri.append(0x00)  # Reserved
             return cri
         data = []
         data.extend(self.control_endpoint.to_knx())

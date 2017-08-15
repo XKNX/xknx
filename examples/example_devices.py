@@ -3,6 +3,7 @@ import asyncio
 from xknx import XKNX
 from xknx.devices import Switch
 
+
 async def main():
     """Add test Switch to devices storage and access it by name."""
     xknx = XKNX()

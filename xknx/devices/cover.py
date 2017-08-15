@@ -13,6 +13,7 @@ from xknx.exceptions import CouldNotParseTelegram
 from .device import Device
 from .travelcalculator import TravelCalculator
 
+
 class Cover(Device):
     """Class for managing a cover."""
 
@@ -55,7 +56,6 @@ class Cover(Device):
             travel_time_down,
             travel_time_up)
 
-
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
@@ -72,16 +72,15 @@ class Cover(Device):
         travel_time_up = \
             config.get('travel_time_up', cls.DEFAULT_TRAVEL_TIME_UP)
 
-        return cls(xknx,
-                   name,
-                   group_address_long=group_address_long,
-                   group_address_short=group_address_short,
-                   group_address_position=group_address_position,
-                   group_address_position_feedback=\
-                        group_address_position_feedback,
-                   travel_time_down=travel_time_down,
-                   travel_time_up=travel_time_up)
-
+        return cls(
+            xknx,
+            name,
+            group_address_long=group_address_long,
+            group_address_short=group_address_short,
+            group_address_position=group_address_position,
+            group_address_position_feedback=group_address_position_feedback,
+            travel_time_down=travel_time_down,
+            travel_time_up=travel_time_up)
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
@@ -89,29 +88,27 @@ class Cover(Device):
             or (self.group_address_short == group_address) \
             or (self.group_address_position_feedback == group_address)
 
-
     def supports_direct_positioning(self):
         """Return if cover is supporting direct positioning."""
         return self.group_address_position is not None
 
-
     def __str__(self):
         """Return object as readable string."""
         return '<Cover name="{0}" ' \
-                'group_address_long="{1}" ' \
-                'group_address_short="{2}" ' \
-                'group_address_position="{3}" ' \
-                'group_address_position_feedback="{4}" ' \
-                'travel_time_down="{5}" ' \
-                'travel_time_up="{6}" />' \
-                .format(
-                    self.name,
-                    self.group_address_long,
-                    self.group_address_short,
-                    self.group_address_position,
-                    self.group_address_position_feedback,
-                    self.travel_time_down,
-                    self.travel_time_up)
+            'group_address_long="{1}" ' \
+            'group_address_short="{2}" ' \
+            'group_address_position="{3}" ' \
+            'group_address_position_feedback="{4}" ' \
+            'travel_time_down="{5}" ' \
+            'travel_time_up="{6}" />' \
+            .format(
+                self.name,
+                self.group_address_long,
+                self.group_address_short,
+                self.group_address_position,
+                self.group_address_position_feedback,
+                self.travel_time_down,
+                self.travel_time_up)
 
     @asyncio.coroutine
     def set_down(self):
@@ -197,7 +194,6 @@ class Cover(Device):
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
-
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
         if self.group_address_position_feedback is None:
@@ -207,7 +203,7 @@ class Cover(Device):
             # Cover is traveling, requesting state will return false results
             return[]
 
-        return [self.group_address_position_feedback,]
+        return [self.group_address_position_feedback, ]
 
     @asyncio.coroutine
     def process(self, telegram):
@@ -218,31 +214,25 @@ class Cover(Device):
         self.travelcalculator.set_position(telegram.payload.value[0])
         yield from self.after_update()
 
-
     def current_position(self):
         """Return current position of cover."""
         return self.travelcalculator.current_position()
-
 
     def is_traveling(self):
         """Return if cover is traveling at the moment."""
         return self.travelcalculator.is_traveling()
 
-
     def position_reached(self):
         """Return if cover has reached its final position."""
         return self.travelcalculator.position_reached()
-
 
     def is_open(self):
         """Return if cover is open."""
         return self.travelcalculator.is_open()
 
-
     def is_closed(self):
         """Return if cover is closed."""
         return self.travelcalculator.is_closed()
-
 
     def __eq__(self, other):
         """Equal operator."""

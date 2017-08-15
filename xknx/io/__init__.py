@@ -6,6 +6,7 @@ This package contains all objects managing Tunneling and Routing Connections..
 - Routing uses UDP/Multicast to communicate with KNX/IP device.
 - Tunelling uses UDP packets and builds a static TUnnel with KNX/IP device.
 """
+# flake8: noqa
 from .knxip_interface import KNXIPInterface, ConnectionType, ConnectionConfig
 from .gateway_scanner import GatewayScanner
 from .routing import Routing

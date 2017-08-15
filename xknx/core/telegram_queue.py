@@ -11,6 +11,7 @@ import asyncio
 
 from xknx.knx import TelegramDirection, TelegramType
 
+
 class TelegramQueue():
     """Class for telegram queue."""
 
@@ -102,7 +103,6 @@ class TelegramQueue():
         # pylint: disable=broad-except
         except Exception as exception:
             self.xknx.logger.exception("Exception while processing telegram: %s", exception)
-
 
     @asyncio.coroutine
     def process_telegram_outgoing(self, telegram):

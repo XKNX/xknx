@@ -1,12 +1,13 @@
-
-""" Implementation of Basic KNX Floats """
+"""Implementation of Basic KNX Floats."""
 
 from xknx.exceptions import ConversionError
 from .dpt import DPTBase
 
+
 class DPTFloat(DPTBase):
     """
-    Abstraction for KNX 2 Octet Floating Point Numbers
+    Abstraction for KNX 2 Octet Floating Point Numbers.
+
     DPT 9.xxx
     """
 
@@ -42,6 +43,7 @@ class DPTFloat(DPTBase):
         if not cls._test_boundaries(value):
             raise ConversionError(value)
         sign = 1 if value < 0 else 0
+
         def calc_exponent(value, sign):
             """Return float exponent."""
             exponent = 0
@@ -52,7 +54,7 @@ class DPTFloat(DPTBase):
                 significand >>= 1
 
             if sign:
-                significand ^= 0x7ff # invert
+                significand ^= 0x7ff  # invert
                 significand += 1     # and add 1
 
             return exponent, significand
@@ -60,17 +62,19 @@ class DPTFloat(DPTBase):
         exponent, significand = calc_exponent(value, sign)
 
         return (sign << 7) | (exponent << 3) | (significand >> 8), \
-               significand & 0xff
+            significand & 0xff
 
     @classmethod
     def _test_boundaries(cls, value):
         """Test if value is within defined range for this object."""
         return value >= cls.value_min and \
-               value <= cls.value_max
+            value <= cls.value_max
+
 
 class DPTTemperature(DPTFloat):
     """
-    Abstraction for KNX 2 Octet Floating Point Numbers
+    Abstraction for KNX 2 Octet Floating Point Numbers.
+
     DPT 9.001
     """
 
@@ -79,9 +83,11 @@ class DPTTemperature(DPTFloat):
     unit = "C"
     resolution = 1
 
+
 class DPTLux(DPTFloat):
     """
-    Abstraction for KNX 2 Octet Floating Point Numbers
+    Abstraction for KNX 2 Octet Floating Point Numbers.
+
     DPT 9.004
     """
 
@@ -90,9 +96,11 @@ class DPTLux(DPTFloat):
     unit = "Lux"
     resolution = 1
 
+
 class DPTWsp(DPTFloat):
     """
-    Abstraction for KNX 2 Octet Floating Point Numbers
+    Abstraction for KNX 2 Octet Floating Point Numbers.
+
     DPT 9.005
     """
 
@@ -101,9 +109,11 @@ class DPTWsp(DPTFloat):
     unit = "m/s"
     resolution = 1
 
+
 class DPTHumidity(DPTFloat):
     """
-    Abstraction for KNX 2 Octet Floating Point Numbers
+    Abstraction for KNX 2 Octet Floating Point Numbers.
+
     DPT 9.007
     """
 

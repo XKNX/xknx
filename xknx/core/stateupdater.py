@@ -1,6 +1,7 @@
 """Module for reading the values of all devices from device vector from KNX bus in periodic cycles."""
 import asyncio
 
+
 class StateUpdater():
     """Class for reading the values of all devices from KNX bus."""
 
@@ -21,7 +22,7 @@ class StateUpdater():
 
     @asyncio.coroutine
     def run(self):
-        """StateUpdater thread. Endless loop for updating states."""
+        """Worker thread. Endless loop for updating states."""
         yield from asyncio.sleep(self.start_timeout)
         self.xknx.logger.debug("Starting StateUpdater")
         while True:

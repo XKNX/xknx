@@ -5,6 +5,7 @@ from xknx import XKNX
 from xknx.knxip import KNXIPFrame, KNXIPServiceType, ConnectRequestType, \
     HPAI, ConnectResponse, ErrorCode
 
+
 class Test_KNXIP_ConnectResponse(unittest.TestCase):
     """Test class for KNX/IP ConnectResponses."""
 
@@ -51,6 +52,7 @@ class Test_KNXIP_ConnectResponse(unittest.TestCase):
         knxipframe2.normalize()
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
+
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(Test_KNXIP_ConnectResponse)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

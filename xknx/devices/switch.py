@@ -11,6 +11,7 @@ from xknx.knx import Address, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
 from .device import Device
 
+
 class Switch(Device):
     """Class for managing a switch."""
 
@@ -32,7 +33,6 @@ class Switch(Device):
         self.group_address = group_address
         self.group_address_state = group_address_state
         self.state = False
-
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -83,7 +83,7 @@ class Switch(Device):
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
-        return [self.group_address_state or self.group_address,]
+        return [self.group_address_state or self.group_address, ]
 
     @asyncio.coroutine
     def process(self, telegram):
@@ -97,7 +97,6 @@ class Switch(Device):
             yield from self._set_internal_state(True)
         else:
             raise CouldNotParseTelegram()
-
 
     def __str__(self):
         """Return object as readable string."""

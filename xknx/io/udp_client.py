@@ -10,6 +10,7 @@ import socket
 from xknx.knxip import KNXIPFrame
 from xknx.exceptions import CouldNotParseKNXIP, XKNXException
 
+
 class UDPClient:
     """Class for handling (sending and receiving) UDP packets."""
 
@@ -28,7 +29,6 @@ class UDPClient:
             return \
                 len(self.service_types) == 0 or \
                 service_type in self.service_types
-
 
     class UDPClientFactory(asyncio.DatagramProtocol):
         """Abstraction for managing the asyncio-udp transports."""
@@ -111,7 +111,6 @@ class UDPClient:
         """Unregister callback."""
         self.callbacks.remove(callb)
 
-
     @staticmethod
     def create_multicast_sock(own_ip, remote_addr, bind_to_multicast_addr):
         """Create UDP multicast socket."""
@@ -145,9 +144,7 @@ class UDPClient:
             sock.bind((remote_addr[0], remote_addr[1]))
         else:
             sock.bind((own_ip, 0))
-
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
-
         return sock
 
     @asyncio.coroutine
@@ -194,5 +191,4 @@ class UDPClient:
     @asyncio.coroutine
     def stop(self):
         """Stop UDP socket."""
-        #yield from asyncio.sleep(1/20)
         self.transport.close()

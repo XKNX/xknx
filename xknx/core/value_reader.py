@@ -12,6 +12,7 @@ import asyncio
 
 from xknx.knx import Telegram, TelegramType
 
+
 class ValueReader:
     """Class for reading the value of a specific KNX group address from KNX bus."""
 
@@ -46,11 +47,9 @@ class ValueReader:
 
         self.xknx.telegram_queue.unregister_telegram_received_cb(
             cb_obj)
-
         if not self.success:
             return None
         return self.received_telegram
-
 
     @asyncio.coroutine
     def send_group_read(self):

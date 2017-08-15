@@ -2,6 +2,7 @@
 from xknx.knxip import KNXIPServiceType, KNXIPFrame, ConnectRequestType, HPAI, ConnectResponse
 from .request_response import RequestResponse
 
+
 class Connect(RequestResponse):
     """Class to send a ConnectRequest and wait for ConnectResponse.."""
 
@@ -12,7 +13,6 @@ class Connect(RequestResponse):
         super(Connect, self).__init__(xknx, self.udp_client, ConnectResponse)
         self.communication_channel = 0
         self.identifier = 0
-
 
     def create_knxipframe(self):
         """Create KNX/IP Frame object to be sent to device."""
@@ -27,7 +27,6 @@ class Connect(RequestResponse):
         knxipframe.body.data_endpoint = HPAI(
             ip_addr=local_addr, port=local_port)
         return knxipframe
-
 
     def on_success_hook(self, knxipframe):
         """Hook for having received a valid answer."""

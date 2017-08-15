@@ -17,14 +17,17 @@ It contains
 from enum import Enum
 from .address import Address
 
+
 class TelegramDirection(Enum):
     """Enum class for the communication direction of a telegram (from KNX bus or to KNX bus)."""
+
     INCOMING = 1
     OUTGOING = 2
 
 
 class TelegramType(Enum):
     """Enum class for type of telegram."""
+
     GROUP_READ = 1
     GROUP_WRITE = 2
     GROUP_RESPONSE = 3
@@ -32,6 +35,7 @@ class TelegramType(Enum):
 
 class Telegram:
     """Class for KNX telegrams."""
+
     # pylint: disable=too-few-public-methods
 
     def __init__(self, group_address=Address(),
@@ -44,16 +48,14 @@ class Telegram:
         self.group_address = group_address
         self.payload = payload
 
-
     def __str__(self):
         """Return object as readable string."""
         return '<Telegram group_address="{0}", payload="{1}" ' \
-                'telegramtype="{2}" direction="{3}" />'.format(
-                    self.group_address,
-                    self.payload,
-                    self.telegramtype,
-                    self.direction)
-
+            'telegramtype="{2}" direction="{3}" />'.format(
+                self.group_address,
+                self.payload,
+                self.telegramtype,
+                self.direction)
 
     def __eq__(self, other):
         """Equal operator."""

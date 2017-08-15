@@ -1,6 +1,7 @@
 """Implementation of Basic KNX datatypes."""
 from xknx.exceptions import ConversionError
 
+
 class DPTBase:
     """Base class for KNX data types."""
 
@@ -43,7 +44,6 @@ class DPTBinary(DPTBase):
         return '<DPTBinary value="{0}" />'.format(self.value)
 
 
-
 class DPTArray(DPTBase):
     """The DPTArray is a base class for all datatypes appended to the KNX telegram."""
 
@@ -70,8 +70,9 @@ class DPTArray(DPTBase):
 
 
 class DPTComparator():
+    """Helper class to compare different types of DPT objects."""
+
     # pylint: disable=too-few-public-methods
-    """ Helper class to compare different types of DPT objects"""
 
     @staticmethod
     def compare(a, b):

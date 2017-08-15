@@ -34,7 +34,6 @@ class TestSwitch(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(Address('1/2/3'), TelegramType.GROUP_READ))
 
-
     def test_sync_state_address(self):
         """Test sync function / sending group reads to KNX bus. Test with Switch with explicit state address."""
         xknx = XKNX(loop=self.loop)
@@ -71,7 +70,6 @@ class TestSwitch(unittest.TestCase):
 
         self.assertEqual(switch.state, False)
 
-
     def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
         # pylint: disable=no-self-use
@@ -80,6 +78,7 @@ class TestSwitch(unittest.TestCase):
         switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
 
         after_update_callback = Mock()
+
         @asyncio.coroutine
         def async_after_update_callback(device):
             """Async callback."""
@@ -91,7 +90,6 @@ class TestSwitch(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(switch.process(telegram)))
 
         after_update_callback.assert_called_with(switch)
-
 
     #
     # TEST SET ON
@@ -130,6 +128,7 @@ class TestSwitch(unittest.TestCase):
         self.assertTrue(switch.state)
         self.loop.run_until_complete(asyncio.Task(switch.do("off")))
         self.assertFalse(switch.state)
+
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestSwitch)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

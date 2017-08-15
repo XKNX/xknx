@@ -6,7 +6,6 @@ KNXIPInterface manages KNX/IP Tunneling or Routing connections.
 * provides callbacks after having received a telegram from the network.
 
 """
-
 import asyncio
 from enum import Enum
 from xknx.exceptions import XKNXException
@@ -16,12 +15,14 @@ from .routing import Routing
 from .tunnel import Tunnel
 from .const import DEFAULT_MCAST_PORT
 
+
 class ConnectionType(Enum):
     """Enum class for different types of KNX/IP Connections."""
 
     AUTOMATIC = 0
     TUNNELING = 1
     ROUTING = 2
+
 
 class ConnectionConfig:
     """
@@ -49,7 +50,6 @@ class ConnectionConfig:
         self.local_ip = local_ip
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
-
 
 
 class KNXIPInterface():
@@ -89,10 +89,8 @@ class KNXIPInterface():
             yield from self.start_tunnelling(gatewayscanner.found_local_ip,
                                              gatewayscanner.found_ip_addr,
                                              gatewayscanner.found_port)
-
         elif gatewayscanner.supports_routing:
             yield from self.start_routing(gatewayscanner.found_local_ip)
-
 
     @asyncio.coroutine
     def start_tunnelling(self, local_ip, gateway_ip, gateway_port):
@@ -117,7 +115,6 @@ class KNXIPInterface():
             local_ip)
         yield from self.interface.start()
 
-
     @asyncio.coroutine
     def stop(self):
         """Stop connected interfae (either Tunneling or Routing)."""
@@ -129,7 +126,6 @@ class KNXIPInterface():
         """Callback for having received telegram."""
         self.xknx.loop.create_task(
             self.xknx.telegrams.put(telegram))
-
 
     @asyncio.coroutine
     def send_telegram(self, telegram):

@@ -1,12 +1,12 @@
-
-""" Implementation of Basic KNX DPT_Scaling (Percent) Values """
-
+"""Implementation of Basic KNX DPT_Scaling (Percent) Values."""
 from xknx.exceptions import ConversionError
 from .dpt import DPTBase
 
+
 class DPTScaling(DPTBase):
     """
-    Abstraction for KNX 1 Octet DPT_Scaling ()
+    Abstraction for KNX 1 Octet DPT_Scaling.
+
     DPT 5.001
     """
 
@@ -41,4 +41,4 @@ class DPTScaling(DPTBase):
     def _test_boundaries(cls, value):
         """Test if value is within defined range for this object."""
         return value >= cls.value_min and \
-               value <= cls.value_max
+            value <= cls.value_max

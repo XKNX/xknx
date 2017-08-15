@@ -35,7 +35,6 @@ class Test_KNXIP_ConnStateReq(unittest.TestCase):
             knxipframe.body.control_endpoint,
             HPAI(ip_addr='192.168.200.12', port=50100))
 
-
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.CONNECTIONSTATE_REQUEST)
         knxipframe2.body.communication_channel_id = 21

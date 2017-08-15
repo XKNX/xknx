@@ -6,6 +6,7 @@ from xknx import XKNX
 from xknx.devices import Sensor
 from xknx.knx import Telegram, Address, TelegramType, DPTArray, DPTBinary
 
+
 class TestSensor(unittest.TestCase):
     """Test class for Sensor objects."""
 
@@ -29,9 +30,7 @@ class TestSensor(unittest.TestCase):
             'TestSensor',
             group_address='1/2/3')
         sensor.state = DPTArray((0x01, 0x02, 0x03))
-
         self.assertEqual(sensor.resolve_state(), "0x01,0x02,0x03")
-
 
     def test_str_binary(self):
         """Test resolve_state fallback method with integer object."""
@@ -41,9 +40,7 @@ class TestSensor(unittest.TestCase):
             'TestSensor',
             group_address='1/2/3')
         sensor.state = DPTBinary(5)
-
         self.assertEqual(sensor.resolve_state(), "101")
-
 
     def test_str_scaling(self):
         """Test resolve state with percent sensor."""
@@ -57,7 +54,6 @@ class TestSensor(unittest.TestCase):
 
         self.assertEqual(sensor.resolve_state(), "25")
         self.assertEqual(sensor.unit_of_measurement(), "%")
-
 
     #
     # SYNC
@@ -92,9 +88,7 @@ class TestSensor(unittest.TestCase):
         telegram = Telegram(Address('1/2/3'))
         telegram.payload = DPTArray((0x01, 0x02, 0x03))
         self.loop.run_until_complete(asyncio.Task(sensor.process(telegram)))
-
         self.assertEqual(sensor.state, DPTArray((0x01, 0x02, 0x03)))
-
 
     def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
@@ -106,6 +100,7 @@ class TestSensor(unittest.TestCase):
             group_address='1/2/3')
 
         after_update_callback = Mock()
+
         @asyncio.coroutine
         def async_after_update_callback(device):
             """Async callback."""
@@ -115,9 +110,7 @@ class TestSensor(unittest.TestCase):
         telegram = Telegram(Address('1/2/3'))
         telegram.payload = DPTArray((0x01, 0x02, 0x03))
         self.loop.run_until_complete(asyncio.Task(sensor.process(telegram)))
-
         after_update_callback.assert_called_with(sensor)
-
 
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestSensor)

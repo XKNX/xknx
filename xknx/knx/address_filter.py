@@ -1,6 +1,5 @@
 """
-AddressFilter provides a mechanism for filtering
-KNX addresses with patterns.
+AddressFilter provides a mechanism for filtering KNX addresses with patterns.
 
 Patterns can be
 
@@ -24,6 +23,7 @@ Patterns can be
 """
 from xknx.exceptions import ConversionError
 from .address import Address
+
 
 class AddressFilter:
     """Class for filtering Addresses according to patterns."""
@@ -72,10 +72,11 @@ class AddressFilter:
         return (
             self.level_filters[0].match(address.get_free()))
 
-
     class Range:
         """Class for filtering patterns like "8", "*", "8-10"."""
+
         def __init__(self, pattern):
+            """Initializer for Range object."""
             self.range_from = None
             self.range_to = None
             self._parse_pattern(pattern)
@@ -130,11 +131,12 @@ class AddressFilter:
                 digit >= self.range_from and \
                 digit <= self.range_to
 
-
     class LevelFilter:
         """Class for filtering patterns like "8,11-14,20"."""
+
         # pylint: disable=too-few-public-methods
         def __init__(self, pattern):
+            """Initializer for LevelFilter."""
             self.ranges = []
             self._parse_pattern(pattern)
 

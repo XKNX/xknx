@@ -10,6 +10,7 @@ from xknx.knx import Address, AddressType
 from xknx.devices import Notification, BinarySensor, Climate, \
     Time, Light, Switch, Cover, Sensor
 
+
 class Config:
     """Class for parsing xknx.yaml."""
 

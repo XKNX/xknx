@@ -4,6 +4,7 @@ import unittest
 from xknx.exceptions import ConversionError
 from xknx.knx import DPTTime, DPTWeekday
 
+
 class TestDPTTime(unittest.TestCase):
     """Test class for KNX time objects."""
 
@@ -61,7 +62,6 @@ class TestDPTTime(unittest.TestCase):
     def test_to_knx_default(self):
         """Testing default initialization of DPTTime object."""
         self.assertEqual(DPTTime().to_knx({}), (0x0, 0x0, 0x0))
-
 
     def test_from_knx_wrong_parameter(self):
         """Test parsing from DPTTime object from wrong binary values."""

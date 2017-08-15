@@ -5,6 +5,7 @@ from xknx import XKNX
 from xknx.devices import Time
 from xknx.knx import Address, TelegramType
 
+
 class TestTime(unittest.TestCase):
     """Test class for Time object."""
 
@@ -32,6 +33,7 @@ class TestTime(unittest.TestCase):
         self.assertEqual(telegram.group_address, Address('1/2/3'))
         self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
         self.assertEqual(len(telegram.payload.value), 3)
+
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestTime)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

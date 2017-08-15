@@ -10,14 +10,16 @@ from .hpai import HPAI
 from .dib import DIB, DIBDeviceInformation
 from .knxip_enum import KNXIPServiceType
 
+
 class SearchResponse(KNXIPBody):
     """Representation of a KNX Connect Request."""
+
     # pylint: disable=too-many-instance-attributes
 
     service_type = KNXIPServiceType.SEARCH_RESPONSE
 
     def __init__(self, xknx):
-        """SearchResponse __init__ object."""
+        """Initializer for SearchResponse object."""
         super(SearchResponse, self).__init__(xknx)
         self.control_endpoint = HPAI()
         self.dibs = []
@@ -44,7 +46,6 @@ class SearchResponse(KNXIPBody):
                 return dib.name
         return "UKNOWN"
 
-
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
         data = []
@@ -52,7 +53,6 @@ class SearchResponse(KNXIPBody):
         for dib in self.dibs:
             data.extend(dib.to_knx())
         return data
-
 
     def __str__(self):
         """Return object as readable string."""

@@ -3,6 +3,7 @@ import unittest
 import time
 from xknx.devices import TravelCalculator
 
+
 class TestTravelCalculator(unittest.TestCase):
     """Test class for TravelCalculator objects."""
 
@@ -49,7 +50,7 @@ class TestTravelCalculator(unittest.TestCase):
         travelcalculator.time_set_from_outside = 1000
         travelcalculator.start_travel(120)
 
-        #time not changed, still at beginning
+        # time not changed, still at beginning
         self.assertEqual(travelcalculator.current_position(), 100)
         self.assertFalse(travelcalculator.position_reached())
 
@@ -137,7 +138,6 @@ class TestTravelCalculator(unittest.TestCase):
         self.assertEqual(travelcalculator.current_position(), 130)
         self.assertTrue(travelcalculator.position_reached())
 
-
     def test_change_direction(self):
         """Test changing direction while travelling."""
         travelcalculator = TravelCalculator(64, 128)
@@ -213,6 +213,7 @@ class TestTravelCalculator(unittest.TestCase):
 
         travelcalculator.time_set_from_outside = 1032
         self.assertFalse(travelcalculator.is_traveling())
+
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestTravelCalculator)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

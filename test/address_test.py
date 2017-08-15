@@ -4,6 +4,7 @@ import unittest
 from xknx.knx import Address, AddressFormat, AddressType
 from xknx.exceptions import CouldNotParseAddress
 
+
 class TestAddress(unittest.TestCase):
     """Test class for Address."""
 
@@ -157,7 +158,6 @@ class TestAddress(unittest.TestCase):
     def test_address_max_address(self):
         """Test initialization of Address with maximum Address."""
         self.assertEqual(Address(Address("31/7/255")).raw, 65535)
-
 
     #
     # INVALID INIT STRINGS

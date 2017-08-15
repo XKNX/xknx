@@ -4,6 +4,7 @@ import unittest
 from xknx.exceptions import ConversionError
 from xknx.knx import DPTString
 
+
 class TestDPTFloat(unittest.TestCase):
     """Test class for KNX float object."""
 
@@ -65,6 +66,7 @@ class TestDPTFloat(unittest.TestCase):
                0x00, 0x00, 0x00]
         with self.assertRaises(ConversionError):
             DPTString().from_knx(raw)
+
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPTFloat)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

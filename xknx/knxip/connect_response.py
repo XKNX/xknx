@@ -10,8 +10,10 @@ from .hpai import HPAI
 from .knxip_enum import ConnectRequestType, KNXIPServiceType
 from .error_code import ErrorCode
 
+
 class ConnectResponse(KNXIPBody):
     """Representation of a KNX Connect Response."""
+
     # pylint: disable=too-many-instance-attributes
 
     service_type = KNXIPServiceType.CONNECT_RESPONSE
@@ -28,11 +30,10 @@ class ConnectResponse(KNXIPBody):
         self.control_endpoint = HPAI()
         self.identifier = None
 
-
     def calculated_length(self):
         """Get length of KNX/IP body."""
         return 2 + HPAI.LENGTH + \
-           ConnectResponse.CRD_LENGTH
+            ConnectResponse.CRD_LENGTH
 
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
@@ -54,7 +55,6 @@ class ConnectResponse(KNXIPBody):
         pos += crd_from_knx(raw[pos:])
         return pos
 
-
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
         def crd_to_knx():
@@ -71,7 +71,6 @@ class ConnectResponse(KNXIPBody):
         data.extend(self.control_endpoint.to_knx())
         data.extend(crd_to_knx())
         return data
-
 
     def __str__(self):
         """Return object as readable string."""

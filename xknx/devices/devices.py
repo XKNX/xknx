@@ -6,6 +6,7 @@ More or less an array with devices. Adds some search functionality to find devic
 import asyncio
 from .device import Device
 
+
 class Devices:
     """Class for handling a vector/array of devices."""
 
@@ -40,7 +41,6 @@ class Devices:
         if isinstance(key, int):
             return self.__devices[key]
         raise KeyError
-
 
     def __len__(self):
         """Return number of devices within vector."""

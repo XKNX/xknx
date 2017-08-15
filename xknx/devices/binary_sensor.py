@@ -16,6 +16,7 @@ from xknx.exceptions import CouldNotParseTelegram
 from .action import Action
 from .device import Device
 
+
 # pylint: disable=invalid-name
 class BinarySensorState(Enum):
     """Enum class for the state of a binary sensor."""

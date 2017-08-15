@@ -6,6 +6,7 @@ from xknx import XKNX
 from xknx.devices import Light, Switch, Cover, Climate, Time, \
     BinarySensor, Action, Sensor, Notification
 
+
 # pylint: disable=too-many-public-methods,invalid-name
 class TestConfig(unittest.TestCase):
     """Test class for Configuration logic."""
@@ -22,7 +23,6 @@ class TestConfig(unittest.TestCase):
     #
     # XKNX Config
     #
-
     def test_config_light(self):
         """Test reading Light from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
@@ -32,7 +32,6 @@ class TestConfig(unittest.TestCase):
                   'Living-Room.Light_1',
                   group_address_switch='1/6/7',
                   device_updated_cb=xknx.devices.device_updated))
-
 
     def test_config_light_state(self):
         """Test reading Light with dimming address from config file."""
@@ -47,7 +46,6 @@ class TestConfig(unittest.TestCase):
                   group_address_brightness_state='1/7/7',
                   device_updated_cb=xknx.devices.device_updated))
 
-
     def test_config_switch(self):
         """Test reading Switch from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
@@ -57,7 +55,6 @@ class TestConfig(unittest.TestCase):
                    'Livingroom.Outlet_2',
                    group_address='1/3/2',
                    device_updated_cb=xknx.devices.device_updated))
-
 
     def test_config_cover(self):
         """Test reading Cover from config file."""
@@ -73,7 +70,6 @@ class TestConfig(unittest.TestCase):
                   travel_time_down=50,
                   travel_time_up=60,
                   device_updated_cb=xknx.devices.device_updated))
-
 
     def test_config_climate_temperature(self):
         """Test reading Climate object from config file."""
@@ -160,8 +156,6 @@ class TestConfig(unittest.TestCase):
                                     method="on")],
                          device_updated_cb=xknx.devices.device_updated))
 
-
-
     def test_config_sensor_percent(self):
         """Test reading Sensor with value_type from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
@@ -173,7 +167,6 @@ class TestConfig(unittest.TestCase):
                    value_type='percent',
                    device_updated_cb=xknx.devices.device_updated))
 
-
     def test_config_sensor_no_value_type(self):
         """Test reading Sensor without value_type from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
@@ -183,7 +176,6 @@ class TestConfig(unittest.TestCase):
                    'Some.Other.Value',
                    group_address='2/0/2',
                    device_updated_cb=xknx.devices.device_updated))
-
 
     def test_config_sensor_binary_device_class(self):
         """Test reading Sensor with device_class from config file."""
@@ -196,7 +188,6 @@ class TestConfig(unittest.TestCase):
                          device_class='motion',
                          device_updated_cb=xknx.devices.device_updated))
 
-
     def test_config_sensor_binary_significant_bit(self):
         """Test reading Sensor with differing significant bit from config file."""
         xknx = XKNX(config='../xknx.yaml', loop=self.loop)
@@ -208,7 +199,6 @@ class TestConfig(unittest.TestCase):
                          significant_bit=2,
                          device_class='motion',
                          device_updated_cb=xknx.devices.device_updated))
-
 
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestConfig)

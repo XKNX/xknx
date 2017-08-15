@@ -3,6 +3,7 @@ import asyncio
 from xknx import XKNX
 from xknx.devices import Switch
 
+
 @asyncio.coroutine
 def device_updated_cb(device):
     """Callback if a device was updated."""
@@ -21,6 +22,7 @@ async def main():
     await xknx.start(daemon_mode=True)
 
     await xknx.stop()
+
 
 # pylint: disable=invalid-name
 loop = asyncio.get_event_loop()

@@ -11,6 +11,7 @@ from .knxip_enum import KNXIPServiceType
 
 class TunnellingRequest(KNXIPBody):
     """Representation of a KNX Connect Request."""
+
     # pylint: disable=too-many-instance-attributes
 
     service_type = KNXIPServiceType.TUNNELLING_REQUEST
@@ -18,7 +19,7 @@ class TunnellingRequest(KNXIPBody):
     HEADER_LENGTH = 4
 
     def __init__(self, xknx):
-        """TunnellingRequest __init__ object."""
+        """Initializer for TunnellingRequest object."""
         super(TunnellingRequest, self).__init__(xknx)
 
         self.communication_channel_id = 1
@@ -30,7 +31,6 @@ class TunnellingRequest(KNXIPBody):
         """Get length of KNX/IP body."""
         return TunnellingRequest.HEADER_LENGTH + \
             self.cemi.calculated_length()
-
 
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
@@ -55,14 +55,13 @@ class TunnellingRequest(KNXIPBody):
             cri.append(TunnellingRequest.HEADER_LENGTH)
             cri.append(self.communication_channel_id)
             cri.append(self.sequence_counter)
-            cri.append(0x00) # Reserved
+            cri.append(0x00)  # Reserved
             return cri
 
         data = []
         data.extend(header_to_knx())
         data.extend(self.cemi.to_knx())
         return data
-
 
     def __str__(self):
         """Return object as readable string."""
