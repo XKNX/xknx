@@ -3,7 +3,7 @@ XKNX - An Asynchronous KNX Library Written in Python
 
 [![Build Status](https://travis-ci.org/XKNX/xknx.svg?branch=master)](https://travis-ci.org/XKNX/xknx)
 
-An asynchronous Wrapper around KNX/IP protocol written in python.
+An asynchronous wrapper around KNX/IP protocol written in python.
 
 Documentation
 -------------
