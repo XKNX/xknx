@@ -3,5 +3,7 @@
 build/
 dist/
 xknx.egg-info/
-
+.cache
+.tox
 .DS_Store
+.coverage
