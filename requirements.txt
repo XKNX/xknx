@@ -3,3 +3,4 @@ pylint
 netifaces
 tox
 coveralls
+pytest
