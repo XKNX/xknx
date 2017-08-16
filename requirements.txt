@@ -4,3 +4,5 @@ netifaces
 tox
 coveralls
 pytest
+pytest-cov
+pytest-timeout
