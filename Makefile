@@ -13,9 +13,11 @@ all:
 	@echo ""
 	@echo "pydocstyle      -- run pydocstyle tests"
 	@echo ""
+	@echo "coverage        -- create coverage report"
+	@echo ""
 
 test:
-	@$(MAKE) -C test all
+	PYTHONPATH="${PYTHONPATH}:/" python3 -m unittest discover -s test -p "*_test.py" -b
 
 build:
 	@python3 setup.py sdist
@@ -30,5 +32,8 @@ pylint:
 
 pydocstyle:
 	 @pydocstyle xknx test/*.py test/*.py *.py examples/*.py
+
+coverage:
+	py.test --cov-report html --cov xknx --verbose
 
 .PHONY: test build
