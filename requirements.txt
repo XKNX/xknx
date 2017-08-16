@@ -2,3 +2,4 @@ pyyaml>=3.11,<4
 pylint
 netifaces
 tox
+coveralls
