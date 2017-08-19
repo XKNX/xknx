@@ -286,8 +286,11 @@ class Climate(Device):
 
     @staticmethod
     def _to_knx_operation_mode(operation_mode):
-        """Return the KNX value for the operation mode."""
-        """ DPT 20.102 DPT_HVACMode."""
+        """
+        Return the KNX value for the operation mode.
+
+        DPT 20.102 DPT_HVACMode.
+        """
 
         if operation_mode == ClimateOperationMode.COMFORT:
             return 1
