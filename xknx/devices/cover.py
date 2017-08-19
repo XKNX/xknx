@@ -17,6 +17,8 @@ from .travelcalculator import TravelCalculator
 class Cover(Device):
     """Class for managing a cover."""
 
+    # pylint: disable=too-many-instance-attributes
+
     # Average typical travel time of a cover
     DEFAULT_TRAVEL_TIME_DOWN = 22
     DEFAULT_TRAVEL_TIME_UP = 22
