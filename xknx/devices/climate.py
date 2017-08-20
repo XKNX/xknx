@@ -291,7 +291,6 @@ class Climate(Device):
 
         DPT 20.102 DPT_HVACMode.
         """
-
         if operation_mode == ClimateOperationMode.COMFORT:
             return 1
         elif operation_mode == ClimateOperationMode.STANDBY:
