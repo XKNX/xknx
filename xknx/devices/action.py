@@ -64,7 +64,6 @@ class Action(ActionBase):
         """Initialize Action class."""
         # pylint: disable=too-many-arguments
         super(Action, self).__init__(xknx, hook, counter)
-        self.xknx = xknx
         self.target = target
         self.method = method
 
@@ -90,3 +89,27 @@ class Action(ActionBase):
         """Return object as readable string."""
         return '<Action target="{1}" method="{2}" {3}/>' \
             .format(self.target, self.method, super(Action, self).__str__())
+
+
+class ActionCallback(ActionBase):
+    """Class for handling commands via callbacks."""
+
+    def __init__(self,
+                 xknx,
+                 callback,
+                 hook="on",
+                 counter=1):
+        """Initialize Action class."""
+        # pylint: disable=too-many-arguments
+        super(ActionCallback, self).__init__(xknx, hook, counter)
+        self.callback = callback
+
+    @asyncio.coroutine
+    def execute(self):
+        """Execute callback."""
+        yield from self.callback()
+
+    def __str__(self):
+        """Return object as readable string."""
+        return '<ActionCallback callback="{}" {}/>' \
+            .format(self.callback.__name__, super(ActionCallback, self).__str__())

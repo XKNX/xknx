@@ -1,7 +1,7 @@
 """Module for handling devices like Lights, Switches or Covers."""
 # flake8: noqa
 from .devices import Devices
-from .action import Action, ActionBase
+from .action import Action, ActionBase, ActionCallback
 from .cover import Cover
 from .travelcalculator import TravelCalculator
 from .climate import Climate, ClimateOperationMode
