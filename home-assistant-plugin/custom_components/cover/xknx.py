@@ -1,13 +1,14 @@
 """
-Support for KNX/IP covers via XKNX.
+Support for KNX/IP covers.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.xknx/
+https://home-assistant.io/components/cover.knx/
 """
 import asyncio
 import voluptuous as vol
 
-from custom_components.xknx import DATA_XKNX, _LOGGER
+from custom_components.xknx import DATA_XKNX, ATTR_DISCOVER_DEVICES, \
+    _LOGGER
 from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.core import callback
 from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
@@ -41,34 +42,30 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, add_devices,
                          discovery_info=None):
-    """Set up cover(s) for XKNX platform."""
+    """Set up cover(s) for KNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
         return False
 
     if discovery_info is not None:
-        yield from add_devices_from_component(hass, add_devices)
+        add_devices_from_component(hass, discovery_info, add_devices)
     else:
-        yield from add_devices_from_platform(hass, config, add_devices)
+        add_devices_from_platform(hass, config, add_devices)
 
     return True
 
 
-@asyncio.coroutine
-def add_devices_from_component(hass, add_devices):
-    """Set up covers for XKNX platform configured via xknx.yaml."""
+def add_devices_from_component(hass, discovery_info, add_devices):
+    """Set up covers for KNX platform configured via xknx.yaml."""
     entities = []
-    for device in hass.data[DATA_XKNX].xknx.devices:
-        import xknx.devices
-        if isinstance(device, xknx.devices.Cover) and \
-                not hasattr(device, "already_added_to_hass"):
-            entities.append(XKNXCover(hass, device))
+    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
+        device = hass.data[DATA_XKNX].xknx.devices[device_name]
+        entities.append(KNXCover(hass, device))
     add_devices(entities)
 
 
-@asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
-    """Set up cover for XKNX platform configured within plattform."""
+    """Set up cover for KNX platform configured within plattform."""
     import xknx
     cover = xknx.devices.Cover(
         hass.data[DATA_XKNX].xknx,
@@ -81,13 +78,12 @@ def add_devices_from_platform(hass, config, add_devices):
         travel_time_down=config.get(CONF_TRAVELLING_TIME_DOWN),
         travel_time_up=config.get(CONF_TRAVELLING_TIME_UP))
 
-    cover.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(cover)
-    add_devices([XKNXCover(hass, cover)])
+    add_devices([KNXCover(hass, cover)])
 
 
-class XKNXCover(CoverDevice):
-    """Representation of a XKNX cover."""
+class KNXCover(CoverDevice):
+    """Representation of a KNX cover."""
 
     def __init__(self, hass, device):
         """Initialize the cover."""
@@ -108,18 +104,18 @@ class XKNXCover(CoverDevice):
 
     @property
     def name(self):
-        """Return the name of the XKNX device."""
+        """Return the name of the KNX device."""
         return self.device.name
 
     @property
     def should_poll(self):
-        """No polling needed within XKNX."""
+        """No polling needed within KNX."""
         return False
 
     @property
     def current_cover_position(self):
         """Return the current position of the cover."""
-        return int(self.from_xknx_position(self.device.current_position()))
+        return int(self.from_knx_position(self.device.current_position()))
 
     @property
     def is_closed(self):
@@ -143,7 +139,7 @@ class XKNXCover(CoverDevice):
     @asyncio.coroutine
     def async_set_cover_position(self, position, **kwargs):
         """Move the cover to a specific position."""
-        knx_position = self.to_xknx_position(position)
+        knx_position = self.to_knx_position(position)
         yield from self.device.set_position(knx_position)
         self.start_auto_updater()
 
@@ -176,13 +172,13 @@ class XKNXCover(CoverDevice):
         self.hass.add_job(self.device.auto_stop_if_necessary())
 
     @staticmethod
-    def from_xknx_position(raw):
-        """Convert XKNX position [0...255] to hass position [100...0]."""
+    def from_knx_position(raw):
+        """Convert KNX position [0...255] to hass position [100...0]."""
         return 100-round((raw/256)*100)
 
     @staticmethod
-    def to_xknx_position(value):
-        """Convert hass position [100...0] to XKNX position [0...255]."""
+    def to_knx_position(value):
+        """Convert hass position [100...0] to KNX position [0...255]."""
         return 255-round(value/100*255.4)
 
     def stop_cover_tilt(self, **kwargs):

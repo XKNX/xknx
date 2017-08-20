@@ -1,13 +1,13 @@
 """
-Support for KNX/IP lights via XKNX.
+Support for KNX/IP lights.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.xknx/
+https://home-assistant.io/components/light.knx/
 """
 import asyncio
 import voluptuous as vol
 
-from custom_components.xknx import DATA_XKNX
+from custom_components.xknx import DATA_XKNX, ATTR_DISCOVER_DEVICES
 from homeassistant.components.light import PLATFORM_SCHEMA, Light, \
     SUPPORT_BRIGHTNESS, ATTR_BRIGHTNESS
 from homeassistant.const import CONF_NAME
@@ -33,34 +33,30 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, add_devices,
                          discovery_info=None):
-    """Set up light(s) for XKNX platform."""
+    """Set up light(s) for KNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
         return False
 
     if discovery_info is not None:
-        yield from add_devices_from_component(hass, add_devices)
+        add_devices_from_component(hass, discovery_info, add_devices)
     else:
-        yield from add_devices_from_platform(hass, config, add_devices)
+        add_devices_from_platform(hass, config, add_devices)
 
     return True
 
 
-@asyncio.coroutine
-def add_devices_from_component(hass, add_devices):
-    """Set up lights for XKNX platform configured via xknx.yaml."""
+def add_devices_from_component(hass, discovery_info, add_devices):
+    """Set up lights for KNX platform configured via xknx.yaml."""
     entities = []
-    for device in hass.data[DATA_XKNX].xknx.devices:
-        import xknx
-        if isinstance(device, xknx.devices.Light) and \
-                not hasattr(device, "already_added_to_hass"):
-            entities.append(XKNXLight(hass, device))
+    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
+        device = hass.data[DATA_XKNX].xknx.devices[device_name]
+        entities.append(KNXLight(hass, device))
     add_devices(entities)
 
 
-@asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
-    """Set up light for XKNX platform configured within plattform."""
+    """Set up light for KNX platform configured within plattform."""
     import xknx
     light = xknx.devices.Light(
         hass.data[DATA_XKNX].xknx,
@@ -70,16 +66,15 @@ def add_devices_from_platform(hass, config, add_devices):
         group_address_brightness=config.get(CONF_BRIGHTNESS_ADDRESS),
         group_address_brightness_state=config.get(
             CONF_BRIGHTNESS_STATE_ADDRESS))
-    light.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(light)
-    add_devices([XKNXLight(hass, light)])
+    add_devices([KNXLight(hass, light)])
 
 
-class XKNXLight(Light):
-    """Representation of a XKNX light."""
+class KNXLight(Light):
+    """Representation of a KNX light."""
 
     def __init__(self, hass, device):
-        """Initialization of XKNXLight."""
+        """Initialization of KNXLight."""
         self.device = device
         self.hass = hass
         self.register_callbacks()
@@ -95,12 +90,12 @@ class XKNXLight(Light):
 
     @property
     def name(self):
-        """Return the name of the XKNX device."""
+        """Return the name of the KNX device."""
         return self.device.name
 
     @property
     def should_poll(self):
-        """No polling needed within XKNX."""
+        """No polling needed within KNX."""
         return False
 
     @property

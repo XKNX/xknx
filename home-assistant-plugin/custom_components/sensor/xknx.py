@@ -1,13 +1,13 @@
 """
-Support for KNX/IP sensors via XKNX.
+Support for KNX/IP sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.xknx/
+https://home-assistant.io/components/sensor.knx/
 """
 import asyncio
 import voluptuous as vol
 
-from custom_components.xknx import DATA_XKNX
+from custom_components.xknx import DATA_XKNX, ATTR_DISCOVER_DEVICES
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
@@ -29,50 +29,45 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, add_devices,
                          discovery_info=None):
-    """Set up sensor(s) for XKNX platform."""
+    """Set up sensor(s) for KNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
         return False
 
     if discovery_info is not None:
-        yield from add_devices_from_component(hass, add_devices)
+        add_devices_from_component(hass, discovery_info, add_devices)
     else:
-        yield from add_devices_from_platform(hass, config, add_devices)
+        add_devices_from_platform(hass, config, add_devices)
 
     return True
 
 
-@asyncio.coroutine
-def add_devices_from_component(hass, add_devices):
-    """Set up sensors for XKNX platform configured via xknx.yaml."""
+def add_devices_from_component(hass, discovery_info, add_devices):
+    """Set up sensors for KNX platform configured via xknx.yaml."""
     entities = []
-    for device in hass.data[DATA_XKNX].xknx.devices:
-        import xknx
-        if isinstance(device, xknx.devices.Sensor) and \
-                not hasattr(device, "already_added_to_hass"):
-            entities.append(XKNXSensor(hass, device))
+    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
+        device = hass.data[DATA_XKNX].xknx.devices[device_name]
+        entities.append(KNXSensor(hass, device))
     add_devices(entities)
 
 
-@asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
-    """Set up sensor for XKNX platform configured within plattform."""
+    """Set up sensor for KNX platform configured within plattform."""
     import xknx
     sensor = xknx.devices.Sensor(
         hass.data[DATA_XKNX].xknx,
         name=config.get(CONF_NAME),
         group_address=config.get(CONF_ADDRESS),
         value_type=config.get(CONF_TYPE))
-    sensor.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(sensor)
-    add_devices([XKNXSensor(hass, sensor)])
+    add_devices([KNXSensor(hass, sensor)])
 
 
-class XKNXSensor(Entity):
-    """Representation of a XKNX sensor."""
+class KNXSensor(Entity):
+    """Representation of a KNX sensor."""
 
     def __init__(self, hass, device):
-        """Initialization of XKNXSensor."""
+        """Initialization of KNXSensor."""
         self.device = device
         self.hass = hass
         self.register_callbacks()
@@ -88,12 +83,12 @@ class XKNXSensor(Entity):
 
     @property
     def name(self):
-        """Return the name of the XKNX device."""
+        """Return the name of the KNX device."""
         return self.device.name
 
     @property
     def should_poll(self):
-        """No polling needed within XKNX."""
+        """No polling needed within KNX."""
         return False
 
     @property

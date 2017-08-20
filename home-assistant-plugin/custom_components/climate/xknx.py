@@ -1,13 +1,13 @@
 """
-Support for KNX/IP climate devices via XKNX.
+Support for KNX/IP climate devices.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.xknx/
+https://home-assistant.io/components/climate.knx/
 """
 import asyncio
 import voluptuous as vol
 
-from custom_components.xknx import DATA_XKNX
+from custom_components.xknx import DATA_XKNX, ATTR_DISCOVER_DEVICES
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.const import CONF_NAME, TEMP_CELSIUS, ATTR_TEMPERATURE
 import homeassistant.helpers.config_validation as cv
@@ -38,34 +38,30 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, add_devices,
                          discovery_info=None):
-    """Set up climate(s) for XKNX platform."""
+    """Set up climate(s) for KNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
         return False
 
     if discovery_info is not None:
-        yield from add_devices_from_component(hass, add_devices)
+        add_devices_from_component(hass, discovery_info, add_devices)
     else:
-        yield from add_devices_from_platform(hass, config, add_devices)
+        add_devices_from_platform(hass, config, add_devices)
 
     return True
 
 
-@asyncio.coroutine
-def add_devices_from_component(hass, add_devices):
-    """Set up climates for XKNX platform configured within plattform."""
+def add_devices_from_component(hass, discovery_info, add_devices):
+    """Set up climates for KNX platform configured within plattform."""
     entities = []
-    for device in hass.data[DATA_XKNX].xknx.devices:
-        import xknx
-        if isinstance(device, xknx.devices.Climate) and \
-                not hasattr(device, "already_added_to_hass"):
-            entities.append(XKNXClimate(hass, device))
+    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
+        device = hass.data[DATA_XKNX].xknx.devices[device_name]
+        entities.append(KNXClimate(hass, device))
     add_devices(entities)
 
 
-@asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
-    """Set up climate for XKNX platform configured within plattform."""
+    """Set up climate for KNX platform configured within plattform."""
     import xknx
     climate = xknx.devices.Climate(
         hass.data[DATA_XKNX].xknx,
@@ -84,16 +80,15 @@ def add_devices_from_platform(hass, config, add_devices):
             CONF_OPERATION_MODE_NIGHT_ADDRESS),
         group_address_operation_mode_comfort=config.get(
             CONF_OPERATION_MODE_COMFORT_ADDRESS))
-    climate.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(climate)
-    add_devices([XKNXClimate(hass, climate)])
+    add_devices([KNXClimate(hass, climate)])
 
 
-class XKNXClimate(ClimateDevice):
-    """Representation of a XKNX climate."""
+class KNXClimate(ClimateDevice):
+    """Representation of a KNX climate."""
 
     def __init__(self, hass, device):
-        """Initialization of XKNXClimate."""
+        """Initialization of KNXClimate."""
         self.device = device
         self.hass = hass
         self.register_callbacks()
@@ -113,12 +108,12 @@ class XKNXClimate(ClimateDevice):
 
     @property
     def name(self):
-        """Return the name of the XKNX device."""
+        """Return the name of the KNX device."""
         return self.device.name
 
     @property
     def should_poll(self):
-        """No polling needed within XKNX."""
+        """No polling needed within KNX."""
         return False
 
     @property
@@ -136,8 +131,7 @@ class XKNXClimate(ClimateDevice):
         """Return the temperature we try to reach."""
         if self.device.supports_target_temperature:
             return self.device.target_temperature
-        else:
-            return None
+        return None
 
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):
@@ -153,8 +147,7 @@ class XKNXClimate(ClimateDevice):
         """Return current operation ie. heat, cool, idle."""
         if self.device.supports_operation_mode:
             return self.device.operation_mode.value
-        else:
-            return None
+        return None
 
     @property
     def operation_list(self):
@@ -167,5 +160,5 @@ class XKNXClimate(ClimateDevice):
         """Set operation mode."""
         if self.device.supports_operation_mode:
             from xknx.devices import ClimateOperationMode
-            xknx_operation_mode = ClimateOperationMode(operation_mode)
-            yield from self.device.set_operation_mode(xknx_operation_mode)
+            knx_operation_mode = ClimateOperationMode(operation_mode)
+            yield from self.device.set_operation_mode(knx_operation_mode)
