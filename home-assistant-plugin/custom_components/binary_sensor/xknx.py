@@ -12,6 +12,7 @@ from custom_components.xknx import DATA_XKNX, ATTR_DISCOVER_DEVICES, \
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, \
     BinarySensorDevice
 from homeassistant.const import CONF_NAME
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 CONF_ADDRESS = 'address'
@@ -60,14 +61,15 @@ def async_setup_platform(hass, config, add_devices,
         return False
 
     if discovery_info is not None:
-        add_devices_from_component(hass, discovery_info, add_devices)
+        async_add_devices_discovery(hass, discovery_info, add_devices)
     else:
-        add_devices_from_platform(hass, config, add_devices)
+        async_add_devices_config(hass, config, add_devices)
 
     return True
 
 
-def add_devices_from_component(hass, discovery_info, add_devices):
+@callback
+def async_add_devices_discovery(hass, discovery_info, add_devices):
     """Set up binary sensors for KNX platform configured via xknx.yaml."""
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
@@ -76,7 +78,8 @@ def add_devices_from_component(hass, discovery_info, add_devices):
     add_devices(entities)
 
 
-def add_devices_from_platform(hass, config, add_devices):
+@callback
+def async_add_devices_config(hass, config, add_devices):
     """Set up binary senor for KNX platform configured within plattform."""
     name = config.get(CONF_NAME)
     import xknx
@@ -108,10 +111,11 @@ class KNXBinarySensor(BinarySensorDevice):
         """Initialization of KNXBinarySensor."""
         self.device = device
         self.hass = hass
-        self.register_callbacks()
+        self.async_register_callbacks()
         self.automations = []
 
-    def register_callbacks(self):
+    @callback
+    def async_register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
         @asyncio.coroutine
         def after_update_callback(device):

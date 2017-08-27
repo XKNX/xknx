@@ -17,7 +17,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, \
     CONF_HOST, CONF_PORT
 from homeassistant.helpers.script import Script
 
-DOMAIN = "knx"
+DOMAIN = "xknx"
 DATA_XKNX = "data_knx"
 CONF_XKNX_CONFIG = "config_file"
 

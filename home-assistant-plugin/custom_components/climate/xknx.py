@@ -10,13 +10,15 @@ import voluptuous as vol
 from custom_components.xknx import DATA_XKNX, ATTR_DISCOVER_DEVICES
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.const import CONF_NAME, TEMP_CELSIUS, ATTR_TEMPERATURE
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 CONF_SETPOINT_ADDRESS = 'setpoint_address'
 CONF_TEMPERATURE_ADDRESS = 'temperature_address'
 CONF_TARGET_TEMPERATURE_ADDRESS = 'target_temperature_address'
 CONF_OPERATION_MODE_ADDRESS = 'operation_mode_address'
-CONF_OPERATION_MODE_PROTECTION_ADDRESS = 'operation_mode_protection_address'
+CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS = \
+    'operation_mode_frost_protection_address'
 CONF_OPERATION_MODE_NIGHT_ADDRESS = 'operation_mode_night_address'
 CONF_OPERATION_MODE_COMFORT_ADDRESS = 'operation_mode_comfort_address'
 
@@ -29,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
     vol.Required(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
-    vol.Optional(CONF_OPERATION_MODE_PROTECTION_ADDRESS): cv.string,
+    vol.Optional(CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
 })
@@ -44,14 +46,15 @@ def async_setup_platform(hass, config, add_devices,
         return False
 
     if discovery_info is not None:
-        add_devices_from_component(hass, discovery_info, add_devices)
+        async_add_devices_discovery(hass, discovery_info, add_devices)
     else:
-        add_devices_from_platform(hass, config, add_devices)
+        async_add_devices_config(hass, config, add_devices)
 
     return True
 
 
-def add_devices_from_component(hass, discovery_info, add_devices):
+@callback
+def async_add_devices_discovery(hass, discovery_info, add_devices):
     """Set up climates for KNX platform configured within plattform."""
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
@@ -60,7 +63,8 @@ def add_devices_from_component(hass, discovery_info, add_devices):
     add_devices(entities)
 
 
-def add_devices_from_platform(hass, config, add_devices):
+@callback
+def async_add_devices_config(hass, config, add_devices):
     """Set up climate for KNX platform configured within plattform."""
     import xknx
     climate = xknx.devices.Climate(
@@ -75,7 +79,7 @@ def add_devices_from_platform(hass, config, add_devices):
         group_address_operation_mode=config.get(
             CONF_OPERATION_MODE_ADDRESS),
         group_address_operation_mode_protection=config.get(
-            CONF_OPERATION_MODE_PROTECTION_ADDRESS),
+            CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS),
         group_address_operation_mode_night=config.get(
             CONF_OPERATION_MODE_NIGHT_ADDRESS),
         group_address_operation_mode_comfort=config.get(
@@ -91,13 +95,13 @@ class KNXClimate(ClimateDevice):
         """Initialization of KNXClimate."""
         self.device = device
         self.hass = hass
-        self.register_callbacks()
+        self.async_register_callbacks()
 
         self._unit_of_measurement = TEMP_CELSIUS
         self._away = False  # not yet supported
         self._is_fan_on = False  # not yet supported
 
-    def register_callbacks(self):
+    def async_register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
         @asyncio.coroutine
         def after_update_callback(device):
@@ -156,6 +160,7 @@ class KNXClimate(ClimateDevice):
                 operation_mode in
                 self.device.get_supported_operation_modes()]
 
+    @asyncio.coroutine
     def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
         if self.device.supports_operation_mode:
