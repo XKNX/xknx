@@ -65,7 +65,7 @@ class TestConfig(unittest.TestCase):
                   'Livingroom.Shutter_2',
                   group_address_long='1/4/5',
                   group_address_short='1/4/6',
-                  group_address_position_feedback='1/4/7',
+                  group_address_position_state='1/4/7',
                   group_address_position='1/4/8',
                   travel_time_down=50,
                   travel_time_up=60,

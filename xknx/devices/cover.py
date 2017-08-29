@@ -29,7 +29,7 @@ class Cover(Device):
                  group_address_long=None,
                  group_address_short=None,
                  group_address_position=None,
-                 group_address_position_feedback=None,
+                 group_address_position_state=None,
                  travel_time_down=DEFAULT_TRAVEL_TIME_DOWN,
                  travel_time_up=DEFAULT_TRAVEL_TIME_UP,
                  device_updated_cb=None):
@@ -43,14 +43,14 @@ class Cover(Device):
             group_address_short = Address(group_address_short)
         if isinstance(group_address_position, (str, int)):
             group_address_position = Address(group_address_position)
-        if isinstance(group_address_position_feedback, (str, int)):
-            group_address_position_feedback = \
-                Address(group_address_position_feedback)
+        if isinstance(group_address_position_state, (str, int)):
+            group_address_position_state = \
+                Address(group_address_position_state)
 
         self.group_address_long = group_address_long
         self.group_address_short = group_address_short
         self.group_address_position = group_address_position
-        self.group_address_position_feedback = group_address_position_feedback
+        self.group_address_position_state = group_address_position_state
         self.travel_time_down = travel_time_down
         self.travel_time_up = travel_time_up
 
@@ -67,12 +67,18 @@ class Cover(Device):
             config.get('group_address_short')
         group_address_position = \
             config.get('group_address_position')
-        group_address_position_feedback = \
+        group_address_position_state = \
+            config.get('group_address_position_state') or \
             config.get('group_address_position_feedback')
         travel_time_down = \
             config.get('travel_time_down', cls.DEFAULT_TRAVEL_TIME_DOWN)
         travel_time_up = \
             config.get('travel_time_up', cls.DEFAULT_TRAVEL_TIME_UP)
+
+        if config.get('group_address_position_feedback') is not None:
+            xknx.logger.warning(
+                "'group_address_position_feedback' is deprecated, "
+                "please use 'group_address_position_state'.")
 
         return cls(
             xknx,
@@ -80,7 +86,7 @@ class Cover(Device):
             group_address_long=group_address_long,
             group_address_short=group_address_short,
             group_address_position=group_address_position,
-            group_address_position_feedback=group_address_position_feedback,
+            group_address_position_state=group_address_position_state,
             travel_time_down=travel_time_down,
             travel_time_up=travel_time_up)
 
@@ -88,7 +94,7 @@ class Cover(Device):
         """Test if device has given group address."""
         return (self.group_address_long == group_address) \
             or (self.group_address_short == group_address) \
-            or (self.group_address_position_feedback == group_address)
+            or (self.group_address_position_state == group_address)
 
     def supports_direct_positioning(self):
         """Return if cover is supporting direct positioning."""
@@ -100,7 +106,7 @@ class Cover(Device):
             'group_address_long="{1}" ' \
             'group_address_short="{2}" ' \
             'group_address_position="{3}" ' \
-            'group_address_position_feedback="{4}" ' \
+            'group_address_position_state="{4}" ' \
             'travel_time_down="{5}" ' \
             'travel_time_up="{6}" />' \
             .format(
@@ -108,7 +114,7 @@ class Cover(Device):
                 self.group_address_long,
                 self.group_address_short,
                 self.group_address_position,
-                self.group_address_position_feedback,
+                self.group_address_position_state,
                 self.travel_time_down,
                 self.travel_time_up)
 
@@ -198,14 +204,15 @@ class Cover(Device):
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
-        if self.group_address_position_feedback is None:
-            self.xknx.logger.warning("group_position not defined for device %s", self.get_name())
-            return[]
         if self.travelcalculator.is_traveling():
             # Cover is traveling, requesting state will return false results
             return[]
+        state_address_position = \
+            self.group_address_position_state or \
+            self.group_address_position
+        state_addresses = [state_address_position]
 
-        return [self.group_address_position_feedback, ]
+        return state_addresses
 
     @asyncio.coroutine
     def process(self, telegram):

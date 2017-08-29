@@ -74,7 +74,7 @@ def async_add_devices_config(hass, config, add_devices):
         name=config.get(CONF_NAME),
         group_address_long=config.get(CONF_MOVE_LONG_ADDRESS),
         group_address_short=config.get(CONF_MOVE_SHORT_ADDRESS),
-        group_address_position_feedback=config.get(
+        group_address_position_state=config.get(
             CONF_POSITION_STATE_ADDRESS),
         group_address_position=config.get(CONF_POSITION_ADDRESS),
         travel_time_down=config.get(CONF_TRAVELLING_TIME_DOWN),

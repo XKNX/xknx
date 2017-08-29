@@ -34,7 +34,7 @@ class TestCover(unittest.TestCase):
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position='1/2/3',
-            group_address_position_feedback='1/2/4')
+            group_address_position_state='1/2/4')
         self.loop.run_until_complete(asyncio.Task(cover.sync(False)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
@@ -53,7 +53,7 @@ class TestCover(unittest.TestCase):
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position='1/2/3',
-            group_address_position_feedback='1/2/4')
+            group_address_position_state='1/2/4')
         self.loop.run_until_complete(asyncio.Task(cover.set_up()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -72,7 +72,7 @@ class TestCover(unittest.TestCase):
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position='1/2/3',
-            group_address_position_feedback='1/2/4')
+            group_address_position_state='1/2/4')
         self.loop.run_until_complete(asyncio.Task(cover.set_down()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -91,7 +91,7 @@ class TestCover(unittest.TestCase):
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position='1/2/3',
-            group_address_position_feedback='1/2/4')
+            group_address_position_state='1/2/4')
         self.loop.run_until_complete(asyncio.Task(cover.set_short_up()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -110,7 +110,7 @@ class TestCover(unittest.TestCase):
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position='1/2/3',
-            group_address_position_feedback='1/2/4')
+            group_address_position_state='1/2/4')
         self.loop.run_until_complete(asyncio.Task(cover.set_short_down()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -128,7 +128,7 @@ class TestCover(unittest.TestCase):
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position='1/2/3',
-            group_address_position_feedback='1/2/4')
+            group_address_position_state='1/2/4')
         self.loop.run_until_complete(asyncio.Task(cover.stop()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -147,7 +147,7 @@ class TestCover(unittest.TestCase):
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position='1/2/3',
-            group_address_position_feedback='1/2/4')
+            group_address_position_state='1/2/4')
         self.loop.run_until_complete(asyncio.Task(cover.set_position(50)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -162,7 +162,7 @@ class TestCover(unittest.TestCase):
             'TestCover',
             group_address_long='1/2/1',
             group_address_short='1/2/2',
-            group_address_position_feedback='1/2/4')
+            group_address_position_state='1/2/4')
         cover.travelcalculator.set_position(40)
         self.loop.run_until_complete(asyncio.Task(cover.set_position(50)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -178,7 +178,7 @@ class TestCover(unittest.TestCase):
             'TestCover',
             group_address_long='1/2/1',
             group_address_short='1/2/2',
-            group_address_position_feedback='1/2/4')
+            group_address_position_state='1/2/4')
         cover.travelcalculator.set_position(100)
         self.loop.run_until_complete(asyncio.Task(cover.set_position(50)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -198,7 +198,7 @@ class TestCover(unittest.TestCase):
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position='1/2/3',
-            group_address_position_feedback='1/2/4')
+            group_address_position_state='1/2/4')
 
         telegram = Telegram(Address('1/2/4'), payload=DPTArray(42))
         self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
@@ -215,7 +215,7 @@ class TestCover(unittest.TestCase):
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position='1/2/3',
-            group_address_position_feedback='1/2/4')
+            group_address_position_state='1/2/4')
 
         after_update_callback = Mock()
 
