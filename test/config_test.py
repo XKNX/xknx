@@ -65,10 +65,25 @@ class TestConfig(unittest.TestCase):
                   'Livingroom.Shutter_2',
                   group_address_long='1/4/5',
                   group_address_short='1/4/6',
-                  group_address_position_feedback='1/4/7',
+                  group_address_position_state='1/4/7',
                   group_address_position='1/4/8',
                   travel_time_down=50,
                   travel_time_up=60,
+                  device_updated_cb=xknx.devices.device_updated))
+
+    def test_config_cover_venetian(self):
+        """Test reading Cover with angle from config file."""
+        xknx = XKNX(config='xknx.yaml', loop=self.loop)
+        self.assertEqual(
+            xknx.devices['Children.Venetian'],
+            Cover(xknx,
+                  'Children.Venetian',
+                  group_address_long='1/4/14',
+                  group_address_short='1/4/15',
+                  group_address_position_state='1/4/17',
+                  group_address_position='1/4/16',
+                  group_address_angle='1/4/18',
+                  group_address_angle_state='1/4/19',
                   device_updated_cb=xknx.devices.device_updated))
 
     def test_config_climate_temperature(self):

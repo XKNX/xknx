@@ -160,6 +160,16 @@ class Climate(Device):
     @asyncio.coroutine
     def set_target_temperature(self, target_temperature):
         """Calculate setpoint-delta and setpoint and send it to  KNX bus."""
+        if not self.setpoint:
+            self.xknx.logger.warning(
+                "Could not set new target temperature "
+                "- setpoint temperature not determined")
+            return
+        if not self.target_temperature:
+            self.xknx.logger.warning(
+                "Could not set new target temperature "
+                "- old target temperature not determined")
+            return
         setpoint_delta = self.setpoint - self.target_temperature
         new_setpoint = target_temperature + setpoint_delta
         yield from self.set_setpoint(new_setpoint)

@@ -55,12 +55,15 @@ class ValueReader:
     @asyncio.coroutine
     def telegram_received(self, telegram):
         """Test if telegram has correct group address and trigger event."""
-        if self.group_address == telegram.group_address:
-            self.success = True
-            self.received_telegram = telegram
-            self.response_received_or_timeout.set()
-            return True
-        return False
+        if telegram.telegramtype != TelegramType.GROUP_WRITE and \
+                telegram.telegramtype != TelegramType.GROUP_RESPONSE:
+            return False
+        if self.group_address != telegram.group_address:
+            return False
+        self.success = True
+        self.received_telegram = telegram
+        self.response_received_or_timeout.set()
+        return True
 
     def timeout(self):
         """Handle timeout for not having received expected group response."""

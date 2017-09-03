@@ -1,9 +1,9 @@
 """
 
-Connects to XKNX platform.
+Connects to KNX platform.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/xknx/
+https://home-assistant.io/components/knx/
 
 """
 import logging
@@ -15,9 +15,10 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, \
     CONF_HOST, CONF_PORT
+from homeassistant.helpers.script import Script
 
 DOMAIN = "xknx"
-DATA_XKNX = "data_xknx"
+DATA_XKNX = "data_knx"
 CONF_XKNX_CONFIG = "config_file"
 
 CONF_XKNX_ROUTING = "routing"
@@ -30,18 +31,11 @@ SERVICE_XKNX_SEND = "send"
 SERVICE_XKNX_ATTR_ADDRESS = "address"
 SERVICE_XKNX_ATTR_PAYLOAD = "payload"
 
-SUPPORTED_DOMAINS = [
-    'switch',
-    'climate',
-    'cover',
-    'light',
-    'sensor',
-    'binary_sensor',
-    'notify']
+ATTR_DISCOVER_DEVICES = 'devices'
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['xknx==0.7.8']
+REQUIREMENTS = ['xknx==0.7.10']
 
 TUNNELING_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
@@ -77,19 +71,29 @@ SERVICE_XKNX_SEND_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up xknx component."""
+    """Set up knx component."""
     from xknx.exceptions import XKNXException
     try:
-        hass.data[DATA_XKNX] = XKNXModule(hass, config)
+        hass.data[DATA_XKNX] = KNXModule(hass, config)
         yield from hass.data[DATA_XKNX].start()
 
     except XKNXException as ex:
         _LOGGER.exception("Can't connect to KNX interface: %s", ex)
         return False
 
-    for component in SUPPORTED_DOMAINS:
+    for component, discovery_type in (
+            ('switch', 'Switch'),
+            ('climate', 'Climate'),
+            ('cover', 'Cover'),
+            ('light', 'Light'),
+            ('sensor', 'Sensor'),
+            ('binary_sensor', 'BinarySensor'),
+            ('notify', 'Notification')):
+        found_devices = _get_devices(hass, discovery_type)
         hass.async_add_job(
-            discovery.async_load_platform(hass, component, DOMAIN, {}, config))
+            discovery.async_load_platform(hass, component, DOMAIN, {
+                ATTR_DISCOVER_DEVICES: found_devices
+            }, config))
 
     hass.services.async_register(
         DOMAIN, SERVICE_XKNX_SEND,
@@ -99,11 +103,19 @@ def async_setup(hass, config):
     return True
 
 
-class XKNXModule(object):
-    """Representation of XKNX Object."""
+def _get_devices(hass, discovery_type):
+    return list(
+        map(lambda device: device.name,
+            filter(
+                lambda device: type(device).__name__ == discovery_type,
+                hass.data[DATA_XKNX].xknx.devices)))
+
+
+class KNXModule(object):
+    """Representation of KNX Object."""
 
     def __init__(self, hass, config):
-        """Initialization of XKNXModule."""
+        """Initialization of KNXModule."""
         self.hass = hass
         self.config = config
         self.initialized = False
@@ -111,7 +123,7 @@ class XKNXModule(object):
         self.register_callbacks()
 
     def init_xknx(self):
-        """Initialization of XKNX object."""
+        """Initialization of KNX object."""
         from xknx import XKNX
         self.xknx = XKNX(
             config=self.config_file(),
@@ -119,7 +131,7 @@ class XKNXModule(object):
 
     @asyncio.coroutine
     def start(self):
-        """Start XKNX object. Connect to tunneling or Routing device."""
+        """Start KNX object. Connect to tunneling or Routing device."""
         connection_config = self.connection_config()
         yield from self.xknx.start(
             state_updater=True,
@@ -129,7 +141,7 @@ class XKNXModule(object):
 
     @asyncio.coroutine
     def stop(self, event):
-        """Stop XKNX object. Disconnect from tunneling or Routing device."""
+        """Stop KNX object. Disconnect from tunneling or Routing device."""
         yield from self.xknx.stop()
 
     def config_file(self):
@@ -147,8 +159,7 @@ class XKNXModule(object):
             return self.connection_config_tunneling()
         elif CONF_XKNX_ROUTING in self.config[DOMAIN]:
             return self.connection_config_routing()
-        else:
-            return self.connection_config_auto()
+        return self.connection_config_auto()
 
     def connection_config_routing(self):
         """Return the connection_config if routing is configured."""
@@ -223,3 +234,22 @@ class XKNXModule(object):
         telegram.payload = payload
         telegram.group_address = address
         yield from self.xknx.telegrams.put(telegram)
+
+
+class KNXAutomation():
+    """Wrapper around xknx.devices.ActionCallback object.."""
+
+    def __init__(self, hass, device, hook, action, counter=1):
+        """Initialize Automation class."""
+        self.hass = hass
+        self.device = device
+        script_name = "{} turn ON script".format(device.get_name())
+        self.script = Script(hass, action, script_name)
+
+        import xknx
+        self.action = xknx.devices.ActionCallback(
+            hass.data[DATA_XKNX].xknx,
+            self.script.async_run,
+            hook=hook,
+            counter=counter)
+        device.actions.append(self.action)

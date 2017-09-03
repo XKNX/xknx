@@ -1,15 +1,16 @@
 """
-Support for KNX/IP switches via XKNX.
+Support for KNX/IP switches.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.xknx/
+https://home-assistant.io/components/switch.knx/
 """
 import asyncio
 import voluptuous as vol
 
-from custom_components.xknx import DATA_XKNX
+from custom_components.xknx import DATA_XKNX, ATTR_DISCOVER_DEVICES
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_NAME
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 CONF_ADDRESS = 'address'
@@ -28,55 +29,53 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, add_devices,
                          discovery_info=None):
-    """Set up switch(es) for XKNX platform."""
+    """Set up switch(es) for KNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
         return False
 
     if discovery_info is not None:
-        yield from add_devices_from_component(hass, add_devices)
+        async_add_devices_discovery(hass, discovery_info, add_devices)
     else:
-        yield from add_devices_from_platform(hass, config, add_devices)
+        async_add_devices_config(hass, config, add_devices)
 
     return True
 
 
-@asyncio.coroutine
-def add_devices_from_component(hass, add_devices):
-    """Set up switches for XKNX platform configured via xknx.yaml."""
+@callback
+def async_add_devices_discovery(hass, discovery_info, add_devices):
+    """Set up switches for KNX platform configured via xknx.yaml."""
     entities = []
-    for device in hass.data[DATA_XKNX].xknx.devices:
-        import xknx
-        if isinstance(device, xknx.devices.Switch) and \
-                not hasattr(device, "already_added_to_hass"):
-            entities.append(XKNXSwitch(hass, device))
+    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
+        device = hass.data[DATA_XKNX].xknx.devices[device_name]
+        entities.append(KNXSwitch(hass, device))
     add_devices(entities)
 
 
-@asyncio.coroutine
-def add_devices_from_platform(hass, config, add_devices):
-    """Set up switch for XKNX platform configured within plattform."""
+@callback
+def async_add_devices_config(hass, config, add_devices):
+    """Set up switch for KNX platform configured within plattform."""
     import xknx
     switch = xknx.devices.Switch(
         hass.data[DATA_XKNX].xknx,
         name=config.get(CONF_NAME),
         group_address=config.get(CONF_ADDRESS),
         group_address_state=config.get(CONF_STATE_ADDRESS))
-    switch.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(switch)
-    add_devices([XKNXSwitch(hass, switch)])
+    add_devices([KNXSwitch(hass, switch)])
 
 
-class XKNXSwitch(SwitchDevice):
-    """Representation of a XKNX switch."""
+class KNXSwitch(SwitchDevice):
+    """Representation of a KNX switch."""
 
     def __init__(self, hass, device):
-        """Initialization of XKNXSwitch."""
+        """Initialization of KNXSwitch."""
         self.device = device
         self.hass = hass
-        self.register_callbacks()
+        self.async_register_callbacks()
 
-    def register_callbacks(self):
+    @callback
+    def async_register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
         @asyncio.coroutine
         def after_update_callback(device):
@@ -87,12 +86,12 @@ class XKNXSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """Return the name of the XKNX device."""
+        """Return the name of the KNX device."""
         return self.device.name
 
     @property
     def should_poll(self):
-        """No polling needed within XKNX."""
+        """No polling needed within KNX."""
         return False
 
     @property
@@ -101,11 +100,11 @@ class XKNXSwitch(SwitchDevice):
         return self.device.state
 
     @asyncio.coroutine
-    def async_turn_on(self):
+    def async_turn_on(self, **kwargs):
         """Turn the device on."""
         yield from self.device.set_on()
 
     @asyncio.coroutine
-    def async_turn_off(self):
+    def async_turn_off(self, **kwargs):
         """Turn the device off."""
         yield from self.device.set_off()
