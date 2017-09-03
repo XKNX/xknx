@@ -27,6 +27,8 @@ class Sensor(Device):
         Device.__init__(self, xknx, name, device_updated_cb)
         if isinstance(group_address, (str, int)):
             group_address = Address(group_address)
+        if value_type == 'brightness':
+            value_type = 'illuminance'
         self.group_address = group_address
         self.value_type = value_type
         self.device_class = device_class
@@ -74,7 +76,7 @@ class Sensor(Device):
             return "%"
         elif self.value_type == 'temperature':
             return "°C"
-        elif self.value_type == 'brightness':
+        elif self.value_type == 'illuminance':
             return "lx"
         elif self.value_type == 'speed_ms':
             return "m/s"
@@ -94,7 +96,7 @@ class Sensor(Device):
             return "{0}".format(DPTScaling().from_knx(self.state.value))
         elif self.value_type == 'temperature':
             return DPTTemperature().from_knx(self.state.value)
-        elif self.value_type == 'brightness':
+        elif self.value_type == 'illuminance':
             return DPTLux().from_knx(self.state.value)
         elif self.value_type == 'speed_ms':
             return DPTWsp().from_knx(self.state.value)
