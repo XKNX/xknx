@@ -121,8 +121,7 @@ class TestCover(unittest.TestCase):
                          Telegram(Address('1/2/4'), TelegramType.GROUP_READ))
 
     def test_sync_angle_state(self):
-        """Test sync function for cover with angle with explicit state and no
-        position address."""
+        """Test sync function with angle/explicit state."""
         xknx = XKNX(loop=self.loop)
         cover = Cover(
             xknx,
