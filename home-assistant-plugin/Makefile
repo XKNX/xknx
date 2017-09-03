@@ -9,8 +9,8 @@ help:
 	@echo ""
 
 install:
-	mkdir -p ~/.homeassistant2
-	ln -s `pwd`/custom_components ~/.homeassistant2
+	mkdir -p ~/.homeassistant
+	ln -s `pwd`/custom_components ~/.homeassistant
 
 pylint:
 	pylint --rcfile=.pylintrc custom_components/*/*.py
