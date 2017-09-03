@@ -1,6 +1,7 @@
 """Example for the telegram monitor callback."""
 import asyncio
-import sys, getopt
+import sys
+import getopt
 from xknx import XKNX
 from xknx.knx import AddressFilter
 
@@ -12,7 +13,7 @@ def telegram_received_cb(telegram):
     return True
 
 
-def help():
+def show_help():
     """Print Help."""
     print("Telegram filter.")
     print("")
@@ -36,14 +37,14 @@ async def monitor(address_filters):
 async def main(argv):
     """Parse command line arguments and start monitor."""
     try:
-        opts, args = getopt.getopt(argv, "hf:", ["help", "filter="])
+        opts, _ = getopt.getopt(argv, "hf:", ["help", "filter="])
     except getopt.GetoptError:
-        help()
+        show_help()
         sys.exit(2)
     address_filters = None
     for opt, arg in opts:
         if opt == '-h' or opt == '--help':
-            help()
+            show_help()
             sys.exit()
         if opt == '-f' or opt == '--filter':
             address_filters = list(map(AddressFilter, arg.split(',')))
@@ -51,6 +52,7 @@ async def main(argv):
 
 
 if __name__ == "__main__":
+    # pylint: disable=invalid-name
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main(sys.argv[1:]))
     loop.close()

@@ -63,6 +63,9 @@ groups:
         # Central Shutters dont have short or position address
         Central.Shutter: {group_address_long: '1/5/1' }
 
+        # Covers with angle position
+        Children.Venetian: {group_address_long: '1/4/14', group_address_short: '1/4/15', group_address_position: '1/4/16', group_address_position_state: '1/4/17', group_address_angle: '1/4/18', group_address_angle_state: '1/4/19'}
+
     light:
 
         Kitchen.Light_1:     {group_address_switch: '1/6/1', group_address_brightness: '1/6/3'}
