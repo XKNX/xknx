@@ -1,6 +1,8 @@
 """Example for the telegram monitor callback."""
 import asyncio
+import sys, getopt
 from xknx import XKNX
+from xknx.knx import AddressFilter
 
 
 @asyncio.coroutine
@@ -10,14 +12,45 @@ def telegram_received_cb(telegram):
     return True
 
 
-async def main():
+def help():
+    """Print Help."""
+    print("Telegram filter.")
+    print("")
+    print("Usage:")
+    print("")
+    print(__file__, "                            Listen to all telegrams")
+    print(__file__, "-f --filter 1/2/*,1/4/[5-6]    Filter for specific group addresses")
+    print(__file__, "-h --help                      Print help")
+    print("")
+
+
+async def monitor(address_filters):
     """Set telegram_received_cb within XKNX and connect to KNX/IP device in daemon mode."""
-    xknx = XKNX(telegram_received_cb=telegram_received_cb)
+    xknx = XKNX()
+    xknx.telegram_queue.register_telegram_received_cb(
+        telegram_received_cb, address_filters)
     await xknx.start(daemon_mode=True)
     await xknx.stop()
 
 
-# pylint: disable=invalid-name
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
-loop.close()
+async def main(argv):
+    """Parse command line arguments and start monitor."""
+    try:
+        opts, args = getopt.getopt(argv, "hf:", ["help", "filter="])
+    except getopt.GetoptError:
+        help()
+        sys.exit(2)
+    address_filters = None
+    for opt, arg in opts:
+        if opt == '-h' or opt == '--help':
+            help()
+            sys.exit()
+        if opt == '-f' or opt == '--filter':
+            address_filters = list(map(AddressFilter, arg.split(',')))
+    await monitor(address_filters)
+
+
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main(sys.argv[1:]))
+    loop.close()

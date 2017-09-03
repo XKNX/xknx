@@ -9,7 +9,7 @@ You may register callbacks to be notified if a telegram was pushed to the queue.
 """
 import asyncio
 
-from xknx.knx import TelegramDirection, TelegramType
+from xknx.knx import TelegramDirection
 
 
 class TelegramQueue():
@@ -115,20 +115,14 @@ class TelegramQueue():
     @asyncio.coroutine
     def process_telegram_incoming(self, telegram):
         """Process incoming telegram."""
-        if telegram.telegramtype == TelegramType.GROUP_WRITE or \
-                telegram.telegramtype == TelegramType.GROUP_RESPONSE:
+        processed = False
+        for telegram_received_cb in self.telegram_received_cbs:
+            if telegram_received_cb.is_within_filter(telegram):
+                ret = yield from telegram_received_cb.callback(telegram)
+                if ret:
+                    processed = True
 
-            processed = False
-            for telegram_received_cb in self.telegram_received_cbs:
-                if telegram_received_cb.is_within_filter(telegram):
-                    ret = yield from telegram_received_cb.callback(telegram)
-                    if ret:
-                        processed = True
-
-            if not processed:
-                for device in self.xknx.devices.devices_by_group_address(
-                        telegram.group_address):
-                    yield from device.process(telegram)
-
-        elif telegram.telegramtype == TelegramType.GROUP_READ:
-            self.xknx.logger.info("Ignoring group read for: %s", telegram.group_address)
+        if not processed:
+            for device in self.xknx.devices.devices_by_group_address(
+                    telegram.group_address):
+                yield from device.process(telegram)
