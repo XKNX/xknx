@@ -164,9 +164,9 @@ class Light(Device):
         if telegram.group_address == self.group_address_switch or \
                 telegram.group_address == self.group_address_switch_state:
             yield from self._process_state(telegram)
-        elif self.supports_dimming and \
-                telegram.group_address == self.group_address_brightness or \
-                telegram.group_address == self.group_address_brightness_state:
+        elif (self.supports_dimming and
+              (telegram.group_address == self.group_address_brightness or
+               telegram.group_address == self.group_address_brightness_state)):
             yield from self._process_brightness(telegram)
 
     @asyncio.coroutine
