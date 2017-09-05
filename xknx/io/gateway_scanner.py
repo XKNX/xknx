@@ -18,7 +18,7 @@ class GatewayScanner():
     """Class for searching KNX/IP devices."""
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, xknx, timeout_in_seconds=1):
+    def __init__(self, xknx, timeout_in_seconds=4):
         """Initialize GatewayScanner class."""
         self.xknx = xknx
         self.response_received_or_timeout = asyncio.Event()
