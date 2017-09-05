@@ -55,6 +55,19 @@ class TestSensor(unittest.TestCase):
         self.assertEqual(sensor.resolve_state(), "25")
         self.assertEqual(sensor.unit_of_measurement(), "%")
 
+    def test_str_speed_ms(self):
+        """Test resolve state with speed_ms sensor."""
+        xknx = XKNX(loop=self.loop)
+        sensor = Sensor(
+            xknx,
+            'TestSensor',
+            group_address='1/2/3',
+            value_type="speed_ms")
+        sensor.state = DPTArray((0x00,0x1b,))
+
+        self.assertEqual(sensor.resolve_state(), 0.27)
+        self.assertEqual(sensor.unit_of_measurement(), "m/s")
+
     #
     # SYNC
     #
