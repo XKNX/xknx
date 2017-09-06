@@ -132,6 +132,30 @@ class TestConfig(unittest.TestCase):
                     group_address_operation_mode_comfort='1/7/10',
                     device_updated_cb=xknx.devices.device_updated))
 
+    def test_config_climate_operation_mode_state(self):
+        """Test reading Climate object with status address for operation mode."""
+        xknx = XKNX(config='xknx.yaml', loop=self.loop)
+        self.assertEqual(
+            xknx.devices['Bath.Climate'],
+            Climate(xknx,
+                    'Bath.Climate',
+                    group_address_temperature='1/7/5',
+                    group_address_operation_mode='1/7/6',
+                    group_address_operation_mode_state='1/7/7',
+                    device_updated_cb=xknx.devices.device_updated))
+
+    def test_config_climate_controller_status_state(self):
+        """Test reading Climate object with addresses for controller status."""
+        xknx = XKNX(config='xknx.yaml', loop=self.loop)
+        self.assertEqual(
+            xknx.devices['Cellar.Climate'],
+            Climate(xknx,
+                    'Cellar.Climate',
+                    group_address_temperature='1/7/11',
+                    group_address_controller_status='1/7/12',
+                    group_address_controller_status_state='1/7/13',
+                    device_updated_cb=xknx.devices.device_updated))
+
     def test_config_time(self):
         """Test reading Time object from config file."""
         xknx = XKNX(config='xknx.yaml', loop=self.loop)

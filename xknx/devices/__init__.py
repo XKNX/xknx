@@ -4,7 +4,7 @@ from .devices import Devices
 from .action import Action, ActionBase, ActionCallback
 from .cover import Cover
 from .travelcalculator import TravelCalculator
-from .climate import Climate, ClimateOperationMode
+from .climate import Climate
 from .light import Light
 from .switch import Switch
 from .time import Time

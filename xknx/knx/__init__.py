@@ -12,6 +12,8 @@ from .address_filter import AddressFilter
 from .telegram import Telegram, TelegramDirection, TelegramType
 from .dpt import DPTBase, DPTBinary, DPTArray, DPTComparator
 from .dpt_float import DPTFloat, DPTLux, DPTTemperature, DPTHumidity, DPTWsp
+from .dpt_hvac_mode import HVACOperationMode, DPTHVACMode, \
+    DPTControllerStatus
 from .dpt_2byte import DPTUElCurrentmA
 from .dpt_scaling import DPTScaling
 from .dpt_time import DPTTime, DPTWeekday
