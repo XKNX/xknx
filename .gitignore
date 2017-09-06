@@ -1,5 +1,5 @@
 *.pyc
-
+htmlcov
 build/
 dist/
 xknx.egg-info/
