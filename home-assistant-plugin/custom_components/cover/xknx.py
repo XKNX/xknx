@@ -151,21 +151,33 @@ class KNXCover(CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return self.device.is_closed()
+        return self.device.is_open() \
+            if self.invert_position else \
+            self.device.is_closed()
 
     @asyncio.coroutine
     def async_close_cover(self, **kwargs):
         """Close the cover."""
-        if not self.device.is_closed():
-            yield from self.device.set_down()
-            self.start_auto_updater()
+        if self.invert_position:
+            if not self.device.is_open():
+                yield from self.device.set_up()
+                self.start_auto_updater()
+        else:
+            if not self.device.is_closed():
+                yield from self.device.set_down()
+                self.start_auto_updater()
 
     @asyncio.coroutine
     def async_open_cover(self, **kwargs):
         """Open the cover."""
-        if not self.device.is_open():
-            yield from self.device.set_up()
-            self.start_auto_updater()
+        if self.invert_position:
+            if not self.device.is_closed():
+                yield from self.device.set_down()
+                self.start_auto_updater()
+        else:
+            if not self.device.is_open():
+                yield from self.device.set_up()
+                self.start_auto_updater()
 
     @asyncio.coroutine
     def async_set_cover_position(self, **kwargs):
