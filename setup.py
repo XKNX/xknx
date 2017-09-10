@@ -21,7 +21,7 @@ setup(
         'Intended Audience :: End Users/Desktop',
         'Intended Audience :: Developers',
         'Topic :: System :: Hardware :: Hardware Drivers',
-        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+        'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6'
     ],
