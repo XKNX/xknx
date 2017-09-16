@@ -51,7 +51,7 @@ class XKNX:
         """Destructor. Cleaning up if this was not done before."""
         if self.started:
             try:
-                task = asyncio.Task(self.stop())
+                task = self.loop.create_task(self.stop())
                 self.loop.run_until_complete(task)
             except RuntimeError as exp:
                 self.logger.warning("Could not close loop, reason: %s", exp)
