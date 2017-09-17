@@ -45,9 +45,8 @@ class TravelCalculator:
         self.travel_to_position = 0
         self.travel_started_time = 0
         self.travel_direction = TravelStatus.STOPPED
-        # TODO: Move to DPT Types class issue #10
-        self.minimum_position_down = 256  # excluding
-        self.maximum_position_up = 0
+        self.minimum_position_down = 0
+        self.maximum_position_up = 100
 
         self.time_set_from_outside = None
 
@@ -73,7 +72,7 @@ class TravelCalculator:
 
         self.travel_direction = \
             TravelStatus.DIRECTION_UP \
-            if travel_to_position < self.last_known_position else \
+            if travel_to_position > self.last_known_position else \
             TravelStatus.DIRECTION_DOWN
 
     def start_travel_up(self):
@@ -112,15 +111,16 @@ class TravelCalculator:
 
         def position_reached_or_exceeded(relative_position):
             """Return if designated position was reached."""
-            if relative_position <= 0 \
+            if relative_position >= 0 \
                     and self.travel_direction == TravelStatus.DIRECTION_DOWN:
                 return True
-            if relative_position >= 0 \
+            if relative_position <= 0 \
                     and self.travel_direction == TravelStatus.DIRECTION_UP:
                 return True
             return False
 
         if position_reached_or_exceeded(relative_position):
+            print("position_reached_or_exceeded")
             return self.travel_to_position
 
         travel_time = self._calculate_travel_time(relative_position)
@@ -134,13 +134,13 @@ class TravelCalculator:
         """Calculate time to travel to relative position."""
         travel_direction = \
             TravelStatus.DIRECTION_UP \
-            if relative_position < 0 else \
+            if relative_position > 0 else \
             TravelStatus.DIRECTION_DOWN
         travel_time_full = \
             self.travel_time_up \
             if travel_direction == TravelStatus.DIRECTION_UP else \
             self.travel_time_down
-        travel_range = self.minimum_position_down - self.maximum_position_up
+        travel_range = self.maximum_position_up - self.minimum_position_down
 
         return travel_time_full * abs(relative_position) / travel_range
 

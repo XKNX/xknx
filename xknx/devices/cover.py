@@ -8,16 +8,17 @@ It provides functionality for
 * Cover will also predict the current position.
 """
 import asyncio
-from xknx.knx import Address, DPTBinary, DPTArray
-from xknx.exceptions import CouldNotParseTelegram
 from .device import Device
 from .travelcalculator import TravelCalculator
+from .remote_value import RemoteValueScaling5001, RemoteValueUpDown1008, \
+    RemoteValueStep1007
 
 
 class Cover(Device):
     """Class for managing a cover."""
 
     # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-public-methods
 
     # Average typical travel time of a cover
     DEFAULT_TRAVEL_TIME_DOWN = 22
@@ -34,44 +35,41 @@ class Cover(Device):
                  group_address_angle_state=None,
                  travel_time_down=DEFAULT_TRAVEL_TIME_DOWN,
                  travel_time_up=DEFAULT_TRAVEL_TIME_UP,
+                 invert_position=False,
+                 invert_angle=False,
                  device_updated_cb=None):
         """Initialize Cover class."""
         # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name, device_updated_cb)
 
-        if isinstance(group_address_long, (str, int)):
-            group_address_long = Address(group_address_long)
-        if isinstance(group_address_short, (str, int)):
-            group_address_short = Address(group_address_short)
-        if isinstance(group_address_position, (str, int)):
-            group_address_position = Address(group_address_position)
-        if isinstance(group_address_position_state, (str, int)):
-            group_address_position_state = \
-                Address(group_address_position_state)
-        if isinstance(group_address_angle, (str, int)):
-            group_address_angle = Address(group_address_angle)
-        if isinstance(group_address_angle_state, (str, int)):
-            group_address_angle_state = Address(group_address_angle_state)
+        self.updown = RemoteValueUpDown1008(
+            xknx,
+            group_address_long,
+            invert=not invert_position)
 
-        self.group_address_long = group_address_long
-        self.group_address_short = group_address_short
-        self.group_address_position = group_address_position
-        self.group_address_position_state = group_address_position_state
-        self.group_address_angle = group_address_angle
-        self.group_address_angle_state = group_address_angle_state
+        self.step = RemoteValueStep1007(
+            xknx,
+            group_address_short,
+            invert=not invert_position)
+
+        self.position = RemoteValueScaling5001(
+            xknx,
+            group_address_position,
+            group_address_position_state,
+            not invert_position)
+
+        self.angle = RemoteValueScaling5001(
+            xknx,
+            group_address_angle,
+            group_address_angle_state,
+            not invert_angle)
+
         self.travel_time_down = travel_time_down
         self.travel_time_up = travel_time_up
 
         self.travelcalculator = TravelCalculator(
             travel_time_down,
             travel_time_up)
-
-        self.angle = 0
-
-        self.supports_angle = \
-            self.group_address_angle is not None
-        self.supports_position = \
-            self.group_address_position is not None
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -83,8 +81,7 @@ class Cover(Device):
         group_address_position = \
             config.get('group_address_position')
         group_address_position_state = \
-            config.get('group_address_position_state') or \
-            config.get('group_address_position_feedback')
+            config.get('group_address_position_state')
         group_address_angle = \
             config.get('group_address_angle')
         group_address_angle_state = \
@@ -93,11 +90,6 @@ class Cover(Device):
             config.get('travel_time_down', cls.DEFAULT_TRAVEL_TIME_DOWN)
         travel_time_up = \
             config.get('travel_time_up', cls.DEFAULT_TRAVEL_TIME_UP)
-
-        if config.get('group_address_position_feedback') is not None:
-            xknx.logger.warning(
-                "'group_address_position_feedback' is deprecated, "
-                "please use 'group_address_position_state'.")
 
         return cls(
             xknx,
@@ -113,86 +105,72 @@ class Cover(Device):
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
-        return (self.group_address_long == group_address) \
-            or (self.group_address_short == group_address) \
-            or (self.group_address_position_state == group_address)
+        return self.updown.has_group_address(group_address) \
+            or self.step.has_group_address(group_address) \
+            or self.position.has_group_address(group_address) \
+            or self.angle.has_group_address(group_address)
 
     def __str__(self):
         """Return object as readable string."""
         return '<Cover name="{0}" ' \
-            'group_address_long="{1}" ' \
-            'group_address_short="{2}" ' \
-            'group_address_position="{3}" ' \
-            'group_address_position_state="{4}" ' \
-            'group_address_angle="{5}" '\
-            'group_address_angle_state="{6}" '\
-            'travel_time_down="{7}" ' \
-            'travel_time_up="{8}" />' \
+            'updown"{1}" ' \
+            'step="{2}" ' \
+            'position="{3}" ' \
+            'angle="{4}" '\
+            'travel_time_down="{5}" ' \
+            'travel_time_up="{6}" />' \
             .format(
                 self.name,
-                self.group_address_long,
-                self.group_address_short,
-                self.group_address_position,
-                self.group_address_position_state,
-                self.group_address_angle,
-                self.group_address_angle_state,
+                self.updown.group_addr_str(),
+                self.step.group_address(),
+                self.position.group_addr_str(),
+                self.angle.group_addr_str(),
                 self.travel_time_down,
                 self.travel_time_up)
 
     @asyncio.coroutine
     def set_down(self):
         """Move cover down."""
-        if self.group_address_long is None:
-            self.xknx.logger.warning("group_address_long not defined for device %s", self.get_name())
-            return
-        yield from self.send(self.group_address_long, DPTBinary(1))
+        yield from self.updown.down()
         self.travelcalculator.start_travel_down()
 
     @asyncio.coroutine
     def set_up(self):
         """Move cover up."""
-        if self.group_address_long is None:
-            self.xknx.logger.warning("group_address_long not defined for device %s", self.get_name())
-            return
-        yield from self.send(self.group_address_long, DPTBinary(0))
+        yield from self.updown.up()
         self.travelcalculator.start_travel_up()
 
     @asyncio.coroutine
     def set_short_down(self):
         """Move cover short down."""
-        if self.group_address_short is None:
-            self.xknx.logger.warning("group_address_short not defined for device %s", self.get_name())
-            return
-        yield from self.send(self.group_address_short, DPTBinary(1))
+        yield from self.step.increase()
 
     @asyncio.coroutine
     def set_short_up(self):
         """Move cover short up."""
-        if self.group_address_short is None:
-            self.xknx.logger.warning("group_address_short not defined for device %s", self.get_name())
-            return
-        yield from self.send(self.group_address_short, DPTBinary(0))
+        yield from self.step.decrease()
 
     @asyncio.coroutine
     def stop(self):
         """Stop cover."""
         # Thats the KNX way of doing this. electrical engineers ... m-)
-        yield from self.set_short_down()
+        yield from self.step.increase()
         self.travelcalculator.stop()
 
     @asyncio.coroutine
     def set_position(self, position):
         """Move cover to a desginated postion."""
-        if not self.supports_position:
-
+        # No direct positioning group address defined
+        if not self.position.group_address:
             current_position = self.current_position()
-            if position > current_position:
-                yield from self.send(self.group_address_long, DPTBinary(1))
-            elif position < current_position:
-                yield from self.send(self.group_address_long, DPTBinary(0))
+            if position < current_position:
+                yield from self.updown.down()
+            elif position > current_position:
+                yield from self.updown.up()
             self.travelcalculator.start_travel(position)
             return
-        yield from self.send(self.group_address_position, DPTArray(position))
+
+        yield from self.position.set(position)
         self.travelcalculator.start_travel(position)
 
     @asyncio.coroutine
@@ -200,8 +178,7 @@ class Cover(Device):
         """Move cover to designated angle."""
         if not self.supports_angle:
             return
-        self.angle = angle
-        yield from self.send(self.group_address_angle, DPTArray(angle))
+        yield from self.angle.set(angle)
         yield from self.after_update()
 
     @asyncio.coroutine
@@ -212,7 +189,7 @@ class Cover(Device):
         # unless device was traveling to fully open
         # or fully closed state
         if (
-                not self.supports_position and
+                not self.position.group_address and
                 self.position_reached() and
                 not self.is_open() and
                 not self.is_closed()):
@@ -238,49 +215,29 @@ class Cover(Device):
             # Cover is traveling, requesting state will return false results
             return[]
         state_addresses = []
-        if self.supports_position:
-            state_address_position = \
-                self.group_address_position_state or \
-                self.group_address_position
-            state_addresses.append(state_address_position)
-        if self.supports_angle:
-            state_address_angle = \
-                self.group_address_angle_state or \
-                self.group_address_angle
-            state_addresses.append(state_address_angle)
+        state_addresses.extend(self.position.state_addresses())
+        state_addresses.extend(self.angle.state_addresses())
         return state_addresses
 
     @asyncio.coroutine
     def process(self, telegram):
         """Process incoming telegram."""
-        if telegram.group_address == self.group_address_position or \
-                telegram.group_address == self.group_address_position_state:
-            yield from self._process_position(telegram)
-        elif telegram.group_address == self.group_address_angle or \
-                telegram.group_address == self.group_address_angle_state:
-            yield from self._process_angle(telegram)
+        position_processed = yield from self.position.process(telegram)
+        if position_processed:
+            self.travelcalculator.set_position(self.position.value())
+            yield from self.after_update()
 
-    @asyncio.coroutine
-    def _process_position(self, telegram):
-        """Process incoming position telegram."""
-        if not isinstance(telegram.payload, DPTArray) \
-                or len(telegram.payload.value) != 1:
-            raise CouldNotParseTelegram()
-        self.travelcalculator.set_position(telegram.payload.value[0])
-        yield from self.after_update()
-
-    @asyncio.coroutine
-    def _process_angle(self, telegram):
-        """Process incoming position telegram."""
-        if not isinstance(telegram.payload, DPTArray) \
-                or len(telegram.payload.value) != 1:
-            raise CouldNotParseTelegram()
-        self.angle = telegram.payload.value[0]
-        yield from self.after_update()
+        angle_processed = yield from self.angle.process(telegram)
+        if angle_processed:
+            yield from self.after_update()
 
     def current_position(self):
         """Return current position of cover."""
         return self.travelcalculator.current_position()
+
+    def current_angle(self):
+        """Return current tilt angle of cover."""
+        return self.angle.value()
 
     def is_traveling(self):
         """Return if cover is traveling at the moment."""
@@ -297,6 +254,16 @@ class Cover(Device):
     def is_closed(self):
         """Return if cover is closed."""
         return self.travelcalculator.is_closed()
+
+    @property
+    def supports_position(self):
+        """Return if cover supports direct positioning."""
+        return self.position.initialized
+
+    @property
+    def supports_angle(self):
+        """Return if cover supports tilt angle."""
+        return self.angle.initialized
 
     def __eq__(self, other):
         """Equal operator."""

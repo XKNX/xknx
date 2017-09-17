@@ -247,7 +247,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/3'), payload=DPTArray(50)))
+                         Telegram(Address('1/2/3'), payload=DPTArray(0x80)))
 
     def test_position_without_position_address_up(self):
         """Test moving cover to absolute position - with no absolute positioning supported."""
@@ -258,7 +258,7 @@ class TestCover(unittest.TestCase):
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position_state='1/2/4')
-        cover.travelcalculator.set_position(40)
+        cover.travelcalculator.set_position(60)
         self.loop.run_until_complete(asyncio.Task(cover.set_position(50)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -274,8 +274,8 @@ class TestCover(unittest.TestCase):
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position_state='1/2/4')
-        cover.travelcalculator.set_position(100)
-        self.loop.run_until_complete(asyncio.Task(cover.set_position(50)))
+        cover.travelcalculator.set_position(70)
+        self.loop.run_until_complete(asyncio.Task(cover.set_position(80)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -297,7 +297,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/4/18'), payload=DPTArray(50)))
+                         Telegram(Address('1/4/18'), payload=DPTArray(0x80)))
 
     #
     # TEST PROCESS
@@ -314,7 +314,7 @@ class TestCover(unittest.TestCase):
             group_address_position_state='1/2/4')
         telegram = Telegram(Address('1/2/4'), payload=DPTArray(42))
         self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
-        self.assertEqual(cover.current_position(), 42)
+        self.assertEqual(cover.current_position(), 84)
 
     def test_process_angle(self):
         """Test process / reading telegrams from telegram queue. Test if position is processed correctly."""
@@ -328,7 +328,7 @@ class TestCover(unittest.TestCase):
             group_address_angle_state='1/2/4')
         telegram = Telegram(Address('1/2/4'), payload=DPTArray(42))
         self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
-        self.assertEqual(cover.angle, 42)
+        self.assertEqual(cover.angle.value(), 84)
 
     def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback is executed."""

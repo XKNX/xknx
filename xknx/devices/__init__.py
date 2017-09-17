@@ -3,7 +3,7 @@
 from .devices import Devices
 from .action import Action, ActionBase, ActionCallback
 from .cover import Cover
-from .travelcalculator import TravelCalculator
+from .travelcalculator import TravelCalculator, TravelStatus
 from .climate import Climate
 from .light import Light
 from .switch import Switch
