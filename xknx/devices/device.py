@@ -49,6 +49,7 @@ class Device:
             else:
                 yield from value_reader.send_group_read()
 
+    # XXX no longer needed!
     @asyncio.coroutine
     def send(self, group_address, payload=None):
         """Send payload as telegram to KNX bus."""

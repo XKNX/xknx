@@ -87,6 +87,10 @@ class BinarySensor(Device):
         """Test if device has given group address."""
         return self.group_address == group_address
 
+    def state_addresses(self):
+        """Return group addresses which should be requested to sync state."""
+        return [self.group_address, ]
+
     @asyncio.coroutine
     def _set_internal_state(self, state):
         """Set the internal state of the device. If state was changed after update hooks and connected Actions are executed."""
