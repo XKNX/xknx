@@ -26,6 +26,7 @@ CONF_XKNX_TUNNELING = "tunneling"
 CONF_XKNX_LOCAL_IP = "local_ip"
 CONF_XKNX_FIRE_EVENT = "fire_event"
 CONF_XKNX_FIRE_EVENT_FILTER = "fire_event_filter"
+CONF_XKNX_STATE_UPDATER = "state_updater"
 
 SERVICE_XKNX_SEND = "send"
 SERVICE_XKNX_ATTR_ADDRESS = "address"
@@ -58,7 +59,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Inclusive(CONF_XKNX_FIRE_EVENT_FILTER, 'fire_ev'):
             vol.All(
                 cv.ensure_list,
-                [cv.string])
+                [cv.string]),
+        vol.Optional(CONF_XKNX_STATE_UPDATER, default=True): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -134,7 +136,7 @@ class KNXModule(object):
         """Start KNX object. Connect to tunneling or Routing device."""
         connection_config = self.connection_config()
         yield from self.xknx.start(
-            state_updater=True,
+            state_updater=self.config[DOMAIN][CONF_XKNX_STATE_UPDATER],
             connection_config=connection_config)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         self.initialized = True
