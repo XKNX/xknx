@@ -7,6 +7,7 @@ from .dpt import DPTBase
 class HVACOperationMode(Enum):
     """Enum for the different KNX HVAC operation modes."""
 
+    AUTO    = "Auto"
     COMFORT = "Comfort"
     STANDBY = "Standby"
     NIGHT = "Night"
@@ -32,11 +33,15 @@ class DPTHVACMode(DPTBase):
             return HVACOperationMode.STANDBY
         elif raw[0] == 0x01:
             return HVACOperationMode.COMFORT
+        elif raw[0] == 0x00:
+            return HVACOperationMode.AUTO
 
     @classmethod
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
-        if value == HVACOperationMode.COMFORT:
+        if value == HVACOperationMode.AUTO:
+            return (0,)
+        elif value == HVACOperationMode.COMFORT:
             return (1,)
         elif value == HVACOperationMode.STANDBY:
             return (2,)
