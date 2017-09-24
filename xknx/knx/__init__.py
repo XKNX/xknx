@@ -18,3 +18,5 @@ from .dpt_2byte import DPTUElCurrentmA
 from .dpt_scaling import DPTScaling
 from .dpt_time import DPTTime, DPTWeekday
 from .dpt_string import DPTString
+from .dpt_signed_relative_value import DPTSignedRelativeValue, DPTPercentV8, \
+    DPTValue1Count
