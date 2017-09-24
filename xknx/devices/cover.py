@@ -122,7 +122,7 @@ class Cover(Device):
             .format(
                 self.name,
                 self.updown.group_addr_str(),
-                self.step.group_address(),
+                self.step.group_addr_str(),
                 self.position.group_addr_str(),
                 self.angle.group_addr_str(),
                 self.travel_time_down,
