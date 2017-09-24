@@ -231,7 +231,7 @@ class Climate(Device):
         if self.group_address_operation_mode is not None:
             return list(HVACOperationMode)
         if self.group_address_controller_status is not None:
-            return list(HVACOperationMode)
+            return list( m for m in HVACOperationMode if m != HVACOperationMode.AUTO )
 
         # Operation modes only supported partially
         operation_modes = []
