@@ -7,7 +7,7 @@ from .dpt import DPTBase
 class HVACOperationMode(Enum):
     """Enum for the different KNX HVAC operation modes."""
 
-    AUTO    = "Auto"
+    AUTO = "Auto"
     COMFORT = "Comfort"
     STANDBY = "Standby"
     NIGHT = "Night"
