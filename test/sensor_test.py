@@ -68,6 +68,32 @@ class TestSensor(unittest.TestCase):
         self.assertEqual(sensor.resolve_state(), 0.27)
         self.assertEqual(sensor.unit_of_measurement(), "m/s")
 
+    def test_str_temp(self):
+        """Test resolve state with temperature sensor."""
+        xknx = XKNX(loop=self.loop)
+        sensor = Sensor(
+            xknx,
+            'TestSensor',
+            group_address='1/2/3',
+            value_type="temperature")
+        sensor.state = DPTArray((0x0c, 0x1a))
+
+        self.assertEqual(sensor.resolve_state(), 21.00)
+        self.assertEqual(sensor.unit_of_measurement(), "°C")
+
+    def test_str_humidity(self):
+        """Test resolve state with humidity sensor."""
+        xknx = XKNX(loop=self.loop)
+        sensor = Sensor(
+            xknx,
+            'TestSensor',
+            group_address='1/2/3',
+            value_type="humidity")
+        sensor.state = DPTArray((0x0e, 0x73))
+
+        self.assertEqual(sensor.resolve_state(), 33.02)
+        self.assertEqual(sensor.unit_of_measurement(), "%")
+
     #
     # SYNC
     #

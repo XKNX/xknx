@@ -8,7 +8,8 @@ It provides functionality for
 """
 import asyncio
 from xknx.knx import Address, DPTBinary, DPTArray, \
-    DPTScaling, DPTTemperature, DPTLux, DPTWsp, DPTUElCurrentmA
+    DPTScaling, DPTTemperature, DPTLux, DPTWsp, DPTUElCurrentmA, \
+    DPTHumidity
 from .device import Device
 
 
@@ -72,16 +73,19 @@ class Sensor(Device):
 
     def unit_of_measurement(self):
         """Return the unit of measurement."""
+        # pylint: disable=too-many-return-statements
         if self.value_type == 'percent':
             return "%"
         elif self.value_type == 'temperature':
-            return "°C"
+            return DPTTemperature.unit
+        elif self.value_type == 'humidity':
+            return DPTHumidity.unit
         elif self.value_type == 'illuminance':
-            return "lx"
+            return DPTLux.unit
         elif self.value_type == 'speed_ms':
-            return "m/s"
+            return DPTWsp.unit
         elif self.value_type == 'current':
-            return "mA"
+            return DPTUElCurrentmA.unit
         return None
 
     def resolve_state(self):
@@ -94,6 +98,8 @@ class Sensor(Device):
                 len(self.state.value) == 1:
             # TODO: Instanciate DPTScaling object with DPTArray class
             return "{0}".format(DPTScaling().from_knx(self.state.value))
+        elif self.value_type == 'humidity':
+            return DPTHumidity().from_knx(self.state.value)
         elif self.value_type == 'temperature':
             return DPTTemperature().from_knx(self.state.value)
         elif self.value_type == 'illuminance':
