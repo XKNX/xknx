@@ -289,6 +289,7 @@ class TestClimate(unittest.TestCase):
             group_address_controller_status='1/2/4')
 
         for operation_mode in HVACOperationMode:
+            if operation_mode == HVACOperationMode.AUTO: continue
             self.loop.run_until_complete(asyncio.Task(climate.set_operation_mode(operation_mode)))
             self.assertEqual(xknx.telegrams.qsize(), 1)
             telegram = xknx.telegrams.get_nowait()
@@ -444,6 +445,7 @@ class TestClimate(unittest.TestCase):
             self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
             self.assertEqual(climate.operation_mode, operation_mode)
         for operation_mode in HVACOperationMode:
+            if operation_mode == HVACOperationMode.AUTO: continue
             telegram = Telegram(Address('1/2/3'))
             telegram.payload = DPTArray(DPTControllerStatus.to_knx(operation_mode))
             self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
@@ -508,7 +510,8 @@ class TestClimate(unittest.TestCase):
             group_address_operation_mode='1/2/5')
         self.assertEqual(
             climate.get_supported_operation_modes(),
-            [HVACOperationMode.COMFORT,
+            [HVACOperationMode.AUTO,
+             HVACOperationMode.COMFORT,
              HVACOperationMode.STANDBY,
              HVACOperationMode.NIGHT,
              HVACOperationMode.FROST_PROTECTION])
