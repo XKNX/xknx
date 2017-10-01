@@ -4,13 +4,12 @@ Module for managing the climate within a room.
 * It reads/listens to a temperature address from KNX bus.
 * Manages and sends the desired setpoint to KNX bus.
 """
-import time
-import datetime
 import asyncio
-from xknx.knx import Address, DPTBinary, DPTArray, DPTTemperature, \
+from xknx.knx import Address, DPTBinary, DPTArray, \
     HVACOperationMode, DPTControllerStatus, DPTHVACMode
 from xknx.exceptions import CouldNotParseTelegram
 from .device import Device
+from .remote_value import RemoteValueTemp, RemoteValue1Count
 
 
 class Climate(Device):
@@ -24,6 +23,8 @@ class Climate(Device):
                  group_address_temperature=None,
                  group_address_target_temperature=None,
                  group_address_setpoint=None,
+                 group_address_setpoint_shift=None,
+                 group_address_setpoint_shift_state=None,
                  group_address_operation_mode=None,
                  group_address_operation_mode_state=None,
                  group_address_operation_mode_protection=None,
@@ -35,12 +36,6 @@ class Climate(Device):
         """Initialize Climate class."""
         # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name, device_updated_cb)
-        if isinstance(group_address_temperature, (str, int)):
-            group_address_temperature = Address(group_address_temperature)
-        if isinstance(group_address_target_temperature, (str, int)):
-            group_address_target_temperature = Address(group_address_target_temperature)
-        if isinstance(group_address_setpoint, (str, int)):
-            group_address_setpoint = Address(group_address_setpoint)
         if isinstance(group_address_operation_mode, (str, int)):
             group_address_operation_mode = Address(group_address_operation_mode)
         if isinstance(group_address_operation_mode_state, (str, int)):
@@ -56,9 +51,6 @@ class Climate(Device):
         if isinstance(group_address_controller_status_state, (str, int)):
             group_address_controller_status_state = Address(group_address_controller_status_state)
 
-        self.group_address_temperature = group_address_temperature
-        self.group_address_target_temperature = group_address_target_temperature
-        self.group_address_setpoint = group_address_setpoint
         self.group_address_operation_mode = group_address_operation_mode
         self.group_address_operation_mode_state = group_address_operation_mode_state
         self.group_address_operation_mode_protection = group_address_operation_mode_protection
@@ -67,18 +59,16 @@ class Climate(Device):
         self.group_address_controller_status = group_address_controller_status
         self.group_address_controller_status_state = group_address_controller_status_state
 
-        self.last_set = None
-        self.temperature = None
-        self.target_temperature = None
-        self.setpoint = None
         self.operation_mode = HVACOperationMode.STANDBY
 
-        self.supports_temperature = \
-            group_address_temperature is not None
-        self.supports_target_temperature = \
-            group_address_target_temperature is not None
-        self.supports_setpoint = \
-            group_address_setpoint is not None
+        self.temperature = RemoteValueTemp(xknx, group_address_temperature)
+        self.target_temperature = RemoteValueTemp(xknx, group_address_target_temperature)
+        self.setpoint = RemoteValueTemp(xknx, group_address_setpoint)
+        self.setpoint_shift = RemoteValue1Count(
+            xknx,
+            group_address_setpoint_shift,
+            group_address_setpoint_shift_state)
+
         self.supports_operation_mode = \
             group_address_operation_mode is not None or \
             group_address_operation_mode_state is not None or \
@@ -97,6 +87,10 @@ class Climate(Device):
             config.get('group_address_target_temperature')
         group_address_setpoint = \
             config.get('group_address_setpoint')
+        group_address_setpoint_shift = \
+            config.get('group_address_setpoint_shift')
+        group_address_setpoint_shift_state = \
+            config.get('group_address_setpoint_shift_state')
         group_address_operation_mode = \
             config.get('group_address_operation_mode')
         group_address_operation_mode_state = \
@@ -116,6 +110,8 @@ class Climate(Device):
                    group_address_temperature=group_address_temperature,
                    group_address_target_temperature=group_address_target_temperature,
                    group_address_setpoint=group_address_setpoint,
+                   group_address_setpoint_shift=group_address_setpoint_shift,
+                   group_address_setpoint_shift_state=group_address_setpoint_shift_state,
                    group_address_operation_mode=group_address_operation_mode,
                    group_address_operation_mode_state=group_address_operation_mode_state,
                    group_address_operation_mode_protection=group_address_operation_mode_protection,
@@ -126,9 +122,10 @@ class Climate(Device):
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
-        return self.group_address_temperature == group_address or \
-            self.group_address_target_temperature == group_address or \
-            self.group_address_setpoint == group_address or \
+        return self.temperature.has_group_address(group_address) or \
+            self.target_temperature.has_group_address(group_address) or \
+            self.setpoint.has_group_address(group_address) or \
+            self.setpoint_shift.has_group_address(group_address) or \
             self.group_address_operation_mode == group_address or \
             self.group_address_operation_mode_state == group_address or \
             self.group_address_operation_mode_protection == group_address or \
@@ -138,59 +135,33 @@ class Climate(Device):
             self.group_address_controller_status_state == group_address
 
     @asyncio.coroutine
-    def _set_internal_setpoint(self, setpoint):
-        """Set internal value of setpoint. Call hooks if setpoint was changed."""
-        if setpoint != self.setpoint:
-            self.setpoint = setpoint
-            yield from self.after_update()
-
-    @asyncio.coroutine
-    def _set_internal_temperature(self, temperature):
-        """Set internal value of temperature. Call hooks if setpoint was changed."""
-        if temperature != self.temperature:
-            self.temperature = temperature
-            yield from self.after_update()
-
-    @asyncio.coroutine
-    def _set_internal_target_temperature(self, target_temperature):
-        """Set internal value of target temperature. Call hooks if setpoint was changed."""
-        if target_temperature != self.target_temperature:
-            self.target_temperature = target_temperature
-            yield from self.after_update()
-
-    @asyncio.coroutine
     def _set_internal_operation_mode(self, operation_mode):
-        """Set internal value of operatio nmode. Call hooks if setpoint was changed."""
+        """Set internal value of operatio nmode. Call hooks if operation mode was changed."""
         if operation_mode != self.operation_mode:
             self.operation_mode = operation_mode
             yield from self.after_update()
 
     @asyncio.coroutine
-    def set_setpoint(self, setpoint):
-        """Send setpoint to KNX bus."""
-        if not self.supports_setpoint:
+    def set_target_temperature_comfort(self, target_temperature_comfort):
+        """Calculate setpoint shift and send it to  KNX bus."""
+        if not self.setpoint.value:
+            self.xknx.logger.warning("Setpoint temperature not know. Cant set target temperature")
             return
-        yield from self.send(
-            self.group_address_setpoint,
-            DPTArray(DPTTemperature().to_knx(setpoint)))
-        yield from self._set_internal_setpoint(setpoint)
+        if not self.setpoint_shift.initialized:
+            self.xknx.logger.warning("Setpoint shift not know. Cant set target temperature")
+            return
+        setpoint_shift = int((target_temperature_comfort-self.setpoint.value)/0.1)
+        yield from self.setpoint_shift.set(setpoint_shift)
 
-    @asyncio.coroutine
-    def set_target_temperature(self, target_temperature):
-        """Calculate setpoint-delta and setpoint and send it to  KNX bus."""
-        if not self.setpoint:
-            self.xknx.logger.warning(
-                "Could not set new target temperature "
-                "- setpoint temperature not determined")
-            return
-        if not self.target_temperature:
-            self.xknx.logger.warning(
-                "Could not set new target temperature "
-                "- old target temperature not determined")
-            return
-        setpoint_delta = self.setpoint - self.target_temperature
-        new_setpoint = target_temperature + setpoint_delta
-        yield from self.set_setpoint(new_setpoint)
+    @property
+    def target_temperature_comfort(self):
+        """Calculate target temperature out of basis setpoint and setpoint shift."""
+        if self.setpoint.value is None or self.setpoint_shift.value is None:
+            if self.name == "Kitchen.Thermostat":
+                print("XXXXXX NO target_temperature_comfort possible",  self.setpoint.value, self.setpoint_shift.value)
+            return None
+        print("XXXXXX ", (self.setpoint.value + 0.5 * (self.setpoint_shift.value)))
+        return self.setpoint.value + 0.5 * (self.setpoint_shift.value)
 
     @asyncio.coroutine
     def set_operation_mode(self, operation_mode):
@@ -247,16 +218,7 @@ class Climate(Device):
     @asyncio.coroutine
     def process(self, telegram):
         """Process incoming telegram."""
-        if telegram.group_address == self.group_address_temperature and \
-                self.supports_temperature:
-            yield from self._process_temperature(telegram)
-        if telegram.group_address == self.group_address_target_temperature and \
-                self.supports_target_temperature:
-            yield from self._process_target_temperature(telegram)
-        elif telegram.group_address == self.group_address_setpoint and \
-                self.supports_setpoint:
-            yield from self._process_setpoint(telegram)
-        elif self.supports_operation_mode and \
+        if self.supports_operation_mode and \
                 telegram.group_address == self.group_address_operation_mode or \
                 telegram.group_address == self.group_address_operation_mode_state:
             yield from self._process_operation_mode(telegram)
@@ -266,40 +228,25 @@ class Climate(Device):
             yield from self._process_controller_status(telegram)
         # Note: telegrams setting splitted up operation modes are not yet implemented
 
-    @asyncio.coroutine
-    def _process_temperature(self, telegram):
-        """Process incoming telegram for temperature."""
-        if not isinstance(telegram.payload, DPTArray) \
-                or len(telegram.payload.value) != 2:
-            raise CouldNotParseTelegram()
-        temperature = DPTTemperature().from_knx(
-            (telegram.payload.value[0],
-             telegram.payload.value[1]))
-        self.last_set = time.time()
-        yield from self._set_internal_temperature(temperature)
+        temperature_processed = yield from self.temperature.process(telegram)
+        if temperature_processed:
+            yield from self.after_update()
+        target_temperature_processed = yield from self.target_temperature.process(telegram)
+        if target_temperature_processed:
+            yield from self.after_update()
+        setpoint_processed = yield from self.setpoint.process(telegram)
+        if setpoint_processed:
+            yield from self.after_update()
+        setpoint_shift_processed = yield from self.setpoint_shift.process(telegram)
+        if setpoint_shift_processed:
+            yield from self.after_update()
 
-    @asyncio.coroutine
-    def _process_target_temperature(self, telegram):
-        """Process incoming telegram for target temperature."""
-        if not isinstance(telegram.payload, DPTArray) \
-                or len(telegram.payload.value) != 2:
-            raise CouldNotParseTelegram()
-        target_temperature = DPTTemperature().from_knx(
-            (telegram.payload.value[0],
-             telegram.payload.value[1]))
-        self.last_set = time.time()
-        yield from self._set_internal_target_temperature(target_temperature)
-
-    @asyncio.coroutine
-    def _process_setpoint(self, telegram):
-        """Process incoming telegram for setpoint."""
-        if not isinstance(telegram.payload, DPTArray) \
-                or len(telegram.payload.value) != 2:
-            raise CouldNotParseTelegram()
-        setpoint = DPTTemperature().from_knx(
-            (telegram.payload.value[0],
-             telegram.payload.value[1]))
-        yield from self._set_internal_setpoint(setpoint)
+        if self.name == "Kitchen.Thermostat":
+            print("-----------------------")
+            print(telegram)
+            print(self)
+            print(self.setpoint.value)
+            print("-----------------------")
 
     @asyncio.coroutine
     def _process_operation_mode(self, telegram):
@@ -322,12 +269,10 @@ class Climate(Device):
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
         state_addresses = []
-        if self.supports_temperature:
-            state_addresses.append(self.group_address_temperature)
-        if self.supports_target_temperature:
-            state_addresses.append(self.group_address_target_temperature)
-        if self.supports_setpoint:
-            state_addresses.append(self.group_address_setpoint)
+        state_addresses.extend(self.temperature.state_addresses())
+        state_addresses.extend(self.target_temperature.state_addresses())
+        state_addresses.extend(self.setpoint.state_addresses())
+        state_addresses.extend(self.setpoint_shift.state_addresses())
         if self.supports_operation_mode:
             if self.group_address_operation_mode_state:
                 state_addresses.append(self.group_address_operation_mode_state)
@@ -342,30 +287,26 @@ class Climate(Device):
 
     def __str__(self):
         """Return object as readable string."""
-        last_set_formatted = \
-            datetime.datetime.fromtimestamp(self.last_set).strftime('%Y-%m-%d %H:%M:%S') \
-            if self.last_set else None
         return '<Climate name="{0}" ' \
-            'group_address_temperature="{1}"  ' \
-            'group_address_target_temperature="{2}"  ' \
-            'group_address_setpoint="{3}" ' \
-            'group_address_operation_mode="{4}" ' \
-            'group_address_operation_mode_state="{5}" ' \
-            'group_address_controller_status="{6}" ' \
-            'group_address_controller_status_state="{7}" ' \
-            'temperature="{8}" ' \
-            'last_set="{9}" />' \
+            'temperature="{1}"  ' \
+            'target_temperature="{2}"  ' \
+            'setpoint="{3}" ' \
+            'setpoint_shift="{4}" ' \
+            'group_address_operation_mode="{5}" ' \
+            'group_address_operation_mode_state="{6}" ' \
+            'group_address_controller_status="{7}" ' \
+            'group_address_controller_status_state="{8}" ' \
+            '/>' \
             .format(
                 self.name,
-                self.group_address_temperature,
-                self.group_address_target_temperature,
-                self.group_address_setpoint,
+                self.temperature.group_addr_str(),
+                self.target_temperature.group_addr_str(),
+                self.setpoint.group_addr_str(),
+                self.setpoint_shift.group_addr_str(),
                 self.group_address_operation_mode,
                 self.group_address_operation_mode_state,
                 self.group_address_controller_status,
-                self.group_address_controller_status_state,
-                self.temperature,
-                last_set_formatted)
+                self.group_address_controller_status_state)
 
     def __eq__(self, other):
         """Equal operator."""
