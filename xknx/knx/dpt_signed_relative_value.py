@@ -41,13 +41,17 @@ class DPTSignedRelativeValue(DPTBase):
 
 class DPTPercentV8(DPTSignedRelativeValue):
     """Abstraction for KNX DPT_Percent_V8.
+
     DPT 6.001
     """
+
     unit = "%"
 
 
 class DPTValue1Count(DPTSignedRelativeValue):
     """Abstraction for KNX DPT_Value_1_Count.
+
     DPT 6.010
     """
+
     unit = "counter pulses"
