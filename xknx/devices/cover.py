@@ -122,7 +122,7 @@ class Cover(Device):
             .format(
                 self.name,
                 self.updown.group_addr_str(),
-                self.step.group_addr_str(),
+                self.step.group_address(),
                 self.position.group_addr_str(),
                 self.angle.group_addr_str(),
                 self.travel_time_down,
@@ -224,7 +224,7 @@ class Cover(Device):
         """Process incoming telegram."""
         position_processed = yield from self.position.process(telegram)
         if position_processed:
-            self.travelcalculator.set_position(self.position.value)
+            self.travelcalculator.set_position(self.position.value())
             yield from self.after_update()
 
         angle_processed = yield from self.angle.process(telegram)
@@ -237,7 +237,7 @@ class Cover(Device):
 
     def current_angle(self):
         """Return current tilt angle of cover."""
-        return self.angle.value
+        return self.angle.value()
 
     def is_traveling(self):
         """Return if cover is traveling at the moment."""
