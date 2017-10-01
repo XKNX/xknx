@@ -103,7 +103,7 @@ class TestDPTFloat(unittest.TestCase):
         """Test attributes of DPTTemperature."""
         self.assertEqual(DPTTemperature().value_min, -273)
         self.assertEqual(DPTTemperature().value_max, 670760)
-        self.assertEqual(DPTTemperature().unit, "C")
+        self.assertEqual(DPTTemperature().unit, "°C")
         self.assertEqual(DPTTemperature().resolution, 1)
 
     def test_temperature_assert_min_exceeded(self):
@@ -123,7 +123,7 @@ class TestDPTFloat(unittest.TestCase):
         """Test attributes of DPTLux."""
         self.assertEqual(DPTLux().value_min, 0)
         self.assertEqual(DPTLux().value_max, 670760)
-        self.assertEqual(DPTLux().unit, "Lux")
+        self.assertEqual(DPTLux().unit, "lx")
         self.assertEqual(DPTLux().resolution, 1)
 
     def test_lux_assert_min_exceeded(self):

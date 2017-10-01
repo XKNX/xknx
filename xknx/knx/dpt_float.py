@@ -80,7 +80,7 @@ class DPTTemperature(DPTFloat):
 
     value_min = -273
     value_max = 670760
-    unit = "C"
+    unit = "°C"
     resolution = 1
 
 
@@ -93,7 +93,7 @@ class DPTLux(DPTFloat):
 
     value_min = 0
     value_max = 670760
-    unit = "Lux"
+    unit = "lx"
     resolution = 1
 
 
