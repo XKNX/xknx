@@ -85,8 +85,9 @@ class RemoteValue():
 
 
 def checkpayload(func):
-    """Decorator for testing if payload was initialized."""
+    """Test if payload was initialized."""
     def function_wrapper(remote_value):
+        """Return None of payload not defined otherwise the current remote value."""
         if remote_value.payload is None:
             return None
         return func(remote_value)
@@ -210,6 +211,7 @@ class RemoteValue1Count(RemoteValue):
                  group_address_state=None):
         """Initialize remote value of KNX 6.010 (DPT_Value_1_Count)."""
         super(RemoteValue1Count, self).__init__(xknx, group_address, group_address_state)
+        self.payload = DPTArray((0, ))
 
     @staticmethod
     def payload_valid(telegram):
@@ -241,6 +243,7 @@ class RemoteValueTemp(RemoteValue):
                  group_address_state=None):
         """Initialize remote value of KNX 9.001 (DPT_Value_Temp)."""
         super(RemoteValueTemp, self).__init__(xknx, group_address, group_address_state)
+        self.payload = DPTArray((0, 0, ))
 
     @staticmethod
     def payload_valid(telegram):
