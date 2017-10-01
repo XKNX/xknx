@@ -328,7 +328,7 @@ class TestCover(unittest.TestCase):
             group_address_angle_state='1/2/4')
         telegram = Telegram(Address('1/2/4'), payload=DPTArray(42))
         self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
-        self.assertEqual(cover.angle.value(), 84)
+        self.assertEqual(cover.angle.value, 84)
 
     def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback is executed."""
