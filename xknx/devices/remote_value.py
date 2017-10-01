@@ -8,7 +8,8 @@ or a group address for both.
 import asyncio
 from xknx.knx import Address, DPTBinary, DPTArray
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.knx import Telegram, DPTScaling
+from xknx.knx import Telegram, DPTScaling, DPTValue1Count, \
+    DPTTemperature
 
 
 class RemoteValue():
@@ -83,6 +84,15 @@ class RemoteValue():
         yield from self.xknx.telegrams.put(telegram)
 
 
+def checkpayload(func):
+    """Decorator for testing if payload was initialized."""
+    def function_wrapper(remote_value):
+        if remote_value.payload is None:
+            return None
+        return func(remote_value)
+    return function_wrapper
+
+
 class RemoteValueUpDown1008(RemoteValue):
     """Abstraction for remote value of KNX DPT 1.008 / DPT_UpDown."""
 
@@ -153,16 +163,15 @@ class RemoteValueStep1007(RemoteValue):
 
 
 class RemoteValueScaling5001(RemoteValue):
-    """Abstraction for remote value of KNX DPT 5.001."""
+    """Abstraction for remote value of KNX DPT 5.001 (DPT_Scaling)."""
 
     def __init__(self,
                  xknx,
                  group_address=None,
                  group_address_state=None,
                  invert_scaling=False):
-        """Initialize remote value of KNX DPT 5.001."""
+        """Initialize remote value of KNX DPT 5.001 (DPT_Scaling)."""
         super(RemoteValueScaling5001, self).__init__(xknx, group_address, group_address_state)
-        self.state = None
         self.invert_scaling = invert_scaling
         self.payload = DPTArray((0, ))
 
@@ -182,9 +191,73 @@ class RemoteValueScaling5001(RemoteValue):
             self.group_address,
             DPTArray(DPTScaling.to_knx(scaling)))
 
+    @property
+    @checkpayload
     def value(self):
         """Return current scaling value."""
         scaling = DPTScaling.from_knx(self.payload.value)
         if self.invert_scaling:
             scaling = 100 - scaling
         return scaling
+
+
+class RemoteValue1Count(RemoteValue):
+    """Abstraction for remote value of KNX 6.010 (DPT_Value_1_Count)."""
+
+    def __init__(self,
+                 xknx,
+                 group_address=None,
+                 group_address_state=None):
+        """Initialize remote value of KNX 6.010 (DPT_Value_1_Count)."""
+        super(RemoteValue1Count, self).__init__(xknx, group_address, group_address_state)
+
+    @staticmethod
+    def payload_valid(telegram):
+        """Test if telegram payload may be parsed."""
+        return (isinstance(telegram.payload, DPTArray)
+                and len(telegram.payload.value) == 1)
+
+    @asyncio.coroutine
+    def set(self, count):
+        """Set new count value."""
+        yield from self.send(
+            self.group_address,
+            DPTArray(DPTValue1Count.to_knx(count)))
+
+    @property
+    @checkpayload
+    def value(self):
+        """Return current count value."""
+        count = DPTValue1Count.from_knx(self.payload.value)
+        return count
+
+
+class RemoteValueTemp(RemoteValue):
+    """Abstraction for remote value of KNX 9.001 (DPT_Value_Temp)."""
+
+    def __init__(self,
+                 xknx,
+                 group_address=None,
+                 group_address_state=None):
+        """Initialize remote value of KNX 9.001 (DPT_Value_Temp)."""
+        super(RemoteValueTemp, self).__init__(xknx, group_address, group_address_state)
+
+    @staticmethod
+    def payload_valid(telegram):
+        """Test if telegram payload may be parsed."""
+        return (isinstance(telegram.payload, DPTArray)
+                and len(telegram.payload.value) == 2)
+
+    @asyncio.coroutine
+    def set(self, temperature):
+        """Set new temperature value."""
+        yield from self.send(
+            self.group_address,
+            DPTArray(DPTTemperature.to_knx(temperature)))
+
+    @property
+    @checkpayload
+    def value(self):
+        """Return current temperature value."""
+        count = DPTTemperature.from_knx(self.payload.value)
+        return count
