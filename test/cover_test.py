@@ -191,7 +191,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/2'), payload=DPTBinary(0)))
+                         Telegram(Address('1/2/2'), payload=DPTBinary(1)))
 
     #
     # TEST SET SHORT DOWN
@@ -210,7 +210,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/2'), payload=DPTBinary(1)))
+                         Telegram(Address('1/2/2'), payload=DPTBinary(0)))
 
     #
     # TEST STOP
@@ -228,7 +228,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/2'), payload=DPTBinary(1)))
+                         Telegram(Address('1/2/2'), payload=DPTBinary(0)))
 
     #
     # TEST POSITION

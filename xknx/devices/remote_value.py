@@ -6,8 +6,9 @@ and and one group address wor writing a KNX value
 or a group address for both.
 """
 import asyncio
+from enum import Enum
 from xknx.knx import Address, DPTBinary, DPTArray
-from xknx.exceptions import CouldNotParseTelegram
+from xknx.exceptions import CouldNotParseTelegram, ConversionError
 from xknx.knx import Telegram, DPTScaling, DPTValue1Count, \
     DPTTemperature
 
@@ -18,7 +19,8 @@ class RemoteValue():
     def __init__(self,
                  xknx,
                  group_address=None,
-                 group_address_state=None):
+                 group_address_state=None,
+                 after_update_cb=None):
         """Initialize RemoteValue class."""
         self.xknx = xknx
         if isinstance(group_address, (str, int)):
@@ -28,6 +30,7 @@ class RemoteValue():
 
         self.group_address = group_address
         self.group_address_state = group_address_state
+        self.after_update_cb = after_update_cb
         self.payload = None
 
     @property
@@ -49,118 +52,197 @@ class RemoteValue():
         return []
 
     @staticmethod
-    def payload_valid(telegram):
-        """Test if telegram payload may be parsed."""
+    def payload_valid(payload):
+        """Test if telegram payload may be parsed - to be implemented in derived class.."""
         # pylint: disable=unused-argument
         return True
+
+    def from_knx(self, payload):
+        """Convert current payload to value - to be implemented in derived class."""
+        # pylint: disable=unused-argument, no-self-use
+        return None
+
+    def to_knx(self, value):
+        """Convert value to payload - to be implemented in derived class."""
+        # pylint: disable=unused-argument, no-self-use
+        return None
 
     @asyncio.coroutine
     def process(self, telegram):
         """Process incoming telegram."""
         if not self.has_group_address(telegram.group_address):
             return False
-        if not self.payload_valid(telegram):
+        if not self.payload_valid(telegram.payload):
             raise CouldNotParseTelegram()
-        self.payload = telegram.payload
+        if self.payload != telegram.payload:
+            self.payload = telegram.payload
+            if self.after_update_cb is not None:
+                yield from self.after_update_cb()
+
+        print(type(self).__name__, self.value)
         return True
+
+    @property
+    def value(self):
+        """Return current value ."""
+        if self.payload is None:
+            return None
+        return self.from_knx(self.payload)
+
+    @asyncio.coroutine
+    def send(self):
+        """Send payload as telegram to KNX bus."""
+        telegram = Telegram()
+        telegram.group_address = self.group_address
+        telegram.payload = self.payload
+        yield from self.xknx.telegrams.put(telegram)
+
+    @asyncio.coroutine
+    def set(self, value):
+        """Set new value."""
+        if not self.initialized:
+            return
+        payload = self.to_knx(value)
+        updated = False
+        print("Payload: ", payload, self.payload)
+        if self.payload is None or payload != self.payload:
+            print("..... UPDATING")
+            self.payload = payload
+            updated = True
+        yield from self.send()
+        if updated and self.after_update_cb is not None:
+            yield from self.after_update_cb()
 
     def group_addr_str(self):
         """Return object as readable string."""
-        return '{0}/{1}/{2}' \
+        return '{0}/{1}/{2}/{3}' \
             .format(self.group_address,
                     self.group_address_state,
-                    self.payload)
+                    self.payload,
+                    self.value)
+
+    def __str__(self):
+        """Return object as string representation."""
+        return "<{} {}/>".format(
+            self.__class__.__name__,
+            self.group_addr_str())
 
     def __eq__(self, other):
         """Equal operator."""
-        return self.__dict__ == other.__dict__
-
-    @asyncio.coroutine
-    def send(self, group_address, payload=None):
-        """Send payload as telegram to KNX bus."""
-        telegram = Telegram()
-        telegram.group_address = group_address
-        telegram.payload = payload
-        yield from self.xknx.telegrams.put(telegram)
-
-
-def checkpayload(func):
-    """Test if payload was initialized."""
-    def function_wrapper(remote_value):
-        """Return None of payload not defined otherwise the current remote value."""
-        if remote_value.payload is None:
-            return None
-        return func(remote_value)
-    return function_wrapper
+        for key, value in self.__dict__.items():
+            if key == "after_update_cb":
+                continue
+            if key not in other.__dict__:
+                return False
+            if other.__dict__[key] != value:
+                return False
+        return True
 
 
 class RemoteValueUpDown1008(RemoteValue):
     """Abstraction for remote value of KNX DPT 1.008 / DPT_UpDown."""
 
+    class Direction(Enum):
+        """Enum for indicating the direction."""
+
+        # pylint: disable=invalid-name
+        UP = 0
+        DOWN = 1
+
     def __init__(self,
                  xknx,
                  group_address=None,
                  group_address_state=None,
+                 after_update_cb=None,
                  invert=False):
         """Initialize remote value of KNX DPT 1.008."""
-        super(RemoteValueUpDown1008, self).__init__(xknx, group_address, group_address_state)
+        # pylint: disable=too-many-arguments
+        super(RemoteValueUpDown1008, self).__init__(xknx, group_address, group_address_state, after_update_cb)
         self.invert = invert
 
     @staticmethod
-    def payload_valid(telegram):
+    def payload_valid(payload):
         """Test if telegram payload may be parsed."""
-        return isinstance(telegram.payload, DPTBinary)
+        return isinstance(payload, DPTBinary)
+
+    def to_knx(self, value):
+        """Convert value to payload."""
+        if value == self.Direction.UP:
+            return DPTBinary(1) if self.invert else DPTBinary(0)
+        elif value == self.Direction.DOWN:
+            return DPTBinary(0) if self.invert else DPTBinary(1)
+        raise ConversionError(value)
+
+    def from_knx(self, payload):
+        """Convert current payload to value."""
+        if payload == DPTBinary(0):
+            return self.Direction.DOWN if self.invert else self.Direction.UP
+        elif payload == DPTBinary(1):
+            return self.Direction.UP if self.invert else self.Direction.DOWN
+        raise ConversionError(payload)
 
     @asyncio.coroutine
     def down(self):
         """Set value to down."""
-        value = 1 if self.invert else 0
-        yield from self.send(
-            self.group_address,
-            DPTBinary(value))
+        yield from self.set(self.Direction.DOWN)
 
     @asyncio.coroutine
     def up(self):
         """Set value to UP."""
         # pylint: disable=invalid-name
-        value = 0 if self.invert else 1
-        yield from self.send(
-            self.group_address,
-            DPTBinary(value))
+        yield from self.set(self.Direction.UP)
 
 
 class RemoteValueStep1007(RemoteValue):
     """Abstraction for remote value of KNX DPT 1.007 / DPT_Step."""
 
+    class Direction(Enum):
+        """Enum for indicating the direction."""
+
+        DECREASE = 0
+        INCREASE = 1
+
     def __init__(self,
                  xknx,
                  group_address=None,
                  group_address_state=None,
+                 after_update_cb=None,
                  invert=False):
         """Initialize remote value of KNX DPT 1.007."""
-        super(RemoteValueStep1007, self).__init__(xknx, group_address, group_address_state)
+        # pylint: disable=too-many-arguments
+        super(RemoteValueStep1007, self).__init__(xknx, group_address, group_address_state, after_update_cb)
         self.invert = invert
 
     @staticmethod
-    def payload_valid(telegram):
+    def payload_valid(payload):
         """Test if telegram payload may be parsed."""
-        return isinstance(telegram.payload, DPTBinary)
+        return isinstance(payload, DPTBinary)
+
+    def to_knx(self, value):
+        """Convert value to payload."""
+        if value == self.Direction.INCREASE:
+            return DPTBinary(1) if self.invert else DPTBinary(0)
+        elif value == self.Direction.DECREASE:
+            return DPTBinary(0) if self.invert else DPTBinary(1)
+        raise ConversionError(value)
+
+    def from_knx(self, payload):
+        """Convert current payload to value."""
+        if payload == DPTBinary(0):
+            return self.Direction.DECREASE if self.invert else self.Direction.INCREASE
+        elif payload == DPTBinary(1):
+            return self.Direction.INCREASE if self.invert else self.Direction.DECREASE
+        raise ConversionError(payload)
 
     @asyncio.coroutine
     def increase(self):
         """Increase value."""
-        value = 1 if self.invert else 0
-        yield from self.send(
-            self.group_address,
-            DPTBinary(value))
+        yield from self.set(self.Direction.INCREASE)
 
     @asyncio.coroutine
     def decrease(self):
         """Decrease the value."""
-        value = 0 if self.invert else 1
-        yield from self.send(
-            self.group_address,
-            DPTBinary(value))
+        yield from self.set(self.Direction.DECREASE)
 
 
 class RemoteValueScaling5001(RemoteValue):
@@ -170,97 +252,64 @@ class RemoteValueScaling5001(RemoteValue):
                  xknx,
                  group_address=None,
                  group_address_state=None,
-                 invert_scaling=False):
+                 after_update_cb=None,
+                 invert=False):
         """Initialize remote value of KNX DPT 5.001 (DPT_Scaling)."""
-        super(RemoteValueScaling5001, self).__init__(xknx, group_address, group_address_state)
-        self.invert_scaling = invert_scaling
-        self.payload = DPTArray((0, ))
+        # pylint: disable=too-many-arguments
+        super(RemoteValueScaling5001, self).__init__(xknx, group_address, group_address_state, after_update_cb)
+        self.invert = invert
 
     @staticmethod
-    def payload_valid(telegram):
+    def payload_valid(payload):
         """Test if telegram payload may be parsed."""
-        return (isinstance(telegram.payload, DPTArray)
-                and len(telegram.payload.value) == 1)
+        return (isinstance(payload, DPTArray)
+                and len(payload.value) == 1)
 
-    @asyncio.coroutine
-    def set(self, scaling):
-        """Set new scaling value."""
-        if self.invert_scaling:
-            scaling = 100 - scaling
+    def to_knx(self, value):
+        """Convert value to payload."""
+        if not self.invert:
+            value = 100 - value
+        return DPTArray(DPTScaling.to_knx(value))
 
-        yield from self.send(
-            self.group_address,
-            DPTArray(DPTScaling.to_knx(scaling)))
-
-    @property
-    @checkpayload
-    def value(self):
-        """Return current scaling value."""
-        scaling = DPTScaling.from_knx(self.payload.value)
-        if self.invert_scaling:
-            scaling = 100 - scaling
-        return scaling
+    def from_knx(self, payload):
+        """Convert current payload to value."""
+        value = DPTScaling.from_knx(payload.value)
+        if not self.invert:
+            value = 100 - value
+        return value
 
 
 class RemoteValue1Count(RemoteValue):
     """Abstraction for remote value of KNX 6.010 (DPT_Value_1_Count)."""
 
-    def __init__(self,
-                 xknx,
-                 group_address=None,
-                 group_address_state=None):
-        """Initialize remote value of KNX 6.010 (DPT_Value_1_Count)."""
-        super(RemoteValue1Count, self).__init__(xknx, group_address, group_address_state)
-        self.payload = DPTArray((0, ))
-
     @staticmethod
-    def payload_valid(telegram):
+    def payload_valid(payload):
         """Test if telegram payload may be parsed."""
-        return (isinstance(telegram.payload, DPTArray)
-                and len(telegram.payload.value) == 1)
+        return (isinstance(payload, DPTArray)
+                and len(payload.value) == 1)
 
-    @asyncio.coroutine
-    def set(self, count):
-        """Set new count value."""
-        yield from self.send(
-            self.group_address,
-            DPTArray(DPTValue1Count.to_knx(count)))
+    def to_knx(self, value):
+        """Convert value to payload."""
+        return DPTArray(DPTValue1Count.to_knx(value))
 
-    @property
-    @checkpayload
-    def value(self):
-        """Return current count value."""
-        count = DPTValue1Count.from_knx(self.payload.value)
-        return count
+    def from_knx(self, payload):
+        """Convert current payload to value."""
+        return DPTValue1Count.from_knx(payload.value)
 
 
 class RemoteValueTemp(RemoteValue):
     """Abstraction for remote value of KNX 9.001 (DPT_Value_Temp)."""
 
-    def __init__(self,
-                 xknx,
-                 group_address=None,
-                 group_address_state=None):
-        """Initialize remote value of KNX 9.001 (DPT_Value_Temp)."""
-        super(RemoteValueTemp, self).__init__(xknx, group_address, group_address_state)
-        self.payload = DPTArray((0, 0, ))
-
     @staticmethod
-    def payload_valid(telegram):
+    def payload_valid(payload):
         """Test if telegram payload may be parsed."""
-        return (isinstance(telegram.payload, DPTArray)
-                and len(telegram.payload.value) == 2)
+        return (isinstance(payload, DPTArray)
+                and len(payload.value) == 2)
 
-    @asyncio.coroutine
-    def set(self, temperature):
-        """Set new temperature value."""
-        yield from self.send(
-            self.group_address,
-            DPTArray(DPTTemperature.to_knx(temperature)))
+    def to_knx(self, value):
+        """Convert value to payload."""
+        return DPTArray(DPTTemperature.to_knx(value))
 
-    @property
-    @checkpayload
-    def value(self):
-        """Return current temperature value."""
-        count = DPTTemperature.from_knx(self.payload.value)
-        return count
+    def from_knx(self, payload):
+        """Convert current payload to value."""
+        return DPTTemperature.from_knx(payload.value)

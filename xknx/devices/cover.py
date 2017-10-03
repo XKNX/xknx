@@ -45,24 +45,28 @@ class Cover(Device):
         self.updown = RemoteValueUpDown1008(
             xknx,
             group_address_long,
-            invert=not invert_position)
+            after_update_cb=self.after_update,
+            invert=invert_position)
 
         self.step = RemoteValueStep1007(
             xknx,
             group_address_short,
-            invert=not invert_position)
+            after_update_cb=self.after_update,
+            invert=invert_position)
 
         self.position = RemoteValueScaling5001(
             xknx,
             group_address_position,
             group_address_position_state,
-            not invert_position)
+            after_update_cb=self.after_update,
+            invert=invert_position)
 
         self.angle = RemoteValueScaling5001(
             xknx,
             group_address_angle,
             group_address_angle_state,
-            not invert_angle)
+            after_update_cb=self.after_update,
+            invert=invert_angle)
 
         self.travel_time_down = travel_time_down
         self.travel_time_up = travel_time_up
@@ -227,9 +231,7 @@ class Cover(Device):
             self.travelcalculator.set_position(self.position.value)
             yield from self.after_update()
 
-        angle_processed = yield from self.angle.process(telegram)
-        if angle_processed:
-            yield from self.after_update()
+        yield from self.angle.process(telegram)
 
     def current_position(self):
         """Return current position of cover."""
