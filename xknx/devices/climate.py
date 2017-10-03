@@ -79,6 +79,8 @@ class Climate(Device):
             group_address_setpoint_shift_state,
             after_update_cb=self.after_update)
 
+        self.setpoint_step = 0.5
+
         self.supports_operation_mode = \
             group_address_operation_mode is not None or \
             group_address_operation_mode_state is not None or \
@@ -161,7 +163,7 @@ class Climate(Device):
         if not self.setpoint_shift.initialized:
             self.xknx.logger.warning("Setpoint shift not know. Cant set target temperature")
             return
-        setpoint_shift = int((target_temperature_comfort-self.setpoint.value)/0.1)
+        setpoint_shift = int((target_temperature_comfort-self.setpoint.value)/self.setpoint_step)
         yield from self.setpoint_shift.set(setpoint_shift)
 
     @property
@@ -169,7 +171,7 @@ class Climate(Device):
         """Calculate target temperature out of basis setpoint and setpoint shift."""
         if self.setpoint.value is None or self.setpoint_shift.value is None:
             return None
-        return self.setpoint.value + 0.5 * (self.setpoint_shift.value)
+        return self.setpoint.value + self.setpoint_step * (self.setpoint_shift.value)
 
     @asyncio.coroutine
     def set_operation_mode(self, operation_mode):
