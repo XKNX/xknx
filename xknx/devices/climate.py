@@ -34,7 +34,7 @@ class Climate(Device):
                  group_address_controller_status_state=None,
                  device_updated_cb=None):
         """Initialize Climate class."""
-        # pylint: disable=too-many-arguments
+        # pylint: disable=too-many-arguments, too-many-locals
         Device.__init__(self, xknx, name, device_updated_cb)
         if isinstance(group_address_operation_mode, (str, int)):
             group_address_operation_mode = Address(group_address_operation_mode)
@@ -91,6 +91,7 @@ class Climate(Device):
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
+        # pylint: disable=too-many-locals
         group_address_temperature = \
             config.get('group_address_temperature')
         group_address_target_temperature = \
