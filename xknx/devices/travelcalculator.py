@@ -45,8 +45,10 @@ class TravelCalculator:
         self.travel_to_position = 0
         self.travel_started_time = 0
         self.travel_direction = TravelStatus.STOPPED
-        self.minimum_position_down = 0
-        self.maximum_position_up = 100
+
+        # 0 is closed, 100 is fully open
+        self.position_closed = 0
+        self.position_open = 100
 
         self.time_set_from_outside = None
 
@@ -77,11 +79,11 @@ class TravelCalculator:
 
     def start_travel_up(self):
         """Start traveling up."""
-        self.start_travel(self.maximum_position_up)
+        self.start_travel(self.position_open)
 
     def start_travel_down(self):
         """Start traveling down."""
-        self.start_travel(self.minimum_position_down)
+        self.start_travel(self.position_closed)
 
     def current_position(self):
         """Return current (calculated or known) position."""
@@ -99,11 +101,11 @@ class TravelCalculator:
 
     def is_open(self):
         """Return if cover is (fully) open."""
-        return self.current_position() == self.maximum_position_up
+        return self.current_position() == self.position_open
 
     def is_closed(self):
         """Return if cover is (fully) closed."""
-        return self.current_position() == self.minimum_position_down
+        return self.current_position() == self.position_closed
 
     def _calculate_position(self):
         """Return calculated position."""
@@ -140,7 +142,7 @@ class TravelCalculator:
             self.travel_time_up \
             if travel_direction == TravelStatus.DIRECTION_UP else \
             self.travel_time_down
-        travel_range = self.maximum_position_up - self.minimum_position_down
+        travel_range = self.position_open - self.position_closed
 
         return travel_time_full * abs(relative_position) / travel_range
 
