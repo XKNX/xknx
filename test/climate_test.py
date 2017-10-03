@@ -33,9 +33,9 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_temperature='1/2/3')
 
-        self.assertTrue(climate.supports_temperature)
-        self.assertFalse(climate.supports_target_temperature)
-        self.assertFalse(climate.supports_setpoint)
+        self.assertTrue(climate.temperature.initialized)
+        self.assertFalse(climate.target_temperature.initialized)
+        self.assertFalse(climate.setpoint.initialized)
         self.assertFalse(climate.supports_operation_mode)
 
     def test_support_target_temperature(self):
@@ -46,9 +46,9 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_target_temperature='1/2/3')
 
-        self.assertFalse(climate.supports_temperature)
-        self.assertTrue(climate.supports_target_temperature)
-        self.assertFalse(climate.supports_setpoint)
+        self.assertFalse(climate.temperature.initialized)
+        self.assertTrue(climate.target_temperature.initialized)
+        self.assertFalse(climate.setpoint.initialized)
         self.assertFalse(climate.supports_operation_mode)
 
     def test_support_setpoint(self):
@@ -59,9 +59,9 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_setpoint='1/2/4')
 
-        self.assertFalse(climate.supports_temperature)
-        self.assertFalse(climate.supports_target_temperature)
-        self.assertTrue(climate.supports_setpoint)
+        self.assertFalse(climate.temperature.initialized)
+        self.assertFalse(climate.target_temperature.initialized)
+        self.assertTrue(climate.setpoint.initialized)
         self.assertFalse(climate.supports_operation_mode)
 
     def test_support_operation_mode(self):
@@ -72,9 +72,9 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_operation_mode='1/2/4')
 
-        self.assertFalse(climate.supports_temperature)
-        self.assertFalse(climate.supports_target_temperature)
-        self.assertFalse(climate.supports_setpoint)
+        self.assertFalse(climate.temperature.initialized)
+        self.assertFalse(climate.target_temperature.initialized)
+        self.assertFalse(climate.setpoint.initialized)
         self.assertTrue(climate.supports_operation_mode)
 
     def test_support_operation_mode2(self):
@@ -85,9 +85,9 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_operation_mode_protection='1/2/4')
 
-        self.assertFalse(climate.supports_temperature)
-        self.assertFalse(climate.supports_target_temperature)
-        self.assertFalse(climate.supports_setpoint)
+        self.assertFalse(climate.temperature.initialized)
+        self.assertFalse(climate.target_temperature.initialized)
+        self.assertFalse(climate.setpoint.initialized)
         self.assertTrue(climate.supports_operation_mode)
 
     #
@@ -137,15 +137,15 @@ class TestClimate(unittest.TestCase):
             after_update_callback(device)
         climate.register_device_updated_cb(async_after_update_callback)
 
-        self.loop.run_until_complete(asyncio.Task(climate.set_setpoint(23)))
+        self.loop.run_until_complete(asyncio.Task(climate.setpoint.set(23)))
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
-        self.loop.run_until_complete(asyncio.Task(climate.set_setpoint(24)))
+        self.loop.run_until_complete(asyncio.Task(climate.setpoint.set(24)))
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
-        self.loop.run_until_complete(asyncio.Task(climate.set_setpoint(24)))
+        self.loop.run_until_complete(asyncio.Task(climate.setpoint.set(24)))
         after_update_callback.assert_not_called()
         after_update_callback.reset_mock()
 
@@ -215,7 +215,7 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_temperature='1/2/3',
             group_address_setpoint='1/2/4')
-        self.loop.run_until_complete(asyncio.Task(climate.set_setpoint(23)))
+        self.loop.run_until_complete(asyncio.Task(climate.setpoint.set(23)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -231,31 +231,8 @@ class TestClimate(unittest.TestCase):
             xknx,
             'TestClimate',
             group_address_temperature='1/2/3')
-        self.loop.run_until_complete(asyncio.Task(climate.set_setpoint(23)))
+        self.loop.run_until_complete(asyncio.Task(climate.setpoint.set(23)))
         self.assertEqual(xknx.telegrams.qsize(), 0)
-
-    #
-    # TEST SET TARGET TEMPERATURE
-    #
-    def test_set_target_temperature(self):
-        """Test calculating and sending target temperature."""
-        xknx = XKNX(loop=self.loop)
-        climate = Climate(
-            xknx,
-            'TestClimate',
-            group_address_temperature='1/2/3',
-            group_address_setpoint='1/2/4')
-        # pylint: disable=protected-access
-        self.loop.run_until_complete(asyncio.Task(climate._set_internal_setpoint(23)))
-        self.loop.run_until_complete(asyncio.Task(climate._set_internal_target_temperature(21)))
-        self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(22)))
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                Address('1/2/4'),
-                payload=DPTArray(DPTTemperature().to_knx(24))))
 
     #
     # TEST SET OPERATION MODE
@@ -417,7 +394,7 @@ class TestClimate(unittest.TestCase):
         telegram = Telegram(Address('1/2/3'))
         telegram.payload = DPTArray(DPTTemperature().to_knx(21.34))
         self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
-        self.assertEqual(climate.temperature, 21.34)
+        self.assertEqual(climate.temperature.value, 21.34)
 
     def test_process_setpoint(self):
         """Test process / reading telegrams from telegram queue. Test if setpoint is processed correctly."""
@@ -430,7 +407,7 @@ class TestClimate(unittest.TestCase):
         telegram = Telegram(Address('1/2/3'))
         telegram.payload = DPTArray(DPTTemperature().to_knx(21.34))
         self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
-        self.assertEqual(climate.setpoint, 21.34)
+        self.assertEqual(climate.setpoint.value, 21.34)
 
     def test_process_operation_mode(self):
         """Test process / reading telegrams from telegram queue. Test if setpoint is processed correctly."""
