@@ -154,7 +154,7 @@ class KNXClimate(ClimateDevice):
         return self.device.target_temperature_comfort
 
     @property
-    def target_temperature_comfort_high(self):
+    def target_temperature_high(self):
         if self.device.target_temperature_comfort:
             return max(
                 self.device.target_temperature_comfort,
@@ -162,7 +162,7 @@ class KNXClimate(ClimateDevice):
         return None
 
     @property
-    def target_temperature_comfort_low(self):
+    def target_temperature_low(self):
         if self.device.target_temperature_comfort:
             return min(
                 self.device.target_temperature_comfort,
