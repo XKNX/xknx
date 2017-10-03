@@ -122,7 +122,6 @@ class TravelCalculator:
             return False
 
         if position_reached_or_exceeded(relative_position):
-            print("position_reached_or_exceeded")
             return self.travel_to_position
 
         travel_time = self._calculate_travel_time(relative_position)

@@ -78,8 +78,6 @@ class RemoteValue():
             self.payload = telegram.payload
             if self.after_update_cb is not None:
                 yield from self.after_update_cb()
-
-        print(type(self).__name__, self.value)
         return True
 
     @property
@@ -104,9 +102,7 @@ class RemoteValue():
             return
         payload = self.to_knx(value)
         updated = False
-        print("Payload: ", payload, self.payload)
         if self.payload is None or payload != self.payload:
-            print("..... UPDATING")
             self.payload = payload
             updated = True
         yield from self.send()
