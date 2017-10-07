@@ -7,9 +7,8 @@ It provides functionality for
 * reading the current state from KNX bus.
 """
 import asyncio
-from xknx.knx import Address, DPTBinary
-from xknx.exceptions import CouldNotParseTelegram
 from .device import Device
+from .remote_value import RemoteValueSwitch1001
 
 
 class Switch(Device):
@@ -25,14 +24,11 @@ class Switch(Device):
         # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name, device_updated_cb)
 
-        if isinstance(group_address, (str, int)):
-            group_address = Address(group_address)
-        if isinstance(group_address_state, (str, int)):
-            group_address_state = Address(group_address_state)
-
-        self.group_address = group_address
-        self.group_address_state = group_address_state
-        self.state = False
+        self.switch = RemoteValueSwitch1001(
+            xknx,
+            group_address,
+            group_address_state,
+            after_update_cb=self.after_update)
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -49,27 +45,22 @@ class Switch(Device):
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
-        return (self.group_address == group_address) or \
-               (self.group_address_state == group_address)
+        return self.switch.has_group_address(group_address)
 
-    @asyncio.coroutine
-    def _set_internal_state(self, state):
-        """Set the internal state of the device. If state was changed after update hooks are executed."""
-        if state != self.state:
-            self.state = state
-            yield from self.after_update()
+    @property
+    def state(self):
+        """Return the current switch state of the device."""
+        return self.switch.value == RemoteValueSwitch1001.Value.ON
 
     @asyncio.coroutine
     def set_on(self):
         """Switch on switch."""
-        yield from self.send(self.group_address, DPTBinary(1))
-        yield from self._set_internal_state(True)
+        yield from self.switch.on()
 
     @asyncio.coroutine
     def set_off(self):
         """Switch off switch."""
-        yield from self.send(self.group_address, DPTBinary(0))
-        yield from self._set_internal_state(False)
+        yield from self.switch.off()
 
     @asyncio.coroutine
     def do(self, action):
@@ -83,29 +74,18 @@ class Switch(Device):
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
-        return [self.group_address_state or self.group_address, ]
+        return self.switch.state_addresses()
 
     @asyncio.coroutine
     def process(self, telegram):
         """Process incoming telegram."""
-        if not isinstance(telegram.payload, DPTBinary):
-            raise CouldNotParseTelegram()
-
-        if telegram.payload.value == 0:
-            yield from self._set_internal_state(False)
-        elif telegram.payload.value == 1:
-            yield from self._set_internal_state(True)
-        else:
-            raise CouldNotParseTelegram()
+        yield from self.switch.process(telegram)
 
     def __str__(self):
         """Return object as readable string."""
-        return '<Switch name="{0}" group_address="{1}" ' \
-               'group_address_state="{2}" state="{3}" />' \
+        return '<Switch name="{0}" switch="{1}" />' \
             .format(self.name,
-                    self.group_address,
-                    self.group_address_state,
-                    self.state)
+                    self.switch.group_addr_str())
 
     def __eq__(self, other):
         """Equal operator."""

@@ -135,6 +135,60 @@ class RemoteValue():
         return True
 
 
+class RemoteValueSwitch1001(RemoteValue):
+    """Abstraction for remote value of KNX DPT 1.001 / DPT_Switch."""
+
+    class Value(Enum):
+        """Enum for indicating the direction."""
+
+        # pylint: disable=invalid-name
+        OFF = 0
+        ON = 1
+
+    def __init__(self,
+                 xknx,
+                 group_address=None,
+                 group_address_state=None,
+                 after_update_cb=None,
+                 invert=False):
+        """Initialize remote value of KNX DPT 1.001."""
+        # pylint: disable=too-many-arguments
+        super(RemoteValueSwitch1001, self).__init__(xknx, group_address, group_address_state, after_update_cb)
+        self.invert = invert
+
+    @staticmethod
+    def payload_valid(payload):
+        """Test if telegram payload may be parsed."""
+        return isinstance(payload, DPTBinary)
+
+    def to_knx(self, value):
+        """Convert value to payload."""
+        if value == self.Value.OFF:
+            return DPTBinary(1) if self.invert else DPTBinary(0)
+        elif value == self.Value.ON:
+            return DPTBinary(0) if self.invert else DPTBinary(1)
+        raise ConversionError(value)
+
+    def from_knx(self, payload):
+        """Convert current payload to value."""
+        if payload == DPTBinary(0):
+            return self.Value.ON if self.invert else self.Value.OFF
+        elif payload == DPTBinary(1):
+            return self.Value.OFF if self.invert else self.Value.ON
+        raise ConversionError(payload)
+
+    @asyncio.coroutine
+    def off(self):
+        """Set value to down."""
+        yield from self.set(self.Value.OFF)
+
+    @asyncio.coroutine
+    def on(self):
+        """Set value to UP."""
+        # pylint: disable=invalid-name
+        yield from self.set(self.Value.ON)
+
+
 class RemoteValueUpDown1008(RemoteValue):
     """Abstraction for remote value of KNX DPT 1.008 / DPT_UpDown."""
 

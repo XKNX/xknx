@@ -59,12 +59,14 @@ class TestSwitch(unittest.TestCase):
         self.assertEqual(switch.state, False)
 
         telegram_on = Telegram()
+        telegram_on.group_address = Address('1/2/3')
         telegram_on.payload = DPTBinary(1)
         self.loop.run_until_complete(asyncio.Task(switch.process(telegram_on)))
 
         self.assertEqual(switch.state, True)
 
         telegram_off = Telegram()
+        telegram_off.group_address = Address('1/2/3')
         telegram_off.payload = DPTBinary(0)
         self.loop.run_until_complete(asyncio.Task(switch.process(telegram_off)))
 
@@ -86,6 +88,7 @@ class TestSwitch(unittest.TestCase):
         switch.register_device_updated_cb(async_after_update_callback)
 
         telegram = Telegram()
+        telegram.group_address = Address('1/2/3')
         telegram.payload = DPTBinary(1)
         self.loop.run_until_complete(asyncio.Task(switch.process(telegram)))
 

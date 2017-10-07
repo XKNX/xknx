@@ -8,9 +8,10 @@ It provides functionality for
 * reading the current state from KNX bus.
 """
 import asyncio
-from xknx.knx import Address, DPTBinary, DPTArray
+from xknx.knx import Address, DPTArray
 from xknx.exceptions import CouldNotParseTelegram
 from .device import Device
+from .remote_value import RemoteValueSwitch1001
 
 
 class Light(Device):
@@ -27,20 +28,20 @@ class Light(Device):
         """Initialize Light class."""
         # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name, device_updated_cb)
-        if isinstance(group_address_switch, (str, int)):
-            group_address_switch = Address(group_address_switch)
-        if isinstance(group_address_switch_state, (str, int)):
-            group_address_switch_state = Address(group_address_switch_state)
         if isinstance(group_address_brightness, (str, int)):
             group_address_brightness = Address(group_address_brightness)
         if isinstance(group_address_brightness_state, (str, int)):
             group_address_brightness_state = Address(group_address_brightness_state)
 
-        self.group_address_switch = group_address_switch
-        self.group_address_switch_state = group_address_switch_state
+        self.switch = RemoteValueSwitch1001(
+            xknx,
+            group_address_switch,
+            group_address_switch_state,
+            after_update_cb=self.after_update)
+
         self.group_address_brightness = group_address_brightness
         self.group_address_brightness_state = group_address_brightness_state
-        self.state = False
+
         self.brightness = 0
         self.supports_dimming = \
             group_address_brightness is not None
@@ -66,8 +67,7 @@ class Light(Device):
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
-        return (self.group_address_switch == group_address) or \
-               (self.group_address_switch_state == group_address) or \
+        return self.switch.has_group_address(group_address) or \
                (self.group_address_brightness == group_address) or \
                (self.group_address_brightness_state == group_address)
 
@@ -75,36 +75,27 @@ class Light(Device):
         """Return object as readable string."""
         if not self.supports_dimming:
             return '<Light name="{0}" ' \
-                    'group_address_switch="{1}" ' \
-                    'group_address_switch_state="{2}" ' \
-                    'state="{3}" />' \
+                    'switch="{1}" />' \
                     .format(
                         self.name,
-                        self.group_address_switch,
-                        self.group_address_switch_state,
-                        self.state)
+                        self.switch.group_addr_str())
 
         return '<Light name="{0}" ' \
-            'group_address_switch="{1}" ' \
-            'group_address_switch_state="{2}" ' \
-            'group_address_brightness="{3}" ' \
-            'group_address_brightness_state="{4}" ' \
-            'state="{5}" brightness="{6}" />' \
+            'switch="{1}" ' \
+            'group_address_brightness="{2}" ' \
+            'group_address_brightness_state="{3}" ' \
+            'brightness="{4}" />' \
             .format(
                 self.name,
-                self.group_address_switch,
-                self.group_address_switch_state,
+                self.switch.group_addr_str(),
                 self.group_address_brightness,
                 self.group_address_brightness_state,
-                self.state,
                 self.brightness)
 
-    @asyncio.coroutine
-    def _set_internal_state(self, state):
-        """Set the internal state of the device. If state was changed after update hooks are executed."""
-        if state != self.state:
-            self.state = state
-            yield from self.after_update()
+    @property
+    def state(self):
+        """Return the current switch state of the device."""
+        return self.switch.value == RemoteValueSwitch1001.Value.ON
 
     @asyncio.coroutine
     def _set_internal_brightness(self, brightness):
@@ -116,14 +107,12 @@ class Light(Device):
     @asyncio.coroutine
     def set_on(self):
         """Switch light on."""
-        yield from self.send(self.group_address_switch, DPTBinary(1))
-        yield from self._set_internal_state(True)
+        yield from self.switch.on()
 
     @asyncio.coroutine
     def set_off(self):
         """Switch light off."""
-        yield from self.send(self.group_address_switch, DPTBinary(0))
-        yield from self._set_internal_state(False)
+        yield from self.switch.off()
 
     @asyncio.coroutine
     def set_brightness(self, brightness):
@@ -147,10 +136,8 @@ class Light(Device):
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
-        state_address_switch = \
-            self.group_address_switch_state or \
-            self.group_address_switch
-        state_addresses = [state_address_switch]
+        state_addresses = []
+        state_addresses.extend(self.switch.state_addresses())
         if self.supports_dimming:
             state_address_brightness = \
                 self.group_address_brightness_state or \
@@ -161,12 +148,11 @@ class Light(Device):
     @asyncio.coroutine
     def process(self, telegram):
         """Process incoming telegram."""
-        if telegram.group_address == self.group_address_switch or \
-                telegram.group_address == self.group_address_switch_state:
-            yield from self._process_state(telegram)
-        elif (self.supports_dimming and
-              (telegram.group_address == self.group_address_brightness or
-               telegram.group_address == self.group_address_brightness_state)):
+        yield from self.switch.process(telegram)
+
+        if (self.supports_dimming and
+                (telegram.group_address == self.group_address_brightness or
+                 telegram.group_address == self.group_address_brightness_state)):
             yield from self._process_brightness(telegram)
 
     @asyncio.coroutine
@@ -177,18 +163,6 @@ class Light(Device):
             raise CouldNotParseTelegram()
 
         yield from self._set_internal_brightness(telegram.payload.value[0])
-
-    @asyncio.coroutine
-    def _process_state(self, telegram):
-        """Process incoming telegram for on/off state."""
-        if not isinstance(telegram.payload, DPTBinary):
-            raise CouldNotParseTelegram()
-        if telegram.payload.value == 0:
-            yield from self._set_internal_state(False)
-        elif telegram.payload.value == 1:
-            yield from self._set_internal_state(True)
-        else:
-            raise CouldNotParseTelegram()
 
     def __eq__(self, other):
         """Equal operator."""
