@@ -67,9 +67,9 @@ class Light(Device):
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
-        return self.switch.has_group_address(group_address) or \
-               (self.group_address_brightness == group_address) or \
-               (self.group_address_brightness_state == group_address)
+        return (self.switch.has_group_address(group_address) or
+                (self.group_address_brightness == group_address) or
+                (self.group_address_brightness_state == group_address))
 
     def __str__(self):
         """Return object as readable string."""
