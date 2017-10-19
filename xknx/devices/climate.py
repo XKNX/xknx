@@ -22,7 +22,6 @@ class Climate(Device):
                  name,
                  group_address_temperature=None,
                  group_address_target_temperature=None,
-                 group_address_setpoint=None,
                  group_address_setpoint_shift=None,
                  group_address_setpoint_shift_state=None,
                  group_address_operation_mode=None,
@@ -69,10 +68,6 @@ class Climate(Device):
             xknx,
             group_address_target_temperature,
             after_update_cb=self.after_update)
-        self.setpoint = RemoteValueTemp(
-            xknx,
-            group_address_setpoint,
-            after_update_cb=self.after_update)
         self.setpoint_shift = RemoteValue1Count(
             xknx,
             group_address_setpoint_shift,
@@ -98,8 +93,6 @@ class Climate(Device):
             config.get('group_address_temperature')
         group_address_target_temperature = \
             config.get('group_address_target_temperature')
-        group_address_setpoint = \
-            config.get('group_address_setpoint')
         group_address_setpoint_shift = \
             config.get('group_address_setpoint_shift')
         group_address_setpoint_shift_state = \
@@ -122,7 +115,6 @@ class Climate(Device):
                    name,
                    group_address_temperature=group_address_temperature,
                    group_address_target_temperature=group_address_target_temperature,
-                   group_address_setpoint=group_address_setpoint,
                    group_address_setpoint_shift=group_address_setpoint_shift,
                    group_address_setpoint_shift_state=group_address_setpoint_shift_state,
                    group_address_operation_mode=group_address_operation_mode,
@@ -137,7 +129,6 @@ class Climate(Device):
         """Test if device has given group address."""
         return self.temperature.has_group_address(group_address) or \
             self.target_temperature.has_group_address(group_address) or \
-            self.setpoint.has_group_address(group_address) or \
             self.setpoint_shift.has_group_address(group_address) or \
             self.group_address_operation_mode == group_address or \
             self.group_address_operation_mode_state == group_address or \
@@ -155,23 +146,24 @@ class Climate(Device):
             yield from self.after_update()
 
     @asyncio.coroutine
-    def set_target_temperature_comfort(self, target_temperature_comfort):
-        """Calculate setpoint shift and send it to  KNX bus."""
-        if not self.setpoint.value:
-            self.xknx.logger.warning("Setpoint temperature not know. Cant set target temperature")
-            return
+    def set_target_temperature(self, target_temperature):
+        """Calculate setpoint shift shift and send it to  KNX bus."""
         if not self.setpoint_shift.initialized:
-            self.xknx.logger.warning("Setpoint shift not know. Cant set target temperature")
+            self.xknx.logger.warning("Setpoint shift not initialized")
             return
-        setpoint_shift = int((target_temperature_comfort-self.setpoint.value)/self.setpoint_step)
+        if self.setpoint_shift.value is None:
+            self.xknx.logger.warning("Setpoint shift not set")
+            return
+        if not self.target_temperature.initialized:
+            self.xknx.logger.warning("Target temperature not initialized")
+            return
+        if self.target_temperature.value is None:
+            self.xknx.logger.warning("Target temperature not set")
+            return
+        temperature_delta = target_temperature-self.target_temperature.value
+        setpoint_shift_delta = int(temperature_delta/self.setpoint_step)
+        setpoint_shift = self.setpoint_shift.value + setpoint_shift_delta
         yield from self.setpoint_shift.set(setpoint_shift)
-
-    @property
-    def target_temperature_comfort(self):
-        """Calculate target temperature out of basis setpoint and setpoint shift."""
-        if self.setpoint.value is None or self.setpoint_shift.value is None:
-            return None
-        return self.setpoint.value + self.setpoint_step * (self.setpoint_shift.value)
 
     @asyncio.coroutine
     def set_operation_mode(self, operation_mode):
@@ -240,7 +232,6 @@ class Climate(Device):
 
         yield from self.temperature.process(telegram)
         yield from self.target_temperature.process(telegram)
-        yield from self.setpoint.process(telegram)
         yield from self.setpoint_shift.process(telegram)
 
     @asyncio.coroutine
@@ -266,7 +257,6 @@ class Climate(Device):
         state_addresses = []
         state_addresses.extend(self.temperature.state_addresses())
         state_addresses.extend(self.target_temperature.state_addresses())
-        state_addresses.extend(self.setpoint.state_addresses())
         state_addresses.extend(self.setpoint_shift.state_addresses())
         if self.supports_operation_mode:
             if self.group_address_operation_mode_state:
@@ -285,18 +275,16 @@ class Climate(Device):
         return '<Climate name="{0}" ' \
             'temperature="{1}"  ' \
             'target_temperature="{2}"  ' \
-            'setpoint="{3}" ' \
-            'setpoint_shift="{4}" ' \
-            'group_address_operation_mode="{5}" ' \
-            'group_address_operation_mode_state="{6}" ' \
-            'group_address_controller_status="{7}" ' \
-            'group_address_controller_status_state="{8}" ' \
+            'setpoint_shift="{3}" ' \
+            'group_address_operation_mode="{4}" ' \
+            'group_address_operation_mode_state="{5}" ' \
+            'group_address_controller_status="{6}" ' \
+            'group_address_controller_status_state="{7}" ' \
             '/>' \
             .format(
                 self.name,
                 self.temperature.group_addr_str(),
                 self.target_temperature.group_addr_str(),
-                self.setpoint.group_addr_str(),
                 self.setpoint_shift.group_addr_str(),
                 self.group_address_operation_mode,
                 self.group_address_operation_mode_state,

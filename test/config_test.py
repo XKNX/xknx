@@ -104,7 +104,6 @@ class TestConfig(unittest.TestCase):
             Climate(xknx,
                     'Children.Climate',
                     group_address_temperature='1/7/2',
-                    group_address_setpoint='1/7/3',
                     group_address_target_temperature='1/7/4',
                     device_updated_cb=xknx.devices.device_updated))
 

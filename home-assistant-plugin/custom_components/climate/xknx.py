@@ -13,7 +13,6 @@ from homeassistant.const import CONF_NAME, TEMP_CELSIUS, ATTR_TEMPERATURE
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-CONF_SETPOINT_ADDRESS = 'setpoint_address'
 CONF_SETPOINT_SHIFT_ADDRESS = 'setpoint_shift_address'
 CONF_SETPOINT_SHIFT_STATE_ADDRESS = 'setpoint_shift_state_address'
 CONF_TEMPERATURE_ADDRESS = 'temperature_address'
@@ -32,9 +31,10 @@ DEPENDENCIES = ['xknx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_SETPOINT_ADDRESS): cv.string,
     vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
     vol.Required(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
+    vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
+    vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): cv.string,
@@ -82,8 +82,6 @@ def async_add_devices_config(hass, config, async_add_devices):
             CONF_TEMPERATURE_ADDRESS),
         group_address_target_temperature=config.get(
             CONF_TARGET_TEMPERATURE_ADDRESS),
-        group_address_setpoint=config.get(
-            CONF_SETPOINT_ADDRESS),
         group_address_setpoint_shift=config.get(
             CONF_SETPOINT_SHIFT_ADDRESS),
         group_address_setpoint_shift_state=config.get(
@@ -151,25 +149,7 @@ class KNXClimate(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self.device.target_temperature_comfort
-
-    @property
-    def target_temperature_high(self):
-        """Return the highbound target temperature we try to reach."""
-        if self.device.target_temperature_comfort:
-            return max(
-                self.device.target_temperature_comfort,
-                self.device.target_temperature.value)
-        return None
-
-    @property
-    def target_temperature_low(self):
-        """Return the lowbound target temperature we try to reach."""
-        if self.device.target_temperature_comfort:
-            return min(
-                self.device.target_temperature_comfort,
-                self.device.target_temperature.value)
-        return None
+        return self.device.target_temperature.value
 
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):
@@ -177,7 +157,7 @@ class KNXClimate(ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        yield from self.device.set_target_temperature_comfort(temperature)
+        yield from self.device.set_target_temperature(temperature)
         yield from self.async_update_ha_state()
 
     @property
