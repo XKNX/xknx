@@ -84,10 +84,12 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_temperature='1/2/1',
             group_address_target_temperature='1/2/2',
-            group_address_operation_mode='1/2/4',
-            group_address_operation_mode_protection='1/2/5',
-            group_address_operation_mode_night='1/2/6',
-            group_address_operation_mode_comfort='1/2/7')
+            group_address_setpoint_shift='1/2/3',
+            group_address_setpoint_shift_state='1/2/4',
+            group_address_operation_mode='1/2/5',
+            group_address_operation_mode_protection='1/2/6',
+            group_address_operation_mode_night='1/2/7',
+            group_address_operation_mode_comfort='1/2/8')
 
         self.assertTrue(climate.has_group_address(Address('1/2/1')))
         self.assertTrue(climate.has_group_address(Address('1/2/2')))
@@ -95,7 +97,8 @@ class TestClimate(unittest.TestCase):
         self.assertTrue(climate.has_group_address(Address('1/2/5')))
         self.assertTrue(climate.has_group_address(Address('1/2/6')))
         self.assertTrue(climate.has_group_address(Address('1/2/7')))
-        self.assertFalse(climate.has_group_address(Address('1/2/8')))
+        self.assertTrue(climate.has_group_address(Address('1/2/8')))
+        self.assertFalse(climate.has_group_address(Address('1/2/9')))
 
     #
     # TEST CALLBACK
