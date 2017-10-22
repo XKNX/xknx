@@ -96,8 +96,8 @@ class TestConfig(unittest.TestCase):
                     group_address_temperature='1/7/1',
                     device_updated_cb=xknx.devices.device_updated))
 
-    def test_config_climate_target_temperature(self):
-        """Test reading Climate object with target_temperature_address and setpoint from config file."""
+    def test_config_climate_target_temperature_and_setpoint_shift(self):
+        """Test reading Climate object with target_temperature_address and setpoint shift from config file."""
         xknx = XKNX(config='xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Children.Climate'],
@@ -105,6 +105,8 @@ class TestConfig(unittest.TestCase):
                     'Children.Climate',
                     group_address_temperature='1/7/2',
                     group_address_target_temperature='1/7/4',
+                    group_address_setpoint_shift='1/7/3',
+                    group_address_setpoint_shift_state='1/7/14',
                     device_updated_cb=xknx.devices.device_updated))
 
     def test_config_climate_operation_mode(self):
