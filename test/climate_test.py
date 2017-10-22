@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import Mock
 import asyncio
 from xknx.knx import Telegram, DPTTemperature, DPTArray, DPTBinary, Address, \
-    TelegramType, HVACOperationMode, DPTControllerStatus, DPTHVACMode
+    TelegramType, HVACOperationMode, DPTControllerStatus, DPTHVACMode, DPTValue1Count
 from xknx import XKNX
 from xknx.devices import Climate
 
@@ -104,13 +104,16 @@ class TestClimate(unittest.TestCase):
     # TEST CALLBACK
     #
     def test_process_callback(self):
-        """Test if after_update_callback is called after update of Climate object was changed via incoming telegram."""
+        """Test if after_update_callback is called after update of Climate object was changed."""
         # pylint: disable=no-self-use
         xknx = XKNX(loop=self.loop)
         climate = Climate(
             xknx,
             'TestClimate',
-            group_address_operation_mode='1/2/4')
+            group_address_target_temperature='1/2/2',
+            group_address_setpoint_shift='1/2/3',
+            group_address_setpoint_shift_state='1/2/4',
+            group_address_operation_mode='1/2/5')
 
         after_update_callback = Mock()
 
@@ -135,6 +138,16 @@ class TestClimate(unittest.TestCase):
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
+        self.loop.run_until_complete(asyncio.Task(
+            climate.target_temperature.set(23.00)))
+        after_update_callback.assert_called_with(climate)
+        after_update_callback.reset_mock()
+
+        self.loop.run_until_complete(asyncio.Task(
+            climate.setpoint_shift.set(-2)))
+        after_update_callback.assert_called_with(climate)
+        after_update_callback.reset_mock()
+
     def test_process_callback_updated_via_telegram(self):
         """Test if after_update_callback is called after update of Climate object."""
         # pylint: disable=no-self-use
@@ -144,6 +157,7 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_temperature='1/2/1',
             group_address_target_temperature='1/2/2',
+            group_address_setpoint_shift='1/2/3',
             group_address_operation_mode='1/2/4')
 
         after_update_callback = Mock()
@@ -154,12 +168,17 @@ class TestClimate(unittest.TestCase):
             after_update_callback(device)
         climate.register_device_updated_cb(async_after_update_callback)
 
-        telegram = Telegram(Address('1/2/1'), payload=DPTArray(DPTTemperature().to_knx(23)))
+        telegram = Telegram(Address('1/2/1'), payload=DPTArray(DPTTemperature.to_knx(23)))
         self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
-        telegram = Telegram(Address('1/2/2'), payload=DPTArray(DPTTemperature().to_knx(23)))
+        telegram = Telegram(Address('1/2/2'), payload=DPTArray(DPTTemperature.to_knx(23)))
+        self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
+        after_update_callback.assert_called_with(climate)
+        after_update_callback.reset_mock()
+
+        telegram = Telegram(Address('1/2/3'), payload=DPTArray(DPTValue1Count.to_knx(-4)))
         self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
