@@ -10,11 +10,17 @@ import voluptuous as vol
 from custom_components.xknx import DATA_XKNX, ATTR_DISCOVER_DEVICES
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.const import CONF_NAME, TEMP_CELSIUS, ATTR_TEMPERATURE
+from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
+CONF_SETPOINT_ADDRESS = 'setpoint_address'
+CONF_SETPOINT_STATE_ADDRESS = 'setpoint_state_address'
 CONF_SETPOINT_SHIFT_ADDRESS = 'setpoint_shift_address'
 CONF_SETPOINT_SHIFT_STATE_ADDRESS = 'setpoint_shift_state_address'
+CONF_SETPOINT_SHIFT_STEP = 'setpoint_shift_step'
+CONF_SETPOINT_SHIFT_MAX = 'setpoint_shift_max'
+CONF_SETPOINT_SHIFT_MIN = 'setpoint_shift_min'
 CONF_TEMPERATURE_ADDRESS = 'temperature_address'
 CONF_TARGET_TEMPERATURE_ADDRESS = 'target_temperature_address'
 CONF_OPERATION_MODE_ADDRESS = 'operation_mode_address'
@@ -27,14 +33,25 @@ CONF_OPERATION_MODE_NIGHT_ADDRESS = 'operation_mode_night_address'
 CONF_OPERATION_MODE_COMFORT_ADDRESS = 'operation_mode_comfort_address'
 
 DEFAULT_NAME = 'XKNX Climate'
+DEFAULT_SETPOINT_SHIFT_STEP = 0.5
+DEFAULT_SETPOINT_SHIFT_MAX = 6
+DEFAULT_SETPOINT_SHIFT_MIN = -6
 DEPENDENCIES = ['xknx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SETPOINT_ADDRESS): cv.string,
+    vol.Optional(CONF_SETPOINT_STATE_ADDRESS): cv.string,
     vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
     vol.Required(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
     vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
     vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
+    vol.Optional(CONF_SETPOINT_SHIFT_STEP, default=DEFAULT_SETPOINT_SHIFT_STEP):
+        vol.All(float, vol.Range(min=0, max=2)),
+    vol.Optional(CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX):
+        vol.All(int, vol.Range(min=-32, max=0)),
+    vol.Optional(CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN):
+        vol.All(int, vol.Range(min=0, max=32)),
     vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): cv.string,
@@ -82,10 +99,20 @@ def async_add_devices_config(hass, config, async_add_devices):
             CONF_TEMPERATURE_ADDRESS),
         group_address_target_temperature=config.get(
             CONF_TARGET_TEMPERATURE_ADDRESS),
+        group_address_setpoint=config.get(
+            CONF_SETPOINT_ADDRESS),
+        group_address_setpoint_state=config.get(
+            CONF_SETPOINT_STATE_ADDRESS),
         group_address_setpoint_shift=config.get(
             CONF_SETPOINT_SHIFT_ADDRESS),
         group_address_setpoint_shift_state=config.get(
             CONF_SETPOINT_SHIFT_STATE_ADDRESS),
+        setpoint_shift_step=config.get(
+            CONF_SETPOINT_SHIFT_STEP),
+        setpoint_shift_max=config.get(
+            CONF_SETPOINT_SHIFT_MAX),
+        setpoint_shift_min=config.get(
+            CONF_SETPOINT_SHIFT_MIN),
         group_address_operation_mode=config.get(
             CONF_OPERATION_MODE_ADDRESS),
         group_address_operation_mode_state=config.get(
@@ -150,6 +177,22 @@ class KNXClimate(ClimateDevice):
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self.device.target_temperature.value
+
+    @property
+    def min_temp(self):
+        """Return the minimum temperature."""
+        return convert_temperature(
+            self.device.target_temperature_min,
+            TEMP_CELSIUS,
+            self.temperature_unit)
+
+    @property
+    def max_temp(self):
+        """Return the maximum temperature."""
+        return convert_temperature(
+            self.device.target_temperature_max,
+            TEMP_CELSIUS,
+            self.temperature_unit)
 
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):

@@ -22,8 +22,13 @@ class Climate(Device):
                  name,
                  group_address_temperature=None,
                  group_address_target_temperature=None,
+                 group_address_setpoint=None,
+                 group_address_setpoint_state=None,
                  group_address_setpoint_shift=None,
                  group_address_setpoint_shift_state=None,
+                 setpoint_shift_step=0.5,
+                 setpoint_shift_max=6,
+                 setpoint_shift_min=-6,
                  group_address_operation_mode=None,
                  group_address_operation_mode_state=None,
                  group_address_operation_mode_protection=None,
@@ -68,13 +73,20 @@ class Climate(Device):
             xknx,
             group_address_target_temperature,
             after_update_cb=self.after_update)
+        self.setpoint = RemoteValueTemp(
+            xknx,
+            group_address_setpoint,
+            group_address_setpoint_state,
+            after_update_cb=self.after_update)
         self.setpoint_shift = RemoteValue1Count(
             xknx,
             group_address_setpoint_shift,
             group_address_setpoint_shift_state,
             after_update_cb=self.after_update)
 
-        self.setpoint_step = 0.5
+        self.setpoint_shift_step = setpoint_shift_step
+        self.setpoint_shift_max = setpoint_shift_max
+        self.setpoint_shift_min = setpoint_shift_min
 
         self.supports_operation_mode = \
             group_address_operation_mode is not None or \
@@ -93,10 +105,20 @@ class Climate(Device):
             config.get('group_address_temperature')
         group_address_target_temperature = \
             config.get('group_address_target_temperature')
+        group_address_setpoint = \
+            config.get('group_address_setpoint')
+        group_address_setpoint_state = \
+            config.get('group_address_setpoint_state')
         group_address_setpoint_shift = \
             config.get('group_address_setpoint_shift')
         group_address_setpoint_shift_state = \
             config.get('group_address_setpoint_shift_state')
+        setpoint_shift_step = \
+            config.get('setpoint_shift_step')
+        setpoint_shift_max = \
+            config.get('setpoint_shift_max')
+        setpoint_shift_min = \
+            config.get('setpoint_shift_min')
         group_address_operation_mode = \
             config.get('group_address_operation_mode')
         group_address_operation_mode_state = \
@@ -115,8 +137,13 @@ class Climate(Device):
                    name,
                    group_address_temperature=group_address_temperature,
                    group_address_target_temperature=group_address_target_temperature,
+                   group_address_setpoint=group_address_setpoint,
+                   group_address_setpoint_state=group_address_setpoint_state,
                    group_address_setpoint_shift=group_address_setpoint_shift,
                    group_address_setpoint_shift_state=group_address_setpoint_shift_state,
+                   setpoint_shift_step=setpoint_shift_step,
+                   setpoint_shift_max=setpoint_shift_max,
+                   setpoint_shift_min=setpoint_shift_min,
                    group_address_operation_mode=group_address_operation_mode,
                    group_address_operation_mode_state=group_address_operation_mode_state,
                    group_address_operation_mode_protection=group_address_operation_mode_protection,
@@ -129,6 +156,7 @@ class Climate(Device):
         """Test if device has given group address."""
         return self.temperature.has_group_address(group_address) or \
             self.target_temperature.has_group_address(group_address) or \
+            self.setpoint.has_group_address(group_address) or \
             self.setpoint_shift.has_group_address(group_address) or \
             self.group_address_operation_mode == group_address or \
             self.group_address_operation_mode_state == group_address or \
@@ -145,25 +173,74 @@ class Climate(Device):
             self.operation_mode = operation_mode
             yield from self.after_update()
 
+    @property
+    def initialized_for_direct_setpoint(self):
+        """Test if object is initialized for direct setpoint setting."""
+        return self.setpoint.initialized
+
+    @property
+    def initialized_for_setpoint_shift_calculations(self):
+        """Test if object is initialized for setpoint shift calculations."""
+        if not self.setpoint_shift.initialized:
+            return False
+        if self.setpoint_shift.value is None:
+            return False
+        if not self.target_temperature.initialized:
+            return False
+        if self.target_temperature.value is None:
+            return False
+        return True
+
     @asyncio.coroutine
     def set_target_temperature(self, target_temperature):
         """Calculate setpoint shift shift and send it to  KNX bus."""
-        if not self.setpoint_shift.initialized:
-            self.xknx.logger.warning("Setpoint shift not initialized")
-            return
-        if self.setpoint_shift.value is None:
-            self.xknx.logger.warning("Setpoint shift not set")
-            return
-        if not self.target_temperature.initialized:
-            self.xknx.logger.warning("Target temperature not initialized")
-            return
-        if self.target_temperature.value is None:
-            self.xknx.logger.warning("Target temperature not set")
-            return
+        if self.initialized_for_direct_setpoint:
+            yield from self.set_target_temperature_setpoint(target_temperature)
+        elif self.initialized_for_setpoint_shift_calculations:
+            yield from self.set_target_temperature_setpoint_shift(target_temperature)
+
+    @asyncio.coroutine
+    def set_target_temperature_setpoint(self, target_temperature):
+        """Set target temperature via setpoint group address."""
+        yield from self.setpoint.set(target_temperature)
+
+    @asyncio.coroutine
+    def set_target_temperature_setpoint_shift(self, target_temperature):
+        """Set target temperature via setpoint_shift group address."""
         temperature_delta = target_temperature-self.target_temperature.value
-        setpoint_shift_delta = int(temperature_delta/self.setpoint_step)
+        setpoint_shift_delta = int(temperature_delta/self.setpoint_shift_step)
         setpoint_shift = self.setpoint_shift.value + setpoint_shift_delta
-        yield from self.setpoint_shift.set(setpoint_shift)
+
+        if setpoint_shift > self.setpoint_shift_max:
+            yield from self.setpoint_shift.set(self.setpoint_shift_max)
+            # Selected target temperature could not be selected,
+            # forcing display update.
+            yield from self.after_update()
+        elif setpoint_shift < self.setpoint_shift_min:
+            yield from self.setpoint_shift.set(self.setpoint_shift_min)
+            # Selected target temperature could not be selected,
+            # forcing display update.
+            yield from self.after_update()
+        else:
+            yield from self.setpoint_shift.set(setpoint_shift)
+
+    @property
+    def target_temperature_max(self):
+        """Return the maxium possible target temperature."""
+        if not self.initialized_for_setpoint_shift_calculations:
+            return None
+        return (self.target_temperature.value -
+                self.setpoint_shift.value * self.setpoint_shift_step +
+                self.setpoint_shift_max * self.setpoint_shift_step)
+
+    @property
+    def target_temperature_min(self):
+        """Return the minimum possible target temperature."""
+        if not self.initialized_for_setpoint_shift_calculations:
+            return None
+        return (self.target_temperature.value -
+                self.setpoint_shift.value * self.setpoint_shift_step +
+                self.setpoint_shift_min * self.setpoint_shift_step)
 
     @asyncio.coroutine
     def set_operation_mode(self, operation_mode):
