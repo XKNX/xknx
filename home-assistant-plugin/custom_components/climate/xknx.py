@@ -14,8 +14,6 @@ from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-CONF_SETPOINT_ADDRESS = 'setpoint_address'
-CONF_SETPOINT_STATE_ADDRESS = 'setpoint_state_address'
 CONF_SETPOINT_SHIFT_ADDRESS = 'setpoint_shift_address'
 CONF_SETPOINT_SHIFT_STATE_ADDRESS = 'setpoint_shift_state_address'
 CONF_SETPOINT_SHIFT_STEP = 'setpoint_shift_step'
@@ -92,6 +90,7 @@ def async_add_devices_discovery(hass, discovery_info, async_add_devices):
 def async_add_devices_config(hass, config, async_add_devices):
     """Set up climate for KNX platform configured within plattform."""
     import xknx
+
     climate = xknx.devices.Climate(
         hass.data[DATA_XKNX].xknx,
         name=config.get(CONF_NAME),
@@ -99,10 +98,6 @@ def async_add_devices_config(hass, config, async_add_devices):
             CONF_TEMPERATURE_ADDRESS),
         group_address_target_temperature=config.get(
             CONF_TARGET_TEMPERATURE_ADDRESS),
-        group_address_setpoint=config.get(
-            CONF_SETPOINT_ADDRESS),
-        group_address_setpoint_state=config.get(
-            CONF_SETPOINT_STATE_ADDRESS),
         group_address_setpoint_shift=config.get(
             CONF_SETPOINT_SHIFT_ADDRESS),
         group_address_setpoint_shift_state=config.get(
