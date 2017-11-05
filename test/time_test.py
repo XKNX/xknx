@@ -34,6 +34,15 @@ class TestTime(unittest.TestCase):
         self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
         self.assertEqual(len(telegram.payload.value), 3)
 
+    #
+    # TEST HAS GROUP ADDRESS
+    #
+    def test_has_group_address(self):
+        """Test if has_group_address function works."""
+        xknx = XKNX(loop=self.loop)
+        time = Time(xknx, "TestTime", group_address='1/2/3')
+        self.assertTrue(time.has_group_address(Address('1/2/3')))
+        self.assertFalse(time.has_group_address(Address('1/2/4')))
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestTime)
 unittest.TextTestRunner(verbosity=2).run(SUITE)
