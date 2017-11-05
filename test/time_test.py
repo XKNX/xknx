@@ -44,5 +44,6 @@ class TestTime(unittest.TestCase):
         self.assertTrue(time.has_group_address(Address('1/2/3')))
         self.assertFalse(time.has_group_address(Address('1/2/4')))
 
+
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestTime)
 unittest.TextTestRunner(verbosity=2).run(SUITE)
