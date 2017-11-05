@@ -12,7 +12,8 @@ from xknx.exceptions import CouldNotParseTelegram, CouldNotParseKNXIP, \
 from xknx.knxip import DIBGeneric, DIBDeviceInformation, DIBSuppSVCFamilies, \
     KNXMedium, DIBServiceFamily, HPAI, KNXIPHeader, ConnectRequest, ConnectRequestType, \
     ConnectResponse, DisconnectRequest, DisconnectResponse, ConnectionStateRequest, \
-    ConnectionStateResponse
+    ConnectionStateResponse, SearchRequest, SearchResponse, TunnellingRequest, TunnellingAck, \
+    CEMIFrame, KNXIPFrame, KNXIPServiceType
 
 
 # pylint: disable=too-many-public-methods,invalid-name
@@ -364,7 +365,7 @@ class TestStringRepresentations(unittest.TestCase):
             'ype="ConnectRequestType.TUNNEL_CONNECTION" identifier="42" />')
 
     def test_disconnect_request(self):
-        """Test string representation of DisconnectRequest."""
+        """Test string representation of KNX/IP DisconnectRequest."""
         xknx = XKNX(loop=self.loop)
         disconnect_request = DisconnectRequest(xknx)
         disconnect_request.communication_channel_id = 13
@@ -374,7 +375,7 @@ class TestStringRepresentations(unittest.TestCase):
             '<DisconnectRequest CommunicationChannelID="13" control_endpoint="<HPAI 192.168.42.1:33941 />" />')
 
     def test_disconnect_response(self):
-        """Test string representation of DisconnectResponse."""
+        """Test string representation of KNX/IP DisconnectResponse."""
         xknx = XKNX(loop=self.loop)
         disconnect_response = DisconnectResponse(xknx)
         disconnect_response.communication_channel_id = 23
@@ -383,7 +384,7 @@ class TestStringRepresentations(unittest.TestCase):
             '<DisconnectResponse CommunicationChannelID="23" status_code="ErrorCode.E_NO_ERROR" />')
 
     def test_connectionstate_request(self):
-        """Test string representation of ConnectionStateRequest."""
+        """Test string representation of KNX/IP ConnectionStateRequest."""
         xknx = XKNX(loop=self.loop)
         connectionstate_request = ConnectionStateRequest(xknx)
         connectionstate_request.communication_channel_id = 23
@@ -393,13 +394,80 @@ class TestStringRepresentations(unittest.TestCase):
             '<ConnectionStateRequest CommunicationChannelID="23", control_endpoint="<HPAI 192.168.42.1:33941 />" />')
 
     def test_connectionstate_response(self):
-        """Test string representation of ConnectionStateResponse."""
+        """Test string representation of KNX/IP ConnectionStateResponse."""
         xknx = XKNX(loop=self.loop)
         connectionstate_response = ConnectionStateResponse(xknx)
         connectionstate_response.communication_channel_id = 23
         self.assertEqual(
             str(connectionstate_response),
             '<ConnectionStateResponse CommunicationChannelID="23" status_code="ErrorCode.E_NO_ERROR" />')
+
+    def test_search_reqeust(self):
+        """Test string representation of KNX/IP SearchRequest."""
+        xknx = XKNX(loop=self.loop)
+        search_request = SearchRequest(xknx)
+        self.assertEqual(
+            str(search_request),
+            '<SearchRequest discovery_endpoint="<HPAI 224.0.23.12:3671 />" />')
+
+    def test_search_response(self):
+        """Test string representation of KNX/IP SearchResponse."""
+        xknx = XKNX(loop=self.loop)
+        search_response = SearchResponse(xknx)
+        search_response.control_endpoint = HPAI(ip_addr='192.168.42.1', port=33941)
+        search_response.dibs.append(DIBGeneric())
+        search_response.dibs.append(DIBGeneric())
+        self.assertEqual(
+            str(search_response),
+            '<SearchResponse control_endpoint="<HPAI 192.168.42.1:33941 />" dibs="[\n'
+            '<DIB dtc="None" data="" />,\n'
+            '<DIB dtc="None" data="" />\n'
+            ']" />')
+
+    def test_tunnelling_request(self):
+        """Test string representation of KNX/IP TunnellingRequest."""
+        xknx = XKNX(loop=self.loop)
+        tunnelling_request = TunnellingRequest(xknx)
+        tunnelling_request.communication_channel_id = 23
+        tunnelling_request.sequence_counter = 42
+        self.assertEqual(
+            str(tunnelling_request),
+            '<TunnellingRequest communication_channel_id="23" sequence_counter="42" cemi="<CEMIFrame SourceAddress="<Address str="0/0/0" />" Destina'
+            'tionAddress="<Address str="0/0/0" />" Flags="               0" Command="APCICommand.GROUP_READ" payload="None" />" />')
+
+    def test_tunnelling_ack(self):
+        """Test string representation of KNX/IP TunnellingAck."""
+        xknx = XKNX(loop=self.loop)
+        tunnelling_ack = TunnellingAck(xknx)
+        tunnelling_ack.communication_channel_id = 23
+        tunnelling_ack.sequence_counter = 42
+        self.assertEqual(
+            str(tunnelling_ack),
+            '<TunnellingAck communication_channel_id="23" sequence_counter="42" status_code="ErrorCode.E_NO_ERROR" />')
+
+    def test_cemi_frame(self):
+        """Test string representation of KNX/IP CEMI Frame."""
+        xknx = XKNX(loop=self.loop)
+        cemi_frame = CEMIFrame(xknx)
+        cemi_frame.src_addr = Address("1/2/3")
+        cemi_frame.telegram = Telegram(
+            group_address=Address('1/2/5'),
+            payload=DPTBinary(7))
+        self.assertEqual(
+            str(cemi_frame),
+            '<CEMIFrame SourceAddress="<Address str="1/2/3" />" DestinationAddress="<Address str="1/2/5" />" Flags="1011110011100000" Command="APCIC'
+            'ommand.GROUP_WRITE" payload="<DPTBinary value="7" />" />')
+
+    def test_knxip_frame(self):
+        """Test string representation of KNX/IP Frame."""
+        xknx = XKNX(loop=self.loop)
+        knxipframe = KNXIPFrame(xknx)
+        knxipframe.init(KNXIPServiceType.SEARCH_REQUEST)
+        self.assertEqual(
+            str(knxipframe),
+            '<KNXIPFrame <KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="KNXIPServiceType.SEARCH_REQUEST" Reserve="0" TotalLeng'
+            'th="0" />\n'
+            ' body="<SearchRequest discovery_endpoint="<HPAI 224.0.23.12:3671 />" />" />')
 
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestStringRepresentations)
