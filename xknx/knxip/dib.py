@@ -97,9 +97,9 @@ class DIBGeneric(DIB):
 
     def __str__(self):
         """Return object as readable string."""
-        return '<DIB dtc="{0}" data="\'{1}\'" />'.format(
+        return '<DIB dtc="{0}" data="{1}" />'.format(
             self.dtc,
-            ','.join('0x%02x' % i for i in self.data))
+            ', '.join('0x%02x' % i for i in self.data))
 
 
 class DIBSuppSVCFamilies(DIB):
@@ -169,7 +169,7 @@ class DIBSuppSVCFamilies(DIB):
     def __str__(self):
         """Return object as readable string."""
         return '<DIBSuppSVCFamilies families="[{0}]" />' \
-            .format(", ".join("\n\t{0} version: {1}".format(
+            .format(", ".join("{0} version: {1}".format(
                 family.name, family.version) for family in self.families))
 
 

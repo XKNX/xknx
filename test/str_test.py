@@ -9,8 +9,11 @@ from xknx.devices import Light, Switch, Cover, Climate, Time, \
 from xknx.knx import DPTArray, DPTBinary, Address, Telegram
 from xknx.exceptions import CouldNotParseTelegram, CouldNotParseKNXIP, \
     ConversionError, CouldNotParseAddress, DeviceIllegalValue
-from xknx.knxip import DIB, DIBGeneric, DIBDeviceInformation, \
-    DIBSuppSVCFamilies, DIBTypeCode, KNXMedium, DIBServiceFamily
+from xknx.knxip import DIBGeneric, DIBDeviceInformation, DIBSuppSVCFamilies, \
+    KNXMedium, DIBServiceFamily, HPAI, KNXIPHeader, ConnectRequest, ConnectRequestType, \
+    ConnectResponse, DisconnectRequest, DisconnectResponse, ConnectionStateRequest, \
+    ConnectionStateResponse
+
 
 # pylint: disable=too-many-public-methods,invalid-name
 class TestStringRepresentations(unittest.TestCase):
@@ -274,6 +277,129 @@ class TestStringRepresentations(unittest.TestCase):
             str(telegram),
             '<Telegram group_address="<Address str="1/2/3" />", payload="<DPTBinary value="7" />" telegramtype="TelegramType.GROUP_WRITE" direction='
             '"TelegramDirection.OUTGOING" />')
+
+    def test_dib_generic(self):
+        """Test string representation of DIBGeneric."""
+        dib = DIBGeneric()
+        dib.dtc = 0x01
+        dib.data = [0x02, 0x03, 0x04]
+        self.assertEqual(
+            str(dib),
+            '<DIB dtc="1" data="0x02, 0x03, 0x04" />')
+
+    def test_dib_supp_svc_families(self):
+        """Test string representation of DIBSuppSVCFamilies."""
+        dib = DIBSuppSVCFamilies()
+        dib.families.append(DIBSuppSVCFamilies.Family(DIBServiceFamily.CORE, "1"))
+        dib.families.append(DIBSuppSVCFamilies.Family(DIBServiceFamily.DEVICE_MANAGEMENT, "2"))
+        self.assertEqual(
+            str(dib),
+            '<DIBSuppSVCFamilies families="[DIBServiceFamily.CORE version: 1, DIBServiceFamily.DEVICE_MANAGEMENT version: 2]" />')
+
+    def test_dib_device_informatio(self):
+        """Test string representation of DIBDeviceInformation."""
+        dib = DIBDeviceInformation()
+        dib.knx_medium = KNXMedium.TP1
+        dib.programming_mode = False
+        dib.individual_address = Address('1.1.0')
+        dib.name = 'Gira KNX/IP-Router'
+        dib.mac_address = '00:01:02:03:04:05'
+        dib.multicast_address = '224.0.23.12'
+        dib.serial_number = '13:37:13:37:13:37'
+        dib.project_number = 564
+        dib.installation_number = 2
+        self.assertEqual(
+            str(dib),
+            '<DIBDeviceInformation \n'
+            '\tknx_medium="KNXMedium.TP1" \n'
+            '\tprogramming_mode="False" \n'
+            '\tindividual_address="<Address str="1.1.0" />" \n'
+            '\tinstallation_number="2" \n'
+            '\tproject_number="564" \n'
+            '\tserial_number="13:37:13:37:13:37" \n'
+            '\tmulticast_address="224.0.23.12" \n'
+            '\tmac_address="00:01:02:03:04:05" \n'
+            '\tname="Gira KNX/IP-Router" />')
+
+    def test_hpai(self):
+        """Test string representation of HPAI."""
+        hpai = HPAI(ip_addr='192.168.42.1', port=33941)
+        self.assertEqual(
+            str(hpai),
+            '<HPAI 192.168.42.1:33941 />')
+
+    def test_header(self):
+        """Test string representation of KNX/IP-Header."""
+        xknx = XKNX(loop=self.loop)
+        header = KNXIPHeader(xknx)
+        header.total_length = 42
+        self.assertEqual(
+            str(header),
+            '<KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="KNXIPServiceType.ROUTING_INDICATION" Reserve="0" TotalLength="42" '
+            '/>')
+
+    def test_connect_request(self):
+        """Test string representation of KNX/IP ConnectRequest."""
+        xknx = XKNX(loop=self.loop)
+        connect_request = ConnectRequest(xknx)
+        connect_request.request_type = ConnectRequestType.TUNNEL_CONNECTION
+        connect_request.control_endpoint = HPAI(ip_addr='192.168.42.1', port=33941)
+        connect_request.data_endpoint = HPAI(ip_addr='192.168.42.2', port=33942)
+        self.assertEqual(
+            str(connect_request),
+            '<ConnectRequest control_endpoint="<HPAI 192.168.42.1:33941 />" data_endpoint="<HPAI 192.168.42.2:33942 />" request_type="ConnectRequest'
+            'Type.TUNNEL_CONNECTION" />')
+
+    def test_connect_response(self):
+        """Test string representatoin of KNX/IP ConnectResponse."""
+        xknx = XKNX(loop=self.loop)
+        connect_response = ConnectResponse(xknx)
+        connect_response.communication_channel = 13
+        connect_response.request_type = ConnectRequestType.TUNNEL_CONNECTION
+        connect_response.control_endpoint = HPAI(ip_addr='192.168.42.1', port=33941)
+        connect_response.identifier = 42
+        self.assertEqual(
+            str(connect_response),
+            '<ConnectResponse communication_channel="13" status_code="ErrorCode.E_NO_ERROR" control_endpoint="<HPAI 192.168.42.1:33941 />" request_t'
+            'ype="ConnectRequestType.TUNNEL_CONNECTION" identifier="42" />')
+
+    def test_disconnect_request(self):
+        """Test string representation of DisconnectRequest."""
+        xknx = XKNX(loop=self.loop)
+        disconnect_request = DisconnectRequest(xknx)
+        disconnect_request.communication_channel_id = 13
+        disconnect_request.control_endpoint = HPAI(ip_addr='192.168.42.1', port=33941)
+        self.assertEqual(
+            str(disconnect_request),
+            '<DisconnectRequest CommunicationChannelID="13" control_endpoint="<HPAI 192.168.42.1:33941 />" />')
+
+    def test_disconnect_response(self):
+        """Test string representation of DisconnectResponse."""
+        xknx = XKNX(loop=self.loop)
+        disconnect_response = DisconnectResponse(xknx)
+        disconnect_response.communication_channel_id = 23
+        self.assertEqual(
+            str(disconnect_response),
+            '<DisconnectResponse CommunicationChannelID="23" status_code="ErrorCode.E_NO_ERROR" />')
+
+    def test_connectionstate_request(self):
+        """Test string representation of ConnectionStateRequest."""
+        xknx = XKNX(loop=self.loop)
+        connectionstate_request = ConnectionStateRequest(xknx)
+        connectionstate_request.communication_channel_id = 23
+        connectionstate_request.control_endpoint = HPAI(ip_addr='192.168.42.1', port=33941)
+        self.assertEqual(
+            str(connectionstate_request),
+            '<ConnectionStateRequest CommunicationChannelID="23", control_endpoint="<HPAI 192.168.42.1:33941 />" />')
+
+    def test_connectionstate_response(self):
+        """Test string representation of ConnectionStateResponse."""
+        xknx = XKNX(loop=self.loop)
+        connectionstate_response = ConnectionStateResponse(xknx)
+        connectionstate_response.communication_channel_id = 23
+        self.assertEqual(
+            str(connectionstate_response),
+            '<ConnectionStateResponse CommunicationChannelID="23" status_code="ErrorCode.E_NO_ERROR" />')
 
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestStringRepresentations)
