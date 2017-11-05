@@ -181,6 +181,8 @@ class Climate(Device):
         """Calculate setpoint shift shift and send it to  KNX bus."""
         if self.initialized_for_setpoint_shift_calculations:
             yield from self.set_target_temperature_setpoint_shift(target_temperature)
+        # broadcast new target temperature and set internally
+        yield from self.target_temperature.set(target_temperature)
 
     @asyncio.coroutine
     def set_target_temperature_setpoint_shift(self, target_temperature):
