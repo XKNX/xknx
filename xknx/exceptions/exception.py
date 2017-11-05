@@ -38,14 +38,14 @@ class CouldNotParseKNXIP(XKNXException):
 class ConversionError(XKNXException):
     """Exception class for error while converting one type to another."""
 
-    def __init__(self, i):
+    def __init__(self, value):
         """Initialize ConversionError class."""
         super(ConversionError, self).__init__("Conversion Error")
-        self.i = i
+        self.value = value
 
     def __str__(self):
         """Return object as readable string."""
-        return '<ConversionError input="{0}" />'.format(self.i)
+        return '<ConversionError value="{0}" />'.format(self.value)
 
 
 class CouldNotParseAddress(XKNXException):

@@ -21,8 +21,7 @@ async def main():
         xknx,
         'DiningRoom.Temperatur.Sensor',
         group_address='6/2/1',
-        value_type='float',
-        device_class='temperature')
+        value_type='float')
     await sensor2.sync()
     print(sensor2)
 

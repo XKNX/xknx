@@ -87,7 +87,7 @@ class Action(ActionBase):
 
     def __str__(self):
         """Return object as readable string."""
-        return '<Action target="{1}" method="{2}" {3}/>' \
+        return '<Action target="{0}" method="{1}" {2}/>' \
             .format(self.target, self.method, super(Action, self).__str__())
 
 

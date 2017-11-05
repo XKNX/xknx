@@ -21,7 +21,6 @@ class Sensor(Device):
                  name,
                  group_address=None,
                  value_type=None,
-                 device_class=None,
                  device_updated_cb=None):
         """Initialize Sensor class."""
         # pylint: disable=too-many-arguments
@@ -32,7 +31,6 @@ class Sensor(Device):
             value_type = 'illuminance'
         self.group_address = group_address
         self.value_type = value_type
-        self.device_class = device_class
         self.state = None
 
     @classmethod
@@ -42,14 +40,11 @@ class Sensor(Device):
             config.get('group_address')
         value_type = \
             config.get('value_type')
-        device_class = \
-            config.get('device_class')
 
         return cls(xknx,
                    name,
                    group_address=group_address,
-                   value_type=value_type,
-                   device_class=device_class)
+                   value_type=value_type)
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
