@@ -220,7 +220,7 @@ class Climate(Device):
     def set_operation_mode(self, operation_mode):
         """Set the operation mode of a thermostat. Send new operation_mode to BUS and update internal state."""
         if not self.supports_operation_mode:
-            return
+            raise DeviceIllegalValue("operation mode not supported", operation_mode)
         if self.group_address_operation_mode is not None:
             yield from self.send(
                 self.group_address_operation_mode,

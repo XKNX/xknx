@@ -212,6 +212,16 @@ class TestClimate(unittest.TestCase):
                     Address('1/2/4'),
                     payload=DPTArray(DPTHVACMode.to_knx(operation_mode))))
 
+    def test_set_operation_mode_not_supported(self):
+        """Test set_operation_mode but not supported."""
+        xknx = XKNX(loop=self.loop)
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            group_address_temperature='1/2/1')
+        with self.assertRaises(DeviceIllegalValue):
+            self.loop.run_until_complete(asyncio.Task(climate.set_operation_mode(HVACOperationMode.AUTO)))
+
     def test_set_operation_mode_with_controller_status(self):
         """Test set_operation_mode with controller status adddressedefined."""
         xknx = XKNX(loop=self.loop)
