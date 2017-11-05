@@ -59,3 +59,19 @@ class CouldNotParseAddress(XKNXException):
     def __str__(self):
         """Return object as readable string."""
         return '<CouldNotParseAddress address="{0}" />'.format(self.address)
+
+
+class DeviceIllegalValue(XKNXException):
+    """Exception class for setting a value of a device with an illegal value."""
+
+    def __init__(self, value, description):
+        """Initialize DeviceIllegalValue class."""
+        super(DeviceIllegalValue, self).__init__("Illegal value for device")
+        self.value = value
+        self.description = description
+
+    def __str__(self):
+        """Return object as readable string."""
+        return '<DeviceIllegalValue description="{0}" value="{1}" />'.format(
+            self.value,
+            self.description)

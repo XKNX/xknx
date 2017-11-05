@@ -3,10 +3,11 @@ import unittest
 from unittest.mock import Mock
 import asyncio
 from xknx.knx import Telegram, DPTTemperature, DPTArray, DPTBinary, Address, \
-    TelegramType, HVACOperationMode, DPTControllerStatus, DPTHVACMode, DPTValue1Count
+    TelegramType, HVACOperationMode, DPTControllerStatus, DPTHVACMode, DPTValue1Count, \
+    DPTFloat
 from xknx import XKNX
 from xknx.devices import Climate
-
+from xknx.exceptions import DeviceIllegalValue
 
 class TestClimate(unittest.TestCase):
     """Test class for Climate objects."""
@@ -270,6 +271,191 @@ class TestClimate(unittest.TestCase):
             Telegram(
                 Address('1/2/7'),
                 payload=DPTBinary(1)))
+
+    #
+    # TEST initialized_for_setpoint_shift_calculations
+    #
+    def test_initialized_for_setpoint_shift_calculations(self):
+        """Test initialized_for_setpoint_shift_calculations method."""
+        xknx = XKNX(loop=self.loop)
+        climate1 = Climate(
+            xknx,
+            'TestClimate')
+        self.assertFalse(climate1.initialized_for_setpoint_shift_calculations)
+
+        climate2 = Climate(
+            xknx,
+            'TestClimate',
+            group_address_setpoint_shift='1/2/3')
+        self.assertFalse(climate2.initialized_for_setpoint_shift_calculations)
+        self.loop.run_until_complete(asyncio.Task(climate2.setpoint_shift.set(4)))
+        self.assertFalse(climate2.initialized_for_setpoint_shift_calculations)
+
+        climate3 = Climate(
+            xknx,
+            'TestClimate',
+            group_address_target_temperature='1/2/2',
+            group_address_setpoint_shift='1/2/3')
+        self.loop.run_until_complete(asyncio.Task(climate3.setpoint_shift.set(4)))
+        self.assertFalse(climate3.initialized_for_setpoint_shift_calculations)
+        self.loop.run_until_complete(asyncio.Task(climate3.target_temperature.set(23.00)))
+        self.assertTrue(climate3.initialized_for_setpoint_shift_calculations)
+
+    #
+    # TEST for unitialized target_temperature_min/target_temperature_max
+    #
+    def test_uninitalized_for_target_temperature_min_max(self):
+        """Test if target_temperature_min/target_temperature_max return non if not initialized."""
+        xknx = XKNX(loop=self.loop)
+        climate = Climate(
+            xknx,
+            'TestClimate')
+        self.assertEqual(climate.target_temperature_min, None)
+        self.assertEqual(climate.target_temperature_max, None)
+
+    #
+    # TEST TARGET TEMPERATURE
+    #
+    def test_target_temperature_up(self):
+        """Test increase target temperature."""
+        # pylint: disable=no-self-use
+        xknx = XKNX(loop=self.loop)
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            group_address_target_temperature='1/2/2',
+            group_address_setpoint_shift='1/2/3')
+
+        self.loop.run_until_complete(asyncio.Task(climate.setpoint_shift.set(4)))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(Address('1/2/3'), payload=DPTArray(4)))
+
+        self.loop.run_until_complete(asyncio.Task(climate.target_temperature.set(23.00)))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(Address('1/2/2'), payload=DPTArray(DPTFloat().to_knx(23.00))))
+
+        # First change
+        self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(24.00)))
+        self.assertEqual(xknx.telegrams.qsize(), 2)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(Address('1/2/3'), payload=DPTArray(6)))
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(Address('1/2/2'), payload=DPTArray(DPTFloat().to_knx(24.00))))
+        self.assertEqual(climate.target_temperature.value, 24.00)
+
+        # Second change
+        self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(23.50)))
+        self.assertEqual(xknx.telegrams.qsize(), 2)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(Address('1/2/3'), payload=DPTArray(5)))
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(Address('1/2/2'), payload=DPTArray(DPTFloat().to_knx(23.50))))
+        self.assertEqual(climate.target_temperature.value, 23.50)
+
+        # Test max target temperature
+        self.assertEqual(climate.target_temperature_max, 24.00)
+
+        # third change - limit exceeded, setting to max
+        with self.assertRaises(DeviceIllegalValue):
+            self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(24.50)))
+
+    def test_target_temperature_down(self):
+        """Test decrease target temperature."""
+        # pylint: disable=no-self-use
+        xknx = XKNX(loop=self.loop)
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            group_address_target_temperature='1/2/2',
+            group_address_setpoint_shift='1/2/3')
+
+        self.loop.run_until_complete(asyncio.Task(climate.setpoint_shift.set(1)))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(Address('1/2/3'), payload=DPTArray(1)))
+
+        self.loop.run_until_complete(asyncio.Task(climate.target_temperature.set(23.00)))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(Address('1/2/2'), payload=DPTArray(DPTFloat().to_knx(23.00))))
+
+        # First change
+        self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(21.00)))
+        self.assertEqual(xknx.telegrams.qsize(), 2)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(Address('1/2/3'), payload=DPTArray(0xFD))) # -3
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(Address('1/2/2'), payload=DPTArray(DPTFloat().to_knx(21.00))))
+        self.assertEqual(climate.target_temperature.value, 21.00)
+
+        # Second change
+        self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(19.50)))
+        self.assertEqual(xknx.telegrams.qsize(), 2)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(Address('1/2/3'), payload=DPTArray(0xFA))) # -3
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(Address('1/2/2'), payload=DPTArray(DPTFloat().to_knx(19.50))))
+        self.assertEqual(climate.target_temperature.value, 19.50)
+
+        # Test min target temperature
+        self.assertEqual(climate.target_temperature_min, 19.50)
+
+        # third change - limit exceeded, setting to max
+        with self.assertRaises(DeviceIllegalValue):
+            self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(19.00)))
+
+    def test_target_temperature_modified_step(self):
+        """Test increase target temperature with modified step size."""
+        # pylint: disable=no-self-use
+        xknx = XKNX(loop=self.loop)
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            group_address_target_temperature='1/2/2',
+            group_address_setpoint_shift='1/2/3',
+            setpoint_shift_step=0.1,
+            setpoint_shift_max=20,
+            setpoint_shift_min=-20)
+
+        self.loop.run_until_complete(asyncio.Task(climate.setpoint_shift.set(10)))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(Address('1/2/3'), payload=DPTArray(10)))
+
+        self.loop.run_until_complete(asyncio.Task(climate.target_temperature.set(23.00)))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(Address('1/2/2'), payload=DPTArray(DPTFloat().to_knx(23.00))))
+
+        self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(24.00)))
+        self.assertEqual(xknx.telegrams.qsize(), 2)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(Address('1/2/3'), payload=DPTArray(20)))
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(Address('1/2/2'), payload=DPTArray(DPTFloat().to_knx(24.00))))
+        self.assertEqual(climate.target_temperature.value, 24.00)
+
+        # Test max/min target temperature
+        self.assertEqual(climate.target_temperature_max, 24.00)
+        self.assertEqual(climate.target_temperature_min, 20.00)
 
     #
     # TEST SYNC

@@ -7,7 +7,7 @@ Module for managing the climate within a room.
 import asyncio
 from xknx.knx import Address, DPTBinary, DPTArray, \
     HVACOperationMode, DPTControllerStatus, DPTHVACMode
-from xknx.exceptions import CouldNotParseTelegram
+from xknx.exceptions import CouldNotParseTelegram, DeviceIllegalValue
 from .device import Device
 from .remote_value import RemoteValueTemp, RemoteValue1Count
 
@@ -192,17 +192,11 @@ class Climate(Device):
         setpoint_shift = self.setpoint_shift.value + setpoint_shift_delta
 
         if setpoint_shift > self.setpoint_shift_max:
-            yield from self.setpoint_shift.set(self.setpoint_shift_max)
-            # Selected target temperature could not be selected,
-            # forcing display update.
-            yield from self.after_update()
+            raise DeviceIllegalValue("setpoint_shift_max exceeded", setpoint_shift)
         elif setpoint_shift < self.setpoint_shift_min:
-            yield from self.setpoint_shift.set(self.setpoint_shift_min)
-            # Selected target temperature could not be selected,
-            # forcing display update.
-            yield from self.after_update()
-        else:
-            yield from self.setpoint_shift.set(setpoint_shift)
+            raise DeviceIllegalValue("setpoint_shift_min exceeded", setpoint_shift)
+
+        yield from self.setpoint_shift.set(setpoint_shift)
 
     @property
     def target_temperature_max(self):
