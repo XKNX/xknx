@@ -9,6 +9,7 @@ from xknx import XKNX
 from xknx.devices import Climate
 from xknx.exceptions import DeviceIllegalValue
 
+
 class TestClimate(unittest.TestCase):
     """Test class for Climate objects."""
 
@@ -394,7 +395,7 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 2)
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            Telegram(Address('1/2/3'), payload=DPTArray(0xFD))) # -3
+            Telegram(Address('1/2/3'), payload=DPTArray(0xFD)))  # -3
         self.assertEqual(
             xknx.telegrams.get_nowait(),
             Telegram(Address('1/2/2'), payload=DPTArray(DPTFloat().to_knx(21.00))))
@@ -405,7 +406,7 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 2)
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            Telegram(Address('1/2/3'), payload=DPTArray(0xFA))) # -3
+            Telegram(Address('1/2/3'), payload=DPTArray(0xFA)))  # -3
         self.assertEqual(
             xknx.telegrams.get_nowait(),
             Telegram(Address('1/2/2'), payload=DPTArray(DPTFloat().to_knx(19.50))))
