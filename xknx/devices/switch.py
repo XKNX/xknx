@@ -7,6 +7,7 @@ It provides functionality for
 * reading the current state from KNX bus.
 """
 import asyncio
+
 from .device import Device
 from .remote_value import RemoteValueSwitch1001
 

@@ -7,9 +7,10 @@ It provides functionality for
 * watching for state updates from KNX bus.
 """
 import asyncio
-from xknx.knx import Address, DPTBinary, DPTArray, \
-    DPTScaling, DPTTemperature, DPTLux, DPTWsp, DPTUElCurrentmA, \
-    DPTHumidity
+
+from xknx.knx import (Address, DPTArray, DPTBinary, DPTHumidity, DPTLux,
+                      DPTScaling, DPTTemperature, DPTUElCurrentmA, DPTWsp)
+
 from .device import Device
 
 

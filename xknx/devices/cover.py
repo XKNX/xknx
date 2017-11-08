@@ -8,10 +8,11 @@ It provides functionality for
 * Cover will also predict the current position.
 """
 import asyncio
+
 from .device import Device
+from .remote_value import (RemoteValueScaling5001, RemoteValueStep1007,
+                           RemoteValueUpDown1008)
 from .travelcalculator import TravelCalculator
-from .remote_value import RemoteValueScaling5001, RemoteValueUpDown1008, \
-    RemoteValueStep1007
 
 
 class Cover(Device):

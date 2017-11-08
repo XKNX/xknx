@@ -8,11 +8,13 @@ A binary sensor can be:
 
 A BinarySensor may also have Actions attached which are executed after state was changed.
 """
-import time
 import asyncio
+import time
 from enum import Enum
-from xknx.knx import Address
+
 from xknx.exceptions import CouldNotParseTelegram
+from xknx.knx import Address
+
 from .action import Action
 from .device import Device
 
