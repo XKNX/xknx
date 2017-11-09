@@ -10,7 +10,6 @@ import voluptuous as vol
 from custom_components.xknx import DATA_XKNX, ATTR_DISCOVER_DEVICES
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.const import CONF_NAME, TEMP_CELSIUS, ATTR_TEMPERATURE
-from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -42,8 +41,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
     vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
     vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
-    vol.Optional(CONF_SETPOINT_SHIFT_STEP, default=DEFAULT_SETPOINT_SHIFT_STEP):
-        vol.All(float, vol.Range(min=0, max=2)),
+    vol.Optional(CONF_SETPOINT_SHIFT_STEP,
+                 default=DEFAULT_SETPOINT_SHIFT_STEP): vol.All(
+                     float, vol.Range(min=0, max=2)),
     vol.Optional(CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX):
         vol.All(int, vol.Range(min=-32, max=0)),
     vol.Optional(CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN):
@@ -134,8 +134,6 @@ class KNXClimate(ClimateDevice):
         self.async_register_callbacks()
 
         self._unit_of_measurement = TEMP_CELSIUS
-        self._away = False  # not yet supported
-        self._is_fan_on = False  # not yet supported
 
     def async_register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
@@ -179,18 +177,12 @@ class KNXClimate(ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(
-            self.device.target_temperature_min,
-            TEMP_CELSIUS,
-            self.temperature_unit)
+        return self.device.target_temperature_min
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(
-            self.device.target_temperature_max,
-            TEMP_CELSIUS,
-            self.temperature_unit)
+        return self.device.target_temperature_max
 
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):
