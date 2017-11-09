@@ -1,8 +1,9 @@
 """Example on how to connecto to a KNX/IP tunneling device."""
 import asyncio
+
 from xknx import XKNX
-from xknx.io import Tunnel, GatewayScanner
-from xknx.knx import Telegram, Address, DPTBinary
+from xknx.io import GatewayScanner, Tunnel
+from xknx.knx import Address, DPTBinary, Telegram
 
 
 async def main():

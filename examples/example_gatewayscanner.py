@@ -1,5 +1,6 @@
 """Example for GateayScanner."""
 import asyncio
+
 from xknx import XKNX
 from xknx.io import GatewayScanner
 

@@ -1,7 +1,8 @@
 """Example for the telegram monitor callback."""
 import asyncio
-import sys
 import getopt
+import sys
+
 from xknx import XKNX
 from xknx.knx import AddressFilter
 

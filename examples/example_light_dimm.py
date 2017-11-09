@@ -1,5 +1,6 @@
 """Example for switching a light on and off."""
 import asyncio
+
 from xknx import XKNX
 from xknx.devices import Light
 

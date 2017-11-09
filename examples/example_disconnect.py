@@ -1,7 +1,8 @@
 """Example on how to disconnect/reset all available tunneling channels."""
 import asyncio
+
 from xknx import XKNX
-from xknx.io import GatewayScanner, UDPClient, Disconnect, ConnectionState
+from xknx.io import ConnectionState, Disconnect, GatewayScanner, UDPClient
 
 
 async def main():

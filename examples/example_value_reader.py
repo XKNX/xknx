@@ -1,5 +1,6 @@
 """Example on how to read a value from KNX bus."""
 import asyncio
+
 from xknx import XKNX
 from xknx.core import ValueReader
 from xknx.knx import Address

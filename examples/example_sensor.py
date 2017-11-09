@@ -1,7 +1,8 @@
 """Example for Sensor device."""
 import asyncio
+
 from xknx import XKNX
-from xknx.devices import Sensor, BinarySensor
+from xknx.devices import BinarySensor, Sensor
 
 
 async def main():
