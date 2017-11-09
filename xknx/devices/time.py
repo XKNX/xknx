@@ -7,7 +7,9 @@ by StateUpdate.
 """
 
 import asyncio
+
 from xknx.knx import Address, DPTArray, DPTTime
+
 from .device import Device
 
 

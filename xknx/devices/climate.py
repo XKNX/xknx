@@ -5,11 +5,13 @@ Module for managing the climate within a room.
 * Manages and sends the desired setpoint to KNX bus.
 """
 import asyncio
-from xknx.knx import Address, DPTBinary, DPTArray, \
-    HVACOperationMode, DPTControllerStatus, DPTHVACMode
+
 from xknx.exceptions import CouldNotParseTelegram, DeviceIllegalValue
+from xknx.knx import (Address, DPTArray, DPTBinary, DPTControllerStatus,
+                      DPTHVACMode, HVACOperationMode)
+
 from .device import Device
-from .remote_value import RemoteValueTemp, RemoteValue1Count
+from .remote_value import RemoteValue1Count, RemoteValueTemp
 
 
 class Climate(Device):

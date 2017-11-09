@@ -1,7 +1,9 @@
 """Module for managing a notification via KNX."""
 import asyncio
-from xknx.knx import Address, DPTString, DPTArray
+
 from xknx.exceptions import CouldNotParseTelegram
+from xknx.knx import Address, DPTArray, DPTString
+
 from .device import Device
 
 
