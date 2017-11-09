@@ -15,6 +15,7 @@ all:
 	@echo ""
 	@echo "coverage        -- create coverage report"
 	@echo ""
+	@echo "clean           -- cleanup working directory"
 
 test:
 	PYTHONPATH="${PYTHONPATH}:/" python3 -m unittest discover -s test -p "*_test.py" -b
@@ -36,4 +37,9 @@ pydocstyle:
 coverage:
 	py.test --cov-report html --cov xknx --verbose
 
-.PHONY: test build
+clean:
+	-rm -rf build dist xknx.egg-info
+	-rm -rf .tox
+	-rm -rf .coverage htmlcov
+
+.PHONY: test build clean
