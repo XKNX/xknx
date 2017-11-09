@@ -12,11 +12,11 @@ Documentation within:
     File: AN117 v02.01 KNX IP Communication Medium DV.pdf
 """
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP
-from xknx.knx import Address, AddressType, DPTBinary, DPTArray, \
-    Telegram, TelegramType
+from xknx.knx import (Address, AddressType, DPTArray, DPTBinary, Telegram,
+                      TelegramType)
 
-from .knxip_enum import CEMIMessageCode, APCICommand, CEMIFlags
 from .body import KNXIPBody
+from .knxip_enum import APCICommand, CEMIFlags, CEMIMessageCode
 
 
 class CEMIFrame(KNXIPBody):

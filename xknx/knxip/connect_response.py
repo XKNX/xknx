@@ -5,10 +5,11 @@ Connect requests are used to start a new tunnel connection on a KNX/IP device.
 With an Connect Response the receiving party acknowledges the valid processing of the request.
 """
 from xknx.exceptions import CouldNotParseKNXIP
+
 from .body import KNXIPBody
+from .error_code import ErrorCode
 from .hpai import HPAI
 from .knxip_enum import ConnectRequestType, KNXIPServiceType
-from .error_code import ErrorCode
 
 
 class ConnectResponse(KNXIPBody):

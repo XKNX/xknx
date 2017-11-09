@@ -5,9 +5,10 @@ Disconnect requests are used to disconnect a tunnel from a KNX/IP device.
 With a Disconnect Response the receiving party acknowledges the valid processing of the request.
 """
 from xknx.exceptions import CouldNotParseKNXIP
-from .knxip_enum import KNXIPServiceType
+
 from .body import KNXIPBody
 from .error_code import ErrorCode
+from .knxip_enum import KNXIPServiceType
 
 
 class DisconnectResponse(KNXIPBody):

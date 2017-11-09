@@ -6,8 +6,8 @@ With a search response the receiving party acknowledges the valid processing of 
 The search response contains all information of the found device (Name, serial number, supported features.).
 """
 from .body import KNXIPBody
-from .hpai import HPAI
 from .dib import DIB, DIBDeviceInformation
+from .hpai import HPAI
 from .knxip_enum import KNXIPServiceType
 
 

@@ -5,6 +5,7 @@ Connect requests are used to transmit a KNX telegram within an existing KNX tunn
 With an Tunnel ACK the receiving party acknowledges the valid processing of the request.
 """
 from xknx.exceptions import CouldNotParseKNXIP
+
 from .body import KNXIPBody
 from .error_code import ErrorCode
 from .knxip_enum import KNXIPServiceType
