@@ -1,0 +1,2 @@
+-r testing.txt
+isort==4.2.15
