@@ -1,7 +1,7 @@
 """
-Module for managing a remote value KNX.
+Module for managing a KNX group.
 
-Remote value can either be a group address for reading
+Group can either be a group address for reading
 and and one group address wor writing a KNX value
 or a group address for both.
 """
@@ -13,7 +13,7 @@ from xknx.knx import Telegram, DPTScaling, DPTValue1Count, \
     DPTTemperature
 
 
-class RemoteValue():
+class Group():
     """Class for managing remlte knx value."""
 
     def __init__(self,
@@ -21,7 +21,7 @@ class RemoteValue():
                  group_address=None,
                  group_address_state=None,
                  after_update_cb=None):
-        """Initialize RemoteValue class."""
+        """Initialize Group class."""
         self.xknx = xknx
         if isinstance(group_address, (str, int)):
             group_address = Address(group_address)
@@ -35,7 +35,7 @@ class RemoteValue():
 
     @property
     def initialized(self):
-        """Evaluate if remote value is initialized with group address."""
+        """Evaluate if group is initialized with group address."""
         return bool(self.group_address_state or self.group_address)
 
     def has_group_address(self, group_address):
@@ -135,8 +135,8 @@ class RemoteValue():
         return True
 
 
-class RemoteValueSwitch1001(RemoteValue):
-    """Abstraction for remote value of KNX DPT 1.001 / DPT_Switch."""
+class GroupSwitch1001(Group):
+    """Abstraction for group of KNX DPT 1.001 / DPT_Switch."""
 
     class Value(Enum):
         """Enum for indicating the direction."""
@@ -151,9 +151,9 @@ class RemoteValueSwitch1001(RemoteValue):
                  group_address_state=None,
                  after_update_cb=None,
                  invert=False):
-        """Initialize remote value of KNX DPT 1.001."""
+        """Initialize group of KNX DPT 1.001."""
         # pylint: disable=too-many-arguments
-        super(RemoteValueSwitch1001, self).__init__(xknx, group_address, group_address_state, after_update_cb)
+        super(GroupSwitch1001, self).__init__(xknx, group_address, group_address_state, after_update_cb)
         self.invert = invert
 
     @staticmethod
@@ -189,8 +189,8 @@ class RemoteValueSwitch1001(RemoteValue):
         yield from self.set(self.Value.ON)
 
 
-class RemoteValueUpDown1008(RemoteValue):
-    """Abstraction for remote value of KNX DPT 1.008 / DPT_UpDown."""
+class GroupUpDown1008(Group):
+    """Abstraction for group of KNX DPT 1.008 / DPT_UpDown."""
 
     class Direction(Enum):
         """Enum for indicating the direction."""
@@ -205,9 +205,9 @@ class RemoteValueUpDown1008(RemoteValue):
                  group_address_state=None,
                  after_update_cb=None,
                  invert=False):
-        """Initialize remote value of KNX DPT 1.008."""
+        """Initialize group of KNX DPT 1.008."""
         # pylint: disable=too-many-arguments
-        super(RemoteValueUpDown1008, self).__init__(xknx, group_address, group_address_state, after_update_cb)
+        super(GroupUpDown1008, self).__init__(xknx, group_address, group_address_state, after_update_cb)
         self.invert = invert
 
     @staticmethod
@@ -243,8 +243,8 @@ class RemoteValueUpDown1008(RemoteValue):
         yield from self.set(self.Direction.UP)
 
 
-class RemoteValueStep1007(RemoteValue):
-    """Abstraction for remote value of KNX DPT 1.007 / DPT_Step."""
+class GroupStep1007(Group):
+    """Abstraction for group of KNX DPT 1.007 / DPT_Step."""
 
     class Direction(Enum):
         """Enum for indicating the direction."""
@@ -258,9 +258,9 @@ class RemoteValueStep1007(RemoteValue):
                  group_address_state=None,
                  after_update_cb=None,
                  invert=False):
-        """Initialize remote value of KNX DPT 1.007."""
+        """Initialize group of KNX DPT 1.007."""
         # pylint: disable=too-many-arguments
-        super(RemoteValueStep1007, self).__init__(xknx, group_address, group_address_state, after_update_cb)
+        super(GroupStep1007, self).__init__(xknx, group_address, group_address_state, after_update_cb)
         self.invert = invert
 
     @staticmethod
@@ -295,8 +295,8 @@ class RemoteValueStep1007(RemoteValue):
         yield from self.set(self.Direction.DECREASE)
 
 
-class RemoteValueScaling5001(RemoteValue):
-    """Abstraction for remote value of KNX DPT 5.001 (DPT_Scaling)."""
+class GroupScaling5001(Group):
+    """Abstraction for group of KNX DPT 5.001 (DPT_Scaling)."""
 
     def __init__(self,
                  xknx,
@@ -304,9 +304,9 @@ class RemoteValueScaling5001(RemoteValue):
                  group_address_state=None,
                  after_update_cb=None,
                  invert=False):
-        """Initialize remote value of KNX DPT 5.001 (DPT_Scaling)."""
+        """Initialize group of KNX DPT 5.001 (DPT_Scaling)."""
         # pylint: disable=too-many-arguments
-        super(RemoteValueScaling5001, self).__init__(xknx, group_address, group_address_state, after_update_cb)
+        super(GroupScaling5001, self).__init__(xknx, group_address, group_address_state, after_update_cb)
         self.invert = invert
 
     @staticmethod
@@ -329,8 +329,8 @@ class RemoteValueScaling5001(RemoteValue):
         return value
 
 
-class RemoteValue1Count(RemoteValue):
-    """Abstraction for remote value of KNX 6.010 (DPT_Value_1_Count)."""
+class Group1Count(Group):
+    """Abstraction for group of KNX 6.010 (DPT_Value_1_Count)."""
 
     @staticmethod
     def payload_valid(payload):
@@ -347,8 +347,8 @@ class RemoteValue1Count(RemoteValue):
         return DPTValue1Count.from_knx(payload.value)
 
 
-class RemoteValueTemp(RemoteValue):
-    """Abstraction for remote value of KNX 9.001 (DPT_Value_Temp)."""
+class GroupTemp(Group):
+    """Abstraction for group of KNX 9.001 (DPT_Value_Temp)."""
 
     @staticmethod
     def payload_valid(payload):

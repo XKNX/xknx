@@ -8,7 +8,7 @@ It provides functionality for
 """
 import asyncio
 from .device import Device
-from .remote_value import RemoteValueSwitch1001
+from .group import GroupSwitch1001
 
 
 class Switch(Device):
@@ -24,7 +24,7 @@ class Switch(Device):
         # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name, device_updated_cb)
 
-        self.switch = RemoteValueSwitch1001(
+        self.switch = GroupSwitch1001(
             xknx,
             group_address,
             group_address_state,
@@ -50,7 +50,7 @@ class Switch(Device):
     @property
     def state(self):
         """Return the current switch state of the device."""
-        return self.switch.value == RemoteValueSwitch1001.Value.ON
+        return self.switch.value == GroupSwitch1001.Value.ON
 
     @asyncio.coroutine
     def set_on(self):

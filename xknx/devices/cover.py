@@ -10,8 +10,8 @@ It provides functionality for
 import asyncio
 from .device import Device
 from .travelcalculator import TravelCalculator
-from .remote_value import RemoteValueScaling5001, RemoteValueUpDown1008, \
-    RemoteValueStep1007
+from .group import GroupScaling5001, GroupUpDown1008, \
+    GroupStep1007
 
 
 class Cover(Device):
@@ -42,26 +42,26 @@ class Cover(Device):
         # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name, device_updated_cb)
 
-        self.updown = RemoteValueUpDown1008(
+        self.updown = GroupUpDown1008(
             xknx,
             group_address_long,
             after_update_cb=self.after_update,
             invert=invert_position)
 
-        self.step = RemoteValueStep1007(
+        self.step = GroupStep1007(
             xknx,
             group_address_short,
             after_update_cb=self.after_update,
             invert=invert_position)
 
-        self.position = RemoteValueScaling5001(
+        self.position = GroupScaling5001(
             xknx,
             group_address_position,
             group_address_position_state,
             after_update_cb=self.after_update,
             invert=invert_position)
 
-        self.angle = RemoteValueScaling5001(
+        self.angle = GroupScaling5001(
             xknx,
             group_address_angle,
             group_address_angle_state,

@@ -11,7 +11,7 @@ import asyncio
 from xknx.knx import Address, DPTArray
 from xknx.exceptions import CouldNotParseTelegram
 from .device import Device
-from .remote_value import RemoteValueSwitch1001
+from .group import GroupSwitch1001
 
 
 class Light(Device):
@@ -33,7 +33,7 @@ class Light(Device):
         if isinstance(group_address_brightness_state, (str, int)):
             group_address_brightness_state = Address(group_address_brightness_state)
 
-        self.switch = RemoteValueSwitch1001(
+        self.switch = GroupSwitch1001(
             xknx,
             group_address_switch,
             group_address_switch_state,
@@ -95,7 +95,7 @@ class Light(Device):
     @property
     def state(self):
         """Return the current switch state of the device."""
-        return self.switch.value == RemoteValueSwitch1001.Value.ON
+        return self.switch.value == GroupSwitch1001.Value.ON
 
     @asyncio.coroutine
     def _set_internal_brightness(self, brightness):

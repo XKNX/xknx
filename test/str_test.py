@@ -4,7 +4,7 @@ import asyncio
 
 from xknx import XKNX
 from xknx.devices import Light, Switch, Cover, Climate, Time, \
-    BinarySensor, Action, Sensor, Notification, RemoteValue, \
+    BinarySensor, Action, Sensor, Notification, Group, \
     ActionBase, ActionCallback
 from xknx.knx import DPTArray, DPTBinary, Address, Telegram
 from xknx.exceptions import CouldNotParseTelegram, CouldNotParseKNXIP, \
@@ -29,20 +29,20 @@ class TestStringRepresentations(unittest.TestCase):
         """Tear down test class."""
         self.loop.close()
 
-    def test_remote_value(self):
-        """Test string representation of remote value."""
+    def test_group(self):
+        """Test string representation of group."""
         xknx = XKNX(loop=self.loop)
-        remote_value = RemoteValue(
+        group = Group(
             xknx,
             group_address='1/2/3',
             group_address_state='1/2/4')
         self.assertEqual(
-            str(remote_value),
-            '<RemoteValue <Address str="1/2/3" />/<Address str="1/2/4" />/None/None/>')
-        remote_value.payload = DPTArray([0x01, 0x02])
+            str(group),
+            '<Group <Address str="1/2/3" />/<Address str="1/2/4" />/None/None/>')
+        group.payload = DPTArray([0x01, 0x02])
         self.assertEqual(
-            str(remote_value),
-            '<RemoteValue <Address str="1/2/3" />/<Address str="1/2/4" />/<DPTArray value="[0x1,0x2]" />/None/>')
+            str(group),
+            '<Group <Address str="1/2/3" />/<Address str="1/2/4" />/<DPTArray value="[0x1,0x2]" />/None/>')
 
     def test_binary_sensor(self):
         """Test string representation of binary sensor object."""

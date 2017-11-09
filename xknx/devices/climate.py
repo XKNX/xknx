@@ -9,7 +9,7 @@ from xknx.knx import Address, DPTBinary, DPTArray, \
     HVACOperationMode, DPTControllerStatus, DPTHVACMode
 from xknx.exceptions import CouldNotParseTelegram, DeviceIllegalValue
 from .device import Device
-from .remote_value import RemoteValueTemp, RemoteValue1Count
+from .group import GroupTemp, Group1Count
 
 
 class Climate(Device):
@@ -67,15 +67,15 @@ class Climate(Device):
 
         self.operation_mode = HVACOperationMode.STANDBY
 
-        self.temperature = RemoteValueTemp(
+        self.temperature = GroupTemp(
             xknx,
             group_address_temperature,
             after_update_cb=self.after_update)
-        self.target_temperature = RemoteValueTemp(
+        self.target_temperature = GroupTemp(
             xknx,
             group_address_target_temperature,
             after_update_cb=self.after_update)
-        self.setpoint_shift = RemoteValue1Count(
+        self.setpoint_shift = Group1Count(
             xknx,
             group_address_setpoint_shift,
             group_address_setpoint_shift_state,
