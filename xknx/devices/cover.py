@@ -11,7 +11,7 @@ import asyncio
 
 from .device import Device
 from .group import (GroupScaling5001, GroupStep1007,
-                           GroupUpDown1008)
+                    GroupUpDown1008)
 from .travelcalculator import TravelCalculator
 
 
