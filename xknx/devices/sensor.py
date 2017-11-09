@@ -10,6 +10,7 @@ import asyncio
 
 from xknx.knx import (Address, DPTArray, DPTBinary, DPTHumidity, DPTLux,
                       DPTScaling, DPTTemperature, DPTUElCurrentmA, DPTWsp)
+from xknx.knx.groups import is_group
 
 from .device import Device
 
@@ -26,7 +27,7 @@ class Sensor(Device):
         """Initialize Sensor class."""
         # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name, device_updated_cb)
-        if isinstance(group_address, (str, int)):
+        if is_group(group_address):
             group_address = Address(group_address)
         if value_type == 'brightness':
             value_type = 'illuminance'
