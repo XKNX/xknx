@@ -2,19 +2,19 @@
 Module for managing a remote value KNX.
 
 Remote value can either be a group address for reading
-and and one group address wor writing a KNX value
+and and one group address for writing a KNX value
 or a group address for both.
 """
 import asyncio
 from enum import Enum
-from xknx.knx import Address, DPTBinary, DPTArray
-from xknx.exceptions import CouldNotParseTelegram, ConversionError
-from xknx.knx import Telegram, DPTScaling, DPTValue1Count, \
-    DPTTemperature
+
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
+from xknx.knx import (Address, DPTArray, DPTBinary, DPTScaling, DPTTemperature,
+                      DPTValue1Count, Telegram)
 
 
 class RemoteValue():
-    """Class for managing remlte knx value."""
+    """Class for managing remote knx value."""
 
     def __init__(self,
                  xknx,

@@ -4,6 +4,7 @@ Module for handling a vector/array of devices.
 More or less an array with devices. Adds some search functionality to find devices.
 """
 import asyncio
+
 from .device import Device
 
 
