@@ -22,6 +22,7 @@ Patterns can be
         AddressFilter("-10")
 """
 from xknx.exceptions import ConversionError
+
 from .address import Address
 
 

@@ -1,6 +1,7 @@
 """Implementation of Basic KNX Floats."""
 
 from xknx.exceptions import ConversionError
+
 from .dpt import DPTBase
 
 

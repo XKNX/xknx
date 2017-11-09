@@ -1,5 +1,6 @@
 """Implementation of 3.17 Datapoint Types String."""
 from xknx.exceptions import ConversionError
+
 from .dpt import DPTBase
 
 

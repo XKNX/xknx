@@ -15,6 +15,7 @@ It contains
 
 """
 from enum import Enum
+
 from .address import Address
 
 

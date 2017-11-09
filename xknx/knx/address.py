@@ -13,6 +13,7 @@ The module supports all different writings of group addresses:
 * Free format: "123"
 """
 from enum import Enum
+
 from xknx.exceptions import CouldNotParseAddress
 
 

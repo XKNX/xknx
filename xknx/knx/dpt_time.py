@@ -1,9 +1,10 @@
 """Implementation of Basic KNX Time."""
 
-from enum import Enum
 import time
+from enum import Enum
 
 from xknx.exceptions import ConversionError
+
 from .dpt import DPTBase
 
 

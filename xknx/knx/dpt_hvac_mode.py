@@ -1,6 +1,7 @@
 """Implementation of different KNX DPT HVAC Operation modes."""
 
 from enum import Enum
+
 from .dpt import DPTBase
 
 
