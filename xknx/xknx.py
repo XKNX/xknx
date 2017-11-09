@@ -1,11 +1,12 @@
 """XKNX is an Asynchronous Python module for reading and writing KNX/IP packets."""
 import asyncio
-import signal
 import logging
-from xknx.knx import Address, AddressFormat
-from xknx.io import KNXIPInterface, ConnectionConfig
-from xknx.core import TelegramQueue, Config
+import signal
+
+from xknx.core import Config, TelegramQueue
 from xknx.devices import Devices
+from xknx.io import ConnectionConfig, KNXIPInterface
+from xknx.knx import Address, AddressFormat
 
 
 class XKNX:
