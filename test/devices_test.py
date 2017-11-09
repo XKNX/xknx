@@ -1,8 +1,9 @@
 """Unit test for devices container within XKNX."""
-import unittest
 import asyncio
+import unittest
+
 from xknx import XKNX
-from xknx.devices import Devices, Light, Switch, BinarySensor
+from xknx.devices import BinarySensor, Devices, Light, Switch
 from xknx.knx import Address
 
 

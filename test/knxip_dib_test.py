@@ -2,9 +2,10 @@
 import unittest
 
 from xknx.exceptions import CouldNotParseKNXIP
-from xknx.knxip import DIB, DIBGeneric, DIBDeviceInformation, \
-    DIBSuppSVCFamilies, DIBTypeCode, KNXMedium, DIBServiceFamily
 from xknx.knx import Address
+from xknx.knxip import (DIB, DIBDeviceInformation, DIBGeneric,
+                        DIBServiceFamily, DIBSuppSVCFamilies, DIBTypeCode,
+                        KNXMedium)
 
 
 class Test_KNXIP_DIB(unittest.TestCase):

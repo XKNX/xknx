@@ -1,10 +1,11 @@
 """Unit test for Sensor objects."""
+import asyncio
 import unittest
 from unittest.mock import Mock
-import asyncio
+
 from xknx import XKNX
 from xknx.devices import Sensor
-from xknx.knx import Telegram, Address, TelegramType, DPTArray, DPTBinary
+from xknx.knx import Address, DPTArray, DPTBinary, Telegram, TelegramType
 
 
 class TestSensor(unittest.TestCase):

@@ -1,5 +1,6 @@
 """Unit test for Address class."""
 import unittest
+
 from xknx.knx import AddressFilter
 
 

@@ -1,19 +1,23 @@
 """Unit test for String representations."""
-import unittest
 import asyncio
+import unittest
 
 from xknx import XKNX
-from xknx.devices import Light, Switch, Cover, Climate, Time, \
-    BinarySensor, Action, Sensor, Notification, RemoteValue, \
-    ActionBase, ActionCallback
-from xknx.knx import DPTArray, DPTBinary, Address, Telegram
-from xknx.exceptions import CouldNotParseTelegram, CouldNotParseKNXIP, \
-    ConversionError, CouldNotParseAddress, DeviceIllegalValue
-from xknx.knxip import DIBGeneric, DIBDeviceInformation, DIBSuppSVCFamilies, \
-    KNXMedium, DIBServiceFamily, HPAI, KNXIPHeader, ConnectRequest, ConnectRequestType, \
-    ConnectResponse, DisconnectRequest, DisconnectResponse, ConnectionStateRequest, \
-    ConnectionStateResponse, SearchRequest, SearchResponse, TunnellingRequest, TunnellingAck, \
-    CEMIFrame, KNXIPFrame, KNXIPServiceType
+from xknx.devices import (Action, ActionBase, ActionCallback, BinarySensor,
+                          Climate, Cover, Light, Notification, RemoteValue,
+                          Sensor, Switch, Time)
+from xknx.exceptions import (ConversionError, CouldNotParseAddress,
+                             CouldNotParseKNXIP, CouldNotParseTelegram,
+                             DeviceIllegalValue)
+from xknx.knx import Address, DPTArray, DPTBinary, Telegram
+from xknx.knxip import (HPAI, CEMIFrame, ConnectionStateRequest,
+                        ConnectionStateResponse, ConnectRequest,
+                        ConnectRequestType, ConnectResponse,
+                        DIBDeviceInformation, DIBGeneric, DIBServiceFamily,
+                        DIBSuppSVCFamilies, DisconnectRequest,
+                        DisconnectResponse, KNXIPFrame, KNXIPHeader,
+                        KNXIPServiceType, KNXMedium, SearchRequest,
+                        SearchResponse, TunnellingAck, TunnellingRequest)
 
 
 # pylint: disable=too-many-public-methods,invalid-name

@@ -2,7 +2,7 @@
 import unittest
 
 from xknx.exceptions import ConversionError
-from xknx.knx import HVACOperationMode, DPTHVACMode, DPTControllerStatus
+from xknx.knx import DPTControllerStatus, DPTHVACMode, HVACOperationMode
 
 
 class TestDPTControllerStatus(unittest.TestCase):

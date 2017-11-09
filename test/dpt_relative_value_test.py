@@ -2,8 +2,7 @@
 import unittest
 
 from xknx.exceptions import ConversionError
-from xknx.knx import DPTSignedRelativeValue, DPTPercentV8, \
-    DPTValue1Count
+from xknx.knx import DPTPercentV8, DPTSignedRelativeValue, DPTValue1Count
 
 
 class TestDPTRelativeValue(unittest.TestCase):

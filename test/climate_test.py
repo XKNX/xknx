@@ -1,13 +1,14 @@
 """Unit test for Climate objects."""
+import asyncio
 import unittest
 from unittest.mock import Mock
-import asyncio
-from xknx.knx import Telegram, DPTTemperature, DPTArray, DPTBinary, Address, \
-    TelegramType, HVACOperationMode, DPTControllerStatus, DPTHVACMode, DPTValue1Count, \
-    DPTFloat
+
 from xknx import XKNX
 from xknx.devices import Climate
 from xknx.exceptions import DeviceIllegalValue
+from xknx.knx import (Address, DPTArray, DPTBinary, DPTControllerStatus,
+                      DPTFloat, DPTHVACMode, DPTTemperature, DPTValue1Count,
+                      HVACOperationMode, Telegram, TelegramType)
 
 
 class TestClimate(unittest.TestCase):

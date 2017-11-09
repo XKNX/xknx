@@ -1,8 +1,8 @@
 """Unit test for Address class."""
 import unittest
 
-from xknx.knx import Address, AddressFormat, AddressType
 from xknx.exceptions import CouldNotParseAddress
+from xknx.knx import Address, AddressFormat, AddressType
 
 
 class TestAddress(unittest.TestCase):

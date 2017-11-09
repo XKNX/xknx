@@ -1,9 +1,10 @@
 """Unit test for KNX/IP ConnectResponses."""
-import unittest
 import asyncio
+import unittest
+
 from xknx import XKNX
-from xknx.knxip import KNXIPFrame, KNXIPServiceType, ConnectRequestType, \
-    HPAI, ConnectResponse, ErrorCode
+from xknx.knxip import (HPAI, ConnectRequestType, ConnectResponse, ErrorCode,
+                        KNXIPFrame, KNXIPServiceType)
 
 
 class Test_KNXIP_ConnectResponse(unittest.TestCase):

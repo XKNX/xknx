@@ -1,6 +1,7 @@
 """Unit test for Time object."""
-import unittest
 import asyncio
+import unittest
+
 from xknx import XKNX
 from xknx.devices import Time
 from xknx.knx import Address, TelegramType

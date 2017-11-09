@@ -1,8 +1,10 @@
 """Unit test for KNX/IP ConnectionStateRequests."""
-import unittest
 import asyncio
+import unittest
+
 from xknx import XKNX
-from xknx.knxip import KNXIPFrame, KNXIPServiceType, ConnectionStateRequest, HPAI
+from xknx.knxip import (HPAI, ConnectionStateRequest, KNXIPFrame,
+                        KNXIPServiceType)
 
 
 class Test_KNXIP_ConnStateReq(unittest.TestCase):

@@ -1,10 +1,11 @@
 """Unit test for Light objects."""
+import asyncio
 import unittest
 from unittest.mock import Mock
-import asyncio
+
 from xknx import XKNX
 from xknx.devices import Light
-from xknx.knx import Address, Telegram, TelegramType, DPTBinary, DPTArray
+from xknx.knx import Address, DPTArray, DPTBinary, Telegram, TelegramType
 
 
 class TestLight(unittest.TestCase):

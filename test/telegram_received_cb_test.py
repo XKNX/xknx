@@ -1,9 +1,11 @@
 """Unit test for telegram received callback."""
+import asyncio
 import unittest
 from unittest.mock import Mock
-import asyncio
+
 from xknx import XKNX
-from xknx.knx import Telegram, DPTBinary, TelegramDirection, Address, AddressFilter
+from xknx.knx import (Address, AddressFilter, DPTBinary, Telegram,
+                      TelegramDirection)
 
 
 class TestTelegramReceivedCallback(unittest.TestCase):

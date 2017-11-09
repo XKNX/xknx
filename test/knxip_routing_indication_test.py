@@ -1,10 +1,11 @@
 """Unit test for KNX/IP RountingIndication objects."""
-import unittest
 import asyncio
+import unittest
+
 from xknx import XKNX
-from xknx.knxip import KNXIPFrame, KNXIPServiceType, CEMIFrame
-from xknx.knx import Address, DPTTime, DPTBinary, DPTArray, \
-    DPTTemperature, Telegram, TelegramType
+from xknx.knx import (Address, DPTArray, DPTBinary, DPTTemperature, DPTTime,
+                      Telegram, TelegramType)
+from xknx.knxip import CEMIFrame, KNXIPFrame, KNXIPServiceType
 
 
 class Test_KNXIP(unittest.TestCase):

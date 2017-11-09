@@ -1,9 +1,9 @@
 """Unit test for KNX/IP TunnelingAck objects."""
-import unittest
 import asyncio
+import unittest
+
 from xknx import XKNX
-from xknx.knxip import KNXIPFrame, KNXIPServiceType, TunnellingAck, \
-    ErrorCode
+from xknx.knxip import ErrorCode, KNXIPFrame, KNXIPServiceType, TunnellingAck
 
 
 class Test_KNXIP_TunnelingReq(unittest.TestCase):

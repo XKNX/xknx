@@ -1,10 +1,11 @@
 """Unit test for BinarySensor objects."""
+import asyncio
 import unittest
 from unittest.mock import Mock
-import asyncio
+
 from xknx import XKNX
-from xknx.devices import BinarySensor, Action, Switch, BinarySensorState
-from xknx.knx import Telegram, DPTBinary
+from xknx.devices import Action, BinarySensor, BinarySensorState, Switch
+from xknx.knx import DPTBinary, Telegram
 
 
 class TestBinarySensor(unittest.TestCase):

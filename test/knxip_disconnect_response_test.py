@@ -1,9 +1,10 @@
 """Unit test for KNX/IP DisconnectResponse objects."""
-import unittest
 import asyncio
+import unittest
+
 from xknx import XKNX
-from xknx.knxip import KNXIPFrame, KNXIPServiceType, DisconnectResponse,\
-    ErrorCode
+from xknx.knxip import (DisconnectResponse, ErrorCode, KNXIPFrame,
+                        KNXIPServiceType)
 
 
 class Test_KNXIP_DisconnectResp(unittest.TestCase):

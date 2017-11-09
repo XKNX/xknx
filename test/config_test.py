@@ -1,10 +1,10 @@
 """Unit test for Configuration logic."""
-import unittest
 import asyncio
+import unittest
 
 from xknx import XKNX
-from xknx.devices import Light, Switch, Cover, Climate, Time, \
-    BinarySensor, Action, Sensor, Notification
+from xknx.devices import (Action, BinarySensor, Climate, Cover, Light,
+                          Notification, Sensor, Switch, Time)
 
 
 # pylint: disable=too-many-public-methods,invalid-name

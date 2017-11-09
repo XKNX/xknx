@@ -1,10 +1,11 @@
 """Unit test for KNX/IP TunnelingRequest objects."""
-import unittest
 import asyncio
+import unittest
+
 from xknx import XKNX
-from xknx.knxip import KNXIPFrame, KNXIPServiceType, CEMIFrame, \
-    TunnellingRequest
-from xknx.knx import Telegram, Address, DPTBinary
+from xknx.knx import Address, DPTBinary, Telegram
+from xknx.knxip import (CEMIFrame, KNXIPFrame, KNXIPServiceType,
+                        TunnellingRequest)
 
 
 class Test_KNXIP_TunnelingReq(unittest.TestCase):

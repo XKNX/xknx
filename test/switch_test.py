@@ -1,10 +1,11 @@
 """Unit test for Switch objects."""
+import asyncio
 import unittest
 from unittest.mock import Mock
-import asyncio
+
 from xknx import XKNX
 from xknx.devices import Switch
-from xknx.knx import Address, Telegram, TelegramType, DPTBinary
+from xknx.knx import Address, DPTBinary, Telegram, TelegramType
 
 
 class TestSwitch(unittest.TestCase):

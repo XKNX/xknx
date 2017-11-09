@@ -1,8 +1,9 @@
 """Unit test for KNX/IP Disconnect objects."""
-import unittest
 import asyncio
+import unittest
+
 from xknx import XKNX
-from xknx.knxip import KNXIPFrame, KNXIPServiceType, DisconnectRequest, HPAI
+from xknx.knxip import HPAI, DisconnectRequest, KNXIPFrame, KNXIPServiceType
 
 
 class Test_KNXIP_DisconnectReq(unittest.TestCase):

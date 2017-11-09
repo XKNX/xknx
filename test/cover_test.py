@@ -1,11 +1,12 @@
 """Unit test for Cover objects."""
 
+import asyncio
 import unittest
 from unittest.mock import Mock
-import asyncio
+
 from xknx import XKNX
 from xknx.devices import Cover
-from xknx.knx import Telegram, Address, TelegramType, DPTBinary, DPTArray
+from xknx.knx import Address, DPTArray, DPTBinary, Telegram, TelegramType
 
 
 class TestCover(unittest.TestCase):
