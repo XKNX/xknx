@@ -4,12 +4,14 @@ Abstraction for handling KNX/IP tunnels.
 Tunnels connect to KNX/IP devices directly via UDP and build a static UDP connection.
 """
 import asyncio
-from xknx.knx import TelegramDirection
-from xknx.knxip import TunnellingRequest, KNXIPFrame, KNXIPServiceType
+
 from xknx.exceptions import XKNXException
-from .disconnect import Disconnect
-from .connectionstate import ConnectionState
+from xknx.knx import TelegramDirection
+from xknx.knxip import KNXIPFrame, KNXIPServiceType, TunnellingRequest
+
 from .connect import Connect
+from .connectionstate import ConnectionState
+from .disconnect import Disconnect
 from .tunnelling import Tunnelling
 from .udp_client import UDPClient
 

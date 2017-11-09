@@ -4,6 +4,7 @@ Base class for sending a specific type of KNX/IP Packet to a KNX/IP device and w
 Will report if the corresponding answer was not received.
 """
 import asyncio
+
 from xknx.knxip import ErrorCode
 
 

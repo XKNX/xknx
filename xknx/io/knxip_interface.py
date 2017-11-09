@@ -8,12 +8,13 @@ KNXIPInterface manages KNX/IP Tunneling or Routing connections.
 """
 import asyncio
 from enum import Enum
-from xknx.exceptions import XKNXException
-from .gateway_scanner import GatewayScanner
 
+from xknx.exceptions import XKNXException
+
+from .const import DEFAULT_MCAST_PORT
+from .gateway_scanner import GatewayScanner
 from .routing import Routing
 from .tunnel import Tunnel
-from .const import DEFAULT_MCAST_PORT
 
 
 class ConnectionType(Enum):

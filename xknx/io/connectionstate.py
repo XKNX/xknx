@@ -1,6 +1,7 @@
 """Abstraction to send ConnectonStateRequest and wait for ConnectionStateResponse."""
-from xknx.knxip import KNXIPServiceType, KNXIPFrame, HPAI,\
-    ConnectionStateResponse
+from xknx.knxip import (HPAI, ConnectionStateResponse, KNXIPFrame,
+                        KNXIPServiceType)
+
 from .request_response import RequestResponse
 
 

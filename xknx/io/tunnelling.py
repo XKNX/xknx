@@ -1,5 +1,6 @@
 """Abstraction to send a TunnelingRequest and wait for TunnelingResponse."""
-from xknx.knxip import KNXIPServiceType, KNXIPFrame, TunnellingAck
+from xknx.knxip import KNXIPFrame, KNXIPServiceType, TunnellingAck
+
 from .request_response import RequestResponse
 
 

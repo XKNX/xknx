@@ -7,11 +7,13 @@ GatewayScanner is an abstraction for searching for KNX/IP devices on the local n
 """
 
 import asyncio
+
 import netifaces
-from xknx.knxip import HPAI, KNXIPFrame, SearchResponse, KNXIPServiceType, \
-    DIBSuppSVCFamilies, DIBServiceFamily
-from .udp_client import UDPClient
+from xknx.knxip import (HPAI, DIBServiceFamily, DIBSuppSVCFamilies, KNXIPFrame,
+                        KNXIPServiceType, SearchResponse)
+
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
+from .udp_client import UDPClient
 
 
 class GatewayScanner():
