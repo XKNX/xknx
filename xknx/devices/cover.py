@@ -8,10 +8,11 @@ It provides functionality for
 * Cover will also predict the current position.
 """
 import asyncio
+
 from .device import Device
+from .group import (GroupScaling5001, GroupStep1007,
+                           GroupUpDown1008)
 from .travelcalculator import TravelCalculator
-from .group import GroupScaling5001, GroupUpDown1008, \
-    GroupStep1007
 
 
 class Cover(Device):

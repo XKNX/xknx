@@ -9,8 +9,8 @@ E.g.:
 * At time 20 TravelCalculator will return position 70 (final position not reached).
 * At time 30 TravelCalculator will return position 60 (final position reached).
 """
-from enum import Enum
 import time
+from enum import Enum
 
 
 class PositionType(Enum):

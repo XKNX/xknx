@@ -8,8 +8,10 @@ It provides functionality for
 * reading the current state from KNX bus.
 """
 import asyncio
-from xknx.knx import Address, DPTArray
+
 from xknx.exceptions import CouldNotParseTelegram
+from xknx.knx import Address, DPTArray
+
 from .device import Device
 from .group import GroupSwitch1001
 
