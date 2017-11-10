@@ -96,7 +96,6 @@ class XKNX:
         yield from self._stop_knxip_interface_if_exists()
         self.started = False
 
-
     @asyncio.coroutine
     def loop_until_sigint(self):
         """Loop until Crtl-C was pressed."""
