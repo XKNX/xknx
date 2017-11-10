@@ -95,6 +95,10 @@ class Cover(Device):
             config.get('travel_time_down', cls.DEFAULT_TRAVEL_TIME_DOWN)
         travel_time_up = \
             config.get('travel_time_up', cls.DEFAULT_TRAVEL_TIME_UP)
+        invert_position = \
+            config.get('invert_position', False)
+        invert_angle = \
+            config.get('invert_angle', False)
 
         return cls(
             xknx,
@@ -106,7 +110,9 @@ class Cover(Device):
             group_address_angle=group_address_angle,
             group_address_angle_state=group_address_angle_state,
             travel_time_down=travel_time_down,
-            travel_time_up=travel_time_up)
+            travel_time_up=travel_time_up,
+            invert_position=invert_position,
+            invert_angle=invert_angle)
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
