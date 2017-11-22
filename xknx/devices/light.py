@@ -11,6 +11,7 @@ import asyncio
 
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.knx import Address, DPTArray
+from xknx.knx.groups import is_group
 
 from .device import Device
 from .remote_value import RemoteValueSwitch1001
@@ -30,9 +31,9 @@ class Light(Device):
         """Initialize Light class."""
         # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name, device_updated_cb)
-        if isinstance(group_address_brightness, (str, int)):
+        if is_group(group_address_brightness):
             group_address_brightness = Address(group_address_brightness)
-        if isinstance(group_address_brightness_state, (str, int)):
+        if is_group(group_address_brightness_state):
             group_address_brightness_state = Address(group_address_brightness_state)
 
         self.switch = RemoteValueSwitch1001(

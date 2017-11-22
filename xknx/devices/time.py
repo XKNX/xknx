@@ -9,6 +9,7 @@ by StateUpdate.
 import asyncio
 
 from xknx.knx import Address, DPTArray, DPTTime
+from xknx.knx.groups import is_group
 
 from .device import Device
 
@@ -24,7 +25,7 @@ class Time(Device):
         """Initialize Time class."""
         Device.__init__(self, xknx, name, device_updated_cb)
 
-        if isinstance(group_address, (str, int)):
+        if is_group(group_address):
             group_address = Address(group_address)
 
         self.group_address = group_address

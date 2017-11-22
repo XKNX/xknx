@@ -11,6 +11,7 @@ from enum import Enum
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.knx import (Address, DPTArray, DPTBinary, DPTScaling, DPTTemperature,
                       DPTValue1Count, Telegram)
+from xknx.knx.groups import is_group
 
 
 class RemoteValue():
@@ -23,9 +24,9 @@ class RemoteValue():
                  after_update_cb=None):
         """Initialize RemoteValue class."""
         self.xknx = xknx
-        if isinstance(group_address, (str, int)):
+        if is_group(group_address):
             group_address = Address(group_address)
-        if isinstance(group_address_state, (str, int)):
+        if is_group(group_address_state):
             group_address_state = Address(group_address_state)
 
         self.group_address = group_address
