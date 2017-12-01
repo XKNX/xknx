@@ -1,24 +1,11 @@
 """Implementation of Basic KNX Time."""
 
 import time
-from enum import Enum
 
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
-
-
-class DPTWeekday(Enum):
-    """Enum class for week days."""
-
-    MONDAY = 1
-    TUESDAY = 2
-    WEDNESDAY = 3
-    THURSDAY = 4
-    FRIDAY = 5
-    SATURDAY = 6
-    SUNDAY = 7
-    NONE = 0
+from .dpt import DPTWeekday
 
 
 class DPTTime(DPTBase):
@@ -33,43 +20,43 @@ class DPTTime(DPTBase):
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw, 3)
 
-        day = (raw[0] & 0xE0) >> 5
+        weekday = (raw[0] & 0xE0) >> 5
         hours = raw[0] & 0x1F
         minutes = raw[1] & 0x3F
         seconds = raw[2] & 0x3F
 
-        if not DPTTime._test_range(day, hours, minutes, seconds):
+        if not DPTTime._test_range(weekday, hours, minutes, seconds):
             raise ConversionError(raw)
 
-        return {'day': DPTWeekday(day),
+        return {'weekday': DPTWeekday(weekday),
                 'hours': hours,
                 'minutes': minutes,
                 'seconds': seconds}
 
     @classmethod
     def to_knx(cls, values):
-        """Serialize to KNX/IP raw data from dict with elements day,hours,minutes,seconds."""
+        """Serialize to KNX/IP raw data from dict with elements weekday,hours,minutes,seconds."""
         if not isinstance(values, dict):
             raise ConversionError(values)
-        day = values.get('day', DPTWeekday.NONE).value
+        weekday = values.get('weekday', DPTWeekday.NONE).value
         hours = values.get('hours', 0)
         minutes = values.get('minutes', 0)
         seconds = values.get('seconds', 0)
 
-        if not DPTTime._test_range(day, hours, minutes, seconds):
+        if not DPTTime._test_range(weekday, hours, minutes, seconds):
             raise ConversionError(values)
 
-        return day << 5 | hours, minutes, seconds
+        return weekday << 5 | hours, minutes, seconds
 
     @classmethod
     def _current_time(cls):
         """Return current local time as struct."""
         localtime = time.localtime()
-        day = localtime.tm_wday + 1
+        weekday = localtime.tm_wday + 1
         hours = localtime.tm_hour
         minutes = localtime.tm_min
         seconds = localtime.tm_sec
-        return {'day': DPTWeekday(day),
+        return {'weekday': DPTWeekday(weekday),
                 'hours': hours,
                 'minutes': minutes,
                 'seconds': seconds}
@@ -80,9 +67,9 @@ class DPTTime(DPTBase):
         return cls.to_knx(cls._current_time())
 
     @staticmethod
-    def _test_range(day, hours, minutes, seconds):
+    def _test_range(weekday, hours, minutes, seconds):
         """Test if values are in the correct value range."""
-        if day < 0 or day > 7:
+        if weekday < 0 or weekday > 7:
             return False
         if hours < 0 or hours > 23:
             return False
