@@ -262,7 +262,3 @@ class TestAddress(unittest.TestCase):
     def test_address_to_knx(self):
         """Test to_knx functionality of Address object."""
         self.assertEqual(Address("2/3/100").to_knx(), (2*8+3, 100))
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestAddress)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

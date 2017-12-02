@@ -58,7 +58,3 @@ class TestDPTControllerStatus(unittest.TestCase):
         """Test parsing of DPTControllerStatus with wrong value)."""
         with self.assertRaises(ConversionError):
             DPTControllerStatus.from_knx((1, 2))
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPTControllerStatus)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

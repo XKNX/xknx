@@ -66,7 +66,3 @@ class TestDPTFloat(unittest.TestCase):
                0x00, 0x00, 0x00]
         with self.assertRaises(ConversionError):
             DPTString().from_knx(raw)
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPTFloat)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

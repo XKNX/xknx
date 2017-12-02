@@ -76,7 +76,3 @@ class Test_KNXIP_DIB(unittest.TestCase):
         ])
 
         self.assertEqual(dib.to_knx(), list(raw))
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(Test_KNXIP_DIB)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

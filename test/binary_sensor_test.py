@@ -161,7 +161,3 @@ class TestBinarySensor(unittest.TestCase):
         telegram.payload = DPTBinary(1)
         self.loop.run_until_complete(asyncio.Task(switch.process(telegram)))
         after_update_callback.assert_called_with(switch)
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestBinarySensor)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

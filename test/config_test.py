@@ -259,7 +259,3 @@ class TestConfig(unittest.TestCase):
                          significant_bit=2,
                          device_class='motion',
                          device_updated_cb=xknx.devices.device_updated))
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestConfig)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

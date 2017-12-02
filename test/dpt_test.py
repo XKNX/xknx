@@ -57,7 +57,3 @@ class TestDPT(unittest.TestCase):
         """Test initialization of DPTBinary objects with wrong value."""
         with self.assertRaises(ConversionError):
             DPTBinary(DPTBinary.APCI_MAX_VALUE + 1)
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPT)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

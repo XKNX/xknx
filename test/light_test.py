@@ -205,7 +205,3 @@ class TestLight(unittest.TestCase):
         self.assertEqual(light.brightness, 80)
         self.loop.run_until_complete(asyncio.Task(light.do("off")))
         self.assertFalse(light.state)
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestLight)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

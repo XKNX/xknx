@@ -28,7 +28,3 @@ class TestTelegram(unittest.TestCase):
             Telegram(Address('1/2/3'), TelegramType.GROUP_READ),
             Telegram(Address('1/2/3'), TelegramType.GROUP_READ,
                      TelegramDirection.INCOMING))
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestTelegram)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

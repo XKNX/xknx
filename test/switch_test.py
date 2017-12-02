@@ -132,7 +132,3 @@ class TestSwitch(unittest.TestCase):
         self.assertTrue(switch.state)
         self.loop.run_until_complete(asyncio.Task(switch.do("off")))
         self.assertFalse(switch.state)
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestSwitch)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

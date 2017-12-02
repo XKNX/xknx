@@ -73,7 +73,3 @@ class TestDPTScaling(unittest.TestCase):
         """Test parsing of DPTScaling with wrong value (array containing string)."""
         with self.assertRaises(ConversionError):
             DPTScaling().from_knx(("0x23"))
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPTScaling)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

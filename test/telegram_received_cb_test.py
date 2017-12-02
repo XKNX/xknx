@@ -122,7 +122,3 @@ class TestTelegramReceivedCallback(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(
             xknx.telegram_queue.process_telegram(telegram)))
         telegram_received_callback.assert_not_called()
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestTelegramReceivedCallback)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

@@ -274,7 +274,3 @@ class Test_KNXIP(unittest.TestCase):
         knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
         knxipframe2.from_knx(knxipframe.to_knx())
         self.assertEqual(knxipframe2.body.telegram, telegram)
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(Test_KNXIP)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

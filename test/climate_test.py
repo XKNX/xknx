@@ -658,7 +658,3 @@ class TestClimate(unittest.TestCase):
             climate.get_supported_operation_modes(),
             [HVACOperationMode.STANDBY,
              HVACOperationMode.NIGHT])
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestClimate)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

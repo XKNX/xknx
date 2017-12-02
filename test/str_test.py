@@ -472,7 +472,3 @@ class TestStringRepresentations(unittest.TestCase):
             '<KNXIPFrame <KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="KNXIPServiceType.SEARCH_REQUEST" Reserve="0" TotalLeng'
             'th="0" />\n'
             ' body="<SearchRequest discovery_endpoint="<HPAI 224.0.23.12:3671 />" />" />')
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestStringRepresentations)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

@@ -355,7 +355,3 @@ class TestCover(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
 
         after_update_callback.assert_called_with(cover)
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestCover)
-unittest.TextTestRunner(verbosity=2).run(SUITE)
