@@ -9,7 +9,7 @@ import yaml
 
 from xknx.devices import (BinarySensor, Climate, Cover, Light, Notification,
                           Sensor, Switch, Time)
-from xknx.knx import Address, AddressType
+from xknx.knx import PhysicalAddress
 
 
 class Config:
@@ -32,8 +32,7 @@ class Config:
         if "general" in doc:
             if "own_address" in doc["general"]:
                 self.xknx.own_address = \
-                    Address(doc["general"]["own_address"],
-                            AddressType.PHYSICAL)
+                    PhysicalAddress(doc["general"]["own_address"])
 
     def parse_groups(self, doc):
         """Parse the group section of xknx.yaml."""

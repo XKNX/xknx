@@ -12,8 +12,8 @@ Documentation within:
     File: AN117 v02.01 KNX IP Communication Medium DV.pdf
 """
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP
-from xknx.knx import (Address, AddressType, DPTArray, DPTBinary, Telegram,
-                      TelegramType)
+from xknx.knx import (GroupAddress, PhysicalAddress, DPTArray, DPTBinary,
+                      Telegram, TelegramType)
 
 from .body import KNXIPBody
 from .knxip_enum import APCICommand, CEMIFlags, CEMIMessageCode
@@ -30,8 +30,8 @@ class CEMIFrame(KNXIPBody):
         self.code = CEMIMessageCode.L_DATA_IND
         self.flags = 0
         self.cmd = APCICommand.GROUP_READ
-        self.src_addr = Address()
-        self.dst_addr = Address()
+        self.src_addr = GroupAddress(None)
+        self.dst_addr = GroupAddress(None)
         self.mpdu_len = 0
         self.payload = None
 
@@ -129,16 +129,13 @@ class CEMIFrame(KNXIPBody):
 
         self.flags = cemi[2 + addil] * 256 + cemi[3 + addil]
 
-        self.src_addr = Address((cemi[4 + addil], cemi[5 + addil]),
-                                AddressType.PHYSICAL)
+        self.src_addr = PhysicalAddress((cemi[4 + addil], cemi[5 + addil]))
 
         if self.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS:
-            self.dst_addr = Address((cemi[6 + addil], cemi[7 + addil]),
-                                    address_type=AddressType.GROUP,
-                                    address_format=self.xknx.address_format)
+            self.dst_addr = GroupAddress((cemi[6 + addil], cemi[7 + addil]),
+                                         levels=self.xknx.address_format)
         else:
-            self.dst_addr = Address((cemi[6 + addil], cemi[7 + addil]),
-                                    address_type=AddressType.PHYSICAL)
+            self.dst_addr = PhysicalAddress((cemi[6 + addil], cemi[7 + addil]))
 
         self.mpdu_len = cemi[8 + addil]
 
@@ -165,9 +162,9 @@ class CEMIFrame(KNXIPBody):
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
-        if not isinstance(self.src_addr, Address):
+        if not isinstance(self.src_addr, (GroupAddress, PhysicalAddress)):
             raise ConversionError("src_add not set")
-        if not isinstance(self.dst_addr, Address):
+        if not isinstance(self.dst_addr, (GroupAddress, PhysicalAddress)):
             raise ConversionError("dst_add not set")
 
         data = []

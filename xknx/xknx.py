@@ -6,7 +6,7 @@ import signal
 from xknx.core import Config, TelegramQueue
 from xknx.devices import Devices
 from xknx.io import ConnectionConfig, KNXIPInterface
-from xknx.knx import Address, AddressFormat
+from xknx.knx import PhysicalAddress, GroupAddressType
 
 
 class XKNX:
@@ -19,8 +19,8 @@ class XKNX:
     def __init__(self,
                  config=None,
                  loop=None,
-                 own_address=Address(DEFAULT_ADDRESS),
-                 address_format=AddressFormat.LEVEL3,
+                 own_address=PhysicalAddress(DEFAULT_ADDRESS),
+                 address_format=GroupAddressType.LONG,
                  telegram_received_cb=None,
                  device_updated_cb=None):
         """Initialize XKNX class."""

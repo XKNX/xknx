@@ -10,7 +10,7 @@ It provides functionality for
 import asyncio
 
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.knx import Address, DPTArray
+from xknx.knx import GroupAddress, DPTArray
 
 from .device import Device
 from .remote_value import RemoteValueSwitch1001
@@ -31,9 +31,9 @@ class Light(Device):
         # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name, device_updated_cb)
         if isinstance(group_address_brightness, (str, int)):
-            group_address_brightness = Address(group_address_brightness)
+            group_address_brightness = GroupAddress(group_address_brightness)
         if isinstance(group_address_brightness_state, (str, int)):
-            group_address_brightness_state = Address(group_address_brightness_state)
+            group_address_brightness_state = GroupAddress(group_address_brightness_state)
 
         self.switch = RemoteValueSwitch1001(
             xknx,

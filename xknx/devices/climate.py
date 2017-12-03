@@ -7,7 +7,7 @@ Module for managing the climate within a room.
 import asyncio
 
 from xknx.exceptions import CouldNotParseTelegram, DeviceIllegalValue
-from xknx.knx import (Address, DPTArray, DPTBinary, DPTControllerStatus,
+from xknx.knx import (GroupAddress, DPTArray, DPTBinary, DPTControllerStatus,
                       DPTHVACMode, HVACOperationMode)
 
 from .device import Device
@@ -45,19 +45,19 @@ class Climate(Device):
         # pylint: disable=too-many-arguments, too-many-locals
         Device.__init__(self, xknx, name, device_updated_cb)
         if isinstance(group_address_operation_mode, (str, int)):
-            group_address_operation_mode = Address(group_address_operation_mode)
+            group_address_operation_mode = GroupAddress(group_address_operation_mode)
         if isinstance(group_address_operation_mode_state, (str, int)):
-            group_address_operation_mode_state = Address(group_address_operation_mode_state)
+            group_address_operation_mode_state = GroupAddress(group_address_operation_mode_state)
         if isinstance(group_address_operation_mode_protection, (str, int)):
-            group_address_operation_mode_protection = Address(group_address_operation_mode_protection)
+            group_address_operation_mode_protection = GroupAddress(group_address_operation_mode_protection)
         if isinstance(group_address_operation_mode_night, (str, int)):
-            group_address_operation_mode_night = Address(group_address_operation_mode_night)
+            group_address_operation_mode_night = GroupAddress(group_address_operation_mode_night)
         if isinstance(group_address_operation_mode_comfort, (str, int)):
-            group_address_operation_mode_comfort = Address(group_address_operation_mode_comfort)
+            group_address_operation_mode_comfort = GroupAddress(group_address_operation_mode_comfort)
         if isinstance(group_address_controller_status, (str, int)):
-            group_address_controller_status = Address(group_address_controller_status)
+            group_address_controller_status = GroupAddress(group_address_controller_status)
         if isinstance(group_address_controller_status_state, (str, int)):
-            group_address_controller_status_state = Address(group_address_controller_status_state)
+            group_address_controller_status_state = GroupAddress(group_address_controller_status_state)
 
         self.group_address_operation_mode = group_address_operation_mode
         self.group_address_operation_mode_state = group_address_operation_mode_state

@@ -12,248 +12,248 @@ The module supports all different writings of group addresses:
 * 2nd level: "1/2"
 * Free format: "123"
 """
+from re import compile as re_compile
 from enum import Enum
 
 from xknx.exceptions import CouldNotParseAddress
 
 
-class AddressType(Enum):
-    """Enum class for different type of addresses."""
+def address_tuple_to_int(address):
+    """
+    Convert the tuple `address` to an integer.
 
-    PHYSICAL = 1
-    GROUP = 2
+    Valid values inside the `address` tuple are:
+    * Positive Numbers between 0 and 255 (binary)
+    """
+    if any(not isinstance(byte, int) for byte in address) \
+       or any(byte < 0 for byte in address) \
+       or any(byte > 255 for byte in address):
+        raise CouldNotParseAddress(address)
+    return address[0] * 256 + address[1]
 
 
-class AddressFormat(Enum):
-    """Enum class for different writing of addresses."""
+class BaseAddress:  # pylint: disable=too-few-public-methods
+    """Base class for all knx address types."""
 
-    LEVEL2 = 1
-    LEVEL3 = 2
-    FREE = 3
-
-
-class Address:
-    """Class for handling KNX pyhsical and group addresses."""
-
-    MAX_PYHSICAL_1 = 0x0F  # 15
-    MAX_PYHSICAL_2 = 0x0F  # 15
-    MAX_PYHSICAL_3 = 0xFF  # 255
-
-    MAX_LEVEL3_1 = 0x1F  # 31
-    MAX_LEVEL3_2 = 0x07  # 7
-    MAX_LEVEL3_3 = 0xFF  # 255
-
-    MAX_LEVEL2_1 = 0x1F  # 31
-    MAX_LEVEL2_2 = 0x07FF  # 2047
-
-    MAX_FREE = 0xFFFF  # 65535
-
-    def __init__(self, address=0, address_type=None, address_format=AddressFormat.LEVEL3):
-        """Initialize Address class."""
+    def __init__(self):
+        """Initialize instance variables needed by all subclasses."""
         self.raw = None
-        self.address_format = address_format
-        self._set(address, address_type)
-
-    def _set(self, address, address_type):
-
-        self.address_type = \
-            address_type if address_type is not None \
-            else self._detect_address_type(address)
-
-        if address is None:
-            self.raw = 0
-
-        elif isinstance(address, Address):
-            self.raw = address.raw
-            self.address_format = address.address_format
-
-        elif isinstance(address, str):
-            if self.address_type == AddressType.PHYSICAL:
-                self._set_str_physical(address)
-            else:
-                self._set_str_group(address)
-
-        elif isinstance(address, int):
-            self._set_int(address)
-
-        elif isinstance(address, tuple):
-            self._set_tuple(address)
-
-        else:
-            raise TypeError()
-
-    def _set_str_physical(self, address):
-        parts = address.split(".")
-        if any(not part.isdigit() for part in parts):
-            raise CouldNotParseAddress(address)
-        if len(parts) != 3:
-            raise CouldNotParseAddress(address)
-        main = int(parts[0])
-        middle = int(parts[1])
-        sub = int(parts[2])
-        if main > self.MAX_PYHSICAL_1:
-            raise CouldNotParseAddress(address)
-        if middle > self.MAX_PYHSICAL_2:
-            raise CouldNotParseAddress(address)
-        if sub > self.MAX_PYHSICAL_3:
-            raise CouldNotParseAddress(address)
-        self.raw = (main << 12) + (middle << 8) + sub
-        self.address_format = AddressFormat.LEVEL3
-
-    def _set_str_group(self, address):
-        parts = address.split("/")
-
-        if any(not part.isdigit() for part in parts):
-            raise CouldNotParseAddress(address)
-        if len(parts) == 1:
-            self._set_str_group_free(parts)
-        elif len(parts) == 2:
-            self._set_str_group_level2(parts)
-        elif len(parts) == 3:
-            self._set_str_group_level3(parts)
-        else:
-            raise CouldNotParseAddress(address)
-
-    def _set_str_group_free(self, parts):
-        self._set_int(int(parts[0]))
-        self.address_format = AddressFormat.FREE
-
-    def _set_str_group_level2(self, parts):
-        main = int(parts[0])
-        sub = int(parts[1])
-        if main > self.MAX_LEVEL2_1:
-            raise CouldNotParseAddress(parts)
-        if sub > self.MAX_LEVEL2_2:
-            raise CouldNotParseAddress(parts)
-        self.raw = (main << 11) + sub
-        self.address_format = AddressFormat.LEVEL2
-
-    def _set_str_group_level3(self, parts):
-        main = int(parts[0])
-        middle = int(parts[1])
-        sub = int(parts[2])
-        if main > self.MAX_LEVEL3_1:
-            raise CouldNotParseAddress(parts)
-        if middle > self.MAX_LEVEL3_2:
-            raise CouldNotParseAddress(parts)
-        if sub > self.MAX_LEVEL3_3:
-            raise CouldNotParseAddress(parts)
-        self.raw = (main << 11) + (middle << 8) + sub
-        self.address_format = AddressFormat.LEVEL3
-
-    def _set_tuple(self, address):
-        if len(address) != 2 \
-                or any(not isinstance(byte, int) for byte in address) \
-                or any(byte < 0 for byte in address) \
-                or any(byte > 255 for byte in address):
-            raise CouldNotParseAddress(address)
-
-        self._set_int(address[0] * 256 + address[1])
-
-    def _set_int(self, raw):
-        if not isinstance(raw, int):
-            raise CouldNotParseAddress(raw)
-        if raw > 65535:
-            raise CouldNotParseAddress(raw)
-        self.raw = raw
-
-    def get_physical_1(self):
-        """Return 1st part of pyhsical address."""
-        return (self.raw >> 12) & self.MAX_PYHSICAL_1
-
-    def get_physical_2(self):
-        """Return 2nd part of pyhsical address."""
-        return (self.raw >> 8) & self.MAX_PYHSICAL_2
-
-    def get_physical_3(self):
-        """Return 3rd part of pyhsical address."""
-        return self.raw & self.MAX_PYHSICAL_3
-
-    def get_level3_1(self):
-        """Return 1st part of level3 group address."""
-        return (self.raw >> 11) & self.MAX_LEVEL3_1
-
-    def get_level3_2(self):
-        """Return 2nd part of level3 group address."""
-        return (self.raw >> 8) & self.MAX_LEVEL3_2
-
-    def get_level3_3(self):
-        """Return 3rd part of level3 group address."""
-        return self.raw & self.MAX_LEVEL3_3
-
-    def get_level2_1(self):
-        """Return 1st part of level2 group address."""
-        return (self.raw >> 11) & self.MAX_LEVEL2_1
-
-    def get_level2_2(self):
-        """Return 2nd part of level2 group address."""
-        return self.raw & self.MAX_LEVEL2_2
-
-    def get_free(self):
-        """Return the only part of free format group address."""
-        return self.raw & self.MAX_FREE
-
-    def str(self):
-        """Return the address in the written string representation."""
-        if self.address_type == AddressType.PHYSICAL:
-            return self._str_physical()
-        elif self.address_format == AddressFormat.FREE:
-            return self._str_free()
-        elif self.address_format == AddressFormat.LEVEL2:
-            return self._str_level2()
-        elif self.address_format == AddressFormat.LEVEL3:
-            return self._str_level3()
-        else:
-            raise TypeError()
-
-    def _str_free(self):
-        """Return the address in the written string representation in free format."""
-        return '{0}'.format(
-            self.get_free())
-
-    def _str_level2(self):
-        """Return the address in the written string representation in 2nd level format."""
-        return '{0}/{1}'.format(
-            self.get_level2_1(),
-            self.get_level2_2())
-
-    def _str_level3(self):
-        """Return the address in the written string representation 3rd level format."""
-        return '{0}/{1}/{2}'.format(
-            self.get_level3_1(),
-            self.get_level3_2(),
-            self.get_level3_3())
-
-    def _str_physical(self):
-        """Return the address in the written string representation in the format for physical addresses."""
-        return '{0}.{1}.{2}'.format(
-            self.get_physical_1(),
-            self.get_physical_2(),
-            self.get_physical_3())
-
-    @staticmethod
-    def _detect_address_type(address):
-        """Return the type of address from the style of writing."""
-        # Physical addresses have either be specified explicitely or
-        # in the correct notation. As default an address is a group address.
-        if isinstance(address, str) and "." in address:
-            return AddressType.PHYSICAL
-        elif isinstance(address, Address):
-            return address.address_type
-        return AddressType.GROUP
 
     def to_knx(self):
-        """Serialize to KNX/IP raw data."""
+        """
+        Serialize to KNX/IP raw data.
+
+        Returns a 2-Byte tuple generated from the raw Value.
+        """
         return (self.raw >> 8) & 255, self.raw & 255
 
-    def __str__(self):
-        """Return object as readable string."""
-        return '<Address str="{0}" />'.format(self.str())
-
     def __eq__(self, other):
-        """Equal operator."""
+        """
+        Implement the equal operator.
+
+        Returns `True` if we check against the same subclass and the
+        raw Value matches.
+
+        Returns `False` if we check against `None`.
+        """
         if other is None:
             return False
-        if not isinstance(other, Address):
+        if not isinstance(other, self.__class__):
             raise TypeError()
         return self.raw == other.raw
+
+
+class PhysicalAddress(BaseAddress):
+    """Class for handling KNX pyhsical addresses."""
+
+    MAX_AREA = 15
+    MAX_MAIN = 15
+    MAX_LINE = 255
+    ADDRESS_RE = re_compile(r'^(?P<area>\d{1,2})\.(?P<main>\d{1,2})\.(?P<line>\d{1,3})$')
+
+    def __init__(self, address):
+        """Initialize Address class."""
+        super(PhysicalAddress, self).__init__()
+        if isinstance(address, str):
+            self.raw = self.__string_to_int(address)
+        elif isinstance(address, tuple) and len(address) == 2:
+            self.raw = address_tuple_to_int(address)
+        elif isinstance(address, int):
+            self.raw = address
+        elif address is None:
+            self.raw = 0
+        else:
+            raise CouldNotParseAddress(address)
+
+        if isinstance(self.raw, int) and self.raw > 65535:
+            raise CouldNotParseAddress(address)
+
+    def __string_to_int(self, address):
+        """
+        Parse `address` as string to an integer and do some simple checks.
+
+        Returns the integer representation of `address` if all checks are valid:
+        * string matches against the regular expression
+        * area, main and line are inside its range
+
+        In any other case, we raise an `CouldNotParseAddress` exception.
+        """
+        match = self.ADDRESS_RE.match(address)
+        if not match:
+            raise CouldNotParseAddress(address)
+        area = int(match.group('area'))
+        main = int(match.group('main'))
+        line = int(match.group('line'))
+        if area > self.MAX_AREA or main > self.MAX_MAIN or line > self.MAX_LINE:
+            raise CouldNotParseAddress(address)
+        return (area << 12) + (main << 8) + line
+
+    @property
+    def area(self):
+        """Return area part of pyhsical address."""
+        return (self.raw >> 12) & self.MAX_AREA
+
+    @property
+    def main(self):
+        """Return main part of pyhsical address."""
+        return (self.raw >> 8) & self.MAX_MAIN
+
+    @property
+    def line(self):
+        """Return line part of pyhsical address."""
+        return self.raw & self.MAX_LINE
+
+    @property
+    def is_device(self):
+        """Return `True` if this address is a valid device address."""
+        return self.line != 0
+
+    @property
+    def is_line(self):
+        """Return `True` if this address is a valid line address."""
+        return not self.is_device
+
+    def __repr__(self):
+        """Return this object as parsable string."""
+        return 'PhysicalAddress("{0.area}.{0.main}.{0.line}")'.format(self)
+
+
+class GroupAddressType(Enum):
+    """
+    Possible types of `GroupAddress`.
+
+    KNX knows three types of group addresses:
+    * FREE, a integer or hex representation
+    * SHORT, a representation like '1/123', without middle groups
+    * LONG, a representation like '1/2/34', with middle groups
+    """
+
+    FREE = 0
+    SHORT = 2
+    LONG = 3
+
+
+class GroupAddress(BaseAddress):
+    """Class for handling KNX group addresses."""
+
+    MAX_MAIN = 31
+    MAX_MIDDLE = 7
+    MAX_SUB_LONG = 255
+    MAX_SUB_SHORT = 2047
+    MAX_FREE = 65535
+
+    ADDRESS_RE = re_compile(r'^(?P<main>\d{1,2})(/(?P<middle>\d{1,2}))?/(?P<sub>\d{1,4})$')
+
+    def __init__(self, address, levels=GroupAddressType.LONG):
+        """Initialize Address class."""
+        super(GroupAddress, self).__init__()
+        self.levels = levels
+
+        if isinstance(address, str) and not address.isdigit():
+            self.raw = self.__string_to_int(address)
+        elif isinstance(address, str) and address.isdigit():
+            self.raw = int(address)
+        elif isinstance(address, tuple) and len(address) == 2:
+            self.raw = address_tuple_to_int(address)
+        elif isinstance(address, int):
+            self.raw = address
+        elif address is None:
+            self.raw = 0
+        else:
+            raise CouldNotParseAddress(address)
+
+        if isinstance(self.raw, int) and self.raw > 65535:
+            raise CouldNotParseAddress(address)
+
+    def __string_to_int(self, address):
+        """
+        Parse `address` as string to an integer and do some simple checks.
+
+        Returns the integer representation of `address` if all checks are valid:
+        * string matches against the regular expression
+        * main, middle and sub are inside its range
+
+        In any other case, we raise an `CouldNotParseAddress` exception.
+        """
+        match = self.ADDRESS_RE.match(address)
+        if not match:
+            raise CouldNotParseAddress(address)
+        main = int(match.group('main'))
+        middle = int(match.group('middle')) if match.group('middle') is not None else None
+        sub = int(match.group('sub'))
+        if main > self.MAX_MAIN:
+            raise CouldNotParseAddress(address)
+        if middle is not None:
+            if middle > self.MAX_MIDDLE:
+                raise CouldNotParseAddress(address)
+            if sub > self.MAX_SUB_LONG:
+                raise CouldNotParseAddress(address)
+        else:
+            if sub > self.MAX_SUB_SHORT:
+                raise CouldNotParseAddress(address)
+        return (main << 11) + (middle << 8) + sub if middle is not None else (main << 11) + sub
+
+    @property
+    def main(self):
+        """
+        Return the main group part as an integer.
+
+        Works only if the group dont uses `GroupAddressType.FREE`, returns `None`
+        in any other case.
+        """
+        return (self.raw >> 11) & self.MAX_MAIN if self.levels != GroupAddressType.FREE else None
+
+    @property
+    def middle(self):
+        """
+        Return the middle group part as an integer.
+
+        Works only if the group uses `GroupAddressType.LONG`, returns `None` in
+        any other case.
+        """
+        return (self.raw >> 8) & self.MAX_MIDDLE if self.levels == GroupAddressType.LONG else None
+
+    @property
+    def sub(self):
+        """
+        Return the sub group part as an integer.
+
+        Works with any `GroupAddressType`, as we always have sub groups.
+        """
+        if self.levels == GroupAddressType.SHORT:
+            return self.raw & self.MAX_SUB_SHORT
+        elif self.levels == GroupAddressType.LONG:
+            return self.raw & self.MAX_SUB_LONG
+        return self.raw
+
+    def __repr__(self):
+        """
+        Return object as readable string.
+
+        Honors the used `GroupAddressType` of this group.
+        """
+        if self.levels == GroupAddressType.LONG:
+            return 'GroupAddress("{0.main}/{0.middle}/{0.sub}")'.format(self)
+        elif self.levels == GroupAddressType.SHORT:
+            return 'GroupAddress("{0.main}/{0.sub}")'.format(self)
+        return 'GroupAddress("{0.sub}")'.format(self)

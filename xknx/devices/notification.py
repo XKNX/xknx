@@ -2,7 +2,7 @@
 import asyncio
 
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.knx import Address, DPTArray, DPTString
+from xknx.knx import GroupAddress, DPTArray, DPTString
 
 from .device import Device
 
@@ -19,7 +19,7 @@ class Notification(Device):
         # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name, device_updated_cb)
         if isinstance(group_address, (str, int)):
-            group_address = Address(group_address)
+            group_address = GroupAddress(group_address)
 
         self.group_address = group_address
         self.message = ""
