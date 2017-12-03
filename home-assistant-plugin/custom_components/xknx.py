@@ -249,7 +249,7 @@ class KNXModule(object):
     @asyncio.coroutine
     def service_send_to_knx_bus(self, call):
         """Service for sending an arbitrary KNX message to the KNX bus."""
-        from xknx.knx import Telegram, Address, DPTBinary, DPTArray
+        from xknx.knx import Telegram, GroupAddress, DPTBinary, DPTArray
         attr_payload = call.data.get(SERVICE_XKNX_ATTR_PAYLOAD)
         attr_address = call.data.get(SERVICE_XKNX_ATTR_ADDRESS)
 
@@ -259,7 +259,7 @@ class KNXModule(object):
                 return DPTBinary(attr_payload)
             return DPTArray(attr_payload)
         payload = calculate_payload(attr_payload)
-        address = Address(attr_address)
+        address = GroupAddress(attr_address)
 
         telegram = Telegram()
         telegram.payload = payload
@@ -269,10 +269,10 @@ class KNXModule(object):
     @asyncio.coroutine
     def async_broadcast_temperature(self, entity_id, old_state, new_state):
         """Broadcast new temperature of sensor to KNX bus."""
-        from xknx.knx import Telegram, Address, DPTArray, DPTFloat
+        from xknx.knx import Telegram, GroupAddress, DPTArray, DPTFloat
         if new_state is None:
             return
-        address = Address(
+        address = GroupAddress(
             self.config[DOMAIN][CONF_XKNX_OUTSIDE_TEMPERATURE_ADDRESS])
         payload = DPTArray(DPTFloat().to_knx(float(new_state.state)))
         telegram = Telegram()
