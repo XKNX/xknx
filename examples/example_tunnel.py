@@ -3,7 +3,7 @@ import asyncio
 
 from xknx import XKNX
 from xknx.io import GatewayScanner, Tunnel
-from xknx.knx import Address, DPTBinary, Telegram
+from xknx.knx import GroupAddress, PhysicalAddress, DPTBinary, Telegram
 
 
 async def main():
@@ -16,7 +16,7 @@ async def main():
         print("No Gateways found")
         return
 
-    src_address = Address("15.15.249")
+    src_address = PhysicalAddress("15.15.249")
 
     print("Connecting to {}:{} from {}".format(
         gatewayscanner.found_ip_addr,
@@ -33,9 +33,9 @@ async def main():
     await tunnel.connect_udp()
     await tunnel.connect()
 
-    await tunnel.send_telegram(Telegram(Address('1/0/15'), payload=DPTBinary(1)))
+    await tunnel.send_telegram(Telegram(GroupAddress('1/0/15'), payload=DPTBinary(1)))
     await asyncio.sleep(2)
-    await tunnel.send_telegram(Telegram(Address('1/0/15'), payload=DPTBinary(0)))
+    await tunnel.send_telegram(Telegram(GroupAddress('1/0/15'), payload=DPTBinary(0)))
     await asyncio.sleep(2)
 
     await tunnel.connectionstate()
