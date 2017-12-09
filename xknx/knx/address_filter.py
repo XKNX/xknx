@@ -23,7 +23,7 @@ Patterns can be
 """
 from xknx.exceptions import ConversionError
 
-from .address import Address
+from .address import GroupAddress
 
 
 class AddressFilter:
@@ -47,7 +47,7 @@ class AddressFilter:
     def match(self, address):
         """Test if provided address matches Addressfilter."""
         if isinstance(address, str):
-            address = Address(address)
+            address = GroupAddress(address)
         if len(self.level_filters) == 3:
             return self._match_level3(address)
         elif len(self.level_filters) == 2:
@@ -57,21 +57,24 @@ class AddressFilter:
 
     def _match_level3(self, address):
         return (
-            self.level_filters[0].match(address.get_level3_1())
+            self.level_filters[0].match(address.main)
             and
-            self.level_filters[1].match(address.get_level3_2())
+            self.level_filters[1].match(address.middle)
             and
-            self.level_filters[2].match(address.get_level3_3()))
+            self.level_filters[2].match(address.sub)
+        )
 
     def _match_level2(self, address):
         return (
-            self.level_filters[0].match(address.get_level2_1())
+            self.level_filters[0].match(address.main)
             and
-            self.level_filters[1].match(address.get_level2_2()))
+            self.level_filters[1].match(address.sub)
+        )
 
     def _match_free(self, address):
         return (
-            self.level_filters[0].match(address.get_free()))
+            self.level_filters[0].match(address.sub)
+        )
 
     class Range:
         """Class for filtering patterns like "8", "*", "8-10"."""
@@ -95,7 +98,7 @@ class AddressFilter:
 
         def _init_wildcard(self):
             self.range_from = 0
-            self.range_to = Address.MAX_FREE
+            self.range_to = GroupAddress.MAX_FREE
 
         def _init_digit(self, pattern):
             digit = int(pattern)
@@ -107,12 +110,12 @@ class AddressFilter:
             self.range_from = int(range_from) \
                 if range_from else 0
             self.range_to = int(range_to) \
-                if range_to else Address.MAX_FREE
+                if range_to else GroupAddress.MAX_FREE
 
         @staticmethod
         def _adjust_range(digit):
-            if digit > Address.MAX_FREE:
-                return Address.MAX_FREE
+            if digit > GroupAddress.MAX_FREE:
+                return GroupAddress.MAX_FREE
             if digit < 0:
                 return 0
             return digit

@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 from xknx import XKNX
 from xknx.devices import Switch
-from xknx.knx import Address, DPTBinary, Telegram, TelegramType
+from xknx.knx import GroupAddress, DPTBinary, Telegram, TelegramType
 
 
 class TestSwitch(unittest.TestCase):
@@ -33,7 +33,7 @@ class TestSwitch(unittest.TestCase):
 
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/3'), TelegramType.GROUP_READ))
+                         Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
 
     def test_sync_state_address(self):
         """Test sync function / sending group reads to KNX bus. Test with Switch with explicit state address."""
@@ -47,7 +47,7 @@ class TestSwitch(unittest.TestCase):
 
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/4'), TelegramType.GROUP_READ))
+                         Telegram(GroupAddress('1/2/4'), TelegramType.GROUP_READ))
 
     #
     # TEST PROCESS
@@ -60,14 +60,14 @@ class TestSwitch(unittest.TestCase):
         self.assertEqual(switch.state, False)
 
         telegram_on = Telegram()
-        telegram_on.group_address = Address('1/2/3')
+        telegram_on.group_address = GroupAddress('1/2/3')
         telegram_on.payload = DPTBinary(1)
         self.loop.run_until_complete(asyncio.Task(switch.process(telegram_on)))
 
         self.assertEqual(switch.state, True)
 
         telegram_off = Telegram()
-        telegram_off.group_address = Address('1/2/3')
+        telegram_off.group_address = GroupAddress('1/2/3')
         telegram_off.payload = DPTBinary(0)
         self.loop.run_until_complete(asyncio.Task(switch.process(telegram_off)))
 
@@ -89,7 +89,7 @@ class TestSwitch(unittest.TestCase):
         switch.register_device_updated_cb(async_after_update_callback)
 
         telegram = Telegram()
-        telegram.group_address = Address('1/2/3')
+        telegram.group_address = GroupAddress('1/2/3')
         telegram.payload = DPTBinary(1)
         self.loop.run_until_complete(asyncio.Task(switch.process(telegram)))
 
@@ -106,7 +106,7 @@ class TestSwitch(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/3'), payload=DPTBinary(1)))
+                         Telegram(GroupAddress('1/2/3'), payload=DPTBinary(1)))
 
     #
     # TEST SET OFF
@@ -119,7 +119,7 @@ class TestSwitch(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/3'), payload=DPTBinary(0)))
+                         Telegram(GroupAddress('1/2/3'), payload=DPTBinary(0)))
 
     #
     # TEST DO
@@ -132,7 +132,3 @@ class TestSwitch(unittest.TestCase):
         self.assertTrue(switch.state)
         self.loop.run_until_complete(asyncio.Task(switch.do("off")))
         self.assertFalse(switch.state)
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestSwitch)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

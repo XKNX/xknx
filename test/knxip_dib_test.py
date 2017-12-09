@@ -2,7 +2,7 @@
 import unittest
 
 from xknx.exceptions import CouldNotParseKNXIP
-from xknx.knx import Address
+from xknx.knx import PhysicalAddress
 from xknx.knxip import (DIB, DIBDeviceInformation, DIBGeneric,
                         DIBServiceFamily, DIBSuppSVCFamilies, DIBTypeCode,
                         KNXMedium)
@@ -44,7 +44,7 @@ class Test_KNXIP_DIB(unittest.TestCase):
         self.assertEqual(dib.from_knx(raw), DIBDeviceInformation.LENGTH)
         self.assertEqual(dib.knx_medium, KNXMedium.TP1)
         self.assertEqual(dib.programming_mode, False)
-        self.assertEqual(dib.individual_address, Address('1.1.0'))
+        self.assertEqual(dib.individual_address, PhysicalAddress('1.1.0'))
         self.assertEqual(dib.name, 'Gira KNX/IP-Router')
         self.assertEqual(dib.mac_address, '00:01:02:03:04:05')
         self.assertEqual(dib.multicast_address, '224.0.23.12')
@@ -76,7 +76,3 @@ class Test_KNXIP_DIB(unittest.TestCase):
         ])
 
         self.assertEqual(dib.to_knx(), list(raw))
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(Test_KNXIP_DIB)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

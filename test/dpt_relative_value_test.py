@@ -55,7 +55,3 @@ class TestDPTRelativeValue(unittest.TestCase):
         self.assertEqual(DPTSignedRelativeValue.unit, 'counter pulses')
         self.assertEqual(DPTPercentV8.unit, '%')
         self.assertEqual(DPTValue1Count.unit, 'counter pulses')
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPTRelativeValue)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

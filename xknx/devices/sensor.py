@@ -8,7 +8,7 @@ It provides functionality for
 """
 import asyncio
 
-from xknx.knx import (Address, DPTArray, DPTBinary, DPTHumidity, DPTLux,
+from xknx.knx import (GroupAddress, DPTArray, DPTBinary, DPTHumidity, DPTLux,
                       DPTScaling, DPTTemperature, DPTUElCurrentmA, DPTWsp)
 
 from .device import Device
@@ -27,7 +27,7 @@ class Sensor(Device):
         # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name, device_updated_cb)
         if isinstance(group_address, (str, int)):
-            group_address = Address(group_address)
+            group_address = GroupAddress(group_address)
         if value_type == 'brightness':
             value_type = 'illuminance'
         self.group_address = group_address

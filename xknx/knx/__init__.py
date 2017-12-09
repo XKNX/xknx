@@ -7,7 +7,7 @@ Module for handling KNX primitves.
 
 """
 # flake8: noqa
-from .address import Address, AddressType, AddressFormat
+from .address import GroupAddress, GroupAddressType, PhysicalAddress
 from .address_filter import AddressFilter
 from .telegram import Telegram, TelegramDirection, TelegramType
 from .dpt import DPTBase, DPTBinary, DPTArray, DPTComparator

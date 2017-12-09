@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import Mock
 
 from xknx import XKNX
-from xknx.knx import (Address, AddressFilter, DPTBinary, Telegram,
+from xknx.knx import (GroupAddress, AddressFilter, DPTBinary, Telegram,
                       TelegramDirection)
 
 
@@ -40,7 +40,7 @@ class TestTelegramReceivedCallback(unittest.TestCase):
         telegram = Telegram(
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
-            group_address=Address("1/2/3"))
+            group_address=GroupAddress("1/2/3"))
         self.loop.run_until_complete(asyncio.Task(
             xknx.telegram_queue.process_telegram(telegram)))
         telegram_received_callback.assert_called_with(telegram)
@@ -66,7 +66,7 @@ class TestTelegramReceivedCallback(unittest.TestCase):
         telegram = Telegram(
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
-            group_address=Address("1/2/3"))
+            group_address=GroupAddress("1/2/3"))
         self.loop.run_until_complete(asyncio.Task(
             xknx.telegram_queue.process_telegram(telegram)))
         telegram_received_callback.assert_called_with(telegram)
@@ -92,7 +92,7 @@ class TestTelegramReceivedCallback(unittest.TestCase):
         telegram = Telegram(
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
-            group_address=Address("1/2/3"))
+            group_address=GroupAddress("1/2/3"))
         self.loop.run_until_complete(asyncio.Task(
             xknx.telegram_queue.process_telegram(telegram)))
         telegram_received_callback.assert_not_called()
@@ -118,11 +118,7 @@ class TestTelegramReceivedCallback(unittest.TestCase):
         telegram = Telegram(
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
-            group_address=Address("1/2/3"))
+            group_address=GroupAddress("1/2/3"))
         self.loop.run_until_complete(asyncio.Task(
             xknx.telegram_queue.process_telegram(telegram)))
         telegram_received_callback.assert_not_called()
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestTelegramReceivedCallback)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

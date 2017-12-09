@@ -3,7 +3,7 @@ import asyncio
 
 from xknx import XKNX
 from xknx.core import ValueReader
-from xknx.knx import Address
+from xknx.knx import GroupAddress
 
 
 async def main():
@@ -11,7 +11,7 @@ async def main():
     xknx = XKNX()
     await xknx.start()
 
-    value_reader = ValueReader(xknx, Address('6/2/1'))
+    value_reader = ValueReader(xknx, GroupAddress('6/2/1'))
     telegram = await value_reader.read()
     if telegram is not None:
         print(telegram)

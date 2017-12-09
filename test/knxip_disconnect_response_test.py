@@ -42,7 +42,3 @@ class Test_KNXIP_DisconnectResp(unittest.TestCase):
         knxipframe2.normalize()
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(Test_KNXIP_DisconnectResp)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

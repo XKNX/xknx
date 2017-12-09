@@ -4,7 +4,7 @@ import unittest
 
 from xknx import XKNX
 from xknx.devices import BinarySensor, Devices, Light, Switch
-from xknx.knx import Address
+from xknx.knx import GroupAddress
 
 
 # pylint: disable=too-many-public-methods,invalid-name
@@ -92,13 +92,13 @@ class TestDevices(unittest.TestCase):
         devices.add(light2)
 
         self.assertEqual(
-            tuple(devices.devices_by_group_address(Address('1/6/7'))),
+            tuple(devices.devices_by_group_address(GroupAddress('1/6/7'))),
             (light1,))
         self.assertEqual(
-            tuple(devices.devices_by_group_address(Address('1/6/8'))),
+            tuple(devices.devices_by_group_address(GroupAddress('1/6/8'))),
             (light2,))
         self.assertEqual(
-            tuple(devices.devices_by_group_address(Address('3/0/1'))),
+            tuple(devices.devices_by_group_address(GroupAddress('3/0/1'))),
             (sensor1, sensor2))
 
     def test_iter(self):
@@ -185,7 +185,7 @@ class TestDevices(unittest.TestCase):
 
         self.assertFalse(light1.state)
 
-        for device in devices.devices_by_group_address(Address('1/6/7')):
+        for device in devices.devices_by_group_address(GroupAddress('1/6/7')):
             self.loop.run_until_complete(asyncio.Task(device.set_on()))
 
         self.assertTrue(light1.state)

@@ -3,7 +3,7 @@ import asyncio
 import unittest
 
 from xknx import XKNX
-from xknx.knx import Address, DPTBinary, Telegram
+from xknx.knx import GroupAddress, DPTBinary, Telegram
 from xknx.knxip import (CEMIFrame, KNXIPFrame, KNXIPServiceType,
                         TunnellingRequest)
 
@@ -37,17 +37,13 @@ class Test_KNXIP_TunnelingReq(unittest.TestCase):
         self.assertTrue(isinstance(knxipframe.body.cemi, CEMIFrame))
 
         self.assertEqual(knxipframe.body.cemi.telegram,
-                         Telegram(Address('9/0/8'), payload=DPTBinary(1)))
+                         Telegram(GroupAddress('9/0/8'), payload=DPTBinary(1)))
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.TUNNELLING_REQUEST)
         knxipframe2.body.cemi.telegram = Telegram(
-            Address('9/0/8'), payload=DPTBinary(1))
+            GroupAddress('9/0/8'), payload=DPTBinary(1))
         knxipframe2.body.sequence_counter = 23
         knxipframe2.normalize()
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(Test_KNXIP_TunnelingReq)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

@@ -230,7 +230,3 @@ class TestTravelCalculator(unittest.TestCase):
 
         travelcalculator.time_set_from_outside = 1005
         self.assertFalse(travelcalculator.is_traveling())
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestTravelCalculator)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

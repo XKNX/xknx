@@ -64,7 +64,3 @@ class Test_KNXIP_Discovery(unittest.TestCase):
         knxipframe2.body.dibs.append(knxipframe.body.dibs[1])
         knxipframe2.normalize()
         self.assertEqual(knxipframe2.to_knx(), list(raw))
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(Test_KNXIP_Discovery)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

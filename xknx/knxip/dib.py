@@ -12,7 +12,7 @@ A KNX/IP Search Response may contain several DIBs of different types:
 """
 
 from xknx.exceptions import CouldNotParseKNXIP
-from xknx.knx import Address, AddressType
+from xknx.knx import PhysicalAddress
 
 from .knxip_enum import DIBServiceFamily, DIBTypeCode, KNXMedium
 
@@ -186,7 +186,7 @@ class DIBDeviceInformation(DIB):
         super(DIBDeviceInformation, self).__init__()
         self.knx_medium = KNXMedium.TP1
         self.programming_mode = False
-        self.individual_address = Address()
+        self.individual_address = PhysicalAddress(None)
         self.installation_number = 0
         self.project_number = 0
         self.serial_number = ""
@@ -211,7 +211,7 @@ class DIBDeviceInformation(DIB):
         # last bit of device_status. All other bits are unused
         self.programming_mode = bool(raw[3])
         self.individual_address = \
-            Address((raw[4], raw[5]), AddressType.PHYSICAL)
+            PhysicalAddress((raw[4], raw[5]))
         installation_project_identifier = raw[6]*256+raw[7]
         self.project_number = installation_project_identifier >> 4
         self.installation_number = installation_project_identifier & 15

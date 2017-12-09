@@ -16,7 +16,7 @@ It contains
 """
 from enum import Enum
 
-from .address import Address
+from .address import GroupAddress
 
 
 class TelegramDirection(Enum):
@@ -39,7 +39,7 @@ class Telegram:
 
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, group_address=Address(),
+    def __init__(self, group_address=GroupAddress(None),
                  telegramtype=TelegramType.GROUP_WRITE,
                  direction=TelegramDirection.OUTGOING,
                  payload=None):

@@ -9,7 +9,7 @@ import asyncio
 from enum import Enum
 
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
-from xknx.knx import (Address, DPTArray, DPTBinary, DPTScaling, DPTTemperature,
+from xknx.knx import (GroupAddress, DPTArray, DPTBinary, DPTScaling, DPTTemperature,
                       DPTValue1Count, Telegram)
 
 
@@ -24,9 +24,9 @@ class RemoteValue():
         """Initialize RemoteValue class."""
         self.xknx = xknx
         if isinstance(group_address, (str, int)):
-            group_address = Address(group_address)
+            group_address = GroupAddress(group_address)
         if isinstance(group_address_state, (str, int)):
-            group_address_state = Address(group_address_state)
+            group_address_state = GroupAddress(group_address_state)
 
         self.group_address = group_address
         self.group_address_state = group_address_state

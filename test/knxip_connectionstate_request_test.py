@@ -45,7 +45,3 @@ class Test_KNXIP_ConnStateReq(unittest.TestCase):
         knxipframe2.normalize()
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(Test_KNXIP_ConnStateReq)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

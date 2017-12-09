@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 from xknx import XKNX
 from xknx.devices import Light
-from xknx.knx import Address, DPTArray, DPTBinary, Telegram, TelegramType
+from xknx.knx import GroupAddress, DPTArray, DPTBinary, Telegram, TelegramType
 
 
 class TestLight(unittest.TestCase):
@@ -56,11 +56,11 @@ class TestLight(unittest.TestCase):
 
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram1,
-                         Telegram(Address('1/2/3'), TelegramType.GROUP_READ))
+                         Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
 
         telegram2 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram2,
-                         Telegram(Address('1/2/5'), TelegramType.GROUP_READ))
+                         Telegram(GroupAddress('1/2/5'), TelegramType.GROUP_READ))
 
     #
     # SYNC WITH STATE ADDRESS
@@ -80,10 +80,10 @@ class TestLight(unittest.TestCase):
 
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram1,
-                         Telegram(Address('1/2/6'), TelegramType.GROUP_READ))
+                         Telegram(GroupAddress('1/2/6'), TelegramType.GROUP_READ))
         telegram2 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram2,
-                         Telegram(Address('1/2/9'), TelegramType.GROUP_READ))
+                         Telegram(GroupAddress('1/2/9'), TelegramType.GROUP_READ))
 
     #
     # TEST SET ON
@@ -99,7 +99,7 @@ class TestLight(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/3'), payload=DPTBinary(1)))
+                         Telegram(GroupAddress('1/2/3'), payload=DPTBinary(1)))
 
     #
     # TEST SET OFF
@@ -115,7 +115,7 @@ class TestLight(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/3'), payload=DPTBinary(0)))
+                         Telegram(GroupAddress('1/2/3'), payload=DPTBinary(0)))
 
     #
     # TEST SET BRIGHTNESS
@@ -131,7 +131,7 @@ class TestLight(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/5'), payload=DPTArray(23)))
+                         Telegram(GroupAddress('1/2/5'), payload=DPTArray(23)))
 
     #
     # TEST PROCESS
@@ -145,11 +145,11 @@ class TestLight(unittest.TestCase):
                       group_address_brightness='1/2/5')
         self.assertEqual(light.state, False)
 
-        telegram = Telegram(Address('1/2/3'), payload=DPTBinary(1))
+        telegram = Telegram(GroupAddress('1/2/3'), payload=DPTBinary(1))
         self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
         self.assertEqual(light.state, True)
 
-        telegram = Telegram(Address('1/2/3'), payload=DPTBinary(0))
+        telegram = Telegram(GroupAddress('1/2/3'), payload=DPTBinary(0))
         self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
         self.assertEqual(light.state, False)
 
@@ -171,7 +171,7 @@ class TestLight(unittest.TestCase):
 
         light.register_device_updated_cb(async_after_update_callback)
 
-        telegram = Telegram(Address('1/2/3'), payload=DPTBinary(1))
+        telegram = Telegram(GroupAddress('1/2/3'), payload=DPTBinary(1))
         self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
 
         after_update_callback.assert_called_with(light)
@@ -185,7 +185,7 @@ class TestLight(unittest.TestCase):
                       group_address_brightness='1/2/5')
         self.assertEqual(light.brightness, 0)
 
-        telegram = Telegram(Address('1/2/5'), payload=DPTArray(23))
+        telegram = Telegram(GroupAddress('1/2/5'), payload=DPTArray(23))
         self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
         self.assertEqual(light.brightness, 23)
 
@@ -205,7 +205,3 @@ class TestLight(unittest.TestCase):
         self.assertEqual(light.brightness, 80)
         self.loop.run_until_complete(asyncio.Task(light.do("off")))
         self.assertFalse(light.state)
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestLight)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

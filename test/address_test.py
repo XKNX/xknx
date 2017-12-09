@@ -1,268 +1,234 @@
 """Unit test for Address class."""
-import unittest
+from unittest import TestCase
 
 from xknx.exceptions import CouldNotParseAddress
-from xknx.knx import Address, AddressFormat, AddressType
+from xknx.knx import GroupAddress, GroupAddressType, PhysicalAddress
 
 
-class TestAddress(unittest.TestCase):
-    """Test class for Address."""
+class TestPhysicalAddress(TestCase):
+    """Test class for PhysicalAddress."""
 
-    # pylint: disable=too-many-public-methods,invalid-name
+    def test_with_valid(self):
+        """Test with some valid addresses."""
+        valid_addresses = (
+            ('0.0.0', 0),
+            ('1.0.0', 4096),
+            ('1.1.0', 4352),
+            ('1.1.1', 4353),
+            ('1.1.11', 4363),
+            ('1.1.111', 4463),
+            ('1.11.111', 7023),
+            ('11.11.111', 47983),
+            ('15.15.255', 65535),
+            ((0xff, 0xff), 65535),
+            (0, 0),
+            (65535, 65535)
+        )
+        for address in valid_addresses:
+            with self.subTest(address=address):
+                self.assertEqual(PhysicalAddress(address[0]).raw, address[1])
 
-    #
-    # INIT
-    #
-    def test_address_init_3level(self):
-        """Test initialization with 3rd level address."""
-        self.assertEqual(Address("2/3/4").raw, 2*2048 + 3*256 + 4)
+    def test_with_invalid(self):
+        """Test with some invalid addresses."""
+        invalid_addresses = (
+            '15.15.256',
+            '16.0.0',
+            '0.16.0',
+            '15.15.255a',
+            'a15.15.255',
+            'abc',
+            '123',
+            65536,
+            (0xff, 0xfff),
+            (0xfff, 0xff),
+            (-1, -1),
+            []
+        )
+        for address in invalid_addresses:
+            with self.subTest(address=address):
+                with self.assertRaises(CouldNotParseAddress):
+                    PhysicalAddress(address)
 
-    def test_address_init_2level(self):
-        """Test initialization with 2nd level address."""
-        self.assertEqual(Address("12/500").raw, 12*2048 + 500)
-
-    def test_address_init_free(self):
-        """Test initialization with free format address as string."""
-        self.assertEqual(Address("49552").raw, 49552)
-
-    def test_address_init_int(self):
+    def test_with_int(self):
         """Test initialization with free format address as integer."""
-        self.assertEqual(Address(49552).raw, 49552)
+        self.assertEqual(PhysicalAddress(49552).raw, 49552)
 
-    def test_address_init_bytes(self):
+    def test_with_bytes(self):
         """Test initialization with Bytes."""
-        self.assertEqual(Address((0x12, 0x34)).raw, 0x1234)
+        self.assertEqual(PhysicalAddress((0x12, 0x34)).raw, 0x1234)
 
-    def test_address_init_address(self):
-        """Test initialization with Address object."""
-        self.assertEqual(Address(Address("2/3/4")).raw, 2*2048 + 3*256 + 4)
-
-    def test_address_init_none(self):
+    def test_with_none(self):
         """Test initialization with None object."""
-        self.assertEqual(Address(None).raw, 0)
+        self.assertEqual(PhysicalAddress(None).raw, 0)
 
-    def test_address_init_address_physical(self):
-        """Test inialization with Physical Address."""
-        address = Address("2.3.4", AddressType.PHYSICAL)
-        self.assertEqual(Address(address).raw, 8964)
+    def test_is_line(self):
+        """Test if `PhysicalAddress.is_line` works like excepted."""
+        self.assertTrue(PhysicalAddress('1.0.0').is_line)
+        self.assertFalse(PhysicalAddress('1.0.1').is_line)
 
-    def test_address_format_3level(self):
-        """Test address_format of 3rd level Address."""
+    def test_is_device(self):
+        """Test if `PhysicalAddress.is_device` works like excepted."""
+        self.assertTrue(PhysicalAddress('1.0.1').is_device)
+        self.assertFalse(PhysicalAddress('1.0.0').is_device)
+
+    def test_to_knx(self):
+        """Test if `PhysicalAddress.to_knx()` generates valid byte tuples."""
+        self.assertEqual(PhysicalAddress('0.0.0').to_knx(), (0x0, 0x0))
+        self.assertEqual(PhysicalAddress('15.15.255').to_knx(), (0xff, 0xff))
+
+    def test_equal(self):
+        """Test if the equal operator works in all cases."""
+        self.assertEqual(PhysicalAddress('1.0.0'), PhysicalAddress(4096))
+        self.assertNotEqual(PhysicalAddress('1.0.0'), PhysicalAddress('1.1.1'))
+        self.assertNotEqual(PhysicalAddress('1.0.0'), None)
+        with self.assertRaises(TypeError):
+            PhysicalAddress('1.0.0') == 'example'  # pylint: disable=expression-not-assigned
+
+    def test_representation(self):
+        """Test string representation of address."""
         self.assertEqual(
-            Address("2/3/4").address_format,
-            AddressFormat.LEVEL3)
+            repr(PhysicalAddress("2.3.4")),
+            'PhysicalAddress("2.3.4")')
 
-    def test_address_format_2level(self):
-        """Test address_format of 2nd level Address."""
+
+class TestGroupAddress(TestCase):
+    """Test class for GroupAddress."""
+
+    def test_with_valid(self):
+        """
+        Test if the class constructor generates valid raw values.
+
+        This test checks:
+        * all allowed input variants (strings, tuples, integers)
+        * for conversation errors
+        * for upper/lower limits still working, to avoid off-by-one errors
+        """
+        valid_addresses = (
+            ('0/0', 0),
+            ('0/1', 1),
+            ('0/11', 11),
+            ('0/111', 111),
+            ('0/1111', 1111),
+            ('0/2047', 2047),
+            ('0/0/0', 0),
+            ('0/0/1', 1),
+            ('0/0/11', 11),
+            ('0/0/111', 111),
+            ('0/0/255', 255),
+            ('0/1/11', 267),
+            ('0/1/111', 367),
+            ('0/7/255', 2047),
+            ('1/0', 2048),
+            ('1/0/0', 2048),
+            ('1/1/111', 2415),
+            ('1/7/255', 4095),
+            ('31/7/255', 65535),
+            ('1', 1),
+            (0, 0),
+            (65535, 65535),
+            ((0xff, 0xff), 65535),
+            (None, 0)
+        )
+        for address in valid_addresses:
+            with self.subTest(address=address):
+                self.assertEqual(GroupAddress(address[0]).raw, address[1])
+
+    def test_with_invalid(self):
+        """
+        Test if constructor raises an exception for all known invalid cases.
+
+        Checks:
+        * addresses or parts of it too high/low
+        * invalid input variants (lists instead of tuples)
+        * invalid strings
+        """
+        invalid_addresses = (
+            '0/2049',
+            '0/8/0',
+            '0/0/256',
+            '32/0',
+            '0/0a',
+            'a0/0',
+            'abc',
+            65536,
+            (0xff, 0xfff),
+            (0xfff, 0xff),
+            (-1, -1),
+            []
+        )
+        for address in invalid_addresses:
+            with self.subTest(address=address):
+                with self.assertRaises(CouldNotParseAddress):
+                    GroupAddress(address)
+
+    def test_main(self):
+        """
+        Test if `GroupAddress.main` works.
+
+        Checks:
+        * Main group part of a strings returns the right value
+        * Return `None` on `GroupAddressType.FREE`
+        """
+        self.assertEqual(GroupAddress('1/0').main, 1)
+        self.assertEqual(GroupAddress('15/0').main, 15)
+        self.assertEqual(GroupAddress('31/0/0').main, 31)
+        self.assertIsNone(GroupAddress('1/0', GroupAddressType.FREE).main)
+
+    def test_middle(self):
+        """
+        Test if `GroupAddress.middle` works.
+
+        Checks:
+        * Middle group part of a strings returns the right value
+        * Return `None` if not `GroupAddressType.LONG`
+        """
+        self.assertEqual(GroupAddress('1/0/1', GroupAddressType.LONG).middle, 0)
+        self.assertEqual(GroupAddress('1/7/1', GroupAddressType.LONG).middle, 7)
+        self.assertIsNone(GroupAddress('1/0', GroupAddressType.SHORT).middle)
+        self.assertIsNone(GroupAddress('1/0', GroupAddressType.FREE).middle)
+
+    def test_sub(self):
+        """
+        Test if `GroupAddress.sub` works.
+
+        Checks:
+        * Sub group part of a strings returns the right value
+        * Return never `None`
+        """
+        self.assertEqual(GroupAddress('1/0', GroupAddressType.SHORT).sub, 0)
+        self.assertEqual(GroupAddress('31/0', GroupAddressType.SHORT).sub, 0)
+        self.assertEqual(GroupAddress('1/2047', GroupAddressType.SHORT).sub, 2047)
+        self.assertEqual(GroupAddress('31/2047', GroupAddressType.SHORT).sub, 2047)
+        self.assertEqual(GroupAddress('1/0/0', GroupAddressType.LONG).sub, 0)
+        self.assertEqual(GroupAddress('1/0/255', GroupAddressType.LONG).sub, 255)
+        self.assertEqual(GroupAddress('0/0', GroupAddressType.FREE).sub, 0)
+        self.assertEqual(GroupAddress('1/0', GroupAddressType.FREE).sub, 2048)
+        self.assertEqual(GroupAddress('31/2047', GroupAddressType.FREE).sub, 65535)
+
+    def test_to_knx(self):
+        """Test if `GroupAddress.to_knx()` generates valid byte tuples."""
+        self.assertEqual(GroupAddress('0/0').to_knx(), (0x0, 0x0))
+        self.assertEqual(GroupAddress('31/2047').to_knx(), (0xff, 0xff))
+
+    def test_equal(self):
+        """Test if the equal operator works in all cases."""
+        self.assertEqual(GroupAddress('1/0'), GroupAddress(2048))
+        self.assertNotEqual(GroupAddress('1/1'), GroupAddress('1/1/0'))
+        self.assertNotEqual(GroupAddress('1/0'), None)
+        with self.assertRaises(TypeError):
+            GroupAddress('1/0') == 'example'  # pylint: disable=expression-not-assigned
+
+    def test_representation(self):
+        """Test string representation of address."""
         self.assertEqual(
-            Address("12/500").address_format,
-            AddressFormat.LEVEL2)
-
-    def test_address_format_free(self):
-        """Test address_format of free format Address."""
+            repr(GroupAddress('0', GroupAddressType.FREE)),
+            'GroupAddress("0")'
+        )
         self.assertEqual(
-            Address("49552").address_format,
-            AddressFormat.FREE)
-
-    def test_address_format_int(self):
-        """Test address_format of Address initalized by int."""
+            repr(GroupAddress('0', GroupAddressType.SHORT)),
+            'GroupAddress("0/0")'
+        )
         self.assertEqual(
-            Address(49552).address_format,
-            AddressFormat.LEVEL3)
-
-    def test_address_format_address(self):
-        """Test address_format of Address initialized by Address."""
-        self.assertEqual(
-            Address(Address("2/3/4")).address_format,
-            AddressFormat.LEVEL3)
-
-    #
-    # ADDRESS TYPE
-    #
-    def test_address_type_physical(self):
-        """Test address_type of physical Address."""
-        self.assertEqual(
-            Address("2.3.4", AddressType.PHYSICAL).address_type,
-            AddressType.PHYSICAL)
-
-    def test_address_type_physical_auto_detect(self):
-        """Test address_type of pyhsical Address (via autodetect)."""
-        self.assertEqual(
-            Address("2.3.4").address_type,
-            AddressType.PHYSICAL)
-
-    def test_address_type_group(self):
-        """Test address_type of group address."""
-        self.assertEqual(
-            Address("2/3/4").address_type,
-            AddressType.GROUP)
-
-    #
-    # STR
-    #
-    def test_address_str_3level(self):
-        """Test string representation of 3rd level group address."""
-        self.assertEqual(
-            Address("2/3/4").str(),
-            "2/3/4")
-
-    def test_address_str_2level(self):
-        """Test string representation of 2nd level group address."""
-        self.assertEqual(
-            Address("12/500").str(),
-            "12/500")
-
-    def test_address_str_free(self):
-        """Test string representation of free format group address."""
-        self.assertEqual(
-            Address("49552").str(),
-            "49552")
-
-    def test_address_str_int(self):
-        """Test string representation of address initialized by int."""
-        self.assertEqual(
-            Address(49552).str(),
-            "24/1/144")
-
-    def test_address_str_address(self):
-        """Test string representation of address initialized by Address object."""
-        self.assertEqual(
-            Address(Address("2/3/4")).str(),
-            "2/3/4")
-
-    def test_address_str_physical(self):
-        """Test string representation of physical address."""
-        self.assertEqual(
-            Address("2.3.4", AddressType.PHYSICAL).str(),
-            "2.3.4")
-
-    #
-    # MAXIMUM ADDRESSES
-    #
-    def test_address_max_3level(self):
-        """Test initialization of Address with maximum 3rd level address."""
-        self.assertEqual(Address("31/7/255").raw, 65535)
-
-    def test_address_max_2level(self):
-        """Test initialization of Address with maximum 2nd level address."""
-        self.assertEqual(Address("31/2047").raw, 65535)
-
-    def test_address_max_free(self):
-        """Test initialization of Address with maximum free format address."""
-        self.assertEqual(Address("65535").raw, 65535)
-
-    def test_address_max_int(self):
-        """Test initialization of Address with max int."""
-        self.assertEqual(Address(65535).raw, 65535)
-
-    def test_address_max_address(self):
-        """Test initialization of Address with maximum Address."""
-        self.assertEqual(Address(Address("31/7/255")).raw, 65535)
-
-    #
-    # INVALID INIT STRINGS
-    #
-    def test_address_init_failed_too_many_parts(self):
-        """Test initialization of Address with invalid string."""
-        with self.assertRaises(CouldNotParseAddress):
-            Address("1/2/3/4")
-
-    def test_address_init_failed_string(self):
-        """Test initialization of Address with invalid string."""
-        with self.assertRaises(CouldNotParseAddress):
-            Address("bla123")
-
-    def test_address_init_failed_string_part(self):
-        """Test initialization of Address with invalid string."""
-        with self.assertRaises(CouldNotParseAddress):
-            Address("1/2/3a")
-
-    def test_address_init_failed_level3_boundaries_sub(self):
-        """Test initialization of 3rd level Address with invalid number value at the end."""
-        with self.assertRaises(CouldNotParseAddress):
-            Address("1/2/256")
-
-    def test_address_init_failed_level3_boundaries_middle(self):
-        """Test initialization of 3rd level Address with invalid number value in the middle."""
-        with self.assertRaises(CouldNotParseAddress):
-            Address("1/8/3")
-
-    def test_address_init_failed_level3_boundaries_main(self):
-        """Test initialization of 3rd level Address with invalid number value at the beginning."""
-        with self.assertRaises(CouldNotParseAddress):
-            Address("32/2/3")
-
-    def test_address_init_failed_level2_boundaries_sub(self):
-        """Test initialization of 2rd level Address with invalid number value at the end."""
-        with self.assertRaises(CouldNotParseAddress):
-            Address("1.4096")
-
-    def test_address_init_failed_level2_boundaries_middle(self):
-        """Test initialization of 2rd level Address with invalid number value at the beginning."""
-        with self.assertRaises(CouldNotParseAddress):
-            Address("16.3")
-
-    def test_address_init_failed_free_boundaries(self):
-        """Test initialization of free format Address with invalid number value."""
-        with self.assertRaises(CouldNotParseAddress):
-            Address("65536")
-
-    def test_address_init_empty_string(self):
-        """Test initialization of Address with invalid empty string."""
-        with self.assertRaises(CouldNotParseAddress):
-            Address("")
-
-    def test_address_init_tuple_3_elements(self):
-        """Test initialization of Address with invalid tuple."""
-        with self.assertRaises(CouldNotParseAddress):
-            Address((1, 2, 3))
-
-    def test_address_init_tuple_string(self):
-        """Test initialization of Address with invalid tuple string."""
-        with self.assertRaises(CouldNotParseAddress):
-            Address((2, "23"))
-
-    def test_address_init_tuple_range_overflow(self):
-        """Test initialization of Address with tuple with invalid 2nd value."""
-        with self.assertRaises(CouldNotParseAddress):
-            Address((4, 256))
-
-    def test_address_init_tuple_range_underflow(self):
-        """Test initialization of Address with tuple with invalid 1st value."""
-        with self.assertRaises(CouldNotParseAddress):
-            Address((1, -1))
-
-    #
-    # __eq__
-    #
-    def test_address_equal(self):
-        """Test equals operator with equal objects."""
-        self.assertTrue(Address("2/3/4") == Address("2/3/4"))
-
-    def test_address_equal_false(self):
-        """Test equals operator with non equal objects."""
-        self.assertFalse(Address("2/3/4") == Address("2/3/5"))
-
-    def test_address_not_equal(self):
-        """Test non equals operator with non equal objects."""
-        self.assertTrue(Address("2/3/4") != Address("2/3/5"))
-
-    def test_address_not_qual_false(self):
-        """Test not equals operator with equal object."""
-        self.assertFalse(Address("2/3/4") != Address("2/3/4"))
-
-    def test_address_equal_diffent_source(self):
-        """Test equals operator. Different format should not have relevance for the equality."""
-        self.assertTrue(Address("2/3/4") == Address("2/772"))
-
-    #
-    # TO KNX
-    #
-
-    def test_address_to_knx(self):
-        """Test to_knx functionality of Address object."""
-        self.assertEqual(Address("2/3/100").to_knx(), (2*8+3, 100))
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestAddress)
-unittest.TextTestRunner(verbosity=2).run(SUITE)
+            repr(GroupAddress('0', GroupAddressType.LONG)),
+            'GroupAddress("0/0/0")'
+        )

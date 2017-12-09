@@ -28,7 +28,3 @@ class Test_KNXIP_HPAI(unittest.TestCase):
 
         with self.assertRaises(CouldNotParseKNXIP):
             HPAI().from_knx(raw)
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(Test_KNXIP_HPAI)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

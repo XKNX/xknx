@@ -137,7 +137,3 @@ class TestAddressFilter(unittest.TestCase):
         self.assertFalse(af1.match("1/7/10"))
         self.assertFalse(af1.match("2/4/10"))
         self.assertFalse(af1.match("2/1/10"))
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestAddressFilter)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

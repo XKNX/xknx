@@ -13,7 +13,7 @@ import time
 from enum import Enum
 
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.knx import Address
+from xknx.knx import GroupAddress
 
 from .action import Action
 from .device import Device
@@ -46,7 +46,7 @@ class BinarySensor(Device):
         # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name, device_updated_cb)
         if isinstance(group_address, (str, int)):
-            group_address = Address(group_address)
+            group_address = GroupAddress(group_address)
         if not isinstance(significant_bit, int):
             raise TypeError()
         if actions is None:

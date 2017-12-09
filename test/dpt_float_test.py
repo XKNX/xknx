@@ -145,7 +145,3 @@ class TestDPTFloat(unittest.TestCase):
         """Test parsing of DPTHumidity with wrong value."""
         with self.assertRaises(ConversionError):
             DPTHumidity().to_knx(-1)
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPTFloat)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

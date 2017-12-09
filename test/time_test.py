@@ -4,7 +4,7 @@ import unittest
 
 from xknx import XKNX
 from xknx.devices import Time
-from xknx.knx import Address, TelegramType
+from xknx.knx import GroupAddress, TelegramType
 
 
 class TestTime(unittest.TestCase):
@@ -31,7 +31,7 @@ class TestTime(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram.group_address, Address('1/2/3'))
+        self.assertEqual(telegram.group_address, GroupAddress('1/2/3'))
         self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
         self.assertEqual(len(telegram.payload.value), 3)
 
@@ -42,9 +42,5 @@ class TestTime(unittest.TestCase):
         """Test if has_group_address function works."""
         xknx = XKNX(loop=self.loop)
         time = Time(xknx, "TestTime", group_address='1/2/3')
-        self.assertTrue(time.has_group_address(Address('1/2/3')))
-        self.assertFalse(time.has_group_address(Address('1/2/4')))
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestTime)
-unittest.TextTestRunner(verbosity=2).run(SUITE)
+        self.assertTrue(time.has_group_address(GroupAddress('1/2/3')))
+        self.assertFalse(time.has_group_address(GroupAddress('1/2/4')))

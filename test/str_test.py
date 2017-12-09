@@ -9,7 +9,7 @@ from xknx.devices import (Action, ActionBase, ActionCallback, BinarySensor,
 from xknx.exceptions import (ConversionError, CouldNotParseAddress,
                              CouldNotParseKNXIP, CouldNotParseTelegram,
                              DeviceIllegalValue)
-from xknx.knx import Address, DPTArray, DPTBinary, Telegram
+from xknx.knx import GroupAddress, DPTArray, DPTBinary, Telegram, PhysicalAddress
 from xknx.knxip import (HPAI, CEMIFrame, ConnectionStateRequest,
                         ConnectionStateResponse, ConnectRequest,
                         ConnectRequestType, ConnectResponse,
@@ -42,11 +42,11 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_state='1/2/4')
         self.assertEqual(
             str(remote_value),
-            '<RemoteValue <Address str="1/2/3" />/<Address str="1/2/4" />/None/None/>')
+            '<RemoteValue GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None/>')
         remote_value.payload = DPTArray([0x01, 0x02])
         self.assertEqual(
             str(remote_value),
-            '<RemoteValue <Address str="1/2/3" />/<Address str="1/2/4" />/<DPTArray value="[0x1,0x2]" />/None/>')
+            '<RemoteValue GroupAddress("1/2/3")/GroupAddress("1/2/4")/<DPTArray value="[0x1,0x2]" />/None/>')
 
     def test_binary_sensor(self):
         """Test string representation of binary sensor object."""
@@ -58,7 +58,7 @@ class TestStringRepresentations(unittest.TestCase):
             device_class='motion')
         self.assertEqual(
             str(binary_sensor),
-            '<BinarySensor group_address="<Address str="1/2/3" />" name="Fnord" state="BinarySensorState.OFF"/>')
+            '<BinarySensor group_address="GroupAddress("1/2/3")" name="Fnord" state="BinarySensorState.OFF"/>')
 
     def test_climate(self):
         """Test string representation of climate object."""
@@ -82,10 +82,10 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_controller_status_state='1/2/11')
         self.assertEqual(
             str(climate),
-            '<Climate name="Wohnzimmer" temperature="<Address str="1/2/1" />/None/None/None"  target_temperature="<Address str="1/2/2" />/None/None/'
-            'None"  setpoint_shift="<Address str="1/2/3" />/<Address str="1/2/4" />/None/None" setpoint_shift_step="0.1" setpoint_shift_max="20" set'
-            'point_shift_min="-20" group_address_operation_mode="<Address str="1/2/5" />" group_address_operation_mode_state="<Address str="1/2/6" /'
-            '>" group_address_controller_status="<Address str="1/2/10" />" group_address_controller_status_state="<Address str="1/2/11" />" />')
+            '<Climate name="Wohnzimmer" temperature="GroupAddress("1/2/1")/None/None/None"  target_temperature="GroupAddress("1/2/2")/None/None/'
+            'None"  setpoint_shift="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" setpoint_shift_step="0.1" setpoint_shift_max="20" set'
+            'point_shift_min="-20" group_address_operation_mode="GroupAddress("1/2/5")" group_address_operation_mode_state="GroupAddress("1/2/6")'
+            '" group_address_controller_status="GroupAddress("1/2/10")" group_address_controller_status_state="GroupAddress("1/2/11")" />')
 
     def test_cover(self):
         """Test string representation of cover object."""
@@ -103,8 +103,8 @@ class TestStringRepresentations(unittest.TestCase):
             travel_time_up=10)
         self.assertEqual(
             str(cover),
-            '<Cover name="Rolladen" updown"<Address str="1/2/3" />/None/None/None" step="<Address str="1/2/4" />/None/None/None" position="<Address '
-            'str="1/2/5" />/<Address str="1/2/6" />/None/None" angle="<Address str="1/2/7" />/<Address str="1/2/8" />/None/None" travel_time_down="8'
+            '<Cover name="Rolladen" updown"GroupAddress("1/2/3")/None/None/None" step="GroupAddress("1/2/4")/None/None/None" position="Group'
+            'Address("1/2/5")/GroupAddress("1/2/6")/None/None" angle="GroupAddress("1/2/7")/GroupAddress("1/2/8")/None/None" travel_time_down="8'
             '" travel_time_up="10" />')
 
     def test_light(self):
@@ -119,8 +119,8 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_brightness_state='1/2/6')
         self.assertEqual(
             str(light),
-            '<Light name="Licht" switch="<Address str="1/2/3" />/<Address str="1/2/4" />/None/None" group_address_brightness="<Address str="1/2/5" /'
-            '>" group_address_brightness_state="<Address str="1/2/6" />" brightness="0" />')
+            '<Light name="Licht" switch="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" group_address_brightness="GroupAddress("1/2/5")'
+            '" group_address_brightness_state="GroupAddress("1/2/6")" brightness="0" />')
 
     def test_notification(self):
         """Test string representation of notification object."""
@@ -131,11 +131,11 @@ class TestStringRepresentations(unittest.TestCase):
             group_address='1/2/3')
         self.assertEqual(
             str(notification),
-            '<Notification name="Alarm" group_address="<Address str="1/2/3" />" message="" />')
+            '<Notification name="Alarm" group_address="GroupAddress("1/2/3")" message="" />')
         notification.message = 'Einbrecher im Haus'
         self.assertEqual(
             str(notification),
-            '<Notification name="Alarm" group_address="<Address str="1/2/3" />" message="Einbrecher im Haus" />')
+            '<Notification name="Alarm" group_address="GroupAddress("1/2/3")" message="Einbrecher im Haus" />')
 
     def test_sensor(self):
         """Test string representation of sensor object."""
@@ -147,11 +147,11 @@ class TestStringRepresentations(unittest.TestCase):
             value_type='percent')
         self.assertEqual(
             str(sensor),
-            '<Sensor name="MeinSensor" group_address="<Address str="1/2/3" />" state="None" resolve_state="None" />')
+            '<Sensor name="MeinSensor" group_address="GroupAddress("1/2/3")" state="None" resolve_state="None" />')
         self.loop.run_until_complete(asyncio.Task(sensor._set_internal_state(DPTArray((0x23)))))  # pylint: disable=protected-access
         self.assertEqual(
             str(sensor),
-            '<Sensor name="MeinSensor" group_address="<Address str="1/2/3" />" state="<DPTArray value="[0x23]" />" resolve_state="14" />')
+            '<Sensor name="MeinSensor" group_address="GroupAddress("1/2/3")" state="<DPTArray value="[0x23]" />" resolve_state="14" />')
 
     def test_switch(self):
         """Test string representation of switch object."""
@@ -163,7 +163,7 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_state="1/2/4")
         self.assertEqual(
             str(switch),
-            '<Switch name="Schalter" switch="<Address str="1/2/3" />/<Address str="1/2/4" />/None/None" />')
+            '<Switch name="Schalter" switch="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" />')
 
     def test_time(self):
         """Test string representation of time object."""
@@ -174,7 +174,7 @@ class TestStringRepresentations(unittest.TestCase):
             group_address="1/2/3")
         self.assertEqual(
             str(time),
-            '<Time name="Zeit" group_address="<Address str="1/2/3" />" />')
+            '<Time name="Zeit" group_address="GroupAddress("1/2/3")" />')
 
     def test_action_base(self):
         """Test string representation of action base."""
@@ -254,10 +254,10 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_address(self):
         """Test string representation of address object."""
-        address = Address("1/2/3")
+        address = GroupAddress("1/2/3")
         self.assertEqual(
             str(address),
-            '<Address str="1/2/3" />')
+            'GroupAddress("1/2/3")')
 
     def test_dpt_array(self):
         """Test string representation of DPTBinary."""
@@ -276,11 +276,11 @@ class TestStringRepresentations(unittest.TestCase):
     def test_telegram(self):
         """Test string representation of Telegram."""
         telegram = Telegram(
-            group_address=Address('1/2/3'),
+            group_address=GroupAddress('1/2/3'),
             payload=DPTBinary(7))
         self.assertEqual(
             str(telegram),
-            '<Telegram group_address="<Address str="1/2/3" />", payload="<DPTBinary value="7" />" telegramtype="TelegramType.GROUP_WRITE" direction='
+            '<Telegram group_address="GroupAddress("1/2/3")", payload="<DPTBinary value="7" />" telegramtype="TelegramType.GROUP_WRITE" direction='
             '"TelegramDirection.OUTGOING" />')
 
     def test_dib_generic(self):
@@ -306,7 +306,7 @@ class TestStringRepresentations(unittest.TestCase):
         dib = DIBDeviceInformation()
         dib.knx_medium = KNXMedium.TP1
         dib.programming_mode = False
-        dib.individual_address = Address('1.1.0')
+        dib.individual_address = PhysicalAddress('1.1.0')
         dib.name = 'Gira KNX/IP-Router'
         dib.mac_address = '00:01:02:03:04:05'
         dib.multicast_address = '224.0.23.12'
@@ -318,7 +318,7 @@ class TestStringRepresentations(unittest.TestCase):
             '<DIBDeviceInformation \n'
             '\tknx_medium="KNXMedium.TP1" \n'
             '\tprogramming_mode="False" \n'
-            '\tindividual_address="<Address str="1.1.0" />" \n'
+            '\tindividual_address="PhysicalAddress("1.1.0")" \n'
             '\tinstallation_number="2" \n'
             '\tproject_number="564" \n'
             '\tserial_number="13:37:13:37:13:37" \n'
@@ -436,8 +436,8 @@ class TestStringRepresentations(unittest.TestCase):
         tunnelling_request.sequence_counter = 42
         self.assertEqual(
             str(tunnelling_request),
-            '<TunnellingRequest communication_channel_id="23" sequence_counter="42" cemi="<CEMIFrame SourceAddress="<Address str="0/0/0" />" Destina'
-            'tionAddress="<Address str="0/0/0" />" Flags="               0" Command="APCICommand.GROUP_READ" payload="None" />" />')
+            '<TunnellingRequest communication_channel_id="23" sequence_counter="42" cemi="<CEMIFrame SourceAddress="GroupAddress("0/0/0")" Destina'
+            'tionAddress="GroupAddress("0/0/0")" Flags="               0" Command="APCICommand.GROUP_READ" payload="None" />" />')
 
     def test_tunnelling_ack(self):
         """Test string representation of KNX/IP TunnellingAck."""
@@ -453,13 +453,13 @@ class TestStringRepresentations(unittest.TestCase):
         """Test string representation of KNX/IP CEMI Frame."""
         xknx = XKNX(loop=self.loop)
         cemi_frame = CEMIFrame(xknx)
-        cemi_frame.src_addr = Address("1/2/3")
+        cemi_frame.src_addr = GroupAddress("1/2/3")
         cemi_frame.telegram = Telegram(
-            group_address=Address('1/2/5'),
+            group_address=GroupAddress('1/2/5'),
             payload=DPTBinary(7))
         self.assertEqual(
             str(cemi_frame),
-            '<CEMIFrame SourceAddress="<Address str="1/2/3" />" DestinationAddress="<Address str="1/2/5" />" Flags="1011110011100000" Command="APCIC'
+            '<CEMIFrame SourceAddress="GroupAddress("1/2/3")" DestinationAddress="GroupAddress("1/2/5")" Flags="1011110011100000" Command="APCIC'
             'ommand.GROUP_WRITE" payload="<DPTBinary value="7" />" />')
 
     def test_knxip_frame(self):
@@ -472,7 +472,3 @@ class TestStringRepresentations(unittest.TestCase):
             '<KNXIPFrame <KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="KNXIPServiceType.SEARCH_REQUEST" Reserve="0" TotalLeng'
             'th="0" />\n'
             ' body="<SearchRequest discovery_endpoint="<HPAI 224.0.23.12:3671 />" />" />')
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestStringRepresentations)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

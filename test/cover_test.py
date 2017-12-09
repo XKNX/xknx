@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 from xknx import XKNX
 from xknx.devices import Cover
-from xknx.knx import Address, DPTArray, DPTBinary, Telegram, TelegramType
+from xknx.knx import GroupAddress, DPTArray, DPTBinary, Telegram, TelegramType
 
 
 class TestCover(unittest.TestCase):
@@ -84,7 +84,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram1,
-                         Telegram(Address('1/2/3'), TelegramType.GROUP_READ))
+                         Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
 
     def test_sync_state(self):
         """Test sync function with explicit state address."""
@@ -100,7 +100,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram1,
-                         Telegram(Address('1/2/4'), TelegramType.GROUP_READ))
+                         Telegram(GroupAddress('1/2/4'), TelegramType.GROUP_READ))
 
     def test_sync_angle(self):
         """Test sync function for cover with angle."""
@@ -116,10 +116,10 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 2)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram1,
-                         Telegram(Address('1/2/3'), TelegramType.GROUP_READ))
+                         Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
         telegram2 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram2,
-                         Telegram(Address('1/2/4'), TelegramType.GROUP_READ))
+                         Telegram(GroupAddress('1/2/4'), TelegramType.GROUP_READ))
 
     def test_sync_angle_state(self):
         """Test sync function with angle/explicit state."""
@@ -135,7 +135,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram1,
-                         Telegram(Address('1/2/4'), TelegramType.GROUP_READ))
+                         Telegram(GroupAddress('1/2/4'), TelegramType.GROUP_READ))
 
     #
     # TEST SET UP
@@ -154,7 +154,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/1'), payload=DPTBinary(0)))
+                         Telegram(GroupAddress('1/2/1'), payload=DPTBinary(0)))
 
     #
     # TEST SET DOWN
@@ -173,7 +173,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/1'), payload=DPTBinary(1)))
+                         Telegram(GroupAddress('1/2/1'), payload=DPTBinary(1)))
 
     #
     # TEST SET SHORT UP
@@ -192,7 +192,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/2'), payload=DPTBinary(1)))
+                         Telegram(GroupAddress('1/2/2'), payload=DPTBinary(1)))
 
     #
     # TEST SET SHORT DOWN
@@ -211,7 +211,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/2'), payload=DPTBinary(0)))
+                         Telegram(GroupAddress('1/2/2'), payload=DPTBinary(0)))
 
     #
     # TEST STOP
@@ -229,7 +229,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/2'), payload=DPTBinary(0)))
+                         Telegram(GroupAddress('1/2/2'), payload=DPTBinary(0)))
 
     #
     # TEST POSITION
@@ -248,7 +248,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/3'), payload=DPTArray(0x80)))
+                         Telegram(GroupAddress('1/2/3'), payload=DPTArray(0x80)))
 
     def test_position_without_position_address_up(self):
         """Test moving cover to absolute position - with no absolute positioning supported."""
@@ -264,7 +264,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/1'), payload=DPTBinary(1)))
+                         Telegram(GroupAddress('1/2/1'), payload=DPTBinary(1)))
 
     def test_position_without_position_address_down(self):
         """Test moving cover down - with no absolute positioning supported."""
@@ -280,7 +280,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/2/1'), payload=DPTBinary(0)))
+                         Telegram(GroupAddress('1/2/1'), payload=DPTBinary(0)))
 
     def test_angle(self):
         """Test changing angle."""
@@ -298,7 +298,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(Address('1/4/18'), payload=DPTArray(0x80)))
+                         Telegram(GroupAddress('1/4/18'), payload=DPTArray(0x80)))
 
     #
     # TEST PROCESS
@@ -313,7 +313,7 @@ class TestCover(unittest.TestCase):
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_state='1/2/4')
-        telegram = Telegram(Address('1/2/4'), payload=DPTArray(42))
+        telegram = Telegram(GroupAddress('1/2/4'), payload=DPTArray(42))
         self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
         self.assertEqual(cover.current_position(), 84)
 
@@ -327,7 +327,7 @@ class TestCover(unittest.TestCase):
             group_address_short='1/2/2',
             group_address_angle='1/2/3',
             group_address_angle_state='1/2/4')
-        telegram = Telegram(Address('1/2/4'), payload=DPTArray(42))
+        telegram = Telegram(GroupAddress('1/2/4'), payload=DPTArray(42))
         self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
         self.assertEqual(cover.angle.value, 84)
 
@@ -351,11 +351,7 @@ class TestCover(unittest.TestCase):
             after_update_callback(device)
         cover.register_device_updated_cb(async_after_update_callback)
 
-        telegram = Telegram(Address('1/2/4'), payload=DPTArray(42))
+        telegram = Telegram(GroupAddress('1/2/4'), payload=DPTArray(42))
         self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
 
         after_update_callback.assert_called_with(cover)
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestCover)
-unittest.TextTestRunner(verbosity=2).run(SUITE)
