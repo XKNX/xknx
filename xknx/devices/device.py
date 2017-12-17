@@ -46,7 +46,7 @@ class Device:
                 if telegram is not None:
                     yield from self.process(value_reader.received_telegram)
                 else:
-                    self.xknx.logger.warning("Could not read value of %s %s", self, group_address.str())
+                    self.xknx.logger.warning("Could not read value of %s %s", self, group_address)
             else:
                 yield from value_reader.send_group_read()
 
