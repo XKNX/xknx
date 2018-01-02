@@ -6,6 +6,7 @@ from xknx.exceptions import ConversionError
 from .dpt import DPTBase
 from .dpt import DPTWeekday
 
+
 class DPTDateTime(DPTBase):
     """Abstraction for KNX 8 octet datetime (DPT 19.001)."""
 
@@ -81,6 +82,8 @@ class DPTDateTime(DPTBase):
         }
 
     @staticmethod
+    # pylint: disable-msg=too-many-arguments
+    # pylint: disable-msg=too-many-return-statements
     def _test_range(year, month, day, weekday, hours, minutes, seconds):
         """Test if the values are in the correct range."""
         if year < 1900 or year > 2155:

@@ -108,6 +108,7 @@ class DPTComparator():
 
         raise TypeError()
 
+
 class DPTWeekday(Enum):
     """Enum class for week days."""
 

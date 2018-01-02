@@ -6,6 +6,7 @@ from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
 
+
 class DPTDate(DPTBase):
     """Abstraction for KNX 3 octet date (DPT 11.001)."""
 
@@ -21,7 +22,7 @@ class DPTDate(DPTBase):
         if not DPTDate._test_range(day, month, year):
             raise ConversionError(raw)
 
-        if (year >= 90):
+        if year >= 90:
             year += 1900
         else:
             year += 2000
@@ -41,7 +42,7 @@ class DPTDate(DPTBase):
         month = values.get('month', 0)
         year = values.get('year', 0)
 
-        if (year >= 2000):
+        if year >= 2000:
             year -= 2000
         else:
             year -= 1900

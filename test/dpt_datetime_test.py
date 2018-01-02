@@ -4,6 +4,7 @@ import unittest
 from xknx.exceptions import ConversionError
 from xknx.knx import DPTDateTime, DPTWeekday
 
+
 class TestDPTDateTime(unittest.TestCase):
     """Test class for KNX datetime objects."""
 
@@ -19,7 +20,7 @@ class TestDPTDateTime(unittest.TestCase):
                 'minutes': 7,
                 'seconds': 24
             })
-    
+
     def test_to_knx(self):
         """Testing KNX/Byte representation of DPTDateTime object."""
         raw = DPTDateTime().to_knx({
@@ -42,6 +43,7 @@ class TestDPTDateTime(unittest.TestCase):
         """Test parsing from DPTDateTime object from wrong string value."""
         with self.assertRaises(ConversionError):
             DPTDateTime().to_knx("hello")
+
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPTDateTime)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

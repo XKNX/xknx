@@ -11,15 +11,19 @@ from enum import Enum
 from xknx.knx import GroupAddress, DPTArray, DPTDateTime, DPTTime, DPTDate
 from .device import Device
 
+
 class DateTimeBroadcastType(Enum):
     """Enum class for the broadcast type of the enum."""
+
     DATETIME = 1
     DATE = 2
     TIME = 3
 
+
 class DateTime(Device):
     """Class for virtual date/time device."""
 
+    # pylint: disable-msg=too-many-arguments
     def __init__(self,
                  xknx,
                  name,
@@ -61,8 +65,7 @@ class DateTime(Device):
         elif self.broadcast_type == DateTimeBroadcastType.TIME:
             broadcast_data = DPTTime.current_time_as_knx()
         else:
-            # TODO: Throw appropriate error
-            return
+            raise TypeError()
         yield from self.send(
             self.group_address,
             DPTArray(broadcast_data))
