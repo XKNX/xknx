@@ -9,7 +9,9 @@ It provides functionality for
 import asyncio
 
 from xknx.knx import (GroupAddress, DPTArray, DPTBinary, DPTHumidity, DPTLux,
-                      DPTScaling, DPTTemperature, DPTElectricPotential, DPTElectricCurrent, DPTPower, DPTUElCurrentmA, DPTWsp)
+                      DPTScaling, DPTTemperature, DPTElectricPotential, \
+                      DPTElectricCurrent, DPTPower, DPTUElCurrentmA, DPTWsp, \
+                      DPT4ByteUnsigned, DPT4ByteSigned)
 
 from .device import Device
 
@@ -42,8 +44,10 @@ class Sensor(Device):
             'current'           : DPTUElCurrentmA,
             'power'             : DPTPower,
             'electric_current'  : DPTElectricCurrent,
-            'electric_potential': DPTElectricPotential 
+            'electric_potential': DPTElectricPotential,
 
+            '4byte_unsigned'    : DPT4ByteUnsigned,
+            '4byte_signed'      : DPT4ByteSigned
         }
 
     @classmethod

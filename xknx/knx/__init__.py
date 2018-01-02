@@ -10,12 +10,13 @@ Module for handling KNX primitves.
 from .address import GroupAddress, GroupAddressType, PhysicalAddress
 from .address_filter import AddressFilter
 from .telegram import Telegram, TelegramDirection, TelegramType
-
 from .dpt import DPTBase, DPTBinary, DPTArray, DPTComparator, DPTWeekday
-from .dpt_float import DPTFloat, DPTIEEE754, DPTLux, DPTTemperature, DPTHumidity, DPTWsp, DPTElectricPotential, DPTElectricCurrent, DPTPower
+from .dpt_float import DPTFloat, DPTIEEE754, DPTLux, DPTTemperature, \
+    DPTHumidity, DPTWsp, DPTElectricPotential, DPTElectricCurrent, DPTPower
 from .dpt_hvac_mode import HVACOperationMode, DPTHVACMode, \
     DPTControllerStatus
 from .dpt_2byte import DPTUElCurrentmA
+from .dpt_4byte import DPT4ByteUnsigned, DPT4ByteSigned
 from .dpt_scaling import DPTScaling
 from .dpt_time import DPTTime
 from .dpt_date import DPTDate
