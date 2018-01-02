@@ -2,7 +2,7 @@
 import unittest
 
 from xknx.exceptions import ConversionError
-from xknx.knx import DPTFloat, DPTHumidity, DPTLux, DPTTemperature
+from xknx.knx import DPTFloat, DPTIEEE754, DPTHumidity, DPTLux, DPTTemperature, DPTElectricPotential, DPTElectricCurrent, DPTPower
 
 
 class TestDPTFloat(unittest.TestCase):
@@ -146,6 +146,64 @@ class TestDPTFloat(unittest.TestCase):
         with self.assertRaises(ConversionError):
             DPTHumidity().to_knx(-1)
 
+        
+    
+    #
+    # DPTIEEE754
+    #
+    def test_ieee754_values_from_power_meter(self):
+        self.assertEqual(DPTIEEE754().from_knx((0x43, 0xC6, 0x80, 00)), 397)
+        self.assertEqual(DPTIEEE754().to_knx(397), (0x43, 0xC6, 0x80, 00))
+        self.assertEqual(DPTIEEE754().from_knx((0x42, 0x38, 0x00, 00)), 46)
+        self.assertEqual(DPTIEEE754().to_knx(46), (0x42, 0x38, 0x00, 00))
+
+
+    def test_ieee754_values_from_voltage_meter(self):
+        self.assertEqual(round(DPTIEEE754().from_knx((0x43, 0x65, 0xE3, 0xD7)), 2), 229.89)
+        self.assertEqual(DPTIEEE754().to_knx(229.89), (0x43, 0x65, 0xE3, 0xD7))
+
+    def test_ieee754_zero_value(self):
+        """Test parsing and streaming of DPTFloat zero value."""
+        self.assertEqual(DPTIEEE754().from_knx((0x00, 0x00, 0x00, 0x00)), 0.00)
+        self.assertEqual(DPTIEEE754().to_knx(0.00), (0x00, 0x00, 0x00, 0x00))
+
+    def test_ieee754_to_knx_wrong_parameter(self):
+        """Test parsing of DPTFloat with wrong value (string)."""
+        with self.assertRaises(ConversionError):
+            DPTIEEE754().to_knx("fnord")
+
+    def test_ieee754_from_knx_wrong_parameter(self):
+        """Test parsing of DPTFloat with wrong value (wrong number of bytes)."""
+        with self.assertRaises(ConversionError):
+            DPTIEEE754().from_knx((0xF8, 0x01, 0x23))
+
+    def test_ieee754_from_knx_wrong_parameter2(self):
+        """Test parsing of DPTFloat with wrong value (second parameter is a string)."""
+        with self.assertRaises(ConversionError):
+            DPTIEEE754().from_knx((0xF8, "0x23", 0x00, 0x00))
+
+
+    #
+    # DPTElectricCurrent
+    #
+    def test_electric_current_settings(self):
+        """Test attributes of DPTLux."""
+        self.assertEqual(DPTElectricCurrent().unit, "A")
+
+    #
+    # DPTElectricPotential
+    #
+    def test_electric_potential_settings(self):
+        """Test attributes of DPTLux."""
+        self.assertEqual(DPTElectricPotential().unit, "V")
+
+    #
+    # DPTPower
+    #
+    def test_power_settings(self):
+            """Test attributes of DPTLux."""
+            self.assertEqual(DPTPower().unit, "W")
+    
 
 SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPTFloat)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

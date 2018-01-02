@@ -1,8 +1,10 @@
 """Implementation of Basic KNX Floats."""
 
+import struct
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
+
 
 
 class DPTFloat(DPTBase):
@@ -72,6 +74,35 @@ class DPTFloat(DPTBase):
             value <= cls.value_max
 
 
+class DPTIEEE754(DPTBase):
+    """
+    Abstraction for KNX 4 Octet Floating Point Numbers (IEEE754).
+    No value range seems to be defined for these values.
+
+    DPT 14.xxx
+    """
+
+    unit = ""
+
+    @classmethod
+    def from_knx(cls, raw):
+        """Parse/deserialize from KNX/IP raw data (big endian)."""
+        cls.test_bytesarray(raw, 4)
+        try:
+            return struct.unpack(">f", bytes(raw))[0]
+        except struct.error:
+            raise ConversionError(raw)
+
+
+    @classmethod
+    def to_knx(cls, value):
+        """Serialize to KNX/IP raw data."""
+        try:
+            return tuple(struct.pack(">f", value))
+        except struct.error:
+            raise ConversionError(value)
+
+
 class DPTTemperature(DPTFloat):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.
@@ -122,3 +153,25 @@ class DPTHumidity(DPTFloat):
     value_max = 670760
     unit = "%"
     resolution = 1
+
+
+class DPTElectricCurrent(DPTIEEE754):
+    """
+    DPT_Value_Electric_Current 14.019
+    """
+    unit = "A"
+
+
+class DPTElectricPotential(DPTIEEE754):
+    """
+    DPT_Value_Electric_Potential 14.027
+    """
+    unit = "V"
+
+
+class DPTPower(DPTIEEE754):
+    """
+    DPT_Value_Power 14.056 
+    """
+    unit = "W"
+
