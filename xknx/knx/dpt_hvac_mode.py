@@ -2,6 +2,8 @@
 
 from enum import Enum
 
+from xknx.exceptions import CouldNotParseKNXIP
+
 from .dpt import DPTBase
 
 
@@ -37,6 +39,8 @@ class DPTHVACMode(DPTBase):
         elif raw[0] == 0x00:
             return HVACOperationMode.AUTO
 
+        raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
+
     @classmethod
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
@@ -50,6 +54,8 @@ class DPTHVACMode(DPTBase):
             return (3,)
         elif value == HVACOperationMode.FROST_PROTECTION:
             return (4,)
+
+        raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
 
 
 class DPTControllerStatus(DPTBase):
@@ -76,6 +82,8 @@ class DPTControllerStatus(DPTBase):
         elif raw[0] & 1 > 0:
             return HVACOperationMode.COMFORT
 
+        raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
+
     @classmethod
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
@@ -90,3 +98,5 @@ class DPTControllerStatus(DPTBase):
             return (0x24,)
         elif value == HVACOperationMode.FROST_PROTECTION:
             return (0x28,)
+
+        raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
