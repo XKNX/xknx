@@ -48,12 +48,15 @@ class AddressFilter:
         """Test if provided address matches Addressfilter."""
         if isinstance(address, str):
             address = Address(address)
+
         if len(self.level_filters) == 3:
             return self._match_level3(address)
         elif len(self.level_filters) == 2:
             return self._match_level2(address)
         elif len(self.level_filters) == 1:
             return self._match_free(address)
+
+        return False
 
     def _match_level3(self, address):
         return (
