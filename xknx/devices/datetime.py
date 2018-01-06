@@ -23,7 +23,7 @@ class DateTimeBroadcastType(Enum):
 class DateTime(Device):
     """Class for virtual date/time device."""
 
-    # pylint: disable-msg=too-many-arguments
+    # pylint: disable=too-many-arguments
     def __init__(self,
                  xknx,
                  name,

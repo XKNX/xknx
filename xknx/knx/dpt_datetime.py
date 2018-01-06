@@ -82,8 +82,8 @@ class DPTDateTime(DPTBase):
         }
 
     @staticmethod
-    # pylint: disable-msg=too-many-arguments
-    # pylint: disable-msg=too-many-return-statements
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-return-statements
     def _test_range(year, month, day, weekday, hours, minutes, seconds):
         """Test if the values are in the correct range."""
         if year < 1900 or year > 2155:
