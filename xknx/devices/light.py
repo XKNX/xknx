@@ -140,8 +140,8 @@ class Light(Device):
             state_addresses.append(state_address_brightness)
         return state_addresses
 
-    async def process(self, telegram):
-        """Process incoming telegram."""
+    async def process_group_write(self, telegram):
+        """Process incoming GROUP WRITE telegram."""
         await self.switch.process(telegram)
 
         if (self.supports_dimming and

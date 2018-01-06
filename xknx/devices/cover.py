@@ -219,8 +219,8 @@ class Cover(Device):
         state_addresses.extend(self.angle.state_addresses())
         return state_addresses
 
-    async def process(self, telegram):
-        """Process incoming telegram."""
+    async def process_group_write(self, telegram):
+        """Process incoming GROUP WRITE telegram."""
         position_processed = await self.position.process(telegram)
         if position_processed:
             self.travelcalculator.set_position(self.position.value)

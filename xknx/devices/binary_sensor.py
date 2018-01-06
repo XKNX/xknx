@@ -9,6 +9,7 @@ A binary sensor can be:
 A BinarySensor may also have Actions attached which are executed after state was changed.
 """
 import time
+import asyncio
 from enum import Enum
 
 from xknx.exceptions import CouldNotParseTelegram
@@ -132,8 +133,8 @@ class BinarySensor(Device):
             self.count_set_off = 1
         return 1
 
-    async def process(self, telegram):
-        """Process incoming telegram."""
+    async def process_group_write(self, telegram):
+        """Process incoming GROUP WRITE telegram."""
         bit_masq = 1 << (self.significant_bit-1)
         binary_value = telegram.payload.value & bit_masq != 0
 

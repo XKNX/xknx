@@ -69,8 +69,8 @@ class Notification(Device):
         """Return group addresses which should be requested to sync state."""
         return [self.group_address, ]
 
-    async def process(self, telegram):
-        """Process incoming telegram."""
+    async def process_group_write(self, telegram):
+        """Process incoming GROUP WRITE telegram."""
         if telegram.group_address == self.group_address:
             await self._process_message(telegram)
 
