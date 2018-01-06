@@ -174,7 +174,7 @@ class TestStringRepresentations(unittest.TestCase):
             group_address="1/2/3")
         self.assertEqual(
             str(dateTime),
-            '<DateTime name="Zeit" group_address="GroupAddress("1/2/3")" broadcast_type="DATETIME" />')
+            '<DateTime name="Zeit" group_address="GroupAddress("1/2/3")" broadcast_type="TIME" />')
 
     def test_action_base(self):
         """Test string representation of action base."""

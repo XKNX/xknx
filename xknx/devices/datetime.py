@@ -27,7 +27,7 @@ class DateTime(Device):
     def __init__(self,
                  xknx,
                  name,
-                 broadcast_type=DateTimeBroadcastType.DATETIME,
+                 broadcast_type=DateTimeBroadcastType.TIME,
                  group_address=None,
                  device_updated_cb=None):
         """Initialize DateTime class."""
@@ -43,7 +43,7 @@ class DateTime(Device):
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
-        broadcast_type_string = config.get('broadcast_type', 'datetime').upper()
+        broadcast_type_string = config.get('broadcast_type', 'time').upper()
         broadcast_type = DateTimeBroadcastType[broadcast_type_string]
         group_address = config.get('group_address')
         return cls(xknx,

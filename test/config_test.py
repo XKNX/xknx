@@ -179,14 +179,30 @@ class TestConfig(unittest.TestCase):
                     device_updated_cb=xknx.devices.device_updated))
 
     def test_config_datetime(self):
-        """Test reading DateTime object from config file."""
+        """Test reading DateTime objects from config file."""
         xknx = XKNX(config='xknx.yaml', loop=self.loop)
+        self.assertEqual(
+            xknx.devices['General.Time'],
+            DateTime(
+                xknx,
+                'General.Time',
+                group_address='2/1/1',
+                broadcast_type=DateTimeBroadcastType.TIME,
+                device_updated_cb=xknx.devices.device_updated))
         self.assertEqual(
             xknx.devices['General.DateTime'],
             DateTime(
                 xknx,
                 'General.DateTime',
                 group_address='2/1/2',
+                broadcast_type=DateTimeBroadcastType.DATETIME,
+                device_updated_cb=xknx.devices.device_updated))
+        self.assertEqual(
+            xknx.devices['General.Date'],
+            DateTime(
+                xknx,
+                'General.Date',
+                group_address='2/1/3',
                 broadcast_type=DateTimeBroadcastType.DATE,
                 device_updated_cb=xknx.devices.device_updated))
 
@@ -198,7 +214,7 @@ class TestConfig(unittest.TestCase):
             Notification(
                 xknx,
                 'AlarmWindow',
-                group_address='2/1/3',
+                group_address='2/7/1',
                 device_updated_cb=xknx.devices.device_updated))
 
     def test_config_binary_sensor(self):
