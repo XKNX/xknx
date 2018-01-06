@@ -8,7 +8,7 @@ Module for reading configfiles (xknx.yaml).
 import yaml
 
 from xknx.devices import (BinarySensor, Climate, Cover, Light, Notification,
-                          Sensor, Switch, Time)
+                          Sensor, Switch, DateTime)
 from xknx.knx import PhysicalAddress
 
 
@@ -45,8 +45,8 @@ class Config:
                 self.parse_group_cover(doc["groups"][group])
             elif group.startswith("climate"):
                 self.parse_group_climate(doc["groups"][group])
-            elif group.startswith("time"):
-                self.parse_group_time(doc["groups"][group])
+            elif group.startswith("datetime"):
+                self.parse_group_datetime(doc["groups"][group])
             elif group.startswith("sensor"):
                 self.parse_group_sensor(doc["groups"][group])
             elif group.startswith("binary_sensor"):
@@ -99,14 +99,14 @@ class Config:
                 entries[entry])
             self.xknx.devices.add(climate)
 
-    def parse_group_time(self, entries):
-        """Parse a time section of xknx.yaml."""
+    def parse_group_datetime(self, entries):
+        """Parse a datetime section of xknx.yaml."""
         for entry in entries:
-            time = Time.from_config(
+            datetime = DateTime.from_config(
                 self.xknx,
                 entry,
                 entries[entry])
-            self.xknx.devices.add(time)
+            self.xknx.devices.add(datetime)
 
     def parse_group_sensor(self, entries):
         """Parse a sensor section of xknx.yaml."""

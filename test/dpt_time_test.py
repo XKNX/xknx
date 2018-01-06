@@ -11,7 +11,7 @@ class TestDPTTime(unittest.TestCase):
     def test_from_knx(self):
         """Test parsing of DPTTime object from binary values. Example 1."""
         self.assertEqual(DPTTime().from_knx((0x4D, 0x17, 0x2A)),
-                         {'day': DPTWeekday.TUESDAY,
+                         {'weekday': DPTWeekday.TUESDAY,
                           'hours': 13,
                           'minutes': 23,
                           'seconds': 42})
@@ -19,7 +19,7 @@ class TestDPTTime(unittest.TestCase):
     def test_from_knx_max(self):
         """Test parsing of DPTTime object from binary values. Example 2."""
         self.assertEqual(DPTTime().from_knx((0xF7, 0x3b, 0x3b)),
-                         {'day': DPTWeekday.SUNDAY,
+                         {'weekday': DPTWeekday.SUNDAY,
                           'hours': 23,
                           'minutes': 59,
                           'seconds': 59})
@@ -27,7 +27,7 @@ class TestDPTTime(unittest.TestCase):
     def test_from_knx_min(self):
         """Test parsing of DPTTime object from binary values. Example 3."""
         self.assertEqual(DPTTime().from_knx((0x0, 0x0, 0x0)),
-                         {'day': DPTWeekday.NONE,
+                         {'weekday': DPTWeekday.NONE,
                           'hours': 0,
                           'minutes': 0,
                           'seconds': 0})
@@ -35,7 +35,7 @@ class TestDPTTime(unittest.TestCase):
     def test_to_knx(self):
         """Testing KNX/Byte representation of DPTTime object."""
         raw = DPTTime().to_knx(
-            {'day': DPTWeekday.TUESDAY,
+            {'weekday': DPTWeekday.TUESDAY,
              'hours': 13,
              'minutes': 23,
              'seconds': 42})
@@ -44,7 +44,7 @@ class TestDPTTime(unittest.TestCase):
     def test_to_knx_max(self):
         """Testing KNX/Byte representation of DPTTime object. Maximum values."""
         raw = DPTTime().to_knx(
-            {'day': DPTWeekday.SUNDAY,
+            {'weekday': DPTWeekday.SUNDAY,
              'hours': 23,
              'minutes': 59,
              'seconds': 59})
@@ -53,7 +53,7 @@ class TestDPTTime(unittest.TestCase):
     def test_to_knx_min(self):
         """Testing KNX/Byte representation of DPTTime object. Minimum values."""
         raw = DPTTime().to_knx(
-            {'day': DPTWeekday.NONE,
+            {'weekday': DPTWeekday.NONE,
              'hours': 0,
              'minutes': 0,
              'seconds': 0})
