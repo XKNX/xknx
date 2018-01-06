@@ -4,7 +4,8 @@ import unittest
 
 from xknx import XKNX
 from xknx.devices import (Action, BinarySensor, Climate, Cover, Light,
-                          Notification, Sensor, Switch, Time)
+                          Notification, Sensor, Switch, DateTime)
+from xknx.devices.datetime import DateTimeBroadcastType
 
 
 # pylint: disable=too-many-public-methods,invalid-name
@@ -177,25 +178,43 @@ class TestConfig(unittest.TestCase):
                     group_address_controller_status_state='1/7/13',
                     device_updated_cb=xknx.devices.device_updated))
 
-    def test_config_time(self):
-        """Test reading Time object from config file."""
+    def test_config_datetime(self):
+        """Test reading DateTime objects from config file."""
         xknx = XKNX(config='xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['General.Time'],
-            Time(xknx,
-                 'General.Time',
-                 group_address='2/1/2',
-                 device_updated_cb=xknx.devices.device_updated))
+            DateTime(
+                xknx,
+                'General.Time',
+                group_address='2/1/1',
+                broadcast_type=DateTimeBroadcastType.TIME,
+                device_updated_cb=xknx.devices.device_updated))
+        self.assertEqual(
+            xknx.devices['General.DateTime'],
+            DateTime(
+                xknx,
+                'General.DateTime',
+                group_address='2/1/2',
+                broadcast_type=DateTimeBroadcastType.DATETIME,
+                device_updated_cb=xknx.devices.device_updated))
+        self.assertEqual(
+            xknx.devices['General.Date'],
+            DateTime(
+                xknx,
+                'General.Date',
+                group_address='2/1/3',
+                broadcast_type=DateTimeBroadcastType.DATE,
+                device_updated_cb=xknx.devices.device_updated))
 
     def test_config_notification(self):
-        """Test reading Time object from config file."""
+        """Test reading DateTime object from config file."""
         xknx = XKNX(config='xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['AlarmWindow'],
             Notification(
                 xknx,
                 'AlarmWindow',
-                group_address='2/1/3',
+                group_address='2/7/1',
                 device_updated_cb=xknx.devices.device_updated))
 
     def test_config_binary_sensor(self):

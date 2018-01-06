@@ -86,12 +86,14 @@ groups:
         Attic.Climate: {group_address_temperature: '1/7/7', group_address_operation_mode_protection: '1/7/8', group_address_operation_mode_night: '1/7/9', group_address_operation_mode_comfort: '1/7/10'}
         Cellar.Climate: {group_address_temperature: '1/7/11', group_address_controller_status: '1/7/12', group_address_controller_status_state: '1/7/13'}
 
-    # Cyclic sending of time to the KNX bus
-    time:
-        General.Time: {group_address: '2/1/2'}
+    # Cyclic sending of time objects to the KNX bus
+    datetime:
+        General.Time: {group_address: '2/1/1'}
+        General.DateTime: {group_address: '2/1/2', broadcast_type: 'datetime'}
+        General.Date: {group_address: '2/1/3', broadcast_type: 'date'}
 
     notification:
-        AlarmWindow: {group_address: '2/1/3'}
+        AlarmWindow: {group_address: '2/7/1'}
 
     sensor:
         Heating.Valve1: {group_address: '2/0/0', value_type: 'percent'}

@@ -5,7 +5,7 @@ import unittest
 from xknx import XKNX
 from xknx.devices import (Action, ActionBase, ActionCallback, BinarySensor,
                           Climate, Cover, Light, Notification, RemoteValue,
-                          Sensor, Switch, Time)
+                          Sensor, Switch, DateTime)
 from xknx.exceptions import (ConversionError, CouldNotParseAddress,
                              CouldNotParseKNXIP, CouldNotParseTelegram,
                              DeviceIllegalValue)
@@ -165,16 +165,16 @@ class TestStringRepresentations(unittest.TestCase):
             str(switch),
             '<Switch name="Schalter" switch="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" />')
 
-    def test_time(self):
-        """Test string representation of time object."""
+    def test_datetime(self):
+        """Test string representation of datetime object."""
         xknx = XKNX(loop=self.loop)
-        time = Time(
+        dateTime = DateTime(
             xknx,
             name="Zeit",
             group_address="1/2/3")
         self.assertEqual(
-            str(time),
-            '<Time name="Zeit" group_address="GroupAddress("1/2/3")" />')
+            str(dateTime),
+            '<DateTime name="Zeit" group_address="GroupAddress("1/2/3")" broadcast_type="TIME" />')
 
     def test_action_base(self):
         """Test string representation of action base."""
