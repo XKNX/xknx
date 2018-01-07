@@ -34,6 +34,7 @@ class DPTBase:
     20.yyy 8-bit enumeration, e.g. HVAC mode ('auto', 'comfort', 'standby', 'economy', 'protection')
     28.yyy UTF-8
     29.yyy V64, 64-bit signed value
+    232.yyy RGB [0,0,0]...[255,255,255]
 
     """
 

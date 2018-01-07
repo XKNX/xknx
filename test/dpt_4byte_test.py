@@ -11,7 +11,7 @@ class TestDPT4Byte(unittest.TestCase):
 
     # pylint: disable=too-many-public-methods,invalid-name
 
-    #
+    # ####################################################################
     # DPT4ByteUnsigned
     #
     def test_unsigned_settings(self):
@@ -35,7 +35,7 @@ class TestDPT4Byte(unittest.TestCase):
         self.assertEqual(DPT4ByteUnsigned().from_knx((0xFF, 0xFF, 0xFF, 0xFF)), 4294967295)
 
     def test_unsigned_value_min_value(self):
-        """Test DPTUElCurrentmA parsing and streaming with null values."""
+        """Test parsing and streaming with null values."""
         self.assertEqual(DPT4ByteUnsigned().to_knx(0), (0x00, 0x00, 0x00, 0x00))
         self.assertEqual(DPT4ByteUnsigned().from_knx((0x00, 0x00, 0x00, 0x00)), 0)
 
@@ -49,8 +49,7 @@ class TestDPT4Byte(unittest.TestCase):
         with self.assertRaises(ConversionError):
             DPT4ByteUnsigned().from_knx((0xFF, 0x4E, 0x12))
 
-
-    #
+    # ####################################################################
     # DPT4ByteSigned
     #
     def test_signed_settings(self):

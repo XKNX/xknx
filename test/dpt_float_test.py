@@ -1,15 +1,19 @@
-"""Unit test for KNX float object."""
+"""Unit test for KNX 2 and 4 byte float objects."""
 import unittest
 
 from xknx.exceptions import ConversionError
-from xknx.knx import DPT2ByteFloat, DPT4ByteFloat, DPTHumidity, DPTLux, DPTTemperature, DPTElectricPotential, DPTElectricCurrent, DPTPower
+from xknx.knx import DPT2ByteFloat, DPT4ByteFloat, DPTHumidity, DPTLux, DPTTemperature, DPTElectricPotential, \
+    DPTElectricCurrent, DPTPower, DPTFrequency, DPTPhaseAngleDeg
 
 
-class TestDPT2ByteFloat(unittest.TestCase):
-    """Test class for KNX float object."""
+class TestDPTFloat(unittest.TestCase):
+    """Test class for KNX 2 & 4 byte/octet float object."""
 
     # pylint: disable=too-many-public-methods,invalid-name
 
+    # ####################################################################
+    # DPT2ByteFloat
+    #
     def test_value_from_documentation(self):
         """Test parsing and streaming of DPT2ByteFloat -30.00. Example from the internet[tm]."""
         self.assertEqual(DPT2ByteFloat().to_knx(-30.00), (0x8a, 0x24))
@@ -44,7 +48,8 @@ class TestDPT2ByteFloat(unittest.TestCase):
         self.assertEqual(DPT2ByteFloat().from_knx((0x84, 0x18)), -10.00)
 
     def test_very_cold_temperature(self):
-        """Test parsing and streaming of DPT2ByteFloat -1000.00,-999.68, -1000.32. Testing rounding issues of negative values."""
+        """Test parsing and streaming of DPT2ByteFloat -1000.00,-999.68, -1000.32.
+           Testing rounding issues of negative values."""
         self.assertEqual(DPT2ByteFloat().to_knx(-1000.00), (0xB1, 0xE6))
         self.assertEqual(DPT2ByteFloat().from_knx((0xB1, 0xE6)), -999.68)
         self.assertEqual(DPT2ByteFloat().from_knx((0xB1, 0xE5)), -1000.32)
@@ -146,42 +151,51 @@ class TestDPT2ByteFloat(unittest.TestCase):
         with self.assertRaises(ConversionError):
             DPTHumidity().to_knx(-1)
 
-        
-    
-    #
+    # ####################################################################
     # DPT4ByteFloat
     #
-    def test_ieee754_values_from_power_meter(self):
+    def test_4byte_float_values_from_power_meter(self):
         self.assertEqual(DPT4ByteFloat().from_knx((0x43, 0xC6, 0x80, 00)), 397)
         self.assertEqual(DPT4ByteFloat().to_knx(397), (0x43, 0xC6, 0x80, 00))
         self.assertEqual(DPT4ByteFloat().from_knx((0x42, 0x38, 0x00, 00)), 46)
         self.assertEqual(DPT4ByteFloat().to_knx(46), (0x42, 0x38, 0x00, 00))
 
+    def test_14_033(self):  # DPTFrequency
+        self.assertEqual(DPTFrequency().unit, "Hz")
 
-    def test_ieee754_values_from_voltage_meter(self):
+    def test_14_055(self):  # DPTPhaseAngleDeg
+        self.assertEqual(DPT4ByteFloat().from_knx((0x42, 0xEF, 0x00, 0x00)), 119.5)
+        self.assertEqual(DPT4ByteFloat().to_knx(119.5), (0x42, 0xEF, 0x00, 0x00))
+        self.assertEqual(DPTPhaseAngleDeg().unit, "°")
+
+    def test_14_057(self):  # DPTPowerFactor
+        self.assertEqual(round(DPT4ByteFloat().from_knx((0x3F, 0x71, 0xEB, 0x86)), 7), 0.9450001)
+        self.assertEqual(DPT4ByteFloat().to_knx(0.945000052452), (0x3F, 0x71, 0xEB, 0x86))
+        # No unit
+
+    def test_4byte_float_values_from_voltage_meter(self):
         self.assertEqual(round(DPT4ByteFloat().from_knx((0x43, 0x65, 0xE3, 0xD7)), 2), 229.89)
         self.assertEqual(DPT4ByteFloat().to_knx(229.89), (0x43, 0x65, 0xE3, 0xD7))
 
-    def test_ieee754_zero_value(self):
+    def test_4byte_float_zero_value(self):
         """Test parsing and streaming of DPT2ByteFloat zero value."""
         self.assertEqual(DPT4ByteFloat().from_knx((0x00, 0x00, 0x00, 0x00)), 0.00)
         self.assertEqual(DPT4ByteFloat().to_knx(0.00), (0x00, 0x00, 0x00, 0x00))
 
-    def test_ieee754_to_knx_wrong_parameter(self):
+    def test_4byte_float_to_knx_wrong_parameter(self):
         """Test parsing of DPT2ByteFloat with wrong value (string)."""
         with self.assertRaises(ConversionError):
             DPT4ByteFloat().to_knx("fnord")
 
-    def test_ieee754_from_knx_wrong_parameter(self):
+    def test_4byte_float_from_knx_wrong_parameter(self):
         """Test parsing of DPT2ByteFloat with wrong value (wrong number of bytes)."""
         with self.assertRaises(ConversionError):
             DPT4ByteFloat().from_knx((0xF8, 0x01, 0x23))
 
-    def test_ieee754_from_knx_wrong_parameter2(self):
+    def test_4byte_float_from_knx_wrong_parameter2(self):
         """Test parsing of DPT2ByteFloat with wrong value (second parameter is a string)."""
         with self.assertRaises(ConversionError):
             DPT4ByteFloat().from_knx((0xF8, "0x23", 0x00, 0x00))
-
 
     #
     # DPTElectricCurrent
@@ -205,5 +219,5 @@ class TestDPT2ByteFloat(unittest.TestCase):
             self.assertEqual(DPTPower().unit, "W")
     
 
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPT2ByteFloat)
+SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPTFloat)
 unittest.TextTestRunner(verbosity=2).run(SUITE)

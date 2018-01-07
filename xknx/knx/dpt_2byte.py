@@ -1,20 +1,21 @@
-"""Implementation of Basic KNX 2-Byte."""
+"""Implementation of Basic KNX 2-Byte/octet values."""
 
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
 
 
-class DPT2Byte(DPTBase):
+class DPT2ByteUnsigned(DPTBase):
     """
-    Abstraction for KNX 2 Byte "2-octet unsigned counter value".
+    Abstraction for KNX 2 Byte "2-octet unsigned value".
+    Contain smaller counters, timers and more
 
-    DPT 7.001
+    DPT 7.xxx
     """
 
     value_min = 0
     value_max = 65535
-    unit = "pulses"
+    unit = ""
     resolution = 1
 
     @classmethod
@@ -33,18 +34,25 @@ class DPT2Byte(DPTBase):
     @classmethod
     def _test_boundaries(cls, value):
         """Test if value is within defined range for this object."""
-        return value >= cls.value_min and \
-            value <= cls.value_max
+        return cls.value_min <= value <= cls.value_max
 
 
-class DPTUElCurrentmA(DPT2Byte):
+class DPT2Ucount(DPT2ByteUnsigned):
     """
-    Abstraction for KNX 2 Byte DPTUElCurrentmA.
-
-    DPT 7.012
+    DPT 7.001 DPT_Value_2_Ucount
     """
+    unit = "pulses"
 
-    value_min = 0
-    value_max = 65535
+
+class DPTUElCurrentmA(DPT2ByteUnsigned):
+    """
+    DPT 7.012 Abstraction for KNX 2 Byte DPTUElCurrentmA.
+    """
     unit = "mA"
-    resolution = 1
+
+
+class DPTBrightness(DPT2ByteUnsigned):
+    """
+    DPT 7.012 DPT_Brightness (lux)
+    """
+    unit = "lx"

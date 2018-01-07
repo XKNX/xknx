@@ -1,4 +1,10 @@
-"""Implementation of Basic KNX 4-Byte."""
+"""
+Implementation of Basic KNX 4-Byte Signed and Unsigned Values.
+
+They correspond the following KNX DPTs:
+    12.yyy 4-byte/octet unsigned value, i.e. pulse counter
+    13.yyy 4-byte/octet signed (2's complement), i.e. flow, energy
+"""
 
 import struct
 from xknx.exceptions import ConversionError
@@ -60,4 +66,3 @@ class DPT4ByteSigned(DPT4ByteUnsigned):
     resolution = 1
 
     _struct_format = ">i"
-
