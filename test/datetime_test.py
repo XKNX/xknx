@@ -31,7 +31,7 @@ class TestDateTime(unittest.TestCase):
     # SYNC DateTime
     #
     @patch('time.localtime', MOCK_LOCALTIME)
-    def test_sync_datetime(self,):
+    def test_sync_datetime(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX(loop=self.loop)
         datetime = DateTime(xknx, "TestDateTime", group_address='1/2/3', broadcast_type=DateTimeBroadcastType.DATETIME)
