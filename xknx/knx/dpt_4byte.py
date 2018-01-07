@@ -44,9 +44,7 @@ class DPT4ByteUnsigned(DPTBase):
     @classmethod
     def _test_boundaries(cls, value):
         """Test if value is within defined range for this object."""
-        return value >= cls.value_min and \
-            value <= cls.value_max
-
+        return cls.value_min <= value <= cls.value_max
 
 
 class DPT4ByteSigned(DPT4ByteUnsigned):
@@ -57,7 +55,7 @@ class DPT4ByteSigned(DPT4ByteUnsigned):
     """
 
     value_min = -2147483648
-    value_max =  2147483647
+    value_max = 2147483647
     unit = ""
     resolution = 1
 
