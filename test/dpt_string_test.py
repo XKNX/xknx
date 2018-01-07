@@ -5,7 +5,7 @@ from xknx.exceptions import ConversionError
 from xknx.knx import DPTString
 
 
-class TestDPTFloat(unittest.TestCase):
+class TestDPT2ByteFloat(unittest.TestCase):
     """Test class for KNX float object."""
 
     # pylint: disable=too-many-public-methods,invalid-name
@@ -47,7 +47,7 @@ class TestDPTFloat(unittest.TestCase):
         self.assertEqual(DPTString.from_knx(raw), string)
 
     def test_to_knx_wrong_parameter(self):
-        """Test parsing of DPTFloat with wrong value (string)."""
+        """Test parsing of DPT2ByteFloat with wrong value (string)."""
         with self.assertRaises(ConversionError):
             DPTString().to_knx(123)
 
@@ -66,3 +66,7 @@ class TestDPTFloat(unittest.TestCase):
                0x00, 0x00, 0x00]
         with self.assertRaises(ConversionError):
             DPTString().from_knx(raw)
+
+
+SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPT2ByteFloat)
+unittest.TextTestRunner(verbosity=2).run(SUITE)
