@@ -1,4 +1,10 @@
-"""Implementation of Basic KNX Floats."""
+"""
+Implementation of KNX Float-values.
+
+They can be either 2 or 4 bytes, and correspond to the the following KDN DPTs.
+    9.yyy  2-byte/octet float, e.g. temperature
+    14.yyy 4-byte/octet float, IEEE 754, i.e. Electrical measurements: current, power
+"""
 
 import struct
 from xknx.exceptions import ConversionError
@@ -108,7 +114,7 @@ class DPTTemperature(DPT2ByteFloat):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.
 
-    DPT 9.001
+    DPT 9.001 DPT_Value_Temp
     """
 
     value_min = -273
@@ -121,7 +127,7 @@ class DPTLux(DPT2ByteFloat):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.
 
-    DPT 9.004
+    DPT 9.004 DPT_Value_Lux
     """
 
     value_min = 0
@@ -134,7 +140,7 @@ class DPTWsp(DPT2ByteFloat):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.
 
-    DPT 9.005
+    DPT 9.005 DPT_Value_Ws Speed (m/s)
     """
 
     value_min = 0
@@ -147,7 +153,7 @@ class DPTHumidity(DPT2ByteFloat):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.
 
-    DPT 9.007
+    DPT 9.007 DPT_Value_Humidity
     """
 
     value_min = 0
@@ -158,69 +164,69 @@ class DPTHumidity(DPT2ByteFloat):
 
 class DPTElectricCurrent(DPT4ByteFloat):
     """
-    DPT_Value_Electric_Current 14.019
+    DPT 14.019 DPT_Value_Electric_Current
     """
     unit = "A"
 
 
 class DPTElectricPotential(DPT4ByteFloat):
     """
-    DPT_Value_Electric_Potential 14.027
+    DPT 14.027 DPT_Value_Electric_Potential
     """
     unit = "V"
 
 
 class DPTEnergy(DPT4ByteFloat):
     """
-    DPT_Value_Energy 14.031
+    DPT 14.031 DPT_Value_Energy
     """
     unit = 'J'
 
 
 class DPTFrequency(DPT4ByteFloat):
     """
-    DPT_Value_Frequency 14.033
+    DPT 14.033 DPT_Value_Frequency
     """
     unit = 'Hz'
 
 
 class DPTHeatFlowRate(DPT4ByteFloat):
     """
-    DPT_Value_Heat_Flow_Rate 14.036
+    DPT 14.036 DPT_Value_Heat_Flow_Rate
     """
     unit = 'W'
 
 
 class DPTPhaseAngleRad(DPT4ByteFloat):
     """
-    DPT_Value_Phase_Angle, Radiant 14.054
+    DPT 14.054 DPT_Value_Phase_Angle, Radiant
     """
     unit = 'rad'
 
 
 class DPTPhaseAngleDeg(DPT4ByteFloat):
     """
-    DPT_Value_Phase_Angle, Degree 14.055
+    14.055 DPT_Value_Phase_Angle, Degree
     """
     unit = '°'
 
 
 class DPTPower(DPT4ByteFloat):
     """
-    DPT_Value_Power 14.056
+    DPT 14.056 DPT_Value_Power
     """
     unit = "W"
 
 
 class DPTPowerFactor(DPT4ByteFloat):
     """
-    DPT_Value_Power 14.057
+    DPT 14.057 DPT_Value_Power
     """
     unit = ''
 
 
 class DPTSpeed(DPT4ByteFloat):
     """
-    DPT_Value_Speed 14.065
+    DPT 14.065 DPT_Value_Speed
     """
     unit = 'm/s'

@@ -9,9 +9,11 @@ It provides functionality for
 import asyncio
 
 from xknx.knx import (GroupAddress, DPTArray, DPTBinary, DPTHumidity, DPTLux,
-                      DPTScaling, DPTTemperature, DPTElectricPotential, \
-                      DPTElectricCurrent, DPTPower, DPTUElCurrentmA, DPTWsp, \
-                      DPT4ByteUnsigned, DPT4ByteSigned)
+                      DPTScaling, DPTTemperature, DPTElectricPotential,
+                      DPTElectricCurrent, DPTPower, DPTUElCurrentmA, DPTWsp,
+                      DPTBrightness, DPTEnergy, DPTHeatFlowRate, DPTFrequency, DPTPhaseAngleRad, DPTPhaseAngleDeg,
+                      DPTPowerFactor, DPTSpeed,
+                      DPT2ByteUnsigned, DPT2ByteFloat, DPT4ByteUnsigned, DPT4ByteSigned, DPT4ByteFloat)
 
 from .device import Device
 
@@ -40,14 +42,32 @@ class Sensor(Device):
             'temperature'       : DPTTemperature,
             'humidity'          : DPTHumidity,
             'illuminance'       : DPTLux,
+            'brightness'        : DPTBrightness,
             'speed_ms'          : DPTWsp,
             'current'           : DPTUElCurrentmA,
             'power'             : DPTPower,
             'electric_current'  : DPTElectricCurrent,
             'electric_potential': DPTElectricPotential,
+            'energy'            : DPTEnergy,
+            'frequency'         : DPTFrequency,
+            'heatflowrate'      : DPTHeatFlowRate,
+            'phaseanglerad'     : DPTPhaseAngleRad,
+            'phaseangledeg'     : DPTPhaseAngleDeg,
+            'powerfactor'       : DPTPowerFactor,
+            'speed'             : DPTSpeed,
 
+            # Generic DPT Without Min/Max and Unit.
+            'DPT-7'             : DPT2ByteUnsigned,
+            '2byte_unsigned'    : DPT2ByteUnsigned,
+            'DPT-9'             : DPT2ByteFloat,
+
+            'DPT-12'            : DPT4ByteUnsigned,
             '4byte_unsigned'    : DPT4ByteUnsigned,
-            '4byte_signed'      : DPT4ByteSigned
+
+            'DPT-13'            : DPT4ByteSigned,
+            '4byte_signed'      : DPT4ByteSigned,
+            'DPT-14'            : DPT4ByteFloat,
+            '4byte_float'       : DPT4ByteFloat
         }
 
     @classmethod

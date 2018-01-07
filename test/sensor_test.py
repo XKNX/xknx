@@ -108,7 +108,6 @@ class TestSensor(unittest.TestCase):
         self.assertEqual(sensor.resolve_state(), 397)
         self.assertEqual(sensor.unit_of_measurement(), "W")
 
-    
     def test_str_electric_potential(self):
         """Test resolve state with voltage sensor."""
         xknx = XKNX(loop=self.loop)
@@ -121,7 +120,6 @@ class TestSensor(unittest.TestCase):
 
         self.assertEqual(round(sensor.resolve_state(), 2), 229.89)
         self.assertEqual(sensor.unit_of_measurement(), "V")
-        
 
     #
     # SYNC
