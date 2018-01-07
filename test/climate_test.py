@@ -7,7 +7,7 @@ from xknx import XKNX
 from xknx.devices import Climate
 from xknx.exceptions import DeviceIllegalValue
 from xknx.knx import (Address, DPTArray, DPTBinary, DPTControllerStatus,
-                      DPTFloat, DPTHVACMode, DPTTemperature, DPTValue1Count,
+                      DPT2ByteFloat, DPTHVACMode, DPTTemperature, DPTValue1Count,
                       HVACOperationMode, Telegram, TelegramType)
 
 
@@ -348,7 +348,7 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            Telegram(Address('1/2/2'), payload=DPTArray(DPTFloat().to_knx(23.00))))
+            Telegram(Address('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(23.00))))
 
         # First change
         self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(24.00)))
@@ -358,7 +358,7 @@ class TestClimate(unittest.TestCase):
             Telegram(Address('1/2/3'), payload=DPTArray(6)))
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            Telegram(Address('1/2/2'), payload=DPTArray(DPTFloat().to_knx(24.00))))
+            Telegram(Address('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(24.00))))
         self.assertEqual(climate.target_temperature.value, 24.00)
 
         # Second change
@@ -369,7 +369,7 @@ class TestClimate(unittest.TestCase):
             Telegram(Address('1/2/3'), payload=DPTArray(5)))
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            Telegram(Address('1/2/2'), payload=DPTArray(DPTFloat().to_knx(23.50))))
+            Telegram(Address('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(23.50))))
         self.assertEqual(climate.target_temperature.value, 23.50)
 
         # Test max target temperature
@@ -399,7 +399,7 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            Telegram(Address('1/2/2'), payload=DPTArray(DPTFloat().to_knx(23.00))))
+            Telegram(Address('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(23.00))))
 
         # First change
         self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(21.00)))
@@ -409,7 +409,7 @@ class TestClimate(unittest.TestCase):
             Telegram(Address('1/2/3'), payload=DPTArray(0xFD)))  # -3
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            Telegram(Address('1/2/2'), payload=DPTArray(DPTFloat().to_knx(21.00))))
+            Telegram(Address('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(21.00))))
         self.assertEqual(climate.target_temperature.value, 21.00)
 
         # Second change
@@ -420,7 +420,7 @@ class TestClimate(unittest.TestCase):
             Telegram(Address('1/2/3'), payload=DPTArray(0xFA)))  # -3
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            Telegram(Address('1/2/2'), payload=DPTArray(DPTFloat().to_knx(19.50))))
+            Telegram(Address('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(19.50))))
         self.assertEqual(climate.target_temperature.value, 19.50)
 
         # Test min target temperature
@@ -453,7 +453,7 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            Telegram(Address('1/2/2'), payload=DPTArray(DPTFloat().to_knx(23.00))))
+            Telegram(Address('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(23.00))))
 
         self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(24.00)))
         self.assertEqual(xknx.telegrams.qsize(), 2)
@@ -462,7 +462,7 @@ class TestClimate(unittest.TestCase):
             Telegram(Address('1/2/3'), payload=DPTArray(20)))
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            Telegram(Address('1/2/2'), payload=DPTArray(DPTFloat().to_knx(24.00))))
+            Telegram(Address('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(24.00))))
         self.assertEqual(climate.target_temperature.value, 24.00)
 
         # Test max/min target temperature

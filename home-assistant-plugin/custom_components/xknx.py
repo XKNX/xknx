@@ -269,12 +269,12 @@ class KNXModule(object):
     @asyncio.coroutine
     def async_broadcast_temperature(self, entity_id, old_state, new_state):
         """Broadcast new temperature of sensor to KNX bus."""
-        from xknx.knx import Telegram, Address, DPTArray, DPTFloat
+        from xknx.knx import Telegram, Address, DPTArray, DPT2ByteFloat
         if new_state is None:
             return
         address = Address(
             self.config[DOMAIN][CONF_XKNX_OUTSIDE_TEMPERATURE_ADDRESS])
-        payload = DPTArray(DPTFloat().to_knx(float(new_state.state)))
+        payload = DPTArray(DPT2ByteFloat().to_knx(float(new_state.state)))
         telegram = Telegram()
         telegram.group_address = address
         telegram.payload = payload
