@@ -70,14 +70,16 @@ class DPTFloat(DPTBase):
     @classmethod
     def _test_boundaries(cls, value):
         """Test if value is within defined range for this object."""
-        return value >= cls.value_min and \
-            value <= cls.value_max
+        return cls.value_min <= value <= cls.value_max
 
 
 class DPTIEEE754(DPTBase):
     """
-    Abstraction for KNX 4 Octet Floating Point Numbers (IEEE754).
-    No value range seems to be defined for these values.
+    Abstraction for KNX 4 Octet Floating Point Numbers, with a maximum usable range as specified in IEEE 754.
+    The largest positive finite float literal is 3.40282347e+38f.
+    The smallest positive finite non-zero literal of type float is 1.40239846e-45f.
+    The negative minimum finite float literal is -3.40282347e+38f.
+    No value range are defined for DPTs 14.000-079.
 
     DPT 14.xxx
     """
@@ -169,9 +171,57 @@ class DPTElectricPotential(DPTIEEE754):
     unit = "V"
 
 
+class DPTEnergy(DPTIEEE754):
+    """
+    DPT_Value_Energy 14.031
+    """
+    unit = 'J'
+
+
+class DPTFrequency(DPTIEEE754):
+    """
+    DPT_Value_Frequency 14.033
+    """
+    unit = 'Hz'
+
+
+class DPTHeatFlowRate(DPTIEEE754):
+    """
+    DPT_Value_Heat_Flow_Rate 14.036
+    """
+    unit = 'W'
+
+
+class DPTPhaseAngleRad(DPTIEEE754):
+    """
+    DPT_Value_Phase_Angle, Radiant 14.054
+    """
+    unit = 'rad'
+
+
+class DPTPhaseAngleDeg(DPTIEEE754):
+    """
+    DPT_Value_Phase_Angle, Degree 14.055
+    """
+    unit = '°'
+
+
 class DPTPower(DPTIEEE754):
     """
-    DPT_Value_Power 14.056 
+    DPT_Value_Power 14.056
     """
     unit = "W"
 
+
+class DPTPowerFactor(DPTIEEE754):
+    """
+    DPT_Value_Power 14.057
+    """
+    unit = ''
+
+
+class DPTSpeed(DPTIEEE754):
+    """
+    DPT_Value_Speed 14.065
+    """
+    unit = 'm/s'
