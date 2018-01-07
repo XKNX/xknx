@@ -60,15 +60,19 @@ class DateTime(Device):
         """Broadcast time to KNX bus."""
         if self.broadcast_type == DateTimeBroadcastType.DATETIME:
             broadcast_data = DPTDateTime.current_datetime_as_knx()
+            yield from self.send(
+                self.group_address,
+                DPTArray(broadcast_data))
         elif self.broadcast_type == DateTimeBroadcastType.DATE:
             broadcast_data = DPTDate.current_date_as_knx()
+            yield from self.send(
+                self.group_address,
+                DPTArray(broadcast_data))
         elif self.broadcast_type == DateTimeBroadcastType.TIME:
             broadcast_data = DPTTime.current_time_as_knx()
-        else:
-            raise TypeError()
-        yield from self.send(
-            self.group_address,
-            DPTArray(broadcast_data))
+            yield from self.send(
+                self.group_address,
+                DPTArray(broadcast_data))
 
     @asyncio.coroutine
     def sync(self, wait_for_result=True):
