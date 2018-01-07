@@ -1,11 +1,18 @@
 """Unit test for DateTime object."""
 import asyncio
+import time
 import unittest
+from unittest.mock import Mock, patch
 
 from xknx import XKNX
 from xknx.devices import DateTime
 from xknx.devices.datetime import DateTimeBroadcastType
 from xknx.knx import GroupAddress, TelegramType
+
+
+MOCK_LOCALTIME = Mock()
+# Mocked time: 2017-01-07 09:13:14  - a Saturday
+MOCK_LOCALTIME.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
 
 
 class TestDateTime(unittest.TestCase):
@@ -23,7 +30,8 @@ class TestDateTime(unittest.TestCase):
     #
     # SYNC DateTime
     #
-    def test_sync_datetime(self):
+    @patch('time.localtime', MOCK_LOCALTIME)
+    def test_sync_datetime(self,):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX(loop=self.loop)
         datetime = DateTime(xknx, "TestDateTime", group_address='1/2/3', broadcast_type=DateTimeBroadcastType.DATETIME)
@@ -35,10 +43,12 @@ class TestDateTime(unittest.TestCase):
         self.assertEqual(telegram.group_address, GroupAddress('1/2/3'))
         self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
         self.assertEqual(len(telegram.payload.value), 8)
+        self.assertEqual(telegram.payload.value, (0x75, 0x01, 0x07, 0xE9, 0x0D, 0x0E, 0x0, 0x0))
 
     #
     # SYNC Date
     #
+    @patch('time.localtime', MOCK_LOCALTIME)
     def test_sync_date(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX(loop=self.loop)
@@ -51,10 +61,12 @@ class TestDateTime(unittest.TestCase):
         self.assertEqual(telegram.group_address, GroupAddress('1/2/3'))
         self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
         self.assertEqual(len(telegram.payload.value), 3)
+        self.assertEqual(telegram.payload.value, (0x07, 0x01, 0x11))
 
     #
     # SYNC Time
     #
+    @patch('time.localtime', MOCK_LOCALTIME)
     def test_sync_time(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX(loop=self.loop)
@@ -67,6 +79,7 @@ class TestDateTime(unittest.TestCase):
         self.assertEqual(telegram.group_address, GroupAddress('1/2/3'))
         self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
         self.assertEqual(len(telegram.payload.value), 3)
+        self.assertEqual(telegram.payload.value, (0xE9, 0x0D, 0x0E))
 
     #
     # TEST HAS GROUP ADDRESS
