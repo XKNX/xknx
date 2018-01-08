@@ -1,11 +1,11 @@
-"""Unit test for KNX float object."""
+"""Unit test for KNX string object."""
 import unittest
 
 from xknx.exceptions import ConversionError
 from xknx.knx import DPTString
 
 
-class TestDPT2ByteFloat(unittest.TestCase):
+class TestDPTString(unittest.TestCase):
     """Test class for KNX float object."""
 
     # pylint: disable=too-many-public-methods,invalid-name
@@ -68,5 +68,5 @@ class TestDPT2ByteFloat(unittest.TestCase):
             DPTString().from_knx(raw)
 
 
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPT2ByteFloat)
+SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPTString)
 unittest.TextTestRunner(verbosity=2).run(SUITE)
