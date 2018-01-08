@@ -9,7 +9,11 @@ It provides functionality for
 import asyncio
 
 from xknx.knx import (GroupAddress, DPTArray, DPTBinary, DPTHumidity, DPTLux,
-                      DPTScaling, DPTTemperature, DPTUElCurrentmA, DPTWsp)
+                      DPTScaling, DPTTemperature, DPTElectricPotential,
+                      DPTElectricCurrent, DPTPower, DPTUElCurrentmA, DPTWsp,
+                      DPTBrightness, DPTEnergy, DPTHeatFlowRate, DPTFrequency, DPTPhaseAngleRad, DPTPhaseAngleDeg,
+                      DPTPowerFactor, DPTSpeed,
+                      DPT2ByteUnsigned, DPT2ByteFloat, DPT4ByteUnsigned, DPT4ByteSigned, DPT4ByteFloat)
 
 from .device import Device
 
@@ -33,6 +37,38 @@ class Sensor(Device):
         self.group_address = group_address
         self.value_type = value_type
         self.state = None
+
+        self.dptmap = {
+            'temperature'       : DPTTemperature,
+            'humidity'          : DPTHumidity,
+            'illuminance'       : DPTLux,
+            'brightness'        : DPTBrightness,
+            'speed_ms'          : DPTWsp,
+            'current'           : DPTUElCurrentmA,
+            'power'             : DPTPower,
+            'electric_current'  : DPTElectricCurrent,
+            'electric_potential': DPTElectricPotential,
+            'energy'            : DPTEnergy,
+            'frequency'         : DPTFrequency,
+            'heatflowrate'      : DPTHeatFlowRate,
+            'phaseanglerad'     : DPTPhaseAngleRad,
+            'phaseangledeg'     : DPTPhaseAngleDeg,
+            'powerfactor'       : DPTPowerFactor,
+            'speed'             : DPTSpeed,
+
+            # Generic DPT Without Min/Max and Unit.
+            'DPT-7'             : DPT2ByteUnsigned,
+            '2byte_unsigned'    : DPT2ByteUnsigned,
+            'DPT-9'             : DPT2ByteFloat,
+
+            'DPT-12'            : DPT4ByteUnsigned,
+            '4byte_unsigned'    : DPT4ByteUnsigned,
+
+            'DPT-13'            : DPT4ByteSigned,
+            '4byte_signed'      : DPT4ByteSigned,
+            'DPT-14'            : DPT4ByteFloat,
+            '4byte_float'       : DPT4ByteFloat
+        }
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -72,16 +108,8 @@ class Sensor(Device):
         # pylint: disable=too-many-return-statements
         if self.value_type == 'percent':
             return "%"
-        elif self.value_type == 'temperature':
-            return DPTTemperature.unit
-        elif self.value_type == 'humidity':
-            return DPTHumidity.unit
-        elif self.value_type == 'illuminance':
-            return DPTLux.unit
-        elif self.value_type == 'speed_ms':
-            return DPTWsp.unit
-        elif self.value_type == 'current':
-            return DPTUElCurrentmA.unit
+        elif self.value_type in self.dptmap:
+            return self.dptmap[self.value_type].unit
         return None
 
     def resolve_state(self):
@@ -94,16 +122,8 @@ class Sensor(Device):
                 len(self.state.value) == 1:
             # TODO: Instanciate DPTScaling object with DPTArray class
             return "{0}".format(DPTScaling().from_knx(self.state.value))
-        elif self.value_type == 'humidity':
-            return DPTHumidity().from_knx(self.state.value)
-        elif self.value_type == 'temperature':
-            return DPTTemperature().from_knx(self.state.value)
-        elif self.value_type == 'illuminance':
-            return DPTLux().from_knx(self.state.value)
-        elif self.value_type == 'speed_ms':
-            return DPTWsp().from_knx(self.state.value)
-        elif self.value_type == 'current':
-            return DPTUElCurrentmA().from_knx(self.state.value)
+        elif self.value_type in self.dptmap:
+            return self.dptmap[self.value_type].from_knx(self.state.value)
         elif isinstance(self.state, DPTArray):
             return ','.join('0x%02x' % i for i in self.state.value)
         elif isinstance(self.state, DPTBinary):

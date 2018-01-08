@@ -1,11 +1,18 @@
-"""Implementation of Basic KNX Floats."""
+"""
+Implementation of KNX Float-values.
 
+They can be either 2 or 4 bytes, and correspond to the the following KDN DPTs.
+    9.yyy  2-byte/octet float, e.g. temperature
+    14.yyy 4-byte/octet float, IEEE 754, i.e. Electrical measurements: current, power
+"""
+
+import struct
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
 
 
-class DPTFloat(DPTBase):
+class DPT2ByteFloat(DPTBase):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.
 
@@ -68,15 +75,46 @@ class DPTFloat(DPTBase):
     @classmethod
     def _test_boundaries(cls, value):
         """Test if value is within defined range for this object."""
-        return value >= cls.value_min and \
-            value <= cls.value_max
+        return cls.value_min <= value <= cls.value_max
 
 
-class DPTTemperature(DPTFloat):
+class DPT4ByteFloat(DPTBase):
+    """
+    Abstraction for KNX 4 Octet Floating Point Numbers, with a maximum usable range as specified in IEEE 754.
+    The largest positive finite float literal is 3.40282347e+38f.
+    The smallest positive finite non-zero literal of type float is 1.40239846e-45f.
+    The negative minimum finite float literal is -3.40282347e+38f.
+    No value range are defined for DPTs 14.000-079.
+
+    DPT 14.xxx
+    """
+
+    unit = ""
+
+    @classmethod
+    def from_knx(cls, raw):
+        """Parse/deserialize from KNX/IP raw data (big endian)."""
+        cls.test_bytesarray(raw, 4)
+        try:
+            return struct.unpack(">f", bytes(raw))[0]
+        except struct.error:
+            raise ConversionError(raw)
+
+
+    @classmethod
+    def to_knx(cls, value):
+        """Serialize to KNX/IP raw data."""
+        try:
+            return tuple(struct.pack(">f", value))
+        except struct.error:
+            raise ConversionError(value)
+
+
+class DPTTemperature(DPT2ByteFloat):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.
 
-    DPT 9.001
+    DPT 9.001 DPT_Value_Temp
     """
 
     value_min = -273
@@ -85,11 +123,11 @@ class DPTTemperature(DPTFloat):
     resolution = 1
 
 
-class DPTLux(DPTFloat):
+class DPTLux(DPT2ByteFloat):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.
 
-    DPT 9.004
+    DPT 9.004 DPT_Value_Lux
     """
 
     value_min = 0
@@ -98,11 +136,11 @@ class DPTLux(DPTFloat):
     resolution = 1
 
 
-class DPTWsp(DPTFloat):
+class DPTWsp(DPT2ByteFloat):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.
 
-    DPT 9.005
+    DPT 9.005 DPT_Value_Ws Speed (m/s)
     """
 
     value_min = 0
@@ -111,14 +149,84 @@ class DPTWsp(DPTFloat):
     resolution = 1
 
 
-class DPTHumidity(DPTFloat):
+class DPTHumidity(DPT2ByteFloat):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.
 
-    DPT 9.007
+    DPT 9.007 DPT_Value_Humidity
     """
 
     value_min = 0
     value_max = 670760
     unit = "%"
     resolution = 1
+
+
+class DPTElectricCurrent(DPT4ByteFloat):
+    """
+    DPT 14.019 DPT_Value_Electric_Current
+    """
+    unit = "A"
+
+
+class DPTElectricPotential(DPT4ByteFloat):
+    """
+    DPT 14.027 DPT_Value_Electric_Potential
+    """
+    unit = "V"
+
+
+class DPTEnergy(DPT4ByteFloat):
+    """
+    DPT 14.031 DPT_Value_Energy
+    """
+    unit = 'J'
+
+
+class DPTFrequency(DPT4ByteFloat):
+    """
+    DPT 14.033 DPT_Value_Frequency
+    """
+    unit = 'Hz'
+
+
+class DPTHeatFlowRate(DPT4ByteFloat):
+    """
+    DPT 14.036 DPT_Value_Heat_Flow_Rate
+    """
+    unit = 'W'
+
+
+class DPTPhaseAngleRad(DPT4ByteFloat):
+    """
+    DPT 14.054 DPT_Value_Phase_Angle, Radiant
+    """
+    unit = 'rad'
+
+
+class DPTPhaseAngleDeg(DPT4ByteFloat):
+    """
+    14.055 DPT_Value_Phase_Angle, Degree
+    """
+    unit = '°'
+
+
+class DPTPower(DPT4ByteFloat):
+    """
+    DPT 14.056 DPT_Value_Power
+    """
+    unit = "W"
+
+
+class DPTPowerFactor(DPT4ByteFloat):
+    """
+    DPT 14.057 DPT_Value_Power
+    """
+    unit = ''
+
+
+class DPTSpeed(DPT4ByteFloat):
+    """
+    DPT 14.065 DPT_Value_Speed
+    """
+    unit = 'm/s'

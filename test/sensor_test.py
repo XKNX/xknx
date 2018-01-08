@@ -95,6 +95,32 @@ class TestSensor(unittest.TestCase):
         self.assertEqual(sensor.resolve_state(), 33.02)
         self.assertEqual(sensor.unit_of_measurement(), "%")
 
+    def test_str_power(self):
+        """Test resolve state with power sensor."""
+        xknx = XKNX(loop=self.loop)
+        sensor = Sensor(
+            xknx,
+            'TestSensor',
+            group_address='1/2/3',
+            value_type="power")
+        sensor.state = DPTArray((0x43, 0xC6, 0x80, 00))
+
+        self.assertEqual(sensor.resolve_state(), 397)
+        self.assertEqual(sensor.unit_of_measurement(), "W")
+
+    def test_str_electric_potential(self):
+        """Test resolve state with voltage sensor."""
+        xknx = XKNX(loop=self.loop)
+        sensor = Sensor(
+            xknx,
+            'TestSensor',
+            group_address='1/2/3',
+            value_type="electric_potential")
+        sensor.state = DPTArray((0x43, 0x65, 0xE3, 0xD7))
+
+        self.assertEqual(round(sensor.resolve_state(), 2), 229.89)
+        self.assertEqual(sensor.unit_of_measurement(), "V")
+
     #
     # SYNC
     #
