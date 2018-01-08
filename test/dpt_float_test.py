@@ -217,7 +217,3 @@ class TestDPTFloat(unittest.TestCase):
     def test_power_settings(self):
         """Test attributes of DPTLux."""
         self.assertEqual(DPTPower().unit, "W")
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPTFloat)
-unittest.TextTestRunner(verbosity=2).run(SUITE)
