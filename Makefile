@@ -18,7 +18,7 @@ all:
 	@echo "clean           -- cleanup working directory"
 
 test:
-	PYTHONPATH="${PYTHONPATH}:/" python3 -m unittest discover -s test -p "*_test.py" -b
+	PYTHONPATH="${PYTHONPATH}:/" python3 -m unittest discover -s test -p "*_test.py" -b -v
 
 build:
 	@python3 setup.py sdist
