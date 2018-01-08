@@ -23,7 +23,7 @@ class DPT4ByteUnsigned(DPTBase):
     value_max = 4294967295
     unit = ""
     resolution = 1
-    
+
     _struct_format = ">I"
 
     @classmethod
