@@ -7,8 +7,6 @@ It provides functionality for
 * setting the brightness.
 * reading the current state from KNX bus.
 """
-import asyncio
-
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.knx import GroupAddress, DPTArray
 
@@ -99,40 +97,35 @@ class Light(Device):
         """Return the current switch state of the device."""
         return self.switch.value == RemoteValueSwitch1001.Value.ON
 
-    @asyncio.coroutine
-    def _set_internal_brightness(self, brightness):
+    async def _set_internal_brightness(self, brightness):
         """Set the internal brightness of the device. If state was changed after update hooks are executed."""
         if brightness != self.brightness:
             self.brightness = brightness
-            yield from self.after_update()
+            await self.after_update()
 
-    @asyncio.coroutine
-    def set_on(self):
+    async def set_on(self):
         """Switch light on."""
-        yield from self.switch.on()
+        await self.switch.on()
 
-    @asyncio.coroutine
-    def set_off(self):
+    async def set_off(self):
         """Switch light off."""
-        yield from self.switch.off()
+        await self.switch.off()
 
-    @asyncio.coroutine
-    def set_brightness(self, brightness):
+    async def set_brightness(self, brightness):
         """Set brightness of light."""
         if not self.supports_dimming:
             return
-        yield from self.send(self.group_address_brightness, DPTArray(brightness))
-        yield from self._set_internal_brightness(brightness)
+        await self.send(self.group_address_brightness, DPTArray(brightness))
+        await self._set_internal_brightness(brightness)
 
-    @asyncio.coroutine
-    def do(self, action):
+    async def do(self, action):
         """Execute 'do' commands."""
         if action == "on":
-            yield from self.set_on()
+            await self.set_on()
         elif action == "off":
-            yield from self.set_off()
+            await self.set_off()
         elif action.startswith("brightness:"):
-            yield from self.set_brightness(int(action[11:]))
+            await self.set_brightness(int(action[11:]))
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
@@ -147,24 +140,22 @@ class Light(Device):
             state_addresses.append(state_address_brightness)
         return state_addresses
 
-    @asyncio.coroutine
-    def process(self, telegram):
+    async def process(self, telegram):
         """Process incoming telegram."""
-        yield from self.switch.process(telegram)
+        await self.switch.process(telegram)
 
         if (self.supports_dimming and
                 (telegram.group_address == self.group_address_brightness or
                  telegram.group_address == self.group_address_brightness_state)):
-            yield from self._process_brightness(telegram)
+            await self._process_brightness(telegram)
 
-    @asyncio.coroutine
-    def _process_brightness(self, telegram):
+    async def _process_brightness(self, telegram):
         """Process incoming telegram for brightness state."""
         if not isinstance(telegram.payload, DPTArray) or \
                 len(telegram.payload.value) != 1:
             raise CouldNotParseTelegram()
 
-        yield from self._set_internal_brightness(telegram.payload.value[0])
+        await self._set_internal_brightness(telegram.payload.value[0])
 
     def __eq__(self, other):
         """Equal operator."""

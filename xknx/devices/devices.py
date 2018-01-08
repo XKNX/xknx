@@ -3,8 +3,6 @@ Module for handling a vector/array of devices.
 
 More or less an array with devices. Adds some search functionality to find devices.
 """
-import asyncio
-
 from .device import Device
 
 
@@ -54,14 +52,12 @@ class Devices:
         device.register_device_updated_cb(self.device_updated)
         self.__devices.append(device)
 
-    @asyncio.coroutine
-    def device_updated(self, device):
+    async def device_updated(self, device):
         """Call all registered device updated callbacks of device."""
         for device_updated_cb in self.device_updated_cbs:
-            yield from device_updated_cb(device)
+            await device_updated_cb(device)
 
-    @asyncio.coroutine
-    def sync(self):
+    async def sync(self):
         """Read state of devices from KNX bus."""
         for device in self.__devices:
-            yield from device.sync()
+            await device.sync()

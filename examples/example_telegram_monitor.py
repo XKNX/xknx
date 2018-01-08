@@ -7,8 +7,7 @@ from xknx import XKNX
 from xknx.knx import AddressFilter
 
 
-@asyncio.coroutine
-def telegram_received_cb(telegram):
+async def telegram_received_cb(telegram):
     """Do something with the received telegram."""
     print("Telegram received: {0}".format(telegram))
     return True

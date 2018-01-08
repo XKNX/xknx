@@ -6,8 +6,6 @@ It provides functionality for
 * switching 'on' and 'off'.
 * reading the current state from KNX bus.
 """
-import asyncio
-
 from .device import Device
 from .remote_value import RemoteValueSwitch1001
 
@@ -53,23 +51,20 @@ class Switch(Device):
         """Return the current switch state of the device."""
         return self.switch.value == RemoteValueSwitch1001.Value.ON
 
-    @asyncio.coroutine
-    def set_on(self):
+    async def set_on(self):
         """Switch on switch."""
-        yield from self.switch.on()
+        await self.switch.on()
 
-    @asyncio.coroutine
-    def set_off(self):
+    async def set_off(self):
         """Switch off switch."""
-        yield from self.switch.off()
+        await self.switch.off()
 
-    @asyncio.coroutine
-    def do(self, action):
+    async def do(self, action):
         """Execute 'do' commands."""
         if action == "on":
-            yield from self.set_on()
+            await self.set_on()
         elif action == "off":
-            yield from self.set_off()
+            await self.set_off()
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
@@ -77,10 +72,9 @@ class Switch(Device):
         """Return group addresses which should be requested to sync state."""
         return self.switch.state_addresses()
 
-    @asyncio.coroutine
-    def process(self, telegram):
+    async def process(self, telegram):
         """Process incoming telegram."""
-        yield from self.switch.process(telegram)
+        await self.switch.process(telegram)
 
     def __str__(self):
         """Return object as readable string."""

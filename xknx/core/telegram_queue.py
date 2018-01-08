@@ -50,75 +50,68 @@ class TelegramQueue():
         """Unregister callback for a telegram beeing received from KNX bus."""
         self.telegram_received_cbs.remove(telegram_received_cb)
 
-    @asyncio.coroutine
-    def start(self):
+    async def start(self):
         """Start telegram queue."""
         self.xknx.loop.create_task(self.run())
 
-    @asyncio.coroutine
-    def run(self):
+    async def run(self):
         """Endless loop for processing telegrams."""
         while True:
-            telegram = yield from self.xknx.telegrams.get()
+            telegram = await self.xknx.telegrams.get()
 
             # Breaking up queue if None is pushed to the queue
             if telegram is None:
                 break
 
-            yield from self.process_telegram(telegram)
+            await self.process_telegram(telegram)
             self.xknx.telegrams.task_done()
 
             if telegram.direction == TelegramDirection.OUTGOING:
                 # limit rate to knx bus to 20 per second
-                yield from asyncio.sleep(1/20)
+                await asyncio.sleep(1/20)
 
         self.queue_stopped.set()
 
-    @asyncio.coroutine
-    def stop(self):
+    async def stop(self):
         """Stop telegram queue."""
         self.xknx.logger.debug("Stopping TelegramQueue")
         # If a None object is pushed to the queue, the queue stops
-        yield from self.xknx.telegrams.put(None)
-        yield from self.queue_stopped.wait()
+        await self.xknx.telegrams.put(None)
+        await self.queue_stopped.wait()
 
-    @asyncio.coroutine
-    def process_all_telegrams(self):
+    async def process_all_telegrams(self):
         """Process all telegrams being queued."""
         while not self.xknx.telegrams.empty():
             telegram = self.xknx.telegrams.get_nowait()
-            yield from self.process_telegram(telegram)
+            await self.process_telegram(telegram)
             self.xknx.telegrams.task_done()
 
-    @asyncio.coroutine
-    def process_telegram(self, telegram):
+    async def process_telegram(self, telegram):
         """Process telegram."""
         self.xknx.telegram_logger.debug(telegram)
         try:
             if telegram.direction == TelegramDirection.INCOMING:
-                yield from self.process_telegram_incoming(telegram)
+                await self.process_telegram_incoming(telegram)
             elif telegram.direction == TelegramDirection.OUTGOING:
-                yield from self.process_telegram_outgoing(telegram)
+                await self.process_telegram_outgoing(telegram)
 
         # pylint: disable=broad-except
         except Exception as exception:
             self.xknx.logger.exception("Exception while processing telegram: %s", exception)
 
-    @asyncio.coroutine
-    def process_telegram_outgoing(self, telegram):
+    async def process_telegram_outgoing(self, telegram):
         """Process outgoing telegram."""
         if self.xknx.knxip_interface is not None:
-            yield from self.xknx.knxip_interface.send_telegram(telegram)
+            await self.xknx.knxip_interface.send_telegram(telegram)
         else:
             self.xknx.logger.warning("No KNXIP interface defined")
 
-    @asyncio.coroutine
-    def process_telegram_incoming(self, telegram):
+    async def process_telegram_incoming(self, telegram):
         """Process incoming telegram."""
         processed = False
         for telegram_received_cb in self.telegram_received_cbs:
             if telegram_received_cb.is_within_filter(telegram):
-                ret = yield from telegram_received_cb.callback(telegram)
+                ret = await telegram_received_cb.callback(telegram)
                 if ret:
                     processed = True
 
@@ -127,4 +120,4 @@ class TelegramQueue():
                  telegram.telegramtype == TelegramType.GROUP_RESPONSE)):
             for device in self.xknx.devices.devices_by_group_address(
                     telegram.group_address):
-                yield from device.process(telegram)
+                await device.process(telegram)

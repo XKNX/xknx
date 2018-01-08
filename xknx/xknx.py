@@ -57,51 +57,47 @@ class XKNX:
             except RuntimeError as exp:
                 self.logger.warning("Could not close loop, reason: %s", exp)
 
-    @asyncio.coroutine
-    def start(self,
-              state_updater=False,
-              daemon_mode=False,
-              connection_config=ConnectionConfig()):
+    async def start(self,
+                    state_updater=False,
+                    daemon_mode=False,
+                    connection_config=ConnectionConfig()):
         """Start XKNX module. Connect to KNX/IP devices and start state updater."""
         self.knxip_interface = KNXIPInterface(self, connection_config=connection_config)
-        yield from self.knxip_interface.start()
-        yield from self.telegram_queue.start()
+        await self.knxip_interface.start()
+        await self.telegram_queue.start()
 
         if state_updater:
             from xknx.core import StateUpdater
             self.state_updater = StateUpdater(self)
-            yield from self.state_updater.start()
+            await self.state_updater.start()
 
         if daemon_mode:
-            yield from self.loop_until_sigint()
+            await self.loop_until_sigint()
 
         self.started = True
 
-    @asyncio.coroutine
-    def join(self):
+    async def join(self):
         """Wait until all telegrams were processed."""
-        yield from self.telegrams.join()
+        await self.telegrams.join()
 
-    def _stop_knxip_interface_if_exists(self):
+    async def _stop_knxip_interface_if_exists(self):
         """Stop KNXIPInterface if initialized."""
         if self.knxip_interface is not None:
-            yield from self.knxip_interface.stop()
+            await self.knxip_interface.stop()
             self.knxip_interface = None
 
-    @asyncio.coroutine
-    def stop(self):
+    async def stop(self):
         """Stop XKNX module."""
-        yield from self.join()
-        yield from self.telegram_queue.stop()
-        yield from self._stop_knxip_interface_if_exists()
+        await self.join()
+        await self.telegram_queue.stop()
+        await self._stop_knxip_interface_if_exists()
         self.started = False
 
-    @asyncio.coroutine
-    def loop_until_sigint(self):
+    async def loop_until_sigint(self):
         """Loop until Crtl-C was pressed."""
         def sigint_handler():
             """End loop."""
             self.sigint_received.set()
         self.loop.add_signal_handler(signal.SIGINT, sigint_handler)
         self.logger.warning('Press Ctrl+C to stop')
-        yield from self.sigint_received.wait()
+        await self.sigint_received.wait()

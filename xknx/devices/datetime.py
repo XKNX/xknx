@@ -6,7 +6,6 @@ beeing configured via xknx.yaml and synchronized periodically
 by StateUpdate.
 """
 
-import asyncio
 from enum import Enum
 from xknx.knx import GroupAddress, DPTArray, DPTDateTime, DPTTime, DPTDate
 from .device import Device
@@ -55,29 +54,27 @@ class DateTime(Device):
         """Test if device has given group address."""
         return self.group_address == group_address
 
-    @asyncio.coroutine
-    def broadcast_time(self):
+    async def broadcast_time(self):
         """Broadcast time to KNX bus."""
         if self.broadcast_type == DateTimeBroadcastType.DATETIME:
             broadcast_data = DPTDateTime.current_datetime_as_knx()
-            yield from self.send(
+            await self.send(
                 self.group_address,
                 DPTArray(broadcast_data))
         elif self.broadcast_type == DateTimeBroadcastType.DATE:
             broadcast_data = DPTDate.current_date_as_knx()
-            yield from self.send(
+            await self.send(
                 self.group_address,
                 DPTArray(broadcast_data))
         elif self.broadcast_type == DateTimeBroadcastType.TIME:
             broadcast_data = DPTTime.current_time_as_knx()
-            yield from self.send(
+            await self.send(
                 self.group_address,
                 DPTArray(broadcast_data))
 
-    @asyncio.coroutine
-    def sync(self, wait_for_result=True):
+    async def sync(self, wait_for_result=True):
         """Read state of device from KNX bus. Used here to broadcast time to KNX bus."""
-        yield from self.broadcast_time()
+        await self.broadcast_time()
 
     def __str__(self):
         """Return object as readable string."""

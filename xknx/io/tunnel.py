@@ -69,24 +69,21 @@ class Tunnel():
         ack_knxipframe.normalize()
         self.udp_client.send(ack_knxipframe)
 
-    @asyncio.coroutine
-    def start(self):
+    async def start(self):
         """Start tunneling."""
-        yield from self.connect_udp()
-        yield from self.connect()
+        await self.connect_udp()
+        await self.connect()
 
-    @asyncio.coroutine
-    def connect_udp(self):
+    async def connect_udp(self):
         """Connect udp_client."""
-        yield from self.udp_client.connect()
+        await self.udp_client.connect()
 
-    @asyncio.coroutine
-    def connect(self):
+    async def connect(self):
         """Connect/build tunnel."""
         connect = Connect(
             self.xknx,
             self.udp_client)
-        yield from connect.start()
+        await connect.start()
         if not connect.success:
             raise XKNXException("Could not establish connection")
         self.xknx.logger.debug(
@@ -95,10 +92,9 @@ class Tunnel():
             connect.identifier)
         self.communication_channel = connect.communication_channel
         self.sequence_number = 0
-        yield from self.start_heartbeat()
+        await self.start_heartbeat()
 
-    @asyncio.coroutine
-    def send_telegram(self, telegram):
+    async def send_telegram(self, telegram):
         """
         Send Telegram to routing tunelling device - retry mechanism.
 
@@ -113,20 +109,19 @@ class Tunnel():
         connection by sending a DISCONNECT_REQUEST frame to the other device’s
         control endpoint.
         """
-        success = yield from self._send_telegram_impl(telegram)
+        success = await self._send_telegram_impl(telegram)
         if not success:
             self.xknx.logger.warning("Sending of telegram failed. Retrying a second time.")
-            success = yield from self._send_telegram_impl(telegram)
+            success = await self._send_telegram_impl(telegram)
             if not success:
                 self.xknx.logger.warning("Resending telegram failed. Reconnecting to tunnel.")
-                yield from self.reconnect()
-                success = yield from self._send_telegram_impl(telegram)
+                await self.reconnect()
+                success = await self._send_telegram_impl(telegram)
                 if not success:
                     raise XKNXException("Could not send telegram to tunnel")
         self.increase_sequence_number()
 
-    @asyncio.coroutine
-    def _send_telegram_impl(self, telegram):
+    async def _send_telegram_impl(self, telegram):
         """Send Telegram to routing tunelling device - implementation."""
         tunnelling = Tunnelling(
             self.xknx,
@@ -135,7 +130,7 @@ class Tunnel():
             self.src_address,
             self.sequence_number,
             self.communication_channel)
-        yield from tunnelling.start()
+        await tunnelling.start()
         return tunnelling.success
 
     def increase_sequence_number(self):
@@ -144,74 +139,65 @@ class Tunnel():
         if self.sequence_number == 256:
             self.sequence_number = 0
 
-    @asyncio.coroutine
-    def connectionstate(self):
+    async def connectionstate(self):
         """Return state of tunnel. True if tunnel is in good shape."""
         conn_state = ConnectionState(
             self.xknx,
             self.udp_client,
             communication_channel_id=self.communication_channel)
-        yield from conn_state.start()
+        await conn_state.start()
         return conn_state.success
 
-    @asyncio.coroutine
-    def disconnect(self, ignore_error=False):
+    async def disconnect(self, ignore_error=False):
         """Disconnect from tunnel device."""
         disconnect = Disconnect(
             self.xknx,
             self.udp_client,
             communication_channel_id=self.communication_channel)
-        yield from disconnect.start()
+        await disconnect.start()
         if not disconnect.success and not ignore_error:
             raise XKNXException("Could not disconnect channel")
         else:
             self.xknx.logger.debug("Tunnel disconnected (communication_channel: %s)", self.communication_channel)
 
-    @asyncio.coroutine
-    def reconnect(self):
+    async def reconnect(self):
         """Reconnect to tunnel device."""
-        yield from self.disconnect(True)
+        await self.disconnect(True)
         self.init_udp_client()
-        yield from self.start()
+        await self.start()
 
-    @asyncio.coroutine
-    def stop(self):
+    async def stop(self):
         """Stop tunneling."""
-        yield from self.disconnect()
-        yield from self.udp_client.stop()
+        await self.disconnect()
+        await self.udp_client.stop()
 
-    @asyncio.coroutine
-    def start_heartbeat(self):
+    async def start_heartbeat(self):
         """Start heartbeat for monitoring state of tunnel, as suggested by 03.08.02 KNX Core 5.4."""
         self.xknx.loop.create_task(
             self.do_heartbeat())
 
-    @asyncio.coroutine
-    def do_heartbeat(self):
+    async def do_heartbeat(self):
         """Heartbeat: Worker 'thread', endless loop for sending heartbeat requests."""
         while True:
-            yield from asyncio.sleep(15)
-            yield from self.do_heartbeat_impl()
+            await asyncio.sleep(15)
+            await self.do_heartbeat_impl()
 
-    @asyncio.coroutine
-    def do_heartbeat_impl(self):
+    async def do_heartbeat_impl(self):
         """Heartbeat: checking connection state and handling result."""
-        connectionsstate = yield from self.connectionstate()
+        connectionsstate = await self.connectionstate()
         if connectionsstate:
-            yield from self.do_heartbeat_success()
+            await self.do_heartbeat_success()
         else:
-            yield from self.do_heartbeat_failed()
+            await self.do_heartbeat_failed()
 
-    @asyncio.coroutine
-    def do_heartbeat_success(self):
+    async def do_heartbeat_success(self):
         """Heartbeat: handling success."""
         self.number_heartbeat_failed = 0
 
-    @asyncio.coroutine
-    def do_heartbeat_failed(self):
+    async def do_heartbeat_failed(self):
         """Heartbeat: handling error."""
         self.number_heartbeat_failed = self.number_heartbeat_failed + 1
         if self.number_heartbeat_failed > 3:
             self.xknx.logger.warning("Heartbeat failed - reconnecting")
-            yield from self.reconnect()
+            await self.reconnect()
             self.number_heartbeat_failed = 0

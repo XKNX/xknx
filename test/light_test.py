@@ -164,8 +164,7 @@ class TestLight(unittest.TestCase):
 
         after_update_callback = Mock()
 
-        @asyncio.coroutine
-        def async_after_update_callback(device):
+        async def async_after_update_callback(device):
             """Async callback."""
             after_update_callback(device)
 

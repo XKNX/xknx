@@ -1,5 +1,4 @@
 """Module for handling commands which may be attached to BinarySensor class."""
-import asyncio
 
 
 class ActionBase():
@@ -36,8 +35,7 @@ class ActionBase():
             return True
         return False
 
-    @asyncio.coroutine
-    def execute(self):
+    async def execute(self):
         """Execute action. To be overwritten in derived classes."""
         # pylint: disable=no-self-use
         pass
@@ -80,10 +78,9 @@ class Action(ActionBase):
                    method=method,
                    counter=counter)
 
-    @asyncio.coroutine
-    def execute(self):
+    async def execute(self):
         """Execute action."""
-        yield from self.xknx.devices[self.target].do(self.method)
+        await self.xknx.devices[self.target].do(self.method)
 
     def __str__(self):
         """Return object as readable string."""
@@ -104,10 +101,9 @@ class ActionCallback(ActionBase):
         super(ActionCallback, self).__init__(xknx, hook, counter)
         self.callback = callback
 
-    @asyncio.coroutine
-    def execute(self):
+    async def execute(self):
         """Execute callback."""
-        yield from self.callback()
+        await self.callback()
 
     def __str__(self):
         """Return object as readable string."""
