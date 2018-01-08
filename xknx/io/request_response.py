@@ -28,19 +28,17 @@ class RequestResponse():
         """Create KNX/IP Frame object to be sent to device."""
         raise NotImplementedError('create_knxipframe has to be implemented')
 
-    @asyncio.coroutine
-    def start(self):
+    async def start(self):
         """Start. Sending and waiting for answer."""
         callb = self.udpclient.register_callback(
             self.response_rec_callback, [self.awaited_response_class.service_type])
-        yield from self.send_request()
-        yield from self.start_timeout()
-        yield from self.response_received_or_timeout.wait()
-        yield from self.stop_timeout()
+        await self.send_request()
+        await self.start_timeout()
+        await self.response_received_or_timeout.wait()
+        await self.stop_timeout()
         self.udpclient.unregister_callback(callb)
 
-    @asyncio.coroutine
-    def send_request(self):
+    async def send_request(self):
         """Build knxipframe (within derived class) and send via UDP."""
         knxipframe = self.create_knxipframe()
         knxipframe.normalize()
@@ -71,13 +69,11 @@ class RequestResponse():
         """Handle timeout for not having received expected knxipframe."""
         self.response_received_or_timeout.set()
 
-    @asyncio.coroutine
-    def start_timeout(self):
+    async def start_timeout(self):
         """Start timeout."""
         self.timeout_handle = self.xknx.loop.call_later(
             self.timeout_in_seconds, self.timeout)
 
-    @asyncio.coroutine
-    def stop_timeout(self):
+    async def stop_timeout(self):
         """Stop timeout."""
         self.timeout_handle.cancel()

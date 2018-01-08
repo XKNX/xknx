@@ -4,8 +4,6 @@ Module for managing the climate within a room.
 * It reads/listens to a temperature address from KNX bus.
 * Manages and sends the desired setpoint to KNX bus.
 """
-import asyncio
-
 from xknx.exceptions import CouldNotParseTelegram, DeviceIllegalValue
 from xknx.knx import (GroupAddress, DPTArray, DPTBinary, DPTControllerStatus,
                       DPTHVACMode, HVACOperationMode)
@@ -158,12 +156,11 @@ class Climate(Device):
             self.group_address_controller_status == group_address or \
             self.group_address_controller_status_state == group_address
 
-    @asyncio.coroutine
-    def _set_internal_operation_mode(self, operation_mode):
+    async def _set_internal_operation_mode(self, operation_mode):
         """Set internal value of operation mode. Call hooks if operation mode was changed."""
         if operation_mode != self.operation_mode:
             self.operation_mode = operation_mode
-            yield from self.after_update()
+            await self.after_update()
 
     @property
     def initialized_for_setpoint_shift_calculations(self):
@@ -178,16 +175,14 @@ class Climate(Device):
             return False
         return True
 
-    @asyncio.coroutine
-    def set_target_temperature(self, target_temperature):
+    async def set_target_temperature(self, target_temperature):
         """Calculate setpoint shift shift and send it to  KNX bus."""
         if self.initialized_for_setpoint_shift_calculations:
-            yield from self.set_target_temperature_setpoint_shift(target_temperature)
+            await self.set_target_temperature_setpoint_shift(target_temperature)
         # broadcast new target temperature and set internally
-        yield from self.target_temperature.set(target_temperature)
+        await self.target_temperature.set(target_temperature)
 
-    @asyncio.coroutine
-    def set_target_temperature_setpoint_shift(self, target_temperature):
+    async def set_target_temperature_setpoint_shift(self, target_temperature):
         """Set target temperature via setpoint_shift group address."""
         temperature_delta = target_temperature-self.target_temperature.value
         setpoint_shift_delta = int(temperature_delta/self.setpoint_shift_step)
@@ -198,7 +193,7 @@ class Climate(Device):
         elif setpoint_shift < self.setpoint_shift_min:
             raise DeviceIllegalValue("setpoint_shift_min exceeded", setpoint_shift)
 
-        yield from self.setpoint_shift.set(setpoint_shift)
+        await self.setpoint_shift.set(setpoint_shift)
 
     @property
     def target_temperature_max(self):
@@ -218,35 +213,34 @@ class Climate(Device):
                 self.setpoint_shift.value * self.setpoint_shift_step +
                 self.setpoint_shift_min * self.setpoint_shift_step)
 
-    @asyncio.coroutine
-    def set_operation_mode(self, operation_mode):
+    async def set_operation_mode(self, operation_mode):
         """Set the operation mode of a thermostat. Send new operation_mode to BUS and update internal state."""
         if not self.supports_operation_mode:
             raise DeviceIllegalValue("operation mode not supported", operation_mode)
         if self.group_address_operation_mode is not None:
-            yield from self.send(
+            await self.send(
                 self.group_address_operation_mode,
                 DPTArray(DPTHVACMode.to_knx(operation_mode)))
         if self.group_address_operation_mode_protection is not None:
             protection_mode = operation_mode == HVACOperationMode.FROST_PROTECTION
-            yield from self.send(
+            await self.send(
                 self.group_address_operation_mode_protection,
                 DPTBinary(protection_mode))
         if self.group_address_operation_mode_night is not None:
             night_mode = operation_mode == HVACOperationMode.NIGHT
-            yield from self.send(
+            await self.send(
                 self.group_address_operation_mode_night,
                 DPTBinary(night_mode))
         if self.group_address_operation_mode_comfort is not None:
             comfort_mode = operation_mode == HVACOperationMode.COMFORT
-            yield from self.send(
+            await self.send(
                 self.group_address_operation_mode_comfort,
                 DPTBinary(comfort_mode))
         if self.group_address_controller_status is not None:
-            yield from self.send(
+            await self.send(
                 self.group_address_controller_status,
                 DPTArray(DPTControllerStatus.to_knx(operation_mode)))
-        yield from self._set_internal_operation_mode(operation_mode)
+        await self._set_internal_operation_mode(operation_mode)
 
     def get_supported_operation_modes(self):
         """Return all configured operation modes."""
@@ -270,40 +264,37 @@ class Climate(Device):
             operation_modes.append(HVACOperationMode.FROST_PROTECTION)
         return operation_modes
 
-    @asyncio.coroutine
-    def process(self, telegram):
+    async def process(self, telegram):
         """Process incoming telegram."""
         if self.supports_operation_mode and \
                 telegram.group_address == self.group_address_operation_mode or \
                 telegram.group_address == self.group_address_operation_mode_state:
-            yield from self._process_operation_mode(telegram)
+            await self._process_operation_mode(telegram)
         elif self.supports_operation_mode and \
                 telegram.group_address == self.group_address_controller_status or \
                 telegram.group_address == self.group_address_controller_status_state:
-            yield from self._process_controller_status(telegram)
+            await self._process_controller_status(telegram)
         # Note: telegrams setting splitted up operation modes are not yet implemented
 
-        yield from self.temperature.process(telegram)
-        yield from self.target_temperature.process(telegram)
-        yield from self.setpoint_shift.process(telegram)
+        await self.temperature.process(telegram)
+        await self.target_temperature.process(telegram)
+        await self.setpoint_shift.process(telegram)
 
-    @asyncio.coroutine
-    def _process_operation_mode(self, telegram):
+    async def _process_operation_mode(self, telegram):
         """Process incoming telegram for operation mode."""
         if not isinstance(telegram.payload, DPTArray) \
                 or len(telegram.payload.value) != 1:
             raise CouldNotParseTelegram()
         operation_mode = DPTHVACMode.from_knx(telegram.payload.value)
-        yield from self._set_internal_operation_mode(operation_mode)
+        await self._set_internal_operation_mode(operation_mode)
 
-    @asyncio.coroutine
-    def _process_controller_status(self, telegram):
+    async def _process_controller_status(self, telegram):
         """Process incoming telegram for controller status."""
         if not isinstance(telegram.payload, DPTArray) \
                 or len(telegram.payload.value) != 1:
             raise CouldNotParseTelegram()
         operation_mode = DPTControllerStatus.from_knx(telegram.payload.value)
-        yield from self._set_internal_operation_mode(operation_mode)
+        await self._set_internal_operation_mode(operation_mode)
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""

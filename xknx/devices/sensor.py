@@ -6,8 +6,6 @@ It provides functionality for
 * reading the current state from KNX bus.
 * watching for state updates from KNX bus.
 """
-import asyncio
-
 from xknx.knx import (GroupAddress, DPTArray, DPTBinary, DPTHumidity, DPTLux,
                       DPTScaling, DPTTemperature, DPTElectricPotential,
                       DPTElectricCurrent, DPTPower, DPTUElCurrentmA, DPTWsp,
@@ -87,21 +85,19 @@ class Sensor(Device):
         """Test if device has given group address."""
         return self.group_address == group_address
 
-    @asyncio.coroutine
-    def _set_internal_state(self, state):
+    async def _set_internal_state(self, state):
         """Set the internal state of the device. If state was changed after update hooks are executed."""
         if state != self.state:
             self.state = state
-            yield from self.after_update()
+            await self.after_update()
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
         return [self.group_address, ]
 
-    @asyncio.coroutine
-    def process(self, telegram):
+    async def process(self, telegram):
         """Process incoming telegram."""
-        yield from self._set_internal_state(telegram.payload)
+        await self._set_internal_state(telegram.payload)
 
     def unit_of_measurement(self):
         """Return the unit of measurement."""

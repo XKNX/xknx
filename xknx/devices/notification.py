@@ -1,6 +1,4 @@
 """Module for managing a notification via KNX."""
-import asyncio
-
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.knx import GroupAddress, DPTArray, DPTString
 
@@ -48,25 +46,22 @@ class Notification(Device):
                 self.group_address,
                 self.message)
 
-    @asyncio.coroutine
-    def _set_internal_message(self, message):
+    async def _set_internal_message(self, message):
         """Set the internal state of the device. If state was changed after update hooks are executed."""
         if message != self.message:
             self.message = message
-            yield from self.after_update()
+            await self.after_update()
 
-    @asyncio.coroutine
-    def set(self, message):
+    async def set(self, message):
         """Set message."""
         cropped_message = message[:14]
-        yield from self.send(self.group_address, DPTArray(DPTString().to_knx(cropped_message)))
-        yield from self._set_internal_message(cropped_message)
+        await self.send(self.group_address, DPTArray(DPTString().to_knx(cropped_message)))
+        await self._set_internal_message(cropped_message)
 
-    @asyncio.coroutine
-    def do(self, action):
+    async def do(self, action):
         """Execute 'do' commands."""
         if action.startswith("message:"):
-            yield from self.set(int(action[8:]))
+            await self.set(int(action[8:]))
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
@@ -74,18 +69,16 @@ class Notification(Device):
         """Return group addresses which should be requested to sync state."""
         return [self.group_address, ]
 
-    @asyncio.coroutine
-    def process(self, telegram):
+    async def process(self, telegram):
         """Process incoming telegram."""
         if telegram.group_address == self.group_address:
-            yield from self._process_message(telegram)
+            await self._process_message(telegram)
 
-    @asyncio.coroutine
-    def _process_message(self, telegram):
+    async def _process_message(self, telegram):
         """Process incoming telegram for on/off state."""
         if not isinstance(telegram.payload, DPTString):
             raise CouldNotParseTelegram()
-        yield from self._set_internal_message(telegram.payload.value)
+        await self._set_internal_message(telegram.payload.value)
 
     def __eq__(self, other):
         """Equal operator."""

@@ -29,16 +29,15 @@ class ValueReader:
         self.timeout_handle = None
         self.received_telegram = None
 
-    @asyncio.coroutine
-    def read(self):
+    async def read(self):
         """Send group read and wait for response."""
         cb_obj = self.xknx.telegram_queue.register_telegram_received_cb(
             self.telegram_received)
 
-        yield from self.send_group_read()
-        yield from self.start_timeout()
-        yield from self.response_received_or_timeout.wait()
-        yield from self.stop_timeout()
+        await self.send_group_read()
+        await self.start_timeout()
+        await self.response_received_or_timeout.wait()
+        await self.stop_timeout()
 
         self.xknx.telegram_queue.unregister_telegram_received_cb(
             cb_obj)
@@ -46,14 +45,12 @@ class ValueReader:
             return None
         return self.received_telegram
 
-    @asyncio.coroutine
-    def send_group_read(self):
+    async def send_group_read(self):
         """Send group read."""
         telegram = Telegram(self.group_address, TelegramType.GROUP_READ)
-        yield from self.xknx.telegrams.put(telegram)
+        await self.xknx.telegrams.put(telegram)
 
-    @asyncio.coroutine
-    def telegram_received(self, telegram):
+    async def telegram_received(self, telegram):
         """Test if telegram has correct group address and trigger event."""
         if telegram.telegramtype != TelegramType.GROUP_WRITE and \
                 telegram.telegramtype != TelegramType.GROUP_RESPONSE:
@@ -69,13 +66,11 @@ class ValueReader:
         """Handle timeout for not having received expected group response."""
         self.response_received_or_timeout.set()
 
-    @asyncio.coroutine
-    def start_timeout(self):
+    async def start_timeout(self):
         """Start timeout. Register callback for no answer received within timeout."""
         self.timeout_handle = self.xknx.loop.call_later(
             self.timeout_in_seconds, self.timeout)
 
-    @asyncio.coroutine
-    def stop_timeout(self):
+    async def stop_timeout(self):
         """Stop timeout."""
         self.timeout_handle.cancel()

@@ -6,7 +6,6 @@ KNXIPInterface manages KNX/IP Tunneling or Routing connections.
 * provides callbacks after having received a telegram from the network.
 
 """
-import asyncio
 from enum import Enum
 
 from xknx.exceptions import XKNXException
@@ -62,39 +61,36 @@ class KNXIPInterface():
         self.interface = None
         self.connection_config = connection_config
 
-    @asyncio.coroutine
-    def start(self):
+    async def start(self):
         """Start interface. Connecting KNX/IP device with the selected method."""
         if self.connection_config.connection_type == ConnectionType.AUTOMATIC:
-            yield from self.start_automatic()
+            await self.start_automatic()
         elif self.connection_config.connection_type == ConnectionType.ROUTING:
-            yield from self.start_routing(
+            await self.start_routing(
                 self.connection_config.local_ip)
         elif self.connection_config.connection_type == ConnectionType.TUNNELING:
-            yield from self.start_tunnelling(
+            await self.start_tunnelling(
                 self.connection_config.local_ip,
                 self.connection_config.gateway_ip,
                 self.connection_config.gateway_port)
 
-    @asyncio.coroutine
-    def start_automatic(self):
+    async def start_automatic(self):
         """Start GatewayScanner and connect to the found device."""
         gatewayscanner = GatewayScanner(self.xknx)
-        yield from gatewayscanner.start()
+        await gatewayscanner.start()
         gatewayscanner.stop()
 
         if not gatewayscanner.found:
             raise XKNXException("No Gateways found")
 
         if gatewayscanner.supports_tunneling:
-            yield from self.start_tunnelling(gatewayscanner.found_local_ip,
-                                             gatewayscanner.found_ip_addr,
-                                             gatewayscanner.found_port)
+            await self.start_tunnelling(gatewayscanner.found_local_ip,
+                                        gatewayscanner.found_ip_addr,
+                                        gatewayscanner.found_port)
         elif gatewayscanner.supports_routing:
-            yield from self.start_routing(gatewayscanner.found_local_ip)
+            await self.start_routing(gatewayscanner.found_local_ip)
 
-    @asyncio.coroutine
-    def start_tunnelling(self, local_ip, gateway_ip, gateway_port):
+    async def start_tunnelling(self, local_ip, gateway_ip, gateway_port):
         """Start KNX/IP tunnel."""
         self.xknx.logger.debug("Starting tunnel to %s:%s from %s", gateway_ip, gateway_port, local_ip)
         self.interface = Tunnel(
@@ -104,23 +100,21 @@ class KNXIPInterface():
             gateway_ip=gateway_ip,
             gateway_port=gateway_port,
             telegram_received_callback=self.telegram_received)
-        yield from self.interface.start()
+        await self.interface.start()
 
-    @asyncio.coroutine
-    def start_routing(self, local_ip):
+    async def start_routing(self, local_ip):
         """Start KNX/IP Routing."""
         self.xknx.logger.debug("Starting Routing from %s", local_ip)
         self.interface = Routing(
             self.xknx,
             self.telegram_received,
             local_ip)
-        yield from self.interface.start()
+        await self.interface.start()
 
-    @asyncio.coroutine
-    def stop(self):
+    async def stop(self):
         """Stop connected interfae (either Tunneling or Routing)."""
         if self.interface is not None:
-            yield from self.interface.stop()
+            await self.interface.stop()
             self.interface = None
 
     def telegram_received(self, telegram):
@@ -128,7 +122,6 @@ class KNXIPInterface():
         self.xknx.loop.create_task(
             self.xknx.telegrams.put(telegram))
 
-    @asyncio.coroutine
-    def send_telegram(self, telegram):
+    async def send_telegram(self, telegram):
         """Send telegram to connected device (either Tunneling or Routing)."""
-        yield from self.interface.send_telegram(telegram)
+        await self.interface.send_telegram(telegram)

@@ -5,7 +5,6 @@ Remote value can either be a group address for reading
 and and one group address for writing a KNX value
 or a group address for both.
 """
-import asyncio
 from enum import Enum
 
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -67,8 +66,7 @@ class RemoteValue():
         # pylint: disable=unused-argument, no-self-use
         return None
 
-    @asyncio.coroutine
-    def process(self, telegram):
+    async def process(self, telegram):
         """Process incoming telegram."""
         if not self.has_group_address(telegram.group_address):
             return False
@@ -77,7 +75,7 @@ class RemoteValue():
         if self.payload != telegram.payload:
             self.payload = telegram.payload
             if self.after_update_cb is not None:
-                yield from self.after_update_cb()
+                await self.after_update_cb()
         return True
 
     @property
@@ -87,16 +85,14 @@ class RemoteValue():
             return None
         return self.from_knx(self.payload)
 
-    @asyncio.coroutine
-    def send(self):
+    async def send(self):
         """Send payload as telegram to KNX bus."""
         telegram = Telegram()
         telegram.group_address = self.group_address
         telegram.payload = self.payload
-        yield from self.xknx.telegrams.put(telegram)
+        await self.xknx.telegrams.put(telegram)
 
-    @asyncio.coroutine
-    def set(self, value):
+    async def set(self, value):
         """Set new value."""
         if not self.initialized:
             return
@@ -105,9 +101,9 @@ class RemoteValue():
         if self.payload is None or payload != self.payload:
             self.payload = payload
             updated = True
-        yield from self.send()
+        await self.send()
         if updated and self.after_update_cb is not None:
-            yield from self.after_update_cb()
+            await self.after_update_cb()
 
     def group_addr_str(self):
         """Return object as readable string."""
@@ -177,16 +173,14 @@ class RemoteValueSwitch1001(RemoteValue):
             return self.Value.OFF if self.invert else self.Value.ON
         raise ConversionError(payload)
 
-    @asyncio.coroutine
-    def off(self):
+    async def off(self):
         """Set value to down."""
-        yield from self.set(self.Value.OFF)
+        await self.set(self.Value.OFF)
 
-    @asyncio.coroutine
-    def on(self):
+    async def on(self):
         """Set value to UP."""
         # pylint: disable=invalid-name
-        yield from self.set(self.Value.ON)
+        await self.set(self.Value.ON)
 
 
 class RemoteValueUpDown1008(RemoteValue):
@@ -231,16 +225,14 @@ class RemoteValueUpDown1008(RemoteValue):
             return self.Direction.UP if self.invert else self.Direction.DOWN
         raise ConversionError(payload)
 
-    @asyncio.coroutine
-    def down(self):
+    async def down(self):
         """Set value to down."""
-        yield from self.set(self.Direction.DOWN)
+        await self.set(self.Direction.DOWN)
 
-    @asyncio.coroutine
-    def up(self):
+    async def up(self):
         """Set value to UP."""
         # pylint: disable=invalid-name
-        yield from self.set(self.Direction.UP)
+        await self.set(self.Direction.UP)
 
 
 class RemoteValueStep1007(RemoteValue):
@@ -284,15 +276,13 @@ class RemoteValueStep1007(RemoteValue):
             return self.Direction.INCREASE if self.invert else self.Direction.DECREASE
         raise ConversionError(payload)
 
-    @asyncio.coroutine
-    def increase(self):
+    async def increase(self):
         """Increase value."""
-        yield from self.set(self.Direction.INCREASE)
+        await self.set(self.Direction.INCREASE)
 
-    @asyncio.coroutine
-    def decrease(self):
+    async def decrease(self):
         """Decrease the value."""
-        yield from self.set(self.Direction.DECREASE)
+        await self.set(self.Direction.DECREASE)
 
 
 class RemoteValueScaling5001(RemoteValue):

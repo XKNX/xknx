@@ -7,8 +7,6 @@ It provides functionality for
 * reading the current state from KNX bus.
 * Cover will also predict the current position.
 """
-import asyncio
-
 from .device import Device
 from .remote_value import (RemoteValueScaling5001, RemoteValueStep1007,
                            RemoteValueUpDown1008)
@@ -139,61 +137,53 @@ class Cover(Device):
                 self.travel_time_down,
                 self.travel_time_up)
 
-    @asyncio.coroutine
-    def set_down(self):
+    async def set_down(self):
         """Move cover down."""
-        yield from self.updown.down()
+        await self.updown.down()
         self.travelcalculator.start_travel_down()
 
-    @asyncio.coroutine
-    def set_up(self):
+    async def set_up(self):
         """Move cover up."""
-        yield from self.updown.up()
+        await self.updown.up()
         self.travelcalculator.start_travel_up()
 
-    @asyncio.coroutine
-    def set_short_down(self):
+    async def set_short_down(self):
         """Move cover short down."""
-        yield from self.step.increase()
+        await self.step.increase()
 
-    @asyncio.coroutine
-    def set_short_up(self):
+    async def set_short_up(self):
         """Move cover short up."""
-        yield from self.step.decrease()
+        await self.step.decrease()
 
-    @asyncio.coroutine
-    def stop(self):
+    async def stop(self):
         """Stop cover."""
         # Thats the KNX way of doing this. electrical engineers ... m-)
-        yield from self.step.increase()
+        await self.step.increase()
         self.travelcalculator.stop()
 
-    @asyncio.coroutine
-    def set_position(self, position):
+    async def set_position(self, position):
         """Move cover to a desginated postion."""
         # No direct positioning group address defined
         if not self.position.group_address:
             current_position = self.current_position()
             if position < current_position:
-                yield from self.updown.down()
+                await self.updown.down()
             elif position > current_position:
-                yield from self.updown.up()
+                await self.updown.up()
             self.travelcalculator.start_travel(position)
             return
 
-        yield from self.position.set(position)
+        await self.position.set(position)
         self.travelcalculator.start_travel(position)
 
-    @asyncio.coroutine
-    def set_angle(self, angle):
+    async def set_angle(self, angle):
         """Move cover to designated angle."""
         if not self.supports_angle:
             return
-        yield from self.angle.set(angle)
-        yield from self.after_update()
+        await self.angle.set(angle)
+        await self.after_update()
 
-    @asyncio.coroutine
-    def auto_stop_if_necessary(self):
+    async def auto_stop_if_necessary(self):
         """Do auto stop if necessary."""
         # If device does not support auto_positioning,
         # we have to ttop the device when position is reached.
@@ -204,19 +194,18 @@ class Cover(Device):
                 self.position_reached() and
                 not self.is_open() and
                 not self.is_closed()):
-            yield from self.stop()
+            await self.stop()
 
-    @asyncio.coroutine
-    def do(self, action):
+    async def do(self, action):
         """Execute 'do' commands."""
         if action == "up":
-            yield from self.set_up()
+            await self.set_up()
         elif action == "short_up":
-            yield from self.set_short_up()
+            await self.set_short_up()
         elif action == "down":
-            yield from self.set_down()
+            await self.set_down()
         elif action == "short_down":
-            yield from self.set_short_down()
+            await self.set_short_down()
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
@@ -230,15 +219,14 @@ class Cover(Device):
         state_addresses.extend(self.angle.state_addresses())
         return state_addresses
 
-    @asyncio.coroutine
-    def process(self, telegram):
+    async def process(self, telegram):
         """Process incoming telegram."""
-        position_processed = yield from self.position.process(telegram)
+        position_processed = await self.position.process(telegram)
         if position_processed:
             self.travelcalculator.set_position(self.position.value)
-            yield from self.after_update()
+            await self.after_update()
 
-        yield from self.angle.process(telegram)
+        await self.angle.process(telegram)
 
     def current_position(self):
         """Return current position of cover."""

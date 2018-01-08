@@ -30,8 +30,7 @@ class TestTelegramReceivedCallback(unittest.TestCase):
 
         telegram_received_callback = Mock()
 
-        @asyncio.coroutine
-        def async_telegram_received_cb(device):
+        async def async_telegram_received_cb(device):
             """Async callback."""
             telegram_received_callback(device)
         xknx.telegram_queue.register_telegram_received_cb(
@@ -55,8 +54,7 @@ class TestTelegramReceivedCallback(unittest.TestCase):
 
         telegram_received_callback = Mock()
 
-        @asyncio.coroutine
-        def async_telegram_received_cb(device):
+        async def async_telegram_received_cb(device):
             """Async callback."""
             telegram_received_callback(device)
         xknx.telegram_queue.register_telegram_received_cb(
@@ -81,8 +79,7 @@ class TestTelegramReceivedCallback(unittest.TestCase):
 
         telegram_received_callback = Mock()
 
-        @asyncio.coroutine
-        def async_telegram_received_cb(device):
+        async def async_telegram_received_cb(device):
             """Async callback."""
             telegram_received_callback(device)
         xknx.telegram_queue.register_telegram_received_cb(
@@ -107,8 +104,7 @@ class TestTelegramReceivedCallback(unittest.TestCase):
 
         telegram_received_callback = Mock()
 
-        @asyncio.coroutine
-        def async_telegram_received_cb(device):
+        async def async_telegram_received_cb(device):
             """Async callback."""
             telegram_received_callback(device)
         callback = xknx.telegram_queue.register_telegram_received_cb(

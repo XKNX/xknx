@@ -57,36 +57,32 @@ class GatewayScanner():
             self.response_received_or_timeout.set()
             self.found = True
 
-    @asyncio.coroutine
-    def start(self):
+    async def start(self):
         """Start searching."""
-        yield from self.send_search_requests()
-        yield from self.start_timeout()
-        yield from self.response_received_or_timeout.wait()
-        yield from self.stop()
-        yield from self.stop_timeout()
+        await self.send_search_requests()
+        await self.start_timeout()
+        await self.response_received_or_timeout.wait()
+        await self.stop()
+        await self.stop_timeout()
 
-    @asyncio.coroutine
-    def stop(self):
+    async def stop(self):
         """Stop tearing down udpclient."""
         for udpclient in self.udpclients:
-            yield from udpclient.stop()
+            await udpclient.stop()
 
-    @asyncio.coroutine
-    def send_search_requests(self):
+    async def send_search_requests(self):
         """Send search requests on all connected interfaces."""
         # pylint: disable=no-member
         for interface in netifaces.interfaces():
             try:
                 af_inet = netifaces.ifaddresses(interface)[netifaces.AF_INET]
                 ip_addr = af_inet[0]["addr"]
-                yield from self.search_interface(interface, ip_addr)
+                await self.search_interface(interface, ip_addr)
             except KeyError:
                 self.xknx.logger.info("Could not connect to an KNX/IP device on %s", interface)
                 continue
 
-    @asyncio.coroutine
-    def search_interface(self, interface, ip_addr):
+    async def search_interface(self, interface, ip_addr):
         """Search on a specific interface."""
         self.xknx.logger.debug("Searching on %s / %s", interface, ip_addr)
 
@@ -97,7 +93,7 @@ class GatewayScanner():
 
         udpclient.register_callback(
             self.response_rec_callback, [KNXIPServiceType.SEARCH_RESPONSE])
-        yield from udpclient.connect()
+        await udpclient.connect()
 
         self.udpclients.append(udpclient)
 
@@ -113,13 +109,11 @@ class GatewayScanner():
         """Handle timeout for not having received a SearchResponse."""
         self.response_received_or_timeout.set()
 
-    @asyncio.coroutine
-    def start_timeout(self):
+    async def start_timeout(self):
         """Start time out."""
         self.timeout_handle = self.xknx.loop.call_later(
             self.timeout_in_seconds, self.timeout)
 
-    @asyncio.coroutine
-    def stop_timeout(self):
+    async def stop_timeout(self):
         """Stop/cancel timeout."""
         self.timeout_handle.cancel()

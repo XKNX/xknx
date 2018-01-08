@@ -147,8 +147,7 @@ class UDPClient:
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
         return sock
 
-    @asyncio.coroutine
-    def connect(self):
+    async def connect(self):
         """Connect UDP socket. Open UDP port and build mulitcast socket if necessary."""
         udp_client_factory = UDPClient.UDPClientFactory(
             self.xknx, self.local_addr[0], multicast=self.multicast,
@@ -156,12 +155,12 @@ class UDPClient:
 
         if self.multicast:
             sock = UDPClient.create_multicast_sock(self.local_addr[0], self.remote_addr, self.bind_to_multicast_addr)
-            (transport, _) = yield from self.xknx.loop.create_datagram_endpoint(
+            (transport, _) = await self.xknx.loop.create_datagram_endpoint(
                 lambda: udp_client_factory, sock=sock)
             self.transport = transport
 
         else:
-            (transport, _) = yield from self.xknx.loop.create_datagram_endpoint(
+            (transport, _) = await self.xknx.loop.create_datagram_endpoint(
                 lambda: udp_client_factory,
                 local_addr=self.local_addr,
                 remote_addr=self.remote_addr)
@@ -188,7 +187,6 @@ class UDPClient:
         peer = self.transport.get_extra_info('peername')
         return peer
 
-    @asyncio.coroutine
-    def stop(self):
+    async def stop(self):
         """Stop UDP socket."""
         self.transport.close()
