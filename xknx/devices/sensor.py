@@ -39,35 +39,35 @@ class Sensor(Device):
         self.state = None
 
         self.dptmap = {
-            'temperature'       : DPTTemperature,
-            'humidity'          : DPTHumidity,
-            'illuminance'       : DPTLux,
-            'brightness'        : DPTBrightness,
-            'speed_ms'          : DPTWsp,
-            'current'           : DPTUElCurrentmA,
-            'power'             : DPTPower,
-            'electric_current'  : DPTElectricCurrent,
+            'temperature': DPTTemperature,
+            'humidity': DPTHumidity,
+            'illuminance': DPTLux,
+            'brightness': DPTBrightness,
+            'speed_ms': DPTWsp,
+            'current': DPTUElCurrentmA,
+            'power': DPTPower,
+            'electric_current': DPTElectricCurrent,
             'electric_potential': DPTElectricPotential,
-            'energy'            : DPTEnergy,
-            'frequency'         : DPTFrequency,
-            'heatflowrate'      : DPTHeatFlowRate,
-            'phaseanglerad'     : DPTPhaseAngleRad,
-            'phaseangledeg'     : DPTPhaseAngleDeg,
-            'powerfactor'       : DPTPowerFactor,
-            'speed'             : DPTSpeed,
+            'energy': DPTEnergy,
+            'frequency': DPTFrequency,
+            'heatflowrate': DPTHeatFlowRate,
+            'phaseanglerad': DPTPhaseAngleRad,
+            'phaseangledeg': DPTPhaseAngleDeg,
+            'powerfactor': DPTPowerFactor,
+            'speed': DPTSpeed,
 
             # Generic DPT Without Min/Max and Unit.
-            'DPT-7'             : DPT2ByteUnsigned,
-            '2byte_unsigned'    : DPT2ByteUnsigned,
-            'DPT-9'             : DPT2ByteFloat,
+            'DPT-7': DPT2ByteUnsigned,
+            '2byte_unsigned': DPT2ByteUnsigned,
+            'DPT-9': DPT2ByteFloat,
 
-            'DPT-12'            : DPT4ByteUnsigned,
-            '4byte_unsigned'    : DPT4ByteUnsigned,
+            'DPT-12': DPT4ByteUnsigned,
+            '4byte_unsigned': DPT4ByteUnsigned,
 
-            'DPT-13'            : DPT4ByteSigned,
-            '4byte_signed'      : DPT4ByteSigned,
-            'DPT-14'            : DPT4ByteFloat,
-            '4byte_float'       : DPT4ByteFloat
+            'DPT-13': DPT4ByteSigned,
+            '4byte_signed': DPT4ByteSigned,
+            'DPT-14': DPT4ByteFloat,
+            '4byte_float': DPT4ByteFloat
         }
 
     @classmethod

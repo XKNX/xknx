@@ -6,6 +6,7 @@ from xknx.exceptions import ConversionError
 class DPTBase:
     """
     Base class for KNX data types.
+
     KNX communicates using Group-addresses, and every Group Object represents a data point of some type.
     To have a standardized interpretation of the data there are a number of Data Point types (DPT).
     The DPT's is written like: xx.yyy, for example 14.056 for a 4-octet float, with Power info in Watts.

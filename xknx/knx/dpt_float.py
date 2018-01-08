@@ -81,6 +81,7 @@ class DPT2ByteFloat(DPTBase):
 class DPT4ByteFloat(DPTBase):
     """
     Abstraction for KNX 4 Octet Floating Point Numbers, with a maximum usable range as specified in IEEE 754.
+
     The largest positive finite float literal is 3.40282347e+38f.
     The smallest positive finite non-zero literal of type float is 1.40239846e-45f.
     The negative minimum finite float literal is -3.40282347e+38f.
@@ -99,7 +100,6 @@ class DPT4ByteFloat(DPTBase):
             return struct.unpack(">f", bytes(raw))[0]
         except struct.error:
             raise ConversionError(raw)
-
 
     @classmethod
     def to_knx(cls, value):
@@ -153,7 +153,7 @@ class DPTHumidity(DPT2ByteFloat):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.
 
-    DPT 9.007 DPT_Value_Humidity
+    DPT 9.007 DPT_Value_Humidity.
     """
 
     value_min = 0
@@ -163,70 +163,60 @@ class DPTHumidity(DPT2ByteFloat):
 
 
 class DPTElectricCurrent(DPT4ByteFloat):
-    """
-    DPT 14.019 DPT_Value_Electric_Current
-    """
+    """DPT 14.019 DPT_Value_Electric_Current."""
+
     unit = "A"
 
 
 class DPTElectricPotential(DPT4ByteFloat):
-    """
-    DPT 14.027 DPT_Value_Electric_Potential
-    """
+    """DPT 14.027 DPT_Value_Electric_Potential."""
+
     unit = "V"
 
 
 class DPTEnergy(DPT4ByteFloat):
-    """
-    DPT 14.031 DPT_Value_Energy
-    """
+    """DPT 14.031 DPT_Value_Energy."""
+
     unit = 'J'
 
 
 class DPTFrequency(DPT4ByteFloat):
-    """
-    DPT 14.033 DPT_Value_Frequency
-    """
+    """DPT 14.033 DPT_Value_Frequency."""
+
     unit = 'Hz'
 
 
 class DPTHeatFlowRate(DPT4ByteFloat):
-    """
-    DPT 14.036 DPT_Value_Heat_Flow_Rate
-    """
+    """DPT 14.036 DPT_Value_Heat_Flow_Rate."""
+
     unit = 'W'
 
 
 class DPTPhaseAngleRad(DPT4ByteFloat):
-    """
-    DPT 14.054 DPT_Value_Phase_Angle, Radiant
-    """
+    """DPT 14.054 DPT_Value_Phase_Angle, Radiant."""
+
     unit = 'rad'
 
 
 class DPTPhaseAngleDeg(DPT4ByteFloat):
-    """
-    14.055 DPT_Value_Phase_Angle, Degree
-    """
+    """14.055 DPT_Value_Phase_Angle, Degree."""
+
     unit = '°'
 
 
 class DPTPower(DPT4ByteFloat):
-    """
-    DPT 14.056 DPT_Value_Power
-    """
+    """DPT 14.056 DPT_Value_Power."""
+
     unit = "W"
 
 
 class DPTPowerFactor(DPT4ByteFloat):
-    """
-    DPT 14.057 DPT_Value_Power
-    """
+    """DPT 14.057 DPT_Value_Power."""
+
     unit = ''
 
 
 class DPTSpeed(DPT4ByteFloat):
-    """
-    DPT 14.065 DPT_Value_Speed
-    """
+    """DPT 14.065 DPT_Value_Speed."""
+
     unit = 'm/s'

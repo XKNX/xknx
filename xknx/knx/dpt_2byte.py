@@ -8,7 +8,8 @@ from .dpt import DPTBase
 class DPT2ByteUnsigned(DPTBase):
     """
     Abstraction for KNX 2 Byte "2-octet unsigned value".
-    Contain smaller counters, timers and more
+
+    Contains smaller counters, timers  etc.
 
     DPT 7.xxx
     """
@@ -38,21 +39,18 @@ class DPT2ByteUnsigned(DPTBase):
 
 
 class DPT2Ucount(DPT2ByteUnsigned):
-    """
-    DPT 7.001 DPT_Value_2_Ucount
-    """
+    """DPT 7.001 DPT_Value_2_Ucount."""
+
     unit = "pulses"
 
 
 class DPTUElCurrentmA(DPT2ByteUnsigned):
-    """
-    DPT 7.012 Abstraction for KNX 2 Byte DPTUElCurrentmA.
-    """
+    """DPT 7.012 Abstraction for KNX 2 Byte DPTUElCurrentmA."""
+
     unit = "mA"
 
 
 class DPTBrightness(DPT2ByteUnsigned):
-    """
-    DPT 7.012 DPT_Brightness (lux)
-    """
+    """DPT 7.012 DPT_Brightness (lux)."""
+
     unit = "lx"
