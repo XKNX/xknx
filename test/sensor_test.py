@@ -177,7 +177,3 @@ class TestSensor(unittest.TestCase):
         telegram.payload = DPTArray((0x01, 0x02, 0x03))
         self.loop.run_until_complete(asyncio.Task(sensor.process(telegram)))
         after_update_callback.assert_called_with(sensor)
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestSensor)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

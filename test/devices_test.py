@@ -189,7 +189,3 @@ class TestDevices(unittest.TestCase):
             self.loop.run_until_complete(asyncio.Task(device.set_on()))
 
         self.assertTrue(light1.state)
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDevices)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

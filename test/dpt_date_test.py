@@ -35,7 +35,3 @@ class TestDPTDate(unittest.TestCase):
         """Test parsing from DPTDate object from wrong string value."""
         with self.assertRaises(ConversionError):
             DPTDate().to_knx("hello")
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPTDate)
-unittest.TextTestRunner(verbosity=2).run(SUITE)

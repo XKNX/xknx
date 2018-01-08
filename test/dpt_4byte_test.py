@@ -86,7 +86,3 @@ class TestDPT4Byte(unittest.TestCase):
         """Test DPT4ByteSigned parsing with wrong value."""
         with self.assertRaises(ConversionError):
             DPT4ByteSigned().from_knx((0xFF, 0x4E, 0x12))
-
-
-SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDPT4Byte)
-unittest.TextTestRunner(verbosity=2).run(SUITE)
