@@ -3,16 +3,17 @@ from setuptools import find_packages, setup
 
 VERSION = '0.7.18'
 
-REQUIRES = ['PyYAML', 'netifaces']
+REQUIRES = [
+    'pyyaml>=3.12',
+    'netifaces>=0.10.0',
+    ]
 
 setup(
     name='xknx',
     description='An Asynchronous Library for the KNX protocol. Documentation: http://xknx.io/',
-
     version=VERSION,
-    download_url='https://github.com/XKNX/xknx/archive/'+VERSION+'.zip',
+    download_url='https://github.com/XKNX/xknx/archive/{}.zip'.format(VERSION),
     url='http://xknx.io/',
-
     author='Julius Mittenzwei',
     author_email='julius@mittenzwei.com',
     license='MIT',
