@@ -3,8 +3,8 @@ import asyncio
 import unittest
 
 from xknx import XKNX
-from xknx.devices import (Action, BinarySensor, Climate, Cover, Light,
-                          Notification, Sensor, Switch, DateTime)
+from xknx.devices import (Action, BinarySensor, Climate, Cover, DateTime,
+                          Light, Notification, Sensor, Switch)
 from xknx.devices.datetime import DateTimeBroadcastType
 
 

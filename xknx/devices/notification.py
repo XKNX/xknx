@@ -1,6 +1,6 @@
 """Module for managing a notification via KNX."""
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.knx import GroupAddress, DPTArray, DPTString
+from xknx.knx import DPTArray, DPTString, GroupAddress
 
 from .device import Device
 

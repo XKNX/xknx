@@ -4,12 +4,13 @@ import unittest
 
 from xknx import XKNX
 from xknx.devices import (Action, ActionBase, ActionCallback, BinarySensor,
-                          Climate, Cover, Light, Notification, RemoteValue,
-                          Sensor, Switch, DateTime)
+                          Climate, Cover, DateTime, Light, Notification,
+                          RemoteValue, Sensor, Switch)
 from xknx.exceptions import (ConversionError, CouldNotParseAddress,
                              CouldNotParseKNXIP, CouldNotParseTelegram,
                              DeviceIllegalValue)
-from xknx.knx import GroupAddress, DPTArray, DPTBinary, Telegram, PhysicalAddress
+from xknx.knx import (DPTArray, DPTBinary, GroupAddress, PhysicalAddress,
+                      Telegram)
 from xknx.knxip import (HPAI, CEMIFrame, ConnectionStateRequest,
                         ConnectionStateResponse, ConnectRequest,
                         ConnectRequestType, ConnectResponse,

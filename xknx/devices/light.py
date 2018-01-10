@@ -8,7 +8,7 @@ It provides functionality for
 * reading the current state from KNX bus.
 """
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.knx import GroupAddress, DPTArray
+from xknx.knx import DPTArray, GroupAddress
 
 from .device import Device
 from .remote_value import RemoteValueSwitch1001

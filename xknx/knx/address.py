@@ -12,8 +12,8 @@ The module supports all different writings of group addresses:
 * 2nd level: "1/2"
 * Free format: "123"
 """
-from re import compile as re_compile
 from enum import Enum
+from re import compile as re_compile
 
 from xknx.exceptions import CouldNotParseAddress
 

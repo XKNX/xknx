@@ -2,8 +2,7 @@
 import unittest
 
 from xknx.exceptions import ConversionError
-from xknx.knx import DPT4ByteUnsigned
-from xknx.knx import DPT4ByteSigned
+from xknx.knx import DPT4ByteSigned, DPT4ByteUnsigned
 
 
 class TestDPT4Byte(unittest.TestCase):

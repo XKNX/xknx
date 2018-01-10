@@ -1,7 +1,9 @@
 """Implementation of different KNX DPT HVAC Operation modes."""
 
 from enum import Enum
+
 from xknx.exceptions import CouldNotParseKNXIP
+
 from .dpt import DPTBase
 
 

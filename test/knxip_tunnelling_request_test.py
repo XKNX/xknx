@@ -3,7 +3,7 @@ import asyncio
 import unittest
 
 from xknx import XKNX
-from xknx.knx import GroupAddress, DPTBinary, Telegram
+from xknx.knx import DPTBinary, GroupAddress, Telegram
 from xknx.knxip import (CEMIFrame, KNXIPFrame, KNXIPServiceType,
                         TunnellingRequest)
 

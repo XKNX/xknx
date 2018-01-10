@@ -3,8 +3,8 @@
 import time
 
 from xknx.exceptions import ConversionError
-from .dpt import DPTBase
-from .dpt import DPTWeekday
+
+from .dpt import DPTBase, DPTWeekday
 
 
 class DPTDateTime(DPTBase):

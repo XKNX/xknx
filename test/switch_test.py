@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 from xknx import XKNX
 from xknx.devices import Switch
-from xknx.knx import GroupAddress, DPTBinary, Telegram, TelegramType
+from xknx.knx import DPTBinary, GroupAddress, Telegram, TelegramType
 
 
 class TestSwitch(unittest.TestCase):

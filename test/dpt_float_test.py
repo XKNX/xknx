@@ -2,8 +2,9 @@
 import unittest
 
 from xknx.exceptions import ConversionError
-from xknx.knx import DPT2ByteFloat, DPT4ByteFloat, DPTHumidity, DPTLux, DPTTemperature, DPTElectricPotential, \
-    DPTElectricCurrent, DPTPower, DPTFrequency, DPTPhaseAngleDeg
+from xknx.knx import (DPT2ByteFloat, DPT4ByteFloat, DPTElectricCurrent,
+                      DPTElectricPotential, DPTFrequency, DPTHumidity, DPTLux,
+                      DPTPhaseAngleDeg, DPTPower, DPTTemperature)
 
 
 class TestDPTFloat(unittest.TestCase):

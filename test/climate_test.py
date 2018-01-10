@@ -6,9 +6,9 @@ from unittest.mock import Mock
 from xknx import XKNX
 from xknx.devices import Climate
 from xknx.exceptions import DeviceIllegalValue
-from xknx.knx import (GroupAddress, DPTArray, DPTBinary, DPTControllerStatus,
-                      DPT2ByteFloat, DPTHVACMode, DPTTemperature, DPTValue1Count,
-                      HVACOperationMode, Telegram, TelegramType)
+from xknx.knx import (DPT2ByteFloat, DPTArray, DPTBinary, DPTControllerStatus,
+                      DPTHVACMode, DPTTemperature, DPTValue1Count,
+                      GroupAddress, HVACOperationMode, Telegram, TelegramType)
 
 
 class TestClimate(unittest.TestCase):

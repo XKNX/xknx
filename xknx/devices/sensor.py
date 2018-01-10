@@ -6,12 +6,13 @@ It provides functionality for
 * reading the current state from KNX bus.
 * watching for state updates from KNX bus.
 """
-from xknx.knx import (GroupAddress, DPTArray, DPTBinary, DPTHumidity, DPTLux,
-                      DPTScaling, DPTTemperature, DPTElectricPotential,
-                      DPTElectricCurrent, DPTPower, DPTUElCurrentmA, DPTWsp,
-                      DPTBrightness, DPTEnergy, DPTHeatFlowRate, DPTFrequency, DPTPhaseAngleRad, DPTPhaseAngleDeg,
-                      DPTPowerFactor, DPTSpeed,
-                      DPT2ByteUnsigned, DPT2ByteFloat, DPT4ByteUnsigned, DPT4ByteSigned, DPT4ByteFloat)
+from xknx.knx import (DPT2ByteFloat, DPT2ByteUnsigned, DPT4ByteFloat,
+                      DPT4ByteSigned, DPT4ByteUnsigned, DPTArray, DPTBinary,
+                      DPTBrightness, DPTElectricCurrent, DPTElectricPotential,
+                      DPTEnergy, DPTFrequency, DPTHeatFlowRate, DPTHumidity,
+                      DPTLux, DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower,
+                      DPTPowerFactor, DPTScaling, DPTSpeed, DPTTemperature,
+                      DPTUElCurrentmA, DPTWsp, GroupAddress)
 
 from .device import Device
 

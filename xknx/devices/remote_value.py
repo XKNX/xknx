@@ -8,8 +8,8 @@ or a group address for both.
 from enum import Enum
 
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
-from xknx.knx import (GroupAddress, DPTArray, DPTBinary, DPTScaling, DPTTemperature,
-                      DPTValue1Count, Telegram)
+from xknx.knx import (DPTArray, DPTBinary, DPTScaling, DPTTemperature,
+                      DPTValue1Count, GroupAddress, Telegram)
 
 
 class RemoteValue():

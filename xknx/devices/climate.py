@@ -5,8 +5,8 @@ Module for managing the climate within a room.
 * Manages and sends the desired setpoint to KNX bus.
 """
 from xknx.exceptions import CouldNotParseTelegram, DeviceIllegalValue
-from xknx.knx import (GroupAddress, DPTArray, DPTBinary, DPTControllerStatus,
-                      DPTHVACMode, HVACOperationMode)
+from xknx.knx import (DPTArray, DPTBinary, DPTControllerStatus, DPTHVACMode,
+                      GroupAddress, HVACOperationMode)
 
 from .device import Device
 from .remote_value import RemoteValue1Count, RemoteValueTemp

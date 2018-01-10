@@ -12,7 +12,7 @@ Documentation within:
     File: AN117 v02.01 KNX IP Communication Medium DV.pdf
 """
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP
-from xknx.knx import (GroupAddress, PhysicalAddress, DPTArray, DPTBinary,
+from xknx.knx import (DPTArray, DPTBinary, GroupAddress, PhysicalAddress,
                       Telegram, TelegramType)
 
 from .body import KNXIPBody

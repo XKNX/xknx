@@ -1,5 +1,6 @@
 """Implementation of Basic KNX datatypes."""
 from enum import Enum
+
 from xknx.exceptions import ConversionError
 
 

@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import Mock
 
 from xknx import XKNX
-from xknx.knx import (GroupAddress, AddressFilter, DPTBinary, Telegram,
+from xknx.knx import (AddressFilter, DPTBinary, GroupAddress, Telegram,
                       TelegramDirection)
 
 

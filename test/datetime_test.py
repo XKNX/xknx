@@ -9,7 +9,6 @@ from xknx.devices import DateTime
 from xknx.devices.datetime import DateTimeBroadcastType
 from xknx.knx import GroupAddress, TelegramType
 
-
 MOCK_LOCALTIME = Mock()
 # Mocked time: 2017-01-07 09:13:14  - a Saturday
 MOCK_LOCALTIME.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])

@@ -7,6 +7,7 @@ They can be either 2 or 4 bytes, and correspond to the the following KDN DPTs.
 """
 
 import struct
+
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase

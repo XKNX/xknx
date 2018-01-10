@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 from xknx import XKNX
 from xknx.devices import Cover
-from xknx.knx import GroupAddress, DPTArray, DPTBinary, Telegram, TelegramType
+from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram, TelegramType
 
 
 class TestCover(unittest.TestCase):

@@ -7,7 +7,9 @@ by StateUpdate.
 """
 
 from enum import Enum
-from xknx.knx import GroupAddress, DPTArray, DPTDateTime, DPTTime, DPTDate
+
+from xknx.knx import DPTArray, DPTDate, DPTDateTime, DPTTime, GroupAddress
+
 from .device import Device
 
 

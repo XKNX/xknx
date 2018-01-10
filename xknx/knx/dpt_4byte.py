@@ -7,6 +7,7 @@ They correspond the following KNX DPTs:
 """
 
 import struct
+
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
