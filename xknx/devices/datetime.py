@@ -54,27 +54,34 @@ class DateTime(Device):
         """Test if device has given group address."""
         return self.group_address == group_address
 
-    async def broadcast_time(self):
+    async def broadcast_time(self, response):
         """Broadcast time to KNX bus."""
         if self.broadcast_type == DateTimeBroadcastType.DATETIME:
             broadcast_data = DPTDateTime.current_datetime_as_knx()
             await self.send(
                 self.group_address,
-                DPTArray(broadcast_data))
+                DPTArray(broadcast_data),
+                response=response)
         elif self.broadcast_type == DateTimeBroadcastType.DATE:
             broadcast_data = DPTDate.current_date_as_knx()
             await self.send(
                 self.group_address,
-                DPTArray(broadcast_data))
+                DPTArray(broadcast_data),
+                response=response)
         elif self.broadcast_type == DateTimeBroadcastType.TIME:
             broadcast_data = DPTTime.current_time_as_knx()
             await self.send(
                 self.group_address,
-                DPTArray(broadcast_data))
+                DPTArray(broadcast_data),
+                response=response)
+
+    async def process_group_read(self, telegram):
+        """Process incoming GROUP RESPONSE telegram."""
+        await self.broadcast_time(True)
 
     async def sync(self, wait_for_result=True):
         """Read state of device from KNX bus. Used here to broadcast time to KNX bus."""
-        await self.broadcast_time()
+        await self.broadcast_time(False)
 
     def __str__(self):
         """Return object as readable string."""
