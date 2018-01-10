@@ -54,7 +54,6 @@ class AddressFilter:
             return self._match_level2(address)
         elif len(self.level_filters) == 1:
             return self._match_free(address)
-
         return False
 
     def _match_level3(self, address):

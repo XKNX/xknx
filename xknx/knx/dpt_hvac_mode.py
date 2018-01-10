@@ -1,9 +1,7 @@
 """Implementation of different KNX DPT HVAC Operation modes."""
 
 from enum import Enum
-
 from xknx.exceptions import CouldNotParseKNXIP
-
 from .dpt import DPTBase
 
 
@@ -38,7 +36,6 @@ class DPTHVACMode(DPTBase):
             return HVACOperationMode.COMFORT
         elif raw[0] == 0x00:
             return HVACOperationMode.AUTO
-
         raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
 
     @classmethod
@@ -54,7 +51,6 @@ class DPTHVACMode(DPTBase):
             return (3,)
         elif value == HVACOperationMode.FROST_PROTECTION:
             return (4,)
-
         raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
 
 
@@ -81,7 +77,6 @@ class DPTControllerStatus(DPTBase):
             return HVACOperationMode.STANDBY
         elif raw[0] & 1 > 0:
             return HVACOperationMode.COMFORT
-
         raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
 
     @classmethod
@@ -98,5 +93,4 @@ class DPTControllerStatus(DPTBase):
             return (0x24,)
         elif value == HVACOperationMode.FROST_PROTECTION:
             return (0x28,)
-
         raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
