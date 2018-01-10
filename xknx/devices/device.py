@@ -3,7 +3,7 @@ Device is the base class for all implemented devices (e.g. Lights/Switches/Senso
 
 It provides basis functionality for reading the state from the KNX bus.
 """
-from xknx.knx import Telegram
+from xknx.knx import Telegram, TelegramType
 
 
 class Device:
@@ -46,13 +46,14 @@ class Device:
             else:
                 await value_reader.send_group_read()
 
-    # XXX no longer needed!
-    async def send(self, group_address, payload=None):
+    async def send(self, group_address, payload=None, response=False):
         """Send payload as telegram to KNX bus."""
         telegram = Telegram()
         telegram.group_address = group_address
         telegram.payload = payload
-        await self.xknx.telegrams.put(telegram)
+        telegram.telegramtype = TelegramType.GROUP_RESPONSE \
+            if response else TelegramType.GROUP_WRITE
+        await  self.xknx.telegrams.put(telegram)
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
@@ -61,6 +62,26 @@ class Device:
 
     async def process(self, telegram):
         """Process incoming telegram."""
+        if telegram.telegramtype == TelegramType.GROUP_WRITE:
+            await self.process_group_write(telegram)
+        elif telegram.telegramtype == TelegramType.GROUP_RESPONSE:
+            await self.process_group_response(telegram)
+        elif telegram.telegramtype == TelegramType.GROUP_READ:
+            await self.process_group_read(telegram)
+
+    async def process_group_read(self, telegram):
+        """Process incoming GROUP RESPONSE telegram."""
+        # The dafault is, that devices dont answer to group reads
+        pass
+
+    async def process_group_response(self, telegram):
+        """Process incoming GROUP RESPONSE telegram."""
+        # Per default mapped to group write.
+        await self.process_group_write(telegram)
+
+    async def process_group_write(self, telegram):
+        """Process incoming GROUP WRITE telegram."""
+        # The dafault is, that devices dont answer to group reads
         pass
 
     def get_name(self):

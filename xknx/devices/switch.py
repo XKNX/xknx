@@ -72,8 +72,8 @@ class Switch(Device):
         """Return group addresses which should be requested to sync state."""
         return self.switch.state_addresses()
 
-    async def process(self, telegram):
-        """Process incoming telegram."""
+    async def process_group_write(self, telegram):
+        """Process incoming GROUP WRITE telegram."""
         await self.switch.process(telegram)
 
     def __str__(self):

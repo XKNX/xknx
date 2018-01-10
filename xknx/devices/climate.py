@@ -264,8 +264,8 @@ class Climate(Device):
             operation_modes.append(HVACOperationMode.FROST_PROTECTION)
         return operation_modes
 
-    async def process(self, telegram):
-        """Process incoming telegram."""
+    async def process_group_write(self, telegram):
+        """Process incoming GROUP WRITE telegram."""
         if self.supports_operation_mode and \
                 telegram.group_address == self.group_address_operation_mode or \
                 telegram.group_address == self.group_address_operation_mode_state:

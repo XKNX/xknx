@@ -95,8 +95,8 @@ class Sensor(Device):
         """Return group addresses which should be requested to sync state."""
         return [self.group_address, ]
 
-    async def process(self, telegram):
-        """Process incoming telegram."""
+    async def process_group_write(self, telegram):
+        """Process incoming GROUP WRITE telegram."""
         await self._set_internal_state(telegram.payload)
 
     def unit_of_measurement(self):
