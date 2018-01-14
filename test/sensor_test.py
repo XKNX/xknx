@@ -122,6 +122,33 @@ class TestSensor(unittest.TestCase):
                          Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
 
     #
+    # HAS GROUP ADDRESS
+    # 
+    def test_has_group_address(self):
+        """Test sensor has group address."""
+        xknx = XKNX(loop=self.loop)
+        sensor = Sensor(
+            xknx,
+            'TestSensor',
+            value_type='temperature',
+            group_address='1/2/3')
+        self.assertTrue(sensor.has_group_address(GroupAddress('1/2/3')))
+        self.assertFalse(sensor.has_group_address(GroupAddress('1/2/4')))
+
+    # 
+    # STATE ADDRESSES
+    #
+    def test_state_addresses(self):
+        """Test expose sensor returns empty list as state addresses."""
+        xknx = XKNX(loop=self.loop)
+        sensor = Sensor(
+            xknx,
+            'TestSensor',
+            value_type='temperature',
+            group_address='1/2/3')
+        self.assertEqual(sensor.state_addresses(), [GroupAddress('1/2/3')])
+
+    #
     # TEST PROCESS
     #
     def test_process(self):

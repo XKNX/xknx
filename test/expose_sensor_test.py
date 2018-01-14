@@ -136,6 +136,34 @@ class TestExposeSensor(unittest.TestCase):
         #self.assertEqual(sensor.resolve_state(), 16.96)
 
     #
+    # HAS GROUP ADDRESS
+    # 
+    def test_has_group_address(self):
+        """Test expose sensor has group address."""
+        xknx = XKNX(loop=self.loop)
+        expose_sensor = ExposeSensor(
+            xknx,
+            'TestSensor',
+            value_type='temperature',
+            group_address='1/2/3')
+        self.assertTrue(expose_sensor.has_group_address(GroupAddress('1/2/3')))
+        self.assertFalse(expose_sensor.has_group_address(GroupAddress('1/2/4')))
+
+    # 
+    # STATE ADDRESSES
+    #
+    def test_state_addresses(self):
+        """Test expose sensor returns empty list as state addresses."""
+        xknx = XKNX(loop=self.loop)
+        expose_sensor = ExposeSensor(
+            xknx,
+            'TestSensor',
+            value_type='temperature',
+            group_address='1/2/3')
+        self.assertEqual(expose_sensor.state_addresses(), [])
+
+
+    #
     # PROCESS CALLBACK
     #
     def test_process_callback(self):
