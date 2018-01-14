@@ -50,10 +50,9 @@ class RemoteValue():
             return [self.group_address, ]
         return []
 
-    @staticmethod
-    def payload_valid(payload):
+    def payload_valid(self, payload):
         """Test if telegram payload may be parsed - to be implemented in derived class.."""
-        # pylint: disable=unused-argument
+        # pylint: disable=unused-argument, no-self-use
         return True
 
     def from_knx(self, payload):
@@ -105,6 +104,11 @@ class RemoteValue():
         if updated and self.after_update_cb is not None:
             await self.after_update_cb()
 
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return None
+
     def group_addr_str(self):
         """Return object as readable string."""
         return '{0}/{1}/{2}/{3}' \
@@ -152,8 +156,7 @@ class RemoteValueSwitch1001(RemoteValue):
         super(RemoteValueSwitch1001, self).__init__(xknx, group_address, group_address_state, after_update_cb)
         self.invert = invert
 
-    @staticmethod
-    def payload_valid(payload):
+    def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
         return isinstance(payload, DPTBinary)
 
@@ -204,8 +207,7 @@ class RemoteValueUpDown1008(RemoteValue):
         super(RemoteValueUpDown1008, self).__init__(xknx, group_address, group_address_state, after_update_cb)
         self.invert = invert
 
-    @staticmethod
-    def payload_valid(payload):
+    def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
         return isinstance(payload, DPTBinary)
 
@@ -255,8 +257,7 @@ class RemoteValueStep1007(RemoteValue):
         super(RemoteValueStep1007, self).__init__(xknx, group_address, group_address_state, after_update_cb)
         self.invert = invert
 
-    @staticmethod
-    def payload_valid(payload):
+    def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
         return isinstance(payload, DPTBinary)
 
@@ -299,8 +300,7 @@ class RemoteValueScaling5001(RemoteValue):
         super(RemoteValueScaling5001, self).__init__(xknx, group_address, group_address_state, after_update_cb)
         self.invert = invert
 
-    @staticmethod
-    def payload_valid(payload):
+    def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
         return (isinstance(payload, DPTArray)
                 and len(payload.value) == 1)
@@ -318,12 +318,16 @@ class RemoteValueScaling5001(RemoteValue):
             value = 100 - value
         return value
 
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return "%"
+
 
 class RemoteValue1Count(RemoteValue):
     """Abstraction for remote value of KNX 6.010 (DPT_Value_1_Count)."""
 
-    @staticmethod
-    def payload_valid(payload):
+    def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
         return (isinstance(payload, DPTArray)
                 and len(payload.value) == 1)
@@ -340,8 +344,7 @@ class RemoteValue1Count(RemoteValue):
 class RemoteValueTemp(RemoteValue):
     """Abstraction for remote value of KNX 9.001 (DPT_Value_Temp)."""
 
-    @staticmethod
-    def payload_valid(payload):
+    def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
         return (isinstance(payload, DPTArray)
                 and len(payload.value) == 2)

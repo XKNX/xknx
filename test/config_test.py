@@ -254,6 +254,7 @@ class TestConfig(unittest.TestCase):
             Sensor(xknx,
                    'Some.Other.Value',
                    group_address='2/0/2',
+                   value_type='temperature',
                    device_updated_cb=xknx.devices.device_updated))
 
     def test_config_sensor_binary_device_class(self):

@@ -18,6 +18,7 @@ class DPT2ByteUnsigned(DPTBase):
     value_max = 65535
     unit = ""
     resolution = 1
+    payload_length = 2
 
     @classmethod
     def from_knx(cls, raw):

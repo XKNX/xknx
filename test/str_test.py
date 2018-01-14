@@ -148,11 +148,11 @@ class TestStringRepresentations(unittest.TestCase):
             value_type='percent')
         self.assertEqual(
             str(sensor),
-            '<Sensor name="MeinSensor" group_address="GroupAddress("1/2/3")" state="None" resolve_state="None" />')
-        self.loop.run_until_complete(asyncio.Task(sensor._set_internal_state(DPTArray((0x23)))))  # pylint: disable=protected-access
+            '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/None/None" value="None" unit="%"/>')
+        self.loop.run_until_complete(asyncio.Task(sensor.sensor_value.set(25)))
         self.assertEqual(
             str(sensor),
-            '<Sensor name="MeinSensor" group_address="GroupAddress("1/2/3")" state="<DPTArray value="[0x23]" />" resolve_state="14" />')
+            '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/<DPTArray value="[0xc0]" />/25" value="25" unit="%"/>')
 
     def test_switch(self):
         """Test string representation of switch object."""

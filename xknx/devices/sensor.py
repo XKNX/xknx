@@ -6,15 +6,9 @@ It provides functionality for
 * reading the current state from KNX bus.
 * watching for state updates from KNX bus.
 """
-from xknx.knx import (DPT2ByteFloat, DPT2ByteUnsigned, DPT4ByteFloat,
-                      DPT4ByteSigned, DPT4ByteUnsigned, DPTArray, DPTBinary,
-                      DPTBrightness, DPTElectricCurrent, DPTElectricPotential,
-                      DPTEnergy, DPTFrequency, DPTHeatFlowRate, DPTHumidity,
-                      DPTLux, DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower,
-                      DPTPowerFactor, DPTScaling, DPTSpeed, DPTTemperature,
-                      DPTUElCurrentmA, DPTWsp, GroupAddress)
-
 from .device import Device
+from .remote_value_sensor import RemoteValueSensor
+from .remote_value import RemoteValueScaling5001
 
 
 class Sensor(Device):
@@ -29,45 +23,19 @@ class Sensor(Device):
         """Initialize Sensor class."""
         # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name, device_updated_cb)
-        if isinstance(group_address, (str, int)):
-            group_address = GroupAddress(group_address)
-        if value_type == 'brightness':
-            value_type = 'illuminance'
-        self.group_address = group_address
-        self.value_type = value_type
-        self.state = None
 
-        self.dptmap = {
-            'temperature': DPTTemperature,
-            'humidity': DPTHumidity,
-            'illuminance': DPTLux,
-            'brightness': DPTBrightness,
-            'speed_ms': DPTWsp,
-            'current': DPTUElCurrentmA,
-            'power': DPTPower,
-            'electric_current': DPTElectricCurrent,
-            'electric_potential': DPTElectricPotential,
-            'energy': DPTEnergy,
-            'frequency': DPTFrequency,
-            'heatflowrate': DPTHeatFlowRate,
-            'phaseanglerad': DPTPhaseAngleRad,
-            'phaseangledeg': DPTPhaseAngleDeg,
-            'powerfactor': DPTPowerFactor,
-            'speed': DPTSpeed,
-
-            # Generic DPT Without Min/Max and Unit.
-            'DPT-7': DPT2ByteUnsigned,
-            '2byte_unsigned': DPT2ByteUnsigned,
-            'DPT-9': DPT2ByteFloat,
-
-            'DPT-12': DPT4ByteUnsigned,
-            '4byte_unsigned': DPT4ByteUnsigned,
-
-            'DPT-13': DPT4ByteSigned,
-            '4byte_signed': DPT4ByteSigned,
-            'DPT-14': DPT4ByteFloat,
-            '4byte_float': DPT4ByteFloat
-        }
+        self.sensor_value = None
+        if value_type == "percent":
+            self.sensor_value = RemoteValueScaling5001(
+                xknx,
+                group_address_state=group_address,
+                after_update_cb=self.after_update)
+        else:
+            self.sensor_value = RemoteValueSensor(
+                xknx,
+                group_address_state=group_address,
+                after_update_cb=self.after_update,
+                value_type=value_type)
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -84,59 +52,32 @@ class Sensor(Device):
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
-        return self.group_address == group_address
-
-    async def _set_internal_state(self, state):
-        """Set the internal state of the device. If state was changed after update hooks are executed."""
-        if state != self.state:
-            self.state = state
-            await self.after_update()
+        return self.sensor_value.has_group_address(group_address)
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
-        return [self.group_address, ]
+        return self.sensor_value.state_addresses()
 
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
-        await self._set_internal_state(telegram.payload)
+        await self.sensor_value.process(telegram)
 
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        # pylint: disable=too-many-return-statements
-        if self.value_type == 'percent':
-            return "%"
-        elif self.value_type in self.dptmap:
-            return self.dptmap[self.value_type].unit
-        return None
+        return self.sensor_value.unit_of_measurement
 
     def resolve_state(self):
         """Return the current state of the sensor as a human readable string."""
-        # pylint: disable=invalid-name,too-many-return-statements
-        if self.state is None:
-            return None
-        elif self.value_type == 'percent' and \
-                isinstance(self.state, DPTArray) and \
-                len(self.state.value) == 1:
-            # TODO: Instanciate DPTScaling object with DPTArray class
-            return "{0}".format(DPTScaling().from_knx(self.state.value))
-        elif self.value_type in self.dptmap:
-            return self.dptmap[self.value_type].from_knx(self.state.value)
-        elif isinstance(self.state, DPTArray):
-            return ','.join('0x%02x' % i for i in self.state.value)
-        elif isinstance(self.state, DPTBinary):
-            return "{0:b}".format(self.state.value)
-        raise TypeError()
+        return self.sensor_value.value
 
     def __str__(self):
         """Return object as readable string."""
         return '<Sensor name="{0}" ' \
-               'group_address="{1}" ' \
-               'state="{2}" ' \
-               'resolve_state="{3}" />' \
+               'sensor="{1}" value="{2}" unit="{3}"/>' \
             .format(self.name,
-                    self.group_address,
-                    self.state,
-                    self.resolve_state())
+                    self.sensor_value.group_addr_str(),
+                    self.resolve_state(),
+                    self.unit_of_measurement())
 
     def __eq__(self, other):
         """Equal operator."""
