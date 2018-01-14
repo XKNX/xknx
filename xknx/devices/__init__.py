@@ -9,6 +9,7 @@ from .light import Light
 from .switch import Switch
 from .datetime import DateTime
 from .sensor import Sensor
+from .expose_sensor import ExposeSensor
 from .binary_sensor import BinarySensor, BinarySensorState
 from .notification import Notification
 from .remote_value import RemoteValue

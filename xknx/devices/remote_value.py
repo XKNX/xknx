@@ -9,7 +9,7 @@ from enum import Enum
 
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.knx import (DPTArray, DPTBinary, DPTScaling, DPTTemperature,
-                      DPTValue1Count, GroupAddress, Telegram)
+                      DPTValue1Count, GroupAddress, Telegram, TelegramType)
 
 
 class RemoteValue():
@@ -84,10 +84,12 @@ class RemoteValue():
             return None
         return self.from_knx(self.payload)
 
-    async def send(self):
+    async def send(self, response=False):
         """Send payload as telegram to KNX bus."""
         telegram = Telegram()
         telegram.group_address = self.group_address
+        telegram.telegramtype = TelegramType.GROUP_RESPONSE \
+            if response else TelegramType.GROUP_WRITE
         telegram.payload = self.payload
         await self.xknx.telegrams.put(telegram)
 

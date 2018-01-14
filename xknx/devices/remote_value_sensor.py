@@ -64,9 +64,9 @@ class RemoteValueSensor(RemoteValue):
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
-        print(len(payload.value) == self.DPTMAP[self.value_type].payload_length)
-        return (isinstance(payload, DPTArray) and
-                len(payload.value) == self.DPTMAP[self.value_type].payload_length)
+        return (
+            isinstance(payload, DPTArray) and
+            len(payload.value) == self.DPTMAP[self.value_type].payload_length)
 
     def to_knx(self, value):
         """Convert value to payload."""
