@@ -123,7 +123,7 @@ class TestSensor(unittest.TestCase):
 
     #
     # HAS GROUP ADDRESS
-    # 
+    #
     def test_has_group_address(self):
         """Test sensor has group address."""
         xknx = XKNX(loop=self.loop)
@@ -135,7 +135,7 @@ class TestSensor(unittest.TestCase):
         self.assertTrue(sensor.has_group_address(GroupAddress('1/2/3')))
         self.assertFalse(sensor.has_group_address(GroupAddress('1/2/4')))
 
-    # 
+    #
     # STATE ADDRESSES
     #
     def test_state_addresses(self):

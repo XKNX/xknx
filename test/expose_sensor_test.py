@@ -20,7 +20,6 @@ class TestExposeSensor(unittest.TestCase):
         """Tear down test class."""
         self.loop.close()
 
-
     #
     # STR FUNCTIONS
     #
@@ -66,10 +65,12 @@ class TestExposeSensor(unittest.TestCase):
 
         telegram = xknx.telegrams.get_nowait()
         print(telegram)
-        self.assertEqual(telegram,
-                         Telegram(GroupAddress('1/2/3'),
-                         TelegramType.GROUP_WRITE,
-                         payload=DPTArray((0x40,))))
+        self.assertEqual(
+            telegram,
+            Telegram(
+                GroupAddress('1/2/3'),
+                TelegramType.GROUP_WRITE,
+                payload=DPTArray((0x40,))))
 
     def test_set_temperature(self):
         """Test set with temperatur sensor."""
@@ -83,10 +84,12 @@ class TestExposeSensor(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         print(telegram)
-        self.assertEqual(telegram,
-                         Telegram(GroupAddress('1/2/3'),
-                         TelegramType.GROUP_WRITE,
-                         payload=DPTArray((0x0c, 0x1a))))
+        self.assertEqual(
+            telegram,
+            Telegram(
+                GroupAddress('1/2/3'),
+                TelegramType.GROUP_WRITE,
+                payload=DPTArray((0x0c, 0x1a))))
 
     #
     # TEST PROCESS (GROUP READ)
@@ -106,10 +109,12 @@ class TestExposeSensor(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(expose_sensor.process(telegram)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram,
-                         Telegram(GroupAddress('1/2/3'),
-                         TelegramType.GROUP_RESPONSE,
-                         payload=DPTArray((0x40, ))))
+        self.assertEqual(
+            telegram,
+            Telegram(
+                GroupAddress('1/2/3'),
+                TelegramType.GROUP_RESPONSE,
+                payload=DPTArray((0x40, ))))
 
     def test_process_temperature(self):
         """Test reading temperature expose sensor from bus."""
@@ -126,18 +131,16 @@ class TestExposeSensor(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(expose_sensor.process(telegram)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram,
-                         Telegram(GroupAddress('1/2/3'),
-                         TelegramType.GROUP_RESPONSE,
-                         payload=DPTArray((0x0c, 0x1a))))
-
-
-        #self.assertEqual(sensor.sensor_value.payload, DPTArray((0x06, 0xa0)))
-        #self.assertEqual(sensor.resolve_state(), 16.96)
+        self.assertEqual(
+            telegram,
+            Telegram(
+                GroupAddress('1/2/3'),
+                TelegramType.GROUP_RESPONSE,
+                payload=DPTArray((0x0c, 0x1a))))
 
     #
     # HAS GROUP ADDRESS
-    # 
+    #
     def test_has_group_address(self):
         """Test expose sensor has group address."""
         xknx = XKNX(loop=self.loop)
@@ -149,7 +152,7 @@ class TestExposeSensor(unittest.TestCase):
         self.assertTrue(expose_sensor.has_group_address(GroupAddress('1/2/3')))
         self.assertFalse(expose_sensor.has_group_address(GroupAddress('1/2/4')))
 
-    # 
+    #
     # STATE ADDRESSES
     #
     def test_state_addresses(self):
@@ -161,7 +164,6 @@ class TestExposeSensor(unittest.TestCase):
             value_type='temperature',
             group_address='1/2/3')
         self.assertEqual(expose_sensor.state_addresses(), [])
-
 
     #
     # PROCESS CALLBACK
