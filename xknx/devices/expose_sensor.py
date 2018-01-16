@@ -1,17 +1,22 @@
 """
-Module for managing a sensor via KNX.
+Module for exposing a (virtual) sensor to KNX bus.
 
 It provides functionality for
 
-* reading the current state from KNX bus.
-* watching for state updates from KNX bus.
+* push local state changes to KNX bus
+* KNX devices may read local values via GROUP READ.
+
+(A typical example for using this class is the outside temperature
+read from an internet service (e.g. Yahoo weather) and exposed to
+ths KNX bus. KNX sensors may show this outside temperature within their
+LCD display.
 """
 from .device import Device
 from .remote_value_sensor import RemoteValueSensor
 from .remote_value import RemoteValueScaling5001
 
 
-class Sensor(Device):
+class ExposeSensor(Device):
     """Class for managing a sensor."""
 
     def __init__(self,
@@ -28,12 +33,12 @@ class Sensor(Device):
         if value_type == "percent":
             self.sensor_value = RemoteValueScaling5001(
                 xknx,
-                group_address_state=group_address,
+                group_address=group_address,
                 after_update_cb=self.after_update)
         else:
             self.sensor_value = RemoteValueSensor(
                 xknx,
-                group_address_state=group_address,
+                group_address=group_address,
                 after_update_cb=self.after_update,
                 value_type=value_type)
 
@@ -56,11 +61,15 @@ class Sensor(Device):
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
-        return self.sensor_value.state_addresses()
+        return []
 
-    async def process_group_write(self, telegram):
-        """Process incoming GROUP WRITE telegram."""
-        await self.sensor_value.process(telegram)
+    async def process_group_read(self, telegram):
+        """Process incoming GROUP READ telegram."""
+        await self.sensor_value.send(response=True)
+
+    async def set(self, value):
+        """Set new value."""
+        await self.sensor_value.set(value)
 
     def unit_of_measurement(self):
         """Return the unit of measurement."""
@@ -72,7 +81,7 @@ class Sensor(Device):
 
     def __str__(self):
         """Return object as readable string."""
-        return '<Sensor name="{0}" ' \
+        return '<ExposeSensor name="{0}" ' \
                'sensor="{1}" value="{2}" unit="{3}"/>' \
             .format(self.name,
                     self.sensor_value.group_addr_str(),

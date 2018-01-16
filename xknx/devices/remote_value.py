@@ -9,7 +9,7 @@ from enum import Enum
 
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.knx import (DPTArray, DPTBinary, DPTScaling, DPTTemperature,
-                      DPTValue1Count, GroupAddress, Telegram)
+                      DPTValue1Count, GroupAddress, Telegram, TelegramType)
 
 
 class RemoteValue():
@@ -50,10 +50,9 @@ class RemoteValue():
             return [self.group_address, ]
         return []
 
-    @staticmethod
-    def payload_valid(payload):
+    def payload_valid(self, payload):
         """Test if telegram payload may be parsed - to be implemented in derived class.."""
-        # pylint: disable=unused-argument
+        # pylint: disable=unused-argument, no-self-use
         return True
 
     def from_knx(self, payload):
@@ -85,10 +84,12 @@ class RemoteValue():
             return None
         return self.from_knx(self.payload)
 
-    async def send(self):
+    async def send(self, response=False):
         """Send payload as telegram to KNX bus."""
         telegram = Telegram()
         telegram.group_address = self.group_address
+        telegram.telegramtype = TelegramType.GROUP_RESPONSE \
+            if response else TelegramType.GROUP_WRITE
         telegram.payload = self.payload
         await self.xknx.telegrams.put(telegram)
 
@@ -104,6 +105,11 @@ class RemoteValue():
         await self.send()
         if updated and self.after_update_cb is not None:
             await self.after_update_cb()
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return None
 
     def group_addr_str(self):
         """Return object as readable string."""
@@ -152,8 +158,7 @@ class RemoteValueSwitch1001(RemoteValue):
         super(RemoteValueSwitch1001, self).__init__(xknx, group_address, group_address_state, after_update_cb)
         self.invert = invert
 
-    @staticmethod
-    def payload_valid(payload):
+    def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
         return isinstance(payload, DPTBinary)
 
@@ -204,8 +209,7 @@ class RemoteValueUpDown1008(RemoteValue):
         super(RemoteValueUpDown1008, self).__init__(xknx, group_address, group_address_state, after_update_cb)
         self.invert = invert
 
-    @staticmethod
-    def payload_valid(payload):
+    def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
         return isinstance(payload, DPTBinary)
 
@@ -255,8 +259,7 @@ class RemoteValueStep1007(RemoteValue):
         super(RemoteValueStep1007, self).__init__(xknx, group_address, group_address_state, after_update_cb)
         self.invert = invert
 
-    @staticmethod
-    def payload_valid(payload):
+    def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
         return isinstance(payload, DPTBinary)
 
@@ -299,8 +302,7 @@ class RemoteValueScaling5001(RemoteValue):
         super(RemoteValueScaling5001, self).__init__(xknx, group_address, group_address_state, after_update_cb)
         self.invert = invert
 
-    @staticmethod
-    def payload_valid(payload):
+    def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
         return (isinstance(payload, DPTArray)
                 and len(payload.value) == 1)
@@ -318,12 +320,16 @@ class RemoteValueScaling5001(RemoteValue):
             value = 100 - value
         return value
 
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return "%"
+
 
 class RemoteValue1Count(RemoteValue):
     """Abstraction for remote value of KNX 6.010 (DPT_Value_1_Count)."""
 
-    @staticmethod
-    def payload_valid(payload):
+    def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
         return (isinstance(payload, DPTArray)
                 and len(payload.value) == 1)
@@ -340,8 +346,7 @@ class RemoteValue1Count(RemoteValue):
 class RemoteValueTemp(RemoteValue):
     """Abstraction for remote value of KNX 9.001 (DPT_Value_Temp)."""
 
-    @staticmethod
-    def payload_valid(payload):
+    def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
         return (isinstance(payload, DPTArray)
                 and len(payload.value) == 2)

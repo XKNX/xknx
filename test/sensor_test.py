@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 from xknx import XKNX
 from xknx.devices import Sensor
-from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram, TelegramType
+from xknx.knx import DPTArray, GroupAddress, Telegram, TelegramType
 
 
 class TestSensor(unittest.TestCase):
@@ -23,26 +23,6 @@ class TestSensor(unittest.TestCase):
     #
     # STR FUNCTIONS
     #
-    def test_str_array(self):
-        """Test resolve_state fallback method with DPTArray."""
-        xknx = XKNX(loop=self.loop)
-        sensor = Sensor(
-            xknx,
-            'TestSensor',
-            group_address='1/2/3')
-        sensor.state = DPTArray((0x01, 0x02, 0x03))
-        self.assertEqual(sensor.resolve_state(), "0x01,0x02,0x03")
-
-    def test_str_binary(self):
-        """Test resolve_state fallback method with integer object."""
-        xknx = XKNX(loop=self.loop)
-        sensor = Sensor(
-            xknx,
-            'TestSensor',
-            group_address='1/2/3')
-        sensor.state = DPTBinary(5)
-        self.assertEqual(sensor.resolve_state(), "101")
-
     def test_str_scaling(self):
         """Test resolve state with percent sensor."""
         xknx = XKNX(loop=self.loop)
@@ -51,9 +31,9 @@ class TestSensor(unittest.TestCase):
             'TestSensor',
             group_address='1/2/3',
             value_type="percent")
-        sensor.state = DPTArray((0x40,))
+        sensor.sensor_value.payload = DPTArray((0x40,))
 
-        self.assertEqual(sensor.resolve_state(), "25")
+        self.assertEqual(sensor.resolve_state(), 75)
         self.assertEqual(sensor.unit_of_measurement(), "%")
 
     def test_str_speed_ms(self):
@@ -64,7 +44,7 @@ class TestSensor(unittest.TestCase):
             'TestSensor',
             group_address='1/2/3',
             value_type="speed_ms")
-        sensor.state = DPTArray((0x00, 0x1b,))
+        sensor.sensor_value.payload = DPTArray((0x00, 0x1b,))
 
         self.assertEqual(sensor.resolve_state(), 0.27)
         self.assertEqual(sensor.unit_of_measurement(), "m/s")
@@ -77,7 +57,7 @@ class TestSensor(unittest.TestCase):
             'TestSensor',
             group_address='1/2/3',
             value_type="temperature")
-        sensor.state = DPTArray((0x0c, 0x1a))
+        sensor.sensor_value.payload = DPTArray((0x0c, 0x1a))
 
         self.assertEqual(sensor.resolve_state(), 21.00)
         self.assertEqual(sensor.unit_of_measurement(), "°C")
@@ -90,7 +70,7 @@ class TestSensor(unittest.TestCase):
             'TestSensor',
             group_address='1/2/3',
             value_type="humidity")
-        sensor.state = DPTArray((0x0e, 0x73))
+        sensor.sensor_value.payload = DPTArray((0x0e, 0x73))
 
         self.assertEqual(sensor.resolve_state(), 33.02)
         self.assertEqual(sensor.unit_of_measurement(), "%")
@@ -103,7 +83,7 @@ class TestSensor(unittest.TestCase):
             'TestSensor',
             group_address='1/2/3',
             value_type="power")
-        sensor.state = DPTArray((0x43, 0xC6, 0x80, 00))
+        sensor.sensor_value.payload = DPTArray((0x43, 0xC6, 0x80, 00))
 
         self.assertEqual(sensor.resolve_state(), 397)
         self.assertEqual(sensor.unit_of_measurement(), "W")
@@ -116,7 +96,7 @@ class TestSensor(unittest.TestCase):
             'TestSensor',
             group_address='1/2/3',
             value_type="electric_potential")
-        sensor.state = DPTArray((0x43, 0x65, 0xE3, 0xD7))
+        sensor.sensor_value.payload = DPTArray((0x43, 0x65, 0xE3, 0xD7))
 
         self.assertEqual(round(sensor.resolve_state(), 2), 229.89)
         self.assertEqual(sensor.unit_of_measurement(), "V")
@@ -130,6 +110,7 @@ class TestSensor(unittest.TestCase):
         sensor = Sensor(
             xknx,
             'TestSensor',
+            value_type="temperature",
             group_address='1/2/3')
 
         self.loop.run_until_complete(asyncio.Task(sensor.sync(False)))
@@ -141,6 +122,33 @@ class TestSensor(unittest.TestCase):
                          Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
 
     #
+    # HAS GROUP ADDRESS
+    #
+    def test_has_group_address(self):
+        """Test sensor has group address."""
+        xknx = XKNX(loop=self.loop)
+        sensor = Sensor(
+            xknx,
+            'TestSensor',
+            value_type='temperature',
+            group_address='1/2/3')
+        self.assertTrue(sensor.has_group_address(GroupAddress('1/2/3')))
+        self.assertFalse(sensor.has_group_address(GroupAddress('1/2/4')))
+
+    #
+    # STATE ADDRESSES
+    #
+    def test_state_addresses(self):
+        """Test expose sensor returns empty list as state addresses."""
+        xknx = XKNX(loop=self.loop)
+        sensor = Sensor(
+            xknx,
+            'TestSensor',
+            value_type='temperature',
+            group_address='1/2/3')
+        self.assertEqual(sensor.state_addresses(), [GroupAddress('1/2/3')])
+
+    #
     # TEST PROCESS
     #
     def test_process(self):
@@ -149,12 +157,14 @@ class TestSensor(unittest.TestCase):
         sensor = Sensor(
             xknx,
             'TestSensor',
+            value_type='temperature',
             group_address='1/2/3')
 
         telegram = Telegram(GroupAddress('1/2/3'))
-        telegram.payload = DPTArray((0x01, 0x02, 0x03))
+        telegram.payload = DPTArray((0x06, 0xa0))
         self.loop.run_until_complete(asyncio.Task(sensor.process(telegram)))
-        self.assertEqual(sensor.state, DPTArray((0x01, 0x02, 0x03)))
+        self.assertEqual(sensor.sensor_value.payload, DPTArray((0x06, 0xa0)))
+        self.assertEqual(sensor.resolve_state(), 16.96)
 
     def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
@@ -163,7 +173,8 @@ class TestSensor(unittest.TestCase):
         sensor = Sensor(
             xknx,
             'TestSensor',
-            group_address='1/2/3')
+            group_address='1/2/3',
+            value_type="temperature")
 
         after_update_callback = Mock()
 
@@ -173,6 +184,6 @@ class TestSensor(unittest.TestCase):
         sensor.register_device_updated_cb(async_after_update_callback)
 
         telegram = Telegram(GroupAddress('1/2/3'))
-        telegram.payload = DPTArray((0x01, 0x02, 0x03))
+        telegram.payload = DPTArray((0x01, 0x02))
         self.loop.run_until_complete(asyncio.Task(sensor.process(telegram)))
         after_update_callback.assert_called_with(sensor)

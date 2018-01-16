@@ -4,7 +4,7 @@ import unittest
 
 from xknx import XKNX
 from xknx.devices import (Action, BinarySensor, Climate, Cover, DateTime,
-                          Light, Notification, Sensor, Switch)
+                          Light, Notification, ExposeSensor, Sensor, Switch)
 from xknx.devices.datetime import DateTimeBroadcastType
 
 
@@ -236,7 +236,7 @@ class TestConfig(unittest.TestCase):
                          device_updated_cb=xknx.devices.device_updated))
 
     def test_config_sensor_percent(self):
-        """Test reading Sensor with value_type from config file."""
+        """Test reading percent Sensor from config file."""
         xknx = XKNX(config='xknx.yaml', loop=self.loop)
         self.assertEqual(
             xknx.devices['Heating.Valve1'],
@@ -246,15 +246,28 @@ class TestConfig(unittest.TestCase):
                    value_type='percent',
                    device_updated_cb=xknx.devices.device_updated))
 
-    def test_config_sensor_no_value_type(self):
-        """Test reading Sensor without value_type from config file."""
+    def test_config_sensor_temperature_type(self):
+        """Test reading temperature Sensor from config file."""
         xknx = XKNX(config='xknx.yaml', loop=self.loop)
         self.assertEqual(
-            xknx.devices['Some.Other.Value'],
+            xknx.devices['Kitchen.Temperature'],
             Sensor(xknx,
-                   'Some.Other.Value',
+                   'Kitchen.Temperature',
                    group_address='2/0/2',
+                   value_type='temperature',
                    device_updated_cb=xknx.devices.device_updated))
+
+    def test_config_expose_sensor(self):
+        """Test reading ExposeSensor from config file."""
+        xknx = XKNX(config='xknx.yaml', loop=self.loop)
+        self.assertEqual(
+            xknx.devices['Outside.Temperature'],
+            ExposeSensor(
+                xknx,
+                'Outside.Temperature',
+                group_address='2/0/3',
+                value_type='temperature',
+                device_updated_cb=xknx.devices.device_updated))
 
     def test_config_sensor_binary_device_class(self):
         """Test reading Sensor with device_class from config file."""

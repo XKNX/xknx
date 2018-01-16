@@ -24,6 +24,7 @@ class DPT4ByteUnsigned(DPTBase):
     value_max = 4294967295
     unit = ""
     resolution = 1
+    payload_length = 4
 
     _struct_format = ">I"
 

@@ -24,6 +24,7 @@ class DPT2ByteFloat(DPTBase):
     value_max = 670760.96
     unit = ""
     resolution = 1
+    payload_length = 2
 
     @classmethod
     def from_knx(cls, raw):
@@ -92,6 +93,7 @@ class DPT4ByteFloat(DPTBase):
     """
 
     unit = ""
+    payload_length = 4
 
     @classmethod
     def from_knx(cls, raw):

@@ -5,7 +5,7 @@ import unittest
 from xknx import XKNX
 from xknx.devices import (Action, ActionBase, ActionCallback, BinarySensor,
                           Climate, Cover, DateTime, Light, Notification,
-                          RemoteValue, Sensor, Switch)
+                          RemoteValue, ExposeSensor, Sensor, Switch)
 from xknx.exceptions import (ConversionError, CouldNotParseAddress,
                              CouldNotParseKNXIP, CouldNotParseTelegram,
                              DeviceIllegalValue)
@@ -148,11 +148,27 @@ class TestStringRepresentations(unittest.TestCase):
             value_type='percent')
         self.assertEqual(
             str(sensor),
-            '<Sensor name="MeinSensor" group_address="GroupAddress("1/2/3")" state="None" resolve_state="None" />')
-        self.loop.run_until_complete(asyncio.Task(sensor._set_internal_state(DPTArray((0x23)))))  # pylint: disable=protected-access
+            '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/None/None" value="None" unit="%"/>')
+        self.loop.run_until_complete(asyncio.Task(sensor.sensor_value.set(25)))
         self.assertEqual(
             str(sensor),
-            '<Sensor name="MeinSensor" group_address="GroupAddress("1/2/3")" state="<DPTArray value="[0x23]" />" resolve_state="14" />')
+            '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/<DPTArray value="[0xc0]" />/25" value="25" unit="%"/>')
+
+    def test_expose_sensor(self):
+        """Test string representation of expose sensor object."""
+        xknx = XKNX(loop=self.loop)
+        sensor = ExposeSensor(
+            xknx,
+            name='MeinSensor',
+            group_address='1/2/3',
+            value_type='percent')
+        self.assertEqual(
+            str(sensor),
+            '<ExposeSensor name="MeinSensor" sensor="GroupAddress("1/2/3")/None/None/None" value="None" unit="%"/>')
+        self.loop.run_until_complete(asyncio.Task(sensor.set(25)))
+        self.assertEqual(
+            str(sensor),
+            '<ExposeSensor name="MeinSensor" sensor="GroupAddress("1/2/3")/None/<DPTArray value="[0xc0]" />/25" value="25" unit="%"/>')
 
     def test_switch(self):
         """Test string representation of switch object."""
