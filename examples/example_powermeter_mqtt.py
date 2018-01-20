@@ -1,7 +1,9 @@
 """
-Example of a daemon listening for a values from my main power-meter.
-The KNX points to look for is defined in this file, but is normally placed
-in an external file that is loaded in on start.
+Example of a daemon listening for values from my main power-meter and resend them on a MQTT bus.
+
+This example will not be able to run as it is - but it will homefully give you some
+ideas to how you can define DPT, and get their converted values, and even send them to MQTT
+in a tested topic-format.
 
 I have a Mosquitto MQTT Server - and running the Paho Python client.
 I use some external MQTT libraries as well to handle the MQTT Topic-creation.
@@ -110,14 +112,18 @@ def device_updated_cb(device):
 
 async def main():
     """
-    Main function where the KNX device objects are created.
-    MQTT server connection is established, and the XKNX Daemon will be started.
+    KNX device objects are created and the MQTT server connection is established.
+
+    Then the XKNX Daemon will be started.
     Then everything else happens in the device_updated-function above as it is triggered when we receive data.
     """
     global mqttc
 
     """Connect to KNX/IP device and listen if a switch was updated via KNX bus."""
     xknx = XKNX(device_updated_cb=device_updated_cb)
+
+    # The KNX addresses to monitor are defined below, but is normally placed in an external
+    #  file that is loaded in on start.
 
     # Generic Types not specifically supported by XKNX
     el_meter_reading_active_energy = Sensor(
