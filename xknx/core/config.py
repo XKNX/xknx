@@ -10,7 +10,7 @@ import yaml
 from xknx.devices import (BinarySensor, Climate, Cover, DateTime, Light,
                           Notification, ExposeSensor, Sensor, Switch)
 from xknx.knx import PhysicalAddress
-
+from xknx.exceptions import XKNXException
 
 class Config:
     """Class for parsing xknx.yaml."""
@@ -22,10 +22,13 @@ class Config:
     def read(self, file='xknx.yaml'):
         """Read config."""
         self.xknx.logger.debug("Reading %s", file)
-        with open(file, 'r') as filehandle:
-            doc = yaml.load(filehandle)
-            self.parse_general(doc)
-            self.parse_groups(doc)
+        try:
+            with open(file, 'r') as filehandle:
+                doc = yaml.load(filehandle)
+                self.parse_general(doc)
+                self.parse_groups(doc)
+        except FileNotFoundError as ex:
+            self.xknx.logger.error("Error while reading %s: %s", file, ex)
 
     def parse_general(self, doc):
         """Parse the general section of xknx.yaml."""
@@ -37,6 +40,11 @@ class Config:
     def parse_groups(self, doc):
         """Parse the group section of xknx.yaml."""
         for group in doc["groups"]:
+            self.parse_group(doc, group)
+
+    def parse_group(self, doc, group):
+        """Parse a group entry of xknx.yaml."""
+        try:
             if group.startswith("light"):
                 self.parse_group_light(doc["groups"][group])
             elif group.startswith("switch"):
@@ -55,6 +63,8 @@ class Config:
                 self.parse_group_binary_sensor(doc["groups"][group])
             elif group.startswith("notification"):
                 self.parse_group_notification(doc["groups"][group])
+        except XKNXException as ex:
+            self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", group, ex)
 
     def parse_group_light(self, entries):
         """Parse a light section of xknx.yaml."""
