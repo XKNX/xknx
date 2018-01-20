@@ -74,7 +74,10 @@ class RemoteValue():
         if not self.has_group_address(telegram.group_address):
             return False
         if not self.payload_valid(telegram.payload):
-            raise CouldNotParseTelegram("payload invalid", payload=telegram.payload, device_name=self.device_name)
+            raise CouldNotParseTelegram("payload invalid",
+                                        payload=telegram.payload,
+                                        group_address=telegram.group_address,
+                                        device_name=self.device_name)
         if self.payload != telegram.payload:
             self.payload = telegram.payload
             if self.after_update_cb is not None:
