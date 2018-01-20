@@ -36,18 +36,18 @@ class DPT4ByteUnsigned(DPTBase):
         try:
             return struct.unpack(cls._struct_format, bytes(raw))[0]
         except struct.error:
-            raise ConversionError(raw)
+            raise ConversionError("Cant parse DPT4ByteUnsigned", raw=raw)
 
     @classmethod
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
         if not cls._test_boundaries(value):
-            raise ConversionError(value)
+            raise ConversionError("Cant serialize DPT4ByteUnsigned", value=value)
 
         try:
             return tuple(struct.pack(cls._struct_format, value))
         except struct.error:
-            raise ConversionError(value)
+            raise ConversionError("Cant serialize DPT4ByteUnsigned", value=value)
 
     @classmethod
     def _test_boundaries(cls, value):

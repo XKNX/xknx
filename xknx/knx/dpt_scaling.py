@@ -24,7 +24,7 @@ class DPTScaling(DPTBase):
         value = round((raw[0]/256)*100)
 
         if not cls._test_boundaries(value):
-            raise ConversionError(value)
+            raise ConversionError("Cant parse DPTScaling", value=value, raw=raw)
 
         return value
 
@@ -32,9 +32,9 @@ class DPTScaling(DPTBase):
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
         if not isinstance(value, (int, float)):
-            raise ConversionError(value)
+            raise ConversionError("Cant serialize DPTScaling", value=value)
         if not cls._test_boundaries(value):
-            raise ConversionError(value)
+            raise ConversionError("Cant serialize DPTScaling", value=value)
         knx_value = round(value/100*255.4)
         return (knx_value,)
 

@@ -10,15 +10,19 @@ class XKNXException(Exception):
 class CouldNotParseTelegram(XKNXException):
     """Could not parse telegram error."""
 
-    def __init__(self, description=""):
+    def __init__(self, description, **kwargs):
         """Initialize CouldNotParseTelegram class."""
         super(CouldNotParseTelegram, self).__init__("Could not parse Telegram")
         self.description = description
+        self.parameter = kwargs
+
+    def _format_parameter(self):
+        return " ".join(['%s="%s"' % (key, value) for (key, value) in sorted(self.parameter.items())])
 
     def __str__(self):
         """Return object as readable string."""
-        return '<CouldNotParseTelegram description="{0}" />' \
-            .format(self.description)
+        return '<CouldNotParseTelegram description="{0}" {1}/>' \
+            .format(self.description, self._format_parameter())
 
 
 class CouldNotParseKNXIP(XKNXException):
@@ -38,14 +42,18 @@ class CouldNotParseKNXIP(XKNXException):
 class ConversionError(XKNXException):
     """Exception class for error while converting one type to another."""
 
-    def __init__(self, value):
+    def __init__(self, description, **kwargs):
         """Initialize ConversionError class."""
         super(ConversionError, self).__init__("Conversion Error")
-        self.value = value
+        self.description = description
+        self.parameter = kwargs
+
+    def _format_parameter(self):
+        return " ".join(['%s="%s"' % (key, value) for (key, value) in sorted(self.parameter.items())])
 
     def __str__(self):
         """Return object as readable string."""
-        return '<ConversionError value="{0}" />'.format(self.value)
+        return '<ConversionError description="{0}" {1}/>'.format(self.description, self._format_parameter())
 
 
 class CouldNotParseAddress(XKNXException):

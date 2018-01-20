@@ -24,7 +24,7 @@ class DPTDateTime(DPTBase):
         seconds = raw[5] & 0x3F
 
         if not DPTDateTime._test_range(year, month, day, weekday, hours, minutes, seconds):
-            raise ConversionError(raw)
+            raise ConversionError("Could not parse DPTDateTime", raw=raw)
 
         return {
             'year': year,
@@ -40,7 +40,7 @@ class DPTDateTime(DPTBase):
     def to_knx(cls, values):
         """Serialize to KNX/IP raw data from dict with elements year,month,day,weekday,hours,minutes,seconds."""
         if not isinstance(values, dict):
-            raise ConversionError(values)
+            raise ConversionError("Cant serialize DPTDateTime", values=values)
 
         year = values.get('year', 1900)
         month = values.get('month', 1)
@@ -51,7 +51,7 @@ class DPTDateTime(DPTBase):
         seconds = values.get('seconds', 0)
 
         if not DPTDateTime._test_range(year, month, day, weekday, hours, minutes, seconds):
-            raise ConversionError(values)
+            raise ConversionError("Cant serialize DPTDateTime", values=values)
 
         return year - 1900, month, day, weekday << 5 | hours, minutes, seconds, 0, 0
 

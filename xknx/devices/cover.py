@@ -44,12 +44,14 @@ class Cover(Device):
         self.updown = RemoteValueUpDown1008(
             xknx,
             group_address_long,
+            device_name=self.name,
             after_update_cb=self.after_update,
             invert=invert_position)
 
         self.step = RemoteValueStep1007(
             xknx,
             group_address_short,
+            device_name=self.name,
             after_update_cb=self.after_update,
             invert=invert_position)
 
@@ -57,6 +59,7 @@ class Cover(Device):
             xknx,
             group_address_position,
             group_address_position_state,
+            device_name=self.name,
             after_update_cb=self.after_update,
             invert=invert_position)
 
@@ -64,6 +67,7 @@ class Cover(Device):
             xknx,
             group_address_angle,
             group_address_angle_state,
+            device_name=self.name,
             after_update_cb=self.after_update,
             invert=invert_angle)
 

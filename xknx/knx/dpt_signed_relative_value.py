@@ -28,7 +28,7 @@ class DPTSignedRelativeValue(DPTBase):
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
         if not cls._test_boundaries(value):
-            raise ConversionError(value)
+            raise ConversionError("Cant serialize DPTSignedRelativeValue", value=value)
         if value < 0:
             value += 0x100
         return (value & 0xff,)

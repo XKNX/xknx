@@ -77,7 +77,7 @@ class Notification(Device):
     async def _process_message(self, telegram):
         """Process incoming telegram for on/off state."""
         if not isinstance(telegram.payload, DPTString):
-            raise CouldNotParseTelegram()
+            raise CouldNotParseTelegram("payload not of type DPTString", payload=telegram.payload, device_name=self.name)
         await self._set_internal_message(telegram.payload.value)
 
     def __eq__(self, other):

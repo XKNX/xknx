@@ -39,10 +39,10 @@ class AddressFilter:
     def _parse_pattern(self, pattern):
         for part in pattern.split("/"):
             if not part:
-                raise ConversionError("Every part of pattern must be a string.")
+                raise ConversionError("Every part of pattern must be a string.", pattern=pattern)
             self.level_filters.append(AddressFilter.LevelFilter(part))
         if len(self.level_filters) > 3:
-            raise ConversionError("Too many parts within pattern.")
+            raise ConversionError("Too many parts within pattern.", pattern=pattern)
 
     def match(self, address):
         """Test if provided address matches Addressfilter."""
@@ -148,7 +148,7 @@ class AddressFilter:
         def _parse_pattern(self, pattern):
             for part in pattern.split(","):
                 if not part:
-                    raise ConversionError("Every part of LevelFilter must be a string")
+                    raise ConversionError("Every part of LevelFilter must be a string", pattern=pattern)
                 self.ranges.append(AddressFilter.Range(part))
 
         def match(self, digit):

@@ -70,15 +70,18 @@ class Climate(Device):
         self.temperature = RemoteValueTemp(
             xknx,
             group_address_temperature,
+            device_name=self.name,
             after_update_cb=self.after_update)
         self.target_temperature = RemoteValueTemp(
             xknx,
             group_address_target_temperature,
+            device_name=self.name,
             after_update_cb=self.after_update)
         self.setpoint_shift = RemoteValue1Count(
             xknx,
             group_address_setpoint_shift,
             group_address_setpoint_shift_state,
+            device_name=self.name,
             after_update_cb=self.after_update)
 
         self.setpoint_shift_step = setpoint_shift_step
@@ -284,7 +287,7 @@ class Climate(Device):
         """Process incoming telegram for operation mode."""
         if not isinstance(telegram.payload, DPTArray) \
                 or len(telegram.payload.value) != 1:
-            raise CouldNotParseTelegram()
+            raise CouldNotParseTelegram("invalid payload", payload=telegram.payload, device_name=self.name)
         operation_mode = DPTHVACMode.from_knx(telegram.payload.value)
         await self._set_internal_operation_mode(operation_mode)
 
@@ -292,7 +295,7 @@ class Climate(Device):
         """Process incoming telegram for controller status."""
         if not isinstance(telegram.payload, DPTArray) \
                 or len(telegram.payload.value) != 1:
-            raise CouldNotParseTelegram()
+            raise CouldNotParseTelegram("invalid payload", payload=telegram.payload, device_name=self.name)
         operation_mode = DPTControllerStatus.from_knx(telegram.payload.value)
         await self._set_internal_operation_mode(operation_mode)
 

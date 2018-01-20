@@ -40,14 +40,15 @@ class TestStringRepresentations(unittest.TestCase):
         remote_value = RemoteValue(
             xknx,
             group_address='1/2/3',
+            device_name="MyDevice",
             group_address_state='1/2/4')
         self.assertEqual(
             str(remote_value),
-            '<RemoteValue GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None/>')
+            '<RemoteValue device_name="MyDevice" GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None/>')
         remote_value.payload = DPTArray([0x01, 0x02])
         self.assertEqual(
             str(remote_value),
-            '<RemoteValue GroupAddress("1/2/3")/GroupAddress("1/2/4")/<DPTArray value="[0x1,0x2]" />/None/>')
+            '<RemoteValue device_name="MyDevice" GroupAddress("1/2/3")/GroupAddress("1/2/4")/<DPTArray value="[0x1,0x2]" />/None/>')
 
     def test_binary_sensor(self):
         """Test string representation of binary sensor object."""
@@ -241,6 +242,13 @@ class TestStringRepresentations(unittest.TestCase):
             str(exception),
             '<CouldNotParseTelegram description="Fnord" />')
 
+    def test_could_not_parse_telegramn_exception_parameter(self):
+        """Test string representation of CouldNotParseTelegram exception."""
+        exception = CouldNotParseTelegram(description='Fnord', one="one", two="two")
+        self.assertEqual(
+            str(exception),
+            '<CouldNotParseTelegram description="Fnord" one="one" two="two"/>')
+
     def test_could_not_parse_knxip_exception(self):
         """Test string representation of CouldNotParseKNXIP exception."""
         exception = CouldNotParseKNXIP(description='Fnord')
@@ -250,10 +258,17 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_conversion_error_exception(self):
         """Test string representation of ConversionError exception."""
-        exception = ConversionError(value='Fnord')
+        exception = ConversionError(description='Fnord')
         self.assertEqual(
             str(exception),
-            '<ConversionError value="Fnord" />')
+            '<ConversionError description="Fnord" />')
+
+    def test_conversion_error_exception_parameter(self):
+        """Test string representation of ConversionError exception."""
+        exception = ConversionError(description='Fnord', one="one", two="two")
+        self.assertEqual(
+            str(exception),
+            '<ConversionError description="Fnord" one="one" two="two"/>')
 
     def test_could_not_parse_address_exception(self):
         """Test string representation of CouldNotParseAddress exception."""
