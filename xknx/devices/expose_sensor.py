@@ -34,11 +34,13 @@ class ExposeSensor(Device):
             self.sensor_value = RemoteValueScaling5001(
                 xknx,
                 group_address=group_address,
+                device_name=self.name,
                 after_update_cb=self.after_update)
         else:
             self.sensor_value = RemoteValueSensor(
                 xknx,
                 group_address=group_address,
+                device_name=self.name,
                 after_update_cb=self.after_update,
                 value_type=value_type)
 

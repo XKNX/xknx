@@ -20,7 +20,7 @@ class DPTDate(DPTBase):
         year = raw[2] & 0x7F
 
         if not DPTDate._test_range(day, month, year):
-            raise ConversionError(raw)
+            raise ConversionError("Cant parse DPTDate", raw=raw)
 
         if year >= 90:
             year += 1900
@@ -37,7 +37,7 @@ class DPTDate(DPTBase):
     def to_knx(cls, values):
         """Serialize to KNX/IP raw data from dict with elements day,month,year."""
         if not isinstance(values, dict):
-            raise ConversionError(values)
+            raise ConversionError("Cant serialize DPTDate", values=values)
         day = values.get('day', 0)
         month = values.get('month', 0)
         year = values.get('year', 0)
@@ -48,7 +48,7 @@ class DPTDate(DPTBase):
             year -= 1900
 
         if not DPTDate._test_range(day, month, year):
-            raise ConversionError(values)
+            raise ConversionError("Cant serialize DPTDate", values=values)
 
         return day, month, year
 

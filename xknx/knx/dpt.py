@@ -50,7 +50,7 @@ class DPTBase:
                 or any(not isinstance(byte, int) for byte in raw) \
                 or any(byte < 0 for byte in raw) \
                 or any(byte > 255 for byte in raw):
-            raise ConversionError(raw)
+            raise ConversionError("Invalid raw bytes", raw=raw)
 
 
 class DPTBinary(DPTBase):
@@ -67,7 +67,7 @@ class DPTBinary(DPTBase):
         if not isinstance(value, int):
             raise TypeError()
         if value > DPTBinary.APCI_BITMASK:
-            raise ConversionError(value)
+            raise ConversionError("Cant init DPTBinary", value=value)
 
         self.value = value
 

@@ -37,6 +37,7 @@ class Light(Device):
             xknx,
             group_address_switch,
             group_address_switch_state,
+            device_name=self.name,
             after_update_cb=self.after_update)
 
         self.group_address_brightness = group_address_brightness
@@ -151,9 +152,10 @@ class Light(Device):
 
     async def _process_brightness(self, telegram):
         """Process incoming telegram for brightness state."""
-        if not isinstance(telegram.payload, DPTArray) or \
-                len(telegram.payload.value) != 1:
-            raise CouldNotParseTelegram()
+        if not isinstance(telegram.payload, DPTArray):
+            raise CouldNotParseTelegram("payload not of type DPTArray", payload=telegram.payload, device_name=self.name)
+        if len(telegram.payload.value) != 1:
+            raise CouldNotParseTelegram("payload has invalid length!=1", length=len(telegram.payload.value), device_name=self.name)
 
         await self._set_internal_brightness(telegram.payload.value[0])
 

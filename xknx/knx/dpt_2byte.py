@@ -30,7 +30,7 @@ class DPT2ByteUnsigned(DPTBase):
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
         if not cls._test_boundaries(value):
-            raise ConversionError(value)
+            raise ConversionError("Cant serialize DPT2ByteUnsigned", value=value)
         return value >> 8, value & 0xff
 
     @classmethod

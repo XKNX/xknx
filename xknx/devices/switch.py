@@ -27,6 +27,7 @@ class Switch(Device):
             xknx,
             group_address,
             group_address_state,
+            device_name=self.name,
             after_update_cb=self.after_update)
 
     @classmethod

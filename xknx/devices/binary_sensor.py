@@ -146,7 +146,7 @@ class BinarySensor(Device):
                 await asyncio.sleep(self.reset_after/1000)
                 await self._set_internal_state(BinarySensorState.OFF)
         else:
-            raise CouldNotParseTelegram()
+            raise CouldNotParseTelegram("Illegal payload", payload=telegram.payload, device_name=self.name)
 
     def is_on(self):
         """Return if binary sensor is 'on'."""

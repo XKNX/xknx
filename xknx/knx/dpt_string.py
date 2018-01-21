@@ -27,9 +27,9 @@ class DPTString(DPTBase):
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
         if not isinstance(value, str):
-            raise ConversionError(value)
+            raise ConversionError("Cant serialize DPTString", value=value)
         if not cls._test_boundaries(value):
-            raise ConversionError(value)
+            raise ConversionError("Cant serialize DPTString", value=value)
 
         raw = []
         for character in value:

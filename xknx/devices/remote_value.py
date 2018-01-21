@@ -19,8 +19,10 @@ class RemoteValue():
                  xknx,
                  group_address=None,
                  group_address_state=None,
+                 device_name=None,
                  after_update_cb=None):
         """Initialize RemoteValue class."""
+        # pylint: disable=too-many-arguments
         self.xknx = xknx
         if isinstance(group_address, (str, int)):
             group_address = GroupAddress(group_address)
@@ -30,6 +32,8 @@ class RemoteValue():
         self.group_address = group_address
         self.group_address_state = group_address_state
         self.after_update_cb = after_update_cb
+        self.device_name = "Unknown" \
+            if device_name is None else device_name
         self.payload = None
 
     @property
@@ -70,7 +74,10 @@ class RemoteValue():
         if not self.has_group_address(telegram.group_address):
             return False
         if not self.payload_valid(telegram.payload):
-            raise CouldNotParseTelegram()
+            raise CouldNotParseTelegram("payload invalid",
+                                        payload=telegram.payload,
+                                        group_address=telegram.group_address,
+                                        device_name=self.device_name)
         if self.payload != telegram.payload:
             self.payload = telegram.payload
             if self.after_update_cb is not None:
@@ -121,8 +128,9 @@ class RemoteValue():
 
     def __str__(self):
         """Return object as string representation."""
-        return "<{} {}/>".format(
+        return '<{} device_name="{}" {}/>'.format(
             self.__class__.__name__,
+            self.device_name,
             self.group_addr_str())
 
     def __eq__(self, other):
@@ -151,11 +159,14 @@ class RemoteValueSwitch1001(RemoteValue):
                  xknx,
                  group_address=None,
                  group_address_state=None,
+                 device_name=None,
                  after_update_cb=None,
                  invert=False):
         """Initialize remote value of KNX DPT 1.001."""
         # pylint: disable=too-many-arguments
-        super(RemoteValueSwitch1001, self).__init__(xknx, group_address, group_address_state, after_update_cb)
+        super(RemoteValueSwitch1001, self).__init__(
+            xknx, group_address, group_address_state,
+            device_name=device_name, after_update_cb=after_update_cb)
         self.invert = invert
 
     def payload_valid(self, payload):
@@ -168,7 +179,7 @@ class RemoteValueSwitch1001(RemoteValue):
             return DPTBinary(1) if self.invert else DPTBinary(0)
         elif value == self.Value.ON:
             return DPTBinary(0) if self.invert else DPTBinary(1)
-        raise ConversionError(value)
+        raise ConversionError("value invalid", value=value, device_name=self.device_name)
 
     def from_knx(self, payload):
         """Convert current payload to value."""
@@ -176,7 +187,7 @@ class RemoteValueSwitch1001(RemoteValue):
             return self.Value.ON if self.invert else self.Value.OFF
         elif payload == DPTBinary(1):
             return self.Value.OFF if self.invert else self.Value.ON
-        raise ConversionError(payload)
+        raise ConversionError("payload invalid", payload=payload, device_name=self.device_name)
 
     async def off(self):
         """Set value to down."""
@@ -202,11 +213,14 @@ class RemoteValueUpDown1008(RemoteValue):
                  xknx,
                  group_address=None,
                  group_address_state=None,
+                 device_name=None,
                  after_update_cb=None,
                  invert=False):
         """Initialize remote value of KNX DPT 1.008."""
         # pylint: disable=too-many-arguments
-        super(RemoteValueUpDown1008, self).__init__(xknx, group_address, group_address_state, after_update_cb)
+        super(RemoteValueUpDown1008, self).__init__(
+            xknx, group_address, group_address_state,
+            device_name=device_name, after_update_cb=after_update_cb)
         self.invert = invert
 
     def payload_valid(self, payload):
@@ -219,7 +233,7 @@ class RemoteValueUpDown1008(RemoteValue):
             return DPTBinary(1) if self.invert else DPTBinary(0)
         elif value == self.Direction.DOWN:
             return DPTBinary(0) if self.invert else DPTBinary(1)
-        raise ConversionError(value)
+        raise ConversionError("value invalid", value=value, device_name=self.device_name)
 
     def from_knx(self, payload):
         """Convert current payload to value."""
@@ -227,7 +241,7 @@ class RemoteValueUpDown1008(RemoteValue):
             return self.Direction.DOWN if self.invert else self.Direction.UP
         elif payload == DPTBinary(1):
             return self.Direction.UP if self.invert else self.Direction.DOWN
-        raise ConversionError(payload)
+        raise ConversionError("payload invalid", payload=payload, device_name=self.device_name)
 
     async def down(self):
         """Set value to down."""
@@ -252,11 +266,14 @@ class RemoteValueStep1007(RemoteValue):
                  xknx,
                  group_address=None,
                  group_address_state=None,
+                 device_name=None,
                  after_update_cb=None,
                  invert=False):
         """Initialize remote value of KNX DPT 1.007."""
         # pylint: disable=too-many-arguments
-        super(RemoteValueStep1007, self).__init__(xknx, group_address, group_address_state, after_update_cb)
+        super(RemoteValueStep1007, self).__init__(
+            xknx, group_address, group_address_state,
+            device_name=device_name, after_update_cb=after_update_cb)
         self.invert = invert
 
     def payload_valid(self, payload):
@@ -269,7 +286,7 @@ class RemoteValueStep1007(RemoteValue):
             return DPTBinary(1) if self.invert else DPTBinary(0)
         elif value == self.Direction.DECREASE:
             return DPTBinary(0) if self.invert else DPTBinary(1)
-        raise ConversionError(value)
+        raise ConversionError("value invalid", value=value, device_name=self.device_name)
 
     def from_knx(self, payload):
         """Convert current payload to value."""
@@ -277,7 +294,7 @@ class RemoteValueStep1007(RemoteValue):
             return self.Direction.DECREASE if self.invert else self.Direction.INCREASE
         elif payload == DPTBinary(1):
             return self.Direction.INCREASE if self.invert else self.Direction.DECREASE
-        raise ConversionError(payload)
+        raise ConversionError("payload invalid", payload=payload, device_name=self.device_name)
 
     async def increase(self):
         """Increase value."""
@@ -295,11 +312,14 @@ class RemoteValueScaling5001(RemoteValue):
                  xknx,
                  group_address=None,
                  group_address_state=None,
+                 device_name=None,
                  after_update_cb=None,
                  invert=False):
         """Initialize remote value of KNX DPT 5.001 (DPT_Scaling)."""
         # pylint: disable=too-many-arguments
-        super(RemoteValueScaling5001, self).__init__(xknx, group_address, group_address_state, after_update_cb)
+        super(RemoteValueScaling5001, self).__init__(
+            xknx, group_address, group_address_state,
+            device_name=device_name, after_update_cb=after_update_cb)
         self.invert = invert
 
     def payload_valid(self, payload):
