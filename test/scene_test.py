@@ -10,6 +10,7 @@ from xknx.knx import DPTArray, GroupAddress, Telegram
 
 MOCK_WARN = Mock()
 
+
 class TestScene(unittest.TestCase):
     """Test class for Scene objects."""
 
