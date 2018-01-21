@@ -73,3 +73,8 @@ class TestDPTScaling(unittest.TestCase):
         """Test parsing of DPTScaling with wrong value (array containing string)."""
         with self.assertRaises(ConversionError):
             DPTScaling().from_knx(("0x23"))
+
+    def test_from_knx_wrong_parameter3(self):
+        """Test parsing of DPTSceneNumber with value which exceeds limits."""
+        with self.assertRaises(ConversionError):
+            DPTScaling().from_knx((0x100,))

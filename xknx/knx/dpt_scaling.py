@@ -23,9 +23,6 @@ class DPTScaling(DPTBase):
 
         value = round((raw[0]/256)*100)
 
-        if not cls._test_boundaries(value):
-            raise ConversionError("Cant parse DPTScaling", value=value, raw=raw)
-
         return value
 
     @classmethod
