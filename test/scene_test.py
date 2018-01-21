@@ -2,11 +2,13 @@
 
 import asyncio
 import unittest
+from unittest.mock import Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Scene
 from xknx.knx import DPTArray, GroupAddress, Telegram
 
+MOCK_WARN = Mock()
 
 class TestScene(unittest.TestCase):
     """Test class for Scene objects."""
@@ -40,7 +42,7 @@ class TestScene(unittest.TestCase):
     # TEST RUN SCENE
     #
     def test_run(self):
-        """Test moving scene to 'up' position."""
+        """Test running scene."""
         xknx = XKNX(loop=self.loop)
         scene = Scene(
             xknx,
@@ -52,3 +54,44 @@ class TestScene(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/1'), payload=DPTArray(0x17)))
+
+    def test_do(self):
+        """Test running scene with do command."""
+        xknx = XKNX(loop=self.loop)
+        scene = Scene(
+            xknx,
+            'TestScene',
+            group_address='1/2/1',
+            scene_number=23)
+        self.loop.run_until_complete(asyncio.Task(scene.do("run")))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        telegram = xknx.telegrams.get_nowait()
+        self.assertEqual(telegram,
+                         Telegram(GroupAddress('1/2/1'), payload=DPTArray(0x17)))
+
+    @patch('logging.Logger.warning', MOCK_WARN)
+    def test_wrong_do(self):
+        """Test wrong do command."""
+        xknx = XKNX(loop=self.loop)
+        scene = Scene(
+            xknx,
+            'TestScene',
+            group_address='1/2/1',
+            scene_number=23)
+        self.loop.run_until_complete(asyncio.Task(scene.do("execute")))
+        self.assertEqual(xknx.telegrams.qsize(), 0)
+        MOCK_WARN.assert_called_with('Could not understand action %s for device %s', 'execute', 'TestScene')
+
+    #
+    # TEST has_group_address
+    #
+    def test_has_group_address(self):
+        """Test has_group_address."""
+        xknx = XKNX(loop=self.loop)
+        scene = Scene(
+            xknx,
+            'TestScene',
+            group_address='1/2/1',
+            scene_number=23)
+        self.assertTrue(scene.has_group_address(GroupAddress('1/2/1')))
+        self.assertFalse(scene.has_group_address(GroupAddress('2/2/2')))

@@ -43,7 +43,12 @@ class TestDPTSceneNumber(unittest.TestCase):
     def test_from_knx_wrong_parameter(self):
         """Test parsing of DPTSceneNumber with wrong value (3 byte array)."""
         with self.assertRaises(ConversionError):
-            DPTSceneNumber().from_knx((0xF8, 0x01, 0x23))
+            DPTSceneNumber().from_knx((0x01, 0x02, 0x03))
+
+    def test_from_knx_wrong_value(self):
+        """Test parsing of DPTSceneNumber with value which exceeds limits."""
+        with self.assertRaises(ConversionError):
+            DPTSceneNumber().from_knx((0x64,))
 
     def test_from_knx_wrong_parameter2(self):
         """Test parsing of DPTSceneNumber with wrong value (array containing string)."""
