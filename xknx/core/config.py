@@ -12,6 +12,7 @@ from xknx.devices import (BinarySensor, Climate, Cover, DateTime, Light,
 from xknx.knx import PhysicalAddress
 from xknx.exceptions import XKNXException
 
+
 class Config:
     """Class for parsing xknx.yaml."""
 
