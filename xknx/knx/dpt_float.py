@@ -49,7 +49,7 @@ class DPT2ByteFloat(DPTBase):
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
         if not isinstance(value, (int, float)):
-            raise ConversionError("Cant serialize DPT2ByteFloat", value=value)
+            raise ConversionError("Cant serialize DPT2ByteFloat", value=value, type=type(value))
         if not cls._test_boundaries(value):
             raise ConversionError("Cant serialize DPT2ByteFloat", value=value)
         sign = 1 if value < 0 else 0
