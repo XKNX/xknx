@@ -4,6 +4,7 @@ Device is the base class for all implemented devices (e.g. Lights/Switches/Senso
 It provides basis functionality for reading the state from the KNX bus.
 """
 from xknx.knx import Telegram, TelegramType
+from xknx.exceptions import XKNXException
 
 
 class Device:
@@ -62,12 +63,15 @@ class Device:
 
     async def process(self, telegram):
         """Process incoming telegram."""
-        if telegram.telegramtype == TelegramType.GROUP_WRITE:
-            await self.process_group_write(telegram)
-        elif telegram.telegramtype == TelegramType.GROUP_RESPONSE:
-            await self.process_group_response(telegram)
-        elif telegram.telegramtype == TelegramType.GROUP_READ:
-            await self.process_group_read(telegram)
+        try:
+            if telegram.telegramtype == TelegramType.GROUP_WRITE:
+                await self.process_group_write(telegram)
+            elif telegram.telegramtype == TelegramType.GROUP_RESPONSE:
+                await self.process_group_response(telegram)
+            elif telegram.telegramtype == TelegramType.GROUP_READ:
+                await self.process_group_read(telegram)
+        except XKNXException as ex:
+            self.xknx.logger.error("Error while processing telegram %s", ex)
 
     async def process_group_read(self, telegram):
         """Process incoming GROUP RESPONSE telegram."""
