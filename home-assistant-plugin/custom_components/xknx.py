@@ -6,16 +6,16 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/knx/
 
 """
-import logging
 import asyncio
+import logging
 
 import voluptuous as vol
 
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import discovery
-from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, \
-    CONF_HOST, CONF_PORT
+from homeassistant.helpers.event import (
+    async_track_state_change, async_track_utc_time_change)
 from homeassistant.helpers.script import Script
 
 DOMAIN = "xknx"
@@ -28,9 +28,10 @@ CONF_XKNX_LOCAL_IP = "local_ip"
 CONF_XKNX_FIRE_EVENT = "fire_event"
 CONF_XKNX_FIRE_EVENT_FILTER = "fire_event_filter"
 CONF_XKNX_STATE_UPDATER = "state_updater"
-CONF_XKNX_TIME_ADDRESS = "time_address"
-CONF_XKNX_OUTSIDE_TEMPERATURE_SENSOR = "outside_temperature_sensor"
-CONF_XKNX_OUTSIDE_TEMPERATURE_ADDRESS = "outside_temperature_address"
+CONF_XKNX_EXPOSE = "expose"
+CONF_XKNX_EXPOSE_TYPE = "type"
+CONF_XKNX_EXPOSE_ENTITY_ID = "entity_id"
+CONF_XKNX_EXPOSE_ADDRESS = "address"
 
 SERVICE_XKNX_SEND = "send"
 SERVICE_XKNX_ATTR_ADDRESS = "address"
@@ -40,7 +41,7 @@ ATTR_DISCOVER_DEVICES = 'devices'
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['xknx==0.7.18']
+# REQUIREMENTS = ['xknx==0.7.18']
 
 TUNNELING_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
@@ -50,6 +51,12 @@ TUNNELING_SCHEMA = vol.Schema({
 
 ROUTING_SCHEMA = vol.Schema({
     vol.Required(CONF_XKNX_LOCAL_IP): cv.string,
+})
+
+EXPOSE_SCHEMA = vol.Schema({
+    vol.Required(CONF_XKNX_EXPOSE_TYPE): cv.string,
+    vol.Optional(CONF_XKNX_EXPOSE_ENTITY_ID): cv.string,
+    vol.Required(CONF_XKNX_EXPOSE_ADDRESS): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -64,12 +71,11 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(
                 cv.ensure_list,
                 [cv.string]),
-        vol.Optional(CONF_XKNX_TIME_ADDRESS): cv.string,
         vol.Optional(CONF_XKNX_STATE_UPDATER, default=True): cv.boolean,
-        vol.Inclusive(CONF_XKNX_OUTSIDE_TEMPERATURE_SENSOR, 'outside_temp'):
-            cv.string,
-        vol.Inclusive(CONF_XKNX_OUTSIDE_TEMPERATURE_ADDRESS, 'outside_temp'):
-            cv.string,
+        vol.Optional(CONF_XKNX_EXPOSE):
+            vol.All(
+                cv.ensure_list,
+                [EXPOSE_SCHEMA]),
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -89,8 +95,11 @@ def async_setup(hass, config):
         yield from hass.data[DATA_XKNX].start()
 
     except XKNXException as ex:
-        _LOGGER.exception("Can't connect to KNX interface: %s", ex)
-        return False
+        _LOGGER.warning("Can't connect to KNX interface: %s", ex)
+        hass.components.persistent_notification.async_create(
+            "Can't connect to KNX interface: <br>"
+            "<b>{0}</b>".format(ex),
+            title="KNX")
 
     for component, discovery_type in (
             ('switch', 'Switch'),
@@ -106,26 +115,12 @@ def async_setup(hass, config):
                 ATTR_DISCOVER_DEVICES: found_devices
             }, config))
 
-    if CONF_XKNX_TIME_ADDRESS in config[DOMAIN]:
-        _add_time_device(hass, config)
-
     hass.services.async_register(
         DOMAIN, SERVICE_XKNX_SEND,
         hass.data[DATA_XKNX].service_send_to_knx_bus,
         schema=SERVICE_XKNX_SEND_SCHEMA)
 
     return True
-
-
-def _add_time_device(hass, config):
-    """Create time broadcasting device and add it to xknx device queue."""
-    import xknx
-    group_address_time = config[DOMAIN][CONF_XKNX_TIME_ADDRESS]
-    time = xknx.devices.Time(
-        hass.data[DATA_XKNX].xknx,
-        'Time',
-        group_address=group_address_time)
-    hass.data[DATA_XKNX].xknx.devices.add(time)
 
 
 def _get_devices(hass, discovery_type):
@@ -143,9 +138,11 @@ class KNXModule(object):
         """Initialization of KNXModule."""
         self.hass = hass
         self.config = config
-        self.initialized = False
+        self.connected = False
+        self.initialized = True
         self.init_xknx()
         self.register_callbacks()
+        self.exposures = self.create_exposures()
 
     def init_xknx(self):
         """Initialization of KNX object."""
@@ -162,7 +159,7 @@ class KNXModule(object):
             state_updater=self.config[DOMAIN][CONF_XKNX_STATE_UPDATER],
             connection_config=connection_config)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
-        self.initialized = True
+        self.connected = True
 
     @asyncio.coroutine
     def stop(self, event):
@@ -230,11 +227,23 @@ class KNXModule(object):
             self.xknx.telegram_queue.register_telegram_received_cb(
                 self.telegram_received_cb, address_filters)
 
-        if CONF_XKNX_OUTSIDE_TEMPERATURE_ADDRESS in self.config[DOMAIN]:
-            sensor_entity_id = \
-                self.config[DOMAIN][CONF_XKNX_OUTSIDE_TEMPERATURE_SENSOR]
-            async_track_state_change(self.hass, sensor_entity_id,
-                                     self.async_broadcast_temperature)
+    def create_exposures(self):
+        """Create exposures."""
+        exposures = []
+        if CONF_XKNX_EXPOSE in self.config[DOMAIN]:
+            for to_expose in self.config[DOMAIN][CONF_XKNX_EXPOSE]:
+                expose_type = to_expose.get(CONF_XKNX_EXPOSE_TYPE)
+                entity_id = to_expose.get(CONF_XKNX_EXPOSE_ENTITY_ID)
+                address = to_expose.get(CONF_XKNX_EXPOSE_ADDRESS)
+                if expose_type in ['time', 'date', 'datetime']:
+                    exposure = KNXExposeTime(
+                        self.hass, self.xknx, expose_type, address)
+                    exposures.append(exposure)
+                else:
+                    exposure = KNXExposeSensor(
+                        self.hass, self.xknx, expose_type, entity_id, address)
+                    exposures.append(exposure)
+        return exposures
 
     @asyncio.coroutine
     def telegram_received_cb(self, telegram):
@@ -266,20 +275,6 @@ class KNXModule(object):
         telegram.group_address = address
         yield from self.xknx.telegrams.put(telegram)
 
-    @asyncio.coroutine
-    def async_broadcast_temperature(self, entity_id, old_state, new_state):
-        """Broadcast new temperature of sensor to KNX bus."""
-        from xknx.knx import Telegram, GroupAddress, DPTArray, DPT2ByteFloat
-        if new_state is None:
-            return
-        address = GroupAddress(
-            self.config[DOMAIN][CONF_XKNX_OUTSIDE_TEMPERATURE_ADDRESS])
-        payload = DPTArray(DPT2ByteFloat().to_knx(float(new_state.state)))
-        telegram = Telegram()
-        telegram.group_address = address
-        telegram.payload = payload
-        yield from self.xknx.telegrams.put(telegram)
-
 
 class KNXAutomation():
     """Wrapper around xknx.devices.ActionCallback object.."""
@@ -298,3 +293,60 @@ class KNXAutomation():
             hook=hook,
             counter=counter)
         device.actions.append(self.action)
+
+
+class KNXExposeTime(object):
+    """Object to Expose Time/Date object to KNX bus."""
+    def __init__(self, hass, xknx, expose_type, address):
+        """Initialize of Expose class."""
+        self.hass = hass
+        self.xknx = xknx
+        self.type = expose_type
+        self.address = address
+        self.device = None
+        self.register()
+
+    def register(self):
+        from xknx.devices import DateTime
+        from xknx.devices.datetime import DateTimeBroadcastType
+        broadcast_type_string = self.type.upper()
+        broadcast_type = DateTimeBroadcastType[broadcast_type_string]
+        self.device = DateTime(
+            self.xknx,
+            'Time',
+            broadcast_type=broadcast_type,
+            group_address=self.address)
+        self.xknx.devices.add(self.device)
+        async_track_utc_time_change(
+            self.hass, self.device.broadcast_time, second=0)
+
+
+class KNXExposeSensor(object):
+    """Object to Expose HASS entity to KNX bus."""
+    def __init__(self, hass, xknx, expose_type, entity_id, address):
+        """Initialize of Expose class."""
+        self.hass = hass
+        self.xknx = xknx
+        self.type = expose_type
+        self.entity_id = entity_id
+        self.address = address
+        self.device = None
+        self.register()
+
+    def register(self):
+        from xknx.devices import ExposeSensor
+        self.device = ExposeSensor(
+            self.xknx,
+            name=self.entity_id,
+            group_address=self.address,
+            value_type=self.type)
+        self.xknx.devices.add(self.device)
+        async_track_state_change(
+            self.hass, self.entity_id, self._async_entity_changed)
+
+    @asyncio.coroutine
+    def _async_entity_changed(self, entity_id, old_state, new_state):
+        """Callback after entity changed."""
+        if new_state is None:
+            return
+        yield from self.device.set(float(new_state.state))
