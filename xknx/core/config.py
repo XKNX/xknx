@@ -7,10 +7,10 @@ Module for reading configfiles (xknx.yaml).
 
 import yaml
 
-from xknx.devices import (BinarySensor, Climate, Cover, DateTime, Light,
-                          Notification, ExposeSensor, Sensor, Switch)
-from xknx.knx import PhysicalAddress
+from xknx.devices import (BinarySensor, Climate, Cover, DateTime, ExposeSensor,
+                          Light, Notification, Scene, Sensor, Switch)
 from xknx.exceptions import XKNXException
+from xknx.knx import PhysicalAddress
 
 
 class Config:
@@ -64,6 +64,8 @@ class Config:
                 self.parse_group_binary_sensor(doc["groups"][group])
             elif group.startswith("notification"):
                 self.parse_group_notification(doc["groups"][group])
+            elif group.startswith("scene"):
+                self.parse_group_scene(doc["groups"][group])
         except XKNXException as ex:
             self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", group, ex)
 
@@ -147,3 +149,12 @@ class Config:
                 entry,
                 entries[entry])
             self.xknx.devices.add(notification)
+
+    def parse_group_scene(self, entries):
+        """Parse a scene section of xknx.yaml."""
+        for entry in entries:
+            scene = Scene.from_config(
+                self.xknx,
+                entry,
+                entries[entry])
+            self.xknx.devices.add(scene)

@@ -12,5 +12,6 @@ from .sensor import Sensor
 from .expose_sensor import ExposeSensor
 from .binary_sensor import BinarySensor, BinarySensorState
 from .notification import Notification
+from .scene import Scene
 from .remote_value import RemoteValue
 from .remote_value_sensor import RemoteValueSensor

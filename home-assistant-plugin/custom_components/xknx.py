@@ -108,6 +108,7 @@ def async_setup(hass, config):
             ('light', 'Light'),
             ('sensor', 'Sensor'),
             ('binary_sensor', 'BinarySensor'),
+            ('scene', 'Scene'),
             ('notify', 'Notification')):
         found_devices = _get_devices(hass, discovery_type)
         hass.async_add_job(
@@ -297,6 +298,7 @@ class KNXAutomation():
 
 class KNXExposeTime(object):
     """Object to Expose Time/Date object to KNX bus."""
+
     def __init__(self, hass, xknx, expose_type, address):
         """Initialize of Expose class."""
         self.hass = hass
@@ -307,6 +309,7 @@ class KNXExposeTime(object):
         self.register()
 
     def register(self):
+        """Register listener."""
         from xknx.devices import DateTime
         from xknx.devices.datetime import DateTimeBroadcastType
         broadcast_type_string = self.type.upper()
@@ -323,6 +326,7 @@ class KNXExposeTime(object):
 
 class KNXExposeSensor(object):
     """Object to Expose HASS entity to KNX bus."""
+
     def __init__(self, hass, xknx, expose_type, entity_id, address):
         """Initialize of Expose class."""
         self.hass = hass
@@ -334,6 +338,7 @@ class KNXExposeSensor(object):
         self.register()
 
     def register(self):
+        """Register listener."""
         from xknx.devices import ExposeSensor
         self.device = ExposeSensor(
             self.xknx,

@@ -8,8 +8,9 @@ or a group address for both.
 from enum import Enum
 
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
-from xknx.knx import (DPTArray, DPTBinary, DPTScaling, DPTTemperature,
-                      DPTValue1Count, GroupAddress, Telegram, TelegramType)
+from xknx.knx import (DPTArray, DPTBinary, DPTScaling, DPTSceneNumber,
+                      DPTTemperature, DPTValue1Count, GroupAddress, Telegram,
+                      TelegramType)
 
 
 class RemoteValue():
@@ -339,6 +340,39 @@ class RemoteValueScaling5001(RemoteValue):
         if not self.invert:
             value = 100 - value
         return value
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return "%"
+
+
+class RemoteValueSceneNumber17001(RemoteValue):
+    """Abstraction for remote value of KNX DPT 17.001 (DPT_Scene_Number)."""
+
+    def __init__(self,
+                 xknx,
+                 group_address=None,
+                 device_name=None,
+                 after_update_cb=None):
+        """Initialize remote value of KNX DPT 17.001 (DPT_Scene_Number)."""
+        # pylint: disable=too-many-arguments
+        super(RemoteValueSceneNumber17001, self).__init__(
+            xknx, group_address, None,
+            device_name=device_name, after_update_cb=after_update_cb)
+
+    def payload_valid(self, payload):
+        """Test if telegram payload may be parsed."""
+        return (isinstance(payload, DPTArray)
+                and len(payload.value) == 1)
+
+    def to_knx(self, value):
+        """Convert value to payload."""
+        return DPTArray(DPTSceneNumber.to_knx(value))
+
+    def from_knx(self, payload):
+        """Convert current payload to value."""
+        return DPTSceneNumber.from_knx(payload.value)
 
     @property
     def unit_of_measurement(self):

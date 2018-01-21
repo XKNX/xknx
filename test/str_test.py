@@ -4,8 +4,8 @@ import unittest
 
 from xknx import XKNX
 from xknx.devices import (Action, ActionBase, ActionCallback, BinarySensor,
-                          Climate, Cover, DateTime, Light, Notification,
-                          RemoteValue, ExposeSensor, Sensor, Switch)
+                          Climate, Cover, DateTime, ExposeSensor, Light,
+                          Notification, RemoteValue, Scene, Sensor, Switch)
 from xknx.exceptions import (ConversionError, CouldNotParseAddress,
                              CouldNotParseKNXIP, CouldNotParseTelegram,
                              DeviceIllegalValue)
@@ -138,6 +138,18 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(notification),
             '<Notification name="Alarm" group_address="GroupAddress("1/2/3")" message="Einbrecher im Haus" />')
+
+    def test_scene(self):
+        """Test string representation of scene object."""
+        xknx = XKNX(loop=self.loop)
+        scene = Scene(
+            xknx,
+            name='Romantic',
+            group_address='1/2/3',
+            scene_number=23)
+        self.assertEqual(
+            str(scene),
+            '<Scene name="Romantic" scene_value="GroupAddress("1/2/3")/None/None/None" scene_number="23" />')
 
     def test_sensor(self):
         """Test string representation of sensor object."""
