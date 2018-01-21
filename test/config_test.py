@@ -4,7 +4,8 @@ import unittest
 
 from xknx import XKNX
 from xknx.devices import (Action, BinarySensor, Climate, Cover, DateTime,
-                          Light, Notification, ExposeSensor, Sensor, Switch)
+                          ExposeSensor, Light, Notification, Scene, Sensor,
+                          Switch)
 from xknx.devices.datetime import DateTimeBroadcastType
 
 
@@ -291,3 +292,15 @@ class TestConfig(unittest.TestCase):
                          significant_bit=2,
                          device_class='motion',
                          device_updated_cb=xknx.devices.device_updated))
+
+    def test_config_scene(self):
+        """Test reading Scene from config file."""
+        xknx = XKNX(config='xknx.yaml', loop=self.loop)
+        self.assertEqual(
+            xknx.devices["Romantic"],
+            Scene(
+                xknx,
+                "Romantic",
+                group_address='7/0/1',
+                scene_number=23,
+                device_updated_cb=xknx.devices.device_updated))

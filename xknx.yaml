@@ -102,3 +102,7 @@ groups:
 
     expose_sensor:
         Outside.Temperature: {group_address: '2/0/3', value_type: 'temperature'}
+
+
+    scene:
+        Romantic: {group_address: '7/0/1', scene_number: 23}

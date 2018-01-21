@@ -1,0 +1,51 @@
+"""Unit test for KNX scaling value."""
+import unittest
+
+from xknx.exceptions import ConversionError
+from xknx.knx import DPTSceneNumber
+
+
+class TestDPTSceneNumber(unittest.TestCase):
+    """Test class for KNX scaling value."""
+
+    # pylint: disable=too-many-public-methods,invalid-name
+
+    def test_value_50(self):
+        """Test parsing and streaming of DPTSceneNumber 50."""
+        self.assertEqual(DPTSceneNumber().to_knx(50), (0x32,))
+        self.assertEqual(DPTSceneNumber().from_knx((0x32,)), 50)
+
+    def test_value_max(self):
+        """Test parsing and streaming of DPTSceneNumber 63."""
+        self.assertEqual(DPTSceneNumber().to_knx(63), (0x3F,))
+        self.assertEqual(DPTSceneNumber().from_knx((0x3F,)), 63)
+
+    def test_value_min(self):
+        """Test parsing and streaming of DPTSceneNumber 0."""
+        self.assertEqual(DPTSceneNumber().to_knx(0), (0x00,))
+        self.assertEqual(DPTSceneNumber().from_knx((0x00,)), 0)
+
+    def test_to_knx_min_exceeded(self):
+        """Test parsing of DPTSceneNumber with wrong value (underflow)."""
+        with self.assertRaises(ConversionError):
+            DPTSceneNumber().to_knx(DPTSceneNumber.value_min - 1)
+
+    def test_to_knx_max_exceeded(self):
+        """Test parsing of DPTSceneNumber with wrong value (overflow)."""
+        with self.assertRaises(ConversionError):
+            DPTSceneNumber().to_knx(DPTSceneNumber.value_max + 1)
+
+    def test_to_knx_wrong_parameter(self):
+        """Test parsing of DPTSceneNumber with wrong value (string)."""
+        with self.assertRaises(ConversionError):
+            DPTSceneNumber().to_knx("fnord")
+
+    def test_from_knx_wrong_parameter(self):
+        """Test parsing of DPTSceneNumber with wrong value (3 byte array)."""
+        with self.assertRaises(ConversionError):
+            DPTSceneNumber().from_knx((0xF8, 0x01, 0x23))
+
+    def test_from_knx_wrong_parameter2(self):
+        """Test parsing of DPTSceneNumber with wrong value (array containing string)."""
+        with self.assertRaises(ConversionError):
+            DPTSceneNumber().from_knx(("0x23"))
