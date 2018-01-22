@@ -1,7 +1,7 @@
 """Unit test for KNX DPT HVAC Operation modes."""
 import unittest
 
-from xknx.exceptions import ConversionError
+from xknx.exceptions import ConversionError, CouldNotParseKNXIP
 from xknx.knx import DPTControllerStatus, DPTHVACMode, HVACOperationMode
 
 
@@ -18,6 +18,11 @@ class TestDPTControllerStatus(unittest.TestCase):
         self.assertEqual(DPTHVACMode.to_knx(HVACOperationMode.NIGHT), (0x03,))
         self.assertEqual(DPTHVACMode.to_knx(HVACOperationMode.FROST_PROTECTION), (0x04,))
 
+    def test_mode_to_knx_wrong_value(self):
+        """Test serializing DPTHVACMode to KNX with wrong value."""
+        with self.assertRaises(ConversionError):
+            DPTHVACMode.to_knx(5)
+
     def test_mode_from_knx(self):
         """Test parsing DPTHVACMode from KNX."""
         self.assertEqual(DPTHVACMode.from_knx((0x00,)), HVACOperationMode.AUTO)
@@ -27,13 +32,18 @@ class TestDPTControllerStatus(unittest.TestCase):
         self.assertEqual(DPTHVACMode.from_knx((0x04,)), HVACOperationMode.FROST_PROTECTION)
 
     def test_controller_status_to_knx(self):
-        """Test parsing DPTControllerStatus to KNX."""
+        """Test serializing DPTControllerStatus to KNX."""
         with self.assertRaises(ConversionError):
             DPTControllerStatus.to_knx(HVACOperationMode.AUTO)
         self.assertEqual(DPTControllerStatus.to_knx(HVACOperationMode.COMFORT), (0x21,))
         self.assertEqual(DPTControllerStatus.to_knx(HVACOperationMode.STANDBY), (0x22,))
         self.assertEqual(DPTControllerStatus.to_knx(HVACOperationMode.NIGHT), (0x24,))
         self.assertEqual(DPTControllerStatus.to_knx(HVACOperationMode.FROST_PROTECTION), (0x28,))
+
+    def test_controller_status_to_knx_wrong_value(self):
+        """Test serializing DPTControllerStatus to KNX with wrong value."""
+        with self.assertRaises(ConversionError):
+            DPTControllerStatus.to_knx(5)
 
     def test_controller_status_from_knx(self):
         """Test parsing DPTControllerStatus from KNX."""
@@ -54,7 +64,17 @@ class TestDPTControllerStatus(unittest.TestCase):
         with self.assertRaises(ConversionError):
             DPTHVACMode.from_knx((1, 2))
 
+    def test_mode_from_knx_wrong_code(self):
+        """Test parsing of DPTHVACMode with wrong code."""
+        with self.assertRaises(CouldNotParseKNXIP):
+            DPTHVACMode.from_knx((0x05,))
+
     def test_controller_status_from_knx_wrong_value(self):
         """Test parsing of DPTControllerStatus with wrong value)."""
         with self.assertRaises(ConversionError):
             DPTControllerStatus.from_knx((1, 2))
+
+    def test_controller_status_from_knx_wrong_code(self):
+        """Test parsing of DPTControllerStatus with wrong code."""
+        with self.assertRaises(CouldNotParseKNXIP):
+            DPTControllerStatus.from_knx((0x00,))

@@ -10,6 +10,7 @@ You may register callbacks to be notified if a telegram was pushed to the queue.
 import asyncio
 
 from xknx.knx import TelegramDirection
+from xknx.exceptions import XKNXException
 
 
 class TelegramQueue():
@@ -94,10 +95,8 @@ class TelegramQueue():
                 await self.process_telegram_incoming(telegram)
             elif telegram.direction == TelegramDirection.OUTGOING:
                 await self.process_telegram_outgoing(telegram)
-
-        # pylint: disable=broad-except
-        except Exception as exception:
-            self.xknx.logger.exception("Exception while processing telegram: %s", exception)
+        except XKNXException as ex:
+            self.xknx.logger.error("Error while processing telegram %s", ex)
 
     async def process_telegram_outgoing(self, telegram):
         """Process outgoing telegram."""

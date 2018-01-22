@@ -1,11 +1,12 @@
 """Unit test for Light objects."""
 import asyncio
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Light
 from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram, TelegramType
+from xknx.exceptions import CouldNotParseTelegram
 
 
 class TestLight(unittest.TestCase):
@@ -133,6 +134,16 @@ class TestLight(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/5'), payload=DPTArray(23)))
 
+    def test_set_brightness_not_dimmable(self):
+        """Test setting the brightness of a non dimmable Light."""
+        # pylint: disable=invalid-name
+        xknx = XKNX(loop=self.loop)
+        light = Light(xknx,
+                      name="TestLight",
+                      group_address_switch='1/2/3')
+        self.loop.run_until_complete(asyncio.Task(light.set_brightness(23)))
+        self.assertEqual(xknx.telegrams.qsize(), 0)  # Nothing should happen
+
     #
     # TEST PROCESS
     #
@@ -188,6 +199,29 @@ class TestLight(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
         self.assertEqual(light.brightness, 23)
 
+    def test_process_dimm_wrong_payload(self):
+        """Test process wrong telegrams. (wrong payload type)."""
+        xknx = XKNX(loop=self.loop)
+        light = Light(xknx,
+                      name="TestLight",
+                      group_address_switch='1/2/3',
+                      group_address_brightness='1/2/5')
+        telegram = Telegram(GroupAddress('1/2/5'), payload=DPTBinary(1))
+        with self.assertRaises(CouldNotParseTelegram):
+            self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
+
+    def test_process_dimm_payload_invalid_length(self):
+        """Test process wrong telegrams. (wrong payload length)."""
+        # pylint: disable=invalid-name
+        xknx = XKNX(loop=self.loop)
+        light = Light(xknx,
+                      name="TestLight",
+                      group_address_switch='1/2/3',
+                      group_address_brightness='1/2/5')
+        telegram = Telegram(GroupAddress('1/2/5'), payload=DPTArray((23, 24)))
+        with self.assertRaises(CouldNotParseTelegram):
+            self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
+
     #
     # TEST DO
     #
@@ -204,3 +238,15 @@ class TestLight(unittest.TestCase):
         self.assertEqual(light.brightness, 80)
         self.loop.run_until_complete(asyncio.Task(light.do("off")))
         self.assertFalse(light.state)
+
+    def test_wrong_do(self):
+        """Test wrong do command."""
+        xknx = XKNX(loop=self.loop)
+        light = Light(xknx,
+                      name="TestLight",
+                      group_address_switch='1/2/3',
+                      group_address_brightness='1/2/5')
+        with patch('logging.Logger.warning') as mock_warn:
+            self.loop.run_until_complete(asyncio.Task(light.do("execute")))
+            self.assertEqual(xknx.telegrams.qsize(), 0)
+            mock_warn.assert_called_with('Could not understand action %s for device %s', 'execute', 'TestLight')

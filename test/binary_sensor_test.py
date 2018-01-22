@@ -5,7 +5,8 @@ from unittest.mock import Mock
 
 from xknx import XKNX
 from xknx.devices import Action, BinarySensor, BinarySensorState, Switch
-from xknx.knx import DPTBinary, Telegram
+from xknx.knx import DPTBinary, DPTArray, Telegram, GroupAddress
+from xknx.exceptions import CouldNotParseTelegram
 
 
 class TestBinarySensor(unittest.TestCase):
@@ -19,6 +20,12 @@ class TestBinarySensor(unittest.TestCase):
     def tearDown(self):
         """Tear down test class."""
         self.loop.close()
+
+    def test_initialization_wrong_significant_bit(self):
+        """Test initialization with wrong significant_bit parameter."""
+        xknx = XKNX(loop=self.loop)
+        with self.assertRaises(TypeError):
+            BinarySensor(xknx, 'TestInput', '1/2/3', significant_bit="1")
 
     #
     # TEST PROCESS
@@ -39,6 +46,14 @@ class TestBinarySensor(unittest.TestCase):
         telegram_off = Telegram()
         telegram_off.payload = DPTBinary(0)
         self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_off)))
+        self.assertEqual(binaryinput.state, BinarySensorState.OFF)
+
+    def test_process_reset_after(self):
+        """Test process / reading telegrams from telegram queue."""
+        xknx = XKNX(loop=self.loop)
+        binaryinput = BinarySensor(xknx, 'TestInput', '1/2/3', reset_after=0.01)
+        telegram_on = Telegram(payload=DPTBinary(1))
+        self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_on)))
         self.assertEqual(binaryinput.state, BinarySensorState.OFF)
 
     def test_process_significant_bit(self):
@@ -116,6 +131,14 @@ class TestBinarySensor(unittest.TestCase):
             xknx.devices['TestOutlet'].state,
             False)
 
+    def test_process_wrong_payload(self):
+        """Test process wrong telegram (wrong payload type)."""
+        xknx = XKNX(loop=self.loop)
+        binary_sensor = BinarySensor(xknx, 'Warning', group_address='1/2/3')
+        telegram = Telegram(GroupAddress('1/2/3'), payload=DPTArray((0x1, 0x2, 0x3)))
+        with self.assertRaises(CouldNotParseTelegram):
+            self.loop.run_until_complete(asyncio.Task(binary_sensor.process(telegram)))
+
     #
     # TEST SWITCHED ON
     #
@@ -160,3 +183,12 @@ class TestBinarySensor(unittest.TestCase):
         telegram.payload = DPTBinary(1)
         self.loop.run_until_complete(asyncio.Task(switch.process(telegram)))
         after_update_callback.assert_called_with(switch)
+
+    #
+    # STATE ADDRESSES
+    #
+    def test_state_addresses(self):
+        """Test expose sensor returns empty list as state addresses."""
+        xknx = XKNX(loop=self.loop)
+        switch = BinarySensor(xknx, 'TestInput', group_address='1/2/3')
+        self.assertEqual(switch.state_addresses(), [GroupAddress('1/2/3')])

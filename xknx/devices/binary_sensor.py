@@ -13,7 +13,7 @@ import time
 from enum import Enum
 
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.knx import GroupAddress
+from xknx.knx import GroupAddress, DPTBinary
 
 from .action import Action
 from .device import Device
@@ -135,18 +135,17 @@ class BinarySensor(Device):
 
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
-        bit_masq = 1 << (self.significant_bit-1)
-        binary_value = telegram.payload.value & bit_masq != 0
+        if not isinstance(telegram.payload, DPTBinary):
+            raise CouldNotParseTelegram("invalid payload", payload=telegram.payload, device_name=self.name)
 
-        if binary_value == 0:
+        bit_masq = 1 << (self.significant_bit-1)
+        if telegram.payload.value & bit_masq == 0:
             await self._set_internal_state(BinarySensorState.OFF)
-        elif binary_value == 1:
+        else:
             await self._set_internal_state(BinarySensorState.ON)
             if self.reset_after is not None:
                 await asyncio.sleep(self.reset_after/1000)
                 await self._set_internal_state(BinarySensorState.OFF)
-        else:
-            raise CouldNotParseTelegram("Illegal payload", payload=telegram.payload, device_name=self.name)
 
     def is_on(self):
         """Return if binary sensor is 'on'."""

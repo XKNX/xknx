@@ -34,6 +34,12 @@ class Device:
 
     async def sync(self, wait_for_result=True):
         """Read state of device from KNX bus."""
+        try:
+            await self._sync_impl(wait_for_result)
+        except XKNXException as ex:
+            self.xknx.logger.error("Error while syncing device: %s", ex)
+
+    async def _sync_impl(self, wait_for_result=True):
         self.xknx.logger.debug("Sync %s", self.name)
         for group_address in self.state_addresses():
             from xknx.core import ValueReader
@@ -63,15 +69,12 @@ class Device:
 
     async def process(self, telegram):
         """Process incoming telegram."""
-        try:
-            if telegram.telegramtype == TelegramType.GROUP_WRITE:
-                await self.process_group_write(telegram)
-            elif telegram.telegramtype == TelegramType.GROUP_RESPONSE:
-                await self.process_group_response(telegram)
-            elif telegram.telegramtype == TelegramType.GROUP_READ:
-                await self.process_group_read(telegram)
-        except XKNXException as ex:
-            self.xknx.logger.error("Error while processing telegram %s", ex)
+        if telegram.telegramtype == TelegramType.GROUP_WRITE:
+            await self.process_group_write(telegram)
+        elif telegram.telegramtype == TelegramType.GROUP_RESPONSE:
+            await self.process_group_response(telegram)
+        elif telegram.telegramtype == TelegramType.GROUP_READ:
+            await self.process_group_read(telegram)
 
     async def process_group_read(self, telegram):
         """Process incoming GROUP RESPONSE telegram."""

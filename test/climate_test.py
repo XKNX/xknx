@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 from xknx import XKNX
 from xknx.devices import Climate
-from xknx.exceptions import DeviceIllegalValue
+from xknx.exceptions import DeviceIllegalValue, CouldNotParseTelegram
 from xknx.knx import (DPT2ByteFloat, DPTArray, DPTBinary, DPTControllerStatus,
                       DPTHVACMode, DPTTemperature, DPTValue1Count,
                       GroupAddress, HVACOperationMode, Telegram, TelegramType)
@@ -560,6 +560,54 @@ class TestClimate(unittest.TestCase):
             telegram.payload = DPTArray(DPTControllerStatus.to_knx(operation_mode))
             self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
             self.assertEqual(climate.operation_mode, operation_mode)
+
+    def test_process_controller_status_wrong_payload(self):
+        """Test process wrong telegram for controller status (wrong payload type)."""
+        xknx = XKNX(loop=self.loop)
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            group_address_operation_mode='1/2/5',
+            group_address_controller_status='1/2/3')
+        telegram = Telegram(GroupAddress('1/2/3'), payload=DPTBinary(1))
+        with self.assertRaises(CouldNotParseTelegram):
+            self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
+
+    def test_process_controller_status_payload_invalid_length(self):
+        """Test process wrong telegram for controller status (wrong payload length)."""
+        xknx = XKNX(loop=self.loop)
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            group_address_operation_mode='1/2/5',
+            group_address_controller_status='1/2/3')
+        telegram = Telegram(GroupAddress('1/2/3'), payload=DPTArray((23, 24)))
+        with self.assertRaises(CouldNotParseTelegram):
+            self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
+
+    def test_process_operation_mode_wrong_payload(self):
+        """Test process wrong telegram for operation mode (wrong payload type)."""
+        xknx = XKNX(loop=self.loop)
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            group_address_operation_mode='1/2/5',
+            group_address_controller_status='1/2/3')
+        telegram = Telegram(GroupAddress('1/2/5'), payload=DPTBinary(1))
+        with self.assertRaises(CouldNotParseTelegram):
+            self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
+
+    def test_process_operation_mode_payload_invalid_length(self):
+        """Test process wrong telegram for operation mode (wrong payload length)."""
+        xknx = XKNX(loop=self.loop)
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            group_address_operation_mode='1/2/5',
+            group_address_controller_status='1/2/3')
+        telegram = Telegram(GroupAddress('1/2/5'), payload=DPTArray((23, 24)))
+        with self.assertRaises(CouldNotParseTelegram):
+            self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
 
     def test_process_callback_temp(self):
         """Test process / reading telegrams from telegram queue. Test if callback is executed when receiving temperature."""

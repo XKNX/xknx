@@ -1,5 +1,7 @@
 """Unit test for KNX 2 byte objects."""
 import unittest
+from unittest.mock import patch
+import struct
 
 from xknx.exceptions import ConversionError
 from xknx.knx import DPT4ByteSigned, DPT4ByteUnsigned
@@ -85,3 +87,17 @@ class TestDPT4Byte(unittest.TestCase):
         """Test DPT4ByteSigned parsing with wrong value."""
         with self.assertRaises(ConversionError):
             DPT4ByteSigned().from_knx((0xFF, 0x4E, 0x12))
+
+    def test_from_knx_unpack_error(self):
+        """Test DPT4ByteSigned parsing with unpack error."""
+        with patch('struct.unpack') as unpackMock:
+            unpackMock.side_effect = struct.error()
+            with self.assertRaises(ConversionError):
+                DPT4ByteSigned().from_knx((0x01, 0x23, 0x45, 0x67))
+
+    def test_to_knx_pack_error(self):
+        """Test serializing DPT4ByteSigned with pack error."""
+        with patch('struct.pack') as packMock:
+            packMock.side_effect = struct.error()
+            with self.assertRaises(ConversionError):
+                DPT4ByteSigned().to_knx(19088743)

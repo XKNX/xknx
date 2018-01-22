@@ -110,7 +110,19 @@ class TestStringRepresentations(unittest.TestCase):
             '" travel_time_up="10" />')
 
     def test_light(self):
-        """Test string representation of light object."""
+        """Test string representation of non dimmable light object."""
+        xknx = XKNX(loop=self.loop)
+        light = Light(
+            xknx,
+            name='Licht',
+            group_address_switch='1/2/3',
+            group_address_switch_state='1/2/4')
+        self.assertEqual(
+            str(light),
+            '<Light name="Licht" switch="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" />')
+
+    def test_light_dimmable(self):
+        """Test string representation of dimmable light object."""
         xknx = XKNX(loop=self.loop)
         light = Light(
             xknx,
