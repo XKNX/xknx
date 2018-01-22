@@ -1,7 +1,8 @@
+#!/usr/bin/env python
 """
 Example of a daemon listening for values from my main power-meter and resend them on a MQTT bus.
 
-This example will not be able to run as it is - but it will homefully give you some
+This example will not be able to run as it is - but it will hopefully give you some
 ideas to how you can define DPT, and get their converted values, and even send them to MQTT
 in a tested topic-format.
 
@@ -11,10 +12,15 @@ I use some external MQTT libraries as well to handle the MQTT Topic-creation.
 The data published on the MQTT bus can be fetched and stored in InfluxDB for graphing,
 or monitored by other listeners - that triggers different events.
 
-Please join XKNX on Discord (https://discord.gg/5XARFNT) and chat with JohanElmis for specific questions.
+Please join XKNX on Discord (https://discord.gg/5XARFNT) and chat with JohanElmis for
+specific questions.
 """
 
 from __future__ import print_function
+
+# Disabling some Pylint checks as it assumes that the global variables are all constants.
+# pylint: disable=invalid-name
+# pylint: disable=global-statement
 
 try:
     import asyncio
@@ -35,7 +41,7 @@ except ImportError as import_err:
     print('Please install the ' + err_list[3] + ' module for Python.')
     sys.exit()
 
-broker_address = '127.0.0.1'
+BROKER_ADDRESS = '127.0.0.1'
 # Give this client a name on the MQTT bus.
 mqttc = mqtt.Client('main_power_central')
 
@@ -49,13 +55,13 @@ mh_sensor = SensorClientMqtt(change_trigger_percent=5,
                              debug=True)
 
 # Pre-compile some regexp filters that will be used to catch the different types.
-re_meter_reading = re.compile('MeterReading_')
-re_active_power = re.compile('ActivePower')
-re_reactive_power = re.compile('ReactivePower')
-re_apparent_power = re.compile('ApparentPower')
-re_voltage = re.compile('Voltage_')
-re_current = re.compile('Current_')
-re_frequency = re.compile('Frequency_')
+RE_METER_READING = re.compile('MeterReading_')
+RE_ACTIVE_POWER = re.compile('ActivePower')
+RE_REACTIVE_POWER = re.compile('ReactivePower')
+RE_APPARENT_POWER = re.compile('ApparentPower')
+RE_VOLTAGE = re.compile('Voltage_')
+RE_CURRENT = re.compile('Current_')
+RE_FREQUENCY = re.compile('Frequency_')
 
 
 @asyncio.coroutine
@@ -69,19 +75,19 @@ def device_updated_cb(device):
     if re.search('^EL-T-O_', device.name):
         metric = str(device.name)[7:]
         value = device.resolve_state()
-        if re_active_power.search(metric):
+        if RE_ACTIVE_POWER.search(metric):
             topic = mh_sensor.get_mqtt_sensor_metric(MetricType.WATT, 'main_power_central', metric)
-        elif re_reactive_power.search(metric):
+        elif RE_REACTIVE_POWER.search(metric):
             topic = mh_sensor.get_mqtt_sensor_metric(MetricType.VAR, 'main_power_central', metric)
-        elif re_apparent_power.search(metric):
+        elif RE_APPARENT_POWER.search(metric):
             topic = mh_sensor.get_mqtt_sensor_metric(MetricType.VA, 'main_power_central', metric)
-        elif re_voltage.search(metric):
+        elif RE_VOLTAGE.search(metric):
             topic = mh_sensor.get_mqtt_sensor_metric(MetricType.VOLTAGE, 'main_power_central', metric)
-        elif re_current.search(metric):
+        elif RE_CURRENT.search(metric):
             topic = mh_sensor.get_mqtt_sensor_metric(MetricType.CURRENT, 'main_power_central', metric)
-        elif re_meter_reading.search(metric):
+        elif RE_METER_READING.search(metric):
             topic = mh_sensor.get_mqtt_sensor_metric(MetricType.KWH, 'main_power_central', metric)
-        elif re_frequency:
+        elif RE_FREQUENCY:
             topic = mh_sensor.get_mqtt_sensor_metric(MetricType.CUSTOM, 'main_power_central', metric)
     else:
         print("Uncatched metric: " + device.name + ' ' + str(device.resolve_state()) +
@@ -89,22 +95,21 @@ def device_updated_cb(device):
 
     if topic and value:
         # This will create a topic like:
-        """
-        myhouse/sensor/KWH/main_power_central/MeterReading_ActiveEnergy 103150280
-        myhouse/sensor/WATT/main_power_central/ActivePower_L2 1028.1099853515625
-        myhouse/sensor/VAR/main_power_central/ReactivePower_L3 136.3699951171875
-        myhouse/sensor/VA/main_power_central/ApparentPower_L3 1449.919921875
-        myhouse/sensor/CURRENT/main_power_central/Current_L3 6.239999294281006
+        # myhouse/sensor/KWH/main_power_central/MeterReading_ActiveEnergy 103150280
+        # myhouse/sensor/WATT/main_power_central/ActivePower_L2 1028.1099853515625
+        # myhouse/sensor/VAR/main_power_central/ReactivePower_L3 136.3699951171875
+        # myhouse/sensor/VA/main_power_central/ApparentPower_L3 1449.919921875
+        # myhouse/sensor/CURRENT/main_power_central/Current_L3 6.239999294281006
 
-        When storing it to InfluxDB I have a DB named 'myhouse' where all these values will be stored.
-        Then I use the next two fields as metric name (lowercase):  sensor/current
-        break out main_power_central as a tag 'location', and the last field is tagged as the
-        'sensor': ApparentPower_L3
+        # When storing it to InfluxDB I have a DB named 'myhouse' where all these values will be stored.
+        # Then I use the next two fields as metric name (lowercase):  sensor/current
+        # break out main_power_central as a tag 'location', and the last field is tagged as the
+        # 'sensor': ApparentPower_L3
 
-        This makes it really easy to graph in for example Grafana.
-        My latest version of the library doesn't send the value after the MQTT Topic, but a JSON structure
-        that also contains time.
-        """
+        # This makes it really easy to graph in for example Grafana.
+        # My latest version of the library doesn't send the value after the MQTT Topic, but a JSON structure
+        # that also contains time.
+
         print(topic + ' ' + str(value))
         # ts = int(time.time() * 1000)
         mqttc.publish(topic, value)
@@ -119,7 +124,7 @@ async def main():
     """
     global mqttc
 
-    """Connect to KNX/IP device and listen if a switch was updated via KNX bus."""
+    # Connect to KNX/IP device and listen if a switch was updated via KNX bus.
     xknx = XKNX(device_updated_cb=device_updated_cb)
 
     # The KNX addresses to monitor are defined below, but is normally placed in an external
@@ -177,7 +182,7 @@ async def main():
         xknx, 'EL-T-O_Frequency', group_address='5/6/53', value_type="frequency")
     xknx.devices.add(el_frequency)
 
-    mqttc.connect(broker_address, 8883, 60)
+    mqttc.connect(BROKER_ADDRESS, 8883, 60)
     mqttc.loop_start()
 
     # Wait until Ctrl-C was pressed
