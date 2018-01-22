@@ -2,7 +2,7 @@
 
 from enum import Enum
 
-from xknx.exceptions import CouldNotParseKNXIP
+from xknx.exceptions import CouldNotParseKNXIP, ConversionError
 
 from .dpt import DPTBase
 
@@ -53,7 +53,7 @@ class DPTHVACMode(DPTBase):
             return (3,)
         elif value == HVACOperationMode.FROST_PROTECTION:
             return (4,)
-        raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
+        raise ConversionError("Could not parse HVACOperationMode", value=value)
 
 
 class DPTControllerStatus(DPTBase):
@@ -85,7 +85,6 @@ class DPTControllerStatus(DPTBase):
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
         if value == HVACOperationMode.AUTO:
-            from xknx.exceptions import ConversionError
             raise ConversionError("Cant serialize DPTControllerStatus", value=value)
         elif value == HVACOperationMode.COMFORT:
             return (0x21,)
@@ -95,4 +94,4 @@ class DPTControllerStatus(DPTBase):
             return (0x24,)
         elif value == HVACOperationMode.FROST_PROTECTION:
             return (0x28,)
-        raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
+        raise ConversionError("Could not parse HVACOperationMode", value=value)

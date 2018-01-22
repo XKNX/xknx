@@ -1,7 +1,7 @@
 """Unit test for Switch objects."""
 import asyncio
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Switch
@@ -131,3 +131,22 @@ class TestSwitch(unittest.TestCase):
         self.assertTrue(switch.state)
         self.loop.run_until_complete(asyncio.Task(switch.do("off")))
         self.assertFalse(switch.state)
+
+    def test_wrong_do(self):
+        """Test wrong do command."""
+        xknx = XKNX(loop=self.loop)
+        switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
+        with patch('logging.Logger.warning') as mock_warn:
+            self.loop.run_until_complete(asyncio.Task(switch.do("execute")))
+            mock_warn.assert_called_with('Could not understand action %s for device %s', 'execute', 'TestOutlet')
+        self.assertEqual(xknx.telegrams.qsize(), 0)
+
+    #
+    # TEST has_group_address
+    #
+    def test_has_group_address(self):
+        """Test has_group_address."""
+        xknx = XKNX(loop=self.loop)
+        switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
+        self.assertTrue(switch.has_group_address(GroupAddress('1/2/3')))
+        self.assertFalse(switch.has_group_address(GroupAddress('2/2/2')))

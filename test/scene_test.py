@@ -2,13 +2,11 @@
 
 import asyncio
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from xknx import XKNX
 from xknx.devices import Scene
 from xknx.knx import DPTArray, GroupAddress, Telegram
-
-MOCK_WARN = Mock()
 
 
 class TestScene(unittest.TestCase):
@@ -70,7 +68,6 @@ class TestScene(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/1'), payload=DPTArray(0x17)))
 
-    @patch('logging.Logger.warning', MOCK_WARN)
     def test_wrong_do(self):
         """Test wrong do command."""
         xknx = XKNX(loop=self.loop)
@@ -79,9 +76,10 @@ class TestScene(unittest.TestCase):
             'TestScene',
             group_address='1/2/1',
             scene_number=23)
-        self.loop.run_until_complete(asyncio.Task(scene.do("execute")))
+        with patch('logging.Logger.warning') as mockWarn:
+            self.loop.run_until_complete(asyncio.Task(scene.do("execute")))
+            mockWarn.assert_called_with('Could not understand action %s for device %s', 'execute', 'TestScene')
         self.assertEqual(xknx.telegrams.qsize(), 0)
-        MOCK_WARN.assert_called_with('Could not understand action %s for device %s', 'execute', 'TestScene')
 
     #
     # TEST has_group_address

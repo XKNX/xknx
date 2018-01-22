@@ -1,5 +1,7 @@
 """Unit test for KNX 2 and 4 byte float objects."""
 import unittest
+from unittest.mock import patch
+import struct
 
 from xknx.exceptions import ConversionError
 from xknx.knx import (DPT2ByteFloat, DPT4ByteFloat, DPTElectricCurrent,
@@ -205,6 +207,13 @@ class TestDPTFloat(unittest.TestCase):
         """Test parsing of DPT2ByteFloat with wrong value (second parameter is a string)."""
         with self.assertRaises(ConversionError):
             DPT4ByteFloat().from_knx((0xF8, "0x23", 0x00, 0x00))
+
+    def test_4byte_flaot_from_knx_unpack_error(self):
+        """Test DPT2ByteFloat parsing with unpack error."""
+        with patch('struct.unpack') as unpackMock:
+            unpackMock.side_effect = struct.error()
+            with self.assertRaises(ConversionError):
+                DPT4ByteFloat().from_knx((0x01, 0x23, 0x02, 0x02))
 
     #
     # DPTElectricCurrent

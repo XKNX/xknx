@@ -61,7 +61,7 @@ class Notification(Device):
     async def do(self, action):
         """Execute 'do' commands."""
         if action.startswith("message:"):
-            await self.set(int(action[8:]))
+            await self.set(action[8:])
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
@@ -76,9 +76,16 @@ class Notification(Device):
 
     async def _process_message(self, telegram):
         """Process incoming telegram for on/off state."""
-        if not isinstance(telegram.payload, DPTString):
-            raise CouldNotParseTelegram("payload not of type DPTString", payload=telegram.payload, device_name=self.name)
-        await self._set_internal_message(telegram.payload.value)
+        if not isinstance(telegram.payload, DPTArray):
+            raise CouldNotParseTelegram(
+                "payload not of type DPTArray",
+                payload=telegram.payload,
+                device_name=self.name)
+        if len(telegram.payload.value) != 14:
+            raise CouldNotParseTelegram(
+                "payload has invalid length!=14",
+                length=len(telegram.payload.value), device_name=self.name)
+        await self._set_internal_message(DPTString().from_knx(telegram.payload.value))
 
     def __eq__(self, other):
         """Equal operator."""
