@@ -73,6 +73,7 @@ class TestNotification(unittest.TestCase):
 
     def test_process_payload_invalid_length(self):
         """Test process wrong telegram (wrong payload length)."""
+        # pylint: disable=invalid-name
         xknx = XKNX(loop=self.loop)
         notification = Notification(xknx, 'Warning', group_address='1/2/3')
         telegram = Telegram(GroupAddress('1/2/3'), payload=DPTArray((23, 24)))

@@ -23,6 +23,7 @@ class TestBinarySensor(unittest.TestCase):
 
     def test_initialization_wrong_significant_bit(self):
         """Test initialization with wrong significant_bit parameter."""
+        # pylint: disable=invalid-name
         xknx = XKNX(loop=self.loop)
         with self.assertRaises(TypeError):
             BinarySensor(xknx, 'TestInput', '1/2/3', significant_bit="1")
