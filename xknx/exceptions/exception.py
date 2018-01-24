@@ -4,7 +4,9 @@
 class XKNXException(Exception):
     """Default XKNX Exception."""
 
-    pass
+    def __eq__(self, other):
+        """Equal operator."""
+        return self.__dict__ == other.__dict__
 
 
 class CouldNotParseTelegram(XKNXException):

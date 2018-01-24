@@ -2,7 +2,7 @@
 import unittest
 
 from xknx.knx import AddressFilter
-
+from xknx.exceptions import ConversionError
 
 class TestAddressFilter(unittest.TestCase):
     """Test class for Address."""
@@ -137,3 +137,7 @@ class TestAddressFilter(unittest.TestCase):
         self.assertFalse(af1.match("1/7/10"))
         self.assertFalse(af1.match("2/4/10"))
         self.assertFalse(af1.match("2/1/10"))
+
+    def test_initialize_wrong_format(self):
+        with self.assertRaises(ConversionError):
+            AddressFilter("2-/2,3/4/5/1,5-/*")

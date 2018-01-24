@@ -47,7 +47,7 @@ class Device:
             if wait_for_result:
                 telegram = await value_reader.read()
                 if telegram is not None:
-                    await self.process(value_reader.received_telegram)
+                    await self.process(telegram)
                 else:
                     self.xknx.logger.warning("Could not read value of %s %s", self, group_address)
             else:
@@ -98,4 +98,4 @@ class Device:
     async def do(self, action):
         """Execute 'do' commands."""
         # pylint: disable=invalid-name
-        pass
+        self.xknx.logger.info("Do not implemented action '%s' for %s", action, self.__class__.__name__)

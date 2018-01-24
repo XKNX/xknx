@@ -98,7 +98,6 @@ class TestNotification(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(notification.set("Ein Prosit!")))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
-        print(telegram)
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'),
                                   payload=DPTArray(DPTString().to_knx("Ein Prosit!"))))
