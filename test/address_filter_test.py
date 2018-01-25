@@ -1,7 +1,7 @@
 """Unit test for Address class."""
 import unittest
 
-from xknx.knx import AddressFilter
+from xknx.knx import AddressFilter, GroupAddress
 from xknx.exceptions import ConversionError
 
 
@@ -143,3 +143,8 @@ class TestAddressFilter(unittest.TestCase):
         """Test if wrong address format raises exception."""
         with self.assertRaises(ConversionError):
             AddressFilter("2-/2,3/4/5/1,5-/*")
+
+    def test_adjust_range(self):
+        """Test helper function _adjust_range."""
+        self.assertEqual(AddressFilter.Range._adjust_range(GroupAddress.MAX_FREE+1), GroupAddress.MAX_FREE)
+        self.assertEqual(AddressFilter.Range._adjust_range(-1), 0)
