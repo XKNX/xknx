@@ -146,5 +146,6 @@ class TestAddressFilter(unittest.TestCase):
 
     def test_adjust_range(self):
         """Test helper function _adjust_range."""
+        # pylint: disable=protected-access
         self.assertEqual(AddressFilter.Range._adjust_range(GroupAddress.MAX_FREE+1), GroupAddress.MAX_FREE)
         self.assertEqual(AddressFilter.Range._adjust_range(-1), 0)
