@@ -14,6 +14,7 @@ class KNXIPBody():
 
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
+        # pylint: disable=unused-argument
         self.xknx.logger.warning("from_knx not implemented for %s", self.__class__.__name__)
 
     def to_knx(self):
