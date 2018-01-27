@@ -1,7 +1,7 @@
 """Unit test for KNX/IP HPAI objects."""
 import unittest
 
-from xknx.exceptions import CouldNotParseKNXIP
+from xknx.exceptions import CouldNotParseKNXIP, ConversionError
 from xknx.knxip import HPAI
 
 
@@ -22,9 +22,26 @@ class Test_KNXIP_HPAI(unittest.TestCase):
         hpai2 = HPAI(ip_addr='192.168.42.1', port=33941)
         self.assertEqual(hpai2.to_knx(), list(raw))
 
-    def test_hpai_wrong_input(self):
-        """Test parsing of wrong HPAI KNX/IP packet."""
+    def test_from_knx_wrong_input1(self):
+        """Test parsing of wrong HPAI KNX/IP packet (wrong length)."""
         raw = ((0x08, 0x01, 0xc0, 0xa8, 0x2a))
-
         with self.assertRaises(CouldNotParseKNXIP):
             HPAI().from_knx(raw)
+
+    def test_from_knx_wrong_input2(self):
+        """Test parsing of wrong HPAI KNX/IP packet (wrong length byte)."""
+        raw = ((0x09, 0x01, 0xc0, 0xa8, 0x2a, 0x01, 0x84, 0x95))
+        with self.assertRaises(CouldNotParseKNXIP):
+            HPAI().from_knx(raw)
+
+    def test_from_knx_wrong_input3(self):
+        """Test parsing of wrong HPAI KNX/IP packet (wrong HPAI type)."""
+        raw = ((0x08, 0x02, 0xc0, 0xa8, 0x2a, 0x01, 0x84, 0x95))
+        with self.assertRaises(CouldNotParseKNXIP):
+            HPAI().from_knx(raw)
+
+    def test_to_knx_wrong_ip(self):
+        """Test serializing HPAI to KNV/IP with wrong ip type."""
+        hpai = HPAI(ip_addr=127001)
+        with self.assertRaises(ConversionError):
+            hpai.to_knx()
