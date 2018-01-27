@@ -183,6 +183,7 @@ class Cover(Device):
     async def set_angle(self, angle):
         """Move cover to designated angle."""
         if not self.supports_angle:
+            self.xknx.logger.warning('Angle not supported for device %s', self.get_name())
             return
         await self.angle.set(angle)
         await self.after_update()
@@ -190,7 +191,7 @@ class Cover(Device):
     async def auto_stop_if_necessary(self):
         """Do auto stop if necessary."""
         # If device does not support auto_positioning,
-        # we have to ttop the device when position is reached.
+        # we have to stop the device when position is reached.
         # unless device was traveling to fully open
         # or fully closed state
         if (

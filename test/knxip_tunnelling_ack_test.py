@@ -4,6 +4,7 @@ import unittest
 
 from xknx import XKNX
 from xknx.knxip import ErrorCode, KNXIPFrame, KNXIPServiceType, TunnellingAck
+from xknx.exceptions import CouldNotParseKNXIP
 
 
 class Test_KNXIP_TunnelingReq(unittest.TestCase):
@@ -42,3 +43,21 @@ class Test_KNXIP_TunnelingReq(unittest.TestCase):
         knxipframe2.normalize()
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
+
+    def test_from_knx_wrong_ack_information(self):
+        """Test parsing and streaming wrong TunnellingAck (wrong length byte)."""
+        raw = ((0x06, 0x10, 0x04, 0x21, 0x00, 0x0a, 0x03, 0x2a,
+                0x17, 0x00))
+        xknx = XKNX(loop=self.loop)
+        knxipframe = KNXIPFrame(xknx)
+        with self.assertRaises(CouldNotParseKNXIP):
+            knxipframe.from_knx(raw)
+
+    def test_from_knx_wrong_ack_information2(self):
+        """Test parsing and streaming wrong TunnellingAck (wrong length)."""
+        raw = ((0x06, 0x10, 0x04, 0x21, 0x00, 0x0a, 0x04, 0x2a,
+                0x17))
+        xknx = XKNX(loop=self.loop)
+        knxipframe = KNXIPFrame(xknx)
+        with self.assertRaises(CouldNotParseKNXIP):
+            knxipframe.from_knx(raw)

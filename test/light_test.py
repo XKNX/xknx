@@ -141,8 +141,10 @@ class TestLight(unittest.TestCase):
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3')
-        self.loop.run_until_complete(asyncio.Task(light.set_brightness(23)))
-        self.assertEqual(xknx.telegrams.qsize(), 0)  # Nothing should happen
+        with patch('logging.Logger.warning') as mock_warn:
+            self.loop.run_until_complete(asyncio.Task(light.set_brightness(23)))
+            self.assertEqual(xknx.telegrams.qsize(), 0)
+            mock_warn.assert_called_with('Dimming not supported for device %s', 'TestLight')
 
     #
     # TEST PROCESS

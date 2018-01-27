@@ -57,17 +57,20 @@ class RemoteValue():
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed - to be implemented in derived class.."""
-        # pylint: disable=unused-argument, no-self-use
+        # pylint: disable=unused-argument
+        self.xknx.logger.warning("payload_valid not implemented for %s", self.__class__.__name__)
         return True
 
     def from_knx(self, payload):
         """Convert current payload to value - to be implemented in derived class."""
-        # pylint: disable=unused-argument, no-self-use
+        # pylint: disable=unused-argument
+        self.xknx.logger.warning("from_knx not implemented for %s", self.__class__.__name__)
         return None
 
     def to_knx(self, value):
         """Convert value to payload - to be implemented in derived class."""
-        # pylint: disable=unused-argument, no-self-use
+        # pylint: disable=unused-argument
+        self.xknx.logger.warning("to_knx not implemented for %s", self.__class__.__name__)
         return None
 
     async def process(self, telegram):
@@ -104,6 +107,7 @@ class RemoteValue():
     async def set(self, value):
         """Set new value."""
         if not self.initialized:
+            self.xknx.logger.info("Setting value of uninitialized device %s (value %s)", self.device_name, value)
             return
         payload = self.to_knx(value)
         updated = False
@@ -142,6 +146,11 @@ class RemoteValue():
             if key not in other.__dict__:
                 return False
             if other.__dict__[key] != value:
+                return False
+        for key, value in other.__dict__.items():
+            if key == "after_update_cb":
+                continue
+            if key not in self.__dict__:
                 return False
         return True
 

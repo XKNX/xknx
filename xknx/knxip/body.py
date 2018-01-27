@@ -10,12 +10,13 @@ class KNXIPBody():
 
     def calculated_length(self):
         """Get length of KNX/IP body."""
-        pass
+        self.xknx.logger.warning("calculated_length not implemented for %s", self.__class__.__name__)
 
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        pass
+        # pylint: disable=unused-argument
+        self.xknx.logger.warning("from_knx not implemented for %s", self.__class__.__name__)
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
-        pass
+        self.xknx.logger.warning("to_knx not implemented for %s", self.__class__.__name__)

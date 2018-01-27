@@ -37,8 +37,7 @@ class ActionBase():
 
     async def execute(self):
         """Execute action. To be overwritten in derived classes."""
-        # pylint: disable=no-self-use
-        pass
+        self.xknx.logger.info("Execute not implemented for %s", self.__class__.__name__)
 
     def __str__(self):
         """Return object as readable string."""
@@ -80,7 +79,8 @@ class Action(ActionBase):
 
     async def execute(self):
         """Execute action."""
-        await self.xknx.devices[self.target].do(self.method)
+        if self.target is not None:
+            await self.xknx.devices[self.target].do(self.method)
 
     def __str__(self):
         """Return object as readable string."""

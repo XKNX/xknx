@@ -115,6 +115,7 @@ class Light(Device):
     async def set_brightness(self, brightness):
         """Set brightness of light."""
         if not self.supports_dimming:
+            self.xknx.logger.warning("Dimming not supported for device %s", self.get_name())
             return
         await self.send(self.group_address_brightness, DPTArray(brightness))
         await self._set_internal_brightness(brightness)

@@ -1,4 +1,4 @@
-"""Unit test for Sensor objects."""
+"""Unit test for RemoteValueSensor objects."""
 import asyncio
 import unittest
 
@@ -7,8 +7,8 @@ from xknx.exceptions import ConversionError
 from xknx.devices import RemoteValueSensor
 
 
-class TestSRemoteValueensor(unittest.TestCase):
-    """Test class for Sensor objects."""
+class TestRemoteValueSensor(unittest.TestCase):
+    """Test class for RemoteValueSensor objects."""
 
     def setUp(self):
         """Set up test class."""
