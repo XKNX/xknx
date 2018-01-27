@@ -195,22 +195,22 @@ class TestBinarySensor(unittest.TestCase):
         with patch('time.time') as mock_time:
             mock_time.return_value = 1517000000.0
             self.assertEqual(switch.bump_and_get_counter(BinarySensorState.ON), 1)
-        with patch('time.time') as mock_time:
+
             mock_time.return_value = 1517000000.1
             self.assertEqual(switch.bump_and_get_counter(BinarySensorState.ON), 2)
-        with patch('time.time') as mock_time:
+
             mock_time.return_value = 1517000000.2
             self.assertEqual(switch.bump_and_get_counter(BinarySensorState.OFF), 1)
-        with patch('time.time') as mock_time:
+
             mock_time.return_value = 1517000000.3
             self.assertEqual(switch.bump_and_get_counter(BinarySensorState.ON), 3)
-        with patch('time.time') as mock_time:
+
             mock_time.return_value = 1517000000.4
             self.assertEqual(switch.bump_and_get_counter(BinarySensorState.OFF), 2)
-        with patch('time.time') as mock_time:
+
             mock_time.return_value = 1517000002.0  # TIME OUT ...
             self.assertEqual(switch.bump_and_get_counter(BinarySensorState.ON), 1)
-        with patch('time.time') as mock_time:
+
             mock_time.return_value = 1517000004.1  # TIME OUT ...
             self.assertEqual(switch.bump_and_get_counter(BinarySensorState.OFF), 1)
 
