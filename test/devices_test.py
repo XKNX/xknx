@@ -1,9 +1,10 @@
 """Unit test for devices container within XKNX."""
 import asyncio
 import unittest
+from unittest.mock import Mock, patch
 
 from xknx import XKNX
-from xknx.devices import BinarySensor, Devices, Light, Switch
+from xknx.devices import BinarySensor, Devices, Device, Light, Switch
 from xknx.knx import GroupAddress
 
 
@@ -169,23 +170,99 @@ class TestDevices(unittest.TestCase):
         """Test if devices object does store references and not copies of objects."""
         xknx = XKNX(loop=self.loop)
         devices = Devices()
-
         light1 = Light(xknx,
                        'Living-Room.Light_1',
                        group_address_switch='1/6/7')
         devices.add(light1)
-
         for device in devices:
             self.loop.run_until_complete(asyncio.Task(device.set_on()))
-
         self.assertTrue(light1.state)
-
         device2 = devices["Living-Room.Light_1"]
         self.loop.run_until_complete(asyncio.Task(device2.set_off()))
-
         self.assertFalse(light1.state)
-
         for device in devices.devices_by_group_address(GroupAddress('1/6/7')):
             self.loop.run_until_complete(asyncio.Task(device.set_on()))
-
         self.assertTrue(light1.state)
+
+    def test_add_wrong_type(self):
+        """Test if exception is raised when wrong type of devices is added."""
+        xknx = XKNX(loop=self.loop)
+        with self.assertRaises(TypeError):
+            xknx.devices.add("fnord")
+
+    #
+    # TEST SYNC
+    #
+    def test_sync(self):
+        """Test sync function."""
+        xknx = XKNX(loop=self.loop)
+        device1 = Device(xknx, 'TestDevice1')
+        device2 = Device(xknx, 'TestDevice2')
+        xknx.devices.add(device1)
+        xknx.devices.add(device2)
+        with patch('xknx.devices.Device.sync') as mock_sync:
+            fut = asyncio.Future()
+            fut.set_result(None)
+            mock_sync.return_value = fut
+            self.loop.run_until_complete(asyncio.Task(xknx.devices.sync()))
+            self.assertEqual(mock_sync.call_count, 2)
+
+    #
+    # TEST CALLBACK
+    #
+    def test_device_updated_callback(self):
+        """Test if device updated callback is called correctly if device was updated."""
+        xknx = XKNX(loop=self.loop)
+        device1 = Device(xknx, 'TestDevice1')
+        device2 = Device(xknx, 'TestDevice2')
+        xknx.devices.add(device1)
+        xknx.devices.add(device2)
+
+        after_update_callback1 = Mock()
+        after_update_callback2 = Mock()
+
+        async def async_after_update_callback1(device):
+            """Async callback No. 1."""
+            after_update_callback1(device)
+
+        async def async_after_update_callback2(device):
+            """Async callback No. 2."""
+            after_update_callback2(device)
+
+        # Registering both callbacks
+        xknx.devices.register_device_updated_cb(async_after_update_callback1)
+        xknx.devices.register_device_updated_cb(async_after_update_callback2)
+
+        # Triggering first device. Both callbacks to be called
+        self.loop.run_until_complete(asyncio.Task(device1.after_update()))
+        after_update_callback1.assert_called_with(device1)
+        after_update_callback2.assert_called_with(device1)
+        after_update_callback1.reset_mock()
+        after_update_callback2.reset_mock()
+
+        # Triggering 2nd device. Both callbacks have to be called
+        self.loop.run_until_complete(asyncio.Task(device2.after_update()))
+        after_update_callback1.assert_called_with(device2)
+        after_update_callback2.assert_called_with(device2)
+        after_update_callback1.reset_mock()
+        after_update_callback2.reset_mock()
+
+        # Unregistering first callback
+        xknx.devices.unregister_device_updated_cb(async_after_update_callback1)
+
+        # Triggering first device. Only second callback has to be called
+        self.loop.run_until_complete(asyncio.Task(device1.after_update()))
+        after_update_callback1.assert_not_called()
+        after_update_callback2.assert_called_with(device1)
+        after_update_callback1.reset_mock()
+        after_update_callback2.reset_mock()
+
+        # Unregistering second callback
+        xknx.devices.unregister_device_updated_cb(async_after_update_callback2)
+
+        # Triggering second device. No callback should be called
+        self.loop.run_until_complete(asyncio.Task(device2.after_update()))
+        after_update_callback1.assert_not_called()
+        after_update_callback2.assert_not_called()
+        after_update_callback1.reset_mock()
+        after_update_callback2.reset_mock()
