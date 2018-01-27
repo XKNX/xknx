@@ -1,7 +1,7 @@
 """Unit test for BinarySensor objects."""
 import asyncio
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Action, BinarySensor, BinarySensorState, Switch
@@ -184,6 +184,35 @@ class TestBinarySensor(unittest.TestCase):
         telegram.payload = DPTBinary(1)
         self.loop.run_until_complete(asyncio.Task(switch.process(telegram)))
         after_update_callback.assert_called_with(switch)
+
+    #
+    # TEST COUNTER
+    #
+    def test_counter(self):
+        """Test counter functionality."""
+        xknx = XKNX(loop=self.loop)
+        switch = BinarySensor(xknx, 'TestInput', group_address='1/2/3')
+        with patch('time.time') as mock_time:
+            mock_time.return_value = 1517000000.0
+            self.assertEqual(switch.bump_and_get_counter(BinarySensorState.ON), 1)
+        with patch('time.time') as mock_time:
+            mock_time.return_value = 1517000000.1
+            self.assertEqual(switch.bump_and_get_counter(BinarySensorState.ON), 2)
+        with patch('time.time') as mock_time:
+            mock_time.return_value = 1517000000.2
+            self.assertEqual(switch.bump_and_get_counter(BinarySensorState.OFF), 1)
+        with patch('time.time') as mock_time:
+            mock_time.return_value = 1517000000.3
+            self.assertEqual(switch.bump_and_get_counter(BinarySensorState.ON), 3)
+        with patch('time.time') as mock_time:
+            mock_time.return_value = 1517000000.4
+            self.assertEqual(switch.bump_and_get_counter(BinarySensorState.OFF), 2)
+        with patch('time.time') as mock_time:
+            mock_time.return_value = 1517000002.0  # TIME OUT ...
+            self.assertEqual(switch.bump_and_get_counter(BinarySensorState.ON), 1)
+        with patch('time.time') as mock_time:
+            mock_time.return_value = 1517000004.1  # TIME OUT ...
+            self.assertEqual(switch.bump_and_get_counter(BinarySensorState.OFF), 1)
 
     #
     # STATE ADDRESSES
