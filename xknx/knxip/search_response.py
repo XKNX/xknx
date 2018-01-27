@@ -44,7 +44,7 @@ class SearchResponse(KNXIPBody):
         for dib in self.dibs:
             if isinstance(dib, DIBDeviceInformation):
                 return dib.name
-        return "UKNOWN"
+        return "UNKNOWN"
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""

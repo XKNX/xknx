@@ -99,15 +99,15 @@ class BinarySensor(Device):
         """Set the internal state of the device. If state was changed after update hooks and connected Actions are executed."""
         if state != self.state:
             self.state = state
-            counter = self.get_counter(state)
+            counter = self.bump_and_get_counter(state)
             await self.after_update()
 
             for action in self.actions:
                 if action.test_if_applicable(self.state, counter):
                     await action.execute()
 
-    def get_counter(self, state):
-        """Return the number of times a state was set to the same value within CONTEXT_TIMEOUT."""
+    def bump_and_get_counter(self, state):
+        """Bump counter and return the number of times a state was set to the same value within CONTEXT_TIMEOUT."""
         def within_same_context():
             """Check if state change was within same context (e.g. 'Button was pressed twice')."""
             if self.last_set is None:

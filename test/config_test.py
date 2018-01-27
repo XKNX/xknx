@@ -1,12 +1,14 @@
 """Unit test for Configuration logic."""
 import asyncio
 import unittest
+from unittest.mock import patch
 
 from xknx import XKNX
 from xknx.devices import (Action, BinarySensor, Climate, Cover, DateTime,
                           ExposeSensor, Light, Notification, Scene, Sensor,
                           Switch)
 from xknx.devices.datetime import DateTimeBroadcastType
+from xknx.exceptions import XKNXException
 
 
 # pylint: disable=too-many-public-methods,invalid-name
@@ -304,3 +306,17 @@ class TestConfig(unittest.TestCase):
                 group_address='7/0/1',
                 scene_number=23,
                 device_updated_cb=xknx.devices.device_updated))
+
+    def test_config_file_not_found(self):
+        """Test error message when reading a non exisiting config file."""
+        with patch('logging.Logger.error') as mock_err:
+            XKNX(config='xknx_does_not_exist.yaml', loop=self.loop)
+            self.assertEqual(mock_err.call_count, 1)
+
+    def test_config_file_error(self):
+        """Test error message when reading an errornous config file."""
+        with patch('logging.Logger.error') as mock_err, \
+                patch('xknx.core.Config.parse_group_light') as mock_parse:
+            mock_parse.side_effect = XKNXException()
+            XKNX(config='xknx.yaml', loop=self.loop)
+            self.assertEqual(mock_err.call_count, 1)

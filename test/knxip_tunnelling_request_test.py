@@ -6,6 +6,7 @@ from xknx import XKNX
 from xknx.knx import DPTBinary, GroupAddress, Telegram
 from xknx.knxip import (CEMIFrame, KNXIPFrame, KNXIPServiceType,
                         TunnellingRequest)
+from xknx.exceptions import CouldNotParseKNXIP
 
 
 class Test_KNXIP_TunnelingReq(unittest.TestCase):
@@ -47,3 +48,19 @@ class Test_KNXIP_TunnelingReq(unittest.TestCase):
         knxipframe2.normalize()
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
+
+    def test_from_knx_wrong_header(self):
+        """Test parsing and streaming wrong TunnellingRequest (wrong header length byte)."""
+        raw = ((0x06, 0x10, 0x04, 0x20, 0x00, 0x15, 0x03))
+        xknx = XKNX(loop=self.loop)
+        knxipframe = KNXIPFrame(xknx)
+        with self.assertRaises(CouldNotParseKNXIP):
+            knxipframe.from_knx(raw)
+
+    def test_from_knx_wrong_header2(self):
+        """Test parsing and streaming wrong TunnellingRequest (wrong header length)."""
+        raw = ((0x06, 0x10, 0x04, 0x20, 0x00, 0x15, 0x04))
+        xknx = XKNX(loop=self.loop)
+        knxipframe = KNXIPFrame(xknx)
+        with self.assertRaises(CouldNotParseKNXIP):
+            knxipframe.from_knx(raw)

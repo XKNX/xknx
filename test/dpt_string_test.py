@@ -47,9 +47,14 @@ class TestDPTString(unittest.TestCase):
         self.assertEqual(DPTString.from_knx(raw), string)
 
     def test_to_knx_wrong_parameter(self):
-        """Test parsing of DPT2ByteFloat with wrong value (string)."""
+        """Test serializing DPTString to KNX with wrong value (int)."""
         with self.assertRaises(ConversionError):
             DPTString().to_knx(123)
+
+    def test_to_knx_too_long(self):
+        """Test serializing DPTString to KNX with wrong value (to long)."""
+        with self.assertRaises(ConversionError):
+            DPTString().to_knx("AAAAABBBBBCCCCx")
 
     def test_from_knx_wrong_parameter_too_large(self):
         """Test parsing of KNX string with too many elements."""

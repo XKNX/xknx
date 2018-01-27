@@ -38,8 +38,6 @@ class AddressFilter:
 
     def _parse_pattern(self, pattern):
         for part in pattern.split("/"):
-            if not part:
-                raise ConversionError("Every part of pattern must be a string.", pattern=pattern)
             self.level_filters.append(AddressFilter.LevelFilter(part))
         if len(self.level_filters) > 3:
             raise ConversionError("Too many parts within pattern.", pattern=pattern)
@@ -52,9 +50,7 @@ class AddressFilter:
             return self._match_level3(address)
         elif len(self.level_filters) == 2:
             return self._match_level2(address)
-        elif len(self.level_filters) == 1:
-            return self._match_free(address)
-        return False
+        return self._match_free(address)
 
     def _match_level3(self, address):
         return (
@@ -147,8 +143,6 @@ class AddressFilter:
 
         def _parse_pattern(self, pattern):
             for part in pattern.split(","):
-                if not part:
-                    raise ConversionError("Every part of LevelFilter must be a string", pattern=pattern)
                 self.ranges.append(AddressFilter.Range(part))
 
         def match(self, digit):

@@ -5,6 +5,7 @@ import unittest
 from xknx import XKNX
 from xknx.knxip import (HPAI, ConnectRequestType, ConnectResponse, ErrorCode,
                         KNXIPFrame, KNXIPServiceType)
+from xknx.exceptions import CouldNotParseKNXIP
 
 
 class Test_KNXIP_ConnectResponse(unittest.TestCase):
@@ -53,3 +54,23 @@ class Test_KNXIP_ConnectResponse(unittest.TestCase):
         knxipframe2.normalize()
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
+
+    def test_from_knx_wrong_crd(self):
+        """Test parsing and streaming wrong ConnectRequest (wrong CRD length byte)."""
+        raw = ((0x06, 0x10, 0x02, 0x06, 0x00, 0x14, 0x01, 0x00,
+                0x08, 0x01, 0xc0, 0xa8, 0x2a, 0x0a, 0x0e, 0x57,
+                0x03, 0x04, 0x11, 0xff))
+        xknx = XKNX(loop=self.loop)
+        knxipframe = KNXIPFrame(xknx)
+        with self.assertRaises(CouldNotParseKNXIP):
+            knxipframe.from_knx(raw)
+
+    def test_from_knx_wrong_crd2(self):
+        """Test parsing and streaming wrong ConnectRequest (wrong CRD length)."""
+        raw = ((0x06, 0x10, 0x02, 0x06, 0x00, 0x14, 0x01, 0x00,
+                0x08, 0x01, 0xc0, 0xa8, 0x2a, 0x0a, 0x0e, 0x57,
+                0x04, 0x04))
+        xknx = XKNX(loop=self.loop)
+        knxipframe = KNXIPFrame(xknx)
+        with self.assertRaises(CouldNotParseKNXIP):
+            knxipframe.from_knx(raw)

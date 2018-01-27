@@ -139,7 +139,7 @@ class TestSensor(unittest.TestCase):
     # STATE ADDRESSES
     #
     def test_state_addresses(self):
-        """Test expose sensor returns empty list as state addresses."""
+        """Test state addresses of sensor object."""
         xknx = XKNX(loop=self.loop)
         sensor = Sensor(
             xknx,

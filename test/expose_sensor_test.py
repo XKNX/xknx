@@ -64,7 +64,6 @@ class TestExposeSensor(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
         telegram = xknx.telegrams.get_nowait()
-        print(telegram)
         self.assertEqual(
             telegram,
             Telegram(
@@ -83,7 +82,6 @@ class TestExposeSensor(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(expose_sensor.set(21.0)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
-        print(telegram)
         self.assertEqual(
             telegram,
             Telegram(

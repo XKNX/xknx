@@ -5,6 +5,7 @@ import unittest
 from xknx import XKNX
 from xknx.knxip import (HPAI, ConnectionStateRequest, KNXIPFrame,
                         KNXIPServiceType)
+from xknx.exceptions import CouldNotParseKNXIP
 
 
 class Test_KNXIP_ConnStateReq(unittest.TestCase):
@@ -21,7 +22,7 @@ class Test_KNXIP_ConnStateReq(unittest.TestCase):
         """Tear down test class."""
         self.loop.close()
 
-    def test_disconnect_request(self):
+    def test_connection_state_request(self):
         """Test parsing and streaming connection state request KNX/IP packet."""
         raw = ((0x06, 0x10, 0x02, 0x07, 0x00, 0x10, 0x15, 0x00,
                 0x08, 0x01, 0xC0, 0xA8, 0xC8, 0x0C, 0xC3, 0xB4))
@@ -45,3 +46,11 @@ class Test_KNXIP_ConnStateReq(unittest.TestCase):
         knxipframe2.normalize()
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
+
+    def test_from_knx_wrong_info(self):
+        """Test parsing and streaming wrong ConnectionStateRequest."""
+        raw = ((0x06, 0x10, 0x02, 0x07, 0x00, 0x010))
+        xknx = XKNX(loop=self.loop)
+        knxipframe = KNXIPFrame(xknx)
+        with self.assertRaises(CouldNotParseKNXIP):
+            knxipframe.from_knx(raw)

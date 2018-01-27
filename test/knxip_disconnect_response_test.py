@@ -5,6 +5,7 @@ import unittest
 from xknx import XKNX
 from xknx.knxip import (DisconnectResponse, ErrorCode, KNXIPFrame,
                         KNXIPServiceType)
+from xknx.exceptions import CouldNotParseKNXIP
 
 
 class Test_KNXIP_DisconnectResp(unittest.TestCase):
@@ -42,3 +43,11 @@ class Test_KNXIP_DisconnectResp(unittest.TestCase):
         knxipframe2.normalize()
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
+
+    def test_from_knx_wrong_length(self):
+        """Test parsing and streaming wrong DisconnectResponse."""
+        raw = ((0x06, 0x10, 0x02, 0x0A, 0x00, 0x08, 0x15))
+        xknx = XKNX(loop=self.loop)
+        knxipframe = KNXIPFrame(xknx)
+        with self.assertRaises(CouldNotParseKNXIP):
+            knxipframe.from_knx(raw)
