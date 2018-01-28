@@ -20,3 +20,7 @@ class KNXIPBody():
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
         self.xknx.logger.warning("to_knx not implemented for %s", self.__class__.__name__)
+
+    def __eq__(self, other):
+        """Equal operator."""
+        return self.__dict__ == other.__dict__

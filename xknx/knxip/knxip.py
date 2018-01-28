@@ -97,3 +97,7 @@ class KNXIPFrame:
         """Return object as readable string."""
         return '<KNXIPFrame {0}\n body="{1}" />' \
             .format(self.header, self.body)
+
+    def __eq__(self, other):
+        """Equal operator."""
+        return self.__dict__ == other.__dict__

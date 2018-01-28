@@ -58,11 +58,10 @@ class RequestResponse():
 
     def on_success_hook(self, knxipframe):
         """Do something after having received a valid answer. May be overwritten in derived class."""
-        pass
+        self.xknx.logger.info('Success: received correct answer from KNX bus: %s', knxipframe.body.status_code)
 
     def on_error_hook(self, knxipframe):
         """Do somthing after not having received valid answer within given time. May be overwritten in derived class."""
-        # pylint: disable=no-self-use
         self.xknx.logger.warning("Error: reading rading group address from KNX bus failed: %s", knxipframe.body.status_code)
 
     def timeout(self):
