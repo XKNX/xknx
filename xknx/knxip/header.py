@@ -63,3 +63,7 @@ class KNXIPHeader():
                 self.service_type_ident,
                 self.b4_reserve,
                 self.total_length)
+
+    def __eq__(self, other):
+        """Equal operator."""
+        return self.__dict__ == other.__dict__

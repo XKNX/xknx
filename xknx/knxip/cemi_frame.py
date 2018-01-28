@@ -211,3 +211,7 @@ class CEMIFrame(KNXIPBody):
                    self.flags,
                    self.cmd,
                    self.payload)
+
+    def __eq__(self, other):
+        """Equal operator."""
+        return self.__dict__ == other.__dict__
