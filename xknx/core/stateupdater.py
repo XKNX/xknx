@@ -13,10 +13,12 @@ class StateUpdater():
         self.xknx = xknx
         self.timeout = timeout
         self.start_timeout = start_timeout
+        self.run_forever = True
+        self.run_task = None
 
     async def start(self):
         """Start StateUpdater."""
-        self.xknx.loop.create_task(
+        self.run_task = self.xknx.loop.create_task(
             self.run())
 
     async def run(self):
@@ -26,3 +28,5 @@ class StateUpdater():
         while True:
             await self.xknx.devices.sync()
             await asyncio.sleep(self.timeout)
+            if not self.run_forever:
+                break
