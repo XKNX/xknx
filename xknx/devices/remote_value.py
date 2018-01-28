@@ -383,11 +383,6 @@ class RemoteValueSceneNumber17001(RemoteValue):
         """Convert current payload to value."""
         return DPTSceneNumber.from_knx(payload.value)
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return "%"
-
 
 class RemoteValue1Count(RemoteValue):
     """Abstraction for remote value of KNX 6.010 (DPT_Value_1_Count)."""
