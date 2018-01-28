@@ -6,8 +6,7 @@ from unittest.mock import patch
 from xknx import XKNX
 from xknx.devices import (Action, BinarySensor, Climate, Cover, DateTime,
                           ExposeSensor, Light, Notification, Scene, Sensor,
-                          Switch)
-from xknx.devices.datetime import DateTimeBroadcastType
+                          Switch, DateTimeBroadcastType)
 from xknx.exceptions import XKNXException
 
 

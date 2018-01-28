@@ -2,8 +2,7 @@
 import asyncio
 
 from xknx import XKNX
-from xknx.devices import DateTime
-from xknx.devices.datetime import DateTimeBroadcastType
+from xknx.devices import DateTime, DateTimeBroadcastType
 
 
 async def main():

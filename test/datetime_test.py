@@ -5,8 +5,7 @@ import unittest
 from unittest.mock import patch
 
 from xknx import XKNX
-from xknx.devices import DateTime
-from xknx.devices.datetime import DateTimeBroadcastType
+from xknx.devices import DateTime, DateTimeBroadcastType
 from xknx.knx import DPTArray, GroupAddress, Telegram, TelegramType
 
 

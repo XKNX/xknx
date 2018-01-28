@@ -8,7 +8,7 @@ from .travelcalculator import TravelCalculator, TravelStatus
 from .climate import Climate
 from .light import Light
 from .switch import Switch
-from .datetime import DateTime
+from .datetime import DateTime, DateTimeBroadcastType
 from .sensor import Sensor
 from .expose_sensor import ExposeSensor
 from .binary_sensor import BinarySensor, BinarySensorState
