@@ -228,7 +228,7 @@ class Cover(Device):
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
 
-        # Allow DTP 1.00x to be processed, more flexible for old KNX devices
+        # Allow DTP 1.00x to be processed, more flexible for old KNX devices...
         if isinstance(telegram.payload, DPTBinary):
             if(telegram.payload.value==1):
                 telegram.payload.value=255
