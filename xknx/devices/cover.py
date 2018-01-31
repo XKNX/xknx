@@ -8,6 +8,7 @@ It provides functionality for
 * Cover will also predict the current position.
 """
 from .device import Device
+from xknx.knx.dpt import (DPTBinary, DPTArray)
 from .remote_value import (RemoteValueScaling5001, RemoteValueStep1007,
                            RemoteValueUpDown1008)
 from .travelcalculator import TravelCalculator
@@ -226,6 +227,13 @@ class Cover(Device):
 
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
+
+        # Allow DTP 1.00x to be processed, more flexible for old KNX devices
+        if isinstance(telegram.payload, DPTBinary):
+            if(telegram.payload.value==1):
+                telegram.payload.value=255
+            telegram.payload=DPTArray(telegram.payload.value)
+
         position_processed = await self.position.process(telegram)
         if position_processed:
             self.travelcalculator.set_position(self.position.value)
