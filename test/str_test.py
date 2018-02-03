@@ -136,6 +136,22 @@ class TestStringRepresentations(unittest.TestCase):
             '<Light name="Licht" switch="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" group_address_brightness="GroupAddress("1/2/5")'
             '" group_address_brightness_state="GroupAddress("1/2/6")" brightness="0" />')
 
+    def test_light_color(self):
+        """Test string representation of dimmable light object."""
+        xknx = XKNX(loop=self.loop)
+        light = Light(
+            xknx,
+            name='Licht',
+            group_address_switch='1/2/3',
+            group_address_switch_state='1/2/4',
+            group_address_color='1/2/5',
+            group_address_color_state='1/2/6')
+        self.assertEqual(
+            str(light),
+            '<Light name="Licht" '
+            'switch="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" '
+            'color="GroupAddress("1/2/5")/GroupAddress("1/2/6")/None/None" />')
+
     def test_notification(self):
         """Test string representation of notification object."""
         xknx = XKNX(loop=self.loop)
