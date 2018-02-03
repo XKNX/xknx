@@ -12,6 +12,7 @@ from xknx.knx import DPTArray, GroupAddress
 
 from .device import Device
 from .remote_value import RemoteValueSwitch1001
+from .remote_value_color_rgb import RemoteValueColorRGB
 
 
 class Light(Device):
@@ -24,6 +25,8 @@ class Light(Device):
                  group_address_switch_state=None,
                  group_address_brightness=None,
                  group_address_brightness_state=None,
+                 group_address_color=None,
+                 group_address_color_state=None,
                  device_updated_cb=None):
         """Initialize Light class."""
         # pylint: disable=too-many-arguments
@@ -47,6 +50,14 @@ class Light(Device):
         self.supports_dimming = \
             group_address_brightness is not None
 
+        self.color = RemoteValueColorRGB(
+            xknx,
+            group_address_color,
+            group_address_color_state,
+            device_name=self.name,
+            after_update_cb=self.after_update)
+        self.supports_color = self.color.initialized
+
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
@@ -58,40 +69,47 @@ class Light(Device):
             config.get('group_address_brightness')
         group_address_brightness_state = \
             config.get('group_address_brightness_state')
+        group_address_color = \
+            config.get('group_address_color')
+        group_address_color_state = \
+            config.get('group_address_color_state')
 
         return cls(xknx,
                    name,
                    group_address_switch=group_address_switch,
                    group_address_switch_state=group_address_switch_state,
                    group_address_brightness=group_address_brightness,
-                   group_address_brightness_state=group_address_brightness_state)
+                   group_address_brightness_state=group_address_brightness_state,
+                   group_address_color=group_address_color,
+                   group_address_color_state=group_address_color_state)
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
         return (self.switch.has_group_address(group_address) or
                 (self.group_address_brightness == group_address) or
-                (self.group_address_brightness_state == group_address))
+                (self.group_address_brightness_state == group_address) or
+                self.color.has_group_address(group_address))
 
     def __str__(self):
         """Return object as readable string."""
-        if not self.supports_dimming:
-            return '<Light name="{0}" ' \
-                    'switch="{1}" />' \
-                    .format(
-                        self.name,
-                        self.switch.group_addr_str())
-
-        return '<Light name="{0}" ' \
-            'switch="{1}" ' \
-            'group_address_brightness="{2}" ' \
-            'group_address_brightness_state="{3}" ' \
-            'brightness="{4}" />' \
-            .format(
-                self.name,
-                self.switch.group_addr_str(),
+        str_brightness = '' if not self.supports_dimming else \
+            ' group_address_brightness="{0}" ' \
+            'group_address_brightness_state="{1}" ' \
+            'brightness="{2}"'.format(
                 self.group_address_brightness,
                 self.group_address_brightness_state,
                 self.brightness)
+        str_color = '' if not self.supports_color else \
+            ' color="{0}"'.format(
+                self.color.group_addr_str())
+
+        return '<Light name="{0}" ' \
+            'switch="{1}"{2}{3} />' \
+            .format(
+                self.name,
+                self.switch.group_addr_str(),
+                str_brightness,
+                str_color)
 
     @property
     def state(self):
@@ -120,6 +138,17 @@ class Light(Device):
         await self.send(self.group_address_brightness, DPTArray(brightness))
         await self._set_internal_brightness(brightness)
 
+    async def set_color(self, color):
+        """Set color of light."""
+        if not self.supports_color:
+            self.xknx.logger.warning("Colors not supported for device %s", self.get_name())
+            return
+        await self.color.set(color)
+
+    def current_color(self):
+        """Return current color of light."""
+        return self.color.value
+
     async def do(self, action):
         """Execute 'do' commands."""
         if action == "on":
@@ -135,6 +164,7 @@ class Light(Device):
         """Return group addresses which should be requested to sync state."""
         state_addresses = []
         state_addresses.extend(self.switch.state_addresses())
+        state_addresses.extend(self.color.state_addresses())
         if self.supports_dimming:
             state_address_brightness = \
                 self.group_address_brightness_state or \
@@ -145,7 +175,7 @@ class Light(Device):
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
         await self.switch.process(telegram)
-
+        await self.color.process(telegram)
         if (self.supports_dimming and
                 (telegram.group_address == self.group_address_brightness or
                  telegram.group_address == self.group_address_brightness_state)):

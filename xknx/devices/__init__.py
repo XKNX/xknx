@@ -16,3 +16,4 @@ from .notification import Notification
 from .scene import Scene
 from .remote_value import RemoteValue
 from .remote_value_sensor import RemoteValueSensor
+from .remote_value_color_rgb import RemoteValueColorRGB

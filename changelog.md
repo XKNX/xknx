@@ -1,8 +1,14 @@
 Changelog
 =========
 
-0.8.0 - Next major release
+0.8.1 - Release 2018-02-03
 --------------------------
+
+* Basic support for colored lights
+* Better unit test coverage
+
+0.8.0 - Release 2018-01-27
+---------------------------
 
 * New example for MQTT forwarder (thanks @JohanElmis)
 * Splitted up Address into GroupAddress and PhysicalAddress (thanks @encbladexp) 

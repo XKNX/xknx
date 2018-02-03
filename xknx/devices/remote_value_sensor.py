@@ -1,5 +1,5 @@
 """
-Module for managing a remote valeue typically used within a sensor.
+Module for managing a remote value typically used within a sensor.
 
 The module maps a given value_type to a DPT class and uses this class
 for serialization and deserialization of the KNX value.

@@ -33,7 +33,7 @@ class TestConfig(unittest.TestCase):
             xknx.devices['Living-Room.Light_1'],
             Light(xknx,
                   'Living-Room.Light_1',
-                  group_address_switch='1/6/7',
+                  group_address_switch='1/6/9',
                   device_updated_cb=xknx.devices.device_updated))
 
     def test_config_light_state(self):
@@ -47,6 +47,19 @@ class TestConfig(unittest.TestCase):
                   group_address_switch_state='1/7/5',
                   group_address_brightness='1/7/6',
                   group_address_brightness_state='1/7/7',
+                  device_updated_cb=xknx.devices.device_updated))
+
+    def test_config_light_color(self):
+        """Test reading Light with with dimming and color address."""
+        xknx = XKNX(config='xknx.yaml', loop=self.loop)
+        self.assertEqual(
+            xknx.devices['Diningroom.Light_1'],
+            Light(xknx,
+                  'Diningroom.Light_1',
+                  group_address_switch='1/6/4',
+                  group_address_brightness='1/6/6',
+                  group_address_color='1/6/7',
+                  group_address_color_state='1/6/8',
                   device_updated_cb=xknx.devices.device_updated))
 
     def test_config_switch(self):
