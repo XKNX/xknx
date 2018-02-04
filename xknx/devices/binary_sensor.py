@@ -45,7 +45,7 @@ class BinarySensor(Device):
                  device_updated_cb=None):
         """Initialize BinarySensor class."""
         # pylint: disable=too-many-arguments
-        Device.__init__(self, xknx, name, device_updated_cb)
+        super(BinarySensor, self).__init__(xknx, name, device_updated_cb)
         if isinstance(group_address, (str, int)):
             group_address = GroupAddress(group_address)
         if not isinstance(significant_bit, int):

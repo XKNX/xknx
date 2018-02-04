@@ -32,7 +32,7 @@ class DateTime(Device):
                  group_address=None,
                  device_updated_cb=None):
         """Initialize DateTime class."""
-        Device.__init__(self, xknx, name, device_updated_cb)
+        super(DateTime, self).__init__(xknx, name, device_updated_cb)
 
         self.broadcast_type = broadcast_type
 

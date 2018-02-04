@@ -30,7 +30,7 @@ class Light(Device):
                  device_updated_cb=None):
         """Initialize Light class."""
         # pylint: disable=too-many-arguments
-        Device.__init__(self, xknx, name, device_updated_cb)
+        super(Light, self).__init__(xknx, name, device_updated_cb)
         if isinstance(group_address_brightness, (str, int)):
             group_address_brightness = GroupAddress(group_address_brightness)
         if isinstance(group_address_brightness_state, (str, int)):

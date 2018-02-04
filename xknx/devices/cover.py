@@ -40,7 +40,7 @@ class Cover(Device):
                  device_updated_cb=None):
         """Initialize Cover class."""
         # pylint: disable=too-many-arguments
-        Device.__init__(self, xknx, name, device_updated_cb)
+        super(Cover, self).__init__(xknx, name, device_updated_cb)
 
         self.updown = RemoteValueUpDown(
             xknx,

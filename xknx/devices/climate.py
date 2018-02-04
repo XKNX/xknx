@@ -42,7 +42,7 @@ class Climate(Device):
                  device_updated_cb=None):
         """Initialize Climate class."""
         # pylint: disable=too-many-arguments, too-many-locals
-        Device.__init__(self, xknx, name, device_updated_cb)
+        super(Climate, self).__init__(xknx, name, device_updated_cb)
         if isinstance(group_address_operation_mode, (str, int)):
             group_address_operation_mode = GroupAddress(group_address_operation_mode)
         if isinstance(group_address_operation_mode_state, (str, int)):
