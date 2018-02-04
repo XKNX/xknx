@@ -1,10 +1,8 @@
 """
-
 Connects to KNX platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/knx/
-
 """
 import asyncio
 import logging
@@ -17,6 +15,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_utc_time_change)
 from homeassistant.helpers.script import Script
+
+# REQUIREMENTS = ['xknx==0.8.1']
 
 DOMAIN = "xknx"
 DATA_XKNX = "data_knx"
@@ -41,12 +41,10 @@ ATTR_DISCOVER_DEVICES = 'devices'
 
 _LOGGER = logging.getLogger(__name__)
 
-# REQUIREMENTS = ['xknx==0.7.18']
-
 TUNNELING_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT): cv.port,
     vol.Required(CONF_XKNX_LOCAL_IP): cv.string,
+    vol.Optional(CONF_PORT): cv.port,
 })
 
 ROUTING_SCHEMA = vol.Schema({
@@ -68,9 +66,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Inclusive(CONF_XKNX_FIRE_EVENT, 'fire_ev'):
             cv.boolean,
         vol.Inclusive(CONF_XKNX_FIRE_EVENT_FILTER, 'fire_ev'):
-            vol.All(
-                cv.ensure_list,
-                [cv.string]),
+            vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_XKNX_STATE_UPDATER, default=True): cv.boolean,
         vol.Optional(CONF_XKNX_EXPOSE):
             vol.All(
@@ -88,7 +84,7 @@ SERVICE_XKNX_SEND_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up knx component."""
+    """Set up the KNX component."""
     from xknx.exceptions import XKNXException
     try:
         hass.data[DATA_XKNX] = KNXModule(hass, config)
@@ -125,6 +121,7 @@ def async_setup(hass, config):
 
 
 def _get_devices(hass, discovery_type):
+    """Get the KNX devices."""
     return list(
         map(lambda device: device.name,
             filter(
@@ -136,7 +133,7 @@ class KNXModule(object):
     """Representation of KNX Object."""
 
     def __init__(self, hass, config):
-        """Initialization of KNXModule."""
+        """Initialize of KNX module."""
         self.hass = hass
         self.config = config
         self.connected = False
@@ -146,11 +143,9 @@ class KNXModule(object):
         self.exposures = self.create_exposures()
 
     def init_xknx(self):
-        """Initialization of KNX object."""
+        """Initialize of KNX object."""
         from xknx import XKNX
-        self.xknx = XKNX(
-            config=self.config_file(),
-            loop=self.hass.loop)
+        self.xknx = XKNX(config=self.config_file(), loop=self.hass.loop)
 
     @asyncio.coroutine
     def start(self):
@@ -206,10 +201,8 @@ class KNXModule(object):
         if gateway_port is None:
             gateway_port = DEFAULT_MCAST_PORT
         return ConnectionConfig(
-            connection_type=ConnectionType.TUNNELING,
-            gateway_ip=gateway_ip,
-            gateway_port=gateway_port,
-            local_ip=local_ip)
+            connection_type=ConnectionType.TUNNELING, gateway_ip=gateway_ip,
+            gateway_port=gateway_port, local_ip=local_ip)
 
     def connection_config_auto(self):
         """Return the connection_config if auto is configured."""
@@ -248,7 +241,7 @@ class KNXModule(object):
 
     @asyncio.coroutine
     def telegram_received_cb(self, telegram):
-        """Callback invoked after a KNX telegram was received."""
+        """Call invoked after a KNX telegram was received."""
         self.hass.bus.fire('knx_event', {
             'address': telegram.group_address.str(),
             'data': telegram.payload.value
@@ -289,10 +282,8 @@ class KNXAutomation():
 
         import xknx
         self.action = xknx.devices.ActionCallback(
-            hass.data[DATA_XKNX].xknx,
-            self.script.async_run,
-            hook=hook,
-            counter=counter)
+            hass.data[DATA_XKNX].xknx, self.script.async_run,
+            hook=hook, counter=counter)
         device.actions.append(self.action)
 
 
@@ -310,8 +301,7 @@ class KNXExposeTime(object):
 
     def register(self):
         """Register listener."""
-        from xknx.devices import DateTime
-        from xknx.devices.datetime import DateTimeBroadcastType
+        from xknx.devices import DateTime, DateTimeBroadcastType
         broadcast_type_string = self.type.upper()
         broadcast_type = DateTimeBroadcastType[broadcast_type_string]
         self.device = DateTime(
