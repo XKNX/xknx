@@ -28,5 +28,6 @@ setup(
     ],
     packages=find_packages(),
     install_requires=REQUIRES,
+    python_requires=">=3.5.2",
     keywords='knx ip knxip eib home automation',
     zip_safe=False)
