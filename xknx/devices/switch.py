@@ -7,7 +7,7 @@ It provides functionality for
 * reading the current state from KNX bus.
 """
 from .device import Device
-from .remote_value import RemoteValueSwitch1001
+from .remote_value_switch import RemoteValueSwitch
 
 
 class Switch(Device):
@@ -23,7 +23,7 @@ class Switch(Device):
         # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name, device_updated_cb)
 
-        self.switch = RemoteValueSwitch1001(
+        self.switch = RemoteValueSwitch(
             xknx,
             group_address,
             group_address_state,
@@ -50,7 +50,7 @@ class Switch(Device):
     @property
     def state(self):
         """Return the current switch state of the device."""
-        return self.switch.value == RemoteValueSwitch1001.Value.ON
+        return self.switch.value == RemoteValueSwitch.Value.ON
 
     async def set_on(self):
         """Switch on switch."""

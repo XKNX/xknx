@@ -1,6 +1,6 @@
 """Module for managing a KNX scene."""
 from .device import Device
-from .remote_value import RemoteValueSceneNumber17001
+from .remote_value_scene_number import RemoteValueSceneNumber
 
 
 class Scene(Device):
@@ -16,7 +16,7 @@ class Scene(Device):
         # pylint: disable=too-many-arguments
         super(Scene, self).__init__(xknx, name, device_updated_cb)
 
-        self.scene_value = RemoteValueSceneNumber17001(
+        self.scene_value = RemoteValueSceneNumber(
             xknx,
             group_address,
             device_name=self.name,

@@ -9,7 +9,8 @@ from xknx.knx import (DPTArray, DPTBinary, DPTControllerStatus, DPTHVACMode,
                       GroupAddress, HVACOperationMode)
 
 from .device import Device
-from .remote_value import RemoteValue1Count, RemoteValueTemp
+from .remote_value_temp import RemoteValueTemp
+from .remote_value_1count import RemoteValue1Count
 
 
 class Climate(Device):

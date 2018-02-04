@@ -11,8 +11,8 @@ from xknx.exceptions import CouldNotParseTelegram
 from xknx.knx import DPTArray, GroupAddress
 
 from .device import Device
-from .remote_value import RemoteValueSwitch1001
 from .remote_value_color_rgb import RemoteValueColorRGB
+from .remote_value_switch import RemoteValueSwitch
 
 
 class Light(Device):
@@ -36,7 +36,7 @@ class Light(Device):
         if isinstance(group_address_brightness_state, (str, int)):
             group_address_brightness_state = GroupAddress(group_address_brightness_state)
 
-        self.switch = RemoteValueSwitch1001(
+        self.switch = RemoteValueSwitch(
             xknx,
             group_address_switch,
             group_address_switch_state,
@@ -114,7 +114,7 @@ class Light(Device):
     @property
     def state(self):
         """Return the current switch state of the device."""
-        return self.switch.value == RemoteValueSwitch1001.Value.ON
+        return self.switch.value == RemoteValueSwitch.Value.ON
 
     async def _set_internal_brightness(self, brightness):
         """Set the internal brightness of the device. If state was changed after update hooks are executed."""

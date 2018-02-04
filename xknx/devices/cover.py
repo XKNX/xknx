@@ -8,8 +8,9 @@ It provides functionality for
 * Cover will also predict the current position.
 """
 from .device import Device
-from .remote_value import (RemoteValueScaling5001, RemoteValueStep1007,
-                           RemoteValueUpDown1008)
+from .remote_value_scaling import RemoteValueScaling
+from .remote_value_updown import RemoteValueUpDown
+from .remote_value_step import RemoteValueStep
 from .travelcalculator import TravelCalculator
 
 
@@ -41,21 +42,21 @@ class Cover(Device):
         # pylint: disable=too-many-arguments
         Device.__init__(self, xknx, name, device_updated_cb)
 
-        self.updown = RemoteValueUpDown1008(
+        self.updown = RemoteValueUpDown(
             xknx,
             group_address_long,
             device_name=self.name,
             after_update_cb=self.after_update,
             invert=invert_position)
 
-        self.step = RemoteValueStep1007(
+        self.step = RemoteValueStep(
             xknx,
             group_address_short,
             device_name=self.name,
             after_update_cb=self.after_update,
             invert=invert_position)
 
-        self.position = RemoteValueScaling5001(
+        self.position = RemoteValueScaling(
             xknx,
             group_address_position,
             group_address_position_state,
@@ -63,7 +64,7 @@ class Cover(Device):
             after_update_cb=self.after_update,
             invert=invert_position)
 
-        self.angle = RemoteValueScaling5001(
+        self.angle = RemoteValueScaling(
             xknx,
             group_address_angle,
             group_address_angle_state,

@@ -13,7 +13,7 @@ import time
 from enum import Enum
 
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.knx import GroupAddress, DPTBinary
+from xknx.knx import DPTBinary, GroupAddress
 
 from .action import Action
 from .device import Device

@@ -10,7 +10,7 @@ from xknx.knx import DPTBinary, DPTArray, Telegram, GroupAddress
 
 
 class TestRemoteValue(unittest.TestCase):
-    """Test class for Sensor objects."""
+    """Test class for RemoteValue objects."""
 
     def setUp(self):
         """Set up test class."""
