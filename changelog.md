@@ -1,6 +1,15 @@
 Changelog
 =========
 
+0.8.2 - Release 2018-02-05
+--------------------------
+
+* Color support for HASS plugin
+* Bugfixes (esp problem with unhashable exceptions)
+* Refactoring: splitted up remote_value.py
+* Better test coverage  
+
+
 0.8.1 - Release 2018-02-03
 --------------------------
 
