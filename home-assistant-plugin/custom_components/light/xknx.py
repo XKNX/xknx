@@ -171,7 +171,7 @@ class KNXLight(Light):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs and self.device.supports_dimming:
             yield from self.device.set_brightness(int(kwargs[ATTR_BRIGHTNESS]))
-        if ATTR_RGB_COLOR in kwargs:
+        elif ATTR_RGB_COLOR in kwargs:
             yield from self.device.set_color(kwargs[ATTR_RGB_COLOR])
         else:
             yield from self.device.set_on()
