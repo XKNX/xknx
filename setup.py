@@ -1,7 +1,7 @@
 """Setup for XKNX python package."""
 from setuptools import find_packages, setup
 
-VERSION = '0.8.2'
+VERSION = '0.8.3'
 
 REQUIRES = [
     'pyyaml>=3.12',
@@ -28,6 +28,6 @@ setup(
     ],
     packages=find_packages(),
     install_requires=REQUIRES,
-    python_requires=">=3.5.2",
+    # python_requires=">=3.5.2",
     keywords='knx ip knxip eib home automation',
     zip_safe=False)
