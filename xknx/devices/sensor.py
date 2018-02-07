@@ -9,7 +9,7 @@ It provides functionality for
 from .device import Device
 from .remote_value_scaling import RemoteValueScaling
 from .remote_value_sensor import RemoteValueSensor
-
+from .remote_value_dpt_value_1_ucount import RemoteValueDptValue1Ucount
 
 class Sensor(Device):
     """Class for managing a sensor."""
@@ -29,6 +29,12 @@ class Sensor(Device):
             self.sensor_value = RemoteValueScaling(
                 xknx,
                 group_address_state=group_address,
+                device_name=self.name,
+                after_update_cb=self.after_update)
+        elif value_type == "pulse":
+            self.sensor_value = RemoteValueDptValue1Ucount(
+                xknx,
+                group_address=group_address,
                 device_name=self.name,
                 after_update_cb=self.after_update)
         else:
