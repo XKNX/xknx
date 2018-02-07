@@ -16,7 +16,7 @@ class RemoteValueDptValue1Ucount(RemoteValue):
                  group_address=None,
                  device_name=None,
                  after_update_cb=None):
-        """Initialize remote value of KNX DPT 5.010"""
+        """Initialize remote value of KNX DPT 5.010."""
         # pylint: disable=too-many-arguments
         super(RemoteValueDptValue1Ucount, self).__init__(
             xknx, group_address, None,
