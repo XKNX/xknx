@@ -19,11 +19,12 @@ from .udp_client import UDPClient
 class GatewayScanner():
     """Class for searching KNX/IP devices."""
 
+    # pylint: disable=too-few-public-methods
     # pylint: disable=too-many-instance-attributes
     def __init__(self, xknx, timeout_in_seconds=4):
         """Initialize GatewayScanner class."""
         self.xknx = xknx
-        self.response_received_or_timeout = asyncio.Event()
+        self.timeout_in_seconds = timeout_in_seconds
         self.found = False
         self.found_ip_addr = None
         self.found_port = None
@@ -31,89 +32,89 @@ class GatewayScanner():
         self.found_local_ip = None
         self.supports_routing = False
         self.supports_tunneling = False
-        self.udpclients = []
-        self.timeout_in_seconds = timeout_in_seconds
-        self.timeout_callback = None
-        self.timeout_handle = None
-
-    def response_rec_callback(self, knxipframe, udp_client):
-        """Verify and handle knxipframe. Callback from internal udpclient."""
-        if not isinstance(knxipframe.body, SearchResponse):
-            self.xknx.logger.warning("Cant understand knxipframe")
-            return
-
-        if not self.found:
-            self.found_ip_addr = knxipframe.body.control_endpoint.ip_addr
-            self.found_port = knxipframe.body.control_endpoint.port
-            self.found_name = knxipframe.body.device_name
-
-            for dib in knxipframe.body.dibs:
-                if isinstance(dib, DIBSuppSVCFamilies):
-                    self.supports_routing = dib.supports(DIBServiceFamily.ROUTING)
-                    self.supports_tunneling = dib.supports(DIBServiceFamily.TUNNELING)
-
-            (self.found_local_ip, _) = udp_client.getsockname()
-
-            self.response_received_or_timeout.set()
-            self.found = True
+        self._udp_clients = []
+        self._response_received_or_timeout = asyncio.Event()
+        self._timeout_callback = None
+        self._timeout_handle = None
 
     async def start(self):
         """Start searching."""
-        await self.send_search_requests()
-        await self.start_timeout()
-        await self.response_received_or_timeout.wait()
+        await self._send_search_requests()
+        await self._start_timeout()
+        await self._response_received_or_timeout.wait()
         await self.stop()
-        await self.stop_timeout()
+        await self._stop_timeout()
 
     async def stop(self):
         """Stop tearing down udpclient."""
-        for udpclient in self.udpclients:
-            await udpclient.stop()
+        for udp_client in self._udp_clients:
+            await udp_client.stop()
 
-    async def send_search_requests(self):
+    async def _send_search_requests(self):
         """Send search requests on all connected interfaces."""
         # pylint: disable=no-member
         for interface in netifaces.interfaces():
             try:
                 af_inet = netifaces.ifaddresses(interface)[netifaces.AF_INET]
                 ip_addr = af_inet[0]["addr"]
-                await self.search_interface(interface, ip_addr)
+                await self._search_interface(interface, ip_addr)
             except KeyError:
                 self.xknx.logger.info("Could not connect to an KNX/IP device on %s", interface)
                 continue
 
-    async def search_interface(self, interface, ip_addr):
+    async def _search_interface(self, interface, ip_addr):
         """Search on a specific interface."""
         self.xknx.logger.debug("Searching on %s / %s", interface, ip_addr)
 
-        udpclient = UDPClient(self.xknx,
-                              (ip_addr, 0),
-                              (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
-                              multicast=True)
+        udp_client = UDPClient(self.xknx,
+                               (ip_addr, 0),
+                               (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+                               multicast=True)
 
-        udpclient.register_callback(
-            self.response_rec_callback, [KNXIPServiceType.SEARCH_RESPONSE])
-        await udpclient.connect()
+        udp_client.register_callback(
+            self._response_rec_callback, [KNXIPServiceType.SEARCH_RESPONSE])
+        await udp_client.connect()
 
-        self.udpclients.append(udpclient)
+        self._udp_clients.append(udp_client)
 
-        (local_addr, local_port) = udpclient.getsockname()
-        knxipframe = KNXIPFrame(self.xknx)
-        knxipframe.init(KNXIPServiceType.SEARCH_REQUEST)
-        knxipframe.body.discovery_endpoint = \
+        (local_addr, local_port) = udp_client.getsockname()
+        knx_ip_frame = KNXIPFrame(self.xknx)
+        knx_ip_frame.init(KNXIPServiceType.SEARCH_REQUEST)
+        knx_ip_frame.body.discovery_endpoint = \
             HPAI(ip_addr=local_addr, port=local_port)
-        knxipframe.normalize()
-        udpclient.send(knxipframe)
+        knx_ip_frame.normalize()
+        udp_client.send(knx_ip_frame)
 
-    def timeout(self):
+    def _response_rec_callback(self, knx_ip_frame, udp_client):
+        """Verify and handle knxipframe. Callback from internal udpclient."""
+        if not isinstance(knx_ip_frame.body, SearchResponse):
+            self.xknx.logger.warning("Cant understand knxipframe")
+            return
+
+        if not self.found:
+            self.found_ip_addr = knx_ip_frame.body.control_endpoint.ip_addr
+            self.found_port = knx_ip_frame.body.control_endpoint.port
+            self.found_name = knx_ip_frame.body.device_name
+
+            for dib in knx_ip_frame.body.dibs:
+                if isinstance(dib, DIBSuppSVCFamilies):
+                    self.supports_routing = dib.supports(DIBServiceFamily.ROUTING)
+                    self.supports_tunneling = dib.supports(DIBServiceFamily.TUNNELING)
+
+            (self.found_local_ip, _) = udp_client.getsockname()
+
+            self._response_received_or_timeout.set()
+            self.found = True
+
+    def _timeout(self):
         """Handle timeout for not having received a SearchResponse."""
-        self.response_received_or_timeout.set()
+        self._response_received_or_timeout.set()
 
-    async def start_timeout(self):
+    async def _start_timeout(self):
         """Start time out."""
-        self.timeout_handle = self.xknx.loop.call_later(
-            self.timeout_in_seconds, self.timeout)
+        self._timeout_handle = self.xknx.loop.call_later(
+            self.timeout_in_seconds, self._timeout)
 
-    async def stop_timeout(self):
+    async def _stop_timeout(self):
         """Stop/cancel timeout."""
-        self.timeout_handle.cancel()
+        self._timeout_handle.cancel()
