@@ -96,10 +96,12 @@ class GatewayScanner():
             self.found_port = knx_ip_frame.body.control_endpoint.port
             self.found_name = knx_ip_frame.body.device_name
 
-            for dib in knx_ip_frame.body.dibs:
-                if isinstance(dib, DIBSuppSVCFamilies):
-                    self.supports_routing = dib.supports(DIBServiceFamily.ROUTING)
-                    self.supports_tunneling = dib.supports(DIBServiceFamily.TUNNELING)
+            try:
+                dib = knx_ip_frame.body[DIBSuppSVCFamilies]
+                self.supports_routing = dib.supports(DIBServiceFamily.ROUTING)
+                self.supports_tunneling = dib.supports(DIBServiceFamily.TUNNELING)
+            except IndexError:
+                pass
 
             (self.found_local_ip, _) = udp_client.getsockname()
 
