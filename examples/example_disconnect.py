@@ -9,7 +9,7 @@ async def main():
     """Search for a Tunelling device, walk through all possible channels and disconnect them."""
     xknx = XKNX()
     gatewayscanner = GatewayScanner(xknx)
-    await gatewayscanner.start()
+    await gatewayscanner.scan()
 
     if not gatewayscanner.found:
         print("No Gateways found")

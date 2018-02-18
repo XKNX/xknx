@@ -37,15 +37,15 @@ class GatewayScanner():
         self._timeout_callback = None
         self._timeout_handle = None
 
-    async def start(self):
+    async def scan(self):
         """Start searching."""
         await self._send_search_requests()
         await self._start_timeout()
         await self._response_received_or_timeout.wait()
-        await self.stop()
+        await self._stop()
         await self._stop_timeout()
 
-    async def stop(self):
+    async def _stop(self):
         """Stop tearing down udpclient."""
         for udp_client in self._udp_clients:
             await udp_client.stop()

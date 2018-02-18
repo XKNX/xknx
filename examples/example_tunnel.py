@@ -10,7 +10,7 @@ async def main():
     """Connect to a tunnel, send 2 telegrams and disconnect."""
     xknx = XKNX()
     gatewayscanner = GatewayScanner(xknx)
-    await gatewayscanner.start()
+    await gatewayscanner.scan()
 
     if not gatewayscanner.found:
         print("No Gateways found")

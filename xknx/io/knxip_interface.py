@@ -83,8 +83,7 @@ class KNXIPInterface():
     async def start_automatic(self):
         """Start GatewayScanner and connect to the found device."""
         gatewayscanner = GatewayScanner(self.xknx)
-        await gatewayscanner.start()
-        await gatewayscanner.stop()
+        await gatewayscanner.scan()
 
         if not gatewayscanner.found:
             raise XKNXException("No Gateways found")
