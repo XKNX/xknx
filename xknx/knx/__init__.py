@@ -27,3 +27,4 @@ from .dpt_datetime import DPTDateTime
 from .dpt_string import DPTString
 from .dpt_signed_relative_value import DPTSignedRelativeValue, DPTPercentV8, \
     DPTValue1Count
+from .dpt_value_1_ucount import DPTValue1Ucount
