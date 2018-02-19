@@ -83,18 +83,19 @@ class KNXIPInterface():
     async def start_automatic(self):
         """Start GatewayScanner and connect to the found device."""
         gatewayscanner = GatewayScanner(self.xknx)
-        await gatewayscanner.scan()
+        gateways = await gatewayscanner.scan()
 
-        if not gatewayscanner.found:
+        if not gateways:
             raise XKNXException("No Gateways found")
 
-        if gatewayscanner.supports_tunneling:
-            await self.start_tunnelling(gatewayscanner.found_local_ip,
-                                        gatewayscanner.found_ip_addr,
-                                        gatewayscanner.found_port)
-        elif gatewayscanner.supports_routing:
+        gateway = gateways[0]
+        if gateway.supports_tunnelling:
+            await self.start_tunnelling(gateway.local_ip,
+                                        gateway.ip_addr,
+                                        gateway.port)
+        elif gateway.supports_routing:
             bind_to_multicast_addr = get_os_name() != "Darwin"  # = Mac OS
-            await self.start_routing(gatewayscanner.found_local_ip, bind_to_multicast_addr)
+            await self.start_routing(gateway.local_ip, bind_to_multicast_addr)
 
     async def start_tunnelling(self, local_ip, gateway_ip, gateway_port):
         """Start KNX/IP tunnel."""

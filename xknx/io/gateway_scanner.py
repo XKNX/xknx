@@ -93,41 +93,24 @@ class GatewayScanner():
         self.stop_on_found = stop_on_found
         self.scan_filter = scan_filter
         self.found_gateways = []  # List[GatewayDescriptor]
-
-        self.found = False
-        self.found_ip_addr = None
-        self.found_port = None
-        self.found_name = None
-        self.found_local_ip = None
-        self.supports_routing = False
-        self.supports_tunneling = False
-
         self._udp_clients = []
         self._response_received_or_timeout = asyncio.Event()
         self._timeout_callback = None
         self._timeout_handle = None
 
-    async def scan(self):
-        """Start searching."""
+    async def scan(self) -> List[GatewayDescriptor]:
+        """Scan and return a list of GatewayDescriptors on success."""
         await self._send_search_requests()
         await self._start_timeout()
         await self._response_received_or_timeout.wait()
         await self._stop()
         await self._stop_timeout()
+        return self.found_gateways
 
     async def _stop(self):
         """Stop tearing down udpclient."""
         for udp_client in self._udp_clients:
             await udp_client.stop()
-        if len(self.found_gateways) > 0:
-            gateway = self.found_gateways[0]
-            self.found = True
-            self.found_ip_addr = gateway.ip_addr
-            self.found_port = gateway.port
-            self.found_name = gateway.name
-            self.found_local_ip = gateway.local_ip
-            self.supports_routing = gateway.supports_routing
-            self.supports_tunneling = gateway.supports_tunnelling
 
     async def _send_search_requests(self):
         """Send search requests on all connected interfaces."""
