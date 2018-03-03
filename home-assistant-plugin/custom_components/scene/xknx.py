@@ -32,16 +32,10 @@ PLATFORM_SCHEMA = vol.Schema({
 def async_setup_platform(hass, config, async_add_devices,
                          discovery_info=None):
     """Set up the scenes for KNX platform."""
-    if DATA_XKNX not in hass.data \
-            or not hass.data[DATA_XKNX].initialized:
-        return False
-
     if discovery_info is not None:
         async_add_devices_discovery(hass, discovery_info, async_add_devices)
     else:
         async_add_devices_config(hass, config, async_add_devices)
-
-    return True
 
 
 @callback
@@ -50,13 +44,13 @@ def async_add_devices_discovery(hass, discovery_info, async_add_devices):
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_XKNX].xknx.devices[device_name]
-        entities.append(KNXScene(hass, device))
+        entities.append(KNXScene(device))
     async_add_devices(entities)
 
 
 @callback
 def async_add_devices_config(hass, config, async_add_devices):
-    """Set up scene for KNX platform configured within plattform."""
+    """Set up scene for KNX platform configured within platform."""
     import xknx
     scene = xknx.devices.Scene(
         hass.data[DATA_XKNX].xknx,
@@ -64,15 +58,14 @@ def async_add_devices_config(hass, config, async_add_devices):
         group_address=config.get(CONF_ADDRESS),
         scene_number=config.get(CONF_SCENE_NUMBER))
     hass.data[DATA_XKNX].xknx.devices.add(scene)
-    async_add_devices([KNXScene(hass, scene)])
+    async_add_devices([KNXScene(scene)])
 
 
 class KNXScene(Scene):
     """Representation of a KNX scene."""
 
-    def __init__(self, hass, scene):
+    def __init__(self, scene):
         """Init KNX scene."""
-        self.hass = hass
         self.scene = scene
 
     @property
@@ -80,16 +73,7 @@ class KNXScene(Scene):
         """Return the name of the scene."""
         return self.scene.name
 
-    @property
-    def should_poll(self):
-        """Return that polling is not necessary."""
-        return False
-
-    @property
-    def is_on(self):
-        """There is no way of detecting if a scene is active (yet)."""
-        return False
-
-    def activate(self):
+    @asyncio.coroutine
+    def async_activate(self):
         """Activate the scene."""
-        self.hass.async_add_job(self.scene.run())
+        yield from self.scene.run()

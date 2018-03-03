@@ -4,19 +4,20 @@ Connects to KNX platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/knx/
 """
-import asyncio
+
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_ENTITY_ID, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import (
-    async_track_state_change, async_track_utc_time_change)
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
 
-# REQUIREMENTS = ['xknx==0.8.1']
+REQUIREMENTS = ['xknx==0.8.3']
 
 DOMAIN = "xknx"
 DATA_XKNX = "data_knx"
@@ -30,7 +31,6 @@ CONF_XKNX_FIRE_EVENT_FILTER = "fire_event_filter"
 CONF_XKNX_STATE_UPDATER = "state_updater"
 CONF_XKNX_EXPOSE = "expose"
 CONF_XKNX_EXPOSE_TYPE = "type"
-CONF_XKNX_EXPOSE_ENTITY_ID = "entity_id"
 CONF_XKNX_EXPOSE_ADDRESS = "address"
 
 SERVICE_XKNX_SEND = "send"
@@ -53,7 +53,7 @@ ROUTING_SCHEMA = vol.Schema({
 
 EXPOSE_SCHEMA = vol.Schema({
     vol.Required(CONF_XKNX_EXPOSE_TYPE): cv.string,
-    vol.Optional(CONF_XKNX_EXPOSE_ENTITY_ID): cv.string,
+    vol.Optional(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_XKNX_EXPOSE_ADDRESS): cv.string,
 })
 
@@ -82,13 +82,13 @@ SERVICE_XKNX_SEND_SCHEMA = vol.Schema({
 })
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the KNX component."""
     from xknx.exceptions import XKNXException
     try:
         hass.data[DATA_XKNX] = KNXModule(hass, config)
-        yield from hass.data[DATA_XKNX].start()
+        hass.data[DATA_XKNX].async_create_exposures()
+        await hass.data[DATA_XKNX].start()
 
     except XKNXException as ex:
         _LOGGER.warning("Can't connect to KNX interface: %s", ex)
@@ -137,30 +137,27 @@ class KNXModule(object):
         self.hass = hass
         self.config = config
         self.connected = False
-        self.initialized = True
         self.init_xknx()
         self.register_callbacks()
-        self.exposures = self.create_exposures()
+        self.exposures = []
 
     def init_xknx(self):
         """Initialize of KNX object."""
         from xknx import XKNX
         self.xknx = XKNX(config=self.config_file(), loop=self.hass.loop)
 
-    @asyncio.coroutine
-    def start(self):
+    async def start(self):
         """Start KNX object. Connect to tunneling or Routing device."""
         connection_config = self.connection_config()
-        yield from self.xknx.start(
+        await self.xknx.start(
             state_updater=self.config[DOMAIN][CONF_XKNX_STATE_UPDATER],
             connection_config=connection_config)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         self.connected = True
 
-    @asyncio.coroutine
-    def stop(self, event):
+    async def stop(self, event):
         """Stop KNX object. Disconnect from tunneling or Routing device."""
-        yield from self.xknx.stop()
+        await self.xknx.stop()
 
     def config_file(self):
         """Resolve and return the full path of xknx.yaml if configured."""
@@ -221,26 +218,27 @@ class KNXModule(object):
             self.xknx.telegram_queue.register_telegram_received_cb(
                 self.telegram_received_cb, address_filters)
 
-    def create_exposures(self):
+    @callback
+    def async_create_exposures(self):
         """Create exposures."""
-        exposures = []
-        if CONF_XKNX_EXPOSE in self.config[DOMAIN]:
-            for to_expose in self.config[DOMAIN][CONF_XKNX_EXPOSE]:
-                expose_type = to_expose.get(CONF_XKNX_EXPOSE_TYPE)
-                entity_id = to_expose.get(CONF_XKNX_EXPOSE_ENTITY_ID)
-                address = to_expose.get(CONF_XKNX_EXPOSE_ADDRESS)
-                if expose_type in ['time', 'date', 'datetime']:
-                    exposure = KNXExposeTime(
-                        self.hass, self.xknx, expose_type, address)
-                    exposures.append(exposure)
-                else:
-                    exposure = KNXExposeSensor(
-                        self.hass, self.xknx, expose_type, entity_id, address)
-                    exposures.append(exposure)
-        return exposures
+        if CONF_XKNX_EXPOSE not in self.config[DOMAIN]:
+            return
+        for to_expose in self.config[DOMAIN][CONF_XKNX_EXPOSE]:
+            expose_type = to_expose.get(CONF_XKNX_EXPOSE_TYPE)
+            entity_id = to_expose.get(CONF_ENTITY_ID)
+            address = to_expose.get(CONF_XKNX_EXPOSE_ADDRESS)
+            if expose_type in ['time', 'date', 'datetime']:
+                exposure = KNXExposeTime(
+                    self.xknx, expose_type, address)
+                exposure.async_register()
+                self.exposures.append(exposure)
+            else:
+                exposure = KNXExposeSensor(
+                    self.hass, self.xknx, expose_type, entity_id, address)
+                exposure.async_register()
+                self.exposures.append(exposure)
 
-    @asyncio.coroutine
-    def telegram_received_cb(self, telegram):
+    async def telegram_received_cb(self, telegram):
         """Call invoked after a KNX telegram was received."""
         self.hass.bus.fire('knx_event', {
             'address': telegram.group_address.str(),
@@ -249,8 +247,7 @@ class KNXModule(object):
         # False signals XKNX to proceed with processing telegrams.
         return False
 
-    @asyncio.coroutine
-    def service_send_to_knx_bus(self, call):
+    async def service_send_to_knx_bus(self, call):
         """Service for sending an arbitrary KNX message to the KNX bus."""
         from xknx.knx import Telegram, GroupAddress, DPTBinary, DPTArray
         attr_payload = call.data.get(SERVICE_XKNX_ATTR_PAYLOAD)
@@ -267,7 +264,7 @@ class KNXModule(object):
         telegram = Telegram()
         telegram.payload = payload
         telegram.group_address = address
-        yield from self.xknx.telegrams.put(telegram)
+        await self.xknx.telegrams.put(telegram)
 
 
 class KNXAutomation():
@@ -290,16 +287,15 @@ class KNXAutomation():
 class KNXExposeTime(object):
     """Object to Expose Time/Date object to KNX bus."""
 
-    def __init__(self, hass, xknx, expose_type, address):
+    def __init__(self, xknx, expose_type, address):
         """Initialize of Expose class."""
-        self.hass = hass
         self.xknx = xknx
         self.type = expose_type
         self.address = address
         self.device = None
-        self.register()
 
-    def register(self):
+    @callback
+    def async_register(self):
         """Register listener."""
         from xknx.devices import DateTime, DateTimeBroadcastType
         broadcast_type_string = self.type.upper()
@@ -310,8 +306,6 @@ class KNXExposeTime(object):
             broadcast_type=broadcast_type,
             group_address=self.address)
         self.xknx.devices.add(self.device)
-        async_track_utc_time_change(
-            self.hass, self.device.broadcast_time, second=0)
 
 
 class KNXExposeSensor(object):
@@ -325,9 +319,9 @@ class KNXExposeSensor(object):
         self.entity_id = entity_id
         self.address = address
         self.device = None
-        self.register()
 
-    def register(self):
+    @callback
+    def async_register(self):
         """Register listener."""
         from xknx.devices import ExposeSensor
         self.device = ExposeSensor(
@@ -339,9 +333,8 @@ class KNXExposeSensor(object):
         async_track_state_change(
             self.hass, self.entity_id, self._async_entity_changed)
 
-    @asyncio.coroutine
-    def _async_entity_changed(self, entity_id, old_state, new_state):
+    async def _async_entity_changed(self, entity_id, old_state, new_state):
         """Callback after entity changed."""
         if new_state is None:
             return
-        yield from self.device.set(float(new_state.state))
+        await self.device.set(float(new_state.state))
