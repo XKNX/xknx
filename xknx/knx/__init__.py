@@ -19,7 +19,6 @@ from .dpt_hvac_mode import HVACOperationMode, DPTHVACMode, \
     DPTControllerStatus
 from .dpt_2byte import DPT2ByteUnsigned, DPTUElCurrentmA, DPT2Ucount, DPTBrightness
 from .dpt_4byte import DPT4ByteUnsigned, DPT4ByteSigned
-from .dpt_scaling import DPTScaling
 from .dpt_scene_number import DPTSceneNumber
 from .dpt_time import DPTTime
 from .dpt_date import DPTDate
