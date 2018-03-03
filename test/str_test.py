@@ -133,8 +133,8 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_brightness_state='1/2/6')
         self.assertEqual(
             str(light),
-            '<Light name="Licht" switch="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" group_address_brightness="GroupAddress("1/2/5")'
-            '" group_address_brightness_state="GroupAddress("1/2/6")" brightness="0" />')
+            '<Light name="Licht" switch="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" '
+            'brightness="GroupAddress("1/2/5")/GroupAddress("1/2/6")/None/None" />')
 
     def test_light_color(self):
         """Test string representation of dimmable light object."""
@@ -193,7 +193,7 @@ class TestStringRepresentations(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(sensor.sensor_value.set(25)))
         self.assertEqual(
             str(sensor),
-            '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/<DPTArray value="[0xc0]" />/25" value="25" unit="%"/>')
+            '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/<DPTArray value="[0xbf]" />/25" value="25" unit="%"/>')
 
     def test_expose_sensor(self):
         """Test string representation of expose sensor object."""
@@ -209,7 +209,7 @@ class TestStringRepresentations(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(sensor.set(25)))
         self.assertEqual(
             str(sensor),
-            '<ExposeSensor name="MeinSensor" sensor="GroupAddress("1/2/3")/None/<DPTArray value="[0xc0]" />/25" value="25" unit="%"/>')
+            '<ExposeSensor name="MeinSensor" sensor="GroupAddress("1/2/3")/None/<DPTArray value="[0xbf]" />/25" value="25" unit="%"/>')
 
     def test_switch(self):
         """Test string representation of switch object."""

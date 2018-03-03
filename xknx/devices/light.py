@@ -7,12 +7,10 @@ It provides functionality for
 * setting the brightness.
 * reading the current state from KNX bus.
 """
-from xknx.exceptions import CouldNotParseTelegram
-from xknx.knx import DPTArray, GroupAddress
-
 from .device import Device
 from .remote_value_color_rgb import RemoteValueColorRGB
 from .remote_value_switch import RemoteValueSwitch
+from .remote_value_scaling import RemoteValueScaling
 
 
 class Light(Device):
@@ -31,10 +29,6 @@ class Light(Device):
         """Initialize Light class."""
         # pylint: disable=too-many-arguments
         super(Light, self).__init__(xknx, name, device_updated_cb)
-        if isinstance(group_address_brightness, (str, int)):
-            group_address_brightness = GroupAddress(group_address_brightness)
-        if isinstance(group_address_brightness_state, (str, int)):
-            group_address_brightness_state = GroupAddress(group_address_brightness_state)
 
         self.switch = RemoteValueSwitch(
             xknx,
@@ -43,12 +37,14 @@ class Light(Device):
             device_name=self.name,
             after_update_cb=self.after_update)
 
-        self.group_address_brightness = group_address_brightness
-        self.group_address_brightness_state = group_address_brightness_state
-
-        self.brightness = 0
-        self.supports_dimming = \
-            group_address_brightness is not None
+        self.brightness = RemoteValueScaling(
+            xknx,
+            group_address_brightness,
+            group_address_brightness_state,
+            device_name=self.name,
+            after_update_cb=self.after_update,
+            range_from=0,
+            range_to=255)
 
         self.color = RemoteValueColorRGB(
             xknx,
@@ -57,6 +53,11 @@ class Light(Device):
             device_name=self.name,
             after_update_cb=self.after_update)
         self.supports_color = self.color.initialized
+
+    @property
+    def supports_brightness(self):
+        """Return if cover supports direct positioning."""
+        return self.brightness.initialized
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -86,19 +87,15 @@ class Light(Device):
     def has_group_address(self, group_address):
         """Test if device has given group address."""
         return (self.switch.has_group_address(group_address) or
-                (self.group_address_brightness == group_address) or
-                (self.group_address_brightness_state == group_address) or
+                self.brightness.has_group_address(group_address) or
                 self.color.has_group_address(group_address))
 
     def __str__(self):
         """Return object as readable string."""
-        str_brightness = '' if not self.supports_dimming else \
-            ' group_address_brightness="{0}" ' \
-            'group_address_brightness_state="{1}" ' \
-            'brightness="{2}"'.format(
-                self.group_address_brightness,
-                self.group_address_brightness_state,
-                self.brightness)
+        str_brightness = '' if not self.supports_brightness else \
+            ' brightness="{0}"'.format(
+                self.brightness.group_addr_str())
+
         str_color = '' if not self.supports_color else \
             ' color="{0}"'.format(
                 self.color.group_addr_str())
@@ -116,12 +113,6 @@ class Light(Device):
         """Return the current switch state of the device."""
         return self.switch.value == RemoteValueSwitch.Value.ON
 
-    async def _set_internal_brightness(self, brightness):
-        """Set the internal brightness of the device. If state was changed after update hooks are executed."""
-        if brightness != self.brightness:
-            self.brightness = brightness
-            await self.after_update()
-
     async def set_on(self):
         """Switch light on."""
         await self.switch.on()
@@ -132,11 +123,10 @@ class Light(Device):
 
     async def set_brightness(self, brightness):
         """Set brightness of light."""
-        if not self.supports_dimming:
+        if not self.supports_brightness:
             self.xknx.logger.warning("Dimming not supported for device %s", self.get_name())
             return
-        await self.send(self.group_address_brightness, DPTArray(brightness))
-        await self._set_internal_brightness(brightness)
+        await self.brightness.set(brightness)
 
     async def set_color(self, color):
         """Set color of light."""
@@ -165,30 +155,14 @@ class Light(Device):
         state_addresses = []
         state_addresses.extend(self.switch.state_addresses())
         state_addresses.extend(self.color.state_addresses())
-        if self.supports_dimming:
-            state_address_brightness = \
-                self.group_address_brightness_state or \
-                self.group_address_brightness
-            state_addresses.append(state_address_brightness)
+        state_addresses.extend(self.brightness.state_addresses())
         return state_addresses
 
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
         await self.switch.process(telegram)
         await self.color.process(telegram)
-        if (self.supports_dimming and
-                (telegram.group_address == self.group_address_brightness or
-                 telegram.group_address == self.group_address_brightness_state)):
-            await self._process_brightness(telegram)
-
-    async def _process_brightness(self, telegram):
-        """Process incoming telegram for brightness state."""
-        if not isinstance(telegram.payload, DPTArray):
-            raise CouldNotParseTelegram("payload not of type DPTArray", payload=telegram.payload, device_name=self.name)
-        if len(telegram.payload.value) != 1:
-            raise CouldNotParseTelegram("payload has invalid length!=1", length=len(telegram.payload.value), device_name=self.name)
-
-        await self._set_internal_brightness(telegram.payload.value[0])
+        await self.brightness.process(telegram)
 
     def __eq__(self, other):
         """Equal operator."""

@@ -109,8 +109,8 @@ class KNXLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self.device.brightness \
-            if self.device.supports_dimming else \
+        return self.device.brightness.value \
+            if self.device.supports_brightness else \
             None
 
     @property

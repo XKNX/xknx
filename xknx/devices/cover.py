@@ -19,6 +19,7 @@ class Cover(Device):
 
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-many-public-methods
+    # pylint: disable=too-many-locals
 
     # Average typical travel time of a cover
     DEFAULT_TRAVEL_TIME_DOWN = 22
@@ -56,21 +57,27 @@ class Cover(Device):
             after_update_cb=self.after_update,
             invert=invert_position)
 
+        position_range_from = 0 if invert_position else 100
+        position_range_to = 100 if invert_position else 0
         self.position = RemoteValueScaling(
             xknx,
             group_address_position,
             group_address_position_state,
             device_name=self.name,
             after_update_cb=self.after_update,
-            invert=invert_position)
+            range_from=position_range_from,
+            range_to=position_range_to)
 
+        angle_range_from = 0 if invert_angle else 100
+        angle_range_to = 100 if invert_angle else 0
         self.angle = RemoteValueScaling(
             xknx,
             group_address_angle,
             group_address_angle_state,
             device_name=self.name,
             after_update_cb=self.after_update,
-            invert=invert_angle)
+            range_from=angle_range_from,
+            range_to=angle_range_to)
 
         self.travel_time_down = travel_time_down
         self.travel_time_up = travel_time_up

@@ -33,7 +33,7 @@ class TestLight(unittest.TestCase):
                       'Diningroom.Light_1',
                       group_address_switch='1/6/4',
                       group_address_brightness='1/6/6')
-        self.assertTrue(light.supports_dimming)
+        self.assertTrue(light.supports_brightness)
 
     def test_supports_dimm_no(self):
         """Test supports_dimm attribute with a Light without dimmer."""
@@ -41,7 +41,7 @@ class TestLight(unittest.TestCase):
         light = Light(xknx,
                       'Diningroom.Light_1',
                       group_address_switch='1/6/4')
-        self.assertFalse(light.supports_dimming)
+        self.assertFalse(light.supports_brightness)
 
     #
     # TEST SUPPORT COLOR
@@ -258,11 +258,11 @@ class TestLight(unittest.TestCase):
                       name="TestLight",
                       group_address_switch='1/2/3',
                       group_address_brightness='1/2/5')
-        self.assertEqual(light.brightness, 0)
+        self.assertEqual(light.brightness.value, None)
 
         telegram = Telegram(GroupAddress('1/2/5'), payload=DPTArray(23))
         self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
-        self.assertEqual(light.brightness, 23)
+        self.assertEqual(light.brightness.value, 23)
 
     def test_process_dimm_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
@@ -312,7 +312,7 @@ class TestLight(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(light.do("on")))
         self.assertTrue(light.state)
         self.loop.run_until_complete(asyncio.Task(light.do("brightness:80")))
-        self.assertEqual(light.brightness, 80)
+        self.assertEqual(light.brightness.value, 80)
         self.loop.run_until_complete(asyncio.Task(light.do("off")))
         self.assertFalse(light.state)
 
