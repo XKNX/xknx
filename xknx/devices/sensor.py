@@ -31,7 +31,9 @@ class Sensor(Device):
                 xknx,
                 group_address_state=group_address,
                 device_name=self.name,
-                after_update_cb=self.after_update)
+                after_update_cb=self.after_update,
+                range_from=0,
+                range_to=100)
         elif value_type == "pulse":
             self.sensor_value = RemoteValueDptValue1Ucount(
                 xknx,
