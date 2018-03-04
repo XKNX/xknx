@@ -195,7 +195,7 @@ class TestLight(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/5'), payload=DPTArray((23, 24, 25))))
-        self.assertEqual(light.current_color(), (23, 24, 25))
+        self.assertEqual(light.current_color, (23, 24, 25))
 
     def test_set_color_not_possible(self):
         """Test setting the color of a non light without color."""
@@ -258,11 +258,11 @@ class TestLight(unittest.TestCase):
                       name="TestLight",
                       group_address_switch='1/2/3',
                       group_address_brightness='1/2/5')
-        self.assertEqual(light.brightness.value, None)
+        self.assertEqual(light.current_brightness, None)
 
         telegram = Telegram(GroupAddress('1/2/5'), payload=DPTArray(23))
         self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
-        self.assertEqual(light.brightness.value, 23)
+        self.assertEqual(light.current_brightness, 23)
 
     def test_process_dimm_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
@@ -294,10 +294,10 @@ class TestLight(unittest.TestCase):
                       name="TestLight",
                       group_address_switch='1/2/3',
                       group_address_color='1/2/5')
-        self.assertEqual(light.current_color(), None)
+        self.assertEqual(light.current_color, None)
         telegram = Telegram(GroupAddress('1/2/5'), payload=DPTArray((23, 24, 25)))
         self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
-        self.assertEqual(light.current_color(), (23, 24, 25))
+        self.assertEqual(light.current_color, (23, 24, 25))
 
     #
     # TEST DO
@@ -312,7 +312,7 @@ class TestLight(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(light.do("on")))
         self.assertTrue(light.state)
         self.loop.run_until_complete(asyncio.Task(light.do("brightness:80")))
-        self.assertEqual(light.brightness.value, 80)
+        self.assertEqual(light.current_brightness, 80)
         self.loop.run_until_complete(asyncio.Task(light.do("off")))
         self.assertFalse(light.state)
 

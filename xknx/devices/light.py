@@ -52,12 +52,16 @@ class Light(Device):
             group_address_color_state,
             device_name=self.name,
             after_update_cb=self.after_update)
-        self.supports_color = self.color.initialized
 
     @property
     def supports_brightness(self):
         """Return if cover supports direct positioning."""
         return self.brightness.initialized
+
+    @property
+    def supports_color(self):
+        """Return if cover supports direct positioning."""
+        return self.color.initialized
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -121,6 +125,11 @@ class Light(Device):
         """Switch light off."""
         await self.switch.off()
 
+    @property
+    def current_brightness(self):
+        """Return current color of light."""
+        return self.brightness.value
+
     async def set_brightness(self, brightness):
         """Set brightness of light."""
         if not self.supports_brightness:
@@ -135,6 +144,7 @@ class Light(Device):
             return
         await self.color.set(color)
 
+    @property
     def current_color(self):
         """Return current color of light."""
         return self.color.value
