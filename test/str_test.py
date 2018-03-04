@@ -193,7 +193,7 @@ class TestStringRepresentations(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(sensor.sensor_value.set(25)))
         self.assertEqual(
             str(sensor),
-            '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/<DPTArray value="[0xbf]" />/25" value="25" unit="%"/>')
+            '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/<DPTArray value="[0x40]" />/25" value="25" unit="%"/>')
 
     def test_expose_sensor(self):
         """Test string representation of expose sensor object."""
