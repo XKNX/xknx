@@ -340,10 +340,10 @@ class Climate(Device):
                 self.setpoint_shift_step,
                 self.setpoint_shift_max,
                 self.setpoint_shift_min,
-                self.group_address_operation_mode,
-                self.group_address_operation_mode_state,
-                self.group_address_controller_status,
-                self.group_address_controller_status_state)
+                self.group_address_operation_mode.__repr__(),
+                self.group_address_operation_mode_state.__repr__(),
+                self.group_address_controller_status.__repr__(),
+                self.group_address_controller_status_state.__repr__())
 
     def __eq__(self, other):
         """Equal operator."""

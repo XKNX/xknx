@@ -53,7 +53,7 @@ class Telegram:
         """Return object as readable string."""
         return '<Telegram group_address="{0}", payload="{1}" ' \
             'telegramtype="{2}" direction="{3}" />'.format(
-                self.group_address,
+                self.group_address.__repr__(),
                 self.payload,
                 self.telegramtype,
                 self.direction)

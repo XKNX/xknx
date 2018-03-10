@@ -246,14 +246,18 @@ class GroupAddress(BaseAddress):
             return self.raw & self.MAX_SUB_LONG
         return self.raw
 
-    def __repr__(self):
+    def __str__(self):
         """
-        Return object as readable string.
+        Return object as in KNX notation (e.g. '1/2/3').
 
         Honors the used `GroupAddressType` of this group.
         """
         if self.levels == GroupAddressType.LONG:
-            return 'GroupAddress("{0.main}/{0.middle}/{0.sub}")'.format(self)
+            return '{0.main}/{0.middle}/{0.sub}'.format(self)
         elif self.levels == GroupAddressType.SHORT:
-            return 'GroupAddress("{0.main}/{0.sub}")'.format(self)
-        return 'GroupAddress("{0.sub}")'.format(self)
+            return '{0.main}/{0.sub}'.format(self)
+        return '{0.sub}'.format(self)
+
+    def __repr__(self):
+        """Return object as readable string."""
+        return 'GroupAddress("{0}")'.format(self)

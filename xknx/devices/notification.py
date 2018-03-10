@@ -43,7 +43,7 @@ class Notification(Device):
             'message="{2}" />' \
             .format(
                 self.name,
-                self.group_address,
+                self.group_address.__repr__(),
                 self.message)
 
     async def _set_internal_message(self, message):

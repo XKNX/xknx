@@ -158,7 +158,7 @@ class BinarySensor(Device):
     def __str__(self):
         """Return object as readable string."""
         return '<BinarySensor group_address="{0}" name="{1}" state="{2}"/>' \
-            .format(self.group_address, self.name, self.state)
+            .format(self.group_address.__repr__(), self.name, self.state)
 
     def __eq__(self, other):
         """Equal operator."""

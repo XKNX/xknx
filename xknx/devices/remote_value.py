@@ -122,8 +122,8 @@ class RemoteValue():
     def group_addr_str(self):
         """Return object as readable string."""
         return '{0}/{1}/{2}/{3}' \
-            .format(self.group_address,
-                    self.group_address_state,
+            .format(self.group_address.__repr__(),
+                    self.group_address_state.__repr__(),
                     self.payload,
                     self.value)
 

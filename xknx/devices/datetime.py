@@ -88,7 +88,7 @@ class DateTime(Device):
     def __str__(self):
         """Return object as readable string."""
         return '<DateTime name="{0}" group_address="{1}" broadcast_type="{2}" />' \
-            .format(self.name, self.group_address, self.broadcast_type.name)
+            .format(self.name, self.group_address.__repr__(), self.broadcast_type.name)
 
     def __eq__(self, other):
         """Equal operator."""

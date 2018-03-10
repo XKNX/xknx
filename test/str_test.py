@@ -328,8 +328,11 @@ class TestStringRepresentations(unittest.TestCase):
         """Test string representation of address object."""
         address = GroupAddress("1/2/3")
         self.assertEqual(
-            str(address),
+            repr(address),
             'GroupAddress("1/2/3")')
+        self.assertEqual(
+            str(address),
+            '1/2/3')
 
     def test_dpt_array(self):
         """Test string representation of DPTBinary."""

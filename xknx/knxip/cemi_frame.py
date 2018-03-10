@@ -206,8 +206,8 @@ class CEMIFrame(KNXIPBody):
         """Return object as readable string."""
         return '<CEMIFrame SourceAddress="{0}" DestinationAddress="{1}" ' \
                'Flags="{2:16b}" Command="{3}" payload="{4}" />'.format(
-                   self.src_addr,
-                   self.dst_addr,
+                   self.src_addr.__repr__(),
+                   self.dst_addr.__repr__(),
                    self.flags,
                    self.cmd,
                    self.payload)
