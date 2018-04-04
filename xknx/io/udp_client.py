@@ -114,9 +114,16 @@ class UDPClient:
     @staticmethod
     def create_multicast_sock(own_ip, remote_addr, bind_to_multicast_addr):
         """Create UDP multicast socket."""
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.setblocking(False)
+
+        if own_ip is None:
+            # Easy and compatible way to find the IP address of the default interface
+            ext_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            ext_sock.connect(("8.8.8.8",53)) # does not send a packet
+            own_ip = ext_sock.getsockname()[0]
+            ext_sock.close()
 
         sock.setsockopt(
             socket.SOL_IP,
@@ -128,23 +135,21 @@ class UDPClient:
             socket.inet_aton(remote_addr[0]) +
             socket.inet_aton(own_ip))
         sock.setsockopt(
-            socket.IPPROTO_IP,
+            socket.SOL_IP,
             socket.IP_MULTICAST_TTL, 2)
-        sock.setsockopt(
-            socket.IPPROTO_IP,
-            socket.IP_MULTICAST_IF,
-            socket.inet_aton(own_ip))
 
         # I have no idea why we have to use different bind calls here
         # - bind() with multicast addr does not work with gateway search requests
         #   on some machines. It only works if called with own ip.
         # - bind() with own_ip does not work with ROUTING_INDICATIONS on Gira
         #   knx router - for an unknown reason.
-        if bind_to_multicast_addr:
-            sock.bind((remote_addr[0], remote_addr[1]))
-        else:
-            sock.bind((own_ip, 0))
+        sock.bind(("0.0.0.0", remote_addr[1]))
+#       if bind_to_multicast_addr:
+#           sock.bind((remote_addr[0], remote_addr[1]))
+#       else:
+#           sock.bind((own_ip, 0))
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
+        # TODO: filter our own packets instead of turning off loopback
         return sock
 
     async def connect(self):
@@ -162,7 +167,7 @@ class UDPClient:
         else:
             (transport, _) = await self.xknx.loop.create_datagram_endpoint(
                 lambda: udp_client_factory,
-                local_addr=self.local_addr,
+                local_addr=self.local_addr if self.local_addr[0] else None,
                 remote_addr=self.remote_addr)
             self.transport = transport
 
