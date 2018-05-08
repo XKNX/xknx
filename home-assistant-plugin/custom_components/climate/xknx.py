@@ -9,9 +9,9 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    ClimateDevice)
+    SUPPORT_ON_OFF, ClimateDevice)
 from custom_components.xknx import ATTR_DISCOVER_DEVICES, DATA_XKNX
-from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS, STATE_UNKNOWN
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -26,10 +26,15 @@ CONF_OPERATION_MODE_ADDRESS = 'operation_mode_address'
 CONF_OPERATION_MODE_STATE_ADDRESS = 'operation_mode_state_address'
 CONF_CONTROLLER_STATUS_ADDRESS = 'controller_status_address'
 CONF_CONTROLLER_STATUS_STATE_ADDRESS = 'controller_status_state_address'
+CONF_CONTROLLER_MODE_ADDRESS = 'controller_mode_address'
+CONF_CONTROLLER_MODE_STATE_ADDRESS = 'controller_mode_state_address'
 CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS = \
     'operation_mode_frost_protection_address'
 CONF_OPERATION_MODE_NIGHT_ADDRESS = 'operation_mode_night_address'
 CONF_OPERATION_MODE_COMFORT_ADDRESS = 'operation_mode_comfort_address'
+CONF_OVERRIDE_SUPPORTED_OPERATION_MODES = 'override_supported_operation_modes'
+CONF_ON_OFF_ADDRESS = 'on_off_address'
+CONF_ON_OFF_STATE_ADDRESS = 'on_off_state_address'
 
 DEFAULT_NAME = 'XKNX Climate'
 DEFAULT_SETPOINT_SHIFT_STEP = 0.5
@@ -54,10 +59,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): cv.string,
     vol.Optional(CONF_CONTROLLER_STATUS_STATE_ADDRESS): cv.string,
+    vol.Optional(CONF_CONTROLLER_MODE_ADDRESS): cv.string,
+    vol.Optional(CONF_CONTROLLER_MODE_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
-})
+    vol.Optional(CONF_ON_OFF_ADDRESS): cv.string,
+    vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
+    vol.Optional(CONF_OVERRIDE_SUPPORTED_OPERATION_MODES): cv.ensure_list_csv,
+    })
 
 
 async def async_setup_platform(hass, config, async_add_devices,
@@ -103,12 +113,22 @@ def async_add_devices_config(hass, config, async_add_devices):
             CONF_CONTROLLER_STATUS_ADDRESS),
         group_address_controller_status_state=config.get(
             CONF_CONTROLLER_STATUS_STATE_ADDRESS),
+        group_address_controller_mode=config.get(
+            CONF_CONTROLLER_MODE_ADDRESS),
+        group_address_controller_mode_state=config.get(
+            CONF_CONTROLLER_MODE_STATE_ADDRESS),
         group_address_operation_mode_protection=config.get(
             CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS),
         group_address_operation_mode_night=config.get(
             CONF_OPERATION_MODE_NIGHT_ADDRESS),
         group_address_operation_mode_comfort=config.get(
-            CONF_OPERATION_MODE_COMFORT_ADDRESS))
+            CONF_OPERATION_MODE_COMFORT_ADDRESS),
+        group_address_on_off=config.get(
+            CONF_ON_OFF_ADDRESS),
+        group_address_on_off_state=config.get(
+            CONF_ON_OFF_STATE_ADDRESS),
+        override_supported_operation_modes=config.get(
+            CONF_OVERRIDE_SUPPORTED_OPERATION_MODES))
     hass.data[DATA_XKNX].xknx.devices.add(climate)
     async_add_devices([KNXClimate(hass, climate)])
 
@@ -130,6 +150,8 @@ class KNXClimate(ClimateDevice):
         support = SUPPORT_TARGET_TEMPERATURE
         if self.device.supports_operation_mode:
             support |= SUPPORT_OPERATION_MODE
+        if self.device.supports_on_off:
+            support |= SUPPORT_ON_OFF
         return support
 
     def async_register_callbacks(self):
@@ -213,3 +235,18 @@ class KNXClimate(ClimateDevice):
             from xknx.knx import HVACOperationMode
             knx_operation_mode = HVACOperationMode(operation_mode)
             await self.device.set_operation_mode(knx_operation_mode)
+
+    @property
+    def is_on(self):
+        """Return true if the device is on."""
+        if self.device.supports_on_off:
+            return self.device.is_on
+        return STATE_UNKNOWN
+
+    async def async_turn_on(self):
+        """Turn on."""
+        await self.device.turn_on()
+
+    async def async_turn_off(self):
+        """Turn off."""
+        await self.device.turn_off()

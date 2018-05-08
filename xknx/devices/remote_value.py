@@ -78,7 +78,7 @@ class RemoteValue():
                                         payload=telegram.payload,
                                         group_address=telegram.group_address,
                                         device_name=self.device_name)
-        if self.payload != telegram.payload:
+        if self.payload != telegram.payload or self.payload is None:
             self.payload = telegram.payload
             if self.after_update_cb is not None:
                 await self.after_update_cb()

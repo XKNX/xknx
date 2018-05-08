@@ -17,6 +17,7 @@ from .dpt_float import DPT2ByteFloat, DPT4ByteFloat, DPTLux, DPTTemperature, \
     DPTPowerFactor, DPTSpeed
 from .dpt_hvac_mode import HVACOperationMode, DPTHVACMode, \
     DPTControllerStatus
+from .dpt_hvac_contr_mode import DPTHVACContrMode
 from .dpt_2byte import DPT2ByteUnsigned, DPTUElCurrentmA, DPT2Ucount, DPTBrightness
 from .dpt_4byte import DPT4ByteUnsigned, DPT4ByteSigned
 from .dpt_scene_number import DPTSceneNumber
