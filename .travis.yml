@@ -15,10 +15,10 @@ matrix:
       env: TOXENV=py36
     - python: "3.6-dev"
       env: TOXENV=py36
-    - python: "3.7-dev"
-      env: TOXENV=py36
-    - python: "nightly"
-      env: TOXENV=py36
+#    - python: "3.7-dev"
+#      env: TOXENV=py36
+#    - python: "nightly"
+#      env: TOXENV=py36
 
 cache:
   directories:
