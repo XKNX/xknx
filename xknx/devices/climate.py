@@ -6,11 +6,12 @@ Module for managing the climate within a room.
 """
 from xknx.exceptions import CouldNotParseTelegram, DeviceIllegalValue
 from xknx.knx import (DPTArray, DPTBinary, DPTControllerStatus, DPTHVACMode,
-                      GroupAddress, HVACOperationMode)
+                      GroupAddress, HVACOperationMode, DPTHVACContrMode)
 
 from .device import Device
 from .remote_value_temp import RemoteValueTemp
 from .remote_value_1count import RemoteValue1Count
+from .remote_value_switch import RemoteValueSwitch
 
 
 class Climate(Device):
@@ -39,9 +40,14 @@ class Climate(Device):
                  group_address_operation_mode_comfort=None,
                  group_address_controller_status=None,
                  group_address_controller_status_state=None,
-                 device_updated_cb=None):
+                 group_address_controller_mode=None,
+                 group_address_controller_mode_state=None,
+                 group_address_on_off=None,
+                 group_address_on_off_state=None,
+                 device_updated_cb=None,
+                 override_supported_operation_modes=None):
         """Initialize Climate class."""
-        # pylint: disable=too-many-arguments, too-many-locals
+        # pylint: disable=too-many-arguments, too-many-locals, too-many-branches, too-many-statements
         super(Climate, self).__init__(xknx, name, device_updated_cb)
         if isinstance(group_address_operation_mode, (str, int)):
             group_address_operation_mode = GroupAddress(group_address_operation_mode)
@@ -57,6 +63,14 @@ class Climate(Device):
             group_address_controller_status = GroupAddress(group_address_controller_status)
         if isinstance(group_address_controller_status_state, (str, int)):
             group_address_controller_status_state = GroupAddress(group_address_controller_status_state)
+        if isinstance(group_address_controller_mode, (str, int)):
+            group_address_controller_mode = GroupAddress(group_address_controller_mode)
+        if isinstance(group_address_controller_mode_state, (str, int)):
+            group_address_controller_mode_state = GroupAddress(group_address_controller_mode_state)
+        if isinstance(group_address_on_off, (str, int)):
+            group_address_on_off = GroupAddress(group_address_on_off)
+        if isinstance(group_address_on_off_state, (str, int)):
+            group_address_on_off_state = GroupAddress(group_address_on_off_state)
 
         self.group_address_operation_mode = group_address_operation_mode
         self.group_address_operation_mode_state = group_address_operation_mode_state
@@ -65,8 +79,20 @@ class Climate(Device):
         self.group_address_operation_mode_comfort = group_address_operation_mode_comfort
         self.group_address_controller_status = group_address_controller_status
         self.group_address_controller_status_state = group_address_controller_status_state
+        self.group_address_controller_mode = group_address_controller_mode
+        self.group_address_controller_mode_state = group_address_controller_mode_state
+        self.group_address_on_off = group_address_on_off
+        self.group_address_on_off_state = group_address_on_off_state
 
         self.operation_mode = HVACOperationMode.STANDBY
+        self.override_supported_operation_modes = []
+
+        if override_supported_operation_modes:
+            for mode in override_supported_operation_modes:
+                if isinstance(mode, str):
+                    self.override_supported_operation_modes.append(HVACOperationMode[mode])
+                elif isinstance(mode, HVACOperationMode):
+                    self.override_supported_operation_modes.append(mode)
 
         self.temperature = RemoteValueTemp(
             xknx,
@@ -96,7 +122,20 @@ class Climate(Device):
             group_address_operation_mode_night is not None or \
             group_address_operation_mode_comfort is not None or \
             group_address_controller_status is not None or \
-            group_address_controller_status_state is not None
+            group_address_controller_status_state is not None or \
+            group_address_controller_mode is not None or \
+            group_address_controller_mode_state is not None
+
+        self.supports_on_off = \
+            group_address_on_off is not None or \
+            group_address_on_off_state is not None
+
+        self.on = RemoteValueSwitch(
+            xknx,
+            group_address_on_off,
+            group_address_on_off_state,
+            self.name,
+            self.after_update)
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -130,6 +169,15 @@ class Climate(Device):
             config.get('group_address_controller_status')
         group_address_controller_status_state = \
             config.get('group_address_controller_status_state')
+        group_address_controller_mode = \
+            config.get('group_address_controller_mode')
+        group_address_controller_mode_state = \
+            config.get('group_address_controller_mode_state')
+        group_address_on_off = \
+            config.get('group_address_on_off')
+        group_address_on_off_state = \
+            config.get('group_address_on_off_state')
+
         return cls(xknx,
                    name,
                    group_address_temperature=group_address_temperature,
@@ -145,7 +193,11 @@ class Climate(Device):
                    group_address_operation_mode_night=group_address_operation_mode_night,
                    group_address_operation_mode_comfort=group_address_operation_mode_comfort,
                    group_address_controller_status=group_address_controller_status,
-                   group_address_controller_status_state=group_address_controller_status_state)
+                   group_address_controller_status_state=group_address_controller_status_state,
+                   group_address_controller_mode=group_address_controller_mode,
+                   group_address_controller_mode_state=group_address_controller_mode_state,
+                   group_address_on_off=group_address_on_off,
+                   group_address_on_off_state=group_address_on_off_state)
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
@@ -158,13 +210,29 @@ class Climate(Device):
             self.group_address_operation_mode_night == group_address or \
             self.group_address_operation_mode_comfort == group_address or \
             self.group_address_controller_status == group_address or \
-            self.group_address_controller_status_state == group_address
+            self.group_address_controller_status_state == group_address or \
+            self.group_address_controller_mode == group_address or \
+            self.group_address_controller_mode_state == group_address or \
+            self.on.has_group_address(group_address)
 
     async def _set_internal_operation_mode(self, operation_mode):
         """Set internal value of operation mode. Call hooks if operation mode was changed."""
         if operation_mode != self.operation_mode:
             self.operation_mode = operation_mode
             await self.after_update()
+
+    @property
+    def is_on(self):
+        """Return power status."""
+        return bool(self.on.value and self.on.value.value == 1)
+
+    async def turn_on(self):
+        """Set power status to on."""
+        await self.on.on()
+
+    async def turn_off(self):
+        """Set power status to off."""
+        await self.on.off()
 
     @property
     def initialized_for_setpoint_shift_calculations(self):
@@ -244,6 +312,10 @@ class Climate(Device):
             await self.send(
                 self.group_address_controller_status,
                 DPTArray(DPTControllerStatus.to_knx(operation_mode)))
+        if self.group_address_controller_mode is not None:
+            await self.send(
+                self.group_address_controller_mode,
+                DPTArray(DPTHVACContrMode.to_knx(operation_mode)))
         await self._set_internal_operation_mode(operation_mode)
 
     def get_supported_operation_modes(self):
@@ -251,11 +323,20 @@ class Climate(Device):
         if not self.supports_operation_mode:
             return []
 
+        if self.override_supported_operation_modes:
+            return self.override_supported_operation_modes
+
         # All operation modes supported
         if self.group_address_operation_mode is not None:
-            return list(HVACOperationMode)
+            return [HVACOperationMode.AUTO, HVACOperationMode.COMFORT,
+                    HVACOperationMode.STANDBY, HVACOperationMode.NIGHT,
+                    HVACOperationMode.FROST_PROTECTION]
         if self.group_address_controller_status is not None:
-            return list(filter(lambda x: x != HVACOperationMode.AUTO, HVACOperationMode))
+            return [HVACOperationMode.COMFORT, HVACOperationMode.STANDBY,
+                    HVACOperationMode.NIGHT, HVACOperationMode.FROST_PROTECTION]
+        if self.group_address_controller_mode is not None:
+            return [HVACOperationMode.STANDBY, HVACOperationMode.AUTO, HVACOperationMode.HEAT,
+                    HVACOperationMode.COOL, HVACOperationMode.FAN_ONLY, HVACOperationMode.DRY]
 
         # Operation modes only supported partially
         operation_modes = []
@@ -275,14 +356,18 @@ class Climate(Device):
                 telegram.group_address == self.group_address_operation_mode_state:
             await self._process_operation_mode(telegram)
         elif self.supports_operation_mode and \
+                telegram.group_address == self.group_address_controller_mode or \
+                telegram.group_address == self.group_address_controller_mode_state:
+            await self._process_controller_mode(telegram)
+        elif self.supports_operation_mode and \
                 telegram.group_address == self.group_address_controller_status or \
                 telegram.group_address == self.group_address_controller_status_state:
             await self._process_controller_status(telegram)
         # Note: telegrams setting splitted up operation modes are not yet implemented
-
         await self.temperature.process(telegram)
         await self.target_temperature.process(telegram)
         await self.setpoint_shift.process(telegram)
+        await self.on.process(telegram)
 
     async def _process_operation_mode(self, telegram):
         """Process incoming telegram for operation mode."""
@@ -290,6 +375,14 @@ class Climate(Device):
                 or len(telegram.payload.value) != 1:
             raise CouldNotParseTelegram("invalid payload", payload=telegram.payload, device_name=self.name)
         operation_mode = DPTHVACMode.from_knx(telegram.payload.value)
+        await self._set_internal_operation_mode(operation_mode)
+
+    async def _process_controller_mode(self, telegram):
+        """Process incoming telegram for controller mode."""
+        if not isinstance(telegram.payload, DPTArray) \
+                or len(telegram.payload.value) != 1:
+            raise CouldNotParseTelegram("invalid payload", payload=telegram.payload, device_name=self.name)
+        operation_mode = DPTHVACContrMode.from_knx(telegram.payload.value)
         await self._set_internal_operation_mode(operation_mode)
 
     async def _process_controller_status(self, telegram):
@@ -306,6 +399,8 @@ class Climate(Device):
         state_addresses.extend(self.temperature.state_addresses())
         state_addresses.extend(self.target_temperature.state_addresses())
         state_addresses.extend(self.setpoint_shift.state_addresses())
+        if self.supports_on_off:
+            state_addresses.extend(self.on.state_addresses())
         if self.supports_operation_mode:
             if self.group_address_operation_mode_state:
                 state_addresses.append(self.group_address_operation_mode_state)
@@ -315,6 +410,10 @@ class Climate(Device):
                 state_addresses.append(self.group_address_controller_status_state)
             elif self.group_address_controller_status:
                 state_addresses.append(self.group_address_controller_status)
+            if self.group_address_controller_mode_state:
+                state_addresses.append(self.group_address_controller_mode_state)
+            elif self.group_address_controller_mode:
+                state_addresses.append(self.group_address_controller_mode)
             # Note: telegrams setting splitted up operation modes are not yet implemented
         return state_addresses
 
@@ -331,6 +430,9 @@ class Climate(Device):
             'group_address_operation_mode_state="{8}" ' \
             'group_address_controller_status="{9}" ' \
             'group_address_controller_status_state="{10}" ' \
+            'group_address_controller_mode="{11}" ' \
+            'group_address_controller_mode_state="{12}" ' \
+            'group_address_on_off="{13}" ' \
             '/>' \
             .format(
                 self.name,
@@ -343,7 +445,10 @@ class Climate(Device):
                 self.group_address_operation_mode.__repr__(),
                 self.group_address_operation_mode_state.__repr__(),
                 self.group_address_controller_status.__repr__(),
-                self.group_address_controller_status_state.__repr__())
+                self.group_address_controller_status_state.__repr__(),
+                self.group_address_controller_mode.__repr__(),
+                self.group_address_controller_mode_state.__repr__(),
+                self.on.group_addr_str())
 
     def __eq__(self, other):
         """Equal operator."""
