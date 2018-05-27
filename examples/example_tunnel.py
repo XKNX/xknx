@@ -9,33 +9,32 @@ from xknx.knx import DPTBinary, GroupAddress, PhysicalAddress, Telegram
 async def main():
     """Connect to a tunnel, send 2 telegrams and disconnect."""
     xknx = XKNX()
-    gatewayscanner = GatewayScanner(xknx)
-    await gatewayscanner.start()
+#    gatewayscanner = GatewayScanner(xknx)
+#    await gatewayscanner.start()
 
-    if not gatewayscanner.found:
-        print("No Gateways found")
-        return
+#    if not gatewayscanner.found:
+#        print("No Gateways found")
+#        return
 
     src_address = PhysicalAddress("15.15.249")
 
-    print("Connecting to {}:{} from {}".format(
-        gatewayscanner.found_ip_addr,
-        gatewayscanner.found_port,
-        gatewayscanner.found_local_ip))
+#    print("Connecting to {}:{} from {}".format(
+#        gatewayscanner.found_ip_addr,
+#        gatewayscanner.found_port,
+#        gatewayscanner.found_local_ip))
 
     tunnel = Tunnel(
         xknx,
         src_address,
-        local_ip=gatewayscanner.found_local_ip,
-        gateway_ip=gatewayscanner.found_ip_addr,
-        gateway_port=gatewayscanner.found_port)
+#        local_ip=gatewayscanner.found_local_ip,
+        gateway_ip="10.107.0.127")
 
     await tunnel.connect_udp()
     await tunnel.connect()
 
-    await tunnel.send_telegram(Telegram(GroupAddress('1/0/15'), payload=DPTBinary(1)))
+    await tunnel.send_telegram(Telegram(GroupAddress('1/1/9'), payload=DPTBinary(0)))
     await asyncio.sleep(2)
-    await tunnel.send_telegram(Telegram(GroupAddress('1/0/15'), payload=DPTBinary(0)))
+    await tunnel.send_telegram(Telegram(GroupAddress('1/1/9'), payload=DPTBinary(1)))
     await asyncio.sleep(2)
 
     await tunnel.connectionstate()

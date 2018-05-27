@@ -15,7 +15,7 @@ async def main():
     xknx = XKNX(device_updated_cb=device_updated_cb)
     switch = Switch(xknx,
                     name='TestOutlet',
-                    group_address='1/1/11')
+                    group_address='1/1/9')
     xknx.devices.add(switch)
 
     # Wait until Ctrl-C was pressed
