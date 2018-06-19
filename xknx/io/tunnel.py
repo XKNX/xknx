@@ -21,7 +21,9 @@ class Tunnel():
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, xknx, src_address, local_ip, gateway_ip, gateway_port, telegram_received_callback=None):
+    def __init__(self, xknx, src_address, local_ip, gateway_ip, gateway_port,
+                 telegram_received_callback=None, auto_reconnect=False,
+                 auto_reconnect_wait=3):
         """Initialize Tunnel class."""
         # pylint: disable=too-many-arguments
         self.xknx = xknx
@@ -37,6 +39,9 @@ class Tunnel():
         self.sequence_number = 0
         self.communication_channel = None
         self.number_heartbeat_failed = 0
+
+        self.auto_reconnect = auto_reconnect
+        self.auto_reconnect_wait = auto_reconnect_wait
 
     def init_udp_client(self):
         """Initialize udp_client."""
@@ -85,7 +90,16 @@ class Tunnel():
             self.udp_client)
         await connect.start()
         if not connect.success:
-            raise XKNXException("Could not establish connection")
+            if self.auto_reconnect:
+                msg = "Cannot connect to KNX. Retry in {} seconds.".format(
+                    self.auto_reconnect_wait
+                )
+                self.xknx.logger.warning(msg)
+                await asyncio.sleep(self.auto_reconnect_wait)
+                self.xknx.loop.create_task(self.reconnect())
+                return
+            else:
+                raise XKNXException("Could not establish connection")
         self.xknx.logger.debug(
             "Tunnel established communication_channel=%s, id=%s",
             connect.communication_channel,
