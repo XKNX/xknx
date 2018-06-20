@@ -48,7 +48,6 @@ class Tunnel():
 
     def init_udp_client(self):
         """Initialize udp_client."""
-        print('########### init udp client')
         self.udp_client = UDPClient(self.xknx,
                                     (self.local_ip, 0),
                                     (self.gateway_ip, self.gateway_port))
@@ -80,7 +79,6 @@ class Tunnel():
 
     async def start(self):
         """Start tunneling."""
-        print('########### start')
         await self.connect_udp()
         await self.connect()
 
@@ -90,7 +88,6 @@ class Tunnel():
 
     async def connect(self):
         """Connect/build tunnel."""
-        print('########### connect')
         connect = Connect(
             self.xknx,
             self.udp_client)
@@ -101,7 +98,6 @@ class Tunnel():
                     self.auto_reconnect_wait
                 )
                 self.xknx.logger.warning(msg)
-                print('########### create schedule_reconnect task')
                 task = self.xknx.loop.create_task(self.schedule_reconnect())
                 self._reconnect_task = task
                 return
@@ -114,7 +110,6 @@ class Tunnel():
         self._reconnect_task = None
         self.communication_channel = connect.communication_channel
         self.sequence_number = 0
-        print('########### connected')
         await self.start_heartbeat()
 
     async def send_telegram(self, telegram):
@@ -173,17 +168,14 @@ class Tunnel():
 
     async def disconnect(self, ignore_error=False):
         """Disconnect from tunnel device."""
-        print('########### disconnect')
         # only send disconnect request if we ever were connected
         if self.communication_channel is None:
-            print('######### no communication channel')
             return
         disconnect = Disconnect(
             self.xknx,
             self.udp_client,
             communication_channel_id=self.communication_channel)
         await disconnect.start()
-        print('######### disconnect done')
         if not disconnect.success and not ignore_error:
             raise XKNXException("Could not disconnect channel")
         else:
@@ -191,30 +183,22 @@ class Tunnel():
 
     async def reconnect(self):
         """Reconnect to tunnel device."""
-        print('########### reconnect')
         await self.disconnect(True)
         self.init_udp_client()
-        print('########### reconnect...')
         await self.start()
 
     async def schedule_reconnect(self):
         """Schedule reconnect to KNX."""
-        print('########### schedule reconnect')
         await asyncio.sleep(self.auto_reconnect_wait)
         await self.reconnect()
 
     async def stop_reconnect(self):
         if self._reconnect_task is not None:
-            print('######### cancel reconnect task')
             self._reconnect_task.cancel()
             self._reconnect_task = None
-            print('######### reconnect task cancelled')
-        else:
-            print('######### reconnect task not scheduled')
 
     async def stop(self):
         """Stop tunneling."""
-        print('########### stop')
         # XXX: set disconnect ignore_error True here. Is there actually anything
         #      which can happen if disconnect fails? normally this fails because
         #      we have no connection...
@@ -226,17 +210,12 @@ class Tunnel():
 
     async def start_heartbeat(self):
         """Start heartbeat for monitoring state of tunnel, as suggested by 03.08.02 KNX Core 5.4."""
-        print('########### start heartbeat')
         self._heartbeat_task = self.xknx.loop.create_task(self.do_heartbeat())
 
     async def stop_heartbeat(self):
         if self._heartbeat_task is not None:
-            print('######### cancel heartbeat task')
             self._heartbeat_task.cancel()
             self._heartbeat_task = None
-            print('######### heartbeat task cancelled')
-        else:
-            print('######### heartbeat task not scheduled')
 
     async def do_heartbeat(self):
         """Heartbeat: Worker 'thread', endless loop for sending heartbeat requests."""
@@ -254,15 +233,12 @@ class Tunnel():
 
     async def do_heartbeat_success(self):
         """Heartbeat: handling success."""
-        print('########### heartbeat success')
         self.number_heartbeat_failed = 0
 
     async def do_heartbeat_failed(self):
         """Heartbeat: handling error."""
-        print('########### heartbeat failed')
         self.number_heartbeat_failed = self.number_heartbeat_failed + 1
         if self.number_heartbeat_failed > 3:
-            print('########### heartbeat max failed reached')
             self.xknx.logger.warning("Heartbeat failed - reconnecting")
             await self.reconnect()
             self.number_heartbeat_failed = 0
