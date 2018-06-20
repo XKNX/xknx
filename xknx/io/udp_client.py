@@ -171,11 +171,20 @@ class UDPClient:
         self.xknx.knx_logger.debug("Sending: %s", knxipframe)
         if self.transport is None:
             raise XKNXException("Transport not connected")
-
+        try:
+            frame = bytes(knxipframe.to_knx())
+        except TypeError:
+            # happens on auto reconnect if very first connection fails.
+            # then knxipframe.body.communication_channel_id
+            # (xknx.knxip.disconnect_request.DisconnectRequest instance)
+            # is None
+            msg = "Failed to convert knxipframe to bytes: {}".format(knxipframe)
+            self.xknx.knx_logger.debug(msg)
+            return
         if self.multicast:
-            self.transport.sendto(bytes(knxipframe.to_knx()), self.remote_addr)
+            self.transport.sendto(frame, self.remote_addr)
         else:
-            self.transport.sendto(bytes(knxipframe.to_knx()))
+            self.transport.sendto(frame)
 
     def getsockname(self):
         """Return sockname."""
