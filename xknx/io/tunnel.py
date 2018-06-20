@@ -193,6 +193,7 @@ class Tunnel():
         await self.reconnect()
 
     async def stop_reconnect(self):
+        """Stop reconnect task if running."""
         if self._reconnect_task is not None:
             self._reconnect_task.cancel()
             self._reconnect_task = None
@@ -213,6 +214,7 @@ class Tunnel():
         self._heartbeat_task = self.xknx.loop.create_task(self.do_heartbeat())
 
     async def stop_heartbeat(self):
+        """Stop heartbeat task if running."""
         if self._heartbeat_task is not None:
             self._heartbeat_task.cancel()
             self._heartbeat_task = None
