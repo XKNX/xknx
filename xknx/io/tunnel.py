@@ -242,6 +242,7 @@ class Tunnel():
         self.number_heartbeat_failed = self.number_heartbeat_failed + 1
         if self.number_heartbeat_failed > 3:
             self.xknx.logger.warning("Heartbeat failed - reconnecting")
+            await self.stop_reconnect()
             await self.reconnect()
             self.number_heartbeat_failed = 0
             await self.stop_heartbeat()
