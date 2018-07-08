@@ -4,6 +4,7 @@ Module for Serialization and Deserialization of KNX Search Response.
 Search Requests are used to search for KNX/IP devices within the network.
 With a search response the receiving party acknowledges the valid processing of the request.
 The search response contains all information of the found device (Name, serial number, supported features.).
+It supports an array-style access to the DIBs (use classname as index).
 """
 from .body import KNXIPBody
 from .dib import DIB, DIBDeviceInformation
@@ -59,3 +60,10 @@ class SearchResponse(KNXIPBody):
         return '<SearchResponse control_endpoint="{0}" dibs="[\n{1}\n]" />' \
             .format(self.control_endpoint,
                     ',\n'.join(dib.__str__() for dib in self.dibs))
+
+    def __getitem__(self, clazz):
+        """Return the first DIB of given class."""
+        for dib in self.dibs:
+            if isinstance(dib, clazz):
+                return dib
+        raise IndexError

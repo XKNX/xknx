@@ -13,7 +13,7 @@ from .udp_client import UDPClient
 class Routing():
     """Class for handling KNX/IP routing."""
 
-    def __init__(self, xknx, telegram_received_callback, local_ip):
+    def __init__(self, xknx, telegram_received_callback, local_ip, bind_to_multicast_addr):
         """Initialize Routing class."""
         self.xknx = xknx
         self.telegram_received_callback = telegram_received_callback
@@ -23,7 +23,7 @@ class Routing():
                                    (local_ip, 0),
                                    (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
                                    multicast=True,
-                                   bind_to_multicast_addr=True)
+                                   bind_to_multicast_addr=bind_to_multicast_addr)
 
         self.udpclient.register_callback(
             self.response_rec_callback,

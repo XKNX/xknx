@@ -9,23 +9,22 @@ async def main():
     """Search for available KNX/IP devices with GatewayScanner and print out result if a device was found."""
     xknx = XKNX()
     gatewayscanner = GatewayScanner(xknx)
-    await gatewayscanner.start()
+    gateways = await gatewayscanner.scan()
 
-    if not gatewayscanner.found:
+    if not gateways:
         print("No Gateways found")
 
     else:
-        print("Gateway found: {0} / {1}:{2}".format(
-            gatewayscanner.found_name,
-            gatewayscanner.found_ip_addr,
-            gatewayscanner.found_port))
-        if gatewayscanner.supports_tunneling:
-            print("- Device supports tunneling")
-        if gatewayscanner.supports_routing:
-            print("- Device supports routing, connecting via {0}".format(
-                gatewayscanner.found_local_ip))
-
-    await gatewayscanner.stop()
+        for gateway in gateways:
+            print("Gateway found: {0} / {1}:{2}".format(
+                gateway.name,
+                gateway.ip_addr,
+                gateway.port))
+            if gateway.supports_tunnelling:
+                print("- Device supports tunneling")
+            if gateway.supports_routing:
+                print("- Device supports routing, connecting via {0}".format(
+                    gateway.local_ip))
 
 # pylint: disable=invalid-name
 loop = asyncio.get_event_loop()

@@ -137,7 +137,8 @@ class UDPClient:
 
         # I have no idea why we have to use different bind calls here
         # - bind() with multicast addr does not work with gateway search requests
-        #   on some machines. It only works if called with own ip.
+        #   on some machines. It only works if called with own ip. It also doesn't
+        #   work on Mac OS.
         # - bind() with own_ip does not work with ROUTING_INDICATIONS on Gira
         #   knx router - for an unknown reason.
         if bind_to_multicast_addr:
