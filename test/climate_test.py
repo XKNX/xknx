@@ -7,7 +7,7 @@ from xknx import XKNX
 from xknx.devices import Climate
 from xknx.exceptions import DeviceIllegalValue, CouldNotParseTelegram
 from xknx.knx import (DPT2ByteFloat, DPTArray, DPTBinary, DPTControllerStatus,
-                      DPTHVACMode, DPTTemperature, DPTValue1Count,
+                      DPTHVACMode, DPTTemperature, DPTInteger,
                       GroupAddress, HVACOperationMode, Telegram, TelegramType)
 
 
@@ -179,7 +179,7 @@ class TestClimate(unittest.TestCase):
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
-        telegram = Telegram(GroupAddress('1/2/3'), payload=DPTArray(DPTValue1Count.to_knx(-4)))
+        telegram = Telegram(GroupAddress('1/2/3'), payload=DPTArray(DPTInteger.to_knx(-4, signed=True)))
         self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()

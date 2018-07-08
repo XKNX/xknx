@@ -3,7 +3,7 @@ Module for managing an 1 count remote value.
 
 DPT 6.010.
 """
-from xknx.knx import DPTArray, DPTValue1Count
+from xknx.knx import DPTArray, DPTInteger
 
 from .remote_value import RemoteValue
 
@@ -18,8 +18,8 @@ class RemoteValue1Count(RemoteValue):
 
     def to_knx(self, value):
         """Convert value to payload."""
-        return DPTArray(DPTValue1Count.to_knx(value))
+        return DPTArray(DPTInteger.to_knx(value, signed=True))
 
     def from_knx(self, payload):
         """Convert current payload to value."""
-        return DPTValue1Count.from_knx(payload.value)
+        return DPTInteger.from_knx(payload.value, signed=True)

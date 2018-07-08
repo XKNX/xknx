@@ -1,14 +1,14 @@
 """Implementation of 3.17 Datapoint Types String."""
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .helper import test_bytesarray
 
 
-class DPTString(DPTBase):
+class DPTString(object):
     """
     Abstraction for KNX 14 Octet String.
 
-    DPT 3.17
+    DPT 16.000
     """
 
     STRING_SIZE = 14
@@ -16,7 +16,7 @@ class DPTString(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, cls.STRING_SIZE)
+        test_bytesarray(raw, cls.STRING_SIZE)
         value = str()
         for byte in raw:
             if byte != 0x00:

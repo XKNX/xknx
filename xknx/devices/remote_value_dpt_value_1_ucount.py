@@ -3,7 +3,7 @@ Module for managing a DTP 5010 remote value.
 
 DPT 5.010.
 """
-from xknx.knx import DPTArray, DPTValue1Ucount
+from xknx.knx import DPTArray, DPTInteger
 
 from .remote_value import RemoteValue
 
@@ -29,8 +29,8 @@ class RemoteValueDptValue1Ucount(RemoteValue):
 
     def to_knx(self, value):
         """Convert value to payload."""
-        return DPTArray(DPTValue1Ucount.to_knx(value))
+        return DPTArray(DPTInteger.to_knx(value))
 
     def from_knx(self, payload):
         """Convert current payload to value."""
-        return DPTValue1Ucount.from_knx(payload.value)
+        return DPTInteger.from_knx(payload.value)

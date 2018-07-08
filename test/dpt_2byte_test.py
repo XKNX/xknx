@@ -18,7 +18,6 @@ class TestDPT2byte(unittest.TestCase):
         self.assertEqual(DPTUElCurrentmA().value_min, 0)
         self.assertEqual(DPTUElCurrentmA().value_max, 65535)
         self.assertEqual(DPTUElCurrentmA().unit, "mA")
-        self.assertEqual(DPTUElCurrentmA().resolution, 1)
 
     def test_current_assert_min_exceeded(self):
         """Test initialization of DPTUElCurrentmA with wrong value (Underflow)."""

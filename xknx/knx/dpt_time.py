@@ -4,10 +4,11 @@ import time
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase, DPTWeekday
+from .dpt import DPTWeekday
+from .helper import test_bytesarray
 
 
-class DPTTime(DPTBase):
+class DPTTime(object):
     """
     Abstraction for KNX 3 Octet Time.
 
@@ -17,7 +18,7 @@ class DPTTime(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 3)
+        test_bytesarray(raw, 3)
 
         weekday = (raw[0] & 0xE0) >> 5
         hours = raw[0] & 0x1F

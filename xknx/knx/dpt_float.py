@@ -10,10 +10,10 @@ import struct
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .helper import test_bytesarray
 
 
-class DPT2ByteFloat(DPTBase):
+class DPT2ByteFloat(object):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.
 
@@ -29,7 +29,7 @@ class DPT2ByteFloat(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 2)
+        test_bytesarray(raw, 2)
         data = (raw[0] * 256) + raw[1]
         exponent = (data >> 11) & 0x0f
         significand = data & 0x7ff
@@ -80,7 +80,7 @@ class DPT2ByteFloat(DPTBase):
         return cls.value_min <= value <= cls.value_max
 
 
-class DPT4ByteFloat(DPTBase):
+class DPT4ByteFloat(object):
     """
     Abstraction for KNX 4 Octet Floating Point Numbers, with a maximum usable range as specified in IEEE 754.
 
@@ -98,7 +98,7 @@ class DPT4ByteFloat(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data (big endian)."""
-        cls.test_bytesarray(raw, 4)
+        test_bytesarray(raw, 4)
         try:
             return struct.unpack(">f", bytes(raw))[0]
         except struct.error:

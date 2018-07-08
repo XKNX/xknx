@@ -4,7 +4,7 @@ from enum import Enum
 
 from xknx.exceptions import CouldNotParseKNXIP, ConversionError
 
-from .dpt import DPTBase
+from .helper import test_bytesarray
 
 
 class HVACOperationMode(Enum):
@@ -17,7 +17,7 @@ class HVACOperationMode(Enum):
     FROST_PROTECTION = "Frost Protection"
 
 
-class DPTHVACMode(DPTBase):
+class DPTHVACMode(object):
     """
     Abstraction for KNX KNX HVAC mod.
 
@@ -27,7 +27,7 @@ class DPTHVACMode(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 1)
+        test_bytesarray(raw, 1)
         if raw[0] == 0x04:
             return HVACOperationMode.FROST_PROTECTION
         elif raw[0] == 0x03:
@@ -56,7 +56,7 @@ class DPTHVACMode(DPTBase):
         raise ConversionError("Could not parse HVACOperationMode", value=value)
 
 
-class DPTControllerStatus(DPTBase):
+class DPTControllerStatus(object):
     """
     Abstraction for KNX HVAC Controller status.
 
@@ -70,7 +70,7 @@ class DPTControllerStatus(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 1)
+        test_bytesarray(raw, 1)
         if raw[0] & 8 > 0:
             return HVACOperationMode.FROST_PROTECTION
         elif raw[0] & 4 > 0:

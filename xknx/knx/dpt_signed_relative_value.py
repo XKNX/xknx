@@ -2,10 +2,10 @@
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .helper import test_bytesarray
 
 
-class DPTSignedRelativeValue(DPTBase):
+class DPTSignedRelativeValue(object):
     """
     Abstraction for KNX 1 Byte "1-octet Signed Relative Value".
 
@@ -19,7 +19,7 @@ class DPTSignedRelativeValue(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 1)
+        test_bytesarray(raw, 1)
         if raw[0] > cls.value_max:
             return raw[0] - 0x100
         return raw[0]
@@ -38,15 +38,6 @@ class DPTSignedRelativeValue(DPTBase):
         """Test if value is within defined range for this object."""
         return value >= cls.value_min and \
             value <= cls.value_max
-
-
-class DPTPercentV8(DPTSignedRelativeValue):
-    """Abstraction for KNX DPT_Percent_V8.
-
-    DPT 6.001
-    """
-
-    unit = "%"
 
 
 class DPTValue1Count(DPTSignedRelativeValue):

@@ -3,7 +3,7 @@ Module for managing a DTP Scene Number remote value.
 
 DPT 17.001.
 """
-from xknx.knx import DPTArray, DPTSceneNumber
+from xknx.knx import DPTArray, DPTInteger
 
 from .remote_value import RemoteValue
 
@@ -29,8 +29,8 @@ class RemoteValueSceneNumber(RemoteValue):
 
     def to_knx(self, value):
         """Convert value to payload."""
-        return DPTArray(DPTSceneNumber.to_knx(value))
+        return DPTArray(DPTInteger.to_knx(value, max_value=63))
 
     def from_knx(self, payload):
         """Convert current payload to value."""
-        return DPTSceneNumber.from_knx(payload.value)
+        return DPTInteger.from_knx(payload.value, max_value=63)
