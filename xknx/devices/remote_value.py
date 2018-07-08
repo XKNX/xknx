@@ -78,7 +78,7 @@ class RemoteValue():
                                         payload=telegram.payload,
                                         group_address=telegram.group_address,
                                         device_name=self.device_name)
-        if self.payload != telegram.payload:
+        if self.payload != telegram.payload or self.payload is None:
             self.payload = telegram.payload
             if self.after_update_cb is not None:
                 await self.after_update_cb()
@@ -122,8 +122,8 @@ class RemoteValue():
     def group_addr_str(self):
         """Return object as readable string."""
         return '{0}/{1}/{2}/{3}' \
-            .format(self.group_address,
-                    self.group_address_state,
+            .format(self.group_address.__repr__(),
+                    self.group_address_state.__repr__(),
                     self.payload,
                     self.value)
 

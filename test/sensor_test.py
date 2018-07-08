@@ -33,7 +33,7 @@ class TestSensor(unittest.TestCase):
             value_type="percent")
         sensor.sensor_value.payload = DPTArray((0x40,))
 
-        self.assertEqual(sensor.resolve_state(), 75)
+        self.assertEqual(sensor.resolve_state(), 25)
         self.assertEqual(sensor.unit_of_measurement(), "%")
 
     def test_str_speed_ms(self):

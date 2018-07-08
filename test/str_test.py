@@ -81,13 +81,19 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_operation_mode_night='1/2/8',
             group_address_operation_mode_comfort='1/2/9',
             group_address_controller_status='1/2/10',
-            group_address_controller_status_state='1/2/11')
+            group_address_controller_status_state='1/2/11',
+            group_address_controller_mode='1/2/12',
+            group_address_controller_mode_state='1/2/13',
+            group_address_on_off='1/2/14',
+            group_address_on_off_state='1/2/15')
         self.assertEqual(
             str(climate),
             '<Climate name="Wohnzimmer" temperature="GroupAddress("1/2/1")/None/None/None"  target_temperature="GroupAddress("1/2/2")/None/None/'
             'None"  setpoint_shift="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" setpoint_shift_step="0.1" setpoint_shift_max="20" set'
             'point_shift_min="-20" group_address_operation_mode="GroupAddress("1/2/5")" group_address_operation_mode_state="GroupAddress("1/2/6")'
-            '" group_address_controller_status="GroupAddress("1/2/10")" group_address_controller_status_state="GroupAddress("1/2/11")" />')
+            '" group_address_controller_status="GroupAddress("1/2/10")" group_address_controller_status_state="GroupAddress("1/2/11")" '
+            'group_address_controller_mode="GroupAddress("1/2/12")" group_address_controller_mode_state="GroupAddress("1/2/13")" '
+            'group_address_on_off="GroupAddress("1/2/14")/GroupAddress("1/2/15")/None/None" />')
 
     def test_cover(self):
         """Test string representation of cover object."""
@@ -193,7 +199,7 @@ class TestStringRepresentations(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(sensor.sensor_value.set(25)))
         self.assertEqual(
             str(sensor),
-            '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/<DPTArray value="[0xbf]" />/25" value="25" unit="%"/>')
+            '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/<DPTArray value="[0x40]" />/25" value="25" unit="%"/>')
 
     def test_expose_sensor(self):
         """Test string representation of expose sensor object."""
@@ -328,8 +334,11 @@ class TestStringRepresentations(unittest.TestCase):
         """Test string representation of address object."""
         address = GroupAddress("1/2/3")
         self.assertEqual(
-            str(address),
+            repr(address),
             'GroupAddress("1/2/3")')
+        self.assertEqual(
+            str(address),
+            '1/2/3')
 
     def test_dpt_array(self):
         """Test string representation of DPTBinary."""

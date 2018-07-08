@@ -15,6 +15,19 @@ class HVACOperationMode(Enum):
     STANDBY = "Standby"
     NIGHT = "Night"
     FROST_PROTECTION = "Frost Protection"
+    HEAT = "Heat"
+    MORNING_WARMUP = "Morning Warmup"
+    COOL = "Cool"
+    NIGHT_PURGE = "Night Purge"
+    PRECOOL = "Precool"
+    OFF = "Off"
+    TEST = "Test"
+    EMERGENCY_HEAT = "Emergency Heat"
+    FAN_ONLY = "Fan only"
+    FREE_COOL = "Free Cool"
+    ICE = "Ice"
+    DRY = "Dry"
+    NODEM = "NoDem"
 
 
 class DPTHVACMode(object):
