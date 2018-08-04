@@ -9,11 +9,12 @@ import voluptuous as vol
 
 from custom_components.xknx import ATTR_DISCOVER_DEVICES, DATA_XKNX
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
-    SUPPORT_RGB_COLOR, Light)
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR, Light)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
 
 CONF_ADDRESS = 'address'
 CONF_STATE_ADDRESS = 'state_address'
@@ -23,6 +24,8 @@ CONF_COLOR_ADDRESS = 'color_address'
 CONF_COLOR_STATE_ADDRESS = 'color_state_address'
 
 DEFAULT_NAME = 'XKNX Light'
+DEFAULT_COLOR = [255, 255, 255]
+DEFAULT_BRIGHTNESS = 255
 DEPENDENCIES = ['xknx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -109,20 +112,19 @@ class KNXLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self.device.current_brightness \
-            if self.device.supports_brightness else \
-            None
-
-    @property
-    def xy_color(self):
-        """Return the XY color value [float, float]."""
-        return None
-
-    @property
-    def rgb_color(self):
-        """Return the RBG color value."""
         if self.device.supports_color:
-            return self.device.current_color
+            return max(self.device.current_color) if self.device.current_color is not None else DEFAULT_BRIGHTNESS
+        elif self.device.supports_brightness:
+            return self.device.current_brightness
+        else:
+            return None
+
+    @property
+    def hs_color(self):
+        """Return the HS color value."""
+        if self.device.supports_color:
+            rgb = self.device.current_color
+            return color_util.color_RGB_to_hs(*rgb) if rgb is not None else DEFAULT_COLOR
         return None
 
     @property
@@ -157,18 +159,26 @@ class KNXLight(Light):
         if self.device.supports_brightness:
             flags |= SUPPORT_BRIGHTNESS
         if self.device.supports_color:
-            flags |= SUPPORT_RGB_COLOR
+            flags |= SUPPORT_COLOR | SUPPORT_BRIGHTNESS
         return flags
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            if self.device.supports_brightness:
-                await self.device.set_brightness(int(kwargs[ATTR_BRIGHTNESS]))
-        elif ATTR_RGB_COLOR in kwargs:
-            if self.device.supports_color:
-                await self.device.set_color(kwargs[ATTR_RGB_COLOR])
+        brightness = int(kwargs[ATTR_BRIGHTNESS]) if ATTR_BRIGHTNESS in kwargs else self.brightness
+        hs_color = kwargs[ATTR_HS_COLOR] if ATTR_HS_COLOR in kwargs else self.hs_color
+
+        update_color = ATTR_HS_COLOR in kwargs
+        update_brightness = ATTR_BRIGHTNESS in kwargs
+
+        # always only go one path for turning on (avoid conflicting changes and weird effects)
+        if self.device.supports_brightness and (update_brightness and not update_color):
+            # if we don't need to update the color, try updating brightness directly if supported
+            await self.device.set_brightness(brightness)
+        elif self.device.supports_color and (update_brightness or update_color):
+            # change RGB color (includes brightness)
+            await self.device.set_color(color_util.color_hsv_to_RGB(*hs_color, brightness * 100 / 255))
         else:
+            # no color/brightness change, so just turn it on
             await self.device.set_on()
 
     async def async_turn_off(self, **kwargs):
