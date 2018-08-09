@@ -170,6 +170,8 @@ class Tunnel():
         """Disconnect from tunnel device."""
         # only send disconnect request if we ever were connected
         if self.communication_channel is None:
+            # close udp client to prevent open file descriptors
+            await self.udp_client.stop()
             return
         disconnect = Disconnect(
             self.xknx,
@@ -180,6 +182,8 @@ class Tunnel():
             raise XKNXException("Could not disconnect channel")
         else:
             self.xknx.logger.debug("Tunnel disconnected (communication_channel: %s)", self.communication_channel)
+        # close udp client to prevent open file descriptors
+        await self.udp_client.stop()
 
     async def reconnect(self):
         """Reconnect to tunnel device."""
@@ -205,7 +209,6 @@ class Tunnel():
         #      we have no connection...
         # await self.disconnect()
         await self.disconnect(True)
-        await self.udp_client.stop()
         await self.stop_heartbeat()
         await self.stop_reconnect()
 
