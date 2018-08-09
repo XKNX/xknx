@@ -134,7 +134,7 @@ class Cover(Device):
     def __str__(self):
         """Return object as readable string."""
         return '<Cover name="{0}" ' \
-            'updown"{1}" ' \
+            'updown="{1}" ' \
             'step="{2}" ' \
             'position="{3}" ' \
             'angle="{4}" '\

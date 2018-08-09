@@ -10,25 +10,26 @@ async def main():
     """Connect to a tunnel, send 2 telegrams and disconnect."""
     xknx = XKNX()
     gatewayscanner = GatewayScanner(xknx)
-    await gatewayscanner.start()
+    gateways = await gatewayscanner.scan()
 
-    if not gatewayscanner.found:
+    if not gateways:
         print("No Gateways found")
         return
 
+    gateway = gateways[0]
     src_address = PhysicalAddress("15.15.249")
 
     print("Connecting to {}:{} from {}".format(
-        gatewayscanner.found_ip_addr,
-        gatewayscanner.found_port,
-        gatewayscanner.found_local_ip))
+        gateway.ip_addr,
+        gateway.port,
+        gateway.local_ip))
 
     tunnel = Tunnel(
         xknx,
         src_address,
-        local_ip=gatewayscanner.found_local_ip,
-        gateway_ip=gatewayscanner.found_ip_addr,
-        gateway_port=gatewayscanner.found_port)
+        local_ip=gateway.local_ip,
+        gateway_ip=gateway.ip_addr,
+        gateway_port=gateway.port)
 
     await tunnel.connect_udp()
     await tunnel.connect()

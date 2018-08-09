@@ -9,20 +9,22 @@ async def main():
     """Search for a Tunelling device, walk through all possible channels and disconnect them."""
     xknx = XKNX()
     gatewayscanner = GatewayScanner(xknx)
-    await gatewayscanner.start()
+    gateways = await gatewayscanner.scan()
 
-    if not gatewayscanner.found:
+    if not gateways:
         print("No Gateways found")
         return
 
-    if not gatewayscanner.supports_tunneling:
+    gateway = gateways[0]
+
+    if not gateway.supports_tunnelling:
         print("Gateway does not support tunneling")
         return
 
     udp_client = UDPClient(
         xknx,
-        (gatewayscanner.found_local_ip, 0),
-        (gatewayscanner.found_ip_addr, gatewayscanner.found_port))
+        (gateway.local_ip, 0),
+        (gateway.ip_addr, gateway.port))
 
     await udp_client.connect()
 
