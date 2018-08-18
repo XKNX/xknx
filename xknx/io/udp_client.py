@@ -55,12 +55,14 @@ class UDPClient:
                 self.data_received_callback(data)
 
         def error_received(self, exc):
-            """Handel errors. Callback for error received."""
-            self.xknx.logger.warning('Error received: %s', exc)
+            """Handle errors. Callback for error received."""
+            if 'xknx' in self:
+                self.xknx.logger.warning('Error received: %s', exc)
 
         def connection_lost(self, exc):
             """Log error. Callback for connection lost."""
-            self.xknx.logger.info('closing transport %s', exc)
+            if 'xknx' in self:
+                self.xknx.logger.info('closing transport %s', exc)
 
     def __init__(self, xknx, local_addr, remote_addr, multicast=False, bind_to_multicast_addr=False):
         """Initialize UDPClient class."""
