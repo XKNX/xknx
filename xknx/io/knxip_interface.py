@@ -43,7 +43,7 @@ class ConnectionConfig:
     * bind_to_multicast_addr: Bind to the multicast address instead of the local IP (ROUTING only)
     """
 
-    # pylint: disable=too-few-public-methods
+    # pylint: disable=too-few-public-methods,too-many-instance-attributes
 
     def __init__(self,
                  connection_type: ConnectionType = ConnectionType.AUTOMATIC,
@@ -114,6 +114,7 @@ class KNXIPInterface():
     async def start_tunnelling(self, local_ip, gateway_ip, gateway_port,
                                auto_reconnect, auto_reconnect_wait):
         """Start KNX/IP tunnel."""
+        # pylint: disable=too-many-arguments
         self.xknx.logger.debug("Starting tunnel to %s:%s from %s", gateway_ip, gateway_port, local_ip)
         self.interface = Tunnel(
             self.xknx,
