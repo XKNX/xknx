@@ -42,8 +42,8 @@ class ConnectionConfig:
     * scan_filter: For AUTOMATIC connection, limit scan with the given filter
     * bind_to_multicast_addr: Bind to the multicast address instead of the local IP (ROUTING only)
     """
-
     # pylint: disable=too-few-public-methods
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(self,
                  connection_type: ConnectionType = ConnectionType.AUTOMATIC,
@@ -55,7 +55,7 @@ class ConnectionConfig:
                  scan_filter: GatewayScanFilter = GatewayScanFilter(),
                  bind_to_multicast_addr: bool = True):
         """Initialize ConnectionConfig class."""
-        # pylint: disable=too-many-instance-attributes
+        # pylint: disable=too-many-arguments
         self.connection_type = connection_type
         self.local_ip = local_ip
         self.gateway_ip = gateway_ip
