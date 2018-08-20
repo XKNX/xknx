@@ -55,7 +55,7 @@ class ConnectionConfig:
                  scan_filter: GatewayScanFilter = GatewayScanFilter(),
                  bind_to_multicast_addr: bool = True):
         """Initialize ConnectionConfig class."""
-        # pylint: disable=too-many-arguments
+        # pylint: disable=too-many-instance-attributes
         self.connection_type = connection_type
         self.local_ip = local_ip
         self.gateway_ip = gateway_ip
@@ -114,6 +114,7 @@ class KNXIPInterface():
     async def start_tunnelling(self, local_ip, gateway_ip, gateway_port,
                                auto_reconnect, auto_reconnect_wait):
         """Start KNX/IP tunnel."""
+        # pylint: disable=too-many-arguments
         self.xknx.logger.debug("Starting tunnel to %s:%s from %s", gateway_ip, gateway_port, local_ip)
         self.interface = Tunnel(
             self.xknx,
