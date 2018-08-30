@@ -6,7 +6,6 @@ It provides functionality for
 * setting fan to specific speed
 * reading the current speed from KNX bus.
 """
-import asyncio
 from .device import Device
 from .remote_value_scaling import RemoteValueScaling
 
