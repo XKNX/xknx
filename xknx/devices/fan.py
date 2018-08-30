@@ -10,6 +10,7 @@ import asyncio
 from .device import Device
 from .remote_value_scaling import RemoteValueScaling
 
+
 class Fan(Device):
     """Class for managing a fan."""
 
@@ -61,16 +62,14 @@ class Fan(Device):
                 self.name,
                 self.speed.group_addr_str())
 
-    @asyncio.coroutine
-    def set_speed(self, speed):
-        """Sets the fan to a desginated speed."""
-        yield from self.speed.set(speed)
+    async def set_speed(self, speed):
+        """Set the fan to a desginated speed."""
+        await self.speed.set(speed)
 
-    @asyncio.coroutine
-    def do(self, action):
+    async def do(self, action):
         """Execute 'do' commands."""
         if action.startswith("speed:"):
-            yield from self.set_speed(int(action[11:]))
+            await self.set_speed(int(action[11:]))
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
