@@ -88,7 +88,7 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_on_off_state='1/2/15')
         self.assertEqual(
             str(climate),
-            '<Climate name="Wohnzimmer" temperature="GroupAddress("1/2/1")/None/None/None"  target_temperature="GroupAddress("1/2/2")/None/None/'
+            '<Climate name="Wohnzimmer" temperature="None/GroupAddress("1/2/1")/None/None"  target_temperature="GroupAddress("1/2/2")/None/None/'
             'None"  setpoint_shift="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" setpoint_shift_step="0.1" setpoint_shift_max="20" set'
             'point_shift_min="-20" group_address_operation_mode="GroupAddress("1/2/5")" group_address_operation_mode_state="GroupAddress("1/2/6")'
             '" group_address_controller_status="GroupAddress("1/2/10")" group_address_controller_status_state="GroupAddress("1/2/11")" '

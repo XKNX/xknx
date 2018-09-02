@@ -47,8 +47,6 @@ class RemoteValue():
         """Return group addresses which should be requested to sync state."""
         if self.group_address_state:
             return [self.group_address_state, ]
-        if self.group_address:
-            return [self.group_address, ]
         return []
 
     def payload_valid(self, payload):

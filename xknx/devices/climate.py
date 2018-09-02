@@ -96,7 +96,7 @@ class Climate(Device):
 
         self.temperature = RemoteValueTemp(
             xknx,
-            group_address_temperature,
+            group_address_state=group_address_temperature,
             device_name=self.name,
             after_update_cb=self.after_update)
         self.target_temperature = RemoteValueTemp(

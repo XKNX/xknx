@@ -73,9 +73,9 @@ class TestLight(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         light = Light(xknx,
                       name="TestLight",
-                      group_address_switch='1/2/3',
-                      group_address_brightness='1/2/5',
-                      group_address_color='1/2/6')
+                      group_address_switch_state='1/2/3',
+                      group_address_brightness_state='1/2/5',
+                      group_address_color_state='1/2/6')
         self.loop.run_until_complete(asyncio.Task(light.sync(False)))
 
         self.assertEqual(xknx.telegrams.qsize(), 3)
