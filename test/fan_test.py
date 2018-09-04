@@ -1,7 +1,7 @@
 """Unit test for Fan objects."""
 import asyncio
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from xknx import XKNX
 from xknx.devices import Fan
