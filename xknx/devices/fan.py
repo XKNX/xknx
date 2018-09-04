@@ -68,7 +68,7 @@ class Fan(Device):
     async def do(self, action):
         """Execute 'do' commands."""
         if action.startswith("speed:"):
-            await self.set_speed(int(action[11:]))
+            await self.set_speed(int(action[6:]))
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
@@ -82,6 +82,7 @@ class Fan(Device):
         """Process incoming GROUP WRITE telegram."""
         await self.speed.process(telegram)
 
+    @property
     def current_speed(self):
         """Return current speed of fan."""
         return self.speed.value
