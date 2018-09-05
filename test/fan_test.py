@@ -91,7 +91,7 @@ class TestFan(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(fan.process(telegram)))
         self.assertEqual(fan.current_speed, 55)
 
-    def test_process_speed_wrong_payload(self):
+    def test_process_speed_wrong_payload(self):  # pylint: disable=invalid-name
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX(loop=self.loop)
         fan = Fan(xknx,
