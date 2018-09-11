@@ -34,3 +34,5 @@ class Connect(RequestResponse):
         """Set communication channel and identifier after having received a valid answer."""
         self.communication_channel = knxipframe.body.communication_channel
         self.identifier = knxipframe.body.identifier
+        # Use the address they gave us
+        self.xknx.own_address.raw = self.identifier
