@@ -113,6 +113,16 @@ class DPT4ByteFloat(DPTBase):
             raise ConversionError("Cant serialize DPT4ByteFloat", vlaue=value)
 
 
+class DPTVoltage(DPT2ByteFloat):
+    """
+    Abstraction for KNX 2 Octet Floating Point Numbers.
+
+    DPT 9.020 DPT_Value_Voltage.
+    """
+
+    unit = "mV"
+
+
 class DPTTemperature(DPT2ByteFloat):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.

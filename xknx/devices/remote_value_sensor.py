@@ -10,7 +10,7 @@ from xknx.knx import (DPT2ByteFloat, DPT2ByteUnsigned, DPT4ByteFloat,
                       DPTBrightness, DPTElectricCurrent, DPTElectricPotential,
                       DPTEnergy, DPTFrequency, DPTHeatFlowRate, DPTHumidity,
                       DPTLux, DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower,
-                      DPTPowerFactor, DPTSpeed, DPTTemperature,
+                      DPTPowerFactor, DPTSpeed, DPTTemperature, DPTVoltage,
                       DPTUElCurrentmA, DPTWsp)
 
 from .remote_value import RemoteValue
@@ -27,6 +27,7 @@ class RemoteValueSensor(RemoteValue):
         'speed_ms': DPTWsp,
         'current': DPTUElCurrentmA,
         'power': DPTPower,
+        'voltage': DPTVoltage,
         'electric_current': DPTElectricCurrent,
         'electric_potential': DPTElectricPotential,
         'energy': DPTEnergy,
