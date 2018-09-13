@@ -235,3 +235,24 @@ class TestDPTFloat(unittest.TestCase):
     def test_power_settings(self):
         """Test attributes of DPTLux."""
         self.assertEqual(DPTPower().unit, "W")
+
+    #
+    # DPTEnthalpie
+    #
+    def test_enthalpie_settings(self):
+        """Test attributes of DPTEnthalpie."""
+        self.assertEqual(DPTEnthalpie().unit, "H")
+
+    #
+    # DPTPartsPerMillion
+    #
+    def test_partspermillion_settings(self):
+        """Test attributes of DPTPartsPerMillion."""
+        self.assertEqual(DPTPartsPerMillion().unit, "ppm")
+
+    #
+    # DTPVoltage
+    #
+    def test_voltage_settings(self):
+        """Test attributes of DTPVoltage."""
+        self.assertEqual(DTPVoltage().unit, "V")
