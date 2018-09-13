@@ -128,7 +128,7 @@ class DPTPartsPerMillion(DPT2ByteFloat):
     DPT 9.008 DPT_Value_parts/million.
     """
 
-    unit = "parts/million"
+    unit = "ppm"
 
 
 class DPTEnthalpie(DPT2ByteFloat):
