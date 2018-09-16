@@ -3,6 +3,8 @@ import asyncio
 import logging
 import signal
 
+from sys import platform
+
 from xknx.core import Config, TelegramQueue
 from xknx.devices import Devices
 from xknx.io import ConnectionConfig, KNXIPInterface
@@ -98,6 +100,9 @@ class XKNX:
         def sigint_handler():
             """End loop."""
             self.sigint_received.set()
-        self.loop.add_signal_handler(signal.SIGINT, sigint_handler)
+        if platform == "win32":
+            self.logger.warning('Windows does not support signals')
+        else:
+            self.loop.add_signal_handler(signal.SIGINT, sigint_handler)
         self.logger.warning('Press Ctrl+C to stop')
         await self.sigint_received.wait()

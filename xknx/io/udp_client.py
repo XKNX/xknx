@@ -55,12 +55,14 @@ class UDPClient:
                 self.data_received_callback(data)
 
         def error_received(self, exc):
-            """Handel errors. Callback for error received."""
-            self.xknx.logger.warning('Error received: %s', exc)
+            """Handle errors. Callback for error received."""
+            if hasattr(self, 'xknx'):
+                self.xknx.logger.warning('Error received: %s', exc)
 
         def connection_lost(self, exc):
             """Log error. Callback for connection lost."""
-            self.xknx.logger.info('closing transport %s', exc)
+            if hasattr(self, 'xknx'):
+                self.xknx.logger.info('closing transport %s', exc)
 
     def __init__(self, xknx, local_addr, remote_addr, multicast=False, bind_to_multicast_addr=False):
         """Initialize UDPClient class."""
@@ -140,7 +142,8 @@ class UDPClient:
 
         # I have no idea why we have to use different bind calls here
         # - bind() with multicast addr does not work with gateway search requests
-        #   on some machines. It only works if called with own ip.
+        #   on some machines. It only works if called with own ip. It also doesn't
+        #   work on Mac OS.
         # - bind() with own_ip does not work with ROUTING_INDICATIONS on Gira
         #   knx router - for an unknown reason.
         sock.bind(("0.0.0.0", remote_addr[1]))

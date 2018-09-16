@@ -9,7 +9,7 @@ This package contains all objects managing Tunneling and Routing Connections..
 # flake8: noqa
 from .request_response import RequestResponse
 from .knxip_interface import KNXIPInterface, ConnectionType, ConnectionConfig
-from .gateway_scanner import GatewayScanner
+from .gateway_scanner import GatewayScanner, GatewayScanFilter
 from .routing import Routing
 from .tunnel import Tunnel
 from .disconnect import Disconnect

@@ -89,7 +89,22 @@ class TestRemoteValueSwitch(unittest.TestCase):
             payload=DPTBinary(1))
         self.assertEqual(remote_value.value, None)
         self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+        self.assertIsNotNone(remote_value.payload)
         self.assertEqual(remote_value.value, RemoteValueSwitch.Value.ON)
+
+    def test_process_off(self):
+        """Test process OFF telegram."""
+        xknx = XKNX(loop=self.loop)
+        remote_value = RemoteValueSwitch(
+            xknx,
+            group_address=GroupAddress("1/2/3"))
+        telegram = Telegram(
+            group_address=GroupAddress("1/2/3"),
+            payload=DPTBinary(0))
+        self.assertEqual(remote_value.value, None)
+        self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+        self.assertIsNotNone(remote_value.payload)
+        self.assertEqual(remote_value.value, RemoteValueSwitch.Value.OFF)
 
     def test_to_process_error(self):
         """Test process errornous telegram."""
