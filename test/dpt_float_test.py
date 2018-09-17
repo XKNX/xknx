@@ -177,7 +177,7 @@ class TestDPTFloat(unittest.TestCase):
     #
     def test_voltage_settings(self):
         """Test attributes of DPTVoltage."""
-        self.assertEqual(DPTVoltage().unit, "V")
+        self.assertEqual(DPTVoltage().unit, "mV")
 
     # ####################################################################
     # DPT4ByteFloat
