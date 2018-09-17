@@ -7,7 +7,7 @@ from xknx.exceptions import ConversionError
 from xknx.knx import (DPT2ByteFloat, DPT4ByteFloat, DPTElectricCurrent,
                       DPTElectricPotential, DPTFrequency, DPTHumidity, DPTLux,
                       DPTPhaseAngleDeg, DPTPower, DPTTemperature,
-                      DPTEnthalpie, DPTPartsPerMillion, DTPVoltage)
+                      DPTEnthalpy, DPTPartsPerMillion, DTPVoltage)
 
 
 class TestDPTFloat(unittest.TestCase):
@@ -159,11 +159,11 @@ class TestDPTFloat(unittest.TestCase):
             DPTHumidity().to_knx(-1)
 
     #
-    # DPTEnthalpie
+    # DPTEnthalpy
     #
-    def test_enthalpie_settings(self):
-        """Test attributes of DPTEnthalpie."""
-        self.assertEqual(DPTEnthalpie().unit, "H")
+    def test_enthalpy_settings(self):
+        """Test attributes of DPTEnthalpy."""
+        self.assertEqual(DPTEnthalpy().unit, "H")
 
     #
     # DPTPartsPerMillion

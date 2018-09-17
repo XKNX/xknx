@@ -131,7 +131,7 @@ class DPTPartsPerMillion(DPT2ByteFloat):
     unit = "ppm"
 
 
-class DPTEnthalpie(DPT2ByteFloat):
+class DPTEnthalpy(DPT2ByteFloat):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.
     DPT 9.* 2-byte float value (with unit)

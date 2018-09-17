@@ -10,7 +10,7 @@ from xknx.knx import (DPT2ByteFloat, DPT2ByteUnsigned, DPT4ByteFloat,
                       DPTBrightness, DPTElectricCurrent, DPTElectricPotential,
                       DPTEnergy, DPTFrequency, DPTHeatFlowRate, DPTHumidity,
                       DPTLux, DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower,
-                      DPTPowerFactor, DPTSpeed, DPTTemperature, DPTEnthalpie,
+                      DPTPowerFactor, DPTSpeed, DPTTemperature, DPTEnthalpy,
                       DPTUElCurrentmA, DPTWsp, DPTPartsPerMillion, DPTVoltage)
 
 from .remote_value import RemoteValue
@@ -37,7 +37,7 @@ class RemoteValueSensor(RemoteValue):
         'phaseangledeg': DPTPhaseAngleDeg,
         'powerfactor': DPTPowerFactor,
         'speed': DPTSpeed,
-        'enthalpie': DPTEnthalpie,
+        'enthalpy': DPTEnthalpy,
         'ppm': DPTPartsPerMillion,
 
         #  Generic DPT Without Min/Max and Unit.
