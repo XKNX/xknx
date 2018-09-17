@@ -116,6 +116,7 @@ class DPT4ByteFloat(DPTBase):
 class DPTVoltage(DPT2ByteFloat):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.
+
     DPT 9.020 DPT_Value_Voltage.
     """
 
@@ -125,6 +126,7 @@ class DPTVoltage(DPT2ByteFloat):
 class DPTPartsPerMillion(DPT2ByteFloat):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.
+
     DPT 9.008 DPT_Value_parts/million.
     """
 
@@ -134,6 +136,7 @@ class DPTPartsPerMillion(DPT2ByteFloat):
 class DPTEnthalpy(DPT2ByteFloat):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.
+
     DPT 9.* 2-byte float value (with unit)
     """
 
