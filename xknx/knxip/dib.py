@@ -50,7 +50,7 @@ class DIB():
 
         if dtc == DIBTypeCode.DEVICE_INFO:
             return DIBDeviceInformation()
-        elif dtc == DIBTypeCode.SUPP_SVC_FAMILIES:
+        if dtc == DIBTypeCode.SUPP_SVC_FAMILIES:
             return DIBSuppSVCFamilies()
         return DIBGeneric()
 

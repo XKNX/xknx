@@ -40,8 +40,7 @@ class RemoteValue():
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
-        return (self.group_address == group_address) or \
-               (self.group_address_state == group_address)
+        return group_address in [self.group_address, self.group_address_state]
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
@@ -59,13 +58,11 @@ class RemoteValue():
         """Convert current payload to value - to be implemented in derived class."""
         # pylint: disable=unused-argument
         self.xknx.logger.warning("from_knx not implemented for %s", self.__class__.__name__)
-        return None
 
     def to_knx(self, value):
         """Convert value to payload - to be implemented in derived class."""
         # pylint: disable=unused-argument
         self.xknx.logger.warning("to_knx not implemented for %s", self.__class__.__name__)
-        return None
 
     async def process(self, telegram):
         """Process incoming telegram."""
@@ -103,7 +100,7 @@ class RemoteValue():
         if not self.initialized:
             self.xknx.logger.info("Setting value of uninitialized device %s (value %s)", self.device_name, value)
             return
-        payload = self.to_knx(value)
+        payload = self.to_knx(value)  # pylint: disable=assignment-from-no-return
         updated = False
         if self.payload is None or payload != self.payload:
             self.payload = payload

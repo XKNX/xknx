@@ -36,8 +36,7 @@ class DPTSignedRelativeValue(DPTBase):
     @classmethod
     def _test_boundaries(cls, value):
         """Test if value is within defined range for this object."""
-        return value >= cls.value_min and \
-            value <= cls.value_max
+        return cls.value_min <= value <= cls.value_max
 
 
 class DPTPercentV8(DPTSignedRelativeValue):

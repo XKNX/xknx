@@ -101,8 +101,7 @@ class Tunnel():
                 task = self.xknx.loop.create_task(self.schedule_reconnect())
                 self._reconnect_task = task
                 return
-            else:
-                raise XKNXException("Could not establish connection")
+            raise XKNXException("Could not establish connection")
         self.xknx.logger.debug(
             "Tunnel established communication_channel=%s, id=%s",
             connect.communication_channel,

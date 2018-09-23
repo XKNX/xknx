@@ -96,8 +96,7 @@ class BinarySensor(Device):
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
-        return (self.group_address == group_address) or \
-               (self.group_address_state == group_address)
+        return group_address in [self.group_address, self.group_address_state]
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""

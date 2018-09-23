@@ -242,7 +242,7 @@ class GroupAddress(BaseAddress):
         """
         if self.levels == GroupAddressType.SHORT:
             return self.raw & self.MAX_SUB_SHORT
-        elif self.levels == GroupAddressType.LONG:
+        if self.levels == GroupAddressType.LONG:
             return self.raw & self.MAX_SUB_LONG
         return self.raw
 
@@ -254,7 +254,7 @@ class GroupAddress(BaseAddress):
         """
         if self.levels == GroupAddressType.LONG:
             return '{0.main}/{0.middle}/{0.sub}'.format(self)
-        elif self.levels == GroupAddressType.SHORT:
+        if self.levels == GroupAddressType.SHORT:
             return '{0.main}/{0.sub}'.format(self)
         return '{0.sub}'.format(self)
 

@@ -42,7 +42,7 @@ class RemoteValueStep(RemoteValue):
         """Convert value to payload."""
         if value == self.Direction.INCREASE:
             return DPTBinary(1) if self.invert else DPTBinary(0)
-        elif value == self.Direction.DECREASE:
+        if value == self.Direction.DECREASE:
             return DPTBinary(0) if self.invert else DPTBinary(1)
         raise ConversionError("value invalid", value=value, device_name=self.device_name)
 
@@ -50,7 +50,7 @@ class RemoteValueStep(RemoteValue):
         """Convert current payload to value."""
         if payload == DPTBinary(0):
             return self.Direction.DECREASE if self.invert else self.Direction.INCREASE
-        elif payload == DPTBinary(1):
+        if payload == DPTBinary(1):
             return self.Direction.INCREASE if self.invert else self.Direction.DECREASE
         raise CouldNotParseTelegram("payload invalid", payload=payload, device_name=self.device_name)
 
