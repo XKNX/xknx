@@ -220,5 +220,5 @@ class TestBinarySensor(unittest.TestCase):
     def test_state_addresses(self):
         """Test expose sensor returns empty list as state addresses."""
         xknx = XKNX(loop=self.loop)
-        switch = BinarySensor(xknx, 'TestInput', group_address='1/2/3')
-        self.assertEqual(switch.state_addresses(), [GroupAddress('1/2/3')])
+        binary_sensor = BinarySensor(xknx, 'TestInput', group_address='1/2/3', group_address_state='1/2/4')
+        self.assertEqual(binary_sensor.state_addresses(), [GroupAddress('1/2/4')])
