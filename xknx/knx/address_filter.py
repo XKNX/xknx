@@ -48,7 +48,7 @@ class AddressFilter:
             address = GroupAddress(address)
         if len(self.level_filters) == 3:
             return self._match_level3(address)
-        elif len(self.level_filters) == 2:
+        if len(self.level_filters) == 2:
             return self._match_level2(address)
         return self._match_free(address)
 
@@ -129,8 +129,7 @@ class AddressFilter:
         def match(self, digit):
             """Return if given digit is within range of pattern."""
             return \
-                digit >= self.range_from and \
-                digit <= self.range_to
+                self.range_from <= digit <= self.range_to
 
     class LevelFilter:
         """Class for filtering patterns like "8,11-14,20"."""

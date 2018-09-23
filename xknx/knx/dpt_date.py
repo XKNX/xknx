@@ -37,9 +37,9 @@ class DPTDate(DPTBase):
     def to_knx(cls, values):
         """Serialize to KNX/IP raw data from dict with elements day,month,year."""
         def _knx_year(year):
-            if year >= 2000 and year < 2090:
+            if 2000 <= year < 2090:
                 return year-2000
-            elif year >= 1990 and year < 2000:
+            if 1990 <= year < 2000:
                 return year-1900
             raise ConversionError("Cant serialize DPTDate", year=year)
 

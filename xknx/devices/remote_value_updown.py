@@ -43,7 +43,7 @@ class RemoteValueUpDown(RemoteValue):
         """Convert value to payload."""
         if value == self.Direction.UP:
             return DPTBinary(1) if self.invert else DPTBinary(0)
-        elif value == self.Direction.DOWN:
+        if value == self.Direction.DOWN:
             return DPTBinary(0) if self.invert else DPTBinary(1)
         raise ConversionError("value invalid", value=value, device_name=self.device_name)
 
@@ -51,7 +51,7 @@ class RemoteValueUpDown(RemoteValue):
         """Convert current payload to value."""
         if payload == DPTBinary(0):
             return self.Direction.DOWN if self.invert else self.Direction.UP
-        elif payload == DPTBinary(1):
+        if payload == DPTBinary(1):
             return self.Direction.UP if self.invert else self.Direction.DOWN
         raise CouldNotParseTelegram("payload invalid", payload=payload, device_name=self.device_name)
 

@@ -46,12 +46,11 @@ class CEMIFrame(KNXIPBody):
             """Return telegram type from APCI Command."""
             if cmd == APCICommand.GROUP_WRITE:
                 return TelegramType.GROUP_WRITE
-            elif cmd == APCICommand.GROUP_READ:
+            if cmd == APCICommand.GROUP_READ:
                 return TelegramType.GROUP_READ
-            elif cmd == APCICommand.GROUP_RESPONSE:
+            if cmd == APCICommand.GROUP_RESPONSE:
                 return TelegramType.GROUP_RESPONSE
-            else:
-                raise ConversionError("Telegram not implemented for {0}".format(self.cmd))
+            raise ConversionError("Telegram not implemented for {0}".format(self.cmd))
 
         telegram.telegramtype = resolve_telegram_type(self.cmd)
 
@@ -80,12 +79,11 @@ class CEMIFrame(KNXIPBody):
             """Resolve APCICommand from TelegramType."""
             if telegramtype == TelegramType.GROUP_READ:
                 return APCICommand.GROUP_READ
-            elif telegramtype == TelegramType.GROUP_WRITE:
+            if telegramtype == TelegramType.GROUP_WRITE:
                 return APCICommand.GROUP_WRITE
-            elif telegramtype == TelegramType.GROUP_RESPONSE:
+            if telegramtype == TelegramType.GROUP_RESPONSE:
                 return APCICommand.GROUP_RESPONSE
-            else:
-                raise TypeError()
+            raise TypeError()
         self.cmd = resolve_cmd(telegram.telegramtype)
 
     def set_hops(self, hops):
@@ -99,12 +97,11 @@ class CEMIFrame(KNXIPBody):
         """Get length of KNX/IP body."""
         if self.payload is None:
             return 11
-        elif isinstance(self.payload, DPTBinary):
+        if isinstance(self.payload, DPTBinary):
             return 11
-        elif isinstance(self.payload, DPTArray):
+        if isinstance(self.payload, DPTArray):
             return 11 + len(self.payload.value)
-        else:
-            raise TypeError()
+        raise TypeError()
 
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
@@ -114,8 +111,7 @@ class CEMIFrame(KNXIPBody):
                 self.code == CEMIMessageCode.L_Data_REQ or \
                 self.code == CEMIMessageCode.L_DATA_CON:
             return self.from_knx_data_link_layer(raw)
-        else:
-            raise CouldNotParseKNXIP("Could not understand CEMIMessageCode: {0} / {1}".format(self.code, raw[0]))
+        raise CouldNotParseKNXIP("Could not understand CEMIMessageCode: {0} / {1}".format(self.code, raw[0]))
 
     def from_knx_data_link_layer(self, cemi):
         """Parse L_DATA_IND, CEMIMessageCode.L_Data_REQ, CEMIMessageCode.L_DATA_CON."""

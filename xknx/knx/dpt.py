@@ -117,28 +117,28 @@ class DPTComparator():
         if a is None and b is None:
             return True
 
-        elif a is None:
+        if a is None:
             if isinstance(b, DPTBinary):
                 return b.value == 0
-            elif isinstance(b, DPTArray):
+            if isinstance(b, DPTArray):
                 return len(b.value) == 0
 
-        elif b is None:
+        if b is None:
             if isinstance(a, DPTBinary):
                 return a.value == 0
-            elif isinstance(a, DPTArray):
+            if isinstance(a, DPTArray):
                 return len(a.value) == 0
 
-        elif isinstance(a, DPTArray) and isinstance(b, DPTArray):
+        if isinstance(a, DPTArray) and isinstance(b, DPTArray):
             return a.value == b.value
 
-        elif isinstance(a, DPTBinary) and isinstance(b, DPTBinary):
+        if isinstance(a, DPTBinary) and isinstance(b, DPTBinary):
             return a.value == b.value
 
-        elif isinstance(a, DPTBinary) and isinstance(b, DPTArray):
+        if isinstance(a, DPTBinary) and isinstance(b, DPTArray):
             return a.value == 0 and len(b.value) == 0
 
-        elif isinstance(a, DPTArray) and isinstance(b, DPTBinary):
+        if isinstance(a, DPTArray) and isinstance(b, DPTBinary):
             return len(a.value) == 0 and b.value == 0
 
         raise TypeError()

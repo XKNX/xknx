@@ -43,10 +43,10 @@ async def main(argv):
         sys.exit(2)
     address_filters = None
     for opt, arg in opts:
-        if opt == '-h' or opt == '--help':
+        if opt in ['-h', '--help']:
             show_help()
             sys.exit()
-        if opt == '-f' or opt == '--filter':
+        if opt in ['-f', '--filter']:
             address_filters = list(map(AddressFilter, arg.split(',')))
     await monitor(address_filters)
 

@@ -43,7 +43,7 @@ class RemoteValueSwitch(RemoteValue):
         """Convert value to payload."""
         if value == self.Value.OFF:
             return DPTBinary(1) if self.invert else DPTBinary(0)
-        elif value == self.Value.ON:
+        if value == self.Value.ON:
             return DPTBinary(0) if self.invert else DPTBinary(1)
         raise ConversionError("value invalid", value=value, device_name=self.device_name)
 
@@ -51,7 +51,7 @@ class RemoteValueSwitch(RemoteValue):
         """Convert current payload to value."""
         if payload == DPTBinary(0):
             return self.Value.ON if self.invert else self.Value.OFF
-        elif payload == DPTBinary(1):
+        if payload == DPTBinary(1):
             return self.Value.OFF if self.invert else self.Value.ON
         raise CouldNotParseTelegram("payload invalid", payload=payload, device_name=self.device_name)
 
