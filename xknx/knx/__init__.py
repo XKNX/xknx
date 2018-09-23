@@ -14,7 +14,7 @@ from .dpt import DPTBase, DPTBinary, DPTArray, DPTComparator, DPTWeekday
 from .dpt_float import DPT2ByteFloat, DPT4ByteFloat, DPTLux, DPTTemperature, \
     DPTHumidity, DPTWsp, DPTElectricPotential, DPTElectricCurrent, DPTPower, \
     DPTEnergy, DPTFrequency, DPTHeatFlowRate, DPTPhaseAngleRad, DPTPhaseAngleDeg, \
-    DPTPowerFactor, DPTSpeed
+    DPTPowerFactor, DPTSpeed, DPTEnthalpy, DPTPartsPerMillion, DPTVoltage
 from .dpt_hvac_mode import HVACOperationMode, DPTHVACMode, \
     DPTControllerStatus
 from .dpt_hvac_contr_mode import DPTHVACContrMode

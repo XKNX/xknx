@@ -6,7 +6,8 @@ import struct
 from xknx.exceptions import ConversionError
 from xknx.knx import (DPT2ByteFloat, DPT4ByteFloat, DPTElectricCurrent,
                       DPTElectricPotential, DPTFrequency, DPTHumidity, DPTLux,
-                      DPTPhaseAngleDeg, DPTPower, DPTTemperature)
+                      DPTPhaseAngleDeg, DPTPower, DPTTemperature,
+                      DPTEnthalpy, DPTPartsPerMillion, DPTVoltage)
 
 
 class TestDPTFloat(unittest.TestCase):
@@ -156,6 +157,27 @@ class TestDPTFloat(unittest.TestCase):
         """Test parsing of DPTHumidity with wrong value."""
         with self.assertRaises(ConversionError):
             DPTHumidity().to_knx(-1)
+
+    #
+    # DPTEnthalpy
+    #
+    def test_enthalpy_settings(self):
+        """Test attributes of DPTEnthalpy."""
+        self.assertEqual(DPTEnthalpy().unit, "H")
+
+    #
+    # DPTPartsPerMillion
+    #
+    def test_partspermillion_settings(self):
+        """Test attributes of DPTPartsPerMillion."""
+        self.assertEqual(DPTPartsPerMillion().unit, "ppm")
+
+    #
+    # DPTVoltage
+    #
+    def test_voltage_settings(self):
+        """Test attributes of DPTVoltage."""
+        self.assertEqual(DPTVoltage().unit, "mV")
 
     # ####################################################################
     # DPT4ByteFloat
