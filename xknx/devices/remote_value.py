@@ -58,13 +58,11 @@ class RemoteValue():
         """Convert current payload to value - to be implemented in derived class."""
         # pylint: disable=unused-argument
         self.xknx.logger.warning("from_knx not implemented for %s", self.__class__.__name__)
-        raise NotImplementedError()
 
     def to_knx(self, value):
         """Convert value to payload - to be implemented in derived class."""
         # pylint: disable=unused-argument
         self.xknx.logger.warning("to_knx not implemented for %s", self.__class__.__name__)
-        raise NotImplementedError()
 
     async def process(self, telegram):
         """Process incoming telegram."""
