@@ -7,3 +7,4 @@ xknx.egg-info/
 .tox
 .DS_Store
 .coverage
+venv
