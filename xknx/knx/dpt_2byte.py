@@ -52,6 +52,6 @@ class DPTUElCurrentmA(DPT2ByteUnsigned):
 
 
 class DPTBrightness(DPT2ByteUnsigned):
-    """DPT 7.012 DPT_Brightness (lux)."""
+    """DPT 7.013 DPT_Brightness (lux)."""
 
     unit = "lx"
