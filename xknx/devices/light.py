@@ -15,6 +15,7 @@ from .remote_value_color_rgb import RemoteValueColorRGB
 from .remote_value_dpt_2_byte_unsigned import RemoteValueDpt2ByteUnsigned
 from .remote_value_scaling import RemoteValueScaling
 from .remote_value_switch import RemoteValueSwitch
+from .remote_value_dpt_2_byte_unsigned import RemoteValueDpt2ByteUnsigned
 
 
 class Light(Device):
