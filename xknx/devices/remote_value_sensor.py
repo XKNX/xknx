@@ -7,11 +7,11 @@ for serialization and deserialization of the KNX value.
 from xknx.exceptions import ConversionError
 from xknx.knx import (
     DPT2ByteFloat, DPT2ByteUnsigned, DPT4ByteFloat, DPT4ByteSigned,
-    DPT4ByteUnsigned, DPTArray, DPTBrightness, DPTElectricCurrent,
-    DPTElectricPotential, DPTEnergy, DPTEnthalpy, DPTFrequency,
-    DPTHeatFlowRate, DPTHumidity, DPTLux, DPTPartsPerMillion, DPTPhaseAngleDeg,
-    DPTPhaseAngleRad, DPTPower, DPTPowerFactor, DPTSpeed, DPTTemperature,
-    DPTUElCurrentmA, DPTVoltage, DPTWsp)
+    DPT4ByteUnsigned, DPTArray, DPTBrightness, DPTColorTemperature,
+    DPTElectricCurrent, DPTElectricPotential, DPTEnergy, DPTEnthalpy,
+    DPTFrequency, DPTHeatFlowRate, DPTHumidity, DPTLux, DPTPartsPerMillion,
+    DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower, DPTPowerFactor, DPTSpeed,
+    DPTTemperature, DPTUElCurrentmA, DPTVoltage, DPTWsp)
 
 from .remote_value import RemoteValue
 
@@ -20,12 +20,13 @@ class RemoteValueSensor(RemoteValue):
     """Abstraction for many different sensor DPT types."""
 
     DPTMAP = {
-        'temperature': DPTTemperature,
-        'humidity': DPTHumidity,
-        'illuminance': DPTLux,
-        'brightness': DPTBrightness,
-        'speed_ms': DPTWsp,
         'current': DPTUElCurrentmA,
+        'brightness': DPTBrightness,
+        'color_temperature': DPTColorTemperature,
+        'temperature': DPTTemperature,
+        'illuminance': DPTLux,
+        'speed_ms': DPTWsp,
+        'humidity': DPTHumidity,
         'voltage': DPTVoltage,
         'power': DPTPower,
         'electric_current': DPTElectricCurrent,

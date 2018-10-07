@@ -86,6 +86,26 @@ class TestLight(unittest.TestCase):
         self.assertFalse(light.supports_tunable_white)
 
     #
+    # TEST SUPPORT COLOR TEMPERATURE
+    #
+    def test_supports_color_temp_true(self):
+        """Test supports_color_temp attribute with a light with color temperature function."""
+        xknx = XKNX(loop=self.loop)
+        light = Light(xknx,
+                      'Diningroom.Light_1',
+                      group_address_switch='1/6/4',
+                      group_address_color_temperature='1/6/6')
+        self.assertTrue(light.supports_color_temperature)
+
+    def test_supports_color_temp_false(self):
+        """Test supports_color_temp attribute with a Light without color temperature function."""
+        xknx = XKNX(loop=self.loop)
+        light = Light(xknx,
+                      'Diningroom.Light_1',
+                      group_address_switch='1/6/4')
+        self.assertFalse(light.supports_color_temperature)
+
+    #
     # SYNC
     #
     def test_sync(self):
@@ -96,10 +116,11 @@ class TestLight(unittest.TestCase):
                       group_address_switch_state='1/2/3',
                       group_address_brightness_state='1/2/5',
                       group_address_color_state='1/2/6',
-                      group_address_tunable_white_state='1/2/7')
+                      group_address_tunable_white_state='1/2/7',
+                      group_address_color_temperature_state='1/2/8')
         self.loop.run_until_complete(asyncio.Task(light.sync(False)))
 
-        self.assertEqual(xknx.telegrams.qsize(), 4)
+        self.assertEqual(xknx.telegrams.qsize(), 5)
 
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram1,
@@ -117,6 +138,10 @@ class TestLight(unittest.TestCase):
         self.assertEqual(telegram4,
                          Telegram(GroupAddress('1/2/7'), TelegramType.GROUP_READ))
 
+        telegram5 = xknx.telegrams.get_nowait()
+        self.assertEqual(telegram5,
+                         Telegram(GroupAddress('1/2/8'), TelegramType.GROUP_READ))
+
     #
     # SYNC WITH STATE ADDRESS
     #
@@ -132,10 +157,12 @@ class TestLight(unittest.TestCase):
                       group_address_color='1/2/7',
                       group_address_color_state='1/2/8',
                       group_address_tunable_white='1/2/9',
-                      group_address_tunable_white_state='1/2/10')
+                      group_address_tunable_white_state='1/2/10',
+                      group_address_color_temperature='1/2/11',
+                      group_address_color_temperature_state='1/2/12')
         self.loop.run_until_complete(asyncio.Task(light.sync(False)))
 
-        self.assertEqual(xknx.telegrams.qsize(), 4)
+        self.assertEqual(xknx.telegrams.qsize(), 5)
 
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram1,
@@ -149,6 +176,9 @@ class TestLight(unittest.TestCase):
         telegram4 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram4,
                          Telegram(GroupAddress('1/2/10'), TelegramType.GROUP_READ))
+        telegram5 = xknx.telegrams.get_nowait()
+        self.assertEqual(telegram5,
+                         Telegram(GroupAddress('1/2/12'), TelegramType.GROUP_READ))
 
     #
     # TEST SET ON
@@ -255,7 +285,7 @@ class TestLight(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/5'), payload=DPTArray(23)))
 
-    def test_set_tw_not_dimmable(self):
+    def test_set_tw_unsupported(self):
         """Test setting the tunable white value of a non tw Light."""
         # pylint: disable=invalid-name
         xknx = XKNX(loop=self.loop)
@@ -266,6 +296,34 @@ class TestLight(unittest.TestCase):
             self.loop.run_until_complete(asyncio.Task(light.set_tunable_white(23)))
             self.assertEqual(xknx.telegrams.qsize(), 0)
             mock_warn.assert_called_with('Tunable white not supported for device %s', 'TestLight')
+
+    #
+    # TEST SET COLOR TEMPERATURE
+    #
+    def test_set_color_temp(self):
+        """Test setting the color temperature value of a Light."""
+        xknx = XKNX(loop=self.loop)
+        light = Light(xknx,
+                      name="TestLight",
+                      group_address_switch='1/2/3',
+                      group_address_color_temperature='1/2/5')
+        self.loop.run_until_complete(asyncio.Task(light.set_color_temperature(4000)))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        telegram = xknx.telegrams.get_nowait()
+        self.assertEqual(telegram,
+                         Telegram(GroupAddress('1/2/5'), payload=DPTArray((0x0F, 0xA0, ))))
+
+    def test_set_color_temp_unsupported(self):
+        """Test setting the color temperature value of an unsupported Light."""
+        # pylint: disable=invalid-name
+        xknx = XKNX(loop=self.loop)
+        light = Light(xknx,
+                      name="TestLight",
+                      group_address_switch='1/2/3')
+        with patch('logging.Logger.warning') as mock_warn:
+            self.loop.run_until_complete(asyncio.Task(light.set_color_temperature(4000)))
+            self.assertEqual(xknx.telegrams.qsize(), 0)
+            mock_warn.assert_called_with('Absolute Color Temperature not supported for device %s', 'TestLight')
 
     #
     # TEST PROCESS
@@ -393,6 +451,42 @@ class TestLight(unittest.TestCase):
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
 
+    def test_process_color_temperature(self):
+        """Test process / reading telegrams from telegram queue. Test if color temperature is processed."""
+        xknx = XKNX(loop=self.loop)
+        light = Light(xknx,
+                      name="TestLight",
+                      group_address_switch='1/2/3',
+                      group_address_color_temperature='1/2/5')
+        self.assertEqual(light.current_color_temperature, None)
+
+        telegram = Telegram(GroupAddress('1/2/5'), payload=DPTArray((0x0F, 0xA0, )))
+        self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
+        self.assertEqual(light.current_color_temperature, 4000)
+
+    def test_process_color_temperature_wrong_payload(self):
+        """Test process wrong telegrams. (wrong payload type)."""
+        xknx = XKNX(loop=self.loop)
+        light = Light(xknx,
+                      name="TestLight",
+                      group_address_switch='1/2/3',
+                      group_address_color_temperature='1/2/5')
+        telegram = Telegram(GroupAddress('1/2/5'), payload=DPTBinary(1))
+        with self.assertRaises(CouldNotParseTelegram):
+            self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
+
+    def test_process_color_temperature_payload_invalid_length(self):
+        """Test process wrong telegrams. (wrong payload length)."""
+        # pylint: disable=invalid-name
+        xknx = XKNX(loop=self.loop)
+        light = Light(xknx,
+                      name="TestLight",
+                      group_address_switch='1/2/3',
+                      group_address_color_temperature='1/2/5')
+        telegram = Telegram(GroupAddress('1/2/5'), payload=DPTArray((23)))
+        with self.assertRaises(CouldNotParseTelegram):
+            self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
+
     #
     # TEST DO
     #
@@ -403,13 +497,16 @@ class TestLight(unittest.TestCase):
                       name="TestLight",
                       group_address_switch='1/2/3',
                       group_address_brightness='1/2/5',
-                      group_address_tunable_white='1/2/9')
+                      group_address_tunable_white='1/2/9',
+                      group_address_color_temperature='1/2/11')
         self.loop.run_until_complete(asyncio.Task(light.do("on")))
         self.assertTrue(light.state)
         self.loop.run_until_complete(asyncio.Task(light.do("brightness:80")))
         self.assertEqual(light.current_brightness, 80)
         self.loop.run_until_complete(asyncio.Task(light.do("tunable_white:80")))
         self.assertEqual(light.current_tunable_white, 80)
+        self.loop.run_until_complete(asyncio.Task(light.do("color_temperature:3750")))
+        self.assertEqual(light.current_color_temperature, 3750)
         self.loop.run_until_complete(asyncio.Task(light.do("off")))
         self.assertFalse(light.state)
 
@@ -438,7 +535,9 @@ class TestLight(unittest.TestCase):
             group_address_color='1/7/5',
             group_address_color_state='1/7/6',
             group_address_tunable_white='1/7/7',
-            group_address_tunable_white_state='1/7/8')
+            group_address_tunable_white_state='1/7/8',
+            group_address_color_temperature='1/7/9',
+            group_address_color_temperature_state='1/7/10')
         self.assertTrue(light.has_group_address(GroupAddress('1/7/1')))
         self.assertTrue(light.has_group_address(GroupAddress('1/7/2')))
         self.assertTrue(light.has_group_address(GroupAddress('1/7/3')))
@@ -447,4 +546,6 @@ class TestLight(unittest.TestCase):
         self.assertTrue(light.has_group_address(GroupAddress('1/7/6')))
         self.assertTrue(light.has_group_address(GroupAddress('1/7/7')))
         self.assertTrue(light.has_group_address(GroupAddress('1/7/8')))
-        self.assertFalse(light.has_group_address(GroupAddress('1/7/9')))
+        self.assertTrue(light.has_group_address(GroupAddress('1/7/9')))
+        self.assertTrue(light.has_group_address(GroupAddress('1/7/10')))
+        self.assertFalse(light.has_group_address(GroupAddress('1/7/11')))

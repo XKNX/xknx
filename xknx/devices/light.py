@@ -7,10 +7,12 @@ It provides functionality for
 * setting the brightness.
 * setting the color.
 * setting the relative color temperature (tunable white).
+* setting the absolute color temperature.
 * reading the current state from KNX bus.
 """
 from .device import Device
 from .remote_value_color_rgb import RemoteValueColorRGB
+from .remote_value_dpt_2_byte_unsigned import RemoteValueDpt2ByteUnsigned
 from .remote_value_scaling import RemoteValueScaling
 from .remote_value_switch import RemoteValueSwitch
 
@@ -29,6 +31,8 @@ class Light(Device):
                  group_address_color_state=None,
                  group_address_tunable_white=None,
                  group_address_tunable_white_state=None,
+                 group_address_color_temperature=None,
+                 group_address_color_temperature_state=None,
                  device_updated_cb=None):
         """Initialize Light class."""
         # pylint: disable=too-many-arguments
@@ -66,6 +70,13 @@ class Light(Device):
             range_from=0,
             range_to=255)
 
+        self.color_temperature = RemoteValueDpt2ByteUnsigned(
+            xknx,
+            group_address_color_temperature,
+            group_address_color_temperature_state,
+            device_name=self.name,
+            after_update_cb=self.after_update)
+
     @property
     def supports_brightness(self):
         """Return if light supports brightness."""
@@ -80,6 +91,11 @@ class Light(Device):
     def supports_tunable_white(self):
         """Return if light supports tunable white / relative color temperature."""
         return self.tunable_white.initialized
+
+    @property
+    def supports_color_temperature(self):
+        """Return if light supports absolute color temperature."""
+        return self.color_temperature.initialized
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -100,6 +116,10 @@ class Light(Device):
             config.get('group_address_tunable_white')
         group_address_tunable_white_state = \
             config.get('group_address_tunable_white_state')
+        group_address_color_temperature = \
+            config.get('group_address_color_temperature')
+        group_address_color_temperature_state = \
+            config.get('group_address_color_temperature_state')
 
         return cls(xknx,
                    name,
@@ -110,14 +130,17 @@ class Light(Device):
                    group_address_color=group_address_color,
                    group_address_color_state=group_address_color_state,
                    group_address_tunable_white=group_address_tunable_white,
-                   group_address_tunable_white_state=group_address_tunable_white_state)
+                   group_address_tunable_white_state=group_address_tunable_white_state,
+                   group_address_color_temperature=group_address_color_temperature,
+                   group_address_color_temperature_state=group_address_color_temperature_state,)
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
         return (self.switch.has_group_address(group_address) or
                 self.brightness.has_group_address(group_address) or
                 self.color.has_group_address(group_address) or
-                self.tunable_white.has_group_address(group_address))
+                self.tunable_white.has_group_address(group_address) or
+                self.color_temperature.has_group_address(group_address))
 
     def __str__(self):
         """Return object as readable string."""
@@ -133,14 +156,19 @@ class Light(Device):
             ' tunable white="{0}"'.format(
                 self.tunable_white.group_addr_str())
 
+        str_color_temperature = '' if not self.supports_color_temperature else \
+            ' color temperature="{0}"'.format(
+                self.color_temperature.group_addr_str())
+
         return '<Light name="{0}" ' \
-            'switch="{1}"{2}{3}{4} />' \
+            'switch="{1}"{2}{3}{4}{5} />' \
             .format(
                 self.name,
                 self.switch.group_addr_str(),
                 str_brightness,
                 str_color,
-                str_tunable_white)
+                str_tunable_white,
+                str_color_temperature)
 
     @property
     def state(self):
@@ -191,6 +219,18 @@ class Light(Device):
             return
         await self.tunable_white.set(tunable_white)
 
+    @property
+    def current_color_temperature(self):
+        """Return current absolute color temperature of light."""
+        return self.color_temperature.value
+
+    async def set_color_temperature(self, color_temperature):
+        """Set absolute color temperature of light."""
+        if not self.supports_color_temperature:
+            self.xknx.logger.warning("Absolute Color Temperature not supported for device %s", self.get_name())
+            return
+        await self.color_temperature.set(color_temperature)
+
     async def do(self, action):
         """Execute 'do' commands."""
         if action == "on":
@@ -201,6 +241,8 @@ class Light(Device):
             await self.set_brightness(int(action[11:]))
         elif action.startswith("tunable_white:"):
             await self.set_tunable_white(int(action[14:]))
+        elif action.startswith("color_temperature:"):
+            await self.set_color_temperature(int(action[18:]))
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
@@ -211,6 +253,7 @@ class Light(Device):
         state_addresses.extend(self.color.state_addresses())
         state_addresses.extend(self.brightness.state_addresses())
         state_addresses.extend(self.tunable_white.state_addresses())
+        state_addresses.extend(self.color_temperature.state_addresses())
         return state_addresses
 
     async def process_group_write(self, telegram):
@@ -219,6 +262,7 @@ class Light(Device):
         await self.color.process(telegram)
         await self.brightness.process(telegram)
         await self.tunable_white.process(telegram)
+        await self.color_temperature.process(telegram)
 
     def __eq__(self, other):
         """Equal operator."""

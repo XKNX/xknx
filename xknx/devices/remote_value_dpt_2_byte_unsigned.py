@@ -14,12 +14,13 @@ class RemoteValueDpt2ByteUnsigned(RemoteValue):
     def __init__(self,
                  xknx,
                  group_address=None,
+                 group_address_state=None,
                  device_name=None,
                  after_update_cb=None):
         """Initialize remote value of KNX DPT 7.001."""
         # pylint: disable=too-many-arguments
         super(RemoteValueDpt2ByteUnsigned, self).__init__(
-            xknx, group_address, None,
+            xknx, group_address, group_address_state,
             device_name=device_name, after_update_cb=after_update_cb)
 
     def payload_valid(self, payload):

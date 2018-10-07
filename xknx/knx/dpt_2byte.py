@@ -57,3 +57,9 @@ class DPTBrightness(DPT2ByteUnsigned):
     """DPT 7.013 DPT_Brightness (lux)."""
 
     unit = "lx"
+
+
+class DPTColorTemperature(DPT2ByteUnsigned):
+    """DPT 7.600 DPT_Color_Temperature (K)."""
+
+    unit = "K"
