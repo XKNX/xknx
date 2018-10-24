@@ -9,8 +9,9 @@ import voluptuous as vol
 
 from custom_components.xknx import ATTR_DISCOVER_DEVICES, DATA_XKNX
 from homeassistant.components.light import (
-    Light, PLATFORM_SCHEMA, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, ATTR_HS_COLOR,
-    SUPPORT_COLOR, SUPPORT_COLOR_TEMP, ATTR_COLOR_TEMP, SUPPORT_WHITE_VALUE)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_WHITE_VALUE,
+    PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP,
+    SUPPORT_WHITE_VALUE, Light)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -245,7 +246,7 @@ class KNXLight(Light):
                 color_util.color_hsv_to_RGB(*hs_color, brightness * 100 / 255))
         elif self.device.supports_color_temperature and \
                 update_color_temp:
-            # change color temperature without ON command
+            # change color temperature without ON telegram
             mireds = kwargs[ATTR_COLOR_TEMP]
             if mireds > self.max_mireds:
                 mireds = self.max_mireds
