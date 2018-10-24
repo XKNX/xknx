@@ -1,4 +1,4 @@
-"""Example for GateayScanner."""
+"""Example for GatewayScanner."""
 import asyncio
 
 from xknx import XKNX
