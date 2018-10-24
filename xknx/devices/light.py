@@ -33,6 +33,8 @@ class Light(Device):
                  group_address_tunable_white_state=None,
                  group_address_color_temperature=None,
                  group_address_color_temperature_state=None,
+                 min_kelvin=None,
+                 max_kelvin=None,
                  device_updated_cb=None):
         """Initialize Light class."""
         # pylint: disable=too-many-arguments
@@ -77,6 +79,9 @@ class Light(Device):
             device_name=self.name,
             after_update_cb=self.after_update)
 
+        self.min_kelvin = min_kelvin
+        self.max_kelvin = max_kelvin
+
     @property
     def supports_brightness(self):
         """Return if light supports brightness."""
@@ -120,6 +125,10 @@ class Light(Device):
             config.get('group_address_color_temperature')
         group_address_color_temperature_state = \
             config.get('group_address_color_temperature_state')
+        min_kelvin = \
+            config.get('min_kelvin')
+        max_kelvin = \
+            config.get('max_kelvin')
 
         return cls(xknx,
                    name,
@@ -132,7 +141,9 @@ class Light(Device):
                    group_address_tunable_white=group_address_tunable_white,
                    group_address_tunable_white_state=group_address_tunable_white_state,
                    group_address_color_temperature=group_address_color_temperature,
-                   group_address_color_temperature_state=group_address_color_temperature_state,)
+                   group_address_color_temperature_state=group_address_color_temperature_state,
+                   min_kelvin=min_kelvin,
+                   max_kelvin=max_kelvin)
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
