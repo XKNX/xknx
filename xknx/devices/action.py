@@ -80,6 +80,9 @@ class Action(ActionBase):
     async def execute(self):
         """Execute action."""
         if self.target is not None:
+            if self.target not in self.xknx.devices:
+                self.xknx.logger.warning("Unknown device %s witin action %s.", self.target, self)
+                return
             await self.xknx.devices[self.target].do(self.method)
 
     def __str__(self):

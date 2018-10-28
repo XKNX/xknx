@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Upcoming version (unreleased)
+-----------------------------
+
+* added __contains__ method for Devices class.
+* fixed KeyError when action refers to a non existing device.
+
 0.9.1 - Release 2018-10-28
 --------------------------
 

@@ -166,6 +166,23 @@ class TestDevices(unittest.TestCase):
         devices.add(light2)
         self.assertEqual(len(devices), 4)
 
+    def test_contains(self):
+        """Test __contains__() function."""
+        xknx = XKNX(loop=self.loop)
+        devices = Devices()
+
+        light1 = Light(xknx,
+                       'Living-Room.Light_1',
+                       group_address_switch='1/6/7')
+        devices.add(light1)
+        light2 = Light(xknx,
+                       'Living-Room.Light_2',
+                       group_address_switch='1/6/8')
+        devices.add(light2)
+        self.assertTrue('Living-Room.Light_1' in devices)
+        self.assertTrue('Living-Room.Light_2' in devices)
+        self.assertFalse('Living-Room.Light_3' in devices)
+
     def test_modification_of_device(self):
         """Test if devices object does store references and not copies of objects."""
         xknx = XKNX(loop=self.loop)
