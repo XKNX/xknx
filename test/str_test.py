@@ -164,14 +164,16 @@ class TestStringRepresentations(unittest.TestCase):
         notification = Notification(
             xknx,
             name='Alarm',
-            group_address='1/2/3')
+            group_address='1/2/3',
+            group_address_state='1/2/4')
         self.assertEqual(
             str(notification),
-            '<Notification name="Alarm" group_address="GroupAddress("1/2/3")" message="" />')
+            '<Notification name="Alarm" group_address="GroupAddress("1/2/3")" group_address_state="GroupAddress("1/2/4")" message="" />')
         notification.message = 'Einbrecher im Haus'
         self.assertEqual(
             str(notification),
-            '<Notification name="Alarm" group_address="GroupAddress("1/2/3")" message="Einbrecher im Haus" />')
+            '<Notification name="Alarm" group_address="GroupAddress("1/2/3")" group_address_state="GroupAddress("1/2/4")" '
+            'message="Einbrecher im Haus" />')
 
     def test_scene(self):
         """Test string representation of scene object."""

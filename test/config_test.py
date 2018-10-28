@@ -230,6 +230,7 @@ class TestConfig(unittest.TestCase):
                 xknx,
                 'AlarmWindow',
                 group_address='2/7/1',
+                group_address_state='2/7/2',
                 device_updated_cb=xknx.devices.device_updated))
 
     def test_config_binary_sensor(self):

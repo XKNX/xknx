@@ -94,7 +94,7 @@ groups:
         General.Date: {group_address: '2/1/3', broadcast_type: 'date'}
 
     notification:
-        AlarmWindow: {group_address: '2/7/1'}
+        AlarmWindow: {group_address: '2/7/1', group_address_state: '2/7/2'}
 
     sensor:
         Heating.Valve1: {group_address: '2/0/0', value_type: 'percent'}

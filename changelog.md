@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.9.1 - Release 2018-10-28
+--------------------------
+
+* state_addresses of binary_sesor should return emty value if no
+  state address is set.
+* state_address for notification device
+
+
 0.9.0 - Release 2018-09-23
 --------------------------
 

@@ -12,14 +12,18 @@ class Notification(Device):
                  xknx,
                  name,
                  group_address=None,
+                 group_address_state=None,
                  device_updated_cb=None):
         """Initialize notification class."""
         # pylint: disable=too-many-arguments
         super(Notification, self).__init__(xknx, name, device_updated_cb)
         if isinstance(group_address, (str, int)):
             group_address = GroupAddress(group_address)
+        if isinstance(group_address_state, (str, int)):
+            group_address_state = GroupAddress(group_address_state)
 
         self.group_address = group_address
+        self.group_address_state = group_address_state
         self.message = ""
 
     @classmethod
@@ -27,23 +31,28 @@ class Notification(Device):
         """Initialize object from configuration structure."""
         group_address = \
             config.get('group_address')
+        group_address_state = \
+            config.get('group_address_state')
 
         return cls(xknx,
                    name,
-                   group_address=group_address)
+                   group_address=group_address,
+                   group_address_state=group_address_state)
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
-        return self.group_address == group_address
+        return group_address in [self.group_address, self.group_address_state]
 
     def __str__(self):
         """Return object as readable string."""
         return '<Notification name="{0}" ' \
             'group_address="{1}" ' \
-            'message="{2}" />' \
+            'group_address_state="{2}" ' \
+            'message="{3}" />' \
             .format(
                 self.name,
                 self.group_address.__repr__(),
+                self.group_address_state.__repr__(),
                 self.message)
 
     async def _set_internal_message(self, message):
@@ -67,7 +76,10 @@ class Notification(Device):
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
-        return [self.group_address, ]
+        if self.group_address_state is not None:
+            print("Group address state: ", self.group_address_state)
+            return [self.group_address_state, ]
+        return []
 
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""

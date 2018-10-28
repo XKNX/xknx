@@ -30,12 +30,13 @@ class TestNotification(unittest.TestCase):
         notification = Notification(
             xknx,
             "Warning",
-            group_address='1/2/3')
+            group_address='1/2/3',
+            group_address_state='1/2/4')
         self.loop.run_until_complete(asyncio.Task(notification.sync(False)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
+                         Telegram(GroupAddress('1/2/4'), TelegramType.GROUP_READ))
 
     #
     # TEST PROCESS
@@ -127,8 +128,8 @@ class TestNotification(unittest.TestCase):
     def test_state_addresses(self):
         """Test expose sensor returns empty list as state addresses."""
         xknx = XKNX(loop=self.loop)
-        notification = Notification(xknx, 'Warning', group_address='1/2/3')
-        self.assertEqual(notification.state_addresses(), [GroupAddress('1/2/3')])
+        notification = Notification(xknx, 'Warning', group_address='1/2/3', group_address_state='1/2/4')
+        self.assertEqual(notification.state_addresses(), [GroupAddress('1/2/4')])
 
     #
     # TEST has_group_address
@@ -136,6 +137,7 @@ class TestNotification(unittest.TestCase):
     def test_has_group_address(self):
         """Test has_group_address."""
         xknx = XKNX(loop=self.loop)
-        notification = Notification(xknx, 'Warning', group_address='1/2/3')
+        notification = Notification(xknx, 'Warning', group_address='1/2/3', group_address_state='1/2/4')
         self.assertTrue(notification.has_group_address(GroupAddress('1/2/3')))
+        self.assertTrue(notification.has_group_address(GroupAddress('1/2/4')))
         self.assertFalse(notification.has_group_address(GroupAddress('2/2/2')))

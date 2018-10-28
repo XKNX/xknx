@@ -1,7 +1,7 @@
 """Setup for XKNX python package."""
 from setuptools import find_packages, setup
 
-VERSION = '0.9.0'
+VERSION = '0.9.1'
 
 REQUIRES = [
     'pyyaml>=3.12',
