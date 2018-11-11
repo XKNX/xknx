@@ -10,8 +10,7 @@ import voluptuous as vol
 from custom_components.xknx import ATTR_DISCOVER_DEVICES, DATA_XKNX
 from homeassistant.components.light import (
     Light, PLATFORM_SCHEMA, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, ATTR_HS_COLOR,
-    SUPPORT_COLOR, SUPPORT_COLOR_TEMP, ATTR_COLOR_TEMP,
-    ATTR_WHITE_VALUE, SUPPORT_WHITE_VALUE)
+    SUPPORT_COLOR, SUPPORT_COLOR_TEMP, ATTR_COLOR_TEMP, SUPPORT_WHITE_VALUE)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv

@@ -20,6 +20,8 @@ from .remote_value_switch import RemoteValueSwitch
 class Light(Device):
     """Class for managing a light."""
 
+    # pylint: disable=too-many-locals
+
     def __init__(self,
                  xknx,
                  name,
