@@ -35,6 +35,8 @@ CONF_OPERATION_MODE_COMFORT_ADDRESS = 'operation_mode_comfort_address'
 CONF_OVERRIDE_SUPPORTED_OPERATION_MODES = 'override_supported_operation_modes'
 CONF_ON_OFF_ADDRESS = 'on_off_address'
 CONF_ON_OFF_STATE_ADDRESS = 'on_off_state_address'
+CONF_OVERRIDE_MIN_TEMP = 'override_min_temp'
+CONF_OVERRIDE_MAX_TEMP = 'override_max_temp'
 
 DEFAULT_NAME = 'XKNX Climate'
 DEFAULT_SETPOINT_SHIFT_STEP = 0.5
@@ -67,6 +69,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ON_OFF_ADDRESS): cv.string,
     vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_OVERRIDE_SUPPORTED_OPERATION_MODES): cv.ensure_list_csv,
+    vol.Optional(CONF_OVERRIDE_MIN_TEMP): cv.string,
+    vol.Optional(CONF_OVERRIDE_MAX_TEMP): cv.string,
     })
 
 
@@ -128,13 +132,36 @@ def async_add_devices_config(hass, config, async_add_devices):
         group_address_on_off_state=config.get(
             CONF_ON_OFF_STATE_ADDRESS),
         override_supported_operation_modes=config.get(
-            CONF_OVERRIDE_SUPPORTED_OPERATION_MODES))
+            CONF_OVERRIDE_SUPPORTED_OPERATION_MODES),
+        override_min_temp=config.get(CONF_OVERRIDE_MIN_TEMP),
+        override_max_temp=config.get(CONF_OVERRIDE_MAX_TEMP))
     hass.data[DATA_XKNX].xknx.devices.add(climate)
     async_add_devices([KNXClimate(hass, climate)])
 
 
 class KNXClimate(ClimateDevice):
     """Representation of a KNX climate device."""
+
+    operationModeMapping = {
+        """Mapping between the frontend and the backend representation"""
+        "auto": "Auto",
+        "comfort": "Comfort",
+        "standby": "Standby",
+        "night": "Night",
+        "frost_protection": "Frost Protection",
+        "heat": "Heat",
+        "morning_warmup": "Morning Warmup",
+        "cool": "Cool",
+        "night_purge": "Night Purge",
+        "precool": "Precool",
+        "off": "Off",
+        "test": "Test",
+        "emergency_heat": "Emergency Heat",
+        "fan_only": "Fan only",
+        "ice": "Ice",
+        "dry": "Dry",
+        "nodem": "NoDem"
+    }
 
     def __init__(self, hass, device):
         """Initialize of a KNX climate device."""
@@ -233,7 +260,7 @@ class KNXClimate(ClimateDevice):
         """Set operation mode."""
         if self.device.supports_operation_mode:
             from xknx.knx import HVACOperationMode
-            knx_operation_mode = HVACOperationMode(operation_mode)
+            knx_operation_mode = HVACOperationMode(self.operationModeMapping.get(operation_mode, operation_mode))
             await self.device.set_operation_mode(knx_operation_mode)
 
     @property
