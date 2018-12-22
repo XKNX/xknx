@@ -4,6 +4,8 @@ Changelog
 Upcoming version (unreleased)
 -----------------------------
 
+* Min and max values for Climate device
+* Splitted up Climate in Climate and ClimateMode
 * added __contains__ method for Devices class.
 * fixed KeyError when action refers to a non existing device.
 
