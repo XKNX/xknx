@@ -82,10 +82,12 @@ groups:
     climate:
         Kitchen.Climate: {group_address_temperature: '1/7/1'}
         Children.Climate: {group_address_temperature: '1/7/2', group_address_target_temperature: '1/7/4', group_address_setpoint_shift: '1/7/3', group_address_setpoint_shift_state: '1/7/14', setpoint_shift_step: 0.1, setpoint_shift_min: -10, setpoint_shift_max: 10}
-        Office.Climate: {group_address_temperature: '1/7/5', group_address_operation_mode: '1/7/6'}
-        Bath.Climate: {group_address_temperature: '1/7/5', group_address_operation_mode: '1/7/6', group_address_operation_mode_state: '1/7/7'}
-        Attic.Climate: {group_address_temperature: '1/7/7', group_address_operation_mode_protection: '1/7/8', group_address_operation_mode_night: '1/7/9', group_address_operation_mode_comfort: '1/7/10'}
-        Cellar.Climate: {group_address_temperature: '1/7/11', group_address_controller_status: '1/7/12', group_address_controller_status_state: '1/7/13'}
+
+    climate_mode:
+        Office.ClimateMode: {group_address_temperature: '1/7/5', group_address_operation_mode: '1/7/6'}
+        Bath.ClimateMode: {group_address_operation_mode: '1/7/6', group_address_operation_mode_state: '1/7/7'}
+        Attic.ClimateMode: {group_address_operation_mode_protection: '1/7/8', group_address_operation_mode_night: '1/7/9', group_address_operation_mode_comfort: '1/7/10'}
+        Cellar.ClimateMode: {group_address_controller_status: '1/7/12', group_address_controller_status_state: '1/7/13'}
 
     # Cyclic sending of time objects to the KNX bus
     datetime:

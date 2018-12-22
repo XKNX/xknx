@@ -109,6 +109,17 @@ def async_add_devices_config(hass, config, async_add_devices):
         setpoint_shift_step=config.get(CONF_SETPOINT_SHIFT_STEP),
         setpoint_shift_max=config.get(CONF_SETPOINT_SHIFT_MAX),
         setpoint_shift_min=config.get(CONF_SETPOINT_SHIFT_MIN),
+        group_address_on_off=config.get(
+            CONF_ON_OFF_ADDRESS),
+        group_address_on_off_state=config.get(
+            CONF_ON_OFF_STATE_ADDRESS),
+        min_temp=config.get(CONF_MIN_TEMP),
+        max_temp=config.get(CONF_MAX_TEMP))
+    hass.data[DATA_XKNX].xknx.devices.add(climate)
+
+    climate_mode = xknx.devices.ClimateMode(
+        hass.data[DATA_XKNX].xknx,
+        name=config.get(CONF_NAME) + " Mode",
         group_address_operation_mode=config.get(CONF_OPERATION_MODE_ADDRESS),
         group_address_operation_mode_state=config.get(
             CONF_OPERATION_MODE_STATE_ADDRESS),
@@ -126,16 +137,11 @@ def async_add_devices_config(hass, config, async_add_devices):
             CONF_OPERATION_MODE_NIGHT_ADDRESS),
         group_address_operation_mode_comfort=config.get(
             CONF_OPERATION_MODE_COMFORT_ADDRESS),
-        group_address_on_off=config.get(
-            CONF_ON_OFF_ADDRESS),
-        group_address_on_off_state=config.get(
-            CONF_ON_OFF_STATE_ADDRESS),
-        override_supported_operation_modes=config.get(
-            CONF_OVERRIDE_SUPPORTED_OPERATION_MODES),
-        min_temp=config.get(CONF_MIN_TEMP),
-        max_temp=config.get(CONF_MAX_TEMP))
-    hass.data[DATA_XKNX].xknx.devices.add(climate)
-    async_add_devices([KNXClimate(hass, climate)])
+        operation_modes=config.get(
+            CONF_OVERRIDE_SUPPORTED_OPERATION_MODES))
+    hass.data[DATA_XKNX].xknx.devices.add(climate_mode)
+
+    async_add_devices([KNXClimate(hass, climate, climate_mode)])
 
 
 class KNXClimate(ClimateDevice):
@@ -162,9 +168,10 @@ class KNXClimate(ClimateDevice):
         "nodem": "NoDem"
     }
 
-    def __init__(self, hass, device):
+    def __init__(self, hass, device, device_mode):
         """Initialize of a KNX climate device."""
         self.device = device
+        self.device_mode = device_mode
         self.hass = hass
         self.async_register_callbacks()
 
@@ -174,7 +181,7 @@ class KNXClimate(ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         support = SUPPORT_TARGET_TEMPERATURE
-        if self.device.supports_operation_mode:
+        if self.device_mode.supports_operation_mode:
             support |= SUPPORT_OPERATION_MODE
         if self.device.supports_on_off:
             support |= SUPPORT_ON_OFF
@@ -189,6 +196,7 @@ class KNXClimate(ClimateDevice):
             await self.async_update_ha_state()
 
         self.device.register_device_updated_cb(after_update_callback)
+        self.device_mode.register_device_updated_cb(after_update_callback)
 
     @property
     def name(self):
@@ -246,8 +254,8 @@ class KNXClimate(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        if self.device.supports_operation_mode:
-            return self.device.operation_mode.value
+        if self.device_mode.supports_operation_mode:
+            return self.device_mode.operation_mode.value
         return None
 
     @property
@@ -255,14 +263,14 @@ class KNXClimate(ClimateDevice):
         """Return the list of available operation modes."""
         return [operation_mode.value for
                 operation_mode in
-                self.device.get_supported_operation_modes()]
+                self.device_mode.operation_modes]
 
     async def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
         if self.device.supports_operation_mode:
             from xknx.knx import HVACOperationMode
             knx_operation_mode = HVACOperationMode(self.operationModeMapping.get(operation_mode, operation_mode))
-            await self.device.set_operation_mode(knx_operation_mode)
+            await self.device_mode.set_operation_mode(knx_operation_mode)
 
     @property
     def is_on(self):

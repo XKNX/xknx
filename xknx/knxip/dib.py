@@ -27,19 +27,15 @@ class DIB():
 
     def __init__(self):
         """Initialize DIB class."""
-        pass
 
     def calculated_length(self):
         """Get length of KNX/IP object."""
-        pass
 
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        pass
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
-        pass
 
     @staticmethod
     def determine_dib(raw):
