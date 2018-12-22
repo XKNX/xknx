@@ -26,7 +26,7 @@ class ClimateMode(Device):
                  group_address_controller_status_state=None,
                  group_address_controller_mode=None,
                  group_address_controller_mode_state=None,
-                 override_supported_operation_modes=None,
+                 operation_modes=None,
                  device_updated_cb=None):
         """Initialize ClimateMode class."""
         # pylint: disable=too-many-arguments, too-many-locals, too-many-branches, too-many-statements
@@ -61,14 +61,16 @@ class ClimateMode(Device):
         self.group_address_controller_mode_state = group_address_controller_mode_state
 
         self.operation_mode = HVACOperationMode.STANDBY
-        self.override_supported_operation_modes = []
 
-        if override_supported_operation_modes:
-            for mode in override_supported_operation_modes:
+        self.operation_modes_ = []
+        if operation_modes is None:
+            self.operation_modes_ = self.guess_operation_modes()
+        else:
+            for mode in operation_modes:
                 if isinstance(mode, str):
-                    self.override_supported_operation_modes.append(HVACOperationMode[mode])
+                    self.operation_modes_.append(HVACOperationMode[mode])
                 elif isinstance(mode, HVACOperationMode):
-                    self.override_supported_operation_modes.append(mode)
+                    self.operation_modes_.append(mode)
 
         self.supports_operation_mode = \
             group_address_operation_mode is not None or \
@@ -168,14 +170,15 @@ class ClimateMode(Device):
                 DPTArray(DPTHVACContrMode.to_knx(operation_mode)))
         await self._set_internal_operation_mode(operation_mode)
 
-    def get_supported_operation_modes(self):
+    @property
+    def operation_modes(self):
         """Return all configured operation modes."""
         if not self.supports_operation_mode:
             return []
+        return self.operation_modes_
 
-        if self.override_supported_operation_modes:
-            return self.override_supported_operation_modes
-
+    def guess_operation_modes(self):
+        """Guess operation modes from group addresses."""
         # All operation modes supported
         if self.group_address_operation_mode is not None:
             return [HVACOperationMode.AUTO, HVACOperationMode.COMFORT,

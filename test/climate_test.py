@@ -714,7 +714,7 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_operation_mode='1/2/5')
         self.assertEqual(
-            climate_mode.get_supported_operation_modes(),
+            climate_mode.operation_modes,
             [HVACOperationMode.AUTO,
              HVACOperationMode.COMFORT,
              HVACOperationMode.STANDBY,
@@ -729,7 +729,7 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_controller_status='1/2/5')
         self.assertEqual(
-            climate_mode.get_supported_operation_modes(),
+            climate_mode.operation_modes,
             [HVACOperationMode.COMFORT,
              HVACOperationMode.STANDBY,
              HVACOperationMode.NIGHT,
@@ -742,7 +742,7 @@ class TestClimate(unittest.TestCase):
             xknx,
             'TestClimate')
         self.assertEqual(
-            climate_mode.get_supported_operation_modes(), [])
+            climate_mode.operation_modes, [])
 
     def test_supported_operation_modes_with_separate_addresses(self):
         """Test get_supported_operation_modes with separated group addresses."""
@@ -754,7 +754,7 @@ class TestClimate(unittest.TestCase):
             group_address_operation_mode_night='1/2/6',
             group_address_operation_mode_comfort='1/2/7')
         self.assertEqual(
-            climate_mode.get_supported_operation_modes(),
+            climate_mode.operation_modes,
             [HVACOperationMode.COMFORT,
              HVACOperationMode.STANDBY,
              HVACOperationMode.NIGHT,
@@ -768,24 +768,24 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_operation_mode_night='1/2/7')
         self.assertEqual(
-            climate_mode.get_supported_operation_modes(),
+            climate_mode.operation_modes,
             [HVACOperationMode.STANDBY,
              HVACOperationMode.NIGHT])
 
     def test_custom_supported_operation_modes(self):
-        """Test get_supported_operation_modes with custom mode override."""
+        """Test get_supported_operation_modes with custom mode."""
         modes = [HVACOperationMode.STANDBY, HVACOperationMode.NIGHT]
         xknx = XKNX(loop=self.loop)
         climate_mode = ClimateMode(
             xknx,
             'TestClimate',
             group_address_operation_mode='1/2/7',
-            override_supported_operation_modes=modes)
+            operation_modes=modes)
         self.assertEqual(
-            climate_mode.get_supported_operation_modes(), modes)
+            climate_mode.operation_modes, modes)
 
     def test_custom_supported_operation_modes_as_str(self):
-        """Test get_supported_operation_modes with custom mode override as str list."""
+        """Test get_supported_operation_modes with custom mode as str list."""
         str_modes = ['STANDBY', 'FROST_PROTECTION']
         modes = [HVACOperationMode.STANDBY, HVACOperationMode.FROST_PROTECTION]
         xknx = XKNX(loop=self.loop)
@@ -793,9 +793,9 @@ class TestClimate(unittest.TestCase):
             xknx,
             'TestClimate',
             group_address_operation_mode='1/2/7',
-            override_supported_operation_modes=str_modes)
+            operation_modes=str_modes)
         self.assertEqual(
-            climate_mode.get_supported_operation_modes(), modes)
+            climate_mode.operation_modes, modes)
 
     def test_process_power_status(self):
         """Test process / reading telegrams from telegram queue. Test if DPT20.105 controller mode is set correctly."""

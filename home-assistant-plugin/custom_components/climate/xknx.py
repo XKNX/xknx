@@ -132,7 +132,7 @@ def async_add_devices_config(hass, config, async_add_devices):
             CONF_OPERATION_MODE_NIGHT_ADDRESS),
         group_address_operation_mode_comfort=config.get(
             CONF_OPERATION_MODE_COMFORT_ADDRESS),
-        override_supported_operation_modes=config.get(
+        operation_modes=config.get(
             CONF_OVERRIDE_SUPPORTED_OPERATION_MODES))
     hass.data[DATA_XKNX].xknx.devices.add(climate_mode)
 
@@ -235,7 +235,7 @@ class KNXClimate(ClimateDevice):
         """Return the list of available operation modes."""
         return [operation_mode.value for
                 operation_mode in
-                self.device_mode.get_supported_operation_modes()]
+                self.device_mode.operation_modes]
 
     async def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
