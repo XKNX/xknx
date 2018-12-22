@@ -34,6 +34,8 @@ class Climate(Device):
                  setpoint_shift_min=DEFAULT_SETPOINT_SHIFT_MIN,
                  group_address_on_off=None,
                  group_address_on_off_state=None,
+                 min_temp=None,
+                 max_temp=None,
                  device_updated_cb=None):
         """Initialize Climate class."""
         # pylint: disable=too-many-arguments, too-many-locals, too-many-branches, too-many-statements
@@ -45,6 +47,9 @@ class Climate(Device):
 
         self.group_address_on_off = group_address_on_off
         self.group_address_on_off_state = group_address_on_off_state
+
+        self.min_temp = min_temp
+        self.max_temp = max_temp
 
         self.temperature = RemoteValueTemp(
             xknx,
@@ -169,6 +174,8 @@ class Climate(Device):
     @property
     def target_temperature_max(self):
         """Return the maxium possible target temperature."""
+        if self.max_temp is not None:
+            return self.max_temp
         if not self.initialized_for_setpoint_shift_calculations:
             return None
         return (self.target_temperature.value -
@@ -178,6 +185,8 @@ class Climate(Device):
     @property
     def target_temperature_min(self):
         """Return the minimum possible target temperature."""
+        if self.min_temp is not None:
+            return self.min_temp
         if not self.initialized_for_setpoint_shift_calculations:
             return None
         return (self.target_temperature.value -

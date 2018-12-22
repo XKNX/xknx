@@ -5,15 +5,14 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.knx/
 """
 
+import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-
+from custom_components.xknx import ATTR_DISCOVER_DEVICES, DATA_XKNX
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_ON_OFF, ClimateDevice)
-from custom_components.xknx import ATTR_DISCOVER_DEVICES, DATA_XKNX
 from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS, STATE_UNKNOWN
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 
 CONF_SETPOINT_SHIFT_ADDRESS = 'setpoint_shift_address'
 CONF_SETPOINT_SHIFT_STATE_ADDRESS = 'setpoint_shift_state_address'
@@ -35,6 +34,8 @@ CONF_OPERATION_MODE_COMFORT_ADDRESS = 'operation_mode_comfort_address'
 CONF_OVERRIDE_SUPPORTED_OPERATION_MODES = 'override_supported_operation_modes'
 CONF_ON_OFF_ADDRESS = 'on_off_address'
 CONF_ON_OFF_STATE_ADDRESS = 'on_off_state_address'
+CONF_MIN_TEMP = 'min_temp'
+CONF_MAX_TEMP = 'max_temp'
 
 DEFAULT_NAME = 'XKNX Climate'
 DEFAULT_SETPOINT_SHIFT_STEP = 0.5
@@ -50,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_SETPOINT_SHIFT_STEP,
                  default=DEFAULT_SETPOINT_SHIFT_STEP): vol.All(
-                     float, vol.Range(min=0, max=2)),
+        float, vol.Range(min=0, max=2)),
     vol.Optional(CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX):
         vol.All(int, vol.Range(min=0, max=32)),
     vol.Optional(CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN):
@@ -67,7 +68,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ON_OFF_ADDRESS): cv.string,
     vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_OVERRIDE_SUPPORTED_OPERATION_MODES): cv.ensure_list_csv,
-    })
+    vol.Optional(CONF_MIN_TEMP): cv.Coerce(float),
+    vol.Optional(CONF_MAX_TEMP): cv.Coerce(float),
+})
 
 
 async def async_setup_platform(hass, config, async_add_devices,
@@ -109,7 +112,9 @@ def async_add_devices_config(hass, config, async_add_devices):
         group_address_on_off=config.get(
             CONF_ON_OFF_ADDRESS),
         group_address_on_off_state=config.get(
-            CONF_ON_OFF_STATE_ADDRESS))
+            CONF_ON_OFF_STATE_ADDRESS),
+        min_temp=config.get(CONF_MIN_TEMP),
+        max_temp=config.get(CONF_MAX_TEMP))
     hass.data[DATA_XKNX].xknx.devices.add(climate)
 
     climate_mode = xknx.devices.ClimateMode(
@@ -142,6 +147,27 @@ def async_add_devices_config(hass, config, async_add_devices):
 class KNXClimate(ClimateDevice):
     """Representation of a KNX climate device."""
 
+    operationModeMapping = {
+        """Mapping between the frontend and the backend representation"""
+        "auto": "Auto",
+        "comfort": "Comfort",
+        "standby": "Standby",
+        "night": "Night",
+        "frost_protection": "Frost Protection",
+        "heat": "Heat",
+        "morning_warmup": "Morning Warmup",
+        "cool": "Cool",
+        "night_purge": "Night Purge",
+        "precool": "Precool",
+        "off": "Off",
+        "test": "Test",
+        "emergency_heat": "Emergency Heat",
+        "fan_only": "Fan only",
+        "ice": "Ice",
+        "dry": "Dry",
+        "nodem": "NoDem"
+    }
+
     def __init__(self, hass, device, device_mode):
         """Initialize of a KNX climate device."""
         self.device = device
@@ -163,10 +189,12 @@ class KNXClimate(ClimateDevice):
 
     def async_register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
+
         async def after_update_callback(device):
             """Call after device was updated."""
             # pylint: disable=unused-argument
             await self.async_update_ha_state()
+
         self.device.register_device_updated_cb(after_update_callback)
         self.device_mode.register_device_updated_cb(after_update_callback)
 
@@ -241,7 +269,7 @@ class KNXClimate(ClimateDevice):
         """Set operation mode."""
         if self.device.supports_operation_mode:
             from xknx.knx import HVACOperationMode
-            knx_operation_mode = HVACOperationMode(operation_mode)
+            knx_operation_mode = HVACOperationMode(self.operationModeMapping.get(operation_mode, operation_mode))
             await self.device_mode.set_operation_mode(knx_operation_mode)
 
     @property
