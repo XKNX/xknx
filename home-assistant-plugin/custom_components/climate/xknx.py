@@ -145,7 +145,7 @@ class KNXClimate(ClimateDevice):
     def __init__(self, hass, device, device_mode):
         """Initialize of a KNX climate device."""
         self.device = device
-        self.device = device_mode
+        self.device_mode = device_mode
         self.hass = hass
         self.async_register_callbacks()
 
