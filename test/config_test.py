@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 
 from xknx import XKNX
-from xknx.devices import (Action, BinarySensor, Climate, Cover, DateTime,
+from xknx.devices import (Action, BinarySensor, Climate, ClimateMode, Cover, DateTime,
                           ExposeSensor, Light, Notification, Scene, Sensor,
                           Switch, DateTimeBroadcastType)
 from xknx.exceptions import XKNXException
@@ -149,49 +149,45 @@ class TestConfig(unittest.TestCase):
         """Test reading Climate object with operation mode in one group address from config file."""
         xknx = XKNX(config='xknx.yaml', loop=self.loop)
         self.assertEqual(
-            xknx.devices['Office.Climate'],
-            Climate(xknx,
-                    'Office.Climate',
-                    group_address_temperature='1/7/5',
-                    group_address_operation_mode='1/7/6',
-                    device_updated_cb=xknx.devices.device_updated))
+            xknx.devices['Office.ClimateMode'],
+            ClimateMode(xknx,
+                        'Office.ClimateMode',
+                        group_address_operation_mode='1/7/6',
+                        device_updated_cb=xknx.devices.device_updated))
 
     def test_config_climate_operation_mode2(self):
         """Test reading Climate object with operation mode in different group addresses  from config file."""
         xknx = XKNX(config='xknx.yaml', loop=self.loop)
         self.assertEqual(
-            xknx.devices['Attic.Climate'],
-            Climate(xknx,
-                    'Attic.Climate',
-                    group_address_temperature='1/7/7',
-                    group_address_operation_mode_protection='1/7/8',
-                    group_address_operation_mode_night='1/7/9',
-                    group_address_operation_mode_comfort='1/7/10',
-                    device_updated_cb=xknx.devices.device_updated))
+            xknx.devices['Attic.ClimateMode'],
+            ClimateMode(xknx,
+                        'Attic.ClimateMode',
+                        group_address_operation_mode_protection='1/7/8',
+                        group_address_operation_mode_night='1/7/9',
+                        group_address_operation_mode_comfort='1/7/10',
+                        device_updated_cb=xknx.devices.device_updated))
 
     def test_config_climate_operation_mode_state(self):
         """Test reading Climate object with status address for operation mode."""
         xknx = XKNX(config='xknx.yaml', loop=self.loop)
         self.assertEqual(
-            xknx.devices['Bath.Climate'],
-            Climate(xknx,
-                    'Bath.Climate',
-                    group_address_temperature='1/7/5',
-                    group_address_operation_mode='1/7/6',
-                    group_address_operation_mode_state='1/7/7',
-                    device_updated_cb=xknx.devices.device_updated))
+            xknx.devices['Bath.ClimateMode'],
+            ClimateMode(xknx,
+                        'Bath.ClimateMode',
+                        group_address_operation_mode='1/7/6',
+                        group_address_operation_mode_state='1/7/7',
+                        device_updated_cb=xknx.devices.device_updated))
 
     def test_config_climate_controller_status_state(self):
         """Test reading Climate object with addresses for controller status."""
         xknx = XKNX(config='xknx.yaml', loop=self.loop)
         self.assertEqual(
-            xknx.devices['Cellar.Climate'],
-            Climate(xknx,
-                    'Cellar.Climate',
-                    group_address_temperature='1/7/11',
-                    group_address_controller_status='1/7/12',
-                    group_address_controller_status_state='1/7/13',
-                    device_updated_cb=xknx.devices.device_updated))
+            xknx.devices['Cellar.ClimateMode'],
+            ClimateMode(xknx,
+                        'Cellar.ClimateMode',
+                        group_address_controller_status='1/7/12',
+                        group_address_controller_status_state='1/7/13',
+                        device_updated_cb=xknx.devices.device_updated))
 
     def test_config_datetime(self):
         """Test reading DateTime objects from config file."""

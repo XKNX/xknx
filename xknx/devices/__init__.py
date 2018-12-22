@@ -6,6 +6,7 @@ from .action import Action, ActionBase, ActionCallback
 from .cover import Cover
 from .travelcalculator import TravelCalculator, TravelStatus
 from .climate import Climate
+from .climate_mode import ClimateMode
 from .light import Light
 from .switch import Switch
 from .datetime import DateTime, DateTimeBroadcastType

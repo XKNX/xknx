@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import Mock
 
 from xknx import XKNX
-from xknx.devices import Climate
+from xknx.devices import Climate, ClimateMode
 from xknx.exceptions import DeviceIllegalValue, CouldNotParseTelegram
 from xknx.knx import (DPT2ByteFloat, DPTArray, DPTBinary, DPTControllerStatus,
                       DPTHVACMode, DPTHVACContrMode, DPTTemperature, DPTValue1Count,
@@ -43,7 +43,6 @@ class TestClimate(unittest.TestCase):
 
         self.assertTrue(climate.temperature.initialized)
         self.assertFalse(climate.target_temperature.initialized)
-        self.assertFalse(climate.supports_operation_mode)
 
     def test_support_target_temperature(self):
         """Test supports_target__temperature flag."""
@@ -55,31 +54,24 @@ class TestClimate(unittest.TestCase):
 
         self.assertFalse(climate.temperature.initialized)
         self.assertTrue(climate.target_temperature.initialized)
-        self.assertFalse(climate.supports_operation_mode)
 
     def test_support_operation_mode(self):
         """Test supports_supports_operation_mode flag. One group address for all modes."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
             group_address_operation_mode='1/2/4')
-
-        self.assertFalse(climate.temperature.initialized)
-        self.assertFalse(climate.target_temperature.initialized)
-        self.assertTrue(climate.supports_operation_mode)
+        self.assertTrue(climate_mode.supports_operation_mode)
 
     def test_support_operation_mode2(self):
         """Test supports_supports_operation_mode flag. Splitted group addresses for each mode."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
             group_address_operation_mode_protection='1/2/4')
-
-        self.assertFalse(climate.temperature.initialized)
-        self.assertFalse(climate.target_temperature.initialized)
-        self.assertTrue(climate.supports_operation_mode)
+        self.assertTrue(climate_mode.supports_operation_mode)
 
     #
     # TEST HAS GROUP ADDRESS
@@ -94,26 +86,38 @@ class TestClimate(unittest.TestCase):
             group_address_target_temperature='1/2/2',
             group_address_setpoint_shift='1/2/3',
             group_address_setpoint_shift_state='1/2/4',
-            group_address_operation_mode='1/2/5',
-            group_address_operation_mode_protection='1/2/6',
-            group_address_operation_mode_night='1/2/7',
-            group_address_operation_mode_comfort='1/2/8',
-            group_address_controller_mode='1/2/9',
-            group_address_controller_mode_state='1/2/10',
             group_address_on_off='1/2/11',
             group_address_on_off_state='1/2/12')
 
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/1')))
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/2')))
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/4')))
+        self.assertTrue(climate.has_group_address(GroupAddress('1/2/11')))
+        self.assertTrue(climate.has_group_address(GroupAddress('1/2/12')))
+        self.assertFalse(climate.has_group_address(GroupAddress('1/2/99')))
+
+    #
+    # TEST HAS GROUP ADDRESS
+    #
+    def test_has_group_address_mode(self):
+        """Test if has_group_address function works."""
+        xknx = XKNX(loop=self.loop)
+        climate = ClimateMode(
+            xknx,
+            'TestClimate',
+            group_address_operation_mode='1/2/5',
+            group_address_operation_mode_protection='1/2/6',
+            group_address_operation_mode_night='1/2/7',
+            group_address_operation_mode_comfort='1/2/8',
+            group_address_controller_mode='1/2/9',
+            group_address_controller_mode_state='1/2/10')
+
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/5')))
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/6')))
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/7')))
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/8')))
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/9')))
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/10')))
-        self.assertTrue(climate.has_group_address(GroupAddress('1/2/11')))
-        self.assertTrue(climate.has_group_address(GroupAddress('1/2/12')))
         self.assertFalse(climate.has_group_address(GroupAddress('1/2/99')))
 
     #
@@ -128,8 +132,7 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_target_temperature='1/2/2',
             group_address_setpoint_shift='1/2/3',
-            group_address_setpoint_shift_state='1/2/4',
-            group_address_operation_mode='1/2/5')
+            group_address_setpoint_shift_state='1/2/4')
 
         after_update_callback = Mock()
 
@@ -137,21 +140,6 @@ class TestClimate(unittest.TestCase):
             """Async callback."""
             after_update_callback(device)
         climate.register_device_updated_cb(async_after_update_callback)
-
-        self.loop.run_until_complete(asyncio.Task(
-            climate.set_operation_mode(HVACOperationMode.COMFORT)))
-        after_update_callback.assert_called_with(climate)
-        after_update_callback.reset_mock()
-
-        self.loop.run_until_complete(asyncio.Task(
-            climate.set_operation_mode(HVACOperationMode.COMFORT)))
-        after_update_callback.assert_not_called()
-        after_update_callback.reset_mock()
-
-        self.loop.run_until_complete(asyncio.Task(
-            climate.set_operation_mode(HVACOperationMode.FROST_PROTECTION)))
-        after_update_callback.assert_called_with(climate)
-        after_update_callback.reset_mock()
 
         self.loop.run_until_complete(asyncio.Task(
             climate.target_temperature.set(23.00)))
@@ -163,6 +151,37 @@ class TestClimate(unittest.TestCase):
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
+    def test_process_callback_mode(self):
+        """Test if after_update_callback is called after update of Climate object was changed."""
+        # pylint: disable=no-self-use
+        xknx = XKNX(loop=self.loop)
+        climate_mode = ClimateMode(
+            xknx,
+            'TestClimate',
+            group_address_operation_mode='1/2/5')
+
+        after_update_callback = Mock()
+
+        async def async_after_update_callback(device):
+            """Async callback."""
+            after_update_callback(device)
+        climate_mode.register_device_updated_cb(async_after_update_callback)
+
+        self.loop.run_until_complete(asyncio.Task(
+            climate_mode.set_operation_mode(HVACOperationMode.COMFORT)))
+        after_update_callback.assert_called_with(climate_mode)
+        after_update_callback.reset_mock()
+
+        self.loop.run_until_complete(asyncio.Task(
+            climate_mode.set_operation_mode(HVACOperationMode.COMFORT)))
+        after_update_callback.assert_not_called()
+        after_update_callback.reset_mock()
+
+        self.loop.run_until_complete(asyncio.Task(
+            climate_mode.set_operation_mode(HVACOperationMode.FROST_PROTECTION)))
+        after_update_callback.assert_called_with(climate_mode)
+        after_update_callback.reset_mock()
+
     def test_process_callback_updated_via_telegram(self):
         """Test if after_update_callback is called after update of Climate object."""
         # pylint: disable=no-self-use
@@ -172,8 +191,7 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_temperature='1/2/1',
             group_address_target_temperature='1/2/2',
-            group_address_setpoint_shift='1/2/3',
-            group_address_operation_mode='1/2/4')
+            group_address_setpoint_shift='1/2/3')
 
         after_update_callback = Mock()
 
@@ -197,9 +215,25 @@ class TestClimate(unittest.TestCase):
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
+    def test_climate_mode_process_callback_updated_via_telegram(self):
+        """Test if after_update_callback is called after update of ClimateMode object."""
+        # pylint: disable=no-self-use
+        xknx = XKNX(loop=self.loop)
+        climate_mode = ClimateMode(
+            xknx,
+            'TestClimateMode',
+            group_address_operation_mode='1/2/4')
+
+        after_update_callback = Mock()
+
+        async def async_after_update_callback(device):
+            """Async callback."""
+            after_update_callback(device)
+        climate_mode.register_device_updated_cb(async_after_update_callback)
+
         telegram = Telegram(GroupAddress('1/2/4'), payload=DPTArray(1))
-        self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
-        after_update_callback.assert_called_with(climate)
+        self.loop.run_until_complete(asyncio.Task(climate_mode.process(telegram)))
+        after_update_callback.assert_called_with(climate_mode)
         after_update_callback.reset_mock()
 
     #
@@ -208,14 +242,13 @@ class TestClimate(unittest.TestCase):
     def test_set_operation_mode(self):
         """Test set_operation_mode."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
-            group_address_temperature='1/2/1',
             group_address_operation_mode='1/2/4')
 
         for operation_mode in DPT_20102_MODES:
-            self.loop.run_until_complete(asyncio.Task(climate.set_operation_mode(operation_mode)))
+            self.loop.run_until_complete(asyncio.Task(climate_mode.set_operation_mode(operation_mode)))
             self.assertEqual(xknx.telegrams.qsize(), 1)
             telegram = xknx.telegrams.get_nowait()
             self.assertEqual(
@@ -227,14 +260,13 @@ class TestClimate(unittest.TestCase):
     def test_set_controller_operation_mode(self):
         """Test set_operation_mode with DPT20.105 controller."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
-            group_address_temperature='1/2/1',
             group_address_controller_mode='1/2/4')
 
         for _, operation_mode in DPTHVACContrMode.SUPPORTED_MODES.items():
-            self.loop.run_until_complete(asyncio.Task(climate.set_operation_mode(operation_mode)))
+            self.loop.run_until_complete(asyncio.Task(climate_mode.set_operation_mode(operation_mode)))
             self.assertEqual(xknx.telegrams.qsize(), 1)
             telegram = xknx.telegrams.get_nowait()
             self.assertEqual(
@@ -246,26 +278,24 @@ class TestClimate(unittest.TestCase):
     def test_set_operation_mode_not_supported(self):
         """Test set_operation_mode but not supported."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
-            'TestClimate',
-            group_address_temperature='1/2/1')
+            'TestClimate')
         with self.assertRaises(DeviceIllegalValue):
-            self.loop.run_until_complete(asyncio.Task(climate.set_operation_mode(HVACOperationMode.AUTO)))
+            self.loop.run_until_complete(asyncio.Task(climate_mode.set_operation_mode(HVACOperationMode.AUTO)))
 
     def test_set_operation_mode_with_controller_status(self):
         """Test set_operation_mode with controller status adddressedefined."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
-            group_address_temperature='1/2/1',
             group_address_controller_status='1/2/4')
 
         for operation_mode in DPT_20102_MODES:
             if operation_mode == HVACOperationMode.AUTO:
                 continue
-            self.loop.run_until_complete(asyncio.Task(climate.set_operation_mode(operation_mode)))
+            self.loop.run_until_complete(asyncio.Task(climate_mode.set_operation_mode(operation_mode)))
             self.assertEqual(xknx.telegrams.qsize(), 1)
             telegram = xknx.telegrams.get_nowait()
             self.assertEqual(
@@ -277,17 +307,15 @@ class TestClimate(unittest.TestCase):
     def test_set_operation_mode_with_separate_addresses(self):
         """Test set_operation_mode with combined and separated group adddresses defined."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
-            group_address_temperature='1/2/1',
-            group_address_target_temperature='1/2/2',
             group_address_operation_mode='1/2/4',
             group_address_operation_mode_protection='1/2/5',
             group_address_operation_mode_night='1/2/6',
             group_address_operation_mode_comfort='1/2/7')
 
-        self.loop.run_until_complete(asyncio.Task(climate.set_operation_mode(HVACOperationMode.COMFORT)))
+        self.loop.run_until_complete(asyncio.Task(climate_mode.set_operation_mode(HVACOperationMode.COMFORT)))
         self.assertEqual(xknx.telegrams.qsize(), 4)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -519,12 +547,12 @@ class TestClimate(unittest.TestCase):
     def test_sync_operation_mode(self):
         """Test sync function / sending group reads to KNX bus for operation mode."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
             group_address_operation_mode='1/2/3',
             group_address_controller_status='1/2/4')
-        self.loop.run_until_complete(asyncio.Task(climate.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(climate_mode.sync(False)))
         self.assertEqual(xknx.telegrams.qsize(), 2)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -538,14 +566,14 @@ class TestClimate(unittest.TestCase):
     def test_sync_operation_mode_state(self):
         """Test sync function / sending group reads to KNX bus for operation mode with explicit state addresses."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
             group_address_operation_mode='1/2/3',
             group_address_operation_mode_state='1/2/5',
             group_address_controller_status='1/2/4',
             group_address_controller_status_state='1/2/6')
-        self.loop.run_until_complete(asyncio.Task(climate.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(climate_mode.sync(False)))
         self.assertEqual(xknx.telegrams.qsize(), 2)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -575,7 +603,7 @@ class TestClimate(unittest.TestCase):
     def test_process_operation_mode(self):
         """Test process / reading telegrams from telegram queue. Test if setpoint is processed correctly."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
             group_address_operation_mode='1/2/5',
@@ -583,76 +611,76 @@ class TestClimate(unittest.TestCase):
         for operation_mode in DPT_20102_MODES:
             telegram = Telegram(GroupAddress('1/2/5'))
             telegram.payload = DPTArray(DPTHVACMode.to_knx(operation_mode))
-            self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
-            self.assertEqual(climate.operation_mode, operation_mode)
+            self.loop.run_until_complete(asyncio.Task(climate_mode.process(telegram)))
+            self.assertEqual(climate_mode.operation_mode, operation_mode)
         for operation_mode in DPT_20102_MODES:
             if operation_mode == HVACOperationMode.AUTO:
                 continue
             telegram = Telegram(GroupAddress('1/2/3'))
             telegram.payload = DPTArray(DPTControllerStatus.to_knx(operation_mode))
-            self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
-            self.assertEqual(climate.operation_mode, operation_mode)
+            self.loop.run_until_complete(asyncio.Task(climate_mode.process(telegram)))
+            self.assertEqual(climate_mode.operation_mode, operation_mode)
 
     def test_process_controller_mode(self):
         """Test process / reading telegrams from telegram queue. Test if DPT20.105 controller mode is set correctly."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
             group_address_controller_mode='1/2/5')
-        for _v, operation_mode in DPTHVACContrMode.SUPPORTED_MODES.items():
+        for _, operation_mode in DPTHVACContrMode.SUPPORTED_MODES.items():
             telegram = Telegram(GroupAddress('1/2/5'))
             telegram.payload = DPTArray(DPTHVACContrMode.to_knx(operation_mode))
-            self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
-            self.assertEqual(climate.operation_mode, operation_mode)
+            self.loop.run_until_complete(asyncio.Task(climate_mode.process(telegram)))
+            self.assertEqual(climate_mode.operation_mode, operation_mode)
 
     def test_process_controller_status_wrong_payload(self):
         """Test process wrong telegram for controller status (wrong payload type)."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
             group_address_operation_mode='1/2/5',
             group_address_controller_status='1/2/3')
         telegram = Telegram(GroupAddress('1/2/3'), payload=DPTBinary(1))
         with self.assertRaises(CouldNotParseTelegram):
-            self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
+            self.loop.run_until_complete(asyncio.Task(climate_mode.process(telegram)))
 
     def test_process_controller_status_payload_invalid_length(self):
         """Test process wrong telegram for controller status (wrong payload length)."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
             group_address_operation_mode='1/2/5',
             group_address_controller_status='1/2/3')
         telegram = Telegram(GroupAddress('1/2/3'), payload=DPTArray((23, 24)))
         with self.assertRaises(CouldNotParseTelegram):
-            self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
+            self.loop.run_until_complete(asyncio.Task(climate_mode.process(telegram)))
 
     def test_process_operation_mode_wrong_payload(self):
         """Test process wrong telegram for operation mode (wrong payload type)."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
             group_address_operation_mode='1/2/5',
             group_address_controller_status='1/2/3')
         telegram = Telegram(GroupAddress('1/2/5'), payload=DPTBinary(1))
         with self.assertRaises(CouldNotParseTelegram):
-            self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
+            self.loop.run_until_complete(asyncio.Task(climate_mode.process(telegram)))
 
     def test_process_operation_mode_payload_invalid_length(self):
         """Test process wrong telegram for operation mode (wrong payload length)."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
             group_address_operation_mode='1/2/5',
             group_address_controller_status='1/2/3')
         telegram = Telegram(GroupAddress('1/2/5'), payload=DPTArray((23, 24)))
         with self.assertRaises(CouldNotParseTelegram):
-            self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
+            self.loop.run_until_complete(asyncio.Task(climate_mode.process(telegram)))
 
     def test_process_callback_temp(self):
         """Test process / reading telegrams from telegram queue. Test if callback is executed when receiving temperature."""
@@ -681,13 +709,12 @@ class TestClimate(unittest.TestCase):
     def test_supported_operation_modes(self):
         """Test get_supported_operation_modes with combined group address."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
-            group_address_temperature='1/2/1',
             group_address_operation_mode='1/2/5')
         self.assertEqual(
-            climate.get_supported_operation_modes(),
+            climate_mode.get_supported_operation_modes(),
             [HVACOperationMode.AUTO,
              HVACOperationMode.COMFORT,
              HVACOperationMode.STANDBY,
@@ -697,13 +724,12 @@ class TestClimate(unittest.TestCase):
     def test_supported_operation_modes_controller_status(self):
         """Test get_supported_operation_modes with combined group address."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
-            group_address_temperature='1/2/1',
             group_address_controller_status='1/2/5')
         self.assertEqual(
-            climate.get_supported_operation_modes(),
+            climate_mode.get_supported_operation_modes(),
             [HVACOperationMode.COMFORT,
              HVACOperationMode.STANDBY,
              HVACOperationMode.NIGHT,
@@ -712,25 +738,23 @@ class TestClimate(unittest.TestCase):
     def test_supported_operation_modes_no_mode(self):
         """Test get_supported_operation_modes no operation_modes supported."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
-            'TestClimate',
-            group_address_temperature='1/2/1')
+            'TestClimate')
         self.assertEqual(
-            climate.get_supported_operation_modes(), [])
+            climate_mode.get_supported_operation_modes(), [])
 
     def test_supported_operation_modes_with_separate_addresses(self):
         """Test get_supported_operation_modes with separated group addresses."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
-            group_address_temperature='1/2/1',
             group_address_operation_mode_protection='1/2/5',
             group_address_operation_mode_night='1/2/6',
             group_address_operation_mode_comfort='1/2/7')
         self.assertEqual(
-            climate.get_supported_operation_modes(),
+            climate_mode.get_supported_operation_modes(),
             [HVACOperationMode.COMFORT,
              HVACOperationMode.STANDBY,
              HVACOperationMode.NIGHT,
@@ -739,13 +763,12 @@ class TestClimate(unittest.TestCase):
     def test_supported_operation_modes_only_night(self):
         """Test get_supported_operation_modes with only night mode supported."""
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
-            group_address_temperature='1/2/1',
             group_address_operation_mode_night='1/2/7')
         self.assertEqual(
-            climate.get_supported_operation_modes(),
+            climate_mode.get_supported_operation_modes(),
             [HVACOperationMode.STANDBY,
              HVACOperationMode.NIGHT])
 
@@ -753,28 +776,26 @@ class TestClimate(unittest.TestCase):
         """Test get_supported_operation_modes with custom mode override."""
         modes = [HVACOperationMode.STANDBY, HVACOperationMode.NIGHT]
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
-            group_address_temperature='1/2/1',
             group_address_operation_mode='1/2/7',
             override_supported_operation_modes=modes)
         self.assertEqual(
-            climate.get_supported_operation_modes(), modes)
+            climate_mode.get_supported_operation_modes(), modes)
 
     def test_custom_supported_operation_modes_as_str(self):
         """Test get_supported_operation_modes with custom mode override as str list."""
         str_modes = ['STANDBY', 'FROST_PROTECTION']
         modes = [HVACOperationMode.STANDBY, HVACOperationMode.FROST_PROTECTION]
         xknx = XKNX(loop=self.loop)
-        climate = Climate(
+        climate_mode = ClimateMode(
             xknx,
             'TestClimate',
-            group_address_temperature='1/2/1',
             group_address_operation_mode='1/2/7',
             override_supported_operation_modes=str_modes)
         self.assertEqual(
-            climate.get_supported_operation_modes(), modes)
+            climate_mode.get_supported_operation_modes(), modes)
 
     def test_process_power_status(self):
         """Test process / reading telegrams from telegram queue. Test if DPT20.105 controller mode is set correctly."""
