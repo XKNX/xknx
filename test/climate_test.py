@@ -364,8 +364,8 @@ class TestClimate(unittest.TestCase):
         climate = Climate(
             xknx,
             'TestClimate',
-            override_min_temp='7',
-            override_max_temp='35')
+            min_temp='7',
+            max_temp='35')
         self.assertEqual(climate.target_temperature_min, '7')
         self.assertEqual(climate.target_temperature_max, '35')
 
@@ -380,8 +380,8 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_target_temperature='1/2/2',
             group_address_setpoint_shift='1/2/3',
-            override_max_temp='42',
-            override_min_temp='3')
+            max_temp='42',
+            min_temp='3')
         self.loop.run_until_complete(asyncio.Task(climate.setpoint_shift.set(4)))
         self.assertFalse(climate.initialized_for_setpoint_shift_calculations)
         self.loop.run_until_complete(asyncio.Task(climate.target_temperature.set(23.00)))

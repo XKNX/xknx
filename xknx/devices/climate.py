@@ -46,8 +46,8 @@ class Climate(Device):
                  group_address_on_off_state=None,
                  device_updated_cb=None,
                  override_supported_operation_modes=None,
-                 override_min_temp=None,
-                 override_max_temp=None):
+                 min_temp=None,
+                 max_temp=None):
         """Initialize Climate class."""
         # pylint: disable=too-many-arguments, too-many-locals, too-many-branches, too-many-statements
         super(Climate, self).__init__(xknx, name, device_updated_cb)
@@ -87,8 +87,8 @@ class Climate(Device):
         self.group_address_on_off_state = group_address_on_off_state
 
         self.operation_mode = HVACOperationMode.STANDBY
-        self.override_min_temp = override_min_temp
-        self.override_max_temp = override_max_temp
+        self.min_temp = min_temp
+        self.max_temp = max_temp
         self.override_supported_operation_modes = []
 
         if override_supported_operation_modes:
@@ -274,8 +274,8 @@ class Climate(Device):
     @property
     def target_temperature_max(self):
         """Return the maxium possible target temperature."""
-        if self.override_max_temp is not None:
-            return self.override_max_temp
+        if self.max_temp is not None:
+            return self.max_temp
         if not self.initialized_for_setpoint_shift_calculations:
             return None
         return (self.target_temperature.value -
@@ -285,8 +285,8 @@ class Climate(Device):
     @property
     def target_temperature_min(self):
         """Return the minimum possible target temperature."""
-        if self.override_min_temp is not None:
-            return self.override_min_temp
+        if self.min_temp is not None:
+            return self.min_temp
         if not self.initialized_for_setpoint_shift_calculations:
             return None
         return (self.target_temperature.value -
