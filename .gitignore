@@ -8,3 +8,4 @@ xknx.egg-info/
 .DS_Store
 .coverage
 venv
+.idea/

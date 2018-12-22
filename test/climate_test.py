@@ -356,6 +356,41 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(climate.target_temperature_max, None)
 
     #
+    # TEST for unitialized target_temperature_min/target_temperature_max but with overridden max and min temperature
+    #
+    def test_uninitalized_for_target_temperature_min_max_can_be_overridden(self):
+        """Test if target_temperature_min/target_temperature_max return overridden value if specified."""
+        xknx = XKNX(loop=self.loop)
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            min_temp='7',
+            max_temp='35')
+        self.assertEqual(climate.target_temperature_min, '7')
+        self.assertEqual(climate.target_temperature_max, '35')
+
+    #
+    # TEST for overriden max and min temp do have precedence over setpoint shift calculations
+    #
+    def test_overridden_max_min_temperature_has_priority(self):
+        """Test that the overridden min and max temp always have precedence over setpoint shift calculations."""
+        xknx = XKNX(loop=self.loop)
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            group_address_target_temperature='1/2/2',
+            group_address_setpoint_shift='1/2/3',
+            max_temp='42',
+            min_temp='3')
+        self.loop.run_until_complete(asyncio.Task(climate.setpoint_shift.set(4)))
+        self.assertFalse(climate.initialized_for_setpoint_shift_calculations)
+        self.loop.run_until_complete(asyncio.Task(climate.target_temperature.set(23.00)))
+        self.assertTrue(climate.initialized_for_setpoint_shift_calculations)
+
+        self.assertEqual(climate.target_temperature_min, '3')
+        self.assertEqual(climate.target_temperature_max, '42')
+
+    #
     # TEST TARGET TEMPERATURE
     #
     def test_target_temperature_up(self):
