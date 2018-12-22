@@ -112,9 +112,9 @@ class KNXLight(Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         if self.device.supports_color:
-            return max(self.device.current_color) \
-                if self.device.current_color is not None else \
-                DEFAULT_BRIGHTNESS
+            if self.device.current_color is None:
+                return None
+            return max(self.device.current_color)
         if self.device.supports_brightness:
             return self.device.current_brightness
         return None
@@ -124,8 +124,9 @@ class KNXLight(Light):
         """Return the HS color value."""
         if self.device.supports_color:
             rgb = self.device.current_color
-            return color_util.color_RGB_to_hs(*rgb) \
-                if rgb is not None else DEFAULT_COLOR
+            if rgb is None:
+                return None
+            return color_util.color_RGB_to_hs(*rgb)
         return None
 
     @property
@@ -165,22 +166,33 @@ class KNXLight(Light):
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
-        brightness = int(kwargs[ATTR_BRIGHTNESS]) \
-            if ATTR_BRIGHTNESS in kwargs else \
-            self.brightness
-        hs_color = kwargs[ATTR_HS_COLOR] \
-            if ATTR_HS_COLOR in kwargs else \
-            self.hs_color
 
-        update_color = ATTR_HS_COLOR in kwargs
+        # initialize with current values
+        brightness = self.brightness
+        hs_color = self.hs_color
+
+        # overwrite values with new settings, if available
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = int(kwargs[ATTR_BRIGHTNESS])
+        if ATTR_HS_COLOR in kwargs:
+            hs_color = kwargs[ATTR_HS_COLOR]
+
+        # fall back to default values, if required
+        if brightness is None:
+            brightness = DEFAULT_BRIGHTNESS
+        if hs_color is None:
+            hs_color = DEFAULT_COLOR
+
         update_brightness = ATTR_BRIGHTNESS in kwargs
+        update_color = ATTR_HS_COLOR in kwargs
 
         # always only go one path for turning on (avoid conflicting changes
         # and weird effects)
         if self.device.supports_brightness and \
                 (update_brightness and not update_color):
             # if we don't need to update the color, try updating brightness
-            # directly if supported
+            # directly if supported; don't do it if color also has to be changed,
+            # as RGB color implicitly sets the brightness as well
             await self.device.set_brightness(brightness)
         elif self.device.supports_color and \
                 (update_brightness or update_color):
@@ -188,7 +200,7 @@ class KNXLight(Light):
             await self.device.set_color(
                 color_util.color_hsv_to_RGB(*hs_color, brightness * 100 / 255))
         else:
-            # no color/brightness change, so just turn it on
+            # no color/brightness change requested, so just turn it on
             await self.device.set_on()
 
     async def async_turn_off(self, **kwargs):
