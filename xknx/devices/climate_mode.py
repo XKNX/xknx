@@ -118,16 +118,16 @@ class ClimateMode(Device):
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
-        return \
-            self.group_address_operation_mode == group_address or \
-            self.group_address_operation_mode_state == group_address or \
-            self.group_address_operation_mode_protection == group_address or \
-            self.group_address_operation_mode_night == group_address or \
-            self.group_address_operation_mode_comfort == group_address or \
-            self.group_address_controller_status == group_address or \
-            self.group_address_controller_status_state == group_address or \
-            self.group_address_controller_mode == group_address or \
-            self.group_address_controller_mode_state == group_address
+        return group_address in \
+            [self.group_address_operation_mode,
+             self.group_address_operation_mode_state,
+             self.group_address_operation_mode_protection,
+             self.group_address_operation_mode_night,
+             self.group_address_operation_mode_comfort,
+             self.group_address_controller_status,
+             self.group_address_controller_status_state,
+             self.group_address_controller_mode,
+             self.group_address_controller_mode_state]
 
     async def _set_internal_operation_mode(self, operation_mode):
         """Set internal value of operation mode. Call hooks if operation mode was changed."""

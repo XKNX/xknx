@@ -282,7 +282,6 @@ class TestStringRepresentations(unittest.TestCase):
 
         def cb():
             """Callback."""
-            pass
 
         action = ActionCallback(
             xknx,
