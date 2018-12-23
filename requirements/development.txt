@@ -1,2 +1,0 @@
--r testing.txt
-isort==4.3.4

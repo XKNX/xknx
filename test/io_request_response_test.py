@@ -3,7 +3,7 @@ import asyncio
 import unittest
 
 from xknx import XKNX
-from xknx.io import UDPClient, RequestResponse
+from xknx.io import RequestResponse, UDPClient
 from xknx.knxip import DisconnectResponse
 
 

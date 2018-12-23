@@ -4,8 +4,9 @@ import unittest
 from unittest.mock import patch
 
 from xknx import XKNX
-from xknx.io import UDPClient, Disconnect
-from xknx.knxip import DisconnectResponse, KNXIPFrame, KNXIPServiceType, HPAI, ErrorCode
+from xknx.io import Disconnect, UDPClient
+from xknx.knxip import (
+    HPAI, DisconnectResponse, ErrorCode, KNXIPFrame, KNXIPServiceType)
 
 
 class TestDisconnect(unittest.TestCase):

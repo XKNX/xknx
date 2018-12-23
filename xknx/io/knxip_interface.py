@@ -12,7 +12,7 @@ from platform import system as get_os_name
 from xknx.exceptions import XKNXException
 
 from .const import DEFAULT_MCAST_PORT
-from .gateway_scanner import GatewayScanner, GatewayScanFilter
+from .gateway_scanner import GatewayScanFilter, GatewayScanner
 from .routing import Routing
 from .tunnel import Tunnel
 

@@ -7,9 +7,9 @@ It provides functionality for
 * watching for state updates from KNX bus.
 """
 from .device import Device
+from .remote_value_dpt_value_1_ucount import RemoteValueDptValue1Ucount
 from .remote_value_scaling import RemoteValueScaling
 from .remote_value_sensor import RemoteValueSensor
-from .remote_value_dpt_value_1_ucount import RemoteValueDptValue1Ucount
 
 
 class Sensor(Device):

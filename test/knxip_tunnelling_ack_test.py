@@ -3,8 +3,8 @@ import asyncio
 import unittest
 
 from xknx import XKNX
-from xknx.knxip import ErrorCode, KNXIPFrame, KNXIPServiceType, TunnellingAck
 from xknx.exceptions import CouldNotParseKNXIP
+from xknx.knxip import ErrorCode, KNXIPFrame, KNXIPServiceType, TunnellingAck
 
 
 class Test_KNXIP_TunnelingReq(unittest.TestCase):

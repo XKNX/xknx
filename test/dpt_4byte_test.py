@@ -1,7 +1,7 @@
 """Unit test for KNX 2 byte objects."""
+import struct
 import unittest
 from unittest.mock import patch
-import struct
 
 from xknx.exceptions import ConversionError
 from xknx.knx import DPT4ByteSigned, DPT4ByteUnsigned

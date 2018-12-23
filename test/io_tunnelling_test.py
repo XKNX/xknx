@@ -4,9 +4,9 @@ import unittest
 from unittest.mock import patch
 
 from xknx import XKNX
-from xknx.io import UDPClient, Tunnelling
-from xknx.knxip import TunnellingAck, KNXIPFrame, KNXIPServiceType, ErrorCode
-from xknx.knx import Telegram, PhysicalAddress, GroupAddress, DPTArray
+from xknx.io import Tunnelling, UDPClient
+from xknx.knx import DPTArray, GroupAddress, PhysicalAddress, Telegram
+from xknx.knxip import ErrorCode, KNXIPFrame, KNXIPServiceType, TunnellingAck
 
 
 class TestTunnelling(unittest.TestCase):

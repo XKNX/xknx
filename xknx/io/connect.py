@@ -1,6 +1,6 @@
 """Abstraction to send ConnectRequest and wait for ConnectResponse."""
-from xknx.knxip import (HPAI, ConnectRequestType, ConnectResponse, KNXIPFrame,
-                        KNXIPServiceType)
+from xknx.knxip import (
+    HPAI, ConnectRequestType, ConnectResponse, KNXIPFrame, KNXIPServiceType)
 
 from .request_response import RequestResponse
 

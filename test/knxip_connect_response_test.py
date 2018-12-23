@@ -3,9 +3,10 @@ import asyncio
 import unittest
 
 from xknx import XKNX
-from xknx.knxip import (HPAI, ConnectRequestType, ConnectResponse, ErrorCode,
-                        KNXIPFrame, KNXIPServiceType)
 from xknx.exceptions import CouldNotParseKNXIP
+from xknx.knxip import (
+    HPAI, ConnectRequestType, ConnectResponse, ErrorCode, KNXIPFrame,
+    KNXIPServiceType)
 
 
 class Test_KNXIP_ConnectResponse(unittest.TestCase):

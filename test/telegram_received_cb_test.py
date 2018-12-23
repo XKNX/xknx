@@ -4,8 +4,8 @@ import unittest
 from unittest.mock import Mock
 
 from xknx import XKNX
-from xknx.knx import (AddressFilter, DPTBinary, GroupAddress, Telegram,
-                      TelegramDirection)
+from xknx.knx import (
+    AddressFilter, DPTBinary, GroupAddress, Telegram, TelegramDirection)
 
 
 class TestTelegramReceivedCallback(unittest.TestCase):

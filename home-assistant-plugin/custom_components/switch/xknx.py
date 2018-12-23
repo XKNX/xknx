@@ -5,13 +5,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.knx/
 """
 
+import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-
 from custom_components.xknx import ATTR_DISCOVER_DEVICES, DATA_XKNX
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 
 CONF_ADDRESS = 'address'
 CONF_STATE_ADDRESS = 'state_address'

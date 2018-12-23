@@ -7,11 +7,11 @@ Module for managing the climate within a room.
 from xknx.exceptions import DeviceIllegalValue
 from xknx.knx import GroupAddress
 
-from .device import Device
 from .climate_mode import ClimateMode
-from .remote_value_temp import RemoteValueTemp
+from .device import Device
 from .remote_value_1count import RemoteValue1Count
 from .remote_value_switch import RemoteValueSwitch
+from .remote_value_temp import RemoteValueTemp
 
 
 class Climate(Device):

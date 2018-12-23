@@ -5,16 +5,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.knx/
 """
 
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
 import voluptuous as vol
-
 from custom_components.xknx import ATTR_DISCOVER_DEVICES, DATA_XKNX
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, Light)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.color as color_util
 
 CONF_ADDRESS = 'address'
 CONF_STATE_ADDRESS = 'state_address'

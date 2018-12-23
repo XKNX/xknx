@@ -1,13 +1,13 @@
 """Unit test for KNX 2 and 4 byte float objects."""
+import struct
 import unittest
 from unittest.mock import patch
-import struct
 
 from xknx.exceptions import ConversionError
-from xknx.knx import (DPT2ByteFloat, DPT4ByteFloat, DPTElectricCurrent,
-                      DPTElectricPotential, DPTFrequency, DPTHumidity, DPTLux,
-                      DPTPhaseAngleDeg, DPTPower, DPTTemperature,
-                      DPTEnthalpy, DPTPartsPerMillion, DPTVoltage)
+from xknx.knx import (
+    DPT2ByteFloat, DPT4ByteFloat, DPTElectricCurrent, DPTElectricPotential,
+    DPTEnthalpy, DPTFrequency, DPTHumidity, DPTLux, DPTPartsPerMillion,
+    DPTPhaseAngleDeg, DPTPower, DPTTemperature, DPTVoltage)
 
 
 class TestDPTFloat(unittest.TestCase):

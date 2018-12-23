@@ -4,9 +4,9 @@ import unittest
 from unittest.mock import patch
 
 from xknx import XKNX
-from xknx.exceptions import CouldNotParseTelegram
 from xknx.devices import RemoteValue
-from xknx.knx import DPTBinary, DPTArray, Telegram, GroupAddress
+from xknx.exceptions import CouldNotParseTelegram
+from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram
 
 
 class TestRemoteValue(unittest.TestCase):
