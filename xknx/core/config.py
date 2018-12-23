@@ -7,8 +7,9 @@ Module for reading configfiles (xknx.yaml).
 
 import yaml
 
-from xknx.devices import (BinarySensor, Climate, Cover, DateTime, ExposeSensor,
-                          Light, Notification, Scene, Sensor, Switch)
+from xknx.devices import (
+    BinarySensor, Climate, Cover, DateTime, ExposeSensor, Light, Notification,
+    Scene, Sensor, Switch)
 from xknx.exceptions import XKNXException
 from xknx.knx import PhysicalAddress
 

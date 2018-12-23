@@ -4,9 +4,9 @@ Module for managing the climate mode.
 Climate modes can be 'auto', 'comfort', 'standby', 'economy' or 'protection'.
 """
 from xknx.exceptions import CouldNotParseTelegram, DeviceIllegalValue
-from xknx.knx import (DPTArray, DPTBinary, DPTControllerStatus,
-                      DPTHVACContrMode, DPTHVACMode, GroupAddress,
-                      HVACOperationMode)
+from xknx.knx import (
+    DPTArray, DPTBinary, DPTControllerStatus, DPTHVACContrMode, DPTHVACMode,
+    GroupAddress, HVACOperationMode)
 
 from .device import Device
 

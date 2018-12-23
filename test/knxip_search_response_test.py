@@ -3,9 +3,9 @@ import asyncio
 import unittest
 
 from xknx import XKNX
-from xknx.knxip import (HPAI, DIBDeviceInformation, DIBServiceFamily,
-                        DIBSuppSVCFamilies, KNXIPFrame, KNXIPServiceType,
-                        SearchResponse)
+from xknx.knxip import (
+    HPAI, DIBDeviceInformation, DIBServiceFamily, DIBSuppSVCFamilies,
+    KNXIPFrame, KNXIPServiceType, SearchResponse)
 
 
 class Test_KNXIP_Discovery(unittest.TestCase):

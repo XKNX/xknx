@@ -4,8 +4,8 @@ import unittest
 
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
-from xknx.knxip import (HPAI, ConnectRequest, ConnectRequestType, KNXIPFrame,
-                        KNXIPServiceType)
+from xknx.knxip import (
+    HPAI, ConnectRequest, ConnectRequestType, KNXIPFrame, KNXIPServiceType)
 
 
 class Test_KNXIP_ConnectRequest(unittest.TestCase):

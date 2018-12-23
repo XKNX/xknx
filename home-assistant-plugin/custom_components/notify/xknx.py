@@ -8,8 +8,8 @@ https://home-assistant.io/components/notify.knx/
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from custom_components.xknx import ATTR_DISCOVER_DEVICES, DATA_XKNX
-from homeassistant.components.notify import (PLATFORM_SCHEMA,
-                                             BaseNotificationService)
+from homeassistant.components.notify import (
+    PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 

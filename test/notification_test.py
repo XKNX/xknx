@@ -6,8 +6,8 @@ from unittest.mock import Mock, patch
 from xknx import XKNX
 from xknx.devices import Notification
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.knx import (DPTArray, DPTBinary, DPTString, GroupAddress, Telegram,
-                      TelegramType)
+from xknx.knx import (
+    DPTArray, DPTBinary, DPTString, GroupAddress, Telegram, TelegramType)
 
 
 class TestNotification(unittest.TestCase):

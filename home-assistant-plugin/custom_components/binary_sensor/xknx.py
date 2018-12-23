@@ -7,10 +7,10 @@ https://home-assistant.io/components/binary_sensor.knx/
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-from custom_components.xknx import (ATTR_DISCOVER_DEVICES, DATA_XKNX,
-                                    KNXAutomation)
-from homeassistant.components.binary_sensor import (PLATFORM_SCHEMA,
-                                                    BinarySensorDevice)
+from custom_components.xknx import (
+    ATTR_DISCOVER_DEVICES, DATA_XKNX, KNXAutomation)
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 

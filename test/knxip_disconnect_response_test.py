@@ -4,8 +4,8 @@ import unittest
 
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
-from xknx.knxip import (DisconnectResponse, ErrorCode, KNXIPFrame,
-                        KNXIPServiceType)
+from xknx.knxip import (
+    DisconnectResponse, ErrorCode, KNXIPFrame, KNXIPServiceType)
 
 
 class Test_KNXIP_DisconnectResp(unittest.TestCase):

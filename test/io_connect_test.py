@@ -5,8 +5,9 @@ from unittest.mock import patch
 
 from xknx import XKNX
 from xknx.io import Connect, UDPClient
-from xknx.knxip import (HPAI, ConnectRequestType, ConnectResponse, ErrorCode,
-                        KNXIPFrame, KNXIPServiceType)
+from xknx.knxip import (
+    HPAI, ConnectRequestType, ConnectResponse, ErrorCode, KNXIPFrame,
+    KNXIPServiceType)
 
 
 class TestConnect(unittest.TestCase):

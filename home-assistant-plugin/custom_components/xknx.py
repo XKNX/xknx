@@ -9,8 +9,8 @@ import logging
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-from homeassistant.const import (CONF_ENTITY_ID, CONF_HOST, CONF_PORT,
-                                 EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (
+    CONF_ENTITY_ID, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.event import async_track_state_change

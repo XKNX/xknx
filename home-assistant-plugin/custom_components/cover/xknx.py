@@ -8,11 +8,10 @@ https://home-assistant.io/components/cover.knx/
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from custom_components.xknx import ATTR_DISCOVER_DEVICES, DATA_XKNX
-from homeassistant.components.cover import (ATTR_POSITION, ATTR_TILT_POSITION,
-                                            PLATFORM_SCHEMA, SUPPORT_CLOSE,
-                                            SUPPORT_OPEN, SUPPORT_SET_POSITION,
-                                            SUPPORT_SET_TILT_POSITION,
-                                            SUPPORT_STOP, CoverDevice)
+from homeassistant.components.cover import (
+    ATTR_POSITION, ATTR_TILT_POSITION, PLATFORM_SCHEMA, SUPPORT_CLOSE,
+    SUPPORT_OPEN, SUPPORT_SET_POSITION, SUPPORT_SET_TILT_POSITION,
+    SUPPORT_STOP, CoverDevice)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_utc_time_change
