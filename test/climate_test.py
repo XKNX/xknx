@@ -155,7 +155,6 @@ class TestClimate(unittest.TestCase):
              GroupAddress("1/2/5"),
              GroupAddress("1/2/10")])
 
-
     #
     # TEST CALLBACK
     #

@@ -60,7 +60,7 @@ class Device:
         telegram.payload = payload
         telegram.telegramtype = TelegramType.GROUP_RESPONSE \
             if response else TelegramType.GROUP_WRITE
-        await  self.xknx.telegrams.put(telegram)
+        await self.xknx.telegrams.put(telegram)
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
