@@ -9,8 +9,8 @@ It provides functionality for
 """
 from .device import Device
 from .remote_value_color_rgb import RemoteValueColorRGB
-from .remote_value_switch import RemoteValueSwitch
 from .remote_value_scaling import RemoteValueScaling
+from .remote_value_switch import RemoteValueSwitch
 
 
 class Light(Device):

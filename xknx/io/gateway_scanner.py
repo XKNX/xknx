@@ -10,8 +10,9 @@ import asyncio
 from typing import List
 
 import netifaces
-from xknx.knxip import (HPAI, DIBServiceFamily, DIBSuppSVCFamilies, KNXIPFrame,
-                        KNXIPServiceType, SearchResponse)
+from xknx.knxip import (
+    HPAI, DIBServiceFamily, DIBSuppSVCFamilies, KNXIPFrame, KNXIPServiceType,
+    SearchResponse)
 
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .udp_client import UDPClient

@@ -3,9 +3,9 @@ import unittest
 
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knx import PhysicalAddress
-from xknx.knxip import (DIB, DIBDeviceInformation, DIBGeneric,
-                        DIBServiceFamily, DIBSuppSVCFamilies, DIBTypeCode,
-                        KNXMedium)
+from xknx.knxip import (
+    DIB, DIBDeviceInformation, DIBGeneric, DIBServiceFamily,
+    DIBSuppSVCFamilies, DIBTypeCode, KNXMedium)
 
 
 class Test_KNXIP_DIB(unittest.TestCase):

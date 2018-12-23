@@ -3,8 +3,8 @@ import asyncio
 import unittest
 
 from xknx import XKNX
-from xknx.knxip import KNXIPHeader, KNXIPServiceType, DisconnectRequest
 from xknx.exceptions import CouldNotParseKNXIP
+from xknx.knxip import DisconnectRequest, KNXIPHeader, KNXIPServiceType
 
 
 class Test_KNXIP_Header(unittest.TestCase):

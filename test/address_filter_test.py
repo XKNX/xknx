@@ -1,8 +1,8 @@
 """Unit test for Address class."""
 import unittest
 
-from xknx.knx import AddressFilter, GroupAddress
 from xknx.exceptions import ConversionError
+from xknx.knx import AddressFilter, GroupAddress
 
 
 class TestAddressFilter(unittest.TestCase):

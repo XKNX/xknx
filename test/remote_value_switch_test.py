@@ -3,9 +3,9 @@ import asyncio
 import unittest
 
 from xknx import XKNX
-from xknx.knx import DPTArray, DPTBinary, Telegram, GroupAddress
-from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.devices import RemoteValueSwitch
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
+from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram
 
 
 class TestRemoteValueSwitch(unittest.TestCase):

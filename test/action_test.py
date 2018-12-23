@@ -4,7 +4,8 @@ import unittest
 from unittest.mock import Mock, patch
 
 from xknx import XKNX
-from xknx.devices import ActionBase, Action, ActionCallback, BinarySensorState, Light
+from xknx.devices import (
+    Action, ActionBase, ActionCallback, BinarySensorState, Light)
 
 
 class TestAction(unittest.TestCase):
