@@ -4,6 +4,9 @@ Changelog
 Upcoming version (unreleased)
 -----------------------------
 
+0.9.2 - Release 2018-12-22
+--------------------------
+
 * Min and max values for Climate device
 * Splitted up Climate in Climate and ClimateMode
 * added __contains__ method for Devices class.

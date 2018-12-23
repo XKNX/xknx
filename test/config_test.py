@@ -149,9 +149,9 @@ class TestConfig(unittest.TestCase):
         """Test reading Climate object with operation mode in one group address from config file."""
         xknx = XKNX(config='xknx.yaml', loop=self.loop)
         self.assertEqual(
-            xknx.devices['Office.ClimateMode'],
+            xknx.devices['Office.Climate'].mode,
             ClimateMode(xknx,
-                        'Office.ClimateMode',
+                        name=None,
                         group_address_operation_mode='1/7/6',
                         device_updated_cb=xknx.devices.device_updated))
 
@@ -159,9 +159,9 @@ class TestConfig(unittest.TestCase):
         """Test reading Climate object with operation mode in different group addresses  from config file."""
         xknx = XKNX(config='xknx.yaml', loop=self.loop)
         self.assertEqual(
-            xknx.devices['Attic.ClimateMode'],
+            xknx.devices['Attic.Climate'].mode,
             ClimateMode(xknx,
-                        'Attic.ClimateMode',
+                        name=None,
                         group_address_operation_mode_protection='1/7/8',
                         group_address_operation_mode_night='1/7/9',
                         group_address_operation_mode_comfort='1/7/10',
@@ -171,9 +171,9 @@ class TestConfig(unittest.TestCase):
         """Test reading Climate object with status address for operation mode."""
         xknx = XKNX(config='xknx.yaml', loop=self.loop)
         self.assertEqual(
-            xknx.devices['Bath.ClimateMode'],
+            xknx.devices['Bath.Climate'].mode,
             ClimateMode(xknx,
-                        'Bath.ClimateMode',
+                        name=None,
                         group_address_operation_mode='1/7/6',
                         group_address_operation_mode_state='1/7/7',
                         device_updated_cb=xknx.devices.device_updated))
@@ -182,9 +182,9 @@ class TestConfig(unittest.TestCase):
         """Test reading Climate object with addresses for controller status."""
         xknx = XKNX(config='xknx.yaml', loop=self.loop)
         self.assertEqual(
-            xknx.devices['Cellar.ClimateMode'],
+            xknx.devices['Cellar.Climate'].mode,
             ClimateMode(xknx,
-                        'Cellar.ClimateMode',
+                        name=None,
                         group_address_controller_status='1/7/12',
                         group_address_controller_status_state='1/7/13',
                         device_updated_cb=xknx.devices.device_updated))
