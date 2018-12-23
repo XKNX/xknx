@@ -102,15 +102,17 @@ class TestClimate(unittest.TestCase):
     def test_has_group_address_mode(self):
         """Test if has_group_address function works."""
         xknx = XKNX(loop=self.loop)
-        climate = ClimateMode(
+        climate_mode = ClimateMode(
             xknx,
-            'TestClimate',
+            name=None,
             group_address_operation_mode='1/2/5',
             group_address_operation_mode_protection='1/2/6',
             group_address_operation_mode_night='1/2/7',
             group_address_operation_mode_comfort='1/2/8',
             group_address_controller_mode='1/2/9',
             group_address_controller_mode_state='1/2/10')
+
+        climate = Climate(xknx, name='TestClimate', mode=climate_mode)
 
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/5')))
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/6')))
@@ -119,6 +121,40 @@ class TestClimate(unittest.TestCase):
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/9')))
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/10')))
         self.assertFalse(climate.has_group_address(GroupAddress('1/2/99')))
+
+    #
+    # STATE ADDRESSES
+    #
+    def test_state_addresses(self):
+        """Test state_addresses of Climate and ClimateMode."""
+        xknx = XKNX(loop=self.loop)
+        climate_mode = ClimateMode(
+            xknx,
+            name=None,
+            group_address_operation_mode='1/2/5',
+            group_address_operation_mode_protection='1/2/6',
+            group_address_operation_mode_night='1/2/7',
+            group_address_operation_mode_comfort='1/2/8',
+            group_address_controller_mode='1/2/9',
+            group_address_controller_mode_state='1/2/10')
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            group_address_temperature='1/2/1',
+            group_address_target_temperature='1/2/2',
+            group_address_setpoint_shift='1/2/3',
+            group_address_setpoint_shift_state='1/2/4',
+            group_address_on_off='1/2/11',
+            group_address_on_off_state='1/2/12',
+            mode=climate_mode)
+        self.assertEqual(
+            climate.state_addresses(),
+            [GroupAddress("1/2/1"),
+             GroupAddress("1/2/4"),
+             GroupAddress("1/2/12"),
+             GroupAddress("1/2/5"),
+             GroupAddress("1/2/10")])
+
 
     #
     # TEST CALLBACK
@@ -226,13 +262,17 @@ class TestClimate(unittest.TestCase):
 
         after_update_callback = Mock()
 
+        climate = Climate(xknx, 'TestClimate', mode=climate_mode)
+
         async def async_after_update_callback(device):
             """Async callback."""
             after_update_callback(device)
         climate_mode.register_device_updated_cb(async_after_update_callback)
 
+        # Note: the climate object processes the telegram, but the cb
+        # is called with the climate_mode object.
         telegram = Telegram(GroupAddress('1/2/4'), payload=DPTArray(1))
-        self.loop.run_until_complete(asyncio.Task(climate_mode.process(telegram)))
+        self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
         after_update_callback.assert_called_with(climate_mode)
         after_update_callback.reset_mock()
 
