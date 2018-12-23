@@ -4,6 +4,15 @@ Changelog
 Upcoming version (unreleased)
 -----------------------------
 
+0.9.3 - Release 2018-12-23
+--------------------------
+
+* updated requirements (added flake8-isort)
+* some more unit tests
+* Breaking Change:
+  ClimateMode is now a member of Climate (the hass plugin
+  needs this kind of dependency. Please note the updated xknx.yml)
+
 0.9.2 - Release 2018-12-22
 --------------------------
 
