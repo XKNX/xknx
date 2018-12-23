@@ -8,6 +8,7 @@ from xknx.exceptions import DeviceIllegalValue
 from xknx.knx import GroupAddress
 
 from .device import Device
+from .climate_mode import ClimateMode
 from .remote_value_temp import RemoteValueTemp
 from .remote_value_1count import RemoteValue1Count
 from .remote_value_switch import RemoteValueSwitch
@@ -36,6 +37,7 @@ class Climate(Device):
                  group_address_on_off_state=None,
                  min_temp=None,
                  max_temp=None,
+                 mode=None,
                  device_updated_cb=None):
         """Initialize Climate class."""
         # pylint: disable=too-many-arguments, too-many-locals, too-many-branches, too-many-statements
@@ -83,6 +85,8 @@ class Climate(Device):
             self.name,
             self.after_update)
 
+        self.mode = mode
+
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
@@ -106,6 +110,13 @@ class Climate(Device):
         group_address_on_off_state = \
             config.get('group_address_on_off_state')
 
+        climate_mode = None
+        if "mode" in config:
+            climate_mode = ClimateMode.from_config(
+                xknx=xknx,
+                name=None,
+                config=config['mode'])
+
         return cls(xknx,
                    name,
                    group_address_temperature=group_address_temperature,
@@ -116,10 +127,13 @@ class Climate(Device):
                    setpoint_shift_max=setpoint_shift_max,
                    setpoint_shift_min=setpoint_shift_min,
                    group_address_on_off=group_address_on_off,
-                   group_address_on_off_state=group_address_on_off_state)
+                   group_address_on_off_state=group_address_on_off_state,
+                   mode=climate_mode)
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
+        if self.mode is not None and self.mode.has_group_address(group_address):
+            return True
         return self.temperature.has_group_address(group_address) or \
             self.target_temperature.has_group_address(group_address) or \
             self.setpoint_shift.has_group_address(group_address) or \
@@ -199,6 +213,8 @@ class Climate(Device):
         await self.target_temperature.process(telegram)
         await self.setpoint_shift.process(telegram)
         await self.on.process(telegram)
+        if self.mode is not None:
+            await self.mode.process_group_write(telegram)
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
@@ -208,6 +224,8 @@ class Climate(Device):
         state_addresses.extend(self.setpoint_shift.state_addresses())
         if self.supports_on_off:
             state_addresses.extend(self.on.state_addresses())
+        if self.mode is not None:
+            state_addresses.extend(self.mode.state_addresses())
         return state_addresses
 
     def __str__(self):

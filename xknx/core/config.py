@@ -7,7 +7,7 @@ Module for reading configfiles (xknx.yaml).
 
 import yaml
 
-from xknx.devices import (BinarySensor, Climate, ClimateMode, Cover, DateTime, ExposeSensor,
+from xknx.devices import (BinarySensor, Climate, Cover, DateTime, ExposeSensor,
                           Light, Notification, Scene, Sensor, Switch)
 from xknx.exceptions import XKNXException
 from xknx.knx import PhysicalAddress
@@ -52,8 +52,6 @@ class Config:
                 self.parse_group_switch(doc["groups"][group])
             elif group.startswith("cover"):
                 self.parse_group_cover(doc["groups"][group])
-            elif group.startswith("climate_mode"):
-                self.parse_group_climate_mode(doc["groups"][group])
             elif group.startswith("climate"):
                 self.parse_group_climate(doc["groups"][group])
             elif group.startswith("datetime"):
@@ -115,15 +113,8 @@ class Config:
                 entry,
                 entries[entry])
             self.xknx.devices.add(climate)
-
-    def parse_group_climate_mode(self, entries):
-        """Parse a climate_mode section of xknx.yaml."""
-        for entry in entries:
-            climate_mode = ClimateMode.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
-            self.xknx.devices.add(climate_mode)
+            if climate.mode is not None:
+                self.xknx.devices.add(climate.mode)
 
     def parse_group_datetime(self, entries):
         """Parse a datetime section of xknx.yaml."""
