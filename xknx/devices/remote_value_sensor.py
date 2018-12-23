@@ -8,10 +8,11 @@ from xknx.exceptions import ConversionError
 from xknx.knx import (DPT2ByteFloat, DPT2ByteUnsigned, DPT4ByteFloat,
                       DPT4ByteSigned, DPT4ByteUnsigned, DPTArray,
                       DPTBrightness, DPTElectricCurrent, DPTElectricPotential,
-                      DPTEnergy, DPTFrequency, DPTHeatFlowRate, DPTHumidity,
-                      DPTLux, DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower,
-                      DPTPowerFactor, DPTSpeed, DPTTemperature, DPTEnthalpy,
-                      DPTUElCurrentmA, DPTWsp, DPTPartsPerMillion, DPTVoltage)
+                      DPTEnergy, DPTEnthalpy, DPTFrequency, DPTHeatFlowRate,
+                      DPTHumidity, DPTLux, DPTPartsPerMillion,
+                      DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower,
+                      DPTPowerFactor, DPTSpeed, DPTTemperature,
+                      DPTUElCurrentmA, DPTVoltage, DPTWsp)
 
 from .remote_value import RemoteValue
 

@@ -3,8 +3,8 @@ import asyncio
 import unittest
 
 from xknx import XKNX
-from xknx.knxip import HPAI, DisconnectRequest, KNXIPFrame, KNXIPServiceType
 from xknx.exceptions import CouldNotParseKNXIP
+from xknx.knxip import HPAI, DisconnectRequest, KNXIPFrame, KNXIPServiceType
 
 
 class Test_KNXIP_DisconnectReq(unittest.TestCase):

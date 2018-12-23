@@ -5,11 +5,11 @@ from unittest.mock import Mock
 
 from xknx import XKNX
 from xknx.devices import Climate, ClimateMode
-from xknx.exceptions import DeviceIllegalValue, CouldNotParseTelegram
+from xknx.exceptions import CouldNotParseTelegram, DeviceIllegalValue
 from xknx.knx import (DPT2ByteFloat, DPTArray, DPTBinary, DPTControllerStatus,
-                      DPTHVACMode, DPTHVACContrMode, DPTTemperature, DPTValue1Count,
-                      GroupAddress, HVACOperationMode, Telegram, TelegramType)
-
+                      DPTHVACContrMode, DPTHVACMode, DPTTemperature,
+                      DPTValue1Count, GroupAddress, HVACOperationMode,
+                      Telegram, TelegramType)
 
 DPT_20102_MODES = [HVACOperationMode.AUTO, HVACOperationMode.COMFORT,
                    HVACOperationMode.STANDBY, HVACOperationMode.NIGHT,

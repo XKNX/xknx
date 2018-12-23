@@ -1,6 +1,6 @@
 """Implementation of different KNX DPT HVAC Operation modes."""
 
-from xknx.exceptions import CouldNotParseKNXIP, ConversionError
+from xknx.exceptions import ConversionError, CouldNotParseKNXIP
 
 from .dpt import DPTBase
 from .dpt_hvac_mode import HVACOperationMode

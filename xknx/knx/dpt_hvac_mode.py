@@ -2,7 +2,7 @@
 
 from enum import Enum
 
-from xknx.exceptions import CouldNotParseKNXIP, ConversionError
+from xknx.exceptions import ConversionError, CouldNotParseKNXIP
 
 from .dpt import DPTBase
 

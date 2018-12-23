@@ -3,8 +3,8 @@ import asyncio
 import unittest
 
 from xknx import XKNX
-from xknx.knxip import KNXIPFrame
 from xknx.exceptions import CouldNotParseKNXIP
+from xknx.knxip import KNXIPFrame
 
 
 class Test_KNXIP(unittest.TestCase):

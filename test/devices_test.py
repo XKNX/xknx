@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from xknx import XKNX
-from xknx.devices import BinarySensor, Devices, Device, Light, Switch
+from xknx.devices import BinarySensor, Device, Devices, Light, Switch
 from xknx.knx import GroupAddress
 
 

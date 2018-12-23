@@ -3,9 +3,9 @@ import asyncio
 import unittest
 
 from xknx import XKNX
+from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import (HPAI, ConnectionStateRequest, KNXIPFrame,
                         KNXIPServiceType)
-from xknx.exceptions import CouldNotParseKNXIP
 
 
 class Test_KNXIP_ConnStateReq(unittest.TestCase):

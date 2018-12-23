@@ -5,14 +5,13 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/notify.knx/
 """
 
+import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-
-from custom_components.xknx import DATA_XKNX, ATTR_DISCOVER_DEVICES
-from homeassistant.components.notify import PLATFORM_SCHEMA, \
-    BaseNotificationService
+from custom_components.xknx import ATTR_DISCOVER_DEVICES, DATA_XKNX
+from homeassistant.components.notify import (PLATFORM_SCHEMA,
+                                             BaseNotificationService)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 
 CONF_ADDRESS = 'address'
 DEFAULT_NAME = 'XKNX Notify'

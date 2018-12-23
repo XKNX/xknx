@@ -4,8 +4,9 @@ import unittest
 from unittest.mock import patch
 
 from xknx import XKNX
-from xknx.io import UDPClient, ConnectionState
-from xknx.knxip import ConnectionStateResponse, KNXIPFrame, KNXIPServiceType, HPAI, ErrorCode
+from xknx.io import ConnectionState, UDPClient
+from xknx.knxip import (HPAI, ConnectionStateResponse, ErrorCode, KNXIPFrame,
+                        KNXIPServiceType)
 
 
 class TestConnectionState(unittest.TestCase):

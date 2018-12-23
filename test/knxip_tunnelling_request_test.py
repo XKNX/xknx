@@ -3,10 +3,10 @@ import asyncio
 import unittest
 
 from xknx import XKNX
+from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knx import DPTBinary, GroupAddress, Telegram
 from xknx.knxip import (CEMIFrame, KNXIPFrame, KNXIPServiceType,
                         TunnellingRequest)
-from xknx.exceptions import CouldNotParseKNXIP
 
 
 class Test_KNXIP_TunnelingReq(unittest.TestCase):

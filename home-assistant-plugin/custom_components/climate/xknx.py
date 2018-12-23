@@ -8,10 +8,12 @@ https://home-assistant.io/components/climate.knx/
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from custom_components.xknx import ATTR_DISCOVER_DEVICES, DATA_XKNX
-from homeassistant.components.climate import (
-    PLATFORM_SCHEMA, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_ON_OFF, ClimateDevice)
-from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS, STATE_UNKNOWN
+from homeassistant.components.climate import (PLATFORM_SCHEMA, SUPPORT_ON_OFF,
+                                              SUPPORT_OPERATION_MODE,
+                                              SUPPORT_TARGET_TEMPERATURE,
+                                              ClimateDevice)
+from homeassistant.const import (ATTR_TEMPERATURE, CONF_NAME, STATE_UNKNOWN,
+                                 TEMP_CELSIUS)
 from homeassistant.core import callback
 
 CONF_SETPOINT_SHIFT_ADDRESS = 'setpoint_shift_address'
