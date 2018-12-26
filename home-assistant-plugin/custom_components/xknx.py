@@ -7,12 +7,13 @@ https://home-assistant.io/components/knx/
 
 import logging
 
-import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
+
 from homeassistant.const import (
     CONF_ENTITY_ID, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
 
@@ -239,7 +240,7 @@ class KNXModule:
 
     async def telegram_received_cb(self, telegram):
         """Call invoked after a KNX telegram was received."""
-        self.hass.bus.fire('knx_event', {
+        self.hass.bus.async_fire('knx_event', {
             'address': str(telegram.group_address),
             'data': telegram.payload.value
         })
@@ -333,7 +334,7 @@ class KNXExposeSensor:
             self.hass, self.entity_id, self._async_entity_changed)
 
     async def _async_entity_changed(self, entity_id, old_state, new_state):
-        """Callback after entity changed."""
+        """Handle entity change."""
         if new_state is None:
             return
         await self.device.set(float(new_state.state))

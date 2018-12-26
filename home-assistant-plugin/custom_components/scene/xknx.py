@@ -4,12 +4,13 @@ Support for KNX scenes.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/scene.knx/
 """
-import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
+
 from custom_components.xknx import ATTR_DISCOVER_DEVICES, DATA_XKNX
 from homeassistant.components.scene import CONF_PLATFORM, Scene
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 
 CONF_ADDRESS = 'address'
 CONF_SCENE_NUMBER = 'scene_number'
@@ -25,27 +26,27 @@ PLATFORM_SCHEMA = vol.Schema({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the scenes for KNX platform."""
     if discovery_info is not None:
-        async_add_devices_discovery(hass, discovery_info, async_add_devices)
+        async_add_entities_discovery(hass, discovery_info, async_add_entities)
     else:
-        async_add_devices_config(hass, config, async_add_devices)
+        async_add_entities_config(hass, config, async_add_entities)
 
 
 @callback
-def async_add_devices_discovery(hass, discovery_info, async_add_devices):
+def async_add_entities_discovery(hass, discovery_info, async_add_entities):
     """Set up scenes for KNX platform configured via xknx.yaml."""
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_XKNX].xknx.devices[device_name]
         entities.append(KNXScene(device))
-    async_add_devices(entities)
+    async_add_entities(entities)
 
 
 @callback
-def async_add_devices_config(hass, config, async_add_devices):
+def async_add_entities_config(hass, config, async_add_entities):
     """Set up scene for KNX platform configured within platform."""
     import xknx
     scene = xknx.devices.Scene(
@@ -54,7 +55,7 @@ def async_add_devices_config(hass, config, async_add_devices):
         group_address=config.get(CONF_ADDRESS),
         scene_number=config.get(CONF_SCENE_NUMBER))
     hass.data[DATA_XKNX].xknx.devices.add(scene)
-    async_add_devices([KNXScene(scene)])
+    async_add_entities([KNXScene(scene)])
 
 
 class KNXScene(Scene):
