@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from custom_components.xknx import ATTR_DISCOVER_DEVICES, DATA_XKNX
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, PLATFORM_SCHEMA,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_WHITE_VALUE, PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_WHITE_VALUE,
     Light)
 from homeassistant.const import CONF_NAME
@@ -220,6 +220,8 @@ class KNXLight(Light):
         """Turn the light on."""
         brightness = int(kwargs.get(ATTR_BRIGHTNESS, self.brightness))
         hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
+        mireds = kwargs.get(ATTR_COLOR_TEMP, self.color_temp)
+        tunable_white = int(kwargs.get(ATTR_WHITE_VALUE, self.white_value))
 
         # fall back to default values, if required
         if brightness is None:
@@ -230,6 +232,7 @@ class KNXLight(Light):
         update_brightness = ATTR_BRIGHTNESS in kwargs
         update_color = ATTR_HS_COLOR in kwargs
         update_color_temp = ATTR_COLOR_TEMP in kwargs
+        update_tunable_white = ATTR_WHITE_VALUE in kwargs
 
         # always only go one path for turning on (avoid conflicting changes
         # and weird effects)
@@ -247,13 +250,15 @@ class KNXLight(Light):
         elif self.device.supports_color_temperature and \
                 update_color_temp:
             # change color temperature without ON telegram
-            mireds = kwargs[ATTR_COLOR_TEMP]
             if mireds > self.max_mireds:
                 mireds = self.max_mireds
             elif mireds < self.min_mireds:
                 mireds = self.min_mireds
             kelvin = int(color_util.color_temperature_mired_to_kelvin(mireds))
             await self.device.set_color_temperature(kelvin)
+        elif self.device.supports_tunable_white and \
+                update_tunable_white:
+            await self.device.set_tunable_white(tunable_white)
         else:
             # no color/brightness change requested, so just turn it on
             await self.device.set_on()
