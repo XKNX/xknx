@@ -36,6 +36,8 @@ DEFAULT_BRIGHTNESS = 255
 DEFAULT_COLOR_TEMPERATURE = 333  # 3000 K
 DEFAULT_MIN_MIREDS = 166  # 6000 K
 DEFAULT_MAX_MIREDS = 370  # 2700 K
+DEFAULT_MIN_KELVIN = 2700
+DEFAULT_MAX_KELVIN = 6000
 DEPENDENCIES = ['xknx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -188,6 +190,24 @@ class KNXLight(Light):
         return None
 
     @property
+    def min_kelvin(self):
+        """Return the warmest color temperature this light supports in kelvin."""
+        if self.device.supports_color_temperature:
+            kelvin = self.device.min_kelvin
+            return kelvin \
+                if kelvin is not None else DEFAULT_MIN_KELVIN
+        return None
+
+    @property
+    def max_kelvin(self):
+        """Return the coldest color temperature this light supports in kelvin."""
+        if self.device.supports_color_temperature:
+            kelvin = self.device.max_kelvin
+            return kelvin \
+                if kelvin is not None else DEFAULT_MAX_KELVIN
+        return None
+
+    @property
     def effect_list(self):
         """Return the list of supported effects."""
         return None
@@ -250,11 +270,11 @@ class KNXLight(Light):
         elif self.device.supports_color_temperature and \
                 update_color_temp:
             # change color temperature without ON telegram
-            if mireds > self.max_mireds:
-                mireds = self.max_mireds
-            elif mireds < self.min_mireds:
-                mireds = self.min_mireds
             kelvin = int(color_util.color_temperature_mired_to_kelvin(mireds))
+            if kelvin > self.max_kelvin:
+                kelvin = self.max_kelvin
+            elif kelvin < self.min_kelvin:
+                kelvin = self.min_kelvin
             await self.device.set_color_temperature(kelvin)
         elif self.device.supports_tunable_white and \
                 update_tunable_white:
