@@ -3,7 +3,7 @@ Module for managing a DTP 7001 remote value.
 
 DPT 7.001.
 """
-from xknx.knx import DPTArray, DPT2ByteUnsigned
+from xknx.knx import DPT2ByteUnsigned, DPTArray
 
 from .remote_value import RemoteValue
 
