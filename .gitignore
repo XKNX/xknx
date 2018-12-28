@@ -9,3 +9,4 @@ xknx.egg-info/
 .coverage
 venv
 .idea/
+.vscode/

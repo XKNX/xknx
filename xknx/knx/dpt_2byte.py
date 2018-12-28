@@ -29,6 +29,8 @@ class DPT2ByteUnsigned(DPTBase):
     @classmethod
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
+        if not isinstance(value, (int)):
+            raise ConversionError("Cant serialize DPT2ByteUnsigned", value=value)
         if not cls._test_boundaries(value):
             raise ConversionError("Cant serialize DPT2ByteUnsigned", value=value)
         return value >> 8, value & 0xff
@@ -55,3 +57,9 @@ class DPTBrightness(DPT2ByteUnsigned):
     """DPT 7.013 DPT_Brightness (lux)."""
 
     unit = "lx"
+
+
+class DPTColorTemperature(DPT2ByteUnsigned):
+    """DPT 7.600 DPT_Color_Temperature (K)."""
+
+    unit = "K"
