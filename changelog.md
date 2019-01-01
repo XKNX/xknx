@@ -4,6 +4,12 @@ Changelog
 Upcoming version (unreleased)
 -----------------------------
 
+0.9.4 - Release 2019-01-01
+--------------------------
+
+* updated hass plugin (@marvin-w #162)
+* tunable white and color temperature for lights (@farmio #154)
+
 0.9.3 - Release 2018-12-23
 --------------------------
 
