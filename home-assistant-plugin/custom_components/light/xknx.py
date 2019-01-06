@@ -61,8 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_COLOR_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_COLOR_TEMP_ADDRESS): cv.string,
     vol.Optional(CONF_COLOR_TEMP_STATE_ADDRESS): cv.string,
-    # TODO: enum for mode with default
-    vol.Optional(CONF_COLOR_TEMP_MODE, default=DEFAULT_COLOR_TEMP_MODE): \
+    vol.Optional(CONF_COLOR_TEMP_MODE, default=DEFAULT_COLOR_TEMP_MODE):
     cv.enum(ColorTempModes),
     vol.Optional(CONF_MIN_KELVIN): vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Optional(CONF_MAX_KELVIN): vol.All(vol.Coerce(int), vol.Range(min=1)),
@@ -95,7 +94,6 @@ def async_add_entities_config(hass, config, async_add_entities):
 
     # switch group address for selected color_temperature_mode
     ga_tw, ga_tw_s, ga_ct, ga_ct_s = None, None, None, None
-    print(config.get(CONF_COLOR_TEMP_MODE))
     if config.get(CONF_COLOR_TEMP_MODE).value == 'DPT-7.600':
         ga_ct = config.get(CONF_COLOR_TEMP_ADDRESS)
         ga_ct_s = config.get(CONF_COLOR_TEMP_STATE_ADDRESS)
