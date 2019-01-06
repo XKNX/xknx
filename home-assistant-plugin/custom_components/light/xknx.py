@@ -94,11 +94,11 @@ def async_add_entities_config(hass, config, async_add_entities):
 
     group_address_tunable_white = None
     group_address_tunable_white_state = None
-    group_address_color_temperature = None
-    group_address_color_temperature_state = None
+    group_address_color_temp = None
+    group_address_color_temp_state = None
     if config.get(CONF_COLOR_TEMP_MODE) == ColorTempModes.absolute:
-        group_address_color_temperature = config.get(CONF_COLOR_TEMP_ADDRESS)
-        group_address_color_temperature_state = \
+        group_address_color_temp = config.get(CONF_COLOR_TEMP_ADDRESS)
+        group_address_color_temp_state = \
             config.get(CONF_COLOR_TEMP_STATE_ADDRESS)
     elif config.get(CONF_COLOR_TEMP_MODE) == ColorTempModes.relative:
         group_address_tunable_white = config.get(CONF_COLOR_TEMP_ADDRESS)
@@ -117,9 +117,8 @@ def async_add_entities_config(hass, config, async_add_entities):
         group_address_color_state=config.get(CONF_COLOR_STATE_ADDRESS),
         group_address_tunable_white=group_address_tunable_white,
         group_address_tunable_white_state=group_address_tunable_white_state,
-        group_address_color_temperature=group_address_color_temperature,
-        group_address_color_temperature_state=\
-            group_address_color_temperature_state,
+        group_address_color_temperature=group_address_color_temp,
+        group_address_color_temperature_state=group_address_color_temp_state,
         min_kelvin=config.get(CONF_MIN_KELVIN),
         max_kelvin=config.get(CONF_MAX_KELVIN))
     hass.data[DATA_XKNX].xknx.devices.add(light)
