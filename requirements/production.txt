@@ -1,2 +1,2 @@
-netifaces==0.10.7
-pyyaml==3.13
+netifaces==0.10.9
+pyyaml==4.2b4
