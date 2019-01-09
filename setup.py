@@ -4,8 +4,8 @@ from setuptools import find_packages, setup
 VERSION = '0.9.4'
 
 REQUIRES = [
-    'pyyaml>=3.12',
-    'netifaces>=0.10.0',
+    'pyyaml>=4.2b4',
+    'netifaces>=0.10.9'
     ]
 
 setup(
