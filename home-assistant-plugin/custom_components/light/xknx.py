@@ -35,12 +35,10 @@ CONF_MAX_KELVIN = 'max_kelvin'
 DEFAULT_NAME = 'XKNX Light'
 DEFAULT_COLOR = [255, 255, 255]
 DEFAULT_BRIGHTNESS = 255
-DEFAULT_COLOR_TEMPERATURE = 333  # 3000 K
+DEFAULT_COLOR_TEMPERATURE = 333  # mireds ~ 3000 K
 DEFAULT_COLOR_TEMP_MODE = 'absolute'
-DEFAULT_MIN_MIREDS = 166  # 6000 K
-DEFAULT_MAX_MIREDS = 370  # 2700 K
-DEFAULT_MIN_KELVIN = 2700
-DEFAULT_MAX_KELVIN = 6000
+DEFAULT_MIN_KELVIN = 2700  # 370 mireds
+DEFAULT_MAX_KELVIN = 6000  # 166 mireds
 DEPENDENCIES = ['xknx']
 
 
@@ -62,9 +60,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_COLOR_TEMP_ADDRESS): cv.string,
     vol.Optional(CONF_COLOR_TEMP_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_COLOR_TEMP_MODE, default=DEFAULT_COLOR_TEMP_MODE):
-    cv.enum(ColorTempModes),
-    vol.Optional(CONF_MIN_KELVIN): vol.All(vol.Coerce(int), vol.Range(min=1)),
-    vol.Optional(CONF_MAX_KELVIN): vol.All(vol.Coerce(int), vol.Range(min=1)),
+        cv.enum(ColorTempModes),
+    vol.Optional(CONF_MIN_KELVIN, default=DEFAULT_MIN_KELVIN):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_MAX_KELVIN, default=DEFAULT_MAX_KELVIN):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
 })
 
 
@@ -132,6 +132,13 @@ class KNXLight(Light):
         """Initialize of KNX light."""
         self.device = device
 
+        self._min_kelvin = device.min_kelvin
+        self._max_kelvin = device.max_kelvin
+        self._min_mireds = \
+            color_util.color_temperature_kelvin_to_mired(self._max_kelvin)
+        self._max_mireds = \
+            color_util.color_temperature_kelvin_to_mired(self._min_kelvin)
+
     @callback
     def async_register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
@@ -197,42 +204,12 @@ class KNXLight(Light):
     @property
     def min_mireds(self):
         """Return the coldest color temp this light supports in mireds."""
-        if self.device.supports_color_temperature or \
-                self.device.supports_tunable_white:
-            kelvin = self.device.max_kelvin
-            return color_util.color_temperature_kelvin_to_mired(kelvin) \
-                if kelvin is not None else DEFAULT_MIN_MIREDS
-        return None
+        return self._min_mireds
 
     @property
     def max_mireds(self):
         """Return the warmest color temp this light supports in mireds."""
-        if self.device.supports_color_temperature or \
-                self.device.supports_tunable_white:
-            kelvin = self.device.min_kelvin
-            return color_util.color_temperature_kelvin_to_mired(kelvin) \
-                if kelvin is not None else DEFAULT_MAX_MIREDS
-        return None
-
-    @property
-    def min_kelvin(self):
-        """Return the warmest color temp this light supports in kelvin."""
-        if self.device.supports_color_temperature or \
-                self.device.supports_tunable_white:
-            kelvin = self.device.min_kelvin
-            return kelvin \
-                if kelvin is not None else DEFAULT_MIN_KELVIN
-        return None
-
-    @property
-    def max_kelvin(self):
-        """Return the coldest color temp this light supports in kelvin."""
-        if self.device.supports_color_temperature or \
-                self.device.supports_tunable_white:
-            kelvin = self.device.max_kelvin
-            return kelvin \
-                if kelvin is not None else DEFAULT_MAX_KELVIN
-        return None
+        return self._max_mireds
 
     @property
     def effect_list(self):
@@ -295,10 +272,10 @@ class KNXLight(Light):
                 update_color_temp:
             # change color temperature without ON telegram
             kelvin = int(color_util.color_temperature_mired_to_kelvin(mireds))
-            if kelvin > self.max_kelvin:
-                kelvin = self.max_kelvin
-            elif kelvin < self.min_kelvin:
-                kelvin = self.min_kelvin
+            if kelvin > self._max_kelvin:
+                kelvin = self._max_kelvin
+            elif kelvin < self._min_kelvin:
+                kelvin = self._min_kelvin
             await self.device.set_color_temperature(kelvin)
         elif self.device.supports_tunable_white and \
                 update_color_temp:
