@@ -10,6 +10,7 @@ from .device import Device
 from .remote_value_dpt_value_1_ucount import RemoteValueDptValue1Ucount
 from .remote_value_scaling import RemoteValueScaling
 from .remote_value_sensor import RemoteValueSensor
+from .remote_value_dpt3 import RemoteValueDpt3, RemoteValueStartStopDimming, RemoteValueStartStopBlinds
 
 
 class Sensor(Device):
@@ -36,6 +37,24 @@ class Sensor(Device):
                 range_to=100)
         elif value_type == "pulse":
             self.sensor_value = RemoteValueDptValue1Ucount(
+                xknx,
+                group_address=group_address,
+                device_name=self.name,
+                after_update_cb=self.after_update)
+        elif value_type == "DPT-3":
+            self.sensor_value = RemoteValueDpt3(
+                xknx,
+                group_address=group_address,
+                device_name=self.name,
+                after_update_cb=self.after_update)
+        elif value_type == "startstop_dimming":
+            self.sensor_value = RemoteValueStartStopDimming(
+                xknx,
+                group_address=group_address,
+                device_name=self.name,
+                after_update_cb=self.after_update)
+        elif value_type == "startstop_blinds_control":
+            self.sensor_value = RemoteValueStartStopBlinds(
                 xknx,
                 group_address=group_address,
                 device_name=self.name,
