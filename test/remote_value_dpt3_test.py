@@ -5,7 +5,7 @@ import unittest
 from xknx import XKNX
 from xknx.knx import DPTArray, DPTBinary, Telegram, GroupAddress
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
-from xknx.devices import RemoteValueDpt3,RemoteValueStartStopDimming,RemoteValueStartStopBlinds
+from xknx.devices import RemoteValueDpt3, RemoteValueStartStopDimming, RemoteValueStartStopBlinds
 
 
 class TestRemoteValueDpt3(unittest.TestCase):
@@ -24,83 +24,83 @@ class TestRemoteValueDpt3(unittest.TestCase):
         """Test to_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueDpt3(xknx)
-        self.assertEqual(remote_value.to_knx(   1), DPTBinary(0xf))
-        self.assertEqual(remote_value.to_knx(   3), DPTBinary(0xe))
-        self.assertEqual(remote_value.to_knx(   6), DPTBinary(0xd))
-        self.assertEqual(remote_value.to_knx(  12), DPTBinary(0xc))
-        self.assertEqual(remote_value.to_knx(  25), DPTBinary(0xb))
-        self.assertEqual(remote_value.to_knx(  50), DPTBinary(0xa))
-        self.assertEqual(remote_value.to_knx( 100), DPTBinary(0x9))
-        self.assertEqual(remote_value.to_knx(  -1), DPTBinary(0x7))
-        self.assertEqual(remote_value.to_knx(  -3), DPTBinary(0x6))
-        self.assertEqual(remote_value.to_knx(  -6), DPTBinary(0x5))
-        self.assertEqual(remote_value.to_knx( -12), DPTBinary(0x4))
-        self.assertEqual(remote_value.to_knx( -25), DPTBinary(0x3))
-        self.assertEqual(remote_value.to_knx( -50), DPTBinary(0x2))
+        self.assertEqual(remote_value.to_knx(1), DPTBinary(0xf))
+        self.assertEqual(remote_value.to_knx(3), DPTBinary(0xe))
+        self.assertEqual(remote_value.to_knx(6), DPTBinary(0xd))
+        self.assertEqual(remote_value.to_knx(12), DPTBinary(0xc))
+        self.assertEqual(remote_value.to_knx(25), DPTBinary(0xb))
+        self.assertEqual(remote_value.to_knx(50), DPTBinary(0xa))
+        self.assertEqual(remote_value.to_knx(100), DPTBinary(0x9))
+        self.assertEqual(remote_value.to_knx(-1), DPTBinary(0x7))
+        self.assertEqual(remote_value.to_knx(-3), DPTBinary(0x6))
+        self.assertEqual(remote_value.to_knx(-6), DPTBinary(0x5))
+        self.assertEqual(remote_value.to_knx(-12), DPTBinary(0x4))
+        self.assertEqual(remote_value.to_knx(-25), DPTBinary(0x3))
+        self.assertEqual(remote_value.to_knx(-50), DPTBinary(0x2))
         self.assertEqual(remote_value.to_knx(-100), DPTBinary(0x1))
-        self.assertEqual(remote_value.to_knx(   0), DPTBinary(0x0))
+        self.assertEqual(remote_value.to_knx(0), DPTBinary(0x0))
 
     def test_from_knx(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueDpt3(xknx)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0xf)),    1)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0xe)),    3)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0xd)),    6)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0xc)),   12)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0xb)),   25)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0xa)),   50)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0x9)),  100)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0x8)),    0)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0x7)),   -1)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0x6)),   -3)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0x5)),   -6)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0x4)),  -12)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0x3)),  -25)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0x2)),  -50)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0xf)), 1)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0xe)), 3)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0xd)), 6)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0xc)), 12)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0xb)), 25)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0xa)), 50)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0x9)), 100)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0x8)), 0)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0x7)), -1)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0x6)), -3)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0x5)), -6)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0x4)), -12)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0x3)), -25)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0x2)), -50)
         self.assertEqual(remote_value.from_knx(DPTBinary(0x1)), -100)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0x0)),    0)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0x0)), 0)
 
     def test_to_knx_invert(self):
         """Test to_knx function with inverted operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueDpt3(xknx, invert=True)
-        self.assertEqual(remote_value.to_knx(  -1), DPTBinary(0xf))
-        self.assertEqual(remote_value.to_knx(  -3), DPTBinary(0xe))
-        self.assertEqual(remote_value.to_knx(  -6), DPTBinary(0xd))
-        self.assertEqual(remote_value.to_knx( -12), DPTBinary(0xc))
-        self.assertEqual(remote_value.to_knx( -25), DPTBinary(0xb))
-        self.assertEqual(remote_value.to_knx( -50), DPTBinary(0xa))
+        self.assertEqual(remote_value.to_knx(-1), DPTBinary(0xf))
+        self.assertEqual(remote_value.to_knx(-3), DPTBinary(0xe))
+        self.assertEqual(remote_value.to_knx(-6), DPTBinary(0xd))
+        self.assertEqual(remote_value.to_knx(-12), DPTBinary(0xc))
+        self.assertEqual(remote_value.to_knx(-25), DPTBinary(0xb))
+        self.assertEqual(remote_value.to_knx(-50), DPTBinary(0xa))
         self.assertEqual(remote_value.to_knx(-100), DPTBinary(0x9))
-        self.assertEqual(remote_value.to_knx(   1), DPTBinary(0x7))
-        self.assertEqual(remote_value.to_knx(   3), DPTBinary(0x6))
-        self.assertEqual(remote_value.to_knx(   6), DPTBinary(0x5))
-        self.assertEqual(remote_value.to_knx(  12), DPTBinary(0x4))
-        self.assertEqual(remote_value.to_knx(  25), DPTBinary(0x3))
-        self.assertEqual(remote_value.to_knx(  50), DPTBinary(0x2))
-        self.assertEqual(remote_value.to_knx( 100), DPTBinary(0x1))
-        self.assertEqual(remote_value.to_knx(   0), DPTBinary(0x0))
+        self.assertEqual(remote_value.to_knx(1), DPTBinary(0x7))
+        self.assertEqual(remote_value.to_knx(3), DPTBinary(0x6))
+        self.assertEqual(remote_value.to_knx(6), DPTBinary(0x5))
+        self.assertEqual(remote_value.to_knx(12), DPTBinary(0x4))
+        self.assertEqual(remote_value.to_knx(25), DPTBinary(0x3))
+        self.assertEqual(remote_value.to_knx(50), DPTBinary(0x2))
+        self.assertEqual(remote_value.to_knx(100), DPTBinary(0x1))
+        self.assertEqual(remote_value.to_knx(0), DPTBinary(0x0))
 
     def test_from_knx_invert(self):
         """Test from_knx function with inverted operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueDpt3(xknx, invert=True)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0xf)),   -1)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0xe)),   -3)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0xd)),   -6)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0xc)),  -12)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0xb)),  -25)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0xa)),  -50)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0xf)), -1)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0xe)), -3)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0xd)), -6)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0xc)), -12)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0xb)), -25)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0xa)), -50)
         self.assertEqual(remote_value.from_knx(DPTBinary(0x9)), -100)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0x8)),    0)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0x7)),    1)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0x6)),    3)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0x5)),    6)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0x4)),   12)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0x3)),   25)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0x2)),   50)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0x1)),  100)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0x0)),    0)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0x8)), 0)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0x7)), 1)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0x6)), 3)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0x5)), 6)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0x4)), 12)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0x3)), 25)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0x2)), 50)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0x1)), 100)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0x0)), 0)
 
     def test_set(self):
         """Test setting value."""
@@ -149,6 +149,7 @@ class TestRemoteValueDpt3(unittest.TestCase):
             # pylint: disable=pointless-statement
             remote_value.value
 
+
 class TestRemoteValueStartStopDimming(unittest.TestCase):
     """Test class for RemoteValueStartStopDimming objects."""
 
@@ -165,29 +166,37 @@ class TestRemoteValueStartStopDimming(unittest.TestCase):
         """Test to_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueStartStopDimming(xknx)
-        self.assertEqual(remote_value.to_knx(RemoteValueStartStopDimming.Direction.INCREASE), DPTBinary(9))
-        self.assertEqual(remote_value.to_knx(RemoteValueStartStopDimming.Direction.DECREASE), DPTBinary(1))
+        self.assertEqual(remote_value.to_knx(RemoteValueStartStopDimming.Direction.INCREASE),
+                         DPTBinary(9))
+        self.assertEqual(remote_value.to_knx(RemoteValueStartStopDimming.Direction.DECREASE),
+                         DPTBinary(1))
 
     def test_from_knx_startstop(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueStartStopDimming(xknx)
-        self.assertEqual(remote_value.from_knx(DPTBinary(9)), RemoteValueStartStopDimming.Direction.INCREASE)
-        self.assertEqual(remote_value.from_knx(DPTBinary(1)), RemoteValueStartStopDimming.Direction.DECREASE)
+        self.assertEqual(remote_value.from_knx(DPTBinary(9)),
+                         RemoteValueStartStopDimming.Direction.INCREASE)
+        self.assertEqual(remote_value.from_knx(DPTBinary(1)),
+                         RemoteValueStartStopDimming.Direction.DECREASE)
 
     def test_to_knx_startstop_invert(self):
         """Test to_knx function with inverted operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueStartStopDimming(xknx, invert=True)
-        self.assertEqual(remote_value.to_knx(RemoteValueStartStopDimming.Direction.INCREASE), DPTBinary(1))
-        self.assertEqual(remote_value.to_knx(RemoteValueStartStopDimming.Direction.DECREASE), DPTBinary(9))
+        self.assertEqual(remote_value.to_knx(RemoteValueStartStopDimming.Direction.INCREASE),
+                         DPTBinary(1))
+        self.assertEqual(remote_value.to_knx(RemoteValueStartStopDimming.Direction.DECREASE),
+                         DPTBinary(9))
 
     def test_from_knx_startstop_invert(self):
         """Test from_knx function with inverted operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueStartStopDimming(xknx, invert=True)
-        self.assertEqual(remote_value.from_knx(DPTBinary(9)), RemoteValueStartStopDimming.Direction.DECREASE)
-        self.assertEqual(remote_value.from_knx(DPTBinary(1)), RemoteValueStartStopDimming.Direction.INCREASE)
+        self.assertEqual(remote_value.from_knx(DPTBinary(9)),
+                         RemoteValueStartStopDimming.Direction.DECREASE)
+        self.assertEqual(remote_value.from_knx(DPTBinary(1)),
+                         RemoteValueStartStopDimming.Direction.INCREASE)
 
     def test_to_knx_startstop_error(self):
         """Test to_knx function with wrong parametern."""
@@ -268,29 +277,37 @@ class TestRemoteValueStartStopBlinds(unittest.TestCase):
         """Test to_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueStartStopBlinds(xknx)
-        self.assertEqual(remote_value.to_knx(RemoteValueStartStopBlinds.Direction.DOWN), DPTBinary(9))
-        self.assertEqual(remote_value.to_knx(RemoteValueStartStopBlinds.Direction.UP), DPTBinary(1))
+        self.assertEqual(remote_value.to_knx(RemoteValueStartStopBlinds.Direction.DOWN),
+                         DPTBinary(9))
+        self.assertEqual(remote_value.to_knx(RemoteValueStartStopBlinds.Direction.UP),
+                         DPTBinary(1))
 
     def test_from_knx_startstop(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueStartStopBlinds(xknx)
-        self.assertEqual(remote_value.from_knx(DPTBinary(9)), RemoteValueStartStopBlinds.Direction.DOWN)
-        self.assertEqual(remote_value.from_knx(DPTBinary(1)), RemoteValueStartStopBlinds.Direction.UP)
+        self.assertEqual(remote_value.from_knx(DPTBinary(9)),
+                         RemoteValueStartStopBlinds.Direction.DOWN)
+        self.assertEqual(remote_value.from_knx(DPTBinary(1)),
+                         RemoteValueStartStopBlinds.Direction.UP)
 
     def test_to_knx_startstop_invert(self):
         """Test to_knx function with inverted operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueStartStopBlinds(xknx, invert=True)
-        self.assertEqual(remote_value.to_knx(RemoteValueStartStopBlinds.Direction.DOWN), DPTBinary(1))
-        self.assertEqual(remote_value.to_knx(RemoteValueStartStopBlinds.Direction.UP), DPTBinary(9))
+        self.assertEqual(remote_value.to_knx(RemoteValueStartStopBlinds.Direction.DOWN),
+                         DPTBinary(1))
+        self.assertEqual(remote_value.to_knx(RemoteValueStartStopBlinds.Direction.UP),
+                         DPTBinary(9))
 
     def test_from_knx_startstop_invert(self):
         """Test from_knx function with inverted operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueStartStopBlinds(xknx, invert=True)
-        self.assertEqual(remote_value.from_knx(DPTBinary(9)), RemoteValueStartStopBlinds.Direction.UP)
-        self.assertEqual(remote_value.from_knx(DPTBinary(1)), RemoteValueStartStopBlinds.Direction.DOWN)
+        self.assertEqual(remote_value.from_knx(DPTBinary(9)),
+                         RemoteValueStartStopBlinds.Direction.UP)
+        self.assertEqual(remote_value.from_knx(DPTBinary(1)),
+                         RemoteValueStartStopBlinds.Direction.DOWN)
 
     def test_to_knx_startstop_error(self):
         """Test to_knx function with wrong parametern."""
@@ -353,4 +370,3 @@ class TestRemoteValueStartStopBlinds(unittest.TestCase):
             self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
             # pylint: disable=pointless-statement
             remote_value.value
-
