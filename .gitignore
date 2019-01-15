@@ -1,7 +1,10 @@
 *.pyc
+docs/_site/
+docs/vendor/
 htmlcov
 build/
 dist/
+Gemfile.lock
 xknx.egg-info/
 .cache
 .tox
