@@ -76,7 +76,7 @@ The `telegram_received_cb` will be called for each KNX telegram received by the 
 import asyncio
 from xknx import XKNX
 
-def telegram_received_cb(telegram):
+async def telegram_received_cb(telegram):
     print("Telegram received: {0}".format(telegram))
 
 async def main():
