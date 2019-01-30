@@ -30,7 +30,7 @@ The constructor of the XKNX object takes several parameters:
 * `loop` points to the asyncio.loop object. Of not specified it uses `asyncio.get_event_loop()`.
 * `own_address` may be used to specify the physical KNX address of the XKNX daemon. If not speficied it uses `15.15.250`.
 * `telegram_received_cb` is a callback which is called after every received KNX telegram. See [callbacks](#callbacks) documentation for details.
-* `device_updated_cb` is a callback after a [XKNX device](#devices) was updated. See [callbacks](#callbacks) documentation for details.
+* `device_updated_cb` is an async callback after a [XKNX device](#devices) was updated. See [callbacks](#callbacks) documentation for details.
 
 # [](#header-2)Starting
 
@@ -97,7 +97,7 @@ import asyncio
 from xknx import XKNX, Outlet
 
 
-def device_updated_cb(device):
+async def device_updated_cb(device):
     print("Callback received from {0}".format(device.name))
 
 
