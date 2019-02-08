@@ -1,0 +1,4 @@
+# base path to ha upstream
+export HA_UPSTREAM=
+# base path to the xknx repo
+export XKNX_REPO=
