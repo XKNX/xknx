@@ -35,7 +35,6 @@ CONF_MAX_KELVIN = 'max_kelvin'
 DEFAULT_NAME = 'XKNX Light'
 DEFAULT_COLOR = [255, 255, 255]
 DEFAULT_BRIGHTNESS = 255
-DEFAULT_COLOR_TEMPERATURE = 333  # mireds ~ 3000 K
 DEFAULT_COLOR_TEMP_MODE = 'absolute'
 DEFAULT_MIN_KELVIN = 2700  # 370 mireds
 DEFAULT_MAX_KELVIN = 6000  # 166 mireds
@@ -43,7 +42,7 @@ DEPENDENCIES = ['xknx']
 
 
 class ColorTempModes(Enum):
-    """Color temperature modes for config validation"""
+    """Color temperature modes for config validation."""
 
     absolute = "DPT-7.600"
     relative = "DPT-5.001"
@@ -96,19 +95,19 @@ def async_add_entities_config(hass, config, async_add_entities):
     group_address_tunable_white_state = None
     group_address_color_temp = None
     group_address_color_temp_state = None
-    if config.get(CONF_COLOR_TEMP_MODE) == ColorTempModes.absolute:
+    if config[CONF_COLOR_TEMP_MODE] == ColorTempModes.absolute:
         group_address_color_temp = config.get(CONF_COLOR_TEMP_ADDRESS)
         group_address_color_temp_state = \
             config.get(CONF_COLOR_TEMP_STATE_ADDRESS)
-    elif config.get(CONF_COLOR_TEMP_MODE) == ColorTempModes.relative:
+    elif config[CONF_COLOR_TEMP_MODE] == ColorTempModes.relative:
         group_address_tunable_white = config.get(CONF_COLOR_TEMP_ADDRESS)
         group_address_tunable_white_state = \
             config.get(CONF_COLOR_TEMP_STATE_ADDRESS)
 
     light = xknx.devices.Light(
         hass.data[DATA_XKNX].xknx,
-        name=config.get(CONF_NAME),
-        group_address_switch=config.get(CONF_ADDRESS),
+        name=config[CONF_NAME],
+        group_address_switch=config[CONF_ADDRESS],
         group_address_switch_state=config.get(CONF_STATE_ADDRESS),
         group_address_brightness=config.get(CONF_BRIGHTNESS_ADDRESS),
         group_address_brightness_state=config.get(
@@ -119,8 +118,8 @@ def async_add_entities_config(hass, config, async_add_entities):
         group_address_tunable_white_state=group_address_tunable_white_state,
         group_address_color_temperature=group_address_color_temp,
         group_address_color_temperature_state=group_address_color_temp_state,
-        min_kelvin=config.get(CONF_MIN_KELVIN),
-        max_kelvin=config.get(CONF_MAX_KELVIN))
+        min_kelvin=config[CONF_MIN_KELVIN],
+        max_kelvin=config[CONF_MAX_KELVIN])
     hass.data[DATA_XKNX].xknx.devices.add(light)
     async_add_entities([KNXLight(light)])
 
@@ -192,13 +191,17 @@ class KNXLight(Light):
         """Return the color temperature in mireds."""
         if self.device.supports_color_temperature:
             kelvin = self.device.current_color_temperature
-            return color_util.color_temperature_kelvin_to_mired(kelvin) \
-                if kelvin is not None else DEFAULT_COLOR_TEMPERATURE
+            if kelvin is not None:
+                return color_util.color_temperature_kelvin_to_mired(kelvin)
         if self.device.supports_tunable_white:
             relative_ct = self.device.current_tunable_white
-            return self.min_mireds + (((255 - relative_ct) / 255) *
-                                      (self.max_mireds - self.min_mireds)) \
-                if relative_ct is not None else DEFAULT_COLOR_TEMPERATURE
+            if relative_ct is not None:
+                # as KNX devices typically use Kelvin we use it as base for
+                # calculating ct from percent
+                return color_util.color_temperature_kelvin_to_mired(
+                    self._min_kelvin + (
+                        (relative_ct / 255) *
+                        (self._max_kelvin - self._min_kelvin)))
         return None
 
     @property
@@ -245,12 +248,6 @@ class KNXLight(Light):
         hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
         mireds = kwargs.get(ATTR_COLOR_TEMP, self.color_temp)
 
-        # fall back to default values, if required
-        if brightness is None:
-            brightness = DEFAULT_BRIGHTNESS
-        if hs_color is None:
-            hs_color = DEFAULT_COLOR
-
         update_brightness = ATTR_BRIGHTNESS in kwargs
         update_color = ATTR_HS_COLOR in kwargs
         update_color_temp = ATTR_COLOR_TEMP in kwargs
@@ -266,6 +263,12 @@ class KNXLight(Light):
         elif self.device.supports_color and \
                 (update_brightness or update_color):
             # change RGB color (includes brightness)
+            # if brightness or hs_color was not yet set use the default value
+            # to calculate RGB from as a fallback
+            if brightness is None:
+                brightness = DEFAULT_BRIGHTNESS
+            if hs_color is None:
+                hs_color = DEFAULT_COLOR
             await self.device.set_color(
                 color_util.color_hsv_to_RGB(*hs_color, brightness * 100 / 255))
         elif self.device.supports_color_temperature and \
@@ -279,8 +282,10 @@ class KNXLight(Light):
             await self.device.set_color_temperature(kelvin)
         elif self.device.supports_tunable_white and \
                 update_color_temp:
-            relative_ct = 255 - int(255 * (mireds - self.min_mireds) /
-                                    (self.max_mireds - self.min_mireds))
+            # calculate relative_ct from Kelvin to fit typical KNX devices
+            kelvin = int(color_util.color_temperature_mired_to_kelvin(mireds))
+            relative_ct = int(255 * (kelvin - self._min_kelvin) /
+                              (self._max_kelvin - self._min_kelvin))
             await self.device.set_tunable_white(relative_ct)
         else:
             # no color/brightness change requested, so just turn it on
