@@ -9,7 +9,7 @@ from xknx.knxip import ErrorCode
 
 
 class RequestResponse():
-    """Class for ending a specific type of KNX/IP Packet to a KNX/IP and wait for the corresponding answer."""
+    """Class for sending a specific type of KNX/IP Packet to a KNX/IP and wait for the corresponding answer."""
 
     # pylint: disable=too-many-instance-attributes
 

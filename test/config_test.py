@@ -63,6 +63,36 @@ class TestConfig(unittest.TestCase):
                   group_address_color_state='1/6/8',
                   device_updated_cb=xknx.devices.device_updated))
 
+    def test_config_color_temperature(self):
+        """Test reading Light with with dimming and color temperature address."""
+        xknx = XKNX(config='xknx.yaml', loop=self.loop)
+        self.assertEqual(
+            xknx.devices['Living-Room.Light_CT'],
+            Light(xknx,
+                  'Living-Room.Light_CT',
+                  group_address_switch='1/6/11',
+                  group_address_switch_state='1/6/10',
+                  group_address_brightness='1/6/12',
+                  group_address_brightness_state='1/6/13',
+                  group_address_color_temperature='1/6/14',
+                  group_address_color_temperature_state='1/6/15',
+                  device_updated_cb=xknx.devices.device_updated))
+
+    def test_config_tunable_white(self):
+        """Test reading Light with with dimming and tunable white address."""
+        xknx = XKNX(config='xknx.yaml', loop=self.loop)
+        self.assertEqual(
+            xknx.devices['Living-Room.Light_TW'],
+            Light(xknx,
+                  'Living-Room.Light_TW',
+                  group_address_switch='1/6/21',
+                  group_address_switch_state='1/6/20',
+                  group_address_brightness='1/6/22',
+                  group_address_brightness_state='1/6/23',
+                  group_address_tunable_white='1/6/24',
+                  group_address_tunable_white_state='1/6/25',
+                  device_updated_cb=xknx.devices.device_updated))
+
     def test_config_switch(self):
         """Test reading Switch from config file."""
         xknx = XKNX(config='xknx.yaml', loop=self.loop)
