@@ -78,6 +78,9 @@ groups:
         Office.Light_1:  {group_address_switch: '1/7/4', group_address_switch_state: '1/7/5', group_address_brightness: '1/7/6', group_address_brightness_state: '1/7/7'}
         # Light with color
         Diningroom.Light_1:  {group_address_switch: '1/6/4', group_address_brightness: '1/6/6', group_address_color: '1/6/7',  group_address_color_state: '1/6/8'}
+        # Light with color temperature
+        Living-Room.Light_CT:  {group_address_switch: '1/6/11', group_address_switch_state: '1/6/10', group_address_brightness: '1/6/12', group_address_brightness_state: '1/6/13', group_address_color_temperature: '1/6/14',  group_address_color_temperature_state: '1/6/15'}
+        Living-Room.Light_TW:  {group_address_switch: '1/6/21', group_address_switch_state: '1/6/20', group_address_brightness: '1/6/22', group_address_brightness_state: '1/6/23', group_address_tunable_white: '1/6/24',  group_address_tunable_white_state: '1/6/25'}
 
     climate:
         Kitchen.Climate: {group_address_temperature: '1/7/1'}
