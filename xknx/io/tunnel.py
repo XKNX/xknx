@@ -21,16 +21,18 @@ class Tunnel():
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, xknx, src_address, local_ip, gateway_ip, gateway_port,
-                 telegram_received_callback=None, auto_reconnect=False,
+    def __init__(self, xknx, src_address, local_ip, local_port, gateway_ip, gateway_port,
+                 proxy_ip, telegram_received_callback=None, auto_reconnect=False,
                  auto_reconnect_wait=3):
         """Initialize Tunnel class."""
         # pylint: disable=too-many-arguments
         self.xknx = xknx
         self.src_address = src_address
         self.local_ip = local_ip
+        self.local_port = local_port
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
+        self.proxy_ip = proxy_ip
         self.telegram_received_callback = telegram_received_callback
 
         self.udp_client = None
@@ -49,7 +51,7 @@ class Tunnel():
     def init_udp_client(self):
         """Initialize udp_client."""
         self.udp_client = UDPClient(self.xknx,
-                                    (self.local_ip, 0),
+                                    (self.local_ip, self.local_port),
                                     (self.gateway_ip, self.gateway_port))
 
         self.udp_client.register_callback(
@@ -90,7 +92,8 @@ class Tunnel():
         """Connect/build tunnel."""
         connect = Connect(
             self.xknx,
-            self.udp_client)
+            self.udp_client,
+            self.proxy_ip)
         await connect.start()
         if not connect.success:
             if self.auto_reconnect:

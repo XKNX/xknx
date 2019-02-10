@@ -8,26 +8,31 @@ from .request_response import RequestResponse
 class Connect(RequestResponse):
     """Class to send a ConnectRequest and wait for ConnectResponse.."""
 
-    def __init__(self, xknx, udp_client):
+    def __init__(self, xknx, udp_client, proxy_ip):
         """Initialize Connect class."""
         self.xknx = xknx
         self.udp_client = udp_client
         super().__init__(xknx, self.udp_client, ConnectResponse)
+        self.proxy_ip = proxy_ip
         self.communication_channel = 0
         self.identifier = 0
 
     def create_knxipframe(self):
         """Create KNX/IP Frame object to be sent to device."""
         (local_addr, local_port) = self.udp_client.getsockname()
+        if self.proxy_ip is not None:
+            return_addr = self.proxy_ip
+        else:
+            return_addr = local_addr
         knxipframe = KNXIPFrame(self.xknx)
         knxipframe.init(KNXIPServiceType.CONNECT_REQUEST)
         knxipframe.body.request_type = ConnectRequestType.TUNNEL_CONNECTION
 
         # set control_endpoint and data_endpoint to the same udp_connection
         knxipframe.body.control_endpoint = HPAI(
-            ip_addr=local_addr, port=local_port)
+            ip_addr=return_addr, port=local_port)
         knxipframe.body.data_endpoint = HPAI(
-            ip_addr=local_addr, port=local_port)
+            ip_addr=return_addr, port=local_port)
         return knxipframe
 
     def on_success_hook(self, knxipframe):
