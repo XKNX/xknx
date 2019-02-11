@@ -8,7 +8,7 @@ from .request_response import RequestResponse
 class Connect(RequestResponse):
     """Class to send a ConnectRequest and wait for ConnectResponse.."""
 
-    def __init__(self, xknx, udp_client, proxy_ip):
+    def __init__(self, xknx, udp_client, proxy_ip=None):
         """Initialize Connect class."""
         self.xknx = xknx
         self.udp_client = udp_client

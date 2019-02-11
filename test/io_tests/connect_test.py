@@ -23,7 +23,7 @@ class TestConnect(unittest.TestCase):
         self.loop.close()
 
     def test_connect(self):
-        """Test connecting from KNX bus."""
+        """Test connecting to KNX bus."""
         xknx = XKNX(loop=self.loop)
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
         connect = Connect(xknx, udp_client)
@@ -72,3 +72,28 @@ class TestConnect(unittest.TestCase):
         self.assertTrue(connect.success)
         self.assertEqual(connect.communication_channel, 23)
         self.assertEqual(connect.identifier, 7)
+
+    def test_proxy_connect(self):
+        """Test connecting to KNX bus via proxy."""
+        xknx = XKNX(loop=self.loop)
+        udp_client = UDPClient(xknx, ("172.20.0.2", 0), ("192.168.1.5", 1234))
+        proxy_ip = "192.168.1.10"
+        connect = Connect(xknx, udp_client, proxy_ip)
+        connect.timeout_in_seconds = 0
+
+        self.assertEqual(connect.awaited_response_class, ConnectResponse)
+
+        # Expected KNX/IP-Frame:
+        exp_knxipframe = KNXIPFrame(xknx)
+        exp_knxipframe.init(KNXIPServiceType.CONNECT_REQUEST)
+        exp_knxipframe.body.control_endpoint = HPAI(
+            ip_addr='192.168.1.10', port=4321)
+        exp_knxipframe.body.data_endpoint = HPAI(
+            ip_addr='192.168.1.10', port=4321)
+        exp_knxipframe.body.request_type = ConnectRequestType.TUNNEL_CONNECTION
+        exp_knxipframe.normalize()
+        with patch('xknx.io.UDPClient.send') as mock_udp_send, \
+                patch('xknx.io.UDPClient.getsockname') as mock_udp_getsockname:
+            mock_udp_getsockname.return_value = ("172.20.0.2", 4321)
+            self.loop.run_until_complete(asyncio.Task(connect.start()))
+            mock_udp_send.assert_called_with(exp_knxipframe)
