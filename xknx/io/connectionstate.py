@@ -16,12 +16,16 @@ class ConnectionState(RequestResponse):
 
     def create_knxipframe(self):
         """Create KNX/IP Frame object to be sent to device."""
-        (local_addr, local_port) = self.udpclient.getsockname()
+        if self.udp_client.proxy_addr[0] is None:
+            (return_ip, return_port) = self.udp_client.getsockname()
+        else:
+            (return_ip, return_port) = self.udp_client.proxy_addr
+
         knxipframe = KNXIPFrame(self.xknx)
         knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_REQUEST)
         knxipframe.body.communication_channel_id = \
             self.communication_channel_id
         knxipframe.body.control_endpoint = HPAI(
-            ip_addr=local_addr, port=local_port)
+            ip_addr=return_ip, port=return_port)
 
         return knxipframe

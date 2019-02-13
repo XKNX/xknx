@@ -64,16 +64,20 @@ class UDPClient:
             if hasattr(self, 'xknx'):
                 self.xknx.logger.info('closing transport %s', exc)
 
-    def __init__(self, xknx, local_addr, remote_addr, multicast=False, bind_to_multicast_addr=False):
+    def __init__(self, xknx, local_addr, remote_addr, proxy_addr=(None, None),
+                 multicast=False, bind_to_multicast_addr=False):
         """Initialize UDPClient class."""
         # pylint: disable=too-many-arguments
         if not isinstance(local_addr, tuple):
             raise TypeError()
         if not isinstance(remote_addr, tuple):
             raise TypeError()
+        if not isinstance(proxy_addr, tuple):
+            raise TypeError()
         self.xknx = xknx
         self.local_addr = local_addr
         self.remote_addr = remote_addr
+        self.proxy_addr = proxy_addr
         self.multicast = multicast
         self.bind_to_multicast_addr = bind_to_multicast_addr
         self.transport = None

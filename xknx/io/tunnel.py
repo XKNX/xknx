@@ -52,7 +52,8 @@ class Tunnel():
         """Initialize udp_client."""
         self.udp_client = UDPClient(self.xknx,
                                     (self.local_ip, self.local_port),
-                                    (self.gateway_ip, self.gateway_port))
+                                    (self.gateway_ip, self.gateway_port),
+                                    proxy_addr=(self.proxy_ip, self.local_port))
 
         self.udp_client.register_callback(
             self.tunnel_reqest_received, [TunnellingRequest.service_type])
@@ -90,10 +91,7 @@ class Tunnel():
 
     async def connect(self):
         """Connect/build tunnel."""
-        connect = Connect(
-            self.xknx,
-            self.udp_client,
-            self.proxy_ip)
+        connect = Connect(self.xknx, self.udp_client)
         await connect.start()
         if not connect.success:
             if self.auto_reconnect:

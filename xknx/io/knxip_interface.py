@@ -125,7 +125,6 @@ class KNXIPInterface():
                                         self.connection_config.local_port,
                                         gateway.ip_addr,
                                         gateway.port,
-                                        # TODO does auto discovery work with proxy?
                                         self.connection_config.proxy_ip,
                                         self.connection_config.auto_reconnect,
                                         self.connection_config.auto_reconnect_wait)
