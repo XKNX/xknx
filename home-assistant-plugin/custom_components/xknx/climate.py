@@ -147,10 +147,10 @@ def async_add_entities_config(hass, config, async_add_entities):
         hass.data[DATA_XKNX].xknx,
         name=config.get(CONF_NAME),
         group_address_temperature=config[CONF_TEMPERATURE_ADDRESS],
-        group_address_target_temperature=
-            config[CONF_TARGET_TEMPERATURE_ADDRESS],
-        group_address_target_temperature_state=
-            config.get(CONF_TARGET_TEMPERATURE_STATE_ADDRESS),
+        group_address_target_temperature=config[
+            CONF_TARGET_TEMPERATURE_ADDRESS],
+        group_address_target_temperature_state=config.get(
+            CONF_TARGET_TEMPERATURE_STATE_ADDRESS),
         group_address_setpoint_shift=config.get(CONF_SETPOINT_SHIFT_ADDRESS),
         group_address_setpoint_shift_state=config.get(
             CONF_SETPOINT_SHIFT_STATE_ADDRESS),
