@@ -9,6 +9,7 @@ from xknx.devices import (
     DateTimeBroadcastType, ExposeSensor, Light, Notification, Scene, Sensor,
     Switch)
 from xknx.exceptions import XKNXException
+from xknx.io import ConnectionConfig, ConnectionType
 from xknx.knx import PhysicalAddress
 
 
@@ -32,6 +33,16 @@ class TestConfig(unittest.TestCase):
         """Test reading general section from config file."""
         xknx = XKNX(config='xknx.yaml', loop=self.loop)
         self.assertEqual(xknx.own_address, PhysicalAddress('15.15.249'))
+
+    #
+    # XKNX Connection Config
+    #
+    def test_config_connection(self):
+        """Test reading connection section from config file."""
+        xknx = XKNX(config='xknx.yaml', loop=self.loop)
+        self.assertEqual(
+            xknx.connection_config,
+            ConnectionConfig(connection_type=ConnectionType.AUTOMATIC))
 
     #
     # XKNX Groups Config
