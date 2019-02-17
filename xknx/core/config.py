@@ -44,8 +44,10 @@ class Config:
 
     def parse_groups(self, doc):
         """Parse the group section of xknx.yaml."""
-        for group in doc["groups"]:
-            self.parse_group(doc, group)
+        if "groups" in doc \
+                and hasattr(doc["groups"], '__iter__'):
+            for group in doc["groups"]:
+                self.parse_group(doc, group)
 
     def parse_group(self, doc, group):
         """Parse a group entry of xknx.yaml."""
