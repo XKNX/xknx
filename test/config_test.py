@@ -9,6 +9,7 @@ from xknx.devices import (
     DateTimeBroadcastType, ExposeSensor, Light, Notification, Scene, Sensor,
     Switch)
 from xknx.exceptions import XKNXException
+from xknx.knx import PhysicalAddress
 
 
 # pylint: disable=too-many-public-methods,invalid-name
@@ -25,7 +26,15 @@ class TestConfig(unittest.TestCase):
         self.loop.close()
 
     #
-    # XKNX Config
+    # XKNX General Config
+    #
+    def test_config_general(self):
+        """Test reading general section from config file."""
+        xknx = XKNX(config='xknx.yaml', loop=self.loop)
+        self.assertEqual(xknx.own_address, PhysicalAddress('15.15.249'))
+
+    #
+    # XKNX Groups Config
     #
     def test_config_light(self):
         """Test reading Light from config file."""
