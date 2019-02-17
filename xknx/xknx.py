@@ -42,6 +42,7 @@ class XKNX:
         self.logger = logging.getLogger('xknx.log')
         self.knx_logger = logging.getLogger('xknx.knx')
         self.telegram_logger = logging.getLogger('xknx.telegram')
+        self.connection_config = None
 
         if config is not None:
             Config(self).read(config)
@@ -64,8 +65,13 @@ class XKNX:
     async def start(self,
                     state_updater=False,
                     daemon_mode=False,
-                    connection_config=ConnectionConfig()):
+                    connection_config=None):
         """Start XKNX module. Connect to KNX/IP devices and start state updater."""
+        if connection_config is None:
+            if self.connection_config is None:
+                connection_config = ConnectionConfig()
+            else:
+                connection_config = self.connection_config
         self.knxip_interface = KNXIPInterface(self, connection_config=connection_config)
         await self.knxip_interface.start()
         await self.telegram_queue.start()
