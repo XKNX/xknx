@@ -37,7 +37,7 @@ The constructor of the XKNX object takes several parameters:
 ** LONG: representation like '1/2/34' with middle groups
 * `telegram_received_cb` is a callback which is called after every received KNX telegram. See [callbacks](#callbacks) documentation for details.
 * `device_updated_cb` is an async callback after a [XKNX device](#devices) was updated. See [callbacks](#callbacks) documentation for details.
-* `rate_limit` can be used to limit the outgoing traffic to the KNX/IP interface. The default value is 0.05 meaning that we allow 20 packets per second to send to the bus.
+* `rate_limit` in telegrams per second - can be used to limit the outgoing traffic to the KNX/IP interface. The default value is 20 packets per second.
 
 # [](#header-2)Starting
 
