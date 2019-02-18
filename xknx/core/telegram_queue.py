@@ -69,7 +69,7 @@ class TelegramQueue():
 
             if telegram.direction == TelegramDirection.OUTGOING:
                 # limit rate to knx bus - defaults to 20 per second
-                await asyncio.sleep(self.xknx.rate_limit)
+                await asyncio.sleep(1 / self.xknx.rate_limit)
 
         self.queue_stopped.set()
 
