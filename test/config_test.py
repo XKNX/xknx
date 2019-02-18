@@ -66,8 +66,11 @@ class TestConfig(unittest.TestCase):
             ("""
             connection:
                 routing:
+                    local_ip: '192.168.1.2'
             """,
-             ConnectionConfig(connection_type=ConnectionType.ROUTING)
+             ConnectionConfig(
+                 connection_type=ConnectionType.ROUTING,
+                 local_ip="192.168.1.2")
              )
         ]
         for yaml_string, expected_conn in test_configs:

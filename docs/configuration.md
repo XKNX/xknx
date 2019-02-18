@@ -18,11 +18,11 @@ The configuration file can contain three sections.
 - The `connection` section can be used to specify the connection to the KNX interface.
   - `auto` for automatic discovery of a KNX interface
   - `tunneling` for a UDP unicast connection
-    - `local_ip` sets the ip address that is used by xknx
-    - `host` sets the ip address of the KNX tunneling interface
-    - `port` sets the port the KNX tunneling interface is listening on
+    - `local_ip` (required) sets the ip address that is used by xknx
+    - `gateway_ip` (required) sets the ip address of the KNX tunneling interface
+    - `gateway_port` (optional) sets the port the KNX tunneling interface is listening on
   - `routing` for a UDP multicast connection
-    - `local_ip` sets the ip address that is used by xknx
+    - `local_ip` (required) sets the ip address that is used by xknx
 - Within the `groups` sections all devices are defined. For each type of device more then one section might be specified. You need to append numbers or strings to differentiate the entries, as in the example below. The appended number or string must be unique. 
 
 How to use
@@ -42,6 +42,9 @@ for device in xknx.devices:
 ```yaml
 general:
     own_address: '15.15.249'
+
+connection:
+    routing:
 
 groups:
 
