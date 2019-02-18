@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import patch
 
 from xknx import XKNX
+from xknx.core import Config
 from xknx.devices import (
     Action, BinarySensor, Climate, ClimateMode, Cover, DateTime,
     DateTimeBroadcastType, ExposeSensor, Light, Notification, Scene, Sensor,
@@ -40,10 +41,38 @@ class TestConfig(unittest.TestCase):
     # XKNX Connection Config
     #
     def test_config_connection(self):
-        """Test reading connection section from config file."""
+        """Test connection section from config file."""
+        import yaml
+        # Default connection setting from xknx.yaml (auto:)
         self.assertEqual(
             TestConfig.xknx.connection_config,
             ConnectionConfig(connection_type=ConnectionType.AUTOMATIC))
+        # Replaces setting from xknx.yaml
+        test_configs = [
+            ("""
+            connection:
+                tunneling:
+                    local_ip: '192.168.1.2'
+                    gateway_ip: 192.168.1.15
+                    gateway_port: 6000
+            """,
+             ConnectionConfig(
+                 connection_type=ConnectionType.TUNNELING,
+                 local_ip="192.168.1.2",
+                 gateway_ip="192.168.1.15",
+                 gateway_port=6000)
+             ),
+            ("""
+            connection:
+                routing:
+            """,
+             ConnectionConfig(connection_type=ConnectionType.ROUTING)
+             )
+        ]
+        for yaml_string, expected_conn in test_configs:
+            config = yaml.load(yaml_string)
+            Config(TestConfig.xknx).parse_connection(config)
+            self.assertEqual(TestConfig.xknx.connection_config, expected_conn)
 
     #
     # XKNX Groups Config
