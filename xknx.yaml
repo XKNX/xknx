@@ -1,7 +1,7 @@
 
 general:
     own_address: '15.15.249'
-    rate_limit: 0.05
+    rate_limit: 20
 
 groups:
 
