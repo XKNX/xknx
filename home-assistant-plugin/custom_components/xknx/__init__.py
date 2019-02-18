@@ -69,7 +69,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Inclusive(CONF_XKNX_FIRE_EVENT_FILTER, 'fire_ev'):
             vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_XKNX_STATE_UPDATER, default=True): cv.boolean,
-        vol.Optional(CONF_XKNX_RATE_LIMIT, default=0.05): cv.float,
+        vol.Optional(CONF_XKNX_RATE_LIMIT, default=20):
+            vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
         vol.Optional(CONF_XKNX_EXPOSE):
             vol.All(
                 cv.ensure_list,
