@@ -29,6 +29,7 @@ CONF_XKNX_LOCAL_IP = "local_ip"
 CONF_XKNX_FIRE_EVENT = "fire_event"
 CONF_XKNX_FIRE_EVENT_FILTER = "fire_event_filter"
 CONF_XKNX_STATE_UPDATER = "state_updater"
+CONF_XKNX_RATE_LIMIT = "rate_limit"
 CONF_XKNX_EXPOSE = "expose"
 CONF_XKNX_EXPOSE_TYPE = "type"
 CONF_XKNX_EXPOSE_ADDRESS = "address"
@@ -68,6 +69,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Inclusive(CONF_XKNX_FIRE_EVENT_FILTER, 'fire_ev'):
             vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_XKNX_STATE_UPDATER, default=True): cv.boolean,
+        vol.Optional(CONF_XKNX_RATE_LIMIT, default=20):
+            vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
         vol.Optional(CONF_XKNX_EXPOSE):
             vol.All(
                 cv.ensure_list,
@@ -144,7 +147,8 @@ class KNXModule:
     def init_xknx(self):
         """Initialize of KNX object."""
         from xknx import XKNX
-        self.xknx = XKNX(config=self.config_file(), loop=self.hass.loop)
+        self.xknx = XKNX(config=self.config_file(), loop=self.hass.loop,
+                         rate_limit=self.config[DOMAIN][CONF_XKNX_RATE_LIMIT])
 
     async def start(self):
         """Start KNX object. Connect to tunneling or Routing device."""

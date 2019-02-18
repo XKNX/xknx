@@ -38,6 +38,9 @@ class Config:
             if "own_address" in doc["general"]:
                 self.xknx.own_address = \
                     PhysicalAddress(doc["general"]["own_address"])
+            if "rate_limit" in doc["general"]:
+                self.xknx.rate_limit = \
+                    doc["general"]["rate_limit"]
 
     def parse_groups(self, doc):
         """Parse the group section of xknx.yaml."""

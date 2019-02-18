@@ -16,6 +16,7 @@ class XKNX:
     # pylint: disable=too-many-instance-attributes
 
     DEFAULT_ADDRESS = '15.15.250'
+    DEFAULT_RATE_LIMIT = 20
 
     def __init__(self,
                  config=None,
@@ -23,7 +24,8 @@ class XKNX:
                  own_address=PhysicalAddress(DEFAULT_ADDRESS),
                  address_format=GroupAddressType.LONG,
                  telegram_received_cb=None,
-                 device_updated_cb=None):
+                 device_updated_cb=None,
+                 rate_limit=DEFAULT_RATE_LIMIT):
         """Initialize XKNX class."""
         # pylint: disable=too-many-arguments
         self.devices = Devices()
@@ -36,6 +38,7 @@ class XKNX:
         self.started = False
         self.address_format = address_format
         self.own_address = own_address
+        self.rate_limit = rate_limit
         self.logger = logging.getLogger('xknx.log')
         self.knx_logger = logging.getLogger('xknx.knx')
         self.telegram_logger = logging.getLogger('xknx.telegram')

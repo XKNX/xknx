@@ -20,8 +20,10 @@ The `XKNX()` object is the core element of any XKNX installation. It should be o
 xknx = XKNX(config='xknx.yaml',
             loop=loop,
             own_address=Address,
-            telegram_received_cb=function1,
-            device_updated_cb=function2):
+            address_format=GroupAddressType.LONG
+            telegram_received_cb=None,
+            device_updated_cb=None,
+            rate_limit=DEFAULT_RATE_LIMIT):
 ```
 
 The constructor of the XKNX object takes several parameters:
@@ -29,8 +31,13 @@ The constructor of the XKNX object takes several parameters:
 * `config` defines a path to the local [XKNX.yaml](/configuration).
 * `loop` points to the asyncio.loop object. Of not specified it uses `asyncio.get_event_loop()`.
 * `own_address` may be used to specify the physical KNX address of the XKNX daemon. If not speficied it uses `15.15.250`.
+* `address_format` may be used to specify the type of group addresses to use. Possible values are:
+** FREE: integer or hex representation
+** SHORT: representation like '1/34' without middle groups
+** LONG: representation like '1/2/34' with middle groups
 * `telegram_received_cb` is a callback which is called after every received KNX telegram. See [callbacks](#callbacks) documentation for details.
 * `device_updated_cb` is an async callback after a [XKNX device](#devices) was updated. See [callbacks](#callbacks) documentation for details.
+* `rate_limit` in telegrams per second - can be used to limit the outgoing traffic to the KNX/IP interface. The default value is 20 packets per second.
 
 # [](#header-2)Starting
 
