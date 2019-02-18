@@ -16,7 +16,7 @@ class XKNX:
     # pylint: disable=too-many-instance-attributes
 
     DEFAULT_ADDRESS = '15.15.250'
-    DEFAULT_RATE_LIMIT = 0.05
+    DEFAULT_RATE_LIMIT = 20
 
     def __init__(self,
                  config=None,
