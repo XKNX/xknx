@@ -66,7 +66,7 @@ class ConnectionConfig:
         self.bind_to_multicast_addr = bind_to_multicast_addr
 
     def __eq__(self, other):
-        # Equality is used in unit tests.
+        """Equality for ConnectionConfig class (used in unit tests)."""
         return self.connection_type == other.connection_type and \
             self.local_ip == other.local_ip and \
             self.gateway_ip == other.gateway_ip and \
