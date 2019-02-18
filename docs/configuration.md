@@ -10,9 +10,20 @@ Overview
 
 XKNX is controlled via a configuration file. Per default the configuration file is  named `xknx.yaml`. 
 
-The configuration file contains two section. The `general` section contains the individual / physical address of the XKNX daemon (`own_address`).
+The configuration file can contain three sections.
 
-Within the `groups` sections all devices are defined. For each type of device more then one section might be specified. You need to append numbers or strings to differentiate the entries, as in the example below. The appended number or string must be unique. 
+- The `general` section can contain:
+  - `own_address` the individual / physical address of the XKNX daemon
+  - `rate_limit` a rate limit for telegrams sent to the bus
+- The `connection` section can be used to specify the connection to the KNX interface.
+  - `auto` for automatic discovery of a KNX interface
+  - `tunneling` for a UDP unicast connection
+    - `local_ip` sets the ip address that is used by xknx
+    - `host` sets the ip address of the KNX tunneling interface
+    - `port` sets the port the KNX tunneling interface is listening on
+  - `routing` for a UDP multicast connection
+    - `local_ip` sets the ip address that is used by xknx
+- Within the `groups` sections all devices are defined. For each type of device more then one section might be specified. You need to append numbers or strings to differentiate the entries, as in the example below. The appended number or string must be unique. 
 
 How to use
 ----------

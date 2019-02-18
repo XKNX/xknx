@@ -23,7 +23,7 @@ xknx = XKNX(config='xknx.yaml',
             address_format=GroupAddressType.LONG
             telegram_received_cb=None,
             device_updated_cb=None,
-            rate_limit=DEFAULT_RATE_LIMIT):
+            rate_limit=DEFAULT_RATE_LIMIT)
 ```
 
 The constructor of the XKNX object takes several parameters:
@@ -42,13 +42,16 @@ The constructor of the XKNX object takes several parameters:
 # [](#header-2)Starting
 
 ```python
-await xknx.start(state_updater=False, daemon_mode=False)
+await xknx.start(state_updater=False,
+                 daemon_mode=False,
+                 connection_config=None)
 ```
 
 `xknx.start()` will search for KNX/IP devices in the network and either build a KNX/IP-Tunnel or open a mulitcast KNX/IP-Routing connection. `start()` will take the following paramters
 
 * if `state_updater` is set, XKNX will start an asynchronous process for syncing the states of all connected devices every hour
 * if `daemon_mode` is set, start will only stop if Control-X is pressed. This function is useful for using XKNX as a daemon, e.g. for using the callback functions or using the internal action logic.
+* `connection_config` replaces a ConnectionConfig() that was read from a yaml config file.
 
 # [](#header-2)Stopping
 
