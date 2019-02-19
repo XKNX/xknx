@@ -13,3 +13,4 @@ xknx.egg-info/
 venv
 .idea/
 .vscode/
+.sass-cache/

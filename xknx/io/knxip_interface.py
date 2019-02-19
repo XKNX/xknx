@@ -65,6 +65,17 @@ class ConnectionConfig:
         self.scan_filter = scan_filter
         self.bind_to_multicast_addr = bind_to_multicast_addr
 
+    def __eq__(self, other):
+        """Equality for ConnectionConfig class (used in unit tests)."""
+        return self.connection_type == other.connection_type and \
+            self.local_ip == other.local_ip and \
+            self.gateway_ip == other.gateway_ip and \
+            self.gateway_port == other.gateway_port and \
+            self.auto_reconnect == other.auto_reconnect and \
+            self.auto_reconnect_wait == other.auto_reconnect_wait and \
+            self.scan_filter == other.scan_filter and \
+            self.bind_to_multicast_addr == other.bind_to_multicast_addr
+
 
 class KNXIPInterface():
     """Class for managing KNX/IP Tunneling or Routing connections."""

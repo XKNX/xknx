@@ -8,12 +8,12 @@ layout: default
 
 The Light object is either a representation of a binary or dimm actor, LED-controller or DALI-gateway. 
 
-Expected datapoint types for light functions and their corresponding state addresses
-switch: DPT 1.001
-brightness: DPT 5.001
-color: DPT 232.600
-tunable_white: DPT 5.001
-color_temperature: DPT 7.600
+Expected datapoint types for light functions and their corresponding state addresses:
+- switch: DPT 1.001
+- brightness: DPT 5.001
+- color: DPT 232.600
+- tunable_white: DPT 5.001
+- color_temperature: DPT 7.600
 
 ## [](#header-2)Example
 

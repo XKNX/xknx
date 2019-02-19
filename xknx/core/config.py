@@ -11,6 +11,7 @@ from xknx.devices import (
     BinarySensor, Climate, Cover, DateTime, ExposeSensor, Light, Notification,
     Scene, Sensor, Switch)
 from xknx.exceptions import XKNXException
+from xknx.io import ConnectionConfig, ConnectionType
 from xknx.knx import PhysicalAddress
 
 
@@ -28,6 +29,7 @@ class Config:
             with open(file, 'r') as filehandle:
                 doc = yaml.load(filehandle)
                 self.parse_general(doc)
+                self.parse_connection(doc)
                 self.parse_groups(doc)
         except FileNotFoundError as ex:
             self.xknx.logger.error("Error while reading %s: %s", file, ex)
@@ -42,10 +44,45 @@ class Config:
                 self.xknx.rate_limit = \
                     doc["general"]["rate_limit"]
 
+    def parse_connection(self, doc):
+        """Parse the connection section of xknx.yaml."""
+        if "connection" in doc \
+                and hasattr(doc["connection"], '__iter__'):
+            for conn, prefs in doc["connection"].items():
+                try:
+                    if conn.startswith("auto"):
+                        self._parse_connection_prefs(ConnectionType.AUTOMATIC, prefs)
+                    elif conn.startswith("tunneling"):
+                        self._parse_connection_prefs(ConnectionType.TUNNELING, prefs)
+                    elif conn.startswith("routing"):
+                        self._parse_connection_prefs(ConnectionType.ROUTING, prefs)
+                except XKNXException as ex:
+                    self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", conn, ex)
+
+    def _parse_connection_prefs(self, conn_type, prefs):
+        conn = ConnectionConfig()
+        conn.connection_type = conn_type
+        if hasattr(prefs, '__iter__'):
+            for pref, value in prefs.items():
+                try:
+                    if pref.startswith("local_ip"):
+                        conn.local_ip = value
+                    elif pref.startswith("gateway_ip"):
+                        conn.gateway_ip = value
+                    elif pref.startswith("gateway_port"):
+                        # don't overwrite default if None
+                        if value is not None:
+                            conn.gateway_port = value
+                except XKNXException as ex:
+                    self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", pref, ex)
+        self.xknx.connection_config = conn
+
     def parse_groups(self, doc):
         """Parse the group section of xknx.yaml."""
-        for group in doc["groups"]:
-            self.parse_group(doc, group)
+        if "groups" in doc \
+                and hasattr(doc["groups"], '__iter__'):
+            for group in doc["groups"]:
+                self.parse_group(doc, group)
 
     def parse_group(self, doc, group):
         """Parse a group entry of xknx.yaml."""
