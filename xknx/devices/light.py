@@ -21,6 +21,8 @@ class Light(Device):
     """Class for managing a light."""
 
     # pylint: disable=too-many-locals
+    DEFAULT_MIN_KELVIN = 2700  # 370 mireds
+    DEFAULT_MAX_KELVIN = 6000  # 166 mireds
 
     def __init__(self,
                  xknx,
@@ -128,9 +130,9 @@ class Light(Device):
         group_address_color_temperature_state = \
             config.get('group_address_color_temperature_state')
         min_kelvin = \
-            config.get('min_kelvin')
+            config.get('min_kelvin', Light.DEFAULT_MIN_KELVIN)
         max_kelvin = \
-            config.get('max_kelvin')
+            config.get('max_kelvin', Light.DEFAULT_MAX_KELVIN)
 
         return cls(xknx,
                    name,

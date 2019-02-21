@@ -88,6 +88,8 @@ class TestConfig(unittest.TestCase):
             Light(TestConfig.xknx,
                   'Living-Room.Light_1',
                   group_address_switch='1/6/9',
+                  min_kelvin=2700,
+                  max_kelvin=6000,
                   device_updated_cb=TestConfig.xknx.devices.device_updated))
 
     def test_config_light_state(self):
@@ -100,6 +102,8 @@ class TestConfig(unittest.TestCase):
                   group_address_switch_state='1/7/5',
                   group_address_brightness='1/7/6',
                   group_address_brightness_state='1/7/7',
+                  min_kelvin=2700,
+                  max_kelvin=6000,
                   device_updated_cb=TestConfig.xknx.devices.device_updated))
 
     def test_config_light_color(self):
@@ -112,6 +116,8 @@ class TestConfig(unittest.TestCase):
                   group_address_brightness='1/6/6',
                   group_address_color='1/6/7',
                   group_address_color_state='1/6/8',
+                  min_kelvin=2700,
+                  max_kelvin=6000,
                   device_updated_cb=TestConfig.xknx.devices.device_updated))
 
     def test_config_color_temperature(self):
@@ -126,6 +132,8 @@ class TestConfig(unittest.TestCase):
                   group_address_brightness_state='1/6/13',
                   group_address_color_temperature='1/6/14',
                   group_address_color_temperature_state='1/6/15',
+                  min_kelvin=2700,
+                  max_kelvin=6000,
                   device_updated_cb=TestConfig.xknx.devices.device_updated))
 
     def test_config_tunable_white(self):
@@ -140,6 +148,8 @@ class TestConfig(unittest.TestCase):
                   group_address_brightness_state='1/6/23',
                   group_address_tunable_white='1/6/24',
                   group_address_tunable_white_state='1/6/25',
+                  min_kelvin=2700,
+                  max_kelvin=6000,
                   device_updated_cb=TestConfig.xknx.devices.device_updated))
 
     def test_config_switch(self):
