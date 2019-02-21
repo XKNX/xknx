@@ -39,7 +39,8 @@ groups:
 
 * **group_address_temperature** KNX address of current room temperature
 * **group_address_setpoint** KNX address of basis setpoint.
-* **group_address_target_temperature** KNX address for reading the target temperature from KNX bus.
+* **group_address_target_temperature** KNX address for setting the target temperature if setpoint shift is unsupported.
+* **group_address_target_temperature_state** KNX address for reading the target temperature from the KNX bus.
 * **group_address_operation_mode** KNX address for operation mode.
 
 * **group_address_operation_mode_protection** KNX address for switching on/off frost/heat protection mode.
