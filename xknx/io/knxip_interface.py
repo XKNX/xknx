@@ -7,11 +7,10 @@ KNXIPInterface manages KNX/IP Tunneling or Routing connections.
 
 """
 import ipaddress
-import netifaces
-
 from enum import Enum
 from platform import system as get_os_name
 
+import netifaces
 from xknx.exceptions import XKNXException
 
 from .const import DEFAULT_MCAST_PORT
@@ -87,10 +86,16 @@ class KNXIPInterface():
         if self.connection_config.connection_type == ConnectionType.AUTOMATIC:
             await self.start_automatic(
                 self.connection_config.scan_filter)
-        elif self.connection_config.connection_type == ConnectionType.ROUTING:
+        elif self.connection_config.connection_type == ConnectionType.ROUTING and \
+                self.connection_config.local_ip is not None:
             await self.start_routing(
                 self.connection_config.local_ip,
                 self.connection_config.bind_to_multicast_addr)
+        elif self.connection_config.connection_type == ConnectionType.ROUTING and \
+                self.connection_config.local_ip is None:
+            self.connection_config.scan_filter.routing = True
+            await self.start_automatic(
+                self.connection_config.scan_filter)
         elif self.connection_config.connection_type == ConnectionType.TUNNELING:
             await self.start_tunnelling(
                 self.connection_config.local_ip,
@@ -101,14 +106,15 @@ class KNXIPInterface():
 
     async def start_automatic(self, scan_filter: GatewayScanFilter):
         """Start GatewayScanner and connect to the found device."""
-        gatewayscanner = GatewayScanner(self.xknx, scan_filter=scan_filter)
+        gatewayscanner = GatewayScanner(self.xknx, scan_filter=scan_filter, stop_on_found=1)
         gateways = await gatewayscanner.scan()
 
         if not gateways:
             raise XKNXException("No Gateways found")
 
         gateway = gateways[0]
-        if gateway.supports_tunnelling:
+        if gateway.supports_tunnelling and \
+                scan_filter.routing is not True:
             await self.start_tunnelling(gateway.local_ip,
                                         gateway.ip_addr,
                                         gateway.port,
