@@ -65,14 +65,12 @@ class Config:
         if hasattr(prefs, '__iter__'):
             for pref, value in prefs.items():
                 try:
-                    if pref.startswith("local_ip"):
-                        conn.local_ip = value
-                    elif pref.startswith("gateway_ip"):
+                    if pref.startswith("gateway_ip"):
                         conn.gateway_ip = value
                     elif pref.startswith("gateway_port"):
-                        # don't overwrite default if None
-                        if value is not None:
-                            conn.gateway_port = value
+                        conn.gateway_port = value
+                    elif pref.startswith("local_ip"):
+                        conn.local_ip = value
                 except XKNXException as ex:
                     self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", pref, ex)
         self.xknx.connection_config = conn
