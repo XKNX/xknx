@@ -1,7 +1,6 @@
 """Unit test for KNX/IP gateway scanner."""
 import asyncio
 import unittest
-from unittest.mock import patch, create_autospec
 
 from xknx import XKNX
 from xknx.io import GatewayScanFilter, GatewayScanner, UDPClient
@@ -9,7 +8,7 @@ from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.knx import PhysicalAddress
 from xknx.knxip import (
     HPAI, DIBDeviceInformation, DIBServiceFamily, DIBSuppSVCFamilies,
-    KNXIPBody, KNXIPHeader, KNXIPFrame, KNXIPServiceType, SearchResponse)
+    KNXIPFrame, KNXIPHeader, KNXIPServiceType, SearchResponse)
 
 
 class TestGatewayScanner(unittest.TestCase):
@@ -57,10 +56,11 @@ class TestGatewayScanner(unittest.TestCase):
 
     def test_search_response_reception(self):
         """Test function of gateway scanner."""
+        # pylint: disable=protected-access
         xknx = XKNX(loop=self.loop)
         gateway_scanner = GatewayScanner(xknx)
         search_response = fake_router_search_response(xknx)
-        udp_client = create_autospec(UDPClient)
+        udp_client = unittest.mock.create_autospec(UDPClient)
         udp_client.local_addr = ("192.168.42.50", 0, "en1")
         udp_client.getsockname.return_value = ("192.168.42.50", 0)
         router_gw_descriptor = GatewayDescriptor(name="Gira KNX/IP-Router",
