@@ -50,11 +50,11 @@ class Config:
                 and hasattr(doc["connection"], '__iter__'):
             for conn, prefs in doc["connection"].items():
                 try:
-                    if conn.startswith("auto"):
+                    if conn == "auto":
                         self._parse_connection_prefs(ConnectionType.AUTOMATIC, prefs)
-                    elif conn.startswith("tunneling"):
+                    elif conn == "tunneling":
                         self._parse_connection_prefs(ConnectionType.TUNNELING, prefs)
-                    elif conn.startswith("routing"):
+                    elif conn == "routing":
                         self._parse_connection_prefs(ConnectionType.ROUTING, prefs)
                 except XKNXException as ex:
                     self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", conn, ex)
@@ -65,11 +65,11 @@ class Config:
         if hasattr(prefs, '__iter__'):
             for pref, value in prefs.items():
                 try:
-                    if pref.startswith("gateway_ip"):
+                    if pref == "gateway_ip":
                         conn.gateway_ip = value
-                    elif pref.startswith("gateway_port"):
+                    elif pref == "gateway_port":
                         conn.gateway_port = value
-                    elif pref.startswith("local_ip"):
+                    elif pref == "local_ip":
                         conn.local_ip = value
                 except XKNXException as ex:
                     self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", pref, ex)
@@ -85,6 +85,7 @@ class Config:
     def parse_group(self, doc, group):
         """Parse a group entry of xknx.yaml."""
         try:
+            print(group)
             if group.startswith("light"):
                 self.parse_group_light(doc["groups"][group])
             elif group.startswith("switch"):
