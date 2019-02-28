@@ -85,7 +85,6 @@ class Config:
     def parse_group(self, doc, group):
         """Parse a group entry of xknx.yaml."""
         try:
-            print(group)
             if group.startswith("light"):
                 self.parse_group_light(doc["groups"][group])
             elif group.startswith("switch"):
