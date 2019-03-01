@@ -15,6 +15,7 @@ class DPTValue1Ucount(DPTBase):
     value_max = 255
     unit = ""
     resolution = 1
+    payload_length = 1
 
     @classmethod
     def from_knx(cls, raw):
