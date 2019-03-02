@@ -11,17 +11,6 @@ from .remote_value import RemoteValue
 class RemoteValueDptValue1Ucount(RemoteValue):
     """Abstraction for remote value of KNX DPT 5.010."""
 
-    def __init__(self,
-                 xknx,
-                 group_address=None,
-                 device_name=None,
-                 after_update_cb=None):
-        """Initialize remote value of KNX DPT 5.010."""
-        # pylint: disable=too-many-arguments
-        super(RemoteValueDptValue1Ucount, self).__init__(
-            xknx, group_address, None,
-            device_name=device_name, after_update_cb=after_update_cb)
-
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
         return (isinstance(payload, DPTArray)
