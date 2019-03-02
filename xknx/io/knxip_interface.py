@@ -64,8 +64,12 @@ class ConnectionConfig:
         self.gateway_port = gateway_port
         self.auto_reconnect = auto_reconnect
         self.auto_reconnect_wait = auto_reconnect_wait
-        self.scan_filter = scan_filter
         self.bind_to_multicast_addr = bind_to_multicast_addr
+        if connection_type == ConnectionType.TUNNELING:
+            scan_filter.tunnelling = True
+        elif connection_type == ConnectionType.ROUTING:
+            scan_filter.routing = True
+        self.scan_filter = scan_filter
 
     def __eq__(self, other):
         """Equality for ConnectionConfig class (used in unit tests)."""
@@ -83,18 +87,11 @@ class KNXIPInterface():
 
     async def start(self):
         """Start interface. Connecting KNX/IP device with the selected method."""
-        if self.connection_config.connection_type == ConnectionType.AUTOMATIC:
-            await self.start_automatic(
-                self.connection_config.scan_filter)
-        elif self.connection_config.connection_type == ConnectionType.ROUTING:
-            if self.connection_config.local_ip is not None:
-                await self.start_routing(
-                    self.connection_config.local_ip,
-                    self.connection_config.bind_to_multicast_addr)
-            else:
-                prefer_routing = self.connection_config.scan_filter
-                prefer_routing.routing = True
-                await self.start_automatic(prefer_routing)
+        if self.connection_config.connection_type == ConnectionType.ROUTING and \
+                self.connection_config.local_ip is not None:
+            await self.start_routing(
+                self.connection_config.local_ip,
+                self.connection_config.bind_to_multicast_addr)
         elif self.connection_config.connection_type == ConnectionType.TUNNELING:
             await self.start_tunnelling(
                 self.connection_config.local_ip,
@@ -102,6 +99,8 @@ class KNXIPInterface():
                 self.connection_config.gateway_port,
                 self.connection_config.auto_reconnect,
                 self.connection_config.auto_reconnect_wait)
+        else:
+            await self.start_automatic(self.connection_config.scan_filter)
 
     async def start_automatic(self, scan_filter: GatewayScanFilter):
         """Start GatewayScanner and connect to the found device."""

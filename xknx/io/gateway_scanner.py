@@ -77,6 +77,10 @@ class GatewayScanFilter:
             return False
         return True
 
+    def __eq__(self, other):
+        """Equality for GatewayScanFilter class (used in unit tests)."""
+        return self.__dict__ == other.__dict__
+
 
 class GatewayScanner():
     """Class for searching KNX/IP devices."""

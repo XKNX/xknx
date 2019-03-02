@@ -50,30 +50,30 @@ class Config:
                 and hasattr(doc["connection"], '__iter__'):
             for conn, prefs in doc["connection"].items():
                 try:
-                    if conn == "auto":
-                        self._parse_connection_prefs(ConnectionType.AUTOMATIC, prefs)
-                    elif conn == "tunneling":
-                        self._parse_connection_prefs(ConnectionType.TUNNELING, prefs)
+                    if conn == "tunneling":
+                        conn = ConnectionType.TUNNELING
                     elif conn == "routing":
-                        self._parse_connection_prefs(ConnectionType.ROUTING, prefs)
+                        conn = ConnectionType.ROUTING
+                    else:
+                        conn = ConnectionType.AUTOMATIC
+                    self._parse_connection_prefs(conn, prefs)
                 except XKNXException as ex:
                     self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", conn, ex)
 
-    def _parse_connection_prefs(self, conn_type, prefs):
-        conn = ConnectionConfig()
-        conn.connection_type = conn_type
+    def _parse_connection_prefs(self, conn_type: ConnectionType, prefs) -> None:
+        connection_config = ConnectionConfig(connection_type=conn_type)
         if hasattr(prefs, '__iter__'):
             for pref, value in prefs.items():
                 try:
                     if pref == "gateway_ip":
-                        conn.gateway_ip = value
+                        connection_config.gateway_ip = value
                     elif pref == "gateway_port":
-                        conn.gateway_port = value
+                        connection_config.gateway_port = value
                     elif pref == "local_ip":
-                        conn.local_ip = value
+                        connection_config.local_ip = value
                 except XKNXException as ex:
                     self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", pref, ex)
-        self.xknx.connection_config = conn
+        self.xknx.connection_config = connection_config
 
     def parse_groups(self, doc):
         """Parse the group section of xknx.yaml."""
