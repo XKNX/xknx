@@ -188,7 +188,7 @@ class Light(Device):
     @property
     def state(self):
         """Return the current switch state of the device."""
-        return self.switch.value == RemoteValueSwitch.Value.ON
+        return self.switch.value
 
     async def set_on(self):
         """Switch light on."""

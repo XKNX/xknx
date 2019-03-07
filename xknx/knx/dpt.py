@@ -64,6 +64,9 @@ class DPTBinary(DPTBase):
 
     def __init__(self, value):
         """Initialize DPTBinary class."""
+        # TODO: do we need this?
+        # if isinstance(value, bool):
+        #     value = int(value)
         if not isinstance(value, int):
             raise TypeError()
         if value > DPTBinary.APCI_BITMASK:

@@ -1,4 +1,4 @@
-"""Implementation of Basic KNX DPT_Scaling (Percent) Values."""
+"""Implementation of Basic KNX DPT_Scene Values."""
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
