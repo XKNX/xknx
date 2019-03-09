@@ -216,7 +216,7 @@ class KNXClimate(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self.device.target_temperature.value
+        return self.device.target_temperature
 
     @property
     def min_temp(self):

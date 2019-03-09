@@ -13,27 +13,76 @@ from .remote_value_1count import RemoteValue1Count
 from .remote_value_switch import RemoteValueSwitch
 from .remote_value_temp import RemoteValueTemp
 
+DEFAULT_SETPOINT_SHIFT_STEP = 0.5
+DEFAULT_SETPOINT_SHIFT_MAX = 6
+DEFAULT_SETPOINT_SHIFT_MIN = -6
+
+
+class SetpointShiftValue(RemoteValue1Count):
+    """Class for managing setpoint_shift values."""
+
+    def __init__(self,
+                 xknx,
+                 group_address=None,
+                 group_address_state=None,
+                 device_name=None,
+                 after_update_cb=None,
+                 setpoint_shift_step=DEFAULT_SETPOINT_SHIFT_STEP,
+                 min_kelvin=DEFAULT_SETPOINT_SHIFT_MIN,
+                 max_kelvin=DEFAULT_SETPOINT_SHIFT_MAX):
+        """Initialize SepointShift class."""
+        # pylint: disable=too-many-arguments
+        self.setpoint_shift_step = setpoint_shift_step
+        self.min_kelvin = min_kelvin
+        self.max_kelvin = max_kelvin
+
+        if self.setpoint_shift_step is None:
+            self.setpoint_shift_step = DEFAULT_SETPOINT_SHIFT_STEP
+        if self.min_kelvin is None:
+            self.min_kelvin = DEFAULT_SETPOINT_SHIFT_MIN
+        if self.max_kelvin is None:
+            self.max_kelvin = DEFAULT_SETPOINT_SHIFT_MAX
+
+        super().__init__(xknx,
+                         group_address,
+                         group_address_state,
+                         device_name,
+                         after_update_cb)
+
+    @property
+    def value(self):
+        """Return current value in Kelvin."""
+        if super().value is not None:
+            return super().value * self.setpoint_shift_step
+        return None
+
+    async def set(self, value):
+        """Set new value from Kelvin."""
+        if value > self.max_kelvin:
+            raise DeviceIllegalValue("setpoint_shift_max exceeded", value)
+        elif value < self.min_kelvin:
+            raise DeviceIllegalValue("setpoint_shift_min exceeded", value)
+
+        raw_value = int(value / self.setpoint_shift_step)
+        await super().set(raw_value)
+
 
 class Climate(Device):
     """Class for managing the climate."""
 
     # pylint: disable=too-many-instance-attributes,invalid-name
-
-    DEFAULT_SETPOINT_SHIFT_STEP = 0.5
-    DEFAULT_SETPOINT_SHIFT_MAX = 6
-    DEFAULT_SETPOINT_SHIFT_MIN = -6
-
     def __init__(self,
                  xknx,
                  name,
                  group_address_temperature=None,
                  group_address_target_temperature=None,
                  group_address_target_temperature_state=None,
+                 group_address_base_temperature_state=None,
                  group_address_setpoint_shift=None,
                  group_address_setpoint_shift_state=None,
-                 setpoint_shift_step=DEFAULT_SETPOINT_SHIFT_STEP,
-                 setpoint_shift_max=DEFAULT_SETPOINT_SHIFT_MAX,
-                 setpoint_shift_min=DEFAULT_SETPOINT_SHIFT_MIN,
+                 setpoint_shift_step=None,
+                 setpoint_shift_max=None,
+                 setpoint_shift_min=None,
                  group_address_on_off=None,
                  group_address_on_off_state=None,
                  min_temp=None,
@@ -59,22 +108,27 @@ class Climate(Device):
             group_address_state=group_address_temperature,
             device_name=self.name,
             after_update_cb=self.after_update)
-        self.target_temperature = RemoteValueTemp(
+        self._target_temperature = RemoteValueTemp(
             xknx,
             group_address_target_temperature,
             group_address_target_temperature_state,
             device_name=self.name,
             after_update_cb=self.after_update)
-        self.setpoint_shift = RemoteValue1Count(
+        self._base_temperature = RemoteValueTemp(
+            xknx,
+            None,
+            group_address_base_temperature_state,
+            device_name=self.name,
+            after_update_cb=self.after_update)
+        self._setpoint_shift = SetpointShiftValue(
             xknx,
             group_address_setpoint_shift,
             group_address_setpoint_shift_state,
             device_name=self.name,
-            after_update_cb=self.after_update)
-
-        self.setpoint_shift_step = setpoint_shift_step
-        self.setpoint_shift_max = setpoint_shift_max
-        self.setpoint_shift_min = setpoint_shift_min
+            after_update_cb=self.after_update,
+            setpoint_shift_step=setpoint_shift_step,
+            min_kelvin=setpoint_shift_min,
+            max_kelvin=setpoint_shift_max)
 
         self.supports_on_off = \
             group_address_on_off is not None or \
@@ -99,16 +153,18 @@ class Climate(Device):
             config.get('group_address_target_temperature')
         group_address_target_temperature_state = \
             config.get('group_address_target_temperature_state')
+        group_address_base_temperature_state = \
+            config.get('group_address_base_temperature_state')
         group_address_setpoint_shift = \
             config.get('group_address_setpoint_shift')
         group_address_setpoint_shift_state = \
             config.get('group_address_setpoint_shift_state')
         setpoint_shift_step = \
-            config.get('setpoint_shift_step', cls.DEFAULT_SETPOINT_SHIFT_STEP)
+            config.get('setpoint_shift_step')
         setpoint_shift_max = \
-            config.get('setpoint_shift_max', cls.DEFAULT_SETPOINT_SHIFT_MAX)
+            config.get('setpoint_shift_max')
         setpoint_shift_min = \
-            config.get('setpoint_shift_min', cls.DEFAULT_SETPOINT_SHIFT_MIN)
+            config.get('setpoint_shift_min')
         group_address_on_off = \
             config.get('group_address_on_off')
         group_address_on_off_state = \
@@ -128,6 +184,7 @@ class Climate(Device):
                    group_address_temperature=group_address_temperature,
                    group_address_target_temperature=group_address_target_temperature,
                    group_address_target_temperature_state=group_address_target_temperature_state,
+                   group_address_base_temperature_state=group_address_base_temperature_state,
                    group_address_setpoint_shift=group_address_setpoint_shift,
                    group_address_setpoint_shift_state=group_address_setpoint_shift_state,
                    setpoint_shift_step=setpoint_shift_step,
@@ -144,8 +201,9 @@ class Climate(Device):
         if self.mode is not None and self.mode.has_group_address(group_address):
             return True
         return self.temperature.has_group_address(group_address) or \
-            self.target_temperature.has_group_address(group_address) or \
-            self.setpoint_shift.has_group_address(group_address) or \
+            self._target_temperature.has_group_address(group_address) or \
+            self._base_temperature.has_group_address(group_address) or \
+            self._setpoint_shift.has_group_address(group_address) or \
             self.on.has_group_address(group_address)
 
     @property
@@ -165,63 +223,82 @@ class Climate(Device):
     @property
     def initialized_for_setpoint_shift_calculations(self):
         """Test if object is initialized for setpoint shift calculations."""
-        if not self.setpoint_shift.initialized:
+        if not self._setpoint_shift.initialized:
             return False
-        if self.setpoint_shift.value is None:
+        if self.setpoint_shift is None:
             return False
-        if not self.target_temperature.initialized:
+        # Test if target temperature has a writable group address
+        # if self._target_temperature.group_address is not None:
+        #     return False
+        if not (self._target_temperature.initialized or
+                self._base_temperature.initialized):
             return False
-        if self.target_temperature.value is None:
+        if self.target_temperature is None and \
+                self.base_temperature is None:
             return False
         return True
 
+    @property
+    def target_temperature(self):
+        """Return target temperature read from bus or calculated if not available."""
+        if self._target_temperature.value is not None:
+            return self._target_temperature.value
+        if self._base_temperature.value is not None and \
+                self._setpoint_shift.value is not None:
+            return self._base_temperature.value + self._setpoint_shift.value
+        return None
+
     async def set_target_temperature(self, target_temperature):
-        """Calculate setpoint shift shift and send it to  KNX bus."""
+        """Send new target temperature or setpoint_shift to KNX bus."""
         if self.initialized_for_setpoint_shift_calculations:
-            await self.set_target_temperature_setpoint_shift(target_temperature)
+            temperature_delta = target_temperature-self.base_temperature
+            await self.set_setpoint_shift(temperature_delta)
         # broadcast new target temperature and set internally
-        await self.target_temperature.set(target_temperature)
+        await self._target_temperature.set(target_temperature)
 
-    async def set_target_temperature_setpoint_shift(self, target_temperature):
-        """Set target temperature via setpoint_shift group address."""
-        temperature_delta = target_temperature-self.target_temperature.value
-        setpoint_shift_delta = int(temperature_delta/self.setpoint_shift_step)
-        setpoint_shift = self.setpoint_shift.value + setpoint_shift_delta
+    @property
+    def base_temperature(self):
+        """Return base temperature read from bus or calculated if not available."""
+        if self._base_temperature.value is not None:
+            return self._base_temperature.value
+        if self._target_temperature.value is not None and \
+                self._setpoint_shift.value is not None:
+            return self._target_temperature.value - self._setpoint_shift.value
+        return None
 
-        if setpoint_shift > self.setpoint_shift_max:
-            raise DeviceIllegalValue("setpoint_shift_max exceeded", setpoint_shift)
-        if setpoint_shift < self.setpoint_shift_min:
-            raise DeviceIllegalValue("setpoint_shift_min exceeded", setpoint_shift)
+    @property
+    def setpoint_shift(self):
+        """Return current offset from base temperature in Kelvin."""
+        return self._setpoint_shift.value
 
-        await self.setpoint_shift.set(setpoint_shift)
+    async def set_setpoint_shift(self, offset):
+        """Send new temperature offset to KNX bus."""
+        await self._setpoint_shift.set(offset)
 
     @property
     def target_temperature_max(self):
         """Return the maxium possible target temperature."""
         if self.max_temp is not None:
             return self.max_temp
-        if not self.initialized_for_setpoint_shift_calculations:
-            return None
-        return (self.target_temperature.value -
-                self.setpoint_shift.value * self.setpoint_shift_step +
-                self.setpoint_shift_max * self.setpoint_shift_step)
+        if self.initialized_for_setpoint_shift_calculations:
+            return self.base_temperature + self._setpoint_shift.max_kelvin
+        return None
 
     @property
     def target_temperature_min(self):
         """Return the minimum possible target temperature."""
         if self.min_temp is not None:
             return self.min_temp
-        if not self.initialized_for_setpoint_shift_calculations:
-            return None
-        return (self.target_temperature.value -
-                self.setpoint_shift.value * self.setpoint_shift_step +
-                self.setpoint_shift_min * self.setpoint_shift_step)
+        if self.initialized_for_setpoint_shift_calculations:
+            return self.base_temperature + self._setpoint_shift.min_kelvin
+        return None
 
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
         await self.temperature.process(telegram)
-        await self.target_temperature.process(telegram)
-        await self.setpoint_shift.process(telegram)
+        await self._target_temperature.process(telegram)
+        await self._base_temperature.process(telegram)
+        await self._setpoint_shift.process(telegram)
         await self.on.process(telegram)
         if self.mode is not None:
             await self.mode.process_group_write(telegram)
@@ -230,8 +307,9 @@ class Climate(Device):
         """Return group addresses which should be requested to sync state."""
         state_addresses = []
         state_addresses.extend(self.temperature.state_addresses())
-        state_addresses.extend(self.target_temperature.state_addresses())
-        state_addresses.extend(self.setpoint_shift.state_addresses())
+        state_addresses.extend(self._target_temperature.state_addresses())
+        state_addresses.extend(self._base_temperature.state_addresses())
+        state_addresses.extend(self._setpoint_shift.state_addresses())
         if self.supports_on_off:
             state_addresses.extend(self.on.state_addresses())
         if self.mode is not None:
@@ -241,22 +319,24 @@ class Climate(Device):
     def __str__(self):
         """Return object as readable string."""
         return '<Climate name="{0}" ' \
-            'temperature="{1}"  ' \
-            'target_temperature="{2}"  ' \
-            'setpoint_shift="{3}" ' \
-            'setpoint_shift_step="{4}" ' \
-            'setpoint_shift_max="{5}" ' \
-            'setpoint_shift_min="{6}" ' \
-            'group_address_on_off="{7}" ' \
+            'temperature="{1}" ' \
+            'target_temperature="{2}" ' \
+            'base_temperature="{3}" ' \
+            'setpoint_shift="{4}" ' \
+            'setpoint_shift_step="{5}" ' \
+            'setpoint_shift_max="{6}" ' \
+            'setpoint_shift_min="{7}" ' \
+            'group_address_on_off="{8}" ' \
             '/>' \
             .format(
                 self.name,
                 self.temperature.group_addr_str(),
-                self.target_temperature.group_addr_str(),
-                self.setpoint_shift.group_addr_str(),
-                self.setpoint_shift_step,
-                self.setpoint_shift_max,
-                self.setpoint_shift_min,
+                self._target_temperature.group_addr_str(),
+                self._base_temperature.group_addr_str(),
+                self._setpoint_shift.group_addr_str(),
+                self._setpoint_shift.setpoint_shift_step,
+                self._setpoint_shift.max_kelvin,
+                self._setpoint_shift.min_kelvin,
                 self.on.group_addr_str())
 
     def __eq__(self, other):
