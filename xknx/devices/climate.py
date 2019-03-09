@@ -42,13 +42,6 @@ class SetpointShiftValue(RemoteValue1Count):
         self.min_kelvin = min_kelvin
         self.max_kelvin = max_kelvin
 
-        if self.setpoint_shift_step is None:
-            self.setpoint_shift_step = DEFAULT_SETPOINT_SHIFT_STEP
-        if self.min_kelvin is None:
-            self.min_kelvin = DEFAULT_SETPOINT_SHIFT_MIN
-        if self.max_kelvin is None:
-            self.max_kelvin = DEFAULT_SETPOINT_SHIFT_MAX
-
     @property
     def value(self):
         """Return current value in Kelvin."""
@@ -64,7 +57,6 @@ class SetpointShiftValue(RemoteValue1Count):
         elif value < self.min_kelvin:
             raise DeviceIllegalValue("setpoint_shift_min exceeded", value)
             # value = self.min_kelvin
-
         raw_value = int(value / self.setpoint_shift_step)
         await super().set(raw_value)
 
@@ -82,9 +74,9 @@ class Climate(Device):
                  group_address_base_temperature_state=None,
                  group_address_setpoint_shift=None,
                  group_address_setpoint_shift_state=None,
-                 setpoint_shift_step=None,
-                 setpoint_shift_max=None,
-                 setpoint_shift_min=None,
+                 setpoint_shift_step=DEFAULT_SETPOINT_SHIFT_STEP,
+                 setpoint_shift_max=DEFAULT_SETPOINT_SHIFT_MAX,
+                 setpoint_shift_min=DEFAULT_SETPOINT_SHIFT_MIN,
                  group_address_on_off=None,
                  group_address_on_off_state=None,
                  min_temp=None,
@@ -162,11 +154,11 @@ class Climate(Device):
         group_address_setpoint_shift_state = \
             config.get('group_address_setpoint_shift_state')
         setpoint_shift_step = \
-            config.get('setpoint_shift_step')
+            config.get('setpoint_shift_step', DEFAULT_SETPOINT_SHIFT_STEP)
         setpoint_shift_max = \
-            config.get('setpoint_shift_max')
+            config.get('setpoint_shift_max', DEFAULT_SETPOINT_SHIFT_MAX)
         setpoint_shift_min = \
-            config.get('setpoint_shift_min')
+            config.get('setpoint_shift_min', DEFAULT_SETPOINT_SHIFT_MIN)
         group_address_on_off = \
             config.get('group_address_on_off')
         group_address_on_off_state = \
