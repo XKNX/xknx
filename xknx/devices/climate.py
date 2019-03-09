@@ -32,6 +32,12 @@ class SetpointShiftValue(RemoteValue1Count):
                  max_kelvin=DEFAULT_SETPOINT_SHIFT_MAX):
         """Initialize SepointShift class."""
         # pylint: disable=too-many-arguments
+        super().__init__(xknx,
+                         group_address,
+                         group_address_state,
+                         device_name,
+                         after_update_cb)
+
         self.setpoint_shift_step = setpoint_shift_step
         self.min_kelvin = min_kelvin
         self.max_kelvin = max_kelvin
@@ -42,12 +48,6 @@ class SetpointShiftValue(RemoteValue1Count):
             self.min_kelvin = DEFAULT_SETPOINT_SHIFT_MIN
         if self.max_kelvin is None:
             self.max_kelvin = DEFAULT_SETPOINT_SHIFT_MAX
-
-        super().__init__(xknx,
-                         group_address,
-                         group_address_state,
-                         device_name,
-                         after_update_cb)
 
     @property
     def value(self):
@@ -60,8 +60,10 @@ class SetpointShiftValue(RemoteValue1Count):
         """Set new value from Kelvin."""
         if value > self.max_kelvin:
             raise DeviceIllegalValue("setpoint_shift_max exceeded", value)
+            # value = self.max_kelvin
         elif value < self.min_kelvin:
             raise DeviceIllegalValue("setpoint_shift_min exceeded", value)
+            # value = self.min_kelvin
 
         raw_value = int(value / self.setpoint_shift_step)
         await super().set(raw_value)
@@ -227,16 +229,20 @@ class Climate(Device):
             return False
         if self.setpoint_shift is None:
             return False
-        # Test if target temperature has a writable group address
-        # if self._target_temperature.group_address is not None:
-        #     return False
         if not (self._target_temperature.initialized or
                 self._base_temperature.initialized):
             return False
-        if self.target_temperature is None and \
-                self.base_temperature is None:
+        if self._target_temperature.value is None and \
+                self._base_temperature.value is None:
             return False
         return True
+
+    @property
+    def temperature_step(self):
+        """Return smallest possible temperature step."""
+        if self.initialized_for_setpoint_shift_calculations:
+            return self._setpoint_shift.setpoint_shift_step
+        return 0.1
 
     @property
     def target_temperature(self):
