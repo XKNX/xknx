@@ -20,6 +20,7 @@ from .fan import Fan
 from .remote_value import RemoteValue
 from .remote_value_sensor import RemoteValueSensor
 from .remote_value_color_rgb import RemoteValueColorRGB
+from .remote_value_color_rgbw import RemoteValueColorRGBW
 from .remote_value_switch import RemoteValueSwitch
 from .remote_value_1count import RemoteValue1Count
 from .remote_value_step import RemoteValueStep
