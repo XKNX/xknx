@@ -32,6 +32,7 @@ class RemoteValueColorRGBW(RemoteValue):
     def to_knx(self, value):
         """
         Convert value (4-6 bytes) to payload (6 bytes).
+
         * Structure of DPT 251.600
         ** Bytes 0, 1:
         *** Bit 0-11: 0
