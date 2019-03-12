@@ -70,7 +70,6 @@ class TestStringRepresentations(unittest.TestCase):
             name="Wohnzimmer",
             group_address_temperature='1/2/1',
             group_address_target_temperature='1/2/2',
-            group_address_base_temperature_state='1/2/16',
             group_address_setpoint_shift='1/2/3',
             group_address_setpoint_shift_state='1/2/4',
             setpoint_shift_step=0.1,
@@ -82,7 +81,6 @@ class TestStringRepresentations(unittest.TestCase):
             str(climate),
             '<Climate name="Wohnzimmer" temperature="None/GroupAddress("1/2/1")/None/None" '
             'target_temperature="GroupAddress("1/2/2")/None/None/None" '
-            'base_temperature="None/GroupAddress("1/2/16")/None/None" '
             'setpoint_shift="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" '
             'setpoint_shift_step="0.1" setpoint_shift_max="20" setpoint_shift_min="-20" '
             'group_address_on_off="GroupAddress("1/2/14")/GroupAddress("1/2/15")/None/None" />')

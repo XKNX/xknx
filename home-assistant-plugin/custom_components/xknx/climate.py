@@ -57,8 +57,8 @@ OPERATION_MODES_INV = dict((
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
-    vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
+    vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
     vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_SETPOINT_SHIFT_STEP,
@@ -211,12 +211,12 @@ class KNXClimate(ClimateDevice):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        return self.device.setpoint_shift_step
+        return self.device.temperature_step
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self.device.target_temperature
+        return self.device.target_temperature.value
 
     @property
     def min_temp(self):

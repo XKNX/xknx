@@ -20,7 +20,6 @@ class TestClimate(unittest.TestCase):
     """Test class for Climate objects."""
 
     # pylint: disable=invalid-name,too-many-public-methods
-    # TODO: test base_temperature
     def setUp(self):
         """Set up test class."""
         self.loop = asyncio.new_event_loop()
@@ -42,7 +41,7 @@ class TestClimate(unittest.TestCase):
             group_address_temperature='1/2/3')
 
         self.assertTrue(climate.temperature.initialized)
-        self.assertFalse(climate._target_temperature.initialized)
+        self.assertFalse(climate.target_temperature.initialized)
 
     def test_support_target_temperature(self):
         """Test supports_target__temperature flag."""
@@ -53,7 +52,7 @@ class TestClimate(unittest.TestCase):
             group_address_target_temperature='1/2/3')
 
         self.assertFalse(climate.temperature.initialized)
-        self.assertTrue(climate._target_temperature.initialized)
+        self.assertTrue(climate.target_temperature.initialized)
 
     def test_support_operation_mode(self):
         """Test supports_supports_operation_mode flag. One group address for all modes."""
@@ -84,7 +83,6 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_temperature='1/2/1',
             group_address_target_temperature='1/2/2',
-            group_address_base_temperature_state='1/2/16',
             group_address_setpoint_shift='1/2/3',
             group_address_setpoint_shift_state='1/2/4',
             group_address_on_off='1/2/11',
@@ -95,7 +93,6 @@ class TestClimate(unittest.TestCase):
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/4')))
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/11')))
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/12')))
-        self.assertTrue(climate.has_group_address(GroupAddress('1/2/16')))
         self.assertFalse(climate.has_group_address(GroupAddress('1/2/99')))
 
     #
@@ -144,7 +141,6 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_temperature='1/2/1',
             group_address_target_temperature='1/2/2',
-            group_address_base_temperature_state='1/2/16',
             group_address_setpoint_shift='1/2/3',
             group_address_setpoint_shift_state='1/2/4',
             group_address_on_off='1/2/11',
@@ -153,7 +149,6 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(
             climate.state_addresses(),
             [GroupAddress("1/2/1"),
-             GroupAddress("1/2/16"),
              GroupAddress("1/2/4"),
              GroupAddress("1/2/12"),
              GroupAddress("1/2/5"),
@@ -181,7 +176,7 @@ class TestClimate(unittest.TestCase):
         climate.register_device_updated_cb(async_after_update_callback)
 
         self.loop.run_until_complete(asyncio.Task(
-            climate._target_temperature.set(23.00)))
+            climate.target_temperature.set(23.00)))
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
@@ -411,7 +406,7 @@ class TestClimate(unittest.TestCase):
             group_address_setpoint_shift='1/2/3')
         self.loop.run_until_complete(asyncio.Task(climate3.set_setpoint_shift(4)))
         self.assertFalse(climate3.initialized_for_setpoint_shift_calculations)
-        self.loop.run_until_complete(asyncio.Task(climate3._target_temperature.set(23.00)))
+        self.loop.run_until_complete(asyncio.Task(climate3.target_temperature.set(23.00)))
         self.assertTrue(climate3.initialized_for_setpoint_shift_calculations)
 
     #
@@ -455,7 +450,7 @@ class TestClimate(unittest.TestCase):
             min_temp='3')
         self.loop.run_until_complete(asyncio.Task(climate.set_setpoint_shift(4)))
         self.assertFalse(climate.initialized_for_setpoint_shift_calculations)
-        self.loop.run_until_complete(asyncio.Task(climate._target_temperature.set(23.00)))
+        self.loop.run_until_complete(asyncio.Task(climate.target_temperature.set(23.00)))
         self.assertTrue(climate.initialized_for_setpoint_shift_calculations)
 
         self.assertEqual(climate.target_temperature_min, '3')
@@ -481,12 +476,12 @@ class TestClimate(unittest.TestCase):
             # DEFAULT_SETPOINT_SHIFT_STEP is 0.5 -> payload = setpoint_shift * 2
             Telegram(GroupAddress('1/2/3'), payload=DPTArray(6)))
 
-        self.loop.run_until_complete(asyncio.Task(climate._target_temperature.set(23.00)))
+        self.loop.run_until_complete(asyncio.Task(climate.target_temperature.set(23.00)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         self.assertEqual(
             xknx.telegrams.get_nowait(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(23.00))))
-        # Base temperature is 20.00°
+        self.assertEqual(climate.base_temperature, 20)
 
         # First change
         self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(24.00)))
@@ -497,7 +492,7 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(
             xknx.telegrams.get_nowait(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(24.00))))
-        self.assertEqual(climate._target_temperature.value, 24.00)
+        self.assertEqual(climate.target_temperature.value, 24.00)
 
         # Second change
         self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(23.50)))
@@ -508,15 +503,16 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(
             xknx.telegrams.get_nowait(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(23.50))))
-        self.assertEqual(climate._target_temperature.value, 23.50)
+        self.assertEqual(climate.target_temperature.value, 23.50)
 
         # Test max target temperature
         # Base (20) - setpoint_shift_max (6)
         self.assertEqual(climate.target_temperature_max, 26.00)
 
         # third change - limit exceeded, setting to max
-        with self.assertRaises(DeviceIllegalValue):
-            self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(26.50)))
+        self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(26.50)))
+        self.assertEqual(climate.target_temperature_max, 26.00)
+        self.assertEqual(climate.setpoint_shift, 6)
 
     def test_target_temperature_down(self):
         """Test decrease target temperature."""
@@ -535,12 +531,12 @@ class TestClimate(unittest.TestCase):
             # DEFAULT_SETPOINT_SHIFT_STEP is 0.5 -> payload = setpoint_shift * 2
             Telegram(GroupAddress('1/2/3'), payload=DPTArray(2)))
 
-        self.loop.run_until_complete(asyncio.Task(climate._target_temperature.set(23.00)))
+        self.loop.run_until_complete(asyncio.Task(climate.target_temperature.set(23.00)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         self.assertEqual(
             xknx.telegrams.get_nowait(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(23.00))))
-        # Base temperature is 22.00°
+        self.assertEqual(climate.base_temperature, 22.0)
 
         # First change
         self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(20.50)))
@@ -551,7 +547,7 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(
             xknx.telegrams.get_nowait(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(20.50))))
-        self.assertEqual(climate._target_temperature.value, 20.50)
+        self.assertEqual(climate.target_temperature.value, 20.50)
 
         # Second change
         self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(19.00)))
@@ -562,15 +558,16 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(
             xknx.telegrams.get_nowait(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(19.00))))
-        self.assertEqual(climate._target_temperature.value, 19.00)
+        self.assertEqual(climate.target_temperature.value, 19.00)
 
         # Test min target temperature
         # Base (22) - setpoint_shift_min (6)
         self.assertEqual(climate.target_temperature_min, 16.00)
 
-        # third change - limit exceeded, setting to max
-        with self.assertRaises(DeviceIllegalValue):
-            self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(15.50)))
+        # third change - limit exceeded, setting to min
+        self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(15.50)))
+        self.assertEqual(climate.target_temperature_min, 16.00)
+        self.assertEqual(climate.setpoint_shift, -6)
 
     def test_target_temperature_modified_step(self):
         """Test increase target temperature with modified step size."""
@@ -592,12 +589,12 @@ class TestClimate(unittest.TestCase):
             # setpoint_shift_step is 0.1 -> payload = setpoint_shift * 10
             Telegram(GroupAddress('1/2/3'), payload=DPTArray(30)))
 
-        self.loop.run_until_complete(asyncio.Task(climate._target_temperature.set(23.00)))
+        self.loop.run_until_complete(asyncio.Task(climate.target_temperature.set(23.00)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         self.assertEqual(
             xknx.telegrams.get_nowait(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(23.00))))
-        # Base temperature is 20.00°
+        self.assertEqual(climate.base_temperature, 20.00)
         self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(24.00)))
         self.assertEqual(xknx.telegrams.qsize(), 2)
         self.assertEqual(
@@ -606,11 +603,55 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(
             xknx.telegrams.get_nowait(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(24.00))))
-        self.assertEqual(climate._target_temperature.value, 24.00)
+        self.assertEqual(climate.target_temperature.value, 24.00)
 
         # Test max/min target temperature
         self.assertEqual(climate.target_temperature_max, 30.00)
         self.assertEqual(climate.target_temperature_min, 10.00)
+
+    #
+    # TEST BASE TEMPERATURE
+    #
+    def test_base_temperature(self):
+        """Test base temperature."""
+        # pylint: disable=no-self-use
+        xknx = XKNX(loop=self.loop)
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            group_address_target_temperature_state='1/2/1',
+            group_address_target_temperature='1/2/2',
+            group_address_setpoint_shift='1/2/3')
+
+        self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(21.00)))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(21.00))))
+        self.assertFalse(climate.initialized_for_setpoint_shift_calculations)
+        self.assertEqual(climate.base_temperature, None)
+
+        # setpoint_shift initialized after target_temperature (no temperature change)
+        self.loop.run_until_complete(asyncio.Task(climate.set_setpoint_shift(1)))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            # DEFAULT_SETPOINT_SHIFT_STEP is 0.5 -> payload = setpoint_shift * 2
+            Telegram(GroupAddress('1/2/3'), payload=DPTArray(2)))
+        self.assertTrue(climate.initialized_for_setpoint_shift_calculations)
+        self.assertEqual(climate.base_temperature, 20.00)
+
+        # setpoint_shift changed after initialisation
+        self.loop.run_until_complete(asyncio.Task(climate.set_setpoint_shift(2)))
+        # setpoint_shift and target_temperature are sent to the bus
+        self.assertEqual(xknx.telegrams.qsize(), 2)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            # DEFAULT_SETPOINT_SHIFT_STEP is 0.5 -> payload = setpoint_shift * 2
+            Telegram(GroupAddress('1/2/3'), payload=DPTArray(4)))
+        self.assertTrue(climate.initialized_for_setpoint_shift_calculations)
+        self.assertEqual(climate.base_temperature, 20.00)
+        self.assertEqual(climate.target_temperature.value, 22)
 
     #
     # TEST SYNC
