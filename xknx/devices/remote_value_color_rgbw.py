@@ -59,9 +59,14 @@ class RemoteValueColorRGBW(RemoteValue):
         if any(not isinstance(color, int) for color in rgbw) \
                 or any(color < 0 for color in rgbw) \
                 or any(color > 255 for color in rgbw):
-            raise ConversionError("Cant serialize DPT 251.600 (wrong RGBW values)", value=value)
+            raise ConversionError("Cannot serialize DPT 251.600 (wrong RGBW values)", value=value)
         return DPTArray([0x00, 0x0f][:6-len(value)] + list(value))
 
     def from_knx(self, payload):
-        """Convert current payload to value."""
-        return payload.value[0:6]
+        """Convert current payload to value. Always 4 byte (RGBW)."""
+        result = []
+        result.append(0 if payload.value[1] & 0x08 == 0 else payload.value[2])
+        result.append(0 if payload.value[1] & 0x04 == 0 else payload.value[3])
+        result.append(0 if payload.value[1] & 0x02 == 0 else payload.value[4])
+        result.append(0 if payload.value[1] & 0x01 == 0 else payload.value[5])
+        return result
