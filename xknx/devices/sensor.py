@@ -7,7 +7,6 @@ It provides functionality for
 * watching for state updates from KNX bus.
 """
 from .device import Device
-from .remote_value_dpt_value_1_ucount import RemoteValueDptValue1Ucount
 from .remote_value_scaling import RemoteValueScaling
 from .remote_value_sensor import RemoteValueSensor
 
@@ -34,12 +33,6 @@ class Sensor(Device):
                 after_update_cb=self.after_update,
                 range_from=0,
                 range_to=100)
-        elif value_type == "pulse":
-            self.sensor_value = RemoteValueDptValue1Ucount(
-                xknx,
-                group_address=group_address,
-                device_name=self.name,
-                after_update_cb=self.after_update)
         else:
             self.sensor_value = RemoteValueSensor(
                 xknx,

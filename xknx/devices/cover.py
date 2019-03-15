@@ -219,6 +219,8 @@ class Cover(Device):
             await self.set_down()
         elif action == "short_down":
             await self.set_short_down()
+        elif action == "stop":
+            await self.stop()
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
