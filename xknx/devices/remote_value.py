@@ -38,6 +38,11 @@ class RemoteValue():
         """Evaluate if remote value is initialized with group address."""
         return bool(self.group_address_state or self.group_address)
 
+    @property
+    def writable(self):
+        """Evaluate if remote value has a group_address set."""
+        return isinstance(self.group_address, GroupAddress)
+
     def has_group_address(self, group_address):
         """Test if device has given group address."""
         return group_address in [self.group_address, self.group_address_state]
