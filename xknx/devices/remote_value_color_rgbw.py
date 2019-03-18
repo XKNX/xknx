@@ -23,6 +23,7 @@ class RemoteValueColorRGBW(RemoteValue):
         super(RemoteValueColorRGBW, self).__init__(
             xknx, group_address, group_address_state,
             device_name=device_name, after_update_cb=after_update_cb)
+        self.previous_value = (0, 0, 0, 0)
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
@@ -63,10 +64,15 @@ class RemoteValueColorRGBW(RemoteValue):
         return DPTArray([0x00, 0x0f][:6-len(value)] + list(value))
 
     def from_knx(self, payload):
-        """Convert current payload to value. Always 4 byte (RGBW)."""
+        """
+        Convert current payload to value. Always 4 byte (RGBW).
+
+        If one element is invalid, use the previous value. All previous element
+        values are initialized to 0.
+        """
         result = []
-        result.append(0 if payload.value[1] & 0x08 == 0 else payload.value[2])
-        result.append(0 if payload.value[1] & 0x04 == 0 else payload.value[3])
-        result.append(0 if payload.value[1] & 0x02 == 0 else payload.value[4])
-        result.append(0 if payload.value[1] & 0x01 == 0 else payload.value[5])
+        for i in range(0, len(payload.value) - 2):
+            valid = payload.value[1] & (0x08 >> i) != 0
+            result.append(payload.value[2 + i] if valid else self.previous_value[i])
+        self.previous_value = result
         return result

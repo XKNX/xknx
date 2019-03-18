@@ -38,8 +38,21 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
         """Test from_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueColorRGBW(xknx)
-        self.assertEqual(remote_value.from_knx(DPTArray((0x00, 0x0f, 0x64, 0x65, 0x66, 0x7f))), [100, 101, 102, 127])
-        self.assertEqual(remote_value.from_knx(DPTArray((0x00, 0x01, 0x64, 0x65, 0x66, 0x7f))), [0, 0, 0, 127])
+        self.assertEqual(
+            remote_value.from_knx(DPTArray((0x00, 0x00, 0x64, 0x65, 0x66, 0x7f))),
+            [0, 0, 0, 0])
+        self.assertEqual(
+            remote_value.from_knx(DPTArray((0x00, 0x0f, 0x64, 0x65, 0x66, 0x7f))),
+            [100, 101, 102, 127])
+        self.assertEqual(
+            remote_value.from_knx(DPTArray((0x00, 0x00, 0x64, 0x65, 0x66, 0x7f))),
+            [100, 101, 102, 127])
+        self.assertEqual(
+            remote_value.from_knx(DPTArray((0x00, 0x09, 0xff, 0x65, 0x66, 0xff))),
+            [255, 101, 102, 255])
+        self.assertEqual(
+            remote_value.from_knx(DPTArray((0x00, 0x01, 0x64, 0x65, 0x66, 0x7f))),
+            [255, 101, 102, 127])
 
     def test_to_knx_error(self):
         """Test to_knx function with wrong parametern."""
