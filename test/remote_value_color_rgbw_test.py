@@ -38,8 +38,8 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
         """Test from_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueColorRGBW(xknx)
-        self.assertEqual(remote_value.from_knx(DPTArray((0x00, 0x0f, 0x64, 0x65, 0x66, 0x7f))), (0, 15, 100, 101, 102, 127))
-        self.assertEqual(remote_value.from_knx(DPTArray((0x00, 0x01, 0x64, 0x65, 0x66, 0x7f))), (0, 1, 100, 101, 102, 127))
+        self.assertEqual(remote_value.from_knx(DPTArray((0x00, 0x0f, 0x64, 0x65, 0x66, 0x7f))), [100, 101, 102, 127])
+        self.assertEqual(remote_value.from_knx(DPTArray((0x00, 0x01, 0x64, 0x65, 0x66, 0x7f))), [0, 0, 0, 127])
 
     def test_to_knx_error(self):
         """Test to_knx function with wrong parametern."""
@@ -97,7 +97,7 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
             group_address=GroupAddress("1/2/3"),
             payload=DPTArray((0x00, 0x0f, 0x64, 0x65, 0x66, 0x67)))
         self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
-        self.assertEqual(remote_value.value, (0, 15, 100, 101, 102, 103))
+        self.assertEqual(remote_value.value, [100, 101, 102, 103])
 
     def test_to_process_error(self):
         """Test process errornous telegram."""

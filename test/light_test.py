@@ -66,7 +66,7 @@ class TestLight(unittest.TestCase):
         self.assertFalse(light.supports_color)
 
     #
-    # TEST SUPPORT RGBW
+    # TEST SUPPORT COLOR RGBW
     #
     def test_supports_rgbw_true(self):
         """Test supports_rgbw true."""
@@ -75,7 +75,8 @@ class TestLight(unittest.TestCase):
             xknx,
             'Diningroom.Light_1',
             group_address_switch='1/6/4',
-            group_address_rgbw='1/6/5')
+            group_address_rgbw='1/6/5',
+            group_address_color='1/6/6')
         self.assertTrue(light.supports_rgbw)
 
     def test_supports_rgbw_false(self):
@@ -84,7 +85,8 @@ class TestLight(unittest.TestCase):
         light = Light(
             xknx,
             'Diningroom.Light_1',
-            group_address_switch='1/6/4')
+            group_address_switch='1/6/4',
+            group_address_color='1/6/6')
         self.assertFalse(light.supports_rgbw)
 
     #
@@ -287,7 +289,7 @@ class TestLight(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/5'), payload=DPTArray((23, 24, 25))))
-        self.assertEqual(light.current_color, (23, 24, 25))
+        self.assertEqual(light.current_color, ((23, 24, 25), None))
 
     def test_set_color_not_possible(self):
         """Test setting the color of a non light without color."""
@@ -302,31 +304,33 @@ class TestLight(unittest.TestCase):
             mock_warn.assert_called_with('Colors not supported for device %s', 'TestLight')
 
     #
-    # TEST SET RGBW
+    # TEST SET COLOR AS RGBW
     #
-    def test_set_rgbw(self):
+    def test_set_color_rgbw(self):
         """Test setting RGBW value of a Light."""
         xknx = XKNX(loop=self.loop)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
+                      group_address_color='1/2/4',
                       group_address_rgbw='1/2/5')
-        self.loop.run_until_complete(asyncio.Task(light.set_rgbw((23, 24, 25, 26))))
+        self.loop.run_until_complete(asyncio.Task(light.set_color((23, 24, 25), 26)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/5'), payload=DPTArray((0, 15, 23, 24, 25, 26))))
-        self.assertEqual(light.current_rgbw, (0, 15, 23, 24, 25, 26))
+        self.assertEqual(light.current_color, ([23, 24, 25], 26))
 
-    def test_set_rgbw_not_possible(self):
+    def test_set_color_rgbw_not_possible(self):
         """Test setting RGBW value of a non light without color."""
         # pylint: disable=invalid-name
         xknx = XKNX(loop=self.loop)
         light = Light(xknx,
                       name="TestLight",
-                      group_address_switch='1/2/3')
+                      group_address_switch='1/2/3',
+                      group_address_color='1/2/4')
         with patch('logging.Logger.warning') as mock_warn:
-            self.loop.run_until_complete(asyncio.Task(light.set_rgbw((23, 24, 25, 26))))
+            self.loop.run_until_complete(asyncio.Task(light.set_color((23, 24, 25), 26)))
             self.assertEqual(xknx.telegrams.qsize(), 0)
             mock_warn.assert_called_with('RGBW not supported for device %s', 'TestLight')
 
@@ -471,22 +475,23 @@ class TestLight(unittest.TestCase):
                       name="TestLight",
                       group_address_switch='1/2/3',
                       group_address_color='1/2/5')
-        self.assertEqual(light.current_color, None)
+        self.assertEqual(light.current_color, (None, None))
         telegram = Telegram(GroupAddress('1/2/5'), payload=DPTArray((23, 24, 25)))
         self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
-        self.assertEqual(light.current_color, (23, 24, 25))
+        self.assertEqual(light.current_color, ((23, 24, 25), None))
 
-    def test_process_rgbw(self):
+    def test_process_color_rgbw(self):
         """Test process / reading telegrams from telegram queue. Test if RGBW is processed."""
         xknx = XKNX(loop=self.loop)
         light = Light(xknx,
                       name="TestLight",
                       group_address_switch='1/2/3',
+                      group_address_color='1/2/4',
                       group_address_rgbw='1/2/5')
-        self.assertEqual(light.current_rgbw, None)
+        self.assertEqual(light.current_color, (None, None))
         telegram = Telegram(GroupAddress('1/2/5'), payload=DPTArray((0, 15, 23, 24, 25, 26)))
         self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
-        self.assertEqual(light.current_rgbw, (0, 15, 23, 24, 25, 26))
+        self.assertEqual(light.current_color, ([23, 24, 25], 26))
 
     def test_process_tunable_white(self):
         """Test process / reading telegrams from telegram queue. Test if tunable white is processed."""

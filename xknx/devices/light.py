@@ -239,27 +239,36 @@ class Light(Device):
 
     @property
     def current_color(self):
-        """Return current color of light."""
-        return self.color.value
+        """
+        Return current color of light.
 
-    async def set_color(self, color):
-        """Set color of light."""
-        if not self.supports_color:
-            self.xknx.logger.warning("Colors not supported for device %s", self.get_name())
-            return
-        await self.color.set(color)
+        If the device supports RGBW, get the current RGB+White values instead.
+        """
+        if self.supports_rgbw:
+            if not self.rgbw.value:
+                return None, None
+            return self.rgbw.value[:3], self.rgbw.value[3]
+        return self.color.value, None
 
-    @property
-    def current_rgbw(self):
-        """Return current RGBW value of light."""
-        return self.rgbw.value
+    async def set_color(self, color, white=None):
+        """
+        Set color of a light device.
 
-    async def set_rgbw(self, color):
-        """Set RGBW value of light."""
-        if not self.supports_rgbw:
-            self.xknx.logger.warning("RGBW not supported for device %s", self.get_name())
-            return
-        await self.rgbw.set(color)
+        If also the white value is given and the device supports RGBW,
+        set all four values.
+        """
+        if white is not None:
+            if self.supports_rgbw:
+                await self.rgbw.set(list(color) + [white])
+                return
+            self.xknx.logger.warning(
+                "RGBW not supported for device %s", self.get_name())
+        else:
+            if self.supports_color:
+                await self.color.set(color)
+                return
+            self.xknx.logger.warning(
+                "Colors not supported for device %s", self.get_name())
 
     @property
     def current_tunable_white(self):

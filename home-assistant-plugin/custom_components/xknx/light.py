@@ -174,32 +174,27 @@ class KNXLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        if self.device.supports_rgbw:
-            return max(self.device.current_rgbw) if self.device.current_rgbw \
-                else None
-        if self.device.supports_color:
-            return max(self.device.current_color) if self.device.current_color \
-                else None
         if self.device.supports_brightness:
             return self.device.current_brightness
+        if (self.device.supports_color or self.device.supports_rgbw) and self.device.current_color:
+            return max(self.device.current_color)
         return None
 
     @property
     def hs_color(self):
         """Return the HS color value."""
         rgb = None
-        if self.device.supports_rgbw:
-            rgb = self.device.current_rgbw[:3] if self.device.current_rgbw else None
-        elif self.device.supports_color:
-            rgb = self.device.current_color
+        if self.device.supports_rgbw or self.device.supports_color:
+            rgb, _ = self.device.current_color
         return color_util.color_RGB_to_hs(*rgb) if rgb else None
 
     @property
     def white_value(self):
         """Return the white value."""
+        white = None
         if self.device.supports_rgbw:
-            return self.device.current_rgbw[3:][0] if self.device.current_rgbw else None
-        return None
+            _, white = self.device.current_color
+        return white
 
     @property
     def color_temp(self):
@@ -278,31 +273,19 @@ class KNXLight(Light):
             # directly if supported; don't do it if color also has to be
             # changed, as RGB color implicitly sets the brightness as well
             await self.device.set_brightness(brightness)
-        elif self.device.supports_rgbw and \
+        elif (self.device.supports_rgbw or self.device.supports_color) and \
                 (update_brightness or update_color or update_white_value):
-            # change RGB color and white value (includes brightness)
+            # change RGB color, white value )if supported), and brightness
             # if brightness or hs_color was not yet set use the default value
             # to calculate RGB from as a fallback
             if brightness is None:
                 brightness = DEFAULT_BRIGHTNESS
             if hs_color is None:
                 hs_color = DEFAULT_COLOR
-            if white_value is None:
+            if white_value is None and self.device.supports_rgbw:
                 white_value = DEFAULT_WHITE_VALUE
-            print(hs_color)
-            rgbw = color_util.color_hsv_to_RGB(*hs_color, brightness * 100 / 255) + (white_value,)
-            await self.device.set_rgbw(rgbw)
-        elif self.device.supports_color and \
-                (update_brightness or update_color):
-            # change RGB color (includes brightness)
-            # if brightness or hs_color was not yet set use the default value
-            # to calculate RGB from as a fallback
-            if brightness is None:
-                brightness = DEFAULT_BRIGHTNESS
-            if hs_color is None:
-                hs_color = DEFAULT_COLOR
-            await self.device.set_color(
-                color_util.color_hsv_to_RGB(*hs_color, brightness * 100 / 255))
+            rgb = color_util.color_hsv_to_RGB(*hs_color, brightness * 100 / 255)
+            await self.device.set_color(rgb, white_value)
         elif self.device.supports_color_temperature and \
                 update_color_temp:
             # change color temperature without ON telegram
