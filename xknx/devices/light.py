@@ -18,6 +18,7 @@ from .remote_value_scaling import RemoteValueScaling
 from .remote_value_switch import RemoteValueSwitch
 
 
+# pylint: disable=too-many-public-methods, too-many-instance-attributes
 class Light(Device):
     """Class for managing a light."""
 
