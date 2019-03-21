@@ -17,8 +17,8 @@ class RemoteValueScaling(RemoteValue):
                  group_address_state=None,
                  device_name=None,
                  after_update_cb=None,
-                 range_from=100,
-                 range_to=0):
+                 range_from=0,
+                 range_to=100):
         """Initialize remote value of KNX DPT 5.001 (DPT_Scaling)."""
         # pylint: disable=too-many-arguments
         super(RemoteValueScaling, self).__init__(
