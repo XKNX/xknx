@@ -12,7 +12,6 @@ ths KNX bus. KNX sensors may show this outside temperature within their
 LCD display.
 """
 from .device import Device
-from .remote_value_scaling import RemoteValueScaling
 from .remote_value_sensor import RemoteValueSensor
 from .remote_value_switch import RemoteValueSwitch
 
@@ -33,12 +32,6 @@ class ExposeSensor(Device):
         self.sensor_value = None
         if value_type == "binary":
             self.sensor_value = RemoteValueSwitch(
-                xknx,
-                group_address=group_address,
-                device_name=self.name,
-                after_update_cb=self.after_update)
-        elif value_type == "percent":
-            self.sensor_value = RemoteValueScaling(
                 xknx,
                 group_address=group_address,
                 device_name=self.name,

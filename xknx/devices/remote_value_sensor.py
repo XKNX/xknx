@@ -7,11 +7,13 @@ for serialization and deserialization of the KNX value.
 from xknx.exceptions import ConversionError
 from xknx.knx import (
     DPT2ByteFloat, DPT2ByteUnsigned, DPT4ByteFloat, DPT4ByteSigned,
-    DPT4ByteUnsigned, DPTArray, DPTBrightness, DPTColorTemperature,
+    DPT4ByteUnsigned, DPTAngle, DPTArray, DPTBrightness, DPTColorTemperature,
     DPTElectricCurrent, DPTElectricPotential, DPTEnergy, DPTEnthalpy,
     DPTFrequency, DPTHeatFlowRate, DPTHumidity, DPTLux, DPTPartsPerMillion,
-    DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower, DPTPowerFactor, DPTSpeed,
-    DPTTemperature, DPTUElCurrentmA, DPTValue1Ucount, DPTVoltage, DPTWsp)
+    DPTPercentU8, DPTPercentV8, DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower,
+    DPTPowerFactor, DPTScaling, DPTSceneNumber, DPTSpeed, DPTString,
+    DPTTemperature, DPTUElCurrentmA, DPTValue1Count, DPTValue1Ucount,
+    DPTVoltage, DPTWsp)
 
 from .remote_value import RemoteValue
 
@@ -20,28 +22,35 @@ class RemoteValueSensor(RemoteValue):
     """Abstraction for many different sensor DPT types."""
 
     DPTMAP = {
-        'current': DPTUElCurrentmA,
+        'angle': DPTAngle,
         'brightness': DPTBrightness,
         'color_temperature': DPTColorTemperature,
-        'temperature': DPTTemperature,
-        'illuminance': DPTLux,
-        'speed_ms': DPTWsp,
-        'humidity': DPTHumidity,
-        'voltage': DPTVoltage,
-        'power': DPTPower,
+        'counter_pulses': DPTValue1Count,
+        'current': DPTUElCurrentmA,
         'electric_current': DPTElectricCurrent,
         'electric_potential': DPTElectricPotential,
         'energy': DPTEnergy,
+        'enthalpy': DPTEnthalpy,
         'frequency': DPTFrequency,
         'heatflowrate': DPTHeatFlowRate,
+        'humidity': DPTHumidity,
+        'illuminance': DPTLux,
+        'percent': DPTScaling,
+        'percentU8': DPTPercentU8,
+        'percentV8': DPTPercentV8,
         'phaseanglerad': DPTPhaseAngleRad,
         'phaseangledeg': DPTPhaseAngleDeg,
-        'pulse': DPTValue1Ucount,
+        'power': DPTPower,
         'powerfactor': DPTPowerFactor,
-        'speed': DPTSpeed,
-        'enthalpy': DPTEnthalpy,
         'ppm': DPTPartsPerMillion,
-
+        'pulse': DPTValue1Ucount,
+        'scene_number': DPTSceneNumber,
+        'speed': DPTSpeed,
+        'speed_ms': DPTWsp,
+        'string': DPTString,
+        'temperature': DPTTemperature,
+        'voltage': DPTVoltage,
+        # new: angle, percent, scene_number, string
         #  Generic DPT Without Min/Max and Unit.
         'DPT-5': DPTValue1Ucount,
         '1byte_unsigned': DPTValue1Ucount,

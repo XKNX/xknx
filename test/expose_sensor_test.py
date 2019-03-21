@@ -47,7 +47,7 @@ class TestExposeSensor(unittest.TestCase):
             value_type="percent")
         expose_sensor.sensor_value.payload = DPTArray((0x40,))
 
-        self.assertEqual(expose_sensor.resolve_state(), 75)
+        self.assertEqual(expose_sensor.resolve_state(), 25)
         self.assertEqual(expose_sensor.unit_of_measurement(), "%")
 
     def test_str_temperature(self):
@@ -101,7 +101,7 @@ class TestExposeSensor(unittest.TestCase):
             Telegram(
                 GroupAddress('1/2/3'),
                 TelegramType.GROUP_WRITE,
-                payload=DPTArray((0x40,))))
+                payload=DPTArray((0xBF,))))
 
     def test_set_temperature(self):
         """Test set with temperature sensor."""
