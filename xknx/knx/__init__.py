@@ -20,11 +20,11 @@ from .dpt_hvac_mode import HVACOperationMode, DPTHVACMode, \
 from .dpt_hvac_contr_mode import DPTHVACContrMode
 from .dpt_2byte import DPT2ByteUnsigned, DPTUElCurrentmA, DPT2Ucount, DPTBrightness, DPTColorTemperature
 from .dpt_4byte import DPT4ByteUnsigned, DPT4ByteSigned
-from .dpt_scene_number import DPTSceneNumber
 from .dpt_time import DPTTime
 from .dpt_date import DPTDate
 from .dpt_datetime import DPTDateTime
+from .dpt_scaling import DPTAngle, DPTScaling
 from .dpt_string import DPTString
 from .dpt_signed_relative_value import DPTSignedRelativeValue, DPTPercentV8, \
     DPTValue1Count
-from .dpt_value_1_ucount import DPTValue1Ucount
+from .dpt_value_1_ucount import DPTPercentU8, DPTSceneNumber, DPTValue1Ucount

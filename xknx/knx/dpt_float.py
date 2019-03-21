@@ -41,23 +41,17 @@ class DPT2ByteFloat(DPTBase):
         value = float(significand << exponent) / 100
 
         if not cls._test_boundaries(value):
-            raise ConversionError("Cant parse DPT2ByteFloat", value=value)
+            raise ConversionError("Cant parse %s" % cls.__name__, value=value)
 
         return value
 
     @classmethod
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
-        if not isinstance(value, (int, float)):
-            raise ConversionError("Cant serialize DPT2ByteFloat", value=value, type=type(value))
-        if not cls._test_boundaries(value):
-            raise ConversionError("Cant serialize DPT2ByteFloat", value=value)
-        sign = 1 if value < 0 else 0
-
-        def calc_exponent(value, sign):
+        def calc_exponent(float_value, sign):
             """Return float exponent."""
             exponent = 0
-            significand = abs(int(value * 100))
+            significand = abs(int(float_value * 100))
 
             while significand < -2048 or significand > 2048:
                 exponent += 1
@@ -69,10 +63,18 @@ class DPT2ByteFloat(DPTBase):
 
             return exponent, significand
 
-        exponent, significand = calc_exponent(value, sign)
+        try:
+            knx_value = float(value)
+            if not cls._test_boundaries(knx_value):
+                raise ValueError
 
-        return (sign << 7) | (exponent << 3) | (significand >> 8), \
-            significand & 0xff
+            sign = 1 if knx_value < 0 else 0
+            exponent, significand = calc_exponent(knx_value, sign)
+
+            return (sign << 7) | (exponent << 3) | (significand >> 8), \
+                significand & 0xff
+        except ValueError:
+            raise ConversionError("Cant serialize %s" % cls.__name__, value=value)
 
     @classmethod
     def _test_boundaries(cls, value):
@@ -102,15 +104,16 @@ class DPT4ByteFloat(DPTBase):
         try:
             return struct.unpack(">f", bytes(raw))[0]
         except struct.error:
-            raise ConversionError("Cant parse DPT4ByteFloat", raw=raw)
+            raise ConversionError("Cant parse %s" % cls.__name__, raw=raw)
 
     @classmethod
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
         try:
-            return tuple(struct.pack(">f", value))
-        except struct.error:
-            raise ConversionError("Cant serialize DPT4ByteFloat", vlaue=value)
+            knx_value = float(value)
+            return tuple(struct.pack(">f", knx_value))
+        except (ValueError, struct.error):
+            raise ConversionError("Cant serialize %s" % cls.__name__, vlaue=value)
 
 
 class DPTVoltage(DPT2ByteFloat):

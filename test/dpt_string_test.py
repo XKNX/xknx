@@ -46,11 +46,6 @@ class TestDPTString(unittest.TestCase):
         self.assertEqual(DPTString.to_knx(string), raw)
         self.assertEqual(DPTString.from_knx(raw), string)
 
-    def test_to_knx_wrong_parameter(self):
-        """Test serializing DPTString to KNX with wrong value (int)."""
-        with self.assertRaises(ConversionError):
-            DPTString().to_knx(123)
-
     def test_to_knx_too_long(self):
         """Test serializing DPTString to KNX with wrong value (to long)."""
         with self.assertRaises(ConversionError):
