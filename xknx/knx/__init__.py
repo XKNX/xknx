@@ -25,6 +25,5 @@ from .dpt_date import DPTDate
 from .dpt_datetime import DPTDateTime
 from .dpt_scaling import DPTAngle, DPTScaling
 from .dpt_string import DPTString
-from .dpt_signed_relative_value import DPTSignedRelativeValue, DPTPercentV8, \
-    DPTValue1Count
+from .dpt_signed_relative_value import DPTSignedRelativeValue, DPTPercentV8
 from .dpt_value_1_ucount import DPTPercentU8, DPTSceneNumber, DPTValue1Ucount
