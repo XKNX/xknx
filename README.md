@@ -9,19 +9,19 @@ Documentation
 -------------
 
 
-See documentation at: [http://xknx.io/](http://xknx.io/)
+See documentation at: [https://xknx.io/](https://xknx.io/)
 
 Help
 ----
 
-We need your help for testing and improving XKNX. For questions, feature requests, bugreports wither join the [XKNX chat on Discord](https://discord.gg/5XARFNT) or write an [email](mailto:xknx@xknx.io).
+We need your help for testing and improving XKNX. For questions, feature requests, bug reports either join the [XKNX chat on Discord](https://discord.gg/5XARFNT) or write an [email](mailto:xknx@xknx.io).
 
 
 
 Home-Assistant Plugin
 ---------------------
 
-XKNX contains a [Plugin](http://xknx.io/home_assistant) for the [Home-Assistant](https://home-assistant.io/) automation plattform
+XKNX contains a [plugin](https://xknx.io/home_assistant) for the [Home Assistant](https://home-assistant.io/) automation platform
 
 
 Example
@@ -34,7 +34,7 @@ from xknx import XKNX
 from xknx.devices import Light
 
 async def main():
-    """Connect to KNX/IP bus, switch on light, wait 2 seconds and switch of off again."""
+    """Connect to KNX/IP bus, switch on light, wait 2 seconds and switch it off again."""
     xknx = XKNX()
     await xknx.start()
     light = Light(xknx,
@@ -51,5 +51,3 @@ loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
 loop.close()
 ```
-
-
