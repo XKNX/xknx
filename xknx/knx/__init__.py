@@ -11,10 +11,10 @@ from .address import GroupAddress, GroupAddressType, PhysicalAddress
 from .address_filter import AddressFilter
 from .telegram import Telegram, TelegramDirection, TelegramType
 from .dpt import DPTBase, DPTBinary, DPTArray, DPTComparator, DPTWeekday
-from .dpt_float import DPT2ByteFloat, DPT4ByteFloat, DPTLux, DPTTemperature, \
+from .dpt_float import DPT2ByteFloat, DPT4ByteFloat, DPTLuminousFlux, DPTLux, DPTTemperature, \
     DPTHumidity, DPTWsp, DPTElectricPotential, DPTElectricCurrent, DPTPower, \
     DPTEnergy, DPTFrequency, DPTHeatFlowRate, DPTPhaseAngleRad, DPTPhaseAngleDeg, \
-    DPTPowerFactor, DPTSpeed, DPTEnthalpy, DPTPartsPerMillion, DPTVoltage
+    DPTPowerFactor, DPTPressure, DPTSpeed, DPTEnthalpy, DPTPartsPerMillion, DPTVoltage
 from .dpt_hvac_mode import HVACOperationMode, DPTHVACMode, \
     DPTControllerStatus
 from .dpt_hvac_contr_mode import DPTHVACContrMode

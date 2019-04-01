@@ -228,6 +228,12 @@ class DPTHeatFlowRate(DPT4ByteFloat):
     unit = 'W'
 
 
+class DPTLuminousFlux(DPT4ByteFloat):
+    """DPT 14.042 DPT_Value_Heat_Flow_Rate."""
+
+    unit = 'lm'
+
+
 class DPTPhaseAngleRad(DPT4ByteFloat):
     """DPT 14.054 DPT_Value_Phase_Angle, Radiant."""
 
@@ -235,7 +241,7 @@ class DPTPhaseAngleRad(DPT4ByteFloat):
 
 
 class DPTPhaseAngleDeg(DPT4ByteFloat):
-    """14.055 DPT_Value_Phase_Angle, Degree."""
+    """DPT 14.055 DPT_Value_Phase_Angle, Degree."""
 
     unit = '°'
 
@@ -250,6 +256,12 @@ class DPTPowerFactor(DPT4ByteFloat):
     """DPT 14.057 DPT_Value_Power."""
 
     unit = ''
+
+
+class DPTPressure(DPT4ByteFloat):
+    """DPT 14.058 DPT_Value_Pressure."""
+
+    unit = 'Pa'
 
 
 class DPTSpeed(DPT4ByteFloat):

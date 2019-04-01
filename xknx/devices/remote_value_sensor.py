@@ -9,11 +9,11 @@ from xknx.knx import (
     DPT2ByteFloat, DPT2ByteUnsigned, DPT4ByteFloat, DPT4ByteSigned,
     DPT4ByteUnsigned, DPTAngle, DPTArray, DPTBrightness, DPTColorTemperature,
     DPTElectricCurrent, DPTElectricPotential, DPTEnergy, DPTEnthalpy,
-    DPTFrequency, DPTHeatFlowRate, DPTHumidity, DPTLux, DPTPartsPerMillion,
-    DPTPercentU8, DPTPercentV8, DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower,
-    DPTPowerFactor, DPTScaling, DPTSceneNumber, DPTSpeed, DPTString,
-    DPTTemperature, DPTUElCurrentmA, DPTValue1Count, DPTValue1Ucount,
-    DPTVoltage, DPTWsp)
+    DPTFrequency, DPTHeatFlowRate, DPTHumidity, DPTLuminousFlux, DPTLux,
+    DPTPartsPerMillion, DPTPercentU8, DPTPercentV8, DPTPhaseAngleDeg,
+    DPTPhaseAngleRad, DPTPower, DPTPowerFactor, DPTPressure, DPTScaling,
+    DPTSceneNumber, DPTSpeed, DPTString, DPTTemperature, DPTUElCurrentmA,
+    DPTValue1Count, DPTValue1Ucount, DPTVoltage, DPTWsp)
 
 from .remote_value import RemoteValue
 
@@ -35,6 +35,7 @@ class RemoteValueSensor(RemoteValue):
         'heatflowrate': DPTHeatFlowRate,
         'humidity': DPTHumidity,
         'illuminance': DPTLux,
+        'luminous_flux': DPTLuminousFlux,
         'percent': DPTScaling,
         'percentU8': DPTPercentU8,
         'percentV8': DPTPercentV8,
@@ -43,6 +44,7 @@ class RemoteValueSensor(RemoteValue):
         'power': DPTPower,
         'powerfactor': DPTPowerFactor,
         'ppm': DPTPartsPerMillion,
+        'pressure': DPTPressure,
         'pulse': DPTValue1Ucount,
         'scene_number': DPTSceneNumber,
         'speed': DPTSpeed,
