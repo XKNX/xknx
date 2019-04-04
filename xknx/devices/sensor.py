@@ -60,6 +60,10 @@ class Sensor(Device):
         """Return the unit of measurement."""
         return self.sensor_value.unit_of_measurement
 
+    def ha_device_class(self):
+        """Return the home assistant device class as string."""
+        return self.sensor_value.ha_device_class
+
     def resolve_state(self):
         """Return the current state of the sensor as a human readable string."""
         return self.sensor_value.value

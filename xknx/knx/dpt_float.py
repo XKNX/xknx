@@ -156,6 +156,7 @@ class DPTTemperature(DPT2ByteFloat):
     value_min = -273
     value_max = 670760
     unit = "°C"
+    ha_device_class = "temperature"
     resolution = 1
 
 
@@ -169,6 +170,7 @@ class DPTLux(DPT2ByteFloat):
     value_min = 0
     value_max = 670760
     unit = "lx"
+    ha_device_class = "illuminance"
     resolution = 1
 
 
@@ -195,6 +197,7 @@ class DPTHumidity(DPT2ByteFloat):
     value_min = 0
     value_max = 670760
     unit = "%"
+    ha_device_class = "humidity"
     resolution = 1
 
 
@@ -232,6 +235,7 @@ class DPTLuminousFlux(DPT4ByteFloat):
     """DPT 14.042 DPT_Value_Heat_Flow_Rate."""
 
     unit = 'lm'
+    ha_device_class = "illuminance"
 
 
 class DPTPhaseAngleRad(DPT4ByteFloat):
@@ -250,6 +254,7 @@ class DPTPower(DPT4ByteFloat):
     """DPT 14.056 DPT_Value_Power."""
 
     unit = "W"
+    ha_device_class = "power"
 
 
 class DPTPowerFactor(DPT4ByteFloat):
@@ -262,6 +267,7 @@ class DPTPressure(DPT4ByteFloat):
     """DPT 14.058 DPT_Value_Pressure."""
 
     unit = 'Pa'
+    ha_device_class = "pressure"
 
 
 class DPTSpeed(DPT4ByteFloat):

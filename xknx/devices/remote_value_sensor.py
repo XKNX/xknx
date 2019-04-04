@@ -104,3 +104,10 @@ class RemoteValueSensor(RemoteValue):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self.DPTMAP[self.value_type].unit
+
+    @property
+    def ha_device_class(self):
+        """Return a string representing the home assistant device class."""
+        if hasattr(self.DPTMAP[self.value_type], 'ha_device_class'):
+            return self.DPTMAP[self.value_type].ha_device_class
+        return None

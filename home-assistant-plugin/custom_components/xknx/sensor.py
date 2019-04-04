@@ -9,9 +9,7 @@ import voluptuous as vol
 
 from custom_components.xknx import ATTR_DISCOVER_DEVICES, DATA_XKNX
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_POWER, DEVICE_CLASS_PRESSURE, DEVICE_CLASS_TEMPERATURE)
+from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -108,18 +106,7 @@ class KNXSensor(Entity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        if self.device.sensor_value.value_type == "humidity":
-            return DEVICE_CLASS_HUMIDITY
-        if self.device.sensor_value.value_type in \
-                ("illuminance", 'luminous_flux'):
-            return DEVICE_CLASS_ILLUMINANCE
-        if self.device.sensor_value.value_type == "power":
-            return DEVICE_CLASS_POWER
-        if self.device.sensor_value.value_type == "pressure":
-            return DEVICE_CLASS_PRESSURE
-        if self.device.sensor_value.value_type == "temperature":
-            return DEVICE_CLASS_TEMPERATURE
-        return None
+        return self.device.ha_device_class()
 
     @property
     def device_state_attributes(self):
