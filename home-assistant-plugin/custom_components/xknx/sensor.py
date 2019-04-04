@@ -11,7 +11,7 @@ from custom_components.xknx import ATTR_DISCOVER_DEVICES, DATA_XKNX
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_PRESSURE)
+    DEVICE_CLASS_POWER, DEVICE_CLASS_PRESSURE, DEVICE_CLASS_TEMPERATURE)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -113,6 +113,8 @@ class KNXSensor(Entity):
         if self.device.sensor_value.value_type in \
                 ("illuminance", 'luminous_flux'):
             return DEVICE_CLASS_ILLUMINANCE
+        if self.device.sensor_value.value_type == "power":
+            return DEVICE_CLASS_POWER
         if self.device.sensor_value.value_type == "pressure":
             return DEVICE_CLASS_PRESSURE
         if self.device.sensor_value.value_type == "temperature":
