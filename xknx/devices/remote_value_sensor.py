@@ -52,18 +52,16 @@ class RemoteValueSensor(RemoteValue):
         'string': DPTString,
         'temperature': DPTTemperature,
         'voltage': DPTVoltage,
-        # new: angle, percent, scene_number, string
-        #  Generic DPT Without Min/Max and Unit.
+        # Generic DPT Without Min/Max and Unit.
         'DPT-5': DPTValue1Ucount,
         '1byte_unsigned': DPTValue1Ucount,
-
+        # Generic 2 byte DPT
         'DPT-7': DPT2ByteUnsigned,
         '2byte_unsigned': DPT2ByteUnsigned,
         'DPT-9': DPT2ByteFloat,
-
+        # Generic 4 byte DPT
         'DPT-12': DPT4ByteUnsigned,
         '4byte_unsigned': DPT4ByteUnsigned,
-
         'DPT-13': DPT4ByteSigned,
         '4byte_signed': DPT4ByteSigned,
         'DPT-14': DPT4ByteFloat,

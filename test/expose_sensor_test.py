@@ -34,7 +34,6 @@ class TestExposeSensor(unittest.TestCase):
         expose_sensor.sensor_value.payload = DPTBinary(1)
 
         self.assertEqual(expose_sensor.resolve_state(), True)
-        # TODO: unit of binary?
         self.assertEqual(expose_sensor.unit_of_measurement(), None)
 
     def test_str_percent(self):
