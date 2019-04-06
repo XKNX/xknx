@@ -74,7 +74,7 @@ class TestConfig(unittest.TestCase):
              )
         ]
         for yaml_string, expected_conn in test_configs:
-            config = yaml.load(yaml_string)
+            config = yaml.safe_load(yaml_string)
             Config(TestConfig.xknx).parse_connection(config)
             self.assertEqual(TestConfig.xknx.connection_config, expected_conn)
 

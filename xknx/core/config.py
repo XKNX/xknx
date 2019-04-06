@@ -27,7 +27,7 @@ class Config:
         self.xknx.logger.debug("Reading %s", file)
         try:
             with open(file, 'r') as filehandle:
-                doc = yaml.load(filehandle)
+                doc = yaml.safe_load(filehandle)
                 self.parse_general(doc)
                 self.parse_connection(doc)
                 self.parse_groups(doc)
