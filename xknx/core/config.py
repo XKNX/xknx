@@ -50,32 +50,34 @@ class Config:
                 and hasattr(doc["connection"], '__iter__'):
             for conn, prefs in doc["connection"].items():
                 try:
-                    if conn.startswith("auto"):
-                        self._parse_connection_prefs(ConnectionType.AUTOMATIC, prefs)
-                    elif conn.startswith("tunneling"):
-                        self._parse_connection_prefs(ConnectionType.TUNNELING, prefs)
-                    elif conn.startswith("routing"):
-                        self._parse_connection_prefs(ConnectionType.ROUTING, prefs)
+                    if conn == "tunneling":
+                        if prefs is None or \
+                                "gateway_ip" not in prefs:
+                            raise XKNXException("`gateway_ip` is required for tunneling connection.")
+                        conn_type = ConnectionType.TUNNELING
+                    elif conn == "routing":
+                        conn_type = ConnectionType.ROUTING
+                    else:
+                        conn_type = ConnectionType.AUTOMATIC
+                    self._parse_connection_prefs(conn_type, prefs)
                 except XKNXException as ex:
                     self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", conn, ex)
+                    raise ex
 
-    def _parse_connection_prefs(self, conn_type, prefs):
-        conn = ConnectionConfig()
-        conn.connection_type = conn_type
+    def _parse_connection_prefs(self, conn_type: ConnectionType, prefs) -> None:
+        connection_config = ConnectionConfig(connection_type=conn_type)
         if hasattr(prefs, '__iter__'):
             for pref, value in prefs.items():
                 try:
-                    if pref.startswith("local_ip"):
-                        conn.local_ip = value
-                    elif pref.startswith("gateway_ip"):
-                        conn.gateway_ip = value
-                    elif pref.startswith("gateway_port"):
-                        # don't overwrite default if None
-                        if value is not None:
-                            conn.gateway_port = value
+                    if pref == "gateway_ip":
+                        connection_config.gateway_ip = value
+                    elif pref == "gateway_port":
+                        connection_config.gateway_port = value
+                    elif pref == "local_ip":
+                        connection_config.local_ip = value
                 except XKNXException as ex:
                     self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", pref, ex)
-        self.xknx.connection_config = conn
+        self.xknx.connection_config = connection_config
 
     def parse_groups(self, doc):
         """Parse the group section of xknx.yaml."""

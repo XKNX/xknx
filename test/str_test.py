@@ -10,6 +10,7 @@ from xknx.devices import (
 from xknx.exceptions import (
     ConversionError, CouldNotParseAddress, CouldNotParseKNXIP,
     CouldNotParseTelegram, DeviceIllegalValue)
+from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.knx import (
     DPTArray, DPTBinary, GroupAddress, PhysicalAddress, Telegram)
 from xknx.knxip import (
@@ -563,3 +564,20 @@ class TestStringRepresentations(unittest.TestCase):
             '<KNXIPFrame <KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="KNXIPServiceType.SEARCH_REQUEST" Reserve="0" TotalLeng'
             'th="0" />\n'
             ' body="<SearchRequest discovery_endpoint="<HPAI 224.0.23.12:3671 />" />" />')
+
+    #
+    # Gateway Scanner
+    #
+    def test_gateway_descriptor(self):
+        """Test string representation of GatewayDescriptor."""
+        gateway_descriptor = GatewayDescriptor(name='KNX-Interface',
+                                               ip_addr='192.168.2.3',
+                                               port=1234,
+                                               local_interface='en1',
+                                               local_ip='192.168.2.50',
+                                               supports_tunnelling=True,
+                                               supports_routing=False)
+        self.assertEqual(
+            str(gateway_descriptor),
+            '<GatewayDescriptor name="KNX-Interface" addr="192.168.2.3:1234" local="192.168.2.50@en1" routing="False" tunnelling="True" />'
+        )

@@ -44,12 +44,12 @@ _LOGGER = logging.getLogger(__name__)
 
 TUNNELING_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_XKNX_LOCAL_IP): cv.string,
     vol.Optional(CONF_PORT): cv.port,
+    vol.Optional(CONF_XKNX_LOCAL_IP): cv.string,
 })
 
 ROUTING_SCHEMA = vol.Schema({
-    vol.Required(CONF_XKNX_LOCAL_IP): cv.string,
+    vol.Optional(CONF_XKNX_LOCAL_IP): cv.string,
 })
 
 EXPOSE_SCHEMA = vol.Schema({

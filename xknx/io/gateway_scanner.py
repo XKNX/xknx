@@ -43,7 +43,7 @@ class GatewayDescriptor:
 
     def __str__(self):
         """Return object as readable string."""
-        return '<GatewayDescriptor name="{0}" addr="{1}:{2}" local="{3}@{4}" routing="{5}" tunnelling="{6} />'.format(
+        return '<GatewayDescriptor name="{0}" addr="{1}:{2}" local="{3}@{4}" routing="{5}" tunnelling="{6}" />'.format(
             self.name,
             self.ip_addr,
             self.port,
@@ -76,6 +76,10 @@ class GatewayScanFilter:
         if self.routing is not None and self.routing != gateway.supports_routing:
             return False
         return True
+
+    def __eq__(self, other):
+        """Equality for GatewayScanFilter class (used in unit tests)."""
+        return self.__dict__ == other.__dict__
 
 
 class GatewayScanner():
