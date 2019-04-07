@@ -126,9 +126,13 @@ class KNXIPInterface():
                                auto_reconnect, auto_reconnect_wait):
         """Start KNX/IP tunnel."""
         # pylint: disable=too-many-arguments
+        try:
+            ipaddress.IPv4Address(gateway_ip)
+        except ipaddress.AddressValueError as ex:
+            raise XKNXException("Gateway IP address is not a valid IPv4 address.") from ex
         if local_ip is None:
             local_ip = self.find_local_ip(gateway_ip=gateway_ip)
-        self.xknx.logger.debug("Starting tunnel to %s:%s from %s", gateway_ip, gateway_port, local_ip)
+        self.xknx.logger.debug("Starting tunnel from %s to %s:%s", local_ip, gateway_ip, gateway_port)
         self.interface = Tunnel(
             self.xknx,
             self.xknx.own_address,

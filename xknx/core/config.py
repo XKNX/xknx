@@ -51,14 +51,18 @@ class Config:
             for conn, prefs in doc["connection"].items():
                 try:
                     if conn == "tunneling":
-                        conn = ConnectionType.TUNNELING
+                        if prefs is None or \
+                                not "gateway_ip" in prefs:
+                            raise XKNXException("`gateway_ip` is required for tunneling connection.")
+                        conn_type = ConnectionType.TUNNELING
                     elif conn == "routing":
-                        conn = ConnectionType.ROUTING
+                        conn_type = ConnectionType.ROUTING
                     else:
-                        conn = ConnectionType.AUTOMATIC
-                    self._parse_connection_prefs(conn, prefs)
+                        conn_type = ConnectionType.AUTOMATIC
+                    self._parse_connection_prefs(conn_type, prefs)
                 except XKNXException as ex:
                     self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", conn, ex)
+                    raise ex
 
     def _parse_connection_prefs(self, conn_type: ConnectionType, prefs) -> None:
         connection_config = ConnectionConfig(connection_type=conn_type)
