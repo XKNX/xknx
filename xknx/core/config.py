@@ -52,7 +52,7 @@ class Config:
                 try:
                     if conn == "tunneling":
                         if prefs is None or \
-                                not "gateway_ip" in prefs:
+                                "gateway_ip" not in prefs:
                             raise XKNXException("`gateway_ip` is required for tunneling connection.")
                         conn_type = ConnectionType.TUNNELING
                     elif conn == "routing":
