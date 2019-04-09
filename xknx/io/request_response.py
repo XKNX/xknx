@@ -61,11 +61,15 @@ class RequestResponse():
         self.xknx.logger.debug('Success: received correct answer from KNX bus: %s', knxipframe.body.status_code)
 
     def on_error_hook(self, knxipframe):
-        """Do somthing after not having received valid answer within given time. May be overwritten in derived class."""
-        self.xknx.logger.warning("Error: reading rading group address from KNX bus failed: %s", knxipframe.body.status_code)
+        """Do somthing after having received error within given time. May be overwritten in derived class."""
+        self.xknx.logger.warning("Error: KNX bus responded to request of type '%s' with error in '%s': %s",
+                                 self.__class__.__name__,
+                                 self.awaited_response_class.__name__, knxipframe.body.status_code)
 
     def timeout(self):
         """Handle timeout for not having received expected knxipframe."""
+        self.xknx.logger.warning("Error: KNX bus did not respond in time to request of type '%s'",
+                                 self.__class__.__name__)
         self.response_received_or_timeout.set()
 
     async def start_timeout(self):

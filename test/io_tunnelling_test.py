@@ -21,8 +21,8 @@ class TestTunnelling(unittest.TestCase):
         """Tear down test class."""
         self.loop.close()
 
-    def test_tunnellilng(self):
-        """Test tunnellilnging from KNX bus."""
+    def test_tunnelling(self):
+        """Test tunnelling from KNX bus."""
         # pylint: disable=too-many-locals
         xknx = XKNX(loop=self.loop)
         communication_channel_id = 23
@@ -30,11 +30,11 @@ class TestTunnelling(unittest.TestCase):
         telegram = Telegram(GroupAddress('1/2/3'), payload=DPTArray((0x1, 0x2, 0x3)))
         sequence_counter = 42
         src_address = PhysicalAddress('2.2.2')
-        tunnellilng = Tunnelling(xknx, udp_client, telegram, src_address, sequence_counter, communication_channel_id)
-        tunnellilng.timeout_in_seconds = 0
+        tunnelling = Tunnelling(xknx, udp_client, telegram, src_address, sequence_counter, communication_channel_id)
+        tunnelling.timeout_in_seconds = 0
 
-        self.assertEqual(tunnellilng.awaited_response_class, TunnellingAck)
-        self.assertEqual(tunnellilng.communication_channel_id, communication_channel_id)
+        self.assertEqual(tunnelling.awaited_response_class, TunnellingAck)
+        self.assertEqual(tunnelling.communication_channel_id, communication_channel_id)
 
         # Expected KNX/IP-Frame:
         exp_knxipframe = KNXIPFrame(xknx)
@@ -48,14 +48,14 @@ class TestTunnelling(unittest.TestCase):
         with patch('xknx.io.UDPClient.send') as mock_udp_send, \
                 patch('xknx.io.UDPClient.getsockname') as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
-            self.loop.run_until_complete(asyncio.Task(tunnellilng.start()))
+            self.loop.run_until_complete(asyncio.Task(tunnelling.start()))
             mock_udp_send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type
         wrong_knxipframe = KNXIPFrame(xknx)
         wrong_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_REQUEST)
         with patch('logging.Logger.warning') as mock_warning:
-            tunnellilng.response_rec_callback(wrong_knxipframe, None)
+            tunnelling.response_rec_callback(wrong_knxipframe, None)
             mock_warning.assert_called_with('Cant understand knxipframe')
 
         # Response KNX/IP-Frame with error:
@@ -63,13 +63,15 @@ class TestTunnelling(unittest.TestCase):
         err_knxipframe.init(KNXIPServiceType.TUNNELLING_ACK)
         err_knxipframe.body.status_code = ErrorCode.E_CONNECTION_ID
         with patch('logging.Logger.warning') as mock_warning:
-            tunnellilng.response_rec_callback(err_knxipframe, None)
-            mock_warning.assert_called_with('Error: reading rading group address from KNX bus failed: %s', ErrorCode.E_CONNECTION_ID)
+            tunnelling.response_rec_callback(err_knxipframe, None)
+            mock_warning.assert_called_with("Error: KNX bus responded to request of type '%s' with error in '%s': %s",
+                                            type(tunnelling).__name__,
+                                            type(err_knxipframe.body).__name__, ErrorCode.E_CONNECTION_ID)
 
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame(xknx)
         res_knxipframe.init(KNXIPServiceType.TUNNELLING_ACK)
         with patch('logging.Logger.debug') as mock_debug:
-            tunnellilng.response_rec_callback(res_knxipframe, None)
+            tunnelling.response_rec_callback(res_knxipframe, None)
             mock_debug.assert_called_with('Success: received correct answer from KNX bus: %s', ErrorCode.E_NO_ERROR)
-            self.assertTrue(tunnellilng.success)
+            self.assertTrue(tunnelling.success)
