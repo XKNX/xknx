@@ -132,6 +132,7 @@ class KNXIPInterface():
             raise XKNXException("Gateway IP address is not a valid IPv4 address.") from ex
         if local_ip is None:
             local_ip = self.find_local_ip(gateway_ip=gateway_ip)
+        self.validate_local_ip(local_ip)
         self.xknx.logger.debug("Starting tunnel from %s to %s:%s", local_ip, gateway_ip, gateway_port)
         self.interface = Tunnel(
             self.xknx,
@@ -146,6 +147,7 @@ class KNXIPInterface():
 
     async def start_routing(self, local_ip, bind_to_multicast_addr):
         """Start KNX/IP Routing."""
+        self.validate_local_ip(local_ip)
         self.xknx.logger.debug("Starting Routing from %s", local_ip)
         self.interface = Routing(
             self.xknx,
@@ -168,6 +170,12 @@ class KNXIPInterface():
     async def send_telegram(self, telegram):
         """Send telegram to connected device (either Tunneling or Routing)."""
         await self.interface.send_telegram(telegram)
+
+    def validate_local_ip(self, local_ip: str) -> None:
+        try:
+            ipaddress.IPv4Address(local_ip)
+        except ipaddress.AddressValueError as ex:
+            raise XKNXException("Local IP address is not a valid IPv4 address.") from ex
 
     def find_local_ip(self, gateway_ip: str) -> str:
         """Find local IP address on same subnet as gateway."""
