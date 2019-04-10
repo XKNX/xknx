@@ -1,10 +1,4 @@
-"""
-Connects to KNX platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/knx/
-"""
-
+"""Support KNX devices."""
 import logging
 
 import voluptuous as vol
@@ -17,7 +11,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
 
-REQUIREMENTS = ['xknx==0.9.4']
+REQUIREMENTS = ['xknx==0.10.0']
+
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "xknx"
 DATA_XKNX = "data_knx"
@@ -39,8 +35,6 @@ SERVICE_XKNX_ATTR_ADDRESS = "address"
 SERVICE_XKNX_ATTR_PAYLOAD = "payload"
 
 ATTR_DISCOVER_DEVICES = 'devices'
-
-_LOGGER = logging.getLogger(__name__)
 
 TUNNELING_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
