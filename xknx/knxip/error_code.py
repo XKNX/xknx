@@ -32,7 +32,8 @@ class ErrorCode(Enum):
     # occupied.
     E_NO_MORE_CONNECTIONS = 0x24
 
-    # Unclear error, looks like device has no free channels
+    # KNXnet/IP Tunnelling device does not accept connection because the
+    # Individual Address is used multiple times
     E_NO_MORE_UNIQUE_CONNECTIONS = 0x25
 
     # The KNXnet/IP Server device detects an error concerning
