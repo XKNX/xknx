@@ -96,6 +96,11 @@ class KNXSensor(Entity):
         return self.device.unit_of_measurement()
 
     @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return self.device.ha_device_class()
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return None

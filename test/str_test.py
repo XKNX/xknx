@@ -227,7 +227,7 @@ class TestStringRepresentations(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(sensor.set(25)))
         self.assertEqual(
             str(sensor),
-            '<ExposeSensor name="MeinSensor" sensor="GroupAddress("1/2/3")/None/<DPTArray value="[0xbf]" />/25" value="25" unit="%"/>')
+            '<ExposeSensor name="MeinSensor" sensor="GroupAddress("1/2/3")/None/<DPTArray value="[0x40]" />/25" value="25" unit="%"/>')
 
     def test_switch(self):
         """Test string representation of switch object."""

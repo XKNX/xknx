@@ -35,6 +35,7 @@ class TestSensor(unittest.TestCase):
 
         self.assertEqual(sensor.resolve_state(), 25)
         self.assertEqual(sensor.unit_of_measurement(), "%")
+        self.assertEqual(sensor.ha_device_class(), None)
 
     def test_str_speed_ms(self):
         """Test resolve state with speed_ms sensor."""
@@ -48,6 +49,7 @@ class TestSensor(unittest.TestCase):
 
         self.assertEqual(sensor.resolve_state(), 0.27)
         self.assertEqual(sensor.unit_of_measurement(), "m/s")
+        self.assertEqual(sensor.ha_device_class(), None)
 
     def test_str_temp(self):
         """Test resolve state with temperature sensor."""
@@ -61,6 +63,7 @@ class TestSensor(unittest.TestCase):
 
         self.assertEqual(sensor.resolve_state(), 21.00)
         self.assertEqual(sensor.unit_of_measurement(), "°C")
+        self.assertEqual(sensor.ha_device_class(), "temperature")
 
     def test_str_humidity(self):
         """Test resolve state with humidity sensor."""
@@ -74,6 +77,7 @@ class TestSensor(unittest.TestCase):
 
         self.assertEqual(sensor.resolve_state(), 33.02)
         self.assertEqual(sensor.unit_of_measurement(), "%")
+        self.assertEqual(sensor.ha_device_class(), "humidity")
 
     def test_str_power(self):
         """Test resolve state with power sensor."""
@@ -87,6 +91,7 @@ class TestSensor(unittest.TestCase):
 
         self.assertEqual(sensor.resolve_state(), 397)
         self.assertEqual(sensor.unit_of_measurement(), "W")
+        self.assertEqual(sensor.ha_device_class(), "power")
 
     def test_str_electric_potential(self):
         """Test resolve state with voltage sensor."""

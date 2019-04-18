@@ -1,20 +1,20 @@
-"""Implementation of Basic KNX DPT_1_Ucount Values."""
+"""Implementation of scaled KNX DPT_1_Ucount Values."""
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
 
 
-class DPTValue1Ucount(DPTBase):
+class DPTScaling(DPTBase):
     """
-    Abstraction for KNX 1 Octet.
+    Abstraction for KNX 1 Octet Percent.
 
-    DPT 5.010
+    DPT 5.001
     """
 
     value_min = 0
-    value_max = 255
-    unit = ""
-    resolution = 1
+    value_max = 100
+    resolution = 100/255
+    unit = "%"
     payload_length = 1
 
     @classmethod
@@ -22,7 +22,9 @@ class DPTValue1Ucount(DPTBase):
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw, 1)
 
-        value = raw[0]
+        knx_value = raw[0]
+        delta = cls.value_max - cls.value_min
+        value = round((knx_value/255)*delta) + cls.value_min
 
         if not cls._test_boundaries(value):
             raise ConversionError("Cant parse %s" % cls.__name__, value=value, raw=raw)
@@ -33,9 +35,12 @@ class DPTValue1Ucount(DPTBase):
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
         try:
-            knx_value = int(value)
-            if not cls._test_boundaries(knx_value):
+            percent_value = float(value)
+            if not cls._test_boundaries(percent_value):
                 raise ValueError
+            delta = cls.value_max - cls.value_min
+            knx_value = round((percent_value-cls.value_min)/delta*255)
+
             return (knx_value,)
         except ValueError:
             raise ConversionError("Cant serialize %s" % cls.__name__, value=value)
@@ -46,22 +51,14 @@ class DPTValue1Ucount(DPTBase):
         return cls.value_min <= value <= cls.value_max
 
 
-class DPTPercentU8(DPTValue1Ucount):
+class DPTAngle(DPTScaling):
     """
-    Abstraction for KNX 1 Octet Percent.
+    Abstraction for KNX 1 Octet Angle.
 
-    DPT 5.004
-    """
-
-    unit = "%"
-
-
-class DPTSceneNumber(DPTValue1Ucount):
-    """
-    Abstraction for KNX 1 Octet Scene Number.
-
-    DPT 17.001
+    DPT 5.003
     """
 
     value_min = 0
-    value_max = 63
+    value_max = 360
+    resolution = 360/255
+    unit = "°"

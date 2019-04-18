@@ -15,6 +15,7 @@ class DPTSignedRelativeValue(DPTBase):
     value_min = -128
     value_max = 127
     unit = "counter pulses"
+    payload_length = 1
 
     @classmethod
     def from_knx(cls, raw):
@@ -27,11 +28,15 @@ class DPTSignedRelativeValue(DPTBase):
     @classmethod
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
-        if not cls._test_boundaries(value):
-            raise ConversionError("Cant serialize DPTSignedRelativeValue", value=value)
-        if value < 0:
-            value += 0x100
-        return (value & 0xff,)
+        try:
+            knx_value = int(value)
+            if not cls._test_boundaries(knx_value):
+                raise ValueError
+            if knx_value < 0:
+                knx_value += 0x100
+            return (knx_value & 0xff,)
+        except ValueError:
+            raise ConversionError("Cant serialize %s" % cls.__name__, value=value)
 
     @classmethod
     def _test_boundaries(cls, value):

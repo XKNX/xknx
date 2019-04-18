@@ -151,7 +151,8 @@ class Climate(Device):
     @property
     def is_on(self):
         """Return power status."""
-        return bool(self.on.value and self.on.value.value == 1)
+        # None will return False
+        return bool(self.on.value)
 
     async def turn_on(self):
         """Set power status to on."""

@@ -335,4 +335,13 @@ class KNXExposeSensor:
         """Handle entity change."""
         if new_state is None:
             return
-        await self.device.set(float(new_state.state))
+        if new_state.state == "unknown":
+            return
+
+        if self.type == 'binary':
+            if new_state.state == "on":
+                await self.device.set(True)
+            elif new_state.state == "off":
+                await self.device.set(False)
+        else:
+            await self.device.set(new_state.state)
