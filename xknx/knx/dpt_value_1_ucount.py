@@ -63,5 +63,28 @@ class DPTSceneNumber(DPTValue1Ucount):
     DPT 17.001
     """
 
-    value_min = 0
-    value_max = 63
+    value_min = 1
+    value_max = 64
+
+    @classmethod
+    def from_knx(cls, raw):
+        """Parse/deserialize from KNX/IP raw data."""
+        cls.test_bytesarray(raw, 1)
+
+        value = raw[0] + 1
+
+        if not cls._test_boundaries(value):
+            raise ConversionError("Cant parse %s" % cls.__name__, value=value, raw=raw)
+
+        return value
+
+    @classmethod
+    def to_knx(cls, value):
+        """Serialize to KNX/IP raw data."""
+        try:
+            knx_value = int(value) - 1
+            if not cls._test_boundaries(knx_value + 1):
+                raise ValueError
+            return (knx_value,)
+        except ValueError:
+            raise ConversionError("Cant serialize %s" % cls.__name__, value=value)
