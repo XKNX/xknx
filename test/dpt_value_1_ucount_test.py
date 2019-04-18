@@ -2,7 +2,7 @@
 import unittest
 
 from xknx.exceptions import ConversionError
-from xknx.knx import DPTSceneNumber, DPTValue1Ucount
+from xknx.knx import DPTValue1Ucount
 
 
 class TestDPTValue1Ucount(unittest.TestCase):
