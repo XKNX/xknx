@@ -179,8 +179,7 @@ class Tunnel():
         await disconnect.start()
         if not disconnect.success and not ignore_error:
             raise XKNXException("Could not disconnect channel")
-        else:
-            self.xknx.logger.debug("Tunnel disconnected (communication_channel: %s)", self.communication_channel)
+        self.xknx.logger.debug("Tunnel disconnected (communication_channel: %s)", self.communication_channel)
         # close udp client to prevent open file descriptors
         await self.udp_client.stop()
 

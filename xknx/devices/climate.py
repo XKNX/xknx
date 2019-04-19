@@ -190,7 +190,7 @@ class Climate(Device):
 
         if setpoint_shift > self.setpoint_shift_max:
             raise DeviceIllegalValue("setpoint_shift_max exceeded", setpoint_shift)
-        elif setpoint_shift < self.setpoint_shift_min:
+        if setpoint_shift < self.setpoint_shift_min:
             raise DeviceIllegalValue("setpoint_shift_min exceeded", setpoint_shift)
 
         await self.setpoint_shift.set(setpoint_shift)
