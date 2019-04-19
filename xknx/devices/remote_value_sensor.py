@@ -7,11 +7,13 @@ for serialization and deserialization of the KNX value.
 from xknx.exceptions import ConversionError
 from xknx.knx import (
     DPT2ByteFloat, DPT2ByteUnsigned, DPT4ByteFloat, DPT4ByteSigned,
-    DPT4ByteUnsigned, DPTArray, DPTBrightness, DPTColorTemperature,
+    DPT4ByteUnsigned, DPTAngle, DPTArray, DPTBrightness, DPTColorTemperature,
     DPTElectricCurrent, DPTElectricPotential, DPTEnergy, DPTEnthalpy,
-    DPTFrequency, DPTHeatFlowRate, DPTHumidity, DPTLux, DPTPartsPerMillion,
-    DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower, DPTPowerFactor, DPTSpeed,
-    DPTTemperature, DPTUElCurrentmA, DPTValue1Ucount, DPTVoltage, DPTWsp)
+    DPTFrequency, DPTHeatFlowRate, DPTHumidity, DPTLuminousFlux, DPTLux,
+    DPTPartsPerMillion, DPTPercentU8, DPTPercentV8, DPTPhaseAngleDeg,
+    DPTPhaseAngleRad, DPTPower, DPTPowerFactor, DPTPressure, DPTScaling,
+    DPTSceneNumber, DPTSpeed, DPTString, DPTTemperature, DPTUElCurrentmA,
+    DPTValue1Count, DPTValue1Ucount, DPTVoltage, DPTWsp)
 
 from .remote_value import RemoteValue
 
@@ -20,39 +22,46 @@ class RemoteValueSensor(RemoteValue):
     """Abstraction for many different sensor DPT types."""
 
     DPTMAP = {
-        'current': DPTUElCurrentmA,
+        'angle': DPTAngle,
         'brightness': DPTBrightness,
         'color_temperature': DPTColorTemperature,
-        'temperature': DPTTemperature,
-        'illuminance': DPTLux,
-        'speed_ms': DPTWsp,
-        'humidity': DPTHumidity,
-        'voltage': DPTVoltage,
-        'power': DPTPower,
+        'counter_pulses': DPTValue1Count,
+        'current': DPTUElCurrentmA,
         'electric_current': DPTElectricCurrent,
         'electric_potential': DPTElectricPotential,
         'energy': DPTEnergy,
+        'enthalpy': DPTEnthalpy,
         'frequency': DPTFrequency,
         'heatflowrate': DPTHeatFlowRate,
+        'humidity': DPTHumidity,
+        'illuminance': DPTLux,
+        'luminous_flux': DPTLuminousFlux,
+        'percent': DPTScaling,
+        'percentU8': DPTPercentU8,
+        'percentV8': DPTPercentV8,
         'phaseanglerad': DPTPhaseAngleRad,
         'phaseangledeg': DPTPhaseAngleDeg,
-        'pulse': DPTValue1Ucount,
+        'power': DPTPower,
         'powerfactor': DPTPowerFactor,
-        'speed': DPTSpeed,
-        'enthalpy': DPTEnthalpy,
         'ppm': DPTPartsPerMillion,
-
-        #  Generic DPT Without Min/Max and Unit.
+        'pressure': DPTPressure,
+        'pulse': DPTValue1Ucount,
+        'scene_number': DPTSceneNumber,
+        'speed': DPTSpeed,
+        'speed_ms': DPTWsp,
+        'string': DPTString,
+        'temperature': DPTTemperature,
+        'voltage': DPTVoltage,
+        # Generic DPT Without Min/Max and Unit.
         'DPT-5': DPTValue1Ucount,
         '1byte_unsigned': DPTValue1Ucount,
-
+        # Generic 2 byte DPT
         'DPT-7': DPT2ByteUnsigned,
         '2byte_unsigned': DPT2ByteUnsigned,
         'DPT-9': DPT2ByteFloat,
-
+        # Generic 4 byte DPT
         'DPT-12': DPT4ByteUnsigned,
         '4byte_unsigned': DPT4ByteUnsigned,
-
         'DPT-13': DPT4ByteSigned,
         '4byte_signed': DPT4ByteSigned,
         'DPT-14': DPT4ByteFloat,
@@ -93,3 +102,10 @@ class RemoteValueSensor(RemoteValue):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self.DPTMAP[self.value_type].unit
+
+    @property
+    def ha_device_class(self):
+        """Return a string representing the home assistant device class."""
+        if hasattr(self.DPTMAP[self.value_type], 'ha_device_class'):
+            return self.DPTMAP[self.value_type].ha_device_class
+        return None

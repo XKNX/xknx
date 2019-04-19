@@ -1,21 +1,13 @@
-"""
-Support for KNX/IP sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.knx/
-"""
-
+"""Support for KNX/IP sensors."""
 import voluptuous as vol
 
-from custom_components.xknx import ATTR_DISCOVER_DEVICES, DATA_XKNX
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-CONF_ADDRESS = 'address'
-CONF_TYPE = 'type'
+from . import ATTR_DISCOVER_DEVICES, DATA_XKNX
 
 DEFAULT_NAME = 'XKNX Sensor'
 DEPENDENCIES = ['xknx']
@@ -102,6 +94,11 @@ class KNXSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self.device.unit_of_measurement()
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return self.device.ha_device_class()
 
     @property
     def device_state_attributes(self):

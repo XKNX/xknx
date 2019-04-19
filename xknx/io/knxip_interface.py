@@ -6,9 +6,11 @@ KNXIPInterface manages KNX/IP Tunneling or Routing connections.
 * provides callbacks after having received a telegram from the network.
 
 """
+import ipaddress
 from enum import Enum
 from platform import system as get_os_name
 
+import netifaces
 from xknx.exceptions import XKNXException
 
 from .const import DEFAULT_MCAST_PORT
@@ -62,19 +64,16 @@ class ConnectionConfig:
         self.gateway_port = gateway_port
         self.auto_reconnect = auto_reconnect
         self.auto_reconnect_wait = auto_reconnect_wait
-        self.scan_filter = scan_filter
         self.bind_to_multicast_addr = bind_to_multicast_addr
+        if connection_type == ConnectionType.TUNNELING:
+            scan_filter.tunnelling = True
+        elif connection_type == ConnectionType.ROUTING:
+            scan_filter.routing = True
+        self.scan_filter = scan_filter
 
     def __eq__(self, other):
         """Equality for ConnectionConfig class (used in unit tests)."""
-        return self.connection_type == other.connection_type and \
-            self.local_ip == other.local_ip and \
-            self.gateway_ip == other.gateway_ip and \
-            self.gateway_port == other.gateway_port and \
-            self.auto_reconnect == other.auto_reconnect and \
-            self.auto_reconnect_wait == other.auto_reconnect_wait and \
-            self.scan_filter == other.scan_filter and \
-            self.bind_to_multicast_addr == other.bind_to_multicast_addr
+        return self.__dict__ == other.__dict__
 
 
 class KNXIPInterface():
@@ -88,10 +87,8 @@ class KNXIPInterface():
 
     async def start(self):
         """Start interface. Connecting KNX/IP device with the selected method."""
-        if self.connection_config.connection_type == ConnectionType.AUTOMATIC:
-            await self.start_automatic(
-                self.connection_config.scan_filter)
-        elif self.connection_config.connection_type == ConnectionType.ROUTING:
+        if self.connection_config.connection_type == ConnectionType.ROUTING and \
+                self.connection_config.local_ip is not None:
             await self.start_routing(
                 self.connection_config.local_ip,
                 self.connection_config.bind_to_multicast_addr)
@@ -102,6 +99,8 @@ class KNXIPInterface():
                 self.connection_config.gateway_port,
                 self.connection_config.auto_reconnect,
                 self.connection_config.auto_reconnect_wait)
+        else:
+            await self.start_automatic(self.connection_config.scan_filter)
 
     async def start_automatic(self, scan_filter: GatewayScanFilter):
         """Start GatewayScanner and connect to the found device."""
@@ -112,7 +111,8 @@ class KNXIPInterface():
             raise XKNXException("No Gateways found")
 
         gateway = gateways[0]
-        if gateway.supports_tunnelling:
+        if gateway.supports_tunnelling and \
+                scan_filter.routing is not True:
             await self.start_tunnelling(gateway.local_ip,
                                         gateway.ip_addr,
                                         gateway.port,
@@ -126,7 +126,13 @@ class KNXIPInterface():
                                auto_reconnect, auto_reconnect_wait):
         """Start KNX/IP tunnel."""
         # pylint: disable=too-many-arguments
-        self.xknx.logger.debug("Starting tunnel to %s:%s from %s", gateway_ip, gateway_port, local_ip)
+        try:
+            ipaddress.IPv4Address(gateway_ip)
+        except ipaddress.AddressValueError as ex:
+            raise XKNXException("Gateway IP address is not a valid IPv4 address.") from ex
+        if local_ip is None:
+            local_ip = self.find_local_ip(gateway_ip=gateway_ip)
+        self.xknx.logger.debug("Starting tunnel from %s to %s:%s", local_ip, gateway_ip, gateway_port)
         self.interface = Tunnel(
             self.xknx,
             self.xknx.own_address,
@@ -162,3 +168,35 @@ class KNXIPInterface():
     async def send_telegram(self, telegram):
         """Send telegram to connected device (either Tunneling or Routing)."""
         await self.interface.send_telegram(telegram)
+
+    def find_local_ip(self, gateway_ip: str) -> str:
+        """Find local IP address on same subnet as gateway."""
+        def _scan_interfaces(gateway: ipaddress.IPv4Address) -> str:
+            """Return local IP address on same subnet as given gateway."""
+            for interface in netifaces.interfaces():
+                try:
+                    af_inet = netifaces.ifaddresses(interface)[netifaces.AF_INET]
+                    for link in af_inet:
+                        network = ipaddress.IPv4Network((link["addr"],
+                                                         link["netmask"]),
+                                                        strict=False)
+                        if gateway in network:
+                            self.xknx.logger.debug("Using interface: %s", interface)
+                            return link["addr"]
+                except KeyError:
+                    self.xknx.logger.debug("Could not find IPv4 address on interface %s", interface)
+                    continue
+
+        def _find_default_gateway() -> ipaddress.IPv4Address:
+            """Return IP address of default gateway."""
+            gws = netifaces.gateways()
+            return ipaddress.IPv4Address(gws['default'][netifaces.AF_INET][0])
+
+        gateway = ipaddress.IPv4Address(gateway_ip)
+        local_ip = _scan_interfaces(gateway)
+        if local_ip is None:
+            self.xknx.logger.debug(
+                "No interface on same subnet as gateway found. Falling back to default gateway.")
+            default_gateway = _find_default_gateway()
+            local_ip = _scan_interfaces(default_gateway)
+        return local_ip

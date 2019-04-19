@@ -24,29 +24,29 @@ class TestRemoteValueSwitch(unittest.TestCase):
         """Test to_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueSwitch(xknx)
-        self.assertEqual(remote_value.to_knx(RemoteValueSwitch.Value.ON), DPTBinary(1))
-        self.assertEqual(remote_value.to_knx(RemoteValueSwitch.Value.OFF), DPTBinary(0))
+        self.assertEqual(remote_value.to_knx(True), DPTBinary(True))
+        self.assertEqual(remote_value.to_knx(False), DPTBinary(False))
 
     def test_from_knx(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueSwitch(xknx)
-        self.assertEqual(remote_value.from_knx(DPTBinary(1)), RemoteValueSwitch.Value.ON)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0)), RemoteValueSwitch.Value.OFF)
+        self.assertEqual(remote_value.from_knx(DPTBinary(True)), True)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0)), False)
 
     def test_to_knx_invert(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueSwitch(xknx, invert=True)
-        self.assertEqual(remote_value.to_knx(RemoteValueSwitch.Value.ON), DPTBinary(0))
-        self.assertEqual(remote_value.to_knx(RemoteValueSwitch.Value.OFF), DPTBinary(1))
+        self.assertEqual(remote_value.to_knx(True), DPTBinary(0))
+        self.assertEqual(remote_value.to_knx(False), DPTBinary(1))
 
     def test_from_knx_invert(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueSwitch(xknx, invert=True)
-        self.assertEqual(remote_value.from_knx(DPTBinary(1)), RemoteValueSwitch.Value.OFF)
-        self.assertEqual(remote_value.from_knx(DPTBinary(0)), RemoteValueSwitch.Value.ON)
+        self.assertEqual(remote_value.from_knx(DPTBinary(1)), False)
+        self.assertEqual(remote_value.from_knx(DPTBinary(0)), True)
 
     def test_to_knx_error(self):
         """Test to_knx function with wrong parametern."""
@@ -90,7 +90,7 @@ class TestRemoteValueSwitch(unittest.TestCase):
         self.assertEqual(remote_value.value, None)
         self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
         self.assertIsNotNone(remote_value.payload)
-        self.assertEqual(remote_value.value, RemoteValueSwitch.Value.ON)
+        self.assertEqual(remote_value.value, True)
 
     def test_process_off(self):
         """Test process OFF telegram."""
@@ -104,7 +104,7 @@ class TestRemoteValueSwitch(unittest.TestCase):
         self.assertEqual(remote_value.value, None)
         self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
         self.assertIsNotNone(remote_value.payload)
-        self.assertEqual(remote_value.value, RemoteValueSwitch.Value.OFF)
+        self.assertEqual(remote_value.value, False)
 
     def test_to_process_error(self):
         """Test process errornous telegram."""

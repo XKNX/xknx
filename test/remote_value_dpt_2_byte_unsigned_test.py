@@ -8,7 +8,7 @@ from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram
 
 
-class TestRemoteValueDptValue1Ucount(unittest.TestCase):
+class TestRemoteValueDptValue2Ucount(unittest.TestCase):
     """Test class for RemoteValueDpt2ByteUnsigned objects."""
 
     def setUp(self):
@@ -33,13 +33,13 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         self.assertEqual(remote_value.from_knx(DPTArray((0x0A, 0x0B))), 2571)
 
     def test_to_knx_error(self):
-        """Test to_knx function with wrong parametern."""
+        """Test to_knx function with wrong parameters."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueDpt2ByteUnsigned(xknx)
         with self.assertRaises(ConversionError):
             remote_value.to_knx(65536)
         with self.assertRaises(ConversionError):
-            remote_value.to_knx("256")
+            remote_value.to_knx("a")
 
     def test_set(self):
         """Test setting value."""

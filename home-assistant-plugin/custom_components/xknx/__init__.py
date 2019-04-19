@@ -1,10 +1,4 @@
-"""
-Connects to KNX platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/knx/
-"""
-
+"""Support KNX devices."""
 import logging
 
 import voluptuous as vol
@@ -17,7 +11,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
 
-REQUIREMENTS = ['xknx==0.9.4']
+REQUIREMENTS = ['xknx==0.10.0']
+
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "xknx"
 DATA_XKNX = "data_knx"
@@ -40,16 +36,14 @@ SERVICE_XKNX_ATTR_PAYLOAD = "payload"
 
 ATTR_DISCOVER_DEVICES = 'devices'
 
-_LOGGER = logging.getLogger(__name__)
-
 TUNNELING_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_XKNX_LOCAL_IP): cv.string,
     vol.Optional(CONF_PORT): cv.port,
+    vol.Optional(CONF_XKNX_LOCAL_IP): cv.string,
 })
 
 ROUTING_SCHEMA = vol.Schema({
-    vol.Required(CONF_XKNX_LOCAL_IP): cv.string,
+    vol.Optional(CONF_XKNX_LOCAL_IP): cv.string,
 })
 
 EXPOSE_SCHEMA = vol.Schema({
@@ -341,4 +335,13 @@ class KNXExposeSensor:
         """Handle entity change."""
         if new_state is None:
             return
-        await self.device.set(float(new_state.state))
+        if new_state.state == "unknown":
+            return
+
+        if self.type == 'binary':
+            if new_state.state == "on":
+                await self.device.set(True)
+            elif new_state.state == "off":
+                await self.device.set(False)
+        else:
+            await self.device.set(new_state.state)

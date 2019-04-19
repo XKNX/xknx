@@ -81,7 +81,7 @@ class RemoteValue():
 
     @property
     def value(self):
-        """Return current value ."""
+        """Return current value."""
         if self.payload is None:
             return None
         return self.from_knx(self.payload)

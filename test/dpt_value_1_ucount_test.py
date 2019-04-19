@@ -2,11 +2,11 @@
 import unittest
 
 from xknx.exceptions import ConversionError
-from xknx.knx import DPTValue1Ucount
+from xknx.knx import DPTSceneNumber, DPTValue1Ucount
 
 
 class TestDPTValue1Ucount(unittest.TestCase):
-    """Test class for KNX scaling value."""
+    """Test class for KNX 8-bit unsigned value."""
 
     # pylint: disable=too-many-public-methods,invalid-name
 
@@ -16,9 +16,9 @@ class TestDPTValue1Ucount(unittest.TestCase):
         self.assertEqual(DPTValue1Ucount().from_knx((0x32,)), 50)
 
     def test_value_max(self):
-        """Test parsing and streaming of DPTValue1Ucount 63."""
-        self.assertEqual(DPTValue1Ucount().to_knx(63), (0x3F,))
-        self.assertEqual(DPTValue1Ucount().from_knx((0x3F,)), 63)
+        """Test parsing and streaming of DPTValue1Ucount 255."""
+        self.assertEqual(DPTValue1Ucount().to_knx(255), (0xFF,))
+        self.assertEqual(DPTValue1Ucount().from_knx((0xFF,)), 255)
 
     def test_value_min(self):
         """Test parsing and streaming of DPTValue1Ucount 0."""
@@ -54,3 +54,24 @@ class TestDPTValue1Ucount(unittest.TestCase):
         """Test parsing of DPTValue1Ucount with wrong value (array containing string)."""
         with self.assertRaises(ConversionError):
             DPTValue1Ucount().from_knx(("0x23"))
+
+
+class TestDPTSceneNumber(unittest.TestCase):
+    """Test class for KNX scene number value."""
+
+    # pylint: disable=too-many-public-methods,invalid-name
+
+    def test_value_50(self):
+        """Test parsing and streaming of DPTSceneNumber 50."""
+        self.assertEqual(DPTSceneNumber().to_knx(50), (0x32,))
+        self.assertEqual(DPTSceneNumber().from_knx((0x32,)), 50)
+
+    def test_value_max(self):
+        """Test parsing and streaming of DPTSceneNumber 63."""
+        self.assertEqual(DPTSceneNumber().to_knx(63), (0x3F,))
+        self.assertEqual(DPTSceneNumber().from_knx((0x3F,)), 63)
+
+    def test_to_knx_max_exceeded(self):
+        """Test parsing of DPTSceneNumber with wrong value (overflow)."""
+        with self.assertRaises(ConversionError):
+            DPTSceneNumber().to_knx(64)

@@ -65,16 +65,31 @@ class TestConfig(unittest.TestCase):
              ),
             ("""
             connection:
+                tunneling:
+                    gateway_ip: '192.168.1.2'
+            """,
+             ConnectionConfig(
+                 connection_type=ConnectionType.TUNNELING,
+                 gateway_ip="192.168.1.2")
+             ),
+            ("""
+            connection:
                 routing:
                     local_ip: '192.168.1.2'
             """,
              ConnectionConfig(
                  connection_type=ConnectionType.ROUTING,
                  local_ip="192.168.1.2")
+             ),
+            ("""
+            connection:
+                routing:
+            """,
+             ConnectionConfig(connection_type=ConnectionType.ROUTING)
              )
         ]
         for yaml_string, expected_conn in test_configs:
-            config = yaml.load(yaml_string)
+            config = yaml.safe_load(yaml_string)
             Config(TestConfig.xknx).parse_connection(config)
             self.assertEqual(TestConfig.xknx.connection_config, expected_conn)
 

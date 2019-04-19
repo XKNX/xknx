@@ -7,7 +7,6 @@ It provides functionality for
 * watching for state updates from KNX bus.
 """
 from .device import Device
-from .remote_value_scaling import RemoteValueScaling
 from .remote_value_sensor import RemoteValueSensor
 
 
@@ -25,21 +24,12 @@ class Sensor(Device):
         super(Sensor, self).__init__(xknx, name, device_updated_cb)
 
         self.sensor_value = None
-        if value_type == "percent":
-            self.sensor_value = RemoteValueScaling(
-                xknx,
-                group_address_state=group_address,
-                device_name=self.name,
-                after_update_cb=self.after_update,
-                range_from=0,
-                range_to=100)
-        else:
-            self.sensor_value = RemoteValueSensor(
-                xknx,
-                group_address_state=group_address,
-                device_name=self.name,
-                after_update_cb=self.after_update,
-                value_type=value_type)
+        self.sensor_value = RemoteValueSensor(
+            xknx,
+            group_address_state=group_address,
+            device_name=self.name,
+            after_update_cb=self.after_update,
+            value_type=value_type)
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -69,6 +59,10 @@ class Sensor(Device):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self.sensor_value.unit_of_measurement
+
+    def ha_device_class(self):
+        """Return the home assistant device class as string."""
+        return self.sensor_value.ha_device_class
 
     def resolve_state(self):
         """Return the current state of the sensor as a human readable string."""

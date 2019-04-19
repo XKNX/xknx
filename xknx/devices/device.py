@@ -77,17 +77,17 @@ class Device:
             await self.process_group_read(telegram)
 
     async def process_group_read(self, telegram):
-        """Process incoming GROUP RESPONSE telegram."""
+        """Process incoming GroupValueRead telegrams."""
         # The dafault is, that devices dont answer to group reads
 
     async def process_group_response(self, telegram):
-        """Process incoming GROUP RESPONSE telegram."""
+        """Process incoming GroupValueResponse telegrams."""
         # Per default mapped to group write.
         await self.process_group_write(telegram)
 
     async def process_group_write(self, telegram):
-        """Process incoming GROUP WRITE telegram."""
-        # The dafault is, that devices dont answer to group reads
+        """Process incoming GroupValueWrite telegrams."""
+        # The dafault is, that devices dont process group writes
 
     def get_name(self):
         """Return name of device."""
