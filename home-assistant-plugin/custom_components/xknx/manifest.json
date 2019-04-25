@@ -1,5 +1,5 @@
 {
-  "domain": "knx",
+  "domain": "xknx",
   "name": "Knx",
   "documentation": "https://www.home-assistant.io/components/knx",
   "requirements": [
