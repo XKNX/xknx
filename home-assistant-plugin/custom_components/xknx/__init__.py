@@ -36,12 +36,12 @@ ATTR_DISCOVER_DEVICES = 'devices'
 
 TUNNELING_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_XKNX_LOCAL_IP): cv.string,
+    vol.Optional(CONF_XKNX_LOCAL_IP): cv.string,
     vol.Optional(CONF_PORT): cv.port,
 })
 
 ROUTING_SCHEMA = vol.Schema({
-    vol.Required(CONF_XKNX_LOCAL_IP): cv.string,
+    vol.Optional(CONF_XKNX_LOCAL_IP): cv.string,
 })
 
 EXPOSE_SCHEMA = vol.Schema({
