@@ -328,7 +328,7 @@ class TestConfig(unittest.TestCase):
             TestConfig.xknx.devices['Livingroom.Switch_1'],
             BinarySensor(TestConfig.xknx,
                          'Livingroom.Switch_1',
-                         group_address='1/2/7',
+                         group_address_state='1/2/7',
                          actions=[
                              Action(TestConfig.xknx,
                                     target="Livingroom.Outlet_1",
@@ -376,7 +376,7 @@ class TestConfig(unittest.TestCase):
             TestConfig.xknx.devices['DiningRoom.Motion.Sensor'],
             BinarySensor(TestConfig.xknx,
                          'DiningRoom.Motion.Sensor',
-                         group_address='3/0/1',
+                         group_address_state='3/0/1',
                          device_class='motion',
                          device_updated_cb=TestConfig.xknx.devices.device_updated))
 
@@ -386,7 +386,7 @@ class TestConfig(unittest.TestCase):
             TestConfig.xknx.devices['Kitchen.Presence'],
             BinarySensor(TestConfig.xknx,
                          'Kitchen.Presence',
-                         group_address='3/0/2',
+                         group_address_state='3/0/2',
                          significant_bit=2,
                          device_class='motion',
                          device_updated_cb=TestConfig.xknx.devices.device_updated))

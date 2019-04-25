@@ -13,7 +13,7 @@ async def main():
     sensor1 = BinarySensor(
         xknx,
         'DiningRoom.Motion.Sensor',
-        group_address='6/0/2',
+        group_address_state='6/0/2',
         device_class='motion')
     await sensor1.sync()
     print(sensor1)

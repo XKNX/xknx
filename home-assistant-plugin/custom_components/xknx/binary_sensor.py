@@ -68,7 +68,7 @@ def async_add_entities_config(hass, config, async_add_entities):
     binary_sensor = xknx.devices.BinarySensor(
         hass.data[DATA_XKNX].xknx,
         name=name,
-        group_address=config.get(CONF_ADDRESS),
+        group_address_state=config.get(CONF_ADDRESS),
         device_class=config.get(CONF_DEVICE_CLASS),
         significant_bit=config.get(CONF_SIGNIFICANT_BIT),
         reset_after=config.get(CONF_RESET_AFTER))
