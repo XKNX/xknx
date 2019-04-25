@@ -11,8 +11,6 @@ from . import ATTR_DISCOVER_DEVICES, DATA_XKNX
 CONF_STATE_ADDRESS = 'state_address'
 
 DEFAULT_NAME = 'XKNX Switch'
-DEPENDENCIES = ['xknx']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADDRESS): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
