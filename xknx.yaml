@@ -118,9 +118,9 @@ groups:
         AlarmWindow: {group_address: '2/7/1', group_address_state: '2/7/2'}
 
     sensor:
-        Heating.Valve1: {group_address: '2/0/0', value_type: 'percent'}
-        Heating.Valve2: {group_address: '2/0/1', value_type: 'percent'}
-        Kitchen.Temperature: {group_address: '2/0/2', value_type: 'temperature'}
+        Heating.Valve1: {group_address_state: '2/0/0', value_type: 'percent'}
+        Heating.Valve2: {group_address_state: '2/0/1', value_type: 'percent'}
+        Kitchen.Temperature: {group_address_state: '2/0/2', value_type: 'temperature'}
 
     expose_sensor:
         Outside.Temperature: {group_address: '2/0/3', value_type: 'temperature'}

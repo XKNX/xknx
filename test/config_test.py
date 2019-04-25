@@ -345,7 +345,7 @@ class TestConfig(unittest.TestCase):
             TestConfig.xknx.devices['Heating.Valve1'],
             Sensor(TestConfig.xknx,
                    'Heating.Valve1',
-                   group_address='2/0/0',
+                   group_address_state='2/0/0',
                    value_type='percent',
                    device_updated_cb=TestConfig.xknx.devices.device_updated))
 
@@ -355,7 +355,7 @@ class TestConfig(unittest.TestCase):
             TestConfig.xknx.devices['Kitchen.Temperature'],
             Sensor(TestConfig.xknx,
                    'Kitchen.Temperature',
-                   group_address='2/0/2',
+                   group_address_state='2/0/2',
                    value_type='temperature',
                    device_updated_cb=TestConfig.xknx.devices.device_updated))
 

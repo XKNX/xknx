@@ -203,7 +203,7 @@ class TestStringRepresentations(unittest.TestCase):
         sensor = Sensor(
             xknx,
             name='MeinSensor',
-            group_address='1/2/3',
+            group_address_state='1/2/3',
             value_type='percent')
         self.assertEqual(
             str(sensor),
