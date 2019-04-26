@@ -32,7 +32,7 @@ class CouldNotParseTelegram(XKNXException):
 
 
 class CouldNotParseKNXIP(XKNXException):
-    """Exception calss for wrong KNXIP data."""
+    """Exception class for wrong KNXIP data."""
 
     def __init__(self, description=""):
         """Initialize CouldNotParseTelegram class."""

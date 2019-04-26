@@ -14,7 +14,7 @@ class Scene(Device):
                  device_updated_cb=None):
         """Initialize Sceneclass."""
         # pylint: disable=too-many-arguments
-        super(Scene, self).__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name, device_updated_cb)
 
         self.scene_value = RemoteValueSceneNumber(
             xknx,

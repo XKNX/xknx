@@ -27,7 +27,7 @@ class ExposeSensor(Device):
                  device_updated_cb=None):
         """Initialize Sensor class."""
         # pylint: disable=too-many-arguments
-        super(ExposeSensor, self).__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name, device_updated_cb)
 
         self.sensor_value = None
         if value_type == "binary":

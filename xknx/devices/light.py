@@ -42,7 +42,7 @@ class Light(Device):
                  device_updated_cb=None):
         """Initialize Light class."""
         # pylint: disable=too-many-arguments
-        super(Light, self).__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name, device_updated_cb)
 
         self.switch = RemoteValueSwitch(
             xknx,

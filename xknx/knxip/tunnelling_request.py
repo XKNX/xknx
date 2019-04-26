@@ -21,7 +21,7 @@ class TunnellingRequest(KNXIPBody):
 
     def __init__(self, xknx):
         """Initialize TunnellingRequest object."""
-        super(TunnellingRequest, self).__init__(xknx)
+        super().__init__(xknx)
 
         self.communication_channel_id = 1
         self.sequence_counter = 0
