@@ -10,7 +10,7 @@ class Scene(Device):
                  xknx,
                  name,
                  group_address=None,
-                 scene_number=0,
+                 scene_number=1,
                  device_updated_cb=None):
         """Initialize Sceneclass."""
         # pylint: disable=too-many-arguments
@@ -50,7 +50,7 @@ class Scene(Device):
                 self.scene_number)
 
     async def run(self):
-        """Move cover down."""
+        """Activate scene."""
         await self.scene_value.set(self.scene_number)
 
     async def do(self, action):
