@@ -9,7 +9,7 @@ from xknx.knxip import ErrorCode
 
 
 class RequestResponse():
-    """Class for sending a specific type of KNX/IP Packet to a KNX/IP and wait for the corresponding answer."""
+    """Class for sending a specific type of KNX/IP Packet to a KNX/IP device and wait for the corresponding answer."""
 
     # pylint: disable=too-many-instance-attributes
 
@@ -29,7 +29,7 @@ class RequestResponse():
         raise NotImplementedError('create_knxipframe has to be implemented')
 
     async def start(self):
-        """Start. Sending and waiting for answer."""
+        """Start. Send request and wait for an answer."""
         callb = self.udpclient.register_callback(
             self.response_rec_callback, [self.awaited_response_class.service_type])
         await self.send_request()
@@ -61,7 +61,7 @@ class RequestResponse():
         self.xknx.logger.debug('Success: received correct answer from KNX bus: %s', knxipframe.body.status_code)
 
     def on_error_hook(self, knxipframe):
-        """Do somthing after having received error within given time. May be overwritten in derived class."""
+        """Do something after having received error within given time. May be overwritten in derived class."""
         self.xknx.logger.warning("Error: KNX bus responded to request of type '%s' with error in '%s': %s",
                                  self.__class__.__name__,
                                  self.awaited_response_class.__name__, knxipframe.body.status_code)
