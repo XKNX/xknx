@@ -21,9 +21,11 @@ class RemoteValueSwitch(RemoteValue):
                  invert=False):
         """Initialize remote value of KNX DPT 1.001."""
         # pylint: disable=too-many-arguments
-        super(RemoteValueSwitch, self).__init__(
-            xknx, group_address, group_address_state,
-            device_name=device_name, after_update_cb=after_update_cb)
+        super().__init__(xknx,
+                         group_address,
+                         group_address_state,
+                         device_name=device_name,
+                         after_update_cb=after_update_cb)
         self.invert = invert
 
     def payload_valid(self, payload):

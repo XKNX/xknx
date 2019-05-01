@@ -21,7 +21,7 @@ class SearchResponse(KNXIPBody):
 
     def __init__(self, xknx):
         """Initialize SearchResponse object."""
-        super(SearchResponse, self).__init__(xknx)
+        super().__init__(xknx)
         self.control_endpoint = HPAI()
         self.dibs = []
 

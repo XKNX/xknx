@@ -22,7 +22,7 @@ class TunnellingAck(KNXIPBody):
 
     def __init__(self, xknx):
         """Initialize TunnellingAck object."""
-        super(TunnellingAck, self).__init__(xknx)
+        super().__init__(xknx)
         self.communication_channel_id = 1
         self.sequence_counter = 0
         self.status_code = ErrorCode.E_NO_ERROR

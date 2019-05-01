@@ -60,7 +60,7 @@ class Action(ActionBase):
                  counter=1):
         """Initialize Action class."""
         # pylint: disable=too-many-arguments
-        super(Action, self).__init__(xknx, hook, counter)
+        super().__init__(xknx, hook, counter)
         self.target = target
         self.method = method
 
@@ -101,7 +101,7 @@ class ActionCallback(ActionBase):
                  counter=1):
         """Initialize Action class."""
         # pylint: disable=too-many-arguments
-        super(ActionCallback, self).__init__(xknx, hook, counter)
+        super().__init__(xknx, hook, counter)
         self.callback = callback
 
     async def execute(self):
@@ -111,4 +111,4 @@ class ActionCallback(ActionBase):
     def __str__(self):
         """Return object as readable string."""
         return '<ActionCallback callback="{}" {}/>' \
-            .format(self.callback.__name__, super(ActionCallback, self).__str__())
+            .format(self.callback.__name__, super().__str__())

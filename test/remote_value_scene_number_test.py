@@ -24,13 +24,13 @@ class TestRemoteValueSceneNumber(unittest.TestCase):
         """Test to_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueSceneNumber(xknx)
-        self.assertEqual(remote_value.to_knx(10), DPTArray((0x0A, )))
+        self.assertEqual(remote_value.to_knx(11), DPTArray((0x0A, )))
 
     def test_from_knx(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueSceneNumber(xknx)
-        self.assertEqual(remote_value.from_knx(DPTArray((0x0A, ))), 10)
+        self.assertEqual(remote_value.from_knx(DPTArray((0x0A, ))), 11)
 
     def test_to_knx_error(self):
         """Test to_knx function with wrong parametern."""
@@ -47,7 +47,7 @@ class TestRemoteValueSceneNumber(unittest.TestCase):
         remote_value = RemoteValueSceneNumber(
             xknx,
             group_address=GroupAddress("1/2/3"))
-        self.loop.run_until_complete(asyncio.Task(remote_value.set(10)))
+        self.loop.run_until_complete(asyncio.Task(remote_value.set(11)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -55,7 +55,7 @@ class TestRemoteValueSceneNumber(unittest.TestCase):
             Telegram(
                 GroupAddress('1/2/3'),
                 payload=DPTArray((0x0A, ))))
-        self.loop.run_until_complete(asyncio.Task(remote_value.set(11)))
+        self.loop.run_until_complete(asyncio.Task(remote_value.set(12)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -74,7 +74,7 @@ class TestRemoteValueSceneNumber(unittest.TestCase):
             group_address=GroupAddress("1/2/3"),
             payload=DPTArray((0x0A, )))
         self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
-        self.assertEqual(remote_value.value, 10)
+        self.assertEqual(remote_value.value, 11)
 
     def test_to_process_error(self):
         """Test process errornous telegram."""

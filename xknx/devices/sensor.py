@@ -21,7 +21,7 @@ class Sensor(Device):
                  device_updated_cb=None):
         """Initialize Sensor class."""
         # pylint: disable=too-many-arguments
-        super(Sensor, self).__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name, device_updated_cb)
 
         self.sensor_value = None
         self.sensor_value = RemoteValueSensor(

@@ -17,7 +17,7 @@ class SearchRequest(KNXIPBody):
 
     def __init__(self, xknx):
         """Initialize SearchRequest object."""
-        super(SearchRequest, self).__init__(xknx)
+        super().__init__(xknx)
         self.discovery_endpoint = HPAI(ip_addr="224.0.23.12", port=3671)
 
     def calculated_length(self):
