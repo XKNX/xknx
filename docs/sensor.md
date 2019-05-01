@@ -34,7 +34,7 @@ Sensor objects are usually configured via [`xknx.yaml`](/configuration):
     sensor:
         Heating.Valve1: {group_address_state: '2/0/0', value_type: 'percent'}
         Heating.Valve2: {group_address_state: '2/0/1', value_type: 'percent'}
-	Kitchen.Temperature: {group_address_state: '2/0/2', value_type: 'temperature'}
+	    Kitchen.Temperature: {group_address_state: '2/0/2', value_type: 'temperature'}
         Some.Other.Value: {group_address_state: '2/0/3'}
 ```
 
