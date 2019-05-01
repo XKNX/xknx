@@ -99,12 +99,12 @@ class DPTControllerStatus(DPTBase):
         """Serialize to KNX/IP raw data."""
         if value == HVACOperationMode.AUTO:
             raise ConversionError("Cant serialize DPTControllerStatus", value=value)
-        elif value == HVACOperationMode.COMFORT:
+        if value == HVACOperationMode.COMFORT:
             return (0x21,)
-        elif value == HVACOperationMode.STANDBY:
+        if value == HVACOperationMode.STANDBY:
             return (0x22,)
-        elif value == HVACOperationMode.NIGHT:
+        if value == HVACOperationMode.NIGHT:
             return (0x24,)
-        elif value == HVACOperationMode.FROST_PROTECTION:
+        if value == HVACOperationMode.FROST_PROTECTION:
             return (0x28,)
         raise ConversionError("Could not parse HVACOperationMode", value=value)

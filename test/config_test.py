@@ -93,9 +93,28 @@ class TestConfig(unittest.TestCase):
             Config(TestConfig.xknx).parse_connection(config)
             self.assertEqual(TestConfig.xknx.connection_config, expected_conn)
 
+    def test_config_invalid_connection(self):
+        """Test invalid connection section from config file."""
+        import yaml
+        test_configs = [
+            ("""
+            connection:
+                tunneling:
+                    local_ip: '192.168.1.2'
+            """,
+             XKNXException,
+             "`gateway_ip` is required for tunneling connection."
+             )
+        ]
+        for yaml_string, expected_exception, exception_message in test_configs:
+            with self.assertRaises(expected_exception, msg=exception_message):
+                config = yaml.safe_load(yaml_string)
+                Config(TestConfig.xknx).parse_connection(config)
+
     #
     # XKNX Groups Config
     #
+
     def test_config_light(self):
         """Test reading Light from config file."""
         self.assertEqual(

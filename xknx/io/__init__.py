@@ -4,7 +4,7 @@ This package contains all objects managing Tunneling and Routing Connections..
 - KNXIPInterface is the overall managing class.
 - GatewayScanner searches for available KNX/IP devices in the local network.
 - Routing uses UDP/Multicast to communicate with KNX/IP device.
-- Tunelling uses UDP packets and builds a static TUnnel with KNX/IP device.
+- Tunnelling uses UDP packets and builds a static tunnel with KNX/IP device.
 """
 # flake8: noqa
 from .request_response import RequestResponse

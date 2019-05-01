@@ -1,4 +1,4 @@
-"""Unit test for KNX/IP TunnelingRequest objects."""
+"""Unit test for KNX/IP TunnellingRequest objects."""
 import asyncio
 import unittest
 
@@ -10,7 +10,7 @@ from xknx.knxip import (
 
 
 class Test_KNXIP_TunnelingReq(unittest.TestCase):
-    """Test class for KNX/IP TunelingRequest objects."""
+    """Test class for KNX/IP TunnellingRequest objects."""
 
     # pylint: disable=too-many-public-methods,invalid-name
 

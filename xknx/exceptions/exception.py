@@ -18,7 +18,7 @@ class CouldNotParseTelegram(XKNXException):
 
     def __init__(self, description, **kwargs):
         """Initialize CouldNotParseTelegram class."""
-        super(CouldNotParseTelegram, self).__init__("Could not parse Telegram")
+        super().__init__("Could not parse Telegram")
         self.description = description
         self.parameter = kwargs
 
@@ -32,11 +32,11 @@ class CouldNotParseTelegram(XKNXException):
 
 
 class CouldNotParseKNXIP(XKNXException):
-    """Exception falss for worong KNXIP data."""
+    """Exception class for wrong KNXIP data."""
 
     def __init__(self, description=""):
         """Initialize CouldNotParseTelegram class."""
-        super(CouldNotParseKNXIP, self).__init__("Could not parse KNXIP")
+        super().__init__("Could not parse KNXIP")
         self.description = description
 
     def __str__(self):
@@ -50,7 +50,7 @@ class ConversionError(XKNXException):
 
     def __init__(self, description, **kwargs):
         """Initialize ConversionError class."""
-        super(ConversionError, self).__init__("Conversion Error")
+        super().__init__("Conversion Error")
         self.description = description
         self.parameter = kwargs
 
@@ -67,7 +67,7 @@ class CouldNotParseAddress(XKNXException):
 
     def __init__(self, address=None):
         """Initialize CouldNotParseAddress class."""
-        super(CouldNotParseAddress, self).__init__("Could not parse address")
+        super().__init__("Could not parse address")
         self.address = address
 
     def __str__(self):
@@ -80,7 +80,7 @@ class DeviceIllegalValue(XKNXException):
 
     def __init__(self, value, description):
         """Initialize DeviceIllegalValue class."""
-        super(DeviceIllegalValue, self).__init__("Illegal value for device")
+        super().__init__("Illegal value for device")
         self.value = value
         self.description = description
 

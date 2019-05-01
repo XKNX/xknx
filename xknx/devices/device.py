@@ -49,7 +49,7 @@ class Device:
                 if telegram is not None:
                     await self.process(telegram)
                 else:
-                    self.xknx.logger.warning("Could not read value of %s %s", self, group_address)
+                    self.xknx.logger.warning("Could not sync group address '%s' from %s", group_address, self)
             else:
                 await value_reader.send_group_read()
 

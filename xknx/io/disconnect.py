@@ -11,7 +11,7 @@ class Disconnect(RequestResponse):
         """Initialize Disconnect class."""
         self.xknx = xknx
         self.udp_client = udp_client
-        super(Disconnect, self).__init__(xknx, self.udp_client, DisconnectResponse)
+        super().__init__(xknx, self.udp_client, DisconnectResponse)
         self.communication_channel_id = communication_channel_id
 
     def create_knxipframe(self):

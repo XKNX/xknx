@@ -88,3 +88,13 @@ class DPTSceneNumber(DPTValue1Ucount):
             return (knx_value,)
         except ValueError:
             raise ConversionError("Cant serialize %s" % cls.__name__, value=value)
+
+
+class DPTTariff(DPTValue1Ucount):
+    """
+    Abstraction for KNX 1 Octet tariff information.
+
+    DPT 5.006
+    """
+
+    value_max = 254

@@ -58,7 +58,9 @@ class TestDisconnect(unittest.TestCase):
         err_knxipframe.body.status_code = ErrorCode.E_CONNECTION_ID
         with patch('logging.Logger.warning') as mock_warning:
             disconnect.response_rec_callback(err_knxipframe, None)
-            mock_warning.assert_called_with('Error: reading rading group address from KNX bus failed: %s', ErrorCode.E_CONNECTION_ID)
+            mock_warning.assert_called_with("Error: KNX bus responded to request of type '%s' with error in '%s': %s",
+                                            type(disconnect).__name__,
+                                            type(err_knxipframe.body).__name__, ErrorCode.E_CONNECTION_ID)
 
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame(xknx)

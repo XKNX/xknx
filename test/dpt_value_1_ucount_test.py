@@ -2,7 +2,7 @@
 import unittest
 
 from xknx.exceptions import ConversionError
-from xknx.knx import DPTValue1Ucount
+from xknx.knx import DPTTariff, DPTValue1Ucount
 
 
 class TestDPTValue1Ucount(unittest.TestCase):
@@ -54,3 +54,12 @@ class TestDPTValue1Ucount(unittest.TestCase):
         """Test parsing of DPTValue1Ucount with wrong value (array containing string)."""
         with self.assertRaises(ConversionError):
             DPTValue1Ucount().from_knx(("0x23"))
+
+
+class TestDPTTariff(unittest.TestCase):
+    """Test class for KNX 8-bit tariff information."""
+
+    def test_from_knx_max_exceeded(self):
+        """Test parsing of DPTTariff with wrong value (overflow)."""
+        with self.assertRaises(ConversionError):
+            DPTTariff().from_knx((0xFF,))

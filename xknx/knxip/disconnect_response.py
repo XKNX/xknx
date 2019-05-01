@@ -20,7 +20,7 @@ class DisconnectResponse(KNXIPBody):
 
     def __init__(self, xknx):
         """Initialize DisconnectResponse object."""
-        super(DisconnectResponse, self).__init__(xknx)
+        super().__init__(xknx)
 
         self.communication_channel_id = 1
         self.status_code = ErrorCode.E_NO_ERROR

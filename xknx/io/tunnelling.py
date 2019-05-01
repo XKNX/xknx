@@ -14,7 +14,7 @@ class Tunnelling(RequestResponse):
         self.udp_client = udp_client
         self.src_address = src_address
 
-        super(Tunnelling, self).__init__(xknx, self.udp_client, TunnellingAck)
+        super().__init__(xknx, self.udp_client, TunnellingAck)
 
         self.telegram = telegram
         self.sequence_counter = sequence_counter
