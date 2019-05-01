@@ -77,13 +77,13 @@ class TestDevices(unittest.TestCase):
 
         sensor1 = BinarySensor(xknx,
                                'DiningRoom.Motion.Sensor',
-                               group_address='3/0/1',
+                               group_address_state='3/0/1',
                                significant_bit=2)
         devices.add(sensor1)
 
         sensor2 = BinarySensor(xknx,
                                'DiningRoom.Motion.Sensor',
-                               group_address='3/0/1',
+                               group_address_state='3/0/1',
                                significant_bit=3)
         devices.add(sensor2)
 
@@ -114,13 +114,13 @@ class TestDevices(unittest.TestCase):
 
         sensor1 = BinarySensor(xknx,
                                'DiningRoom.Motion.Sensor',
-                               group_address='3/0/1',
+                               group_address_state='3/0/1',
                                significant_bit=2)
         devices.add(sensor1)
 
         sensor2 = BinarySensor(xknx,
                                'DiningRoom.Motion.Sensor',
-                               group_address='3/0/1',
+                               group_address_state='3/0/1',
                                significant_bit=3)
         devices.add(sensor2)
 
@@ -148,14 +148,14 @@ class TestDevices(unittest.TestCase):
 
         sensor1 = BinarySensor(xknx,
                                'DiningRoom.Motion.Sensor',
-                               group_address='3/0/1',
+                               group_address_state='3/0/1',
                                significant_bit=2)
         devices.add(sensor1)
         self.assertEqual(len(devices), 2)
 
         sensor2 = BinarySensor(xknx,
                                'DiningRoom.Motion.Sensor',
-                               group_address='3/0/1',
+                               group_address_state='3/0/1',
                                significant_bit=3)
         devices.add(sensor2)
         self.assertEqual(len(devices), 3)

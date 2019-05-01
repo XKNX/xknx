@@ -77,7 +77,7 @@ class SensorExposeLoopTest(unittest.TestCase):
                 sensor = Sensor(
                     xknx,
                     'TestSensor_%s' % value_type,
-                    group_address='1/1/1',
+                    group_address_state='1/1/1',
                     value_type=value_type
                 )
                 expose = ExposeSensor(
@@ -124,7 +124,7 @@ class SensorExposeLoopTest(unittest.TestCase):
                 sensor = BinarySensor(
                     xknx,
                     'TestSensor_%s' % value_type,
-                    group_address='1/1/1'
+                    group_address_state='1/1/1'
                 )
                 expose = ExposeSensor(
                     xknx,

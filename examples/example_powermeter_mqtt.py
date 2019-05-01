@@ -132,54 +132,54 @@ async def main():
 
     # Generic Types not specifically supported by XKNX
     el_meter_reading_active_energy = Sensor(
-        xknx, 'EL-T-O_MeterReading_ActiveEnergy', group_address='5/6/11', value_type="DPT-13")
+        xknx, 'EL-T-O_MeterReading_ActiveEnergy', group_address_state='5/6/11', value_type="DPT-13")
     xknx.devices.add(el_meter_reading_active_energy)
     el_meter_reading_reactive_energy = Sensor(
-        xknx, 'EL-T-O_MeterReading_ReactiveEnergy', group_address='5/6/16', value_type="DPT-13")
+        xknx, 'EL-T-O_MeterReading_ReactiveEnergy', group_address_state='5/6/16', value_type="DPT-13")
     xknx.devices.add(el_meter_reading_reactive_energy)
 
     # Active Power
     el_total_active_power = Sensor(
-        xknx, 'EL-T-O_TotalActivePower', group_address='5/6/24', value_type="power")
+        xknx, 'EL-T-O_TotalActivePower', group_address_state='5/6/24', value_type="power")
     xknx.devices.add(el_total_active_power)
     el_active_power_l1 = Sensor(
-        xknx, 'EL-T-O_ActivePower_L1', group_address='5/6/25', value_type="power")
+        xknx, 'EL-T-O_ActivePower_L1', group_address_state='5/6/25', value_type="power")
     xknx.devices.add(el_active_power_l1)
     # ...
 
     # Reactive Power
     el_total_reactive_power = Sensor(
-        xknx, 'EL-T-O_TotalReactivePower', group_address='5/6/28', value_type="power")
+        xknx, 'EL-T-O_TotalReactivePower', group_address_state='5/6/28', value_type="power")
     xknx.devices.add(el_total_reactive_power)
     el_reactive_power_l1 = Sensor(
-        xknx, 'EL-T-O_ReactivePower_L1', group_address='5/6/29', value_type="power")
+        xknx, 'EL-T-O_ReactivePower_L1', group_address_state='5/6/29', value_type="power")
     xknx.devices.add(el_reactive_power_l1)
     # ...
 
     # Apparent Power
     el_total_apparent_power = Sensor(
-        xknx, 'EL-T-O_TotalReactivePower', group_address='5/6/32', value_type="power")
+        xknx, 'EL-T-O_TotalReactivePower', group_address_state='5/6/32', value_type="power")
     xknx.devices.add(el_total_apparent_power)
     el_apparent_power_l1 = Sensor(
-        xknx, 'EL-T-O_ApparentPower_L1', group_address='5/6/33', value_type="power")
+        xknx, 'EL-T-O_ApparentPower_L1', group_address_state='5/6/33', value_type="power")
     xknx.devices.add(el_apparent_power_l1)
     # ...
 
     # Current
     el_current_l1 = Sensor(
-        xknx, 'EL-T-O_Current_L1', group_address='5/6/45', value_type="electric_current")
+        xknx, 'EL-T-O_Current_L1', group_address_state='5/6/45', value_type="electric_current")
     xknx.devices.add(el_current_l1)
     # ...
 
     # Voltage
     el_voltage_l1 = Sensor(
-        xknx, 'EL-T-O_Voltage_L1-N', group_address='5/6/48', value_type="electric_potential")
+        xknx, 'EL-T-O_Voltage_L1-N', group_address_state='5/6/48', value_type="electric_potential")
     xknx.devices.add(el_voltage_l1)
     # ...
 
     # Frequency
     el_frequency = Sensor(
-        xknx, 'EL-T-O_Frequency', group_address='5/6/53', value_type="frequency")
+        xknx, 'EL-T-O_Frequency', group_address_state='5/6/53', value_type="frequency")
     xknx.devices.add(el_frequency)
 
     mqttc.connect(BROKER_ADDRESS, 8883, 60)

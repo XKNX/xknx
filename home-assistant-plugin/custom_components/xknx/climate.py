@@ -39,8 +39,6 @@ DEFAULT_NAME = 'XKNX Climate'
 DEFAULT_SETPOINT_SHIFT_STEP = 0.5
 DEFAULT_SETPOINT_SHIFT_MAX = 6
 DEFAULT_SETPOINT_SHIFT_MIN = -6
-DEPENDENCIES = ['xknx']
-
 # Map KNX operation modes to HA modes. This list might not be full.
 OPERATION_MODES = {
     # Map DPT 201.100 HVAC operating modes
