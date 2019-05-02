@@ -49,7 +49,6 @@ class TestValueReader(unittest.TestCase):
         if callable(event_has_cancelled):
             self.assertTrue(value_reader.timeout_handle.cancelled())
         # timeout() was never called because there was no timeout
-        # value_reader.timeout.assert_not_called()
         timeout_mock.assert_not_called()
         # Telegram was received
         self.assertEqual(value_reader.received_telegram,
