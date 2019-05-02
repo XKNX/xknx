@@ -68,15 +68,12 @@ class Config:
         connection_config = ConnectionConfig(connection_type=conn_type)
         if hasattr(prefs, '__iter__'):
             for pref, value in prefs.items():
-                try:
-                    if pref == "gateway_ip":
-                        connection_config.gateway_ip = value
-                    elif pref == "gateway_port":
-                        connection_config.gateway_port = value
-                    elif pref == "local_ip":
-                        connection_config.local_ip = value
-                except XKNXException as ex:
-                    self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", pref, ex)
+                if pref == "gateway_ip":
+                    connection_config.gateway_ip = value
+                elif pref == "gateway_port":
+                    connection_config.gateway_port = value
+                elif pref == "local_ip":
+                    connection_config.local_ip = value
         self.xknx.connection_config = connection_config
 
     def parse_groups(self, doc):
