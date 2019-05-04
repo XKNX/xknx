@@ -7,8 +7,8 @@ from xknx import XKNX
 from xknx.core import Config
 from xknx.devices import (
     Action, BinarySensor, Climate, ClimateMode, Cover, DateTime,
-    DateTimeBroadcastType, ExposeSensor, Light, Notification, Scene, Sensor,
-    Switch)
+    DateTimeBroadcastType, ExposeSensor, Fan, Light, Notification,
+    Scene, Sensor, Switch)
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
 from xknx.knx import PhysicalAddress
@@ -194,6 +194,16 @@ class TestConfig(unittest.TestCase):
                    'Livingroom.Outlet_2',
                    group_address='1/3/2',
                    device_updated_cb=TestConfig.xknx.devices.device_updated))
+
+    def test_config_fan(self):
+        """Test reading Fan from config file."""
+        self.assertEqual(
+            TestConfig.xknx.devices['Kitchen.Fan_1'],
+            Fan(TestConfig.xknx,
+                'Kitchen.Fan_1',
+                group_address_speed='1/3/21',
+                group_address_speed_state='1/3/22',
+                device_updated_cb=TestConfig.xknx.devices.device_updated))
 
     def test_config_cover(self):
         """Test reading Cover from config file."""

@@ -8,8 +8,8 @@ Module for reading configfiles (xknx.yaml).
 import yaml
 
 from xknx.devices import (
-    BinarySensor, Climate, Cover, DateTime, ExposeSensor, Light, Notification,
-    Scene, Sensor, Switch)
+    BinarySensor, Climate, Cover, DateTime, ExposeSensor, Light, Fan,
+    Notification, Scene, Sensor, Switch)
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
 from xknx.knx import PhysicalAddress
@@ -88,6 +88,8 @@ class Config:
         try:
             if group.startswith("light"):
                 self.parse_group_light(doc["groups"][group])
+            elif group.startswith("fan"):
+                self.parse_group_fan(doc["groups"][group])
             elif group.startswith("switch"):
                 self.parse_group_switch(doc["groups"][group])
             elif group.startswith("cover"):
@@ -117,6 +119,15 @@ class Config:
                 entry,
                 entries[entry])
             self.xknx.devices.add(light)
+
+    def parse_group_fan(self, entries):
+        """Parse a fan section of xknx.yaml."""
+        for entry in entries:
+            fan = Fan.from_config(
+                self.xknx,
+                entry,
+                entries[entry])
+            self.xknx.devices.add(fan)
 
     def parse_group_switch(self, entries):
         """Parse a switch section of xknx.yaml."""
