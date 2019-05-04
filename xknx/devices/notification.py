@@ -77,7 +77,6 @@ class Notification(Device):
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
         if self.group_address_state is not None:
-            print("Group address state: ", self.group_address_state)
             return [self.group_address_state, ]
         return []
 
