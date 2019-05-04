@@ -7,8 +7,8 @@ from xknx import XKNX
 from xknx.core import Config
 from xknx.devices import (
     Action, BinarySensor, Climate, ClimateMode, Cover, DateTime,
-    DateTimeBroadcastType, ExposeSensor, Fan, Light, Notification,
-    Scene, Sensor, Switch)
+    DateTimeBroadcastType, ExposeSensor, Fan, Light, Notification, Scene,
+    Sensor, Switch)
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
 from xknx.knx import PhysicalAddress
