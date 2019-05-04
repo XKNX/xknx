@@ -8,10 +8,6 @@ class XKNXException(Exception):
         """Equal operator."""
         return self.__dict__ == other.__dict__
 
-    def __hash__(self):
-        """Hash function."""
-        return 0
-
 
 class CouldNotParseTelegram(XKNXException):
     """Could not parse telegram error."""
