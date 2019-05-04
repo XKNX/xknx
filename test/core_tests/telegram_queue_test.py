@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from xknx import XKNX
+from xknx.exceptions import CouldNotParseTelegram
 from xknx.knx import (
     AddressFilter, DPTBinary, GroupAddress, Telegram, TelegramDirection)
 
@@ -216,6 +217,28 @@ class TestTelegramQueue(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(
             xknx.telegram_queue.process_telegram(telegram)))
         if_mock.send_telegram.assert_called_once_with(telegram)
+
+    @patch('logging.Logger.error')
+    @patch('xknx.core.TelegramQueue.process_telegram_incoming')
+    def test_process_exception(self, process_tg_in_mock, logging_error_mock):
+        """Test process_telegram exception handling."""
+        # pylint: disable=no-self-use
+        xknx = XKNX(loop=self.loop)
+
+        async def process_exception():
+            raise CouldNotParseTelegram("Something went wrong when receiving the telegram.""")
+        process_tg_in_mock.return_value = asyncio.ensure_future(process_exception())
+
+        telegram = Telegram(
+            direction=TelegramDirection.INCOMING,
+            payload=DPTBinary(1),
+            group_address=GroupAddress("1/2/3"))
+
+        self.loop.run_until_complete(asyncio.Task(
+            xknx.telegram_queue.process_telegram(telegram)))
+        logging_error_mock.assert_called_once_with(
+            "Error while processing telegram %s",
+            CouldNotParseTelegram("Something went wrong when receiving the telegram."""))
 
     @patch('xknx.core.TelegramQueue.process_telegram')
     def test_process_all_telegrams(self, process_telegram_mock):
