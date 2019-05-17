@@ -12,11 +12,13 @@ It provides functionality for
 """
 from .device import Device
 from .remote_value_color_rgb import RemoteValueColorRGB
+from .remote_value_color_rgbw import RemoteValueColorRGBW
 from .remote_value_dpt_2_byte_unsigned import RemoteValueDpt2ByteUnsigned
 from .remote_value_scaling import RemoteValueScaling
 from .remote_value_switch import RemoteValueSwitch
 
 
+# pylint: disable=too-many-public-methods, too-many-instance-attributes
 class Light(Device):
     """Class for managing a light."""
 
@@ -33,6 +35,8 @@ class Light(Device):
                  group_address_brightness_state=None,
                  group_address_color=None,
                  group_address_color_state=None,
+                 group_address_rgbw=None,
+                 group_address_rgbw_state=None,
                  group_address_tunable_white=None,
                  group_address_tunable_white_state=None,
                  group_address_color_temperature=None,
@@ -67,6 +71,13 @@ class Light(Device):
             device_name=self.name,
             after_update_cb=self.after_update)
 
+        self.rgbw = RemoteValueColorRGBW(
+            xknx,
+            group_address_rgbw,
+            group_address_rgbw_state,
+            device_name=self.name,
+            after_update_cb=self.after_update)
+
         self.tunable_white = RemoteValueScaling(
             xknx,
             group_address_tunable_white,
@@ -97,6 +108,11 @@ class Light(Device):
         return self.color.initialized
 
     @property
+    def supports_rgbw(self):
+        """Return if light supports RGBW."""
+        return self.rgbw.initialized
+
+    @property
     def supports_tunable_white(self):
         """Return if light supports tunable white / relative color temperature."""
         return self.tunable_white.initialized
@@ -121,6 +137,10 @@ class Light(Device):
             config.get('group_address_color')
         group_address_color_state = \
             config.get('group_address_color_state')
+        group_address_rgbw = \
+            config.get('group_address_rgbw')
+        group_address_rgbw_state = \
+            config.get('group_address_rgbw_state')
         group_address_tunable_white = \
             config.get('group_address_tunable_white')
         group_address_tunable_white_state = \
@@ -142,6 +162,8 @@ class Light(Device):
                    group_address_brightness_state=group_address_brightness_state,
                    group_address_color=group_address_color,
                    group_address_color_state=group_address_color_state,
+                   group_address_rgbw=group_address_rgbw,
+                   group_address_rgbw_state=group_address_rgbw_state,
                    group_address_tunable_white=group_address_tunable_white,
                    group_address_tunable_white_state=group_address_tunable_white_state,
                    group_address_color_temperature=group_address_color_temperature,
@@ -154,6 +176,7 @@ class Light(Device):
         return (self.switch.has_group_address(group_address) or
                 self.brightness.has_group_address(group_address) or
                 self.color.has_group_address(group_address) or
+                self.rgbw.has_group_address(group_address) or
                 self.tunable_white.has_group_address(group_address) or
                 self.color_temperature.has_group_address(group_address))
 
@@ -167,6 +190,10 @@ class Light(Device):
             ' color="{0}"'.format(
                 self.color.group_addr_str())
 
+        str_rgbw = '' if not self.supports_rgbw else \
+            ' rgbw="{0}"'.format(
+                self.rgbw.group_addr_str())
+
         str_tunable_white = '' if not self.supports_tunable_white else \
             ' tunable white="{0}"'.format(
                 self.tunable_white.group_addr_str())
@@ -176,12 +203,13 @@ class Light(Device):
                 self.color_temperature.group_addr_str())
 
         return '<Light name="{0}" ' \
-            'switch="{1}"{2}{3}{4}{5} />' \
+            'switch="{1}"{2}{3}{4}{5}{6} />' \
             .format(
                 self.name,
                 self.switch.group_addr_str(),
                 str_brightness,
                 str_color,
+                str_rgbw,
                 str_tunable_white,
                 str_color_temperature)
 
@@ -213,15 +241,36 @@ class Light(Device):
 
     @property
     def current_color(self):
-        """Return current color of light."""
-        return self.color.value
+        """
+        Return current color of light.
 
-    async def set_color(self, color):
-        """Set color of light."""
-        if not self.supports_color:
-            self.xknx.logger.warning("Colors not supported for device %s", self.get_name())
-            return
-        await self.color.set(color)
+        If the device supports RGBW, get the current RGB+White values instead.
+        """
+        if self.supports_rgbw:
+            if not self.rgbw.value:
+                return None, None
+            return self.rgbw.value[:3], self.rgbw.value[3]
+        return self.color.value, None
+
+    async def set_color(self, color, white=None):
+        """
+        Set color of a light device.
+
+        If also the white value is given and the device supports RGBW,
+        set all four values.
+        """
+        if white is not None:
+            if self.supports_rgbw:
+                await self.rgbw.set(list(color) + [white])
+                return
+            self.xknx.logger.warning(
+                "RGBW not supported for device %s", self.get_name())
+        else:
+            if self.supports_color:
+                await self.color.set(color)
+                return
+            self.xknx.logger.warning(
+                "Colors not supported for device %s", self.get_name())
 
     @property
     def current_tunable_white(self):
@@ -267,6 +316,7 @@ class Light(Device):
         state_addresses = []
         state_addresses.extend(self.switch.state_addresses())
         state_addresses.extend(self.color.state_addresses())
+        state_addresses.extend(self.rgbw.state_addresses())
         state_addresses.extend(self.brightness.state_addresses())
         state_addresses.extend(self.tunable_white.state_addresses())
         state_addresses.extend(self.color_temperature.state_addresses())
@@ -276,6 +326,7 @@ class Light(Device):
         """Process incoming GROUP WRITE telegram."""
         await self.switch.process(telegram)
         await self.color.process(telegram)
+        await self.rgbw.process(telegram)
         await self.brightness.process(telegram)
         await self.tunable_white.process(telegram)
         await self.color_temperature.process(telegram)
