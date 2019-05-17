@@ -169,7 +169,8 @@ class KNXLight(Light):
         """Return the brightness of this light between 0..255."""
         if self.device.supports_brightness:
             return self.device.current_brightness
-        if (self.device.supports_color or self.device.supports_rgbw) and self.device.current_color:
+        if (self.device.supports_color or self.device.supports_rgbw) and \
+                self.device.current_color:
             return max(self.device.current_color)
         return None
 
@@ -277,7 +278,8 @@ class KNXLight(Light):
                 hs_color = DEFAULT_COLOR
             if white_value is None and self.device.supports_rgbw:
                 white_value = DEFAULT_WHITE_VALUE
-            rgb = color_util.color_hsv_to_RGB(*hs_color, brightness * 100 / 255)
+            rgb = color_util.color_hsv_to_RGB(*hs_color,
+                                              brightness * 100 / 255)
             await self.device.set_color(rgb, white_value)
         elif self.device.supports_color_temperature and \
                 update_color_temp:
