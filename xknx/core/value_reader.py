@@ -25,7 +25,6 @@ class ValueReader:
         self.response_received_or_timeout = asyncio.Event()
         self.success = False
         self.timeout_in_seconds = timeout_in_seconds
-        self.timeout_callback = None
         self.timeout_handle = None
         self.received_telegram = None
 

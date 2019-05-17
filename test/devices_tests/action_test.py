@@ -105,3 +105,13 @@ class TestAction(unittest.TestCase):
         action = ActionCallback(xknx, async_callback)
         self.loop.run_until_complete(asyncio.Task(action.execute()))
         callback.assert_called_with()
+
+    def test_execute_unknown_device(self):
+        """Test if execute method of Action calls correct do method of device."""
+        xknx = XKNX(loop=self.loop)
+
+        action = Action(xknx, target='Light1', method='on')
+        with patch('logging.Logger.warning') as logger_warning_mock:
+            self.loop.run_until_complete(asyncio.Task(action.execute()))
+            logger_warning_mock.assert_called_once_with(
+                "Unknown device %s witin action %s.", action.target, action)
