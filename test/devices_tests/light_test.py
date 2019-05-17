@@ -524,7 +524,7 @@ class TestLight(unittest.TestCase):
 
     def test_has_group_address(self):
         """Test has_group_address."""
-        xknx = XKNX(config='xknx.yaml', loop=self.loop)
+        xknx = XKNX(loop=self.loop)
         light = Light(
             xknx,
             'Office.Light_1',

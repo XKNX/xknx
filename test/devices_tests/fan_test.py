@@ -139,7 +139,7 @@ class TestFan(unittest.TestCase):
 
     def test_has_group_address(self):
         """Test has_group_address."""
-        xknx = XKNX(config='xknx.yaml', loop=self.loop)
+        xknx = XKNX(loop=self.loop)
         fan = Fan(xknx,
                   'TestFan',
                   group_address_speed='1/7/1',
