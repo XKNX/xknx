@@ -112,7 +112,7 @@ def async_add_entities_config(hass, config, async_add_entities):
 
     climate_mode = xknx.devices.ClimateMode(
         hass.data[DATA_XKNX].xknx,
-        name=config.get(CONF_NAME) + " Mode",
+        name=config[CONF_NAME] + " Mode",
         group_address_operation_mode=config.get(CONF_OPERATION_MODE_ADDRESS),
         group_address_operation_mode_state=config.get(
             CONF_OPERATION_MODE_STATE_ADDRESS),
@@ -136,7 +136,7 @@ def async_add_entities_config(hass, config, async_add_entities):
 
     climate = xknx.devices.Climate(
         hass.data[DATA_XKNX].xknx,
-        name=config.get(CONF_NAME),
+        name=config[CONF_NAME],
         group_address_temperature=config[CONF_TEMPERATURE_ADDRESS],
         group_address_target_temperature=config.get(
             CONF_TARGET_TEMPERATURE_ADDRESS),
@@ -145,9 +145,9 @@ def async_add_entities_config(hass, config, async_add_entities):
         group_address_setpoint_shift=config.get(CONF_SETPOINT_SHIFT_ADDRESS),
         group_address_setpoint_shift_state=config.get(
             CONF_SETPOINT_SHIFT_STATE_ADDRESS),
-        setpoint_shift_step=config.get(CONF_SETPOINT_SHIFT_STEP),
-        setpoint_shift_max=config.get(CONF_SETPOINT_SHIFT_MAX),
-        setpoint_shift_min=config.get(CONF_SETPOINT_SHIFT_MIN),
+        setpoint_shift_step=config[CONF_SETPOINT_SHIFT_STEP],
+        setpoint_shift_max=config[CONF_SETPOINT_SHIFT_MAX],
+        setpoint_shift_min=config[CONF_SETPOINT_SHIFT_MIN],
         group_address_on_off=config.get(CONF_ON_OFF_ADDRESS),
         group_address_on_off_state=config.get(CONF_ON_OFF_STATE_ADDRESS),
         min_temp=config.get(CONF_MIN_TEMP),
