@@ -1,4 +1,4 @@
-"""Unit test for KNX scaling value."""
+"""Unit test for KNX scene number."""
 import unittest
 
 from xknx.exceptions import ConversionError
@@ -12,18 +12,18 @@ class TestDPTSceneNumber(unittest.TestCase):
 
     def test_value_50(self):
         """Test parsing and streaming of DPTSceneNumber 50."""
-        self.assertEqual(DPTSceneNumber().to_knx(50), (0x32,))
-        self.assertEqual(DPTSceneNumber().from_knx((0x32,)), 50)
+        self.assertEqual(DPTSceneNumber().to_knx(50), (0x31,))
+        self.assertEqual(DPTSceneNumber().from_knx((0x31,)), 50)
 
     def test_value_max(self):
-        """Test parsing and streaming of DPTSceneNumber 63."""
-        self.assertEqual(DPTSceneNumber().to_knx(63), (0x3F,))
-        self.assertEqual(DPTSceneNumber().from_knx((0x3F,)), 63)
+        """Test parsing and streaming of DPTSceneNumber 64."""
+        self.assertEqual(DPTSceneNumber().to_knx(64), (0x3F,))
+        self.assertEqual(DPTSceneNumber().from_knx((0x3F,)), 64)
 
     def test_value_min(self):
         """Test parsing and streaming of DPTSceneNumber 0."""
-        self.assertEqual(DPTSceneNumber().to_knx(0), (0x00,))
-        self.assertEqual(DPTSceneNumber().from_knx((0x00,)), 0)
+        self.assertEqual(DPTSceneNumber().to_knx(1), (0x00,))
+        self.assertEqual(DPTSceneNumber().from_knx((0x00,)), 1)
 
     def test_to_knx_min_exceeded(self):
         """Test parsing of DPTSceneNumber with wrong value (underflow)."""

@@ -7,8 +7,8 @@ from xknx import XKNX
 from xknx.core import Config
 from xknx.devices import (
     Action, BinarySensor, Climate, ClimateMode, Cover, DateTime,
-    DateTimeBroadcastType, ExposeSensor, Light, Notification, Scene, Sensor,
-    Switch)
+    DateTimeBroadcastType, ExposeSensor, Fan, Light, Notification, Scene,
+    Sensor, Switch)
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
 from xknx.knx import PhysicalAddress
@@ -93,9 +93,28 @@ class TestConfig(unittest.TestCase):
             Config(TestConfig.xknx).parse_connection(config)
             self.assertEqual(TestConfig.xknx.connection_config, expected_conn)
 
+    def test_config_invalid_connection(self):
+        """Test invalid connection section from config file."""
+        import yaml
+        test_configs = [
+            ("""
+            connection:
+                tunneling:
+                    local_ip: '192.168.1.2'
+            """,
+             XKNXException,
+             "`gateway_ip` is required for tunneling connection."
+             )
+        ]
+        for yaml_string, expected_exception, exception_message in test_configs:
+            with self.assertRaises(expected_exception, msg=exception_message):
+                config = yaml.safe_load(yaml_string)
+                Config(TestConfig.xknx).parse_connection(config)
+
     #
     # XKNX Groups Config
     #
+
     def test_config_light(self):
         """Test reading Light from config file."""
         self.assertEqual(
@@ -175,6 +194,16 @@ class TestConfig(unittest.TestCase):
                    'Livingroom.Outlet_2',
                    group_address='1/3/2',
                    device_updated_cb=TestConfig.xknx.devices.device_updated))
+
+    def test_config_fan(self):
+        """Test reading Fan from config file."""
+        self.assertEqual(
+            TestConfig.xknx.devices['Kitchen.Fan_1'],
+            Fan(TestConfig.xknx,
+                'Kitchen.Fan_1',
+                group_address_speed='1/3/21',
+                group_address_speed_state='1/3/22',
+                device_updated_cb=TestConfig.xknx.devices.device_updated))
 
     def test_config_cover(self):
         """Test reading Cover from config file."""
@@ -328,7 +357,7 @@ class TestConfig(unittest.TestCase):
             TestConfig.xknx.devices['Livingroom.Switch_1'],
             BinarySensor(TestConfig.xknx,
                          'Livingroom.Switch_1',
-                         group_address='1/2/7',
+                         group_address_state='1/2/7',
                          actions=[
                              Action(TestConfig.xknx,
                                     target="Livingroom.Outlet_1",
@@ -345,7 +374,7 @@ class TestConfig(unittest.TestCase):
             TestConfig.xknx.devices['Heating.Valve1'],
             Sensor(TestConfig.xknx,
                    'Heating.Valve1',
-                   group_address='2/0/0',
+                   group_address_state='2/0/0',
                    value_type='percent',
                    device_updated_cb=TestConfig.xknx.devices.device_updated))
 
@@ -355,7 +384,7 @@ class TestConfig(unittest.TestCase):
             TestConfig.xknx.devices['Kitchen.Temperature'],
             Sensor(TestConfig.xknx,
                    'Kitchen.Temperature',
-                   group_address='2/0/2',
+                   group_address_state='2/0/2',
                    value_type='temperature',
                    device_updated_cb=TestConfig.xknx.devices.device_updated))
 
@@ -376,7 +405,7 @@ class TestConfig(unittest.TestCase):
             TestConfig.xknx.devices['DiningRoom.Motion.Sensor'],
             BinarySensor(TestConfig.xknx,
                          'DiningRoom.Motion.Sensor',
-                         group_address='3/0/1',
+                         group_address_state='3/0/1',
                          device_class='motion',
                          device_updated_cb=TestConfig.xknx.devices.device_updated))
 
@@ -386,7 +415,7 @@ class TestConfig(unittest.TestCase):
             TestConfig.xknx.devices['Kitchen.Presence'],
             BinarySensor(TestConfig.xknx,
                          'Kitchen.Presence',
-                         group_address='3/0/2',
+                         group_address_state='3/0/2',
                          significant_bit=2,
                          device_class='motion',
                          device_updated_cb=TestConfig.xknx.devices.device_updated))

@@ -24,15 +24,15 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
         """Test to_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueColorRGBW(xknx)
-        inputList = [100, 101, 102, 127]
-        inputTuple = (100, 101, 102, 127)
+        input_list = [100, 101, 102, 127]
+        input_tuple = (100, 101, 102, 127)
         expected = DPTArray((0x00, 0x0f, 0x64, 0x65, 0x66, 0x7f))
-        self.assertEqual(remote_value.to_knx(inputTuple), expected)
-        self.assertEqual(remote_value.to_knx(inputList), expected)
-        self.assertEqual(remote_value.to_knx((15,) + inputTuple), expected)
-        self.assertEqual(remote_value.to_knx([15] + inputList), expected)
-        self.assertEqual(remote_value.to_knx((0, 15) + inputTuple), expected)
-        self.assertEqual(remote_value.to_knx([0, 15] + inputList), expected)
+        self.assertEqual(remote_value.to_knx(input_tuple), expected)
+        self.assertEqual(remote_value.to_knx(input_list), expected)
+        self.assertEqual(remote_value.to_knx((15,) + input_tuple), expected)
+        self.assertEqual(remote_value.to_knx([15] + input_list), expected)
+        self.assertEqual(remote_value.to_knx((0, 15) + input_tuple), expected)
+        self.assertEqual(remote_value.to_knx([0, 15] + input_list), expected)
 
     def test_from_knx(self):
         """Test from_knx function with normal operation."""

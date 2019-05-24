@@ -11,8 +11,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
 
-REQUIREMENTS = ['xknx==0.10.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "xknx"
@@ -38,8 +36,8 @@ ATTR_DISCOVER_DEVICES = 'devices'
 
 TUNNELING_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT): cv.port,
     vol.Optional(CONF_XKNX_LOCAL_IP): cv.string,
+    vol.Optional(CONF_PORT): cv.port,
 })
 
 ROUTING_SCHEMA = vol.Schema({

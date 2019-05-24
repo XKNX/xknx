@@ -23,7 +23,7 @@ class ConnectResponse(KNXIPBody):
 
     def __init__(self, xknx):
         """Initialize ConnectResponse class."""
-        super(ConnectResponse, self).__init__(xknx)
+        super().__init__(xknx)
 
         self.communication_channel = 0
         self.status_code = ErrorCode.E_NO_ERROR

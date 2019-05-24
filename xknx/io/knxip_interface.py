@@ -11,6 +11,7 @@ from enum import Enum
 from platform import system as get_os_name
 
 import netifaces
+
 from xknx.exceptions import XKNXException
 
 from .const import DEFAULT_MCAST_PORT
@@ -126,12 +127,10 @@ class KNXIPInterface():
                                auto_reconnect, auto_reconnect_wait):
         """Start KNX/IP tunnel."""
         # pylint: disable=too-many-arguments
-        try:
-            ipaddress.IPv4Address(gateway_ip)
-        except ipaddress.AddressValueError as ex:
-            raise XKNXException("Gateway IP address is not a valid IPv4 address.") from ex
+        validate_ip(gateway_ip, address_name="Gateway IP address")
         if local_ip is None:
             local_ip = self.find_local_ip(gateway_ip=gateway_ip)
+        validate_ip(local_ip, address_name="Local IP address")
         self.xknx.logger.debug("Starting tunnel from %s to %s:%s", local_ip, gateway_ip, gateway_port)
         self.interface = Tunnel(
             self.xknx,
@@ -146,6 +145,7 @@ class KNXIPInterface():
 
     async def start_routing(self, local_ip, bind_to_multicast_addr):
         """Start KNX/IP Routing."""
+        validate_ip(local_ip, address_name="Local IP address")
         self.xknx.logger.debug("Starting Routing from %s", local_ip)
         self.interface = Routing(
             self.xknx,
@@ -186,6 +186,7 @@ class KNXIPInterface():
                 except KeyError:
                     self.xknx.logger.debug("Could not find IPv4 address on interface %s", interface)
                     continue
+            return None
 
         def _find_default_gateway() -> ipaddress.IPv4Address:
             """Return IP address of default gateway."""
@@ -200,3 +201,11 @@ class KNXIPInterface():
             default_gateway = _find_default_gateway()
             local_ip = _scan_interfaces(default_gateway)
         return local_ip
+
+
+def validate_ip(address: str, address_name: str = "IP address") -> None:
+    """Raise an exception if address cannot be parsed as IPv4 address."""
+    try:
+        ipaddress.IPv4Address(address)
+    except ipaddress.AddressValueError as ex:
+        raise XKNXException("%s is not a valid IPv4 address." % address_name) from ex

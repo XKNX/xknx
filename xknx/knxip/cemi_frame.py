@@ -26,7 +26,7 @@ class CEMIFrame(KNXIPBody):
 
     def __init__(self, xknx):
         """Initialize CEMIFrame object."""
-        super(CEMIFrame, self).__init__(xknx)
+        super().__init__(xknx)
         self.code = CEMIMessageCode.L_DATA_IND
         self.flags = 0
         self.cmd = APCICommand.GROUP_READ

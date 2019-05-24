@@ -48,7 +48,7 @@ class SensorExposeLoopTest(unittest.TestCase):
             ('ppm', DPTArray((0x00, 0x03)), 0.03),
             ('pressure', DPTArray((0x42, 0xA9, 0x6B, 0x85)), 84.71),
             ('pulse', DPTArray((0x11)), 17),
-            ('scene_number', DPTArray((0x00)), 0),
+            ('scene_number', DPTArray((0x00)), 1),
             ('speed', DPTArray((0x00, 0x00, 0x00, 0x00)), 0),
             ('speed_ms', DPTArray((0x0E, 0xA4)), 34),
             ('string',
@@ -77,7 +77,7 @@ class SensorExposeLoopTest(unittest.TestCase):
                 sensor = Sensor(
                     xknx,
                     'TestSensor_%s' % value_type,
-                    group_address='1/1/1',
+                    group_address_state='1/1/1',
                     value_type=value_type
                 )
                 expose = ExposeSensor(
@@ -124,7 +124,7 @@ class SensorExposeLoopTest(unittest.TestCase):
                 sensor = BinarySensor(
                     xknx,
                     'TestSensor_%s' % value_type,
-                    group_address='1/1/1'
+                    group_address_state='1/1/1'
                 )
                 expose = ExposeSensor(
                     xknx,

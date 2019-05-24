@@ -9,22 +9,26 @@ Module for handling KNX primitves.
 # flake8: noqa
 from .address import GroupAddress, GroupAddressType, PhysicalAddress
 from .address_filter import AddressFilter
-from .telegram import Telegram, TelegramDirection, TelegramType
-from .dpt import DPTBase, DPTBinary, DPTArray, DPTComparator, DPTWeekday
-from .dpt_float import DPT2ByteFloat, DPT4ByteFloat, DPTLuminousFlux, DPTLux, DPTTemperature, \
-    DPTHumidity, DPTWsp, DPTElectricPotential, DPTElectricCurrent, DPTPower, \
-    DPTEnergy, DPTFrequency, DPTHeatFlowRate, DPTPhaseAngleRad, DPTPhaseAngleDeg, \
-    DPTPowerFactor, DPTPressure, DPTSpeed, DPTEnthalpy, DPTPartsPerMillion, DPTVoltage
-from .dpt_hvac_mode import HVACOperationMode, DPTHVACMode, \
-    DPTControllerStatus
-from .dpt_hvac_contr_mode import DPTHVACContrMode
-from .dpt_2byte import DPT2ByteUnsigned, DPTUElCurrentmA, DPT2Ucount, DPTBrightness, DPTColorTemperature
-from .dpt_4byte import DPT4ByteUnsigned, DPT4ByteSigned
-from .dpt_time import DPTTime
+from .dpt import DPTArray, DPTBase, DPTBinary, DPTComparator, DPTWeekday
+from .dpt_2byte import (
+    DPT2ByteUnsigned, DPT2Ucount, DPTBrightness, DPTColorTemperature,
+    DPTUElCurrentmA)
+from .dpt_4byte import DPT4ByteSigned, DPT4ByteUnsigned
 from .dpt_date import DPTDate
 from .dpt_datetime import DPTDateTime
+from .dpt_float import (
+    DPT2ByteFloat, DPT4ByteFloat, DPTElectricCurrent, DPTElectricPotential,
+    DPTEnergy, DPTEnthalpy, DPTFrequency, DPTHeatFlowRate, DPTHumidity,
+    DPTLuminousFlux, DPTLux, DPTPartsPerMillion, DPTPhaseAngleDeg,
+    DPTPhaseAngleRad, DPTPower, DPTPowerFactor, DPTPressure, DPTSpeed,
+    DPTTemperature, DPTVoltage, DPTWsp)
+from .dpt_hvac_contr_mode import DPTHVACContrMode
+from .dpt_hvac_mode import DPTControllerStatus, DPTHVACMode, HVACOperationMode
 from .dpt_scaling import DPTAngle, DPTScaling
+from .dpt_signed_relative_value import (
+    DPTPercentV8, DPTSignedRelativeValue, DPTValue1Count)
 from .dpt_string import DPTString
-from .dpt_signed_relative_value import DPTSignedRelativeValue, DPTPercentV8, \
-    DPTValue1Count
-from .dpt_value_1_ucount import DPTPercentU8, DPTSceneNumber, DPTValue1Ucount
+from .dpt_time import DPTTime
+from .dpt_value_1_ucount import (
+    DPTPercentU8, DPTSceneNumber, DPTTariff, DPTValue1Ucount)
+from .telegram import Telegram, TelegramDirection, TelegramType

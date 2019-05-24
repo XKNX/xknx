@@ -16,17 +16,17 @@ class Sensor(Device):
     def __init__(self,
                  xknx,
                  name,
-                 group_address=None,
+                 group_address_state=None,
                  value_type=None,
                  device_updated_cb=None):
         """Initialize Sensor class."""
         # pylint: disable=too-many-arguments
-        super(Sensor, self).__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name, device_updated_cb)
 
         self.sensor_value = None
         self.sensor_value = RemoteValueSensor(
             xknx,
-            group_address_state=group_address,
+            group_address_state=group_address_state,
             device_name=self.name,
             after_update_cb=self.after_update,
             value_type=value_type)
@@ -34,14 +34,14 @@ class Sensor(Device):
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
-        group_address = \
-            config.get('group_address')
+        group_address_state = \
+            config.get('group_address_state')
         value_type = \
             config.get('value_type')
 
         return cls(xknx,
                    name,
-                   group_address=group_address,
+                   group_address_state=group_address_state,
                    value_type=value_type)
 
     def has_group_address(self, group_address):

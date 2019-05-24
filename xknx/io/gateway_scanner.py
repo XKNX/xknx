@@ -10,6 +10,7 @@ import asyncio
 from typing import List
 
 import netifaces
+
 from xknx.knxip import (
     HPAI, DIBServiceFamily, DIBSuppSVCFamilies, KNXIPFrame, KNXIPServiceType,
     SearchResponse)
@@ -77,10 +78,6 @@ class GatewayScanFilter:
             return False
         return True
 
-    def __eq__(self, other):
-        """Equality for GatewayScanFilter class (used in unit tests)."""
-        return self.__dict__ == other.__dict__
-
 
 class GatewayScanner():
     """Class for searching KNX/IP devices."""
@@ -100,7 +97,6 @@ class GatewayScanner():
         self.found_gateways = []  # List[GatewayDescriptor]
         self._udp_clients = []
         self._response_received_or_timeout = asyncio.Event()
-        self._timeout_callback = None
         self._timeout_handle = None
 
     async def scan(self) -> List[GatewayDescriptor]:
@@ -118,7 +114,7 @@ class GatewayScanner():
             await udp_client.stop()
 
     async def _send_search_requests(self):
-        """Send search requests on all connected interfaces."""
+        """Find all interfaces with active IPv4 connection to search for gateways."""
         # pylint: disable=no-member
         for interface in netifaces.interfaces():
             try:
@@ -130,7 +126,7 @@ class GatewayScanner():
                 continue
 
     async def _search_interface(self, interface, ip_addr):
-        """Search on a specific interface."""
+        """Send a search request on a specific interface."""
         self.xknx.logger.debug("Searching on %s / %s", interface, ip_addr)
 
         udp_client = UDPClient(self.xknx,

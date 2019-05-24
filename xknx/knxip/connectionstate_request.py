@@ -19,7 +19,7 @@ class ConnectionStateRequest(KNXIPBody):
 
     def __init__(self, xknx):
         """Initialize ConnectionStateRequest object."""
-        super(ConnectionStateRequest, self).__init__(xknx)
+        super().__init__(xknx)
         self.communication_channel_id = 1
         self.control_endpoint = HPAI()
 

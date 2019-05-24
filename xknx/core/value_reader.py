@@ -25,7 +25,6 @@ class ValueReader:
         self.response_received_or_timeout = asyncio.Event()
         self.success = False
         self.timeout_in_seconds = timeout_in_seconds
-        self.timeout_callback = None
         self.timeout_handle = None
         self.received_telegram = None
 
@@ -52,8 +51,8 @@ class ValueReader:
 
     async def telegram_received(self, telegram):
         """Test if telegram has correct group address and trigger event."""
-        if telegram.telegramtype != TelegramType.GROUP_WRITE and \
-                telegram.telegramtype != TelegramType.GROUP_RESPONSE:
+        if telegram.telegramtype not in (
+                TelegramType.GROUP_RESPONSE, TelegramType.GROUP_WRITE):
             return False
         if self.group_address != telegram.group_address:
             return False
@@ -64,6 +63,8 @@ class ValueReader:
 
     def timeout(self):
         """Handle timeout for not having received expected group response."""
+        self.xknx.logger.warning("Error: KNX bus did not respond in time to GroupValueRead request for: %s",
+                                 self.group_address)
         self.response_received_or_timeout.set()
 
     async def start_timeout(self):

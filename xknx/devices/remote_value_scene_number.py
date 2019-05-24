@@ -18,9 +18,11 @@ class RemoteValueSceneNumber(RemoteValue):
                  after_update_cb=None):
         """Initialize remote value of KNX DPT 17.001 (DPT_Scene_Number)."""
         # pylint: disable=too-many-arguments
-        super(RemoteValueSceneNumber, self).__init__(
-            xknx, group_address, None,
-            device_name=device_name, after_update_cb=after_update_cb)
+        super().__init__(xknx,
+                         group_address,
+                         None,
+                         device_name=device_name,
+                         after_update_cb=after_update_cb)
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""

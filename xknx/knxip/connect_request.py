@@ -21,7 +21,7 @@ class ConnectRequest(KNXIPBody):
 
     def __init__(self, xknx):
         """Initialize ConnectRequest object."""
-        super(ConnectRequest, self).__init__(xknx)
+        super().__init__(xknx)
         self.request_type = None
         self.control_endpoint = HPAI()
         self.data_endpoint = HPAI()

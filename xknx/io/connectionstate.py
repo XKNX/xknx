@@ -11,7 +11,7 @@ class ConnectionState(RequestResponse):
     def __init__(self, xknx, udp_client, communication_channel_id):
         """Initialize ConnectionState class."""
         self.udp_client = udp_client
-        super(ConnectionState, self).__init__(xknx, self.udp_client, ConnectionStateResponse)
+        super().__init__(xknx, self.udp_client, ConnectionStateResponse)
         self.communication_channel_id = communication_channel_id
 
     def create_knxipframe(self):

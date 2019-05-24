@@ -129,8 +129,10 @@ class TestNotification(unittest.TestCase):
     def test_state_addresses(self):
         """Test expose sensor returns empty list as state addresses."""
         xknx = XKNX(loop=self.loop)
-        notification = Notification(xknx, 'Warning', group_address='1/2/3', group_address_state='1/2/4')
-        self.assertEqual(notification.state_addresses(), [GroupAddress('1/2/4')])
+        notification_1 = Notification(xknx, 'Warning', group_address='1/2/3', group_address_state='1/2/4')
+        notification_2 = Notification(xknx, 'Warning', group_address='1/2/5')
+        self.assertEqual(notification_1.state_addresses(), [GroupAddress('1/2/4')])
+        self.assertEqual(notification_2.state_addresses(), [])
 
     #
     # TEST has_group_address

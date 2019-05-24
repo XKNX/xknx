@@ -41,19 +41,6 @@ Delete automatically installed version:
 rm .homeassistant/deps/lib/python3.5/site-packages/xknx*
 ```
 
-Comment out dependency from xknx.py, otherwise hass would reinstall the xknx library when startup:
-
-````diff
-julius@xxx ~/xknx:$ git diff -U0 home-assistant-plugin/custom_components/xknx.py 
-diff --git a/home-assistant-plugin/custom_components/xknx.py b/home-assistant-plugin/custom_components/xknx.py
-index 7f26c43..0b1e046 100644
---- a/home-assistant-plugin/custom_components/xknx.py
-+++ b/home-assistant-plugin/custom_components/xknx.py
-@@ -39 +39 @@ _LOGGER = logging.getLogger(__name__)
--REQUIREMENTS = ['xknx==0.7.18']
-+# REQUIREMENTS = ['xknx==0.7.18']
-```
-
 Ideally start hass from command line. Export the environment variable PYTHONPATH to your local xknx checkout:
 
 ```bash

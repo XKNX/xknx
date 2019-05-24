@@ -88,7 +88,7 @@ class TestBinarySensor(unittest.TestCase):
         switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
         xknx.devices.add(switch)
 
-        binary_sensor = BinarySensor(xknx, 'TestInput', group_address='1/2/3')
+        binary_sensor = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3')
         action_on = Action(
             xknx,
             hook='on',
@@ -135,7 +135,7 @@ class TestBinarySensor(unittest.TestCase):
     def test_process_wrong_payload(self):
         """Test process wrong telegram (wrong payload type)."""
         xknx = XKNX(loop=self.loop)
-        binary_sensor = BinarySensor(xknx, 'Warning', group_address='1/2/3')
+        binary_sensor = BinarySensor(xknx, 'Warning', group_address_state='1/2/3')
         telegram = Telegram(GroupAddress('1/2/3'), payload=DPTArray((0x1, 0x2, 0x3)))
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(asyncio.Task(binary_sensor.process(telegram)))
@@ -171,7 +171,7 @@ class TestBinarySensor(unittest.TestCase):
         """Test after_update_callback after state of switch was changed."""
         # pylint: disable=no-self-use
         xknx = XKNX(loop=self.loop)
-        switch = BinarySensor(xknx, 'TestInput', group_address='1/2/3')
+        switch = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3')
 
         after_update_callback = Mock()
 
@@ -191,7 +191,7 @@ class TestBinarySensor(unittest.TestCase):
     def test_counter(self):
         """Test counter functionality."""
         xknx = XKNX(loop=self.loop)
-        switch = BinarySensor(xknx, 'TestInput', group_address='1/2/3')
+        switch = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3')
         with patch('time.time') as mock_time:
             mock_time.return_value = 1517000000.0
             self.assertEqual(switch.bump_and_get_counter(BinarySensorState.ON), 1)
@@ -218,9 +218,10 @@ class TestBinarySensor(unittest.TestCase):
     # STATE ADDRESSES
     #
     def test_state_addresses(self):
-        """Test expose sensor returns empty list as state addresses."""
+        """Test binary sensor returns state address as list."""
         xknx = XKNX(loop=self.loop)
-        binary_sensor = BinarySensor(xknx, 'TestInput', group_address='1/2/3', group_address_state='1/2/4')
+        binary_sensor = BinarySensor(xknx, 'TestInput', group_address_state='1/2/4')
         self.assertEqual(binary_sensor.state_addresses(), [GroupAddress('1/2/4')])
-        binary_sensor2 = BinarySensor(xknx, 'TestInput', group_address='1/2/3')
+
+        binary_sensor2 = BinarySensor(xknx, 'TestInput')
         self.assertEqual(binary_sensor2.state_addresses(), [])

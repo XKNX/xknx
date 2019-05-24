@@ -175,7 +175,8 @@ class TestDevice(unittest.TestCase):
                 mock_value_reader_read.return_value = fut
                 with patch('logging.Logger.warning') as mock_warn:
                     self.loop.run_until_complete(asyncio.Task(device._sync_impl()))
-                    mock_warn.assert_called_with('Could not read value of %s %s', device, GroupAddress('1/2/3'))
+                    mock_warn.assert_called_with("Could not sync group address '%s' from %s",
+                                                 GroupAddress('1/2/3'), device)
 
     def test_sync_not_wait_for_response(self):
         """Testing _sync_impl() method without waiting for response (send_group_read should be called directly)."""

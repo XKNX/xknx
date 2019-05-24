@@ -60,7 +60,7 @@ class DIBGeneric(DIB):
 
     def __init__(self):
         """Initialize DIBGeneric class."""
-        super(DIBGeneric, self).__init__()
+        super().__init__()
         # DTC Description Type Code
         self.dtc = None
         # IBD Information Block Data
@@ -123,7 +123,7 @@ class DIBSuppSVCFamilies(DIB):
 
     def __init__(self):
         """Initialize DIBSuppSVCFamilies class."""
-        super(DIBSuppSVCFamilies, self).__init__()
+        super().__init__()
         self.families = []
 
     def supports(self, name):
@@ -179,7 +179,7 @@ class DIBDeviceInformation(DIB):
 
     def __init__(self):
         """Initialize DIBDeviceInformation class."""
-        super(DIBDeviceInformation, self).__init__()
+        super().__init__()
         self.knx_medium = KNXMedium.TP1
         self.programming_mode = False
         self.individual_address = PhysicalAddress(None)

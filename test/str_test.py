@@ -5,8 +5,8 @@ import unittest
 from xknx import XKNX
 from xknx.devices import (
     Action, ActionBase, ActionCallback, BinarySensor, Climate, ClimateMode,
-    Cover, DateTime, ExposeSensor, Light, Notification, RemoteValue, Scene,
-    Sensor, Switch)
+    Cover, DateTime, ExposeSensor, Fan, Light, Notification, RemoteValue,
+    Scene, Sensor, Switch)
 from xknx.exceptions import (
     ConversionError, CouldNotParseAddress, CouldNotParseKNXIP,
     CouldNotParseTelegram, DeviceIllegalValue)
@@ -56,11 +56,11 @@ class TestStringRepresentations(unittest.TestCase):
         binary_sensor = BinarySensor(
             xknx,
             name='Fnord',
-            group_address='1/2/3',
+            group_address_state='1/2/3',
             device_class='motion')
         self.assertEqual(
             str(binary_sensor),
-            '<BinarySensor group_address="GroupAddress("1/2/3")" name="Fnord" state="BinarySensorState.OFF"/>')
+            '<BinarySensor group_address_state="GroupAddress("1/2/3")" name="Fnord" state="BinarySensorState.OFF"/>')
 
     def test_climate(self):
         """Test string representation of climate object."""
@@ -124,6 +124,18 @@ class TestStringRepresentations(unittest.TestCase):
             '<Cover name="Rolladen" updown="GroupAddress("1/2/3")/None/None/None" step="GroupAddress("1/2/4")/None/None/None" position="Group'
             'Address("1/2/5")/GroupAddress("1/2/6")/None/None" angle="GroupAddress("1/2/7")/GroupAddress("1/2/8")/None/None" travel_time_down="8'
             '" travel_time_up="10" />')
+
+    def test_fan(self):
+        """Test string representation of fan object."""
+        xknx = XKNX(loop=self.loop)
+        fan = Fan(
+            xknx,
+            name='Dunstabzug',
+            group_address_speed='1/2/3',
+            group_address_speed_state='1/2/4')
+        self.assertEqual(
+            str(fan),
+            '<Fan name="Dunstabzug" speed="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" />')
 
     def test_light(self):
         """Test string representation of non dimmable light object."""
@@ -203,7 +215,7 @@ class TestStringRepresentations(unittest.TestCase):
         sensor = Sensor(
             xknx,
             name='MeinSensor',
-            group_address='1/2/3',
+            group_address_state='1/2/3',
             value_type='percent')
         self.assertEqual(
             str(sensor),

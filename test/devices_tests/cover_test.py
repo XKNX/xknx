@@ -438,33 +438,32 @@ class TestCover(unittest.TestCase):
     #
     def test_do(self):
         """Test 'do' functionality."""
+        async def async_none():
+            return None
+
         xknx = XKNX(loop=self.loop)
         cover = Cover(
             xknx,
             'TestCover')
         with patch('xknx.devices.Cover.set_up') as mock:
-            fut = asyncio.Future()
-            fut.set_result(None)
-            mock.return_value = fut
+            mock.return_value = asyncio.ensure_future(async_none())
             self.loop.run_until_complete(asyncio.Task(cover.do("up")))
             mock.assert_called_once_with()
         with patch('xknx.devices.Cover.set_short_up') as mock:
-            fut = asyncio.Future()
-            fut.set_result(None)
-            mock.return_value = fut
+            mock.return_value = asyncio.ensure_future(async_none())
             self.loop.run_until_complete(asyncio.Task(cover.do("short_up")))
             mock.assert_called_once_with()
         with patch('xknx.devices.Cover.set_down') as mock:
-            fut = asyncio.Future()
-            fut.set_result(None)
-            mock.return_value = fut
+            mock.return_value = asyncio.ensure_future(async_none())
             self.loop.run_until_complete(asyncio.Task(cover.do("down")))
             mock.assert_called_once_with()
         with patch('xknx.devices.Cover.set_short_down') as mock:
-            fut = asyncio.Future()
-            fut.set_result(None)
-            mock.return_value = fut
+            mock.return_value = asyncio.ensure_future(async_none())
             self.loop.run_until_complete(asyncio.Task(cover.do("short_down")))
+            mock.assert_called_once_with()
+        with patch('xknx.devices.Cover.stop') as mock:
+            mock.return_value = asyncio.ensure_future(async_none())
+            self.loop.run_until_complete(asyncio.Task(cover.do("stop")))
             mock.assert_called_once_with()
 
     def test_wrong_do(self):
