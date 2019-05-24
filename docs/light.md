@@ -12,6 +12,7 @@ Expected datapoint types for light functions and their corresponding state addre
 - switch: DPT 1.001
 - brightness: DPT 5.001
 - color: DPT 232.600
+- rgbw: DPT 251.600
 - tunable_white: DPT 5.001
 - color_temperature: DPT 7.600
 
@@ -68,6 +69,8 @@ light = Light(xknx,
               group_address_brightness_state='1/2/6',
               group_address_color='1/2/7',
               group_address_color_state='1/2/8',
+              group_address_rgbw='1/2/13',
+              group_address_rgbw_state='1/2/14',
               group_address_tunable_white='1/2/9',
               group_address_tunable_white_state='1/2/10',
               group_address_color_temperature='1/2/11',
@@ -84,6 +87,9 @@ await light.set_brightness(23)
 
 # Set color
 await light.set_color((20, 70,200))
+
+# Set rgbw color
+await light.set_color((20,70,200), 30)
 
 # Set relative color temperature (percent)
 await set_tunable_white(25)
@@ -104,6 +110,7 @@ print(light.supports_brightness)
 print(light.current_brightness)
 print(light.supports_color)
 print(light.current_color)
+print(light.supports_rgbw)
 print(light.supports_tunable_white)
 print(light.current_tunable_white)
 print(light.supports_color_temperature)
