@@ -17,7 +17,7 @@ class DPT4ByteUnsigned(DPTBase):
     """
     Abstraction for KNX 4 Byte "32-bit unsigned".
 
-    DPT 12.x
+    DPT 12.***
     """
 
     value_min = 0
@@ -59,7 +59,7 @@ class DPT4ByteSigned(DPT4ByteUnsigned):
     """
     Abstraction for KNX 4 Byte "32-bit signed".
 
-    DPT 13.x
+    DPT 13.***
     """
 
     value_min = -2147483648
