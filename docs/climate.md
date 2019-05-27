@@ -27,7 +27,7 @@ print("Current temperature: ", climate.temperature)
 
 ## [](#header-2)Configuration via **xknx.yaml**
 
-Switches are usually configured via [`xknx.yaml`](/configuration):
+Climate devices are usually configured via [`xknx.yaml`](/configuration):
 
 ```yaml
 groups:

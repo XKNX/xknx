@@ -68,13 +68,13 @@ The XKNX may keep all devices in a local storage named `devices`. All devices ma
 Example:
 
 ```python
-outlet = Outlet(xknx,
-                name='TestOutlet',
+switch = Switch(xknx,
+                name='TestSwitch',
                 group_address='1/1/11')
-xknx.devices.add(outlet)
+xknx.devices.add(switch)
 
-await xknx.devices['TestOutlet'].set_on()
-await xknx.devices['TestOutlet'].set_off()
+await xknx.devices['TestSwitch'].set_on()
+await xknx.devices['TestSwitch'].set_off()
 ```
 
 
@@ -104,7 +104,8 @@ For all devices stored in the `devices` storage (see [above](#devices)) a callba
 
 ```python
 import asyncio
-from xknx import XKNX, Outlet
+from xknx import XKNX
+from xknx.devices import Switch
 
 
 async def device_updated_cb(device):
@@ -113,10 +114,10 @@ async def device_updated_cb(device):
 
 async def main():
     xknx = XKNX(device_updated_cb=device_updated_cb)
-    outlet = Outlet(xknx,
-                    name='TestOutlet',
+    switch = Switch(xknx,
+                    name='TestSwitch',
                     group_address='1/1/11')
-    xknx.devices.add(outlet)
+    xknx.devices.add(switch)
 
     await xknx.start(daemon_mode=True)
 
