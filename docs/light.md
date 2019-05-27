@@ -32,7 +32,7 @@ await xknx.devices['TestLight'].set_brightness(23)
 
 ## [](#header-2)Configuration via **xknx.yaml**
 
-Outlets are usually configured via [`xknx.yaml`](/configuration):
+Lights are usually configured via [`xknx.yaml`](/configuration):
 
 ```yaml
 groups:

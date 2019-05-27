@@ -7,7 +7,7 @@ Binary Sensor
 
 Binary sensors which have either the state "on" or "off". Binary sensors could be e.g. a switch in the wall (the thing you press on when switching on the light) or a motion detector. 
 
-Switches are mainly intended to act on input, which means to execute so called `Actions`. An action can be the switching of an outlet or light or the moving of a cover.
+Switches are mainly intended to act on input, which means to execute so called `Actions`. An action can be toggling a switch or a light or the moving of a cover.
 
 The logic within switches can further handle if a button is pressed once or twice - and trigger different actions. Use the attribute `counter` for this purpose.
 
@@ -25,10 +25,10 @@ binarysensor = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3', devi
 ## [](#header-2)Example
 
 ```python
-outlet = Outlet(xknx, 'TestOutlet', group_address='1/2/3')
+outlet = Switch(xknx, 'TestOutlet', group_address='1/2/3')
 xknx.devices.devices.append(outlet)
 
-binarysensor = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3')
+binarysensor = BinarySensor(xknx, 'TestInput', group_address_state='2/3/4')
 action_on = Action(
     xknx,
     hook='on',
