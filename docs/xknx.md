@@ -104,7 +104,8 @@ For all devices stored in the `devices` storage (see [above](#devices)) a callba
 
 ```python
 import asyncio
-from xknx import XKNX, Switch
+from xknx import XKNX
+from xknx.devices import Switch
 
 
 async def device_updated_cb(device):

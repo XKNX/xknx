@@ -6,12 +6,12 @@ layout: default
 
 ## [](#header-2)Overview
 
-XKNX provides the possibility to send the local time to the KNX bus in regular intervals. This can be used to display the time within [KNX touch sensors](https://katalog.gira.de/en/datenblatt.html?id=638294) or for KNX automation schemes programmed with the ETS.
+XKNX provides the possibility to send the local time, date or both combined to the KNX bus in regular intervals. This can be used to display the time within [KNX touch sensors](https://katalog.gira.de/en/datenblatt.html?id=638294) or for KNX automation schemes programmed with the ETS.
 
 ## [](#header-2)Example
 
 ```python
-time = Time(xknx, 'TimeTest', group_address='1/2/3')
+time = DateTime(xknx, 'TimeTest', group_address='1/2/3')
 xknx.devices.add(time)
 
 # Sending time to knx bus
@@ -34,11 +34,12 @@ When XKNX is started in [daemon mode](/xknx), with START_STATE_UPDATER enabled, 
 
 ```python
 import asyncio
-from xknx import XKNX, Time
+from xknx import XKNX
+from xknx.devices import DateTime
 
 async def main():
     xknx = XKNX()
-    time = Time(xknx, 'TimeTest', group_address='1/2/3')
+    time = DateTime(xknx, 'TimeTest', group_address='1/2/3')
     xknx.devices.add(time)
     print("Sending time to KNX bus every hour")
     await xknx.start(daemon_mode=True, state_updater=True)
@@ -54,10 +55,11 @@ loop.close()
 
 
 ```python
-from xknx import XKNX,Time
+from xknx import XKNX
+from xknx.devices import DateTime, DateTimeBroadcastType
 
 xknx = XKNX()
-time = Time(xknx, 'TimeTest', group_address='1/2/3')
+time = DateTime(xknx, 'TimeTest', group_address='1/2/3', broadcast_type=DateTimeBroadcastType.TIME)
 
 # Sending Time to KNX bus 
 await time.sync()
