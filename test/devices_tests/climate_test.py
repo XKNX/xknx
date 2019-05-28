@@ -688,7 +688,6 @@ class TestClimate(unittest.TestCase):
             setpoint_shift_step=0.3)
         self.assertEqual(climate.temperature_step, 0.3)
 
-
     #
     # TEST SYNC
     #
