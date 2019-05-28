@@ -664,16 +664,19 @@ class TestClimate(unittest.TestCase):
             xknx,
             'TestClimate',
             group_address_target_temperature_state='1/2/1',
-            group_address_target_temperature='1/2/2',
-            group_address_setpoint_shift='1/2/3')
+            group_address_target_temperature='1/2/2')
 
         self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(21.00)))
         # default temperature_step for non setpoint_shift
         self.assertEqual(climate.temperature_step, 0.1)
 
-        # initialize setpoint_shift
-        self.loop.run_until_complete(asyncio.Task(climate.set_setpoint_shift(1)))
-        self.assertTrue(climate.initialized_for_setpoint_shift_calculations)
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            group_address_target_temperature_state='1/2/1',
+            group_address_target_temperature='1/2/2',
+            group_address_setpoint_shift='1/2/3')
+        # default temperature_step for setpoint_shift
         self.assertEqual(climate.temperature_step, 0.5)
 
         climate = Climate(
@@ -683,11 +686,8 @@ class TestClimate(unittest.TestCase):
             group_address_target_temperature='1/2/2',
             group_address_setpoint_shift='1/2/3',
             setpoint_shift_step=0.3)
-        self.assertEqual(climate.temperature_step, 0.1)
-        self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(21.00)))
-        self.loop.run_until_complete(asyncio.Task(climate.set_setpoint_shift(0)))
-        self.assertTrue(climate.initialized_for_setpoint_shift_calculations)
         self.assertEqual(climate.temperature_step, 0.3)
+
 
     #
     # TEST SYNC
