@@ -32,7 +32,7 @@ class HVACOperationMode(Enum):
 
 class DPTHVACMode(DPTBase):
     """
-    Abstraction for KNX KNX HVAC mod.
+    Abstraction for KNX HVAC mode.
 
     DPT 20.102
     """

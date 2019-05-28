@@ -12,9 +12,10 @@ from .remote_value_1count import RemoteValue1Count
 from .remote_value_switch import RemoteValueSwitch
 from .remote_value_temp import RemoteValueTemp
 
-DEFAULT_SETPOINT_SHIFT_STEP = 0.5
 DEFAULT_SETPOINT_SHIFT_MAX = 6
 DEFAULT_SETPOINT_SHIFT_MIN = -6
+DEFAULT_SETPOINT_SHIFT_STEP = 0.5
+DEFAULT_TEMPERATUE_STEP = 0.1
 
 
 class SetpointShiftValue(RemoteValue1Count):
@@ -222,9 +223,9 @@ class Climate(Device):
     @property
     def temperature_step(self):
         """Return smallest possible temperature step."""
-        if self.initialized_for_setpoint_shift_calculations:
+        if self._setpoint_shift.initialized:
             return self._setpoint_shift.setpoint_shift_step
-        return 0.1
+        return DEFAULT_TEMPERATUE_STEP
 
     async def set_target_temperature(self, target_temperature):
         """Send new target temperature or setpoint_shift to KNX bus."""
