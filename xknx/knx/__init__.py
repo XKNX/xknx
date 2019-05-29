@@ -13,6 +13,9 @@ from .dpt import DPTArray, DPTBase, DPTBinary, DPTComparator, DPTWeekday
 from .dpt_2byte import (
     DPT2ByteUnsigned, DPT2Ucount, DPTBrightness, DPTColorTemperature,
     DPTUElCurrentmA)
+from .dpt_2byte_signed import (
+    DPT2ByteSigned, DPTDeltaTimeHrs, DPTDeltaTimeMin, DPTDeltaTimeMsec,
+    DPTDeltaTimeSec, DPTPercentV16, DPTRotationAngle, DPTValue2Count)
 from .dpt_4byte import DPT4ByteSigned, DPT4ByteUnsigned
 from .dpt_date import DPTDate
 from .dpt_datetime import DPTDateTime

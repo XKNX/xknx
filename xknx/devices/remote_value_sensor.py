@@ -6,14 +6,16 @@ for serialization and deserialization of the KNX value.
 """
 from xknx.exceptions import ConversionError
 from xknx.knx import (
-    DPT2ByteFloat, DPT2ByteUnsigned, DPT4ByteFloat, DPT4ByteSigned,
-    DPT4ByteUnsigned, DPTAngle, DPTArray, DPTBrightness, DPTColorTemperature,
-    DPTElectricCurrent, DPTElectricPotential, DPTEnergy, DPTEnthalpy,
-    DPTFrequency, DPTHeatFlowRate, DPTHumidity, DPTLuminousFlux, DPTLux,
-    DPTPartsPerMillion, DPTPercentU8, DPTPercentV8, DPTPhaseAngleDeg,
-    DPTPhaseAngleRad, DPTPower, DPTPowerFactor, DPTPressure, DPTScaling,
-    DPTSceneNumber, DPTSpeed, DPTString, DPTTemperature, DPTUElCurrentmA,
-    DPTValue1Count, DPTValue1Ucount, DPTVoltage, DPTWsp)
+    DPT2ByteFloat, DPT2ByteSigned, DPT2ByteUnsigned, DPT2Ucount, DPT4ByteFloat,
+    DPT4ByteSigned, DPT4ByteUnsigned, DPTAngle, DPTArray, DPTBrightness,
+    DPTColorTemperature, DPTDeltaTimeHrs, DPTDeltaTimeMin, DPTDeltaTimeMsec,
+    DPTDeltaTimeSec, DPTElectricCurrent, DPTElectricPotential, DPTEnergy,
+    DPTEnthalpy, DPTFrequency, DPTHeatFlowRate, DPTHumidity, DPTLuminousFlux,
+    DPTLux, DPTPartsPerMillion, DPTPercentU8, DPTPercentV8, DPTPercentV16,
+    DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower, DPTPowerFactor, DPTPressure,
+    DPTRotationAngle, DPTScaling, DPTSceneNumber, DPTSpeed, DPTString,
+    DPTTemperature, DPTUElCurrentmA, DPTValue1Count, DPTValue1Ucount,
+    DPTValue2Count, DPTVoltage, DPTWsp)
 
 from .remote_value import RemoteValue
 
@@ -27,6 +29,10 @@ class RemoteValueSensor(RemoteValue):
         'color_temperature': DPTColorTemperature,
         'counter_pulses': DPTValue1Count,
         'current': DPTUElCurrentmA,
+        'delta_time_hrs': DPTDeltaTimeHrs,
+        'delta_time_min': DPTDeltaTimeMin,
+        'delta_time_ms': DPTDeltaTimeMsec,
+        'delta_time_sec': DPTDeltaTimeSec,
         'electric_current': DPTElectricCurrent,
         'electric_potential': DPTElectricPotential,
         'energy': DPTEnergy,
@@ -39,6 +45,7 @@ class RemoteValueSensor(RemoteValue):
         'percent': DPTScaling,
         'percentU8': DPTPercentU8,
         'percentV8': DPTPercentV8,
+        'percentV16': DPTPercentV16,
         'phaseanglerad': DPTPhaseAngleRad,
         'phaseangledeg': DPTPhaseAngleDeg,
         'power': DPTPower,
@@ -46,6 +53,7 @@ class RemoteValueSensor(RemoteValue):
         'ppm': DPTPartsPerMillion,
         'pressure': DPTPressure,
         'pulse': DPTValue1Ucount,
+        'rotation_angle': DPTRotationAngle,
         'scene_number': DPTSceneNumber,
         'speed': DPTSpeed,
         'speed_ms': DPTWsp,
@@ -57,7 +65,9 @@ class RemoteValueSensor(RemoteValue):
         '1byte_unsigned': DPTValue1Ucount,
         # Generic 2 byte DPT
         'DPT-7': DPT2ByteUnsigned,
-        '2byte_unsigned': DPT2ByteUnsigned,
+        '2byte_unsigned': DPT2Ucount,
+        'DPT-8': DPT2ByteSigned,
+        '2byte_signed': DPTValue2Count,
         'DPT-9': DPT2ByteFloat,
         # Generic 4 byte DPT
         'DPT-12': DPT4ByteUnsigned,
