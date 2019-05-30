@@ -52,6 +52,6 @@ class TestDPTRelativeValue(unittest.TestCase):
 
     def test_unit(self):
         """Test unit of 1 byte relative value objects."""
-        self.assertEqual(DPTSignedRelativeValue.unit, 'counter pulses')
+        self.assertEqual(DPTSignedRelativeValue.unit, '')
         self.assertEqual(DPTPercentV8.unit, '%')
         self.assertEqual(DPTValue1Count.unit, 'counter pulses')
