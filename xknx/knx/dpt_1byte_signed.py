@@ -1,4 +1,4 @@
-"""Implementation of Basic KNX 2-Byte."""
+"""Implementation of Basic KNX 1-Byte signed integer values."""
 
 from xknx.exceptions import ConversionError
 
