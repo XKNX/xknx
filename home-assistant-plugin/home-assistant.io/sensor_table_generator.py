@@ -6,6 +6,20 @@ except ModuleNotFoundError:
     exit("Add the `xknx` directory to pythons path via `export PYTHONPATH=$HOME/directory/to/xknx`")
 
 
+# Defines the column order of the printed table.
+# ["dpt_number", "value_type", "dpt_size", "unit", "dpt_range"]
+COLUMN_ORDER = ["dpt_number", "value_type", "dpt_size", "unit"]
+
+# Defines the column adjustment of the printed table.
+# "left", "right" or "center"
+COLUMN_ADJUSTMENT = {
+    "value_type": "left",
+    "unit": "left",
+    "dpt_number": "right",
+    "dpt_size": "right",
+    "dpt_range": "center"}
+
+
 class Row():
     """A row in the table. Table header text is defined in __init__ defaults."""
     column_width = {}
@@ -35,15 +49,21 @@ class Row():
             Row.column_width[index] = len(text)
 
     def __repr__(self):
-        def _format_column_ljust(content, index):
+        def _format_column_ljust(index):
+            content = getattr(self, index)
             return "| " + content.ljust(Row.column_width[index] + 1)
 
-        return (_format_column_ljust(self.value_type, "value_type") +
-                _format_column_ljust(self.unit, "unit") +
-                _format_column_ljust(self.dpt_number, "dpt_number") +
-                _format_column_ljust(self.dpt_size, "dpt_size") +
-                # _format_column_ljust(self.dpt_range, "dpt_range") +
-                "|")
+        # return (_format_column_ljust("value_type") +
+        #         _format_column_ljust("unit") +
+        #         _format_column_ljust("dpt_number") +
+        #         _format_column_ljust("dpt_size") +
+        #         # _format_column_ljust("dpt_range") +
+        #         "|")
+        _row = ""
+        for column in COLUMN_ORDER:
+            _row += _format_column_ljust(column)
+        _row += "|"
+        return _row
 
 
 class DPTRow(Row):
@@ -96,12 +116,24 @@ def table_delimiter():
     def table_delimiter_rjust(width):
         return "|-" + "-" * width + ":"
 
-    return (table_delimiter_ljust(Row.column_width["value_type"]) +
-            table_delimiter_ljust(Row.column_width["unit"]) +
-            table_delimiter_rjust(Row.column_width["dpt_number"]) +
-            table_delimiter_rjust(Row.column_width["dpt_size"]) +
-            # table_delimiter_center(Row.column_width["dpt_range"]) +
-            "|")
+    _row = ""
+    for column in COLUMN_ORDER:
+        _cell_width = Row.column_width[column]
+        if COLUMN_ADJUSTMENT[column] == "left":
+            _row += table_delimiter_ljust(_cell_width)
+        elif COLUMN_ADJUSTMENT[column] == "right":
+            _row += table_delimiter_rjust(_cell_width)
+        elif COLUMN_ADJUSTMENT[column] == "center":
+            _row += table_delimiter_center(_cell_width)
+    _row += "|"
+    return _row
+
+    # return (table_delimiter_ljust(Row.column_width["value_type"]) +
+    #         table_delimiter_ljust(Row.column_width["unit"]) +
+    #         table_delimiter_rjust(Row.column_width["dpt_number"]) +
+    #         table_delimiter_rjust(Row.column_width["dpt_size"]) +
+    #         # table_delimiter_center(Row.column_width["dpt_range"]) +
+    #         "|")
 
 
 def print_table():
