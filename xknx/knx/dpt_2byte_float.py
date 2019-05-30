@@ -13,7 +13,7 @@ class DPT2ByteFloat(DPTBase):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.
 
-    DPT 9.xxx
+    DPT 9.***
     """
 
     value_min = -671088.64
