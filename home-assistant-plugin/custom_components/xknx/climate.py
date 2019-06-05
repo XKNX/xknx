@@ -246,9 +246,10 @@ class KNXClimate(ClimateDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return [OPERATION_MODES.get(operation_mode.value) for
-                operation_mode in
-                self.device.mode.operation_modes]
+        _operations = [OPERATION_MODES.get(operation_mode.value) for
+                       operation_mode in
+                       self.device.mode.operation_modes]
+        return list(filter(None, _operations))
 
     async def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
