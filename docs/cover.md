@@ -6,7 +6,7 @@ layout: default
 
 ## [](#header-2)Overview
 
-Shutters are simple representations of blind/roller cover actuators. With XKNX you can move them up, down, to direct positions or stop them. Internally the class provides a calculation which calculates the current position while traveling.
+Shutters are simple representations of blind/roller cover actuators. With XKNX you can move them up, down, to direct positions or stop them. Internally the class calculates the current position while traveling.
 
 ## [](#header-2)Example
 
@@ -16,7 +16,7 @@ cover = Cover(xknx,
               group_address_long='1/2/1',
               group_address_short='1/2/2',
               group_address_position='1/2/3',
-              group_address_position_feedback='1/2/4',
+              group_address_position_state='1/2/4',
               travel_time_down=50,
               travel_time_up=60)
 
@@ -46,9 +46,13 @@ cover = Cover(xknx,
               group_address_long='1/2/1',
               group_address_short='1/2/2',
               group_address_position='1/2/3',
-              group_address_position_feedback='1/2/4',
+              group_address_position_state='1/2/4',
+              group_address_angle='1/2/5',
+              group_address_angle_state='1/2/6',
               travel_time_down=50,
-              travel_time_up=60)
+              travel_time_up=60,
+              invert_position=False,
+              invert_angle=False)
 
 # Moving to up position
 await cover.set_up()
@@ -68,10 +72,14 @@ await cover.stop()
 # Moving cover to absolute position
 await cover.set_position(50)
 
+# Tilting blinds to absolute position
+await cover.set_angle(50)
+
 # Requesting current state
 # If requested position was not reached yet, XKNX will calculate the position
 # out of last known position and defined traveling times
 position = cover.current_position()
+angle = cover.current_angle()
 
 # Helper functions to see if cover is traveling or has reached final position
 is_traveling = cover.is_traveling()
