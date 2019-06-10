@@ -106,7 +106,7 @@ class RemoteValue():
             self.xknx.logger.info("Setting value of uninitialized device: %s (value: %s)", self.device_name, value)
             return
         if not self.writable:
-            self.xknx.logger.warning("Atempted to set value for non-writable device: %s (value: %s)", self.device_name, value)
+            self.xknx.logger.warning("Attempted to set value for non-writable device: %s (value: %s)", self.device_name, value)
             return
 
         payload = self.to_knx(value)  # pylint: disable=assignment-from-no-return
