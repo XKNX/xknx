@@ -59,7 +59,7 @@ class TestRemoteValue(unittest.TestCase):
         remote_value = RemoteValue(xknx, group_address_state=GroupAddress('1/2/3'))
         with patch('logging.Logger.warning') as mock_info:
             self.loop.run_until_complete(asyncio.Task(remote_value.set(23)))
-            mock_info.assert_called_with('Atempted to set value for non-writable device: %s (value: %s)', 'Unknown', 23)
+            mock_info.assert_called_with('Attempted to set value for non-writable device: %s (value: %s)', 'Unknown', 23)
 
     def test_default_value_unit(self):
         """Test for the default value of unit_of_measurement."""
