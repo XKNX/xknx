@@ -8,7 +8,7 @@ from .dpt_hvac_mode import HVACOperationMode
 
 class DPTHVACContrMode(DPTBase):
     """
-    Abstraction for KNX KNX HVAC mod.
+    Abstraction for KNX HVAC controller mode.
 
     DPT 20.105
     """
@@ -37,11 +37,11 @@ class DPTHVACContrMode(DPTBase):
         cls.test_bytesarray(raw, 1)
         if raw[0] in DPTHVACContrMode.SUPPORTED_MODES:
             return DPTHVACContrMode.SUPPORTED_MODES[raw[0]]
-        raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
+        raise CouldNotParseKNXIP("Could not parse DPTHVACContrMode")
 
     @classmethod
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
         if value in DPTHVACContrMode.SUPPORTED_MODES_INV:
             return (DPTHVACContrMode.SUPPORTED_MODES_INV[value],)
-        raise ConversionError("Could not parse HVACOperationMode", value=value)
+        raise ConversionError("Could not parse DPTHVACContrMode", value=value)

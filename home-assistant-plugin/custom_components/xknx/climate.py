@@ -56,11 +56,6 @@ OPERATION_MODES_INV = dict((
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
-    vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): cv.string,
-    vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
-    vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
-    vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_SETPOINT_SHIFT_STEP,
                  default=DEFAULT_SETPOINT_SHIFT_STEP): vol.All(
                      float, vol.Range(min=0, max=2)),
@@ -68,6 +63,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(int, vol.Range(min=0, max=32)),
     vol.Optional(CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN):
         vol.All(int, vol.Range(min=-32, max=0)),
+    vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
+    vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): cv.string,
+    vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
+    vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
+    vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): cv.string,
@@ -211,7 +211,7 @@ class KNXClimate(ClimateDevice):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        return self.device.setpoint_shift_step
+        return self.device.temperature_step
 
     @property
     def target_temperature(self):
@@ -246,9 +246,10 @@ class KNXClimate(ClimateDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return [OPERATION_MODES.get(operation_mode.value) for
-                operation_mode in
-                self.device.mode.operation_modes]
+        _operations = [OPERATION_MODES.get(operation_mode.value) for
+                       operation_mode in
+                       self.device.mode.operation_modes]
+        return list(filter(None, _operations))
 
     async def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""

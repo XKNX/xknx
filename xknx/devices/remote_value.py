@@ -38,6 +38,11 @@ class RemoteValue():
         """Evaluate if remote value is initialized with group address."""
         return bool(self.group_address_state or self.group_address)
 
+    @property
+    def writable(self):
+        """Evaluate if remote value has a group_address set."""
+        return isinstance(self.group_address, GroupAddress)
+
     def has_group_address(self, group_address):
         """Test if device has given group address."""
         return group_address in [self.group_address, self.group_address_state]
@@ -98,8 +103,12 @@ class RemoteValue():
     async def set(self, value):
         """Set new value."""
         if not self.initialized:
-            self.xknx.logger.info("Setting value of uninitialized device %s (value %s)", self.device_name, value)
+            self.xknx.logger.info("Setting value of uninitialized device: %s (value: %s)", self.device_name, value)
             return
+        if not self.writable:
+            self.xknx.logger.warning("Attempted to set value for non-writable device: %s (value: %s)", self.device_name, value)
+            return
+
         payload = self.to_knx(value)  # pylint: disable=assignment-from-no-return
         updated = False
         if self.payload is None or payload != self.payload:

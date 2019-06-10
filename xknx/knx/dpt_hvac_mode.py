@@ -32,7 +32,7 @@ class HVACOperationMode(Enum):
 
 class DPTHVACMode(DPTBase):
     """
-    Abstraction for KNX KNX HVAC mod.
+    Abstraction for KNX HVAC mode.
 
     DPT 20.102
     """
@@ -107,4 +107,4 @@ class DPTControllerStatus(DPTBase):
             return (0x24,)
         if value == HVACOperationMode.FROST_PROTECTION:
             return (0x28,)
-        raise ConversionError("Could not parse HVACOperationMode", value=value)
+        raise ConversionError("Could not parse DPTControllerStatus", value=value)

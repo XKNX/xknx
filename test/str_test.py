@@ -12,7 +12,8 @@ from xknx.exceptions import (
     CouldNotParseTelegram, DeviceIllegalValue)
 from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.knx import (
-    DPTArray, DPTBinary, GroupAddress, PhysicalAddress, Telegram)
+    DPTArray, DPTBinary, GroupAddress, PhysicalAddress, Telegram,
+    TelegramDirection)
 from xknx.knxip import (
     HPAI, CEMIFrame, ConnectionStateRequest, ConnectionStateResponse,
     ConnectRequest, ConnectRequestType, ConnectResponse, DIBDeviceInformation,
@@ -79,9 +80,11 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_on_off_state='1/2/15')
         self.assertEqual(
             str(climate),
-            '<Climate name="Wohnzimmer" temperature="None/GroupAddress("1/2/1")/None/None"  target_temperature="GroupAddress("1/2/2")/None/None/'
-            'None"  setpoint_shift="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" setpoint_shift_step="0.1" setpoint_shift_max="20" set'
-            'point_shift_min="-20" group_address_on_off="GroupAddress("1/2/14")/GroupAddress("1/2/15")/None/None" />')
+            '<Climate name="Wohnzimmer" temperature="None/GroupAddress("1/2/1")/None/None" '
+            'target_temperature="GroupAddress("1/2/2")/None/None/None" '
+            'setpoint_shift="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" '
+            'setpoint_shift_step="0.1" setpoint_shift_max="20" setpoint_shift_min="-20" '
+            'group_address_on_off="GroupAddress("1/2/14")/GroupAddress("1/2/15")/None/None" />')
 
     def test_climate_mode(self):
         """Test string representation of climate mode object."""
@@ -220,7 +223,11 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(sensor),
             '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/None/None" value="None" unit="%"/>')
-        self.loop.run_until_complete(asyncio.Task(sensor.sensor_value.set(25)))
+        # self.loop.run_until_complete(asyncio.Task(sensor.sensor_value.set(25)))
+        telegram = Telegram(group_address=GroupAddress('1/2/3'),
+                            direction=TelegramDirection.INCOMING,
+                            payload=DPTArray((0x40)))
+        self.loop.run_until_complete(asyncio.Task(sensor.process_group_write(telegram)))
         self.assertEqual(
             str(sensor),
             '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/<DPTArray value="[0x40]" />/25" value="25" unit="%"/>')

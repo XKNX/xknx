@@ -251,16 +251,10 @@ class ClimateMode(Device):
         if self.supports_operation_mode:
             if self.group_address_operation_mode_state:
                 state_addresses.append(self.group_address_operation_mode_state)
-            elif self.group_address_operation_mode:
-                state_addresses.append(self.group_address_operation_mode)
             if self.group_address_controller_status_state:
                 state_addresses.append(self.group_address_controller_status_state)
-            elif self.group_address_controller_status:
-                state_addresses.append(self.group_address_controller_status)
             if self.group_address_controller_mode_state:
                 state_addresses.append(self.group_address_controller_mode_state)
-            elif self.group_address_controller_mode:
-                state_addresses.append(self.group_address_controller_mode)
             # Note: telegrams setting splitted up operation modes are not yet implemented
         return state_addresses
 

@@ -46,12 +46,20 @@ class TestRemoteValue(unittest.TestCase):
             mock_warn.assert_called_with('from_knx not implemented for %s', 'RemoteValue')
 
     def test_info_set_uninitialized(self):
-        """Test for warning if from_knx is not implemented."""
+        """Test for info if RemoteValue is not initialized."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValue(xknx)
         with patch('logging.Logger.info') as mock_info:
             self.loop.run_until_complete(asyncio.Task(remote_value.set(23)))
-            mock_info.assert_called_with('Setting value of uninitialized device %s (value %s)', 'Unknown', 23)
+            mock_info.assert_called_with('Setting value of uninitialized device: %s (value: %s)', 'Unknown', 23)
+
+    def test_info_set_unwritable(self):
+        """Test for warning if RemoteValue is read only."""
+        xknx = XKNX(loop=self.loop)
+        remote_value = RemoteValue(xknx, group_address_state=GroupAddress('1/2/3'))
+        with patch('logging.Logger.warning') as mock_info:
+            self.loop.run_until_complete(asyncio.Task(remote_value.set(23)))
+            mock_info.assert_called_with('Attempted to set value for non-writable device: %s (value: %s)', 'Unknown', 23)
 
     def test_default_value_unit(self):
         """Test for the default value of unit_of_measurement."""
