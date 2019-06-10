@@ -1,4 +1,4 @@
-"""Unit test for KNX 2 byte objects."""
+"""Unit test for KNX 4 byte objects."""
 import struct
 import unittest
 from unittest.mock import patch
