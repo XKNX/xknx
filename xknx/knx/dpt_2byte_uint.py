@@ -11,7 +11,7 @@ class DPT2ByteUnsigned(DPTBase):
 
     Contains smaller counters, timers  etc.
 
-    DPT 7.xxx
+    DPT 7.***
     """
 
     value_min = 0

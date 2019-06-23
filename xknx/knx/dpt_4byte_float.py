@@ -20,7 +20,7 @@ class DPT4ByteFloat(DPTBase):
     The negative minimum finite float literal is -3.40282347e+38f.
     No value range are defined for DPTs 14.000-079.
 
-    DPT 14.xxx
+    DPT 14.***
     """
 
     unit = ""

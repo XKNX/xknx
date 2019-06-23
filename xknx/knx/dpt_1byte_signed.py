@@ -9,12 +9,12 @@ class DPTSignedRelativeValue(DPTBase):
     """
     Abstraction for KNX 1 Byte "1-octet Signed Relative Value".
 
-    DPT 6.010 and 6.001
+    DPT 6.***
     """
 
     value_min = -128
     value_max = 127
-    unit = "counter pulses"
+    unit = ""
     payload_length = 1
 
     @classmethod

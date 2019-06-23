@@ -53,12 +53,6 @@ class Row():
             content = getattr(self, index)
             return "| " + content.ljust(Row.column_width[index] + 1)
 
-        # return (_format_column_ljust("value_type") +
-        #         _format_column_ljust("unit") +
-        #         _format_column_ljust("dpt_number") +
-        #         _format_column_ljust("dpt_size") +
-        #         # _format_column_ljust("dpt_range") +
-        #         "|")
         _row = ""
         for column in COLUMN_ORDER:
             _row += _format_column_ljust(column)
@@ -127,13 +121,6 @@ def table_delimiter():
             _row += table_delimiter_center(_cell_width)
     _row += "|"
     return _row
-
-    # return (table_delimiter_ljust(Row.column_width["value_type"]) +
-    #         table_delimiter_ljust(Row.column_width["unit"]) +
-    #         table_delimiter_rjust(Row.column_width["dpt_number"]) +
-    #         table_delimiter_rjust(Row.column_width["dpt_size"]) +
-    #         # table_delimiter_center(Row.column_width["dpt_range"]) +
-    #         "|")
 
 
 def print_table():
