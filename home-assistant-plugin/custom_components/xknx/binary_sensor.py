@@ -3,12 +3,13 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA, BinarySensorDevice)
-from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import ATTR_DISCOVER_DEVICES, DATA_XKNX, KNXAutomation
 
+CONF_STATE_ADDRESS = 'state_address'
 CONF_SIGNIFICANT_BIT = 'significant_bit'
 CONF_DEFAULT_SIGNIFICANT_BIT = 1
 CONF_SYNC_STATE = 'sync_state'
@@ -37,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SIGNIFICANT_BIT, default=CONF_DEFAULT_SIGNIFICANT_BIT):
         cv.positive_int,
     vol.Optional(CONF_SYNC_STATE, default=True): cv.boolean,
-    vol.Required(CONF_ADDRESS): cv.string,
+    vol.Required(CONF_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_RESET_AFTER): cv.positive_int,
     vol.Optional(CONF_AUTOMATION): AUTOMATIONS_SCHEMA,
 })
@@ -70,7 +71,7 @@ def async_add_entities_config(hass, config, async_add_entities):
     binary_sensor = xknx.devices.BinarySensor(
         hass.data[DATA_XKNX].xknx,
         name=name,
-        group_address_state=config[CONF_ADDRESS],
+        group_address_state=config[CONF_STATE_ADDRESS],
         sync_state=config[CONF_SYNC_STATE],
         device_class=config.get(CONF_DEVICE_CLASS),
         significant_bit=config[CONF_SIGNIFICANT_BIT],
