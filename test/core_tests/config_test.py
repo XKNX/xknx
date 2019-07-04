@@ -376,6 +376,18 @@ class TestConfig(unittest.TestCase):
                    'Heating.Valve1',
                    group_address_state='2/0/0',
                    value_type='percent',
+                   sync_state=True,
+                   device_updated_cb=TestConfig.xknx.devices.device_updated))
+
+    def test_config_sensor_percent_passive(self):
+        """Test passive percent Sensor from config file."""
+        self.assertEqual(
+            TestConfig.xknx.devices['Heating.Valve2'],
+            Sensor(TestConfig.xknx,
+                   'Heating.Valve2',
+                   group_address_state='2/0/1',
+                   value_type='percent',
+                   sync_state=False,
                    device_updated_cb=TestConfig.xknx.devices.device_updated))
 
     def test_config_sensor_temperature_type(self):
