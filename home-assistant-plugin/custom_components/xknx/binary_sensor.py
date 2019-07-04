@@ -34,11 +34,11 @@ AUTOMATIONS_SCHEMA = vol.All(cv.ensure_list, [AUTOMATION_SCHEMA])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS): cv.string,
     vol.Optional(CONF_SIGNIFICANT_BIT, default=CONF_DEFAULT_SIGNIFICANT_BIT):
         cv.positive_int,
     vol.Optional(CONF_SYNC_STATE, default=True): cv.boolean,
     vol.Required(CONF_STATE_ADDRESS): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS): cv.string,
     vol.Optional(CONF_RESET_AFTER): cv.positive_int,
     vol.Optional(CONF_AUTOMATION): AUTOMATIONS_SCHEMA,
 })
