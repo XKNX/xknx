@@ -74,6 +74,8 @@ class Config:
                     connection_config.gateway_port = value
                 elif pref == "local_ip":
                     connection_config.local_ip = value
+                elif pref == "proxy_ip":
+                    connection_config.proxy_ip = value
         self.xknx.connection_config = connection_config
 
     def parse_groups(self, doc):

@@ -22,7 +22,7 @@ class Tunnel():
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, xknx, src_address, local_ip, local_port, gateway_ip, gateway_port,
-                 proxy_ip, telegram_received_callback=None, auto_reconnect=False,
+                 proxy_ip=None, telegram_received_callback=None, auto_reconnect=False,
                  auto_reconnect_wait=3):
         """Initialize Tunnel class."""
         # pylint: disable=too-many-arguments

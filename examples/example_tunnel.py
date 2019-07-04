@@ -28,6 +28,7 @@ async def main():
         xknx,
         src_address,
         local_ip=gateway.local_ip,
+        local_port=0,
         gateway_ip=gateway.ip_addr,
         gateway_port=gateway.port)
 

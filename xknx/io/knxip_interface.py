@@ -41,6 +41,7 @@ class ConnectionConfig:
     * local_port: Local port the interface should listen to.
     * gateway_ip: IP of KNX/IP tunneling device.
     * gateway_port: Port of KNX/IP tunneling device.
+    * proxy_ip: For TUNNELING connection through a proxy (eg. NAT).
     * auto_reconnect: Auto reconnect to KNX/IP tunneling device if connection cannot be established.
     * auto_reconnect_wait: Wait n seconds before trying to reconnect to KNX/IP tunneling device.
     * scan_filter: For AUTOMATIC connection, limit scan with the given filter
@@ -142,9 +143,11 @@ class KNXIPInterface():
         validate_ip(local_ip, address_name="Local IP address")
         if proxy_ip is not None:
             validate_ip(proxy_ip, address_name="Proxy IP address")
-            self.xknx.logger.debug("Starting tunnel from %s:%s over %s to %s:%s", local_ip, local_port, proxy_ip, gateway_ip, gateway_port)
+            self.xknx.logger.debug("Starting tunnel from %s:%s over %s to %s:%s",
+                                   local_ip, local_port, proxy_ip, gateway_ip, gateway_port)
         else:
-            self.xknx.logger.debug("Starting tunnel from %s:%s to %s:%s", local_ip, local_port, gateway_ip, gateway_port)
+            self.xknx.logger.debug("Starting tunnel from %s:%s to %s:%s",
+                                   local_ip, local_port, gateway_ip, gateway_port)
         self.interface = Tunnel(
             self.xknx,
             self.xknx.own_address,

@@ -76,9 +76,12 @@ class TestConnect(unittest.TestCase):
     def test_proxy_connect(self):
         """Test connecting to KNX bus via proxy."""
         xknx = XKNX(loop=self.loop)
-        udp_client = UDPClient(xknx, ("172.20.0.2", 0), ("192.168.1.5", 1234))
-        proxy_ip = "192.168.1.10"
-        connect = Connect(xknx, udp_client, proxy_ip)
+        udp_client = UDPClient(
+            xknx,
+            ("172.20.0.2", 0),
+            ("192.168.1.5", 1234),
+            proxy_addr=("192.168.1.10", 4321))
+        connect = Connect(xknx, udp_client)
         connect.timeout_in_seconds = 0
 
         self.assertEqual(connect.awaited_response_class, ConnectResponse)

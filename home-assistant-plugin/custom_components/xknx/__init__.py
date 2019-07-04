@@ -20,6 +20,7 @@ CONF_XKNX_CONFIG = "config_file"
 CONF_XKNX_ROUTING = "routing"
 CONF_XKNX_TUNNELING = "tunneling"
 CONF_XKNX_LOCAL_IP = "local_ip"
+CONF_XKNX_PROXY_IP = "proxy_ip"
 CONF_XKNX_FIRE_EVENT = "fire_event"
 CONF_XKNX_FIRE_EVENT_FILTER = "fire_event_filter"
 CONF_XKNX_STATE_UPDATER = "state_updater"
@@ -38,6 +39,7 @@ TUNNELING_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_XKNX_LOCAL_IP): cv.string,
     vol.Optional(CONF_PORT): cv.port,
+    vol.Optional(CONF_XKNX_PROXY_IP): cv.string,
 })
 
 ROUTING_SCHEMA = vol.Schema({
@@ -191,11 +193,13 @@ class KNXModule:
             self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_PORT)
         local_ip = \
             self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_XKNX_LOCAL_IP)
+        proxy_ip = \
+            self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_XKNX_PROXY_IP)
         if gateway_port is None:
             gateway_port = DEFAULT_MCAST_PORT
         return ConnectionConfig(
             connection_type=ConnectionType.TUNNELING, gateway_ip=gateway_ip,
-            gateway_port=gateway_port, local_ip=local_ip)
+            gateway_port=gateway_port, local_ip=local_ip, proxy_ip=proxy_ip)
 
     def connection_config_auto(self):
         """Return the connection_config if auto is configured."""

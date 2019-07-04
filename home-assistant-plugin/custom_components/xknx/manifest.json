@@ -2,9 +2,7 @@
   "domain": "xknx",
   "name": "Knx",
   "documentation": "https://www.home-assistant.io/components/knx",
-  "requirements": [
-    "xknx==0.10.0"
-  ],
+  "requirements": [],
   "dependencies": [],
   "codeowners": [
     "@Julius2342"

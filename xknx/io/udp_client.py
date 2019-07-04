@@ -14,7 +14,7 @@ from xknx.knxip import KNXIPFrame
 class UDPClient:
     """Class for handling (sending and receiving) UDP packets."""
 
-    # pylint: disable=too-few-public-methods
+    # pylint: disable=too-few-public-methods, too-many-instance-attributes
 
     class Callback:
         """Callback class for handling callbacks for different 'KNX service types' of received packets."""
