@@ -9,10 +9,13 @@ from homeassistant.helpers.entity import Entity
 
 from . import ATTR_DISCOVER_DEVICES, DATA_XKNX
 
+CONF_SYNC_STATE = 'sync_state'
 DEFAULT_NAME = 'XKNX Sensor'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ADDRESS): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SYNC_STATE, default=True): cv.boolean,
+    vol.Required(CONF_ADDRESS): cv.string,
     vol.Required(CONF_TYPE): cv.string,
 })
 
@@ -44,6 +47,7 @@ def async_add_entities_config(hass, config, async_add_entities):
         hass.data[DATA_XKNX].xknx,
         name=config[CONF_NAME],
         group_address_state=config[CONF_ADDRESS],
+        sync_state=config[CONF_SYNC_STATE],
         value_type=config[CONF_TYPE])
     hass.data[DATA_XKNX].xknx.devices.add(sensor)
     async_add_entities([KNXSensor(sensor)])
