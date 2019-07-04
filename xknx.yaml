@@ -38,7 +38,7 @@ groups:
 
     binary_sensor_motion_dection:
         Kitchen.Motion.Sensor: {group_address_state: '3/0/0', device_class: 'motion'}
-        DiningRoom.Motion.Sensor: {group_address_state: '3/0/1', device_class: 'motion'}
+        DiningRoom.Motion.Sensor: {group_address_state: '3/0/1', sync_state: False, device_class: 'motion'}
 
         # Some states are encoded into different bits of the same group_address
         # Defining which bit should be relevant for the binary state via the "significant_bit" option

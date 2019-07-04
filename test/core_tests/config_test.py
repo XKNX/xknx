@@ -414,10 +414,21 @@ class TestConfig(unittest.TestCase):
     def test_config_sensor_binary_device_class(self):
         """Test reading Sensor with device_class from config file."""
         self.assertEqual(
+            TestConfig.xknx.devices['Kitchen.Motion.Sensor'],
+            BinarySensor(TestConfig.xknx,
+                         'Kitchen.Motion.Sensor',
+                         group_address_state='3/0/0',
+                         device_class='motion',
+                         device_updated_cb=TestConfig.xknx.devices.device_updated))
+
+    def test_config_sensor_binary_passive(self):
+        """Test reading Sensor with sync_state False from config file."""
+        self.assertEqual(
             TestConfig.xknx.devices['DiningRoom.Motion.Sensor'],
             BinarySensor(TestConfig.xknx,
                          'DiningRoom.Motion.Sensor',
                          group_address_state='3/0/1',
+                         sync_state=False,
                          device_class='motion',
                          device_updated_cb=TestConfig.xknx.devices.device_updated))
 

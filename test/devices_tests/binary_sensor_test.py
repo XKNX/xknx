@@ -220,8 +220,20 @@ class TestBinarySensor(unittest.TestCase):
     def test_state_addresses(self):
         """Test binary sensor returns state address as list."""
         xknx = XKNX(loop=self.loop)
-        binary_sensor = BinarySensor(xknx, 'TestInput', group_address_state='1/2/4')
+        binary_sensor = BinarySensor(
+            xknx,
+            'TestInput',
+            group_address_state='1/2/4')
         self.assertEqual(binary_sensor.state_addresses(), [GroupAddress('1/2/4')])
 
-        binary_sensor2 = BinarySensor(xknx, 'TestInput')
+        binary_sensor2 = BinarySensor(
+            xknx,
+            'TestInput')
         self.assertEqual(binary_sensor2.state_addresses(), [])
+
+        binary_sensor_passive = BinarySensor(
+            xknx,
+            'TestInput',
+            group_address_state='1/2/5',
+            sync_state=False)
+        self.assertEqual(binary_sensor_passive.state_addresses(), [])
