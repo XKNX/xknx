@@ -82,6 +82,7 @@ class RemoteValueSensor(RemoteValue):
                  xknx,
                  group_address=None,
                  group_address_state=None,
+                 sync_state=True,
                  value_type=None,
                  device_name=None,
                  after_update_cb=None):
@@ -90,6 +91,7 @@ class RemoteValueSensor(RemoteValue):
         super().__init__(xknx,
                          group_address,
                          group_address_state,
+                         sync_state=sync_state,
                          device_name=device_name,
                          after_update_cb=after_update_cb)
         if value_type not in self.DPTMAP:

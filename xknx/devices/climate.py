@@ -35,8 +35,8 @@ class SetpointShiftValue(RemoteValue1Count):
         super().__init__(xknx,
                          group_address,
                          group_address_state,
-                         device_name,
-                         after_update_cb)
+                         device_name=device_name,
+                         after_update_cb=after_update_cb)
 
         self.setpoint_shift_step = setpoint_shift_step
         self.min_temp_delta = min_temp_delta
@@ -129,8 +129,8 @@ class Climate(Device):
             xknx,
             group_address_on_off,
             group_address_on_off_state,
-            self.name,
-            self.after_update)
+            device_name=self.name,
+            after_update_cb=self.after_update)
 
         self.mode = mode
 
