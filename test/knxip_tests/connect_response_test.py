@@ -75,3 +75,20 @@ class Test_KNXIP_ConnectResponse(unittest.TestCase):
         knxipframe = KNXIPFrame(xknx)
         with self.assertRaises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
+
+    def test_connect_response_connection_error(self):
+        """Test parsing and streaming connection response KNX/IP packet with error."""
+        raw = ((0x06, 0x10, 0x02, 0x06, 0x00, 0x08, 0x00, 0x24))
+        xknx = XKNX(loop=self.loop)
+        knxipframe = KNXIPFrame(xknx)
+        knxipframe.from_knx(raw)
+        self.assertTrue(isinstance(knxipframe.body, ConnectResponse))
+        self.assertEqual(knxipframe.body.status_code, ErrorCode.E_NO_MORE_CONNECTIONS)
+        self.assertEqual(knxipframe.body.communication_channel, 0)
+
+        knxipframe2 = KNXIPFrame(xknx)
+        knxipframe2.init(KNXIPServiceType.CONNECT_RESPONSE)
+        knxipframe2.body.status_code = ErrorCode.E_NO_MORE_CONNECTIONS
+        knxipframe2.normalize()
+
+        self.assertEqual(knxipframe2.to_knx(), list(raw))
