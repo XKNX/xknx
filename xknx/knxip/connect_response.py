@@ -34,8 +34,8 @@ class ConnectResponse(KNXIPBody):
     def calculated_length(self):
         """Get length of KNX/IP body."""
         if self.status_code == ErrorCode.E_NO_ERROR:
-          return 2 + HPAI.LENGTH + \
-              ConnectResponse.CRD_LENGTH
+            return 2 + HPAI.LENGTH + \
+                ConnectResponse.CRD_LENGTH
         return 2
 
     def from_knx(self, raw):
