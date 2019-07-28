@@ -1,7 +1,73 @@
 Changelog
 =========
 
-0.8.2 - Release 2018-02-05
+Upcoming version (unreleased)
+-----------------------------
+
+0.9.4 - Release 2019-01-01
+--------------------------
+
+* updated hass plugin (@marvin-w #162)
+* tunable white and color temperature for lights (@farmio #154)
+
+0.9.3 - Release 2018-12-23
+--------------------------
+
+* updated requirements (added flake8-isort)
+* some more unit tests
+* Breaking Change:
+  ClimateMode is now a member of Climate (the hass plugin
+  needs this kind of dependency. Please note the updated xknx.yml)
+
+0.9.2 - Release 2018-12-22
+--------------------------
+
+* Min and max values for Climate device
+* Splitted up Climate in Climate and ClimateMode
+* added __contains__ method for Devices class.
+* fixed KeyError when action refers to a non existing device.
+
+0.9.1 - Release 2018-10-28
+--------------------------
+
+* state_addresses of binary_sesor should return emty value if no
+  state address is set.
+* state_address for notification device
+
+
+0.9.0 - Release 2018-09-23
+--------------------------
+
+* Updated requirements
+* Feature: Added new DPTs for DPTEnthalpy, DPTPartsPerMillion, DPTVoltage. Thanks @magenbrot #146
+* Breaking Change: Only read explicit state addresses #140
+* Minor: Fixed some comments,  @magenbrot #145
+* Minor: lowered loglevel from INFO to DEBUG for 'correct answer from KNX bus' @magenbrot #144
+* Feature: Add fan device,  @itineric #139
+* Bugfix: Tunnel: Use the bus address assigned by the server,  @M-o-a-T #141
+* Bugfix: Adde:wd a check for windows because windows does not support add_signal  @pulse-mind #135
+* Bugfix: correct testing if xknx exists within self  @FireFrei #131  
+* Feature: Implement support to automatically reconnect KNX/IP tunnel,  @rnixx #125
+* Feature: Adjusted to Home Assistant's changes to light colors @oliverblaha #128
+* Feature: Scan multiple gateways @DrMurx #111
+* Bugfix: Pylint errors @rnixx #132
+* Typo: @itineric #124
+* Feature: Add support for KNX DPT 20.105  @cian #122
+
+0.8.5 -Release 2018-03-10
+-------------------------
+
+* Bugfix: fixed string representation of GroupAddress https://github.com/home-assistant/home-assistant/issues/13049
+
+
+0.8.4 -Release 2018-03-04
+--------------------------
+
+* Bugfix: invert scaling value #114
+* Minor: current_brightness and current_color are now properties
+* Feature: Added DPT 5.010 DPTValue1Ucount @andreasnanko #109
+
+0.8.3 - Release 2018-02-05
 --------------------------
 
 * Color support for HASS plugin

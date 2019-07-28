@@ -2,7 +2,7 @@
 
 from enum import Enum
 
-from xknx.exceptions import CouldNotParseKNXIP, ConversionError
+from xknx.exceptions import ConversionError, CouldNotParseKNXIP
 
 from .dpt import DPTBase
 
@@ -32,7 +32,7 @@ class HVACOperationMode(Enum):
 
 class DPTHVACMode(DPTBase):
     """
-    Abstraction for KNX KNX HVAC mod.
+    Abstraction for KNX HVAC mode.
 
     DPT 20.102
     """
@@ -43,13 +43,13 @@ class DPTHVACMode(DPTBase):
         cls.test_bytesarray(raw, 1)
         if raw[0] == 0x04:
             return HVACOperationMode.FROST_PROTECTION
-        elif raw[0] == 0x03:
+        if raw[0] == 0x03:
             return HVACOperationMode.NIGHT
-        elif raw[0] == 0x02:
+        if raw[0] == 0x02:
             return HVACOperationMode.STANDBY
-        elif raw[0] == 0x01:
+        if raw[0] == 0x01:
             return HVACOperationMode.COMFORT
-        elif raw[0] == 0x00:
+        if raw[0] == 0x00:
             return HVACOperationMode.AUTO
         raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
 
@@ -58,13 +58,13 @@ class DPTHVACMode(DPTBase):
         """Serialize to KNX/IP raw data."""
         if value == HVACOperationMode.AUTO:
             return (0,)
-        elif value == HVACOperationMode.COMFORT:
+        if value == HVACOperationMode.COMFORT:
             return (1,)
-        elif value == HVACOperationMode.STANDBY:
+        if value == HVACOperationMode.STANDBY:
             return (2,)
-        elif value == HVACOperationMode.NIGHT:
+        if value == HVACOperationMode.NIGHT:
             return (3,)
-        elif value == HVACOperationMode.FROST_PROTECTION:
+        if value == HVACOperationMode.FROST_PROTECTION:
             return (4,)
         raise ConversionError("Could not parse HVACOperationMode", value=value)
 
@@ -86,11 +86,11 @@ class DPTControllerStatus(DPTBase):
         cls.test_bytesarray(raw, 1)
         if raw[0] & 8 > 0:
             return HVACOperationMode.FROST_PROTECTION
-        elif raw[0] & 4 > 0:
+        if raw[0] & 4 > 0:
             return HVACOperationMode.NIGHT
-        elif raw[0] & 2 > 0:
+        if raw[0] & 2 > 0:
             return HVACOperationMode.STANDBY
-        elif raw[0] & 1 > 0:
+        if raw[0] & 1 > 0:
             return HVACOperationMode.COMFORT
         raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
 
@@ -99,12 +99,12 @@ class DPTControllerStatus(DPTBase):
         """Serialize to KNX/IP raw data."""
         if value == HVACOperationMode.AUTO:
             raise ConversionError("Cant serialize DPTControllerStatus", value=value)
-        elif value == HVACOperationMode.COMFORT:
+        if value == HVACOperationMode.COMFORT:
             return (0x21,)
-        elif value == HVACOperationMode.STANDBY:
+        if value == HVACOperationMode.STANDBY:
             return (0x22,)
-        elif value == HVACOperationMode.NIGHT:
+        if value == HVACOperationMode.NIGHT:
             return (0x24,)
-        elif value == HVACOperationMode.FROST_PROTECTION:
+        if value == HVACOperationMode.FROST_PROTECTION:
             return (0x28,)
-        raise ConversionError("Could not parse HVACOperationMode", value=value)
+        raise ConversionError("Could not parse DPTControllerStatus", value=value)

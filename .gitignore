@@ -1,9 +1,17 @@
 *.pyc
+docs/_site/
+docs/vendor/
 htmlcov
 build/
 dist/
+Gemfile.lock
 xknx.egg-info/
 .cache
 .tox
 .DS_Store
 .coverage
+venv
+.idea/
+.vscode/
+.sass-cache/
+.pytest_cache/

@@ -37,7 +37,8 @@ class BinarySensor(Device):
     def __init__(self,
                  xknx,
                  name,
-                 group_address=None,
+                 group_address_state=None,
+                 sync_state=True,
                  device_class=None,
                  significant_bit=1,
                  reset_after=None,
@@ -45,15 +46,16 @@ class BinarySensor(Device):
                  device_updated_cb=None):
         """Initialize BinarySensor class."""
         # pylint: disable=too-many-arguments
-        super(BinarySensor, self).__init__(xknx, name, device_updated_cb)
-        if isinstance(group_address, (str, int)):
-            group_address = GroupAddress(group_address)
+        super().__init__(xknx, name, device_updated_cb)
+        if isinstance(group_address_state, (str, int)):
+            group_address_state = GroupAddress(group_address_state)
         if not isinstance(significant_bit, int):
             raise TypeError()
         if actions is None:
             actions = []
 
-        self.group_address = group_address
+        self.group_address_state = group_address_state
+        self.sync_state = sync_state
         self.device_class = device_class
         self.significant_bit = significant_bit
         self.reset_after = reset_after
@@ -67,8 +69,10 @@ class BinarySensor(Device):
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
-        group_address = \
-            config.get('group_address')
+        group_address_state = \
+            config.get('group_address_state')
+        sync_state = \
+            config.get('sync_state', True)
         device_class = \
             config.get('device_class')
         significant_bit = \
@@ -82,18 +86,22 @@ class BinarySensor(Device):
 
         return cls(xknx,
                    name,
-                   group_address=group_address,
+                   group_address_state=group_address_state,
+                   sync_state=sync_state,
                    device_class=device_class,
                    significant_bit=significant_bit,
                    actions=actions)
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
-        return self.group_address == group_address
+        return group_address in [self.group_address_state]
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
-        return [self.group_address, ]
+        if self.sync_state and \
+                self.group_address_state is not None:
+            return [self.group_address_state, ]
+        return []
 
     async def _set_internal_state(self, state):
         """Set the internal state of the device. If state was changed after update hooks and connected Actions are executed."""
@@ -157,8 +165,8 @@ class BinarySensor(Device):
 
     def __str__(self):
         """Return object as readable string."""
-        return '<BinarySensor group_address="{0}" name="{1}" state="{2}"/>' \
-            .format(self.group_address.__repr__(), self.name, self.state)
+        return '<BinarySensor group_address_state="{0}" name="{1}" state="{2}"/>' \
+            .format(self.group_address_state.__repr__(), self.name, self.state)
 
     def __eq__(self, other):
         """Equal operator."""

@@ -9,8 +9,8 @@ It provides functionality for
 """
 from .device import Device
 from .remote_value_scaling import RemoteValueScaling
-from .remote_value_updown import RemoteValueUpDown
 from .remote_value_step import RemoteValueStep
+from .remote_value_updown import RemoteValueUpDown
 from .travelcalculator import TravelCalculator
 
 
@@ -41,7 +41,7 @@ class Cover(Device):
                  device_updated_cb=None):
         """Initialize Cover class."""
         # pylint: disable=too-many-arguments
-        super(Cover, self).__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name, device_updated_cb)
 
         self.updown = RemoteValueUpDown(
             xknx,
@@ -219,6 +219,8 @@ class Cover(Device):
             await self.set_down()
         elif action == "short_down":
             await self.set_short_down()
+        elif action == "stop":
+            await self.stop()
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 

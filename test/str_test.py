@@ -3,22 +3,23 @@ import asyncio
 import unittest
 
 from xknx import XKNX
-from xknx.devices import (Action, ActionBase, ActionCallback, BinarySensor,
-                          Climate, Cover, DateTime, ExposeSensor, Light,
-                          Notification, RemoteValue, Scene, Sensor, Switch)
-from xknx.exceptions import (ConversionError, CouldNotParseAddress,
-                             CouldNotParseKNXIP, CouldNotParseTelegram,
-                             DeviceIllegalValue)
-from xknx.knx import (DPTArray, DPTBinary, GroupAddress, PhysicalAddress,
-                      Telegram)
-from xknx.knxip import (HPAI, CEMIFrame, ConnectionStateRequest,
-                        ConnectionStateResponse, ConnectRequest,
-                        ConnectRequestType, ConnectResponse,
-                        DIBDeviceInformation, DIBGeneric, DIBServiceFamily,
-                        DIBSuppSVCFamilies, DisconnectRequest,
-                        DisconnectResponse, KNXIPFrame, KNXIPHeader,
-                        KNXIPServiceType, KNXMedium, SearchRequest,
-                        SearchResponse, TunnellingAck, TunnellingRequest)
+from xknx.devices import (
+    Action, ActionBase, ActionCallback, BinarySensor, Climate, ClimateMode,
+    Cover, DateTime, ExposeSensor, Fan, Light, Notification, RemoteValue,
+    Scene, Sensor, Switch)
+from xknx.exceptions import (
+    ConversionError, CouldNotParseAddress, CouldNotParseKNXIP,
+    CouldNotParseTelegram, DeviceIllegalValue)
+from xknx.io.gateway_scanner import GatewayDescriptor
+from xknx.knx import (
+    DPTArray, DPTBinary, GroupAddress, PhysicalAddress, Telegram,
+    TelegramDirection)
+from xknx.knxip import (
+    HPAI, CEMIFrame, ConnectionStateRequest, ConnectionStateResponse,
+    ConnectRequest, ConnectRequestType, ConnectResponse, DIBDeviceInformation,
+    DIBGeneric, DIBServiceFamily, DIBSuppSVCFamilies, DisconnectRequest,
+    DisconnectResponse, KNXIPFrame, KNXIPHeader, KNXIPServiceType, KNXMedium,
+    SearchRequest, SearchResponse, TunnellingAck, TunnellingRequest)
 
 
 # pylint: disable=too-many-public-methods,invalid-name
@@ -56,11 +57,11 @@ class TestStringRepresentations(unittest.TestCase):
         binary_sensor = BinarySensor(
             xknx,
             name='Fnord',
-            group_address='1/2/3',
+            group_address_state='1/2/3',
             device_class='motion')
         self.assertEqual(
             str(binary_sensor),
-            '<BinarySensor group_address="GroupAddress("1/2/3")" name="Fnord" state="BinarySensorState.OFF"/>')
+            '<BinarySensor group_address_state="GroupAddress("1/2/3")" name="Fnord" state="BinarySensorState.OFF"/>')
 
     def test_climate(self):
         """Test string representation of climate object."""
@@ -75,6 +76,22 @@ class TestStringRepresentations(unittest.TestCase):
             setpoint_shift_step=0.1,
             setpoint_shift_max=20,
             setpoint_shift_min=-20,
+            group_address_on_off='1/2/14',
+            group_address_on_off_state='1/2/15')
+        self.assertEqual(
+            str(climate),
+            '<Climate name="Wohnzimmer" temperature="None/GroupAddress("1/2/1")/None/None" '
+            'target_temperature="GroupAddress("1/2/2")/None/None/None" '
+            'setpoint_shift="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" '
+            'setpoint_shift_step="0.1" setpoint_shift_max="20" setpoint_shift_min="-20" '
+            'group_address_on_off="GroupAddress("1/2/14")/GroupAddress("1/2/15")/None/None" />')
+
+    def test_climate_mode(self):
+        """Test string representation of climate mode object."""
+        xknx = XKNX(loop=self.loop)
+        climate_mode = ClimateMode(
+            xknx,
+            name="Wohnzimmer Mode",
             group_address_operation_mode='1/2/5',
             group_address_operation_mode_state='1/2/6',
             group_address_operation_mode_protection='1/2/7',
@@ -83,17 +100,13 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_controller_status='1/2/10',
             group_address_controller_status_state='1/2/11',
             group_address_controller_mode='1/2/12',
-            group_address_controller_mode_state='1/2/13',
-            group_address_on_off='1/2/14',
-            group_address_on_off_state='1/2/15')
+            group_address_controller_mode_state='1/2/13')
         self.assertEqual(
-            str(climate),
-            '<Climate name="Wohnzimmer" temperature="GroupAddress("1/2/1")/None/None/None"  target_temperature="GroupAddress("1/2/2")/None/None/'
-            'None"  setpoint_shift="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" setpoint_shift_step="0.1" setpoint_shift_max="20" set'
-            'point_shift_min="-20" group_address_operation_mode="GroupAddress("1/2/5")" group_address_operation_mode_state="GroupAddress("1/2/6")'
+            str(climate_mode),
+            '<ClimateMode name="Wohnzimmer Mode" '
+            'group_address_operation_mode="GroupAddress("1/2/5")" group_address_operation_mode_state="GroupAddress("1/2/6")'
             '" group_address_controller_status="GroupAddress("1/2/10")" group_address_controller_status_state="GroupAddress("1/2/11")" '
-            'group_address_controller_mode="GroupAddress("1/2/12")" group_address_controller_mode_state="GroupAddress("1/2/13")" '
-            'group_address_on_off="GroupAddress("1/2/14")/GroupAddress("1/2/15")/None/None" />')
+            'group_address_controller_mode="GroupAddress("1/2/12")" group_address_controller_mode_state="GroupAddress("1/2/13")" />')
 
     def test_cover(self):
         """Test string representation of cover object."""
@@ -114,6 +127,18 @@ class TestStringRepresentations(unittest.TestCase):
             '<Cover name="Rolladen" updown="GroupAddress("1/2/3")/None/None/None" step="GroupAddress("1/2/4")/None/None/None" position="Group'
             'Address("1/2/5")/GroupAddress("1/2/6")/None/None" angle="GroupAddress("1/2/7")/GroupAddress("1/2/8")/None/None" travel_time_down="8'
             '" travel_time_up="10" />')
+
+    def test_fan(self):
+        """Test string representation of fan object."""
+        xknx = XKNX(loop=self.loop)
+        fan = Fan(
+            xknx,
+            name='Dunstabzug',
+            group_address_speed='1/2/3',
+            group_address_speed_state='1/2/4')
+        self.assertEqual(
+            str(fan),
+            '<Fan name="Dunstabzug" speed="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" />')
 
     def test_light(self):
         """Test string representation of non dimmable light object."""
@@ -164,14 +189,16 @@ class TestStringRepresentations(unittest.TestCase):
         notification = Notification(
             xknx,
             name='Alarm',
-            group_address='1/2/3')
+            group_address='1/2/3',
+            group_address_state='1/2/4')
         self.assertEqual(
             str(notification),
-            '<Notification name="Alarm" group_address="GroupAddress("1/2/3")" message="" />')
+            '<Notification name="Alarm" group_address="GroupAddress("1/2/3")" group_address_state="GroupAddress("1/2/4")" message="" />')
         notification.message = 'Einbrecher im Haus'
         self.assertEqual(
             str(notification),
-            '<Notification name="Alarm" group_address="GroupAddress("1/2/3")" message="Einbrecher im Haus" />')
+            '<Notification name="Alarm" group_address="GroupAddress("1/2/3")" group_address_state="GroupAddress("1/2/4")" '
+            'message="Einbrecher im Haus" />')
 
     def test_scene(self):
         """Test string representation of scene object."""
@@ -191,12 +218,16 @@ class TestStringRepresentations(unittest.TestCase):
         sensor = Sensor(
             xknx,
             name='MeinSensor',
-            group_address='1/2/3',
+            group_address_state='1/2/3',
             value_type='percent')
         self.assertEqual(
             str(sensor),
             '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/None/None" value="None" unit="%"/>')
-        self.loop.run_until_complete(asyncio.Task(sensor.sensor_value.set(25)))
+        # self.loop.run_until_complete(asyncio.Task(sensor.sensor_value.set(25)))
+        telegram = Telegram(group_address=GroupAddress('1/2/3'),
+                            direction=TelegramDirection.INCOMING,
+                            payload=DPTArray((0x40)))
+        self.loop.run_until_complete(asyncio.Task(sensor.process_group_write(telegram)))
         self.assertEqual(
             str(sensor),
             '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/<DPTArray value="[0x40]" />/25" value="25" unit="%"/>')
@@ -215,7 +246,7 @@ class TestStringRepresentations(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(sensor.set(25)))
         self.assertEqual(
             str(sensor),
-            '<ExposeSensor name="MeinSensor" sensor="GroupAddress("1/2/3")/None/<DPTArray value="[0xbf]" />/25" value="25" unit="%"/>')
+            '<ExposeSensor name="MeinSensor" sensor="GroupAddress("1/2/3")/None/<DPTArray value="[0x40]" />/25" value="25" unit="%"/>')
 
     def test_switch(self):
         """Test string representation of switch object."""
@@ -270,7 +301,6 @@ class TestStringRepresentations(unittest.TestCase):
 
         def cb():
             """Callback."""
-            pass
 
         action = ActionCallback(
             xknx,
@@ -553,3 +583,20 @@ class TestStringRepresentations(unittest.TestCase):
             '<KNXIPFrame <KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="KNXIPServiceType.SEARCH_REQUEST" Reserve="0" TotalLeng'
             'th="0" />\n'
             ' body="<SearchRequest discovery_endpoint="<HPAI 224.0.23.12:3671 />" />" />')
+
+    #
+    # Gateway Scanner
+    #
+    def test_gateway_descriptor(self):
+        """Test string representation of GatewayDescriptor."""
+        gateway_descriptor = GatewayDescriptor(name='KNX-Interface',
+                                               ip_addr='192.168.2.3',
+                                               port=1234,
+                                               local_interface='en1',
+                                               local_ip='192.168.2.50',
+                                               supports_tunnelling=True,
+                                               supports_routing=False)
+        self.assertEqual(
+            str(gateway_descriptor),
+            '<GatewayDescriptor name="KNX-Interface" addr="192.168.2.3:1234" local="192.168.2.50@en1" routing="False" tunnelling="True" />'
+        )

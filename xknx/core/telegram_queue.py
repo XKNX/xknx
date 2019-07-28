@@ -9,8 +9,8 @@ You may register callbacks to be notified if a telegram was pushed to the queue.
 """
 import asyncio
 
-from xknx.knx import TelegramDirection
 from xknx.exceptions import XKNXException
+from xknx.knx import TelegramDirection
 
 
 class TelegramQueue():
@@ -68,8 +68,8 @@ class TelegramQueue():
             self.xknx.telegrams.task_done()
 
             if telegram.direction == TelegramDirection.OUTGOING:
-                # limit rate to knx bus to 20 per second
-                await asyncio.sleep(1/20)
+                # limit rate to knx bus - defaults to 20 per second
+                await asyncio.sleep(1 / self.xknx.rate_limit)
 
         self.queue_stopped.set()
 

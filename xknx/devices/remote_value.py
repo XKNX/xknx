@@ -16,6 +16,7 @@ class RemoteValue():
                  xknx,
                  group_address=None,
                  group_address_state=None,
+                 sync_state=True,
                  device_name=None,
                  after_update_cb=None):
         """Initialize RemoteValue class."""
@@ -28,9 +29,10 @@ class RemoteValue():
 
         self.group_address = group_address
         self.group_address_state = group_address_state
-        self.after_update_cb = after_update_cb
+        self.sync_state = sync_state
         self.device_name = "Unknown" \
             if device_name is None else device_name
+        self.after_update_cb = after_update_cb
         self.payload = None
 
     @property
@@ -38,17 +40,24 @@ class RemoteValue():
         """Evaluate if remote value is initialized with group address."""
         return bool(self.group_address_state or self.group_address)
 
+    @property
+    def readable(self):
+        """Evaluate if remote value should be read from bus."""
+        return self.sync_state and isinstance(self.group_address_state, GroupAddress)
+
+    @property
+    def writable(self):
+        """Evaluate if remote value has a group_address set."""
+        return isinstance(self.group_address, GroupAddress)
+
     def has_group_address(self, group_address):
         """Test if device has given group address."""
-        return (self.group_address == group_address) or \
-               (self.group_address_state == group_address)
+        return group_address in [self.group_address, self.group_address_state]
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
-        if self.group_address_state:
+        if self.readable:
             return [self.group_address_state, ]
-        if self.group_address:
-            return [self.group_address, ]
         return []
 
     def payload_valid(self, payload):
@@ -61,13 +70,11 @@ class RemoteValue():
         """Convert current payload to value - to be implemented in derived class."""
         # pylint: disable=unused-argument
         self.xknx.logger.warning("from_knx not implemented for %s", self.__class__.__name__)
-        return None
 
     def to_knx(self, value):
         """Convert value to payload - to be implemented in derived class."""
         # pylint: disable=unused-argument
         self.xknx.logger.warning("to_knx not implemented for %s", self.__class__.__name__)
-        return None
 
     async def process(self, telegram):
         """Process incoming telegram."""
@@ -86,7 +93,7 @@ class RemoteValue():
 
     @property
     def value(self):
-        """Return current value ."""
+        """Return current value."""
         if self.payload is None:
             return None
         return self.from_knx(self.payload)
@@ -103,9 +110,13 @@ class RemoteValue():
     async def set(self, value):
         """Set new value."""
         if not self.initialized:
-            self.xknx.logger.info("Setting value of uninitialized device %s (value %s)", self.device_name, value)
+            self.xknx.logger.info("Setting value of uninitialized device: %s (value: %s)", self.device_name, value)
             return
-        payload = self.to_knx(value)
+        if not self.writable:
+            self.xknx.logger.warning("Attempted to set value for non-writable device: %s (value: %s)", self.device_name, value)
+            return
+
+        payload = self.to_knx(value)  # pylint: disable=assignment-from-no-return
         updated = False
         if self.payload is None or payload != self.payload:
             self.payload = payload

@@ -2,13 +2,12 @@
 import asyncio
 import logging
 import signal
-
 from sys import platform
 
 from xknx.core import Config, TelegramQueue
 from xknx.devices import Devices
 from xknx.io import ConnectionConfig, KNXIPInterface
-from xknx.knx import PhysicalAddress, GroupAddressType
+from xknx.knx import GroupAddressType, PhysicalAddress
 
 
 class XKNX:
@@ -17,6 +16,7 @@ class XKNX:
     # pylint: disable=too-many-instance-attributes
 
     DEFAULT_ADDRESS = '15.15.250'
+    DEFAULT_RATE_LIMIT = 20
 
     def __init__(self,
                  config=None,
@@ -24,7 +24,8 @@ class XKNX:
                  own_address=PhysicalAddress(DEFAULT_ADDRESS),
                  address_format=GroupAddressType.LONG,
                  telegram_received_cb=None,
-                 device_updated_cb=None):
+                 device_updated_cb=None,
+                 rate_limit=DEFAULT_RATE_LIMIT):
         """Initialize XKNX class."""
         # pylint: disable=too-many-arguments
         self.devices = Devices()
@@ -37,9 +38,11 @@ class XKNX:
         self.started = False
         self.address_format = address_format
         self.own_address = own_address
+        self.rate_limit = rate_limit
         self.logger = logging.getLogger('xknx.log')
         self.knx_logger = logging.getLogger('xknx.knx')
         self.telegram_logger = logging.getLogger('xknx.telegram')
+        self.connection_config = None
 
         if config is not None:
             Config(self).read(config)
@@ -62,8 +65,13 @@ class XKNX:
     async def start(self,
                     state_updater=False,
                     daemon_mode=False,
-                    connection_config=ConnectionConfig()):
+                    connection_config=None):
         """Start XKNX module. Connect to KNX/IP devices and start state updater."""
+        if connection_config is None:
+            if self.connection_config is None:
+                connection_config = ConnectionConfig()
+            else:
+                connection_config = self.connection_config
         self.knxip_interface = KNXIPInterface(self, connection_config=connection_config)
         await self.knxip_interface.start()
         await self.telegram_queue.start()

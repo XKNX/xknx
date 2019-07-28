@@ -6,13 +6,16 @@ KNXIPInterface manages KNX/IP Tunneling or Routing connections.
 * provides callbacks after having received a telegram from the network.
 
 """
+import ipaddress
 from enum import Enum
 from platform import system as get_os_name
+
+import netifaces
 
 from xknx.exceptions import XKNXException
 
 from .const import DEFAULT_MCAST_PORT
-from .gateway_scanner import GatewayScanner, GatewayScanFilter
+from .gateway_scanner import GatewayScanFilter, GatewayScanner
 from .routing import Routing
 from .tunnel import Tunnel
 
@@ -62,8 +65,16 @@ class ConnectionConfig:
         self.gateway_port = gateway_port
         self.auto_reconnect = auto_reconnect
         self.auto_reconnect_wait = auto_reconnect_wait
-        self.scan_filter = scan_filter
         self.bind_to_multicast_addr = bind_to_multicast_addr
+        if connection_type == ConnectionType.TUNNELING:
+            scan_filter.tunnelling = True
+        elif connection_type == ConnectionType.ROUTING:
+            scan_filter.routing = True
+        self.scan_filter = scan_filter
+
+    def __eq__(self, other):
+        """Equality for ConnectionConfig class (used in unit tests)."""
+        return self.__dict__ == other.__dict__
 
 
 class KNXIPInterface():
@@ -77,10 +88,8 @@ class KNXIPInterface():
 
     async def start(self):
         """Start interface. Connecting KNX/IP device with the selected method."""
-        if self.connection_config.connection_type == ConnectionType.AUTOMATIC:
-            await self.start_automatic(
-                self.connection_config.scan_filter)
-        elif self.connection_config.connection_type == ConnectionType.ROUTING:
+        if self.connection_config.connection_type == ConnectionType.ROUTING and \
+                self.connection_config.local_ip is not None:
             await self.start_routing(
                 self.connection_config.local_ip,
                 self.connection_config.bind_to_multicast_addr)
@@ -91,6 +100,8 @@ class KNXIPInterface():
                 self.connection_config.gateway_port,
                 self.connection_config.auto_reconnect,
                 self.connection_config.auto_reconnect_wait)
+        else:
+            await self.start_automatic(self.connection_config.scan_filter)
 
     async def start_automatic(self, scan_filter: GatewayScanFilter):
         """Start GatewayScanner and connect to the found device."""
@@ -101,7 +112,8 @@ class KNXIPInterface():
             raise XKNXException("No Gateways found")
 
         gateway = gateways[0]
-        if gateway.supports_tunnelling:
+        if gateway.supports_tunnelling and \
+                scan_filter.routing is not True:
             await self.start_tunnelling(gateway.local_ip,
                                         gateway.ip_addr,
                                         gateway.port,
@@ -115,7 +127,11 @@ class KNXIPInterface():
                                auto_reconnect, auto_reconnect_wait):
         """Start KNX/IP tunnel."""
         # pylint: disable=too-many-arguments
-        self.xknx.logger.debug("Starting tunnel to %s:%s from %s", gateway_ip, gateway_port, local_ip)
+        validate_ip(gateway_ip, address_name="Gateway IP address")
+        if local_ip is None:
+            local_ip = self.find_local_ip(gateway_ip=gateway_ip)
+        validate_ip(local_ip, address_name="Local IP address")
+        self.xknx.logger.debug("Starting tunnel from %s to %s:%s", local_ip, gateway_ip, gateway_port)
         self.interface = Tunnel(
             self.xknx,
             self.xknx.own_address,
@@ -129,6 +145,7 @@ class KNXIPInterface():
 
     async def start_routing(self, local_ip, bind_to_multicast_addr):
         """Start KNX/IP Routing."""
+        validate_ip(local_ip, address_name="Local IP address")
         self.xknx.logger.debug("Starting Routing from %s", local_ip)
         self.interface = Routing(
             self.xknx,
@@ -151,3 +168,44 @@ class KNXIPInterface():
     async def send_telegram(self, telegram):
         """Send telegram to connected device (either Tunneling or Routing)."""
         await self.interface.send_telegram(telegram)
+
+    def find_local_ip(self, gateway_ip: str) -> str:
+        """Find local IP address on same subnet as gateway."""
+        def _scan_interfaces(gateway: ipaddress.IPv4Address) -> str:
+            """Return local IP address on same subnet as given gateway."""
+            for interface in netifaces.interfaces():
+                try:
+                    af_inet = netifaces.ifaddresses(interface)[netifaces.AF_INET]
+                    for link in af_inet:
+                        network = ipaddress.IPv4Network((link["addr"],
+                                                         link["netmask"]),
+                                                        strict=False)
+                        if gateway in network:
+                            self.xknx.logger.debug("Using interface: %s", interface)
+                            return link["addr"]
+                except KeyError:
+                    self.xknx.logger.debug("Could not find IPv4 address on interface %s", interface)
+                    continue
+            return None
+
+        def _find_default_gateway() -> ipaddress.IPv4Address:
+            """Return IP address of default gateway."""
+            gws = netifaces.gateways()
+            return ipaddress.IPv4Address(gws['default'][netifaces.AF_INET][0])
+
+        gateway = ipaddress.IPv4Address(gateway_ip)
+        local_ip = _scan_interfaces(gateway)
+        if local_ip is None:
+            self.xknx.logger.debug(
+                "No interface on same subnet as gateway found. Falling back to default gateway.")
+            default_gateway = _find_default_gateway()
+            local_ip = _scan_interfaces(default_gateway)
+        return local_ip
+
+
+def validate_ip(address: str, address_name: str = "IP address") -> None:
+    """Raise an exception if address cannot be parsed as IPv4 address."""
+    try:
+        ipaddress.IPv4Address(address)
+    except ipaddress.AddressValueError as ex:
+        raise XKNXException("%s is not a valid IPv4 address." % address_name) from ex

@@ -27,19 +27,15 @@ class DIB():
 
     def __init__(self):
         """Initialize DIB class."""
-        pass
 
     def calculated_length(self):
         """Get length of KNX/IP object."""
-        pass
 
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        pass
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
-        pass
 
     @staticmethod
     def determine_dib(raw):
@@ -50,7 +46,7 @@ class DIB():
 
         if dtc == DIBTypeCode.DEVICE_INFO:
             return DIBDeviceInformation()
-        elif dtc == DIBTypeCode.SUPP_SVC_FAMILIES:
+        if dtc == DIBTypeCode.SUPP_SVC_FAMILIES:
             return DIBSuppSVCFamilies()
         return DIBGeneric()
 
@@ -64,7 +60,7 @@ class DIBGeneric(DIB):
 
     def __init__(self):
         """Initialize DIBGeneric class."""
-        super(DIBGeneric, self).__init__()
+        super().__init__()
         # DTC Description Type Code
         self.dtc = None
         # IBD Information Block Data
@@ -127,7 +123,7 @@ class DIBSuppSVCFamilies(DIB):
 
     def __init__(self):
         """Initialize DIBSuppSVCFamilies class."""
-        super(DIBSuppSVCFamilies, self).__init__()
+        super().__init__()
         self.families = []
 
     def supports(self, name):
@@ -183,7 +179,7 @@ class DIBDeviceInformation(DIB):
 
     def __init__(self):
         """Initialize DIBDeviceInformation class."""
-        super(DIBDeviceInformation, self).__init__()
+        super().__init__()
         self.knx_medium = KNXMedium.TP1
         self.programming_mode = False
         self.individual_address = PhysicalAddress(None)

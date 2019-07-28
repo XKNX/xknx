@@ -45,6 +45,13 @@ class Devices:
         """Return number of devices within vector."""
         return len(self.__devices)
 
+    def __contains__(self, key):
+        """Return if devices with name 'key' is within devices."""
+        for device in self.__devices:
+            if device.name == key:
+                return True
+        return False
+
     def add(self, device):
         """Add device to devices vector."""
         if not isinstance(device, Device):

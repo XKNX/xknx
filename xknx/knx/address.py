@@ -73,7 +73,7 @@ class PhysicalAddress(BaseAddress):
 
     def __init__(self, address):
         """Initialize Address class."""
-        super(PhysicalAddress, self).__init__()
+        super().__init__()
         if isinstance(address, str):
             self.raw = self.__string_to_int(address)
         elif isinstance(address, tuple) and len(address) == 2:
@@ -166,7 +166,7 @@ class GroupAddress(BaseAddress):
 
     def __init__(self, address, levels=GroupAddressType.LONG):
         """Initialize Address class."""
-        super(GroupAddress, self).__init__()
+        super().__init__()
         self.levels = levels
 
         if isinstance(address, str) and not address.isdigit():
@@ -242,7 +242,7 @@ class GroupAddress(BaseAddress):
         """
         if self.levels == GroupAddressType.SHORT:
             return self.raw & self.MAX_SUB_SHORT
-        elif self.levels == GroupAddressType.LONG:
+        if self.levels == GroupAddressType.LONG:
             return self.raw & self.MAX_SUB_LONG
         return self.raw
 
@@ -254,7 +254,7 @@ class GroupAddress(BaseAddress):
         """
         if self.levels == GroupAddressType.LONG:
             return '{0.main}/{0.middle}/{0.sub}'.format(self)
-        elif self.levels == GroupAddressType.SHORT:
+        if self.levels == GroupAddressType.SHORT:
             return '{0.main}/{0.sub}'.format(self)
         return '{0.sub}'.format(self)
 

@@ -1,11 +1,11 @@
 """Setup for XKNX python package."""
 from setuptools import find_packages, setup
 
-VERSION = '0.8.5'
+VERSION = '0.11.1'
 
 REQUIRES = [
-    'pyyaml>=3.12',
-    'netifaces>=0.10.0',
+    'pyyaml>=5.1',
+    'netifaces>=0.10.9'
     ]
 
 setup(
