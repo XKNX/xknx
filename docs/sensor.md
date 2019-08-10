@@ -11,13 +11,13 @@ Sensors are monitoring temperature, air humidity, pressure etc. from KNX bus.
 ```python
     sensor = Sensor(
         xknx=xknx,
-        name='DiningRoom.Temperatur.Sensor',
+        name='DiningRoom.Temperature.Sensor',
         group_address_state='6/2/1',
         sync_state=True,
-        value_type='float',
-        device_class='temperature')
-    await sensor2.sync()
-    print(sensor2)
+        value_type='temperature'
+    )
+    await sensor.sync()
+    print(sensor)
 ```
 
 * `xknx` is the XKNX object.
@@ -25,7 +25,6 @@ Sensors are monitoring temperature, air humidity, pressure etc. from KNX bus.
 * `group_address_state` is the KNX group address of the sensor device.
 * `sync_state` defines if the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
 * `value_type` controls how the value should be rendered in a human readable representation. The attribut may have may have the values `percent`, `temperature`, `illuminance`, `speed_ms` or `current`.
-* `device_class` may be used to store the type of sensor, e.g. "motion" for motion detectors.
 
 
 ## [](#header-2)Configuration via **xknx.yaml**
@@ -45,7 +44,7 @@ Sensor objects are usually configured via [`xknx.yaml`](/configuration):
 ```python
 sensor = Sensor(
         xknx=xknx,
-        name='DiningRoom.Temperatur.Sensor',
+        name='DiningRoom.Temperature.Sensor',
         group_address_state='6/2/1')
 
 await sensor.sync() # Syncs the state. Tries to read the corresponding value from the bus.
