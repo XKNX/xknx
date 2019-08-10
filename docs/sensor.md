@@ -10,14 +10,14 @@ Sensors are monitoring temperature, air humidity, pressure etc. from KNX bus.
 
 ```python
     sensor = Sensor(
-        xknx = xknx,
-        name = 'DiningRoom.Temperature.Sensor',
-        group_address_state = '6/2/1',
-        sync_state = True,
-        value_type = 'temperature'
+        xknx=xknx,
+        name='DiningRoom.Temperature.Sensor',
+        group_address_state='6/2/1',
+        sync_state=True,
+        value_type='temperature'
     )
-    await sensor2.sync()
-    print(sensor2)
+    await sensor.sync()
+    print(sensor)
 ```
 
 * `xknx` is the XKNX object.
