@@ -15,7 +15,7 @@ from xknx.knx import (
     DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower, DPTPowerFactor, DPTPressure,
     DPTRotationAngle, DPTScaling, DPTSceneNumber, DPTSpeed, DPTString,
     DPTTemperature, DPTUElCurrentmA, DPTValue1Count, DPTValue1Ucount,
-    DPTValue2Count, DPTVoltage, DPTWsp)
+    DPTValue2Count, DPTVoltage, DPTWsp, DPTPressure2Byte)
 
 from .remote_value import RemoteValue
 
@@ -52,6 +52,7 @@ class RemoteValueSensor(RemoteValue):
         'powerfactor': DPTPowerFactor,
         'ppm': DPTPartsPerMillion,
         'pressure': DPTPressure,
+        'pressure_2Byte': DPTPressure2Byte,
         'pulse': DPTValue1Ucount,
         'rotation_angle': DPTRotationAngle,
         'scene_number': DPTSceneNumber,
