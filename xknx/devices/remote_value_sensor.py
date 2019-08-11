@@ -52,7 +52,7 @@ class RemoteValueSensor(RemoteValue):
         'powerfactor': DPTPowerFactor,
         'ppm': DPTPartsPerMillion,
         'pressure': DPTPressure,
-        'pressure_2Byte': DPTPressure2Byte,
+        'pressure_2byte': DPTPressure2Byte,
         'pulse': DPTValue1Ucount,
         'rotation_angle': DPTRotationAngle,
         'scene_number': DPTSceneNumber,
