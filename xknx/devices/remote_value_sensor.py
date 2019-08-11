@@ -13,9 +13,9 @@ from xknx.knx import (
     DPTEnthalpy, DPTFrequency, DPTHeatFlowRate, DPTHumidity, DPTLuminousFlux,
     DPTLux, DPTPartsPerMillion, DPTPercentU8, DPTPercentV8, DPTPercentV16,
     DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower, DPTPowerFactor, DPTPressure,
-    DPTRotationAngle, DPTScaling, DPTSceneNumber, DPTSpeed, DPTString,
-    DPTTemperature, DPTUElCurrentmA, DPTValue1Count, DPTValue1Ucount,
-    DPTValue2Count, DPTVoltage, DPTWsp, DPTPressure2Byte)
+    DPTPressure2Byte, DPTRotationAngle, DPTScaling, DPTSceneNumber, DPTSpeed,
+    DPTString, DPTTemperature, DPTUElCurrentmA, DPTValue1Count,
+    DPTValue1Ucount, DPTValue2Count, DPTVoltage, DPTWsp)
 
 from .remote_value import RemoteValue
 
