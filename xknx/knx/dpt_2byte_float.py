@@ -134,6 +134,7 @@ class DPTEnthalpy(DPT2ByteFloat):
 
     unit = "H"
 
+
 class DPTPressure2Byte(DPT2ByteFloat):
     """DPT 9.006 DPT_Value_Pressure."""
 
