@@ -203,7 +203,7 @@ class Climate(Device):
     def is_on(self):
         """Return power status."""
         # None will return False
-        if self.on.value == None:
+        if self.on.value is None:
             return False
         return bool(self.on.value) if not self.on_off_inverted else not bool(self.on.value)
 
