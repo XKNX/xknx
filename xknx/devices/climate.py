@@ -96,8 +96,6 @@ class Climate(Device):
         self.group_address_on_off = group_address_on_off
         self.group_address_on_off_state = group_address_on_off_state
 
-        self.on_off_inverted = on_off_inverted
-
         self.min_temp = min_temp
         self.max_temp = max_temp
 
@@ -133,7 +131,8 @@ class Climate(Device):
             group_address_on_off,
             group_address_on_off_state,
             device_name=self.name,
-            after_update_cb=self.after_update)
+            after_update_cb=self.after_update,
+            invert=on_off_inverted)
 
         self.mode = mode
 
@@ -203,23 +202,15 @@ class Climate(Device):
     def is_on(self):
         """Return power status."""
         # None will return False
-        if self.on.value is None:
-            return False
-        return bool(self.on.value) if not self.on_off_inverted else not bool(self.on.value)
+        return bool(self.on.value)
 
     async def turn_on(self):
         """Set power status to on."""
-        if not self.on_off_inverted:
-            await self.on.on()
-        else:
-            await self.on.off()
+        await self.on.on()
 
     async def turn_off(self):
         """Set power status to off."""
-        if not self.on_off_inverted:
-            await self.on.off()
-        else:
-            await self.on.on()
+        await self.on.off()
 
     @property
     def initialized_for_setpoint_shift_calculations(self):
