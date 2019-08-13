@@ -83,7 +83,8 @@ class Climate(Device):
                  min_temp=None,
                  max_temp=None,
                  mode=None,
-                 device_updated_cb=None):
+                 device_updated_cb=None,
+                 on_off_inverted=False):
         """Initialize Climate class."""
         # pylint: disable=too-many-arguments, too-many-locals, too-many-branches, too-many-statements
         super().__init__(xknx, name, device_updated_cb)
@@ -94,6 +95,8 @@ class Climate(Device):
 
         self.group_address_on_off = group_address_on_off
         self.group_address_on_off_state = group_address_on_off_state
+
+        self.on_off_inverted = on_off_inverted
 
         self.min_temp = min_temp
         self.max_temp = max_temp
@@ -158,6 +161,8 @@ class Climate(Device):
             config.get('group_address_on_off')
         group_address_on_off_state = \
             config.get('group_address_on_off_state')
+        on_off_inverted = \
+            config.get('on_off_inverted')
         min_temp = config.get('min_temp')
         max_temp = config.get('max_temp')
 
@@ -182,7 +187,8 @@ class Climate(Device):
                    group_address_on_off_state=group_address_on_off_state,
                    min_temp=min_temp,
                    max_temp=max_temp,
-                   mode=climate_mode)
+                   mode=climate_mode,
+                   on_off_inverted=on_off_inverted)
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
@@ -197,15 +203,23 @@ class Climate(Device):
     def is_on(self):
         """Return power status."""
         # None will return False
-        return bool(self.on.value)
+        if self.on.value == None:
+            return False
+        return bool(self.on.value) if not self.on_off_inverted else not bool(self.on.value)
 
     async def turn_on(self):
         """Set power status to on."""
-        await self.on.on()
+        if not self.on_off_inverted:
+            await self.on.on()
+        else:
+            await self.on.off()
 
     async def turn_off(self):
         """Set power status to off."""
-        await self.on.off()
+        if not self.on_off_inverted:
+            await self.on.off()
+        else:
+            await self.on.on()
 
     @property
     def initialized_for_setpoint_shift_calculations(self):

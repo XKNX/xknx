@@ -94,7 +94,8 @@ climate = Climate(
         min_temp=18,
         max_temp=26,
         mode=climate_mode,
-        device_updated_cb=None)
+        device_updated_cb=None,
+        on_off_inverted=False)
 
 # Set target temperature to 23 degrees. Works with setpoint_shift too.
 await climate.set_target_temperature(23)
