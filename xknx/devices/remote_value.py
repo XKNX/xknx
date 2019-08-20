@@ -12,6 +12,7 @@ from xknx.knx import GroupAddress, Telegram, TelegramType
 class RemoteValue():
     """Class for managing remote knx value."""
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(self,
                  xknx,
                  group_address=None,
