@@ -19,7 +19,7 @@ async def main():
     await sensor1.sync()
     print(sensor1)
 
-    sensor2 = Sensor( 
+    sensor2 = Sensor(
         xknx,
         'DiningRoom.Temperature.Sensor',
         group_address_state='6/2/1',
