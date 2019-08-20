@@ -42,12 +42,9 @@ class SetpointShiftValue(RemoteValue1Count):
         self.min_temp_delta = min_temp_delta
         self.max_temp_delta = max_temp_delta
 
-    @property
-    def value(self):
-        """Return current value in Kelvin."""
-        if super().value is None:
-            return None
-        return super().value * self.setpoint_shift_step
+    def from_knx(self, payload):
+        """Convert current payload to value."""
+        return super().from_knx(payload) * self.setpoint_shift_step
 
     async def set(self, value):
         """Set new value from Kelvin."""
