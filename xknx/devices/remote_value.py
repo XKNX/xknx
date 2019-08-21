@@ -5,6 +5,8 @@ Remote value can either be a group address for reading
 and and one group address for writing a KNX value
 or a group address for both.
 """
+import time
+
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.knx import GroupAddress, Telegram, TelegramType
 
@@ -34,6 +36,8 @@ class RemoteValue():
         self.device_name = "Unknown" \
             if device_name is None else device_name
         self.after_update_cb = after_update_cb
+
+        self.last_update = None
         self.payload = None
 
     @property
@@ -86,6 +90,7 @@ class RemoteValue():
                                         payload=telegram.payload,
                                         group_address=telegram.group_address,
                                         device_name=self.device_name)
+        self.last_update = time.time()
         if self.payload != telegram.payload or self.payload is None:
             self.payload = telegram.payload
             if self.after_update_cb is not None:

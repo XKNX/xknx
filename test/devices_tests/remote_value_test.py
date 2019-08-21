@@ -1,5 +1,6 @@
 """Unit test for RemoveValue objects."""
 import asyncio
+import time
 import unittest
 from unittest.mock import patch
 
@@ -60,6 +61,27 @@ class TestRemoteValue(unittest.TestCase):
         with patch('logging.Logger.warning') as mock_info:
             self.loop.run_until_complete(asyncio.Task(remote_value.set(23)))
             mock_info.assert_called_with('Attempted to set value for non-writable device: %s (value: %s)', 'Unknown', 23)
+
+    def test_last_update_timestamp(self):
+        """Test the last_update value is set correctly."""
+        xknx = XKNX(loop=self.loop)
+        remote_value = RemoteValue(xknx)
+        self.assertIsNone(remote_value.last_update)
+        with patch('xknx.devices.RemoteValue.payload_valid') as patch_valid, \
+                patch('xknx.devices.RemoteValue.has_group_address') as patch_has_group_address, \
+                patch('xknx.devices.RemoteValue.from_knx') as from_knx_mock:
+            patch_valid.return_value = True
+            patch_has_group_address.return_value = True
+            from_knx_mock.return_value = 18
+
+            telegram = Telegram(
+                GroupAddress('1/2/1'),
+                payload=DPTArray((0x01, 0x02)))
+            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            # allow 1 second deviation for the timestamp from process() to assertion
+            self.assertAlmostEqual(remote_value.last_update,
+                                   time.time(),
+                                   delta=1)
 
     def test_default_value_unit(self):
         """Test for the default value of unit_of_measurement."""
