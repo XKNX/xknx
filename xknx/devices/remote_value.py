@@ -34,20 +34,7 @@ class RemoteValue():
         self.device_name = "Unknown" \
             if device_name is None else device_name
         self.after_update_cb = after_update_cb
-
-        self._payload = None
-        self.value = None
-
-    @property
-    def payload(self):
-        """Return current payload."""
-        return self._payload
-
-    @payload.setter
-    def payload(self, payload):
-        """Set payload."""
-        self.value = self.from_knx(payload)  # pylint: disable=assignment-from-no-return
-        self._payload = payload
+        self.payload = None
 
     @property
     def initialized(self):
@@ -104,6 +91,13 @@ class RemoteValue():
             if self.after_update_cb is not None:
                 await self.after_update_cb()
         return True
+
+    @property
+    def value(self):
+        """Return current value."""
+        if self.payload is None:
+            return None
+        return self.from_knx(self.payload)
 
     async def send(self, response=False):
         """Send payload as telegram to KNX bus."""
