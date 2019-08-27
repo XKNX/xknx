@@ -10,6 +10,8 @@ import time
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.knx import GroupAddress, Telegram, TelegramType
 
+from .state_updater import StateUpdater
+
 
 class RemoteValue():
     """Class for managing remote knx value."""
@@ -32,13 +34,19 @@ class RemoteValue():
 
         self.group_address = group_address
         self.group_address_state = group_address_state
-        self.sync_state = sync_state
         self.device_name = "Unknown" \
             if device_name is None else device_name
         self.after_update_cb = after_update_cb
 
-        self.last_update = None
         self.payload = None
+
+        # TODO: naming? unclear that it holds minutes
+        if sync_state:
+            self.state_updater = StateUpdater(
+                xknx,
+                expiration_min=sync_state,
+                callback=self.read_state)
+            # await self.read_state()
 
     @property
     def initialized(self):
@@ -58,12 +66,6 @@ class RemoteValue():
     def has_group_address(self, group_address):
         """Test if device has given group address."""
         return group_address in [self.group_address, self.group_address_state]
-
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        if self.readable:
-            return [self.group_address_state, ]
-        return []
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed - to be implemented in derived class.."""
@@ -90,7 +92,8 @@ class RemoteValue():
                                         payload=telegram.payload,
                                         group_address=telegram.group_address,
                                         device_name=self.device_name)
-        self.last_update = time.time()
+        if self.state_updater:
+            self.state_updater.reset()
         if self.payload != telegram.payload or self.payload is None:
             self.payload = telegram.payload
             if self.after_update_cb is not None:
@@ -130,6 +133,23 @@ class RemoteValue():
         await self.send()
         if updated and self.after_update_cb is not None:
             await self.after_update_cb()
+
+    async def read_state(self, wait_for_result=True):
+        if self.readable:
+            self.xknx.logger.debug("Sync %s", self.device_name)
+            from xknx.core import ValueReader
+            value_reader = ValueReader(self.xknx, self.group_address_state)
+            # TODO: why would we not wait for result?
+            if wait_for_result:
+                telegram = await value_reader.read()
+                if telegram is not None:
+                    await self.process(telegram)
+                else:
+                    self.xknx.logger.warning(
+                        "Could not sync group address '%s' from %s",
+                        self.group_address_state, self.device_name)
+            else:
+                await value_reader.send_group_read()
 
     @property
     def unit_of_measurement(self):
