@@ -5,8 +5,6 @@ Remote value can either be a group address for reading
 and and one group address for writing a KNX value
 or a group address for both.
 """
-import time
-
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.knx import GroupAddress, Telegram, TelegramType
 
@@ -56,7 +54,7 @@ class RemoteValue():
     @property
     def readable(self):
         """Evaluate if remote value should be read from bus."""
-        return self.sync_state and isinstance(self.group_address_state, GroupAddress)
+        return isinstance(self.group_address_state, GroupAddress)
 
     @property
     def writable(self):
@@ -135,6 +133,7 @@ class RemoteValue():
             await self.after_update_cb()
 
     async def read_state(self, wait_for_result=True):
+        """Send GroupValueRead telegram for state address to KNX bus."""
         if self.readable:
             self.xknx.logger.debug("Sync %s", self.device_name)
             from xknx.core import ValueReader

@@ -20,11 +20,12 @@ class StateUpdater():
         self.initial_start()
 
     def start(self):
-        """Start StateUpdater."""
+        """Start StateUpdater - wait for value to expire."""
         self._waiting_task = self.xknx.loop.create_task(
             self._wait_for_expiration())
 
     def initial_start(self):
+        """Start StateUpdater - read state on call."""
         # TODO: random(1-15) start timeout so not all devices are queried at once?
         self.xknx.loop.create_task(self._callback)
         self.start()
