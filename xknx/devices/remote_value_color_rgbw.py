@@ -68,7 +68,7 @@ class RemoteValueColorRGBW(RemoteValue):
         if len(value) < 5:
             return DPTArray(list(rgbw) + [0x00, 0x0f])
         elif len(value) < 6:
-            return DPTArray(list(rgbw) + [0x00] + value[4:])
+            return DPTArray(list(rgbw) + [0x00] + list(value[4:]))
         else:
             return DPTArray(value)
 
