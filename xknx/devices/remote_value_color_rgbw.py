@@ -67,10 +67,9 @@ class RemoteValueColorRGBW(RemoteValue):
             raise ConversionError("Cannot serialize DPT 251.600 (wrong RGBW values)", value=value)
         if len(value) < 5:
             return DPTArray(list(rgbw) + [0x00, 0x0f])
-        elif len(value) < 6:
+        if len(value) < 6:
             return DPTArray(list(rgbw) + [0x00] + list(value[4:]))
-        else:
-            return DPTArray(value)
+        return DPTArray(value)
 
     def from_knx(self, payload):
         """
