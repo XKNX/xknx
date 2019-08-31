@@ -2,7 +2,7 @@
 from unittest import TestCase
 
 from xknx.exceptions import CouldNotParseAddress
-from xknx.knx import GroupAddress, GroupAddressType, PhysicalAddress
+from xknx.telegram import GroupAddress, GroupAddressType, PhysicalAddress
 
 
 class TestPhysicalAddress(TestCase):

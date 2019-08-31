@@ -3,11 +3,11 @@ import struct
 import unittest
 from unittest.mock import patch
 
-from xknx.exceptions import ConversionError
-from xknx.knx import (
+from xknx.dpt import (
     DPT2ByteFloat, DPT4ByteFloat, DPTElectricCurrent, DPTElectricPotential,
     DPTEnthalpy, DPTFrequency, DPTHumidity, DPTLux, DPTPartsPerMillion,
     DPTPhaseAngleDeg, DPTPower, DPTTemperature, DPTVoltage)
+from xknx.exceptions import ConversionError
 
 
 class TestDPTFloat(unittest.TestCase):

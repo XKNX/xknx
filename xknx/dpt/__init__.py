@@ -1,14 +1,10 @@
 """
-Module for handling KNX primitves.
+Module for encoding and decoding KNX datatypes.
 
-* KNX Addresses
-* KNX Values like Int, Float, Time
-* Derived KNX Values like Scaling, Time, Temperature
-
+* KNX Values like Int, Float, String, Time
+* Derived KNX Values like Scaling, Temperature
 """
 # flake8: noqa
-from .address import GroupAddress, GroupAddressType, PhysicalAddress
-from .address_filter import AddressFilter
 from .dpt import DPTArray, DPTBase, DPTBinary, DPTComparator, DPTWeekday
 from .dpt_1byte_signed import (
     DPTPercentV8, DPTSignedRelativeValue, DPTValue1Count)
@@ -35,4 +31,3 @@ from .dpt_hvac_mode import DPTControllerStatus, DPTHVACMode, HVACOperationMode
 from .dpt_scaling import DPTAngle, DPTScaling
 from .dpt_string import DPTString
 from .dpt_time import DPTTime
-from .telegram import Telegram, TelegramDirection, TelegramType

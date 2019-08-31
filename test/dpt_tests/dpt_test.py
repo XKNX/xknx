@@ -1,8 +1,8 @@
 """Unit test for KNX binary/integer objects."""
 import unittest
 
+from xknx.dpt import DPTArray, DPTBinary, DPTComparator
 from xknx.exceptions import ConversionError
-from xknx.knx import DPTArray, DPTBinary, DPTComparator
 
 
 class TestDPT(unittest.TestCase):

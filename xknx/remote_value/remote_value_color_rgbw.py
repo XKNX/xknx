@@ -3,8 +3,8 @@ Module for managing an RGBW remote value.
 
 DPT 251.600.
 """
+from xknx.dpt import DPTArray
 from xknx.exceptions import ConversionError
-from xknx.knx import DPTArray
 
 from .remote_value import RemoteValue
 

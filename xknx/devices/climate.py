@@ -4,9 +4,9 @@ Module for managing the climate within a room.
 * It reads/listens to a temperature address from KNX bus.
 * Manages and sends the desired setpoint to KNX bus.
 """
-from xknx.knx import GroupAddress
 from xknx.remote_value import (
     RemoteValue1Count, RemoteValueSwitch, RemoteValueTemp)
+from xknx.telegram import GroupAddress
 
 from .climate_mode import ClimateMode
 from .device import Device

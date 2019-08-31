@@ -3,8 +3,8 @@ Module for managing an DPT Switch remote value.
 
 DPT 1.001.
 """
+from xknx.dpt import DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
-from xknx.knx import DPTBinary
 
 from .remote_value import RemoteValue
 

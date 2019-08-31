@@ -3,7 +3,7 @@ Module for managing an 1 count remote value.
 
 DPT 6.010.
 """
-from xknx.knx import DPTArray, DPTValue1Count
+from xknx.dpt import DPTArray, DPTValue1Count
 
 from .remote_value import RemoteValue
 

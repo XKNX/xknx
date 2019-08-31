@@ -2,7 +2,7 @@
 import unittest
 
 from xknx.exceptions import ConversionError
-from xknx.knx import AddressFilter, GroupAddress
+from xknx.telegram import AddressFilter, GroupAddress
 
 
 class TestAddressFilter(unittest.TestCase):

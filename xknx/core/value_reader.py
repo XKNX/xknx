@@ -10,7 +10,7 @@ The module will
 
 import asyncio
 
-from xknx.knx import Telegram, TelegramType
+from xknx.telegram import Telegram, TelegramType
 
 
 class ValueReader:

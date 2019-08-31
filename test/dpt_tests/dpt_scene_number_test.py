@@ -1,8 +1,8 @@
 """Unit test for KNX scene number."""
 import unittest
 
+from xknx.dpt import DPTSceneNumber
 from xknx.exceptions import ConversionError
-from xknx.knx import DPTSceneNumber
 
 
 class TestDPTSceneNumber(unittest.TestCase):

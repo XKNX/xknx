@@ -4,8 +4,7 @@ Module for managing a remote value typically used within a sensor.
 The module maps a given value_type to a DPT class and uses this class
 for serialization and deserialization of the KNX value.
 """
-from xknx.exceptions import ConversionError
-from xknx.knx import (
+from xknx.dpt import (
     DPT2ByteFloat, DPT2ByteSigned, DPT2ByteUnsigned, DPT2Ucount, DPT4ByteFloat,
     DPT4ByteSigned, DPT4ByteUnsigned, DPTAngle, DPTArray, DPTBrightness,
     DPTColorTemperature, DPTDeltaTimeHrs, DPTDeltaTimeMin, DPTDeltaTimeMsec,

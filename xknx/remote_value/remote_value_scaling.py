@@ -3,7 +3,7 @@ Module for managing a Scaling remote value.
 
 DPT 5.001.
 """
-from xknx.knx import DPTArray
+from xknx.dpt import DPTArray
 
 from .remote_value import RemoteValue
 

@@ -298,7 +298,7 @@ class KNXClimate(ClimateDevice):
         elif self.device.supports_on_off and hvac_mode == HVAC_MODE_HEAT:
             await self.device.turn_on()
         elif self.device.mode.supports_operation_mode:
-            from xknx.knx import HVACOperationMode
+            from xknx.dpt import HVACOperationMode
 
             knx_operation_mode = HVACOperationMode(OPERATION_MODES_INV.get(hvac_mode))
             await self.device.mode.set_operation_mode(knx_operation_mode)
@@ -333,7 +333,7 @@ class KNXClimate(ClimateDevice):
         This method must be run in the event loop and returns a coroutine.
         """
         if self.device.mode.supports_operation_mode:
-            from xknx.knx import HVACOperationMode
+            from xknx.dpt import HVACOperationMode
 
             knx_operation_mode = HVACOperationMode(PRESET_MODES_INV.get(preset_mode))
             await self.device.mode.set_operation_mode(knx_operation_mode)

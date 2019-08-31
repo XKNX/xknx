@@ -1,8 +1,8 @@
 """Unit test for KNX DPT 1 byte relative value  objects."""
 import unittest
 
+from xknx.dpt import DPTPercentV8, DPTSignedRelativeValue, DPTValue1Count
 from xknx.exceptions import ConversionError
-from xknx.knx import DPTPercentV8, DPTSignedRelativeValue, DPTValue1Count
 
 
 class TestDPTRelativeValue(unittest.TestCase):

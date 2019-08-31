@@ -5,8 +5,8 @@ DPT 1.008.
 """
 from enum import Enum
 
+from xknx.dpt import DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
-from xknx.knx import DPTBinary
 
 from .remote_value import RemoteValue
 

@@ -3,7 +3,7 @@ Module for managing a DTP 5010 remote value.
 
 DPT 5.010.
 """
-from xknx.knx import DPTArray, DPTValue1Ucount
+from xknx.dpt import DPTArray, DPTValue1Ucount
 
 from .remote_value import RemoteValue
 

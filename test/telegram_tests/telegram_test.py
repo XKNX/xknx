@@ -1,7 +1,8 @@
 """Unit test for Telegram objects."""
 import unittest
 
-from xknx.knx import GroupAddress, Telegram, TelegramDirection, TelegramType
+from xknx.telegram import (
+    GroupAddress, Telegram, TelegramDirection, TelegramType)
 
 
 class TestTelegram(unittest.TestCase):

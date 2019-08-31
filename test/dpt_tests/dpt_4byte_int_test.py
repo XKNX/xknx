@@ -3,8 +3,8 @@ import struct
 import unittest
 from unittest.mock import patch
 
+from xknx.dpt import DPT4ByteSigned, DPT4ByteUnsigned
 from xknx.exceptions import ConversionError
-from xknx.knx import DPT4ByteSigned, DPT4ByteUnsigned
 
 
 class TestDPT4Byte(unittest.TestCase):

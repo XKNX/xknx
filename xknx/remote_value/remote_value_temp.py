@@ -3,7 +3,7 @@ Module for managing a remote temperature value.
 
 DPT 9.001.
 """
-from xknx.knx import DPTArray, DPTTemperature
+from xknx.dpt import DPTArray, DPTTemperature
 
 from .remote_value import RemoteValue
 

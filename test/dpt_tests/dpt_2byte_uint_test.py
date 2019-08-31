@@ -1,8 +1,8 @@
 """Unit test for KNX 2 byte objects."""
 import unittest
 
+from xknx.dpt import DPTUElCurrentmA
 from xknx.exceptions import ConversionError
-from xknx.knx import DPTUElCurrentmA
 
 
 class TestDPT2byte(unittest.TestCase):

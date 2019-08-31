@@ -1,8 +1,8 @@
 """Unit test for KNX DPT HVAC Operation modes."""
 import unittest
 
+from xknx.dpt import DPTControllerStatus, DPTHVACMode, HVACOperationMode
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP
-from xknx.knx import DPTControllerStatus, DPTHVACMode, HVACOperationMode
 
 
 class TestDPTControllerStatus(unittest.TestCase):

@@ -7,7 +7,7 @@ Remote value can be :
 - or a group of both representing the same value.
 """
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.knx import GroupAddress, Telegram, TelegramType
+from xknx.telegram import GroupAddress, Telegram, TelegramType
 
 
 class RemoteValue():

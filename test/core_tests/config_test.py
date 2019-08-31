@@ -11,7 +11,7 @@ from xknx.devices import (
     Sensor, Switch)
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
-from xknx.knx import PhysicalAddress
+from xknx.telegram import PhysicalAddress
 
 
 # pylint: disable=too-many-public-methods,invalid-name

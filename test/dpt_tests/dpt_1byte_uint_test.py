@@ -1,8 +1,8 @@
 """Unit test for KNX DPT 5.010 value."""
 import unittest
 
+from xknx.dpt import DPTTariff, DPTValue1Ucount
 from xknx.exceptions import ConversionError
-from xknx.knx import DPTTariff, DPTValue1Ucount
 
 
 class TestDPTValue1Ucount(unittest.TestCase):
