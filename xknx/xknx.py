@@ -35,7 +35,7 @@ class XKNX:
         self.telegram_queue = TelegramQueue(self)
         self.state_updater = None
         self.knxip_interface = None
-        self.started = False
+        self.started = asyncio.Event()
         self.address_format = address_format
         self.own_address = own_address
         self.rate_limit = rate_limit
@@ -55,7 +55,7 @@ class XKNX:
 
     def __del__(self):
         """Destructor. Cleaning up if this was not done before."""
-        if self.started:
+        if self.started.is_set():
             try:
                 task = self.loop.create_task(self.stop())
                 self.loop.run_until_complete(task)
@@ -76,15 +76,16 @@ class XKNX:
         await self.knxip_interface.start()
         await self.telegram_queue.start()
 
-        if state_updater:
-            from xknx.core import StateUpdater
-            self.state_updater = StateUpdater(self)
-            await self.state_updater.start()
+        # TODO:
+        # if state_updater:
+        #     from xknx.core import StateUpdater
+        #     self.state_updater = StateUpdater(self)
+        #     await self.state_updater.start()
 
         if daemon_mode:
             await self.loop_until_sigint()
 
-        self.started = True
+        self.started.set()
 
     async def join(self):
         """Wait until all telegrams were processed."""
@@ -101,7 +102,7 @@ class XKNX:
         await self.join()
         await self.telegram_queue.stop()
         await self._stop_knxip_interface_if_exists()
-        self.started = False
+        self.started.clear()
 
     async def loop_until_sigint(self):
         """Loop until Crtl-C was pressed."""
