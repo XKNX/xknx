@@ -122,40 +122,6 @@ class TestClimate(unittest.TestCase):
         self.assertFalse(climate.has_group_address(GroupAddress('1/2/99')))
 
     #
-    # STATE ADDRESSES
-    #
-    def test_state_addresses(self):
-        """Test state_addresses of Climate and ClimateMode."""
-        xknx = XKNX(loop=self.loop)
-        climate_mode = ClimateMode(
-            xknx,
-            name=None,
-            group_address_operation_mode='1/2/5',
-            group_address_operation_mode_state='1/2/13',
-            group_address_operation_mode_protection='1/2/6',
-            group_address_operation_mode_night='1/2/7',
-            group_address_operation_mode_comfort='1/2/8',
-            group_address_controller_mode='1/2/9',
-            group_address_controller_mode_state='1/2/10')
-        climate = Climate(
-            xknx,
-            'TestClimate',
-            group_address_temperature='1/2/1',
-            group_address_target_temperature='1/2/2',
-            group_address_setpoint_shift='1/2/3',
-            group_address_setpoint_shift_state='1/2/4',
-            group_address_on_off='1/2/11',
-            group_address_on_off_state='1/2/12',
-            mode=climate_mode)
-        self.assertEqual(
-            climate.state_addresses(),
-            [GroupAddress("1/2/1"),
-             GroupAddress("1/2/4"),
-             GroupAddress("1/2/12"),
-             GroupAddress("1/2/13"),
-             GroupAddress("1/2/10")])
-
-    #
     # TEST CALLBACK
     #
     def test_process_callback(self):
@@ -699,7 +665,7 @@ class TestClimate(unittest.TestCase):
             xknx,
             'TestClimate',
             group_address_temperature='1/2/3')
-        self.loop.run_until_complete(asyncio.Task(climate.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(climate.sync()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -714,7 +680,7 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_operation_mode='1/2/3',
             group_address_operation_mode_state='1/2/4')
-        self.loop.run_until_complete(asyncio.Task(climate_mode.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(climate_mode.sync()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -729,7 +695,7 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_operation_mode='1/2/23',
             group_address_controller_status_state='1/2/24')
-        self.loop.run_until_complete(asyncio.Task(climate_mode.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(climate_mode.sync()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -744,7 +710,7 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_controller_mode='1/2/13',
             group_address_controller_mode_state='1/2/14')
-        self.loop.run_until_complete(asyncio.Task(climate_mode.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(climate_mode.sync()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -763,7 +729,7 @@ class TestClimate(unittest.TestCase):
             group_address_controller_status_state='1/2/6',
             group_address_controller_mode='1/2/13',
             group_address_controller_mode_state='1/2/14')
-        self.loop.run_until_complete(asyncio.Task(climate_mode.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(climate_mode.sync()))
         self.assertEqual(xknx.telegrams.qsize(), 3)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(

@@ -96,12 +96,13 @@ class BinarySensor(Device):
         """Test if device has given group address."""
         return group_address in [self.group_address_state]
 
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        if self.sync_state and \
-                self.group_address_state is not None:
-            return [self.group_address_state, ]
-        return []
+    #TODO: state_updater
+    # def state_addresses(self):
+    #     """Return group addresses which should be requested to sync state."""
+    #     if self.sync_state and \
+    #             self.group_address_state is not None:
+    #         return [self.group_address_state, ]
+    #     return []
 
     async def _set_internal_state(self, state):
         """Set the internal state of the device. If state was changed after update hooks and connected Actions are executed."""

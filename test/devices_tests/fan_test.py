@@ -32,7 +32,7 @@ class TestFan(unittest.TestCase):
         fan = Fan(xknx,
                   name="TestFan",
                   group_address_speed_state='1/2/3')
-        self.loop.run_until_complete(asyncio.Task(fan.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(fan.sync()))
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
@@ -50,7 +50,7 @@ class TestFan(unittest.TestCase):
                   name="TestFan",
                   group_address_speed='1/2/3',
                   group_address_speed_state='1/2/4')
-        self.loop.run_until_complete(asyncio.Task(fan.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(fan.sync()))
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 

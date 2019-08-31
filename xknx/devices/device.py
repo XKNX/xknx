@@ -32,26 +32,9 @@ class Device:
             # pylint: disable=not-callable
             await device_updated_cb(self)
 
-    async def sync(self, wait_for_result=True):
+    #TODO: state_updater; features / remote_values
+    async def sync(self):
         """Read state of device from KNX bus."""
-        try:
-            await self._sync_impl(wait_for_result)
-        except XKNXException as ex:
-            self.xknx.logger.error("Error while syncing device: %s", ex)
-
-    async def _sync_impl(self, wait_for_result=True):
-        self.xknx.logger.debug("Sync %s", self.name)
-        for group_address in self.state_addresses():
-            from xknx.core import ValueReader
-            value_reader = ValueReader(self.xknx, group_address)
-            if wait_for_result:
-                telegram = await value_reader.read()
-                if telegram is not None:
-                    await self.process(telegram)
-                else:
-                    self.xknx.logger.warning("Could not sync group address '%s' from %s", group_address, self)
-            else:
-                await value_reader.send_group_read()
 
     async def send(self, group_address, payload=None, response=False):
         """Send payload as telegram to KNX bus."""
@@ -61,11 +44,6 @@ class Device:
         telegram.telegramtype = TelegramType.GROUP_RESPONSE \
             if response else TelegramType.GROUP_WRITE
         await self.xknx.telegrams.put(telegram)
-
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        # pylint: disable=no-self-use
-        return []
 
     async def process(self, telegram):
         """Process incoming telegram."""

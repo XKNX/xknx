@@ -29,6 +29,7 @@ class ExposeSensor(Device):
         # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
 
+        # TODO: state_updater: disable for expose sensor
         self.sensor_value = None
         if value_type == "binary":
             self.sensor_value = RemoteValueSwitch(
@@ -60,10 +61,6 @@ class ExposeSensor(Device):
     def has_group_address(self, group_address):
         """Test if device has given group address."""
         return self.sensor_value.has_group_address(group_address)
-
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        return []
 
     async def process_group_read(self, telegram):
         """Process incoming GROUP READ telegram."""

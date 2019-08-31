@@ -26,6 +26,7 @@ CONF_XKNX_TUNNELING = "tunneling"
 CONF_XKNX_LOCAL_IP = "local_ip"
 CONF_XKNX_FIRE_EVENT = "fire_event"
 CONF_XKNX_FIRE_EVENT_FILTER = "fire_event_filter"
+# TODO: keep global state_updater bool to disable it at all?
 CONF_XKNX_STATE_UPDATER = "state_updater"
 CONF_XKNX_RATE_LIMIT = "rate_limit"
 CONF_XKNX_EXPOSE = "expose"
@@ -67,6 +68,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Inclusive(CONF_XKNX_FIRE_EVENT_FILTER, "fire_ev"): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
+                # TODO:
                 vol.Optional(CONF_XKNX_STATE_UPDATER, default=True): cv.boolean,
                 vol.Optional(CONF_XKNX_RATE_LIMIT, default=20): vol.All(
                     vol.Coerce(int), vol.Range(min=1, max=100)
@@ -169,6 +171,7 @@ class KNXModule:
         """Start KNX object. Connect to tunneling or Routing device."""
         connection_config = self.connection_config()
         await self.xknx.start(
+            # TODO:
             state_updater=self.config[DOMAIN][CONF_XKNX_STATE_UPDATER],
             connection_config=connection_config,
         )

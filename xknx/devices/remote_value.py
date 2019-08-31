@@ -35,11 +35,11 @@ class RemoteValue():
         self.device_name = "Unknown" \
             if device_name is None else device_name
         self.after_update_cb = after_update_cb
-
+        self.state_updater = None
         self.payload = None
 
         # TODO: naming? unclear that it holds minutes
-        if sync_state:
+        if self.xknx.state_updater and sync_state:
             self.state_updater = StateUpdater(
                 xknx,
                 expiration_min=sync_state,
@@ -132,7 +132,7 @@ class RemoteValue():
         if updated and self.after_update_cb is not None:
             await self.after_update_cb()
 
-    async def read_state(self, wait_for_result=True):
+    async def read_state(self, wait_for_result=False):
         """Send GroupValueRead telegram for state address to KNX bus."""
         if self.readable:
             self.xknx.logger.debug("Sync %s", self.device_name)
@@ -142,6 +142,7 @@ class RemoteValue():
             if wait_for_result:
                 telegram = await value_reader.read()
                 if telegram is not None:
+                    # TODO: will this telegram be prcessed twice?
                     await self.process(telegram)
                 else:
                     self.xknx.logger.warning(

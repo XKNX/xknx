@@ -286,17 +286,12 @@ class Climate(Device):
         if self.mode is not None:
             await self.mode.process_group_write(telegram)
 
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        state_addresses = []
-        state_addresses.extend(self.temperature.state_addresses())
-        state_addresses.extend(self.target_temperature.state_addresses())
-        state_addresses.extend(self._setpoint_shift.state_addresses())
-        if self.supports_on_off:
-            state_addresses.extend(self.on.state_addresses())
-        if self.mode is not None:
-            state_addresses.extend(self.mode.state_addresses())
-        return state_addresses
+    async def sync(self):
+        await self.temperature.read_state()
+        await self.target_temperature.read_state()
+        await self._setpoint_shift.read_state()
+        await self.on.read_state()
+        # TODO: read state of mode from here?
 
     def __str__(self):
         """Return object as readable string."""

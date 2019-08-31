@@ -224,15 +224,19 @@ class Cover(Device):
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        if self.travelcalculator.is_traveling():
-            # Cover is traveling, requesting state will return false results
-            return[]
-        state_addresses = []
-        state_addresses.extend(self.position.state_addresses())
-        state_addresses.extend(self.angle.state_addresses())
-        return state_addresses
+    #TODO: state_updater
+    # def state_addresses(self):
+    #     """Return group addresses which should be requested to sync state."""
+    #     if self.travelcalculator.is_traveling():
+    #         # Cover is traveling, requesting state will return false results
+    #         return[]
+    async def sync(self):
+        # TODO: if not self.travelcalculator.is_traveling():
+            # when Cover is traveling, requesting state will return false results
+            # but this is manual syncing so it may be ok
+            # should state updater wait for cover to stop?
+        await self.position.read_state()
+        await self.angle.read_state()
 
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""

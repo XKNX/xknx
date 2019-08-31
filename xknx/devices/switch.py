@@ -70,13 +70,12 @@ class Switch(Device):
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        return self.switch.state_addresses()
-
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
         await self.switch.process(telegram)
+
+    async def sync(self):
+        await self.switch.read_state()
 
     def __str__(self):
         """Return object as readable string."""

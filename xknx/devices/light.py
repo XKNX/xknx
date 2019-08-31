@@ -311,17 +311,6 @@ class Light(Device):
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        state_addresses = []
-        state_addresses.extend(self.switch.state_addresses())
-        state_addresses.extend(self.color.state_addresses())
-        state_addresses.extend(self.rgbw.state_addresses())
-        state_addresses.extend(self.brightness.state_addresses())
-        state_addresses.extend(self.tunable_white.state_addresses())
-        state_addresses.extend(self.color_temperature.state_addresses())
-        return state_addresses
-
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
         await self.switch.process(telegram)
@@ -330,6 +319,14 @@ class Light(Device):
         await self.brightness.process(telegram)
         await self.tunable_white.process(telegram)
         await self.color_temperature.process(telegram)
+
+    async def sync(self):
+        await self.switch.read_state()
+        await self.color.read_state()
+        await self.rgbw.read_state()
+        await self.brightness.read_state()
+        await self.tunable_white.read_state()
+        await self.color_temperature.read_state()
 
     def __eq__(self, other):
         """Equal operator."""

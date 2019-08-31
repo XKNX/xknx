@@ -21,12 +21,6 @@ class TestDevice(unittest.TestCase):
         """Tear down test class."""
         self.loop.close()
 
-    def test_state_addresses(self):
-        """Test state_addresses() function."""
-        xknx = XKNX(loop=self.loop)
-        device = Device(xknx, 'TestDevice')
-        self.assertEqual(device.state_addresses(), [])
-
     def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
         xknx = XKNX(loop=self.loop)
@@ -159,54 +153,36 @@ class TestDevice(unittest.TestCase):
             self.loop.run_until_complete(asyncio.Task(device.do("xx")))
             mock_info.assert_called_with("Do not implemented action '%s' for %s", 'xx', 'Device')
 
-    #
-    # _SYNC_IMPL()
-    #
-    def test_sync_no_response(self):
-        """Testing _sync_impl() method with ValueReader returning no telegram as response."""
-        # pylint: disable=protected-access
-        xknx = XKNX(loop=self.loop)
-        device = Device(xknx, 'TestDevice')
-        with patch('xknx.devices.Device.state_addresses') as mock_state_addresses:
-            mock_state_addresses.return_value = [GroupAddress('1/2/3'), ]
-            with patch('xknx.core.ValueReader.read') as mock_value_reader_read:
-                fut = asyncio.Future()
-                fut.set_result(None)  # Make Value reader return no response
-                mock_value_reader_read.return_value = fut
-                with patch('logging.Logger.warning') as mock_warn:
-                    self.loop.run_until_complete(asyncio.Task(device._sync_impl()))
-                    mock_warn.assert_called_with("Could not sync group address '%s' from %s",
-                                                 GroupAddress('1/2/3'), device)
+    #TODO: state_updater
+    # def test_sync_not_wait_for_response(self):
+    #     """Testing _sync_impl() method without waiting for response (send_group_read should be called directly)."""
+    #     # pylint: disable=protected-access
+    #     xknx = XKNX(loop=self.loop)
+    #     device = Device(xknx, 'TestDevice')
+    #     with patch('xknx.devices.Device.state_addresses') as mock_state_addresses:
+    #         mock_state_addresses.return_value = [GroupAddress('1/2/3'), ]
+    #         with patch('xknx.core.ValueReader.send_group_read') as mock_value_reader_group_read:
+    #             fut = asyncio.Future()
+    #             fut.set_result(None)  # Make Value reader return no response
+    #             mock_value_reader_group_read.return_value = fut
+    #             self.loop.run_until_complete(asyncio.Task(device._sync_impl(wait_for_result=False)))
+    #             mock_value_reader_group_read.assert_called_with()
 
-    def test_sync_not_wait_for_response(self):
-        """Testing _sync_impl() method without waiting for response (send_group_read should be called directly)."""
-        # pylint: disable=protected-access
-        xknx = XKNX(loop=self.loop)
-        device = Device(xknx, 'TestDevice')
-        with patch('xknx.devices.Device.state_addresses') as mock_state_addresses:
-            mock_state_addresses.return_value = [GroupAddress('1/2/3'), ]
-            with patch('xknx.core.ValueReader.send_group_read') as mock_value_reader_group_read:
-                fut = asyncio.Future()
-                fut.set_result(None)  # Make Value reader return no response
-                mock_value_reader_group_read.return_value = fut
-                self.loop.run_until_complete(asyncio.Task(device._sync_impl(wait_for_result=False)))
-                mock_value_reader_group_read.assert_called_with()
-
-    def test_sync_valid_response(self):
-        """Testing _sync_imp() method with ValueReader.read returning a Telegram - which should be processed."""
-        # pylint: disable=protected-access
-        xknx = XKNX(loop=self.loop)
-        device = Device(xknx, 'TestDevice')
-        with patch('xknx.devices.Device.state_addresses') as mock_state_addresses:
-            mock_state_addresses.return_value = [GroupAddress('1/2/3'), ]
-            with patch('xknx.core.ValueReader.read') as mock_value_reader_read:
-                fut = asyncio.Future()
-                telegram = Telegram(GroupAddress("1/2/3"))
-                fut.set_result(telegram)
-                mock_value_reader_read.return_value = fut
-                with patch('xknx.devices.Device.process') as mock_device_process:
-                    fut2 = asyncio.Future()
-                    fut2.set_result(None)
-                    mock_device_process.return_value = fut2
-                    self.loop.run_until_complete(asyncio.Task(device._sync_impl()))
-                    mock_device_process.assert_called_with(telegram)
+    # def test_sync_valid_response(self):
+    #     """Testing _sync_imp() method with ValueReader.read returning a Telegram - which should be processed."""
+    #     # pylint: disable=protected-access
+    #     xknx = XKNX(loop=self.loop)
+    #     device = Device(xknx, 'TestDevice')
+    #     with patch('xknx.devices.Device.state_addresses') as mock_state_addresses:
+    #         mock_state_addresses.return_value = [GroupAddress('1/2/3'), ]
+    #         with patch('xknx.core.ValueReader.read') as mock_value_reader_read:
+    #             fut = asyncio.Future()
+    #             telegram = Telegram(GroupAddress("1/2/3"))
+    #             fut.set_result(telegram)
+    #             mock_value_reader_read.return_value = fut
+    #             with patch('xknx.devices.Device.process') as mock_device_process:
+    #                 fut2 = asyncio.Future()
+    #                 fut2.set_result(None)
+    #                 mock_device_process.return_value = fut2
+    #                 self.loop.run_until_complete(asyncio.Task(device._sync_impl()))
+    #                 mock_device_process.assert_called_with(telegram)

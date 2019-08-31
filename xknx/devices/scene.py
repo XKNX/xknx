@@ -16,6 +16,7 @@ class Scene(Device):
         # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
 
+        # TODO: state_updater: disable for scene number per default?
         self.scene_value = RemoteValueSceneNumber(
             xknx,
             group_address,
@@ -59,10 +60,6 @@ class Scene(Device):
             await self.run()
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
-
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        return []
 
     def __eq__(self, other):
         """Equal operator."""

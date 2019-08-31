@@ -244,19 +244,20 @@ class ClimateMode(Device):
         operation_mode = DPTControllerStatus.from_knx(telegram.payload.value)
         await self._set_internal_operation_mode(operation_mode)
 
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        state_addresses = []
+    #TODO: state_updater
+    # def state_addresses(self):
+    #     """Return group addresses which should be requested to sync state."""
+    #     state_addresses = []
 
-        if self.supports_operation_mode:
-            if self.group_address_operation_mode_state:
-                state_addresses.append(self.group_address_operation_mode_state)
-            if self.group_address_controller_status_state:
-                state_addresses.append(self.group_address_controller_status_state)
-            if self.group_address_controller_mode_state:
-                state_addresses.append(self.group_address_controller_mode_state)
-            # Note: telegrams setting splitted up operation modes are not yet implemented
-        return state_addresses
+    #     if self.supports_operation_mode:
+    #         if self.group_address_operation_mode_state:
+    #             state_addresses.append(self.group_address_operation_mode_state)
+    #         if self.group_address_controller_status_state:
+    #             state_addresses.append(self.group_address_controller_status_state)
+    #         if self.group_address_controller_mode_state:
+    #             state_addresses.append(self.group_address_controller_mode_state)
+    #         # Note: telegrams setting splitted up operation modes are not yet implemented
+    #     return state_addresses
 
     def __str__(self):
         """Return object as readable string."""

@@ -49,13 +49,12 @@ class Sensor(Device):
         """Test if device has given group address."""
         return self.sensor_value.has_group_address(group_address)
 
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        return self.sensor_value.state_addresses()
-
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
         await self.sensor_value.process(telegram)
+
+    async def sync(self):
+        await self.sensor_value.read_state()
 
     def unit_of_measurement(self):
         """Return the unit of measurement."""

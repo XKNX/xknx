@@ -74,12 +74,6 @@ class Notification(Device):
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        if self.group_address_state is not None:
-            return [self.group_address_state, ]
-        return []
-
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
         if telegram.group_address == self.group_address:

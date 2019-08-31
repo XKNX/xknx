@@ -143,7 +143,7 @@ class TestLight(unittest.TestCase):
                       group_address_tunable_white_state='1/2/7',
                       group_address_color_temperature_state='1/2/8',
                       group_address_rgbw_state='1/2/9')
-        self.loop.run_until_complete(asyncio.Task(light.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(light.sync()))
 
         self.assertEqual(xknx.telegrams.qsize(), 6)
 
@@ -191,7 +191,7 @@ class TestLight(unittest.TestCase):
                       group_address_color_temperature_state='1/2/12',
                       group_address_rgbw='1/2/13',
                       group_address_rgbw_state='1/2/14')
-        self.loop.run_until_complete(asyncio.Task(light.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(light.sync()))
 
         self.assertEqual(xknx.telegrams.qsize(), 6)
 
