@@ -5,8 +5,8 @@ import unittest
 from xknx import XKNX
 from xknx.devices import (
     Action, ActionBase, ActionCallback, BinarySensor, Climate, ClimateMode,
-    Cover, DateTime, ExposeSensor, Fan, Light, Notification, RemoteValue,
-    Scene, Sensor, Switch)
+    Cover, DateTime, ExposeSensor, Fan, Light, Notification, Scene, Sensor,
+    Switch)
 from xknx.exceptions import (
     ConversionError, CouldNotParseAddress, CouldNotParseKNXIP,
     CouldNotParseTelegram, DeviceIllegalValue)
@@ -20,6 +20,7 @@ from xknx.knxip import (
     DIBGeneric, DIBServiceFamily, DIBSuppSVCFamilies, DisconnectRequest,
     DisconnectResponse, KNXIPFrame, KNXIPHeader, KNXIPServiceType, KNXMedium,
     SearchRequest, SearchResponse, TunnellingAck, TunnellingRequest)
+from xknx.remote_value import RemoteValue
 
 
 # pylint: disable=too-many-public-methods,invalid-name

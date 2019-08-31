@@ -3,9 +3,9 @@ import asyncio
 import unittest
 
 from xknx import XKNX
-from xknx.devices import RemoteValueDpt2ByteUnsigned
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram
+from xknx.remote_value import RemoteValueDpt2ByteUnsigned
 
 
 class TestRemoteValueDptValue2Ucount(unittest.TestCase):

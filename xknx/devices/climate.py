@@ -5,12 +5,11 @@ Module for managing the climate within a room.
 * Manages and sends the desired setpoint to KNX bus.
 """
 from xknx.knx import GroupAddress
+from xknx.remote_value import (
+    RemoteValue1Count, RemoteValueSwitch, RemoteValueTemp)
 
 from .climate_mode import ClimateMode
 from .device import Device
-from .remote_value_1count import RemoteValue1Count
-from .remote_value_switch import RemoteValueSwitch
-from .remote_value_temp import RemoteValueTemp
 
 DEFAULT_SETPOINT_SHIFT_MAX = 6
 DEFAULT_SETPOINT_SHIFT_MIN = -6

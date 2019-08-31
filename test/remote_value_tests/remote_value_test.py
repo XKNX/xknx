@@ -4,9 +4,9 @@ import unittest
 from unittest.mock import patch
 
 from xknx import XKNX
-from xknx.devices import RemoteValue
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram
+from xknx.remote_value import RemoteValue
 
 
 class TestRemoteValue(unittest.TestCase):
@@ -71,8 +71,8 @@ class TestRemoteValue(unittest.TestCase):
         """Test if exception is raised when processing telegram with invalid payload."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValue(xknx)
-        with patch('xknx.devices.RemoteValue.payload_valid') as patch_valid, \
-                patch('xknx.devices.RemoteValue.has_group_address') as patch_has_group_address:
+        with patch('xknx.remote_value.RemoteValue.payload_valid') as patch_valid, \
+                patch('xknx.remote_value.RemoteValue.has_group_address') as patch_has_group_address:
             patch_valid.return_value = False
             patch_has_group_address.return_value = True
 

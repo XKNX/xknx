@@ -3,8 +3,8 @@ import asyncio
 import unittest
 
 from xknx import XKNX
-from xknx.devices import RemoteValueSensor
 from xknx.exceptions import ConversionError
+from xknx.remote_value import RemoteValueSensor
 
 
 class TestRemoteValueSensor(unittest.TestCase):

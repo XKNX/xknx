@@ -1,9 +1,10 @@
 """
-Module for managing a remote value KNX.
+Module for managing a remote value on the KNX bus.
 
-Remote value can either be a group address for reading
-and and one group address for writing a KNX value
-or a group address for both.
+Remote value can be :
+- a group address for writing a KNX value,
+- a group address for reading a KNX value,
+- or a group of both representing the same value.
 """
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.knx import GroupAddress, Telegram, TelegramType

@@ -3,7 +3,7 @@ import asyncio
 import unittest
 
 from xknx import XKNX
-from xknx.devices import RemoteValueScaling
+from xknx.remote_value import RemoteValueScaling
 
 
 class TestRemoteValueScaling(unittest.TestCase):
