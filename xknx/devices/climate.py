@@ -80,6 +80,7 @@ class Climate(Device):
                  setpoint_shift_min=DEFAULT_SETPOINT_SHIFT_MIN,
                  group_address_on_off=None,
                  group_address_on_off_state=None,
+                 on_off_invert=False,
                  min_temp=None,
                  max_temp=None,
                  mode=None,
@@ -130,7 +131,8 @@ class Climate(Device):
             group_address_on_off,
             group_address_on_off_state,
             device_name=self.name,
-            after_update_cb=self.after_update)
+            after_update_cb=self.after_update,
+            invert=on_off_invert)
 
         self.mode = mode
 
@@ -158,6 +160,8 @@ class Climate(Device):
             config.get('group_address_on_off')
         group_address_on_off_state = \
             config.get('group_address_on_off_state')
+        on_off_invert = \
+            config.get('on_off_invert', False)
         min_temp = config.get('min_temp')
         max_temp = config.get('max_temp')
 
@@ -180,6 +184,7 @@ class Climate(Device):
                    setpoint_shift_min=setpoint_shift_min,
                    group_address_on_off=group_address_on_off,
                    group_address_on_off_state=group_address_on_off_state,
+                   on_off_invert=on_off_invert,
                    min_temp=min_temp,
                    max_temp=max_temp,
                    mode=climate_mode)
