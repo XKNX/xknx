@@ -1003,6 +1003,16 @@ class TestClimate(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
         self.assertEqual(climate.is_on, True)
 
+        climate_inv = Climate(
+            xknx,
+            'TestClimate',
+            group_address_on_off='1/2/2',
+            on_off_invert=True)
+        telegram = Telegram(GroupAddress('1/2/2'))
+        telegram.payload = DPTBinary(1)
+        self.loop.run_until_complete(asyncio.Task(climate_inv.process(telegram)))
+        self.assertEqual(climate_inv.is_on, False)
+
     def test_power_on_off(self):
         """Test turn_on and turn_off functions."""
         xknx = XKNX(loop=self.loop)
@@ -1012,5 +1022,27 @@ class TestClimate(unittest.TestCase):
             group_address_on_off='1/2/2')
         self.loop.run_until_complete(asyncio.Task(climate.turn_on()))
         self.assertEqual(climate.is_on, True)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(GroupAddress('1/2/2'), payload=DPTBinary(True)))
         self.loop.run_until_complete(asyncio.Task(climate.turn_off()))
         self.assertEqual(climate.is_on, False)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(GroupAddress('1/2/2'), payload=DPTBinary(False)))
+
+        climate_inv = Climate(
+            xknx,
+            'TestClimate',
+            group_address_on_off='1/2/2',
+            on_off_invert=True)
+        self.loop.run_until_complete(asyncio.Task(climate_inv.turn_on()))
+        self.assertEqual(climate_inv.is_on, True)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(GroupAddress('1/2/2'), payload=DPTBinary(False)))
+        self.loop.run_until_complete(asyncio.Task(climate_inv.turn_off()))
+        self.assertEqual(climate_inv.is_on, False)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(GroupAddress('1/2/2'), payload=DPTBinary(True)))
