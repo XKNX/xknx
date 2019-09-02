@@ -91,11 +91,11 @@ climate = Climate(
         setpoint_shift_min=-6,
         group_address_on_off='',
         group_address_on_off_state='',
+        on_off_invert=False,
         min_temp=18,
         max_temp=26,
         mode=climate_mode,
-        device_updated_cb=None,
-        on_off_inverted=False)
+        device_updated_cb=None)
 
 # Set target temperature to 23 degrees. Works with setpoint_shift too.
 await climate.set_target_temperature(23)
