@@ -15,6 +15,7 @@ from xknx.dpt import (
     DPTPressure2Byte, DPTRotationAngle, DPTScaling, DPTSceneNumber, DPTSpeed,
     DPTString, DPTTemperature, DPTUElCurrentmA, DPTValue1Count,
     DPTValue1Ucount, DPTValue2Count, DPTVoltage, DPTWsp)
+from xknx.exceptions import ConversionError
 
 from .remote_value import RemoteValue
 
