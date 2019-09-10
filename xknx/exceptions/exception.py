@@ -9,10 +9,11 @@ class XKNXException(Exception):
         return repr(self) == repr(other)
 
     def __hash__(self):
-        """Hash function"""
+        """Hash function."""
         return hash(str(self))
 
     def __repr__(self):
+        """Representation of object."""
         return str(self)
 
 
