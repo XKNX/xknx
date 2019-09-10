@@ -140,7 +140,11 @@ class CEMIFrame(KNXIPBody):
 
         tpci_apci = cemi[9 + addil] * 256 + cemi[10 + addil]
 
-        self.cmd = APCICommand(tpci_apci & 0xFFC0)
+        try:
+            self.cmd = APCICommand(tpci_apci & 0xFFC0)
+        except ValueError:
+            raise CouldNotParseKNXIP(
+                "APCI not supported: {0:#b}".format(tpci_apci & 0xFFC0))
 
         apdu = cemi[10 + addil:]
         if len(apdu) != self.mpdu_len:
