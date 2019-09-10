@@ -6,7 +6,14 @@ class XKNXException(Exception):
 
     def __eq__(self, other):
         """Equal operator."""
-        return self.__dict__ == other.__dict__
+        return repr(self) == repr(other)
+
+    def __hash__(self):
+        """Hash function"""
+        return hash(str(self))
+
+    def __repr__(self):
+        return str(self)
 
 
 class CouldNotParseTelegram(XKNXException):
