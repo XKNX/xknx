@@ -105,7 +105,10 @@ class CEMIFrame(KNXIPBody):
 
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        self.code = CEMIMessageCode(raw[0])
+        try:
+            self.code = CEMIMessageCode(raw[0])
+        except ValueError:
+            raise CouldNotParseKNXIP("Could not understand CEMIMessageCode: {0} ".format(raw[0]))
 
         if self.code == CEMIMessageCode.L_DATA_IND or \
                 self.code == CEMIMessageCode.L_Data_REQ or \
