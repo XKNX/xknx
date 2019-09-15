@@ -1,11 +1,13 @@
 """Tests for the CEMIFrame object"""
 
 from unittest.mock import MagicMock
-from pytest import raises, fixture
+
+from pytest import fixture, raises
+
+from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knx import DPTBinary, PhysicalAddress
 from xknx.knxip.cemi_frame import CEMIFrame
-from xknx.knxip.knxip_enum import CEMIMessageCode, APCICommand
-from xknx.exceptions import CouldNotParseKNXIP
+from xknx.knxip.knxip_enum import APCICommand, CEMIMessageCode
 
 
 def get_data(code, adil, flags, src, dst, mpdu_len, tpci_apci, payload):
