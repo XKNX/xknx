@@ -30,7 +30,6 @@ class XKNX:
         # pylint: disable=too-many-arguments
         self.devices = Devices()
         self.telegrams = asyncio.Queue()
-        self.loop = loop or asyncio.get_event_loop()
         self.sigint_received = asyncio.Event()
         self.telegram_queue = TelegramQueue(self)
         self.state_updater = None
@@ -52,15 +51,6 @@ class XKNX:
 
         if device_updated_cb is not None:
             self.devices.register_device_updated_cb(device_updated_cb)
-
-    def __del__(self):
-        """Destructor. Cleaning up if this was not done before."""
-        if self.started:
-            try:
-                task = self.loop.create_task(self.stop())
-                self.loop.run_until_complete(task)
-            except RuntimeError as exp:
-                self.logger.warning("Could not close loop, reason: %s", exp)
 
     async def start(self,
                     state_updater=False,
