@@ -14,15 +14,6 @@ from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram
 class TestRemoteValueSceneNumber(unittest.TestCase):
     """Test class for RemoteValueSceneNumber objects."""
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     def test_to_knx(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()

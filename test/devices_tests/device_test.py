@@ -15,15 +15,6 @@ from xknx.knx import DPTArray, GroupAddress, Telegram, TelegramType
 class TestDevice(unittest.TestCase):
     """Test class for Switch object."""
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     def test_state_addresses(self):
         """Test state_addresses() function."""
         xknx = XKNX()

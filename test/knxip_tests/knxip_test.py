@@ -12,15 +12,6 @@ class Test_KNXIP(unittest.TestCase):
 
     # pylint: disable=too-many-public-methods,invalid-name
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     def test_wrong_init(self):
         """Testing init method with wrong service_type_ident."""
         xknx = XKNX()

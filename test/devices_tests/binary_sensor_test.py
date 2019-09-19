@@ -15,15 +15,6 @@ from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram
 class TestBinarySensor(unittest.TestCase):
     """Test class for BinarySensor objects."""
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     def test_initialization_wrong_significant_bit(self):
         """Test initialization with wrong significant_bit parameter."""
         # pylint: disable=invalid-name

@@ -15,15 +15,6 @@ from xknx.knx import GroupAddress
 class TestDevices(unittest.TestCase):
     """Test class for devices container within XKNX."""
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     #
     # XKNX Config
     #

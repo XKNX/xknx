@@ -12,15 +12,6 @@ class Test_KNXIPBody(unittest.TestCase):
 
     # pylint: disable=too-many-public-methods,invalid-name
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     def test_warn_calculated_length(self):
         """Test correct warn message if calculated_length is missing."""
         xknx = XKNX()

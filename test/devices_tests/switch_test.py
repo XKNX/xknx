@@ -14,15 +14,6 @@ from xknx.knx import DPTBinary, GroupAddress, Telegram, TelegramType
 class TestSwitch(unittest.TestCase):
     """Test class for Switch object."""
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     #
     # SYNC
     #

@@ -11,15 +11,6 @@ class TestRemoteValueScaling(unittest.TestCase):
 
     # pylint: disable=protected-access
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     def test_calc_0_10(self):
         """Test if from/to calculations work with small range."""
         self.assertEqual(RemoteValueScaling._calc_to_knx(0, 10, 0), 0)

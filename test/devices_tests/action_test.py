@@ -14,15 +14,6 @@ from xknx.devices import (
 class TestAction(unittest.TestCase):
     """Class for testing Action objects."""
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     #
     # TEST COUNTER
     #

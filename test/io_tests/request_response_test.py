@@ -13,15 +13,6 @@ from xknx.knxip import DisconnectResponse
 class TestConnectResponse(unittest.TestCase):
     """Test class for xknx/io/Disconnect objects."""
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     def test_create_knxipframe_err(self):
         """Test if create_knxipframe of base class raises an exception."""
         xknx = XKNX()

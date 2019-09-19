@@ -15,15 +15,6 @@ from xknx.knxip import (
 class TestConnectionState(unittest.TestCase):
     """Test class for xknx/io/ConnectionState objects."""
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     def test_connectionstate(self):
         """Test connectionstateing from KNX bus."""
         xknx = XKNX()

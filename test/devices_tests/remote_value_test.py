@@ -15,15 +15,6 @@ from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram
 class TestRemoteValue(unittest.TestCase):
     """Test class for RemoteValue objects."""
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     def test_warn_payload_valid(self):
         """Test for warning if payload_valid is not implemented."""
         xknx = XKNX()

@@ -12,15 +12,6 @@ class Test_KNXIP_Header(unittest.TestCase):
 
     # pylint: disable=too-many-public-methods,invalid-name
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     def test_from_knx(self):
         """Test parsing and streaming wrong Header (wrong length byte)."""
         raw = ((0x06, 0x10, 0x04, 0x21, 0x00, 0x0a))

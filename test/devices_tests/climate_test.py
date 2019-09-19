@@ -23,15 +23,6 @@ class TestClimate(unittest.TestCase):
     """Test class for Climate objects."""
 
     # pylint: disable=invalid-name,too-many-public-methods
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     #
     # SUPPORTS TEMPERATURE / SETPOINT
     #

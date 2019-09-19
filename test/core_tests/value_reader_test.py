@@ -15,15 +15,6 @@ from xknx.knx import (
 class TestValueReader(unittest.TestCase):
     """Test class for value reader."""
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     @patch('xknx.core.ValueReader.timeout')
     def test_value_reader_read_success(self, timeout_mock):
         """Test value reader: successfull read."""

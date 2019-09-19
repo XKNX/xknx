@@ -14,15 +14,6 @@ from xknx.devices import Light
 class TestStateupdater(unittest.TestCase):
     """Test class for xknx/io/Disconnect objects."""
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     async def test_state_updater(self):
         """Test State updater."""
         xknx = XKNX()

@@ -20,9 +20,6 @@ class TestGatewayScanner(unittest.TestCase):
 
     def setUp(self):
         """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
         self.gateway_desc_interface = GatewayDescriptor(
             name='KNX-Interface',
             ip_addr='10.1.1.11',
@@ -58,10 +55,6 @@ class TestGatewayScanner(unittest.TestCase):
                     30: [{'addr': 'fe80::1234:1234:1234:1234%en1', 'netmask': 'ffff:ffff:ffff:ffff::/64', 'flags': 1024}],
                     2: [{'addr': '10.1.1.2', 'netmask': '255.255.255.0', 'broadcast': '10.1.1.255'}]}
         }
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
 
     def test_gateway_scan_filter_match(self):
         """Test match function of gateway filter."""

@@ -14,15 +14,6 @@ from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram, TelegramType
 class TestExposeSensor(unittest.TestCase):
     """Test class for Sensor objects."""
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     #
     # STR FUNCTIONS
     #

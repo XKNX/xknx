@@ -14,15 +14,6 @@ class Test_KNXIP(unittest.TestCase):
 
     # pylint: disable=too-many-public-methods,invalid-name
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     def test_from_knx(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet (payload=0xf0)."""
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x12, 0x29, 0x00,

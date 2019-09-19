@@ -13,15 +13,6 @@ class Test_KNXIP_Discovery(unittest.TestCase):
 
     # pylint: disable=too-many-public-methods,invalid-name
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     def test_search_response(self):
         """Test parsing and streaming SearchResponse KNX/IP packet."""
         raw = ((0x06, 0x10, 0x02, 0x02, 0x00, 0x50, 0x08, 0x01,

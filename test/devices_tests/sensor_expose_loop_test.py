@@ -15,15 +15,6 @@ from xknx.knx import (
 class SensorExposeLoopTest(unittest.TestCase):
     """Process incoming Telegrams and send the values to the bus again."""
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     def test_array_sensor_loop(self):
         """Test sensor and expose_sensor with different values."""
         test_cases = [

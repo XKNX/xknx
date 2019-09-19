@@ -10,15 +10,6 @@ from xknx.exceptions import ConversionError
 class TestRemoteValueSensor(unittest.TestCase):
     """Test class for RemoteValueSensor objects."""
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
     def test_wrong_value_type(self):
         """Test initializing with wrong value_type."""
         xknx = XKNX()
