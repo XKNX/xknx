@@ -23,7 +23,7 @@ class TestDisconnect(unittest.TestCase):
 
     def test_disconnect(self):
         """Test disconnecting from KNX bus."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         communication_channel_id = 23
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
         disconnect = Disconnect(xknx, udp_client, communication_channel_id)

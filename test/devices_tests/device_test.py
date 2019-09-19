@@ -23,13 +23,13 @@ class TestDevice(unittest.TestCase):
 
     def test_state_addresses(self):
         """Test state_addresses() function."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device = Device(xknx, 'TestDevice')
         self.assertEqual(device.state_addresses(), [])
 
     def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device = Device(xknx, 'TestDevice')
 
         after_update_callback1 = Mock()
@@ -76,7 +76,7 @@ class TestDevice(unittest.TestCase):
 
     def test_process(self):
         """Test if telegram is handled by the correct process_* method."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device = Device(xknx, 'TestDevice')
 
         with patch('xknx.devices.Device.process_group_read') as mock_group_read:
@@ -114,13 +114,13 @@ class TestDevice(unittest.TestCase):
 
     def test_process_group_write(self):
         """Test if process_group_write. Nothing really to test here."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device = Device(xknx, 'TestDevice')
         self.loop.run_until_complete(asyncio.Task(device.process_group_write(Telegram())))
 
     def test_process_group_response(self):
         """Test if process_group_read. Testing if mapped to group_write."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device = Device(xknx, 'TestDevice')
         with patch('xknx.devices.Device.process_group_write') as mock_group_write:
             fut = asyncio.Future()
@@ -131,14 +131,14 @@ class TestDevice(unittest.TestCase):
 
     def test_process_group_read(self):
         """Test if process_group_read. Nothing really to test here."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device = Device(xknx, 'TestDevice')
         self.loop.run_until_complete(asyncio.Task(device.process_group_read(Telegram())))
 
     def test_sync_exception(self):
         """Testing exception handling within sync()."""
         # pylint: disable=protected-access
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device = Device(xknx, 'TestDevice')
 
         with patch('logging.Logger.error') as mock_error:
@@ -153,7 +153,7 @@ class TestDevice(unittest.TestCase):
 
     def test_do(self):
         """Testing empty do."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device = Device(xknx, 'TestDevice')
         with patch('logging.Logger.info') as mock_info:
             self.loop.run_until_complete(asyncio.Task(device.do("xx")))
@@ -165,7 +165,7 @@ class TestDevice(unittest.TestCase):
     def test_sync_no_response(self):
         """Testing _sync_impl() method with ValueReader returning no telegram as response."""
         # pylint: disable=protected-access
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device = Device(xknx, 'TestDevice')
         with patch('xknx.devices.Device.state_addresses') as mock_state_addresses:
             mock_state_addresses.return_value = [GroupAddress('1/2/3'), ]
@@ -181,7 +181,7 @@ class TestDevice(unittest.TestCase):
     def test_sync_not_wait_for_response(self):
         """Testing _sync_impl() method without waiting for response (send_group_read should be called directly)."""
         # pylint: disable=protected-access
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device = Device(xknx, 'TestDevice')
         with patch('xknx.devices.Device.state_addresses') as mock_state_addresses:
             mock_state_addresses.return_value = [GroupAddress('1/2/3'), ]
@@ -195,7 +195,7 @@ class TestDevice(unittest.TestCase):
     def test_sync_valid_response(self):
         """Testing _sync_imp() method with ValueReader.read returning a Telegram - which should be processed."""
         # pylint: disable=protected-access
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device = Device(xknx, 'TestDevice')
         with patch('xknx.devices.Device.state_addresses') as mock_state_addresses:
             mock_state_addresses.return_value = [GroupAddress('1/2/3'), ]

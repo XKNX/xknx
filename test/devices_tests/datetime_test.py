@@ -26,7 +26,7 @@ class TestDateTime(unittest.TestCase):
     #
     def test_sync_datetime(self):
         """Test sync function / sending group reads to KNX bus."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         datetime = DateTime(xknx, "TestDateTime", group_address='1/2/3', broadcast_type=DateTimeBroadcastType.DATETIME)
 
         with patch('time.localtime') as mock_time:
@@ -45,7 +45,7 @@ class TestDateTime(unittest.TestCase):
     #
     def test_sync_date(self):
         """Test sync function / sending group reads to KNX bus."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         datetime = DateTime(xknx, "TestDateTime", group_address='1/2/3', broadcast_type=DateTimeBroadcastType.DATE)
         with patch('time.localtime') as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
@@ -63,7 +63,7 @@ class TestDateTime(unittest.TestCase):
     #
     def test_sync_time(self):
         """Test sync function / sending group reads to KNX bus."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         datetime = DateTime(xknx, "TestDateTime", group_address='1/2/3', broadcast_type=DateTimeBroadcastType.TIME)
         with patch('time.localtime') as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
@@ -84,7 +84,7 @@ class TestDateTime(unittest.TestCase):
     #
     def test_process_read(self):
         """Test test process a read telegram from KNX bus."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         datetime = DateTime(xknx, "TestDateTime", group_address='1/2/3', broadcast_type=DateTimeBroadcastType.TIME)
 
         telegram_read = Telegram(
@@ -107,7 +107,7 @@ class TestDateTime(unittest.TestCase):
     #
     def test_has_group_address(self):
         """Test if has_group_address function works."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         datetime = DateTime(xknx, "TestDateTime", group_address='1/2/3')
         self.assertTrue(datetime.has_group_address(GroupAddress('1/2/3')))
         self.assertFalse(datetime.has_group_address(GroupAddress('1/2/4')))

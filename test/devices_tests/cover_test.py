@@ -28,7 +28,7 @@ class TestCover(unittest.TestCase):
     #
     def test_supports_position_true(self):
         """Test support_position_true."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'Children.Venetian',
@@ -39,7 +39,7 @@ class TestCover(unittest.TestCase):
 
     def test_supports_position_false(self):
         """Test support_position_true."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'Children.Venetian',
@@ -49,7 +49,7 @@ class TestCover(unittest.TestCase):
 
     def test_supports_angle_true(self):
         """Test support_position_true."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'Children.Venetian',
@@ -60,7 +60,7 @@ class TestCover(unittest.TestCase):
 
     def test_support_angle_false(self):
         """Test support_position_true."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'Children.Venetian',
@@ -73,7 +73,7 @@ class TestCover(unittest.TestCase):
     #
     def test_sync(self):
         """Test sync function / sending group reads to KNX bus."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',
@@ -88,7 +88,7 @@ class TestCover(unittest.TestCase):
 
     def test_sync_state(self):
         """Test sync function with explicit state address."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',
@@ -104,7 +104,7 @@ class TestCover(unittest.TestCase):
 
     def test_sync_angle(self):
         """Test sync function for cover with angle."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',
@@ -123,7 +123,7 @@ class TestCover(unittest.TestCase):
 
     def test_sync_angle_state(self):
         """Test sync function with angle/explicit state."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',
@@ -142,7 +142,7 @@ class TestCover(unittest.TestCase):
     #
     def test_set_up(self):
         """Test moving cover to 'up' position."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',
@@ -161,7 +161,7 @@ class TestCover(unittest.TestCase):
     #
     def test_set_short_down(self):
         """Test moving cover to 'down' position."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',
@@ -180,7 +180,7 @@ class TestCover(unittest.TestCase):
     #
     def test_set_short_up(self):
         """Test moving cover 'short up'."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',
@@ -199,7 +199,7 @@ class TestCover(unittest.TestCase):
     #
     def test_set_down(self):
         """Test moving cover 'short down'."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',
@@ -218,7 +218,7 @@ class TestCover(unittest.TestCase):
     #
     def test_stop(self):
         """Test stopping cover."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx, 'TestCover',
             group_address_long='1/2/1',
@@ -236,7 +236,7 @@ class TestCover(unittest.TestCase):
     #
     def test_position(self):
         """Test moving cover to absolute position."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',
@@ -252,7 +252,7 @@ class TestCover(unittest.TestCase):
 
     def test_position_without_position_address_up(self):
         """Test moving cover to absolute position - with no absolute positioning supported."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',
@@ -268,7 +268,7 @@ class TestCover(unittest.TestCase):
 
     def test_position_without_position_address_down(self):
         """Test moving cover down - with no absolute positioning supported."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',
@@ -284,7 +284,7 @@ class TestCover(unittest.TestCase):
 
     def test_angle(self):
         """Test changing angle."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'Children.Venetian',
@@ -302,7 +302,7 @@ class TestCover(unittest.TestCase):
 
     def test_angle_not_supported(self):
         """Test changing angle on cover wich does not support angle."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'Children.Venetian',
@@ -318,7 +318,7 @@ class TestCover(unittest.TestCase):
     #
     def test_process(self):
         """Test process / reading telegrams from telegram queue. Test if position is processed correctly."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',
@@ -332,7 +332,7 @@ class TestCover(unittest.TestCase):
 
     def test_process_angle(self):
         """Test process / reading telegrams from telegram queue. Test if position is processed correctly."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',
@@ -347,7 +347,7 @@ class TestCover(unittest.TestCase):
     def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback is executed."""
         # pylint: disable=no-self-use
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',
@@ -373,7 +373,7 @@ class TestCover(unittest.TestCase):
     #
     def test_is_traveling(self):
         """Test moving cover to absolute position."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',
@@ -409,7 +409,7 @@ class TestCover(unittest.TestCase):
     #
     def test_auto_stop(self):
         """Test auto stop functionality."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',
@@ -441,7 +441,7 @@ class TestCover(unittest.TestCase):
         async def async_none():
             return None
 
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover')
@@ -468,7 +468,7 @@ class TestCover(unittest.TestCase):
 
     def test_wrong_do(self):
         """Test wrong do command."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover')
@@ -482,7 +482,7 @@ class TestCover(unittest.TestCase):
     #
     def test_state_addresses(self):
         """Test state addresses of cover."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',
@@ -496,7 +496,7 @@ class TestCover(unittest.TestCase):
 
     def test_state_addresses_while_travelling(self):
         """Test state addresses of cover while travelling."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',
@@ -518,7 +518,7 @@ class TestCover(unittest.TestCase):
     #
     def test_has_group_address(self):
         """Test sensor has group address."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover',

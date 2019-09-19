@@ -22,7 +22,7 @@ class TestStateupdater(unittest.TestCase):
 
     def test_state_updater(self):
         """Test State updater."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name='TestLight',

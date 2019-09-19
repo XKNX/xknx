@@ -130,6 +130,6 @@ class TestRemoteValueScaling(unittest.TestCase):
 
     def test_value_unit(self):
         """Test for the unit_of_measurement."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueScaling(xknx)
         self.assertEqual(remote_value.unit_of_measurement, "%")

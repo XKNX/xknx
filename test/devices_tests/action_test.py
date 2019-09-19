@@ -25,7 +25,7 @@ class TestAction(unittest.TestCase):
     #
     def test_counter(self):
         """Test counter method."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         action = ActionBase(xknx, counter=2)
         self.assertTrue(action.test_counter(None))
         self.assertFalse(action.test_counter(1))
@@ -34,7 +34,7 @@ class TestAction(unittest.TestCase):
 
     def test_no_counter(self):
         """Test counter method with no counter set."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         action = ActionBase(xknx, counter=None)
         self.assertTrue(action.test_counter(None))
         self.assertTrue(action.test_counter(1))
@@ -46,7 +46,7 @@ class TestAction(unittest.TestCase):
     #
     def test_if_applicable_hook_on(self):
         """Test test_if_applicable method with hook set to 'on'."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         action = ActionBase(xknx, counter=2, hook="on")
         self.assertTrue(action.test_if_applicable(
             BinarySensorState.ON, 2))
@@ -57,7 +57,7 @@ class TestAction(unittest.TestCase):
 
     def test_if_applicable_hook_off(self):
         """Test test_if_applicable method with hook set to 'off'."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         action = ActionBase(xknx, counter=2, hook="off")
         self.assertTrue(action.test_if_applicable(
             BinarySensorState.OFF, 2))
@@ -71,7 +71,7 @@ class TestAction(unittest.TestCase):
     #
     def test_execute_base_action(self):
         """Test if execute method of BaseAction shows correct info message."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         action = ActionBase(xknx)
         with patch('logging.Logger.info') as mock_info:
             self.loop.run_until_complete(asyncio.Task(action.execute()))
@@ -79,7 +79,7 @@ class TestAction(unittest.TestCase):
 
     def test_execute_action(self):
         """Test if execute method of Action calls correct do method of device."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             'Light1',
@@ -95,7 +95,7 @@ class TestAction(unittest.TestCase):
 
     def test_execute_action_callback(self):
         """Test if execute method of ActionCallback calls correct callback method."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         callback = Mock()
 
         async def async_callback():
@@ -108,7 +108,7 @@ class TestAction(unittest.TestCase):
 
     def test_execute_unknown_device(self):
         """Test if execute method of Action calls correct do method of device."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         action = Action(xknx, target='Light1', method='on')
         with patch('logging.Logger.warning') as logger_warning_mock:

@@ -28,7 +28,7 @@ class TestScene(unittest.TestCase):
     #
     def test_sync(self):
         """Test sync function / sending group reads to KNX bus."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         scene = Scene(
             xknx,
             'TestScene',
@@ -42,7 +42,7 @@ class TestScene(unittest.TestCase):
     #
     def test_run(self):
         """Test running scene."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         scene = Scene(
             xknx,
             'TestScene',
@@ -56,7 +56,7 @@ class TestScene(unittest.TestCase):
 
     def test_do(self):
         """Test running scene with do command."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         scene = Scene(
             xknx,
             'TestScene',
@@ -70,7 +70,7 @@ class TestScene(unittest.TestCase):
 
     def test_wrong_do(self):
         """Test wrong do command."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         scene = Scene(
             xknx,
             'TestScene',
@@ -86,7 +86,7 @@ class TestScene(unittest.TestCase):
     #
     def test_has_group_address(self):
         """Test has_group_address."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         scene = Scene(
             xknx,
             'TestScene',

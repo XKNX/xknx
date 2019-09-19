@@ -25,7 +25,7 @@ class TestExposeSensor(unittest.TestCase):
     #
     def test_str_binary(self):
         """Test resolve state with binary sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx,
             'TestSensor',
@@ -38,7 +38,7 @@ class TestExposeSensor(unittest.TestCase):
 
     def test_str_percent(self):
         """Test resolve state with percent sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx,
             'TestSensor',
@@ -51,7 +51,7 @@ class TestExposeSensor(unittest.TestCase):
 
     def test_str_temperature(self):
         """Test resolve state with temperature sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx,
             'TestSensor',
@@ -67,7 +67,7 @@ class TestExposeSensor(unittest.TestCase):
     #
     def test_set_binary(self):
         """Test set with binary sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx,
             'TestSensor',
@@ -85,7 +85,7 @@ class TestExposeSensor(unittest.TestCase):
 
     def test_set_percent(self):
         """Test set with percent sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx,
             'TestSensor',
@@ -104,7 +104,7 @@ class TestExposeSensor(unittest.TestCase):
 
     def test_set_temperature(self):
         """Test set with temperature sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx,
             'TestSensor',
@@ -125,7 +125,7 @@ class TestExposeSensor(unittest.TestCase):
     #
     def test_process_binary(self):
         """Test reading binary expose sensor from bus."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx,
             'TestSensor',
@@ -147,7 +147,7 @@ class TestExposeSensor(unittest.TestCase):
 
     def test_process_percent(self):
         """Test reading percent expose sensor from bus."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx,
             'TestSensor',
@@ -169,7 +169,7 @@ class TestExposeSensor(unittest.TestCase):
 
     def test_process_temperature(self):
         """Test reading temperature expose sensor from bus."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx,
             'TestSensor',
@@ -194,7 +194,7 @@ class TestExposeSensor(unittest.TestCase):
     #
     def test_has_group_address(self):
         """Test expose sensor has group address."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx,
             'TestSensor',
@@ -208,7 +208,7 @@ class TestExposeSensor(unittest.TestCase):
     #
     def test_state_addresses(self):
         """Test expose sensor returns empty list as state addresses."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx,
             'TestSensor',
@@ -222,7 +222,7 @@ class TestExposeSensor(unittest.TestCase):
     def test_process_callback(self):
         """Test setting value. Test if callback is called."""
         # pylint: disable=no-self-use
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx,
             'TestSensor',

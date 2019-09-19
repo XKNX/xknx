@@ -26,7 +26,7 @@ class Test_KNXIP_ConnStateReq(unittest.TestCase):
         """Test parsing and streaming connection state request KNX/IP packet."""
         raw = ((0x06, 0x10, 0x02, 0x07, 0x00, 0x10, 0x15, 0x00,
                 0x08, 0x01, 0xC0, 0xA8, 0xC8, 0x0C, 0xC3, 0xB4))
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 
@@ -50,7 +50,7 @@ class Test_KNXIP_ConnStateReq(unittest.TestCase):
     def test_from_knx_wrong_info(self):
         """Test parsing and streaming wrong ConnectionStateRequest."""
         raw = ((0x06, 0x10, 0x02, 0x07, 0x00, 0x010))
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         with self.assertRaises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)

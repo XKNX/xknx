@@ -21,7 +21,7 @@ class TestRemoteValueSensor(unittest.TestCase):
 
     def test_wrong_value_type(self):
         """Test initializing with wrong value_type."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         with self.assertRaises(ConversionError):
             RemoteValueSensor(xknx=xknx, value_type="wrong_value_type")
 

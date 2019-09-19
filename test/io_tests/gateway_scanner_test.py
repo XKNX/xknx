@@ -87,7 +87,7 @@ class TestGatewayScanner(unittest.TestCase):
     def test_search_response_reception(self):
         """Test function of gateway scanner."""
         # pylint: disable=protected-access
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         gateway_scanner = GatewayScanner(xknx)
         test_search_response = fake_router_search_response(xknx)
         udp_client_mock = unittest.mock.create_autospec(UDPClient)
@@ -103,7 +103,7 @@ class TestGatewayScanner(unittest.TestCase):
     def test_scan_timeout(self, netifaces_mock):
         """Test gateway scanner timeout."""
         # pylint: disable=protected-access
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         # No interface shall be found
         netifaces_mock.interfaces.return_value = []
 
@@ -124,7 +124,7 @@ class TestGatewayScanner(unittest.TestCase):
     def test_send_search_requests(self, _search_interface_mock, netifaces_mock):
         """Test finding all valid interfaces to send search requests to. No requests are sent."""
         # pylint: disable=protected-access
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         netifaces_mock.interfaces.return_value = self.fake_interfaces
         netifaces_mock.ifaddresses = lambda interface: self.fake_ifaddresses[interface]

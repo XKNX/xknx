@@ -27,7 +27,7 @@ class TestNotification(unittest.TestCase):
     #
     def test_sync_state(self):
         """Test sync function / sending group reads to KNX bus."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         notification = Notification(
             xknx,
             "Warning",
@@ -44,7 +44,7 @@ class TestNotification(unittest.TestCase):
     #
     def test_process(self):
         """Test process telegram with notification. Test if device was updated."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         notification = Notification(xknx, 'Warning', group_address='1/2/3')
         telegram_set = Telegram(GroupAddress('1/2/3'),
                                 payload=DPTArray(DPTString().to_knx("Ein Prosit!")))
@@ -59,7 +59,7 @@ class TestNotification(unittest.TestCase):
     def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
         # pylint: disable=no-self-use
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         notification = Notification(xknx, 'Warning', group_address='1/2/3')
         after_update_callback = Mock()
 
@@ -76,7 +76,7 @@ class TestNotification(unittest.TestCase):
     def test_process_payload_invalid_length(self):
         """Test process wrong telegram (wrong payload length)."""
         # pylint: disable=invalid-name
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         notification = Notification(xknx, 'Warning', group_address='1/2/3')
         telegram = Telegram(GroupAddress('1/2/3'), payload=DPTArray((23, 24)))
         with self.assertRaises(CouldNotParseTelegram):
@@ -84,7 +84,7 @@ class TestNotification(unittest.TestCase):
 
     def test_process_wrong_payload(self):
         """Test process wrong telegram (wrong payload type)."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         notification = Notification(xknx, 'Warning', group_address='1/2/3')
         telegram = Telegram(GroupAddress('1/2/3'), payload=DPTBinary(1))
         with self.assertRaises(CouldNotParseTelegram):
@@ -95,7 +95,7 @@ class TestNotification(unittest.TestCase):
     #
     def test_set(self):
         """Test notificationing off notification."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         notification = Notification(xknx, 'Warning', group_address='1/2/3')
         self.loop.run_until_complete(asyncio.Task(notification.set("Ein Prosit!")))
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -109,14 +109,14 @@ class TestNotification(unittest.TestCase):
     #
     def test_do(self):
         """Test 'do' functionality."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         notification = Notification(xknx, 'Warning', group_address='1/2/3')
         self.loop.run_until_complete(asyncio.Task(notification.do("message:Ein Prosit!")))
         self.assertEqual(notification.message, "Ein Prosit!")
 
     def test_wrong_do(self):
         """Test wrong do command."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         notification = Notification(xknx, 'Warning', group_address='1/2/3')
         with patch('logging.Logger.warning') as mock_warn:
             self.loop.run_until_complete(asyncio.Task(notification.do("execute")))
@@ -128,7 +128,7 @@ class TestNotification(unittest.TestCase):
     #
     def test_state_addresses(self):
         """Test expose sensor returns empty list as state addresses."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         notification_1 = Notification(xknx, 'Warning', group_address='1/2/3', group_address_state='1/2/4')
         notification_2 = Notification(xknx, 'Warning', group_address='1/2/5')
         self.assertEqual(notification_1.state_addresses(), [GroupAddress('1/2/4')])
@@ -139,7 +139,7 @@ class TestNotification(unittest.TestCase):
     #
     def test_has_group_address(self):
         """Test has_group_address."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         notification = Notification(xknx, 'Warning', group_address='1/2/3', group_address_state='1/2/4')
         self.assertTrue(notification.has_group_address(GroupAddress('1/2/3')))
         self.assertTrue(notification.has_group_address(GroupAddress('1/2/4')))

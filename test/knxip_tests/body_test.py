@@ -23,7 +23,7 @@ class Test_KNXIPBody(unittest.TestCase):
 
     def test_warn_calculated_length(self):
         """Test correct warn message if calculated_length is missing."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         body = KNXIPBody(xknx)
         with patch('logging.Logger.warning') as mock_warn:
             body.calculated_length()
@@ -31,7 +31,7 @@ class Test_KNXIPBody(unittest.TestCase):
 
     def test_warn_to_knx(self):
         """Test correct warn message if to_knx is missing."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         body = KNXIPBody(xknx)
         with patch('logging.Logger.warning') as mock_warn:
             body.to_knx()
@@ -39,7 +39,7 @@ class Test_KNXIPBody(unittest.TestCase):
 
     def test_warn_from_knx(self):
         """Test correct warn message if from_knx is missing."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         body = KNXIPBody(xknx)
         with patch('logging.Logger.warning') as mock_warn:
             body.from_knx((0x75, 0x0B, 0x1C, 0x17, 0x07, 0x18, 0x00, 0x00))

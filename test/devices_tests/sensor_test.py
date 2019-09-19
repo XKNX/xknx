@@ -25,7 +25,7 @@ class TestSensor(unittest.TestCase):
     #
     def test_str_scaling(self):
         """Test resolve state with percent sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -39,7 +39,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_speed_ms(self):
         """Test resolve state with speed_ms sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -53,7 +53,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_temp(self):
         """Test resolve state with temperature sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -67,7 +67,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_humidity(self):
         """Test resolve state with humidity sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -81,7 +81,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_power(self):
         """Test resolve state with power sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -95,7 +95,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_electric_potential(self):
         """Test resolve state with voltage sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -111,7 +111,7 @@ class TestSensor(unittest.TestCase):
     #
     def test_sync(self):
         """Test sync function / sending group reads to KNX bus."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -128,7 +128,7 @@ class TestSensor(unittest.TestCase):
 
     def test_sync_passive(self):
         """Test sync function / not sending group reads to KNX bus."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -148,7 +148,7 @@ class TestSensor(unittest.TestCase):
     #
     def test_has_group_address(self):
         """Test sensor has group address."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -162,7 +162,7 @@ class TestSensor(unittest.TestCase):
     #
     def test_state_addresses(self):
         """Test state addresses of sensor object."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -172,7 +172,7 @@ class TestSensor(unittest.TestCase):
 
     def test_state_addresses_passive(self):
         """Test state addresses of passive sensor object."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -186,7 +186,7 @@ class TestSensor(unittest.TestCase):
     #
     def test_process(self):
         """Test process / reading telegrams from telegram queue."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -202,7 +202,7 @@ class TestSensor(unittest.TestCase):
     def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
         # pylint: disable=no-self-use
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',

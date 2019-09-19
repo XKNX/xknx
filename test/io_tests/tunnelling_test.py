@@ -24,7 +24,7 @@ class TestTunnelling(unittest.TestCase):
     def test_tunnelling(self):
         """Test tunnelling from KNX bus."""
         # pylint: disable=too-many-locals
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         communication_channel_id = 23
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
         telegram = Telegram(GroupAddress('1/2/3'), payload=DPTArray((0x1, 0x2, 0x3)))

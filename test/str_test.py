@@ -37,7 +37,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_remote_value(self):
         """Test string representation of remote value."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValue(
             xknx,
             group_address='1/2/3',
@@ -53,7 +53,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_binary_sensor(self):
         """Test string representation of binary sensor object."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         binary_sensor = BinarySensor(
             xknx,
             name='Fnord',
@@ -65,7 +65,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_climate(self):
         """Test string representation of climate object."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         climate = Climate(
             xknx,
             name="Wohnzimmer",
@@ -88,7 +88,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_climate_mode(self):
         """Test string representation of climate mode object."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
             name="Wohnzimmer Mode",
@@ -110,7 +110,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_cover(self):
         """Test string representation of cover object."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cover = Cover(
             xknx,
             name='Rolladen',
@@ -130,7 +130,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_fan(self):
         """Test string representation of fan object."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         fan = Fan(
             xknx,
             name='Dunstabzug',
@@ -142,7 +142,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_light(self):
         """Test string representation of non dimmable light object."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name='Licht',
@@ -154,7 +154,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_light_dimmable(self):
         """Test string representation of dimmable light object."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name='Licht',
@@ -169,7 +169,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_light_color(self):
         """Test string representation of dimmable light object."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name='Licht',
@@ -185,7 +185,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_notification(self):
         """Test string representation of notification object."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         notification = Notification(
             xknx,
             name='Alarm',
@@ -202,7 +202,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_scene(self):
         """Test string representation of scene object."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         scene = Scene(
             xknx,
             name='Romantic',
@@ -214,7 +214,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_sensor(self):
         """Test string representation of sensor object."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             name='MeinSensor',
@@ -234,7 +234,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_expose_sensor(self):
         """Test string representation of expose sensor object."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = ExposeSensor(
             xknx,
             name='MeinSensor',
@@ -250,7 +250,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_switch(self):
         """Test string representation of switch object."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         switch = Switch(
             xknx,
             name="Schalter",
@@ -262,7 +262,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_datetime(self):
         """Test string representation of datetime object."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         dateTime = DateTime(
             xknx,
             name="Zeit",
@@ -273,7 +273,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_action_base(self):
         """Test string representation of action base."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         action_base = ActionBase(
             xknx,
             hook='off',
@@ -284,7 +284,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_action(self):
         """Test string representation of action."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         action = Action(
             xknx,
             hook="on",
@@ -297,7 +297,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_action_callback(self):
         """Test string representation of action callback."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         def cb():
             """Callback."""
@@ -446,7 +446,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_header(self):
         """Test string representation of KNX/IP-Header."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         header = KNXIPHeader(xknx)
         header.total_length = 42
         self.assertEqual(
@@ -456,7 +456,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_connect_request(self):
         """Test string representation of KNX/IP ConnectRequest."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         connect_request = ConnectRequest(xknx)
         connect_request.request_type = ConnectRequestType.TUNNEL_CONNECTION
         connect_request.control_endpoint = HPAI(ip_addr='192.168.42.1', port=33941)
@@ -468,7 +468,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_connect_response(self):
         """Test string representatoin of KNX/IP ConnectResponse."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         connect_response = ConnectResponse(xknx)
         connect_response.communication_channel = 13
         connect_response.request_type = ConnectRequestType.TUNNEL_CONNECTION
@@ -481,7 +481,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_disconnect_request(self):
         """Test string representation of KNX/IP DisconnectRequest."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         disconnect_request = DisconnectRequest(xknx)
         disconnect_request.communication_channel_id = 13
         disconnect_request.control_endpoint = HPAI(ip_addr='192.168.42.1', port=33941)
@@ -491,7 +491,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_disconnect_response(self):
         """Test string representation of KNX/IP DisconnectResponse."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         disconnect_response = DisconnectResponse(xknx)
         disconnect_response.communication_channel_id = 23
         self.assertEqual(
@@ -500,7 +500,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_connectionstate_request(self):
         """Test string representation of KNX/IP ConnectionStateRequest."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         connectionstate_request = ConnectionStateRequest(xknx)
         connectionstate_request.communication_channel_id = 23
         connectionstate_request.control_endpoint = HPAI(ip_addr='192.168.42.1', port=33941)
@@ -510,7 +510,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_connectionstate_response(self):
         """Test string representation of KNX/IP ConnectionStateResponse."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         connectionstate_response = ConnectionStateResponse(xknx)
         connectionstate_response.communication_channel_id = 23
         self.assertEqual(
@@ -519,7 +519,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_search_reqeust(self):
         """Test string representation of KNX/IP SearchRequest."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         search_request = SearchRequest(xknx)
         self.assertEqual(
             str(search_request),
@@ -527,7 +527,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_search_response(self):
         """Test string representation of KNX/IP SearchResponse."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         search_response = SearchResponse(xknx)
         search_response.control_endpoint = HPAI(ip_addr='192.168.42.1', port=33941)
         search_response.dibs.append(DIBGeneric())
@@ -541,7 +541,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_tunnelling_request(self):
         """Test string representation of KNX/IP TunnellingRequest."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         tunnelling_request = TunnellingRequest(xknx)
         tunnelling_request.communication_channel_id = 23
         tunnelling_request.sequence_counter = 42
@@ -552,7 +552,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_tunnelling_ack(self):
         """Test string representation of KNX/IP TunnellingAck."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         tunnelling_ack = TunnellingAck(xknx)
         tunnelling_ack.communication_channel_id = 23
         tunnelling_ack.sequence_counter = 42
@@ -562,7 +562,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_cemi_frame(self):
         """Test string representation of KNX/IP CEMI Frame."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         cemi_frame = CEMIFrame(xknx)
         cemi_frame.src_addr = GroupAddress("1/2/3")
         cemi_frame.telegram = Telegram(
@@ -575,7 +575,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_knxip_frame(self):
         """Test string representation of KNX/IP Frame."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.init(KNXIPServiceType.SEARCH_REQUEST)
         self.assertEqual(

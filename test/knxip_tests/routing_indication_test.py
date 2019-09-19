@@ -28,7 +28,7 @@ class Test_KNXIP(unittest.TestCase):
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x12, 0x29, 0x00,
                 0xbc, 0xd0, 0x12, 0x02, 0x01, 0x51, 0x02, 0x00,
                 0x40, 0xf0))
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 
@@ -45,7 +45,7 @@ class Test_KNXIP(unittest.TestCase):
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x12, 0x29, 0x00,
                 0xbc, 0xd0, 0x12, 0x02, 0x01, 0x51, 0x02, 0x00,
                 0x40, 0xf0))
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 
@@ -57,7 +57,7 @@ class Test_KNXIP(unittest.TestCase):
 
     def test_telegram_set(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet with DPTArray/DPTTime as payload."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
         knxipframe.body.src_addr = PhysicalAddress("1.2.2")
@@ -86,7 +86,7 @@ class Test_KNXIP(unittest.TestCase):
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x12, 0x29, 0x00,
                 0xbc, 0xd0, 0x12, 0x02, 0x01, 0x51, 0x02, 0x00,
                 0x40, 0xf0))
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 
@@ -111,7 +111,7 @@ class Test_KNXIP(unittest.TestCase):
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x11, 0x29, 0x00,
                 0xbc, 0xd0, 0xff, 0xf9, 0x01, 0x49, 0x01, 0x00,
                 0x81))
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
         telegram = knxipframe.body.telegram
@@ -135,7 +135,7 @@ class Test_KNXIP(unittest.TestCase):
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x11, 0x29, 0x00,
                 0xbc, 0xd0, 0xff, 0xf9, 0x01, 0x49, 0x01, 0x00,
                 0x80))
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
         telegram = knxipframe.body.telegram
@@ -159,7 +159,7 @@ class Test_KNXIP(unittest.TestCase):
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x12, 0x29, 0x00,
                 0xbc, 0xd0, 0xff, 0xf9, 0x01, 0x4b, 0x02, 0x00,
                 0x80, 0x65))
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
         telegram = knxipframe.body.telegram
@@ -183,7 +183,7 @@ class Test_KNXIP(unittest.TestCase):
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x13, 0x29, 0x00,
                 0xbc, 0xd0, 0x14, 0x02, 0x08, 0x01, 0x03, 0x00,
                 0x80, 0x07, 0xc1))
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
         telegram = knxipframe.body.telegram
@@ -209,7 +209,7 @@ class Test_KNXIP(unittest.TestCase):
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x11, 0x29, 0x00,
                 0xbc, 0xd0, 0xff, 0xf9, 0x01, 0xb8, 0x01, 0x00,
                 0x00))
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
         telegram = knxipframe.body.telegram
@@ -233,7 +233,7 @@ class Test_KNXIP(unittest.TestCase):
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x11, 0x29, 0x00,
                 0xbc, 0xd0, 0x13, 0x01, 0x01, 0x88, 0x01, 0x00,
                 0x41))
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
         telegram = knxipframe.body.telegram
@@ -258,7 +258,7 @@ class Test_KNXIP(unittest.TestCase):
         telegram = Telegram()
         telegram.group_address = GroupAddress(337)
         telegram.payload = DPTBinary(DPTBinary.APCI_MAX_VALUE)
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
         knxipframe.body.src_addr = PhysicalAddress("1.3.1")

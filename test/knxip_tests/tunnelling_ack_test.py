@@ -25,7 +25,7 @@ class Test_KNXIP_TunnelingReq(unittest.TestCase):
         """Test parsing and streaming tunneling ACK KNX/IP packet."""
         raw = ((0x06, 0x10, 0x04, 0x21, 0x00, 0x0a, 0x04, 0x2a,
                 0x17, 0x00))
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 
@@ -48,7 +48,7 @@ class Test_KNXIP_TunnelingReq(unittest.TestCase):
         """Test parsing and streaming wrong TunnellingAck (wrong length byte)."""
         raw = ((0x06, 0x10, 0x04, 0x21, 0x00, 0x0a, 0x03, 0x2a,
                 0x17, 0x00))
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         with self.assertRaises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
@@ -57,7 +57,7 @@ class Test_KNXIP_TunnelingReq(unittest.TestCase):
         """Test parsing and streaming wrong TunnellingAck (wrong length)."""
         raw = ((0x06, 0x10, 0x04, 0x21, 0x00, 0x0a, 0x04, 0x2a,
                 0x17))
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         with self.assertRaises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
