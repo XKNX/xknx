@@ -59,7 +59,7 @@ class TestExposeSensor(unittest.TestCase):
     #
     # TEST SET
     #
-    def test_set_binary(self):
+    async def test_set_binary(self):
         """Test set with binary sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -77,7 +77,7 @@ class TestExposeSensor(unittest.TestCase):
                 TelegramType.GROUP_WRITE,
                 payload=DPTBinary(0)))
 
-    def test_set_percent(self):
+    async def test_set_percent(self):
         """Test set with percent sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -96,7 +96,7 @@ class TestExposeSensor(unittest.TestCase):
                 TelegramType.GROUP_WRITE,
                 payload=DPTArray((0xBF,))))
 
-    def test_set_temperature(self):
+    async def test_set_temperature(self):
         """Test set with temperature sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -117,7 +117,7 @@ class TestExposeSensor(unittest.TestCase):
     #
     # TEST PROCESS (GROUP READ)
     #
-    def test_process_binary(self):
+    async def test_process_binary(self):
         """Test reading binary expose sensor from bus."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -139,7 +139,7 @@ class TestExposeSensor(unittest.TestCase):
                 TelegramType.GROUP_RESPONSE,
                 payload=DPTArray(True)))
 
-    def test_process_percent(self):
+    async def test_process_percent(self):
         """Test reading percent expose sensor from bus."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -161,7 +161,7 @@ class TestExposeSensor(unittest.TestCase):
                 TelegramType.GROUP_RESPONSE,
                 payload=DPTArray((0x40, ))))
 
-    def test_process_temperature(self):
+    async def test_process_temperature(self):
         """Test reading temperature expose sensor from bus."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -213,7 +213,7 @@ class TestExposeSensor(unittest.TestCase):
     #
     # PROCESS CALLBACK
     #
-    def test_process_callback(self):
+    async def test_process_callback(self):
         """Test setting value. Test if callback is called."""
         # pylint: disable=no-self-use
         xknx = XKNX()

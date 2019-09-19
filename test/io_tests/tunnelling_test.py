@@ -15,7 +15,7 @@ from xknx.knxip import ErrorCode, KNXIPFrame, KNXIPServiceType, TunnellingAck
 class TestTunnelling(unittest.TestCase):
     """Test class for xknx/io/Tunnelling objects."""
 
-    def test_tunnelling(self):
+    async def test_tunnelling(self):
         """Test tunnelling from KNX bus."""
         # pylint: disable=too-many-locals
         xknx = XKNX()

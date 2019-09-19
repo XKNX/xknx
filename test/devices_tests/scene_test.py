@@ -20,7 +20,7 @@ class TestScene(unittest.TestCase):
     #
     # SYNC
     #
-    def test_sync(self):
+    async def test_sync(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         scene = Scene(
@@ -34,7 +34,7 @@ class TestScene(unittest.TestCase):
     #
     # TEST RUN SCENE
     #
-    def test_run(self):
+    async def test_run(self):
         """Test running scene."""
         xknx = XKNX()
         scene = Scene(
@@ -48,7 +48,7 @@ class TestScene(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/1'), payload=DPTArray(0x16)))
 
-    def test_do(self):
+    async def test_do(self):
         """Test running scene with do command."""
         xknx = XKNX()
         scene = Scene(
@@ -62,7 +62,7 @@ class TestScene(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/1'), payload=DPTArray(0x16)))
 
-    def test_wrong_do(self):
+    async def test_wrong_do(self):
         """Test wrong do command."""
         xknx = XKNX()
         scene = Scene(

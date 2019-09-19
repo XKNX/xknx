@@ -21,7 +21,7 @@ class TestDevice(unittest.TestCase):
         device = Device(xknx, 'TestDevice')
         self.assertEqual(device.state_addresses(), [])
 
-    def test_process_callback(self):
+    async def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
         xknx = XKNX()
         device = Device(xknx, 'TestDevice')
@@ -68,7 +68,7 @@ class TestDevice(unittest.TestCase):
         after_update_callback1.assert_not_called()
         after_update_callback2.assert_not_called()
 
-    def test_process(self):
+    async def test_process(self):
         """Test if telegram is handled by the correct process_* method."""
         xknx = XKNX()
         device = Device(xknx, 'TestDevice')
@@ -106,13 +106,13 @@ class TestDevice(unittest.TestCase):
             await asyncio.Task(device.process(telegram))
             mock_group_response.assert_called_with(telegram)
 
-    def test_process_group_write(self):
+    async def test_process_group_write(self):
         """Test if process_group_write. Nothing really to test here."""
         xknx = XKNX()
         device = Device(xknx, 'TestDevice')
         await asyncio.Task(device.process_group_write(Telegram()))
 
-    def test_process_group_response(self):
+    async def test_process_group_response(self):
         """Test if process_group_read. Testing if mapped to group_write."""
         xknx = XKNX()
         device = Device(xknx, 'TestDevice')
@@ -123,13 +123,13 @@ class TestDevice(unittest.TestCase):
             await asyncio.Task(device.process_group_response(Telegram()))
             mock_group_write.assert_called_with(Telegram())
 
-    def test_process_group_read(self):
+    async def test_process_group_read(self):
         """Test if process_group_read. Nothing really to test here."""
         xknx = XKNX()
         device = Device(xknx, 'TestDevice')
         await asyncio.Task(device.process_group_read(Telegram()))
 
-    def test_sync_exception(self):
+    async def test_sync_exception(self):
         """Testing exception handling within sync()."""
         # pylint: disable=protected-access
         xknx = XKNX()
@@ -145,7 +145,7 @@ class TestDevice(unittest.TestCase):
                 mock_sync_impl.assert_called_with(True)
                 mock_error.assert_called_with('Error while syncing device: %s', XKNXException())
 
-    def test_do(self):
+    async def test_do(self):
         """Testing empty do."""
         xknx = XKNX()
         device = Device(xknx, 'TestDevice')
@@ -156,7 +156,7 @@ class TestDevice(unittest.TestCase):
     #
     # _SYNC_IMPL()
     #
-    def test_sync_no_response(self):
+    async def test_sync_no_response(self):
         """Testing _sync_impl() method with ValueReader returning no telegram as response."""
         # pylint: disable=protected-access
         xknx = XKNX()
@@ -172,7 +172,7 @@ class TestDevice(unittest.TestCase):
                     mock_warn.assert_called_with("Could not sync group address '%s' from %s",
                                                  GroupAddress('1/2/3'), device)
 
-    def test_sync_not_wait_for_response(self):
+    async def test_sync_not_wait_for_response(self):
         """Testing _sync_impl() method without waiting for response (send_group_read should be called directly)."""
         # pylint: disable=protected-access
         xknx = XKNX()
@@ -186,7 +186,7 @@ class TestDevice(unittest.TestCase):
                 await asyncio.Task(device._sync_impl(wait_for_result=False))
                 mock_value_reader_group_read.assert_called_with()
 
-    def test_sync_valid_response(self):
+    async def test_sync_valid_response(self):
         """Testing _sync_imp() method with ValueReader.read returning a Telegram - which should be processed."""
         # pylint: disable=protected-access
         xknx = XKNX()

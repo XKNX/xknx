@@ -20,7 +20,7 @@ class TestFan(unittest.TestCase):
     #
     # SYNC
     #
-    def test_sync(self):
+    async def test_sync(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         fan = Fan(xknx,
@@ -37,7 +37,7 @@ class TestFan(unittest.TestCase):
     #
     # SYNC WITH STATE ADDRESS
     #
-    def test_sync_state_address(self):
+    async def test_sync_state_address(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         fan = Fan(xknx,
@@ -56,7 +56,7 @@ class TestFan(unittest.TestCase):
     #
     # TEST SET SPEED
     #
-    def test_set_speed(self):
+    async def test_set_speed(self):
         """Test setting the speed of a Fan."""
         xknx = XKNX()
         fan = Fan(xknx,
@@ -72,7 +72,7 @@ class TestFan(unittest.TestCase):
     #
     # TEST PROCESS
     #
-    def test_process_speed(self):
+    async def test_process_speed(self):
         """Test process / reading telegrams from telegram queue. Test if speed is processed."""
         xknx = XKNX()
         fan = Fan(xknx,
@@ -85,7 +85,7 @@ class TestFan(unittest.TestCase):
         await asyncio.Task(fan.process(telegram))
         self.assertEqual(fan.current_speed, 55)
 
-    def test_process_speed_wrong_payload(self):  # pylint: disable=invalid-name
+    async def test_process_speed_wrong_payload(self):  # pylint: disable=invalid-name
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
         fan = Fan(xknx,
@@ -95,7 +95,7 @@ class TestFan(unittest.TestCase):
         with self.assertRaises(CouldNotParseTelegram):
             await asyncio.Task(fan.process(telegram))
 
-    def test_process_fan_payload_invalid_length(self):
+    async def test_process_fan_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
         # pylint: disable=invalid-name
         xknx = XKNX()
@@ -109,7 +109,7 @@ class TestFan(unittest.TestCase):
     #
     # TEST DO
     #
-    def test_do(self):
+    async def test_do(self):
         """Test 'do' functionality."""
         xknx = XKNX()
         fan = Fan(xknx,
@@ -120,7 +120,7 @@ class TestFan(unittest.TestCase):
         await asyncio.Task(fan.do("speed:25"))
         self.assertEqual(fan.current_speed, 25)
 
-    def test_wrong_do(self):
+    async def test_wrong_do(self):
         """Test wrong do command."""
         xknx = XKNX()
         fan = Fan(xknx,

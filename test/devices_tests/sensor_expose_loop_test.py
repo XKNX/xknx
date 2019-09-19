@@ -15,7 +15,7 @@ from xknx.knx import (
 class SensorExposeLoopTest(unittest.TestCase):
     """Process incoming Telegrams and send the values to the bus again."""
 
-    def test_array_sensor_loop(self):
+    async def test_array_sensor_loop(self):
         """Test sensor and expose_sensor with different values."""
         test_cases = [
             ('angle', DPTArray((0x0B)), 16),
@@ -114,7 +114,7 @@ class SensorExposeLoopTest(unittest.TestCase):
                         direction=TelegramDirection.OUTGOING,
                         payload=test_payload))
 
-    def test_binary_sensor_loop(self):
+    async def test_binary_sensor_loop(self):
         """Test binary_sensor and expose_sensor with binary values."""
         test_cases = [
             ('binary', DPTBinary(0), False),

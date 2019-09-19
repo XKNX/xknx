@@ -49,7 +49,7 @@ class TestRemoteValueStep(unittest.TestCase):
         with self.assertRaises(ConversionError):
             remote_value.to_knx(1)
 
-    def test_set(self):
+    async def test_set(self):
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValueStep(
@@ -72,7 +72,7 @@ class TestRemoteValueStep(unittest.TestCase):
                 GroupAddress('1/2/3'),
                 payload=DPTBinary(0)))
 
-    def test_process(self):
+    async def test_process(self):
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueStep(
@@ -85,7 +85,7 @@ class TestRemoteValueStep(unittest.TestCase):
         await asyncio.Task(remote_value.process(telegram))
         self.assertEqual(remote_value.value, RemoteValueStep.Direction.DECREASE)
 
-    def test_to_process_error(self):
+    async def test_to_process_error(self):
         """Test process errornous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueStep(

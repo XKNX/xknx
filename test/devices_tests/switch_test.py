@@ -17,7 +17,7 @@ class TestSwitch(unittest.TestCase):
     #
     # SYNC
     #
-    def test_sync(self):
+    async def test_sync(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address_state='1/2/3')
@@ -29,7 +29,7 @@ class TestSwitch(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
 
-    def test_sync_state_address(self):
+    async def test_sync_state_address(self):
         """Test sync function / sending group reads to KNX bus. Test with Switch with explicit state address."""
         xknx = XKNX()
         switch = Switch(xknx, "TestOutlet",
@@ -46,7 +46,7 @@ class TestSwitch(unittest.TestCase):
     #
     # TEST PROCESS
     #
-    def test_process(self):
+    async def test_process(self):
         """Test process / reading telegrams from telegram queue. Test if device was updated."""
         xknx = XKNX()
         switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
@@ -67,7 +67,7 @@ class TestSwitch(unittest.TestCase):
 
         self.assertEqual(switch.state, False)
 
-    def test_process_callback(self):
+    async def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
         # pylint: disable=no-self-use
 
@@ -91,7 +91,7 @@ class TestSwitch(unittest.TestCase):
     #
     # TEST SET ON
     #
-    def test_set_on(self):
+    async def test_set_on(self):
         """Test switching on switch."""
         xknx = XKNX()
         switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
@@ -104,7 +104,7 @@ class TestSwitch(unittest.TestCase):
     #
     # TEST SET OFF
     #
-    def test_set_off(self):
+    async def test_set_off(self):
         """Test switching off switch."""
         xknx = XKNX()
         switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
@@ -117,7 +117,7 @@ class TestSwitch(unittest.TestCase):
     #
     # TEST DO
     #
-    def test_do(self):
+    async def test_do(self):
         """Test 'do' functionality."""
         xknx = XKNX()
         switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
@@ -126,7 +126,7 @@ class TestSwitch(unittest.TestCase):
         await asyncio.Task(switch.do("off"))
         self.assertFalse(switch.state)
 
-    def test_wrong_do(self):
+    async def test_wrong_do(self):
         """Test wrong do command."""
         xknx = XKNX()
         switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')

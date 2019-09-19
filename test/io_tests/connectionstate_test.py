@@ -15,7 +15,7 @@ from xknx.knxip import (
 class TestConnectionState(unittest.TestCase):
     """Test class for xknx/io/ConnectionState objects."""
 
-    def test_connectionstate(self):
+    async def test_connectionstate(self):
         """Test connectionstateing from KNX bus."""
         xknx = XKNX()
         communication_channel_id = 23

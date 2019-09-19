@@ -20,7 +20,7 @@ class TestLight(unittest.TestCase):
     #
     # TEST SUPPORT DIMMING
     #
-    def test_supports_dimm_yes(self):
+    async def test_supports_dimm_yes(self):
         """Test supports_dimm attribute with a light with dimmer."""
         xknx = XKNX()
         light = Light(xknx,
@@ -29,7 +29,7 @@ class TestLight(unittest.TestCase):
                       group_address_brightness='1/6/6')
         self.assertTrue(light.supports_brightness)
 
-    def test_supports_dimm_no(self):
+    async def test_supports_dimm_no(self):
         """Test supports_dimm attribute with a Light without dimmer."""
         xknx = XKNX()
         light = Light(xknx,
@@ -40,7 +40,7 @@ class TestLight(unittest.TestCase):
     #
     # TEST SUPPORT COLOR
     #
-    def test_supports_color_true(self):
+    async def test_supports_color_true(self):
         """Test supports_color true."""
         xknx = XKNX()
         light = Light(
@@ -50,7 +50,7 @@ class TestLight(unittest.TestCase):
             group_address_color='1/6/5')
         self.assertTrue(light.supports_color)
 
-    def test_supports_color_false(self):
+    async def test_supports_color_false(self):
         """Test supports_color false."""
         xknx = XKNX()
         light = Light(
@@ -62,7 +62,7 @@ class TestLight(unittest.TestCase):
     #
     # TEST SUPPORT COLOR RGBW
     #
-    def test_supports_rgbw_true(self):
+    async def test_supports_rgbw_true(self):
         """Test supports_rgbw true."""
         xknx = XKNX()
         light = Light(
@@ -73,7 +73,7 @@ class TestLight(unittest.TestCase):
             group_address_color='1/6/6')
         self.assertTrue(light.supports_rgbw)
 
-    def test_supports_rgbw_false(self):
+    async def test_supports_rgbw_false(self):
         """Test supports_color false."""
         xknx = XKNX()
         light = Light(
@@ -86,7 +86,7 @@ class TestLight(unittest.TestCase):
     #
     # TEST SUPPORT TUNABLE WHITE
     #
-    def test_supports_tw_yes(self):
+    async def test_supports_tw_yes(self):
         """Test supports_tw attribute with a light with tunable white function."""
         xknx = XKNX()
         light = Light(xknx,
@@ -95,7 +95,7 @@ class TestLight(unittest.TestCase):
                       group_address_tunable_white='1/6/6')
         self.assertTrue(light.supports_tunable_white)
 
-    def test_supports_tw_no(self):
+    async def test_supports_tw_no(self):
         """Test supports_tw attribute with a Light without tunable white function."""
         xknx = XKNX()
         light = Light(xknx,
@@ -106,7 +106,7 @@ class TestLight(unittest.TestCase):
     #
     # TEST SUPPORT COLOR TEMPERATURE
     #
-    def test_supports_color_temp_true(self):
+    async def test_supports_color_temp_true(self):
         """Test supports_color_temp attribute with a light with color temperature function."""
         xknx = XKNX()
         light = Light(xknx,
@@ -115,7 +115,7 @@ class TestLight(unittest.TestCase):
                       group_address_color_temperature='1/6/6')
         self.assertTrue(light.supports_color_temperature)
 
-    def test_supports_color_temp_false(self):
+    async def test_supports_color_temp_false(self):
         """Test supports_color_temp attribute with a Light without color temperature function."""
         xknx = XKNX()
         light = Light(xknx,
@@ -126,7 +126,7 @@ class TestLight(unittest.TestCase):
     #
     # SYNC
     #
-    def test_sync(self):
+    async def test_sync(self):
         """Test sync function / sending group reads to KNX bus. Testing with a Light without dimm functionality."""
         xknx = XKNX()
         light = Light(xknx,
@@ -168,7 +168,7 @@ class TestLight(unittest.TestCase):
     #
     # SYNC WITH STATE ADDRESS
     #
-    def test_sync_state_address(self):
+    async def test_sync_state_address(self):
         """Test sync function / sending group reads to KNX bus. Testing with a Light with dimm functionality."""
         xknx = XKNX()
         light = Light(xknx,
@@ -211,7 +211,7 @@ class TestLight(unittest.TestCase):
     #
     # TEST SET ON
     #
-    def test_set_on(self):
+    async def test_set_on(self):
         """Test switching on a Light."""
         xknx = XKNX()
         light = Light(xknx,
@@ -227,7 +227,7 @@ class TestLight(unittest.TestCase):
     #
     # TEST SET OFF
     #
-    def test_set_off(self):
+    async def test_set_off(self):
         """Test switching off a Light."""
         xknx = XKNX()
         light = Light(xknx,
@@ -243,7 +243,7 @@ class TestLight(unittest.TestCase):
     #
     # TEST SET BRIGHTNESS
     #
-    def test_set_brightness(self):
+    async def test_set_brightness(self):
         """Test setting the brightness of a Light."""
         xknx = XKNX()
         light = Light(xknx,
@@ -256,7 +256,7 @@ class TestLight(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/5'), payload=DPTArray(23)))
 
-    def test_set_brightness_not_dimmable(self):
+    async def test_set_brightness_not_dimmable(self):
         """Test setting the brightness of a non dimmable Light."""
         # pylint: disable=invalid-name
         xknx = XKNX()
@@ -271,7 +271,7 @@ class TestLight(unittest.TestCase):
     #
     # TEST SET COLOR
     #
-    def test_set_color(self):
+    async def test_set_color(self):
         """Test setting the color of a Light."""
         xknx = XKNX()
         light = Light(xknx,
@@ -285,7 +285,7 @@ class TestLight(unittest.TestCase):
                          Telegram(GroupAddress('1/2/5'), payload=DPTArray((23, 24, 25))))
         self.assertEqual(light.current_color, ((23, 24, 25), None))
 
-    def test_set_color_not_possible(self):
+    async def test_set_color_not_possible(self):
         """Test setting the color of a non light without color."""
         # pylint: disable=invalid-name
         xknx = XKNX()
@@ -300,7 +300,7 @@ class TestLight(unittest.TestCase):
     #
     # TEST SET COLOR AS RGBW
     #
-    def test_set_color_rgbw(self):
+    async def test_set_color_rgbw(self):
         """Test setting RGBW value of a Light."""
         xknx = XKNX()
         light = Light(xknx,
@@ -315,7 +315,7 @@ class TestLight(unittest.TestCase):
                          Telegram(GroupAddress('1/2/5'), payload=DPTArray((0, 15, 23, 24, 25, 26))))
         self.assertEqual(light.current_color, ([23, 24, 25], 26))
 
-    def test_set_color_rgbw_not_possible(self):
+    async def test_set_color_rgbw_not_possible(self):
         """Test setting RGBW value of a non light without color."""
         # pylint: disable=invalid-name
         xknx = XKNX()
@@ -331,7 +331,7 @@ class TestLight(unittest.TestCase):
     #
     # TEST SET TUNABLE WHITE
     #
-    def test_set_tw(self):
+    async def test_set_tw(self):
         """Test setting the tunable white value of a Light."""
         xknx = XKNX()
         light = Light(xknx,
@@ -344,7 +344,7 @@ class TestLight(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/5'), payload=DPTArray(23)))
 
-    def test_set_tw_unsupported(self):
+    async def test_set_tw_unsupported(self):
         """Test setting the tunable white value of a non tw Light."""
         # pylint: disable=invalid-name
         xknx = XKNX()
@@ -359,7 +359,7 @@ class TestLight(unittest.TestCase):
     #
     # TEST SET COLOR TEMPERATURE
     #
-    def test_set_color_temp(self):
+    async def test_set_color_temp(self):
         """Test setting the color temperature value of a Light."""
         xknx = XKNX()
         light = Light(xknx,
@@ -372,7 +372,7 @@ class TestLight(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/5'), payload=DPTArray((0x0F, 0xA0, ))))
 
-    def test_set_color_temp_unsupported(self):
+    async def test_set_color_temp_unsupported(self):
         """Test setting the color temperature value of an unsupported Light."""
         # pylint: disable=invalid-name
         xknx = XKNX()
@@ -387,7 +387,7 @@ class TestLight(unittest.TestCase):
     #
     # TEST PROCESS
     #
-    def test_process_switch(self):
+    async def test_process_switch(self):
         """Test process / reading telegrams from telegram queue. Test if switch position is processed correctly."""
         xknx = XKNX()
         light = Light(xknx,
@@ -404,7 +404,7 @@ class TestLight(unittest.TestCase):
         await asyncio.Task(light.process(telegram))
         self.assertEqual(light.state, False)
 
-    def test_process_switch_callback(self):
+    async def test_process_switch_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
         # pylint: disable=no-self-use
         xknx = XKNX()
@@ -426,7 +426,7 @@ class TestLight(unittest.TestCase):
 
         after_update_callback.assert_called_with(light)
 
-    def test_process_dimm(self):
+    async def test_process_dimm(self):
         """Test process / reading telegrams from telegram queue. Test if brightness is processed."""
         xknx = XKNX()
         light = Light(xknx,
@@ -439,7 +439,7 @@ class TestLight(unittest.TestCase):
         await asyncio.Task(light.process(telegram))
         self.assertEqual(light.current_brightness, 23)
 
-    def test_process_dimm_wrong_payload(self):
+    async def test_process_dimm_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
         light = Light(xknx,
@@ -450,7 +450,7 @@ class TestLight(unittest.TestCase):
         with self.assertRaises(CouldNotParseTelegram):
             await asyncio.Task(light.process(telegram))
 
-    def test_process_dimm_payload_invalid_length(self):
+    async def test_process_dimm_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
         # pylint: disable=invalid-name
         xknx = XKNX()
@@ -462,7 +462,7 @@ class TestLight(unittest.TestCase):
         with self.assertRaises(CouldNotParseTelegram):
             await asyncio.Task(light.process(telegram))
 
-    def test_process_color(self):
+    async def test_process_color(self):
         """Test process / reading telegrams from telegram queue. Test if color is processed."""
         xknx = XKNX()
         light = Light(xknx,
@@ -474,7 +474,7 @@ class TestLight(unittest.TestCase):
         await asyncio.Task(light.process(telegram))
         self.assertEqual(light.current_color, ((23, 24, 25), None))
 
-    def test_process_color_rgbw(self):
+    async def test_process_color_rgbw(self):
         """Test process / reading telegrams from telegram queue. Test if RGBW is processed."""
         xknx = XKNX()
         light = Light(xknx,
@@ -487,7 +487,7 @@ class TestLight(unittest.TestCase):
         await asyncio.Task(light.process(telegram))
         self.assertEqual(light.current_color, ([23, 24, 25], 26))
 
-    def test_process_tunable_white(self):
+    async def test_process_tunable_white(self):
         """Test process / reading telegrams from telegram queue. Test if tunable white is processed."""
         xknx = XKNX()
         light = Light(xknx,
@@ -500,7 +500,7 @@ class TestLight(unittest.TestCase):
         await asyncio.Task(light.process(telegram))
         self.assertEqual(light.current_tunable_white, 23)
 
-    def test_process_tunable_white_wrong_payload(self):
+    async def test_process_tunable_white_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
         light = Light(xknx,
@@ -511,7 +511,7 @@ class TestLight(unittest.TestCase):
         with self.assertRaises(CouldNotParseTelegram):
             await asyncio.Task(light.process(telegram))
 
-    def test_process_tunable_white_payload_invalid_length(self):
+    async def test_process_tunable_white_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
         # pylint: disable=invalid-name
         xknx = XKNX()
@@ -523,7 +523,7 @@ class TestLight(unittest.TestCase):
         with self.assertRaises(CouldNotParseTelegram):
             await asyncio.Task(light.process(telegram))
 
-    def test_process_color_temperature(self):
+    async def test_process_color_temperature(self):
         """Test process / reading telegrams from telegram queue. Test if color temperature is processed."""
         xknx = XKNX()
         light = Light(xknx,
@@ -536,7 +536,7 @@ class TestLight(unittest.TestCase):
         await asyncio.Task(light.process(telegram))
         self.assertEqual(light.current_color_temperature, 4000)
 
-    def test_process_color_temperature_wrong_payload(self):
+    async def test_process_color_temperature_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
         light = Light(xknx,
@@ -547,7 +547,7 @@ class TestLight(unittest.TestCase):
         with self.assertRaises(CouldNotParseTelegram):
             await asyncio.Task(light.process(telegram))
 
-    def test_process_color_temperature_payload_invalid_length(self):
+    async def test_process_color_temperature_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
         # pylint: disable=invalid-name
         xknx = XKNX()
@@ -562,7 +562,7 @@ class TestLight(unittest.TestCase):
     #
     # TEST DO
     #
-    def test_do(self):
+    async def test_do(self):
         """Test 'do' functionality."""
         xknx = XKNX()
         light = Light(xknx,
@@ -582,7 +582,7 @@ class TestLight(unittest.TestCase):
         await asyncio.Task(light.do("off"))
         self.assertFalse(light.state)
 
-    def test_wrong_do(self):
+    async def test_wrong_do(self):
         """Test wrong do command."""
         xknx = XKNX()
         light = Light(xknx,

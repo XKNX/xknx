@@ -15,7 +15,7 @@ from xknx.knxip import (
 class TestDisconnect(unittest.TestCase):
     """Test class for xknx/io/Disconnect objects."""
 
-    def test_disconnect(self):
+    async def test_disconnect(self):
         """Test disconnecting from KNX bus."""
         xknx = XKNX()
         communication_channel_id = 23

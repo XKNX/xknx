@@ -14,7 +14,7 @@ from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram
 class TestRemoteValueColorRGBW(unittest.TestCase):
     """Test class for RemoteValueColorRGBW objects."""
 
-    def test_to_knx(self):
+    async def test_to_knx(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx)
@@ -28,7 +28,7 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
         self.assertEqual(remote_value.to_knx((0, 15) + input_tuple), expected)
         self.assertEqual(remote_value.to_knx([0, 15] + input_list), expected)
 
-    def test_from_knx(self):
+    async def test_from_knx(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx)
@@ -48,7 +48,7 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
             remote_value.from_knx(DPTArray((0x00, 0x01, 0x64, 0x65, 0x66, 0x7f))),
             [255, 101, 102, 127])
 
-    def test_to_knx_error(self):
+    async def test_to_knx_error(self):
         """Test to_knx function with wrong parametern."""
         xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx)
@@ -71,7 +71,7 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
         with self.assertRaises(ConversionError):
             remote_value.to_knx("100, 101, 102, 103")
 
-    def test_set(self):
+    async def test_set(self):
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValueColorRGBW(
@@ -94,7 +94,7 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
                 GroupAddress('1/2/3'),
                 payload=DPTArray((0x00, 0x0f, 0x64, 0x65, 0x68, 0x69))))
 
-    def test_process(self):
+    async def test_process(self):
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueColorRGBW(
@@ -106,7 +106,7 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
         await asyncio.Task(remote_value.process(telegram))
         self.assertEqual(remote_value.value, [100, 101, 102, 103])
 
-    def test_to_process_error(self):
+    async def test_to_process_error(self):
         """Test process errornous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueColorRGBW(

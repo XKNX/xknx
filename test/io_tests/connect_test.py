@@ -16,7 +16,7 @@ from xknx.knxip import (
 class TestConnect(unittest.TestCase):
     """Test class for xknx/io/Connect objects."""
 
-    def test_connect(self):
+    async def test_connect(self):
         """Test connecting from KNX bus."""
         xknx = XKNX()
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))

@@ -96,7 +96,7 @@ class TestGatewayScanner(unittest.TestCase):
                          str(self.gateway_desc_both))
 
     @patch('xknx.io.gateway_scanner.netifaces', autospec=True)
-    def test_scan_timeout(self, netifaces_mock):
+    async def test_scan_timeout(self, netifaces_mock):
         """Test gateway scanner timeout."""
         # pylint: disable=protected-access
         xknx = XKNX()
@@ -117,7 +117,7 @@ class TestGatewayScanner(unittest.TestCase):
 
     @patch('xknx.io.gateway_scanner.netifaces', autospec=True)
     @patch('xknx.io.GatewayScanner._search_interface', autospec=True)
-    def test_send_search_requests(self, _search_interface_mock, netifaces_mock):
+    async def test_send_search_requests(self, _search_interface_mock, netifaces_mock):
         """Test finding all valid interfaces to send search requests to. No requests are sent."""
         # pylint: disable=protected-access
         xknx = XKNX()

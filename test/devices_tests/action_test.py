@@ -63,7 +63,7 @@ class TestAction(unittest.TestCase):
     #
     # TEST EXECUTE
     #
-    def test_execute_base_action(self):
+    async def test_execute_base_action(self):
         """Test if execute method of BaseAction shows correct info message."""
         xknx = XKNX()
         action = ActionBase(xknx)
@@ -71,7 +71,7 @@ class TestAction(unittest.TestCase):
             await asyncio.Task(action.execute())
             mock_info.assert_called_with('Execute not implemented for %s', 'ActionBase')
 
-    def test_execute_action(self):
+    async def test_execute_action(self):
         """Test if execute method of Action calls correct do method of device."""
         xknx = XKNX()
         light = Light(
@@ -87,7 +87,7 @@ class TestAction(unittest.TestCase):
             await asyncio.Task(action.execute())
             mock_do.assert_called_with('on')
 
-    def test_execute_action_callback(self):
+    async def test_execute_action_callback(self):
         """Test if execute method of ActionCallback calls correct callback method."""
         xknx = XKNX()
         callback = Mock()
@@ -100,7 +100,7 @@ class TestAction(unittest.TestCase):
         await asyncio.Task(action.execute())
         callback.assert_called_with()
 
-    def test_execute_unknown_device(self):
+    async def test_execute_unknown_device(self):
         """Test if execute method of Action calls correct do method of device."""
         xknx = XKNX()
 

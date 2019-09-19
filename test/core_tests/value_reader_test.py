@@ -16,7 +16,7 @@ class TestValueReader(unittest.TestCase):
     """Test class for value reader."""
 
     @patch('xknx.core.ValueReader.timeout')
-    def test_value_reader_read_success(self, timeout_mock):
+    async def test_value_reader_read_success(self, timeout_mock):
         """Test value reader: successfull read."""
         xknx = XKNX()
         test_group_address = GroupAddress("0/0/0")
@@ -52,7 +52,7 @@ class TestValueReader(unittest.TestCase):
                          response_telegram)
 
     @patch('logging.Logger.warning')
-    def test_value_reader_read_timeout(self, logger_warning_mock):
+    async def test_value_reader_read_timeout(self, logger_warning_mock):
         """Test value reader: read timeout."""
         xknx = XKNX()
         value_reader = ValueReader(xknx, GroupAddress('0/0/0'), timeout_in_seconds=0)
@@ -76,7 +76,7 @@ class TestValueReader(unittest.TestCase):
         # Unsuccessfull read() returns None
         self.assertIsNone(timed_out_read)
 
-    def test_value_reader_send_group_read(self):
+    async def test_value_reader_send_group_read(self):
         """Test value reader: send_group_read."""
         xknx = XKNX()
         value_reader = ValueReader(xknx, GroupAddress('0/0/0'))
@@ -88,7 +88,7 @@ class TestValueReader(unittest.TestCase):
                          Telegram(group_address=GroupAddress('0/0/0'),
                                   telegramtype=TelegramType.GROUP_READ))
 
-    def test_value_reader_telegram_received(self):
+    async def test_value_reader_telegram_received(self):
         """Test value reader: telegram_received."""
         xknx = XKNX()
         test_group_address = GroupAddress("0/0/0")

@@ -18,7 +18,7 @@ class TestDateTime(unittest.TestCase):
     #
     # SYNC DateTime
     #
-    def test_sync_datetime(self):
+    async def test_sync_datetime(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         datetime = DateTime(xknx, "TestDateTime", group_address='1/2/3', broadcast_type=DateTimeBroadcastType.DATETIME)
@@ -37,7 +37,7 @@ class TestDateTime(unittest.TestCase):
     #
     # SYNC Date
     #
-    def test_sync_date(self):
+    async def test_sync_date(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         datetime = DateTime(xknx, "TestDateTime", group_address='1/2/3', broadcast_type=DateTimeBroadcastType.DATE)
@@ -55,7 +55,7 @@ class TestDateTime(unittest.TestCase):
     #
     # SYNC Time
     #
-    def test_sync_time(self):
+    async def test_sync_time(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         datetime = DateTime(xknx, "TestDateTime", group_address='1/2/3', broadcast_type=DateTimeBroadcastType.TIME)
@@ -76,7 +76,7 @@ class TestDateTime(unittest.TestCase):
     #
     # TEST PROCESS
     #
-    def test_process_read(self):
+    async def test_process_read(self):
         """Test test process a read telegram from KNX bus."""
         xknx = XKNX()
         datetime = DateTime(xknx, "TestDateTime", group_address='1/2/3', broadcast_type=DateTimeBroadcastType.TIME)

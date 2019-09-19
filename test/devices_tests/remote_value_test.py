@@ -39,7 +39,7 @@ class TestRemoteValue(unittest.TestCase):
             remote_value.from_knx(DPTBinary(0))
             mock_warn.assert_called_with('from_knx not implemented for %s', 'RemoteValue')
 
-    def test_info_set_uninitialized(self):
+    async def test_info_set_uninitialized(self):
         """Test for info if RemoteValue is not initialized."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
@@ -47,7 +47,7 @@ class TestRemoteValue(unittest.TestCase):
             await asyncio.Task(remote_value.set(23))
             mock_info.assert_called_with('Setting value of uninitialized device: %s (value: %s)', 'Unknown', 23)
 
-    def test_info_set_unwritable(self):
+    async def test_info_set_unwritable(self):
         """Test for warning if RemoteValue is read only."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx, group_address_state=GroupAddress('1/2/3'))
@@ -61,7 +61,7 @@ class TestRemoteValue(unittest.TestCase):
         remote_value = RemoteValue(xknx)
         self.assertEqual(remote_value.unit_of_measurement, None)
 
-    def test_process_invalid_payload(self):
+    async def test_process_invalid_payload(self):
         """Test if exception is raised when processing telegram with invalid payload."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)

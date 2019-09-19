@@ -13,7 +13,7 @@ from xknx.knxip import DisconnectResponse
 class TestConnectResponse(unittest.TestCase):
     """Test class for xknx/io/Disconnect objects."""
 
-    def test_create_knxipframe_err(self):
+    async def test_create_knxipframe_err(self):
         """Test if create_knxipframe of base class raises an exception."""
         xknx = XKNX()
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))

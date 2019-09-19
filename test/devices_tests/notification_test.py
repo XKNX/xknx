@@ -19,7 +19,7 @@ class TestNotification(unittest.TestCase):
     #
     # SYNC
     #
-    def test_sync_state(self):
+    async def test_sync_state(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         notification = Notification(
@@ -36,7 +36,7 @@ class TestNotification(unittest.TestCase):
     #
     # TEST PROCESS
     #
-    def test_process(self):
+    async def test_process(self):
         """Test process telegram with notification. Test if device was updated."""
         xknx = XKNX()
         notification = Notification(xknx, 'Warning', group_address='1/2/3')
@@ -50,7 +50,7 @@ class TestNotification(unittest.TestCase):
         await asyncio.Task(notification.process(telegram_unset))
         self.assertEqual(notification.message, "")
 
-    def test_process_callback(self):
+    async def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
         # pylint: disable=no-self-use
         xknx = XKNX()
@@ -67,7 +67,7 @@ class TestNotification(unittest.TestCase):
         await asyncio.Task(notification.process(telegram_set))
         after_update_callback.assert_called_with(notification)
 
-    def test_process_payload_invalid_length(self):
+    async def test_process_payload_invalid_length(self):
         """Test process wrong telegram (wrong payload length)."""
         # pylint: disable=invalid-name
         xknx = XKNX()
@@ -76,7 +76,7 @@ class TestNotification(unittest.TestCase):
         with self.assertRaises(CouldNotParseTelegram):
             await asyncio.Task(notification.process(telegram))
 
-    def test_process_wrong_payload(self):
+    async def test_process_wrong_payload(self):
         """Test process wrong telegram (wrong payload type)."""
         xknx = XKNX()
         notification = Notification(xknx, 'Warning', group_address='1/2/3')
@@ -87,7 +87,7 @@ class TestNotification(unittest.TestCase):
     #
     # TEST SET MESSAGE
     #
-    def test_set(self):
+    async def test_set(self):
         """Test notificationing off notification."""
         xknx = XKNX()
         notification = Notification(xknx, 'Warning', group_address='1/2/3')
@@ -101,14 +101,14 @@ class TestNotification(unittest.TestCase):
     #
     # TEST DO
     #
-    def test_do(self):
+    async def test_do(self):
         """Test 'do' functionality."""
         xknx = XKNX()
         notification = Notification(xknx, 'Warning', group_address='1/2/3')
         await asyncio.Task(notification.do("message:Ein Prosit!"))
         self.assertEqual(notification.message, "Ein Prosit!")
 
-    def test_wrong_do(self):
+    async def test_wrong_do(self):
         """Test wrong do command."""
         xknx = XKNX()
         notification = Notification(xknx, 'Warning', group_address='1/2/3')

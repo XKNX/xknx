@@ -206,7 +206,7 @@ class TestStringRepresentations(unittest.TestCase):
             str(scene),
             '<Scene name="Romantic" scene_value="GroupAddress("1/2/3")/None/None/None" scene_number="23" />')
 
-    def test_sensor(self):
+    async def test_sensor(self):
         """Test string representation of sensor object."""
         xknx = XKNX()
         sensor = Sensor(
@@ -226,7 +226,7 @@ class TestStringRepresentations(unittest.TestCase):
             str(sensor),
             '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/<DPTArray value="[0x40]" />/25" value="25" unit="%"/>')
 
-    def test_expose_sensor(self):
+    async def test_expose_sensor(self):
         """Test string representation of expose sensor object."""
         xknx = XKNX()
         sensor = ExposeSensor(

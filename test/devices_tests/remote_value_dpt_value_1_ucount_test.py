@@ -35,7 +35,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         with self.assertRaises(ConversionError):
             remote_value.to_knx("256")
 
-    def test_set(self):
+    async def test_set(self):
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValueDptValue1Ucount(
@@ -58,7 +58,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
                 GroupAddress('1/2/3'),
                 payload=DPTArray((0x0B, ))))
 
-    def test_process(self):
+    async def test_process(self):
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueDptValue1Ucount(
@@ -70,7 +70,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         await asyncio.Task(remote_value.process(telegram))
         self.assertEqual(remote_value.value, 10)
 
-    def test_to_process_error(self):
+    async def test_to_process_error(self):
         """Test process errornous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueDptValue1Ucount(
