@@ -25,6 +25,4 @@ async def main():
 
 
 # pylint: disable=invalid-name
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
-loop.close()
+asyncio.run(main())

@@ -53,6 +53,4 @@ async def main(argv):
 
 if __name__ == "__main__":
     # pylint: disable=invalid-name
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main(sys.argv[1:]))
-    loop.close()
+    asyncio.run(main(sys.argv[1:]))

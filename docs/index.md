@@ -51,9 +51,7 @@ async def main():
 
 
 # pylint: disable=invalid-name
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
-loop.close()
+asyncio.run(main())
 ```
 
 For more examples please check out the [examples page](https://github.com/XKNX/xknx/tree/master/examples)
