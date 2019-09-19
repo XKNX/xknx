@@ -16,7 +16,7 @@ from .dpt_1byte_uint import (
     DPTPercentU8, DPTSceneNumber, DPTTariff, DPTValue1Ucount)
 from .dpt_2byte_float import (
     DPT2ByteFloat, DPTEnthalpy, DPTHumidity, DPTLux, DPTPartsPerMillion,
-    DPTTemperature, DPTVoltage, DPTWsp)
+    DPTPressure2Byte, DPTTemperature, DPTVoltage, DPTWsp)
 from .dpt_2byte_signed import (
     DPT2ByteSigned, DPTDeltaTimeHrs, DPTDeltaTimeMin, DPTDeltaTimeMsec,
     DPTDeltaTimeSec, DPTPercentV16, DPTRotationAngle, DPTValue2Count)
