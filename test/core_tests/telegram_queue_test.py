@@ -3,6 +3,9 @@ import asyncio
 import unittest
 from unittest.mock import Mock, patch
 
+import pytest
+pytestmark = pytest.mark.asyncio
+
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.knx import (
@@ -34,7 +37,7 @@ class TestTelegramQueue(unittest.TestCase):
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
 
-        self.loop.run_until_complete(xknx.telegram_queue.start())
+        await xknx.telegram_queue.start()
 
         self.assertFalse(xknx.telegram_queue.queue_stopped.is_set())
         # queue shall now consume telegrams from xknx.telegrams
@@ -43,12 +46,12 @@ class TestTelegramQueue(unittest.TestCase):
         xknx.telegrams.put_nowait(telegram_in)
         self.assertEqual(xknx.telegrams.qsize(), 2)
         # wait until telegrams are consumed
-        self.loop.run_until_complete(xknx.telegrams.join())
+        await xknx.telegrams.join()
         self.assertEqual(xknx.telegrams.qsize(), 0)
-        self.loop.run_until_complete(xknx.telegrams.join())
+        await xknx.telegrams.join()
         self.assertEqual(xknx.telegrams.qsize(), 0)
         # stop run() task with stop()
-        self.loop.run_until_complete(xknx.telegram_queue.stop())
+        await xknx.telegram_queue.stop()
         self.assertTrue(xknx.telegram_queue.queue_stopped.is_set())
 
     @patch('asyncio.sleep')
@@ -73,21 +76,21 @@ class TestTelegramQueue(unittest.TestCase):
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
 
-        self.loop.run_until_complete(xknx.telegram_queue.start())
+        await xknx.telegram_queue.start()
 
         # no sleep for incoming telegrams
         xknx.telegrams.put_nowait(telegram_in)
         xknx.telegrams.put_nowait(telegram_in)
-        self.loop.run_until_complete(xknx.telegrams.join())
+        await xknx.telegrams.join()
         self.assertEqual(async_sleep_mock.call_count, 0)
         # sleep for outgoing telegrams
         xknx.telegrams.put_nowait(telegram_out)
         xknx.telegrams.put_nowait(telegram_out)
-        self.loop.run_until_complete(xknx.telegrams.join())
+        await xknx.telegrams.join()
         self.assertEqual(async_sleep_mock.call_count, 2)
         async_sleep_mock.assert_called_with(sleep_time)
 
-        self.loop.run_until_complete(xknx.telegram_queue.stop())
+        await xknx.telegram_queue.stop()
 
     #
     # TEST REGISTER
@@ -109,8 +112,7 @@ class TestTelegramQueue(unittest.TestCase):
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
-        self.loop.run_until_complete(asyncio.Task(
-            xknx.telegram_queue.process_telegram(telegram)))
+        await xknx.telegram_queue.process_telegram(telegram)
         telegram_received_callback.assert_called_once_with(telegram)
 
     #
@@ -134,8 +136,7 @@ class TestTelegramQueue(unittest.TestCase):
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
-        self.loop.run_until_complete(asyncio.Task(
-            xknx.telegram_queue.process_telegram(telegram)))
+        await xknx.telegram_queue.process_telegram(telegram)
         telegram_received_callback.assert_not_called()
 
     #
@@ -158,8 +159,7 @@ class TestTelegramQueue(unittest.TestCase):
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
-        self.loop.run_until_complete(asyncio.Task(
-            xknx.telegram_queue.process_telegram(telegram)))
+        await xknx.telegram_queue.process_telegram(telegram)
 
         devices_by_ga_mock.assert_called_once_with(GroupAddress("1/2/3"))
         test_device.process.assert_called_once_with(telegram)
@@ -184,8 +184,7 @@ class TestTelegramQueue(unittest.TestCase):
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
-        self.loop.run_until_complete(asyncio.Task(
-            xknx.telegram_queue.process_telegram(telegram)))
+        await xknx.telegram_queue.process_telegram(telegram)
         telegram_received_callback.assert_called_once_with(telegram)
         devices_by_ga_mock.assert_not_called()
 
@@ -206,16 +205,14 @@ class TestTelegramQueue(unittest.TestCase):
             group_address=GroupAddress("1/2/3"))
 
         # log a warning if there is no KNXIP interface instanciated
-        self.loop.run_until_complete(asyncio.Task(
-            xknx.telegram_queue.process_telegram(telegram)))
+        await xknx.telegram_queue.process_telegram(telegram)
         logger_warning_mock.assert_called_once_with(
             "No KNXIP interface defined")
         if_mock.send_telegram.assert_not_called()
 
         # if we have an interface send the telegram
         xknx.knxip_interface = if_mock
-        self.loop.run_until_complete(asyncio.Task(
-            xknx.telegram_queue.process_telegram(telegram)))
+        await xknx.telegram_queue.process_telegram(telegram)
         if_mock.send_telegram.assert_called_once_with(telegram)
 
     @patch('logging.Logger.error')
@@ -234,8 +231,7 @@ class TestTelegramQueue(unittest.TestCase):
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
 
-        self.loop.run_until_complete(asyncio.Task(
-            xknx.telegram_queue.process_telegram(telegram)))
+        await xknx.telegram_queue.process_telegram(telegram)
         logging_error_mock.assert_called_once_with(
             "Error while processing telegram %s",
             CouldNotParseTelegram("Something went wrong when receiving the telegram."""))
@@ -261,8 +257,7 @@ class TestTelegramQueue(unittest.TestCase):
 
         xknx.telegrams.put_nowait(telegram_in)
         xknx.telegrams.put_nowait(telegram_out)
-        res = self.loop.run_until_complete(asyncio.Task(
-            xknx.telegram_queue.process_all_telegrams()))
+        await xknx.telegram_queue.process_telegram(telegram)
 
         self.assertIsNone(res)
         self.assertEqual(process_telegram_mock.call_count, 2)
@@ -287,8 +282,7 @@ class TestTelegramQueue(unittest.TestCase):
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
-        self.loop.run_until_complete(asyncio.Task(
-            xknx.telegram_queue.process_telegram(telegram)))
+        await xknx.telegram_queue.process_telegram(telegram)
         telegram_received_callback.assert_called_with(telegram)
 
     #
@@ -312,8 +306,7 @@ class TestTelegramQueue(unittest.TestCase):
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
-        self.loop.run_until_complete(asyncio.Task(
-            xknx.telegram_queue.process_telegram(telegram)))
+        await xknx.telegram_queue.process_telegram(telegram)
         telegram_received_callback.assert_called_with(telegram)
 
     #
@@ -337,6 +330,5 @@ class TestTelegramQueue(unittest.TestCase):
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
-        self.loop.run_until_complete(asyncio.Task(
-            xknx.telegram_queue.process_telegram(telegram)))
+        await xknx.telegram_queue.process_telegram(telegram)
         telegram_received_callback.assert_not_called()

@@ -3,6 +3,9 @@ import asyncio
 import unittest
 from unittest.mock import Mock, patch
 
+import pytest
+pytestmark = pytest.mark.asyncio
+
 from xknx import XKNX
 from xknx.devices import (
     Action, ActionBase, ActionCallback, BinarySensorState, Light)
@@ -74,7 +77,7 @@ class TestAction(unittest.TestCase):
         xknx = XKNX()
         action = ActionBase(xknx)
         with patch('logging.Logger.info') as mock_info:
-            self.loop.run_until_complete(asyncio.Task(action.execute()))
+            await asyncio.Task(action.execute())
             mock_info.assert_called_with('Execute not implemented for %s', 'ActionBase')
 
     def test_execute_action(self):
@@ -90,7 +93,7 @@ class TestAction(unittest.TestCase):
             fut = asyncio.Future()
             fut.set_result(None)
             mock_do.return_value = fut
-            self.loop.run_until_complete(asyncio.Task(action.execute()))
+            await asyncio.Task(action.execute())
             mock_do.assert_called_with('on')
 
     def test_execute_action_callback(self):
@@ -103,7 +106,7 @@ class TestAction(unittest.TestCase):
             callback()
 
         action = ActionCallback(xknx, async_callback)
-        self.loop.run_until_complete(asyncio.Task(action.execute()))
+        await asyncio.Task(action.execute())
         callback.assert_called_with()
 
     def test_execute_unknown_device(self):
@@ -112,6 +115,6 @@ class TestAction(unittest.TestCase):
 
         action = Action(xknx, target='Light1', method='on')
         with patch('logging.Logger.warning') as logger_warning_mock:
-            self.loop.run_until_complete(asyncio.Task(action.execute()))
+            await asyncio.Task(action.execute())
             logger_warning_mock.assert_called_once_with(
                 "Unknown device %s witin action %s.", action.target, action)

@@ -161,7 +161,6 @@ class KNXModule:
 
         self.xknx = XKNX(
             config=self.config_file(),
-            loop=self.hass.loop,
             rate_limit=self.config[DOMAIN][CONF_XKNX_RATE_LIMIT],
         )
 

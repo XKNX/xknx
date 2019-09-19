@@ -3,6 +3,9 @@ import asyncio
 import unittest
 from unittest.mock import Mock
 
+import pytest
+pytestmark = pytest.mark.asyncio
+
 from xknx import XKNX
 from xknx.devices import ExposeSensor
 from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram, TelegramType
@@ -73,7 +76,7 @@ class TestExposeSensor(unittest.TestCase):
             'TestSensor',
             group_address='1/2/3',
             value_type="binary")
-        self.loop.run_until_complete(asyncio.Task(expose_sensor.set(False)))
+        await asyncio.Task(expose_sensor.set(False))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -91,7 +94,7 @@ class TestExposeSensor(unittest.TestCase):
             'TestSensor',
             group_address='1/2/3',
             value_type="percent")
-        self.loop.run_until_complete(asyncio.Task(expose_sensor.set(75)))
+        await asyncio.Task(expose_sensor.set(75))
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
         telegram = xknx.telegrams.get_nowait()
@@ -110,7 +113,7 @@ class TestExposeSensor(unittest.TestCase):
             'TestSensor',
             group_address='1/2/3',
             value_type="temperature")
-        self.loop.run_until_complete(asyncio.Task(expose_sensor.set(21.0)))
+        await asyncio.Task(expose_sensor.set(21.0))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -135,7 +138,7 @@ class TestExposeSensor(unittest.TestCase):
 
         telegram = Telegram(GroupAddress('1/2/3'))
         telegram.telegramtype = TelegramType.GROUP_READ
-        self.loop.run_until_complete(asyncio.Task(expose_sensor.process(telegram)))
+        await asyncio.Task(expose_sensor.process(telegram))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -157,7 +160,7 @@ class TestExposeSensor(unittest.TestCase):
 
         telegram = Telegram(GroupAddress('1/2/3'))
         telegram.telegramtype = TelegramType.GROUP_READ
-        self.loop.run_until_complete(asyncio.Task(expose_sensor.process(telegram)))
+        await asyncio.Task(expose_sensor.process(telegram))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -179,7 +182,7 @@ class TestExposeSensor(unittest.TestCase):
 
         telegram = Telegram(GroupAddress('1/2/3'))
         telegram.telegramtype = TelegramType.GROUP_READ
-        self.loop.run_until_complete(asyncio.Task(expose_sensor.process(telegram)))
+        await asyncio.Task(expose_sensor.process(telegram))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -236,5 +239,5 @@ class TestExposeSensor(unittest.TestCase):
             after_update_callback(device)
         expose_sensor.register_device_updated_cb(async_after_update_callback)
 
-        self.loop.run_until_complete(asyncio.Task(expose_sensor.set(21.0)))
+        await asyncio.Task(expose_sensor.set(21.0))
         after_update_callback.assert_called_with(expose_sensor)

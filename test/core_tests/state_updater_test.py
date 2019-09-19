@@ -3,6 +3,9 @@ import asyncio
 import unittest
 from unittest.mock import patch
 
+import pytest
+pytestmark = pytest.mark.asyncio
+
 from xknx import XKNX
 from xknx.core import StateUpdater
 from xknx.devices import Light
@@ -20,7 +23,7 @@ class TestStateupdater(unittest.TestCase):
         """Tear down test class."""
         self.loop.close()
 
-    def test_state_updater(self):
+    async def test_state_updater(self):
         """Test State updater."""
         xknx = XKNX()
         light = Light(
@@ -37,6 +40,6 @@ class TestStateupdater(unittest.TestCase):
             fut.set_result(None)
             mock_sync.return_value = fut
 
-            self.loop.run_until_complete(asyncio.Task(state_updater.start()))
-            self.loop.run_until_complete(state_updater.run_task)
+            await asyncio.Task(state_updater.start()))
+            await state_updater.run_task)
             mock_sync.assert_called_with()

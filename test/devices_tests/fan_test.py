@@ -3,6 +3,9 @@ import asyncio
 import unittest
 from unittest.mock import patch
 
+import pytest
+pytestmark = pytest.mark.asyncio
+
 from xknx import XKNX
 from xknx.devices import Fan
 from xknx.exceptions import CouldNotParseTelegram
@@ -32,7 +35,7 @@ class TestFan(unittest.TestCase):
         fan = Fan(xknx,
                   name="TestFan",
                   group_address_speed_state='1/2/3')
-        self.loop.run_until_complete(asyncio.Task(fan.sync(False)))
+        await asyncio.Task(fan.sync(False))
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
@@ -50,7 +53,7 @@ class TestFan(unittest.TestCase):
                   name="TestFan",
                   group_address_speed='1/2/3',
                   group_address_speed_state='1/2/4')
-        self.loop.run_until_complete(asyncio.Task(fan.sync(False)))
+        await asyncio.Task(fan.sync(False))
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
@@ -68,7 +71,7 @@ class TestFan(unittest.TestCase):
         fan = Fan(xknx,
                   name="TestFan",
                   group_address_speed='1/2/3')
-        self.loop.run_until_complete(asyncio.Task(fan.set_speed(55)))
+        await asyncio.Task(fan.set_speed(55))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         # 140 is 55% as byte (0...255)
@@ -88,7 +91,7 @@ class TestFan(unittest.TestCase):
 
         # 140 is 55% as byte (0...255)
         telegram = Telegram(GroupAddress('1/2/3'), payload=DPTArray(140))
-        self.loop.run_until_complete(asyncio.Task(fan.process(telegram)))
+        await asyncio.Task(fan.process(telegram))
         self.assertEqual(fan.current_speed, 55)
 
     def test_process_speed_wrong_payload(self):  # pylint: disable=invalid-name
@@ -99,7 +102,7 @@ class TestFan(unittest.TestCase):
                   group_address_speed='1/2/3')
         telegram = Telegram(GroupAddress('1/2/3'), payload=DPTBinary(1))
         with self.assertRaises(CouldNotParseTelegram):
-            self.loop.run_until_complete(asyncio.Task(fan.process(telegram)))
+            await asyncio.Task(fan.process(telegram))
 
     def test_process_fan_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
@@ -110,7 +113,7 @@ class TestFan(unittest.TestCase):
                   group_address_speed='1/2/3')
         telegram = Telegram(GroupAddress('1/2/3'), payload=DPTArray((23, 24)))
         with self.assertRaises(CouldNotParseTelegram):
-            self.loop.run_until_complete(asyncio.Task(fan.process(telegram)))
+            await asyncio.Task(fan.process(telegram))
 
     #
     # TEST DO
@@ -121,9 +124,9 @@ class TestFan(unittest.TestCase):
         fan = Fan(xknx,
                   name="TestFan",
                   group_address_speed='1/2/3')
-        self.loop.run_until_complete(asyncio.Task(fan.do("speed:50")))
+        await asyncio.Task(fan.do("speed:50"))
         self.assertEqual(fan.current_speed, 50)
-        self.loop.run_until_complete(asyncio.Task(fan.do("speed:25")))
+        await asyncio.Task(fan.do("speed:25"))
         self.assertEqual(fan.current_speed, 25)
 
     def test_wrong_do(self):
@@ -133,7 +136,7 @@ class TestFan(unittest.TestCase):
                   name="TestFan",
                   group_address_speed='1/2/3')
         with patch('logging.Logger.warning') as mock_warn:
-            self.loop.run_until_complete(asyncio.Task(fan.do("execute")))
+            await asyncio.Task(fan.do("execute"))
             self.assertEqual(xknx.telegrams.qsize(), 0)
             mock_warn.assert_called_with('Could not understand action %s for device %s', 'execute', 'TestFan')
 

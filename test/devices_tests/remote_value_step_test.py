@@ -2,6 +2,9 @@
 import asyncio
 import unittest
 
+import pytest
+pytestmark = pytest.mark.asyncio
+
 from xknx import XKNX
 from xknx.devices import RemoteValueStep
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -61,7 +64,7 @@ class TestRemoteValueStep(unittest.TestCase):
         remote_value = RemoteValueStep(
             xknx,
             group_address=GroupAddress("1/2/3"))
-        self.loop.run_until_complete(asyncio.Task(remote_value.decrease()))
+        await asyncio.Task(remote_value.decrease())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -69,7 +72,7 @@ class TestRemoteValueStep(unittest.TestCase):
             Telegram(
                 GroupAddress('1/2/3'),
                 payload=DPTBinary(1)))
-        self.loop.run_until_complete(asyncio.Task(remote_value.increase()))
+        await asyncio.Task(remote_value.increase())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -88,7 +91,7 @@ class TestRemoteValueStep(unittest.TestCase):
             group_address=GroupAddress("1/2/3"),
             payload=DPTBinary(1))
         self.assertEqual(remote_value.value, None)
-        self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+        await asyncio.Task(remote_value.process(telegram))
         self.assertEqual(remote_value.value, RemoteValueStep.Direction.DECREASE)
 
     def test_to_process_error(self):
@@ -101,11 +104,11 @@ class TestRemoteValueStep(unittest.TestCase):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"),
                 payload=DPTArray((0x01)))
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            await asyncio.Task(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"),
                 payload=DPTBinary(3))
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            await asyncio.Task(remote_value.process(telegram))
             # pylint: disable=pointless-statement
             remote_value.value

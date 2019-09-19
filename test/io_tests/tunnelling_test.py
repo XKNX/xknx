@@ -3,6 +3,9 @@ import asyncio
 import unittest
 from unittest.mock import patch
 
+import pytest
+pytestmark = pytest.mark.asyncio
+
 from xknx import XKNX
 from xknx.io import Tunnelling, UDPClient
 from xknx.knx import DPTArray, GroupAddress, PhysicalAddress, Telegram
@@ -48,7 +51,7 @@ class TestTunnelling(unittest.TestCase):
         with patch('xknx.io.UDPClient.send') as mock_udp_send, \
                 patch('xknx.io.UDPClient.getsockname') as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
-            self.loop.run_until_complete(asyncio.Task(tunnelling.start()))
+            await asyncio.Task(tunnelling.start())
             mock_udp_send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type

@@ -4,6 +4,9 @@ import asyncio
 import unittest
 from unittest.mock import patch
 
+import pytest
+pytestmark = pytest.mark.asyncio
+
 from xknx import XKNX
 from xknx.devices import Scene
 from xknx.knx import DPTArray, GroupAddress, Telegram
@@ -34,7 +37,7 @@ class TestScene(unittest.TestCase):
             'TestScene',
             group_address='1/2/1',
             scene_number=23)
-        self.loop.run_until_complete(asyncio.Task(scene.sync(False)))
+        await asyncio.Task(scene.sync(False))
         self.assertEqual(xknx.telegrams.qsize(), 0)
 
     #
@@ -48,7 +51,7 @@ class TestScene(unittest.TestCase):
             'TestScene',
             group_address='1/2/1',
             scene_number=23)
-        self.loop.run_until_complete(asyncio.Task(scene.run()))
+        await asyncio.Task(scene.run())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -62,7 +65,7 @@ class TestScene(unittest.TestCase):
             'TestScene',
             group_address='1/2/1',
             scene_number=23)
-        self.loop.run_until_complete(asyncio.Task(scene.do("run")))
+        await asyncio.Task(scene.do("run"))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -77,7 +80,7 @@ class TestScene(unittest.TestCase):
             group_address='1/2/1',
             scene_number=23)
         with patch('logging.Logger.warning') as mockWarn:
-            self.loop.run_until_complete(asyncio.Task(scene.do("execute")))
+            await asyncio.Task(scene.do("execute"))
             mockWarn.assert_called_with('Could not understand action %s for device %s', 'execute', 'TestScene')
         self.assertEqual(xknx.telegrams.qsize(), 0)
 

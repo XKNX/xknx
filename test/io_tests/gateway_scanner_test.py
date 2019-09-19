@@ -3,6 +3,9 @@ import asyncio
 import unittest
 from unittest.mock import patch
 
+import pytest
+pytestmark = pytest.mark.asyncio
+
 from xknx import XKNX
 from xknx.io import GatewayScanFilter, GatewayScanner, UDPClient
 from xknx.io.gateway_scanner import GatewayDescriptor
@@ -109,7 +112,7 @@ class TestGatewayScanner(unittest.TestCase):
 
         gateway_scanner = GatewayScanner(xknx, timeout_in_seconds=0)
 
-        timed_out_scan = self.loop.run_until_complete(gateway_scanner.scan())
+        timed_out_scan = await gateway_scanner.scan()
 
         # Timeout handle was cancelled (cancelled method requires Python 3.7)
         event_has_cancelled = getattr(gateway_scanner._timeout_handle, "cancelled", None)
@@ -136,7 +139,7 @@ class TestGatewayScanner(unittest.TestCase):
 
         gateway_scanner = GatewayScanner(xknx, timeout_in_seconds=0)
 
-        test_scan = self.loop.run_until_complete(gateway_scanner.scan())
+        test_scan = await gateway_scanner.scan()
 
         self.assertEqual(_search_interface_mock.call_count, 2)
         expected_calls = [((gateway_scanner, 'lo0', '127.0.0.1'),),

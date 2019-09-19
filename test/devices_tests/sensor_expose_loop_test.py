@@ -2,6 +2,9 @@
 import asyncio
 import unittest
 
+import pytest
+pytestmark = pytest.mark.asyncio
+
 from xknx import XKNX
 from xknx.devices import BinarySensor, ExposeSensor, Sensor
 from xknx.knx import (
@@ -100,7 +103,7 @@ class SensorExposeLoopTest(unittest.TestCase):
                                              TelegramType.GROUP_WRITE,
                                              direction=TelegramDirection.INCOMING,
                                              payload=test_payload)
-                self.loop.run_until_complete(asyncio.Task(sensor.process(incoming_telegram)))
+                await asyncio.Task(sensor.process(incoming_telegram))
                 incoming_value = sensor.resolve_state()
                 if isinstance(test_value, float):
                     self.assertEqual(round(incoming_value, 4), test_value)
@@ -109,7 +112,7 @@ class SensorExposeLoopTest(unittest.TestCase):
 
                 # HA sends strings for new values
                 stringified_value = str(test_value)
-                self.loop.run_until_complete(asyncio.Task(expose.set(stringified_value)))
+                await asyncio.Task(expose.set(stringified_value))
                 self.assertEqual(xknx.telegrams.qsize(), 1)
                 outgoing_telegram = xknx.telegrams.get_nowait()
                 self.assertEqual(
@@ -146,11 +149,11 @@ class SensorExposeLoopTest(unittest.TestCase):
                                              TelegramType.GROUP_WRITE,
                                              direction=TelegramDirection.INCOMING,
                                              payload=test_payload)
-                self.loop.run_until_complete(asyncio.Task(sensor.process(incoming_telegram)))
+                await asyncio.Task(sensor.process(incoming_telegram))
                 incoming_value = sensor.is_on()
                 self.assertEqual(incoming_value, test_value)
 
-                self.loop.run_until_complete(asyncio.Task(expose.set(test_value)))
+                await asyncio.Task(expose.set(test_value))
                 self.assertEqual(xknx.telegrams.qsize(), 1)
                 outgoing_telegram = xknx.telegrams.get_nowait()
                 self.assertEqual(

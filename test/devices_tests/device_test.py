@@ -3,6 +3,9 @@ import asyncio
 import unittest
 from unittest.mock import Mock, patch
 
+import pytest
+pytestmark = pytest.mark.asyncio
+
 from xknx import XKNX
 from xknx.devices import Device
 from xknx.exceptions import XKNXException
@@ -47,14 +50,14 @@ class TestDevice(unittest.TestCase):
         device.register_device_updated_cb(async_after_update_callback2)
 
         # Triggering first time. Both have to be called
-        self.loop.run_until_complete(asyncio.Task(device.after_update()))
+        await asyncio.Task(device.after_update())
         after_update_callback1.assert_called_with(device)
         after_update_callback2.assert_called_with(device)
         after_update_callback1.reset_mock()
         after_update_callback2.reset_mock()
 
         # Triggering 2nd time. Both have to be called
-        self.loop.run_until_complete(asyncio.Task(device.after_update()))
+        await asyncio.Task(device.after_update())
         after_update_callback1.assert_called_with(device)
         after_update_callback2.assert_called_with(device)
         after_update_callback1.reset_mock()
@@ -62,7 +65,7 @@ class TestDevice(unittest.TestCase):
 
         # Unregistering first callback
         device.unregister_device_updated_cb(async_after_update_callback1)
-        self.loop.run_until_complete(asyncio.Task(device.after_update()))
+        await asyncio.Task(device.after_update())
         after_update_callback1.assert_not_called()
         after_update_callback2.assert_called_with(device)
         after_update_callback1.reset_mock()
@@ -70,7 +73,7 @@ class TestDevice(unittest.TestCase):
 
         # Unregistering second callback
         device.unregister_device_updated_cb(async_after_update_callback2)
-        self.loop.run_until_complete(asyncio.Task(device.after_update()))
+        await asyncio.Task(device.after_update())
         after_update_callback1.assert_not_called()
         after_update_callback2.assert_not_called()
 
@@ -87,7 +90,7 @@ class TestDevice(unittest.TestCase):
                 GroupAddress('1/2/1'),
                 payload=DPTArray((0x01, 0x02)),
                 telegramtype=TelegramType.GROUP_READ)
-            self.loop.run_until_complete(asyncio.Task(device.process(telegram)))
+            await asyncio.Task(device.process(telegram))
             mock_group_read.assert_called_with(telegram)
 
         with patch('xknx.devices.Device.process_group_write') as mock_group_write:
@@ -98,7 +101,7 @@ class TestDevice(unittest.TestCase):
                 GroupAddress('1/2/1'),
                 payload=DPTArray((0x01, 0x02)),
                 telegramtype=TelegramType.GROUP_WRITE)
-            self.loop.run_until_complete(asyncio.Task(device.process(telegram)))
+            await asyncio.Task(device.process(telegram))
             mock_group_write.assert_called_with(telegram)
 
         with patch('xknx.devices.Device.process_group_response') as mock_group_response:
@@ -109,14 +112,14 @@ class TestDevice(unittest.TestCase):
                 GroupAddress('1/2/1'),
                 payload=DPTArray((0x01, 0x02)),
                 telegramtype=TelegramType.GROUP_RESPONSE)
-            self.loop.run_until_complete(asyncio.Task(device.process(telegram)))
+            await asyncio.Task(device.process(telegram))
             mock_group_response.assert_called_with(telegram)
 
     def test_process_group_write(self):
         """Test if process_group_write. Nothing really to test here."""
         xknx = XKNX()
         device = Device(xknx, 'TestDevice')
-        self.loop.run_until_complete(asyncio.Task(device.process_group_write(Telegram())))
+        await asyncio.Task(device.process_group_write(Telegram()))
 
     def test_process_group_response(self):
         """Test if process_group_read. Testing if mapped to group_write."""
@@ -126,14 +129,14 @@ class TestDevice(unittest.TestCase):
             fut = asyncio.Future()
             fut.set_result(None)
             mock_group_write.return_value = fut
-            self.loop.run_until_complete(asyncio.Task(device.process_group_response(Telegram())))
+            await asyncio.Task(device.process_group_response(Telegram()))
             mock_group_write.assert_called_with(Telegram())
 
     def test_process_group_read(self):
         """Test if process_group_read. Nothing really to test here."""
         xknx = XKNX()
         device = Device(xknx, 'TestDevice')
-        self.loop.run_until_complete(asyncio.Task(device.process_group_read(Telegram())))
+        await asyncio.Task(device.process_group_read(Telegram()))
 
     def test_sync_exception(self):
         """Testing exception handling within sync()."""
@@ -147,7 +150,7 @@ class TestDevice(unittest.TestCase):
                 fut.set_result(None)
                 mock_sync_impl.return_value = fut
                 mock_sync_impl.side_effect = XKNXException()
-                self.loop.run_until_complete(asyncio.Task(device.sync()))
+                await asyncio.Task(device.sync())
                 mock_sync_impl.assert_called_with(True)
                 mock_error.assert_called_with('Error while syncing device: %s', XKNXException())
 
@@ -156,7 +159,7 @@ class TestDevice(unittest.TestCase):
         xknx = XKNX()
         device = Device(xknx, 'TestDevice')
         with patch('logging.Logger.info') as mock_info:
-            self.loop.run_until_complete(asyncio.Task(device.do("xx")))
+            await asyncio.Task(device.do("xx"))
             mock_info.assert_called_with("Do not implemented action '%s' for %s", 'xx', 'Device')
 
     #
@@ -174,7 +177,7 @@ class TestDevice(unittest.TestCase):
                 fut.set_result(None)  # Make Value reader return no response
                 mock_value_reader_read.return_value = fut
                 with patch('logging.Logger.warning') as mock_warn:
-                    self.loop.run_until_complete(asyncio.Task(device._sync_impl()))
+                    await asyncio.Task(device._sync_impl())
                     mock_warn.assert_called_with("Could not sync group address '%s' from %s",
                                                  GroupAddress('1/2/3'), device)
 
@@ -189,7 +192,7 @@ class TestDevice(unittest.TestCase):
                 fut = asyncio.Future()
                 fut.set_result(None)  # Make Value reader return no response
                 mock_value_reader_group_read.return_value = fut
-                self.loop.run_until_complete(asyncio.Task(device._sync_impl(wait_for_result=False)))
+                await asyncio.Task(device._sync_impl(wait_for_result=False))
                 mock_value_reader_group_read.assert_called_with()
 
     def test_sync_valid_response(self):
@@ -208,5 +211,5 @@ class TestDevice(unittest.TestCase):
                     fut2 = asyncio.Future()
                     fut2.set_result(None)
                     mock_device_process.return_value = fut2
-                    self.loop.run_until_complete(asyncio.Task(device._sync_impl()))
+                    await asyncio.Task(device._sync_impl())
                     mock_device_process.assert_called_with(telegram)

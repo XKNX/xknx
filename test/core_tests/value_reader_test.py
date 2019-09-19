@@ -3,6 +3,9 @@ import asyncio
 import unittest
 from unittest.mock import patch
 
+import pytest
+pytestmark = pytest.mark.asyncio
+
 from xknx import XKNX
 from xknx.core import ValueReader
 from xknx.knx import (
@@ -35,9 +38,9 @@ class TestValueReader(unittest.TestCase):
         # Create a task for read() (3.5 compatible)
         read_task = asyncio.ensure_future(value_reader.read())
         # receive the response
-        self.loop.run_until_complete(value_reader.telegram_received(response_telegram))
+        await value_reader.telegram_received(response_telegram)
         # and yield the result
-        successfull_read = self.loop.run_until_complete(asyncio.gather(read_task))[0]
+        successfull_read = await asyncio.gather(read_task)[0]
 
         # GroupValueRead telegram is still in the queue because we are not actually processing it
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -63,7 +66,7 @@ class TestValueReader(unittest.TestCase):
         xknx = XKNX()
         value_reader = ValueReader(xknx, GroupAddress('0/0/0'), timeout_in_seconds=0)
 
-        timed_out_read = self.loop.run_until_complete(value_reader.read())
+        timed_out_read = await value_reader.read()
 
         # GroupValueRead telegram is still in the queue because we are not actually processing it
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -87,7 +90,7 @@ class TestValueReader(unittest.TestCase):
         xknx = XKNX()
         value_reader = ValueReader(xknx, GroupAddress('0/0/0'))
 
-        self.loop.run_until_complete(value_reader.send_group_read())
+        await value_reader.send_group_read()
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -118,7 +121,7 @@ class TestValueReader(unittest.TestCase):
         value_reader = ValueReader(xknx, test_group_address)
 
         def async_telegram_received(test_telegram):
-            return self.loop.run_until_complete(value_reader.telegram_received(test_telegram))
+            return await value_reader.telegram_received(test_telegram)
 
         self.assertFalse(async_telegram_received(telegram_wrong_address))
         self.assertFalse(async_telegram_received(telegram_wrong_type))

@@ -4,6 +4,9 @@ import asyncio
 import unittest
 from unittest.mock import Mock, patch
 
+import pytest
+pytestmark = pytest.mark.asyncio
+
 from xknx import XKNX
 from xknx.devices import Cover
 from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram, TelegramType
@@ -80,7 +83,7 @@ class TestCover(unittest.TestCase):
             group_address_long='1/2/1',
             group_address_short='1/2/2',
             group_address_position_state='1/2/3')
-        self.loop.run_until_complete(asyncio.Task(cover.sync(False)))
+        await asyncio.Task(cover.sync(False))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram1,
@@ -96,7 +99,7 @@ class TestCover(unittest.TestCase):
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_state='1/2/4')
-        self.loop.run_until_complete(asyncio.Task(cover.sync(False)))
+        await asyncio.Task(cover.sync(False))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram1,
@@ -112,7 +115,7 @@ class TestCover(unittest.TestCase):
             group_address_short='1/2/2',
             group_address_position_state='1/2/3',
             group_address_angle_state='1/2/4')
-        self.loop.run_until_complete(asyncio.Task(cover.sync(False)))
+        await asyncio.Task(cover.sync(False))
         self.assertEqual(xknx.telegrams.qsize(), 2)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram1,
@@ -131,7 +134,7 @@ class TestCover(unittest.TestCase):
             group_address_short='1/2/2',
             group_address_angle='1/2/3',
             group_address_angle_state='1/2/4')
-        self.loop.run_until_complete(asyncio.Task(cover.sync(False)))
+        await asyncio.Task(cover.sync(False))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(telegram1,
@@ -150,7 +153,7 @@ class TestCover(unittest.TestCase):
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_state='1/2/4')
-        self.loop.run_until_complete(asyncio.Task(cover.set_up()))
+        await asyncio.Task(cover.set_up())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -169,7 +172,7 @@ class TestCover(unittest.TestCase):
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_state='1/2/4')
-        self.loop.run_until_complete(asyncio.Task(cover.set_down()))
+        await asyncio.Task(cover.set_down())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -188,7 +191,7 @@ class TestCover(unittest.TestCase):
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_state='1/2/4')
-        self.loop.run_until_complete(asyncio.Task(cover.set_short_up()))
+        await asyncio.Task(cover.set_short_up())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -207,7 +210,7 @@ class TestCover(unittest.TestCase):
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_state='1/2/4')
-        self.loop.run_until_complete(asyncio.Task(cover.set_short_down()))
+        await asyncio.Task(cover.set_short_down())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -225,7 +228,7 @@ class TestCover(unittest.TestCase):
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_state='1/2/4')
-        self.loop.run_until_complete(asyncio.Task(cover.stop()))
+        await asyncio.Task(cover.stop())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -244,7 +247,7 @@ class TestCover(unittest.TestCase):
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_state='1/2/4')
-        self.loop.run_until_complete(asyncio.Task(cover.set_position(50)))
+        await asyncio.Task(cover.set_position(50))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -260,7 +263,7 @@ class TestCover(unittest.TestCase):
             group_address_short='1/2/2',
             group_address_position_state='1/2/4')
         cover.travelcalculator.set_position(60)
-        self.loop.run_until_complete(asyncio.Task(cover.set_position(50)))
+        await asyncio.Task(cover.set_position(50))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -276,7 +279,7 @@ class TestCover(unittest.TestCase):
             group_address_short='1/2/2',
             group_address_position_state='1/2/4')
         cover.travelcalculator.set_position(70)
-        self.loop.run_until_complete(asyncio.Task(cover.set_position(80)))
+        await asyncio.Task(cover.set_position(80))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -294,7 +297,7 @@ class TestCover(unittest.TestCase):
             group_address_position='1/4/16',
             group_address_angle='1/4/18',
             group_address_angle_state='1/4/19')
-        self.loop.run_until_complete(asyncio.Task(cover.set_angle(50)))
+        await asyncio.Task(cover.set_angle(50))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -309,7 +312,7 @@ class TestCover(unittest.TestCase):
             group_address_long='1/4/14',
             group_address_short='1/4/15')
         with patch('logging.Logger.warning') as mock_warn:
-            self.loop.run_until_complete(asyncio.Task(cover.set_angle(50)))
+            await asyncio.Task(cover.set_angle(50))
             self.assertEqual(xknx.telegrams.qsize(), 0)
             mock_warn.assert_called_with('Angle not supported for device %s', 'Children.Venetian')
 
@@ -327,7 +330,7 @@ class TestCover(unittest.TestCase):
             group_address_position='1/2/3',
             group_address_position_state='1/2/4')
         telegram = Telegram(GroupAddress('1/2/4'), payload=DPTArray(42))
-        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        await asyncio.Task(cover.process(telegram))
         self.assertEqual(cover.current_position(), 84)
 
     def test_process_angle(self):
@@ -341,7 +344,7 @@ class TestCover(unittest.TestCase):
             group_address_angle='1/2/3',
             group_address_angle_state='1/2/4')
         telegram = Telegram(GroupAddress('1/2/4'), payload=DPTArray(42))
-        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        await asyncio.Task(cover.process(telegram))
         self.assertEqual(cover.current_angle(), 84)
 
     def test_process_callback(self):
@@ -364,7 +367,7 @@ class TestCover(unittest.TestCase):
         cover.register_device_updated_cb(async_after_update_callback)
 
         telegram = Telegram(GroupAddress('1/2/4'), payload=DPTArray(42))
-        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        await asyncio.Task(cover.process(telegram))
 
         after_update_callback.assert_called_with(cover)
 
@@ -387,7 +390,7 @@ class TestCover(unittest.TestCase):
             self.assertFalse(cover.is_traveling())
             self.assertTrue(cover.position_reached())
 
-            self.loop.run_until_complete(asyncio.Task(cover.set_up()))
+            await asyncio.Task(cover.set_up())
             self.assertTrue(cover.is_traveling())
             self.assertFalse(cover.is_open())
             self.assertTrue(cover.is_closed())
@@ -422,14 +425,14 @@ class TestCover(unittest.TestCase):
             mock_stop.return_value = fut
 
             mock_time.return_value = 1517000000.0
-            self.loop.run_until_complete(asyncio.Task(cover.set_position(50)))
+            await asyncio.Task(cover.set_position(50))
 
             mock_time.return_value = 1517000001.0
-            self.loop.run_until_complete(asyncio.Task(cover.auto_stop_if_necessary()))
+            await asyncio.Task(cover.auto_stop_if_necessary())
             mock_stop.assert_not_called()
 
             mock_time.return_value = 1517000005.0
-            self.loop.run_until_complete(asyncio.Task(cover.auto_stop_if_necessary()))
+            await asyncio.Task(cover.auto_stop_if_necessary())
             mock_stop.assert_called_with()
             mock_stop.reset_mock()
 
@@ -447,23 +450,23 @@ class TestCover(unittest.TestCase):
             'TestCover')
         with patch('xknx.devices.Cover.set_up') as mock:
             mock.return_value = asyncio.ensure_future(async_none())
-            self.loop.run_until_complete(asyncio.Task(cover.do("up")))
+            await asyncio.Task(cover.do("up"))
             mock.assert_called_once_with()
         with patch('xknx.devices.Cover.set_short_up') as mock:
             mock.return_value = asyncio.ensure_future(async_none())
-            self.loop.run_until_complete(asyncio.Task(cover.do("short_up")))
+            await asyncio.Task(cover.do("short_up"))
             mock.assert_called_once_with()
         with patch('xknx.devices.Cover.set_down') as mock:
             mock.return_value = asyncio.ensure_future(async_none())
-            self.loop.run_until_complete(asyncio.Task(cover.do("down")))
+            await asyncio.Task(cover.do("down"))
             mock.assert_called_once_with()
         with patch('xknx.devices.Cover.set_short_down') as mock:
             mock.return_value = asyncio.ensure_future(async_none())
-            self.loop.run_until_complete(asyncio.Task(cover.do("short_down")))
+            await asyncio.Task(cover.do("short_down"))
             mock.assert_called_once_with()
         with patch('xknx.devices.Cover.stop') as mock:
             mock.return_value = asyncio.ensure_future(async_none())
-            self.loop.run_until_complete(asyncio.Task(cover.do("stop")))
+            await asyncio.Task(cover.do("stop"))
             mock.assert_called_once_with()
 
     def test_wrong_do(self):
@@ -473,7 +476,7 @@ class TestCover(unittest.TestCase):
             xknx,
             'TestCover')
         with patch('logging.Logger.warning') as mock_warn:
-            self.loop.run_until_complete(asyncio.Task(cover.do("execute")))
+            await asyncio.Task(cover.do("execute"))
             self.assertEqual(xknx.telegrams.qsize(), 0)
             mock_warn.assert_called_with('Could not understand action %s for device %s', 'execute', 'TestCover')
 
@@ -509,7 +512,7 @@ class TestCover(unittest.TestCase):
 
         with patch('time.time') as mock_time:
             mock_time.return_value = 1517000000.0
-            self.loop.run_until_complete(asyncio.Task(cover.set_up()))
+            await asyncio.Task(cover.set_up())
             mock_time.return_value = 1517000001.0
             self.assertEqual(cover.state_addresses(), [])
 

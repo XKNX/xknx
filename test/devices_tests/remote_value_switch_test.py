@@ -2,6 +2,9 @@
 import asyncio
 import unittest
 
+import pytest
+pytestmark = pytest.mark.asyncio
+
 from xknx import XKNX
 from xknx.devices import RemoteValueSwitch
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -61,7 +64,7 @@ class TestRemoteValueSwitch(unittest.TestCase):
         remote_value = RemoteValueSwitch(
             xknx,
             group_address=GroupAddress("1/2/3"))
-        self.loop.run_until_complete(asyncio.Task(remote_value.on()))
+        await asyncio.Task(remote_value.on())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -69,7 +72,7 @@ class TestRemoteValueSwitch(unittest.TestCase):
             Telegram(
                 GroupAddress('1/2/3'),
                 payload=DPTBinary(1)))
-        self.loop.run_until_complete(asyncio.Task(remote_value.off()))
+        await asyncio.Task(remote_value.off())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -88,7 +91,7 @@ class TestRemoteValueSwitch(unittest.TestCase):
             group_address=GroupAddress("1/2/3"),
             payload=DPTBinary(1))
         self.assertEqual(remote_value.value, None)
-        self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+        await asyncio.Task(remote_value.process(telegram))
         self.assertIsNotNone(remote_value.payload)
         self.assertEqual(remote_value.value, True)
 
@@ -102,7 +105,7 @@ class TestRemoteValueSwitch(unittest.TestCase):
             group_address=GroupAddress("1/2/3"),
             payload=DPTBinary(0))
         self.assertEqual(remote_value.value, None)
-        self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+        await asyncio.Task(remote_value.process(telegram))
         self.assertIsNotNone(remote_value.payload)
         self.assertEqual(remote_value.value, False)
 
@@ -116,11 +119,11 @@ class TestRemoteValueSwitch(unittest.TestCase):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"),
                 payload=DPTArray((0x01)))
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            await asyncio.Task(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"),
                 payload=DPTBinary(3))
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            await asyncio.Task(remote_value.process(telegram))
             # pylint: disable=pointless-statement
             remote_value.value

@@ -2,6 +2,9 @@
 import asyncio
 import unittest
 
+import pytest
+pytestmark = pytest.mark.asyncio
+
 from xknx import XKNX
 from xknx.io import RequestResponse, UDPClient
 from xknx.knxip import DisconnectResponse
@@ -27,4 +30,4 @@ class TestConnectResponse(unittest.TestCase):
         request_response.timeout_in_seconds = 0
 
         with self.assertRaises(NotImplementedError):
-            self.loop.run_until_complete(asyncio.Task(request_response.start()))
+            await asyncio.Task(request_response.start())
