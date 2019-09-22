@@ -12,7 +12,7 @@ I use some external MQTT libraries as well to handle the MQTT Topic-creation.
 The data published on the MQTT bus can be fetched and stored in InfluxDB for graphing,
 or monitored by other listeners - that triggers different events.
 
-Please join XKNX on Discord (https://discord.gg/5XARFNT) and chat with JohanElmis for
+Please join XKNX on Discord (https://discord.gg/EuAQDXU) and chat with JohanElmis for
 specific questions.
 """
 
