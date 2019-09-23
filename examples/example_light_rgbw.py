@@ -1,8 +1,8 @@
-"""Example for setting different colors on a RGBW light."""
+"""Example for setting different colors on a RGBW remote value."""
 import asyncio
 
 from xknx import XKNX
-from xknx.devices import RemoteValueColorRGBW
+from xknx.remote_value import RemoteValueColorRGBW
 
 
 async def main():
