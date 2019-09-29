@@ -1,7 +1,7 @@
 """Generate a markdown table that can be copied to home-assistant.io sensor.knx documentation."""
 try:
-    from xknx.devices.remote_value_sensor import RemoteValueSensor
-    from xknx.knx.dpt import DPTBase
+    from xknx.remote_value import RemoteValueSensor
+    from xknx.dpt import DPTBase
 except ModuleNotFoundError:
     exit("Add the `xknx` directory to pythons path via `export PYTHONPATH=$HOME/directory/to/xknx`")
 

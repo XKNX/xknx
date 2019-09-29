@@ -5,7 +5,8 @@ from unittest.mock import Mock
 
 from xknx import XKNX
 from xknx.devices import Sensor
-from xknx.knx import DPTArray, GroupAddress, Telegram, TelegramType
+from xknx.dpt import DPTArray
+from xknx.telegram import GroupAddress, Telegram, TelegramType
 
 
 class TestSensor(unittest.TestCase):

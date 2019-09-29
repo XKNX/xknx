@@ -12,8 +12,9 @@ import asyncio
 import time
 from enum import Enum
 
+from xknx.dpt import DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.knx import DPTBinary, GroupAddress
+from xknx.telegram import GroupAddress
 
 from .action import Action
 from .device import Device

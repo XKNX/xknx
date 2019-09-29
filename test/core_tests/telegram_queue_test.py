@@ -4,9 +4,10 @@ import unittest
 from unittest.mock import Mock, patch
 
 from xknx import XKNX
+from xknx.dpt import DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.knx import (
-    AddressFilter, DPTBinary, GroupAddress, Telegram, TelegramDirection)
+from xknx.telegram import (
+    AddressFilter, GroupAddress, Telegram, TelegramDirection)
 
 
 class TestTelegramQueue(unittest.TestCase):

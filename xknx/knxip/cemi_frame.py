@@ -11,9 +11,9 @@ Documentation within:
     KNX IP Communication Medium
     File: AN117 v02.01 KNX IP Communication Medium DV.pdf
 """
+from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP
-from xknx.knx import (
-    DPTArray, DPTBinary, GroupAddress, PhysicalAddress, Telegram, TelegramType)
+from xknx.telegram import GroupAddress, PhysicalAddress, Telegram, TelegramType
 
 from .body import KNXIPBody
 from .knxip_enum import APCICommand, CEMIFlags, CEMIMessageCode

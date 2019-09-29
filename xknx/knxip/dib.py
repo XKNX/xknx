@@ -12,7 +12,7 @@ A KNX/IP Search Response may contain several DIBs of different types:
 """
 
 from xknx.exceptions import CouldNotParseKNXIP
-from xknx.knx import PhysicalAddress
+from xknx.telegram import PhysicalAddress
 
 from .knxip_enum import DIBServiceFamily, DIBTypeCode, KNXMedium
 

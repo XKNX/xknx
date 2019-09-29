@@ -3,7 +3,7 @@ import asyncio
 
 from xknx import XKNX
 from xknx.core import ValueReader
-from xknx.knx import GroupAddress
+from xknx.telegram import GroupAddress
 
 
 async def main():

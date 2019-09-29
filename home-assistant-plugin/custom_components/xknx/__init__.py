@@ -234,7 +234,7 @@ class KNXModule:
             CONF_XKNX_FIRE_EVENT in self.config[DOMAIN]
             and self.config[DOMAIN][CONF_XKNX_FIRE_EVENT]
         ):
-            from xknx.knx import AddressFilter
+            from xknx.telegram import AddressFilter
 
             address_filters = list(
                 map(AddressFilter, self.config[DOMAIN][CONF_XKNX_FIRE_EVENT_FILTER])
@@ -274,7 +274,8 @@ class KNXModule:
 
     async def service_send_to_knx_bus(self, call):
         """Service for sending an arbitrary KNX message to the KNX bus."""
-        from xknx.knx import Telegram, GroupAddress, DPTBinary, DPTArray
+        from xknx.dpt import DPTArray, DPTBinary
+        from xknx.telegram import GroupAddress, Telegram
 
         attr_payload = call.data.get(SERVICE_XKNX_ATTR_PAYLOAD)
         attr_address = call.data.get(SERVICE_XKNX_ATTR_ADDRESS)
