@@ -5,21 +5,24 @@ Upcoming version (unreleased)
 -----------------------------
 
 
-0.11.2 Bugfix release 2019-09-29
---------------------------------
+0.11.2 Add invert for climate on_off; fixed RGBW lights and stability improvements  2019-09-29
+----------------------------------------------------------------------------------------------
 
-* Avoid leaking ValueError exception on unknown APCICommand and CEMIMessageCode (#235) @elupus 
-* Fix exceptions (#234) @elupus
-* Fix for wrong structure of DPT 251.600 (#231) @dstrigl 
+## New Features
+
+*  Sensor: add DPT 9.006 as pressure_2byte #223 (@michelde)
+*  Climate: add new attribute on_off_invert #225 (@tombbo)
+
+## Bugfixes
+
+* Light: Fix for wrong structure of RGBW DPT 251.600 #231 (@dstrigl)
+* Core: Correct handling of E_NO_MORE_CONNECTIONS within ConnectResponses #217 (@Julius2342)
+* Core: Fix exceptions #234 (@elupus)
+* Core: Avoid leaking ValueError exception on unknown APCI command #235 (@elupus)
 * add tests for Climate on_off_invert (#233) @farmio
-* Add new param on_off_invert. (#225) @tombbo
-* added DPT 9.006 as pressure_2Byte sensor. (#223) @michelde
 * merge HA plugin from upstream 0.97.2 (#224) @farmio 
 * Small adjustments to the sensor documentation and example (#219) @biggestj 
-* merge HA plugin from upstream tag 0.97.0 @farmio
 * merge HA plugin from upstream @farmio
-* Merge pull request #217 from Julius2342/connect-response-wrong-hpai @julius2342
-* Correct handling of E_NO_MORE_CONNECTIONS within ConnectResponses @julius2342
 
 
 0.11.1 Bugfix release 2019-07-08
