@@ -5,21 +5,22 @@ import unittest
 from xknx import XKNX
 from xknx.devices import (
     Action, ActionBase, ActionCallback, BinarySensor, Climate, ClimateMode,
-    Cover, DateTime, ExposeSensor, Fan, Light, Notification, RemoteValue,
-    Scene, Sensor, Switch)
+    Cover, DateTime, ExposeSensor, Fan, Light, Notification, Scene, Sensor,
+    Switch)
+from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import (
     ConversionError, CouldNotParseAddress, CouldNotParseKNXIP,
     CouldNotParseTelegram, DeviceIllegalValue)
 from xknx.io.gateway_scanner import GatewayDescriptor
-from xknx.knx import (
-    DPTArray, DPTBinary, GroupAddress, PhysicalAddress, Telegram,
-    TelegramDirection)
 from xknx.knxip import (
     HPAI, CEMIFrame, ConnectionStateRequest, ConnectionStateResponse,
     ConnectRequest, ConnectRequestType, ConnectResponse, DIBDeviceInformation,
     DIBGeneric, DIBServiceFamily, DIBSuppSVCFamilies, DisconnectRequest,
     DisconnectResponse, KNXIPFrame, KNXIPHeader, KNXIPServiceType, KNXMedium,
     SearchRequest, SearchResponse, TunnellingAck, TunnellingRequest)
+from xknx.remote_value import RemoteValue
+from xknx.telegram import (
+    GroupAddress, PhysicalAddress, Telegram, TelegramDirection)
 
 
 # pylint: disable=too-many-public-methods,invalid-name

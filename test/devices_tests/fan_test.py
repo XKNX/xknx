@@ -5,8 +5,9 @@ from unittest.mock import patch
 
 from xknx import XKNX
 from xknx.devices import Fan
+from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram, TelegramType
+from xknx.telegram import GroupAddress, Telegram, TelegramType
 
 
 class TestFan(unittest.TestCase):

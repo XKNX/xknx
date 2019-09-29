@@ -4,9 +4,9 @@ import unittest
 
 from xknx import XKNX
 from xknx.devices import BinarySensor, ExposeSensor, Sensor
-from xknx.knx import (
-    DPTArray, DPTBinary, GroupAddress, Telegram, TelegramDirection,
-    TelegramType)
+from xknx.dpt import DPTArray, DPTBinary
+from xknx.telegram import (
+    GroupAddress, Telegram, TelegramDirection, TelegramType)
 
 
 class SensorExposeLoopTest(unittest.TestCase):

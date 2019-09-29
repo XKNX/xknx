@@ -11,9 +11,9 @@ read from an internet service (e.g. Yahoo weather) and exposed to
 ths KNX bus. KNX sensors may show this outside temperature within their
 LCD display.
 """
+from xknx.remote_value import RemoteValueSensor, RemoteValueSwitch
+
 from .device import Device
-from .remote_value_sensor import RemoteValueSensor
-from .remote_value_switch import RemoteValueSwitch
 
 
 class ExposeSensor(Device):

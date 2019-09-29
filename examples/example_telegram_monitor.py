@@ -4,7 +4,7 @@ import getopt
 import sys
 
 from xknx import XKNX
-from xknx.knx import AddressFilter
+from xknx.telegram import AddressFilter
 
 
 async def telegram_received_cb(telegram):
