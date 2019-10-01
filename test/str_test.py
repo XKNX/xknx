@@ -194,12 +194,15 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_state='1/2/4')
         self.assertEqual(
             str(notification),
-            '<Notification name="Alarm" group_address="GroupAddress("1/2/3")" group_address_state="GroupAddress("1/2/4")" message="" />')
-        notification.message = 'Einbrecher im Haus'
+            '<Notification name="Alarm" message="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" />')
+        self.loop.run_until_complete(asyncio.Task(notification.set('Einbrecher im Haus')))
         self.assertEqual(
             str(notification),
-            '<Notification name="Alarm" group_address="GroupAddress("1/2/3")" group_address_state="GroupAddress("1/2/4")" '
-            'message="Einbrecher im Haus" />')
+            '<Notification name="Alarm" '
+            'message="GroupAddress("1/2/3")/'
+            'GroupAddress("1/2/4")/'
+            '<DPTArray value="[0x45,0x69,0x6e,0x62,0x72,0x65,0x63,0x68,0x65,0x72,0x20,0x69,0x6d,0x20]" />/'
+            'Einbrecher im " />')
 
     def test_scene(self):
         """Test string representation of scene object."""
