@@ -11,9 +11,9 @@ Documentation within:
     KNX IP Communication Medium
     File: AN117 v02.01 KNX IP Communication Medium DV.pdf
 """
+from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP
-from xknx.knx import (
-    DPTArray, DPTBinary, GroupAddress, PhysicalAddress, Telegram, TelegramType)
+from xknx.telegram import GroupAddress, PhysicalAddress, Telegram, TelegramType
 
 from .body import KNXIPBody
 from .knxip_enum import APCICommand, CEMIFlags, CEMIMessageCode
@@ -105,7 +105,10 @@ class CEMIFrame(KNXIPBody):
 
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        self.code = CEMIMessageCode(raw[0])
+        try:
+            self.code = CEMIMessageCode(raw[0])
+        except ValueError:
+            raise CouldNotParseKNXIP("Could not understand CEMIMessageCode: {0} ".format(raw[0]))
 
         if self.code == CEMIMessageCode.L_DATA_IND or \
                 self.code == CEMIMessageCode.L_Data_REQ or \
@@ -140,7 +143,11 @@ class CEMIFrame(KNXIPBody):
 
         tpci_apci = cemi[9 + addil] * 256 + cemi[10 + addil]
 
-        self.cmd = APCICommand(tpci_apci & 0xFFC0)
+        try:
+            self.cmd = APCICommand(tpci_apci & 0xFFC0)
+        except ValueError:
+            raise CouldNotParseKNXIP(
+                "APCI not supported: {0:#012b}".format(tpci_apci & 0xFFC0))
 
         apdu = cemi[10 + addil:]
         if len(apdu) != self.mpdu_len:

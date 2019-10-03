@@ -5,8 +5,9 @@ from unittest.mock import Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Light
+from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram, TelegramType
+from xknx.telegram import GroupAddress, Telegram, TelegramType
 
 
 class TestLight(unittest.TestCase):
@@ -318,7 +319,7 @@ class TestLight(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(GroupAddress('1/2/5'), payload=DPTArray((0, 15, 23, 24, 25, 26))))
+                         Telegram(GroupAddress('1/2/5'), payload=DPTArray((23, 24, 25, 26, 0, 15))))
         self.assertEqual(light.current_color, ([23, 24, 25], 26))
 
     def test_set_color_rgbw_not_possible(self):
@@ -489,7 +490,7 @@ class TestLight(unittest.TestCase):
                       group_address_color='1/2/4',
                       group_address_rgbw='1/2/5')
         self.assertEqual(light.current_color, (None, None))
-        telegram = Telegram(GroupAddress('1/2/5'), payload=DPTArray((0, 15, 23, 24, 25, 26)))
+        telegram = Telegram(GroupAddress('1/2/5'), payload=DPTArray((23, 24, 25, 26, 0, 15)))
         self.loop.run_until_complete(asyncio.Task(light.process(telegram)))
         self.assertEqual(light.current_color, ([23, 24, 25], 26))
 

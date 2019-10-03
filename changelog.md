@@ -4,11 +4,89 @@ Changelog
 Upcoming version (unreleased)
 -----------------------------
 
+
+0.11.2 Add invert for climate on_off; fixed RGBW lights and stability improvements  2019-09-29
+----------------------------------------------------------------------------------------------
+
+## New Features
+
+*  Sensor: add DPT 9.006 as pressure_2byte #223 (@michelde)
+*  Climate: add new attribute on_off_invert #225 (@tombbo)
+
+## Bugfixes
+
+* Light: Fix for wrong structure of RGBW DPT 251.600 #231 (@dstrigl)
+* Core: Correct handling of E_NO_MORE_CONNECTIONS within ConnectResponses #217 (@Julius2342)
+* Core: Fix exceptions #234 (@elupus)
+* Core: Avoid leaking ValueError exception on unknown APCI command #235 (@elupus)
+* add tests for Climate on_off_invert (#233) @farmio
+* merge HA plugin from upstream 0.97.2 (#224) @farmio 
+* Small adjustments to the sensor documentation and example (#219) @biggestj 
+* merge HA plugin from upstream @farmio
+
+
+0.11.1 Bugfix release 2019-07-08
+--------------------------------
+
+* Optionally disable reading (GroupValueRead) for sensor and binary_sensor #216 @farmio
+
+
+0.11.0 Added new sensor types and fixed a couple of bugs 2019-06-12
+-------------------------------------------------------------------
+
+### Features
+
+* Auto detection of local ip: #184 (@farmio )
+* Added new sensor types and fix existing: #189 (@farmio )
+        - binary mapped to RemoteValueSwitch
+        - angle DPT 5.003
+        - percentU8DPT 5.004 (1 byte unscaled)
+        - percentV8 DPT 6.001 (1 byte signed unscaled)
+        - counter_pulses DPT 6.010
+        - DPT 8.*** types (percentV16, delta_time_*, rotation_angle, 2byte_signed and DPT-8)
+        - luminous_flux DPT 14.042
+        - pressure DPT 14.058
+        - string DPT 16.000
+        - scene_number DPT 17.001
+* Binary values are now exposable
+* Add support for RGBW lights - DPT 251.600: #191 #206 (@phbaer )
+* Bump PyYAML to latest version (5.1): #204 (@Julius2342 )
+* Add DPT-8 support for Sensors and HA Sensors: #208 (@farmio )
+
+### Breaking changes
+
+* Scene: scene_number is now 1 indexed according to KNX standards
+* Replaced group_address in BinarySensor with group_address_state (not for Home Assistant component)
+
+### Bugfixes
+
+* Fix pulse sensor type: #187 (@farmio )
+* Fix climate device using setpoint_shift: #190 (@farmio )
+* Read binary sensors on startup: #199 (@farmio )
+* Updated YAML to use safe mode: #196 (@farmio )
+* Update README.md #195 (thanks @amp-man)
+* Code refactoring: #200 (@farmio )
+* Fix #194, #193, #129, #116, #114
+* Fix #183 and #148 through #190 (@farmio )
+
+
+0.10.0 Bugfix release 2019-02-22
+--------------------------------
+
+* Connection config can now be configured in xknx.yml (#179 @farmio )
+* (breaking change) Introduced target_temperature_state for climate devices (#175 @marvin-w )
+* Introduce a configurable rate limit (#178 @marvin-w)
+* updated HA plugin (#174 @marvin-w)
+* Migrate documentation in main project (#168 @marvin-w)
+* documentation updates (@farmio & @marvin-w)
+
+
 0.9.4 - Release 2019-01-01
 --------------------------
 
 * updated hass plugin (@marvin-w #162)
 * tunable white and color temperature for lights (@farmio #154)
+
 
 0.9.3 - Release 2018-12-23
 --------------------------
@@ -19,6 +97,7 @@ Upcoming version (unreleased)
   ClimateMode is now a member of Climate (the hass plugin
   needs this kind of dependency. Please note the updated xknx.yml)
 
+
 0.9.2 - Release 2018-12-22
 --------------------------
 
@@ -26,6 +105,7 @@ Upcoming version (unreleased)
 * Splitted up Climate in Climate and ClimateMode
 * added __contains__ method for Devices class.
 * fixed KeyError when action refers to a non existing device.
+
 
 0.9.1 - Release 2018-10-28
 --------------------------
@@ -54,6 +134,7 @@ Upcoming version (unreleased)
 * Typo: @itineric #124
 * Feature: Add support for KNX DPT 20.105  @cian #122
 
+
 0.8.5 -Release 2018-03-10
 -------------------------
 
@@ -66,6 +147,7 @@ Upcoming version (unreleased)
 * Bugfix: invert scaling value #114
 * Minor: current_brightness and current_color are now properties
 * Feature: Added DPT 5.010 DPTValue1Ucount @andreasnanko #109
+
 
 0.8.3 - Release 2018-02-05
 --------------------------
@@ -82,6 +164,7 @@ Upcoming version (unreleased)
 * Basic support for colored lights
 * Better unit test coverage
 
+
 0.8.0 - Release 2018-01-27
 ---------------------------
 
@@ -96,6 +179,7 @@ Upcoming version (unreleased)
 * Fixed versions for dependencies (@encbladexp)
 
 And many more smaller improvements :-)
+
 
 0.7.7-0.7.18 - Release 2017-11-05
 ---------------------------------
@@ -191,6 +275,7 @@ groups:
 
 
 Within `Light` class i introduced an attribute `group_address_brightness_state`. The attribute `group_address_state` was renamed to `group_address_switch_state`. I also removed the attribute `group_address_dimm` (which did not have any implemented logic).
+
 
 Version 0.6.2 - Released 2017-07-24
 -----------------------------------

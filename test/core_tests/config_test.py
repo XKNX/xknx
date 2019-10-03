@@ -11,7 +11,7 @@ from xknx.devices import (
     Sensor, Switch)
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
-from xknx.knx import PhysicalAddress
+from xknx.telegram import PhysicalAddress
 
 
 # pylint: disable=too-many-public-methods,invalid-name
@@ -376,6 +376,18 @@ class TestConfig(unittest.TestCase):
                    'Heating.Valve1',
                    group_address_state='2/0/0',
                    value_type='percent',
+                   sync_state=True,
+                   device_updated_cb=TestConfig.xknx.devices.device_updated))
+
+    def test_config_sensor_percent_passive(self):
+        """Test passive percent Sensor from config file."""
+        self.assertEqual(
+            TestConfig.xknx.devices['Heating.Valve2'],
+            Sensor(TestConfig.xknx,
+                   'Heating.Valve2',
+                   group_address_state='2/0/1',
+                   value_type='percent',
+                   sync_state=False,
                    device_updated_cb=TestConfig.xknx.devices.device_updated))
 
     def test_config_sensor_temperature_type(self):
@@ -402,10 +414,21 @@ class TestConfig(unittest.TestCase):
     def test_config_sensor_binary_device_class(self):
         """Test reading Sensor with device_class from config file."""
         self.assertEqual(
+            TestConfig.xknx.devices['Kitchen.Motion.Sensor'],
+            BinarySensor(TestConfig.xknx,
+                         'Kitchen.Motion.Sensor',
+                         group_address_state='3/0/0',
+                         device_class='motion',
+                         device_updated_cb=TestConfig.xknx.devices.device_updated))
+
+    def test_config_sensor_binary_passive(self):
+        """Test reading Sensor with sync_state False from config file."""
+        self.assertEqual(
             TestConfig.xknx.devices['DiningRoom.Motion.Sensor'],
             BinarySensor(TestConfig.xknx,
                          'DiningRoom.Motion.Sensor',
                          group_address_state='3/0/1',
+                         sync_state=False,
                          device_class='motion',
                          device_updated_cb=TestConfig.xknx.devices.device_updated))
 

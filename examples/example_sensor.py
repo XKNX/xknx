@@ -1,4 +1,4 @@
-"""Example for Sensor device."""
+"""Example for Sensor device. See docs/sensor.md and docs/binary_sensor.md for a detailed explanation."""
 import asyncio
 
 from xknx import XKNX
@@ -14,15 +14,18 @@ async def main():
         xknx,
         'DiningRoom.Motion.Sensor',
         group_address_state='6/0/2',
-        device_class='motion')
+        device_class='motion'
+    )
     await sensor1.sync()
     print(sensor1)
 
     sensor2 = Sensor(
         xknx,
-        'DiningRoom.Temperatur.Sensor',
+        'DiningRoom.Temperature.Sensor',
         group_address_state='6/2/1',
-        value_type='float')
+        value_type='temperature'
+    )
+
     await sensor2.sync()
     print(sensor2)
 

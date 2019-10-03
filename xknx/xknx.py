@@ -7,7 +7,7 @@ from sys import platform
 from xknx.core import Config, TelegramQueue
 from xknx.devices import Devices
 from xknx.io import ConnectionConfig, KNXIPInterface
-from xknx.knx import GroupAddressType, PhysicalAddress
+from xknx.telegram import GroupAddressType, PhysicalAddress
 
 
 class XKNX:

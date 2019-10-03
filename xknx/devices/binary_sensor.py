@@ -12,8 +12,9 @@ import asyncio
 import time
 from enum import Enum
 
+from xknx.dpt import DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.knx import DPTBinary, GroupAddress
+from xknx.telegram import GroupAddress
 
 from .action import Action
 from .device import Device
@@ -38,6 +39,7 @@ class BinarySensor(Device):
                  xknx,
                  name,
                  group_address_state=None,
+                 sync_state=True,
                  device_class=None,
                  significant_bit=1,
                  reset_after=None,
@@ -54,6 +56,7 @@ class BinarySensor(Device):
             actions = []
 
         self.group_address_state = group_address_state
+        self.sync_state = sync_state
         self.device_class = device_class
         self.significant_bit = significant_bit
         self.reset_after = reset_after
@@ -69,6 +72,8 @@ class BinarySensor(Device):
         """Initialize object from configuration structure."""
         group_address_state = \
             config.get('group_address_state')
+        sync_state = \
+            config.get('sync_state', True)
         device_class = \
             config.get('device_class')
         significant_bit = \
@@ -83,6 +88,7 @@ class BinarySensor(Device):
         return cls(xknx,
                    name,
                    group_address_state=group_address_state,
+                   sync_state=sync_state,
                    device_class=device_class,
                    significant_bit=significant_bit,
                    actions=actions)
@@ -93,7 +99,8 @@ class BinarySensor(Device):
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
-        if self.group_address_state is not None:
+        if self.sync_state and \
+                self.group_address_state is not None:
             return [self.group_address_state, ]
         return []
 

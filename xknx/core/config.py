@@ -12,7 +12,7 @@ from xknx.devices import (
     Notification, Scene, Sensor, Switch)
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
-from xknx.knx import PhysicalAddress
+from xknx.telegram import PhysicalAddress
 
 
 class Config:

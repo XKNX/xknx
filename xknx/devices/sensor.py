@@ -6,8 +6,9 @@ It provides functionality for
 * reading the current state from KNX bus.
 * watching for state updates from KNX bus.
 """
+from xknx.remote_value import RemoteValueSensor
+
 from .device import Device
-from .remote_value_sensor import RemoteValueSensor
 
 
 class Sensor(Device):
@@ -17,31 +18,32 @@ class Sensor(Device):
                  xknx,
                  name,
                  group_address_state=None,
+                 sync_state=True,
                  value_type=None,
                  device_updated_cb=None):
         """Initialize Sensor class."""
         # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
 
-        self.sensor_value = None
         self.sensor_value = RemoteValueSensor(
             xknx,
             group_address_state=group_address_state,
+            sync_state=sync_state,
+            value_type=value_type,
             device_name=self.name,
-            after_update_cb=self.after_update,
-            value_type=value_type)
+            after_update_cb=self.after_update)
 
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
-        group_address_state = \
-            config.get('group_address_state')
-        value_type = \
-            config.get('value_type')
+        group_address_state = config.get('group_address_state')
+        sync_state = config.get('sync_state', True)
+        value_type = config.get('value_type')
 
         return cls(xknx,
                    name,
                    group_address_state=group_address_state,
+                   sync_state=sync_state,
                    value_type=value_type)
 
     def has_group_address(self, group_address):

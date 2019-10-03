@@ -6,8 +6,8 @@ Tunnels connect to KNX/IP devices directly via UDP and build a static UDP connec
 import asyncio
 
 from xknx.exceptions import XKNXException
-from xknx.knx import TelegramDirection
 from xknx.knxip import KNXIPFrame, KNXIPServiceType, TunnellingRequest
+from xknx.telegram import TelegramDirection
 
 from .connect import Connect
 from .connectionstate import ConnectionState

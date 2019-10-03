@@ -4,13 +4,12 @@ Module for managing the climate within a room.
 * It reads/listens to a temperature address from KNX bus.
 * Manages and sends the desired setpoint to KNX bus.
 """
-from xknx.knx import GroupAddress
+from xknx.remote_value import (
+    RemoteValue1Count, RemoteValueSwitch, RemoteValueTemp)
+from xknx.telegram import GroupAddress
 
 from .climate_mode import ClimateMode
 from .device import Device
-from .remote_value_1count import RemoteValue1Count
-from .remote_value_switch import RemoteValueSwitch
-from .remote_value_temp import RemoteValueTemp
 
 DEFAULT_SETPOINT_SHIFT_MAX = 6
 DEFAULT_SETPOINT_SHIFT_MIN = -6
@@ -35,8 +34,8 @@ class SetpointShiftValue(RemoteValue1Count):
         super().__init__(xknx,
                          group_address,
                          group_address_state,
-                         device_name,
-                         after_update_cb)
+                         device_name=device_name,
+                         after_update_cb=after_update_cb)
 
         self.setpoint_shift_step = setpoint_shift_step
         self.min_temp_delta = min_temp_delta
@@ -80,6 +79,7 @@ class Climate(Device):
                  setpoint_shift_min=DEFAULT_SETPOINT_SHIFT_MIN,
                  group_address_on_off=None,
                  group_address_on_off_state=None,
+                 on_off_invert=False,
                  min_temp=None,
                  max_temp=None,
                  mode=None,
@@ -129,8 +129,9 @@ class Climate(Device):
             xknx,
             group_address_on_off,
             group_address_on_off_state,
-            self.name,
-            self.after_update)
+            device_name=self.name,
+            after_update_cb=self.after_update,
+            invert=on_off_invert)
 
         self.mode = mode
 
@@ -158,6 +159,8 @@ class Climate(Device):
             config.get('group_address_on_off')
         group_address_on_off_state = \
             config.get('group_address_on_off_state')
+        on_off_invert = \
+            config.get('on_off_invert', False)
         min_temp = config.get('min_temp')
         max_temp = config.get('max_temp')
 
@@ -180,6 +183,7 @@ class Climate(Device):
                    setpoint_shift_min=setpoint_shift_min,
                    group_address_on_off=group_address_on_off,
                    group_address_on_off_state=group_address_on_off_state,
+                   on_off_invert=on_off_invert,
                    min_temp=min_temp,
                    max_temp=max_temp,
                    mode=climate_mode)

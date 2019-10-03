@@ -2,8 +2,9 @@
 import asyncio
 
 from xknx import XKNX
+from xknx.dpt import DPTBinary
 from xknx.io import GatewayScanner, Tunnel
-from xknx.knx import DPTBinary, GroupAddress, PhysicalAddress, Telegram
+from xknx.telegram import GroupAddress, PhysicalAddress, Telegram
 
 
 async def main():

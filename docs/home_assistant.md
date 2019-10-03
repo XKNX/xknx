@@ -81,6 +81,6 @@ switch:
 Help
 ----
 
-If you have problems, join the [XKNX chat on Discord](https://discord.gg/5XARFNT). We are happy to help :-)
+If you have problems, join the [XKNX chat on Discord](https://discord.gg/EuAQDXU). We are happy to help :-)
 
 

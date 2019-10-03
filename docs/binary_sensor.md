@@ -20,6 +20,9 @@ binarysensor = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3', devi
 * `xknx` is the XKNX object.
 * `name` is the name of the object.
 * `group_address_state` is the KNX group address of the sensor device.
+* `sync_state` defines if the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
+* `significant_bit` Defining which bit should be relevant for the binary state. Defaults to `1`
+* `reset_after` may be used to reset the internal state to `OFF` again after given time in ms. Defaults to `None`
 * `device_class` may be used to store the type of sensor, e.g. "motion" for motion detectors.
 
 ## [](#header-2)Example

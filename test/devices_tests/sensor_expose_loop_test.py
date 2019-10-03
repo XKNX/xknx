@@ -4,9 +4,9 @@ import unittest
 
 from xknx import XKNX
 from xknx.devices import BinarySensor, ExposeSensor, Sensor
-from xknx.knx import (
-    DPTArray, DPTBinary, GroupAddress, Telegram, TelegramDirection,
-    TelegramType)
+from xknx.dpt import DPTArray, DPTBinary
+from xknx.telegram import (
+    GroupAddress, Telegram, TelegramDirection, TelegramType)
 
 
 class SensorExposeLoopTest(unittest.TestCase):
@@ -52,6 +52,7 @@ class SensorExposeLoopTest(unittest.TestCase):
             ('powerfactor', DPTArray((0x42, 0xA9, 0x6B, 0x85)), 84.71),
             ('ppm', DPTArray((0x00, 0x03)), 0.03),
             ('pressure', DPTArray((0x42, 0xA9, 0x6B, 0x85)), 84.71),
+            ('pressure_2byte', DPTArray((0x2E, 0xA9)), 545.6),
             ('pulse', DPTArray((0x11)), 17),
             ('rotation_angle', DPTArray((0xAE, 0xC0)), -20800),
             ('scene_number', DPTArray((0x00)), 1),
