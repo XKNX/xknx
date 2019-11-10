@@ -3,6 +3,7 @@ from typing import List, Optional
 
 import voluptuous as vol
 from xknx.devices import Climate as XknxClimate, ClimateMode as XknxClimateMode
+from xknx.devices.climate import SetpointShiftMode
 from xknx.dpt import HVACOperationMode
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
@@ -24,7 +25,6 @@ from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from xknx.devices.climate import SetpointShiftMode
 from . import ATTR_DISCOVER_DEVICES, DATA_XKNX
 
 CONF_SETPOINT_SHIFT_ADDRESS = "setpoint_shift_address"
@@ -84,6 +84,9 @@ PRESET_MODES_INV = dict((reversed(item) for item in PRESET_MODES.items()))
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_SETPOINT_SHIFT_MODE, default=DEFAULT_SETPOINT_SHIFT_MODE): cv.enum(
+            SetpointShiftMode
+        ),
         vol.Optional(
             CONF_SETPOINT_SHIFT_STEP, default=DEFAULT_SETPOINT_SHIFT_STEP
         ): vol.All(float, vol.Range(min=0, max=2)),
@@ -96,9 +99,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
         vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): cv.string,
         vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
-        vol.Optional(CONF_SETPOINT_SHIFT_MODE, default=DEFAULT_SETPOINT_SHIFT_MODE): cv.enum(
-            SetpointShiftMode
-        ),
         vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
         vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
         vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
@@ -183,7 +183,7 @@ def async_add_entities_config(hass, config, async_add_entities):
         group_address_setpoint_shift_state=config.get(
             CONF_SETPOINT_SHIFT_STATE_ADDRESS
         ),
-        setpoint_shift_mode=config.get(CONF_SETPOINT_SHIFT_MODE),
+        setpoint_shift_mode=config[CONF_SETPOINT_SHIFT_MODE],
         setpoint_shift_step=config[CONF_SETPOINT_SHIFT_STEP],
         setpoint_shift_max=config[CONF_SETPOINT_SHIFT_MAX],
         setpoint_shift_min=config[CONF_SETPOINT_SHIFT_MIN],
