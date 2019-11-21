@@ -324,7 +324,7 @@ class KNXModule:
         """Call invoked after a KNX telegram was received."""
         self.hass.bus.async_fire(
             "knx_event",
-            {"address": str(telegram.group_address), "data": telegram.payload.value},
+            {"address": str(telegram.address), "data": telegram.payload.value},
         )
 
     async def service_send_to_knx_bus(self, call):
@@ -347,7 +347,7 @@ class KNXModule:
         payload = calculate_payload(attr_payload)
         address = GroupAddress(attr_address)
 
-        telegram = Telegram(group_address=address, payload=payload)
+        telegram = Telegram(address=address, payload=payload)
         await self.xknx.telegrams.put(telegram)
 
 

@@ -281,7 +281,7 @@ class TestStringRepresentations(unittest.TestCase):
         )
         # self.loop.run_until_complete(sensor.sensor_value.set(25))
         telegram = Telegram(
-            group_address=GroupAddress("1/2/3"),
+            address=GroupAddress("1/2/3"),
             direction=TelegramDirection.INCOMING,
             payload=DPTArray(0x40),
         )
@@ -350,7 +350,7 @@ class TestStringRepresentations(unittest.TestCase):
         )
 
         telegram = Telegram(
-            group_address=GroupAddress("7/0/10"),
+            address=GroupAddress("7/0/10"),
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
         )
@@ -468,10 +468,10 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_telegram(self):
         """Test string representation of Telegram."""
-        telegram = Telegram(group_address=GroupAddress("1/2/3"), payload=DPTBinary(7))
+        telegram = Telegram(address=GroupAddress("1/2/3"), payload=DPTBinary(7))
         self.assertEqual(
             str(telegram),
-            '<Telegram group_address="GroupAddress("1/2/3")", payload="<DPTBinary value="7" />" telegramtype="TelegramType.GROUP_WRITE" direction='
+            '<Telegram address="GroupAddress("1/2/3")", payload="<DPTBinary value="7" />" telegramtype="TelegramType.GROUP_WRITE" direction='
             '"TelegramDirection.OUTGOING" />',
         )
 
@@ -660,7 +660,7 @@ class TestStringRepresentations(unittest.TestCase):
         cemi_frame = CEMIFrame(xknx)
         cemi_frame.src_addr = GroupAddress("1/2/3")
         cemi_frame.telegram = Telegram(
-            group_address=GroupAddress("1/2/5"), payload=DPTBinary(7)
+            address=GroupAddress("1/2/5"), payload=DPTBinary(7)
         )
         self.assertEqual(
             str(cemi_frame),

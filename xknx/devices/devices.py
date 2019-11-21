@@ -66,7 +66,7 @@ class Devices:
 
     async def process(self, telegram):
         """Process telegram."""
-        for device in self.devices_by_group_address(telegram.group_address):
+        for device in self.devices_by_group_address(telegram.address):
             await device.process(telegram)
 
     async def sync(self):

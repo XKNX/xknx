@@ -110,13 +110,13 @@ class RemoteValue:
 
     async def process(self, telegram, always_callback=False):
         """Process incoming or outgoing telegram."""
-        if not self.has_group_address(telegram.group_address):
+        if not self.has_group_address(telegram.address):
             return False
         if not self.payload_valid(telegram.payload):
             raise CouldNotParseTelegram(
                 "payload invalid",
                 payload=telegram.payload,
-                group_address=telegram.group_address,
+                address=telegram.address,
                 device_name=self.device_name,
                 feature_name=self.feature_name,
             )
@@ -137,7 +137,7 @@ class RemoteValue:
     async def _send(self, payload, response=False):
         """Send payload as telegram to KNX bus."""
         telegram = Telegram(
-            group_address=self.group_address,
+            address=self.group_address,
             telegramtype=(
                 TelegramType.GROUP_RESPONSE if response else TelegramType.GROUP_WRITE
             ),

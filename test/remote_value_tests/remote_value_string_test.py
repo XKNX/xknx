@@ -112,7 +112,7 @@ class TestRemoteValueString(unittest.TestCase):
         xknx = XKNX()
         remote_value = RemoteValueString(xknx, group_address=GroupAddress("1/2/3"))
         telegram = Telegram(
-            group_address=GroupAddress("1/2/3"),
+            address=GroupAddress("1/2/3"),
             payload=DPTArray(
                 (
                     0x41,
@@ -141,12 +141,12 @@ class TestRemoteValueString(unittest.TestCase):
         remote_value = RemoteValueString(xknx, group_address=GroupAddress("1/2/3"))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+                address=GroupAddress("1/2/3"), payload=DPTBinary(1)
             )
             self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                group_address=GroupAddress("1/2/3"),
+                address=GroupAddress("1/2/3"),
                 payload=DPTArray(
                     (
                         0x64,

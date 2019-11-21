@@ -74,7 +74,7 @@ class CEMIFrame:
             raise ConversionError(f"Telegram not implemented for {self.cmd}")
 
         return Telegram(
-            group_address=self.dst_addr,
+            address=self.dst_addr,
             payload=self.payload,
             telegramtype=resolve_telegram_type(self.cmd),
         )
@@ -82,7 +82,7 @@ class CEMIFrame:
     @telegram.setter
     def telegram(self, telegram: Telegram):
         """Set telegram."""
-        self.dst_addr = telegram.group_address
+        self.dst_addr = telegram.address
         self.payload = telegram.payload
 
         # TODO: Move to separate function, together with setting of

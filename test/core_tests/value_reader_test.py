@@ -27,7 +27,7 @@ class TestValueReader(unittest.TestCase):
         xknx = XKNX()
         test_group_address = GroupAddress("0/0/0")
         response_telegram = Telegram(
-            group_address=test_group_address,
+            address=test_group_address,
             telegramtype=TelegramType.GROUP_RESPONSE,
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
@@ -94,7 +94,7 @@ class TestValueReader(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                group_address=GroupAddress("0/0/0"),
+                address=GroupAddress("0/0/0"),
                 telegramtype=TelegramType.GROUP_READ,
             ),
         )
@@ -104,25 +104,25 @@ class TestValueReader(unittest.TestCase):
         xknx = XKNX()
         test_group_address = GroupAddress("0/0/0")
         expected_telegram_1 = Telegram(
-            group_address=test_group_address,
+            address=test_group_address,
             telegramtype=TelegramType.GROUP_RESPONSE,
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
         )
         expected_telegram_2 = Telegram(
-            group_address=test_group_address,
+            address=test_group_address,
             telegramtype=TelegramType.GROUP_WRITE,
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
         )
         telegram_wrong_address = Telegram(
-            group_address=GroupAddress("0/0/1"),
+            address=GroupAddress("0/0/1"),
             telegramtype=TelegramType.GROUP_RESPONSE,
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
         )
         telegram_wrong_type = Telegram(
-            group_address=test_group_address,
+            address=test_group_address,
             telegramtype=TelegramType.GROUP_READ,
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),

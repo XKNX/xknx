@@ -60,7 +60,7 @@ class Test_KNXIP(unittest.TestCase):
         knxipframe.body.cemi.src_addr = PhysicalAddress("1.2.2")
 
         telegram = Telegram(
-            group_address=GroupAddress(337),
+            address=GroupAddress(337),
             payload=DPTArray(DPTTime().to_knx(time.strptime("13:23:42", "%H:%M:%S"))),
         )
 
@@ -84,7 +84,7 @@ class Test_KNXIP(unittest.TestCase):
 
         telegram = knxipframe.body.cemi.telegram
 
-        self.assertEqual(telegram.group_address, GroupAddress(337))
+        self.assertEqual(telegram.address, GroupAddress(337))
 
         self.assertEqual(len(telegram.payload.value), 1)
         self.assertEqual(telegram.payload.value[0], 0xF0)
@@ -240,7 +240,7 @@ class Test_KNXIP(unittest.TestCase):
     def test_maximum_apci(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, testing maximum APCI."""
         telegram = Telegram(
-            group_address=GroupAddress(337), payload=DPTBinary(DPTBinary.APCI_MAX_VALUE)
+            address=GroupAddress(337), payload=DPTBinary(DPTBinary.APCI_MAX_VALUE)
         )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)

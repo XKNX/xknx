@@ -77,7 +77,7 @@ class TestRemoteValueDptValue2Ucount(unittest.TestCase):
             xknx, group_address=GroupAddress("1/2/3")
         )
         telegram = Telegram(
-            group_address=GroupAddress("1/2/3"), payload=DPTArray((0x0A, 0x0B))
+            address=GroupAddress("1/2/3"), payload=DPTArray((0x0A, 0x0B))
         )
         self.loop.run_until_complete(remote_value.process(telegram))
         self.assertEqual(remote_value.value, 2571)
@@ -90,17 +90,17 @@ class TestRemoteValueDptValue2Ucount(unittest.TestCase):
         )
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+                address=GroupAddress("1/2/3"), payload=DPTBinary(1)
             )
             self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                group_address=GroupAddress("1/2/3"), payload=DPTArray((0x64,))
+                address=GroupAddress("1/2/3"), payload=DPTArray((0x64,))
             )
             self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                group_address=GroupAddress("1/2/3"),
+                address=GroupAddress("1/2/3"),
                 payload=DPTArray(
                     (
                         0x64,
