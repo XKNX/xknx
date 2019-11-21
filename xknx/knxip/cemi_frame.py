@@ -94,9 +94,15 @@ class CEMIFrame:
             | CEMIFlags.PRIORITY_LOW
             | CEMIFlags.NO_ACK_REQUESTED
             | CEMIFlags.CONFIRM_NO_ERROR
-            | CEMIFlags.DESTINATION_GROUP_ADDRESS
             | CEMIFlags.HOP_COUNT_1ST
         )
+
+        if isinstance(telegram.address, GroupAddress):
+            self.flags |= CEMIFlags.DESTINATION_GROUP_ADDRESS
+        elif isinstance(telegram.address, PhysicalAddress):
+            self.flags |= CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
+        else:
+            raise TypeError()
 
         # TODO: use telegram.direction
         def resolve_cmd(telegramtype: TelegramType) -> APCICommand:
