@@ -7,7 +7,13 @@ from unittest.mock import patch
 from xknx import XKNX
 from xknx.devices import DateTime
 from xknx.dpt import DPTArray
-from xknx.telegram import GroupAddress, Telegram, TelegramType
+from xknx.telegram import (
+    GroupAddress,
+    GroupValueRead,
+    GroupValueResponse,
+    GroupValueWrite,
+    Telegram,
+)
 
 
 class TestDateTime(unittest.TestCase):
@@ -43,10 +49,9 @@ class TestDateTime(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram.destination_address, GroupAddress("1/2/3"))
-        self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
-        self.assertEqual(len(telegram.payload.value), 8)
+        self.assertEqual(len(telegram.payload.dpt.value), 8)
         self.assertEqual(
-            telegram.payload.value, (0x75, 0x01, 0x07, 0xE9, 0x0D, 0x0E, 0x20, 0x80)
+            telegram.payload.dpt.value, (0x75, 0x01, 0x07, 0xE9, 0x0D, 0x0E, 0x20, 0x80)
         )
 
     #
@@ -69,9 +74,8 @@ class TestDateTime(unittest.TestCase):
 
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram.destination_address, GroupAddress("1/2/3"))
-        self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
-        self.assertEqual(len(telegram.payload.value), 3)
-        self.assertEqual(telegram.payload.value, (0x07, 0x01, 0x11))
+        self.assertEqual(len(telegram.payload.dpt.value), 3)
+        self.assertEqual(telegram.payload.dpt.value, (0x07, 0x01, 0x11))
 
     #
     # SYNC Time
@@ -93,9 +97,8 @@ class TestDateTime(unittest.TestCase):
 
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram.destination_address, GroupAddress("1/2/3"))
-        self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
-        self.assertEqual(len(telegram.payload.value), 3)
-        self.assertEqual(telegram.payload.value, (0xE9, 0x0D, 0x0E))
+        self.assertEqual(len(telegram.payload.dpt.value), 3)
+        self.assertEqual(telegram.payload.dpt.value, (0xE9, 0x0D, 0x0E))
 
     #
     # PROCESS
@@ -111,8 +114,7 @@ class TestDateTime(unittest.TestCase):
         )
 
         telegram_read = Telegram(
-            destination_address=GroupAddress("1/2/3"),
-            telegramtype=TelegramType.GROUP_READ,
+            destination_address=GroupAddress("1/2/3"), payload=GroupValueRead()
         )
         with patch("time.localtime") as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
@@ -127,8 +129,7 @@ class TestDateTime(unittest.TestCase):
             telegram,
             Telegram(
                 destination_address=GroupAddress("1/2/3"),
-                telegramtype=TelegramType.GROUP_RESPONSE,
-                payload=DPTArray((0xE9, 0xD, 0xE)),
+                payload=GroupValueResponse(DPTArray((0xE9, 0xD, 0xE))),
             ),
         )
 

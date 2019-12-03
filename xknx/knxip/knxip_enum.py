@@ -52,9 +52,9 @@ class CEMIMessageCode(Enum):
 class APCICommand(Enum):
     """Enum class for KNX/IP APCI Commands."""
 
-    GROUP_READ = 0x00
-    GROUP_WRITE = 0x80
-    GROUP_RESPONSE = 0x40
+    GROUP_READ = 0x0000
+    GROUP_RESPONSE = 0x0040
+    GROUP_WRITE = 0x0080
 
 
 class CEMIFlags:

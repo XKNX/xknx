@@ -11,7 +11,7 @@ import asyncio
 import logging
 
 from xknx.exceptions import CommunicationError, XKNXException
-from xknx.telegram import TelegramDirection, TelegramType
+from xknx.telegram import GroupValueWrite, TelegramDirection
 
 logger = logging.getLogger("xknx.log")
 telegram_logger = logging.getLogger("xknx.telegram")
@@ -133,7 +133,7 @@ class TelegramQueue:
         telegram_logger.debug(telegram)
         if self.xknx.knxip_interface is not None:
             await self.xknx.knxip_interface.send_telegram(telegram)
-            if telegram.telegramtype == TelegramType.GROUP_WRITE:
+            if isinstance(telegram.payload, GroupValueWrite):
                 await self.xknx.devices.process(telegram)
         else:
             logger.warning("No KNXIP interface defined")
