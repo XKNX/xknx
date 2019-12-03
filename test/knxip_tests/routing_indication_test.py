@@ -6,7 +6,14 @@ import unittest
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary, DPTTemperature, DPTTime
 from xknx.knxip import CEMIFrame, KNXIPFrame, KNXIPServiceType, RoutingIndication
-from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramType
+from xknx.telegram import (
+    GroupAddress,
+    GroupValueRead,
+    GroupValueResponse,
+    GroupValueWrite,
+    IndividualAddress,
+    Telegram,
+)
 
 
 class Test_KNXIP(unittest.TestCase):
@@ -36,8 +43,8 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe.body.cemi.src_addr, IndividualAddress("1.2.2"))
         self.assertEqual(knxipframe.body.cemi.dst_addr, GroupAddress(337))
 
-        self.assertEqual(len(knxipframe.body.cemi.payload.value), 1)
-        self.assertEqual(knxipframe.body.cemi.payload.value[0], 0xF0)
+        self.assertEqual(len(knxipframe.body.cemi.payload.dpt.value), 1)
+        self.assertEqual(knxipframe.body.cemi.payload.dpt.value[0], 0xF0)
 
     def test_from_knx_to_knx(self):
         """Test parsing and streaming CEMIFrame KNX/IP."""
@@ -61,7 +68,9 @@ class Test_KNXIP(unittest.TestCase):
 
         telegram = Telegram(
             destination_address=GroupAddress(337),
-            payload=DPTArray(DPTTime().to_knx(time.strptime("13:23:42", "%H:%M:%S"))),
+            payload=GroupValueWrite(
+                DPTArray(DPTTime().to_knx(time.strptime("13:23:42", "%H:%M:%S")))
+            ),
         )
 
         knxipframe.body.cemi.telegram = telegram
@@ -86,8 +95,8 @@ class Test_KNXIP(unittest.TestCase):
 
         self.assertEqual(telegram.destination_address, GroupAddress(337))
 
-        self.assertEqual(len(telegram.payload.value), 1)
-        self.assertEqual(telegram.payload.value[0], 0xF0)
+        self.assertEqual(len(telegram.payload.dpt.value), 1)
+        self.assertEqual(telegram.payload.dpt.value[0], 0xF0)
 
     #
     # End-tox-End tests:
@@ -109,7 +118,7 @@ class Test_KNXIP(unittest.TestCase):
             telegram,
             Telegram(
                 destination_address=GroupAddress("329"),
-                payload=DPTBinary(1),
+                payload=GroupValueWrite(DPTBinary(1)),
                 source_address=IndividualAddress("15.15.249"),
             ),
         )
@@ -137,7 +146,7 @@ class Test_KNXIP(unittest.TestCase):
             telegram,
             Telegram(
                 destination_address=GroupAddress("329"),
-                payload=DPTBinary(0),
+                payload=GroupValueWrite(DPTBinary(0)),
                 source_address=IndividualAddress("15.15.249"),
             ),
         )
@@ -165,7 +174,7 @@ class Test_KNXIP(unittest.TestCase):
             telegram,
             Telegram(
                 destination_address=GroupAddress("331"),
-                payload=DPTArray(0x65),
+                payload=GroupValueWrite(DPTArray(0x65)),
                 source_address=IndividualAddress("15.15.249"),
             ),
         )
@@ -193,7 +202,7 @@ class Test_KNXIP(unittest.TestCase):
             telegram,
             Telegram(
                 destination_address=GroupAddress("2049"),
-                payload=DPTArray(DPTTemperature().to_knx(19.85)),
+                payload=GroupValueWrite(DPTArray(DPTTemperature().to_knx(19.85))),
                 source_address=IndividualAddress("1.4.2"),
             ),
         )
@@ -221,7 +230,7 @@ class Test_KNXIP(unittest.TestCase):
             telegram,
             Telegram(
                 destination_address=GroupAddress("440"),
-                telegramtype=TelegramType.GROUP_READ,
+                payload=GroupValueRead(),
                 source_address=IndividualAddress("15.15.249"),
             ),
         )
@@ -249,8 +258,7 @@ class Test_KNXIP(unittest.TestCase):
             telegram,
             Telegram(
                 destination_address=GroupAddress("392"),
-                telegramtype=TelegramType.GROUP_RESPONSE,
-                payload=DPTBinary(1),
+                payload=GroupValueResponse(DPTBinary(1)),
                 source_address=IndividualAddress("1.3.1"),
             ),
         )
@@ -270,7 +278,7 @@ class Test_KNXIP(unittest.TestCase):
         """Test parsing and streaming CEMIFrame KNX/IP packet, testing maximum APCI."""
         telegram = Telegram(
             destination_address=GroupAddress(337),
-            payload=DPTBinary(DPTBinary.APCI_MAX_VALUE),
+            payload=GroupValueWrite(DPTBinary(DPTBinary.APCI_MAX_VALUE)),
             source_address=IndividualAddress("1.3.1"),
         )
         xknx = XKNX()

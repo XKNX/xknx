@@ -6,7 +6,13 @@ from unittest.mock import Mock
 from xknx import XKNX
 from xknx.devices import ExposeSensor
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.telegram import GroupAddress, Telegram, TelegramType
+from xknx.telegram import (
+    GroupAddress,
+    GroupValueRead,
+    GroupValueResponse,
+    GroupValueWrite,
+    Telegram,
+)
 
 
 class TestExposeSensor(unittest.TestCase):
@@ -73,8 +79,7 @@ class TestExposeSensor(unittest.TestCase):
             telegram,
             Telegram(
                 destination_address=GroupAddress("1/2/3"),
-                telegramtype=TelegramType.GROUP_WRITE,
-                payload=DPTBinary(0),
+                payload=GroupValueWrite(DPTBinary(0)),
             ),
         )
 
@@ -92,8 +97,7 @@ class TestExposeSensor(unittest.TestCase):
             telegram,
             Telegram(
                 destination_address=GroupAddress("1/2/3"),
-                telegramtype=TelegramType.GROUP_WRITE,
-                payload=DPTArray((0xBF,)),
+                payload=GroupValueWrite(DPTArray((0xBF,))),
             ),
         )
 
@@ -110,8 +114,7 @@ class TestExposeSensor(unittest.TestCase):
             telegram,
             Telegram(
                 destination_address=GroupAddress("1/2/3"),
-                telegramtype=TelegramType.GROUP_WRITE,
-                payload=DPTArray((0x0C, 0x1A)),
+                payload=GroupValueWrite(DPTArray((0x0C, 0x1A))),
             ),
         )
 
@@ -126,8 +129,7 @@ class TestExposeSensor(unittest.TestCase):
         )
         expose_sensor.sensor_value.payload = DPTBinary(1)
 
-        telegram = Telegram(destination_address=GroupAddress("1/2/3"))
-        telegram.telegramtype = TelegramType.GROUP_READ
+        telegram = Telegram(GroupAddress("1/2/3"), payload=GroupValueRead())
         self.loop.run_until_complete(expose_sensor.process(telegram))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -135,8 +137,7 @@ class TestExposeSensor(unittest.TestCase):
             telegram,
             Telegram(
                 destination_address=GroupAddress("1/2/3"),
-                telegramtype=TelegramType.GROUP_RESPONSE,
-                payload=DPTBinary(True),
+                payload=GroupValueResponse(DPTBinary(True)),
             ),
         )
 
@@ -148,8 +149,7 @@ class TestExposeSensor(unittest.TestCase):
         )
         expose_sensor.sensor_value.payload = DPTArray((0x40,))
 
-        telegram = Telegram(destination_address=GroupAddress("1/2/3"))
-        telegram.telegramtype = TelegramType.GROUP_READ
+        telegram = Telegram(GroupAddress("1/2/3"), payload=GroupValueRead())
         self.loop.run_until_complete(expose_sensor.process(telegram))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -157,8 +157,7 @@ class TestExposeSensor(unittest.TestCase):
             telegram,
             Telegram(
                 destination_address=GroupAddress("1/2/3"),
-                telegramtype=TelegramType.GROUP_RESPONSE,
-                payload=DPTArray((0x40,)),
+                payload=GroupValueResponse(DPTArray((0x40,))),
             ),
         )
 
@@ -170,8 +169,7 @@ class TestExposeSensor(unittest.TestCase):
         )
         expose_sensor.sensor_value.payload = DPTArray((0x0C, 0x1A))
 
-        telegram = Telegram(destination_address=GroupAddress("1/2/3"))
-        telegram.telegramtype = TelegramType.GROUP_READ
+        telegram = Telegram(GroupAddress("1/2/3"), payload=GroupValueRead())
         self.loop.run_until_complete(expose_sensor.process(telegram))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -179,8 +177,7 @@ class TestExposeSensor(unittest.TestCase):
             telegram,
             Telegram(
                 destination_address=GroupAddress("1/2/3"),
-                telegramtype=TelegramType.GROUP_RESPONSE,
-                payload=DPTArray((0x0C, 0x1A)),
+                payload=GroupValueResponse(DPTArray((0x0C, 0x1A))),
             ),
         )
 

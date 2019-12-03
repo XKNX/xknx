@@ -7,7 +7,7 @@ from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.remote_value import RemoteValue, RemoteValueSwitch
-from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram import GroupAddress, GroupValueWrite, Telegram
 
 
 class TestRemoteValue(unittest.TestCase):
@@ -96,7 +96,7 @@ class TestRemoteValue(unittest.TestCase):
 
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/1"),
-                payload=DPTArray((0x01, 0x02)),
+                payload=GroupValueWrite(DPTArray((0x01, 0x02))),
             )
             with self.assertRaises(CouldNotParseTelegram):
                 self.loop.run_until_complete(remote_value.process(telegram))
@@ -113,7 +113,8 @@ class TestRemoteValue(unittest.TestCase):
 
             fut = asyncio.Future()
             telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(1)),
             )
             fut.set_result(telegram)
             patch_read.return_value = fut
@@ -158,7 +159,8 @@ class TestRemoteValue(unittest.TestCase):
             patch_valid.return_value = True
             test_payload = DPTArray((0x01, 0x02))
             telegram = Telegram(
-                destination_address=GroupAddress("1/1/1"), payload=test_payload
+                destination_address=GroupAddress("1/1/1"),
+                payload=GroupValueWrite(test_payload),
             )
             self.assertTrue(
                 self.loop.run_until_complete(

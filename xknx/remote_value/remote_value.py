@@ -10,7 +10,7 @@ import logging
 from typing import List
 
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.telegram import GroupAddress, Telegram, TelegramType
+from xknx.telegram import GroupAddress, GroupValueResponse, GroupValueWrite, Telegram
 
 logger = logging.getLogger("xknx.log")
 
@@ -112,7 +112,21 @@ class RemoteValue:
         """Process incoming or outgoing telegram."""
         if not self.has_group_address(telegram.destination_address):
             return False
-        if not self.payload_valid(telegram.payload):
+        if not isinstance(
+            telegram.payload,
+            (
+                GroupValueWrite,
+                GroupValueResponse,
+            ),
+        ):
+            raise CouldNotParseTelegram(
+                "payload not a GroupValueWrite or GroupValueResponse",
+                payload=telegram.payload,
+                address=telegram.address,
+                device_name=self.device_name,
+                feature_name=self.feature_name,
+            )
+        if not self.payload_valid(telegram.payload.dpt):
             raise CouldNotParseTelegram(
                 "payload invalid",
                 payload=telegram.payload,
@@ -121,8 +135,12 @@ class RemoteValue:
                 feature_name=self.feature_name,
             )
         self.xknx.state_updater.update_received(self)
-        if self.payload is None or always_callback or self.payload != telegram.payload:
-            self.payload = telegram.payload
+        if (
+            self.payload is None
+            or always_callback
+            or self.payload != telegram.payload.dpt
+        ):
+            self.payload = telegram.payload.dpt
             if self.after_update_cb is not None:
                 await self.after_update_cb()
         return True
@@ -138,10 +156,9 @@ class RemoteValue:
         """Send payload as telegram to KNX bus."""
         telegram = Telegram(
             destination_address=self.group_address,
-            telegramtype=(
-                TelegramType.GROUP_RESPONSE if response else TelegramType.GROUP_WRITE
+            payload=(
+                GroupValueResponse(payload) if response else GroupValueWrite(payload)
             ),
-            payload=payload,
         )
         await self.xknx.telegrams.put(telegram)
 

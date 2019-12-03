@@ -5,7 +5,7 @@ import unittest
 from xknx import XKNX
 from xknx.devices import BinarySensor, ExposeSensor, Sensor
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.telegram import GroupAddress, Telegram, TelegramDirection, TelegramType
+from xknx.telegram import GroupAddress, GroupValueWrite, Telegram, TelegramDirection
 
 
 class SensorExposeLoopTest(unittest.TestCase):
@@ -1460,9 +1460,8 @@ class SensorExposeLoopTest(unittest.TestCase):
 
                 incoming_telegram = Telegram(
                     destination_address=GroupAddress("1/1/1"),
-                    telegramtype=TelegramType.GROUP_WRITE,
                     direction=TelegramDirection.INCOMING,
-                    payload=test_payload,
+                    payload=GroupValueWrite(test_payload),
                 )
                 self.loop.run_until_complete(sensor.process(incoming_telegram))
 
@@ -1482,9 +1481,8 @@ class SensorExposeLoopTest(unittest.TestCase):
                     outgoing_telegram,
                     Telegram(
                         destination_address=GroupAddress("2/2/2"),
-                        telegramtype=TelegramType.GROUP_WRITE,
                         direction=TelegramDirection.OUTGOING,
-                        payload=test_payload,
+                        payload=GroupValueWrite(test_payload),
                     ),
                 )
 
@@ -1510,9 +1508,8 @@ class SensorExposeLoopTest(unittest.TestCase):
 
                 incoming_telegram = Telegram(
                     destination_address=GroupAddress("1/1/1"),
-                    telegramtype=TelegramType.GROUP_WRITE,
                     direction=TelegramDirection.INCOMING,
-                    payload=test_payload,
+                    payload=GroupValueWrite(test_payload),
                 )
                 self.loop.run_until_complete(sensor.process(incoming_telegram))
 
@@ -1526,8 +1523,7 @@ class SensorExposeLoopTest(unittest.TestCase):
                     outgoing_telegram,
                     Telegram(
                         destination_address=GroupAddress("2/2/2"),
-                        telegramtype=TelegramType.GROUP_WRITE,
                         direction=TelegramDirection.OUTGOING,
-                        payload=test_payload,
+                        payload=GroupValueWrite(test_payload),
                     ),
                 )
