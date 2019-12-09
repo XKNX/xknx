@@ -27,3 +27,10 @@
 |[Switch](./example_switch.py)|Example for Switch device|
 |[Scene](./example_scene.py)|Example for switching a light on and off|
 |[Weather](./example_weather.py)|Example for Weather device and reading sensor data|
+
+## Low-level
+
+|Example|Description|
+|-|-|
+|[Info](./example_info.py)|Example on how to read device information such as serial and programming mode (depends on actor if supported)|
+|[Restart](./example_restart.py)|Example on how to restart an actor|
