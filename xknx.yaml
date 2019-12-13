@@ -94,8 +94,8 @@ groups:
         Children.Climate: {group_address_temperature: '1/7/2', group_address_target_temperature: '1/7/4', group_address_setpoint_shift: '1/7/3', group_address_setpoint_shift_state: '1/7/14', setpoint_shift_step: 0.1, setpoint_shift_min: -10, setpoint_shift_max: 10}
 
         Office.Climate:
+            group_address_temperature: '1/7/5'
             mode:
-                group_address_temperature: '1/7/5'
                 group_address_operation_mode: '1/7/6'
         Bath.Climate:
             mode:
