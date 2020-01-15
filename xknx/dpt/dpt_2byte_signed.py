@@ -66,6 +66,20 @@ class DPTDeltaTimeMsec(DPT2ByteSigned):
     unit = "ms"
 
 
+class DPTDeltaTime10Msec(DPT2ByteSigned):
+    """DPT 8.003 DPT_DeltaTime10Msec (ms)."""
+
+    unit = "ms"
+    resolution = 10
+
+
+class DPTDeltaTime100Msec(DPT2ByteSigned):
+    """DPT 8.004 DPT_DeltaTime100Msec (ms)."""
+
+    unit = "ms"
+    resolution = 100
+
+
 class DPTDeltaTimeSec(DPT2ByteSigned):
     """DPT 8.005 DPT_DeltaTimeSec (s)."""
 
