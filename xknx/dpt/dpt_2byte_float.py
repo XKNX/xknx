@@ -88,7 +88,7 @@ class DPTTemperature(DPT2ByteFloat):
     resolution = 1
 
 
-class DPTTemperatureDifference(DPT2ByteFloat):
+class DPTTemperatureDifference2Byte(DPT2ByteFloat):
     """DPT 9.002 DPT_Value_Tempd."""
 
     value_min = -670760
@@ -194,7 +194,7 @@ class DPTKelvinPerPercent(DPT2ByteFloat):
     unit = "K/%"
 
 
-class DPTPower(DPT2ByteFloat):
+class DPTPower2Byte(DPT2ByteFloat):
     """DPT 9.024 DPT_Power (kW)."""
 
     unit = "kW"
