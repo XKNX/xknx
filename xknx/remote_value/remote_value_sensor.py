@@ -19,16 +19,15 @@ from xknx.dpt import (
     DPTLightQuantity, DPTLongDeltaTimeSec, DPTLuminance, DPTLuminousFlux, DPTLuminousIntensity, DPTLux,
     DPTMagneticFieldStrength, DPTMagneticFlux, DPTMagneticFluxDensity, DPTMagneticMoment, DPTMagneticPolarization,
     DPTMagnetization, DPTMagnetomotiveForce, DPTMass, DPTMassFlux, DPTMol, DPTMomentum, DPTPartsPerMillion,
-    DPTPercentU8, DPTPercentV16, DPTPercentV8, DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower, DPTPower2Byte,
+    DPTPercentU8, DPTPercentV8, DPTPercentV16, DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower, DPTPower2Byte,
     DPTPowerDensity, DPTPowerFactor, DPTPressure, DPTPressure2Byte, DPTRainAmount, DPTReactance, DPTReactiveEnergy,
     DPTReactiveEnergykVARh, DPTResistance, DPTResistivity, DPTRotationAngle, DPTScaling, DPTSceneNumber,
     DPTSelfInductance, DPTSolidAngle, DPTSoundIntensity, DPTSpeed, DPTStress, DPTString, DPTSurfaceTension,
     DPTTemperature, DPTTemperatureA, DPTTemperatureDifference, DPTTemperatureDifference2Byte, DPTTemperatureF,
-    DPTThermalCapacity, DPTThermalConductivity, DPTThermoelectricPower, DPTTime1, DPTTime2, DPTTimePeriod100Msec,
-    DPTTimePeriod10Msec, DPTTimePeriodHrs, DPTTimePeriodMin, DPTTimePeriodMsec, DPTTimePeriodSec, DPTTimeSeconds,
+    DPTThermalCapacity, DPTThermalConductivity, DPTThermoelectricPower, DPTTime1, DPTTime2, DPTTimePeriod10Msec,
+    DPTTimePeriod100Msec, DPTTimePeriodHrs, DPTTimePeriodMin, DPTTimePeriodMsec, DPTTimePeriodSec, DPTTimeSeconds,
     DPTTorque, DPTUElCurrentmA, DPTValue1Count, DPTValue1Ucount, DPTValue2Count, DPTVoltage, DPTVolume, DPTVolumeFlow,
     DPTVolumeFlux, DPTWeight, DPTWork, DPTWsp, DPTWspKmh)
-
 from xknx.exceptions import ConversionError
 
 from .remote_value import RemoteValue
