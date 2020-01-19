@@ -207,7 +207,7 @@ class DPTVolumeFlow(DPT2ByteFloat):
     unit = "l/h"
 
 
-class DPTRainAmont(DPT2ByteFloat):
+class DPTRainAmount(DPT2ByteFloat):
     """DPT 9.026 DPT_Rain_Amount (l/m²)."""
 
     value_min = -671088.64
