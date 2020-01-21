@@ -6,6 +6,7 @@ Due to lame support of UDP multicast within asyncio some special treatment for m
 """
 import asyncio
 import socket
+from sys import platform
 
 from xknx.exceptions import CouldNotParseKNXIP, XKNXException
 from xknx.knxip import KNXIPFrame
@@ -144,7 +145,10 @@ class UDPClient:
         # - bind() with own_ip does not work with ROUTING_INDICATIONS on Gira
         #   knx router - for an unknown reason.
         if bind_to_multicast_addr:
-            sock.bind((remote_addr[0], remote_addr[1]))
+            if platform == "win32":
+                sock.bind(('', remote_addr[1]))
+            else:
+                sock.bind((remote_addr[0], remote_addr[1]))
         else:
             sock.bind((own_ip, 0))
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
