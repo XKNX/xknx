@@ -280,8 +280,7 @@ class KNXLight(Light):
             # changed, as RGB color implicitly sets the brightness as well
             await self.device.set_brightness(brightness)
         elif (self.device.supports_rgbw or self.device.supports_color) and (
-            update_brightness or update_color or update_white_value
-        ):
+                update_brightness or update_color or update_white_value):
             # change RGB color, white value (if supported), and brightness
             # if brightness or hs_color was not yet set use the default value
             # to calculate RGB from as a fallback
