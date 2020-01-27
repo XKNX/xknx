@@ -424,7 +424,7 @@ class TestCover(unittest.TestCase):
             self.assertTrue(cover.is_closed())
             self.assertTrue(cover.is_opening())
             self.assertFalse(cover.is_closing())
-            
+
             mock_time.return_value = 1517000015.0  # 15 Seconds, half way
             self.assertFalse(cover.position_reached())
             self.assertTrue(cover.is_traveling())
@@ -441,6 +441,7 @@ class TestCover(unittest.TestCase):
             self.assertFalse(cover.is_closed())
             self.assertFalse(cover.is_opening())
             self.assertFalse(cover.is_closing())
+
     #
     # TEST AUTO STOP
     #

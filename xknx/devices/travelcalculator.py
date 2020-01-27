@@ -50,8 +50,6 @@ class TravelCalculator:
         self.position_closed = 100
         self.position_open = 0
 
-        self.time_set_from_outside = None
-
     def set_position(self, position):
         """Set known position of cover."""
         self.last_known_position = position
@@ -68,7 +66,7 @@ class TravelCalculator:
     def start_travel(self, travel_to_position):
         """Start traveling to position."""
         self.stop()
-        self.travel_started_time = self.current_time()
+        self.travel_started_time = time.time()
         self.travel_to_position = travel_to_position
         self.position_type = PositionType.CALCULATED
 
@@ -133,10 +131,10 @@ class TravelCalculator:
             return self.travel_to_position
 
         travel_time = self._calculate_travel_time(relative_position)
-        if self.current_time() > self.travel_started_time + travel_time:
+        if time.time() > self.travel_started_time + travel_time:
             return self.travel_to_position
 
-        progress = (self.current_time()-self.travel_started_time)/travel_time
+        progress = (time.time()-self.travel_started_time)/travel_time
         position = self.last_known_position + relative_position * progress
         return int(position)
 
@@ -153,13 +151,6 @@ class TravelCalculator:
         travel_range = self.position_closed - self.position_open
 
         return travel_time_full * abs(relative_position) / travel_range
-
-    def current_time(self):
-        """Get current time. May be modified from outside (for unit tests)."""
-        # time_set_from_outside is  used within unit tests
-        if self.time_set_from_outside is not None:
-            return self.time_set_from_outside
-        return time.time()
 
     def __eq__(self, other):
         """Equal operator."""
