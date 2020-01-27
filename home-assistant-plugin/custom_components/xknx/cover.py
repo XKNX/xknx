@@ -151,6 +151,16 @@ class KNXCover(CoverDevice):
         """Return if the cover is closed."""
         return self.device.is_closed()
 
+    @property
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        return self.device.is_opening()
+
+    @property
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        return self.device.is_closing()
+
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
         if not self.device.is_closed():

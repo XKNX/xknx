@@ -267,6 +267,14 @@ class Cover(Device):
         """Return if cover is closed."""
         return self.travelcalculator.is_closed()
 
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        return self.travelcalculator.is_opening()
+
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        return self.travelcalculator.is_closing()
+
     @property
     def supports_position(self):
         """Return if cover supports direct positioning."""

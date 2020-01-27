@@ -390,24 +390,32 @@ class TestCover(unittest.TestCase):
         with patch('time.time') as mock_time:
             mock_time.return_value = 1517000000.0
             self.assertFalse(cover.is_traveling())
+            self.assertFalse(cover.is_opening())
+            self.assertFalse(cover.is_closing())
             self.assertTrue(cover.position_reached())
             # we start with open covers (up)
             self.loop.run_until_complete(asyncio.Task(cover.set_down()))
             self.assertTrue(cover.is_traveling())
             self.assertTrue(cover.is_open())
             self.assertFalse(cover.is_closed())
+            self.assertFalse(cover.is_opening())
+            self.assertTrue(cover.is_closing())
 
             mock_time.return_value = 1517000005.0  # 5 Seconds, half way
             self.assertFalse(cover.position_reached())
             self.assertTrue(cover.is_traveling())
             self.assertFalse(cover.is_open())
             self.assertFalse(cover.is_closed())
+            self.assertFalse(cover.is_opening())
+            self.assertTrue(cover.is_closing())
 
             mock_time.return_value = 1517000010.0  # 10 Seconds, fully closed
             self.assertTrue(cover.position_reached())
             self.assertFalse(cover.is_traveling())
             self.assertFalse(cover.is_open())
             self.assertTrue(cover.is_closed())
+            self.assertFalse(cover.is_opening())
+            self.assertFalse(cover.is_closing())
 
     #
     # TEST AUTO STOP

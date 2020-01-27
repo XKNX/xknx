@@ -230,3 +230,34 @@ class TestTravelCalculator(unittest.TestCase):
 
         travelcalculator.time_set_from_outside = 1005
         self.assertFalse(travelcalculator.is_traveling())
+
+    def test_is_opening_closing(self):
+        """Test reports is_opening and is_closing."""
+        travelcalculator = TravelCalculator(25, 50)
+        self.assertFalse(travelcalculator.is_opening())
+        self.assertFalse(travelcalculator.is_closing())
+
+        travelcalculator.set_position(80)
+        self.assertFalse(travelcalculator.is_opening())
+        self.assertFalse(travelcalculator.is_closing())
+
+        travelcalculator.time_set_from_outside = 1000
+        travelcalculator.start_travel_down()
+        self.assertFalse(travelcalculator.is_opening())
+        self.assertTrue(travelcalculator.is_closing())
+
+        travelcalculator.time_set_from_outside = 1004
+        self.assertFalse(travelcalculator.is_opening())
+        self.assertTrue(travelcalculator.is_closing())
+
+        travelcalculator.time_set_from_outside = 1005
+        self.assertFalse(travelcalculator.is_opening())
+        self.assertFalse(travelcalculator.is_closing())
+        # up direction
+        travelcalculator.start_travel(50)
+        self.assertTrue(travelcalculator.is_opening())
+        self.assertFalse(travelcalculator.is_closing())
+
+        travelcalculator.time_set_from_outside = 1030
+        self.assertFalse(travelcalculator.is_opening())
+        self.assertFalse(travelcalculator.is_closing())

@@ -88,13 +88,20 @@ class TravelCalculator:
     def current_position(self):
         """Return current (calculated or known) position."""
         if self.position_type == PositionType.CALCULATED:
-            print(f"cp: {self._calculate_position()}")
             return self._calculate_position()
         return self.last_known_position
 
     def is_traveling(self):
         """Return if cover is traveling."""
         return self.current_position() != self.travel_to_position
+
+    def is_opening(self):
+        """Return if the cover is opening."""
+        return self.is_traveling() and self.travel_direction == TravelStatus.DIRECTION_UP
+
+    def is_closing(self):
+        """Return if the cover is closing."""
+        return self.is_traveling() and self.travel_direction == TravelStatus.DIRECTION_DOWN
 
     def position_reached(self):
         """Return if cover has reached designated position."""
@@ -124,13 +131,12 @@ class TravelCalculator:
 
         if position_reached_or_exceeded(relative_position):
             return self.travel_to_position
-        print(f"calculating from rp {relative_position}")
+
         travel_time = self._calculate_travel_time(relative_position)
-        print(f"travel_time {travel_time}")
         if self.current_time() > self.travel_started_time + travel_time:
             return self.travel_to_position
+
         progress = (self.current_time()-self.travel_started_time)/travel_time
-        print(f"progress {progress}")
         position = self.last_known_position + relative_position * progress
         return int(position)
 
