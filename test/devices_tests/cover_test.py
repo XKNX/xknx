@@ -154,6 +154,7 @@ class TestCover(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(cover.set_up()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
+        # DPT 1.008 - 0:up 1:down
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/1'), payload=DPTBinary(0)))
 
@@ -192,8 +193,9 @@ class TestCover(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(cover.set_short_up()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
+        # DPT 1.008 - 0:up 1:down
         self.assertEqual(telegram,
-                         Telegram(GroupAddress('1/2/2'), payload=DPTBinary(1)))
+                         Telegram(GroupAddress('1/2/2'), payload=DPTBinary(0)))
 
     #
     # TEST SET SHORT DOWN
@@ -211,8 +213,9 @@ class TestCover(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(cover.set_short_down()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
+        # DPT 1.008 - 0:up 1:down
         self.assertEqual(telegram,
-                         Telegram(GroupAddress('1/2/2'), payload=DPTBinary(0)))
+                         Telegram(GroupAddress('1/2/2'), payload=DPTBinary(1)))
 
     #
     # TEST STOP
@@ -264,8 +267,9 @@ class TestCover(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(cover.set_position(50)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
+        # DPT 1.008 - 0:up 1:down
         self.assertEqual(telegram,
-                         Telegram(GroupAddress('1/2/1'), payload=DPTBinary(1)))
+                         Telegram(GroupAddress('1/2/1'), payload=DPTBinary(0)))
 
     def test_position_without_position_address_down(self):
         """Test moving cover down - with no absolute positioning supported."""
@@ -281,7 +285,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(GroupAddress('1/2/1'), payload=DPTBinary(0)))
+                         Telegram(GroupAddress('1/2/1'), payload=DPTBinary(1)))
 
     def test_angle(self):
         """Test changing angle."""
@@ -387,11 +391,11 @@ class TestCover(unittest.TestCase):
             mock_time.return_value = 1517000000.0
             self.assertFalse(cover.is_traveling())
             self.assertTrue(cover.position_reached())
-
-            self.loop.run_until_complete(asyncio.Task(cover.set_up()))
+            # we start with open covers (up)
+            self.loop.run_until_complete(asyncio.Task(cover.set_down()))
             self.assertTrue(cover.is_traveling())
-            self.assertFalse(cover.is_open())
-            self.assertTrue(cover.is_closed())
+            self.assertTrue(cover.is_open())
+            self.assertFalse(cover.is_closed())
 
             mock_time.return_value = 1517000005.0  # 5 Seconds, half way
             self.assertFalse(cover.position_reached())
@@ -399,11 +403,11 @@ class TestCover(unittest.TestCase):
             self.assertFalse(cover.is_open())
             self.assertFalse(cover.is_closed())
 
-            mock_time.return_value = 1517000010.0  # 10 Seconds, fully open
+            mock_time.return_value = 1517000010.0  # 10 Seconds, fully closed
             self.assertTrue(cover.position_reached())
             self.assertFalse(cover.is_traveling())
-            self.assertTrue(cover.is_open())
-            self.assertFalse(cover.is_closed())
+            self.assertFalse(cover.is_open())
+            self.assertTrue(cover.is_closed())
 
     #
     # TEST AUTO STOP
@@ -510,7 +514,7 @@ class TestCover(unittest.TestCase):
 
         with patch('time.time') as mock_time:
             mock_time.return_value = 1517000000.0
-            self.loop.run_until_complete(asyncio.Task(cover.set_up()))
+            self.loop.run_until_complete(asyncio.Task(cover.set_down()))
             mock_time.return_value = 1517000001.0
             self.assertEqual(cover.state_addresses(), [])
 

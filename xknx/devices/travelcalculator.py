@@ -46,9 +46,9 @@ class TravelCalculator:
         self.travel_started_time = 0
         self.travel_direction = TravelStatus.STOPPED
 
-        # 0 is closed, 100 is fully open
-        self.position_closed = 0
-        self.position_open = 100
+        # 100 is closed, 0 is fully open
+        self.position_closed = 100
+        self.position_open = 0
 
         self.time_set_from_outside = None
 
@@ -73,9 +73,9 @@ class TravelCalculator:
         self.position_type = PositionType.CALCULATED
 
         self.travel_direction = \
-            TravelStatus.DIRECTION_UP \
+            TravelStatus.DIRECTION_DOWN \
             if travel_to_position > self.last_known_position else \
-            TravelStatus.DIRECTION_DOWN
+            TravelStatus.DIRECTION_UP
 
     def start_travel_up(self):
         """Start traveling up."""
@@ -88,6 +88,7 @@ class TravelCalculator:
     def current_position(self):
         """Return current (calculated or known) position."""
         if self.position_type == PositionType.CALCULATED:
+            print(f"cp: {self._calculate_position()}")
             return self._calculate_position()
         return self.last_known_position
 
@@ -113,21 +114,23 @@ class TravelCalculator:
 
         def position_reached_or_exceeded(relative_position):
             """Return if designated position was reached."""
-            if relative_position >= 0 \
+            if relative_position <= 0 \
                     and self.travel_direction == TravelStatus.DIRECTION_DOWN:
                 return True
-            if relative_position <= 0 \
+            if relative_position >= 0 \
                     and self.travel_direction == TravelStatus.DIRECTION_UP:
                 return True
             return False
 
         if position_reached_or_exceeded(relative_position):
             return self.travel_to_position
-
+        print(f"calculating from rp {relative_position}")
         travel_time = self._calculate_travel_time(relative_position)
+        print(f"travel_time {travel_time}")
         if self.current_time() > self.travel_started_time + travel_time:
             return self.travel_to_position
         progress = (self.current_time()-self.travel_started_time)/travel_time
+        print(f"progress {progress}")
         position = self.last_known_position + relative_position * progress
         return int(position)
 
@@ -135,13 +138,13 @@ class TravelCalculator:
         """Calculate time to travel to relative position."""
         travel_direction = \
             TravelStatus.DIRECTION_UP \
-            if relative_position > 0 else \
+            if relative_position < 0 else \
             TravelStatus.DIRECTION_DOWN
         travel_time_full = \
             self.travel_time_up \
             if travel_direction == TravelStatus.DIRECTION_UP else \
             self.travel_time_down
-        travel_range = self.position_open - self.position_closed
+        travel_range = self.position_closed - self.position_open
 
         return travel_time_full * abs(relative_position) / travel_range
 

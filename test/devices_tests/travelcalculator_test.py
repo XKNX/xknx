@@ -46,83 +46,83 @@ class TestTravelCalculator(unittest.TestCase):
     def test_travel_down(self):
         """Test travel up."""
         travelcalculator = TravelCalculator(25, 50)
-        travelcalculator.set_position(60)
+        travelcalculator.set_position(40)
 
         travelcalculator.time_set_from_outside = 1000
-        travelcalculator.start_travel(40)
+        travelcalculator.start_travel(60)
 
         # time not changed, still at beginning
-        self.assertEqual(travelcalculator.current_position(), 60)
+        self.assertEqual(travelcalculator.current_position(), 40)
         self.assertFalse(travelcalculator.position_reached())
         self.assertEqual(
             travelcalculator.travel_direction,
             TravelStatus.DIRECTION_DOWN)
 
         travelcalculator.time_set_from_outside = 1000 + 1
-        self.assertEqual(travelcalculator.current_position(), 56)
+        self.assertEqual(travelcalculator.current_position(), 44)
         self.assertFalse(travelcalculator.position_reached())
 
         travelcalculator.time_set_from_outside = 1000 + 2
-        self.assertEqual(travelcalculator.current_position(), 52)
+        self.assertEqual(travelcalculator.current_position(), 48)
         self.assertFalse(travelcalculator.position_reached())
 
         travelcalculator.time_set_from_outside = 1000 + 4
-        self.assertEqual(travelcalculator.current_position(), 44)
+        self.assertEqual(travelcalculator.current_position(), 56)
         self.assertFalse(travelcalculator.position_reached())
 
         travelcalculator.time_set_from_outside = 1000 + 5
 
         # position reached
-        self.assertEqual(travelcalculator.current_position(), 40)
+        self.assertEqual(travelcalculator.current_position(), 60)
         self.assertTrue(travelcalculator.position_reached())
 
         travelcalculator.time_set_from_outside = 1000 + 10
-        self.assertEqual(travelcalculator.current_position(), 40)
+        self.assertEqual(travelcalculator.current_position(), 60)
         self.assertTrue(travelcalculator.position_reached())
 
     def test_travel_up(self):
         """Test travel down."""
         travelcalculator = TravelCalculator(25, 50)
-        travelcalculator.set_position(50)
+        travelcalculator.set_position(70)
 
         travelcalculator.time_set_from_outside = 1000
-        travelcalculator.start_travel(70)
+        travelcalculator.start_travel(50)
 
         # time not changed, still at beginning
-        self.assertEqual(travelcalculator.current_position(), 50)
+        self.assertEqual(travelcalculator.current_position(), 70)
         self.assertFalse(travelcalculator.position_reached())
         self.assertEqual(
             travelcalculator.travel_direction,
             TravelStatus.DIRECTION_UP)
 
         travelcalculator.time_set_from_outside = 1000 + 2
-        self.assertEqual(travelcalculator.current_position(), 54)
+        self.assertEqual(travelcalculator.current_position(), 66)
         self.assertFalse(travelcalculator.position_reached())
 
         travelcalculator.time_set_from_outside = 1000 + 4
-        self.assertEqual(travelcalculator.current_position(), 58)
+        self.assertEqual(travelcalculator.current_position(), 62)
         self.assertFalse(travelcalculator.position_reached())
 
         travelcalculator.time_set_from_outside = 1000 + 8
-        self.assertEqual(travelcalculator.current_position(), 66)
+        self.assertEqual(travelcalculator.current_position(), 54)
         self.assertFalse(travelcalculator.position_reached())
 
         travelcalculator.time_set_from_outside = 1000 + 10
         # position reached
-        self.assertEqual(travelcalculator.current_position(), 70)
+        self.assertEqual(travelcalculator.current_position(), 50)
         self.assertTrue(travelcalculator.position_reached())
 
         travelcalculator.time_set_from_outside = 1000 + 20
-        self.assertEqual(travelcalculator.current_position(), 70)
+        self.assertEqual(travelcalculator.current_position(), 50)
         self.assertTrue(travelcalculator.position_reached())
 
     def test_stop(self):
         """Test stopping."""
         travelcalculator = TravelCalculator(25, 50)
-        travelcalculator.set_position(60)
+        travelcalculator.set_position(80)
 
         travelcalculator.time_set_from_outside = 1000
-        travelcalculator.start_travel(80)
+        travelcalculator.start_travel(60)
         self.assertEqual(
             travelcalculator.travel_direction,
             TravelStatus.DIRECTION_UP)
@@ -132,7 +132,7 @@ class TestTravelCalculator(unittest.TestCase):
         travelcalculator.stop()
 
         travelcalculator.time_set_from_outside = 1000 + 4
-        self.assertEqual(travelcalculator.current_position(), 64)
+        self.assertEqual(travelcalculator.current_position(), 76)
         self.assertTrue(travelcalculator.position_reached())
 
         # restart after 1 additional second (3 seconds)
@@ -141,23 +141,23 @@ class TestTravelCalculator(unittest.TestCase):
 
         # running up for 6 seconds
         travelcalculator.time_set_from_outside = 1000 + 6
-        self.assertEqual(travelcalculator.current_position(), 66)
+        self.assertEqual(travelcalculator.current_position(), 74)
         self.assertFalse(travelcalculator.position_reached())
 
-        travelcalculator.time_set_from_outside = 1000 + 7
+        travelcalculator.time_set_from_outside = 1000 + 9
         self.assertEqual(travelcalculator.current_position(), 68)
         self.assertTrue(travelcalculator.position_reached())
 
     def test_change_direction(self):
         """Test changing direction while travelling."""
-        travelcalculator = TravelCalculator(25, 50)
+        travelcalculator = TravelCalculator(50, 25)
         travelcalculator.set_position(60)
 
         travelcalculator.time_set_from_outside = 1000
         travelcalculator.start_travel(80)
         self.assertEqual(
             travelcalculator.travel_direction,
-            TravelStatus.DIRECTION_UP)
+            TravelStatus.DIRECTION_DOWN)
 
         # change direction after two seconds
         travelcalculator.time_set_from_outside = 1000 + 2
@@ -165,7 +165,7 @@ class TestTravelCalculator(unittest.TestCase):
         travelcalculator.start_travel(48)
         self.assertEqual(
             travelcalculator.travel_direction,
-            TravelStatus.DIRECTION_DOWN)
+            TravelStatus.DIRECTION_UP)
 
         self.assertEqual(travelcalculator.current_position(), 64)
         self.assertFalse(travelcalculator.position_reached())
@@ -181,7 +181,7 @@ class TestTravelCalculator(unittest.TestCase):
     def test_travel_full_up(self):
         """Test travelling to the full up position."""
         travelcalculator = TravelCalculator(25, 50)
-        travelcalculator.set_position(70)
+        travelcalculator.set_position(30)
 
         travelcalculator.time_set_from_outside = 1000
         travelcalculator.start_travel_up()
@@ -199,7 +199,7 @@ class TestTravelCalculator(unittest.TestCase):
     def test_travel_full_down(self):
         """Test travelling to the full down position."""
         travelcalculator = TravelCalculator(25, 50)
-        travelcalculator.set_position(80)
+        travelcalculator.set_position(20)
 
         travelcalculator.time_set_from_outside = 1000
         travelcalculator.start_travel_down()
@@ -219,7 +219,7 @@ class TestTravelCalculator(unittest.TestCase):
         travelcalculator = TravelCalculator(25, 50)
         self.assertFalse(travelcalculator.is_traveling())
 
-        travelcalculator.set_position(20)
+        travelcalculator.set_position(80)
         self.assertFalse(travelcalculator.is_traveling())
 
         travelcalculator.time_set_from_outside = 1000

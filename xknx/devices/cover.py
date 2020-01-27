@@ -161,11 +161,11 @@ class Cover(Device):
 
     async def set_short_down(self):
         """Move cover short down."""
-        await self.step.increase()
+        await self.step.decrease()
 
     async def set_short_up(self):
         """Move cover short up."""
-        await self.step.decrease()
+        await self.step.increase()
 
     async def stop(self):
         """Stop cover."""
@@ -179,9 +179,9 @@ class Cover(Device):
         if not self.position.group_address:
             current_position = self.current_position()
             if position < current_position:
-                await self.updown.down()
-            elif position > current_position:
                 await self.updown.up()
+            elif position > current_position:
+                await self.updown.down()
             self.travelcalculator.start_travel(position)
             return
 
