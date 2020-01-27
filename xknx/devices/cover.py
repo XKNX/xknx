@@ -47,15 +47,13 @@ class Cover(Device):
             xknx,
             group_address_long,
             device_name=self.name,
-            after_update_cb=self.after_update,
-            invert=invert_position)
+            after_update_cb=self.after_update)
 
         self.step = RemoteValueStep(
             xknx,
             group_address_short,
             device_name=self.name,
-            after_update_cb=self.after_update,
-            invert=invert_position)
+            after_update_cb=self.after_update)
 
         position_range_from = 0 if invert_position else 100
         position_range_to = 100 if invert_position else 0
