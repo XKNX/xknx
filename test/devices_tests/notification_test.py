@@ -103,6 +103,13 @@ class TestNotification(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'),
                                   payload=DPTArray(DPTString().to_knx("Ein Prosit!"))))
+        # test if message longer than 14 chars gets cropped
+        self.loop.run_until_complete(asyncio.Task(notification.set("This is too long.")))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        telegram = xknx.telegrams.get_nowait()
+        self.assertEqual(telegram,
+                         Telegram(GroupAddress('1/2/3'),
+                                  payload=DPTArray(DPTString().to_knx("This is too lo"))))
 
     #
     # TEST DO
