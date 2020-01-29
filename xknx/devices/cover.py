@@ -55,8 +55,8 @@ class Cover(Device):
             device_name=self.name,
             after_update_cb=self.after_update)
 
-        position_range_from = 0 if invert_position else 100
-        position_range_to = 100 if invert_position else 0
+        position_range_from = 100 if invert_position else 0
+        position_range_to = 0 if invert_position else 100
         self.position = RemoteValueScaling(
             xknx,
             group_address_position,
@@ -66,8 +66,8 @@ class Cover(Device):
             range_from=position_range_from,
             range_to=position_range_to)
 
-        angle_range_from = 0 if invert_angle else 100
-        angle_range_to = 100 if invert_angle else 0
+        angle_range_from = 100 if invert_angle else 0
+        angle_range_to = 0 if invert_angle else 100
         self.angle = RemoteValueScaling(
             xknx,
             group_address_angle,
