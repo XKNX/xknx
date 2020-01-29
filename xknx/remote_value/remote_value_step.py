@@ -41,8 +41,8 @@ class RemoteValueStep(RemoteValue):
         return isinstance(payload, DPTBinary)
 
     # from KNX Association System Specifications AS v1.5.00:
-    # 1.007 DPT_Step   0 = Decrease 1 = Increase 
-    # 1.008 DPT_UpDown 0 = Up       1 = Down 
+    # 1.007 DPT_Step   0 = Decrease 1 = Increase
+    # 1.008 DPT_UpDown 0 = Up       1 = Down
 
     def to_knx(self, value):
         """Convert value to payload."""
