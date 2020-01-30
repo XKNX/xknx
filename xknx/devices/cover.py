@@ -159,16 +159,16 @@ class Cover(Device):
 
     async def set_short_down(self):
         """Move cover short down."""
-        await self.step.decrease()
+        await self.step.increase()
 
     async def set_short_up(self):
         """Move cover short up."""
-        await self.step.increase()
+        await self.step.decrease()
 
     async def stop(self):
         """Stop cover."""
         # Thats the KNX way of doing this. electrical engineers ... m-)
-        await self.step.increase()
+        await self.step.decrease()
         self.travelcalculator.stop()
 
     async def set_position(self, position):
