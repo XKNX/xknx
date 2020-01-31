@@ -68,3 +68,58 @@ class DPT4ByteSigned(DPT4ByteUnsigned):
     resolution = 1
 
     _struct_format = ">i"
+
+
+class DPTValue4Count(DPT4ByteSigned):
+    """DPT 13.001 DPT_Value_4_Count (pulse)."""
+
+    unit = "pulses"
+
+
+class DPTFlowRateM3H(DPT4ByteSigned):
+    """DPT 13.002 DPT_FlowRate_m3/h (m³/h)."""
+
+    unit = "m³/h"
+    resolution = 0.0001
+
+
+class DPTActiveEnergy(DPT4ByteSigned):
+    """DPT 13.010 DPT_ActiveEnergy (Wh)."""
+
+    unit = "Wh"
+
+
+class DPTApparantEnergy(DPT4ByteSigned):
+    """DPT 13.011 DPT_ActiveEnergy (VAh)."""
+
+    unit = "VAh"
+
+
+class DPTReactiveEnergy(DPT4ByteSigned):
+    """DPT 13.012 DPT_ActiveEnergy (VARh)."""
+
+    unit = "VARh"
+
+
+class DPTActiveEnergykWh(DPT4ByteSigned):
+    """DPT 13.013 DPT_ActiveEnergy_kWh (kWh)."""
+
+    unit = "kWh"
+
+
+class DPTApparantEnergykVAh(DPT4ByteSigned):
+    """DPT 13.014 DPT_ActiveEnergy_kVAh (kVAh)."""
+
+    unit = "kVAh"
+
+
+class DPTReactiveEnergykVARh(DPT4ByteSigned):
+    """DPT 13.015 DPT_ActiveEnergy (kVARh)."""
+
+    unit = "kVARh"
+
+
+class DPTLongDeltaTimeSec(DPT4ByteSigned):
+    """DPT 13.100 DPT_LongDeltaTimeSec (s)."""
+
+    unit = "s"

@@ -56,6 +56,14 @@ class DPTPercentU8(DPTValue1Ucount):
     unit = "%"
 
 
+class DPTDecimalFactor(DPTValue1Ucount):
+    """
+    Abstraction for KNX 1 Octet Percent.
+
+    DPT 5.005
+    """
+
+
 class DPTTariff(DPTValue1Ucount):
     """
     Abstraction for KNX 1 Octet tariff information.
