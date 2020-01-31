@@ -102,7 +102,7 @@ class DPTPower(DPT4ByteFloat):
 
 
 class DPTPowerFactor(DPT4ByteFloat):
-    """DPT 14.057 DPT_Value_Power."""
+    """DPT 14.057 DPT_Value_Power_Factor."""
 
     unit = ''
 
@@ -118,3 +118,23 @@ class DPTSpeed(DPT4ByteFloat):
     """DPT 14.065 DPT_Value_Speed."""
 
     unit = 'm/s'
+
+
+class DPTCommonTemperature(DPT4ByteFloat):
+    """DPT 14.068 DPT_Value_Common_Temperature."""
+
+    unit = '° C'
+
+
+class DPTAbsoluteTemperature(DPT4ByteFloat):
+    """DPT 14.069 DPT_Value_Absolute_Temperature."""
+
+    unit = 'K'
+
+
+class DPTValueTime(DPT4ByteFloat):
+    """DPT 14.074 DPT_Value_Time."""
+
+    unit = 's'
+
+
