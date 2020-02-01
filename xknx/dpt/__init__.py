@@ -9,7 +9,7 @@ from .dpt import DPTArray, DPTBase, DPTBinary, DPTComparator, DPTWeekday
 from .dpt_1byte_signed import (
     DPTPercentV8, DPTSignedRelativeValue, DPTValue1Count)
 from .dpt_1byte_uint import (
-    DPTPercentU8, DPTDecimalFactor, DPTSceneNumber, DPTTariff, DPTValue1Ucount)
+    DPTPercentU8, DPTDecimalFactor, DPTSceneNumber, DPTTariff, DPTValue1ByteUnsigned, DPTValue1Ucount)
 from .dpt_2byte_float import (
     DPT2ByteFloat, DPTCurrent, DPTEnthalpy, DPTHumidity, DPTKelvinPerPercent, DPTLux, DPTPartsPerMillion, DPTPower2Byte,
     DPTPowerDensity, DPTPressure2Byte, DPTRainAmount, DPTTemperature, DPTTemperatureA, DPTTemperatureDifference2Byte,

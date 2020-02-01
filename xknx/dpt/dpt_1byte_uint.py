@@ -4,7 +4,7 @@ from xknx.exceptions import ConversionError
 from .dpt import DPTBase
 
 
-class DPTValue1Ucount(DPTBase):
+class DPTValue1ByteUnsigned(DPTBase):
     """
     Abstraction for KNX 1 Octet.
 
@@ -46,7 +46,7 @@ class DPTValue1Ucount(DPTBase):
         return cls.value_min <= value <= cls.value_max
 
 
-class DPTPercentU8(DPTValue1Ucount):
+class DPTPercentU8(DPTValue1ByteUnsigned):
     """
     Abstraction for KNX 1 Octet Percent.
 
@@ -56,7 +56,7 @@ class DPTPercentU8(DPTValue1Ucount):
     unit = "%"
 
 
-class DPTDecimalFactor(DPTValue1Ucount):
+class DPTDecimalFactor(DPTValue1ByteUnsigned):
     """
     Abstraction for KNX 1 Octet Percent.
 
@@ -64,7 +64,7 @@ class DPTDecimalFactor(DPTValue1Ucount):
     """
 
 
-class DPTTariff(DPTValue1Ucount):
+class DPTTariff(DPTValue1ByteUnsigned):
     """
     Abstraction for KNX 1 Octet tariff information.
 
@@ -74,7 +74,17 @@ class DPTTariff(DPTValue1Ucount):
     value_max = 254
 
 
-class DPTSceneNumber(DPTValue1Ucount):
+class DPTValue1Ucount(DPTValue1ByteUnsigned):
+    """
+    Abstraction for KNX 1 Octet counter pulses.
+
+    DPT 5.010
+    """
+
+    unit = "counter pulses"
+
+
+class DPTSceneNumber(DPTValue1ByteUnsigned):
     """
     Abstraction for KNX 1 Octet Scene Number.
 

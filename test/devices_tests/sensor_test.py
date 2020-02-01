@@ -1310,7 +1310,7 @@ class TestSensor(unittest.TestCase):
         sensor.sensor_value.payload = DPTArray((0xFC,))
 
         self.assertEqual(sensor.resolve_state(), 252)
-        self.assertEqual(sensor.unit_of_measurement(), "")
+        self.assertEqual(sensor.unit_of_measurement(), "counter pulses")
         self.assertEqual(sensor.ha_device_class(), None)
 
     def test_str_rain_amount(self):
