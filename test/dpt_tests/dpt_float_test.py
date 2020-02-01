@@ -4,14 +4,13 @@ import unittest
 from unittest.mock import patch
 
 from xknx.dpt import (
-    DPT2ByteFloat, DPT4ByteFloat,
-    DPTAbsoluteTemperature, DPTActiveEnergykWh, DPTActiveEnergy,
-    DPTApparantEnergykVAh, DPTApparantEnergy, DPTCurrent, DPTElectricCurrent,
-    DPTElectricPotential, DPTEnergy, DPTEnthalpy, DPTFrequency, DPTHeatFlowRate,
-    DPTHumidity, DPTLuminousFlux, DPTLux, DPTPartsPerMillion, DPTPhaseAngleDeg,
-    DPTPhaseAngleRad, DPTPowerFactor, DPTPower, DPTPressure, DPTSpeed,
-    DPTTemperature, DPTValueTime, DPTVoltage,
-    DPTCommonTemperature, DPTReactiveEnergykVARh, DPTReactiveEnergy)
+    DPT2ByteFloat, DPT4ByteFloat, DPTAbsoluteTemperature, DPTActiveEnergy,
+    DPTActiveEnergykWh, DPTApparantEnergy, DPTApparantEnergykVAh,
+    DPTCommonTemperature, DPTCurrent, DPTElectricCurrent, DPTElectricPotential,
+    DPTEnergy, DPTEnthalpy, DPTFrequency, DPTHeatFlowRate, DPTHumidity,
+    DPTLuminousFlux, DPTLux, DPTPartsPerMillion, DPTPhaseAngleDeg,
+    DPTPhaseAngleRad, DPTPower, DPTPowerFactor, DPTPressure, DPTReactiveEnergy,
+    DPTReactiveEnergykVARh, DPTSpeed, DPTTemperature, DPTValueTime, DPTVoltage)
 from xknx.exceptions import ConversionError
 
 

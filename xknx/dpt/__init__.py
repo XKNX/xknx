@@ -11,8 +11,8 @@ from .dpt_1byte_signed import (
 from .dpt_1byte_uint import (
     DPTPercentU8, DPTSceneNumber, DPTTariff, DPTValue1Ucount)
 from .dpt_2byte_float import (
-    DPT2ByteFloat, DPTEnthalpy, DPTHumidity, DPTLux, DPTPartsPerMillion,
-    DPTPressure2Byte, DPTTemperature, DPTVoltage, DPTWsp, DPTCurrent)
+    DPT2ByteFloat, DPTCurrent, DPTEnthalpy, DPTHumidity, DPTLux,
+    DPTPartsPerMillion, DPTPressure2Byte, DPTTemperature, DPTVoltage, DPTWsp)
 from .dpt_2byte_signed import (
     DPT2ByteSigned, DPTDeltaTimeHrs, DPTDeltaTimeMin, DPTDeltaTimeMsec,
     DPTDeltaTimeSec, DPTPercentV16, DPTRotationAngle, DPTValue2Count)
@@ -20,14 +20,14 @@ from .dpt_2byte_uint import (
     DPT2ByteUnsigned, DPT2Ucount, DPTBrightness, DPTColorTemperature,
     DPTUElCurrentmA)
 from .dpt_4byte_float import (
-    DPT4ByteFloat, DPTElectricCurrent, DPTElectricPotential, DPTEnergy,
-    DPTFrequency, DPTHeatFlowRate, DPTLuminousFlux, DPTPhaseAngleDeg,
-    DPTPhaseAngleRad, DPTPower, DPTPowerFactor, DPTPressure, DPTSpeed,
-    DPTCommonTemperature, DPTAbsoluteTemperature, DPTValueTime)
-
+    DPT4ByteFloat, DPTAbsoluteTemperature, DPTCommonTemperature,
+    DPTElectricCurrent, DPTElectricPotential, DPTEnergy, DPTFrequency,
+    DPTHeatFlowRate, DPTLuminousFlux, DPTPhaseAngleDeg, DPTPhaseAngleRad,
+    DPTPower, DPTPowerFactor, DPTPressure, DPTSpeed, DPTValueTime)
 from .dpt_4byte_int import (
-    DPT4ByteSigned, DPT4ByteUnsigned, DPTActiveEnergy, DPTApparantEnergy,
-    DPTReactiveEnergy, DPTActiveEnergykWh, DPTApparantEnergykVAh, DPTReactiveEnergykVARh)
+    DPT4ByteSigned, DPT4ByteUnsigned, DPTActiveEnergy, DPTActiveEnergykWh,
+    DPTApparantEnergy, DPTApparantEnergykVAh, DPTReactiveEnergy,
+    DPTReactiveEnergykVARh)
 from .dpt_date import DPTDate
 from .dpt_datetime import DPTDateTime
 from .dpt_hvac_contr_mode import DPTHVACContrMode

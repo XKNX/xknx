@@ -7,15 +7,17 @@ for serialization and deserialization of the KNX value.
 from xknx.dpt import (
     DPT2ByteFloat, DPT2ByteSigned, DPT2ByteUnsigned, DPT2Ucount, DPT4ByteFloat,
     DPT4ByteSigned, DPT4ByteUnsigned, DPTAbsoluteTemperature, DPTActiveEnergy,
-    DPTActiveEnergykWh, DPTAngle, DPTApparantEnergy, DPTApparantEnergykVAh, DPTArray,
-    DPTBrightness, DPTColorTemperature, DPTCommonTemperature, DPTCurrent, DPTDeltaTimeHrs,
-    DPTDeltaTimeMin, DPTDeltaTimeMsec, DPTDeltaTimeSec, DPTElectricCurrent,
-    DPTElectricPotential, DPTEnergy, DPTEnthalpy, DPTFrequency, DPTHeatFlowRate,
-    DPTHumidity, DPTLuminousFlux, DPTLux, DPTPartsPerMillion, DPTPercentU8, DPTPercentV8,
-    DPTPercentV16, DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower, DPTPowerFactor, DPTPressure,
-    DPTPressure2Byte, DPTReactiveEnergy, DPTReactiveEnergykVARh, DPTRotationAngle, DPTScaling,
-    DPTSceneNumber, DPTSpeed, DPTString, DPTTemperature, DPTUElCurrentmA, DPTValue1Count,
-    DPTValue1Ucount, DPTValue2Count, DPTVoltage, DPTWsp)
+    DPTActiveEnergykWh, DPTAngle, DPTApparantEnergy, DPTApparantEnergykVAh,
+    DPTArray, DPTBrightness, DPTColorTemperature, DPTCommonTemperature,
+    DPTCurrent, DPTDeltaTimeHrs, DPTDeltaTimeMin, DPTDeltaTimeMsec,
+    DPTDeltaTimeSec, DPTElectricCurrent, DPTElectricPotential, DPTEnergy,
+    DPTEnthalpy, DPTFrequency, DPTHeatFlowRate, DPTHumidity, DPTLuminousFlux,
+    DPTLux, DPTPartsPerMillion, DPTPercentU8, DPTPercentV8, DPTPercentV16,
+    DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower, DPTPowerFactor, DPTPressure,
+    DPTPressure2Byte, DPTReactiveEnergy, DPTReactiveEnergykVARh,
+    DPTRotationAngle, DPTScaling, DPTSceneNumber, DPTSpeed, DPTString,
+    DPTTemperature, DPTUElCurrentmA, DPTValue1Count, DPTValue1Ucount,
+    DPTValue2Count, DPTVoltage, DPTWsp)
 from xknx.exceptions import ConversionError
 
 from .remote_value import RemoteValue

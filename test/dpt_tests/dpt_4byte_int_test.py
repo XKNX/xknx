@@ -3,9 +3,10 @@ import struct
 import unittest
 from unittest.mock import patch
 
-from xknx.dpt import DPT4ByteSigned, DPT4ByteUnsigned
-from xknx.dpt import (DPTActiveEnergykWh, DPTActiveEnergy, DPTApparantEnergykVAh, DPTApparantEnergy,
-              DPTReactiveEnergykVARh, DPTReactiveEnergy,)
+from xknx.dpt import (
+    DPT4ByteSigned, DPT4ByteUnsigned, DPTActiveEnergy, DPTActiveEnergykWh,
+    DPTApparantEnergy, DPTApparantEnergykVAh, DPTReactiveEnergy,
+    DPTReactiveEnergykVARh)
 from xknx.exceptions import ConversionError
 
 
