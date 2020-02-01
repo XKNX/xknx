@@ -1,5 +1,5 @@
 """
-Module for managing DPT with date and time values
+Module for managing DPT with date and time values.
 
 DPT 10.001, 11.001, 19.002
 """
