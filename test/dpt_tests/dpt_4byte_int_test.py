@@ -4,10 +4,8 @@ import unittest
 from unittest.mock import patch
 
 from xknx.dpt import DPT4ByteSigned, DPT4ByteUnsigned
-from xknx.dpt.dpt_4byte_int import (
-    DPT4ByteSigned, DPT4ByteUnsigned, DPTActiveEnergy, DPTApparantEnergy, 
-    DPTReactiveEnergy, DPTActiveEnergykWh, DPTApparantEnergykVAh, DPTReactiveEnergykVARh)
-
+from xknx.dpt import (DPTActiveEnergy, DPTActiveEnergykWh, DPTApparantEnergy,
+    DPTApparantEnergykVAh, DPTReactiveEnergy, DPTReactiveEnergykVARh)
 from xknx.exceptions import ConversionError
 
 
@@ -106,46 +104,44 @@ class TestDPT4Byte(unittest.TestCase):
             with self.assertRaises(ConversionError):
                 DPT4ByteSigned().to_knx(19088743)
 
-
     #
     # DPTActiveEnergy
     #
     def test_activeenergy_settings(self):
         """Test attributes of DPTActiveEnergy."""
         self.assertEqual(DPTActiveEnergy().unit, "Wh")
-    
+
     #
     # DPTApparantEnergy
     #
     def test_apparantenergy_settings(self):
         """Test attributes of DPTApparantEnergy."""
         self.assertEqual(DPTApparantEnergy().unit, "VAh")
-    
+
     #
     # DPTReactiveEnergy
     #
     def test_reactiveenergy_settings(self):
         """Test attributes of DPTReactiveEnergy."""
         self.assertEqual(DPTReactiveEnergy().unit, "VARh")
-    
+
     #
     # DPTActiveEnergykWh
     #
     def test_activeenergykwh_settings(self):
         """Test attributes of DPTActiveEnergykWh."""
         self.assertEqual(DPTActiveEnergykWh().unit, "kWh")
-    
+
     #
     # DPTApparantEnergykVAh
     #
     def test_apparantenergykvah_settings(self):
         """Test attributes of DPTApparantEnergykVAh."""
         self.assertEqual(DPTApparantEnergykVAh().unit, "kVAh")
-    
+
     #
     # DPTReactiveEnergykVARh
     #
     def test_reactiveenergykvarh_settings(self):
         """Test attributes of DPTReactiveEnergykVARh."""
         self.assertEqual(DPTReactiveEnergykVARh().unit, "kVARh")
-

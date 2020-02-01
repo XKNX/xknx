@@ -69,6 +69,7 @@ class DPT4ByteSigned(DPT4ByteUnsigned):
 
     _struct_format = ">i"
 
+
 class DPTActiveEnergy(DPT4ByteSigned):
     """DPT 13.010 DPT_ActiveEnergy."""
 
@@ -76,6 +77,7 @@ class DPTActiveEnergy(DPT4ByteSigned):
     value_max = 2147483647
     unit = "Wh"
     resolution = 1
+
 
 class DPTApparantEnergy(DPT4ByteSigned):
     """DPT 13.011 DPT_ApparantEnergy."""
@@ -85,6 +87,7 @@ class DPTApparantEnergy(DPT4ByteSigned):
     unit = "VAh"
     resolution = 1
 
+
 class DPTReactiveEnergy(DPT4ByteSigned):
     """DPT 13.012 DPT_ReactiveEnergy."""
 
@@ -92,6 +95,7 @@ class DPTReactiveEnergy(DPT4ByteSigned):
     value_max = 2147483647
     unit = "VARh"
     resolution = 1
+
 
 class DPTActiveEnergykWh(DPT4ByteSigned):
     """DPT 13.013 DPT_ActiveEnergy_kWh."""
@@ -110,6 +114,7 @@ class DPTApparantEnergykVAh(DPT4ByteSigned):
     unit = "kVAh"
     resolution = 1
 
+
 class DPTReactiveEnergykVARh(DPT4ByteSigned):
     """DPT 13.015 DPT_ReactiveEnergy_kVARh."""
 
@@ -117,4 +122,3 @@ class DPTReactiveEnergykVARh(DPT4ByteSigned):
     value_max = 2147483647
     unit = "kVARh"
     resolution = 1
-

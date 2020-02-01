@@ -3,12 +3,12 @@ Module for managing DPT with date and time values
 
 DPT 10.001, 11.001, 19.002
 """
-from enum import Enum
-
 from xknx.dpt import DPTTime, DPTDate, DPTDateTime, DPTArray
-from xknx.exceptions import ConversionError, CouldNotParseTelegram
+
+from xknx.exceptions import ConversionError
 
 from .remote_value import RemoteValue
+
 
 class RemoteValueDateAndTime(RemoteValue):
     """Abstraction for different date and time DPT types."""
@@ -65,4 +65,3 @@ class RemoteValueDateAndTime(RemoteValue):
         if hasattr(self.DPTMAP[self.value_type], 'ha_device_class'):
             return self.DPTMAP[self.value_type].ha_device_class
         return None
-

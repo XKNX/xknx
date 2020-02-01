@@ -28,7 +28,6 @@ from .dpt_4byte_float import (
 from .dpt_4byte_int import (
     DPT4ByteSigned, DPT4ByteUnsigned, DPTActiveEnergy, DPTApparantEnergy, 
     DPTReactiveEnergy, DPTActiveEnergykWh, DPTApparantEnergykVAh, DPTReactiveEnergykVARh)
-from .dpt_1byte_control import DPTControlDimming, DPTControlBlinds
 from .dpt_date import DPTDate
 from .dpt_datetime import DPTDateTime
 from .dpt_hvac_contr_mode import DPTHVACContrMode

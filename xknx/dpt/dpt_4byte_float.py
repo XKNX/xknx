@@ -136,5 +136,3 @@ class DPTValueTime(DPT4ByteFloat):
     """DPT 14.074 DPT_Value_Time."""
 
     unit = 's'
-
-
