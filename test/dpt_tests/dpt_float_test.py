@@ -5,13 +5,13 @@ from unittest.mock import patch
 
 from xknx.dpt import (
     DPT2ByteFloat, DPT4ByteFloat,
-    DPTAbsoluteTemperature, DPTActiveEnergy, DPTActiveEnergykWh, DPTApparantEnergy,
-    DPTApparantEnergykVAh, DPTCurrent, DPTElectricCurrent, DPTElectricPotential,
-    DPTEnergy, DPTEnthalpy, DPTFrequency, DPTHeatFlowRate, DPTHumidity, DPTLuminousFlux,
-    DPTLux, DPTPartsPerMillion, DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower, DPTPowerFactor,
-    DPTPressure, DPTSpeed, DPTTemperature, DPTValueTime, DPTVoltage,
-    DPTCommonTemperature, DPTReactiveEnergy, DPTReactiveEnergykVARh)
-
+    DPTAbsoluteTemperature, DPTActiveEnergykWh, DPTActiveEnergy,
+    DPTApparantEnergykVAh, DPTApparantEnergy, DPTCurrent, DPTElectricCurrent,
+    DPTElectricPotential, DPTEnergy, DPTEnthalpy, DPTFrequency, DPTHeatFlowRate,
+    DPTHumidity, DPTLuminousFlux, DPTLux, DPTPartsPerMillion, DPTPhaseAngleDeg,
+    DPTPhaseAngleRad, DPTPowerFactor, DPTPower, DPTPressure, DPTSpeed,
+    DPTTemperature, DPTValueTime, DPTVoltage,
+    DPTCommonTemperature, DPTReactiveEnergykVARh, DPTReactiveEnergy)
 from xknx.exceptions import ConversionError
 
 
@@ -190,7 +190,6 @@ class TestDPTFloat(unittest.TestCase):
     def test_current_settings(self):
         """Test attributes of DPTCurrent."""
         self.assertEqual(DPTCurrent().unit, "mA")
-
 
     # ####################################################################
     # DPT4ByteFloat
