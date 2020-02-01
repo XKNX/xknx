@@ -83,6 +83,7 @@ class DPTSceneNumber(DPTValue1Ucount):
 
     value_min = 1
     value_max = 64
+    unit = ""
 
     @classmethod
     def from_knx(cls, raw):

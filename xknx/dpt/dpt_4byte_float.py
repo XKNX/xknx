@@ -78,6 +78,8 @@ class DPTMol(DPT4ByteFloat):
 class DPTAmplitude(DPT4ByteFloat):
     """DPT 14.005 DPT_Value_Amplitude."""
 
+    unit = ""
+
 
 class DPTAngleRad(DPT4ByteFloat):
     """DPT 14.006 DPT_Value_AngleRad (rad)."""
