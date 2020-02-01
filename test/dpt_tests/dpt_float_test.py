@@ -359,21 +359,21 @@ class TestDPTFloat(unittest.TestCase):
     #
     def test_activeenergy_settings(self):
         """Test attributes of DPTActiveEnergy."""
-        self.assertEqual(DPTActiveEnergy().unit, "W")
+        self.assertEqual(DPTActiveEnergy().unit, "Wh")
 
     #
     # DPTApparantEnergy
     #
     def test_apparantenergy_settings(self):
         """Test attributes of DPTApparantEnergy."""
-        self.assertEqual(DPTApparantEnergy().unit, "VA")
+        self.assertEqual(DPTApparantEnergy().unit, "VAh")
 
     #
     # DPTReactiveEnergy
     #
     def test_reactiveenergy_settings(self):
         """Test attributes of DPTReactiveEnergy."""
-        self.assertEqual(DPTReactiveEnergy().unit, "VAR")
+        self.assertEqual(DPTReactiveEnergy().unit, "VARh")
 
     #
     # DPTActiveEnergykWh
