@@ -14,7 +14,11 @@ from xknx.dpt import (
     DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower, DPTPowerFactor, DPTPressure,
     DPTPressure2Byte, DPTRotationAngle, DPTScaling, DPTSceneNumber, DPTSpeed,
     DPTString, DPTTemperature, DPTUElCurrentmA, DPTValue1Count,
-    DPTValue1Ucount, DPTValue2Count, DPTVoltage, DPTWsp)
+    DPTValue1Ucount, DPTValue2Count, DPTVoltage, DPTWsp,
+    DPTCommonTemperature, DPTAbsoluteTemperature,
+    DPTCurrent, DPTActiveEnergy, DPTActiveEnergykWh, DPTApparantEnergy, 
+    DPTApparantEnergykVAh, DPTReactiveEnergy, DPTReactiveEnergykVARh)
+   
 from xknx.exceptions import ConversionError
 
 from .remote_value import RemoteValue
@@ -28,6 +32,7 @@ class RemoteValueSensor(RemoteValue):
         'brightness': DPTBrightness,
         'color_temperature': DPTColorTemperature,
         'counter_pulses': DPTValue1Count,
+        'curr': DPTCurrent,
         'current': DPTUElCurrentmA,
         'delta_time_hrs': DPTDeltaTimeHrs,
         'delta_time_min': DPTDeltaTimeMin,
@@ -36,6 +41,12 @@ class RemoteValueSensor(RemoteValue):
         'electric_current': DPTElectricCurrent,
         'electric_potential': DPTElectricPotential,
         'energy': DPTEnergy,
+        'energy_active': DPTActiveEnergy,
+        'energy_active_kwh': DPTActiveEnergykWh,
+        'energy_apparent': DPTApparantEnergy,
+        'energy_apparent_kvah': DPTApparantEnergykVAh,
+        'energy_reactive': DPTReactiveEnergy,
+        'energy_reactive_kvarh': DPTReactiveEnergykVARh,
         'enthalpy': DPTEnthalpy,
         'frequency': DPTFrequency,
         'heatflowrate': DPTHeatFlowRate,
@@ -60,6 +71,8 @@ class RemoteValueSensor(RemoteValue):
         'speed_ms': DPTWsp,
         'string': DPTString,
         'temperature': DPTTemperature,
+        'temperature_common': DPTCommonTemperature,
+        'temperature_absolute': DPTAbsoluteTemperature,
         'voltage': DPTVoltage,
         # Generic DPT Without Min/Max and Unit.
         'DPT-5': DPTValue1Ucount,
