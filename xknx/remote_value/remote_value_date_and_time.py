@@ -3,8 +3,7 @@ Module for managing DPT with date and time values.
 
 DPT 10.001, 11.001, 19.002
 """
-from xknx.dpt import DPTTime, DPTDate, DPTDateTime, DPTArray
-
+from xknx.dpt import DPTArray, DPTDate, DPTDateTime, DPTTime
 from xknx.exceptions import ConversionError
 
 from .remote_value import RemoteValue
@@ -26,7 +25,6 @@ class RemoteValueDateAndTime(RemoteValue):
                  sync_state=True,
                  value_type=None,
                  device_name=None,
-                 invert=False,
                  after_update_cb=None):
         """Initialize RemoteValueControl class."""
         # pylint: disable=too-many-arguments

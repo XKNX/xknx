@@ -9,7 +9,7 @@ from .dpt import DPTBase, DPTWeekday
 
 class DPTDateTime(DPTBase):
     """Abstraction for KNX 8 octet datetime (DPT 19.001)."""
-    
+
     payload_length = 8
 
     @classmethod

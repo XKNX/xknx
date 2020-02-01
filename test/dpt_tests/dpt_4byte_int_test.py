@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from xknx.dpt import DPT4ByteSigned, DPT4ByteUnsigned
 from xknx.dpt import (DPTActiveEnergy, DPTActiveEnergykWh, DPTApparantEnergy,
-    DPTApparantEnergykVAh, DPTReactiveEnergy, DPTReactiveEnergykVARh)
+              DPTApparantEnergykVAh, DPTReactiveEnergy, DPTReactiveEnergykVARh)
 from xknx.exceptions import ConversionError
 
 

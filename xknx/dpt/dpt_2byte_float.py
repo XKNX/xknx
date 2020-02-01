@@ -128,6 +128,7 @@ class DPTVoltage(DPT2ByteFloat):
 
     unit = "mV"
 
+
 class DPTCurrent(DPT2ByteFloat):
     """DPT 9.021 DPT_Value_Curr."""
 

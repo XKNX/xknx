@@ -26,7 +26,7 @@ from .dpt_4byte_float import (
     DPTCommonTemperature, DPTAbsoluteTemperature, DPTValueTime)
 
 from .dpt_4byte_int import (
-    DPT4ByteSigned, DPT4ByteUnsigned, DPTActiveEnergy, DPTApparantEnergy, 
+    DPT4ByteSigned, DPT4ByteUnsigned, DPTActiveEnergy, DPTApparantEnergy,
     DPTReactiveEnergy, DPTActiveEnergykWh, DPTApparantEnergykVAh, DPTReactiveEnergykVARh)
 from .dpt_date import DPTDate
 from .dpt_datetime import DPTDateTime

@@ -4,14 +4,14 @@ import unittest
 from unittest.mock import patch
 
 from xknx.dpt import (
-    DPT2ByteFloat, DPT4ByteFloat, 
-    DPTAbsoluteTemperature,DPTActiveEnergy, DPTActiveEnergykWh, DPTApparantEnergy,
+    DPT2ByteFloat, DPT4ByteFloat,
+    DPTAbsoluteTemperature, DPTActiveEnergy, DPTActiveEnergykWh, DPTApparantEnergy,
     DPTApparantEnergykVAh, DPTCurrent, DPTElectricCurrent, DPTElectricPotential,
     DPTEnergy, DPTEnthalpy, DPTFrequency, DPTHeatFlowRate, DPTHumidity, DPTLuminousFlux,
     DPTLux, DPTPartsPerMillion, DPTPhaseAngleDeg, DPTPhaseAngleRad, DPTPower, DPTPowerFactor,
     DPTPressure, DPTSpeed, DPTTemperature, DPTValueTime, DPTVoltage,
     DPTCommonTemperature, DPTReactiveEnergy, DPTReactiveEnergykVARh)
-    
+
 from xknx.exceptions import ConversionError
 
 
@@ -192,10 +192,10 @@ class TestDPTFloat(unittest.TestCase):
         self.assertEqual(DPTCurrent().unit, "mA")
 
 
-
     # ####################################################################
     # DPT4ByteFloat
     #
+
     def test_4byte_float_values_from_power_meter(self):
         """Test parsing DPT4ByteFloat value from power meter."""
         self.assertEqual(DPT4ByteFloat().from_knx((0x43, 0xC6, 0x80, 00)), 397)
@@ -315,13 +315,6 @@ class TestDPTFloat(unittest.TestCase):
         self.assertEqual(DPTPhaseAngleDeg().unit, "°")
 
     #
-    # DPTPower
-    #
-    def test_power_settings(self):
-        """Test attributes of DPTPower."""
-        self.assertEqual(DPTPower().unit, "W")
-
-    #
     # DPTPowerFactor
     #
     def test_powerfactor_settings(self):
@@ -404,6 +397,3 @@ class TestDPTFloat(unittest.TestCase):
     def test_reactiveenergy_kvarh_settings(self):
         """Test attributes of DPTReactiveEnergykVARh."""
         self.assertEqual(DPTReactiveEnergykVARh().unit, "kVARh")
-        
-        
-        
