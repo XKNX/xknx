@@ -6,7 +6,10 @@ from unittest.mock import patch
 from xknx.dpt import (
     DPT2ByteFloat, DPT4ByteFloat, DPTElectricCurrent, DPTElectricPotential,
     DPTEnthalpy, DPTFrequency, DPTHumidity, DPTLux, DPTPartsPerMillion,
-    DPTPhaseAngleDeg, DPTPower, DPTTemperature, DPTVoltage)
+    DPTPhaseAngleDeg, DPTPower, DPTTemperature, DPTVoltage,
+    DPTActiveEnergy, DPTApparantEnergy, DPTValueTime,DPTAbsoluteTemperature,DPTCommonTemperature,
+    DPTReactiveEnergy, DPTActiveEnergykWh, DPTApparantEnergykVAh, DPTReactiveEnergykVARh,
+    DPTCurrent, DPTEnergy, DPTHeatFlowRate, DPTLuminousFlux,DPTPhaseAngleRad, DPTPowerFactor, DPTPressure, DPTSpeed)
 from xknx.exceptions import ConversionError
 
 
@@ -179,6 +182,15 @@ class TestDPTFloat(unittest.TestCase):
         """Test attributes of DPTVoltage."""
         self.assertEqual(DPTVoltage().unit, "mV")
 
+    #
+    # DPTCurrent
+    #
+    def test_current_settings(self):
+        """Test attributes of DPTCurrent."""
+        self.assertEqual(DPTCurrent().unit, "mA")
+
+
+
     # ####################################################################
     # DPT4ByteFloat
     #
@@ -257,3 +269,108 @@ class TestDPTFloat(unittest.TestCase):
     def test_power_settings(self):
         """Test attributes of DPTPower."""
         self.assertEqual(DPTPower().unit, "W")
+
+    #
+    # DPTEnergy
+    #
+    def test_energy_settings(self):
+        """Test attributes of DPTEnergy."""
+        self.assertEqual(DPTEnergy().unit, "J")
+
+
+    #
+    # DPTFrequency
+    #
+    def test_frequency_settings(self):
+        """Test attributes of DPTFrequency."""
+        self.assertEqual(DPTFrequency().unit, "Hz")
+
+
+    #
+    # DPTHeatFlowRate
+    #
+    def test_heatflow_settings(self):
+        """Test attributes of ."""
+        self.assertEqual(DPTHeatFlowRate().unit, "W")
+
+
+    #
+    # DPTLuminousFlux
+    #
+    def test_luminousflux_settings(self):
+        """Test attributes of ."""
+        self.assertEqual(DPTLuminousFlux().unit, "lm")
+
+
+    #
+    # DPTPhaseAngleRad
+    #
+    def test_phaseanglerad_settings(self):
+        """Test attributes of ."""
+        self.assertEqual(DPTPhaseAngleRad().unit, "rad")
+
+
+    #
+    # DPTPhaseAngleDeg
+    #
+    def test_phaseangledeg_settings(self):
+        """Test attributes of ."""
+        self.assertEqual(DPTPhaseAngleDeg().unit, "°")
+
+
+    #
+    # DPTPower
+    #
+    def test_power_settings(self):
+        """Test attributes of ."""
+        self.assertEqual(DPTPower().unit, "W")
+
+
+    #
+    # DPTPowerFactor
+    #
+    def test_powerfactor_settings(self):
+        """Test attributes of ."""
+        self.assertEqual(DPTPowerFactor().unit, "")
+
+
+    #
+    # DPTPressure
+    #
+    def test_pressure_settings(self):
+        """Test attributes of ."""
+        self.assertEqual(DPTPressure().unit, "Pa")
+
+
+    #
+    # DPTSpeed
+    #
+    def test_speed_settings(self):
+        """Test attributes of ."""
+        self.assertEqual(DPTSpeed().unit, "m/s")
+
+
+    #
+    # DPTCommonTemperature
+    #
+    def test_commontemperature_settings(self):
+        """Test attributes of ."""
+        self.assertEqual(DPTCommonTemperature().unit, "° C")
+
+
+    #
+    # DPTAbsoluteTemperature
+    #
+    def test_absolutetemperature_settings(self):
+        """Test attributes of ."""
+        self.assertEqual(DPTAbsoluteTemperature().unit, "K")
+
+
+    #
+    # DPTValueTime
+    #
+    def test_valuetime_settings(self):
+        """Test attributes of ."""
+        self.assertEqual(DPTValueTime().unit, "s")
+
+
