@@ -5,8 +5,7 @@ DPT 3.007, 3.008
 """
 from enum import Enum
 
-from xknx.dpt import (
-    DPTControl, DPTControlBlinds, DPTControlDimming)
+from xknx.dpt import DPTControl, DPTControlBlinds, DPTControlDimming
 from xknx.exceptions import ConversionError
 
 from .remote_value import RemoteValue
@@ -69,15 +68,16 @@ class RemoteValueControl(RemoteValue):
             'control': self.Direction.DOWN.value,
             'step_code': step_code
         }
-        await self.set(value) # calls to_knx of this derived class
+        await self.set(value)  # (calls to_knx() of this derived class)
 
+    # pylint: disable=invalid-name
     async def up(self, step_code=1):
         """Set value to UP with default step with 1."""
         value = {
             'control': self.Direction.UP.value,
             'step_code': step_code
         }
-        await self.set(value) # calls to_knx of this derived class
+        await self.set(value)
 
     async def increase(self, step_code=1):
         """Set value to INCREASE with default step with 1."""
@@ -85,7 +85,7 @@ class RemoteValueControl(RemoteValue):
             'control': self.Direction.INCREASE.value,
             'step_code': step_code
         }
-        await self.set(value) # calls to_knx of this derived class
+        await self.set(value)
 
     async def decrease(self, step_code=1):
         """Set value to DECREASE with default step with 1."""
@@ -93,7 +93,7 @@ class RemoteValueControl(RemoteValue):
             'control': self.Direction.DECREASE.value,
             'step_code': step_code
         }
-        await self.set(value) # calls to_knx of this derived class
+        await self.set(value)
 
     @property
     def unit_of_measurement(self):
