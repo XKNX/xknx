@@ -1,7 +1,7 @@
 """Implementation of Basic KNX DPT_1_Control Values."""
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase, DPTComparator
+from .dpt import DPTBase
 
 
 class DPTControl(DPTBase):
@@ -43,7 +43,7 @@ class DPTControl(DPTBase):
 
     def __eq__(self, other):
         """Equal operator."""
-        """Test if 'a' and 'b' are the same."""
+        # Test if 'a' and 'b' are the same."""
         # pylint: disable=invalid-name,too-many-return-statements,len-as-condition
         if other is None:
             return self.value == 0
@@ -55,14 +55,14 @@ class DPTControl(DPTBase):
 
     @classmethod
     def __encode__(cls, control, step_code):
-        """Encodes control-bit with step-code"""
+        """Encode control-bit with step-code."""
         value = 1 if control > 0 else 0
         value = (value << 3) | (step_code & cls.APCI_STEPCODEMASK)
         return value
 
     @classmethod
     def __decode__(cls, value):
-        """Decodes value into control-bit and step-code"""
+        """Decode value into control-bit and step-code."""
         control = 1 if (value & cls.APCI_CONTROLMASK) != 0 else 0
         step_code = (value & cls.APCI_STEPCODEMASK)
         return control, step_code
@@ -129,23 +129,24 @@ class DPTControl(DPTBase):
         """Test if value is within defined range for this object."""
         if isinstance(value, int):
             return 0 <= value <= cls.APCI_MAX_VALUE
-        else:
-            return False
+
+        return False
 
     @classmethod
     def _test_values(cls, control, step_code):
         """Test if input values are valid."""
         try:
-            if 0 > control or control > 1:
+            if control < 0 or control > 1:
                 return 0
-            if 0 > step_code or step_code > cls.APCI_CONTROLMASK:
+            if step_code < 0 or step_code > cls.APCI_CONTROLMASK:
                 return 0
-        except:
+        except ValueError:
             return 0
         return 1
 
     @classmethod
     def invert_control_bit(cls, value):
+        """Inverts control-bit of given value."""
         if value & cls.APCI_CONTROLMASK:
             value = value & ~cls.APCI_CONTROLMASK  # clear bit
         else:
@@ -154,19 +155,8 @@ class DPTControl(DPTBase):
 
 
 class DPTControlDimming(DPTControl):
-    """
-    Abstraction for KNX 1 Octet Dimming.
-
-    DPT 3.007
-    """
-    pass
+    """DPT 3.007 DPT_Control_Dimming."""
 
 
 class DPTControlBlinds(DPTControl):
-    """
-    Abstraction for KNX 1 Octet Blinds.
-
-    DPT 3.008
-    """
-    pass
-
+    """DPT 3.008 DPT_Control_Blinds."""

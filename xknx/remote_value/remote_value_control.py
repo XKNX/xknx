@@ -5,8 +5,9 @@ DPT 3.007, 3.008
 """
 from enum import Enum
 
-from xknx.dpt import DPTControlDimming, DPTControlBlinds, DPTControl, DPTBinary, DPTArray
-from xknx.exceptions import ConversionError, CouldNotParseTelegram
+from xknx.dpt import (
+    DPTControl, DPTControlBlinds, DPTControlDimming)
+from xknx.exceptions import ConversionError
 
 from .remote_value import RemoteValue
 
@@ -62,7 +63,7 @@ class RemoteValueControl(RemoteValue):
         """Convert current payload to value."""
         return self.DPTMAP[self.value_type].from_knx(payload.value, self.invert)
 
-    async def down(self,step_code=1):
+    async def down(self, step_code=1):
         """Set value to DOWN with default step with 1."""
         value = {
             'control': self.Direction.DOWN.value,
@@ -70,7 +71,7 @@ class RemoteValueControl(RemoteValue):
         }
         await self.set(value) # calls to_knx of this derived class
 
-    async def up(self,step_code=1):
+    async def up(self, step_code=1):
         """Set value to UP with default step with 1."""
         value = {
             'control': self.Direction.UP.value,
@@ -78,7 +79,7 @@ class RemoteValueControl(RemoteValue):
         }
         await self.set(value) # calls to_knx of this derived class
 
-    async def increase(self,step_code=1):
+    async def increase(self, step_code=1):
         """Set value to INCREASE with default step with 1."""
         value = {
             'control': self.Direction.INCREASE.value,
@@ -86,7 +87,7 @@ class RemoteValueControl(RemoteValue):
         }
         await self.set(value) # calls to_knx of this derived class
 
-    async def decrease(self,step_code=1):
+    async def decrease(self, step_code=1):
         """Set value to DECREASE with default step with 1."""
         value = {
             'control': self.Direction.DECREASE.value,
