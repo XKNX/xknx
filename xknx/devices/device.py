@@ -53,6 +53,7 @@ class Device:
             else:
                 await value_reader.send_group_read()
 
+    # TODO: remove need for send function in device - only use set and RemoteValue.send
     async def send(self, group_address, payload=None, response=False):
         """Send payload as telegram to KNX bus."""
         telegram = Telegram()

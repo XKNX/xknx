@@ -6,7 +6,7 @@ from .dpt import DPTBase
 
 class DPTString(DPTBase):
     """
-    Abstraction for KNX 14 Octet String.
+    Abstraction for KNX 14 Octet ASCII String.
 
     DPT 16.000
     """

@@ -2,6 +2,12 @@
 import logging
 
 import voluptuous as vol
+from xknx import XKNX
+from xknx.devices import ActionCallback, DateTime, DateTimeBroadcastType, ExposeSensor
+from xknx.dpt import DPTArray, DPTBinary
+from xknx.exceptions import XKNXException
+from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
+from xknx.telegram import AddressFilter, GroupAddress, Telegram
 
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -92,13 +98,10 @@ SERVICE_XKNX_SEND_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the KNX component."""
-    from xknx.exceptions import XKNXException
-
     try:
         hass.data[DATA_XKNX] = KNXModule(hass, config)
         hass.data[DATA_XKNX].async_create_exposures()
         await hass.data[DATA_XKNX].start()
-
     except XKNXException as ex:
         _LOGGER.warning("Can't connect to KNX interface: %s", ex)
         hass.components.persistent_notification.async_create(
@@ -159,8 +162,6 @@ class KNXModule:
 
     def init_xknx(self):
         """Initialize of KNX object."""
-        from xknx import XKNX
-
         self.xknx = XKNX(
             config=self.config_file(),
             loop=self.hass.loop,
@@ -200,8 +201,6 @@ class KNXModule:
 
     def connection_config_routing(self):
         """Return the connection_config if routing is configured."""
-        from xknx.io import ConnectionConfig, ConnectionType
-
         local_ip = self.config[DOMAIN][CONF_XKNX_ROUTING].get(CONF_XKNX_LOCAL_IP)
         return ConnectionConfig(
             connection_type=ConnectionType.ROUTING, local_ip=local_ip
@@ -209,8 +208,6 @@ class KNXModule:
 
     def connection_config_tunneling(self):
         """Return the connection_config if tunneling is configured."""
-        from xknx.io import ConnectionConfig, ConnectionType, DEFAULT_MCAST_PORT
-
         gateway_ip = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_HOST)
         gateway_port = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_PORT)
         local_ip = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_XKNX_LOCAL_IP)
@@ -228,8 +225,6 @@ class KNXModule:
     def connection_config_auto(self):
         """Return the connection_config if auto is configured."""
         # pylint: disable=no-self-use
-        from xknx.io import ConnectionConfig
-
         return ConnectionConfig()
 
     def register_callbacks(self):
@@ -238,8 +233,6 @@ class KNXModule:
             CONF_XKNX_FIRE_EVENT in self.config[DOMAIN]
             and self.config[DOMAIN][CONF_XKNX_FIRE_EVENT]
         ):
-            from xknx.telegram import AddressFilter
-
             address_filters = list(
                 map(AddressFilter, self.config[DOMAIN][CONF_XKNX_FIRE_EVENT_FILTER])
             )
@@ -278,9 +271,6 @@ class KNXModule:
 
     async def service_send_to_knx_bus(self, call):
         """Service for sending an arbitrary KNX message to the KNX bus."""
-        from xknx.dpt import DPTArray, DPTBinary
-        from xknx.telegram import GroupAddress, Telegram
-
         attr_payload = call.data.get(SERVICE_XKNX_ATTR_PAYLOAD)
         attr_address = call.data.get(SERVICE_XKNX_ATTR_ADDRESS)
 
@@ -309,9 +299,7 @@ class KNXAutomation:
         script_name = "{} turn ON script".format(device.get_name())
         self.script = Script(hass, action, script_name)
 
-        import xknx
-
-        self.action = xknx.devices.ActionCallback(
+        self.action = ActionCallback(
             hass.data[DATA_XKNX].xknx, self.script.async_run, hook=hook, counter=counter
         )
         device.actions.append(self.action)
@@ -330,8 +318,6 @@ class KNXExposeTime:
     @callback
     def async_register(self):
         """Register listener."""
-        from xknx.devices import DateTime, DateTimeBroadcastType
-
         broadcast_type_string = self.type.upper()
         broadcast_type = DateTimeBroadcastType[broadcast_type_string]
         self.device = DateTime(
@@ -355,8 +341,6 @@ class KNXExposeSensor:
     @callback
     def async_register(self):
         """Register listener."""
-        from xknx.devices import ExposeSensor
-
         self.device = ExposeSensor(
             self.xknx,
             name=self.entity_id,
