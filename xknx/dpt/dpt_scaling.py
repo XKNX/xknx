@@ -14,6 +14,9 @@ class DPTScaling(DPTBase):
     value_min = 0
     value_max = 100
     resolution = 100/255
+    dpt_main_number = 5
+    dpt_sub_number = 1
+    value_type = "percent"
     unit = "%"
     payload_length = 1
 
@@ -61,4 +64,7 @@ class DPTAngle(DPTScaling):
     value_min = 0
     value_max = 360
     resolution = 360/255
+    dpt_main_number = 5
+    dpt_sub_number = 3
+    value_type = "angle"
     unit = "°"

@@ -14,6 +14,9 @@ class DPTSignedRelativeValue(DPTBase):
 
     value_min = -128
     value_max = 127
+    dpt_main_number = 6
+    dpt_sub_number = None
+    value_type = "1byte_signed"
     unit = ""
     payload_length = 1
 
@@ -50,6 +53,9 @@ class DPTPercentV8(DPTSignedRelativeValue):
     DPT 6.001
     """
 
+    dpt_main_number = 6
+    dpt_sub_number = 1
+    value_type = "percentV8"
     unit = "%"
 
 
@@ -59,4 +65,7 @@ class DPTValue1Count(DPTSignedRelativeValue):
     DPT 6.010
     """
 
+    dpt_main_number = 6
+    dpt_sub_number = 10
+    value_type = "counter_pulses"
     unit = "counter pulses"

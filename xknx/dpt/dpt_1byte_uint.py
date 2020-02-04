@@ -8,11 +8,14 @@ class DPTValue1ByteUnsigned(DPTBase):
     """
     Abstraction for KNX 1 Octet.
 
-    DPT 5.010
+    DPT 5.***
     """
 
     value_min = 0
     value_max = 255
+    dpt_main_number = 5
+    dpt_sub_number = None
+    value_type = "1byte_unsigned"
     unit = ""
     resolution = 1
     payload_length = 1
@@ -53,6 +56,9 @@ class DPTPercentU8(DPTValue1ByteUnsigned):
     DPT 5.004
     """
 
+    dpt_main_number = 5
+    dpt_sub_number = 4
+    value_type = "percentU8"
     unit = "%"
 
 
@@ -63,6 +69,10 @@ class DPTDecimalFactor(DPTValue1ByteUnsigned):
     DPT 5.005
     """
 
+    dpt_main_number = 5
+    dpt_sub_number = 5
+    value_type = "decimal_factor"
+
 
 class DPTTariff(DPTValue1ByteUnsigned):
     """
@@ -71,6 +81,9 @@ class DPTTariff(DPTValue1ByteUnsigned):
     DPT 5.006
     """
 
+    dpt_main_number = 5
+    dpt_sub_number = 6
+    value_type = "tariff"
     value_max = 254
 
 
@@ -81,6 +94,9 @@ class DPTValue1Ucount(DPTValue1ByteUnsigned):
     DPT 5.010
     """
 
+    dpt_main_number = 5
+    dpt_sub_number = 10
+    value_type = "pulse"
     unit = "counter pulses"
 
 
@@ -93,6 +109,9 @@ class DPTSceneNumber(DPTValue1ByteUnsigned):
 
     value_min = 1
     value_max = 64
+    dpt_main_number = 17
+    dpt_sub_number = 1
+    value_type = "scene_number"
     unit = ""
 
     @classmethod
