@@ -85,7 +85,7 @@ class DPTBase:
     def transcoder_by_value_type(value_type):
         """Return Class reference of DPTBase subclass with matching value_type."""
         for dpt in DPTBase.__recursive_subclasses__():
-            if dpt.has_distinct_value_type:
+            if dpt.has_distinct_value_type():
                 if value_type == dpt.value_type:
                     return dpt
         return None
