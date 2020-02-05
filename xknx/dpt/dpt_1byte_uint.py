@@ -23,7 +23,7 @@ class DPTValue1ByteUnsigned(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 1)
+        cls.test_bytesarray(raw)
 
         value = raw[0]
 
@@ -117,7 +117,7 @@ class DPTSceneNumber(DPTValue1ByteUnsigned):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 1)
+        cls.test_bytesarray(raw)
 
         value = raw[0] + 1
 

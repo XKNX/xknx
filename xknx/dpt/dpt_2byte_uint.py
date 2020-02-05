@@ -26,7 +26,7 @@ class DPT2ByteUnsigned(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 2)
+        cls.test_bytesarray(raw)
         return (raw[0] * 256) + raw[1]
 
     @classmethod

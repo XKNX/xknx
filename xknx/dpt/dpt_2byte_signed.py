@@ -23,7 +23,7 @@ class DPT2ByteSigned(DPTBase):
     value_max = 32767
     dpt_main_number = 8
     dpt_sub_number = None
-    value_type = "DPT-8"
+    value_type = "2byte_signed"
     unit = ""
     resolution = 1
     payload_length = 2
@@ -33,7 +33,7 @@ class DPT2ByteSigned(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 2)
+        cls.test_bytesarray(raw)
 
         try:
             return struct.unpack(cls._struct_format, bytes(raw))[0]
@@ -62,7 +62,7 @@ class DPTValue2Count(DPT2ByteSigned):
 
     dpt_main_number = 8
     dpt_sub_number = 1
-    value_type = "2byte_signed"
+    value_type = "pulse_2byte_signed"
     unit = "pulses"
 
 

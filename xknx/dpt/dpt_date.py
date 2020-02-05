@@ -10,10 +10,12 @@ from .dpt import DPTBase
 class DPTDate(DPTBase):
     """Abstraction for KNX 3 octet date (DPT 11.001)."""
 
+    payload_length = 3
+
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 3)
+        cls.test_bytesarray(raw)
 
         day = raw[0] & 0x1F
         month = raw[1] & 0x0F

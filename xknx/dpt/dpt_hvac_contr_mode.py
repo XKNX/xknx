@@ -13,6 +13,8 @@ class DPTHVACContrMode(DPTBase):
     DPT 20.105
     """
 
+    payload_length = 1
+
     SUPPORTED_MODES = {
         0: HVACOperationMode.AUTO,
         1: HVACOperationMode.HEAT,
@@ -34,7 +36,7 @@ class DPTHVACContrMode(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 1)
+        cls.test_bytesarray(raw)
         if raw[0] in DPTHVACContrMode.SUPPORTED_MODES:
             return DPTHVACContrMode.SUPPORTED_MODES[raw[0]]
         raise CouldNotParseKNXIP("Could not parse DPTHVACContrMode")

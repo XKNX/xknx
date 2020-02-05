@@ -14,10 +14,12 @@ class DPTTime(DPTBase):
     DPT 10.001
     """
 
+    payload_length = 3
+
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 3)
+        cls.test_bytesarray(raw)
 
         weekday = (raw[0] & 0xE0) >> 5
         hours = raw[0] & 0x1F

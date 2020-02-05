@@ -35,7 +35,7 @@ class DPT4ByteFloat(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data (big endian)."""
-        cls.test_bytesarray(raw, 4)
+        cls.test_bytesarray(raw)
         try:
             return struct.unpack(">f", bytes(raw))[0]
         except struct.error:

@@ -20,7 +20,7 @@ class DPT2ByteFloat(DPTBase):
     value_max = 670760.96
     dpt_main_number = 9
     dpt_sub_number = None
-    value_type = "DPT-9"
+    value_type = "2byte_float"
     unit = ""
     resolution = 1
     payload_length = 2
@@ -28,7 +28,7 @@ class DPT2ByteFloat(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 2)
+        cls.test_bytesarray(raw)
         data = (raw[0] * 256) + raw[1]
         exponent = (data >> 11) & 0x0f
         significand = data & 0x7ff

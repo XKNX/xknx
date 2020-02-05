@@ -34,7 +34,7 @@ class DPT4ByteUnsigned(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 4)
+        cls.test_bytesarray(raw)
 
         try:
             return struct.unpack(cls._struct_format, bytes(raw))[0]

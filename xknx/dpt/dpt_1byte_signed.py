@@ -23,7 +23,7 @@ class DPTSignedRelativeValue(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 1)
+        cls.test_bytesarray(raw)
         if raw[0] > cls.value_max:
             return raw[0] - 0x100
         return raw[0]

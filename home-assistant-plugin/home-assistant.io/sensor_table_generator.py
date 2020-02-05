@@ -1,6 +1,5 @@
 """Generate a markdown table that can be copied to home-assistant.io sensor.knx documentation."""
 try:
-    from xknx.remote_value import RemoteValueSensor
     from xknx.dpt import DPTBase
 except ModuleNotFoundError:
     exit("Add the `xknx` directory to pythons path via `export PYTHONPATH=$HOME/directory/to/xknx`")
@@ -63,14 +62,12 @@ class Row():
 class DPTRow(Row):
     """A row holding information for a DPT."""
 
-    def __init__(self,
-                 value_type: str,
-                 dpt_class: DPTBase):
+    def __init__(self, dpt_class: DPTBase):
         dpt_range = ""
         if hasattr(dpt_class, "value_min") and hasattr(dpt_class, "value_max"):
             dpt_range = "%s ... %s" % (dpt_class.value_min, dpt_class.value_max)
 
-        super().__init__(value_type=value_type,
+        super().__init__(value_type=dpt_class.value_type,
                          unit=dpt_class.unit,
                          dpt_number=self._get_dpt_number_from_docstring(dpt_class),
                          dpt_size=str(dpt_class.payload_length),
@@ -126,8 +123,9 @@ def table_delimiter():
 def print_table():
     """Read the values and print the table to stdout."""
     rows = []
-    for key, dpt in RemoteValueSensor.DPTMAP.items():
-        rows.append(DPTRow(value_type=key, dpt_class=dpt))
+    for dpt in DPTBase.__recursive_subclasses__():
+        if dpt.has_distinct_value_type():
+            rows.append(DPTRow(dpt_class=dpt))
 
     rows.sort(key=lambda row: row.dpt_number_int())
 

@@ -37,10 +37,12 @@ class DPTHVACMode(DPTBase):
     DPT 20.102
     """
 
+    payload_length = 1
+
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 1)
+        cls.test_bytesarray(raw)
         if raw[0] == 0x04:
             return HVACOperationMode.FROST_PROTECTION
         if raw[0] == 0x03:
@@ -80,10 +82,12 @@ class DPTControllerStatus(DPTBase):
     notes on the correct implementation of this type are highly appreciated.
     """
 
+    payload_length = 1
+
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 1)
+        cls.test_bytesarray(raw)
         if raw[0] & 8 > 0:
             return HVACOperationMode.FROST_PROTECTION
         if raw[0] & 4 > 0:

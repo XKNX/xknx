@@ -23,7 +23,7 @@ class DPTScaling(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 1)
+        cls.test_bytesarray(raw)
 
         knx_value = raw[0]
         delta = cls.value_max - cls.value_min

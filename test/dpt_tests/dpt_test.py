@@ -1,7 +1,7 @@
 """Unit test for KNX binary/integer objects."""
 import unittest
 
-from xknx.dpt import DPTArray, DPTBinary, DPTComparator
+from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTComparator
 from xknx.exceptions import ConversionError
 
 
@@ -78,3 +78,32 @@ class TestDPT(unittest.TestCase):
         """Test comperator for DPTBinary and DPTBinary - wrong parameter."""
         with self.assertRaises(TypeError):
             DPTComparator.compare("bla", DPTBinary(0))
+
+
+class TestDPTBase(unittest.TestCase):
+    """Test class for transcoder base object."""
+
+    def test_dpt_subclasses_no_duplicate_value_types(self):
+        """Test for duplicate value_type values in subclasses of DPTBase."""
+        value_types = []
+        for dpt in DPTBase.__recursive_subclasses__():
+            if hasattr(dpt, 'value_type'):
+                value_types.append(dpt.value_type)
+        self.assertCountEqual(value_types,
+                              set(value_types))
+
+    def test_dpt_subclasses_have_both_dpt_number_attributes(self):
+        """Test DPTBase subclasses for having both dpt number attributes set."""
+        for dpt in DPTBase.__recursive_subclasses__():
+            if hasattr(dpt, 'dpt_main_number'):
+                self.assertTrue(hasattr(dpt, 'dpt_sub_number'),
+                                f"No dpt_sub_number in {dpt}")
+
+    def test_dpt_subclasses_no_duplicate_dpt_number(self):
+        """Test for duplicate value_type values in subclasses of DPTBase."""
+        dpt_tuples = []
+        for dpt in DPTBase.__recursive_subclasses__():
+            if hasattr(dpt, 'dpt_main_number') and hasattr(dpt, 'dpt_sub_number'):
+                dpt_tuples.append((dpt.dpt_main_number, dpt.dpt_sub_number))
+        self.assertCountEqual(dpt_tuples,
+                              set(dpt_tuples))
