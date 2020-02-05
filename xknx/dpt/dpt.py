@@ -47,7 +47,7 @@ class DPTBase:
     def test_bytesarray(cls, raw):
         """Test if array of raw bytes has the correct length and values of correct type."""
         if cls.payload_length is None:
-            raise NotImplementedError(f"payload_length has to be defined for: {cls}")
+            raise NotImplementedError("payload_length has to be defined for: %s" % cls)
         if not isinstance(raw, (tuple, list)) \
                 or len(raw) != cls.payload_length \
                 or any(not isinstance(byte, int) for byte in raw) \

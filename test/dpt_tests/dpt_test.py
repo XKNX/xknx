@@ -97,7 +97,7 @@ class TestDPTBase(unittest.TestCase):
         for dpt in DPTBase.__recursive_subclasses__():
             if hasattr(dpt, 'dpt_main_number'):
                 self.assertTrue(hasattr(dpt, 'dpt_sub_number'),
-                                f"No dpt_sub_number in {dpt}")
+                                "No dpt_sub_number in %s" % dpt)
 
     def test_dpt_subclasses_no_duplicate_dpt_number(self):
         """Test for duplicate value_type values in subclasses of DPTBase."""
