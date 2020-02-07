@@ -935,20 +935,6 @@ class TestSensor(unittest.TestCase):
         self.assertEqual(sensor.unit_of_measurement(), "cd")
         self.assertEqual(sensor.ha_device_class(), 'illuminance')
 
-    def test_str_lux(self):
-        """Test resolve state with lux sensor."""
-        xknx = XKNX(loop=self.loop)
-        sensor = Sensor(
-            xknx,
-            'TestSensor',
-            group_address_state='1/2/3',
-            value_type="lux")
-        sensor.sensor_value.payload = DPTArray((0x7E, 0x11,))
-
-        self.assertEqual(sensor.resolve_state(), 508887.04)
-        self.assertEqual(sensor.unit_of_measurement(), "lx")
-        self.assertEqual(sensor.ha_device_class(), 'illuminance')
-
     def test_str_magnetic_field_strength(self):
         """Test resolve state with magnetic_field_strength sensor."""
         xknx = XKNX(loop=self.loop)
@@ -1101,20 +1087,6 @@ class TestSensor(unittest.TestCase):
 
         self.assertEqual(sensor.resolve_state(), -2682.647216796875)
         self.assertEqual(sensor.unit_of_measurement(), "N/s")
-        self.assertEqual(sensor.ha_device_class(), None)
-
-    def test_str_parts_per_million(self):
-        """Test resolve state with parts_per_million sensor."""
-        xknx = XKNX(loop=self.loop)
-        sensor = Sensor(
-            xknx,
-            'TestSensor',
-            group_address_state='1/2/3',
-            value_type="parts_per_million")
-        sensor.sensor_value.payload = DPTArray((0x77, 0x84,))
-
-        self.assertEqual(sensor.resolve_state(), 315228.16)
-        self.assertEqual(sensor.unit_of_measurement(), "ppm")
         self.assertEqual(sensor.ha_device_class(), None)
 
     def test_str_percent(self):
