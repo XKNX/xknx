@@ -330,24 +330,6 @@ class DPTElectromotiveForce(DPT4ByteFloat):
     unit = "V"
 
 
-class DPTElectricPotentialDifference(DPT4ByteFloat):
-    """DPT 14.028 DPT_Value_Electric_PotentialDifference."""
-
-    unit = "V"
-
-
-class DPTElectromagneticMoment(DPT4ByteFloat):
-    """DPT 14.029 DPT_Value_ElectromagneticMoment."""
-
-    unit = "A m²"
-
-
-class DPTElectromotiveForce(DPT4ByteFloat):
-    """DPT 14.030 DPT_Value_Electromotive_Force."""
-
-    unit = "V"
-
-
 class DPTEnergy(DPT4ByteFloat):
     """DPT 14.031 DPT_Value_Energy."""
 
