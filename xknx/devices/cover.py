@@ -168,7 +168,7 @@ class Cover(Device):
     async def stop(self):
         """Stop cover."""
         # Thats the KNX way of doing this. electrical engineers ... m-)
-        await self.step.decrease()
+        await self.step.increase()
         self.travelcalculator.stop()
 
     async def set_position(self, position):
