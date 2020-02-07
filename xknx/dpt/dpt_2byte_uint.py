@@ -49,6 +49,50 @@ class DPT2Ucount(DPT2ByteUnsigned):
     unit = "pulses"
 
 
+class DPTTimePeriodMsec(DPT2ByteUnsigned):
+    """DPT 7.002 DPT_TimePeriodMsec (ms)."""
+
+    unit = "ms"
+
+
+class DPTTimePeriod10Msec(DPT2ByteUnsigned):
+    """DPT 7.003 DPT_TimePeriod10Msec (ms)."""
+
+    unit = "ms"
+    resolution = 10
+
+
+class DPTTimePeriod100Msec(DPT2ByteUnsigned):
+    """DPT 7.004 DPT_TimePeriod100Msec (ms)."""
+
+    unit = "ms"
+    resolution = 100
+
+
+class DPTTimePeriodSec(DPT2ByteUnsigned):
+    """DPT 7.005 DPT_TimePeriodSec (s)."""
+
+    unit = "s"
+
+
+class DPTTimePeriodMin(DPT2ByteUnsigned):
+    """DPT 7.006 DPT_TimePeriodMin (min)."""
+
+    unit = "min"
+
+
+class DPTTimePeriodHrs(DPT2ByteUnsigned):
+    """DPT 7.007 DPT_TimePeriodHrs (h)."""
+
+    unit = "h"
+
+
+class DPTLengthMm(DPT2ByteUnsigned):
+    """DPT 7.011 Abstraction for KNX 2 Byte DPT_Length_mm (mm)."""
+
+    unit = "mm"
+
+
 class DPTUElCurrentmA(DPT2ByteUnsigned):
     """DPT 7.012 Abstraction for KNX 2 Byte DPTUElCurrentmA."""
 

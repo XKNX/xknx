@@ -88,6 +88,25 @@ class DPTTemperature(DPT2ByteFloat):
     resolution = 1
 
 
+class DPTTemperatureDifference2Byte(DPT2ByteFloat):
+    """DPT 9.002 DPT_Value_Tempd."""
+
+    value_min = -670760
+    value_max = 670760
+    unit = "K"
+    ha_device_class = "temperature"
+    resolution = 1
+
+
+class DPTTemperatureA(DPT2ByteFloat):
+    """DPT 9.003 DPT_Value_Tempa."""
+
+    value_min = -670760
+    value_max = 670760
+    unit = "K/h"
+    resolution = 1
+
+
 class DPTLux(DPT2ByteFloat):
     """DPT 9.004 DPT_Value_Lux."""
 
@@ -107,6 +126,16 @@ class DPTWsp(DPT2ByteFloat):
     resolution = 1
 
 
+class DPTPressure2Byte(DPT2ByteFloat):
+    """DPT 9.006 DPT_Value_Pres (Pa)."""
+
+    value_min = 0
+    value_max = 670760
+    unit = "Pa"
+    ha_device_class = "pressure"
+    resolution = 1
+
+
 class DPTHumidity(DPT2ByteFloat):
     """DPT 9.007 DPT_Value_Humidity."""
 
@@ -123,20 +152,89 @@ class DPTPartsPerMillion(DPT2ByteFloat):
     unit = "ppm"
 
 
+class DPTTime1(DPT2ByteFloat):
+    """DPT 9.010 DPT_Value_Time1 (s)."""
+
+    value_min = -670760
+    value_max = 670760
+    unit = "s"
+    resolution = 1
+
+
+class DPTTime2(DPT2ByteFloat):
+    """DPT 9.011 DPT_Value_Time2 (ms)."""
+
+    value_min = -670760
+    value_max = 670760
+    unit = "ms"
+    resolution = 1
+
+
 class DPTVoltage(DPT2ByteFloat):
     """DPT 9.020 DPT_Value_Voltage."""
 
     unit = "mV"
 
 
+class DPTCurrent(DPT2ByteFloat):
+    """DPT 9.021 DPT_Value_Curr (mA)."""
+
+    unit = "mA"
+
+
+class DPTPowerDensity(DPT2ByteFloat):
+    """DPT 9.022 DPT_PowerDensity (W/m²)."""
+
+    unit = "W/m²"
+
+
+class DPTKelvinPerPercent(DPT2ByteFloat):
+    """DPT 9.023 DPT_KelvinPerPercent (K/%)."""
+
+    unit = "K/%"
+
+
+class DPTPower2Byte(DPT2ByteFloat):
+    """DPT 9.024 DPT_Power (kW)."""
+
+    unit = "kW"
+    ha_device_class = "power"
+
+
+class DPTVolumeFlow(DPT2ByteFloat):
+    """DPT 9.025 DPT_Value_Volume_Flow (l/h)."""
+
+    unit = "l/h"
+
+
+class DPTRainAmount(DPT2ByteFloat):
+    """DPT 9.026 DPT_Rain_Amount (l/m²)."""
+
+    value_min = -671088.64
+    value_max = 670760.96
+    unit = "l/m²"
+
+
+class DPTTemperatureF(DPT2ByteFloat):
+    """DPT 9.027 DPT_Value_Temp_F."""
+
+    value_min = -459.6
+    value_max = 670760
+    unit = "°F"
+    ha_device_class = "temperature"
+    resolution = 1
+
+
+class DPTWspKmh(DPT2ByteFloat):
+    """DPT 9.028 DPT_Value_Wsp_kmh Speed (km/h)."""
+
+    value_min = 0
+    value_max = 670760
+    unit = "km/h"
+    resolution = 1
+
+
 class DPTEnthalpy(DPT2ByteFloat):
     """DPT 9.* 2-byte float value (with unit)."""
 
     unit = "H"
-
-
-class DPTPressure2Byte(DPT2ByteFloat):
-    """DPT 9.006 DPT_Value_Pressure."""
-
-    unit = 'Pa'
-    ha_device_class = "pressure"
