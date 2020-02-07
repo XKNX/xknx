@@ -62,6 +62,7 @@ class TelegramQueue():
 
             # Breaking up queue if None is pushed to the queue
             if telegram is None:
+                self.xknx.telegrams.task_done()
                 break
 
             await self.process_telegram(telegram)
