@@ -8,7 +8,6 @@ KNXIPInterface manages KNX/IP Tunneling or Routing connections.
 """
 import ipaddress
 from enum import Enum
-from platform import system as get_os_name
 
 import netifaces
 
@@ -43,7 +42,6 @@ class ConnectionConfig:
     * auto_reconnect: Auto reconnect to KNX/IP tunneling device if connection cannot be established.
     * auto_reconnect_wait: Wait n seconds before trying to reconnect to KNX/IP tunneling device.
     * scan_filter: For AUTOMATIC connection, limit scan with the given filter
-    * bind_to_multicast_addr: Bind to the multicast address instead of the local IP (ROUTING only)
     """
 
     # pylint: disable=too-few-public-methods,too-many-instance-attributes
@@ -55,8 +53,7 @@ class ConnectionConfig:
                  gateway_port: int = DEFAULT_MCAST_PORT,
                  auto_reconnect: bool = False,
                  auto_reconnect_wait: int = 3,
-                 scan_filter: GatewayScanFilter = GatewayScanFilter(),
-                 bind_to_multicast_addr: bool = True):
+                 scan_filter: GatewayScanFilter = GatewayScanFilter()):
         """Initialize ConnectionConfig class."""
         # pylint: disable=too-many-arguments
         self.connection_type = connection_type
@@ -65,7 +62,6 @@ class ConnectionConfig:
         self.gateway_port = gateway_port
         self.auto_reconnect = auto_reconnect
         self.auto_reconnect_wait = auto_reconnect_wait
-        self.bind_to_multicast_addr = bind_to_multicast_addr
         if connection_type == ConnectionType.TUNNELING:
             scan_filter.tunnelling = True
         elif connection_type == ConnectionType.ROUTING:
@@ -90,9 +86,7 @@ class KNXIPInterface():
         """Start interface. Connecting KNX/IP device with the selected method."""
         if self.connection_config.connection_type == ConnectionType.ROUTING and \
                 self.connection_config.local_ip is not None:
-            await self.start_routing(
-                self.connection_config.local_ip,
-                self.connection_config.bind_to_multicast_addr)
+            await self.start_routing(self.connection_config.local_ip)
         elif self.connection_config.connection_type == ConnectionType.TUNNELING:
             await self.start_tunnelling(
                 self.connection_config.local_ip,
@@ -120,8 +114,7 @@ class KNXIPInterface():
                                         self.connection_config.auto_reconnect,
                                         self.connection_config.auto_reconnect_wait)
         elif gateway.supports_routing:
-            bind_to_multicast_addr = get_os_name() != "Darwin"  # = Mac OS
-            await self.start_routing(gateway.local_ip, bind_to_multicast_addr)
+            await self.start_routing(gateway.local_ip)
 
     async def start_tunnelling(self, local_ip, gateway_ip, gateway_port,
                                auto_reconnect, auto_reconnect_wait):
@@ -143,15 +136,14 @@ class KNXIPInterface():
             auto_reconnect_wait=auto_reconnect_wait)
         await self.interface.start()
 
-    async def start_routing(self, local_ip, bind_to_multicast_addr):
+    async def start_routing(self, local_ip):
         """Start KNX/IP Routing."""
         validate_ip(local_ip, address_name="Local IP address")
         self.xknx.logger.debug("Starting Routing from %s", local_ip)
         self.interface = Routing(
             self.xknx,
             self.telegram_received,
-            local_ip,
-            bind_to_multicast_addr)
+            local_ip)
         await self.interface.start()
 
     async def stop(self):
