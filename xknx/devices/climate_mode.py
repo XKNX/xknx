@@ -71,7 +71,7 @@ class ClimateMode(Device):
         else:
             for mode in operation_modes:
                 if isinstance(mode, str):
-                    self.operation_modes_.append(HVACOperationMode[mode])
+                    self.operation_modes_.append(HVACOperationMode(mode))
                 elif isinstance(mode, HVACOperationMode):
                     self.operation_modes_.append(mode)
 
