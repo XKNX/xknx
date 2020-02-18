@@ -80,7 +80,7 @@ class BinarySensor(Device):
         significant_bit = \
             config.get('significant_bit', 1)
         force_hook = \
-            config.get('force_hook', True)
+            config.get('force_hook', False)
         actions = []
         if "actions" in config:
             for action in config["actions"]:
