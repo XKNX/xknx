@@ -109,7 +109,7 @@ class BinarySensor(Device):
 
     async def _set_internal_state(self, state):
         """Set the internal state of the device. If state was changed after update hooks and connected Actions are executed."""
-        if state != self.state or self.force_hook == True:
+        if state != self.state or self.force_hook:
             self.state = state
             counter = self.bump_and_get_counter(state)
             await self.after_update()
