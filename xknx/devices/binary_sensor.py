@@ -40,7 +40,7 @@ class BinarySensor(Device):
                  name,
                  group_address_state=None,
                  sync_state=True,
-                 force_hook=False,
+                 ignore_internal_state=False,
                  device_class=None,
                  significant_bit=1,
                  reset_after=None,
@@ -63,7 +63,7 @@ class BinarySensor(Device):
         self.reset_after = reset_after
         self.state = BinarySensorState.OFF
         self.actions = actions
-        self.force_hook = force_hook
+        self.ignore_internal_state = ignore_internal_state
         self.last_set = None
         self.count_set_on = 0
         self.count_set_off = 0
@@ -79,8 +79,8 @@ class BinarySensor(Device):
             config.get('device_class')
         significant_bit = \
             config.get('significant_bit', 1)
-        force_hook = \
-            config.get('force_hook', False)
+        ignore_internal_state = \
+            config.get('ignore_internal_state', False)
         actions = []
         if "actions" in config:
             for action in config["actions"]:
@@ -91,7 +91,7 @@ class BinarySensor(Device):
                    name,
                    group_address_state=group_address_state,
                    sync_state=sync_state,
-                   force_hook=force_hook,
+                   ignore_internal_state=ignore_internal_state,
                    device_class=device_class,
                    significant_bit=significant_bit,
                    actions=actions)
@@ -109,7 +109,7 @@ class BinarySensor(Device):
 
     async def _set_internal_state(self, state):
         """Set the internal state of the device. If state was changed after update hooks and connected Actions are executed."""
-        if state != self.state or self.force_hook:
+        if state != self.state or self.ignore_internal_state:
             self.state = state
             counter = self.bump_and_get_counter(state)
             await self.after_update()
