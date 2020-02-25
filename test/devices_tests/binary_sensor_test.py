@@ -184,7 +184,6 @@ class TestBinarySensor(unittest.TestCase):
             xknx.devices['TestOutlet'].state,
             True)
 
-
     def test_process_wrong_payload(self):
         """Test process wrong telegram (wrong payload type)."""
         xknx = XKNX(loop=self.loop)
