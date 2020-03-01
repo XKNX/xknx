@@ -15,7 +15,7 @@ class RemoteValueDateAndTime(RemoteValue):
     DPTMAP = {
         'date': DPTDate,
         'time': DPTTime,
-        'timeofday': DPTDateTime
+        'datetime': DPTDateTime
     }
 
     def __init__(self,
