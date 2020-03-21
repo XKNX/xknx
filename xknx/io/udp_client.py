@@ -121,36 +121,34 @@ class UDPClient:
         sock.setblocking(False)
 
         sock.setsockopt(
-            socket.SOL_IP,
+            socket.IPPROTO_IP,
             socket.IP_MULTICAST_IF,
             socket.inet_aton(own_ip))
         sock.setsockopt(
-            socket.SOL_IP,
+            socket.IPPROTO_IP,
             socket.IP_ADD_MEMBERSHIP,
             socket.inet_aton(remote_addr[0]) +
             socket.inet_aton(own_ip))
         sock.setsockopt(
             socket.IPPROTO_IP,
             socket.IP_MULTICAST_TTL, 2)
-        sock.setsockopt(
-            socket.IPPROTO_IP,
-            socket.IP_MULTICAST_IF,
-            socket.inet_aton(own_ip))
 
-        # I have no idea why we have to use different bind calls here
-        # - bind() with multicast addr does not work with gateway search requests
-        #   on some machines. It only works if called with own ip. It also doesn't
-        #   work on Mac OS.
-        # - bind() with own_ip does not work with ROUTING_INDICATIONS on Gira
-        #   knx router - for an unknown reason.
         if platform == "win32":
+            # '' represents INADDR_ANY
             sock.bind(('', remote_addr[1]))
         elif platform == "darwin":
-            sock.bind((own_ip, 0))
+            # allows multiple sockets to the same port by multiple processes
+            # behaves like SO_REUSEADDR for bind for INADDR_ANY
+            # (GatewayScanner opens multiple sockets)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+            sock.bind(('', remote_addr[1]))
         else:
             sock.bind((remote_addr[0], remote_addr[1]))
 
+        # ignore multicast datagrams sent by the host itself
+        # don't use when running multiple routing instances on a single host (interface)
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
+
         return sock
 
     async def connect(self):

@@ -106,15 +106,20 @@ class KNXIPInterface():
             raise XKNXException("No Gateways found")
 
         gateway = gateways[0]
+
+        # on Linux gateway.local_ip can be any interface listening to the
+        # multicast group (even 127.0.0.1) so we set the interface with find_local_ip
+        local_interface_ip = self.find_local_ip(gateway_ip=gateway.ip_addr)
+
         if gateway.supports_tunnelling and \
                 scan_filter.routing is not True:
-            await self.start_tunnelling(gateway.local_ip,
+            await self.start_tunnelling(local_interface_ip,
                                         gateway.ip_addr,
                                         gateway.port,
                                         self.connection_config.auto_reconnect,
                                         self.connection_config.auto_reconnect_wait)
         elif gateway.supports_routing:
-            await self.start_routing(gateway.local_ip)
+            await self.start_routing(local_interface_ip)
 
     async def start_tunnelling(self, local_ip, gateway_ip, gateway_port,
                                auto_reconnect, auto_reconnect_wait):
@@ -188,7 +193,7 @@ class KNXIPInterface():
         gateway = ipaddress.IPv4Address(gateway_ip)
         local_ip = _scan_interfaces(gateway)
         if local_ip is None:
-            self.xknx.logger.debug(
+            self.xknx.logger.warning(
                 "No interface on same subnet as gateway found. Falling back to default gateway.")
             default_gateway = _find_default_gateway()
             local_ip = _scan_interfaces(default_gateway)
