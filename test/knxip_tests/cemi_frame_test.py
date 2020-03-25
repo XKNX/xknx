@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from pytest import fixture, raises
 
 from xknx.dpt import DPTBinary
-from xknx.exceptions import CouldNotParseKNXIP
+from xknx.exceptions import CouldNotParseKNXIP, UnsupportedCEMIMessage
 from xknx.knxip.cemi_frame import CEMIFrame
 from xknx.knxip.knxip_enum import APCICommand, CEMIMessageCode
 from xknx.telegram import PhysicalAddress
@@ -50,8 +50,8 @@ def test_valid_command(frame):
 
 def test_invalid_tpci_apci(frame):
     """Test for invalid APCICommand"""
-    with raises(CouldNotParseKNXIP, match=r".*APCI not supported: .*"):
-        frame.from_knx(get_data(0x29, 0, 0, 0, 0, 1, 0xFFC0, []))
+    with raises(UnsupportedCEMIMessage, match=r".*APCI not supported: .*"):
+        frame.from_knx_data_link_layer(get_data(0x29, 0, 0, 0, 0, 1, 0xFFC0, []))
 
 
 def test_invalid_apdu_len(frame):
@@ -62,11 +62,5 @@ def test_invalid_apdu_len(frame):
 
 def test_invalid_invalid_len(frame):
     """Test for invalid cemi len"""
-    with raises(CouldNotParseKNXIP, match=r".*CEMI too small"):
-        frame.from_knx(get_data(0x29, 0, 0, 0, 0, 2, 0, [])[:5])
-
-
-def test_invalid_invalid_code(frame):
-    """Test for invalid cemi code"""
-    with raises(CouldNotParseKNXIP, match=r".*Could not understand CEMIMessageCode"):
-        frame.from_knx(get_data(0x0, 0, 0, 0, 0, 2, 0, []))
+    with raises(UnsupportedCEMIMessage, match=r".*CEMI too small.*"):
+        frame.from_knx_data_link_layer(get_data(0x29, 0, 0, 0, 0, 2, 0, [])[:5])
