@@ -5,7 +5,7 @@ from .binary_sensor import BinarySensor, BinarySensorState
 from .climate import Climate
 from .climate_mode import ClimateMode
 from .cover import Cover
-from .datetime import DateTime, DateTimeBroadcastType
+from .datetime import DateTime
 from .device import Device
 from .devices import Devices
 from .expose_sensor import ExposeSensor

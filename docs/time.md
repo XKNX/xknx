@@ -11,12 +11,24 @@ XKNX provides the possibility to send the local time, date or both combined to t
 ## [](#header-2)Example
 
 ```python
-time = DateTime(xknx, 'TimeTest', group_address='1/2/3')
-xknx.devices.add(time)
+time_device = DateTime(
+    xknx, 'TimeTest',
+    group_address='1/2/3',
+    broadcast_type='TIME',
+    localtime=True
+)
+xknx.devices.add(time_device)
 
 # Sending time to knx bus
 await xknx.devices['TimeTest'].sync()
 ``` 
+
+* `xknx` is the XKNX object.
+* `name` is the name of the object.
+* `group_address` is the KNX group address of the sensor device.
+* `broadcast_type` defines the value type that will be sent to the KNX bus. Valid attributes are: 'time', 'date' and 'datetime'. Default: `time`
+* `localtime` If set `True` sync() and GroupValueRead requests always return the current local time. On `False` the set value will be sent. Default: `True`
+
 
 ## [](#header-2)Configuration via **xknx.yaml**
 
@@ -56,13 +68,12 @@ loop.close()
 
 ```python
 from xknx import XKNX
-from xknx.devices import DateTime, DateTimeBroadcastType
+from xknx.devices import DateTime
 
 xknx = XKNX()
-time = DateTime(xknx, 'TimeTest', group_address='1/2/3', broadcast_type=DateTimeBroadcastType.TIME)
+time_device = DateTime(xknx, 'TimeTest', group_address='1/2/3', broadcast_type='time')
 
 # Sending Time to KNX bus 
-await time.sync()
+await time_device.broadcast_localtime()
 ```
-
 

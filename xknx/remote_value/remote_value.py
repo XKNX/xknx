@@ -108,7 +108,7 @@ class RemoteValue():
         telegram.payload = self.payload
         await self.xknx.telegrams.put(telegram)
 
-    async def set(self, value):
+    async def set(self, value, response=False):
         """Set new value."""
         if not self.initialized:
             self.xknx.logger.info("Setting value of uninitialized device: %s (value: %s)", self.device_name, value)
@@ -122,7 +122,7 @@ class RemoteValue():
         if self.payload is None or payload != self.payload:
             self.payload = payload
             updated = True
-        await self.send()
+        await self.send(response)
         if updated and self.after_update_cb is not None:
             await self.after_update_cb()
 

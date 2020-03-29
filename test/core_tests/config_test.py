@@ -6,9 +6,8 @@ from unittest.mock import patch
 from xknx import XKNX
 from xknx.core import Config
 from xknx.devices import (
-    Action, BinarySensor, Climate, ClimateMode, Cover, DateTime,
-    DateTimeBroadcastType, ExposeSensor, Fan, Light, Notification, Scene,
-    Sensor, Switch)
+    Action, BinarySensor, Climate, ClimateMode, Cover, DateTime, ExposeSensor,
+    Fan, Light, Notification, Scene, Sensor, Switch)
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
 from xknx.telegram import PhysicalAddress
@@ -321,7 +320,7 @@ class TestConfig(unittest.TestCase):
                 TestConfig.xknx,
                 'General.Time',
                 group_address='2/1/1',
-                broadcast_type=DateTimeBroadcastType.TIME,
+                broadcast_type="TIME",
                 device_updated_cb=TestConfig.xknx.devices.device_updated))
         self.assertEqual(
             TestConfig.xknx.devices['General.DateTime'],
@@ -329,7 +328,7 @@ class TestConfig(unittest.TestCase):
                 TestConfig.xknx,
                 'General.DateTime',
                 group_address='2/1/2',
-                broadcast_type=DateTimeBroadcastType.DATETIME,
+                broadcast_type="DATETIME",
                 device_updated_cb=TestConfig.xknx.devices.device_updated))
         self.assertEqual(
             TestConfig.xknx.devices['General.Date'],
@@ -337,7 +336,7 @@ class TestConfig(unittest.TestCase):
                 TestConfig.xknx,
                 'General.Date',
                 group_address='2/1/3',
-                broadcast_type=DateTimeBroadcastType.DATE,
+                broadcast_type="DATE",
                 device_updated_cb=TestConfig.xknx.devices.device_updated))
 
     def test_config_notification(self):

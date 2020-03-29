@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 from xknx import XKNX
-from xknx.devices import ActionCallback, DateTime, DateTimeBroadcastType, ExposeSensor
+from xknx.devices import ActionCallback, DateTime, ExposeSensor
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import XKNXException
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
@@ -315,7 +315,7 @@ class KNXExposeTime:
     def async_register(self):
         """Register listener."""
         broadcast_type_string = self.type.upper()
-        broadcast_type = DateTimeBroadcastType[broadcast_type_string]
+        broadcast_type = broadcast_type_string
         self.device = DateTime(
             self.xknx, "Time", broadcast_type=broadcast_type, group_address=self.address
         )
