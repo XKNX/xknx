@@ -21,6 +21,16 @@ class StateUpdater():
         self.run_task = self.xknx.loop.create_task(
             self.run())
 
+    async def stop(self):
+        """Stop StateUpdater."""
+        if self.run_task:
+            self.xknx.logger.debug("Stopping StateUpdater")
+            self.run_task.cancel()
+            try:
+                await self.run_task
+            except asyncio.CancelledError:
+                self.run_task = None
+
     async def run(self):
         """Worker thread. Endless loop for updating states."""
         await asyncio.sleep(self.start_timeout)
