@@ -74,6 +74,10 @@ class Config:
                     connection_config.gateway_port = value
                 elif pref == "local_ip":
                     connection_config.local_ip = value
+                elif pref == "auto_reconnect":
+                    connection_config.auto_reconnect = value
+                elif pref == "auto_reconnect_wait":
+                    connection_config.auto_reconnect_wait = value
         self.xknx.connection_config = connection_config
 
     def parse_groups(self, doc):
