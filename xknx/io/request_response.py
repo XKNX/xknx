@@ -61,7 +61,7 @@ class RequestResponse():
 
     def on_error_hook(self, knxipframe):
         """Do something after having received error within given time. May be overwritten in derived class."""
-        self.xknx.logger.warning("Error: KNX bus responded to request of type '%s' with error in '%s': %s",
+        self.xknx.logger.error("Error: KNX bus responded to request of type '%s' with error in '%s': %s",
                                  self.__class__.__name__,
                                  self.awaited_response_class.__name__, knxipframe.body.status_code)
 
