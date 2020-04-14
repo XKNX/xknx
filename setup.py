@@ -18,7 +18,7 @@ setup(
     description='An Asynchronous Library for the KNX protocol. Documentation: https://xknx.io/',
     version=VERSION,
     long_description=long_description,
-    long_description_content_type='text/markdown'
+    long_description_content_type='text/markdown',
     download_url='https://github.com/XKNX/xknx/archive/{}.zip'.format(VERSION),
     url='https://xknx.io/',
     author='Julius Mittenzwei',
