@@ -1,13 +1,16 @@
 """Setup for XKNX python package."""
-from os import environ, path
+from os import path
 
 from setuptools import find_packages, setup
-
-VERSION = environ.get('GITHUB_REF', 'dev')
 
 THIS_DIRECTORY = path.abspath(path.dirname(__file__))
 with open(path.join(THIS_DIRECTORY, 'README.md'), encoding='utf-8') as f:
     LONG_DESCRIPTION = f.read()
+
+VERSION = {}
+# pylint: disable=exec-used
+with open(path.join(THIS_DIRECTORY, "xknx/__version__.py")) as fp:
+    exec(fp.read(), VERSION)
 
 REQUIRES = [
     'pyyaml>=5.1',
@@ -17,10 +20,10 @@ REQUIRES = [
 setup(
     name='xknx',
     description='An Asynchronous Library for the KNX protocol. Documentation: https://xknx.io/',
-    version=VERSION,
+    version=VERSION['__version__'],
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
-    download_url='https://github.com/XKNX/xknx/archive/{}.zip'.format(VERSION),
+    download_url='https://github.com/XKNX/xknx/archive/{}.zip'.format(VERSION['__version__']),
     url='https://xknx.io/',
     author='Julius Mittenzwei',
     author_email='julius@mittenzwei.com',
