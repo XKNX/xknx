@@ -5,15 +5,36 @@ Upcoming version (unreleased)
 -----------------------------
 
 
+0.11.3 Sensor types galore!  2020-04-28
+---------------------------------------
+
+### New Features
+
+* added a lot of DPTs now useable as sensor type (@eXtenZy #255) 
+
+### Bugfixes
+
+* DPT_Step correction (used in Cover) (@recMartin #260) 
+* prevent reconnects on unknown CEMI Messages (@farmio #271)
+* fix the parsing of operation mode strings to HVACOperationMode (@FredericMa #266) 
+* corrected binding to multicast address in Windows (Routing) (@FredericMa #256) 
+* finish tasks when stopping xknx (@farmio #264, #274) 
+
+### Internals
+
+* some code cleanup (dpt, telegram and remote_value module) (@farmio #232)
+* refactor Notification device (@farmio #245)
+
+
 0.11.2 Add invert for climate on_off; fixed RGBW lights and stability improvements  2019-09-29
 ----------------------------------------------------------------------------------------------
 
-## New Features
+### New Features
 
 *  Sensor: add DPT 9.006 as pressure_2byte #223 (@michelde)
 *  Climate: add new attribute on_off_invert #225 (@tombbo)
 
-## Bugfixes
+### Bugfixes
 
 * Light: Fix for wrong structure of RGBW DPT 251.600 #231 (@dstrigl)
 * Core: Correct handling of E_NO_MORE_CONNECTIONS within ConnectResponses #217 (@Julius2342)
