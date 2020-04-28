@@ -9,6 +9,8 @@ from xknx.devices import Devices
 from xknx.io import ConnectionConfig, KNXIPInterface
 from xknx.telegram import GroupAddressType, PhysicalAddress
 
+from .__version__ import __version__ as VERSION
+
 
 class XKNX:
     """Class for reading and writing KNX/IP packets."""
@@ -43,6 +45,7 @@ class XKNX:
         self.knx_logger = logging.getLogger('xknx.knx')
         self.telegram_logger = logging.getLogger('xknx.telegram')
         self.connection_config = None
+        self.version = VERSION
 
         if config is not None:
             Config(self).read(config)
@@ -73,6 +76,8 @@ class XKNX:
             else:
                 connection_config = self.connection_config
         self.knxip_interface = KNXIPInterface(self, connection_config=connection_config)
+        self.logger.info('XKNX v%s starting %s connection to KNX bus.',
+                         VERSION, connection_config.connection_type.name.lower())
         await self.knxip_interface.start()
         await self.telegram_queue.start()
 
