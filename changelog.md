@@ -4,6 +4,15 @@ Changelog
 Upcoming version (unreleased)
 -----------------------------
 
+### New Features
+
+* Added config option ignore_internal_state in binary sensors (@andreasnanko #267)
+
+### Internals
+
+* Automatically publish packages to pypi (@Julius2342 #277)
+* keep xknx version in `xknx/__version__.py` (@farmio #278)
+
 
 0.11.3 Sensor types galore!  2020-04-28
 ---------------------------------------
