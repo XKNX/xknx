@@ -284,7 +284,8 @@ class KNXClimate(ClimateEntity):
             return OPERATION_MODES.get(
                 self.device.mode.operation_mode.value, HVAC_MODE_HEAT
             )
-        return None
+        # default to "heat"
+        return HVAC_MODE_HEAT
 
     @property
     def hvac_modes(self) -> Optional[List[str]]:
@@ -298,7 +299,9 @@ class KNXClimate(ClimateEntity):
             _operations.append(HVAC_MODE_HEAT)
             _operations.append(HVAC_MODE_OFF)
 
-        return [op for op in _operations if op is not None]
+        _modes = list(filter(None, _operations))
+        # default to ["heat"]
+        return _modes if _modes else [HVAC_MODE_HEAT]
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set operation mode."""
