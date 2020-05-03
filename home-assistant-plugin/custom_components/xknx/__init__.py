@@ -14,6 +14,8 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    STATE_ON,
+    STATE_OFF,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN
 )
@@ -373,7 +375,7 @@ class KNXExposeSensor:
             if old_state is not None:
                 old_attribute = old_state.attributes.get(self.expose_attribute)
                 if old_attribute == new_attribute:
-                    # don't send same value sequentially and spam the bus
+                    # don't send same value sequentially
                     return
             await self._async_set_knx_value(new_attribute)
         else:
@@ -387,9 +389,9 @@ class KNXExposeSensor:
             value = self.expose_default
 
         if self.type == "binary":
-            if value == "on":
+            if value == STATE_ON:
                 value = True
-            elif value == "off":
+            elif value == STATE_OFF:
                 value = False
 
         await self.device.set(value)
