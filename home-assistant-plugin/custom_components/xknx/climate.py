@@ -215,6 +215,11 @@ class KNXClimate(ClimateEntity):
         self.device.register_device_updated_cb(after_update_callback)
         self.device.mode.register_device_updated_cb(after_update_callback)
 
+    async def async_update(self):
+        """Request a state update from KNX bus."""
+        await self.device.sync()
+        await self.device.mode.sync()
+
     @property
     def name(self) -> str:
         """Return the name of the KNX device."""
