@@ -73,7 +73,15 @@ class XKNX:
             else:
                 connection_config = self.connection_config
         self.knxip_interface = KNXIPInterface(self, connection_config=connection_config)
-        await self.knxip_interface.start()
+        try:
+            
+            await self.knxip_interface.start()        
+            
+        except:
+            await self._stop_knxip_interface_if_exists()
+            self.logger.error('Could not start KNX/IP interface. xkxn not started.')
+            return
+
         await self.telegram_queue.start()
 
         if state_updater:
@@ -98,9 +106,10 @@ class XKNX:
 
     async def stop(self):
         """Stop XKNX module."""
-        await self.join()
-        await self.telegram_queue.stop()
-        await self._stop_knxip_interface_if_exists()
+        if self.started:       
+            await self.join()    
+            await self.telegram_queue.stop()
+            await self._stop_knxip_interface_if_exists()
         self.started = False
 
     async def loop_until_sigint(self):
