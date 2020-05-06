@@ -215,6 +215,11 @@ class KNXClimate(ClimateDevice):
         self.device.register_device_updated_cb(after_update_callback)
         self.device.mode.register_device_updated_cb(after_update_callback)
 
+    async def async_update(self):
+        """Request a state update from KNX bus."""
+        await self.device.sync()
+        await self.device.mode.sync()
+
     @property
     def name(self) -> str:
         """Return the name of the KNX device."""
@@ -330,10 +335,7 @@ class KNXClimate(ClimateDevice):
         return list(filter(None, _presets))
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set new preset mode.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Set new preset mode."""
         if self.device.mode.supports_operation_mode:
             knx_operation_mode = HVACOperationMode(PRESET_MODES_INV.get(preset_mode))
             await self.device.mode.set_operation_mode(knx_operation_mode)
