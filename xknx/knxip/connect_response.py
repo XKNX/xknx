@@ -33,10 +33,7 @@ class ConnectResponse(KNXIPBody):
 
     def calculated_length(self):
         """Get length of KNX/IP body."""
-        if self.status_code == ErrorCode.E_NO_ERROR:
-            return 2 + HPAI.LENGTH + \
-                ConnectResponse.CRD_LENGTH
-        return 2
+        return 2 + HPAI.LENGTH + ConnectResponse.CRD_LENGTH
 
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
@@ -57,6 +54,9 @@ class ConnectResponse(KNXIPBody):
         if self.status_code == ErrorCode.E_NO_ERROR:
             pos += self.control_endpoint.from_knx(raw[pos:])
             pos += crd_from_knx(raw[pos:])
+        else:
+            # do not parse HPAI and CRD in case of errors - just check length
+            pos += len(raw[pos:])
         return pos
 
     def to_knx(self):
@@ -73,9 +73,8 @@ class ConnectResponse(KNXIPBody):
         data.append(self.communication_channel)
         data.append(self.status_code.value)
 
-        if self.status_code == ErrorCode.E_NO_ERROR:
-            data.extend(self.control_endpoint.to_knx())
-            data.extend(crd_to_knx())
+        data.extend(self.control_endpoint.to_knx())
+        data.extend(crd_to_knx())
 
         return data
 

@@ -9,6 +9,8 @@ from xknx.devices import Devices
 from xknx.io import ConnectionConfig, KNXIPInterface
 from xknx.telegram import GroupAddressType, PhysicalAddress
 
+from .__version__ import __version__ as VERSION
+
 
 class XKNX:
     """Class for reading and writing KNX/IP packets."""
@@ -43,6 +45,7 @@ class XKNX:
         self.knx_logger = logging.getLogger('xknx.knx')
         self.telegram_logger = logging.getLogger('xknx.telegram')
         self.connection_config = None
+        self.version = VERSION
 
         if config is not None:
             Config(self).read(config)
@@ -73,7 +76,17 @@ class XKNX:
             else:
                 connection_config = self.connection_config
         self.knxip_interface = KNXIPInterface(self, connection_config=connection_config)
-        await self.knxip_interface.start()
+        self.logger.info('XKNX v%s starting %s connection to KNX bus.',
+                         VERSION, connection_config.connection_type.name.lower())
+        
+        try:
+            await self.knxip_interface.start()        
+            
+        except:
+            await self._stop_knxip_interface_if_exists()
+            self.logger.error('Could not start KNX/IP interface. xkxn not started.')
+            return
+
         await self.telegram_queue.start()
 
         if state_updater:
@@ -98,9 +111,12 @@ class XKNX:
 
     async def stop(self):
         """Stop XKNX module."""
-        await self.join()
-        await self.telegram_queue.stop()
-        await self._stop_knxip_interface_if_exists()
+        if self.state_updater:
+            await self.state_updater.stop()
+        if self.started:       
+            await self.join()    
+            await self.telegram_queue.stop()
+            await self._stop_knxip_interface_if_exists()
         self.started = False
 
     async def loop_until_sigint(self):
