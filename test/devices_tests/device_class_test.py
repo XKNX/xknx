@@ -58,7 +58,7 @@ class TestRegisterDeviceClass(unittest.TestCase):
         xknx = XKNX(
                 loop=self.loop,
                 custom_device_classes={"custom_device": CustomDevice},
-                config=os.path.join(pathlib.Path(__file__).parent.absolute(), "device_class_test.yaml")
+                config=os.path.join(str(pathlib.Path(__file__).parent.absolute()), "device_class_test.yaml")
             )
         self.assertTrue("my_example_device" in xknx.devices)
         self.assertTrue(xknx.devices["my_example_device"].__class__.__name__ == "CustomDevice")
