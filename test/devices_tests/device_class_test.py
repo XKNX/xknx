@@ -61,4 +61,4 @@ class TestRegisterDeviceClass(unittest.TestCase):
             )
         self.assertTrue("my_example_device" in xknx.devices)
         self.assertTrue(xknx.devices["my_example_device"].__class__.__name__ == "CustomDevice")
-        self.assertEqual(xknx.devices["my_example_device"].get_my_custom_attribute() == "hello world")
+        self.assertEqual(xknx.devices["my_example_device"].get_my_custom_attribute(), "hello world")

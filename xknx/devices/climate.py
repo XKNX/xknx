@@ -164,29 +164,35 @@ class Climate(Device):
         min_temp = config.get('min_temp')
         max_temp = config.get('max_temp')
 
+        devices = []
         climate_mode = None
         if "mode" in config:
             climate_mode = ClimateMode.from_config(
                 xknx=xknx,
                 name=None,
                 config=config['mode'])
+            devices.append(climate_mode)
 
-        return cls(xknx,
-                   name,
-                   group_address_temperature=group_address_temperature,
-                   group_address_target_temperature=group_address_target_temperature,
-                   group_address_target_temperature_state=group_address_target_temperature_state,
-                   group_address_setpoint_shift=group_address_setpoint_shift,
-                   group_address_setpoint_shift_state=group_address_setpoint_shift_state,
-                   setpoint_shift_step=setpoint_shift_step,
-                   setpoint_shift_max=setpoint_shift_max,
-                   setpoint_shift_min=setpoint_shift_min,
-                   group_address_on_off=group_address_on_off,
-                   group_address_on_off_state=group_address_on_off_state,
-                   on_off_invert=on_off_invert,
-                   min_temp=min_temp,
-                   max_temp=max_temp,
-                   mode=climate_mode)
+        devices.append(
+            cls(xknx,
+                name,
+                group_address_temperature=group_address_temperature,
+                group_address_target_temperature=group_address_target_temperature,
+                group_address_target_temperature_state=group_address_target_temperature_state,
+                group_address_setpoint_shift=group_address_setpoint_shift,
+                group_address_setpoint_shift_state=group_address_setpoint_shift_state,
+                setpoint_shift_step=setpoint_shift_step,
+                setpoint_shift_max=setpoint_shift_max,
+                setpoint_shift_min=setpoint_shift_min,
+                group_address_on_off=group_address_on_off,
+                group_address_on_off_state=group_address_on_off_state,
+                on_off_invert=on_off_invert,
+                min_temp=min_temp,
+                max_temp=max_temp,
+                mode=climate_mode
+                )
+            )
+        return devices
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""

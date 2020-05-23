@@ -2,13 +2,19 @@
 import asyncio
 import logging
 import signal
+import copy
+from xknx.core.readonlydict import ReadOnlyDict
+from inspect import isclass
 from sys import platform
 
 from xknx.core import Config, TelegramQueue
 from xknx.devices import Devices
 from xknx.io import ConnectionConfig, KNXIPInterface
 from xknx.telegram import GroupAddressType, PhysicalAddress
-
+from xknx.devices import (
+    Device, BinarySensor, Climate, Cover, DateTime, ExposeSensor, Fan, Light,
+    Notification, Scene, Sensor, Switch)
+    
 from .__version__ import __version__ as VERSION
 
 
@@ -23,6 +29,7 @@ class XKNX:
     def __init__(self,
                  config=None,
                  loop=None,
+                 custom_device_classes={},
                  own_address=PhysicalAddress(DEFAULT_ADDRESS),
                  address_format=GroupAddressType.LONG,
                  telegram_received_cb=None,
@@ -46,6 +53,9 @@ class XKNX:
         self.telegram_logger = logging.getLogger('xknx.telegram')
         self.connection_config = None
         self.version = VERSION
+        self._device_classes = self.standard_device_classes()
+        for device_class, cls in custom_device_classes.items():
+            self.register_device_class(device_class, cls)
 
         if config is not None:
             Config(self).read(config)
@@ -55,6 +65,37 @@ class XKNX:
 
         if device_updated_cb is not None:
             self.devices.register_device_updated_cb(device_updated_cb)
+            
+    def register_device_class(self, name, cls):
+        """ registers a new device class within xknx """
+        if name in self._device_classes:
+            raise XKNXException("`device class` %s was already registered." % name)
+        elif not isclass(cls):
+            raise XKNXException("%s instance cannot be registered as a device class" % cls.__class__.__name__)
+        elif not issubclass(cls, Device):
+            raise XKNXException("%s cannot be registered as a device class" % cls.__name__)
+        else:
+            self._device_classes[name] = cls
+
+    def registered_device_classes(self):
+        return ReadOnlyDict(self._device_classes)
+		
+    def standard_device_classes(self):
+        """ Return the dictionary of standard device classes with group/class name as key and corresponding device class as value """
+        """ Group names within the xknx config file start with one of the availabel device class names """
+        return {
+            "binary_sensor" : BinarySensor,
+            "climate"       : Climate,
+            "cover"         : Cover,
+            "datetime"      : DateTime,
+            "expose_sensor" : ExposeSensor,
+            "fan"           : Fan,
+            "light"         : Light,
+            "notification"  : Notification,
+            "scene"         : Scene,
+            "sensor"        : Sensor,
+            "switch"        : Switch
+        }
 
     def __del__(self):
         """Destructor. Cleaning up if this was not done before."""

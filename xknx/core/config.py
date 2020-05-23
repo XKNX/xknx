@@ -79,7 +79,7 @@ class Config:
                 and hasattr(doc["groups"], '__iter__'):
             for group in doc["groups"]:
                 device_class = self.identify_registered_device_class(group)
-                if device_class != None:
+                if device_class is not None:
                     self.parse_group(device_class, doc["groups"][group])
 
     def identify_registered_device_class(self, group):
