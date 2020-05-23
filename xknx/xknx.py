@@ -54,9 +54,9 @@ class XKNX:
         self.connection_config = None
         self.version = VERSION
         self._device_classes = self.standard_device_classes()
-		if custom_device_classes is not None:
-			for device_class, cls in custom_device_classes.items():
-				self.register_device_class(device_class, cls)
+        if custom_device_classes is not None:
+            for device_class, cls in custom_device_classes.items():
+                self.register_device_class(device_class, cls)
 
         if config is not None:
             Config(self).read(config)
@@ -66,7 +66,7 @@ class XKNX:
 
         if device_updated_cb is not None:
             self.devices.register_device_updated_cb(device_updated_cb)
-            
+
     def register_device_class(self, name, cls):
         """registers a new device class within xknx"""
         if name in self._device_classes:
@@ -79,7 +79,7 @@ class XKNX:
             self._device_classes[name] = cls
 
     def registered_device_classes(self):
-		"""return a read only dictionary with all registered device classes"""
+        """return a read only dictionary with all registered device classes"""
         return ReadOnlyDict(self._device_classes)
 
     def standard_device_classes():
@@ -87,16 +87,16 @@ class XKNX:
         """Group names within the xknx config file start with one of the availabel device class names"""
         return {
             "binary_sensor": BinarySensor,
-            "climate":Climate,
-            "cover":Cover,
-            "datetime":DateTime,
-            "expose_sensor":ExposeSensor,
-            "fan":Fan,
-            "light":Light,
-            "notification":Notification,
-            "scene":Scene,
-            "sensor":Sensor,
-            "switch":Switch
+            "climate": Climate,
+            "cover": Cover,
+            "datetime": DateTime,
+            "expose_sensor": ExposeSensor,
+            "fan": Fan,
+            "light": Light,
+            "notification": Notification,
+            "scene": Scene,
+            "sensor": Sensor,
+            "switch": Switch
         }
 
     def __del__(self):
