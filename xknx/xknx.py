@@ -9,9 +9,8 @@ from sys import platform
 from xknx.core import Config, TelegramQueue
 from xknx.core.readonlydict import ReadOnlyDict
 from xknx.devices import (
-    BinarySensor, Climate, Cover, DateTime, Device, ExposeSensor, Fan, Light,
-    Notification, Scene, Sensor, Switch)
-from xknx.devices import Devices
+    BinarySensor, Climate, Cover, DateTime, Device, Devices, ExposeSensor, Fan,
+    Light, Notification, Scene, Sensor, Switch)
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, KNXIPInterface
 from xknx.telegram import GroupAddressType, PhysicalAddress
