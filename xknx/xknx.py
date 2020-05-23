@@ -72,12 +72,11 @@ class XKNX:
         """Register a new device class within xknx."""
         if name in self._device_classes:
             raise XKNXException("`device class` %s was already registered." % name)
-        elif not isclass(cls):
+        if not isclass(cls):
             raise XKNXException("%s instance cannot be registered as a device class" % cls.__class__.__name__)
-        elif not issubclass(cls, Device):
+        if not issubclass(cls, Device):
             raise XKNXException("%s cannot be registered as a device class" % cls.__name__)
-        else:
-            self._device_classes[name] = cls
+        self._device_classes[name] = cls
 
     def registered_device_classes(self):
         """Return a read only dictionary with all registered device classes."""
@@ -86,7 +85,9 @@ class XKNX:
     @staticmethod
     def standard_device_classes():
         """Return the dictionary of standard device classes with group/class name as key and corresponding device class as value.
-           Group names within the xknx config file start with one of the availabel device class names"""
+
+           Group names within the xknx config file start with one of the available device class names
+        """
         return {
             "binary_sensor": BinarySensor,
             "climate": Climate,

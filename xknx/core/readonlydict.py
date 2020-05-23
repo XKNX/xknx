@@ -4,6 +4,7 @@ import copy
 
 class ReadOnlyDict(dict):
     """Dictionary which doesn't allow to add or remove items."""
+
     # pylint: disable=no-self-use
     def __readonly__(self, *args, **kwargs):
         """Throw runtime error when trying to modify the dict."""
@@ -18,5 +19,5 @@ class ReadOnlyDict(dict):
     setdefault = __readonly__
     del __readonly__
     __copy__ = dict.copy
-    # pylint: disable-protected-access
+    # pylint: disable=protected-access
     __deepcopy__ = copy._deepcopy_dispatch.get(dict)
