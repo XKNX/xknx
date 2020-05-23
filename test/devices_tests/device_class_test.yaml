@@ -1,0 +1,9 @@
+general:
+    own_address: '15.15.249'
+connection:
+    routing:
+groups:
+    custom_device:
+        my_example_device:
+            group_address_state: '1/2/7'
+            my_custom_attribute: 'hello world'
