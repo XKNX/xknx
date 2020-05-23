@@ -18,6 +18,24 @@ from xknx.telegram import GroupAddressType, PhysicalAddress
 
 from .__version__ import __version__ as VERSION
 
+def standard_device_classes():
+    """Return the dictionary of standard device classes with group/class name as key and corresponding device class as value.
+       Group names within the xknx config file start with one of the available device class names
+    """
+    return {
+        "binary_sensor": BinarySensor,
+        "climate": Climate,
+        "cover": Cover,
+        "datetime": DateTime,
+        "expose_sensor": ExposeSensor,
+        "fan": Fan,
+        "light": Light,
+        "notification": Notification,
+        "scene": Scene,
+        "sensor": Sensor,
+        "switch": Switch
+        }
+
 
 class XKNX:
     """Class for reading and writing KNX/IP packets."""
@@ -54,7 +72,7 @@ class XKNX:
         self.telegram_logger = logging.getLogger('xknx.telegram')
         self.connection_config = None
         self.version = VERSION
-        self._device_classes = XKNX.standard_device_classes()
+        self._device_classes = standard_device_classes()
         if custom_device_classes is not None:
             for device_class, cls in custom_device_classes.items():
                 self.register_device_class(device_class, cls)
@@ -81,26 +99,6 @@ class XKNX:
     def registered_device_classes(self):
         """Return a read only dictionary with all registered device classes."""
         return ReadOnlyDict(self._device_classes)
-
-    @staticmethod
-    def standard_device_classes():
-        """Return the dictionary of standard device classes with group/class name as key and corresponding device class as value.
-
-           Group names within the xknx config file start with one of the available device class names
-        """
-        return {
-            "binary_sensor": BinarySensor,
-            "climate": Climate,
-            "cover": Cover,
-            "datetime": DateTime,
-            "expose_sensor": ExposeSensor,
-            "fan": Fan,
-            "light": Light,
-            "notification": Notification,
-            "scene": Scene,
-            "sensor": Sensor,
-            "switch": Switch
-            }
 
     def __del__(self):
         """Destructor. Cleaning up if this was not done before."""
