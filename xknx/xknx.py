@@ -17,8 +17,10 @@ from xknx.telegram import GroupAddressType, PhysicalAddress
 
 from .__version__ import __version__ as VERSION
 
+
 def standard_device_classes():
     """Return the dictionary of standard device classes with group/class name as key and corresponding device class as value.
+    
        Group names within the xknx config file start with one of the available device class names
     """
     return {
