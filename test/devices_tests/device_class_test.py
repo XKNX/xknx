@@ -1,12 +1,12 @@
-"""Unit test for Sensor objects."""
+"""Unit test for registering custom Device classes"""
 import asyncio
 import unittest
 import pathlib
 import os
-from unittest.mock import Mock
 
 from xknx import XKNX
 from xknx.devices import Device
+
 
 class CustomDevice(Device):
     def __init__(self,
@@ -33,12 +33,12 @@ class CustomDevice(Device):
                    group_address_state=group_address_state,
                    my_custom_attribute=my_custom_attribute)
 
-        
     def get_my_custom_attribute(self):
         return self.my_custom_attribute
 
+
 class TestRegisterDeviceClass(unittest.TestCase):
-    """Test class for registering new device classes"""
+    """Test class for registering new device classes."""
 
     def setUp(self):
         """Set up test class."""
@@ -53,11 +53,11 @@ class TestRegisterDeviceClass(unittest.TestCase):
     # test registration of custom devices
     #
     def test_register_device_class(self):
-        """Test resolve state with binary sensor."""
+        """Test registration of a custom device class."""
         xknx = XKNX(
                 loop=self.loop,
-                custom_device_classes = { "custom_device" : CustomDevice },
-                config= os.path.join(pathlib.Path(__file__).parent.absolute(),"device_class_test.yaml")
+                custom_device_classes = {"custom_device":CustomDevice},
+                config= os.path.join(pathlib.Path(__file__).parent.absolute(), "device_class_test.yaml")
             )
         self.assertTrue("my_example_device" in xknx.devices)
         self.assertTrue(xknx.devices["my_example_device"].__class__.__name__ == "CustomDevice")

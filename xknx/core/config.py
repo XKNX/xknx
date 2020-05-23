@@ -78,11 +78,12 @@ class Config:
         if "groups" in doc \
                 and hasattr(doc["groups"], '__iter__'):
             for group in doc["groups"]:
-                device_class = self.identify_registered_device_class(group)
+                device_class = self.identify_registered_device_class_from_group(group)
                 if device_class is not None:
                     self.parse_group(device_class, doc["groups"][group])
 
-    def identify_registered_device_class(self, group):
+    def identify_registered_device_class_from_group(self, group):
+        """ returns the device class for the passed group name or None if not found """
         registered_device_classes = self.xknx.registered_device_classes()
         # standard handling with well formed group names
         if group in registered_device_classes:
@@ -91,10 +92,8 @@ class Config:
         for reg_group, device_class in registered_device_classes.items():
             if group.startswith(reg_group):
                 return device_class
-            else:
-                return None
+        return None
 
-        
     def parse_group(self, device_class, entries):
         """Parse a group entry of xknx.yaml."""
         def as_list(item): return item if isinstance(item, list) else [item]
@@ -109,8 +108,9 @@ class Config:
                 )
                 self.add_devices(devices)
         except XKNXException as ex:
-            self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", group, ex)
+            self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", device_class.__name__, ex)
 
     def add_devices(self, devices):
+        """ add the passed list of devices to the XKNX device list """
         for device in devices:
             self.xknx.devices.add(device)
