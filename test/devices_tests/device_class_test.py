@@ -1,9 +1,9 @@
 """Unit test for registering custom Device classes"""
 
 import asyncio
-import unittest
-import pathlib
 import os
+import pathlib
+import unittest
 
 from xknx import XKNX
 from xknx.devices import Device

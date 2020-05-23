@@ -6,15 +6,15 @@ import signal
 from inspect import isclass
 from sys import platform
 
-from xknx.core.readonlydict import ReadOnlyDict
 from xknx.core import Config, TelegramQueue
+from xknx.core.readonlydict import ReadOnlyDict
+from xknx.devices import (
+    BinarySensor, Climate, Cover, DateTime, Device, ExposeSensor, Fan, Light,
+    Notification, Scene, Sensor, Switch)
 from xknx.devices import Devices
+from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, KNXIPInterface
 from xknx.telegram import GroupAddressType, PhysicalAddress
-from xknx.exceptions import XKNXException
-from xknx.devices import (
-    Device, BinarySensor, Climate, Cover, DateTime, ExposeSensor, Fan, Light,
-    Notification, Scene, Sensor, Switch)
 
 from .__version__ import __version__ as VERSION
 
@@ -100,7 +100,7 @@ class XKNX:
             "scene": Scene,
             "sensor": Sensor,
             "switch": Switch
-        }
+            }
 
     def __del__(self):
         """Destructor. Cleaning up if this was not done before."""
