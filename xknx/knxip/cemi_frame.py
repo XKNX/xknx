@@ -107,19 +107,15 @@ class CEMIFrame(KNXIPBody):
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
         try:
-            try:
-                self.code = CEMIMessageCode(raw[0])
-            except ValueError:
-                raise UnsupportedCEMIMessage("CEMIMessageCode not implemented: {0} ".format(raw[0]))
+            self.code = CEMIMessageCode(raw[0])
+        except ValueError:
+            raise UnsupportedCEMIMessage("CEMIMessageCode not implemented: {0} ".format(raw[0]))
 
-            if self.code == CEMIMessageCode.L_DATA_IND or \
-                    self.code == CEMIMessageCode.L_Data_REQ or \
-                    self.code == CEMIMessageCode.L_DATA_CON:
-                return self.from_knx_data_link_layer(raw)
-            raise UnsupportedCEMIMessage("Could not handle CEMIMessageCode: {0} / {1}".format(self.code, raw[0]))
-        except UnsupportedCEMIMessage as unsupported_cemi_err:
-            self.xknx.logger.warning("Ignoring not implemented CEMI: %s", unsupported_cemi_err)
-            return len(raw)
+        if self.code in (CEMIMessageCode.L_DATA_IND,
+                         CEMIMessageCode.L_Data_REQ,
+                         CEMIMessageCode.L_DATA_CON):
+            return self.from_knx_data_link_layer(raw)
+        raise UnsupportedCEMIMessage("Could not handle CEMIMessageCode: {0} / {1}".format(self.code, raw[0]))
 
     def from_knx_data_link_layer(self, cemi):
         """Parse L_DATA_IND, CEMIMessageCode.L_Data_REQ, CEMIMessageCode.L_DATA_CON."""

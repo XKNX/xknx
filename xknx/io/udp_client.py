@@ -8,7 +8,8 @@ import asyncio
 import socket
 from sys import platform
 
-from xknx.exceptions import CouldNotParseKNXIP, XKNXException
+from xknx.exceptions import (
+    CouldNotParseKNXIP, UnsupportedCEMIMessage, XKNXException)
 from xknx.knxip import KNXIPFrame
 
 
@@ -89,6 +90,8 @@ class UDPClient:
                 self.handle_knxipframe(knxipframe)
             except CouldNotParseKNXIP as couldnotparseknxip:
                 self.xknx.logger.exception(couldnotparseknxip)
+            except UnsupportedCEMIMessage as unsupported_cemi_err:
+                self.xknx.logger.debug("Ignoring Frame with unsupported CEMI: %s", unsupported_cemi_err)
 
     def handle_knxipframe(self, knxipframe):
         """Handle KNXIP Frame and call all callbacks which watch for the service type ident."""
