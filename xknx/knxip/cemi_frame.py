@@ -31,7 +31,7 @@ class CEMIFrame(KNXIPBody):
         self.code = CEMIMessageCode.L_DATA_IND
         self.flags = 0
         self.cmd = APCICommand.GROUP_READ
-        self.src_addr = GroupAddress(None)
+        self.src_addr = PhysicalAddress(None)
         self.dst_addr = GroupAddress(None)
         self.mpdu_len = 0
         self.payload = None
@@ -112,13 +112,13 @@ class CEMIFrame(KNXIPBody):
             except ValueError:
                 raise UnsupportedCEMIMessage("CEMIMessageCode not implemented: {0} ".format(raw[0]))
 
-            if self.code == CEMIMessageCode.L_DATA_IND or \
-                    self.code == CEMIMessageCode.L_Data_REQ or \
-                    self.code == CEMIMessageCode.L_DATA_CON:
+            if self.code in (CEMIMessageCode.L_DATA_IND,
+                             CEMIMessageCode.L_Data_REQ,
+                             CEMIMessageCode.L_DATA_CON):
                 return self.from_knx_data_link_layer(raw)
             raise UnsupportedCEMIMessage("Could not handle CEMIMessageCode: {0} / {1}".format(self.code, raw[0]))
         except UnsupportedCEMIMessage as unsupported_cemi_err:
-            self.xknx.logger.warning("Ignoring not implemented CEMI: %s", unsupported_cemi_err)
+            self.xknx.logger.warning("CEMI not supported: %s", unsupported_cemi_err)
             return len(raw)
 
     def from_knx_data_link_layer(self, cemi):
