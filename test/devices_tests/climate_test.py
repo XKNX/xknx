@@ -8,11 +8,11 @@ pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.devices import Climate, ClimateMode
-from xknx.exceptions import CouldNotParseTelegram, DeviceIllegalValue
-from xknx.knx import (
+from xknx.dpt import (
     DPT2ByteFloat, DPTArray, DPTBinary, DPTControllerStatus, DPTHVACContrMode,
-    DPTHVACMode, DPTTemperature, DPTValue1Count, GroupAddress,
-    HVACOperationMode, Telegram, TelegramType)
+    DPTHVACMode, DPTTemperature, DPTValue1Count, HVACOperationMode)
+from xknx.exceptions import CouldNotParseTelegram, DeviceIllegalValue
+from xknx.telegram import GroupAddress, Telegram, TelegramType
 
 DPT_20102_MODES = [HVACOperationMode.AUTO, HVACOperationMode.COMFORT,
                    HVACOperationMode.STANDBY, HVACOperationMode.NIGHT,
@@ -969,7 +969,7 @@ class TestClimate(unittest.TestCase):
 
     def test_custom_supported_operation_modes_as_str(self):
         """Test get_supported_operation_modes with custom mode as str list."""
-        str_modes = ['STANDBY', 'FROST_PROTECTION']
+        str_modes = ['Standby', 'Frost Protection']
         modes = [HVACOperationMode.STANDBY, HVACOperationMode.FROST_PROTECTION]
         xknx = XKNX()
         climate_mode = ClimateMode(

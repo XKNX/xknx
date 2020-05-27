@@ -11,9 +11,10 @@ Documentation within:
     KNX IP Communication Medium
     File: AN117 v02.01 KNX IP Communication Medium DV.pdf
 """
-from xknx.exceptions import ConversionError, CouldNotParseKNXIP
-from xknx.knx import (
-    DPTArray, DPTBinary, GroupAddress, PhysicalAddress, Telegram, TelegramType)
+from xknx.dpt import DPTArray, DPTBinary
+from xknx.exceptions import (
+    ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage)
+from xknx.telegram import GroupAddress, PhysicalAddress, Telegram, TelegramType
 
 from .body import KNXIPBody
 from .knxip_enum import APCICommand, CEMIFlags, CEMIMessageCode
@@ -105,18 +106,26 @@ class CEMIFrame(KNXIPBody):
 
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        self.code = CEMIMessageCode(raw[0])
+        try:
+            try:
+                self.code = CEMIMessageCode(raw[0])
+            except ValueError:
+                raise UnsupportedCEMIMessage("CEMIMessageCode not implemented: {0} ".format(raw[0]))
 
-        if self.code == CEMIMessageCode.L_DATA_IND or \
-                self.code == CEMIMessageCode.L_Data_REQ or \
-                self.code == CEMIMessageCode.L_DATA_CON:
-            return self.from_knx_data_link_layer(raw)
-        raise CouldNotParseKNXIP("Could not understand CEMIMessageCode: {0} / {1}".format(self.code, raw[0]))
+            if self.code == CEMIMessageCode.L_DATA_IND or \
+                    self.code == CEMIMessageCode.L_Data_REQ or \
+                    self.code == CEMIMessageCode.L_DATA_CON:
+                return self.from_knx_data_link_layer(raw)
+            raise UnsupportedCEMIMessage("Could not handle CEMIMessageCode: {0} / {1}".format(self.code, raw[0]))
+        except UnsupportedCEMIMessage as unsupported_cemi_err:
+            self.xknx.logger.warning("Ignoring not implemented CEMI: %s", unsupported_cemi_err)
+            return len(raw)
 
     def from_knx_data_link_layer(self, cemi):
         """Parse L_DATA_IND, CEMIMessageCode.L_Data_REQ, CEMIMessageCode.L_DATA_CON."""
         if len(cemi) < 11:
-            raise CouldNotParseKNXIP("CEMI too small")
+            # eg. ETS Line-Scan issues L_DATA_IND with length 10
+            raise UnsupportedCEMIMessage("CEMI too small. Length: {0}; CEMI: {1}".format(len(cemi), cemi))
 
         # AddIL (Additional Info Length), as specified within
         # KNX Chapter 3.6.3/4.1.4.3 "Additional information."
@@ -140,7 +149,11 @@ class CEMIFrame(KNXIPBody):
 
         tpci_apci = cemi[9 + addil] * 256 + cemi[10 + addil]
 
-        self.cmd = APCICommand(tpci_apci & 0xFFC0)
+        try:
+            self.cmd = APCICommand(tpci_apci & 0xFFC0)
+        except ValueError:
+            raise UnsupportedCEMIMessage(
+                "APCI not supported: {0:#012b}".format(tpci_apci & 0xFFC0))
 
         apdu = cemi[10 + addil:]
         if len(apdu) != self.mpdu_len:

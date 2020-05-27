@@ -7,10 +7,10 @@ It provides functionality for
 * reading the current state from KNX bus.
 * Cover will also predict the current position.
 """
+from xknx.remote_value import (
+    RemoteValueScaling, RemoteValueStep, RemoteValueUpDown)
+
 from .device import Device
-from .remote_value_scaling import RemoteValueScaling
-from .remote_value_step import RemoteValueStep
-from .remote_value_updown import RemoteValueUpDown
 from .travelcalculator import TravelCalculator
 
 

@@ -8,7 +8,8 @@ pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.devices import Switch
-from xknx.knx import DPTBinary, GroupAddress, Telegram, TelegramType
+from xknx.dpt import DPTBinary
+from xknx.telegram import GroupAddress, Telegram, TelegramType
 
 
 class TestSwitch(unittest.TestCase):

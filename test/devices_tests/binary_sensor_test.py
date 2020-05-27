@@ -8,8 +8,9 @@ pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.devices import Action, BinarySensor, BinarySensorState, Switch
+from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram
+from xknx.telegram import GroupAddress, Telegram
 
 
 class TestBinarySensor(unittest.TestCase):
@@ -126,7 +127,58 @@ class TestBinarySensor(unittest.TestCase):
             xknx.devices['TestOutlet'].state,
             False)
 
-    async def test_process_wrong_payload(self):
+    def test_process_action_ignore_internal_state(self):
+        """Test process / reading telegrams from telegram queue. Test if action is executed."""
+        xknx = XKNX()
+        switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
+        xknx.devices.add(switch)
+
+        binary_sensor = BinarySensor(xknx, 'TestInput', group_address_state='1/2/5', ignore_internal_state=True)
+        action_on = Action(
+            xknx,
+            hook='on',
+            target='TestOutlet',
+            method='on')
+        binary_sensor.actions.append(action_on)
+        xknx.devices.add(binary_sensor)
+
+        self.assertEqual(
+            xknx.devices['TestInput'].state,
+            BinarySensorState.OFF)
+        self.assertEqual(
+            xknx.devices['TestOutlet'].state,
+            False)
+
+        telegram_on = Telegram()
+        telegram_on.payload = DPTBinary(1)
+        self.loop.run_until_complete(asyncio.Task(binary_sensor.process(telegram_on)))
+
+        self.assertEqual(
+            xknx.devices['TestInput'].state,
+            BinarySensorState.ON)
+        self.assertEqual(
+            xknx.devices['TestOutlet'].state,
+            True)
+
+        self.loop.run_until_complete(asyncio.Task(switch.set_off()))
+        self.assertEqual(
+            xknx.devices['TestOutlet'].state,
+            False)
+        self.assertEqual(
+            xknx.devices['TestInput'].state,
+            BinarySensorState.ON)
+
+        self.loop.run_until_complete(asyncio.sleep(1))
+        self.loop.run_until_complete(asyncio.Task(binary_sensor.process(telegram_on)))
+
+        self.assertEqual(
+            xknx.devices['TestInput'].state,
+            BinarySensorState.ON)
+        self.assertEqual(
+            xknx.devices['TestOutlet'].state,
+            True)
+
+    def test_process_wrong_payload(self):
         """Test process wrong telegram (wrong payload type)."""
         xknx = XKNX()
         binary_sensor = BinarySensor(xknx, 'Warning', group_address_state='1/2/3')

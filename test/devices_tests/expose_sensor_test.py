@@ -8,7 +8,8 @@ pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.devices import ExposeSensor
-from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram, TelegramType
+from xknx.dpt import DPTArray, DPTBinary
+from xknx.telegram import GroupAddress, Telegram, TelegramType
 
 
 class TestExposeSensor(unittest.TestCase):

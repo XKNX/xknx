@@ -9,10 +9,10 @@ pytestmark = pytest.mark.asyncio
 from xknx import XKNX
 from xknx.io import GatewayScanFilter, GatewayScanner, UDPClient
 from xknx.io.gateway_scanner import GatewayDescriptor
-from xknx.knx import PhysicalAddress
 from xknx.knxip import (
     HPAI, DIBDeviceInformation, DIBServiceFamily, DIBSuppSVCFamilies,
     KNXIPFrame, KNXIPHeader, KNXIPServiceType, SearchResponse)
+from xknx.telegram import PhysicalAddress
 
 
 class TestGatewayScanner(unittest.TestCase):

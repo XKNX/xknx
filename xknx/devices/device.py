@@ -4,7 +4,7 @@ Device is the base class for all implemented devices (e.g. Lights/Switches/Senso
 It provides basis functionality for reading the state from the KNX bus.
 """
 from xknx.exceptions import XKNXException
-from xknx.knx import Telegram, TelegramType
+from xknx.telegram import Telegram, TelegramType
 
 
 class Device:
@@ -53,6 +53,7 @@ class Device:
             else:
                 await value_reader.send_group_read()
 
+    # TODO: remove need for send function in device - only use set and RemoteValue.send
     async def send(self, group_address, payload=None, response=False):
         """Send payload as telegram to KNX bus."""
         telegram = Telegram()

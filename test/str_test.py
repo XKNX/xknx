@@ -8,21 +8,22 @@ pytestmark = pytest.mark.asyncio
 from xknx import XKNX
 from xknx.devices import (
     Action, ActionBase, ActionCallback, BinarySensor, Climate, ClimateMode,
-    Cover, DateTime, ExposeSensor, Fan, Light, Notification, RemoteValue,
-    Scene, Sensor, Switch)
+    Cover, DateTime, ExposeSensor, Fan, Light, Notification, Scene, Sensor,
+    Switch)
+from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import (
     ConversionError, CouldNotParseAddress, CouldNotParseKNXIP,
     CouldNotParseTelegram, DeviceIllegalValue)
 from xknx.io.gateway_scanner import GatewayDescriptor
-from xknx.knx import (
-    DPTArray, DPTBinary, GroupAddress, PhysicalAddress, Telegram,
-    TelegramDirection)
 from xknx.knxip import (
     HPAI, CEMIFrame, ConnectionStateRequest, ConnectionStateResponse,
     ConnectRequest, ConnectRequestType, ConnectResponse, DIBDeviceInformation,
     DIBGeneric, DIBServiceFamily, DIBSuppSVCFamilies, DisconnectRequest,
     DisconnectResponse, KNXIPFrame, KNXIPHeader, KNXIPServiceType, KNXMedium,
     SearchRequest, SearchResponse, TunnellingAck, TunnellingRequest)
+from xknx.remote_value import RemoteValue
+from xknx.telegram import (
+    GroupAddress, PhysicalAddress, Telegram, TelegramDirection)
 
 
 # pylint: disable=too-many-public-methods,invalid-name
@@ -187,12 +188,15 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_state='1/2/4')
         self.assertEqual(
             str(notification),
-            '<Notification name="Alarm" group_address="GroupAddress("1/2/3")" group_address_state="GroupAddress("1/2/4")" message="" />')
-        notification.message = 'Einbrecher im Haus'
+            '<Notification name="Alarm" message="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" />')
+        self.loop.run_until_complete(asyncio.Task(notification.set('Einbrecher im Haus')))
         self.assertEqual(
             str(notification),
-            '<Notification name="Alarm" group_address="GroupAddress("1/2/3")" group_address_state="GroupAddress("1/2/4")" '
-            'message="Einbrecher im Haus" />')
+            '<Notification name="Alarm" '
+            'message="GroupAddress("1/2/3")/'
+            'GroupAddress("1/2/4")/'
+            '<DPTArray value="[0x45,0x69,0x6e,0x62,0x72,0x65,0x63,0x68,0x65,0x72,0x20,0x69,0x6d,0x20]" />/'
+            'Einbrecher im " />')
 
     def test_scene(self):
         """Test string representation of scene object."""

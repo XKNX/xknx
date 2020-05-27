@@ -1,5 +1,6 @@
 """Support for KNX/IP binary sensors."""
 import voluptuous as vol
+from xknx.devices import BinarySensor
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
@@ -12,6 +13,7 @@ CONF_STATE_ADDRESS = "state_address"
 CONF_SIGNIFICANT_BIT = "significant_bit"
 CONF_DEFAULT_SIGNIFICANT_BIT = 1
 CONF_SYNC_STATE = "sync_state"
+CONF_IGNORE_INTERNAL_STATE = "ignore_internal_state"
 CONF_AUTOMATION = "automation"
 CONF_HOOK = "hook"
 CONF_DEFAULT_HOOK = "on"
@@ -40,6 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             CONF_SIGNIFICANT_BIT, default=CONF_DEFAULT_SIGNIFICANT_BIT
         ): cv.positive_int,
         vol.Optional(CONF_SYNC_STATE, default=True): cv.boolean,
+        vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=False): cv.boolean,
         vol.Required(CONF_STATE_ADDRESS): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): cv.string,
         vol.Optional(CONF_RESET_AFTER): cv.positive_int,
@@ -70,13 +73,13 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
 def async_add_entities_config(hass, config, async_add_entities):
     """Set up binary senor for KNX platform configured within platform."""
     name = config[CONF_NAME]
-    import xknx
 
-    binary_sensor = xknx.devices.BinarySensor(
+    binary_sensor = BinarySensor(
         hass.data[DATA_XKNX].xknx,
         name=name,
         group_address_state=config[CONF_STATE_ADDRESS],
         sync_state=config[CONF_SYNC_STATE],
+        ignore_internal_state=config[CONF_IGNORE_INTERNAL_STATE],
         device_class=config.get(CONF_DEVICE_CLASS),
         significant_bit=config[CONF_SIGNIFICANT_BIT],
         reset_after=config.get(CONF_RESET_AFTER),
@@ -123,6 +126,10 @@ class KNXBinarySensor(BinarySensorDevice):
     async def async_added_to_hass(self):
         """Store register state change callback."""
         self.async_register_callbacks()
+
+    async def async_update(self):
+        """Request a state update from KNX bus."""
+        await self.device.sync()
 
     @property
     def name(self):

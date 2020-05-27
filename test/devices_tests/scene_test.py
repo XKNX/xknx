@@ -9,7 +9,8 @@ pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.devices import Scene
-from xknx.knx import DPTArray, GroupAddress, Telegram
+from xknx.dpt import DPTArray
+from xknx.telegram import GroupAddress, Telegram
 
 
 class TestScene(unittest.TestCase):

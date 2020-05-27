@@ -3,10 +3,9 @@ import asyncio
 import unittest
 
 from xknx import XKNX
-from xknx.knx import (
-    DPTArray, DPTBinary, DPTTemperature, DPTTime, GroupAddress,
-    PhysicalAddress, Telegram, TelegramType)
+from xknx.dpt import DPTArray, DPTBinary, DPTTemperature, DPTTime
 from xknx.knxip import CEMIFrame, KNXIPFrame, KNXIPServiceType
+from xknx.telegram import GroupAddress, PhysicalAddress, Telegram, TelegramType
 
 
 class Test_KNXIP(unittest.TestCase):

@@ -6,8 +6,9 @@ It provides functionality for
 * reading the current state from KNX bus.
 * watching for state updates from KNX bus.
 """
+from xknx.remote_value import RemoteValueSensor
+
 from .device import Device
-from .remote_value_sensor import RemoteValueSensor
 
 
 class Sensor(Device):

@@ -8,7 +8,7 @@ pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.devices import BinarySensor, Device, Devices, Light, Switch
-from xknx.knx import GroupAddress
+from xknx.telegram import GroupAddress
 
 
 # pylint: disable=too-many-public-methods,invalid-name

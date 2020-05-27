@@ -10,7 +10,7 @@ You may register callbacks to be notified if a telegram was pushed to the queue.
 import asyncio
 
 from xknx.exceptions import XKNXException
-from xknx.knx import TelegramDirection
+from xknx.telegram import TelegramDirection
 
 
 class TelegramQueue():
@@ -62,6 +62,7 @@ class TelegramQueue():
 
             # Breaking up queue if None is pushed to the queue
             if telegram is None:
+                self.xknx.telegrams.task_done()
                 break
 
             await self.process_telegram(telegram)

@@ -8,7 +8,8 @@ by StateUpdate.
 
 from enum import Enum
 
-from xknx.knx import DPTArray, DPTDate, DPTDateTime, DPTTime, GroupAddress
+from xknx.dpt import DPTArray, DPTDate, DPTDateTime, DPTTime
+from xknx.telegram import GroupAddress
 
 from .device import Device
 

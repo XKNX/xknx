@@ -9,7 +9,8 @@ pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.devices import DateTime, DateTimeBroadcastType
-from xknx.knx import DPTArray, GroupAddress, Telegram, TelegramType
+from xknx.dpt import DPTArray
+from xknx.telegram import GroupAddress, Telegram, TelegramType
 
 
 class TestDateTime(unittest.TestCase):

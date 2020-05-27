@@ -14,7 +14,7 @@ See documentation at: [https://xknx.io/](https://xknx.io/)
 Help
 ----
 
-We need your help for testing and improving XKNX. For questions, feature requests, bug reports either join the [XKNX chat on Discord](https://discord.gg/5XARFNT) or write an [email](mailto:xknx@xknx.io).
+We need your help for testing and improving XKNX. For questions, feature requests, bug reports either join the [XKNX chat on Discord](https://discord.gg/EuAQDXU) or write an [email](mailto:xknx@xknx.io).
 
 
 
