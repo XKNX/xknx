@@ -28,7 +28,7 @@ class TestScene(unittest.TestCase):
             'TestScene',
             group_address='1/2/1',
             scene_number=23)
-        await asyncio.Task(scene.sync(False))
+        await scene.sync(False)
         self.assertEqual(xknx.telegrams.qsize(), 0)
 
     #
@@ -42,7 +42,7 @@ class TestScene(unittest.TestCase):
             'TestScene',
             group_address='1/2/1',
             scene_number=23)
-        await asyncio.Task(scene.run())
+        await scene.run()
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -56,7 +56,7 @@ class TestScene(unittest.TestCase):
             'TestScene',
             group_address='1/2/1',
             scene_number=23)
-        await asyncio.Task(scene.do("run"))
+        await scene.do("run")
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -71,7 +71,7 @@ class TestScene(unittest.TestCase):
             group_address='1/2/1',
             scene_number=23)
         with patch('logging.Logger.warning') as mockWarn:
-            await asyncio.Task(scene.do("execute"))
+            await scene.do("execute")
             mockWarn.assert_called_with('Could not understand action %s for device %s', 'execute', 'TestScene')
         self.assertEqual(xknx.telegrams.qsize(), 0)
 

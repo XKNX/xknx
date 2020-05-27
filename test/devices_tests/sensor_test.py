@@ -112,7 +112,7 @@ class TestSensor(unittest.TestCase):
             value_type="temperature",
             group_address_state='1/2/3')
 
-        await asyncio.Task(sensor.sync(False))
+        await sensor.sync(False)
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
@@ -130,7 +130,7 @@ class TestSensor(unittest.TestCase):
             group_address_state='1/2/3',
             sync_state=False)
 
-        await asyncio.Task(sensor.sync(False))
+        await sensor.sync(False)
 
         self.assertEqual(xknx.telegrams.qsize(), 0)
 
@@ -189,7 +189,7 @@ class TestSensor(unittest.TestCase):
 
         telegram = Telegram(GroupAddress('1/2/3'))
         telegram.payload = DPTArray((0x06, 0xa0))
-        await asyncio.Task(sensor.process(telegram))
+        await sensor.process(telegram)
         self.assertEqual(sensor.sensor_value.payload, DPTArray((0x06, 0xa0)))
         self.assertEqual(sensor.resolve_state(), 16.96)
 
@@ -212,5 +212,5 @@ class TestSensor(unittest.TestCase):
 
         telegram = Telegram(GroupAddress('1/2/3'))
         telegram.payload = DPTArray((0x01, 0x02))
-        await asyncio.Task(sensor.process(telegram))
+        await sensor.process(telegram)
         after_update_callback.assert_called_with(sensor)

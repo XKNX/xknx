@@ -25,7 +25,7 @@ class TestDateTime(unittest.TestCase):
 
         with patch('time.localtime') as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
-            await asyncio.Task(datetime.sync(False))
+            await datetime.sync(False)
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -43,7 +43,7 @@ class TestDateTime(unittest.TestCase):
         datetime = DateTime(xknx, "TestDateTime", group_address='1/2/3', broadcast_type=DateTimeBroadcastType.DATE)
         with patch('time.localtime') as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
-            await asyncio.Task(datetime.sync(False))
+            await datetime.sync(False)
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -61,7 +61,7 @@ class TestDateTime(unittest.TestCase):
         datetime = DateTime(xknx, "TestDateTime", group_address='1/2/3', broadcast_type=DateTimeBroadcastType.TIME)
         with patch('time.localtime') as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
-            await asyncio.Task(datetime.sync(False))
+            await datetime.sync(False)
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -86,7 +86,7 @@ class TestDateTime(unittest.TestCase):
             telegramtype=TelegramType.GROUP_READ)
         with patch('time.localtime') as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
-            await asyncio.Task(datetime.process(telegram_read))
+            await datetime.process(telegram_read)
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(

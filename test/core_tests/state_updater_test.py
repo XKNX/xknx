@@ -31,6 +31,6 @@ class TestStateupdater(unittest.TestCase):
             fut.set_result(None)
             mock_sync.return_value = fut
 
-            await asyncio.Task(state_updater.start())
+            await state_updater.start())
             await state_updater.run_task)
             mock_sync.assert_called_with()

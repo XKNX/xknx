@@ -44,7 +44,7 @@ class TestRemoteValue(unittest.TestCase):
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
         with patch('logging.Logger.info') as mock_info:
-            await asyncio.Task(remote_value.set(23))
+            await remote_value.set(23)
             mock_info.assert_called_with('Setting value of uninitialized device: %s (value: %s)', 'Unknown', 23)
 
     async def test_info_set_unwritable(self):
@@ -52,7 +52,7 @@ class TestRemoteValue(unittest.TestCase):
         xknx = XKNX()
         remote_value = RemoteValue(xknx, group_address_state=GroupAddress('1/2/3'))
         with patch('logging.Logger.warning') as mock_info:
-            await asyncio.Task(remote_value.set(23))
+            await remote_value.set(23)
             mock_info.assert_called_with('Attempted to set value for non-writable device: %s (value: %s)', 'Unknown', 23)
 
     def test_default_value_unit(self):
@@ -74,7 +74,7 @@ class TestRemoteValue(unittest.TestCase):
                 GroupAddress('1/2/1'),
                 payload=DPTArray((0x01, 0x02)))
             with self.assertRaises(CouldNotParseTelegram):
-                await asyncio.Task(remote_value.process(telegram))
+                await remote_value.process(telegram)
 
     def test_eq(self):
         """Test __eq__ operator."""

@@ -217,11 +217,11 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(sensor),
             '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/None/None" value="None" unit="%"/>')
-        # await asyncio.Task(sensor.sensor_value.set(25))
+        # await sensor.sensor_value.set(25)
         telegram = Telegram(group_address=GroupAddress('1/2/3'),
                             direction=TelegramDirection.INCOMING,
                             payload=DPTArray((0x40)))
-        await asyncio.Task(sensor.process_group_write(telegram))
+        await sensor.process_group_write(telegram)
         self.assertEqual(
             str(sensor),
             '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/<DPTArray value="[0x40]" />/25" value="25" unit="%"/>')
@@ -237,7 +237,7 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(sensor),
             '<ExposeSensor name="MeinSensor" sensor="GroupAddress("1/2/3")/None/None/None" value="None" unit="%"/>')
-        await asyncio.Task(sensor.set(25))
+        await sensor.set(25)
         self.assertEqual(
             str(sensor),
             '<ExposeSensor name="MeinSensor" sensor="GroupAddress("1/2/3")/None/<DPTArray value="[0x40]" />/25" value="25" unit="%"/>')

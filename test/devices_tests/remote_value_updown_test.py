@@ -55,7 +55,7 @@ class TestRemoteValueUpDown(unittest.TestCase):
         remote_value = RemoteValueUpDown(
             xknx,
             group_address=GroupAddress("1/2/3"))
-        await asyncio.Task(remote_value.down())
+        await remote_value.down()
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -63,7 +63,7 @@ class TestRemoteValueUpDown(unittest.TestCase):
             Telegram(
                 GroupAddress('1/2/3'),
                 payload=DPTBinary(1)))
-        await asyncio.Task(remote_value.up())
+        await remote_value.up()
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -82,7 +82,7 @@ class TestRemoteValueUpDown(unittest.TestCase):
             group_address=GroupAddress("1/2/3"),
             payload=DPTBinary(1))
         self.assertEqual(remote_value.value, None)
-        await asyncio.Task(remote_value.process(telegram))
+        await remote_value.process(telegram)
         self.assertEqual(remote_value.value, RemoteValueUpDown.Direction.DOWN)
 
     async def test_to_process_error(self):
@@ -95,11 +95,11 @@ class TestRemoteValueUpDown(unittest.TestCase):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"),
                 payload=DPTArray((0x01)))
-            await asyncio.Task(remote_value.process(telegram))
+            await remote_value.process(telegram)
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"),
                 payload=DPTBinary(3))
-            await asyncio.Task(remote_value.process(telegram))
+            await remote_value.process(telegram)
             # pylint: disable=pointless-statement
             remote_value.value

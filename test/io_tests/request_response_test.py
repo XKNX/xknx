@@ -21,4 +21,4 @@ class TestConnectResponse(unittest.TestCase):
         request_response.timeout_in_seconds = 0
 
         with self.assertRaises(NotImplementedError):
-            await asyncio.Task(request_response.start())
+            await request_response.start()

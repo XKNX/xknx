@@ -41,7 +41,7 @@ class TestRemoteValueDptValue2Ucount(unittest.TestCase):
         remote_value = RemoteValueDpt2ByteUnsigned(
             xknx,
             group_address=GroupAddress("1/2/3"))
-        await asyncio.Task(remote_value.set(2571))
+        await remote_value.set(2571)
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -49,7 +49,7 @@ class TestRemoteValueDptValue2Ucount(unittest.TestCase):
             Telegram(
                 GroupAddress('1/2/3'),
                 payload=DPTArray((0x0A, 0x0B))))
-        await asyncio.Task(remote_value.set(5500))
+        await remote_value.set(5500)
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -67,7 +67,7 @@ class TestRemoteValueDptValue2Ucount(unittest.TestCase):
         telegram = Telegram(
             group_address=GroupAddress("1/2/3"),
             payload=DPTArray((0x0A, 0x0B)))
-        await asyncio.Task(remote_value.process(telegram))
+        await remote_value.process(telegram)
         self.assertEqual(remote_value.value, 2571)
 
     async def test_to_process_error(self):
@@ -80,14 +80,14 @@ class TestRemoteValueDptValue2Ucount(unittest.TestCase):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"),
                 payload=DPTBinary(1))
-            await asyncio.Task(remote_value.process(telegram))
+            await remote_value.process(telegram)
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"),
                 payload=DPTArray((0x64, )))
-            await asyncio.Task(remote_value.process(telegram))
+            await remote_value.process(telegram)
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"),
                 payload=DPTArray((0x64, 0x53, 0x42, )))
-            await asyncio.Task(remote_value.process(telegram))
+            await remote_value.process(telegram)

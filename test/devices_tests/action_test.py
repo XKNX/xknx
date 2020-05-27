@@ -68,7 +68,7 @@ class TestAction(unittest.TestCase):
         xknx = XKNX()
         action = ActionBase(xknx)
         with patch('logging.Logger.info') as mock_info:
-            await asyncio.Task(action.execute())
+            await action.execute()
             mock_info.assert_called_with('Execute not implemented for %s', 'ActionBase')
 
     async def test_execute_action(self):
@@ -84,7 +84,7 @@ class TestAction(unittest.TestCase):
             fut = asyncio.Future()
             fut.set_result(None)
             mock_do.return_value = fut
-            await asyncio.Task(action.execute())
+            await action.execute()
             mock_do.assert_called_with('on')
 
     async def test_execute_action_callback(self):
@@ -97,7 +97,7 @@ class TestAction(unittest.TestCase):
             callback()
 
         action = ActionCallback(xknx, async_callback)
-        await asyncio.Task(action.execute())
+        await action.execute()
         callback.assert_called_with()
 
     async def test_execute_unknown_device(self):
@@ -106,6 +106,6 @@ class TestAction(unittest.TestCase):
 
         action = Action(xknx, target='Light1', method='on')
         with patch('logging.Logger.warning') as logger_warning_mock:
-            await asyncio.Task(action.execute())
+            await action.execute()
             logger_warning_mock.assert_called_once_with(
                 "Unknown device %s witin action %s.", action.target, action)
