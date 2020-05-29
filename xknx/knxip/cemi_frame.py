@@ -16,18 +16,17 @@ from xknx.exceptions import (
     ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage)
 from xknx.telegram import GroupAddress, PhysicalAddress, Telegram, TelegramType
 
-from .body import KNXIPBody
 from .knxip_enum import APCICommand, CEMIFlags, CEMIMessageCode
 
 
-class CEMIFrame(KNXIPBody):
+class CEMIFrame():
     """Representation of a CEMI Frame."""
 
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, xknx):
         """Initialize CEMIFrame object."""
-        super().__init__(xknx)
+        self.xknx = xknx
         self.code = CEMIMessageCode.L_DATA_IND
         self.flags = 0
         self.cmd = APCICommand.GROUP_READ
@@ -107,19 +106,16 @@ class CEMIFrame(KNXIPBody):
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
         try:
-            try:
-                self.code = CEMIMessageCode(raw[0])
-            except ValueError:
-                raise UnsupportedCEMIMessage("CEMIMessageCode not implemented: {0} ".format(raw[0]))
+            self.code = CEMIMessageCode(raw[0])
+        except ValueError:
+            raise UnsupportedCEMIMessage("CEMIMessageCode not implemented: {0} ".format(raw[0]))
 
-            if self.code in (CEMIMessageCode.L_DATA_IND,
+        if self.code not in (CEMIMessageCode.L_DATA_IND,
                              CEMIMessageCode.L_Data_REQ,
                              CEMIMessageCode.L_DATA_CON):
-                return self.from_knx_data_link_layer(raw)
             raise UnsupportedCEMIMessage("Could not handle CEMIMessageCode: {0} / {1}".format(self.code, raw[0]))
-        except UnsupportedCEMIMessage as unsupported_cemi_err:
-            self.xknx.logger.warning("CEMI not supported: %s", unsupported_cemi_err)
-            return len(raw)
+
+        return self.from_knx_data_link_layer(raw)
 
     def from_knx_data_link_layer(self, cemi):
         """Parse L_DATA_IND, CEMIMessageCode.L_Data_REQ, CEMIMessageCode.L_DATA_CON."""
