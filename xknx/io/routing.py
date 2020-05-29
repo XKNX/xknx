@@ -30,17 +30,20 @@ class Routing():
 
     def response_rec_callback(self, knxipframe, _):
         """Verify and handle knxipframe. Callback from internal udpclient."""
-        if knxipframe.body.src_addr == self.xknx.own_address:
-            self.xknx.logger.debug("Ignoring own packet")
-        elif knxipframe.header.service_type_ident != \
+        if knxipframe.header.service_type_ident != \
                 KNXIPServiceType.ROUTING_INDICATION:
             self.xknx.logger.warning("Service type not implemented: %s", knxipframe)
-        elif knxipframe.body.cmd not in [APCICommand.GROUP_READ,
-                                         APCICommand.GROUP_WRITE,
-                                         APCICommand.GROUP_RESPONSE]:
+        elif knxipframe.body.cemi is None:
+            # ignore unsupported CEMI frame
+            return
+        elif knxipframe.body.cemi.src_addr == self.xknx.own_address:
+            self.xknx.logger.debug("Ignoring own packet")
+        elif knxipframe.body.cemi.cmd not in (APCICommand.GROUP_READ,
+                                              APCICommand.GROUP_WRITE,
+                                              APCICommand.GROUP_RESPONSE):
             self.xknx.logger.warning("APCI not implemented: %s", knxipframe)
         else:
-            telegram = knxipframe.body.telegram
+            telegram = knxipframe.body.cemi.telegram
             telegram.direction = TelegramDirection.INCOMING
 
             if self.telegram_received_callback is not None:
@@ -50,9 +53,9 @@ class Routing():
         """Send Telegram to routing connected device."""
         knxipframe = KNXIPFrame(self.xknx)
         knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe.body.src_addr = self.xknx.own_address
-        knxipframe.body.telegram = telegram
-        knxipframe.body.sender = self.xknx.own_address
+        knxipframe.body.cemi.src_addr = self.xknx.own_address
+        knxipframe.body.cemi.telegram = telegram
+        knxipframe.body.cemi.sender = self.xknx.own_address
         knxipframe.normalize()
         await self.send_knxipframe(knxipframe)
 
