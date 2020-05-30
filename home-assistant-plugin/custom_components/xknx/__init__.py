@@ -14,10 +14,10 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
-    STATE_ON,
     STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN
+    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
@@ -262,8 +262,13 @@ class KNXModule:
                 self.exposures.append(exposure)
             else:
                 exposure = KNXExposeSensor(
-                    self.hass, self.xknx, expose_type, entity_id,
-                    attribute, default, address
+                    self.hass,
+                    self.xknx,
+                    expose_type,
+                    entity_id,
+                    attribute,
+                    default,
+                    address,
                 )
                 exposure.async_register()
                 self.exposures.append(exposure)
@@ -356,10 +361,7 @@ class KNXExposeSensor:
         else:
             _name = self.entity_id
         self.device = ExposeSensor(
-            self.xknx,
-            name=_name,
-            group_address=self.address,
-            value_type=self.type,
+            self.xknx, name=_name, group_address=self.address, value_type=self.type,
         )
         self.xknx.devices.add(self.device)
         async_track_state_change(self.hass, self.entity_id, self._async_entity_changed)
