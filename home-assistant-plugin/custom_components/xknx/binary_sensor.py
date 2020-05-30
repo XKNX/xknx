@@ -13,6 +13,7 @@ CONF_STATE_ADDRESS = "state_address"
 CONF_SIGNIFICANT_BIT = "significant_bit"
 CONF_DEFAULT_SIGNIFICANT_BIT = 1
 CONF_SYNC_STATE = "sync_state"
+CONF_IGNORE_INTERNAL_STATE = "ignore_internal_state"
 CONF_AUTOMATION = "automation"
 CONF_HOOK = "hook"
 CONF_DEFAULT_HOOK = "on"
@@ -41,6 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             CONF_SIGNIFICANT_BIT, default=CONF_DEFAULT_SIGNIFICANT_BIT
         ): cv.positive_int,
         vol.Optional(CONF_SYNC_STATE, default=True): cv.boolean,
+        vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=False): cv.boolean,
         vol.Required(CONF_STATE_ADDRESS): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): cv.string,
         vol.Optional(CONF_RESET_AFTER): cv.positive_int,
@@ -77,6 +79,7 @@ def async_add_entities_config(hass, config, async_add_entities):
         name=name,
         group_address_state=config[CONF_STATE_ADDRESS],
         sync_state=config[CONF_SYNC_STATE],
+        ignore_internal_state=config[CONF_IGNORE_INTERNAL_STATE],
         device_class=config.get(CONF_DEVICE_CLASS),
         significant_bit=config[CONF_SIGNIFICANT_BIT],
         reset_after=config.get(CONF_RESET_AFTER),
