@@ -44,6 +44,7 @@ class XKNX:
         self.logger = logging.getLogger('xknx.log')
         self.knx_logger = logging.getLogger('xknx.knx')
         self.telegram_logger = logging.getLogger('xknx.telegram')
+        self.raw_socket_logger = logging.getLogger('xknx.raw_socket')
         self.connection_config = None
         self.version = VERSION
 

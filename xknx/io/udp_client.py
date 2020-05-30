@@ -52,6 +52,7 @@ class UDPClient:
 
         def datagram_received(self, data, addr):
             """Call assigned callback. Callback for datagram received."""
+            self.xknx.raw_socket_logger.debug("Received from %s: %s", addr, data.hex())
             if self.data_received_callback is not None:
                 self.data_received_callback(data)
 
