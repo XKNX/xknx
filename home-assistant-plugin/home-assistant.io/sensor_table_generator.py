@@ -8,7 +8,7 @@ except ModuleNotFoundError:
 
 # Defines the column order of the printed table.
 # ["dpt_number", "value_type", "dpt_size", "unit", "dpt_range"]
-COLUMN_ORDER = ["dpt_number", "value_type", "dpt_size", "unit"]
+COLUMN_ORDER = ["dpt_number", "value_type", "dpt_size", "dpt_range", "unit"]
 
 # Defines the column adjustment of the printed table.
 # "left", "right" or "center"
