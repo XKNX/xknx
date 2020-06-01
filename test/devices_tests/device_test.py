@@ -164,7 +164,6 @@ class TestDevice(Testcase):
     # _SYNC_IMPL()
     #
     @pytest.mark.asyncio
-    @pytest.mark.xfail
     async def test_sync_no_response(self):
         """Testing _sync_impl() method with ValueReader returning no telegram as response."""
         # pylint: disable=protected-access
@@ -173,9 +172,7 @@ class TestDevice(Testcase):
         with patch('xknx.devices.Device.state_addresses') as mock_state_addresses:
             mock_state_addresses.return_value = [GroupAddress('1/2/3'), ]
             with patch('xknx.core.ValueReader.read', new_callable=CoroMock) as mock_value_reader_read:
-                fut = asyncio.Future()
-                fut.set_result(None)  # Make Value reader return no response
-                mock_value_reader_read.return_value = fut
+                mock_value_reader_read.return_value = None
                 with patch('logging.Logger.warning') as mock_warn:
                     await device._sync_impl()
                     mock_warn.assert_called_with("Could not sync group address '%s' from %s",
@@ -189,15 +186,12 @@ class TestDevice(Testcase):
         device = Device(xknx, 'TestDevice')
         with patch('xknx.devices.Device.state_addresses') as mock_state_addresses:
             mock_state_addresses.return_value = [GroupAddress('1/2/3'), ]
-            with patch('xknx.core.ValueReader.send_group_read') as mock_value_reader_group_read:
-                fut = asyncio.Future()
-                fut.set_result(None)  # Make Value reader return no response
-                mock_value_reader_group_read.return_value = fut
+            with patch('xknx.core.ValueReader.send_group_read', new_callable=CoroMock) as mock_value_reader_group_read:
+                mock_value_reader_group_read.return_value = None
                 await device._sync_impl(wait_for_result=False)
                 mock_value_reader_group_read.assert_called_with()
 
     @pytest.mark.asyncio
-    @pytest.mark.xfail
     async def test_sync_valid_response(self):
         """Testing _sync_imp() method with ValueReader.read returning a Telegram - which should be processed."""
         # pylint: disable=protected-access
@@ -206,13 +200,9 @@ class TestDevice(Testcase):
         with patch('xknx.devices.Device.state_addresses') as mock_state_addresses:
             mock_state_addresses.return_value = [GroupAddress('1/2/3'), ]
             with patch('xknx.core.ValueReader.read', new_callable=CoroMock) as mock_value_reader_read:
-                fut = asyncio.Future()
                 telegram = Telegram(GroupAddress("1/2/3"))
-                fut.set_result(telegram)
-                mock_value_reader_read.return_value = fut
-                with patch('xknx.devices.Device.process') as mock_device_process:
-                    fut2 = asyncio.Future()
-                    fut2.set_result(None)
-                    mock_device_process.return_value = fut2
+                mock_value_reader_read.return_value = telegram
+                with patch('xknx.devices.Device.process', new_callable=CoroMock) as mock_device_process:
+                    mock_device_process.return_value = None
                     await device._sync_impl()
                     mock_device_process.assert_called_with(telegram)

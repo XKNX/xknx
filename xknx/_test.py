@@ -5,7 +5,7 @@ This is a helper class to support async testcases.
 from asyncio import coroutine
 
 import unittest
-from unittest.mock import Mock
+from unittest.mock import MagicMock
 
 class Testcase:
     def __getattr__(self,k):
@@ -16,8 +16,6 @@ class Testcase:
         raise AttributeError(k)
     pass
 
-def CoroMock():
-    coro = Mock(name="CoroutineResult")
-    corofunc = Mock(name="CoroutineFunction", side_effect=coroutine(coro))
-    corofunc.coro = coro
-    return corofunc
+class CoroMock(MagicMock):
+    async def __call__(self, *args, **kwargs):
+        return super().__call__(*args, **kwargs)
