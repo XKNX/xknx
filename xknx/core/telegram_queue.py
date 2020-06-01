@@ -8,6 +8,7 @@ The underlaying KNXIPInterface will poll the queue and send the packets to the c
 You may register callbacks to be notified if a telegram was pushed to the queue.
 """
 import asyncio
+from contextlib import asynccontextmanager
 
 from xknx.exceptions import XKNXException
 from xknx.telegram import TelegramDirection
@@ -51,11 +52,19 @@ class TelegramQueue():
         """Unregister callback for a telegram beeing received from KNX bus."""
         self.telegram_received_cbs.remove(telegram_received_cb)
 
+    @asynccontextmanager
+    async def run(self):
+        try:
+            await self.start()
+            yield self
+        finally:
+            await self.stop()
+
     async def start(self):
         """Start telegram queue."""
-        asyncio.create_task(self.run())
+        asyncio.create_task(self._run())
 
-    async def run(self):
+    async def _run(self):
         """Endless loop for processing telegrams."""
         while True:
             telegram = await self.xknx.telegrams.get()

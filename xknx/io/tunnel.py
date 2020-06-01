@@ -4,6 +4,7 @@ Abstraction for handling KNX/IP tunnels.
 Tunnels connect to KNX/IP devices directly via UDP and build a static UDP connection.
 """
 import asyncio
+from contextlib import asynccontextmanager
 
 from xknx.exceptions import XKNXException
 from xknx.knxip import KNXIPFrame, KNXIPServiceType, TunnellingRequest
@@ -76,6 +77,14 @@ class Tunnel():
         ack_knxipframe.body.sequence_counter = sequence_counter
         ack_knxipframe.normalize()
         self.udp_client.send(ack_knxipframe)
+
+    @asynccontextmanager
+    async def run(self):
+        try:
+            await self.start()
+            yield self
+        finally:
+            await self.stop()
 
     async def start(self):
         """Start tunneling."""

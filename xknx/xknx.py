@@ -3,6 +3,7 @@ import asyncio
 import logging
 import signal
 from sys import platform
+from contextlib import asynccontextmanager
 
 from xknx.core import Config, TelegramQueue
 from xknx.devices import Devices
@@ -54,6 +55,15 @@ class XKNX:
 
         if device_updated_cb is not None:
             self.devices.register_device_updated_cb(device_updated_cb)
+
+    @asynccontextmanager
+    async def run(self, state_updater=False, connection_config=None):
+        try:
+            await self.start(state_updater=state_updater,
+                    connection_config=connection_config)
+            yield self
+        finally:
+            await self.stop()
 
     async def start(self,
                     state_updater=False,

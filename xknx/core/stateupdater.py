@@ -1,6 +1,7 @@
 """Module for reading the values of all devices from device vector from KNX bus in periodic cycles."""
 import asyncio
 
+from contextlib import asynccontextmanager
 
 class StateUpdater():
     """Class for reading the values of all devices from KNX bus."""
@@ -16,10 +17,18 @@ class StateUpdater():
         self.run_forever = True
         self.run_task = None
 
+    @asynccontextmanager
+    async def run(self):
+        try:
+            await self.start()
+            yield self
+        finally:
+            await self.stop()
+
     async def start(self):
         """Start StateUpdater."""
         self.run_task = asyncio.create_task(
-            self.run())
+            self._run())
 
     async def stop(self):
         """Stop StateUpdater."""
@@ -31,7 +40,7 @@ class StateUpdater():
             except asyncio.CancelledError:
                 self.run_task = None
 
-    async def run(self):
+    async def _run(self):
         """Worker thread. Endless loop for updating states."""
         await asyncio.sleep(self.start_timeout)
         self.xknx.logger.debug("Starting StateUpdater")
