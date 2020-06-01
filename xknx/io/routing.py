@@ -65,6 +65,7 @@ class Routing():
 
     @asynccontextmanager
     async def run(self):
+        """Async context manager for the routing task."""
         try:
             await self.start()
             yield self

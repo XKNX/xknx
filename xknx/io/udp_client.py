@@ -124,7 +124,7 @@ class UDPClient:
         if own_ip is None:
             # Easy and compatible way to find the IP address of the default interface
             ext_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            ext_sock.connect(("8.8.8.8",53)) # does not send a packet
+            ext_sock.connect(("8.8.8.8", 53)) # does not send a packet
             own_ip = ext_sock.getsockname()[0]
             ext_sock.close()
 

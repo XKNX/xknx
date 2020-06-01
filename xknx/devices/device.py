@@ -42,7 +42,7 @@ class Device:
     async def _sync_impl(self, wait_for_result=True):
         self.xknx.logger.debug("Sync %s", self.name)
         for group_address in self.state_addresses():
-            from xknx.core import ValueReader
+            from xknx.core import ValueReader  # pylint: disable=import-outside-toplevel
             value_reader = ValueReader(self.xknx, group_address)
             if wait_for_result:
                 telegram = await value_reader.read()

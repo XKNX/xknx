@@ -54,6 +54,7 @@ class TelegramQueue():
 
     @asynccontextmanager
     async def run(self):
+        """Async context manager to manage the telegram queue."""
         try:
             await self.start()
             yield self

@@ -23,7 +23,7 @@ class XKNX:
 
     def __init__(self,
                  config=None,
-                 loop=None,
+                 loop=None,  # pylint: disable=unused-argument
                  own_address=PhysicalAddress(DEFAULT_ADDRESS),
                  address_format=GroupAddressType.LONG,
                  telegram_received_cb=None,
@@ -58,6 +58,7 @@ class XKNX:
 
     @asynccontextmanager
     async def run(self, state_updater=False, connection_config=None):
+        """Async context manager for XKNX. Connect to KNX/IP devices and start state updater."""
         try:
             await self.start(state_updater=state_updater,
                              connection_config=connection_config)
@@ -82,6 +83,7 @@ class XKNX:
         await self.telegram_queue.start()
 
         if state_updater:
+            # pylint: disable=import-outside-toplevel
             from xknx.core import StateUpdater
             self.state_updater = StateUpdater(self)
             await self.state_updater.start()
@@ -118,6 +120,7 @@ class XKNX:
         if platform == "win32":
             self.logger.warning('Windows does not support signals')
         else:
-            self.loop.add_signal_handler(signal.SIGINT, sigint_handler)
+            loop = asyncio.get_event_loop()
+            loop.add_signal_handler(signal.SIGINT, sigint_handler)
         self.logger.warning('Press Ctrl+C to stop')
         await self.sigint_received.wait()

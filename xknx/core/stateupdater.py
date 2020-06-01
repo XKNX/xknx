@@ -19,6 +19,7 @@ class StateUpdater():
 
     @asynccontextmanager
     async def run(self):
+        """Async context manager for the StateUpdater task."""
         try:
             await self.start()
             yield self

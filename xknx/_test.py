@@ -2,20 +2,30 @@
 This is a helper class to support async testcases.
 """
 
-from asyncio import coroutine
-
 import unittest
 from unittest.mock import MagicMock
 
 class Testcase:
-    def __getattr__(self,k):
+    # pylint: disable=too-few-public-methods
+    """
+    A fake-unittest class which allows the user to use unittests assertFOO
+    methods without subclassing `unittest.TestCase`.
+    """
+    __unittest = None
+
+    def __getattr__(self, k):
+        # pylint: disable=attribute-defined-outside-init
         if k.startswith("assert"):
-            if not hasattr(self,"_unittest_"):
-                self._unittest_ = unittest.TestCase()
-            return getattr(self._unittest_,k)
+            if self.__unittest is None:
+                self.__unittest = unittest.TestCase()
+            return getattr(self.__unittest, k)
         raise AttributeError(k)
-    pass
 
 class CoroMock(MagicMock):
+    """
+    A MagicMock subclass which behaves like an async function.
+    """
     async def __call__(self, *args, **kwargs):
+        # no it is not.
+        # pylint: disable=useless-super-delegation
         return super().__call__(*args, **kwargs)

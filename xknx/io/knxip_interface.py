@@ -9,6 +9,7 @@ KNXIPInterface manages KNX/IP Tunneling or Routing connections.
 import ipaddress
 from enum import Enum
 from platform import system as get_os_name
+import asyncio
 
 import netifaces
 

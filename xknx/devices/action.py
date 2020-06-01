@@ -24,7 +24,7 @@ class ActionBase():
 
     def test_if_applicable(self, state, counter=None):
         """Test if should be executed for this state and this counter number."""
-        from .binary_sensor import BinarySensorState
+        from .binary_sensor import BinarySensorState  # pylint: disable=import-outside-toplevel
         if (state == BinarySensorState.ON) \
                 and (self.hook == "on") \
                 and self.test_counter(counter):

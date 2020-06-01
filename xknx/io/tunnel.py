@@ -20,7 +20,7 @@ from .udp_client import UDPClient
 class Tunnel():
     """Class for handling KNX/IP tunnels."""
 
-    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-instance-attributes,too-many-public-methods
 
     def __init__(self, xknx, src_address, local_ip="0.0.0.0", gateway_ip=None, gateway_port=None,
                  telegram_received_callback=None, auto_reconnect=False,
@@ -80,6 +80,7 @@ class Tunnel():
 
     @asynccontextmanager
     async def run(self):
+        """Async context manager for the tunneling subtask."""
         try:
             await self.start()
             yield self
