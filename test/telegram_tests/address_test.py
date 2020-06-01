@@ -1,4 +1,5 @@
 """Unit test for Address class."""
+import pytest
 
 from xknx.exceptions import CouldNotParseAddress
 from xknx.telegram import GroupAddress, GroupAddressType, PhysicalAddress
@@ -8,9 +9,7 @@ from xknx._test import Testcase
 class TestPhysicalAddress(Testcase):
     """Test class for PhysicalAddress."""
 
-    def test_with_valid(self):
-        """Test with some valid addresses."""
-        valid_addresses = (
+    valid_addresses = (
             ('0.0.0', 0),
             ('1.0.0', 4096),
             ('1.1.0', 4352),
@@ -24,13 +23,12 @@ class TestPhysicalAddress(Testcase):
             (0, 0),
             (65535, 65535)
         )
-        for address in valid_addresses:
-            with self.subTest(address=address):
-                self.assertEqual(PhysicalAddress(address[0]).raw, address[1])
+    @pytest.mark.parametrize("address,result",valid_addresses)
+    def test_valid(self, address, result):
+        """Test with some valid addresses."""
+        self.assertEqual(PhysicalAddress(address).raw, result)
 
-    def test_with_invalid(self):
-        """Test with some invalid addresses."""
-        invalid_addresses = (
+    invalid_addresses = (
             '15.15.256',
             '16.0.0',
             '0.16.0',
@@ -44,10 +42,11 @@ class TestPhysicalAddress(Testcase):
             (-1, -1),
             []
         )
-        for address in invalid_addresses:
-            with self.subTest(address=address):
-                with self.assertRaises(CouldNotParseAddress):
-                    PhysicalAddress(address)
+    @pytest.mark.parametrize("address",invalid_addresses)
+    def test_invalid(self, address):
+        """Test with some invalid addresses."""
+        with self.assertRaises(CouldNotParseAddress):
+            PhysicalAddress(address)
 
     def test_with_int(self):
         """Test initialization with free format address as integer."""
@@ -94,16 +93,7 @@ class TestPhysicalAddress(Testcase):
 class TestGroupAddress(Testcase):
     """Test class for GroupAddress."""
 
-    def test_with_valid(self):
-        """
-        Test if the class constructor generates valid raw values.
-
-        This test checks:
-        * all allowed input variants (strings, tuples, integers)
-        * for conversation errors
-        * for upper/lower limits still working, to avoid off-by-one errors
-        """
-        valid_addresses = (
+    valid_addresses = (
             ('0/0', 0),
             ('0/1', 1),
             ('0/11', 11),
@@ -129,20 +119,19 @@ class TestGroupAddress(Testcase):
             ((0xff, 0xff), 65535),
             (None, 0)
         )
-        for address in valid_addresses:
-            with self.subTest(address=address):
-                self.assertEqual(GroupAddress(address[0]).raw, address[1])
-
-    def test_with_invalid(self):
+    @pytest.mark.parametrize("address,result",valid_addresses)
+    def test_valid(self, address, result):
         """
-        Test if constructor raises an exception for all known invalid cases.
+        Test if the class constructor generates valid raw values.
 
-        Checks:
-        * addresses or parts of it too high/low
-        * invalid input variants (lists instead of tuples)
-        * invalid strings
+        This test checks:
+        * all allowed input variants (strings, tuples, integers)
+        * for conversation errors
+        * for upper/lower limits still working, to avoid off-by-one errors
         """
-        invalid_addresses = (
+        self.assertEqual(GroupAddress(address).raw, result)
+
+    invalid_addresses = (
             '0/2049',
             '0/8/0',
             '0/0/256',
@@ -156,10 +145,18 @@ class TestGroupAddress(Testcase):
             (-1, -1),
             []
         )
-        for address in invalid_addresses:
-            with self.subTest(address=address):
-                with self.assertRaises(CouldNotParseAddress):
-                    GroupAddress(address)
+    @pytest.mark.parametrize("address",invalid_addresses)
+    def test_with_invalid(self, address):
+        """
+        Test if constructor raises an exception for all known invalid cases.
+
+        Checks:
+        * addresses or parts of it too high/low
+        * invalid input variants (lists instead of tuples)
+        * invalid strings
+        """
+        with self.assertRaises(CouldNotParseAddress):
+            GroupAddress(address)
 
     def test_main(self):
         """
