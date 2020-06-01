@@ -30,8 +30,9 @@ async def monitor(address_filters):
     xknx = XKNX()
     xknx.telegram_queue.register_telegram_received_cb(
         telegram_received_cb, address_filters)
-    await xknx.start(daemon_mode=True)
-    await xknx.stop()
+    async with XKNX().run() as xknx:
+        while True:
+            await asyncio.sleep(99999)
 
 
 async def main(argv):

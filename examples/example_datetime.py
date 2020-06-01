@@ -11,8 +11,9 @@ async def main():
     datetime = DateTime(xknx, 'TimeTest', group_address='1/2/3', broadcast_type=DateTimeBroadcastType.TIME)
     xknx.devices.add(datetime)
     print("Sending time to KNX bus every hour")
-    await xknx.start(daemon_mode=True, state_updater=True)
-    await xknx.stop()
+    async with xknx.run(state_updater=True):
+        while True:
+            asyncio.sleep(99999)
 
 # pylint: disable=invalid-name
 asyncio.run(main())

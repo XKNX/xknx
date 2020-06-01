@@ -7,16 +7,13 @@ from xknx.devices import Scene
 
 async def main():
     """Connect to KNX/IP bus and run scene."""
-    xknx = XKNX()
-    await xknx.start()
-    scene = Scene(
-        xknx,
-        name='Romantic',
-        group_address='7/0/9',
-        scene_number=23)
-    await scene.run()
-    await xknx.stop()
+    async with XKNX().run() as xknx:
+        scene = Scene(
+            xknx,
+            name='Romantic',
+            group_address='7/0/9',
+            scene_number=23)
+        await scene.run()
 
 
-# pylint: disable=invalid-name
 asyncio.run(main())

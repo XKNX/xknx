@@ -186,11 +186,12 @@ async def main():
     mqttc.loop_start()
 
     # Wait until Ctrl-C was pressed
-    await xknx.start(daemon_mode=True)
+    try:
+        async with xknx.run():
+            while True:
+                await asyncio.sleep(99999)
+    finally:
+        await mqttc.loop_stop()
+        await mqttc.disconnect()
 
-    await xknx.stop()
-    await mqttc.loop_stop()
-    await mqttc.disconnect()
-
-# pylint: disable=invalid-name
 asyncio.run(main())

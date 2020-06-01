@@ -8,20 +8,17 @@ from xknx.telegram import GroupAddress
 
 async def main():
     """Connect and read value from KNX bus."""
-    xknx = XKNX()
-    await xknx.start()
+    async with XKNX().run() as xknx:
 
-    value_reader = ValueReader(xknx, GroupAddress('2/0/8'))
-    telegram = await value_reader.read()
-    if telegram is not None:
-        print(telegram)
+        value_reader = ValueReader(xknx, GroupAddress('2/0/8'))
+        telegram = await value_reader.read()
+        if telegram is not None:
+            print(telegram)
 
-    value_reader = ValueReader(xknx, GroupAddress('2/1/8'))
-    telegram = await value_reader.read()
-    if telegram is not None:
-        print(telegram)
-
-    await xknx.stop()
+        value_reader = ValueReader(xknx, GroupAddress('2/1/8'))
+        telegram = await value_reader.read()
+        if telegram is not None:
+            print(telegram)
 
 
 # pylint: disable=invalid-name

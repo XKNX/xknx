@@ -18,10 +18,10 @@ async def main():
                     group_address='1/1/9')
     xknx.devices.add(switch)
 
-    # Wait until Ctrl-C was pressed
-    await xknx.start(daemon_mode=True)
-
-    await xknx.stop()
+    # Wait until Ctrl-C is pressed
+    async with xknx.run():
+        while True:
+            await asyncio.sleep(99999)
 
 
 # pylint: disable=invalid-name

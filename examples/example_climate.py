@@ -7,19 +7,15 @@ from xknx.devices import Climate
 
 async def main():
     """Connect to KNX/IP and read the state of a Climate device."""
-    xknx = XKNX()
-    await xknx.start()
+    async with XKNX().run() as xknx:
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            group_address_temperature='6/2/1')
+        await climate.sync()
 
-    climate = Climate(
-        xknx,
-        'TestClimate',
-        group_address_temperature='6/2/1')
-    await climate.sync()
-
-    # Will print out state of climate including current temperature:
-    print(climate)
-
-    await xknx.stop()
+        # Will print out state of climate including current temperature:
+        print(climate)
 
 
 # pylint: disable=invalid-name
