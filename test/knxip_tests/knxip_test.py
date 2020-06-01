@@ -6,8 +6,9 @@ from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import KNXIPFrame
 
+from xknx._test import Testcase
 
-class Test_KNXIP(unittest.TestCase):
+class Test_KNXIP(Testcase):
     """Test class for KNX/IP base class."""
 
     # pylint: disable=too-many-public-methods,invalid-name

@@ -2,22 +2,22 @@
 import asyncio
 import unittest
 from unittest.mock import Mock, patch
-
 import pytest
-pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.devices import Switch
 from xknx.dpt import DPTBinary
 from xknx.telegram import GroupAddress, Telegram, TelegramType
 
+from xknx._test import Testcase
 
-class TestSwitch(unittest.TestCase):
+class TestSwitch(Testcase):
     """Test class for Switch object."""
 
     #
     # SYNC
     #
+    @pytest.mark.asyncio
     async def test_sync(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
@@ -30,6 +30,7 @@ class TestSwitch(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
 
+    @pytest.mark.asyncio
     async def test_sync_state_address(self):
         """Test sync function / sending group reads to KNX bus. Test with Switch with explicit state address."""
         xknx = XKNX()
@@ -47,6 +48,7 @@ class TestSwitch(unittest.TestCase):
     #
     # TEST PROCESS
     #
+    @pytest.mark.asyncio
     async def test_process(self):
         """Test process / reading telegrams from telegram queue. Test if device was updated."""
         xknx = XKNX()
@@ -68,6 +70,7 @@ class TestSwitch(unittest.TestCase):
 
         self.assertEqual(switch.state, False)
 
+    @pytest.mark.asyncio
     async def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
         # pylint: disable=no-self-use
@@ -92,6 +95,7 @@ class TestSwitch(unittest.TestCase):
     #
     # TEST SET ON
     #
+    @pytest.mark.asyncio
     async def test_set_on(self):
         """Test switching on switch."""
         xknx = XKNX()
@@ -105,6 +109,7 @@ class TestSwitch(unittest.TestCase):
     #
     # TEST SET OFF
     #
+    @pytest.mark.asyncio
     async def test_set_off(self):
         """Test switching off switch."""
         xknx = XKNX()
@@ -118,6 +123,7 @@ class TestSwitch(unittest.TestCase):
     #
     # TEST DO
     #
+    @pytest.mark.asyncio
     async def test_do(self):
         """Test 'do' functionality."""
         xknx = XKNX()
@@ -127,6 +133,7 @@ class TestSwitch(unittest.TestCase):
         await switch.do("off")
         self.assertFalse(switch.state)
 
+    @pytest.mark.asyncio
     async def test_wrong_do(self):
         """Test wrong do command."""
         xknx = XKNX()

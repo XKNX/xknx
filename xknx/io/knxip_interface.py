@@ -162,7 +162,8 @@ class KNXIPInterface():
 
     def telegram_received(self, telegram):
         """Put received telegram into queue. Callback for having received telegram."""
-        self.xknx.loop.create_task(
+        loop = asyncio.get_event_loop()
+        loop.create_task(
             self.xknx.telegrams.put(telegram))
 
     async def send_telegram(self, telegram):

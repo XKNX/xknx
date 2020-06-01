@@ -6,8 +6,9 @@ from xknx import XKNX
 from xknx.exceptions import ConversionError
 from xknx.remote_value import RemoteValueSensor
 
+from xknx._test import Testcase
 
-class TestRemoteValueSensor(unittest.TestCase):
+class TestRemoteValueSensor(Testcase):
     """Test class for RemoteValueSensor objects."""
 
     def test_wrong_value_type(self):

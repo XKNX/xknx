@@ -4,8 +4,9 @@ import unittest
 from xknx.dpt import DPTSceneNumber
 from xknx.exceptions import ConversionError
 
+from xknx._test import Testcase
 
-class TestDPTSceneNumber(unittest.TestCase):
+class TestDPTSceneNumber(Testcase):
     """Test class for KNX scaling value."""
 
     # pylint: disable=too-many-public-methods,invalid-name

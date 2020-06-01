@@ -2,17 +2,16 @@
 import asyncio
 import unittest
 from unittest.mock import Mock
-
 import pytest
-pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.devices import Sensor
 from xknx.dpt import DPTArray
 from xknx.telegram import GroupAddress, Telegram, TelegramType
 
+from xknx._test import Testcase
 
-class TestSensor(unittest.TestCase):
+class TestSensor(Testcase):
     """Test class for Sensor objects."""
 
     #
@@ -21,7 +20,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_absolute_temperature(self):
         """Test resolve state with absolute_temperature sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -35,7 +34,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_acceleration(self):
         """Test resolve state with acceleration sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -49,7 +48,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_acceleration_angular(self):
         """Test resolve state with acceleration_angular sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -63,7 +62,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_activation_energy(self):
         """Test resolve state with activation_energy sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -77,7 +76,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_active_energy(self):
         """Test resolve state with active_energy sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -91,7 +90,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_active_energy_kwh(self):
         """Test resolve state with active_energy_kwh sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -105,7 +104,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_activity(self):
         """Test resolve state with activity sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -119,7 +118,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_amplitude(self):
         """Test resolve state with amplitude sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -133,7 +132,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_angle(self):
         """Test resolve state with angle sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -147,7 +146,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_angle_deg(self):
         """Test resolve state with angle_deg sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -161,7 +160,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_angle_rad(self):
         """Test resolve state with angle_rad sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -175,7 +174,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_angular_frequency(self):
         """Test resolve state with angular_frequency sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -189,7 +188,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_angular_momentum(self):
         """Test resolve state with angular_momentum sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -203,7 +202,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_angular_velocity(self):
         """Test resolve state with angular_velocity sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -217,7 +216,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_apparant_energy(self):
         """Test resolve state with apparant_energy sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -231,7 +230,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_apparant_energy_kvah(self):
         """Test resolve state with apparant_energy_kvah sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -245,7 +244,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_area(self):
         """Test resolve state with area sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -259,7 +258,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_brightness(self):
         """Test resolve state with brightness sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -273,7 +272,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_capacitance(self):
         """Test resolve state with capacitance sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -287,7 +286,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_charge_density_surface(self):
         """Test resolve state with charge_density_surface sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -301,7 +300,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_charge_density_volume(self):
         """Test resolve state with charge_density_volume sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -315,7 +314,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_color_temperature(self):
         """Test resolve state with color_temperature sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -329,7 +328,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_common_temperature(self):
         """Test resolve state with common_temperature sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -343,7 +342,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_compressibility(self):
         """Test resolve state with compressibility sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -357,7 +356,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_conductance(self):
         """Test resolve state with conductance sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -371,7 +370,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_counter_pulses(self):
         """Test resolve state with counter_pulses sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -385,7 +384,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_current(self):
         """Test resolve state with current sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -399,7 +398,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_delta_time_hrs(self):
         """Test resolve state with delta_time_hrs sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -413,7 +412,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_delta_time_min(self):
         """Test resolve state with delta_time_min sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -427,7 +426,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_delta_time_ms(self):
         """Test resolve state with delta_time_ms sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -441,7 +440,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_delta_time_sec(self):
         """Test resolve state with delta_time_sec sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -455,7 +454,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_density(self):
         """Test resolve state with density sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -469,7 +468,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_electrical_conductivity(self):
         """Test resolve state with electrical_conductivity sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -483,7 +482,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_electric_charge(self):
         """Test resolve state with electric_charge sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -497,7 +496,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_electric_current(self):
         """Test resolve state with electric_current sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -511,7 +510,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_electric_current_density(self):
         """Test resolve state with electric_current_density sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -525,7 +524,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_electric_dipole_moment(self):
         """Test resolve state with electric_dipole_moment sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -539,7 +538,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_electric_displacement(self):
         """Test resolve state with electric_displacement sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -553,7 +552,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_electric_field_strength(self):
         """Test resolve state with electric_field_strength sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -567,7 +566,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_electric_flux(self):
         """Test resolve state with electric_flux sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -581,7 +580,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_electric_flux_density(self):
         """Test resolve state with electric_flux_density sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -595,7 +594,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_electric_polarization(self):
         """Test resolve state with electric_polarization sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -609,7 +608,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_electric_potential(self):
         """Test resolve state with electric_potential sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -623,7 +622,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_electric_potential_difference(self):
         """Test resolve state with electric_potential_difference sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -637,7 +636,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_electromagnetic_moment(self):
         """Test resolve state with electromagnetic_moment sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -651,7 +650,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_electromotive_force(self):
         """Test resolve state with electromotive_force sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -665,7 +664,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_energy(self):
         """Test resolve state with energy sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -679,7 +678,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_enthalpy(self):
         """Test resolve state with enthalpy sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -693,7 +692,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_flow_rate_m3h(self):
         """Test resolve state with flow_rate_m3h sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -707,7 +706,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_force(self):
         """Test resolve state with force sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -721,7 +720,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_frequency(self):
         """Test resolve state with frequency sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -735,7 +734,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_heatcapacity(self):
         """Test resolve state with heatcapacity sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -749,7 +748,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_heatflowrate(self):
         """Test resolve state with heatflowrate sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -763,7 +762,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_heat_quantity(self):
         """Test resolve state with heat_quantity sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -777,7 +776,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_humidity(self):
         """Test resolve state with humidity sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -791,7 +790,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_impedance(self):
         """Test resolve state with impedance sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -805,7 +804,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_illuminance(self):
         """Test resolve state with illuminance sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -819,7 +818,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_kelvin_per_percent(self):
         """Test resolve state with kelvin_per_percent sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -833,7 +832,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_length(self):
         """Test resolve state with length sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -847,7 +846,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_length_mm(self):
         """Test resolve state with length_mm sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -861,7 +860,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_light_quantity(self):
         """Test resolve state with light_quantity sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -875,7 +874,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_long_delta_timesec(self):
         """Test resolve state with long_delta_timesec sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -889,7 +888,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_luminance(self):
         """Test resolve state with luminance sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -903,7 +902,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_luminous_flux(self):
         """Test resolve state with luminous_flux sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -917,7 +916,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_luminous_intensity(self):
         """Test resolve state with luminous_intensity sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -931,7 +930,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_magnetic_field_strength(self):
         """Test resolve state with magnetic_field_strength sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -945,7 +944,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_magnetic_flux(self):
         """Test resolve state with magnetic_flux sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -959,7 +958,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_magnetic_flux_density(self):
         """Test resolve state with magnetic_flux_density sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -973,7 +972,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_magnetic_moment(self):
         """Test resolve state with magnetic_moment sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -987,7 +986,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_magnetic_polarization(self):
         """Test resolve state with magnetic_polarization sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1001,7 +1000,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_magnetization(self):
         """Test resolve state with magnetization sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1015,7 +1014,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_magnetomotive_force(self):
         """Test resolve state with magnetomotive_force sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1029,7 +1028,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_mass(self):
         """Test resolve state with mass sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1043,7 +1042,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_mass_flux(self):
         """Test resolve state with mass_flux sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1057,7 +1056,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_mol(self):
         """Test resolve state with mol sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1071,7 +1070,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_momentum(self):
         """Test resolve state with momentum sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1099,7 +1098,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_percentU8(self):
         """Test resolve state with percentU8 sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1113,7 +1112,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_percentV8(self):
         """Test resolve state with percentV8 sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1127,7 +1126,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_percentV16(self):
         """Test resolve state with percentV16 sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1141,7 +1140,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_phaseanglerad(self):
         """Test resolve state with phaseanglerad sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1155,7 +1154,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_phaseangledeg(self):
         """Test resolve state with phaseangledeg sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1169,7 +1168,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_power(self):
         """Test resolve state with power sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1183,7 +1182,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_power_2byte(self):
         """Test resolve state with power_2byte sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1197,7 +1196,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_power_density(self):
         """Test resolve state with power_density sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1211,7 +1210,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_powerfactor(self):
         """Test resolve state with powerfactor sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1225,7 +1224,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_ppm(self):
         """Test resolve state with ppm sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1239,7 +1238,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_pressure(self):
         """Test resolve state with pressure sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1253,7 +1252,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_pressure_2byte(self):
         """Test resolve state with pressure_2byte sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1267,7 +1266,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_pulse(self):
         """Test resolve state with pulse sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1281,7 +1280,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_rain_amount(self):
         """Test resolve state with rain_amount sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1295,7 +1294,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_reactance(self):
         """Test resolve state with reactance sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1309,7 +1308,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_reactive_energy(self):
         """Test resolve state with reactive_energy sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1323,7 +1322,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_reactive_energy_kvarh(self):
         """Test resolve state with reactive_energy_kvarh sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1337,7 +1336,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_resistance(self):
         """Test resolve state with resistance sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1351,7 +1350,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_resistivity(self):
         """Test resolve state with resistivity sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1365,7 +1364,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_rotation_angle(self):
         """Test resolve state with rotation_angle sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1379,7 +1378,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_scene_number(self):
         """Test resolve state with scene_number sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1393,7 +1392,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_self_inductance(self):
         """Test resolve state with self_inductance sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1407,7 +1406,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_solid_angle(self):
         """Test resolve state with solid_angle sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1421,7 +1420,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_sound_intensity(self):
         """Test resolve state with sound_intensity sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1449,7 +1448,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_stress(self):
         """Test resolve state with stress sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1463,7 +1462,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_surface_tension(self):
         """Test resolve state with surface_tension sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1519,7 +1518,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_temperature_difference_2byte(self):
         """Test resolve state with temperature_difference_2byte sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1533,7 +1532,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_temperature_f(self):
         """Test resolve state with temperature_f sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1547,7 +1546,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_thermal_capacity(self):
         """Test resolve state with thermal_capacity sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1561,7 +1560,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_thermal_conductivity(self):
         """Test resolve state with thermal_conductivity sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1575,7 +1574,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_thermoelectric_power(self):
         """Test resolve state with thermoelectric_power sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1589,7 +1588,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_time_1(self):
         """Test resolve state with time_1 sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1603,7 +1602,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_time_2(self):
         """Test resolve state with time_2 sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1617,7 +1616,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_time_period_100msec(self):
         """Test resolve state with time_period_100msec sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1631,7 +1630,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_time_period_10msec(self):
         """Test resolve state with time_period_10msec sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1645,7 +1644,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_time_period_hrs(self):
         """Test resolve state with time_period_hrs sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1659,7 +1658,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_time_period_min(self):
         """Test resolve state with time_period_min sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1673,7 +1672,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_time_period_msec(self):
         """Test resolve state with time_period_msec sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1687,7 +1686,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_time_period_sec(self):
         """Test resolve state with time_period_sec sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1701,7 +1700,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_time_seconds(self):
         """Test resolve state with time_seconds sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1715,7 +1714,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_torque(self):
         """Test resolve state with torque sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1743,7 +1742,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_volume(self):
         """Test resolve state with volume sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1757,7 +1756,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_volume_flow(self):
         """Test resolve state with volume_flow sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1771,7 +1770,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_volume_flux(self):
         """Test resolve state with volume_flux sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1785,7 +1784,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_weight(self):
         """Test resolve state with weight sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1799,7 +1798,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_work(self):
         """Test resolve state with work sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1813,7 +1812,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_wind_speed_ms(self):
         """Test resolve state with wind_speed_ms sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',
@@ -1827,7 +1826,7 @@ class TestSensor(unittest.TestCase):
 
     def test_str_wind_speed_kmh(self):
         """Test resolve state with wind_speed_kmh sensor."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx,
             'TestSensor',

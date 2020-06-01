@@ -13,9 +13,10 @@ from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
 from xknx.telegram import PhysicalAddress
 
+from xknx._test import Testcase
 
 # pylint: disable=too-many-public-methods,invalid-name
-class TestConfig(unittest.TestCase):
+class TestConfig(Testcase):
     """Test class for Configuration logic."""
 
     #

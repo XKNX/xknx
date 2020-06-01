@@ -4,8 +4,9 @@ import unittest
 from xknx.dpt import DPTString
 from xknx.exceptions import ConversionError
 
+from xknx._test import Testcase
 
-class TestDPTString(unittest.TestCase):
+class TestDPTString(Testcase):
     """Test class for KNX float object."""
 
     # pylint: disable=too-many-public-methods,invalid-name

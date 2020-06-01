@@ -181,7 +181,8 @@ class GatewayScanner():
 
     async def _start_timeout(self):
         """Start time out."""
-        self._timeout_handle = self.xknx.loop.call_later(
+        loop = asyncio.get_event_loop()
+        self._timeout_handle = loop.call_later(
             self.timeout_in_seconds, self._timeout)
 
     async def _stop_timeout(self):

@@ -2,9 +2,7 @@
 import asyncio
 import unittest
 from unittest.mock import patch
-
 import pytest
-pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.dpt import DPTArray
@@ -12,10 +10,12 @@ from xknx.io import Tunnelling, UDPClient
 from xknx.knxip import ErrorCode, KNXIPFrame, KNXIPServiceType, TunnellingAck
 from xknx.telegram import GroupAddress, PhysicalAddress, Telegram
 
+from xknx._test import Testcase
 
-class TestTunnelling(unittest.TestCase):
+class TestTunnelling(Testcase):
     """Test class for xknx/io/Tunnelling objects."""
 
+    @pytest.mark.asyncio
     async def test_tunnelling(self):
         """Test tunnelling from KNX bus."""
         # pylint: disable=too-many-locals

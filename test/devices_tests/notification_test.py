@@ -2,9 +2,7 @@
 import asyncio
 import unittest
 from unittest.mock import Mock, patch
-
 import pytest
-pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.devices import Notification
@@ -12,13 +10,15 @@ from xknx.dpt import DPTArray, DPTBinary, DPTString
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram, TelegramType
 
+from xknx._test import Testcase
 
-class TestNotification(unittest.TestCase):
+class TestNotification(Testcase):
     """Test class for Notification object."""
 
     #
     # SYNC
     #
+    @pytest.mark.asyncio
     async def test_sync_state(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
@@ -36,6 +36,7 @@ class TestNotification(unittest.TestCase):
     #
     # TEST PROCESS
     #
+    @pytest.mark.asyncio
     async def test_process(self):
         """Test process telegram with notification. Test if device was updated."""
         xknx = XKNX()
@@ -50,6 +51,7 @@ class TestNotification(unittest.TestCase):
         await notification.process(telegram_unset)
         self.assertEqual(notification.message, "")
 
+    @pytest.mark.asyncio
     async def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
         # pylint: disable=no-self-use
@@ -67,6 +69,7 @@ class TestNotification(unittest.TestCase):
         await notification.process(telegram_set)
         after_update_callback.assert_called_with(notification)
 
+    @pytest.mark.asyncio
     async def test_process_payload_invalid_length(self):
         """Test process wrong telegram (wrong payload length)."""
         # pylint: disable=invalid-name
@@ -76,6 +79,7 @@ class TestNotification(unittest.TestCase):
         with self.assertRaises(CouldNotParseTelegram):
             await notification.process(telegram)
 
+    @pytest.mark.asyncio
     async def test_process_wrong_payload(self):
         """Test process wrong telegram (wrong payload type)."""
         xknx = XKNX()
@@ -87,6 +91,7 @@ class TestNotification(unittest.TestCase):
     #
     # TEST SET MESSAGE
     #
+    @pytest.mark.asyncio
     async def test_set(self):
         """Test notificationing off notification."""
         xknx = XKNX()
@@ -98,7 +103,7 @@ class TestNotification(unittest.TestCase):
                          Telegram(GroupAddress('1/2/3'),
                                   payload=DPTArray(DPTString().to_knx("Ein Prosit!"))))
         # test if message longer than 14 chars gets cropped
-        self.loop.run_until_complete(asyncio.Task(notification.set("This is too long.")))
+        await notification.set("This is too long.")
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -108,6 +113,7 @@ class TestNotification(unittest.TestCase):
     #
     # TEST DO
     #
+    @pytest.mark.asyncio
     async def test_do(self):
         """Test 'do' functionality."""
         xknx = XKNX()
@@ -115,6 +121,7 @@ class TestNotification(unittest.TestCase):
         await notification.do("message:Ein Prosit!")
         self.assertEqual(notification.message, "Ein Prosit!")
 
+    @pytest.mark.asyncio
     async def test_wrong_do(self):
         """Test wrong do command."""
         xknx = XKNX()

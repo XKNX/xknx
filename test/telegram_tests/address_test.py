@@ -4,6 +4,7 @@ from unittest import TestCase
 from xknx.exceptions import CouldNotParseAddress
 from xknx.telegram import GroupAddress, GroupAddressType, PhysicalAddress
 
+from xknx._test import Testcase
 
 class TestPhysicalAddress(TestCase):
     """Test class for PhysicalAddress."""

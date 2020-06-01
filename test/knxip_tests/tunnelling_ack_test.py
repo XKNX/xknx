@@ -6,8 +6,9 @@ from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import ErrorCode, KNXIPFrame, KNXIPServiceType, TunnellingAck
 
+from xknx._test import Testcase
 
-class Test_KNXIP_TunnelingReq(unittest.TestCase):
+class Test_KNXIP_TunnelingReq(Testcase):
     """Test class for KNX/IP TunnellingAck objects."""
 
     # pylint: disable=too-many-public-methods,invalid-name

@@ -1,9 +1,7 @@
 """Unit test for String representations."""
 import asyncio
 import unittest
-
 import pytest
-pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.devices import (
@@ -25,9 +23,10 @@ from xknx.remote_value import RemoteValue
 from xknx.telegram import (
     GroupAddress, PhysicalAddress, Telegram, TelegramDirection)
 
+from xknx._test import Testcase
 
 # pylint: disable=too-many-public-methods,invalid-name
-class TestStringRepresentations(unittest.TestCase):
+class TestStringRepresentations(Testcase):
     """Test class for Configuration logic."""
 
     def test_remote_value(self):
@@ -178,7 +177,8 @@ class TestStringRepresentations(unittest.TestCase):
             'switch="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" '
             'color="GroupAddress("1/2/5")/GroupAddress("1/2/6")/None/None" />')
 
-    def test_notification(self):
+    @pytest.mark.asyncio
+    async def test_notification(self):
         """Test string representation of notification object."""
         xknx = XKNX()
         notification = Notification(
@@ -189,7 +189,7 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(notification),
             '<Notification name="Alarm" message="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" />')
-        self.loop.run_until_complete(asyncio.Task(notification.set('Einbrecher im Haus')))
+        await notification.set('Einbrecher im Haus')
         self.assertEqual(
             str(notification),
             '<Notification name="Alarm" '
@@ -210,6 +210,7 @@ class TestStringRepresentations(unittest.TestCase):
             str(scene),
             '<Scene name="Romantic" scene_value="GroupAddress("1/2/3")/None/None/None" scene_number="23" />')
 
+    @pytest.mark.asyncio
     async def test_sensor(self):
         """Test string representation of sensor object."""
         xknx = XKNX()
@@ -230,6 +231,7 @@ class TestStringRepresentations(unittest.TestCase):
             str(sensor),
             '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/<DPTArray value="[0x40]" />/25" value="25" unit="%"/>')
 
+    @pytest.mark.asyncio
     async def test_expose_sensor(self):
         """Test string representation of expose sensor object."""
         xknx = XKNX()

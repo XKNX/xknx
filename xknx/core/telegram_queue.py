@@ -53,7 +53,7 @@ class TelegramQueue():
 
     async def start(self):
         """Start telegram queue."""
-        self.xknx.loop.create_task(self.run())
+        asyncio.create_task(self.run())
 
     async def run(self):
         """Endless loop for processing telegrams."""

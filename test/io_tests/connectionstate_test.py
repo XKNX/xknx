@@ -2,19 +2,19 @@
 import asyncio
 import unittest
 from unittest.mock import patch
-
 import pytest
-pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.io import ConnectionState, UDPClient
 from xknx.knxip import (
     HPAI, ConnectionStateResponse, ErrorCode, KNXIPFrame, KNXIPServiceType)
 
+from xknx._test import Testcase
 
-class TestConnectionState(unittest.TestCase):
+class TestConnectionState(Testcase):
     """Test class for xknx/io/ConnectionState objects."""
 
+    @pytest.mark.asyncio
     async def test_connectionstate(self):
         """Test connectionstateing from KNX bus."""
         xknx = XKNX()

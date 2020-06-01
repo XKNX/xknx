@@ -5,8 +5,9 @@ import unittest
 from xknx import XKNX
 from xknx.remote_value import RemoteValueScaling
 
+from xknx._test import Testcase
 
-class TestRemoteValueScaling(unittest.TestCase):
+class TestRemoteValueScaling(Testcase):
     """Test class for RemoteValueScaling objects."""
 
     # pylint: disable=protected-access

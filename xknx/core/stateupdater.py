@@ -18,7 +18,7 @@ class StateUpdater():
 
     async def start(self):
         """Start StateUpdater."""
-        self.run_task = self.xknx.loop.create_task(
+        self.run_task = asyncio.create_task(
             self.run())
 
     async def stop(self):

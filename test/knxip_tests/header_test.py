@@ -6,8 +6,9 @@ from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import DisconnectRequest, KNXIPHeader, KNXIPServiceType
 
+from xknx._test import Testcase
 
-class Test_KNXIP_Header(unittest.TestCase):
+class Test_KNXIP_Header(Testcase):
     """Test class for KNX/IP TunnellingAck objects."""
 
     # pylint: disable=too-many-public-methods,invalid-name

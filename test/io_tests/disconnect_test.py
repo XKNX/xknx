@@ -2,19 +2,19 @@
 import asyncio
 import unittest
 from unittest.mock import patch
-
 import pytest
-pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.io import Disconnect, UDPClient
 from xknx.knxip import (
     HPAI, DisconnectResponse, ErrorCode, KNXIPFrame, KNXIPServiceType)
 
+from xknx._test import Testcase
 
-class TestDisconnect(unittest.TestCase):
+class TestDisconnect(Testcase):
     """Test class for xknx/io/Disconnect objects."""
 
+    @pytest.mark.asyncio
     async def test_disconnect(self):
         """Test disconnecting from KNX bus."""
         xknx = XKNX()

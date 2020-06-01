@@ -6,8 +6,9 @@ from unittest.mock import patch
 from xknx import XKNX
 from xknx.knxip import KNXIPBody
 
+from xknx._test import Testcase
 
-class Test_KNXIPBody(unittest.TestCase):
+class Test_KNXIPBody(Testcase):
     """Test class for KNX/IP ConnectionStateRequests."""
 
     # pylint: disable=too-many-public-methods,invalid-name

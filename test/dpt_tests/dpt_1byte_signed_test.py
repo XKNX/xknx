@@ -4,8 +4,9 @@ import unittest
 from xknx.dpt import DPTPercentV8, DPTSignedRelativeValue, DPTValue1Count
 from xknx.exceptions import ConversionError
 
+from xknx._test import Testcase
 
-class TestDPTRelativeValue(unittest.TestCase):
+class TestDPTRelativeValue(Testcase):
     """Test class for KNX DPT Relative Value."""
 
     # pylint: disable=too-many-public-methods,invalid-name

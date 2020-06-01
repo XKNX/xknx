@@ -4,16 +4,17 @@ import unittest
 from unittest.mock import patch
 
 import pytest
-pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.core import StateUpdater
 from xknx.devices import Light
 
+from xknx._test import Testcase
 
-class TestStateupdater(unittest.TestCase):
+class TestStateupdater(Testcase):
     """Test class for xknx/io/Disconnect objects."""
 
+    @pytest.mark.asyncio
     async def test_state_updater(self):
         """Test State updater."""
         xknx = XKNX()
@@ -31,6 +32,6 @@ class TestStateupdater(unittest.TestCase):
             fut.set_result(None)
             mock_sync.return_value = fut
 
-            await state_updater.start())
-            await state_updater.run_task)
+            await state_updater.start()
+            await state_updater.run_task
             mock_sync.assert_called_with()

@@ -1,18 +1,18 @@
 """Unit test for KNX/IP Disconnect Request/Response."""
 import asyncio
 import unittest
-
 import pytest
-pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.io import RequestResponse, UDPClient
 from xknx.knxip import DisconnectResponse
 
+from xknx._test import Testcase
 
-class TestConnectResponse(unittest.TestCase):
+class TestConnectResponse(Testcase):
     """Test class for xknx/io/Disconnect objects."""
 
+    @pytest.mark.asyncio
     async def test_create_knxipframe_err(self):
         """Test if create_knxipframe of base class raises an exception."""
         xknx = XKNX()

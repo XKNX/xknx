@@ -1,9 +1,7 @@
 """Unit test for RemoteValueSceneNumber objects."""
 import asyncio
 import unittest
-
 import pytest
-pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
@@ -11,8 +9,9 @@ from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.remote_value import RemoteValueSceneNumber
 from xknx.telegram import GroupAddress, Telegram
 
+from xknx._test import Testcase
 
-class TestRemoteValueSceneNumber(unittest.TestCase):
+class TestRemoteValueSceneNumber(Testcase):
     """Test class for RemoteValueSceneNumber objects."""
 
     def test_to_knx(self):
@@ -36,6 +35,7 @@ class TestRemoteValueSceneNumber(unittest.TestCase):
         with self.assertRaises(ConversionError):
             remote_value.to_knx("100")
 
+    @pytest.mark.asyncio
     async def test_set(self):
         """Test setting value."""
         xknx = XKNX()
@@ -59,6 +59,7 @@ class TestRemoteValueSceneNumber(unittest.TestCase):
                 GroupAddress('1/2/3'),
                 payload=DPTArray((0x0B, ))))
 
+    @pytest.mark.asyncio
     async def test_process(self):
         """Test process telegram."""
         xknx = XKNX()
@@ -71,6 +72,7 @@ class TestRemoteValueSceneNumber(unittest.TestCase):
         await remote_value.process(telegram)
         self.assertEqual(remote_value.value, 11)
 
+    @pytest.mark.asyncio
     async def test_to_process_error(self):
         """Test process errornous telegram."""
         xknx = XKNX()

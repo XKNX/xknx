@@ -7,8 +7,9 @@ from xknx.dpt import DPTArray, DPTBinary, DPTTemperature, DPTTime
 from xknx.knxip import CEMIFrame, KNXIPFrame, KNXIPServiceType
 from xknx.telegram import GroupAddress, PhysicalAddress, Telegram, TelegramType
 
+from xknx._test import Testcase
 
-class Test_KNXIP(unittest.TestCase):
+class Test_KNXIP(Testcase):
     """Class for KNX/IP RoutingIndication test."""
 
     # pylint: disable=too-many-public-methods,invalid-name

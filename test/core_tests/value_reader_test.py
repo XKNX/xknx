@@ -2,9 +2,7 @@
 import asyncio
 import unittest
 from unittest.mock import patch
-
 import pytest
-pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.core import ValueReader
@@ -12,11 +10,13 @@ from xknx.dpt import DPTBinary
 from xknx.telegram import (
     GroupAddress, Telegram, TelegramDirection, TelegramType)
 
+from xknx._test import Testcase
 
-class TestValueReader(unittest.TestCase):
+class TestValueReader(Testcase):
     """Test class for value reader."""
 
     @patch('xknx.core.ValueReader.timeout')
+    @pytest.mark.asyncio
     async def test_value_reader_read_success(self, timeout_mock):
         """Test value reader: successfull read."""
         xknx = XKNX()
@@ -32,7 +32,7 @@ class TestValueReader(unittest.TestCase):
         # receive the response
         await value_reader.telegram_received(response_telegram)
         # and yield the result
-        successfull_read = await asyncio.gather(read_task)[0]
+        successfull_read = (await asyncio.gather(read_task))[0]
 
         # GroupValueRead telegram is still in the queue because we are not actually processing it
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -53,6 +53,7 @@ class TestValueReader(unittest.TestCase):
                          response_telegram)
 
     @patch('logging.Logger.warning')
+    @pytest.mark.asyncio
     async def test_value_reader_read_timeout(self, logger_warning_mock):
         """Test value reader: read timeout."""
         xknx = XKNX()
@@ -77,6 +78,7 @@ class TestValueReader(unittest.TestCase):
         # Unsuccessfull read() returns None
         self.assertIsNone(timed_out_read)
 
+    @pytest.mark.asyncio
     async def test_value_reader_send_group_read(self):
         """Test value reader: send_group_read."""
         xknx = XKNX()
@@ -89,6 +91,7 @@ class TestValueReader(unittest.TestCase):
                          Telegram(group_address=GroupAddress('0/0/0'),
                                   telegramtype=TelegramType.GROUP_READ))
 
+    @pytest.mark.asyncio
     async def test_value_reader_telegram_received(self):
         """Test value reader: telegram_received."""
         xknx = XKNX()
@@ -112,15 +115,15 @@ class TestValueReader(unittest.TestCase):
 
         value_reader = ValueReader(xknx, test_group_address)
 
-        def async_telegram_received(test_telegram):
+        async def async_telegram_received(test_telegram):
             return await value_reader.telegram_received(test_telegram)
 
-        self.assertFalse(async_telegram_received(telegram_wrong_address))
-        self.assertFalse(async_telegram_received(telegram_wrong_type))
+        self.assertFalse(await async_telegram_received(telegram_wrong_address))
+        self.assertFalse(await async_telegram_received(telegram_wrong_type))
         self.assertIsNone(value_reader.received_telegram)
 
-        self.assertTrue(async_telegram_received(expected_telegram_1))
+        self.assertTrue(await async_telegram_received(expected_telegram_1))
         self.assertEqual(value_reader.received_telegram, expected_telegram_1)
 
-        self.assertTrue(async_telegram_received(expected_telegram_2))
+        self.assertTrue(await async_telegram_received(expected_telegram_2))
         self.assertEqual(value_reader.received_telegram, expected_telegram_2)

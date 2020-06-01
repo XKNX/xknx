@@ -164,14 +164,15 @@ class UDPClient:
             self.xknx, self.local_addr[0], multicast=self.multicast,
             data_received_callback=self.data_received_callback)
 
+        loop = asyncio.get_event_loop()
         if self.multicast:
             sock = UDPClient.create_multicast_sock(self.local_addr[0], self.remote_addr, self.bind_to_multicast_addr)
-            (transport, _) = await self.xknx.loop.create_datagram_endpoint(
+            (transport, _) = await loop.create_datagram_endpoint(
                 lambda: udp_client_factory, sock=sock)
             self.transport = transport
 
         else:
-            (transport, _) = await self.xknx.loop.create_datagram_endpoint(
+            (transport, _) = await loop.create_datagram_endpoint(
                 lambda: udp_client_factory,
                 local_addr=self.local_addr if self.local_addr[0] else None,
                 remote_addr=self.remote_addr)

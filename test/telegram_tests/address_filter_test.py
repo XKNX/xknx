@@ -4,8 +4,9 @@ import unittest
 from xknx.exceptions import ConversionError
 from xknx.telegram import AddressFilter, GroupAddress
 
+from xknx._test import Testcase
 
-class TestAddressFilter(unittest.TestCase):
+class TestAddressFilter(Testcase):
     """Test class for Address."""
 
     # pylint: disable=too-many-public-methods,invalid-name

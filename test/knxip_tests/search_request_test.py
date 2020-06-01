@@ -5,8 +5,9 @@ import unittest
 from xknx import XKNX
 from xknx.knxip import HPAI, KNXIPFrame, KNXIPServiceType, SearchRequest
 
+from xknx._test import Testcase
 
-class Test_KNXIP_Discovery(unittest.TestCase):
+class Test_KNXIP_Discovery(Testcase):
     """Test class for KNX/IP SearchRequest objects."""
 
     # pylint: disable=too-many-public-methods,invalid-name

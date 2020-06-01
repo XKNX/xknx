@@ -4,8 +4,9 @@ import unittest
 from xknx.dpt import DPTArray, DPTBinary, DPTComparator
 from xknx.exceptions import ConversionError
 
+from xknx._test import Testcase
 
-class TestDPT(unittest.TestCase):
+class TestDPT(Testcase):
     """Test class for KNX binary/integer objects."""
 
     # pylint: disable=too-many-public-methods,invalid-name

@@ -7,8 +7,9 @@ from xknx.knxip import (
     DIBSuppSVCFamilies, DIBTypeCode, KNXMedium)
 from xknx.telegram import PhysicalAddress
 
+from xknx._test import Testcase
 
-class Test_KNXIP_DIB(unittest.TestCase):
+class Test_KNXIP_DIB(Testcase):
     """Test class for KNX/IP DIB objects."""
 
     # pylint: disable=too-many-public-methods,invalid-name

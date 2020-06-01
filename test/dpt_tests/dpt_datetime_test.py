@@ -4,8 +4,9 @@ import unittest
 from xknx.dpt import DPTDateTime, DPTWeekday
 from xknx.exceptions import ConversionError
 
+from xknx._test import Testcase
 
-class TestDPTDateTime(unittest.TestCase):
+class TestDPTDateTime(Testcase):
     """Test class for KNX datetime objects."""
 
     #

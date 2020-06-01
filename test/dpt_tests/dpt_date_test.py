@@ -4,8 +4,9 @@ import unittest
 from xknx.dpt import DPTDate
 from xknx.exceptions import ConversionError
 
+from xknx._test import Testcase
 
-class TestDPTDate(unittest.TestCase):
+class TestDPTDate(Testcase):
     """Test class for KNX date objects."""
 
     def test_from_knx(self):

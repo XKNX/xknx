@@ -1,9 +1,7 @@
 """Unit test for RemoteValueSwitch objects."""
 import asyncio
 import unittest
-
 import pytest
-pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
@@ -11,8 +9,9 @@ from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.remote_value import RemoteValueSwitch
 from xknx.telegram import GroupAddress, Telegram
 
+from xknx._test import Testcase
 
-class TestRemoteValueSwitch(unittest.TestCase):
+class TestRemoteValueSwitch(Testcase):
     """Test class for RemoteValueSwitch objects."""
 
     def test_to_knx(self):
@@ -50,6 +49,7 @@ class TestRemoteValueSwitch(unittest.TestCase):
         with self.assertRaises(ConversionError):
             remote_value.to_knx(1)
 
+    @pytest.mark.asyncio
     async def test_set(self):
         """Test setting value."""
         xknx = XKNX()
@@ -73,6 +73,7 @@ class TestRemoteValueSwitch(unittest.TestCase):
                 GroupAddress('1/2/3'),
                 payload=DPTBinary(0)))
 
+    @pytest.mark.asyncio
     async def test_process(self):
         """Test process telegram."""
         xknx = XKNX()
@@ -87,6 +88,7 @@ class TestRemoteValueSwitch(unittest.TestCase):
         self.assertIsNotNone(remote_value.payload)
         self.assertEqual(remote_value.value, True)
 
+    @pytest.mark.asyncio
     async def test_process_off(self):
         """Test process OFF telegram."""
         xknx = XKNX()
@@ -101,6 +103,7 @@ class TestRemoteValueSwitch(unittest.TestCase):
         self.assertIsNotNone(remote_value.payload)
         self.assertEqual(remote_value.value, False)
 
+    @pytest.mark.asyncio
     async def test_to_process_error(self):
         """Test process errornous telegram."""
         xknx = XKNX()

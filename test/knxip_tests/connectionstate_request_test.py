@@ -7,8 +7,9 @@ from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import (
     HPAI, ConnectionStateRequest, KNXIPFrame, KNXIPServiceType)
 
+from xknx._test import Testcase
 
-class Test_KNXIP_ConnStateReq(unittest.TestCase):
+class Test_KNXIP_ConnStateReq(Testcase):
     """Test class for KNX/IP ConnectionStateRequests."""
 
     # pylint: disable=too-many-public-methods,invalid-name

@@ -2,9 +2,7 @@
 import asyncio
 import unittest
 from unittest.mock import patch
-
 import pytest
-pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.io import GatewayScanFilter, GatewayScanner, UDPClient
@@ -14,11 +12,13 @@ from xknx.knxip import (
     KNXIPFrame, KNXIPHeader, KNXIPServiceType, SearchResponse)
 from xknx.telegram import PhysicalAddress
 
+from xknx._test import Testcase
 
-class TestGatewayScanner(unittest.TestCase):
+class TestGatewayScanner(Testcase):
     """Test class for xknx/io/GatewayScanner objects."""
 
-    def setUp(self):
+    @classmethod
+    def setup_method(self):
         """Set up test class."""
         self.gateway_desc_interface = GatewayDescriptor(
             name='KNX-Interface',
@@ -96,6 +96,7 @@ class TestGatewayScanner(unittest.TestCase):
                          str(self.gateway_desc_both))
 
     @patch('xknx.io.gateway_scanner.netifaces', autospec=True)
+    @pytest.mark.asyncio
     async def test_scan_timeout(self, netifaces_mock):
         """Test gateway scanner timeout."""
         # pylint: disable=protected-access
@@ -117,6 +118,7 @@ class TestGatewayScanner(unittest.TestCase):
 
     @patch('xknx.io.gateway_scanner.netifaces', autospec=True)
     @patch('xknx.io.GatewayScanner._search_interface', autospec=True)
+    @pytest.mark.asyncio
     async def test_send_search_requests(self, _search_interface_mock, netifaces_mock):
         """Test finding all valid interfaces to send search requests to. No requests are sent."""
         # pylint: disable=protected-access

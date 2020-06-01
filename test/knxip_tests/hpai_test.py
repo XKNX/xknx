@@ -4,8 +4,9 @@ import unittest
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP
 from xknx.knxip import HPAI
 
+from xknx._test import Testcase
 
-class Test_KNXIP_HPAI(unittest.TestCase):
+class Test_KNXIP_HPAI(Testcase):
     """Test class for KNX/IP HPAI objects."""
 
     # pylint: disable=too-many-public-methods,invalid-name

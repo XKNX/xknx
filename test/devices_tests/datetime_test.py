@@ -3,22 +3,22 @@ import asyncio
 import time
 import unittest
 from unittest.mock import patch
-
 import pytest
-pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.devices import DateTime, DateTimeBroadcastType
 from xknx.dpt import DPTArray
 from xknx.telegram import GroupAddress, Telegram, TelegramType
 
+from xknx._test import Testcase
 
-class TestDateTime(unittest.TestCase):
+class TestDateTime(Testcase):
     """Test class for DateTime object."""
 
     #
     # SYNC DateTime
     #
+    @pytest.mark.asyncio
     async def test_sync_datetime(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
@@ -38,6 +38,7 @@ class TestDateTime(unittest.TestCase):
     #
     # SYNC Date
     #
+    @pytest.mark.asyncio
     async def test_sync_date(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
@@ -56,6 +57,7 @@ class TestDateTime(unittest.TestCase):
     #
     # SYNC Time
     #
+    @pytest.mark.asyncio
     async def test_sync_time(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
@@ -77,6 +79,7 @@ class TestDateTime(unittest.TestCase):
     #
     # TEST PROCESS
     #
+    @pytest.mark.asyncio
     async def test_process_read(self):
         """Test test process a read telegram from KNX bus."""
         xknx = XKNX()

@@ -4,8 +4,9 @@ import unittest
 
 from xknx.devices import TravelCalculator, TravelStatus
 
+from xknx._test import Testcase
 
-class TestTravelCalculator(unittest.TestCase):
+class TestTravelCalculator(Testcase):
     """Test class for TravelCalculator objects."""
 
     # TravelCalculator(25, 50) means:

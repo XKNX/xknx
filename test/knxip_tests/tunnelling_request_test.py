@@ -9,8 +9,9 @@ from xknx.knxip import (
     CEMIFrame, KNXIPFrame, KNXIPServiceType, TunnellingRequest)
 from xknx.telegram import GroupAddress, Telegram
 
+from xknx._test import Testcase
 
-class Test_KNXIP_TunnelingReq(unittest.TestCase):
+class Test_KNXIP_TunnelingReq(Testcase):
     """Test class for KNX/IP TunnellingRequest objects."""
 
     # pylint: disable=too-many-public-methods,invalid-name

@@ -7,8 +7,9 @@ from xknx.knxip import (
     HPAI, DIBDeviceInformation, DIBServiceFamily, DIBSuppSVCFamilies,
     KNXIPFrame, KNXIPServiceType, SearchResponse)
 
+from xknx._test import Testcase
 
-class Test_KNXIP_Discovery(unittest.TestCase):
+class Test_KNXIP_Discovery(Testcase):
     """Test class for KNX/IP SearchResponse objects."""
 
     # pylint: disable=too-many-public-methods,invalid-name

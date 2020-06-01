@@ -4,8 +4,9 @@ import unittest
 from xknx.dpt import DPTUElCurrentmA
 from xknx.exceptions import ConversionError
 
+from xknx._test import Testcase
 
-class TestDPT2byte(unittest.TestCase):
+class TestDPT2byte(Testcase):
     """Test class for KNX 2 byte objects."""
 
     # pylint: disable=too-many-public-methods,invalid-name

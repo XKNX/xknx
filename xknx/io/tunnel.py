@@ -98,7 +98,7 @@ class Tunnel():
                     self.auto_reconnect_wait
                 )
                 self.xknx.logger.warning(msg)
-                task = self.xknx.loop.create_task(self.schedule_reconnect())
+                task = asyncio.create_task(self.schedule_reconnect())
                 self._reconnect_task = task
                 return
             raise XKNXException("Could not establish connection")
@@ -212,7 +212,7 @@ class Tunnel():
 
     async def start_heartbeat(self):
         """Start heartbeat for monitoring state of tunnel, as suggested by 03.08.02 KNX Core 5.4."""
-        self._heartbeat_task = self.xknx.loop.create_task(self.do_heartbeat())
+        self._heartbeat_task = asyncio.create_task(self.do_heartbeat())
 
     async def stop_heartbeat(self):
         """Stop heartbeat task if running."""

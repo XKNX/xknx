@@ -2,17 +2,16 @@
 import asyncio
 import unittest
 from unittest.mock import Mock, patch
-
 import pytest
-pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.devices import BinarySensor, Device, Devices, Light, Switch
 from xknx.telegram import GroupAddress
 
+from xknx._test import Testcase
 
 # pylint: disable=too-many-public-methods,invalid-name
-class TestDevices(unittest.TestCase):
+class TestDevices(Testcase):
     """Test class for devices container within XKNX."""
 
     #
@@ -177,6 +176,7 @@ class TestDevices(unittest.TestCase):
         self.assertTrue('Living-Room.Light_2' in devices)
         self.assertFalse('Living-Room.Light_3' in devices)
 
+    @pytest.mark.asyncio
     async def test_modification_of_device(self):
         """Test if devices object does store references and not copies of objects."""
         xknx = XKNX()
@@ -204,6 +204,7 @@ class TestDevices(unittest.TestCase):
     #
     # TEST SYNC
     #
+    @pytest.mark.asyncio
     async def test_sync(self):
         """Test sync function."""
         xknx = XKNX()
@@ -221,6 +222,7 @@ class TestDevices(unittest.TestCase):
     #
     # TEST CALLBACK
     #
+    @pytest.mark.asyncio
     async def test_device_updated_callback(self):
         """Test if device updated callback is called correctly if device was updated."""
         xknx = XKNX()

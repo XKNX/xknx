@@ -9,8 +9,9 @@ from xknx.dpt import (
     DPTPhaseAngleDeg, DPTPower, DPTTemperature, DPTVoltage)
 from xknx.exceptions import ConversionError
 
+from xknx._test import Testcase
 
-class TestDPTFloat(unittest.TestCase):
+class TestDPTFloat(Testcase):
     """Test class for KNX 2 & 4 byte/octet float object."""
 
     # pylint: disable=too-many-public-methods,invalid-name

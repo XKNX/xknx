@@ -2,17 +2,16 @@
 import asyncio
 import unittest
 from unittest.mock import Mock
-
 import pytest
-pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.devices import ExposeSensor
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.telegram import GroupAddress, Telegram, TelegramType
 
+from xknx._test import Testcase
 
-class TestExposeSensor(unittest.TestCase):
+class TestExposeSensor(Testcase):
     """Test class for Sensor objects."""
 
     #
@@ -60,6 +59,7 @@ class TestExposeSensor(unittest.TestCase):
     #
     # TEST SET
     #
+    @pytest.mark.asyncio
     async def test_set_binary(self):
         """Test set with binary sensor."""
         xknx = XKNX()
@@ -78,6 +78,7 @@ class TestExposeSensor(unittest.TestCase):
                 TelegramType.GROUP_WRITE,
                 payload=DPTBinary(0)))
 
+    @pytest.mark.asyncio
     async def test_set_percent(self):
         """Test set with percent sensor."""
         xknx = XKNX()
@@ -97,6 +98,7 @@ class TestExposeSensor(unittest.TestCase):
                 TelegramType.GROUP_WRITE,
                 payload=DPTArray((0xBF,))))
 
+    @pytest.mark.asyncio
     async def test_set_temperature(self):
         """Test set with temperature sensor."""
         xknx = XKNX()
@@ -118,6 +120,7 @@ class TestExposeSensor(unittest.TestCase):
     #
     # TEST PROCESS (GROUP READ)
     #
+    @pytest.mark.asyncio
     async def test_process_binary(self):
         """Test reading binary expose sensor from bus."""
         xknx = XKNX()
@@ -140,6 +143,7 @@ class TestExposeSensor(unittest.TestCase):
                 TelegramType.GROUP_RESPONSE,
                 payload=DPTArray(True)))
 
+    @pytest.mark.asyncio
     async def test_process_percent(self):
         """Test reading percent expose sensor from bus."""
         xknx = XKNX()
@@ -162,6 +166,7 @@ class TestExposeSensor(unittest.TestCase):
                 TelegramType.GROUP_RESPONSE,
                 payload=DPTArray((0x40, ))))
 
+    @pytest.mark.asyncio
     async def test_process_temperature(self):
         """Test reading temperature expose sensor from bus."""
         xknx = XKNX()
@@ -214,6 +219,7 @@ class TestExposeSensor(unittest.TestCase):
     #
     # PROCESS CALLBACK
     #
+    @pytest.mark.asyncio
     async def test_process_callback(self):
         """Test setting value. Test if callback is called."""
         # pylint: disable=no-self-use

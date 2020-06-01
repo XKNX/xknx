@@ -6,8 +6,9 @@ from unittest.mock import patch
 from xknx.dpt import DPT4ByteSigned, DPT4ByteUnsigned
 from xknx.exceptions import ConversionError
 
+from xknx._test import Testcase
 
-class TestDPT4Byte(unittest.TestCase):
+class TestDPT4Byte(Testcase):
     """Test class for KNX 4 byte objects."""
 
     # pylint: disable=too-many-public-methods,invalid-name

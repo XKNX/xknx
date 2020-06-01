@@ -4,8 +4,9 @@ import unittest
 from xknx.dpt import DPTTariff, DPTValue1Ucount
 from xknx.exceptions import ConversionError
 
+from xknx._test import Testcase
 
-class TestDPTValue1Ucount(unittest.TestCase):
+class TestDPTValue1Ucount(Testcase):
     """Test class for KNX 8-bit unsigned value."""
 
     # pylint: disable=too-many-public-methods,invalid-name
@@ -56,7 +57,7 @@ class TestDPTValue1Ucount(unittest.TestCase):
             DPTValue1Ucount().from_knx(("0x23"))
 
 
-class TestDPTTariff(unittest.TestCase):
+class TestDPTTariff(Testcase):
     """Test class for KNX 8-bit tariff information."""
 
     def test_from_knx_max_exceeded(self):

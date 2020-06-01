@@ -3,17 +3,16 @@
 import asyncio
 import unittest
 from unittest.mock import patch
-
 import pytest
-pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.devices import Scene
 from xknx.dpt import DPTArray
 from xknx.telegram import GroupAddress, Telegram
 
+from xknx._test import Testcase
 
-class TestScene(unittest.TestCase):
+class TestScene(Testcase):
     """Test class for Scene objects."""
 
     # pylint: disable=too-many-public-methods,invalid-name
@@ -21,6 +20,7 @@ class TestScene(unittest.TestCase):
     #
     # SYNC
     #
+    @pytest.mark.asyncio
     async def test_sync(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
@@ -35,6 +35,7 @@ class TestScene(unittest.TestCase):
     #
     # TEST RUN SCENE
     #
+    @pytest.mark.asyncio
     async def test_run(self):
         """Test running scene."""
         xknx = XKNX()
@@ -49,6 +50,7 @@ class TestScene(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/1'), payload=DPTArray(0x16)))
 
+    @pytest.mark.asyncio
     async def test_do(self):
         """Test running scene with do command."""
         xknx = XKNX()
@@ -63,6 +65,7 @@ class TestScene(unittest.TestCase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/1'), payload=DPTArray(0x16)))
 
+    @pytest.mark.asyncio
     async def test_wrong_do(self):
         """Test wrong do command."""
         xknx = XKNX()

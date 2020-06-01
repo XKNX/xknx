@@ -4,8 +4,9 @@ import unittest
 from xknx.dpt import DPTControllerStatus, DPTHVACMode, HVACOperationMode
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP
 
+from xknx._test import Testcase
 
-class TestDPTControllerStatus(unittest.TestCase):
+class TestDPTControllerStatus(Testcase):
     """Test class for KNX DPT HVAC Operation modes."""
 
     # pylint: disable=too-many-public-methods,invalid-name

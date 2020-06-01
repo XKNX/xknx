@@ -2,16 +2,15 @@
 import asyncio
 import unittest
 from unittest.mock import Mock, patch
-
 import pytest
-pytestmark = pytest.mark.asyncio
 
 from xknx import XKNX
 from xknx.devices import (
     Action, ActionBase, ActionCallback, BinarySensorState, Light)
 
+from xknx._test import Testcase
 
-class TestAction(unittest.TestCase):
+class TestAction(Testcase):
     """Class for testing Action objects."""
 
     #
@@ -63,6 +62,7 @@ class TestAction(unittest.TestCase):
     #
     # TEST EXECUTE
     #
+    @pytest.mark.asyncio
     async def test_execute_base_action(self):
         """Test if execute method of BaseAction shows correct info message."""
         xknx = XKNX()
@@ -71,6 +71,7 @@ class TestAction(unittest.TestCase):
             await action.execute()
             mock_info.assert_called_with('Execute not implemented for %s', 'ActionBase')
 
+    @pytest.mark.asyncio
     async def test_execute_action(self):
         """Test if execute method of Action calls correct do method of device."""
         xknx = XKNX()
@@ -87,6 +88,7 @@ class TestAction(unittest.TestCase):
             await action.execute()
             mock_do.assert_called_with('on')
 
+    @pytest.mark.asyncio
     async def test_execute_action_callback(self):
         """Test if execute method of ActionCallback calls correct callback method."""
         xknx = XKNX()
@@ -100,6 +102,7 @@ class TestAction(unittest.TestCase):
         await action.execute()
         callback.assert_called_with()
 
+    @pytest.mark.asyncio
     async def test_execute_unknown_device(self):
         """Test if execute method of Action calls correct do method of device."""
         xknx = XKNX()

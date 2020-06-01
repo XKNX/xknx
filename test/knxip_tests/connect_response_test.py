@@ -8,8 +8,9 @@ from xknx.knxip import (
     HPAI, ConnectRequestType, ConnectResponse, ErrorCode, KNXIPFrame,
     KNXIPServiceType)
 
+from xknx._test import Testcase
 
-class Test_KNXIP_ConnectResponse(unittest.TestCase):
+class Test_KNXIP_ConnectResponse(Testcase):
     """Test class for KNX/IP ConnectResponses."""
 
     # pylint: disable=too-many-public-methods,invalid-name

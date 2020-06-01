@@ -10,6 +10,7 @@ from xknx.knxip.cemi_frame import CEMIFrame
 from xknx.knxip.knxip_enum import APCICommand, CEMIMessageCode
 from xknx.telegram import PhysicalAddress
 
+from xknx._test import Testcase
 
 def get_data(code, adil, flags, src, dst, mpdu_len, tpci_apci, payload):
     return [

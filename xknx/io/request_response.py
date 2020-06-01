@@ -73,7 +73,8 @@ class RequestResponse():
 
     async def start_timeout(self):
         """Start timeout."""
-        self.timeout_handle = self.xknx.loop.call_later(
+        loop = asyncio.get_event_loop()
+        self.timeout_handle = loop.call_later(
             self.timeout_in_seconds, self.timeout)
 
     async def stop_timeout(self):
