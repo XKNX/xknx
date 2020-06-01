@@ -1840,6 +1840,7 @@ class TestSensor(Testcase):
     #
     # SYNC
     #
+    @pytest.mark.asyncio
     async def test_sync(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
@@ -1857,6 +1858,7 @@ class TestSensor(Testcase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
 
+    @pytest.mark.asyncio
     async def test_sync_passive(self):
         """Test sync function / not sending group reads to KNX bus."""
         xknx = XKNX()
@@ -1915,6 +1917,7 @@ class TestSensor(Testcase):
     #
     # TEST PROCESS
     #
+    @pytest.mark.asyncio
     async def test_process(self):
         """Test process / reading telegrams from telegram queue."""
         xknx = XKNX()
@@ -1930,6 +1933,7 @@ class TestSensor(Testcase):
         self.assertEqual(sensor.sensor_value.payload, DPTArray((0x06, 0xa0)))
         self.assertEqual(sensor.resolve_state(), 16.96)
 
+    @pytest.mark.asyncio
     async def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
         # pylint: disable=no-self-use
