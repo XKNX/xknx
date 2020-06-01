@@ -20,6 +20,8 @@ REQUIRES = [
 setup(
     name='xknx',
     description='An Asynchronous Library for the KNX protocol. Documentation: https://xknx.io/',
+    setup_requires=["pytest-runner"],
+    tests_require=['pytest'],
     version=VERSION['__version__'],
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
