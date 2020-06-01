@@ -60,7 +60,7 @@ class XKNX:
     async def run(self, state_updater=False, connection_config=None):
         try:
             await self.start(state_updater=state_updater,
-                    connection_config=connection_config)
+                             connection_config=connection_config)
             yield self
         finally:
             await self.stop()
