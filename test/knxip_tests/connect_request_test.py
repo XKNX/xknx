@@ -1,6 +1,5 @@
 """Unit test for KNX/IP ConnectRequests."""
 import asyncio
-import unittest
 
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP

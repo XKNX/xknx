@@ -1,6 +1,5 @@
 """Unit test for Sensor and ExposeSensor objects."""
 import asyncio
-import unittest
 import pytest
 
 from xknx import XKNX

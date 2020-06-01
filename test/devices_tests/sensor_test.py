@@ -1,6 +1,5 @@
 """Unit test for Sensor objects."""
 import asyncio
-import unittest
 from unittest.mock import Mock
 import pytest
 

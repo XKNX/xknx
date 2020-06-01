@@ -1,7 +1,6 @@
 """Unit test for BinarySensor objects."""
 import anyio
 import asyncio
-import unittest
 from unittest.mock import Mock, patch
 import pytest
 

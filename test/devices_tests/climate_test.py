@@ -1,6 +1,5 @@
 """Unit test for Climate objects."""
 import asyncio
-import unittest
 from unittest.mock import Mock
 import pytest
 

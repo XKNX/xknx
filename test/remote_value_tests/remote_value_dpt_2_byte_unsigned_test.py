@@ -1,6 +1,5 @@
 """Unit test for RemoteValueDpt2ByteUnsigned objects."""
 import asyncio
-import unittest
 import pytest
 
 from xknx import XKNX

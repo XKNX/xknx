@@ -1,6 +1,5 @@
 """Unit test for KNX 4 byte objects."""
 import struct
-import unittest
 from unittest.mock import patch
 
 from xknx.dpt import DPT4ByteSigned, DPT4ByteUnsigned

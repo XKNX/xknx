@@ -1,5 +1,4 @@
 """Unit test for Address class."""
-import unittest
 
 from xknx.exceptions import ConversionError
 from xknx.telegram import AddressFilter, GroupAddress

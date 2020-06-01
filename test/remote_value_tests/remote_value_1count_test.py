@@ -1,6 +1,5 @@
 """Unit test for RemoteValue1Count objects."""
 import asyncio
-import unittest
 import pytest
 
 from xknx import XKNX

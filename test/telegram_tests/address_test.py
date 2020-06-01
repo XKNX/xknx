@@ -1,12 +1,11 @@
 """Unit test for Address class."""
-from unittest import TestCase
 
 from xknx.exceptions import CouldNotParseAddress
 from xknx.telegram import GroupAddress, GroupAddressType, PhysicalAddress
 
 from xknx._test import Testcase
 
-class TestPhysicalAddress(TestCase):
+class TestPhysicalAddress(Testcase):
     """Test class for PhysicalAddress."""
 
     def test_with_valid(self):
@@ -92,7 +91,7 @@ class TestPhysicalAddress(TestCase):
             'PhysicalAddress("2.3.4")')
 
 
-class TestGroupAddress(TestCase):
+class TestGroupAddress(Testcase):
     """Test class for GroupAddress."""
 
     def test_with_valid(self):

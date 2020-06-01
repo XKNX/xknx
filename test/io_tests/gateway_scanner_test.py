@@ -1,7 +1,6 @@
 """Unit test for KNX/IP gateway scanner."""
 import asyncio
-import unittest
-from unittest.mock import patch
+from unittest.mock import patch, create_autospec
 import pytest
 
 from xknx import XKNX
@@ -86,7 +85,7 @@ class TestGatewayScanner(Testcase):
         xknx = XKNX()
         gateway_scanner = GatewayScanner(xknx)
         test_search_response = fake_router_search_response(xknx)
-        udp_client_mock = unittest.mock.create_autospec(UDPClient)
+        udp_client_mock = create_autospec(UDPClient)
         udp_client_mock.local_addr = ("192.168.42.50", 0, "en1")
         udp_client_mock.getsockname.return_value = ("192.168.42.50", 0)
 

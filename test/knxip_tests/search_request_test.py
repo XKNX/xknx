@@ -1,6 +1,5 @@
 """Unit test for KNX/IP SearchRequest objects."""
 import asyncio
-import unittest
 
 from xknx import XKNX
 from xknx.knxip import HPAI, KNXIPFrame, KNXIPServiceType, SearchRequest

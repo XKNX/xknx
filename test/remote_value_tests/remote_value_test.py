@@ -1,6 +1,5 @@
 """Unit test for RemoveValue objects."""
 import asyncio
-import unittest
 from unittest.mock import patch
 import pytest
 

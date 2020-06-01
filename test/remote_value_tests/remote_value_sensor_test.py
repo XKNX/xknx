@@ -1,6 +1,5 @@
 """Unit test for RemoteValueSensor objects."""
 import asyncio
-import unittest
 
 from xknx import XKNX
 from xknx.exceptions import ConversionError

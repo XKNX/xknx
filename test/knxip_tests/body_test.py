@@ -1,6 +1,5 @@
 """Unit test for KNX/IP ConnectionStateRequests."""
 import asyncio
-import unittest
 from unittest.mock import patch
 
 from xknx import XKNX

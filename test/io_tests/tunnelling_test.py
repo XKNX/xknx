@@ -1,6 +1,5 @@
 """Unit test for KNX/IP Tunnelling Request/Response."""
 import asyncio
-import unittest
 from unittest.mock import patch
 import pytest
 

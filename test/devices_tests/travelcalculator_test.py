@@ -1,6 +1,5 @@
 """Unit test for TravelCalculator objects."""
 import time
-import unittest
 
 from xknx.devices import TravelCalculator, TravelStatus
 

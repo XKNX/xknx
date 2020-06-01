@@ -1,6 +1,5 @@
 """Unit test for KNX/IP RountingIndication objects."""
 import asyncio
-import unittest
 
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary, DPTTemperature, DPTTime

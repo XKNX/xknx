@@ -1,6 +1,5 @@
 """Unit test for RemoteValueScaling objects."""
 import asyncio
-import unittest
 
 from xknx import XKNX
 from xknx.remote_value import RemoteValueScaling

@@ -1,6 +1,5 @@
 """Unit test for KNX/IP base class."""
 import asyncio
-import unittest
 
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP

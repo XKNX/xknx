@@ -1,7 +1,6 @@
 """Unit test for Cover objects."""
 
 import asyncio
-import unittest
 from unittest.mock import Mock, patch
 import pytest
 

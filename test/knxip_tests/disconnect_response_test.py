@@ -1,6 +1,5 @@
 """Unit test for KNX/IP DisconnectResponse objects."""
 import asyncio
-import unittest
 
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP

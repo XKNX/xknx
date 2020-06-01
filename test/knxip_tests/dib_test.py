@@ -1,5 +1,4 @@
 """Unit test for KNX/IP DIB objects."""
-import unittest
 
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import (

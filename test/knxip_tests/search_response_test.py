@@ -1,6 +1,5 @@
 """Unit test for KNX/IP SearchResponse objects."""
 import asyncio
-import unittest
 
 from xknx import XKNX
 from xknx.knxip import (

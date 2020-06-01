@@ -1,5 +1,4 @@
 """Unit test for KNX string object."""
-import unittest
 
 from xknx.dpt import DPTString
 from xknx.exceptions import ConversionError

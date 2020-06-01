@@ -1,6 +1,5 @@
 """Unit test for value reader."""
 import asyncio
-import unittest
 from unittest.mock import patch
 import pytest
 

@@ -1,6 +1,4 @@
 """Unit test for Configuration logic."""
-import asyncio
-import unittest
 from unittest.mock import patch
 
 from xknx import XKNX

@@ -1,5 +1,4 @@
 """Unit test for KNX DPT 5.001 and 5.003 value."""
-import unittest
 
 from xknx.dpt import DPTAngle, DPTScaling
 from xknx.exceptions import ConversionError

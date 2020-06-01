@@ -1,6 +1,5 @@
 """Unit test for telegram received callback."""
 import asyncio
-import unittest
 from unittest.mock import Mock, patch
 import pytest
 

@@ -1,6 +1,5 @@
 """Unit test for KNX/IP Disconnect Request/Response."""
 import asyncio
-import unittest
 import pytest
 
 from xknx import XKNX

@@ -1,5 +1,4 @@
 """Unit test for Telegram objects."""
-import unittest
 
 from xknx.telegram import (
     GroupAddress, Telegram, TelegramDirection, TelegramType)

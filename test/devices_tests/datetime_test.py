@@ -1,7 +1,6 @@
 """Unit test for DateTime object."""
 import asyncio
 import time
-import unittest
 from unittest.mock import patch
 import pytest
 
