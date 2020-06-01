@@ -15,13 +15,10 @@ import asyncio
 from xknx import XKNX
 
 async def main():
-    xknx = XKNX()
-    await xknx.start()
+    async with XKNX().run() as xknx:
 
-    # USING THE XKNX OBJECT, e.g. for 
-    # controlling lights, dimmers, shutters
-
-    await xknx.stop()
+        # USING THE XKNX OBJECT, e.g. for 
+        # controlling lights, dimmers, shutters
 
 asyncio.run(main())
 ```
@@ -36,10 +33,13 @@ async def main():
  
 
 ```python
-    xknx = XKNX()
+    async with XKNX().run() as xknx:
+        pass
 ```
 
-Initialization of XKNX object. Constructor may take several arguments like a reference to the asyncio-loop or various callbacks for device updates or telegram received. See [XKNX object documentation](/xknx) for details.
+Initialization of XKNX object. The constructor may take several arguments like various callbacks for device updates or telegram received. See [XKNX object documentation](/xknx) for details.
+
+For Python beginners: this construct is called an "asynchronous context manager". Within its scope (the indented code below it), "xknx" is your active connection. It is automatically stopped in a controlled manner when your code leaves the "async with" block, which is important as most devices have a limited amount of channels. 
 
 ````python
     await xknx.start()
@@ -47,11 +47,15 @@ Initialization of XKNX object. Constructor may take several arguments like a ref
 
 Asynchronous start of the XKNX object. `xknx.start()` will connect to a KNX/IP device and either build a tunnel or connect through Mulitcast UDP.
 
+This is a legacy method. Consider using an async context manager instead.
+
 ```python
     await xknx.stop()
 ```
 
 Asynchronous stop of the XKNX object. `xknx.stop()` will disconnect from Tunnels - which is important bc most of the devices have a limited amount of channels. 
+
+This is a legacy method. Consider using an async context manager instead.
 
 ```
 asyncio.run(main())

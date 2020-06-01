@@ -40,16 +40,38 @@ The constructor of the XKNX object takes several parameters:
 # [](#header-2)Starting
 
 ```python
+async with xknx.run(state_updater=False,
+                 connection_config=None):
+    pass
+```
+
+This is the context manager that controls XKNX's main loop. It will search for KNX/IP devices in the network and either build a KNX/IP-Tunnel or open a mulitcast KNX/IP-Routing connection. `start()` takes the following parameters
+* if `state_updater` is set, XKNX will start an asynchronous process for syncing the states of all connected devices every hour
+* `connection_config` replaces a ConnectionConfig() that was read from a yaml config file.
+
+```python
 await xknx.start(state_updater=False,
                  daemon_mode=False,
                  connection_config=None)
 ```
 
-`xknx.start()` will search for KNX/IP devices in the network and either build a KNX/IP-Tunnel or open a mulitcast KNX/IP-Routing connection. `start()` will take the following paramters
+`xknx.start()` will search for KNX/IP devices in the network and either build a KNX/IP-Tunnel or open a mulitcast KNX/IP-Routing connection. `start()` takes the following parameters
 
 * if `state_updater` is set, XKNX will start an asynchronous process for syncing the states of all connected devices every hour
-* if `daemon_mode` is set, start will only stop if Control-X is pressed. This function is useful for using XKNX as a daemon, e.g. for using the callback functions or using the internal action logic.
+* if `daemon_mode` is set, start will only stop if Control-C is pressed. This function is useful for using XKNX as a daemon, e.g. for using the callback functions or using the internal action logic.
 * `connection_config` replaces a ConnectionConfig() that was read from a yaml config file.
+
+`xknx.start()` is a legacy method. Consider using an async context manager
+using `xknx.run()` instead.
+
+Using `xknx.run()`, the equivalent of `daemon_mode` is achieved with a
+body that does nothing:
+
+```python
+async with xknx.run():  # only interested in side effects
+    while True:
+        await asyncio.sleep(99999)
+```
 
 # [](#header-2)Stopping
 
@@ -58,6 +80,10 @@ await xknx.stop()
 ```
 
 Will disconnect from tunneling devices and stop the different queues.
+
+This is a legacy method. Consider using `async with xknx.run():` which will
+call `stop` for you when your code leaves its body, even if your code is
+interrupted with ^C or terminates due to an exception.
 
 # [](#header-2)Devices
 
