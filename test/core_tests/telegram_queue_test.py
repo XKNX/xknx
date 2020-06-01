@@ -10,7 +10,7 @@ from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import (
     AddressFilter, GroupAddress, Telegram, TelegramDirection)
 
-from xknx._test import Testcase
+from xknx._test import Testcase, CoroMock
 
 class TestTelegramQueue(Testcase):
     """Test class for telegram queue."""
@@ -214,17 +214,17 @@ class TestTelegramQueue(Testcase):
         if_mock.send_telegram.assert_called_once_with(telegram)
 
     @patch('logging.Logger.error')
-    @patch('xknx.core.TelegramQueue.process_telegram_incoming')
+    @patch('xknx.core.TelegramQueue.process_telegram_incoming',
+            new_callable=CoroMock)
     @pytest.mark.asyncio
-    @pytest.mark.xfail
     async def test_process_exception(self, process_tg_in_mock, logging_error_mock):
         """Test process_telegram exception handling."""
         # pylint: disable=no-self-use
         xknx = XKNX()
 
-        async def process_exception():
+        def process_exception(x):
             raise CouldNotParseTelegram("Something went wrong when receiving the telegram.")
-        process_tg_in_mock.return_value = asyncio.ensure_future(process_exception())
+        process_tg_in_mock.side_effect = process_exception
 
         telegram = Telegram(
             direction=TelegramDirection.INCOMING,
