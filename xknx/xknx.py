@@ -157,4 +157,5 @@ class XKNX:
         async with anyio.receive_signals(signal.SIGINT) as sig:
             async for _ in sig:
                 await self.stop(wait=False)
+                self.logger.warning('Terminating.')
                 break
