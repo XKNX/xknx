@@ -65,12 +65,11 @@ await xknx.start(state_updater=False,
 using `xknx.run()` instead.
 
 Using `xknx.run()`, the equivalent of `daemon_mode` is achieved with a
-body that does nothing:
+body that does nothing (or waits for an interrupt):
 
 ```python
 async with xknx.run():  # only interested in side effects
-    while True:
-        await asyncio.sleep(99999)
+    xknx.loop_until_sigint()
 ```
 
 # [](#header-2)Stopping

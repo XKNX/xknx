@@ -30,7 +30,7 @@ groups:
 
 ## [](#header-2)Daemon mode
 
-When XKNX is started with START_STATE_UPDATER enabled, XKNX will automatically send the time to the KNX bus with the `sync_state`-loop. If your main code doesn't need to do anything else, it should simply sleep.
+When XKNX is started with START_STATE_UPDATER enabled, XKNX will automatically send the time to the KNX bus with the `sync_state`-loop. If your main code doesn't need to do anything else, it should simply wait for an interrupt.
 
 ```python
 import asyncio
@@ -42,8 +42,7 @@ async def main():
         time = DateTime(xknx, 'TimeTest', group_address='1/2/3')
         xknx.devices.add(time)
         print("Sending time to KNX bus every hour")
-        while True:
-            await asyncio.sleep(99999)
+        await xknx.loop_until_sigint()
 
 # pylint: disable=invalid-name
 asyncio.run(main())
