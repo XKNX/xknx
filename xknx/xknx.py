@@ -123,6 +123,23 @@ class XKNX:
 
         self.started = True
 
+    async def spawn(self, p,*a,**k):
+        """Start a task.
+
+        Returns a cancel scope.
+        """
+        scope = None
+        async def _spawn(evt,p,a,k):
+            nonlocal scope
+            async with anyio.open_cancel_scope() as scope:
+                await evt.set()
+                await p(*a,**k)
+
+        evt = anyio.create_event()
+        await self.task_group.spawn(_spawn,evt,p,a,k)
+        await evt.wait()
+        return scope
+
     async def join(self):
         """Wait until all telegrams are processed."""
         while self.telegrams.qsize():
