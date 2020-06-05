@@ -138,15 +138,16 @@ class XKNX:
             await self.knxip_interface.stop()
             self.knxip_interface = None
 
-    async def stop(self):
+    async def stop(self, wait=True):
         """Stop XKNX module."""
         if self._stop_flag is not None:
             self._stop_flag.set()
         if self._main_task is not None:
             self._main_task.cancel()
         if self.task_group is not None:
-            self.task_group.cancel_scope.cancel()
-        await self._stopped.wait()
+            await self.task_group.cancel_scope.cancel()
+        if wait:
+            await self._stopped.wait()
 
     async def _stop(self):
         if self.state_updater:
@@ -158,13 +159,8 @@ class XKNX:
 
     async def loop_until_sigint(self):
         """Loop until Crtl-C was pressed."""
-        def sigint_handler():
-            """End loop."""
-            self.sigint_received.set()
-        if platform == "win32":
-            self.logger.warning('Windows does not support signals')
-        else:
-            loop = asyncio.get_event_loop()
-            loop.add_signal_handler(signal.SIGINT, sigint_handler)
         self.logger.warning('Press Ctrl+C to stop')
-        await self.sigint_received.wait()
+        async with anyio.receive_signals(signal.SIGINT) as sig:
+            async for _ in sig:
+                await self.stop(wait=False)
+                break
