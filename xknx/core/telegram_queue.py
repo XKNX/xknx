@@ -7,6 +7,7 @@ The underlaying KNXIPInterface will poll the queue and send the packets to the c
 
 You may register callbacks to be notified if a telegram was pushed to the queue.
 """
+import anyio
 import asyncio
 from contextlib import asynccontextmanager
 
@@ -53,34 +54,43 @@ class TelegramQueue():
         self.telegram_received_cbs.remove(telegram_received_cb)
 
     @asynccontextmanager
-    async def run(self):
-        """Async context manager to manage the telegram queue."""
-        try:
-            await self.start()
-            yield self
-        finally:
-            await self.stop()
+    async def run_test(self):
+        """Async context manager to manage the telegram queue.
+
+        XKNX only uses this method for testing.
+        """
+        if self.xknx.task_group is not None:
+            raise RuntimeError("This function is only used for testing.")
+        async with anyio.create_task_group() as tg:
+            self.xknx.task_group = tg
+            try:
+                await self.start()
+                yield self
+            finally:
+                self.xknx.task_group = None
+                await self.stop()
 
     async def start(self):
         """Start telegram queue."""
-        asyncio.create_task(self._run())
+        await self.xknx.task_group.spawn(self._run)
 
     async def _run(self):
         """Endless loop for processing telegrams."""
-        while True:
-            telegram = await self.xknx.telegrams.get()
+        try:
+            while True:
+                telegram = await self.xknx.telegrams.get()
 
-            # Breaking up queue if None is pushed to the queue
-            if telegram is None:
-                break
+                # Breaking up queue if None is pushed to the queue
+                if telegram is None:
+                    break
 
-            await self.process_telegram(telegram)
+                await self.process_telegram(telegram)
 
-            if telegram.direction == TelegramDirection.OUTGOING:
-                # limit rate to knx bus - defaults to 20 per second
-                await asyncio.sleep(1 / self.xknx.rate_limit)
-
-        self.queue_stopped.set()
+                if telegram.direction == TelegramDirection.OUTGOING:
+                    # limit rate to knx bus - defaults to 20 per second
+                    await asyncio.sleep(1 / self.xknx.rate_limit)
+        finally:
+            self.queue_stopped.set()
 
     async def stop(self):
         """Stop telegram queue."""

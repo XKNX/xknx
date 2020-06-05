@@ -28,19 +28,16 @@ class TestTelegramQueue(Testcase):
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
 
-        await xknx.telegram_queue.start()
-
-        self.assertFalse(xknx.telegram_queue.queue_stopped.is_set())
-        # queue shall now consume telegrams from xknx.telegrams
-        self.assertEqual(xknx.telegrams.qsize(), 0)
-        await xknx.telegrams.put(telegram_in)
-        await xknx.telegrams.put(telegram_in)
-        self.assertEqual(xknx.telegrams.qsize(), 2)
-        # wait until telegrams are consumed
-        while xknx.telegrams.qsize():
-            await asyncio.sleep(0.01)
-        # stop run() task with stop()
-        await xknx.telegram_queue.stop()
+        async with xknx.telegram_queue.run_test():
+            self.assertFalse(xknx.telegram_queue.queue_stopped.is_set())
+            # queue shall now consume telegrams from xknx.telegrams
+            self.assertEqual(xknx.telegrams.qsize(), 0)
+            await xknx.telegrams.put(telegram_in)
+            await xknx.telegrams.put(telegram_in)
+            self.assertEqual(xknx.telegrams.qsize(), 2)
+            # wait until telegrams are consumed
+            while xknx.telegrams.qsize():
+                await asyncio.sleep(0.01)
         self.assertTrue(xknx.telegram_queue.queue_stopped.is_set())
 
     @pytest.mark.skip
@@ -67,23 +64,21 @@ class TestTelegramQueue(Testcase):
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
 
-        await xknx.telegram_queue.start()
+        async with xknx.telegram_queue.run_test():
 
-        # no sleep for incoming telegrams
-        await xknx.telegrams.put(telegram_in)
-        await xknx.telegrams.put(telegram_in)
-        while xknx.telegrams.qsize():
-            await asyncio.sleep(0.01)
-        self.assertEqual(async_sleep_mock.call_count, 0)
-        # sleep for outgoing telegrams
-        await xknx.telegrams.put(telegram_out)
-        await xknx.telegrams.put(telegram_out)
-        while xknx.telegrams.qsize():
-            await asyncio.sleep(0.01)
-        self.assertEqual(async_sleep_mock.call_count, 2)
-        async_sleep_mock.assert_called_with(sleep_time)
-
-        await xknx.telegram_queue.stop()
+            # no sleep for incoming telegrams
+            await xknx.telegrams.put(telegram_in)
+            await xknx.telegrams.put(telegram_in)
+            while xknx.telegrams.qsize():
+                await asyncio.sleep(0.01)
+            self.assertEqual(async_sleep_mock.call_count, 0)
+            # sleep for outgoing telegrams
+            await xknx.telegrams.put(telegram_out)
+            await xknx.telegrams.put(telegram_out)
+            while xknx.telegrams.qsize():
+                await asyncio.sleep(0.01)
+            self.assertEqual(async_sleep_mock.call_count, 2)
+            async_sleep_mock.assert_called_with(sleep_time)
 
     #
     # TEST REGISTER
