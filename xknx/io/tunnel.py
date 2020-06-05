@@ -56,36 +56,27 @@ class Tunnel():
         self.udp_client.register_callback(
             self.tunnel_reqest_received, [TunnellingRequest.service_type])
 
-    def tunnel_reqest_received(self, knxipframe, udp_client):
+    async def tunnel_reqest_received(self, knxipframe, udp_client):
         """Handle incoming tunnel request."""
         # pylint: disable=unused-argument
         if knxipframe.header.service_type_ident != \
                 KNXIPServiceType.TUNNELLING_REQUEST:
             self.xknx.logger.warning("Service not implemented: %s", knxipframe)
         else:
-            self.send_ack(knxipframe.body.communication_channel_id, knxipframe.body.sequence_counter)
+            await self.send_ack(knxipframe.body.communication_channel_id, knxipframe.body.sequence_counter)
             telegram = knxipframe.body.cemi.telegram
             telegram.direction = TelegramDirection.INCOMING
             if self.telegram_received_callback is not None:
                 self.telegram_received_callback(telegram)
 
-    def send_ack(self, communication_channel_id, sequence_counter):
+    async def send_ack(self, communication_channel_id, sequence_counter):
         """Send tunnelling ACK after tunnelling request received."""
         ack_knxipframe = KNXIPFrame(self.xknx)
         ack_knxipframe.init(KNXIPServiceType.TUNNELLING_ACK)
         ack_knxipframe.body.communication_channel_id = communication_channel_id
         ack_knxipframe.body.sequence_counter = sequence_counter
         ack_knxipframe.normalize()
-        self.udp_client.send(ack_knxipframe)
-
-    @asynccontextmanager
-    async def run(self):
-        """Async context manager for the tunneling subtask."""
-        try:
-            await self.start()
-            yield self
-        finally:
-            await self.stop()
+        await self.udp_client.send(ack_knxipframe)
 
     async def start(self):
         """Start tunneling."""

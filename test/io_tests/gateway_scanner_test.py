@@ -91,7 +91,7 @@ class TestGatewayScanner(Testcase):
         udp_client_mock.getsockname.return_value = ("192.168.42.50", 0)
 
         self.assertEqual(gateway_scanner.found_gateways, [])
-        gateway_scanner._response_rec_callback(test_search_response, udp_client_mock)
+        await gateway_scanner._response_rec_callback(test_search_response, udp_client_mock)
         self.assertEqual(str(gateway_scanner.found_gateways[0]),
                          str(self.gateway_desc_both))
 

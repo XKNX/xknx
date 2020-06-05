@@ -72,8 +72,9 @@ class XKNX:
                 yield self
                 await tg.cancel_scope.cancel()
             finally:
-                await self._stop()
-                await self._stopped.set()
+                async with anyio.move_on_after(2,shield=True):
+                    await self._stop()
+                    await self._stopped.set()
 
     async def start(self,
                     state_updater=False,

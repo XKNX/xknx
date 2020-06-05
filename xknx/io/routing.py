@@ -31,7 +31,7 @@ class Routing():
             self.response_rec_callback,
             [KNXIPServiceType.ROUTING_INDICATION])
 
-    def response_rec_callback(self, knxipframe, _):
+    async def response_rec_callback(self, knxipframe, _):
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if knxipframe.body.src_addr == self.xknx.own_address:
             self.xknx.logger.debug("Ignoring own packet")
@@ -61,7 +61,7 @@ class Routing():
 
     async def send_knxipframe(self, knxipframe):
         """Send KNXIPFrame to connected routing device."""
-        self.udpclient.send(knxipframe)
+        await self.udpclient.send(knxipframe)
 
     @asynccontextmanager
     async def run(self):

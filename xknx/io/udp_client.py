@@ -4,6 +4,7 @@ UDPClient is an abstraction for handling the complete UDP io.
 The module is build upon asyncio udp functions.
 Due to lame support of UDP multicast within asyncio some special treatment for multicast is necessary.
 """
+import anyio
 import asyncio
 import socket
 from sys import platform
@@ -31,40 +32,6 @@ class UDPClient:
                 len(self.service_types) == 0 or \
                 service_type in self.service_types
 
-    class UDPClientFactory(asyncio.DatagramProtocol):
-        """Abstraction for managing the asyncio-udp transports."""
-
-        def __init__(self,
-                     xknx,
-                     own_ip,
-                     multicast=False,
-                     data_received_callback=None):
-            """Initialize UDPClientFactory class."""
-            self.xknx = xknx
-            self.own_ip = own_ip
-            self.multicast = multicast
-            self.transport = None
-            self.data_received_callback = data_received_callback
-
-        def connection_made(self, transport):
-            """Assign transport. Callback after udp connection was made."""
-            self.transport = transport
-
-        def datagram_received(self, data, addr):
-            """Call assigned callback. Callback for datagram received."""
-            if self.data_received_callback is not None:
-                self.data_received_callback(data)
-
-        def error_received(self, exc):
-            """Handle errors. Callback for error received."""
-            if hasattr(self, 'xknx'):
-                self.xknx.logger.warning('Error received: %s', exc)
-
-        def connection_lost(self, exc):
-            """Log error. Callback for connection lost."""
-            if hasattr(self, 'xknx'):
-                self.xknx.logger.info('closing transport %s', exc)
-
     def __init__(self, xknx, local_addr, remote_addr, multicast=False, bind_to_multicast_addr=False):
         """Initialize UDPClient class."""
         # pylint: disable=too-many-arguments
@@ -77,26 +44,26 @@ class UDPClient:
         self.remote_addr = remote_addr
         self.multicast = multicast
         self.bind_to_multicast_addr = bind_to_multicast_addr
-        self.transport = None
+        self.socket = None
         self.callbacks = []
 
-    def data_received_callback(self, raw):
+    async def data_received_callback(self, raw):
         """Parse and process KNXIP frame. Callback for having received an UDP packet."""
         if raw:
             try:
                 knxipframe = KNXIPFrame(self.xknx)
                 knxipframe.from_knx(raw)
                 self.xknx.knx_logger.debug("Received: %s", knxipframe)
-                self.handle_knxipframe(knxipframe)
+                await self.handle_knxipframe(knxipframe)
             except CouldNotParseKNXIP as couldnotparseknxip:
                 self.xknx.logger.exception(couldnotparseknxip)
 
-    def handle_knxipframe(self, knxipframe):
+    async def handle_knxipframe(self, knxipframe):
         """Handle KNXIP Frame and call all callbacks which watch for the service type ident."""
         handled = False
         for callback in self.callbacks:
             if callback.has_service(knxipframe.header.service_type_ident):
-                callback.callback(knxipframe, self)
+                await callback.callback(knxipframe, self)
                 handled = True
         if not handled:
             self.xknx.logger.debug("UNHANDLED: %s", knxipframe.header.service_type_ident)
@@ -115,9 +82,9 @@ class UDPClient:
         self.callbacks.remove(callb)
 
     @staticmethod
-    def create_multicast_sock(own_ip, remote_addr, bind_to_multicast_addr):
+    async def create_multicast_sock(own_ip, remote_addr, bind_to_multicast_addr):
         """Create UDP multicast socket."""
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        sock = await anyio.create_udp_socket()
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.setblocking(False)
 
@@ -160,45 +127,40 @@ class UDPClient:
 
     async def connect(self):
         """Connect UDP socket. Open UDP port and build mulitcast socket if necessary."""
-        udp_client_factory = UDPClient.UDPClientFactory(
-            self.xknx, self.local_addr[0], multicast=self.multicast,
-            data_received_callback=self.data_received_callback)
-
-        loop = asyncio.get_event_loop()
         if self.multicast:
-            sock = UDPClient.create_multicast_sock(self.local_addr[0], self.remote_addr, self.bind_to_multicast_addr)
-            (transport, _) = await loop.create_datagram_endpoint(
-                lambda: udp_client_factory, sock=sock)
-            self.transport = transport
+            self.socket = await self.create_multicast_sock(self.local_addr[0], self.remote_addr, self.bind_to_multicast_addr)
 
         else:
-            (transport, _) = await loop.create_datagram_endpoint(
-                lambda: udp_client_factory,
-                local_addr=self.local_addr if self.local_addr[0] else None,
-                remote_addr=self.remote_addr)
-            self.transport = transport
+            self.socket = await anyio.create_udp_socket(interface=self.local_addr[0], port=self.local_addr[1], target_host=self.remote_addr[0], target_port=self.remote_addr[1])
 
-    def send(self, knxipframe):
+        self._read_task = await self.xknx.spawn(self._reader)
+
+    async def _reader(self):
+        async for raw,addr in self.socket.receive_packets(999):
+            await self.data_received_callback(raw)
+
+    async def send(self, knxipframe):
         """Send KNXIPFrame to socket."""
         self.xknx.knx_logger.debug("Sending: %s", knxipframe)
-        if self.transport is None:
+        if self.socket is None:
             raise XKNXException("Transport not connected")
 
         if self.multicast:
-            self.transport.sendto(bytes(knxipframe.to_knx()), self.remote_addr)
+            await self.socket.send(bytes(knxipframe.to_knx()), self.remote_addr)
         else:
-            self.transport.sendto(bytes(knxipframe.to_knx()))
+            await self.socket.send(bytes(knxipframe.to_knx()))
 
     def getsockname(self):
         """Return sockname."""
-        sock = self.transport.get_extra_info("sockname")
-        return sock
+        return self.socket.address
 
     def getremote(self):
         """Return peername."""
-        peer = self.transport.get_extra_info('peername')
-        return peer
+        return self.socket.peer_address
 
     async def stop(self):
         """Stop UDP socket."""
-        self.transport.close()
+        if self._read_task is not None:
+            await self._read_task.cancel()
+        if self.socket is not None:
+            await self.socket.close()

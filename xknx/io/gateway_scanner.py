@@ -146,9 +146,9 @@ class GatewayScanner():
         knx_ip_frame.body.discovery_endpoint = \
             HPAI(ip_addr=local_addr, port=local_port)
         knx_ip_frame.normalize()
-        udp_client.send(knx_ip_frame)
+        await udp_client.send(knx_ip_frame)
 
-    def _response_rec_callback(self, knx_ip_frame: KNXIPFrame, udp_client: UDPClient) -> None:
+    async def _response_rec_callback(self, knx_ip_frame: KNXIPFrame, udp_client: UDPClient) -> None:
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knx_ip_frame.body, SearchResponse):
             self.xknx.logger.warning("Cant understand knxipframe")

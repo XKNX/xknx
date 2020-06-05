@@ -41,9 +41,9 @@ class RequestResponse():
         """Build knxipframe (within derived class) and send via UDP."""
         knxipframe = self.create_knxipframe()
         knxipframe.normalize()
-        self.udpclient.send(knxipframe)
+        await self.udpclient.send(knxipframe)
 
-    def response_rec_callback(self, knxipframe, _):
+    async def response_rec_callback(self, knxipframe, _):
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knxipframe.body, self.awaited_response_class):
             self.xknx.logger.warning("Cant understand knxipframe")

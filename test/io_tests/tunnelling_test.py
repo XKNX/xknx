@@ -49,7 +49,7 @@ class TestTunnelling(Testcase):
         wrong_knxipframe = KNXIPFrame(xknx)
         wrong_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_REQUEST)
         with patch('logging.Logger.warning') as mock_warning:
-            tunnelling.response_rec_callback(wrong_knxipframe, None)
+            await tunnelling.response_rec_callback(wrong_knxipframe, None)
             mock_warning.assert_called_with('Cant understand knxipframe')
 
         # Response KNX/IP-Frame with error:
@@ -57,7 +57,7 @@ class TestTunnelling(Testcase):
         err_knxipframe.init(KNXIPServiceType.TUNNELLING_ACK)
         err_knxipframe.body.status_code = ErrorCode.E_CONNECTION_ID
         with patch('logging.Logger.warning') as mock_warning:
-            tunnelling.response_rec_callback(err_knxipframe, None)
+            await tunnelling.response_rec_callback(err_knxipframe, None)
             mock_warning.assert_called_with("Error: KNX bus responded to request of type '%s' with error in '%s': %s",
                                             type(tunnelling).__name__,
                                             type(err_knxipframe.body).__name__, ErrorCode.E_CONNECTION_ID)
@@ -66,6 +66,6 @@ class TestTunnelling(Testcase):
         res_knxipframe = KNXIPFrame(xknx)
         res_knxipframe.init(KNXIPServiceType.TUNNELLING_ACK)
         with patch('logging.Logger.debug') as mock_debug:
-            tunnelling.response_rec_callback(res_knxipframe, None)
+            await tunnelling.response_rec_callback(res_knxipframe, None)
             mock_debug.assert_called_with('Success: received correct answer from KNX bus: %s', ErrorCode.E_NO_ERROR)
             self.assertTrue(tunnelling.success)
