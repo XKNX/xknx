@@ -8,7 +8,7 @@ The module will
 * ... store the received telegram for further processing.
 """
 
-import asyncio
+import anyio
 
 from xknx.telegram import Telegram, TelegramType
 
@@ -22,10 +22,8 @@ class ValueReader:
         """Initialize ValueReader class."""
         self.xknx = xknx
         self.group_address = group_address
-        self.response_received_or_timeout = asyncio.Event()
-        self.success = False
+        self.response_received = anyio.create_event()
         self.timeout_in_seconds = timeout_in_seconds
-        self.timeout_handle = None
         self.received_telegram = None
 
     async def read(self):
@@ -34,14 +32,18 @@ class ValueReader:
             self.telegram_received)
 
         await self.send_group_read()
-        await self.start_timeout()
-        await self.response_received_or_timeout.wait()
-        await self.stop_timeout()
-
-        self.xknx.telegram_queue.unregister_telegram_received_cb(
-            cb_obj)
-        if not self.success:
+        try:
+            # anyio buglet
+            async with anyio.fail_after(self.timeout_in_seconds+0.01):
+                await self.response_received.wait()
+        except TimeoutError:
+            self.xknx.logger.warning("Error: KNX bus did not respond in time to GroupValueRead request for: %s",
+                                    self.group_address)
             return None
+        except BaseException as exc:
+            pass
+        finally:
+            self.xknx.telegram_queue.unregister_telegram_received_cb(cb_obj)
         return self.received_telegram
 
     async def send_group_read(self):
@@ -56,23 +58,6 @@ class ValueReader:
             return False
         if self.group_address != telegram.group_address:
             return False
-        self.success = True
         self.received_telegram = telegram
-        self.response_received_or_timeout.set()
+        await self.response_received.set()
         return True
-
-    def timeout(self):
-        """Handle timeout for not having received expected group response."""
-        self.xknx.logger.warning("Error: KNX bus did not respond in time to GroupValueRead request for: %s",
-                                 self.group_address)
-        self.response_received_or_timeout.set()
-
-    async def start_timeout(self):
-        """Start timeout. Register callback for no answer received within timeout."""
-        loop = asyncio.get_event_loop()
-        self.timeout_handle = loop.call_later(
-            self.timeout_in_seconds, self.timeout)
-
-    async def stop_timeout(self):
-        """Stop timeout."""
-        self.timeout_handle.cancel()

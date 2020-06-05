@@ -1,5 +1,6 @@
 """Unit test for value reader."""
 import asyncio
+import anyio
 from unittest.mock import patch
 import pytest
 
@@ -14,9 +15,8 @@ from xknx._test import Testcase
 class TestValueReader(Testcase):
     """Test class for value reader."""
 
-    @patch('xknx.core.ValueReader.timeout')
     @pytest.mark.asyncio
-    async def test_value_reader_read_success(self, timeout_mock):
+    async def test_value_reader_read_success(self):
         """Test value reader: successfull read."""
         xknx = XKNX()
         test_group_address = GroupAddress("0/0/0")
@@ -26,30 +26,31 @@ class TestValueReader(Testcase):
                                      payload=DPTBinary(1))
 
         value_reader = ValueReader(xknx, test_group_address)
-        # Create a task for read() (3.5 compatible)
-        read_task = asyncio.ensure_future(value_reader.read())
-        # receive the response
-        await value_reader.telegram_received(response_telegram)
-        # and yield the result
-        successfull_read = (await asyncio.gather(read_task))[0]
+
+        # Create a task for read()
+        result = None
+        async with anyio.create_task_group() as tg:
+            xknx.task_group = tg
+
+            async def _reader():
+                nonlocal result
+                result = await value_reader.read()
+            read_task = await xknx.spawn(_reader)
+
+            # receive the response
+            await value_reader.telegram_received(response_telegram)
+            # dropping off the taskgroup waits for the task to end
 
         # GroupValueRead telegram is still in the queue because we are not actually processing it
         self.assertEqual(xknx.telegrams.qsize(), 1)
         # Callback was removed again
-        self.assertEqual(xknx.telegram_queue.telegram_received_cbs,
-                         [])
-        # Timeout handle was cancelled (cancelled method requires Python 3.7)
-        event_has_cancelled = getattr(value_reader.timeout_handle, "cancelled", None)
-        if callable(event_has_cancelled):
-            self.assertTrue(value_reader.timeout_handle.cancelled())
-        # timeout() was never called because there was no timeout
-        timeout_mock.assert_not_called()
+        self.assertEqual(xknx.telegram_queue.telegram_received_cbs, [])
         # Telegram was received
         self.assertEqual(value_reader.received_telegram,
-                         response_telegram)
+                        response_telegram)
         # Successfull read() returns the telegram
-        self.assertEqual(successfull_read,
-                         response_telegram)
+        self.assertEqual(result,
+                        response_telegram)
 
     @patch('logging.Logger.warning')
     @pytest.mark.asyncio
@@ -68,10 +69,6 @@ class TestValueReader(Testcase):
         # Callback was removed again
         self.assertEqual(xknx.telegram_queue.telegram_received_cbs,
                          [])
-        # Timeout handle was cancelled (cancelled method requires Python 3.7)
-        event_has_cancelled = getattr(value_reader.timeout_handle, "cancelled", None)
-        if callable(event_has_cancelled):
-            self.assertTrue(value_reader.timeout_handle.cancelled())
         # No telegram was received
         self.assertIsNone(value_reader.received_telegram)
         # Unsuccessfull read() returns None
