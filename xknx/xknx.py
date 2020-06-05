@@ -47,6 +47,10 @@ class XKNX:
         self.connection_config = None
         self.version = VERSION
 
+        self._stop_flag = None
+        self._stopped = None
+        self._main_task = None
+
         if config is not None:
             Config(self).read(config)
 
@@ -59,18 +63,42 @@ class XKNX:
     @asynccontextmanager
     async def run(self, state_updater=False, connection_config=None):
         """Async context manager for XKNX. Connect to KNX/IP devices and start state updater."""
+        self.stop_flag = None
+        self.stopped = asyncio.Event()
         try:
             await self._start(state_updater=state_updater,
                               connection_config=connection_config)
             yield self
         finally:
             await self._stop()
+            self.stopped_flag.set()
 
-    async def _start(self,
+    async def start(self,
                     state_updater=False,
                     daemon_mode=False,
                     connection_config=None):
-        """Start XKNX module. Connect to KNX/IP devices and start state updater."""
+        """Start XKNX module. Connect to KNX/IP devices and start state updater.
+        
+        This is a compatibility method which starts a separate task for XKNX.
+        You might want to use `async with xknx.run()` instead.
+        """
+        self._stop_flag = asyncio.Event()
+        self._stopped = asyncio.Event()
+        self._main_task = asyncio.create_task(self._run(state_updater=state_updater,
+            connection_config=connection_config))
+        if daemon_mode:
+            await self._stopped.wait()
+
+    async def _run(self,
+                    state_updater=False,
+                    connection_config=None):
+        await self._start(state_updater=state_updater,  
+            connection_config=connection_config)
+        await self.stop_flag.wait()
+
+    async def _start(self,
+                    state_updater=False,
+                    connection_config=None):
         if connection_config is None:
             if self.connection_config is None:
                 connection_config = ConnectionConfig()
@@ -88,9 +116,6 @@ class XKNX:
             self.state_updater = StateUpdater(self)
             await self.state_updater.start()
 
-        if daemon_mode:
-            await self.loop_until_sigint()
-
         self.started = True
 
     async def join(self):
@@ -102,6 +127,13 @@ class XKNX:
         if self.knxip_interface is not None:
             await self.knxip_interface.stop()
             self.knxip_interface = None
+
+    async def stop(self):
+        if self._stop_flag is not None:
+            self._stop_flag.set()
+        if self._main_task is not None:
+            self._main_task.cancel()
+        await self._stopped.wait()
 
     async def _stop(self):
         """Stop XKNX module."""
