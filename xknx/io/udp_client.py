@@ -1,11 +1,10 @@
 """
 UDPClient is an abstraction for handling the complete UDP io.
 
-The module is build upon asyncio udp functions.
-Due to lame support of UDP multicast within asyncio some special treatment for multicast is necessary.
+The module is built upon anyio udp functions.
+Due to nonexisting support of UDP multicast within anyio some special treatment for multicast is necessary.
 """
 import anyio
-import asyncio
 import socket
 from sys import platform
 
