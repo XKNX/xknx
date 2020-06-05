@@ -22,13 +22,14 @@ from __future__ import print_function
 # pylint: disable=invalid-name
 # pylint: disable=global-statement
 
+import sys
+import re
+
 try:
     import asyncio
 
     from xknx import XKNX
     from xknx.devices import Sensor
-    import sys
-    import re
     # import time
     import paho.mqtt.client as mqtt
     # The following library is not included.
@@ -37,8 +38,7 @@ try:
     # import pprint
 except ImportError as import_err:
     err_list = str(import_err).split(' ')
-    print('Unable to import module: ' + err_list[3])
-    print('Please install the ' + err_list[3] + ' module for Python.')
+    print('Unable to import module: %s' % (import_err.name), file=sys.stderr)
     sys.exit()
 
 BROKER_ADDRESS = '127.0.0.1'
