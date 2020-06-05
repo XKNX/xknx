@@ -3,7 +3,7 @@ Abstraction for handling KNX/IP tunnels.
 
 Tunnels connect to KNX/IP devices directly via UDP and build a static UDP connection.
 """
-import asyncio
+import anyio
 from contextlib import asynccontextmanager
 
 from xknx.exceptions import XKNXException
@@ -99,8 +99,7 @@ class Tunnel():
                     self.auto_reconnect_wait
                 )
                 self.xknx.logger.warning(msg)
-                task = asyncio.create_task(self.schedule_reconnect())
-                self._reconnect_task = task
+                self._reconnect_task = await self.xknx.spawn(self.schedule_reconnect)
                 return
             raise XKNXException("Could not establish connection")
         self.xknx.logger.debug(
@@ -192,13 +191,13 @@ class Tunnel():
 
     async def schedule_reconnect(self):
         """Schedule reconnect to KNX."""
-        await asyncio.sleep(self.auto_reconnect_wait)
+        await anyio.sleep(self.auto_reconnect_wait)
         await self.reconnect()
 
     async def stop_reconnect(self):
         """Stop reconnect task if running."""
         if self._reconnect_task is not None:
-            self._reconnect_task.cancel()
+            await self._reconnect_task.cancel()
             self._reconnect_task = None
 
     async def stop(self):
@@ -213,18 +212,18 @@ class Tunnel():
 
     async def start_heartbeat(self):
         """Start heartbeat for monitoring state of tunnel, as suggested by 03.08.02 KNX Core 5.4."""
-        self._heartbeat_task = asyncio.create_task(self.do_heartbeat())
+        self._heartbeat_task = await self.xknx.spawn(self.do_heartbeat)
 
     async def stop_heartbeat(self):
         """Stop heartbeat task if running."""
         if self._heartbeat_task is not None:
-            self._heartbeat_task.cancel()
+            await self._heartbeat_task.cancel()
             self._heartbeat_task = None
 
     async def do_heartbeat(self):
         """Heartbeat: Worker 'thread', endless loop for sending heartbeat requests."""
         while True:
-            await asyncio.sleep(15)
+            await anyio.sleep(15)
             await self.do_heartbeat_impl()
 
     async def do_heartbeat_impl(self):
