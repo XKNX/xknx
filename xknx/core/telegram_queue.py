@@ -41,7 +41,7 @@ class TelegramQueue():
         """Initialize TelegramQueue class."""
         self.xknx = xknx
         self.telegram_received_cbs = []
-        self.queue_stopped = asyncio.Event()
+        self.queue_stopped = anyio.create_event()
 
     def register_telegram_received_cb(self, telegram_received_cb, address_filters=None):
         """Register callback for a telegram beeing received from KNX bus."""
@@ -90,7 +90,7 @@ class TelegramQueue():
                     # limit rate to knx bus - defaults to 20 per second
                     await asyncio.sleep(1 / self.xknx.rate_limit)
         finally:
-            self.queue_stopped.set()
+            await self.queue_stopped.set()
 
     async def stop(self):
         """Stop telegram queue."""
