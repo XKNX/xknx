@@ -1,6 +1,5 @@
 """XKNX is an Asynchronous Python module for reading and writing KNX/IP packets."""
 import anyio
-import asyncio
 import logging
 import signal
 from sys import platform
@@ -34,7 +33,6 @@ class XKNX:
         # pylint: disable=too-many-arguments
         self.devices = Devices()
         self.telegrams = anyio.create_queue(10)
-        self.sigint_received = asyncio.Event()
         self.telegram_queue = TelegramQueue(self)
         self.state_updater = None
         self.knxip_interface = None
@@ -49,7 +47,6 @@ class XKNX:
         self.version = VERSION
 
         self.task_group = None
-        self._stop_flag = None
         self._stopped = None
         self._main_task = None
 
@@ -67,8 +64,7 @@ class XKNX:
         """Async context manager for XKNX. Connect to KNX/IP devices and start state updater."""
         async with anyio.create_task_group() as tg:
             self.task_group = tg
-            self._stop_flag = None
-            self._stopped = asyncio.Event()
+            self._stopped = anyio.create_event()
 
             try:
                 await self._start(state_updater=state_updater,
@@ -77,7 +73,7 @@ class XKNX:
                 await tg.cancel_scope.cancel()
             finally:
                 await self._stop()
-                self._stopped.set()
+                await self._stopped.set()
 
     async def start(self,
                     state_updater=False,
@@ -96,8 +92,7 @@ class XKNX:
             raise RuntimeError("You need to use a context manager.")
 
         import asyncio
-        self._stop_flag = asyncio.Event()
-        self._stopped = asyncio.Event()
+        self._stopped = anyio.create_event()
         self._main_task = asyncio.create_task(self._run(state_updater=state_updater,
             connection_config=connection_config))
 
@@ -141,8 +136,6 @@ class XKNX:
 
     async def stop(self, wait=True):
         """Stop XKNX module."""
-        if self._stop_flag is not None:
-            self._stop_flag.set()
         if self._main_task is not None:
             self._main_task.cancel()
         if self.task_group is not None:
