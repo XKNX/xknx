@@ -1,6 +1,6 @@
 """Unit test for KNX/IP Disconnect Request/Response."""
-import asyncio
-from unittest.mock import patch
+import anyio
+from unittest.mock import patch, AsyncMock
 
 import pytest
 
@@ -23,14 +23,15 @@ class TestStateupdater(Testcase):
             group_address_switch='1/0/9')
         xknx.devices.add(light)
 
-        state_updater = StateUpdater(xknx, timeout=0, start_timeout=0)
-        state_updater.run_forever = False
+        async with anyio.create_task_group() as tg:
+            xknx.task_group = tg
+            state_updater = StateUpdater(xknx, timeout=0, start_timeout=0)
 
-        with patch('xknx.devices.Device.sync') as mock_sync:
-            fut = asyncio.Future()
-            fut.set_result(None)
-            mock_sync.return_value = fut
+            async def stopper():
+                await state_updater.stop()
 
-            await state_updater.start()
-            await state_updater.run_task
-            mock_sync.assert_called_with()
+            with patch('xknx.devices.Device.sync', new_callable=AsyncMock,
+                    side_effect=stopper) as mock_sync:
+                await state_updater.start()
+                await anyio.sleep(0.2)
+                mock_sync.assert_called_with()
