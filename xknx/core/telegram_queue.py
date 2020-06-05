@@ -8,7 +8,6 @@ The underlaying KNXIPInterface will poll the queue and send the packets to the c
 You may register callbacks to be notified if a telegram was pushed to the queue.
 """
 import anyio
-import asyncio
 from contextlib import asynccontextmanager
 
 from xknx.exceptions import XKNXException
@@ -88,7 +87,7 @@ class TelegramQueue():
 
                 if telegram.direction == TelegramDirection.OUTGOING:
                     # limit rate to knx bus - defaults to 20 per second
-                    await asyncio.sleep(1 / self.xknx.rate_limit)
+                    await anyio.sleep(1 / self.xknx.rate_limit)
         finally:
             await self.queue_stopped.set()
 
