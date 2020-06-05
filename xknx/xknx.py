@@ -60,13 +60,13 @@ class XKNX:
     async def run(self, state_updater=False, connection_config=None):
         """Async context manager for XKNX. Connect to KNX/IP devices and start state updater."""
         try:
-            await self.start(state_updater=state_updater,
-                             connection_config=connection_config)
+            await self._start(state_updater=state_updater,
+                              connection_config=connection_config)
             yield self
         finally:
-            await self.stop()
+            await self._stop()
 
-    async def start(self,
+    async def _start(self,
                     state_updater=False,
                     daemon_mode=False,
                     connection_config=None):
@@ -103,7 +103,7 @@ class XKNX:
             await self.knxip_interface.stop()
             self.knxip_interface = None
 
-    async def stop(self):
+    async def _stop(self):
         """Stop XKNX module."""
         if self.state_updater:
             await self.state_updater.stop()
