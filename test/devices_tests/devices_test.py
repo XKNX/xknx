@@ -16,7 +16,8 @@ class TestDevices(Testcase):
     #
     # XKNX Config
     #
-    def test_get_item(self):
+    @pytest.mark.asyncio
+    async def test_get_item(self):
         """Test get item by name or by index."""
         xknx = XKNX()
         devices = Devices()
@@ -57,7 +58,8 @@ class TestDevices(Testcase):
             # pylint: disable=pointless-statement
             devices[4]
 
-    def test_device_by_group_address(self):
+    @pytest.mark.asyncio
+    async def test_device_by_group_address(self):
         """Test get devices by group address."""
         xknx = XKNX()
         devices = Devices()
@@ -94,7 +96,8 @@ class TestDevices(Testcase):
             tuple(devices.devices_by_group_address(GroupAddress('3/0/1'))),
             (sensor1, sensor2))
 
-    def test_iter(self):
+    @pytest.mark.asyncio
+    async def test_iter(self):
         """Test __iter__() function."""
         xknx = XKNX()
         devices = Devices()
@@ -126,7 +129,8 @@ class TestDevices(Testcase):
             tuple(devices.__iter__()),
             (light1, sensor1, sensor2, light2))
 
-    def test_len(self):
+    @pytest.mark.asyncio
+    async def test_len(self):
         """Test len() function."""
         xknx = XKNX()
         devices = Devices()
@@ -158,7 +162,8 @@ class TestDevices(Testcase):
         devices.add(light2)
         self.assertEqual(len(devices), 4)
 
-    def test_contains(self):
+    @pytest.mark.asyncio
+    async def test_contains(self):
         """Test __contains__() function."""
         xknx = XKNX()
         devices = Devices()
@@ -194,7 +199,8 @@ class TestDevices(Testcase):
             await device.set_on()
         self.assertTrue(light1.state)
 
-    def test_add_wrong_type(self):
+    @pytest.mark.asyncio
+    async def test_add_wrong_type(self):
         """Test if exception is raised when wrong type of devices is added."""
         xknx = XKNX()
         with self.assertRaises(TypeError):

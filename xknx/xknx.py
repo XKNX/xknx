@@ -33,7 +33,7 @@ class XKNX:
         """Initialize XKNX class."""
         # pylint: disable=too-many-arguments
         self.devices = Devices()
-        self.telegrams = asyncio.Queue()
+        self.telegrams = anyio.create_queue(10)
         self.sigint_received = asyncio.Event()
         self.telegram_queue = TelegramQueue(self)
         self.state_updater = None
@@ -129,8 +129,9 @@ class XKNX:
         self.started = True
 
     async def join(self):
-        """Wait until all telegrams were processed."""
-        await self.telegrams.join()
+        """Wait until all telegrams are processed."""
+        while self.telegrams.qsize():
+            await anyio.sleep(0.01)
 
     async def _stop_knxip_interface_if_exists(self):
         """Stop KNXIPInterface if initialized."""

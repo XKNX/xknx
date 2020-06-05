@@ -16,7 +16,8 @@ class TestExposeSensor(Testcase):
     #
     # STR FUNCTIONS
     #
-    def test_str_binary(self):
+    @pytest.mark.asyncio
+    async def test_str_binary(self):
         """Test resolve state with binary sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -29,7 +30,8 @@ class TestExposeSensor(Testcase):
         self.assertEqual(expose_sensor.resolve_state(), True)
         self.assertEqual(expose_sensor.unit_of_measurement(), None)
 
-    def test_str_percent(self):
+    @pytest.mark.asyncio
+    async def test_str_percent(self):
         """Test resolve state with percent sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -42,7 +44,8 @@ class TestExposeSensor(Testcase):
         self.assertEqual(expose_sensor.resolve_state(), 25)
         self.assertEqual(expose_sensor.unit_of_measurement(), "%")
 
-    def test_str_temperature(self):
+    @pytest.mark.asyncio
+    async def test_str_temperature(self):
         """Test resolve state with temperature sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -69,7 +72,7 @@ class TestExposeSensor(Testcase):
             value_type="binary")
         await expose_sensor.set(False)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(
             telegram,
             Telegram(
@@ -89,7 +92,7 @@ class TestExposeSensor(Testcase):
         await expose_sensor.set(75)
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(
             telegram,
             Telegram(
@@ -108,7 +111,7 @@ class TestExposeSensor(Testcase):
             value_type="temperature")
         await expose_sensor.set(21.0)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(
             telegram,
             Telegram(
@@ -134,7 +137,7 @@ class TestExposeSensor(Testcase):
         telegram.telegramtype = TelegramType.GROUP_READ
         await expose_sensor.process(telegram)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(
             telegram,
             Telegram(
@@ -157,7 +160,7 @@ class TestExposeSensor(Testcase):
         telegram.telegramtype = TelegramType.GROUP_READ
         await expose_sensor.process(telegram)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(
             telegram,
             Telegram(
@@ -180,7 +183,7 @@ class TestExposeSensor(Testcase):
         telegram.telegramtype = TelegramType.GROUP_READ
         await expose_sensor.process(telegram)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(
             telegram,
             Telegram(
@@ -191,7 +194,8 @@ class TestExposeSensor(Testcase):
     #
     # HAS GROUP ADDRESS
     #
-    def test_has_group_address(self):
+    @pytest.mark.asyncio
+    async def test_has_group_address(self):
         """Test expose sensor has group address."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -205,7 +209,8 @@ class TestExposeSensor(Testcase):
     #
     # STATE ADDRESSES
     #
-    def test_state_addresses(self):
+    @pytest.mark.asyncio
+    async def test_state_addresses(self):
         """Test expose sensor returns empty list as state addresses."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(

@@ -28,7 +28,7 @@ class TestNotification(Testcase):
             group_address_state='1/2/4')
         await notification.sync(False)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/4'), TelegramType.GROUP_READ))
 
@@ -97,14 +97,14 @@ class TestNotification(Testcase):
         notification = Notification(xknx, 'Warning', group_address='1/2/3')
         await notification.set("Ein Prosit!")
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'),
                                   payload=DPTArray(DPTString().to_knx("Ein Prosit!"))))
         # test if message longer than 14 chars gets cropped
         await notification.set("This is too long.")
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'),
                                   payload=DPTArray(DPTString().to_knx("This is too lo"))))
@@ -133,7 +133,8 @@ class TestNotification(Testcase):
     #
     # STATE ADDRESSES
     #
-    def test_state_addresses(self):
+    @pytest.mark.asyncio
+    async def test_state_addresses(self):
         """Test expose sensor returns empty list as state addresses."""
         xknx = XKNX()
         notification_1 = Notification(xknx, 'Warning', group_address='1/2/3', group_address_state='1/2/4')
@@ -144,7 +145,8 @@ class TestNotification(Testcase):
     #
     # TEST has_group_address
     #
-    def test_has_group_address(self):
+    @pytest.mark.asyncio
+    async def test_has_group_address(self):
         """Test has_group_address."""
         xknx = XKNX()
         notification = Notification(xknx, 'Warning', group_address='1/2/3', group_address_state='1/2/4')

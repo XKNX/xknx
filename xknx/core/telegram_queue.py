@@ -72,11 +72,9 @@ class TelegramQueue():
 
             # Breaking up queue if None is pushed to the queue
             if telegram is None:
-                self.xknx.telegrams.task_done()
                 break
 
             await self.process_telegram(telegram)
-            self.xknx.telegrams.task_done()
 
             if telegram.direction == TelegramDirection.OUTGOING:
                 # limit rate to knx bus - defaults to 20 per second
@@ -94,9 +92,8 @@ class TelegramQueue():
     async def process_all_telegrams(self):
         """Process all telegrams being queued."""
         while not self.xknx.telegrams.empty():
-            telegram = self.xknx.telegrams.get_nowait()
+            telegram = await self.xknx.telegrams.get()
             await self.process_telegram(telegram)
-            self.xknx.telegrams.task_done()
 
     async def process_telegram(self, telegram):
         """Process telegram."""

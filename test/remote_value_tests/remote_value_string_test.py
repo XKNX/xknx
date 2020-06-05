@@ -22,7 +22,8 @@ class TestRemoteValueString(Testcase):
         """Tear down test class."""
         self.loop.close()
 
-    def test_to_knx(self):
+    @pytest.mark.asyncio
+    async def test_to_knx(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueString(xknx)
@@ -30,7 +31,8 @@ class TestRemoteValueString(Testcase):
                                                                      0x73, 0x20, 0x4F, 0x4B, 0x00,
                                                                      0x00, 0x00, 0x00, 0x00)))
 
-    def test_from_knx(self):
+    @pytest.mark.asyncio
+    async def test_from_knx(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueString(xknx)
@@ -38,7 +40,8 @@ class TestRemoteValueString(Testcase):
                                                          0x73, 0x20, 0x4F, 0x4B, 0x00,
                                                          0x00, 0x00, 0x00, 0x00))), "KNX is OK")
 
-    def test_to_knx_error(self):
+    @pytest.mark.asyncio
+    async def test_to_knx_error(self):
         """Test to_knx function with wrong parametern."""
         xknx = XKNX()
         remote_value = RemoteValueString(xknx)
@@ -54,7 +57,7 @@ class TestRemoteValueString(Testcase):
             group_address=GroupAddress("1/2/3"))
         await remote_value.set("asdf")
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(
             telegram,
             Telegram(
@@ -62,7 +65,7 @@ class TestRemoteValueString(Testcase):
                 payload=DPTArray((97, 115, 100, 102, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))))
         await remote_value.set("ASDF")
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(
             telegram,
             Telegram(

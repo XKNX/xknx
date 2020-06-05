@@ -14,7 +14,8 @@ from xknx._test import Testcase, CoroMock
 class TestDevice(Testcase):
     """Test class for Switch object."""
 
-    def test_state_addresses(self):
+    @pytest.mark.asyncio
+    async def test_state_addresses(self):
         """Test state_addresses() function."""
         xknx = XKNX()
         device = Device(xknx, 'TestDevice')

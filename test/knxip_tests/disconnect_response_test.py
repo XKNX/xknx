@@ -1,4 +1,5 @@
 """Unit test for KNX/IP DisconnectResponse objects."""
+import pytest
 import asyncio
 
 from xknx import XKNX
@@ -13,7 +14,8 @@ class Test_KNXIP_DisconnectResp(Testcase):
 
     # pylint: disable=too-many-public-methods,invalid-name
 
-    def test_disconnect_response(self):
+    @pytest.mark.asyncio
+    async def test_disconnect_response(self):
         """Test parsing and streaming DisconnectResponse KNX/IP packet."""
         raw = ((0x06, 0x10, 0x02, 0x0A, 0x00, 0x08, 0x15, 0x25))
         xknx = XKNX()
@@ -35,7 +37,8 @@ class Test_KNXIP_DisconnectResp(Testcase):
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-    def test_from_knx_wrong_length(self):
+    @pytest.mark.asyncio
+    async def test_from_knx_wrong_length(self):
         """Test parsing and streaming wrong DisconnectResponse."""
         raw = ((0x06, 0x10, 0x02, 0x0A, 0x00, 0x08, 0x15))
         xknx = XKNX()

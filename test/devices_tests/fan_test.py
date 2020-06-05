@@ -30,7 +30,7 @@ class TestFan(Testcase):
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
-        telegram1 = xknx.telegrams.get_nowait()
+        telegram1 = await xknx.telegrams.get()
         self.assertEqual(telegram1,
                          Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
 
@@ -49,7 +49,7 @@ class TestFan(Testcase):
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
-        telegram1 = xknx.telegrams.get_nowait()
+        telegram1 = await xknx.telegrams.get()
         self.assertEqual(telegram1,
                          Telegram(GroupAddress('1/2/4'), TelegramType.GROUP_READ))
 
@@ -66,7 +66,7 @@ class TestFan(Testcase):
                   group_address_speed='1/2/3')
         await fan.set_speed(55)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         # 140 is 55% as byte (0...255)
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'), payload=DPTArray(140)))
@@ -138,7 +138,8 @@ class TestFan(Testcase):
             self.assertEqual(xknx.telegrams.qsize(), 0)
             mock_warn.assert_called_with('Could not understand action %s for device %s', 'execute', 'TestFan')
 
-    def test_has_group_address(self):
+    @pytest.mark.asyncio
+    async def test_has_group_address(self):
         """Test has_group_address."""
         xknx = XKNX()
         fan = Fan(xknx,

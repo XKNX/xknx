@@ -82,7 +82,7 @@ class TestRemoteValueColorRGBW(Testcase):
             group_address=GroupAddress("1/2/3"))
         await remote_value.set((100, 101, 102, 103))
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(
             telegram,
             Telegram(
@@ -90,7 +90,7 @@ class TestRemoteValueColorRGBW(Testcase):
                 payload=DPTArray((0x64, 0x65, 0x66, 0x67, 0x00, 0x0f))))
         await remote_value.set((100, 101, 104, 105))
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(
             telegram,
             Telegram(

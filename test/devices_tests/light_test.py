@@ -151,27 +151,27 @@ class TestLight(Testcase):
 
         self.assertEqual(xknx.telegrams.qsize(), 6)
 
-        telegram1 = xknx.telegrams.get_nowait()
+        telegram1 = await xknx.telegrams.get()
         self.assertEqual(telegram1,
                          Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
 
-        telegram2 = xknx.telegrams.get_nowait()
+        telegram2 = await xknx.telegrams.get()
         self.assertEqual(telegram2,
                          Telegram(GroupAddress('1/2/6'), TelegramType.GROUP_READ))
 
-        telegram6 = xknx.telegrams.get_nowait()
+        telegram6 = await xknx.telegrams.get()
         self.assertEqual(telegram6,
                          Telegram(GroupAddress('1/2/9'), TelegramType.GROUP_READ))
 
-        telegram3 = xknx.telegrams.get_nowait()
+        telegram3 = await xknx.telegrams.get()
         self.assertEqual(telegram3,
                          Telegram(GroupAddress('1/2/5'), TelegramType.GROUP_READ))
 
-        telegram4 = xknx.telegrams.get_nowait()
+        telegram4 = await xknx.telegrams.get()
         self.assertEqual(telegram4,
                          Telegram(GroupAddress('1/2/7'), TelegramType.GROUP_READ))
 
-        telegram5 = xknx.telegrams.get_nowait()
+        telegram5 = await xknx.telegrams.get()
         self.assertEqual(telegram5,
                          Telegram(GroupAddress('1/2/8'), TelegramType.GROUP_READ))
 
@@ -200,22 +200,22 @@ class TestLight(Testcase):
 
         self.assertEqual(xknx.telegrams.qsize(), 6)
 
-        telegram1 = xknx.telegrams.get_nowait()
+        telegram1 = await xknx.telegrams.get()
         self.assertEqual(telegram1,
                          Telegram(GroupAddress('1/2/4'), TelegramType.GROUP_READ))
-        telegram2 = xknx.telegrams.get_nowait()
+        telegram2 = await xknx.telegrams.get()
         self.assertEqual(telegram2,
                          Telegram(GroupAddress('1/2/8'), TelegramType.GROUP_READ))
-        telegram6 = xknx.telegrams.get_nowait()
+        telegram6 = await xknx.telegrams.get()
         self.assertEqual(telegram6,
                          Telegram(GroupAddress('1/2/14'), TelegramType.GROUP_READ))
-        telegram3 = xknx.telegrams.get_nowait()
+        telegram3 = await xknx.telegrams.get()
         self.assertEqual(telegram3,
                          Telegram(GroupAddress('1/2/6'), TelegramType.GROUP_READ))
-        telegram4 = xknx.telegrams.get_nowait()
+        telegram4 = await xknx.telegrams.get()
         self.assertEqual(telegram4,
                          Telegram(GroupAddress('1/2/10'), TelegramType.GROUP_READ))
-        telegram5 = xknx.telegrams.get_nowait()
+        telegram5 = await xknx.telegrams.get()
         self.assertEqual(telegram5,
                          Telegram(GroupAddress('1/2/12'), TelegramType.GROUP_READ))
 
@@ -232,7 +232,7 @@ class TestLight(Testcase):
                       group_address_brightness='1/2/5')
         await light.set_on()
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'), payload=DPTBinary(1)))
 
@@ -249,7 +249,7 @@ class TestLight(Testcase):
                       group_address_brightness='1/2/5')
         await light.set_off()
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'), payload=DPTBinary(0)))
 
@@ -266,7 +266,7 @@ class TestLight(Testcase):
                       group_address_brightness='1/2/5')
         await light.set_brightness(23)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/5'), payload=DPTArray(23)))
 
@@ -296,7 +296,7 @@ class TestLight(Testcase):
                       group_address_color='1/2/5')
         await light.set_color((23, 24, 25))
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/5'), payload=DPTArray((23, 24, 25))))
         self.assertEqual(light.current_color, ((23, 24, 25), None))
@@ -328,7 +328,7 @@ class TestLight(Testcase):
                       group_address_rgbw='1/2/5')
         await light.set_color((23, 24, 25), 26)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/5'), payload=DPTArray((23, 24, 25, 26, 0, 15))))
         self.assertEqual(light.current_color, ([23, 24, 25], 26))
@@ -360,7 +360,7 @@ class TestLight(Testcase):
                       group_address_tunable_white='1/2/5')
         await light.set_tunable_white(23)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/5'), payload=DPTArray(23)))
 
@@ -390,7 +390,7 @@ class TestLight(Testcase):
                       group_address_color_temperature='1/2/5')
         await light.set_color_temperature(4000)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/5'), payload=DPTArray((0x0F, 0xA0, ))))
 
@@ -632,7 +632,8 @@ class TestLight(Testcase):
             self.assertEqual(xknx.telegrams.qsize(), 0)
             mock_warn.assert_called_with('Could not understand action %s for device %s', 'execute', 'TestLight')
 
-    def test_has_group_address(self):
+    @pytest.mark.asyncio
+    async def test_has_group_address(self):
         """Test has_group_address."""
         xknx = XKNX()
         light = Light(

@@ -1,4 +1,5 @@
 """Unit test for KNX/IP base class."""
+import pytest
 import asyncio
 
 from xknx import XKNX
@@ -12,14 +13,16 @@ class Test_KNXIP(Testcase):
 
     # pylint: disable=too-many-public-methods,invalid-name
 
-    def test_wrong_init(self):
+    @pytest.mark.asyncio
+    async def test_wrong_init(self):
         """Testing init method with wrong service_type_ident."""
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         with self.assertRaises(TypeError):
             knxipframe.init(23)
 
-    def test_parsing_too_long_knxip(self):
+    @pytest.mark.asyncio
+    async def test_parsing_too_long_knxip(self):
         """Test parsing and streaming connection state request KNX/IP packet."""
         raw = ((0x06, 0x10, 0x02, 0x07, 0x00, 0x10, 0x15, 0x00,
                 0x08, 0x01, 0xC0, 0xA8, 0xC8, 0x0C, 0xC3, 0xB4, 0x00))

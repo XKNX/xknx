@@ -13,35 +13,40 @@ from xknx._test import Testcase
 class TestRemoteValueUpDown(Testcase):
     """Test class for RemoteValueUpDown objects."""
 
-    def test_to_knx(self):
+    @pytest.mark.asyncio
+    async def test_to_knx(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx)
         self.assertEqual(remote_value.to_knx(RemoteValueUpDown.Direction.UP), DPTBinary(0))
         self.assertEqual(remote_value.to_knx(RemoteValueUpDown.Direction.DOWN), DPTBinary(1))
 
-    def test_from_knx(self):
+    @pytest.mark.asyncio
+    async def test_from_knx(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx)
         self.assertEqual(remote_value.from_knx(DPTBinary(0)), RemoteValueUpDown.Direction.UP)
         self.assertEqual(remote_value.from_knx(DPTBinary(1)), RemoteValueUpDown.Direction.DOWN)
 
-    def test_to_knx_invert(self):
+    @pytest.mark.asyncio
+    async def test_to_knx_invert(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx, invert=True)
         self.assertEqual(remote_value.to_knx(RemoteValueUpDown.Direction.UP), DPTBinary(1))
         self.assertEqual(remote_value.to_knx(RemoteValueUpDown.Direction.DOWN), DPTBinary(0))
 
-    def test_from_knx_invert(self):
+    @pytest.mark.asyncio
+    async def test_from_knx_invert(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx, invert=True)
         self.assertEqual(remote_value.from_knx(DPTBinary(0)), RemoteValueUpDown.Direction.DOWN)
         self.assertEqual(remote_value.from_knx(DPTBinary(1)), RemoteValueUpDown.Direction.UP)
 
-    def test_to_knx_error(self):
+    @pytest.mark.asyncio
+    async def test_to_knx_error(self):
         """Test to_knx function with wrong parametern."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx)
@@ -57,7 +62,7 @@ class TestRemoteValueUpDown(Testcase):
             group_address=GroupAddress("1/2/3"))
         await remote_value.down()
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(
             telegram,
             Telegram(
@@ -65,7 +70,7 @@ class TestRemoteValueUpDown(Testcase):
                 payload=DPTBinary(1)))
         await remote_value.up()
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(
             telegram,
             Telegram(

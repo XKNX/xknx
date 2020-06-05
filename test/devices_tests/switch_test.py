@@ -25,7 +25,7 @@ class TestSwitch(Testcase):
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
 
@@ -40,7 +40,7 @@ class TestSwitch(Testcase):
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/4'), TelegramType.GROUP_READ))
 
@@ -101,7 +101,7 @@ class TestSwitch(Testcase):
         switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
         await switch.set_on()
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'), payload=DPTBinary(1)))
 
@@ -115,7 +115,7 @@ class TestSwitch(Testcase):
         switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
         await switch.set_off()
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'), payload=DPTBinary(0)))
 
@@ -145,7 +145,8 @@ class TestSwitch(Testcase):
     #
     # TEST has_group_address
     #
-    def test_has_group_address(self):
+    @pytest.mark.asyncio
+    async def test_has_group_address(self):
         """Test has_group_address."""
         xknx = XKNX()
         switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')

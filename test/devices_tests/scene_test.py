@@ -45,7 +45,7 @@ class TestScene(Testcase):
             scene_number=23)
         await scene.run()
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/1'), payload=DPTArray(0x16)))
 
@@ -60,7 +60,7 @@ class TestScene(Testcase):
             scene_number=23)
         await scene.do("run")
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/1'), payload=DPTArray(0x16)))
 
@@ -81,7 +81,8 @@ class TestScene(Testcase):
     #
     # TEST has_group_address
     #
-    def test_has_group_address(self):
+    @pytest.mark.asyncio
+    async def test_has_group_address(self):
         """Test has_group_address."""
         xknx = XKNX()
         scene = Scene(

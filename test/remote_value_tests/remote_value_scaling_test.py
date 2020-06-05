@@ -1,4 +1,5 @@
 """Unit test for RemoteValueScaling objects."""
+import pytest
 import asyncio
 
 from xknx import XKNX
@@ -119,7 +120,8 @@ class TestRemoteValueScaling(Testcase):
         self.assertEqual(RemoteValueScaling._calc_from_knx(100, 200, 178), 170)
         self.assertEqual(RemoteValueScaling._calc_from_knx(100, 200, 255), 200)
 
-    def test_value_unit(self):
+    @pytest.mark.asyncio
+    async def test_value_unit(self):
         """Test for the unit_of_measurement."""
         xknx = XKNX()
         remote_value = RemoteValueScaling(xknx)

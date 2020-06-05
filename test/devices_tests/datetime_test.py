@@ -28,7 +28,7 @@ class TestDateTime(Testcase):
             await datetime.sync(False)
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram.group_address, GroupAddress('1/2/3'))
         self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
         self.assertEqual(len(telegram.payload.value), 8)
@@ -47,7 +47,7 @@ class TestDateTime(Testcase):
             await datetime.sync(False)
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram.group_address, GroupAddress('1/2/3'))
         self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
         self.assertEqual(len(telegram.payload.value), 3)
@@ -66,7 +66,7 @@ class TestDateTime(Testcase):
             await datetime.sync(False)
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram.group_address, GroupAddress('1/2/3'))
         self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
         self.assertEqual(len(telegram.payload.value), 3)
@@ -91,7 +91,7 @@ class TestDateTime(Testcase):
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
             await datetime.process(telegram_read)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(
             telegram,
             Telegram(
@@ -102,7 +102,8 @@ class TestDateTime(Testcase):
     #
     # TEST HAS GROUP ADDRESS
     #
-    def test_has_group_address(self):
+    @pytest.mark.asyncio
+    async def test_has_group_address(self):
         """Test if has_group_address function works."""
         xknx = XKNX()
         datetime = DateTime(xknx, "TestDateTime", group_address='1/2/3')

@@ -1,4 +1,5 @@
 """Unit test for KNX/IP TunnellingAck objects."""
+import pytest
 import asyncio
 
 from xknx import XKNX
@@ -12,7 +13,8 @@ class Test_KNXIP_Header(Testcase):
 
     # pylint: disable=too-many-public-methods,invalid-name
 
-    def test_from_knx(self):
+    @pytest.mark.asyncio
+    async def test_from_knx(self):
         """Test parsing and streaming wrong Header (wrong length byte)."""
         raw = ((0x06, 0x10, 0x04, 0x21, 0x00, 0x0a))
         xknx = XKNX()
@@ -25,7 +27,8 @@ class Test_KNXIP_Header(Testcase):
         self.assertEqual(header.total_length, 10)
         self.assertEqual(header.to_knx(), list(raw))
 
-    def test_set_length(self):
+    @pytest.mark.asyncio
+    async def test_set_length(self):
         """Test setting length."""
         xknx = XKNX()
         header = KNXIPHeader(xknx)
@@ -33,14 +36,16 @@ class Test_KNXIP_Header(Testcase):
         # 6 (header) + 2 + 8 (HPAI length)
         self.assertEqual(header.total_length, 16)
 
-    def test_set_length_error(self):
+    @pytest.mark.asyncio
+    async def test_set_length_error(self):
         """Test setting length with wrong type."""
         xknx = XKNX()
         header = KNXIPHeader(xknx)
         with self.assertRaises(TypeError):
             header.set_length(2)
 
-    def test_from_knx_wrong_header(self):
+    @pytest.mark.asyncio
+    async def test_from_knx_wrong_header(self):
         """Test parsing and streaming wrong Header (wrong length)."""
         raw = ((0x06, 0x10, 0x04, 0x21, 0x00))
         xknx = XKNX()
@@ -48,7 +53,8 @@ class Test_KNXIP_Header(Testcase):
         with self.assertRaises(CouldNotParseKNXIP):
             header.from_knx(raw)
 
-    def test_from_knx_wrong_header2(self):
+    @pytest.mark.asyncio
+    async def test_from_knx_wrong_header2(self):
         """Test parsing and streaming wrong Header (wrong length byte)."""
         raw = ((0x05, 0x10, 0x04, 0x21, 0x00, 0x0a))
         xknx = XKNX()
@@ -56,7 +62,8 @@ class Test_KNXIP_Header(Testcase):
         with self.assertRaises(CouldNotParseKNXIP):
             header.from_knx(raw)
 
-    def test_from_knx_wrong_header3(self):
+    @pytest.mark.asyncio
+    async def test_from_knx_wrong_header3(self):
         """Test parsing and streaming wrong Header (wrong protocol version)."""
         raw = ((0x06, 0x11, 0x04, 0x21, 0x00, 0x0a))
         xknx = XKNX()

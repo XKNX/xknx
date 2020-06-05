@@ -13,7 +13,8 @@ from xknx._test import Testcase
 class TestRemoteValue1Count(Testcase):
     """Test class for RemoteValue1Count objects."""
 
-    def test_to_knx(self):
+    @pytest.mark.asyncio
+    async def test_to_knx(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValue1Count(xknx)
@@ -35,7 +36,7 @@ class TestRemoteValue1Count(Testcase):
             group_address=GroupAddress("1/2/3"))
         await remote_value.set(100)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(
             telegram,
             Telegram(
@@ -43,7 +44,7 @@ class TestRemoteValue1Count(Testcase):
                 payload=DPTArray((0x64, ))))
         await remote_value.set(101, )
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(
             telegram,
             Telegram(

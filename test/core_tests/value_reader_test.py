@@ -85,7 +85,7 @@ class TestValueReader(Testcase):
 
         await value_reader.send_group_read()
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(telegram,
                          Telegram(group_address=GroupAddress('0/0/0'),
                                   telegramtype=TelegramType.GROUP_READ))

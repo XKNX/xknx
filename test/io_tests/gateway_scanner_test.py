@@ -79,7 +79,8 @@ class TestGatewayScanner(Testcase):
         self.assertTrue(filter_no_tunnel.match(self.gateway_desc_router))
         self.assertFalse(filter_no_tunnel.match(self.gateway_desc_both))
 
-    def test_search_response_reception(self):
+    @pytest.mark.asyncio
+    async def test_search_response_reception(self):
         """Test function of gateway scanner."""
         # pylint: disable=protected-access
         xknx = XKNX()

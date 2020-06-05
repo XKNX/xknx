@@ -15,7 +15,8 @@ from xknx._test import Testcase
 class TestBinarySensor(Testcase):
     """Test class for BinarySensor objects."""
 
-    def test_initialization_wrong_significant_bit(self):
+    @pytest.mark.asyncio
+    async def test_initialization_wrong_significant_bit(self):
         """Test initialization with wrong significant_bit parameter."""
         # pylint: disable=invalid-name
         xknx = XKNX()
@@ -242,7 +243,8 @@ class TestBinarySensor(Testcase):
     #
     # TEST COUNTER
     #
-    def test_counter(self):
+    @pytest.mark.asyncio
+    async def test_counter(self):
         """Test counter functionality."""
         xknx = XKNX()
         switch = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3')
@@ -271,7 +273,8 @@ class TestBinarySensor(Testcase):
     #
     # STATE ADDRESSES
     #
-    def test_state_addresses(self):
+    @pytest.mark.asyncio
+    async def test_state_addresses(self):
         """Test binary sensor returns state address as list."""
         xknx = XKNX()
         binary_sensor = BinarySensor(

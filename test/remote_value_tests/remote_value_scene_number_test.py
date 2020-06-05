@@ -13,19 +13,22 @@ from xknx._test import Testcase
 class TestRemoteValueSceneNumber(Testcase):
     """Test class for RemoteValueSceneNumber objects."""
 
-    def test_to_knx(self):
+    @pytest.mark.asyncio
+    async def test_to_knx(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueSceneNumber(xknx)
         self.assertEqual(remote_value.to_knx(11), DPTArray((0x0A, )))
 
-    def test_from_knx(self):
+    @pytest.mark.asyncio
+    async def test_from_knx(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueSceneNumber(xknx)
         self.assertEqual(remote_value.from_knx(DPTArray((0x0A, ))), 11)
 
-    def test_to_knx_error(self):
+    @pytest.mark.asyncio
+    async def test_to_knx_error(self):
         """Test to_knx function with wrong parametern."""
         xknx = XKNX()
         remote_value = RemoteValueSceneNumber(xknx)
@@ -43,7 +46,7 @@ class TestRemoteValueSceneNumber(Testcase):
             group_address=GroupAddress("1/2/3"))
         await remote_value.set(11)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(
             telegram,
             Telegram(
@@ -51,7 +54,7 @@ class TestRemoteValueSceneNumber(Testcase):
                 payload=DPTArray((0x0A, ))))
         await remote_value.set(12)
         self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = xknx.telegrams.get_nowait()
+        telegram = await xknx.telegrams.get()
         self.assertEqual(
             telegram,
             Telegram(

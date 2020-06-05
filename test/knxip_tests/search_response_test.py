@@ -1,4 +1,5 @@
 """Unit test for KNX/IP SearchResponse objects."""
+import pytest
 import asyncio
 
 from xknx import XKNX
@@ -13,7 +14,8 @@ class Test_KNXIP_Discovery(Testcase):
 
     # pylint: disable=too-many-public-methods,invalid-name
 
-    def test_search_response(self):
+    @pytest.mark.asyncio
+    async def test_search_response(self):
         """Test parsing and streaming SearchResponse KNX/IP packet."""
         raw = ((0x06, 0x10, 0x02, 0x02, 0x00, 0x50, 0x08, 0x01,
                 0xc0, 0xa8, 0x2a, 0x0a, 0x0e, 0x57, 0x36, 0x01,
@@ -56,7 +58,8 @@ class Test_KNXIP_Discovery(Testcase):
         knxipframe2.normalize()
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-    def test_unknown_device_name(self):
+    @pytest.mark.asyncio
+    async def test_unknown_device_name(self):
         """Test device_name if no DIBDeviceInformation is present."""
         xknx = XKNX()
         search_response = SearchResponse(xknx)

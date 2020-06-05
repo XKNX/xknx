@@ -197,7 +197,7 @@ class SensorExposeLoopTest(Testcase):
                 stringified_value = str(test_value)
                 await expose.set(stringified_value)
                 self.assertEqual(xknx.telegrams.qsize(), 1)
-                outgoing_telegram = xknx.telegrams.get_nowait()
+                outgoing_telegram = await xknx.telegrams.get()
                 self.assertEqual(
                     outgoing_telegram,
                     Telegram(
@@ -239,7 +239,7 @@ class SensorExposeLoopTest(Testcase):
 
                 await expose.set(test_value)
                 self.assertEqual(xknx.telegrams.qsize(), 1)
-                outgoing_telegram = xknx.telegrams.get_nowait()
+                outgoing_telegram = await xknx.telegrams.get()
                 self.assertEqual(
                     outgoing_telegram,
                     Telegram(

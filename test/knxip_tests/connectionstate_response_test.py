@@ -1,4 +1,5 @@
 """Unit test for KNX/IP ConnectionStateResponses."""
+import pytest
 import asyncio
 
 from xknx import XKNX
@@ -13,7 +14,8 @@ class Test_KNXIP_ConnStateResp(Testcase):
 
     # pylint: disable=too-many-public-methods,invalid-name
 
-    def test_disconnect_response(self):
+    @pytest.mark.asyncio
+    async def test_disconnect_response(self):
         """Test parsing and streaming connection state response KNX/IP packet."""
         raw = ((0x06, 0x10, 0x02, 0x08, 0x00, 0x08, 0x15, 0x21))
         xknx = XKNX()
@@ -35,7 +37,8 @@ class Test_KNXIP_ConnStateResp(Testcase):
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-    def test_from_knx_wrong_header(self):
+    @pytest.mark.asyncio
+    async def test_from_knx_wrong_header(self):
         """Test parsing and streaming wrong ConnectionStateResponse (wrong header length)."""
         raw = ((0x06, 0x10, 0x02, 0x08, 0x00, 0x08, 0x15))
         xknx = XKNX()

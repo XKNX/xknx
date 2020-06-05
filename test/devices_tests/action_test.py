@@ -15,7 +15,8 @@ class TestAction(Testcase):
     #
     # TEST COUNTER
     #
-    def test_counter(self):
+    @pytest.mark.asyncio
+    async def test_counter(self):
         """Test counter method."""
         xknx = XKNX()
         action = ActionBase(xknx, counter=2)
@@ -24,7 +25,8 @@ class TestAction(Testcase):
         self.assertTrue(action.test_counter(2))
         self.assertFalse(action.test_counter(3))
 
-    def test_no_counter(self):
+    @pytest.mark.asyncio
+    async def test_no_counter(self):
         """Test counter method with no counter set."""
         xknx = XKNX()
         action = ActionBase(xknx, counter=None)
@@ -36,7 +38,8 @@ class TestAction(Testcase):
     #
     # TEST APPLICABLE
     #
-    def test_if_applicable_hook_on(self):
+    @pytest.mark.asyncio
+    async def test_if_applicable_hook_on(self):
         """Test test_if_applicable method with hook set to 'on'."""
         xknx = XKNX()
         action = ActionBase(xknx, counter=2, hook="on")
@@ -47,7 +50,8 @@ class TestAction(Testcase):
         self.assertFalse(action.test_if_applicable(
             BinarySensorState.OFF, 2))
 
-    def test_if_applicable_hook_off(self):
+    @pytest.mark.asyncio
+    async def test_if_applicable_hook_off(self):
         """Test test_if_applicable method with hook set to 'off'."""
         xknx = XKNX()
         action = ActionBase(xknx, counter=2, hook="off")

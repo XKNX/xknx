@@ -1,4 +1,5 @@
 """Unit test for RemoteValueSensor objects."""
+import pytest
 import asyncio
 
 from xknx import XKNX
@@ -10,7 +11,8 @@ from xknx._test import Testcase
 class TestRemoteValueSensor(Testcase):
     """Test class for RemoteValueSensor objects."""
 
-    def test_wrong_value_type(self):
+    @pytest.mark.asyncio
+    async def test_wrong_value_type(self):
         """Test initializing with wrong value_type."""
         xknx = XKNX()
         with self.assertRaises(ConversionError):

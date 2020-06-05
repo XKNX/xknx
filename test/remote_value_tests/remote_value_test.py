@@ -14,7 +14,8 @@ from xknx._test import Testcase
 class TestRemoteValue(Testcase):
     """Test class for RemoteValue objects."""
 
-    def test_warn_payload_valid(self):
+    @pytest.mark.asyncio
+    async def test_warn_payload_valid(self):
         """Test for warning if payload_valid is not implemented."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
@@ -22,7 +23,8 @@ class TestRemoteValue(Testcase):
             remote_value.payload_valid(DPTBinary(0))
             mock_warn.assert_called_with('payload_valid not implemented for %s', 'RemoteValue')
 
-    def test_warn_to_knx(self):
+    @pytest.mark.asyncio
+    async def test_warn_to_knx(self):
         """Test for warning if to_knx is not implemented."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
@@ -30,7 +32,8 @@ class TestRemoteValue(Testcase):
             remote_value.to_knx(23)
             mock_warn.assert_called_with('to_knx not implemented for %s', 'RemoteValue')
 
-    def test_warn_from_knx(self):
+    @pytest.mark.asyncio
+    async def test_warn_from_knx(self):
         """Test for warning if from_knx is not implemented."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
@@ -56,7 +59,8 @@ class TestRemoteValue(Testcase):
             await remote_value.set(23)
             mock_info.assert_called_with('Attempted to set value for non-writable device: %s (value: %s)', 'Unknown', 23)
 
-    def test_default_value_unit(self):
+    @pytest.mark.asyncio
+    async def test_default_value_unit(self):
         """Test for the default value of unit_of_measurement."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
@@ -78,7 +82,8 @@ class TestRemoteValue(Testcase):
             with self.assertRaises(CouldNotParseTelegram):
                 await remote_value.process(telegram)
 
-    def test_eq(self):
+    @pytest.mark.asyncio
+    async def test_eq(self):
         """Test __eq__ operator."""
         xknx = XKNX()
         remote_value1 = RemoteValue(xknx, group_address=GroupAddress('1/1/1'))
