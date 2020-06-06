@@ -100,6 +100,23 @@ class TestTelegramQueue(Testcase):
         await xknx.telegram_queue.process_telegram(telegram)
         telegram_received_callback.assert_called_once_with(telegram)
 
+    @pytest.mark.anyio
+    async def test_receiver(self):
+        """Test telegram_received_callback after state of switch was changed."""
+        # pylint: disable=no-self-use
+        xknx = XKNX()
+
+        # No callback or similar nonlinearity required.
+        with xknx.telegram_queue.receiver() as recv:
+            telegram = Telegram(
+                direction=TelegramDirection.INCOMING,
+                payload=DPTBinary(1),
+                group_address=GroupAddress("1/2/3"))
+            await xknx.telegram_queue.process_telegram(telegram)
+            async for msg in recv:
+                assert msg is telegram
+                break
+
     #
     # TEST UNREGISTER
     #
