@@ -6,7 +6,7 @@ GatewayScanner is an abstraction for searching for KNX/IP devices on the local n
 * it returns the first found device
 """
 
-import asyncio
+import anyio
 from typing import List
 
 import netifaces
@@ -96,16 +96,15 @@ class GatewayScanner():
         self.scan_filter = scan_filter
         self.found_gateways = []  # List[GatewayDescriptor]
         self._udp_clients = []
-        self._response_received_or_timeout = asyncio.Event()
+        self._response_received = anyio.create_event()
         self._timeout_handle = None
 
     async def scan(self) -> List[GatewayDescriptor]:
         """Scan and return a list of GatewayDescriptors on success."""
         await self._send_search_requests()
-        await self._start_timeout()
-        await self._response_received_or_timeout.wait()
+        async with anyio.move_on_after(self.timeout_in_seconds):
+            await self._response_received.wait()
         await self._stop()
-        await self._stop_timeout()
         return self.found_gateways
 
     async def _stop(self):
@@ -167,24 +166,11 @@ class GatewayScanner():
         except IndexError:
             pass
 
-        self._add_found_gateway(gateway)
+        await self._add_found_gateway(gateway)
 
-    def _add_found_gateway(self, gateway):
+    async def _add_found_gateway(self, gateway):
         if self.scan_filter.match(gateway):
             self.found_gateways.append(gateway)
             if len(self.found_gateways) >= self.stop_on_found:
-                self._response_received_or_timeout.set()
+                await self._response_received.set()
 
-    def _timeout(self):
-        """Handle timeout for not having received enough SearchResponse."""
-        self._response_received_or_timeout.set()
-
-    async def _start_timeout(self):
-        """Start time out."""
-        loop = asyncio.get_event_loop()
-        self._timeout_handle = loop.call_later(
-            self.timeout_in_seconds, self._timeout)
-
-    async def _stop_timeout(self):
-        """Stop/cancel timeout."""
-        self._timeout_handle.cancel()

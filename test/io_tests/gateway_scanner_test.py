@@ -108,11 +108,6 @@ class TestGatewayScanner(Testcase):
 
         timed_out_scan = await gateway_scanner.scan()
 
-        # Timeout handle was cancelled (cancelled method requires Python 3.7)
-        event_has_cancelled = getattr(gateway_scanner._timeout_handle, "cancelled", None)
-        if callable(event_has_cancelled):
-            self.assertTrue(gateway_scanner._timeout_handle.cancelled())
-        self.assertTrue(gateway_scanner._response_received_or_timeout.is_set())
         # Unsuccessfull scan() returns None
         self.assertEqual(timed_out_scan, [])
 
