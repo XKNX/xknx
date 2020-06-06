@@ -14,7 +14,8 @@ with open(path.join(THIS_DIRECTORY, "xknx/__version__.py")) as fp:
 
 REQUIRES = [
     'pyyaml>=5.1',
-    'netifaces>=0.10.9'
+    'netifaces>=0.10.9',
+    'anyio>=1.3,<2',
 ]
 
 setup(
@@ -36,7 +37,6 @@ setup(
         'Intended Audience :: Developers',
         'Topic :: System :: Hardware :: Hardware Drivers',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8'
