@@ -102,9 +102,11 @@ class GatewayScanner():
     async def scan(self) -> List[GatewayDescriptor]:
         """Scan and return a list of GatewayDescriptors on success."""
         await self._send_search_requests()
-        async with anyio.move_on_after(self.timeout_in_seconds):
-            await self._response_received.wait()
-        await self._stop()
+        try:
+            async with anyio.move_on_after(self.timeout_in_seconds):
+                await self._response_received.wait()
+        finally:
+            await self._stop()
         return self.found_gateways
 
     async def _stop(self):
