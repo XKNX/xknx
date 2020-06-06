@@ -1,6 +1,5 @@
 """Unit test for KNX/IP gateway scanner."""
-import asyncio
-from unittest.mock import patch, create_autospec
+from unittest.mock import patch, create_autospec, AsyncMock
 import pytest
 
 from xknx import XKNX
@@ -79,7 +78,7 @@ class TestGatewayScanner(Testcase):
         self.assertTrue(filter_no_tunnel.match(self.gateway_desc_router))
         self.assertFalse(filter_no_tunnel.match(self.gateway_desc_both))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_search_response_reception(self):
         """Test function of gateway scanner."""
         # pylint: disable=protected-access
@@ -96,7 +95,7 @@ class TestGatewayScanner(Testcase):
                          str(self.gateway_desc_both))
 
     @patch('xknx.io.gateway_scanner.netifaces', autospec=True)
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_scan_timeout(self, netifaces_mock):
         """Test gateway scanner timeout."""
         # pylint: disable=protected-access
@@ -112,8 +111,8 @@ class TestGatewayScanner(Testcase):
         self.assertEqual(timed_out_scan, [])
 
     @patch('xknx.io.gateway_scanner.netifaces', autospec=True)
-    @patch('xknx.io.GatewayScanner._search_interface', autospec=True)
-    @pytest.mark.asyncio
+    @patch('xknx.io.GatewayScanner._search_interface', new_callable=AsyncMock)
+    @pytest.mark.anyio
     async def test_send_search_requests(self, _search_interface_mock, netifaces_mock):
         """Test finding all valid interfaces to send search requests to. No requests are sent."""
         # pylint: disable=protected-access
@@ -123,17 +122,13 @@ class TestGatewayScanner(Testcase):
         netifaces_mock.ifaddresses = lambda interface: self.fake_ifaddresses[interface]
         netifaces_mock.AF_INET = 2
 
-        async def async_none():
-            return None
-        _search_interface_mock.return_value = asyncio.ensure_future(async_none())
-
         gateway_scanner = GatewayScanner(xknx, timeout_in_seconds=0)
 
         test_scan = await gateway_scanner.scan()
 
         self.assertEqual(_search_interface_mock.call_count, 2)
-        expected_calls = [((gateway_scanner, 'lo0', '127.0.0.1'),),
-                          ((gateway_scanner, 'en1', '10.1.1.2'),)]
+        expected_calls = [(('lo0', '127.0.0.1'),),
+                          (('en1', '10.1.1.2'),)]
         self.assertEqual(_search_interface_mock.call_args_list, expected_calls)
         self.assertEqual(test_scan, [])
 

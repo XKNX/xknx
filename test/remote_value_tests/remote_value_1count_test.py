@@ -1,5 +1,4 @@
 """Unit test for RemoteValue1Count objects."""
-import asyncio
 import pytest
 
 from xknx import XKNX
@@ -13,21 +12,21 @@ from xknx._test import Testcase
 class TestRemoteValue1Count(Testcase):
     """Test class for RemoteValue1Count objects."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_to_knx(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValue1Count(xknx)
         self.assertEqual(remote_value.to_knx(100), DPTArray((0x64, )))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_from_knx(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValue1Count(xknx)
         self.assertEqual(remote_value.from_knx(DPTArray((0x64, ))), 100)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set(self):
         """Test setting value."""
         xknx = XKNX()
@@ -51,7 +50,7 @@ class TestRemoteValue1Count(Testcase):
                 GroupAddress('1/2/3'),
                 payload=DPTArray((0x65, ))))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process(self):
         """Test process telegram."""
         xknx = XKNX()
@@ -64,7 +63,7 @@ class TestRemoteValue1Count(Testcase):
         await remote_value.process(telegram)
         self.assertEqual(remote_value.value, 100)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_to_process_error(self):
         """Test process errornous telegram."""
         xknx = XKNX()

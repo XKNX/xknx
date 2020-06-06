@@ -1,5 +1,4 @@
 """Unit test for KNX/IP Disconnect Request/Response."""
-import asyncio
 from unittest.mock import patch
 import pytest
 
@@ -13,7 +12,7 @@ from xknx._test import Testcase
 class TestDisconnect(Testcase):
     """Test class for xknx/io/Disconnect objects."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_disconnect(self):
         """Test disconnecting from KNX bus."""
         xknx = XKNX()

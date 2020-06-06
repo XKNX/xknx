@@ -1,5 +1,4 @@
 """Unit test for Sensor and ExposeSensor objects."""
-import asyncio
 import pytest
 
 from xknx import XKNX
@@ -13,7 +12,7 @@ from xknx._test import Testcase
 class SensorExposeLoopTest(Testcase):
     """Process incoming Telegrams and send the values to the bus again."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_array_sensor_loop(self):
         """Test sensor and expose_sensor with different values."""
         test_cases = [
@@ -206,7 +205,7 @@ class SensorExposeLoopTest(Testcase):
                         direction=TelegramDirection.OUTGOING,
                         payload=test_payload))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_binary_sensor_loop(self):
         """Test binary_sensor and expose_sensor with binary values."""
         test_cases = [

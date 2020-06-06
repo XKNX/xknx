@@ -1,7 +1,6 @@
 """Unit test for Cover objects."""
 
-import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, AsyncMock
 import pytest
 
 from xknx import XKNX
@@ -19,7 +18,7 @@ class TestCover(Testcase):
     #
     # SUPPORTS_POSITION/ANGLE
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_supports_position_true(self):
         """Test support_position_true."""
         xknx = XKNX()
@@ -31,7 +30,7 @@ class TestCover(Testcase):
             group_address_position='1/4/16')
         self.assertTrue(cover.supports_position)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_supports_position_false(self):
         """Test support_position_true."""
         xknx = XKNX()
@@ -42,7 +41,7 @@ class TestCover(Testcase):
             group_address_short='1/4/15')
         self.assertFalse(cover.supports_position)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_supports_angle_true(self):
         """Test support_position_true."""
         xknx = XKNX()
@@ -54,7 +53,7 @@ class TestCover(Testcase):
             group_address_angle='1/4/18')
         self.assertTrue(cover.supports_angle)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_support_angle_false(self):
         """Test support_position_true."""
         xknx = XKNX()
@@ -68,7 +67,7 @@ class TestCover(Testcase):
     #
     # SYNC
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
@@ -84,7 +83,7 @@ class TestCover(Testcase):
         self.assertEqual(telegram1,
                          Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync_state(self):
         """Test sync function with explicit state address."""
         xknx = XKNX()
@@ -101,7 +100,7 @@ class TestCover(Testcase):
         self.assertEqual(telegram1,
                          Telegram(GroupAddress('1/2/4'), TelegramType.GROUP_READ))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync_angle(self):
         """Test sync function for cover with angle."""
         xknx = XKNX()
@@ -121,7 +120,7 @@ class TestCover(Testcase):
         self.assertEqual(telegram2,
                          Telegram(GroupAddress('1/2/4'), TelegramType.GROUP_READ))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync_angle_state(self):
         """Test sync function with angle/explicit state."""
         xknx = XKNX()
@@ -141,7 +140,7 @@ class TestCover(Testcase):
     #
     # TEST SET UP
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set_up(self):
         """Test moving cover to 'up' position."""
         xknx = XKNX()
@@ -161,7 +160,7 @@ class TestCover(Testcase):
     #
     # TEST SET DOWN
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set_short_down(self):
         """Test moving cover to 'down' position."""
         xknx = XKNX()
@@ -181,7 +180,7 @@ class TestCover(Testcase):
     #
     # TEST SET SHORT UP
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set_short_up(self):
         """Test moving cover 'short up'."""
         xknx = XKNX()
@@ -201,7 +200,7 @@ class TestCover(Testcase):
     #
     # TEST SET SHORT DOWN
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set_down(self):
         """Test moving cover 'short down'."""
         xknx = XKNX()
@@ -221,7 +220,7 @@ class TestCover(Testcase):
     #
     # TEST STOP
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_stop(self):
         """Test stopping cover."""
         xknx = XKNX()
@@ -240,7 +239,7 @@ class TestCover(Testcase):
     #
     # TEST POSITION
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_position(self):
         """Test moving cover to absolute position."""
         xknx = XKNX()
@@ -257,7 +256,7 @@ class TestCover(Testcase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'), payload=DPTArray(0x80)))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_position_without_position_address_up(self):
         """Test moving cover to absolute position - with no absolute positioning supported."""
         xknx = XKNX()
@@ -274,7 +273,7 @@ class TestCover(Testcase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/1'), payload=DPTBinary(1)))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_position_without_position_address_down(self):
         """Test moving cover down - with no absolute positioning supported."""
         xknx = XKNX()
@@ -291,7 +290,7 @@ class TestCover(Testcase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/1'), payload=DPTBinary(0)))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_angle(self):
         """Test changing angle."""
         xknx = XKNX()
@@ -310,7 +309,7 @@ class TestCover(Testcase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/4/18'), payload=DPTArray(0x80)))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_angle_not_supported(self):
         """Test changing angle on cover wich does not support angle."""
         xknx = XKNX()
@@ -327,7 +326,7 @@ class TestCover(Testcase):
     #
     # TEST PROCESS
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process(self):
         """Test process / reading telegrams from telegram queue. Test if position is processed correctly."""
         xknx = XKNX()
@@ -342,7 +341,7 @@ class TestCover(Testcase):
         await cover.process(telegram)
         self.assertEqual(cover.current_position(), 84)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_angle(self):
         """Test process / reading telegrams from telegram queue. Test if position is processed correctly."""
         xknx = XKNX()
@@ -357,7 +356,7 @@ class TestCover(Testcase):
         await cover.process(telegram)
         self.assertEqual(cover.current_angle(), 84)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback is executed."""
         # pylint: disable=no-self-use
@@ -385,7 +384,7 @@ class TestCover(Testcase):
     #
     # IS TRAVELING / IS UP / IS DOWN
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_is_traveling(self):
         """Test moving cover to absolute position."""
         xknx = XKNX()
@@ -422,7 +421,7 @@ class TestCover(Testcase):
     #
     # TEST AUTO STOP
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_auto_stop(self):
         """Test auto stop functionality."""
         xknx = XKNX()
@@ -432,11 +431,7 @@ class TestCover(Testcase):
             group_address_long='1/2/1',
             travel_time_down=10,
             travel_time_up=10)
-        with patch('xknx.devices.Cover.stop') as mock_stop, patch('time.time') as mock_time:
-            fut = asyncio.Future()
-            fut.set_result(None)
-            mock_stop.return_value = fut
-
+        with patch('xknx.devices.Cover.stop', new_callable=AsyncMock) as mock_stop, patch('time.time') as mock_time:
             mock_time.return_value = 1517000000.0
             await cover.set_position(50)
 
@@ -452,38 +447,30 @@ class TestCover(Testcase):
     #
     # TEST DO
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_do(self):
         """Test 'do' functionality."""
-        async def async_none():
-            return None
-
         xknx = XKNX()
         cover = Cover(
             xknx,
             'TestCover')
-        with patch('xknx.devices.Cover.set_up') as mock:
-            mock.return_value = asyncio.ensure_future(async_none())
+        with patch('xknx.devices.Cover.set_up', new_callable=AsyncMock) as mock:
             await cover.do("up")
             mock.assert_called_once_with()
-        with patch('xknx.devices.Cover.set_short_up') as mock:
-            mock.return_value = asyncio.ensure_future(async_none())
+        with patch('xknx.devices.Cover.set_short_up', new_callable=AsyncMock) as mock:
             await cover.do("short_up")
             mock.assert_called_once_with()
-        with patch('xknx.devices.Cover.set_down') as mock:
-            mock.return_value = asyncio.ensure_future(async_none())
+        with patch('xknx.devices.Cover.set_down', new_callable=AsyncMock) as mock:
             await cover.do("down")
             mock.assert_called_once_with()
-        with patch('xknx.devices.Cover.set_short_down') as mock:
-            mock.return_value = asyncio.ensure_future(async_none())
+        with patch('xknx.devices.Cover.set_short_down', new_callable=AsyncMock) as mock:
             await cover.do("short_down")
             mock.assert_called_once_with()
-        with patch('xknx.devices.Cover.stop') as mock:
-            mock.return_value = asyncio.ensure_future(async_none())
+        with patch('xknx.devices.Cover.stop', new_callable=AsyncMock) as mock:
             await cover.do("stop")
             mock.assert_called_once_with()
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_wrong_do(self):
         """Test wrong do command."""
         xknx = XKNX()
@@ -498,7 +485,7 @@ class TestCover(Testcase):
     #
     # STATE ADDRESSES
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_state_addresses(self):
         """Test state addresses of cover."""
         xknx = XKNX()
@@ -513,7 +500,7 @@ class TestCover(Testcase):
             group_address_angle_state='1/2/6')
         self.assertEqual(cover.state_addresses(), [GroupAddress('1/2/4'), GroupAddress('1/2/6')])
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_state_addresses_while_travelling(self):
         """Test state addresses of cover while travelling."""
         xknx = XKNX()
@@ -536,7 +523,7 @@ class TestCover(Testcase):
     #
     # HAS GROUP ADDRESS
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_has_group_address(self):
         """Test sensor has group address."""
         xknx = XKNX()

@@ -1,6 +1,5 @@
 """Unit test for Scene objects."""
 
-import asyncio
 from unittest.mock import patch
 import pytest
 
@@ -19,7 +18,7 @@ class TestScene(Testcase):
     #
     # SYNC
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
@@ -34,7 +33,7 @@ class TestScene(Testcase):
     #
     # TEST RUN SCENE
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_run(self):
         """Test running scene."""
         xknx = XKNX()
@@ -49,7 +48,7 @@ class TestScene(Testcase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/1'), payload=DPTArray(0x16)))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_do(self):
         """Test running scene with do command."""
         xknx = XKNX()
@@ -64,7 +63,7 @@ class TestScene(Testcase):
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/1'), payload=DPTArray(0x16)))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_wrong_do(self):
         """Test wrong do command."""
         xknx = XKNX()
@@ -81,7 +80,7 @@ class TestScene(Testcase):
     #
     # TEST has_group_address
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_has_group_address(self):
         """Test has_group_address."""
         xknx = XKNX()

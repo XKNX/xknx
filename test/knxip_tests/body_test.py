@@ -1,6 +1,5 @@
 """Unit test for KNX/IP ConnectionStateRequests."""
 import pytest
-import asyncio
 from unittest.mock import patch
 
 from xknx import XKNX
@@ -13,7 +12,7 @@ class Test_KNXIPBody(Testcase):
 
     # pylint: disable=too-many-public-methods,invalid-name
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_warn_calculated_length(self):
         """Test correct warn message if calculated_length is missing."""
         xknx = XKNX()
@@ -22,7 +21,7 @@ class Test_KNXIPBody(Testcase):
             body.calculated_length()
             mock_warn.assert_called_with('calculated_length not implemented for %s', 'KNXIPBody')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_warn_to_knx(self):
         """Test correct warn message if to_knx is missing."""
         xknx = XKNX()
@@ -31,7 +30,7 @@ class Test_KNXIPBody(Testcase):
             body.to_knx()
             mock_warn.assert_called_with('to_knx not implemented for %s', 'KNXIPBody')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_warn_from_knx(self):
         """Test correct warn message if from_knx is missing."""
         xknx = XKNX()

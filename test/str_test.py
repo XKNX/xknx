@@ -1,5 +1,4 @@
 """Unit test for String representations."""
-import asyncio
 import pytest
 
 from xknx import XKNX
@@ -28,7 +27,7 @@ from xknx._test import Testcase
 class TestStringRepresentations(Testcase):
     """Test class for Configuration logic."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_remote_value(self):
         """Test string representation of remote value."""
         xknx = XKNX()
@@ -45,7 +44,7 @@ class TestStringRepresentations(Testcase):
             str(remote_value),
             '<RemoteValue device_name="MyDevice" GroupAddress("1/2/3")/GroupAddress("1/2/4")/<DPTArray value="[0x1,0x2]" />/None/>')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_binary_sensor(self):
         """Test string representation of binary sensor object."""
         xknx = XKNX()
@@ -58,7 +57,7 @@ class TestStringRepresentations(Testcase):
             str(binary_sensor),
             '<BinarySensor group_address_state="GroupAddress("1/2/3")" name="Fnord" state="BinarySensorState.OFF"/>')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_climate(self):
         """Test string representation of climate object."""
         xknx = XKNX()
@@ -82,7 +81,7 @@ class TestStringRepresentations(Testcase):
             'setpoint_shift_step="0.1" setpoint_shift_max="20" setpoint_shift_min="-20" '
             'group_address_on_off="GroupAddress("1/2/14")/GroupAddress("1/2/15")/None/None" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_climate_mode(self):
         """Test string representation of climate mode object."""
         xknx = XKNX()
@@ -105,7 +104,7 @@ class TestStringRepresentations(Testcase):
             '" group_address_controller_status="GroupAddress("1/2/10")" group_address_controller_status_state="GroupAddress("1/2/11")" '
             'group_address_controller_mode="GroupAddress("1/2/12")" group_address_controller_mode_state="GroupAddress("1/2/13")" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_cover(self):
         """Test string representation of cover object."""
         xknx = XKNX()
@@ -126,7 +125,7 @@ class TestStringRepresentations(Testcase):
             'Address("1/2/5")/GroupAddress("1/2/6")/None/None" angle="GroupAddress("1/2/7")/GroupAddress("1/2/8")/None/None" travel_time_down="8'
             '" travel_time_up="10" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_fan(self):
         """Test string representation of fan object."""
         xknx = XKNX()
@@ -139,7 +138,7 @@ class TestStringRepresentations(Testcase):
             str(fan),
             '<Fan name="Dunstabzug" speed="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_light(self):
         """Test string representation of non dimmable light object."""
         xknx = XKNX()
@@ -152,7 +151,7 @@ class TestStringRepresentations(Testcase):
             str(light),
             '<Light name="Licht" switch="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_light_dimmable(self):
         """Test string representation of dimmable light object."""
         xknx = XKNX()
@@ -168,7 +167,7 @@ class TestStringRepresentations(Testcase):
             '<Light name="Licht" switch="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" '
             'brightness="GroupAddress("1/2/5")/GroupAddress("1/2/6")/None/None" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_light_color(self):
         """Test string representation of dimmable light object."""
         xknx = XKNX()
@@ -185,7 +184,7 @@ class TestStringRepresentations(Testcase):
             'switch="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" '
             'color="GroupAddress("1/2/5")/GroupAddress("1/2/6")/None/None" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_notification(self):
         """Test string representation of notification object."""
         xknx = XKNX()
@@ -206,7 +205,7 @@ class TestStringRepresentations(Testcase):
             '<DPTArray value="[0x45,0x69,0x6e,0x62,0x72,0x65,0x63,0x68,0x65,0x72,0x20,0x69,0x6d,0x20]" />/'
             'Einbrecher im " />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_scene(self):
         """Test string representation of scene object."""
         xknx = XKNX()
@@ -219,7 +218,7 @@ class TestStringRepresentations(Testcase):
             str(scene),
             '<Scene name="Romantic" scene_value="GroupAddress("1/2/3")/None/None/None" scene_number="23" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sensor(self):
         """Test string representation of sensor object."""
         xknx = XKNX()
@@ -240,7 +239,7 @@ class TestStringRepresentations(Testcase):
             str(sensor),
             '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/<DPTArray value="[0x40]" />/25" value="25" unit="%"/>')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_expose_sensor(self):
         """Test string representation of expose sensor object."""
         xknx = XKNX()
@@ -257,7 +256,7 @@ class TestStringRepresentations(Testcase):
             str(sensor),
             '<ExposeSensor name="MeinSensor" sensor="GroupAddress("1/2/3")/None/<DPTArray value="[0x40]" />/25" value="25" unit="%"/>')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_switch(self):
         """Test string representation of switch object."""
         xknx = XKNX()
@@ -270,7 +269,7 @@ class TestStringRepresentations(Testcase):
             str(switch),
             '<Switch name="Schalter" switch="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_datetime(self):
         """Test string representation of datetime object."""
         xknx = XKNX()
@@ -282,7 +281,7 @@ class TestStringRepresentations(Testcase):
             str(dateTime),
             '<DateTime name="Zeit" group_address="GroupAddress("1/2/3")" broadcast_type="TIME" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_action_base(self):
         """Test string representation of action base."""
         xknx = XKNX()
@@ -294,7 +293,7 @@ class TestStringRepresentations(Testcase):
             str(action_base),
             '<ActionBase hook="off" counter="2"/>')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_action(self):
         """Test string representation of action."""
         xknx = XKNX()
@@ -308,7 +307,7 @@ class TestStringRepresentations(Testcase):
             str(action),
             '<Action target="Licht1" method="off" <ActionBase hook="on" counter="2"/>/>')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_action_callback(self):
         """Test string representation of action callback."""
         xknx = XKNX()
@@ -458,7 +457,7 @@ class TestStringRepresentations(Testcase):
             str(hpai),
             '<HPAI 192.168.42.1:33941 />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_header(self):
         """Test string representation of KNX/IP-Header."""
         xknx = XKNX()
@@ -469,7 +468,7 @@ class TestStringRepresentations(Testcase):
             '<KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="KNXIPServiceType.ROUTING_INDICATION" Reserve="0" TotalLength="42" '
             '/>')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_connect_request(self):
         """Test string representation of KNX/IP ConnectRequest."""
         xknx = XKNX()
@@ -482,7 +481,7 @@ class TestStringRepresentations(Testcase):
             '<ConnectRequest control_endpoint="<HPAI 192.168.42.1:33941 />" data_endpoint="<HPAI 192.168.42.2:33942 />" request_type="ConnectRequest'
             'Type.TUNNEL_CONNECTION" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_connect_response(self):
         """Test string representatoin of KNX/IP ConnectResponse."""
         xknx = XKNX()
@@ -496,7 +495,7 @@ class TestStringRepresentations(Testcase):
             '<ConnectResponse communication_channel="13" status_code="ErrorCode.E_NO_ERROR" control_endpoint="<HPAI 192.168.42.1:33941 />" request_t'
             'ype="ConnectRequestType.TUNNEL_CONNECTION" identifier="42" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_disconnect_request(self):
         """Test string representation of KNX/IP DisconnectRequest."""
         xknx = XKNX()
@@ -507,7 +506,7 @@ class TestStringRepresentations(Testcase):
             str(disconnect_request),
             '<DisconnectRequest CommunicationChannelID="13" control_endpoint="<HPAI 192.168.42.1:33941 />" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_disconnect_response(self):
         """Test string representation of KNX/IP DisconnectResponse."""
         xknx = XKNX()
@@ -517,7 +516,7 @@ class TestStringRepresentations(Testcase):
             str(disconnect_response),
             '<DisconnectResponse CommunicationChannelID="23" status_code="ErrorCode.E_NO_ERROR" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_connectionstate_request(self):
         """Test string representation of KNX/IP ConnectionStateRequest."""
         xknx = XKNX()
@@ -528,7 +527,7 @@ class TestStringRepresentations(Testcase):
             str(connectionstate_request),
             '<ConnectionStateRequest CommunicationChannelID="23", control_endpoint="<HPAI 192.168.42.1:33941 />" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_connectionstate_response(self):
         """Test string representation of KNX/IP ConnectionStateResponse."""
         xknx = XKNX()
@@ -538,7 +537,7 @@ class TestStringRepresentations(Testcase):
             str(connectionstate_response),
             '<ConnectionStateResponse CommunicationChannelID="23" status_code="ErrorCode.E_NO_ERROR" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_search_reqeust(self):
         """Test string representation of KNX/IP SearchRequest."""
         xknx = XKNX()
@@ -547,7 +546,7 @@ class TestStringRepresentations(Testcase):
             str(search_request),
             '<SearchRequest discovery_endpoint="<HPAI 224.0.23.12:3671 />" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_search_response(self):
         """Test string representation of KNX/IP SearchResponse."""
         xknx = XKNX()
@@ -562,7 +561,7 @@ class TestStringRepresentations(Testcase):
             '<DIB dtc="None" data="" />\n'
             ']" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_tunnelling_request(self):
         """Test string representation of KNX/IP TunnellingRequest."""
         xknx = XKNX()
@@ -574,7 +573,7 @@ class TestStringRepresentations(Testcase):
             '<TunnellingRequest communication_channel_id="23" sequence_counter="42" cemi="<CEMIFrame SourceAddress="GroupAddress("0/0/0")" Destina'
             'tionAddress="GroupAddress("0/0/0")" Flags="               0" Command="APCICommand.GROUP_READ" payload="None" />" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_tunnelling_ack(self):
         """Test string representation of KNX/IP TunnellingAck."""
         xknx = XKNX()
@@ -585,7 +584,7 @@ class TestStringRepresentations(Testcase):
             str(tunnelling_ack),
             '<TunnellingAck communication_channel_id="23" sequence_counter="42" status_code="ErrorCode.E_NO_ERROR" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_cemi_frame(self):
         """Test string representation of KNX/IP CEMI Frame."""
         xknx = XKNX()
@@ -599,7 +598,7 @@ class TestStringRepresentations(Testcase):
             '<CEMIFrame SourceAddress="GroupAddress("1/2/3")" DestinationAddress="GroupAddress("1/2/5")" Flags="1011110011100000" Command="APCIC'
             'ommand.GROUP_WRITE" payload="<DPTBinary value="7" />" />')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_knxip_frame(self):
         """Test string representation of KNX/IP Frame."""
         xknx = XKNX()

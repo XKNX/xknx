@@ -1,5 +1,4 @@
 """Unit test for Sensor objects."""
-import asyncio
 from unittest.mock import Mock
 import pytest
 
@@ -16,7 +15,7 @@ class TestExposeSensor(Testcase):
     #
     # STR FUNCTIONS
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_str_binary(self):
         """Test resolve state with binary sensor."""
         xknx = XKNX()
@@ -30,7 +29,7 @@ class TestExposeSensor(Testcase):
         self.assertEqual(expose_sensor.resolve_state(), True)
         self.assertEqual(expose_sensor.unit_of_measurement(), None)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_str_percent(self):
         """Test resolve state with percent sensor."""
         xknx = XKNX()
@@ -44,7 +43,7 @@ class TestExposeSensor(Testcase):
         self.assertEqual(expose_sensor.resolve_state(), 25)
         self.assertEqual(expose_sensor.unit_of_measurement(), "%")
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_str_temperature(self):
         """Test resolve state with temperature sensor."""
         xknx = XKNX()
@@ -61,7 +60,7 @@ class TestExposeSensor(Testcase):
     #
     # TEST SET
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set_binary(self):
         """Test set with binary sensor."""
         xknx = XKNX()
@@ -80,7 +79,7 @@ class TestExposeSensor(Testcase):
                 TelegramType.GROUP_WRITE,
                 payload=DPTBinary(0)))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set_percent(self):
         """Test set with percent sensor."""
         xknx = XKNX()
@@ -100,7 +99,7 @@ class TestExposeSensor(Testcase):
                 TelegramType.GROUP_WRITE,
                 payload=DPTArray((0xBF,))))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set_temperature(self):
         """Test set with temperature sensor."""
         xknx = XKNX()
@@ -122,7 +121,7 @@ class TestExposeSensor(Testcase):
     #
     # TEST PROCESS (GROUP READ)
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_binary(self):
         """Test reading binary expose sensor from bus."""
         xknx = XKNX()
@@ -145,7 +144,7 @@ class TestExposeSensor(Testcase):
                 TelegramType.GROUP_RESPONSE,
                 payload=DPTArray(True)))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_percent(self):
         """Test reading percent expose sensor from bus."""
         xknx = XKNX()
@@ -168,7 +167,7 @@ class TestExposeSensor(Testcase):
                 TelegramType.GROUP_RESPONSE,
                 payload=DPTArray((0x40, ))))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_temperature(self):
         """Test reading temperature expose sensor from bus."""
         xknx = XKNX()
@@ -194,7 +193,7 @@ class TestExposeSensor(Testcase):
     #
     # HAS GROUP ADDRESS
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_has_group_address(self):
         """Test expose sensor has group address."""
         xknx = XKNX()
@@ -209,7 +208,7 @@ class TestExposeSensor(Testcase):
     #
     # STATE ADDRESSES
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_state_addresses(self):
         """Test expose sensor returns empty list as state addresses."""
         xknx = XKNX()
@@ -223,7 +222,7 @@ class TestExposeSensor(Testcase):
     #
     # PROCESS CALLBACK
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_callback(self):
         """Test setting value. Test if callback is called."""
         # pylint: disable=no-self-use

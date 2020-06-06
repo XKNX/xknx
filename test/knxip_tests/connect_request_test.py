@@ -1,6 +1,5 @@
 """Unit test for KNX/IP ConnectRequests."""
 import pytest
-import asyncio
 
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
@@ -14,7 +13,7 @@ class Test_KNXIP_ConnectRequest(Testcase):
 
     # pylint: disable=too-many-public-methods,invalid-name
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_connect_request(self):
         """Test parsing and streaming connection request KNX/IP packet."""
         raw = ((0x06, 0x10, 0x02, 0x05, 0x00, 0x1a, 0x08, 0x01,
@@ -47,7 +46,7 @@ class Test_KNXIP_ConnectRequest(Testcase):
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_from_knx_wrong_length_of_cri(self):
         """Test parsing and streaming wrong ConnectRequest."""
         raw = ((0x06, 0x10, 0x02, 0x05, 0x00, 0x1a, 0x08, 0x01,
@@ -59,7 +58,7 @@ class Test_KNXIP_ConnectRequest(Testcase):
         with self.assertRaises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_from_knx_wrong_cri(self):
         """Test parsing and streaming wrong ConnectRequest."""
         raw = ((0x06, 0x10, 0x02, 0x05, 0x00, 0x1a, 0x08, 0x01,

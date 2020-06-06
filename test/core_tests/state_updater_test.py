@@ -13,7 +13,7 @@ from xknx._test import Testcase
 class TestStateupdater(Testcase):
     """Test class for xknx/io/Disconnect objects."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_state_updater(self):
         """Test State updater."""
         xknx = XKNX()

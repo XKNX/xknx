@@ -1,5 +1,4 @@
 """Unit test for RemoteValueColorRGB objects."""
-import asyncio
 import pytest
 
 from xknx import XKNX
@@ -13,7 +12,7 @@ from xknx._test import Testcase
 class TestRemoteValueColorRGB(Testcase):
     """Test class for RemoteValueColorRGB objects."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_to_knx(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
@@ -21,14 +20,14 @@ class TestRemoteValueColorRGB(Testcase):
         self.assertEqual(remote_value.to_knx((100, 101, 102)), DPTArray((0x64, 0x65, 0x66)))
         self.assertEqual(remote_value.to_knx([100, 101, 102]), DPTArray((0x64, 0x65, 0x66)))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_from_knx(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueColorRGB(xknx)
         self.assertEqual(remote_value.from_knx(DPTArray((0x64, 0x65, 0x66))), (100, 101, 102))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_to_knx_error(self):
         """Test to_knx function with wrong parametern."""
         xknx = XKNX()
@@ -44,7 +43,7 @@ class TestRemoteValueColorRGB(Testcase):
         with self.assertRaises(ConversionError):
             remote_value.to_knx("100, 101, 102")
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set(self):
         """Test setting value."""
         xknx = XKNX()
@@ -68,7 +67,7 @@ class TestRemoteValueColorRGB(Testcase):
                 GroupAddress('1/2/3'),
                 payload=DPTArray((0x64, 0x65, 0x68))))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process(self):
         """Test process telegram."""
         xknx = XKNX()
@@ -81,7 +80,7 @@ class TestRemoteValueColorRGB(Testcase):
         await remote_value.process(telegram)
         self.assertEqual(remote_value.value, (100, 101, 102))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_to_process_error(self):
         """Test process errornous telegram."""
         xknx = XKNX()

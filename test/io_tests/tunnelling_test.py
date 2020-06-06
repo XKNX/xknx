@@ -1,5 +1,4 @@
 """Unit test for KNX/IP Tunnelling Request/Response."""
-import asyncio
 from unittest.mock import patch
 import pytest
 
@@ -14,7 +13,7 @@ from xknx._test import Testcase
 class TestTunnelling(Testcase):
     """Test class for xknx/io/Tunnelling objects."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_tunnelling(self):
         """Test tunnelling from KNX bus."""
         # pylint: disable=too-many-locals

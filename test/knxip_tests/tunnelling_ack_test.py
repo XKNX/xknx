@@ -1,6 +1,5 @@
 """Unit test for KNX/IP TunnellingAck objects."""
 import pytest
-import asyncio
 
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
@@ -13,7 +12,7 @@ class Test_KNXIP_TunnelingReq(Testcase):
 
     # pylint: disable=too-many-public-methods,invalid-name
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_connect_request(self):
         """Test parsing and streaming tunneling ACK KNX/IP packet."""
         raw = ((0x06, 0x10, 0x04, 0x21, 0x00, 0x0a, 0x04, 0x2a,
@@ -37,7 +36,7 @@ class Test_KNXIP_TunnelingReq(Testcase):
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_from_knx_wrong_ack_information(self):
         """Test parsing and streaming wrong TunnellingAck (wrong length byte)."""
         raw = ((0x06, 0x10, 0x04, 0x21, 0x00, 0x0a, 0x03, 0x2a,
@@ -47,7 +46,7 @@ class Test_KNXIP_TunnelingReq(Testcase):
         with self.assertRaises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_from_knx_wrong_ack_information2(self):
         """Test parsing and streaming wrong TunnellingAck (wrong length)."""
         raw = ((0x06, 0x10, 0x04, 0x21, 0x00, 0x0a, 0x04, 0x2a,

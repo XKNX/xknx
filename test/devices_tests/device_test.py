@@ -1,6 +1,5 @@
 """Unit test for Switch objects."""
-import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, AsyncMock
 import pytest
 
 from xknx import XKNX
@@ -9,19 +8,19 @@ from xknx.dpt import DPTArray
 from xknx.exceptions import XKNXException
 from xknx.telegram import GroupAddress, Telegram, TelegramType
 
-from xknx._test import Testcase, CoroMock
+from xknx._test import Testcase
 
 class TestDevice(Testcase):
     """Test class for Switch object."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_state_addresses(self):
         """Test state_addresses() function."""
         xknx = XKNX()
         device = Device(xknx, 'TestDevice')
         self.assertEqual(device.state_addresses(), [])
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
         xknx = XKNX()
@@ -69,16 +68,13 @@ class TestDevice(Testcase):
         after_update_callback1.assert_not_called()
         after_update_callback2.assert_not_called()
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process(self):
         """Test if telegram is handled by the correct process_* method."""
         xknx = XKNX()
         device = Device(xknx, 'TestDevice')
 
-        with patch('xknx.devices.Device.process_group_read') as mock_group_read:
-            fut = asyncio.Future()
-            fut.set_result(None)
-            mock_group_read.return_value = fut
+        with patch('xknx.devices.Device.process_group_read', new_callable=AsyncMock) as mock_group_read:
             telegram = Telegram(
                 GroupAddress('1/2/1'),
                 payload=DPTArray((0x01, 0x02)),
@@ -86,10 +82,7 @@ class TestDevice(Testcase):
             await device.process(telegram)
             mock_group_read.assert_called_with(telegram)
 
-        with patch('xknx.devices.Device.process_group_write') as mock_group_write:
-            fut = asyncio.Future()
-            fut.set_result(None)
-            mock_group_write.return_value = fut
+        with patch('xknx.devices.Device.process_group_write', new_callable=AsyncMock) as mock_group_write:
             telegram = Telegram(
                 GroupAddress('1/2/1'),
                 payload=DPTArray((0x01, 0x02)),
@@ -97,10 +90,7 @@ class TestDevice(Testcase):
             await device.process(telegram)
             mock_group_write.assert_called_with(telegram)
 
-        with patch('xknx.devices.Device.process_group_response') as mock_group_response:
-            fut = asyncio.Future()
-            fut.set_result(None)
-            mock_group_response.return_value = fut
+        with patch('xknx.devices.Device.process_group_response', new_callable=AsyncMock) as mock_group_response:
             telegram = Telegram(
                 GroupAddress('1/2/1'),
                 payload=DPTArray((0x01, 0x02)),
@@ -108,33 +98,30 @@ class TestDevice(Testcase):
             await device.process(telegram)
             mock_group_response.assert_called_with(telegram)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_group_write(self):
         """Test if process_group_write. Nothing really to test here."""
         xknx = XKNX()
         device = Device(xknx, 'TestDevice')
         await device.process_group_write(Telegram())
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_group_response(self):
         """Test if process_group_read. Testing if mapped to group_write."""
         xknx = XKNX()
         device = Device(xknx, 'TestDevice')
-        with patch('xknx.devices.Device.process_group_write') as mock_group_write:
-            fut = asyncio.Future()
-            fut.set_result(None)
-            mock_group_write.return_value = fut
+        with patch('xknx.devices.Device.process_group_write', new_callable=AsyncMock) as mock_group_write:
             await device.process_group_response(Telegram())
             mock_group_write.assert_called_with(Telegram())
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_group_read(self):
         """Test if process_group_read. Nothing really to test here."""
         xknx = XKNX()
         device = Device(xknx, 'TestDevice')
         await device.process_group_read(Telegram())
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync_exception(self):
         """Testing exception handling within sync()."""
         # pylint: disable=protected-access
@@ -142,16 +129,13 @@ class TestDevice(Testcase):
         device = Device(xknx, 'TestDevice')
 
         with patch('logging.Logger.error') as mock_error:
-            with patch('xknx.devices.Device._sync_impl') as mock_sync_impl:
-                fut = asyncio.Future()
-                fut.set_result(None)
-                mock_sync_impl.return_value = fut
+            with patch('xknx.devices.Device._sync_impl', new_callable=AsyncMock) as mock_sync_impl:
                 mock_sync_impl.side_effect = XKNXException()
                 await device.sync()
                 mock_sync_impl.assert_called_with(True)
                 mock_error.assert_called_with('Error while syncing device: %s', XKNXException())
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_do(self):
         """Testing empty do."""
         xknx = XKNX()
@@ -163,7 +147,7 @@ class TestDevice(Testcase):
     #
     # _SYNC_IMPL()
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync_no_response(self):
         """Testing _sync_impl() method with ValueReader returning no telegram as response."""
         # pylint: disable=protected-access
@@ -171,14 +155,14 @@ class TestDevice(Testcase):
         device = Device(xknx, 'TestDevice')
         with patch('xknx.devices.Device.state_addresses') as mock_state_addresses:
             mock_state_addresses.return_value = [GroupAddress('1/2/3'), ]
-            with patch('xknx.core.ValueReader.read', new_callable=CoroMock) as mock_value_reader_read:
+            with patch('xknx.core.ValueReader.read', new_callable=AsyncMock) as mock_value_reader_read:
                 mock_value_reader_read.return_value = None
                 with patch('logging.Logger.warning') as mock_warn:
                     await device._sync_impl()
                     mock_warn.assert_called_with("Could not sync group address '%s' from %s",
                                                  GroupAddress('1/2/3'), device)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync_not_wait_for_response(self):
         """Testing _sync_impl() method without waiting for response (send_group_read should be called directly)."""
         # pylint: disable=protected-access
@@ -186,12 +170,12 @@ class TestDevice(Testcase):
         device = Device(xknx, 'TestDevice')
         with patch('xknx.devices.Device.state_addresses') as mock_state_addresses:
             mock_state_addresses.return_value = [GroupAddress('1/2/3'), ]
-            with patch('xknx.core.ValueReader.send_group_read', new_callable=CoroMock) as mock_value_reader_group_read:
+            with patch('xknx.core.ValueReader.send_group_read', new_callable=AsyncMock) as mock_value_reader_group_read:
                 mock_value_reader_group_read.return_value = None
                 await device._sync_impl(wait_for_result=False)
                 mock_value_reader_group_read.assert_called_with()
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync_valid_response(self):
         """Testing _sync_imp() method with ValueReader.read returning a Telegram - which should be processed."""
         # pylint: disable=protected-access
@@ -199,10 +183,10 @@ class TestDevice(Testcase):
         device = Device(xknx, 'TestDevice')
         with patch('xknx.devices.Device.state_addresses') as mock_state_addresses:
             mock_state_addresses.return_value = [GroupAddress('1/2/3'), ]
-            with patch('xknx.core.ValueReader.read', new_callable=CoroMock) as mock_value_reader_read:
+            with patch('xknx.core.ValueReader.read', new_callable=AsyncMock) as mock_value_reader_read:
                 telegram = Telegram(GroupAddress("1/2/3"))
                 mock_value_reader_read.return_value = telegram
-                with patch('xknx.devices.Device.process', new_callable=CoroMock) as mock_device_process:
+                with patch('xknx.devices.Device.process', new_callable=AsyncMock) as mock_device_process:
                     mock_device_process.return_value = None
                     await device._sync_impl()
                     mock_device_process.assert_called_with(telegram)

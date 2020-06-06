@@ -1,5 +1,4 @@
 """Unit test for RemoteValueSwitch objects."""
-import asyncio
 import pytest
 
 from xknx import XKNX
@@ -13,7 +12,7 @@ from xknx._test import Testcase
 class TestRemoteValueSwitch(Testcase):
     """Test class for RemoteValueSwitch objects."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_to_knx(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
@@ -21,7 +20,7 @@ class TestRemoteValueSwitch(Testcase):
         self.assertEqual(remote_value.to_knx(True), DPTBinary(True))
         self.assertEqual(remote_value.to_knx(False), DPTBinary(False))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_from_knx(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX()
@@ -29,7 +28,7 @@ class TestRemoteValueSwitch(Testcase):
         self.assertEqual(remote_value.from_knx(DPTBinary(True)), True)
         self.assertEqual(remote_value.from_knx(DPTBinary(0)), False)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_to_knx_invert(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
@@ -37,7 +36,7 @@ class TestRemoteValueSwitch(Testcase):
         self.assertEqual(remote_value.to_knx(True), DPTBinary(0))
         self.assertEqual(remote_value.to_knx(False), DPTBinary(1))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_from_knx_invert(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX()
@@ -45,7 +44,7 @@ class TestRemoteValueSwitch(Testcase):
         self.assertEqual(remote_value.from_knx(DPTBinary(1)), False)
         self.assertEqual(remote_value.from_knx(DPTBinary(0)), True)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_to_knx_error(self):
         """Test to_knx function with wrong parametern."""
         xknx = XKNX()
@@ -53,7 +52,7 @@ class TestRemoteValueSwitch(Testcase):
         with self.assertRaises(ConversionError):
             remote_value.to_knx(1)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set(self):
         """Test setting value."""
         xknx = XKNX()
@@ -77,7 +76,7 @@ class TestRemoteValueSwitch(Testcase):
                 GroupAddress('1/2/3'),
                 payload=DPTBinary(0)))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process(self):
         """Test process telegram."""
         xknx = XKNX()
@@ -92,7 +91,7 @@ class TestRemoteValueSwitch(Testcase):
         self.assertIsNotNone(remote_value.payload)
         self.assertEqual(remote_value.value, True)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_off(self):
         """Test process OFF telegram."""
         xknx = XKNX()
@@ -107,7 +106,7 @@ class TestRemoteValueSwitch(Testcase):
         self.assertIsNotNone(remote_value.payload)
         self.assertEqual(remote_value.value, False)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_to_process_error(self):
         """Test process errornous telegram."""
         xknx = XKNX()

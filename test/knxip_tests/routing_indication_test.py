@@ -1,6 +1,5 @@
 """Unit test for KNX/IP RountingIndication objects."""
 import pytest
-import asyncio
 
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary, DPTTemperature, DPTTime
@@ -14,7 +13,7 @@ class Test_KNXIP(Testcase):
 
     # pylint: disable=too-many-public-methods,invalid-name
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_from_knx(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet (payload=0xf0)."""
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x12, 0x29, 0x00,
@@ -32,7 +31,7 @@ class Test_KNXIP(Testcase):
         self.assertEqual(len(knxipframe.body.payload.value), 1)
         self.assertEqual(knxipframe.body.payload.value[0], 0xf0)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_from_knx_to_knx(self):
         """Test parsing and streaming CEMIFrame KNX/IP."""
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x12, 0x29, 0x00,
@@ -48,7 +47,7 @@ class Test_KNXIP(Testcase):
         self.assertEqual(knxipframe.body.to_knx(), list(raw[6:]))
         self.assertEqual(knxipframe.to_knx(), list(raw))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_telegram_set(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet with DPTArray/DPTTime as payload."""
         xknx = XKNX()
@@ -75,7 +74,7 @@ class Test_KNXIP(Testcase):
         self.assertEqual(knxipframe.body.to_knx(), list(raw[6:]))
         self.assertEqual(knxipframe.to_knx(), list(raw))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_telegram_get(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, group read."""
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x12, 0x29, 0x00,
@@ -100,7 +99,7 @@ class Test_KNXIP(Testcase):
     #   - comparing both
     #
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_EndTOEnd_group_write_binary_on(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, switch on light in my kitchen."""
         # Switch on Kitchen-L1
@@ -125,7 +124,7 @@ class Test_KNXIP(Testcase):
         self.assertEqual(knxipframe2.body.to_knx(), list(raw[6:]))
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_EndTOEnd_group_write_binary_off(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, switch off light in my kitchen."""
         # Switch off Kitchen-L1
@@ -150,7 +149,7 @@ class Test_KNXIP(Testcase):
         self.assertEqual(knxipframe2.body.to_knx(), list(raw[6:]))
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_EndTOEnd_group_write_1byte(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, dimm light in my kitchen."""
         # Dimm Kitchen L1 to 0x65
@@ -175,7 +174,7 @@ class Test_KNXIP(Testcase):
         self.assertEqual(knxipframe2.body.to_knx(), list(raw[6:]))
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_EndTOEnd_group_write_2bytes(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, setting value of thermostat."""
         # Incoming Temperature from thermostat
@@ -202,7 +201,7 @@ class Test_KNXIP(Testcase):
         self.assertEqual(knxipframe2.body.to_knx(), list(raw[6:]))
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_EndTOEnd_group_read(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, group read."""
         # State request
@@ -227,7 +226,7 @@ class Test_KNXIP(Testcase):
         self.assertEqual(knxipframe2.body.to_knx(), list(raw[6:]))
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_EndTOEnd_group_response(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, group response."""
         # Incoming state
@@ -254,7 +253,7 @@ class Test_KNXIP(Testcase):
         self.assertEqual(knxipframe2.body.to_knx(), list(raw[6:]))
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_maximum_apci(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, testing maximum APCI."""
         telegram = Telegram()

@@ -1,6 +1,6 @@
 """Unit test for telegram received callback."""
-import asyncio
-from unittest.mock import Mock, patch
+import anyio
+from unittest.mock import Mock, patch, AsyncMock
 import pytest
 
 from xknx import XKNX
@@ -9,7 +9,7 @@ from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import (
     AddressFilter, GroupAddress, Telegram, TelegramDirection)
 
-from xknx._test import Testcase, CoroMock
+from xknx._test import Testcase
 
 class TestTelegramQueue(Testcase):
     """Test class for telegram queue."""
@@ -17,7 +17,7 @@ class TestTelegramQueue(Testcase):
     #
     # TEST START, RUN, STOP
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_start(self):
         """Test start, run and stop."""
         # pylint: disable=no-self-use
@@ -34,22 +34,18 @@ class TestTelegramQueue(Testcase):
             self.assertEqual(xknx.telegrams.qsize(), 0)
             await xknx.telegrams.put(telegram_in)
             await xknx.telegrams.put(telegram_in)
-            self.assertEqual(xknx.telegrams.qsize(), 2)
+            # "put" might actually run the consumer immediately
+            # self.assertEqual(xknx.telegrams.qsize(), 2)
             # wait until telegrams are consumed
             while xknx.telegrams.qsize():
-                await asyncio.sleep(0.01)
+                await anyio.sleep(0.01)
         self.assertTrue(xknx.telegram_queue.queue_stopped.is_set())
 
     @pytest.mark.skip
-    @patch('asyncio.sleep')
-    @pytest.mark.asyncio
+    @patch('anyio.sleep', new_callable=AsyncMock)
+    @pytest.mark.anyio
     async def test_rate_limit(self, async_sleep_mock):
         """Test rate limit."""
-        # pylint: disable=no-self-use
-        async def async_none():
-            return None
-        async_sleep_mock.return_value = asyncio.ensure_future(async_none())
-
         xknx = XKNX()
         xknx.rate_limit = 20  # 50 ms per outgoing telegram
         sleep_time = 0.05  # 1 / 20
@@ -70,20 +66,20 @@ class TestTelegramQueue(Testcase):
             await xknx.telegrams.put(telegram_in)
             await xknx.telegrams.put(telegram_in)
             while xknx.telegrams.qsize():
-                await asyncio.sleep(0.01)
+                await anyio.sleep(0.01)
             self.assertEqual(async_sleep_mock.call_count, 0)
             # sleep for outgoing telegrams
             await xknx.telegrams.put(telegram_out)
             await xknx.telegrams.put(telegram_out)
             while xknx.telegrams.qsize():
-                await asyncio.sleep(0.01)
+                await anyio.sleep(0.01)
             self.assertEqual(async_sleep_mock.call_count, 2)
             async_sleep_mock.assert_called_with(sleep_time)
 
     #
     # TEST REGISTER
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_register(self):
         """Test telegram_received_callback after state of switch was changed."""
         # pylint: disable=no-self-use
@@ -107,7 +103,7 @@ class TestTelegramQueue(Testcase):
     #
     # TEST UNREGISTER
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_unregister(self):
         """Test telegram_received_callback after state of switch was changed."""
         # pylint: disable=no-self-use
@@ -133,17 +129,13 @@ class TestTelegramQueue(Testcase):
     # TEST PROCESS
     #
     @patch('xknx.devices.Devices.devices_by_group_address')
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_to_device(self, devices_by_ga_mock):
         """Test process_telegram for forwarding telegram to a device."""
         # pylint: disable=no-self-use
         xknx = XKNX()
 
-        test_device = Mock()
-        async_device_process = asyncio.Future()
-        async_device_process.set_result(None)
-        test_device.process.return_value = async_device_process
-
+        test_device = AsyncMock()
         devices_by_ga_mock.return_value = [test_device]
 
         telegram = Telegram(
@@ -156,7 +148,7 @@ class TestTelegramQueue(Testcase):
         test_device.process.assert_called_once_with(telegram)
 
     @patch('xknx.devices.Devices.devices_by_group_address')
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_to_callback(self, devices_by_ga_mock):
         """Test process_telegram for returning after processing callback."""
         # pylint: disable=no-self-use
@@ -180,17 +172,13 @@ class TestTelegramQueue(Testcase):
         telegram_received_callback.assert_called_once_with(telegram)
         devices_by_ga_mock.assert_not_called()
 
-    @patch('xknx.io.KNXIPInterface')
+    @patch('xknx.io.KNXIPInterface', new_callable=AsyncMock)
     @patch('logging.Logger.warning')
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_outgoing(self, logger_warning_mock, if_mock):
         """Test outgoing telegrams in telegram queue."""
         # pylint: disable=no-self-use
         xknx = XKNX()
-
-        async_if_send_telegram = asyncio.Future()
-        async_if_send_telegram.set_result(None)
-        if_mock.send_telegram.return_value = async_if_send_telegram
 
         telegram = Telegram(
             direction=TelegramDirection.OUTGOING,
@@ -210,8 +198,8 @@ class TestTelegramQueue(Testcase):
 
     @patch('logging.Logger.error')
     @patch('xknx.core.TelegramQueue.process_telegram_incoming',
-            new_callable=CoroMock)
-    @pytest.mark.asyncio
+            new_callable=AsyncMock)
+    @pytest.mark.anyio
     async def test_process_exception(self, process_tg_in_mock, logging_error_mock):
         """Test process_telegram exception handling."""
         # pylint: disable=no-self-use
@@ -231,16 +219,12 @@ class TestTelegramQueue(Testcase):
             "Error while processing telegram %s",
             CouldNotParseTelegram("Something went wrong when receiving the telegram."))
 
-    @patch('xknx.core.TelegramQueue.process_telegram')
-    @pytest.mark.asyncio
+    @patch('xknx.core.TelegramQueue.process_telegram', new_callable=AsyncMock)
+    @pytest.mark.anyio
     async def test_process_all_telegrams(self, process_telegram_mock):
         """Test process_all_telegrams for clearing the queue."""
         # pylint: disable=no-self-use
         xknx = XKNX()
-
-        async_process_mock = asyncio.Future()
-        async_process_mock.set_result(None)
-        process_telegram_mock.return_value = async_process_mock
 
         telegram_in = Telegram(
             direction=TelegramDirection.INCOMING,
@@ -261,7 +245,7 @@ class TestTelegramQueue(Testcase):
     #
     # TEST NO FILTERS
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_no_filters(self):
         """Test telegram_received_callback after state of switch was changed."""
         # pylint: disable=no-self-use
@@ -285,7 +269,7 @@ class TestTelegramQueue(Testcase):
     #
     # TEST POSITIVE FILTERS
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_positive_filters(self):
         """Test telegram_received_callback after state of switch was changed."""
         # pylint: disable=no-self-use
@@ -310,7 +294,7 @@ class TestTelegramQueue(Testcase):
     #
     # TEST NEGATIVE FILTERS
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_negative_filters(self):
         """Test telegram_received_callback after state of switch was changed."""
         # pylint: disable=no-self-use

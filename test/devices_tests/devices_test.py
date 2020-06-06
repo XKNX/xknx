@@ -1,6 +1,5 @@
 """Unit test for devices container within XKNX."""
-import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, AsyncMock
 import pytest
 
 from xknx import XKNX
@@ -16,7 +15,7 @@ class TestDevices(Testcase):
     #
     # XKNX Config
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_get_item(self):
         """Test get item by name or by index."""
         xknx = XKNX()
@@ -58,7 +57,7 @@ class TestDevices(Testcase):
             # pylint: disable=pointless-statement
             devices[4]
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_device_by_group_address(self):
         """Test get devices by group address."""
         xknx = XKNX()
@@ -96,7 +95,7 @@ class TestDevices(Testcase):
             tuple(devices.devices_by_group_address(GroupAddress('3/0/1'))),
             (sensor1, sensor2))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_iter(self):
         """Test __iter__() function."""
         xknx = XKNX()
@@ -129,7 +128,7 @@ class TestDevices(Testcase):
             tuple(devices.__iter__()),
             (light1, sensor1, sensor2, light2))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_len(self):
         """Test len() function."""
         xknx = XKNX()
@@ -162,7 +161,7 @@ class TestDevices(Testcase):
         devices.add(light2)
         self.assertEqual(len(devices), 4)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_contains(self):
         """Test __contains__() function."""
         xknx = XKNX()
@@ -180,7 +179,7 @@ class TestDevices(Testcase):
         self.assertTrue('Living-Room.Light_2' in devices)
         self.assertFalse('Living-Room.Light_3' in devices)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_modification_of_device(self):
         """Test if devices object does store references and not copies of objects."""
         xknx = XKNX()
@@ -199,7 +198,7 @@ class TestDevices(Testcase):
             await device.set_on()
         self.assertTrue(light1.state)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_add_wrong_type(self):
         """Test if exception is raised when wrong type of devices is added."""
         xknx = XKNX()
@@ -209,7 +208,7 @@ class TestDevices(Testcase):
     #
     # TEST SYNC
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync(self):
         """Test sync function."""
         xknx = XKNX()
@@ -217,17 +216,14 @@ class TestDevices(Testcase):
         device2 = Device(xknx, 'TestDevice2')
         xknx.devices.add(device1)
         xknx.devices.add(device2)
-        with patch('xknx.devices.Device.sync') as mock_sync:
-            fut = asyncio.Future()
-            fut.set_result(None)
-            mock_sync.return_value = fut
+        with patch('xknx.devices.Device.sync', new_callable=AsyncMock) as mock_sync:
             await xknx.devices.sync()
             self.assertEqual(mock_sync.call_count, 2)
 
     #
     # TEST CALLBACK
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_device_updated_callback(self):
         """Test if device updated callback is called correctly if device was updated."""
         xknx = XKNX()

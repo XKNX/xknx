@@ -1,5 +1,4 @@
 """Unit test for DateTime object."""
-import asyncio
 import time
 from unittest.mock import patch
 import pytest
@@ -17,7 +16,7 @@ class TestDateTime(Testcase):
     #
     # SYNC DateTime
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync_datetime(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
@@ -37,7 +36,7 @@ class TestDateTime(Testcase):
     #
     # SYNC Date
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync_date(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
@@ -56,7 +55,7 @@ class TestDateTime(Testcase):
     #
     # SYNC Time
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync_time(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
@@ -78,7 +77,7 @@ class TestDateTime(Testcase):
     #
     # TEST PROCESS
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_read(self):
         """Test test process a read telegram from KNX bus."""
         xknx = XKNX()
@@ -102,7 +101,7 @@ class TestDateTime(Testcase):
     #
     # TEST HAS GROUP ADDRESS
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_has_group_address(self):
         """Test if has_group_address function works."""
         xknx = XKNX()

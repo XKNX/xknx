@@ -1,5 +1,4 @@
 """Unit test for Climate objects."""
-import asyncio
 from unittest.mock import Mock
 import pytest
 
@@ -24,7 +23,7 @@ class TestClimate(Testcase):
     #
     # SUPPORTS TEMPERATURE / SETPOINT
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_support_temperature(self):
         """Test supports_temperature flag."""
         xknx = XKNX()
@@ -36,7 +35,7 @@ class TestClimate(Testcase):
         self.assertTrue(climate.temperature.initialized)
         self.assertFalse(climate.target_temperature.initialized)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_support_target_temperature(self):
         """Test supports_target__temperature flag."""
         xknx = XKNX()
@@ -48,7 +47,7 @@ class TestClimate(Testcase):
         self.assertFalse(climate.temperature.initialized)
         self.assertTrue(climate.target_temperature.initialized)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_support_operation_mode(self):
         """Test supports_supports_operation_mode flag. One group address for all modes."""
         xknx = XKNX()
@@ -58,7 +57,7 @@ class TestClimate(Testcase):
             group_address_operation_mode='1/2/4')
         self.assertTrue(climate_mode.supports_operation_mode)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_support_operation_mode2(self):
         """Test supports_supports_operation_mode flag. Splitted group addresses for each mode."""
         xknx = XKNX()
@@ -71,7 +70,7 @@ class TestClimate(Testcase):
     #
     # TEST HAS GROUP ADDRESS
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_has_group_address(self):
         """Test if has_group_address function works."""
         xknx = XKNX()
@@ -95,7 +94,7 @@ class TestClimate(Testcase):
     #
     # TEST HAS GROUP ADDRESS
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_has_group_address_mode(self):
         """Test if has_group_address function works."""
         xknx = XKNX()
@@ -122,7 +121,7 @@ class TestClimate(Testcase):
     #
     # STATE ADDRESSES
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_state_addresses(self):
         """Test state_addresses of Climate and ClimateMode."""
         xknx = XKNX()
@@ -157,7 +156,7 @@ class TestClimate(Testcase):
     #
     # TEST CALLBACK
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_callback(self):
         """Test if after_update_callback is called after update of Climate object was changed."""
         # pylint: disable=no-self-use
@@ -184,7 +183,7 @@ class TestClimate(Testcase):
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_callback_mode(self):
         """Test if after_update_callback is called after update of Climate object was changed."""
         # pylint: disable=no-self-use
@@ -213,7 +212,7 @@ class TestClimate(Testcase):
         after_update_callback.assert_called_with(climate_mode)
         after_update_callback.reset_mock()
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_callback_updated_via_telegram(self):
         """Test if after_update_callback is called after update of Climate object."""
         # pylint: disable=no-self-use
@@ -247,7 +246,7 @@ class TestClimate(Testcase):
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_climate_mode_process_callback_updated_via_telegram(self):
         """Test if after_update_callback is called after update of ClimateMode object."""
         # pylint: disable=no-self-use
@@ -276,7 +275,7 @@ class TestClimate(Testcase):
     #
     # TEST SET OPERATION MODE
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set_operation_mode(self):
         """Test set_operation_mode."""
         xknx = XKNX()
@@ -295,7 +294,7 @@ class TestClimate(Testcase):
                     GroupAddress('1/2/4'),
                     payload=DPTArray(DPTHVACMode.to_knx(operation_mode))))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set_controller_operation_mode(self):
         """Test set_operation_mode with DPT20.105 controller."""
         xknx = XKNX()
@@ -314,7 +313,7 @@ class TestClimate(Testcase):
                     GroupAddress('1/2/4'),
                     payload=DPTArray(DPTHVACContrMode.to_knx(operation_mode))))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set_operation_mode_not_supported(self):
         """Test set_operation_mode but not supported."""
         xknx = XKNX()
@@ -324,7 +323,7 @@ class TestClimate(Testcase):
         with self.assertRaises(DeviceIllegalValue):
             await climate_mode.set_operation_mode(HVACOperationMode.AUTO)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set_operation_mode_with_controller_status(self):
         """Test set_operation_mode with controller status adddressedefined."""
         xknx = XKNX()
@@ -345,7 +344,7 @@ class TestClimate(Testcase):
                     GroupAddress('1/2/4'),
                     payload=DPTArray(DPTControllerStatus.to_knx(operation_mode))))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set_operation_mode_with_separate_addresses(self):
         """Test set_operation_mode with combined and separated group adddresses defined."""
         xknx = XKNX()
@@ -387,7 +386,7 @@ class TestClimate(Testcase):
     #
     # TEST initialized_for_setpoint_shift_calculations
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_initialized_for_setpoint_shift_calculations(self):
         """Test initialized_for_setpoint_shift_calculations method."""
         xknx = XKNX()
@@ -417,7 +416,7 @@ class TestClimate(Testcase):
     #
     # TEST for unitialized target_temperature_min/target_temperature_max
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_uninitalized_for_target_temperature_min_max(self):
         """Test if target_temperature_min/target_temperature_max return non if not initialized."""
         xknx = XKNX()
@@ -430,7 +429,7 @@ class TestClimate(Testcase):
     #
     # TEST for unitialized target_temperature_min/target_temperature_max but with overridden max and min temperature
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_uninitalized_for_target_temperature_min_max_can_be_overridden(self):
         """Test if target_temperature_min/target_temperature_max return overridden value if specified."""
         xknx = XKNX()
@@ -445,7 +444,7 @@ class TestClimate(Testcase):
     #
     # TEST for overriden max and min temp do have precedence over setpoint shift calculations
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_overridden_max_min_temperature_has_priority(self):
         """Test that the overridden min and max temp always have precedence over setpoint shift calculations."""
         xknx = XKNX()
@@ -467,7 +466,7 @@ class TestClimate(Testcase):
     #
     # TEST TARGET TEMPERATURE
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_target_temperature_up(self):
         """Test increase target temperature."""
         # pylint: disable=no-self-use
@@ -523,7 +522,7 @@ class TestClimate(Testcase):
         self.assertEqual(climate.target_temperature_max, 26.00)
         self.assertEqual(climate.setpoint_shift, 6)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_target_temperature_down(self):
         """Test decrease target temperature."""
         # pylint: disable=no-self-use
@@ -579,7 +578,7 @@ class TestClimate(Testcase):
         self.assertEqual(climate.target_temperature_min, 16.00)
         self.assertEqual(climate.setpoint_shift, -6)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_target_temperature_modified_step(self):
         """Test increase target temperature with modified step size."""
         # pylint: disable=no-self-use
@@ -623,7 +622,7 @@ class TestClimate(Testcase):
     #
     # TEST BASE TEMPERATURE
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_base_temperature(self):
         """Test base temperature."""
         # pylint: disable=no-self-use
@@ -668,7 +667,7 @@ class TestClimate(Testcase):
     #
     # TEST TEMPERATURE STEP
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_temperature_step(self):
         """Test base temperature step."""
         # pylint: disable=no-self-use
@@ -704,7 +703,7 @@ class TestClimate(Testcase):
     #
     # TEST SYNC
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
@@ -719,7 +718,7 @@ class TestClimate(Testcase):
             telegram1,
             Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync_operation_mode(self):
         """Test sync function / sending group reads to KNX bus for operation mode."""
         xknx = XKNX()
@@ -735,7 +734,7 @@ class TestClimate(Testcase):
             telegram1,
             Telegram(GroupAddress('1/2/4'), TelegramType.GROUP_READ))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync_controller_status(self):
         """Test sync function / sending group reads to KNX bus for controller status."""
         xknx = XKNX()
@@ -751,7 +750,7 @@ class TestClimate(Testcase):
             telegram1,
             Telegram(GroupAddress('1/2/24'), TelegramType.GROUP_READ))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync_controller_mode(self):
         """Test sync function / sending group reads to KNX bus for controller mode."""
         xknx = XKNX()
@@ -767,7 +766,7 @@ class TestClimate(Testcase):
             telegram1,
             Telegram(GroupAddress('1/2/14'), TelegramType.GROUP_READ))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync_operation_mode_state(self):
         """Test sync function / sending group reads to KNX bus for multiple mode addresses."""
         xknx = XKNX()
@@ -798,7 +797,7 @@ class TestClimate(Testcase):
     #
     # TEST PROCESS
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_temperature(self):
         """Test process / reading telegrams from telegram queue. Test if temperature is processed correctly."""
         xknx = XKNX()
@@ -812,7 +811,7 @@ class TestClimate(Testcase):
         await climate.process(telegram)
         self.assertEqual(climate.temperature.value, 21.34)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_operation_mode(self):
         """Test process / reading telegrams from telegram queue. Test if setpoint is processed correctly."""
         xknx = XKNX()
@@ -834,7 +833,7 @@ class TestClimate(Testcase):
             await climate_mode.process(telegram)
             self.assertEqual(climate_mode.operation_mode, operation_mode)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_controller_mode(self):
         """Test process / reading telegrams from telegram queue. Test if DPT20.105 controller mode is set correctly."""
         xknx = XKNX()
@@ -848,7 +847,7 @@ class TestClimate(Testcase):
             await climate_mode.process(telegram)
             self.assertEqual(climate_mode.operation_mode, operation_mode)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_controller_status_wrong_payload(self):
         """Test process wrong telegram for controller status (wrong payload type)."""
         xknx = XKNX()
@@ -861,7 +860,7 @@ class TestClimate(Testcase):
         with self.assertRaises(CouldNotParseTelegram):
             await climate_mode.process(telegram)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_controller_status_payload_invalid_length(self):
         """Test process wrong telegram for controller status (wrong payload length)."""
         xknx = XKNX()
@@ -874,7 +873,7 @@ class TestClimate(Testcase):
         with self.assertRaises(CouldNotParseTelegram):
             await climate_mode.process(telegram)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_operation_mode_wrong_payload(self):
         """Test process wrong telegram for operation mode (wrong payload type)."""
         xknx = XKNX()
@@ -887,7 +886,7 @@ class TestClimate(Testcase):
         with self.assertRaises(CouldNotParseTelegram):
             await climate_mode.process(telegram)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_operation_mode_payload_invalid_length(self):
         """Test process wrong telegram for operation mode (wrong payload length)."""
         xknx = XKNX()
@@ -900,7 +899,7 @@ class TestClimate(Testcase):
         with self.assertRaises(CouldNotParseTelegram):
             await climate_mode.process(telegram)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_callback_temp(self):
         """Test process / reading telegrams from telegram queue. Test if callback is executed when receiving temperature."""
         # pylint: disable=no-self-use
@@ -925,7 +924,7 @@ class TestClimate(Testcase):
     #
     # SUPPORTED OPERATION MODES
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_supported_operation_modes(self):
         """Test get_supported_operation_modes with combined group address."""
         xknx = XKNX()
@@ -941,7 +940,7 @@ class TestClimate(Testcase):
              HVACOperationMode.NIGHT,
              HVACOperationMode.FROST_PROTECTION])
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_supported_operation_modes_controller_status(self):
         """Test get_supported_operation_modes with combined group address."""
         xknx = XKNX()
@@ -956,7 +955,7 @@ class TestClimate(Testcase):
              HVACOperationMode.NIGHT,
              HVACOperationMode.FROST_PROTECTION])
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_supported_operation_modes_no_mode(self):
         """Test get_supported_operation_modes no operation_modes supported."""
         xknx = XKNX()
@@ -966,7 +965,7 @@ class TestClimate(Testcase):
         self.assertEqual(
             climate_mode.operation_modes, [])
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_supported_operation_modes_with_separate_addresses(self):
         """Test get_supported_operation_modes with separated group addresses."""
         xknx = XKNX()
@@ -983,7 +982,7 @@ class TestClimate(Testcase):
              HVACOperationMode.NIGHT,
              HVACOperationMode.FROST_PROTECTION])
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_supported_operation_modes_only_night(self):
         """Test get_supported_operation_modes with only night mode supported."""
         xknx = XKNX()
@@ -996,7 +995,7 @@ class TestClimate(Testcase):
             [HVACOperationMode.STANDBY,
              HVACOperationMode.NIGHT])
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_custom_supported_operation_modes(self):
         """Test get_supported_operation_modes with custom mode."""
         modes = [HVACOperationMode.STANDBY, HVACOperationMode.NIGHT]
@@ -1009,7 +1008,7 @@ class TestClimate(Testcase):
         self.assertEqual(
             climate_mode.operation_modes, modes)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_custom_supported_operation_modes_as_str(self):
         """Test get_supported_operation_modes with custom mode as str list."""
         str_modes = ['Standby', 'Frost Protection']
@@ -1023,7 +1022,7 @@ class TestClimate(Testcase):
         self.assertEqual(
             climate_mode.operation_modes, modes)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_power_status(self):
         """Test process / reading telegrams from telegram queue. Test if DPT20.105 controller mode is set correctly."""
         xknx = XKNX()
@@ -1046,7 +1045,7 @@ class TestClimate(Testcase):
         await climate_inv.process(telegram)
         self.assertEqual(climate_inv.is_on, False)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_power_on_off(self):
         """Test turn_on and turn_off functions."""
         xknx = XKNX()

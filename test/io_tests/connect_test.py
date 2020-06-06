@@ -1,5 +1,4 @@
 """Unit test for KNX/IP Connect Request/Response."""
-import asyncio
 from unittest.mock import patch
 import pytest
 
@@ -14,7 +13,7 @@ from xknx._test import Testcase
 class TestConnect(Testcase):
     """Test class for xknx/io/Connect objects."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_connect(self):
         """Test connecting from KNX bus."""
         xknx = XKNX()

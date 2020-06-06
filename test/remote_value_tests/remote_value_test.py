@@ -1,5 +1,4 @@
 """Unit test for RemoveValue objects."""
-import asyncio
 from unittest.mock import patch
 import pytest
 
@@ -14,7 +13,7 @@ from xknx._test import Testcase
 class TestRemoteValue(Testcase):
     """Test class for RemoteValue objects."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_warn_payload_valid(self):
         """Test for warning if payload_valid is not implemented."""
         xknx = XKNX()
@@ -23,7 +22,7 @@ class TestRemoteValue(Testcase):
             remote_value.payload_valid(DPTBinary(0))
             mock_warn.assert_called_with('payload_valid not implemented for %s', 'RemoteValue')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_warn_to_knx(self):
         """Test for warning if to_knx is not implemented."""
         xknx = XKNX()
@@ -32,7 +31,7 @@ class TestRemoteValue(Testcase):
             remote_value.to_knx(23)
             mock_warn.assert_called_with('to_knx not implemented for %s', 'RemoteValue')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_warn_from_knx(self):
         """Test for warning if from_knx is not implemented."""
         xknx = XKNX()
@@ -41,7 +40,7 @@ class TestRemoteValue(Testcase):
             remote_value.from_knx(DPTBinary(0))
             mock_warn.assert_called_with('from_knx not implemented for %s', 'RemoteValue')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_info_set_uninitialized(self):
         """Test for info if RemoteValue is not initialized."""
         xknx = XKNX()
@@ -50,7 +49,7 @@ class TestRemoteValue(Testcase):
             await remote_value.set(23)
             mock_info.assert_called_with('Setting value of uninitialized device: %s (value: %s)', 'Unknown', 23)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_info_set_unwritable(self):
         """Test for warning if RemoteValue is read only."""
         xknx = XKNX()
@@ -59,14 +58,14 @@ class TestRemoteValue(Testcase):
             await remote_value.set(23)
             mock_info.assert_called_with('Attempted to set value for non-writable device: %s (value: %s)', 'Unknown', 23)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_default_value_unit(self):
         """Test for the default value of unit_of_measurement."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
         self.assertEqual(remote_value.unit_of_measurement, None)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_invalid_payload(self):
         """Test if exception is raised when processing telegram with invalid payload."""
         xknx = XKNX()
@@ -82,7 +81,7 @@ class TestRemoteValue(Testcase):
             with self.assertRaises(CouldNotParseTelegram):
                 await remote_value.process(telegram)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_eq(self):
         """Test __eq__ operator."""
         xknx = XKNX()

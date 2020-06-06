@@ -1,6 +1,5 @@
 """Unit test for Action objects."""
-import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, AsyncMock
 import pytest
 
 from xknx import XKNX
@@ -15,7 +14,7 @@ class TestAction(Testcase):
     #
     # TEST COUNTER
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_counter(self):
         """Test counter method."""
         xknx = XKNX()
@@ -25,7 +24,7 @@ class TestAction(Testcase):
         self.assertTrue(action.test_counter(2))
         self.assertFalse(action.test_counter(3))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_no_counter(self):
         """Test counter method with no counter set."""
         xknx = XKNX()
@@ -38,7 +37,7 @@ class TestAction(Testcase):
     #
     # TEST APPLICABLE
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_if_applicable_hook_on(self):
         """Test test_if_applicable method with hook set to 'on'."""
         xknx = XKNX()
@@ -50,7 +49,7 @@ class TestAction(Testcase):
         self.assertFalse(action.test_if_applicable(
             BinarySensorState.OFF, 2))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_if_applicable_hook_off(self):
         """Test test_if_applicable method with hook set to 'off'."""
         xknx = XKNX()
@@ -65,7 +64,7 @@ class TestAction(Testcase):
     #
     # TEST EXECUTE
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_execute_base_action(self):
         """Test if execute method of BaseAction shows correct info message."""
         xknx = XKNX()
@@ -74,7 +73,7 @@ class TestAction(Testcase):
             await action.execute()
             mock_info.assert_called_with('Execute not implemented for %s', 'ActionBase')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_execute_action(self):
         """Test if execute method of Action calls correct do method of device."""
         xknx = XKNX()
@@ -84,14 +83,11 @@ class TestAction(Testcase):
             group_address_switch='1/6/4')
         xknx.devices.add(light)
         action = Action(xknx, target='Light1', method='on')
-        with patch('xknx.devices.Light.do') as mock_do:
-            fut = asyncio.Future()
-            fut.set_result(None)
-            mock_do.return_value = fut
+        with patch('xknx.devices.Light.do', new_callable=AsyncMock) as mock_do:
             await action.execute()
             mock_do.assert_called_with('on')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_execute_action_callback(self):
         """Test if execute method of ActionCallback calls correct callback method."""
         xknx = XKNX()
@@ -105,7 +101,7 @@ class TestAction(Testcase):
         await action.execute()
         callback.assert_called_with()
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_execute_unknown_device(self):
         """Test if execute method of Action calls correct do method of device."""
         xknx = XKNX()

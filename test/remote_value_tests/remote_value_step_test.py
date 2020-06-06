@@ -1,5 +1,4 @@
 """Unit test for RemoteValueStep objects."""
-import asyncio
 import pytest
 
 from xknx import XKNX
@@ -13,7 +12,7 @@ from xknx._test import Testcase
 class TestRemoteValueStep(Testcase):
     """Test class for RemoteValueStep objects."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_to_knx(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
@@ -21,7 +20,7 @@ class TestRemoteValueStep(Testcase):
         self.assertEqual(remote_value.to_knx(RemoteValueStep.Direction.INCREASE), DPTBinary(1))
         self.assertEqual(remote_value.to_knx(RemoteValueStep.Direction.DECREASE), DPTBinary(0))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_from_knx(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX()
@@ -29,7 +28,7 @@ class TestRemoteValueStep(Testcase):
         self.assertEqual(remote_value.from_knx(DPTBinary(1)), RemoteValueStep.Direction.INCREASE)
         self.assertEqual(remote_value.from_knx(DPTBinary(0)), RemoteValueStep.Direction.DECREASE)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_to_knx_invert(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
@@ -37,7 +36,7 @@ class TestRemoteValueStep(Testcase):
         self.assertEqual(remote_value.to_knx(RemoteValueStep.Direction.INCREASE), DPTBinary(0))
         self.assertEqual(remote_value.to_knx(RemoteValueStep.Direction.DECREASE), DPTBinary(1))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_from_knx_invert(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX()
@@ -45,7 +44,7 @@ class TestRemoteValueStep(Testcase):
         self.assertEqual(remote_value.from_knx(DPTBinary(1)), RemoteValueStep.Direction.DECREASE)
         self.assertEqual(remote_value.from_knx(DPTBinary(0)), RemoteValueStep.Direction.INCREASE)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_to_knx_error(self):
         """Test to_knx function with wrong parametern."""
         xknx = XKNX()
@@ -53,7 +52,7 @@ class TestRemoteValueStep(Testcase):
         with self.assertRaises(ConversionError):
             remote_value.to_knx(1)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set(self):
         """Test setting value."""
         xknx = XKNX()
@@ -77,7 +76,7 @@ class TestRemoteValueStep(Testcase):
                 GroupAddress('1/2/3'),
                 payload=DPTBinary(1)))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process(self):
         """Test process telegram."""
         xknx = XKNX()
@@ -91,7 +90,7 @@ class TestRemoteValueStep(Testcase):
         await remote_value.process(telegram)
         self.assertEqual(remote_value.value, RemoteValueStep.Direction.DECREASE)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_to_process_error(self):
         """Test process errornous telegram."""
         xknx = XKNX()

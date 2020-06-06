@@ -1,5 +1,4 @@
 """Unit test for value reader."""
-import asyncio
 import anyio
 from unittest.mock import patch
 import pytest
@@ -15,7 +14,7 @@ from xknx._test import Testcase
 class TestValueReader(Testcase):
     """Test class for value reader."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_value_reader_read_success(self):
         """Test value reader: successfull read."""
         xknx = XKNX()
@@ -53,7 +52,7 @@ class TestValueReader(Testcase):
                         response_telegram)
 
     @patch('logging.Logger.warning')
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_value_reader_read_timeout(self, logger_warning_mock):
         """Test value reader: read timeout."""
         xknx = XKNX()
@@ -74,7 +73,7 @@ class TestValueReader(Testcase):
         # Unsuccessfull read() returns None
         self.assertIsNone(timed_out_read)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_value_reader_send_group_read(self):
         """Test value reader: send_group_read."""
         xknx = XKNX()
@@ -87,7 +86,7 @@ class TestValueReader(Testcase):
                          Telegram(group_address=GroupAddress('0/0/0'),
                                   telegramtype=TelegramType.GROUP_READ))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_value_reader_telegram_received(self):
         """Test value reader: telegram_received."""
         xknx = XKNX()

@@ -21,7 +21,7 @@ class TestConfig(Testcase):
     #
     # XKNX General Config
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_general(self):
         """Test reading general section from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -31,7 +31,7 @@ class TestConfig(Testcase):
     #
     # XKNX Connection Config
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_connection(self):
         """Test connection section from config file."""
         import yaml
@@ -85,7 +85,7 @@ class TestConfig(Testcase):
             Config(xknx).parse_connection(config)
             self.assertEqual(xknx.connection_config, expected_conn)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_invalid_connection(self):
         """Test invalid connection section from config file."""
         import yaml
@@ -109,7 +109,7 @@ class TestConfig(Testcase):
     # XKNX Groups Config
     #
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_light(self):
         """Test reading Light from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -122,7 +122,7 @@ class TestConfig(Testcase):
                   max_kelvin=6000,
                   device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_light_state(self):
         """Test reading Light with dimming address from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -138,7 +138,7 @@ class TestConfig(Testcase):
                   max_kelvin=6000,
                   device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_light_color(self):
         """Test reading Light with with dimming and color address."""
         xknx = XKNX(config='xknx.yaml')
@@ -154,7 +154,7 @@ class TestConfig(Testcase):
                   max_kelvin=6000,
                   device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_color_temperature(self):
         """Test reading Light with with dimming and color temperature address."""
         xknx = XKNX(config='xknx.yaml')
@@ -172,7 +172,7 @@ class TestConfig(Testcase):
                   max_kelvin=6000,
                   device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_tunable_white(self):
         """Test reading Light with with dimming and tunable white address."""
         xknx = XKNX(config='xknx.yaml')
@@ -190,7 +190,7 @@ class TestConfig(Testcase):
                   max_kelvin=6000,
                   device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_switch(self):
         """Test reading Switch from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -201,7 +201,7 @@ class TestConfig(Testcase):
                    group_address='1/3/2',
                    device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_fan(self):
         """Test reading Fan from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -213,7 +213,7 @@ class TestConfig(Testcase):
                 group_address_speed_state='1/3/22',
                 device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_cover(self):
         """Test reading Cover from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -229,7 +229,7 @@ class TestConfig(Testcase):
                   travel_time_up=60,
                   device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_cover_venetian(self):
         """Test reading Cover with angle from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -245,7 +245,7 @@ class TestConfig(Testcase):
                   group_address_angle_state='1/4/19',
                   device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_cover_venetian_with_inverted_position(self):
         """Test reading Cover with angle from config file with inverted position/angle."""
         xknx = XKNX(config='xknx.yaml')
@@ -263,7 +263,7 @@ class TestConfig(Testcase):
                   invert_angle=True,
                   device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_climate_temperature(self):
         """Test reading Climate object from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -274,7 +274,7 @@ class TestConfig(Testcase):
                     group_address_temperature='1/7/1',
                     device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_climate_target_temperature_and_setpoint_shift(self):
         """Test reading Climate object with target_temperature_address and setpoint shift from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -291,7 +291,7 @@ class TestConfig(Testcase):
                     setpoint_shift_max=10,
                     device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_climate_operation_mode(self):
         """Test reading Climate object with operation mode in one group address from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -302,7 +302,7 @@ class TestConfig(Testcase):
                         group_address_operation_mode='1/7/6',
                         device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_climate_operation_mode2(self):
         """Test reading Climate object with operation mode in different group addresses  from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -315,7 +315,7 @@ class TestConfig(Testcase):
                         group_address_operation_mode_comfort='1/7/10',
                         device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_climate_operation_mode_state(self):
         """Test reading Climate object with status address for operation mode."""
         xknx = XKNX(config='xknx.yaml')
@@ -327,7 +327,7 @@ class TestConfig(Testcase):
                         group_address_operation_mode_state='1/7/7',
                         device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_climate_controller_status_state(self):
         """Test reading Climate object with addresses for controller status."""
         xknx = XKNX(config='xknx.yaml')
@@ -339,7 +339,7 @@ class TestConfig(Testcase):
                         group_address_controller_status_state='1/7/13',
                         device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_datetime(self):
         """Test reading DateTime objects from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -368,7 +368,7 @@ class TestConfig(Testcase):
                 broadcast_type=DateTimeBroadcastType.DATE,
                 device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_notification(self):
         """Test reading DateTime object from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -381,7 +381,7 @@ class TestConfig(Testcase):
                 group_address_state='2/7/2',
                 device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_binary_sensor(self):
         """Test reading BinarySensor from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -400,7 +400,7 @@ class TestConfig(Testcase):
                                     method="on")],
                          device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_sensor_percent(self):
         """Test reading percent Sensor from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -413,7 +413,7 @@ class TestConfig(Testcase):
                    sync_state=True,
                    device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_sensor_percent_passive(self):
         """Test passive percent Sensor from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -426,7 +426,7 @@ class TestConfig(Testcase):
                    sync_state=False,
                    device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_sensor_temperature_type(self):
         """Test reading temperature Sensor from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -438,7 +438,7 @@ class TestConfig(Testcase):
                    value_type='temperature',
                    device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_expose_sensor(self):
         """Test reading ExposeSensor from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -451,7 +451,7 @@ class TestConfig(Testcase):
                 value_type='temperature',
                 device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_sensor_binary_device_class(self):
         """Test reading Sensor with device_class from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -463,7 +463,7 @@ class TestConfig(Testcase):
                          device_class='motion',
                          device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_sensor_binary_passive(self):
         """Test reading Sensor with sync_state False from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -476,7 +476,7 @@ class TestConfig(Testcase):
                          device_class='motion',
                          device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_sensor_binary_significant_bit(self):
         """Test reading Sensor with differing significant bit from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -489,7 +489,7 @@ class TestConfig(Testcase):
                          device_class='motion',
                          device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_scene(self):
         """Test reading Scene from config file."""
         xknx = XKNX(config='xknx.yaml')
@@ -502,14 +502,14 @@ class TestConfig(Testcase):
                 scene_number=23,
                 device_updated_cb=xknx.devices.device_updated))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_file_not_found(self):
         """Test error message when reading a non exisiting config file."""
         with patch('logging.Logger.error') as mock_err:
             XKNX(config='xknx_does_not_exist.yaml')
             self.assertEqual(mock_err.call_count, 1)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_config_file_error(self):
         """Test error message when reading an errornous config file."""
         with patch('logging.Logger.error') as mock_err, \

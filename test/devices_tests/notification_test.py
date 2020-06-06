@@ -1,5 +1,4 @@
 """Unit test for Notification objects."""
-import asyncio
 from unittest.mock import Mock, patch
 import pytest
 
@@ -17,7 +16,7 @@ class TestNotification(Testcase):
     #
     # SYNC
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync_state(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
@@ -35,7 +34,7 @@ class TestNotification(Testcase):
     #
     # TEST PROCESS
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process(self):
         """Test process telegram with notification. Test if device was updated."""
         xknx = XKNX()
@@ -50,7 +49,7 @@ class TestNotification(Testcase):
         await notification.process(telegram_unset)
         self.assertEqual(notification.message, "")
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
         # pylint: disable=no-self-use
@@ -68,7 +67,7 @@ class TestNotification(Testcase):
         await notification.process(telegram_set)
         after_update_callback.assert_called_with(notification)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_payload_invalid_length(self):
         """Test process wrong telegram (wrong payload length)."""
         # pylint: disable=invalid-name
@@ -78,7 +77,7 @@ class TestNotification(Testcase):
         with self.assertRaises(CouldNotParseTelegram):
             await notification.process(telegram)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_wrong_payload(self):
         """Test process wrong telegram (wrong payload type)."""
         xknx = XKNX()
@@ -90,7 +89,7 @@ class TestNotification(Testcase):
     #
     # TEST SET MESSAGE
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set(self):
         """Test notificationing off notification."""
         xknx = XKNX()
@@ -112,7 +111,7 @@ class TestNotification(Testcase):
     #
     # TEST DO
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_do(self):
         """Test 'do' functionality."""
         xknx = XKNX()
@@ -120,7 +119,7 @@ class TestNotification(Testcase):
         await notification.do("message:Ein Prosit!")
         self.assertEqual(notification.message, "Ein Prosit!")
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_wrong_do(self):
         """Test wrong do command."""
         xknx = XKNX()
@@ -133,7 +132,7 @@ class TestNotification(Testcase):
     #
     # STATE ADDRESSES
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_state_addresses(self):
         """Test expose sensor returns empty list as state addresses."""
         xknx = XKNX()
@@ -145,7 +144,7 @@ class TestNotification(Testcase):
     #
     # TEST has_group_address
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_has_group_address(self):
         """Test has_group_address."""
         xknx = XKNX()

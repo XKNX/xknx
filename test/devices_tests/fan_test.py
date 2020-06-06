@@ -1,5 +1,4 @@
 """Unit test for Fan objects."""
-import asyncio
 from unittest.mock import patch
 import pytest
 
@@ -19,7 +18,7 @@ class TestFan(Testcase):
     #
     # SYNC
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
@@ -37,7 +36,7 @@ class TestFan(Testcase):
     #
     # SYNC WITH STATE ADDRESS
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_sync_state_address(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
@@ -57,7 +56,7 @@ class TestFan(Testcase):
     #
     # TEST SET SPEED
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set_speed(self):
         """Test setting the speed of a Fan."""
         xknx = XKNX()
@@ -74,7 +73,7 @@ class TestFan(Testcase):
     #
     # TEST PROCESS
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_speed(self):
         """Test process / reading telegrams from telegram queue. Test if speed is processed."""
         xknx = XKNX()
@@ -88,7 +87,7 @@ class TestFan(Testcase):
         await fan.process(telegram)
         self.assertEqual(fan.current_speed, 55)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_speed_wrong_payload(self):  # pylint: disable=invalid-name
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
@@ -99,7 +98,7 @@ class TestFan(Testcase):
         with self.assertRaises(CouldNotParseTelegram):
             await fan.process(telegram)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_fan_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
         # pylint: disable=invalid-name
@@ -114,7 +113,7 @@ class TestFan(Testcase):
     #
     # TEST DO
     #
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_do(self):
         """Test 'do' functionality."""
         xknx = XKNX()
@@ -126,7 +125,7 @@ class TestFan(Testcase):
         await fan.do("speed:25")
         self.assertEqual(fan.current_speed, 25)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_wrong_do(self):
         """Test wrong do command."""
         xknx = XKNX()
@@ -138,7 +137,7 @@ class TestFan(Testcase):
             self.assertEqual(xknx.telegrams.qsize(), 0)
             mock_warn.assert_called_with('Could not understand action %s for device %s', 'execute', 'TestFan')
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_has_group_address(self):
         """Test has_group_address."""
         xknx = XKNX()

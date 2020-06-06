@@ -1,5 +1,4 @@
 """Unit test for RemoteValueString objects."""
-import asyncio
 import pytest
 
 from xknx import XKNX
@@ -13,16 +12,7 @@ from xknx._test import Testcase
 class TestRemoteValueString(Testcase):
     """Test class for RemoteValueString objects."""
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_to_knx(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
@@ -31,7 +21,7 @@ class TestRemoteValueString(Testcase):
                                                                      0x73, 0x20, 0x4F, 0x4B, 0x00,
                                                                      0x00, 0x00, 0x00, 0x00)))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_from_knx(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX()
@@ -40,7 +30,7 @@ class TestRemoteValueString(Testcase):
                                                          0x73, 0x20, 0x4F, 0x4B, 0x00,
                                                          0x00, 0x00, 0x00, 0x00))), "KNX is OK")
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_to_knx_error(self):
         """Test to_knx function with wrong parametern."""
         xknx = XKNX()
@@ -48,7 +38,7 @@ class TestRemoteValueString(Testcase):
         with self.assertRaises(ConversionError):
             remote_value.to_knx("123456789012345")
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_set(self):
         """Test setting value."""
         xknx = XKNX()
@@ -72,7 +62,7 @@ class TestRemoteValueString(Testcase):
                 GroupAddress('1/2/3'),
                 payload=DPTArray((65, 83, 68, 70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process(self):
         """Test process telegram."""
         xknx = XKNX()
@@ -87,7 +77,7 @@ class TestRemoteValueString(Testcase):
         await remote_value.process(telegram)
         self.assertEqual(remote_value.value, "AAAAABBBBBCCCC")
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_to_process_error(self):
         """Test process errornous telegram."""
         xknx = XKNX()

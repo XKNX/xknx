@@ -1,6 +1,5 @@
 """Unit test for KNX/IP ConnectResponses."""
 import pytest
-import asyncio
 
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
@@ -15,7 +14,7 @@ class Test_KNXIP_ConnectResponse(Testcase):
 
     # pylint: disable=too-many-public-methods,invalid-name
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_connect_response(self):
         """Test parsing and streaming connection response KNX/IP packet."""
         raw = ((0x06, 0x10, 0x02, 0x06, 0x00, 0x14, 0x01, 0x00,
@@ -49,7 +48,7 @@ class Test_KNXIP_ConnectResponse(Testcase):
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_from_knx_wrong_crd(self):
         """Test parsing and streaming wrong ConnectRequest (wrong CRD length byte)."""
         raw = ((0x06, 0x10, 0x02, 0x06, 0x00, 0x14, 0x01, 0x00,
@@ -60,7 +59,7 @@ class Test_KNXIP_ConnectResponse(Testcase):
         with self.assertRaises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_from_knx_wrong_crd2(self):
         """Test parsing and streaming wrong ConnectRequest (wrong CRD length)."""
         raw = ((0x06, 0x10, 0x02, 0x06, 0x00, 0x14, 0x01, 0x00,
@@ -71,7 +70,7 @@ class Test_KNXIP_ConnectResponse(Testcase):
         with self.assertRaises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_connect_response_connection_error(self):
         """Test parsing and streaming connection response KNX/IP packet with error."""
         raw = ((0x06, 0x10, 0x02, 0x06, 0x00, 0x08, 0x00, 0x24))

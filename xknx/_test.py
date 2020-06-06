@@ -21,11 +21,3 @@ class Testcase:
             return getattr(self.__unittest, k)
         raise AttributeError(k)
 
-class CoroMock(MagicMock):
-    """
-    A MagicMock subclass which behaves like an async function.
-    """
-    async def __call__(self, *args, **kwargs):
-        # no it is not.
-        # pylint: disable=useless-super-delegation
-        return super().__call__(*args, **kwargs)
