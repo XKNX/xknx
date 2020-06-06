@@ -1,6 +1,11 @@
 Changelog
 =========
 
+AsyncXKNX fork
+--------------
+
+* Uses anyio, thus natively compatible with Trio.
+
 Upcoming version (unreleased)
 -----------------------------
 
