@@ -18,10 +18,8 @@ class RequestResponse():
         self.xknx = xknx
         self.udpclient = udp_client
         self.awaited_response_class = awaited_response_class
-        self.response_received = anyio.create_event()
         self.success = False
         self.timeout_in_seconds = timeout_in_seconds
-        self.timeout_handle = None
 
     def create_knxipframe(self):
         """Create KNX/IP Frame object to be sent to device."""
@@ -29,17 +27,16 @@ class RequestResponse():
 
     async def start(self):
         """Start. Send request and wait for an answer."""
-        callb = self.udpclient.register_callback(
-            self.response_rec_callback, [self.awaited_response_class.service_type])
-        await self.send_request()
-        try:
-            async with anyio.fail_after(self.timeout_in_seconds):
-                await self.response_received.wait()
-        except TimeoutError:
-            self.xknx.logger.warning("Error: KNX bus did not respond in time to request of type '%s'",
+        with self.udpclient.receiver(self.awaited_response_class.service_type) as recv:
+            await self.send_request()
+            try:
+                async with anyio.fail_after(self.timeout_in_seconds):
+                    async for msg in recv:
+                        if await self.response_rec_callback(msg):
+                            break
+            except TimeoutError:
+                self.xknx.logger.warning("Error: KNX bus did not respond in time to request of type '%s'",
                                  self.__class__.__name__)
-        finally:
-            self.udpclient.unregister_callback(callb)
 
     async def send_request(self):
         """Build knxipframe (within derived class) and send via UDP."""
@@ -47,17 +44,17 @@ class RequestResponse():
         knxipframe.normalize()
         await self.udpclient.send(knxipframe)
 
-    async def response_rec_callback(self, knxipframe, _):
+    async def response_rec_callback(self, knxipframe, _=None):
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knxipframe.body, self.awaited_response_class):
             self.xknx.logger.warning("Cant understand knxipframe")
-            return
-        await self.response_received.set()
+            return False
         if knxipframe.body.status_code == ErrorCode.E_NO_ERROR:
             self.success = True
             self.on_success_hook(knxipframe)
         else:
             self.on_error_hook(knxipframe)
+        return True
 
     def on_success_hook(self, knxipframe):
         """Do something after having received a valid answer. May be overwritten in derived class."""
