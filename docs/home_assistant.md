@@ -6,15 +6,15 @@ layout: default
 Home Assistant Component
 ========================
 
-XKNX ships with [Home Assistant](https://home-assistant.io/components/#search/knx), the great platform for home automation!
+XKNX is shipped within [Home Assistant](https://www.home-assistant.io/), the great platform for home automation, in the form of the included [KNX component](https://www.home-assistant.io/integrations/#search/KNX).
 
-For development and debugging reasons - or to catch up with the newest features - you may still use the custom component version of the plugin.
+For development and debugging reasons - or to catch up with the newest features - you may still want to use the custom component version of the plugin.
 
 
 Manual Installation:
 --------------------
 
-Checkout xknx ideally into your home folder:
+Checkout `xknx` ideally into your home folder:
 
 ```bash
 cd ~
@@ -33,15 +33,15 @@ Run HASS as usual either via service or by directly typing in `hass`.
 Running HASS with local XKNX library
 ------------------------------------
 
-Even when running hass with the XKNX component, hass will automatically install a xknx library within `.homeassistant/deps/lib/python3.5/site-packages` via pip. This very often causes the problem, that the checked out xknx library is not in sync with the xknx library hass uses. But getting both in sync is easy:
+Even when running HASS with the XKNX custom component, HASS will automatically install a `xknx` library version within `.homeassistant/deps/lib/python[python-version]/site-packages` via pip. This very often causes the problem, that the manually checked out `xknx` library is not in sync with the `xknx` library version HASS already contains and uses by default. But getting both in sync is easy:
 
-Delete automatically installed version:
+Delete the automatically installed version:
 
 ```bash
-rm .homeassistant/deps/lib/python3.5/site-packages/xknx*
+rm .homeassistant/deps/lib/python[python-version]/site-packages/xknx*
 ```
 
-Ideally start hass from command line. Export the environment variable PYTHONPATH to your local xknx checkout:
+Ideally start HASS from command line. Export the environment variable PYTHONPATH to your local `xknx` checkout:
 
 ```bash
 export PYTHONPATH=$HOME/xknx
@@ -54,7 +54,7 @@ Starting via service is also possible, but you have to change the configuration 
 Configuration:
 --------------
 
-The configuration works as described within [Home Assistant documentation](https://home-assistant.io/components/#search/knx) with the difference that the component is called `xknx` instead of `knx`.
+The configuration for the manually checked out version works the same as described within [Home Assistant KNX documentation](https://home-assistant.io/components/#search/knx) with the difference that the component is called `xknx` instead of `knx` (which is be the HASS default KNX integration name).
 
 ### Platform:
 
