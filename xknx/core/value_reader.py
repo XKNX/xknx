@@ -34,7 +34,7 @@ class ValueReader:
         await self.send_group_read()
         try:
             # anyio buglet
-            async with anyio.fail_after(self.timeout_in_seconds+0.01):
+            async with anyio.fail_after(self.timeout_in_seconds or 0.01):
                 await self.response_received.wait()
         except TimeoutError:
             self.xknx.logger.warning("Error: KNX bus did not respond in time to GroupValueRead request for: %s",

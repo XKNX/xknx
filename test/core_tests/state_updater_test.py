@@ -1,6 +1,6 @@
 """Unit test for KNX/IP Disconnect Request/Response."""
 import anyio
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch
 
 import pytest
 
@@ -8,7 +8,7 @@ from xknx import XKNX
 from xknx.core import StateUpdater
 from xknx.devices import Light
 
-from xknx._test import Testcase
+from xknx._test import Testcase, AsyncMock
 
 class TestStateupdater(Testcase):
     """Test class for xknx/io/Disconnect objects."""

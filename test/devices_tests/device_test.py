@@ -1,5 +1,5 @@
 """Unit test for Switch objects."""
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import Mock, patch
 import pytest
 
 from xknx import XKNX
@@ -8,7 +8,7 @@ from xknx.dpt import DPTArray
 from xknx.exceptions import XKNXException
 from xknx.telegram import GroupAddress, Telegram, TelegramType
 
-from xknx._test import Testcase
+from xknx._test import Testcase, AsyncMock
 
 class TestDevice(Testcase):
     """Test class for Switch object."""
@@ -130,7 +130,9 @@ class TestDevice(Testcase):
 
         with patch('logging.Logger.error') as mock_error:
             with patch('xknx.devices.Device._sync_impl', new_callable=AsyncMock) as mock_sync_impl:
-                mock_sync_impl.side_effect = XKNXException()
+                async def _err(_=None):
+                    raise XKNXException
+                mock_sync_impl.side_effect = _err
                 await device.sync()
                 mock_sync_impl.assert_called_with(True)
                 mock_error.assert_called_with('Error while syncing device: %s', XKNXException())

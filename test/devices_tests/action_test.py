@@ -1,12 +1,12 @@
 """Unit test for Action objects."""
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import Mock, patch
 import pytest
 
 from xknx import XKNX
 from xknx.devices import (
     Action, ActionBase, ActionCallback, BinarySensorState, Light)
 
-from xknx._test import Testcase
+from xknx._test import Testcase, AsyncMock
 
 class TestAction(Testcase):
     """Class for testing Action objects."""

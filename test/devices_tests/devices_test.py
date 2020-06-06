@@ -1,12 +1,12 @@
 """Unit test for devices container within XKNX."""
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import Mock, patch
 import pytest
 
 from xknx import XKNX
 from xknx.devices import BinarySensor, Device, Devices, Light, Switch
 from xknx.telegram import GroupAddress
 
-from xknx._test import Testcase
+from xknx._test import Testcase, AsyncMock
 
 # pylint: disable=too-many-public-methods,invalid-name
 class TestDevices(Testcase):

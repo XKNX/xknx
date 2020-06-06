@@ -1,5 +1,5 @@
 """Unit test for KNX/IP gateway scanner."""
-from unittest.mock import patch, create_autospec, AsyncMock
+from unittest.mock import patch, create_autospec
 import pytest
 
 from xknx import XKNX
@@ -10,7 +10,7 @@ from xknx.knxip import (
     KNXIPFrame, KNXIPHeader, KNXIPServiceType, SearchResponse)
 from xknx.telegram import PhysicalAddress
 
-from xknx._test import Testcase
+from xknx._test import Testcase, AsyncMock
 
 class TestGatewayScanner(Testcase):
     """Test class for xknx/io/GatewayScanner objects."""

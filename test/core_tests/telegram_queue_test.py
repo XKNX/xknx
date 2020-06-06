@@ -1,6 +1,6 @@
 """Unit test for telegram received callback."""
 import anyio
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import Mock, patch
 import pytest
 
 from xknx import XKNX
@@ -9,7 +9,7 @@ from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import (
     AddressFilter, GroupAddress, Telegram, TelegramDirection)
 
-from xknx._test import Testcase
+from xknx._test import Testcase, AsyncMock
 
 class TestTelegramQueue(Testcase):
     """Test class for telegram queue."""
@@ -205,7 +205,7 @@ class TestTelegramQueue(Testcase):
         # pylint: disable=no-self-use
         xknx = XKNX()
 
-        def process_exception(x):
+        async def process_exception(_=None):
             raise CouldNotParseTelegram("Something went wrong when receiving the telegram.")
         process_tg_in_mock.side_effect = process_exception
 
