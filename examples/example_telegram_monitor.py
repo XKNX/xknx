@@ -19,7 +19,7 @@ def show_help():
     print("")
     print("Usage:")
     print("")
-    print(__file__, "                            Listen to all telegrams")
+    print(__file__, "                               Listen to all telegrams")
     print(__file__, "-f --filter 1/2/*,1/4/[5-6]    Filter for specific group addresses")
     print(__file__, "-h --help                      Print help")
     print("")
@@ -27,12 +27,10 @@ def show_help():
 
 async def monitor(address_filters):
     """Set telegram_received_cb within XKNX and connect to KNX/IP device in daemon mode."""
-    xknx = XKNX()
-    xknx.telegram_queue.register_telegram_received_cb(
-        telegram_received_cb, address_filters)
     async with XKNX().run() as xknx:
-        while True:
-            await asyncio.sleep(99999)
+        with xknx.telegram_queue.receiver(*address_filters) as recv:
+            async for telegram in recv:
+                await telegram_received_cb(telegram)
 
 
 async def main(argv):
@@ -42,13 +40,13 @@ async def main(argv):
     except getopt.GetoptError:
         show_help()
         sys.exit(2)
-    address_filters = None
+    address_filters = []
     for opt, arg in opts:
         if opt in ['-h', '--help']:
             show_help()
             sys.exit()
         if opt in ['-f', '--filter']:
-            address_filters = list(map(AddressFilter, arg.split(',')))
+            address_filters.extend(list(map(AddressFilter, arg.split(','))))
     await monitor(address_filters)
 
 
