@@ -36,8 +36,8 @@ class TestValueReader(Testcase):
                 result = await value_reader.read()
             read_task = await xknx.spawn(_reader)
 
-            # receive the response
-            await value_reader.telegram_received(response_telegram)
+            # queue the response
+            await xknx.telegram_queue.process_telegram_incoming(response_telegram)
             # dropping off the taskgroup waits for the task to end
 
         # GroupValueRead telegram is still in the queue because we are not actually processing it

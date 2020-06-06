@@ -8,7 +8,7 @@ The underlaying KNXIPInterface will poll the queue and send the packets to the c
 You may register callbacks to be notified if a telegram was pushed to the queue.
 """
 import anyio
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 
 from xknx.exceptions import XKNXException
 from xknx.telegram import TelegramDirection
@@ -29,7 +29,7 @@ class TelegramQueue():
 
         def is_within_filter(self, telegram):
             """Test if callback is filtering for group address."""
-            if self.address_filters is None:
+            if not self.address_filters:
                 return True
             for address_filter in self.address_filters:
                 if address_filter.match(telegram.group_address):
@@ -51,6 +51,19 @@ class TelegramQueue():
     def unregister_telegram_received_cb(self, telegram_received_cb):
         """Unregister callback for a telegram beeing received from KNX bus."""
         self.telegram_received_cbs.remove(telegram_received_cb)
+
+    @contextmanager
+    def receiver(self, *address_filters):
+        """Context manager returning an iterator for queued telegrams."""
+        q = anyio.create_queue(10)
+        async def _receiver(telegram, _=None):
+            await q.put(telegram)
+        callb = TelegramQueue.Callback(_receiver, address_filters)
+        try:
+            self.telegram_received_cbs.append(callb)
+            yield q
+        finally:
+            self.telegram_received_cbs.remove(callb)
 
     @asynccontextmanager
     async def run_test(self):

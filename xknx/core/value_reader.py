@@ -22,27 +22,24 @@ class ValueReader:
         """Initialize ValueReader class."""
         self.xknx = xknx
         self.group_address = group_address
-        self.response_received = anyio.create_event()
         self.timeout_in_seconds = timeout_in_seconds
         self.received_telegram = None
 
     async def read(self):
         """Send group read and wait for response."""
-        cb_obj = self.xknx.telegram_queue.register_telegram_received_cb(
-            self.telegram_received)
-
-        await self.send_group_read()
-        try:
-            # anyio buglet
-            async with anyio.fail_after(self.timeout_in_seconds or 0.01):
-                await self.response_received.wait()
-        except TimeoutError:
-            self.xknx.logger.warning("Error: KNX bus did not respond in time to GroupValueRead request for: %s",
-                                    self.group_address)
-            return None
-        finally:
-            self.xknx.telegram_queue.unregister_telegram_received_cb(cb_obj)
-        return self.received_telegram
+        with self.xknx.telegram_queue.receiver() as recv:
+            await self.send_group_read()
+            try:
+                # anyio buglet
+                async with anyio.fail_after(self.timeout_in_seconds or 0.01):
+                    async for telegram in recv:
+                        if await self.telegram_received(telegram):
+                            return telegram
+                        await self.response_received.wait()
+            except TimeoutError:
+                self.xknx.logger.warning("Error: KNX bus did not respond in time to GroupValueRead request for: %s",
+                                        self.group_address)
+        return None
 
     async def send_group_read(self):
         """Send group read."""
@@ -57,5 +54,4 @@ class ValueReader:
         if self.group_address != telegram.group_address:
             return False
         self.received_telegram = telegram
-        await self.response_received.set()
         return True
