@@ -9,7 +9,6 @@ KNXIPInterface manages KNX/IP Tunneling or Routing connections.
 import ipaddress
 from enum import Enum
 from platform import system as get_os_name
-import asyncio
 
 import netifaces
 
@@ -161,11 +160,9 @@ class KNXIPInterface():
             await self.interface.stop()
             self.interface = None
 
-    def telegram_received(self, telegram):
+    async def telegram_received(self, telegram):
         """Put received telegram into queue. Callback for having received telegram."""
-        loop = asyncio.get_event_loop()
-        loop.create_task(
-            self.xknx.telegrams.put(telegram))
+        await self.xknx.telegrams.put(telegram)
 
     async def send_telegram(self, telegram):
         """Send telegram to connected device (either Tunneling or Routing)."""

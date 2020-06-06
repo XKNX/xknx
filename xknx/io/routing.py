@@ -47,7 +47,7 @@ class Routing():
             telegram.direction = TelegramDirection.INCOMING
 
             if self.telegram_received_callback is not None:
-                self.telegram_received_callback(telegram)
+                await self.telegram_received_callback(telegram)
 
     async def send_telegram(self, telegram):
         """Send Telegram to routing connected device."""

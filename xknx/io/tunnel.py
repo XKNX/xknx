@@ -67,7 +67,7 @@ class Tunnel():
             telegram = knxipframe.body.cemi.telegram
             telegram.direction = TelegramDirection.INCOMING
             if self.telegram_received_callback is not None:
-                self.telegram_received_callback(telegram)
+                await self.telegram_received_callback(telegram)
 
     async def send_ack(self, communication_channel_id, sequence_counter):
         """Send tunnelling ACK after tunnelling request received."""
