@@ -4,15 +4,26 @@ import logging
 import signal
 from contextlib import asynccontextmanager
 
-from xknx.core import Config, TelegramQueue
+from xknx.core import Config, TelegramQueueIn, TelegramQueueOut
 from xknx.devices import Devices
 from xknx.io import ConnectionConfig, KNXIPInterface
-from xknx.telegram import GroupAddressType, PhysicalAddress
+from xknx.telegram import GroupAddressType, PhysicalAddress, TelegramDirection
 
 import sniffio
 
 from .__version__ import __version__ as VERSION
 
+
+class _TelegramsDispatcher:
+    def __init__(self, xknx):
+        self.xknx = xknx
+    async def put(self, telegram):
+        if telegram.direction == TelegramDirection.INCOMING:
+            await self.xknx.telegrams_in.put(telegram)
+        elif telegram.direction == TelegramDirection.OUTGOING:
+            await self.xknx.telegrams_out.put(telegram)
+        else:
+            raise RuntimeError("Telegram without direction")
 
 class XKNX:
     """Class for reading and writing KNX/IP packets."""
@@ -33,8 +44,9 @@ class XKNX:
         """Initialize XKNX class."""
         # pylint: disable=too-many-arguments
         self.devices = Devices()
-        self.telegrams = anyio.create_queue(10)
-        self.telegram_queue = TelegramQueue(self)
+        self.telegrams = _TelegramsDispatcher(self)
+        self.telegrams_in = TelegramQueueIn(self)
+        self.telegrams_out = TelegramQueueOut(self)
         self.state_updater = None
         self.knxip_interface = None
         self.started = False
@@ -56,7 +68,7 @@ class XKNX:
             Config(self).read(config)
 
         if telegram_received_cb is not None:
-            self.telegram_queue.register_telegram_received_cb(telegram_received_cb)
+            self.telegrams_in.register_telegram_cb(telegram_received_cb)
 
         if device_updated_cb is not None:
             self.devices.register_device_updated_cb(device_updated_cb)
@@ -116,7 +128,8 @@ class XKNX:
         self.logger.info('XKNX v%s starting %s connection to KNX bus.',
                          VERSION, connection_config.connection_type.name.lower())
         await self.knxip_interface.start()
-        await self.telegram_queue.start()
+        await self.telegrams_in.start()
+        await self.telegrams_out.start()
 
         if state_updater:
             # pylint: disable=import-outside-toplevel
@@ -125,6 +138,11 @@ class XKNX:
             await self.state_updater.start()
 
         self.started = True
+
+    def telegram_receiver(self, *a):
+        """Shortcut to `TelegramQueueIn.receiver`.
+        """
+        return self.telegrams_in.receiver(*a)
 
     async def spawn(self, p,*a,**k):
         """Start a task.
@@ -145,7 +163,9 @@ class XKNX:
 
     async def join(self):
         """Wait until all telegrams are processed."""
-        while self.telegrams.qsize():
+        while self.telegrams_in.qsize():
+            await anyio.sleep(0.01)
+        while self.telegrams_out.qsize():
             await anyio.sleep(0.01)
 
     async def _stop_knxip_interface_if_exists(self):
@@ -167,7 +187,8 @@ class XKNX:
         if self.state_updater:
             await self.state_updater.stop()
         await self.join()
-        await self.telegram_queue.stop()
+        await self.telegrams_in.stop()
+        await self.telegrams_out.stop()
         await self._stop_knxip_interface_if_exists()
         self.started = False
 

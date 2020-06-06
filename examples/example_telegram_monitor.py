@@ -28,7 +28,7 @@ def show_help():
 async def monitor(address_filters):
     """Set telegram_received_cb within XKNX and connect to KNX/IP device in daemon mode."""
     async with XKNX().run() as xknx:
-        with xknx.telegram_queue.receiver(*address_filters) as recv:
+        with xknx.telegram_receiver(*address_filters) as recv:
             async for telegram in recv:
                 await telegram_received_cb(telegram)
 

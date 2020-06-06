@@ -44,16 +44,16 @@ class TestRemoteValueDptValue2Ucount(Testcase):
             xknx,
             group_address=GroupAddress("1/2/3"))
         await remote_value.set(2571)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram,
             Telegram(
                 GroupAddress('1/2/3'),
                 payload=DPTArray((0x0A, 0x0B))))
         await remote_value.set(5500)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram,
             Telegram(

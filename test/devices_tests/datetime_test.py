@@ -26,8 +26,8 @@ class TestDateTime(Testcase):
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
             await datetime.sync(False)
 
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(telegram.group_address, GroupAddress('1/2/3'))
         self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
         self.assertEqual(len(telegram.payload.value), 8)
@@ -45,8 +45,8 @@ class TestDateTime(Testcase):
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
             await datetime.sync(False)
 
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(telegram.group_address, GroupAddress('1/2/3'))
         self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
         self.assertEqual(len(telegram.payload.value), 3)
@@ -64,8 +64,8 @@ class TestDateTime(Testcase):
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
             await datetime.sync(False)
 
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(telegram.group_address, GroupAddress('1/2/3'))
         self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
         self.assertEqual(len(telegram.payload.value), 3)
@@ -89,8 +89,8 @@ class TestDateTime(Testcase):
         with patch('time.localtime') as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
             await datetime.process(telegram_read)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram,
             Telegram(

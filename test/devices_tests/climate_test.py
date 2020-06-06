@@ -286,8 +286,8 @@ class TestClimate(Testcase):
 
         for operation_mode in DPT_20102_MODES:
             await climate_mode.set_operation_mode(operation_mode)
-            self.assertEqual(xknx.telegrams.qsize(), 1)
-            telegram = await xknx.telegrams.get()
+            self.assertEqual(xknx.telegrams_out.qsize(), 1)
+            telegram = await xknx.telegrams_out.q.get()
             self.assertEqual(
                 telegram,
                 Telegram(
@@ -305,8 +305,8 @@ class TestClimate(Testcase):
 
         for _, operation_mode in DPTHVACContrMode.SUPPORTED_MODES.items():
             await climate_mode.set_operation_mode(operation_mode)
-            self.assertEqual(xknx.telegrams.qsize(), 1)
-            telegram = await xknx.telegrams.get()
+            self.assertEqual(xknx.telegrams_out.qsize(), 1)
+            telegram = await xknx.telegrams_out.q.get()
             self.assertEqual(
                 telegram,
                 Telegram(
@@ -336,8 +336,8 @@ class TestClimate(Testcase):
             if operation_mode == HVACOperationMode.AUTO:
                 continue
             await climate_mode.set_operation_mode(operation_mode)
-            self.assertEqual(xknx.telegrams.qsize(), 1)
-            telegram = await xknx.telegrams.get()
+            self.assertEqual(xknx.telegrams_out.qsize(), 1)
+            telegram = await xknx.telegrams_out.q.get()
             self.assertEqual(
                 telegram,
                 Telegram(
@@ -357,26 +357,26 @@ class TestClimate(Testcase):
             group_address_operation_mode_comfort='1/2/7')
 
         await climate_mode.set_operation_mode(HVACOperationMode.COMFORT)
-        self.assertEqual(xknx.telegrams.qsize(), 4)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 4)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram,
             Telegram(
                 GroupAddress('1/2/4'),
                 payload=DPTArray(1)))
-        telegram = await xknx.telegrams.get()
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram,
             Telegram(
                 GroupAddress('1/2/5'),
                 payload=DPTBinary(0)))
-        telegram = await xknx.telegrams.get()
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram,
             Telegram(
                 GroupAddress('1/2/6'),
                 payload=DPTBinary(0)))
-        telegram = await xknx.telegrams.get()
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram,
             Telegram(
@@ -478,38 +478,38 @@ class TestClimate(Testcase):
             group_address_setpoint_shift='1/2/3')
 
         await climate.set_setpoint_shift(3)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             # DEFAULT_SETPOINT_SHIFT_STEP is 0.5 -> payload = setpoint_shift * 2
             Telegram(GroupAddress('1/2/3'), payload=DPTArray(6)))
 
         await climate.target_temperature.set(23.00)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(23.00))))
         self.assertEqual(climate.base_temperature, 20)
 
         # First change
         await climate.set_target_temperature(24.00)
-        self.assertEqual(xknx.telegrams.qsize(), 2)
+        self.assertEqual(xknx.telegrams_out.qsize(), 2)
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             Telegram(GroupAddress('1/2/3'), payload=DPTArray(8)))
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(24.00))))
         self.assertEqual(climate.target_temperature.value, 24.00)
 
         # Second change
         await climate.set_target_temperature(23.50)
-        self.assertEqual(xknx.telegrams.qsize(), 2)
+        self.assertEqual(xknx.telegrams_out.qsize(), 2)
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             Telegram(GroupAddress('1/2/3'), payload=DPTArray(7)))
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(23.50))))
         self.assertEqual(climate.target_temperature.value, 23.50)
 
@@ -534,38 +534,38 @@ class TestClimate(Testcase):
             group_address_setpoint_shift='1/2/3')
 
         await climate.set_setpoint_shift(1)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             # DEFAULT_SETPOINT_SHIFT_STEP is 0.5 -> payload = setpoint_shift * 2
             Telegram(GroupAddress('1/2/3'), payload=DPTArray(2)))
 
         await climate.target_temperature.set(23.00)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(23.00))))
         self.assertEqual(climate.base_temperature, 22.0)
 
         # First change
         await climate.set_target_temperature(20.50)
-        self.assertEqual(xknx.telegrams.qsize(), 2)
+        self.assertEqual(xknx.telegrams_out.qsize(), 2)
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             Telegram(GroupAddress('1/2/3'), payload=DPTArray(0xFD)))  # -3
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(20.50))))
         self.assertEqual(climate.target_temperature.value, 20.50)
 
         # Second change
         await climate.set_target_temperature(19.00)
-        self.assertEqual(xknx.telegrams.qsize(), 2)
+        self.assertEqual(xknx.telegrams_out.qsize(), 2)
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             Telegram(GroupAddress('1/2/3'), payload=DPTArray(0xFA)))  # -6
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(19.00))))
         self.assertEqual(climate.target_temperature.value, 19.00)
 
@@ -593,25 +593,25 @@ class TestClimate(Testcase):
             setpoint_shift_min=-10)
 
         await climate.set_setpoint_shift(3)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             # setpoint_shift_step is 0.1 -> payload = setpoint_shift * 10
             Telegram(GroupAddress('1/2/3'), payload=DPTArray(30)))
 
         await climate.target_temperature.set(23.00)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(23.00))))
         self.assertEqual(climate.base_temperature, 20.00)
         await climate.set_target_temperature(24.00)
-        self.assertEqual(xknx.telegrams.qsize(), 2)
+        self.assertEqual(xknx.telegrams_out.qsize(), 2)
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             Telegram(GroupAddress('1/2/3'), payload=DPTArray(40)))
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(24.00))))
         self.assertEqual(climate.target_temperature.value, 24.00)
 
@@ -635,18 +635,18 @@ class TestClimate(Testcase):
             group_address_setpoint_shift='1/2/3')
 
         await climate.set_target_temperature(21.00)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(21.00))))
         self.assertFalse(climate.initialized_for_setpoint_shift_calculations)
         self.assertEqual(climate.base_temperature, None)
 
         # setpoint_shift initialized after target_temperature (no temperature change)
         await climate.set_setpoint_shift(1)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             # DEFAULT_SETPOINT_SHIFT_STEP is 0.5 -> payload = setpoint_shift * 2
             Telegram(GroupAddress('1/2/3'), payload=DPTArray(2)))
         self.assertTrue(climate.initialized_for_setpoint_shift_calculations)
@@ -655,9 +655,9 @@ class TestClimate(Testcase):
         # setpoint_shift changed after initialisation
         await climate.set_setpoint_shift(2)
         # setpoint_shift and target_temperature are sent to the bus
-        self.assertEqual(xknx.telegrams.qsize(), 2)
+        self.assertEqual(xknx.telegrams_out.qsize(), 2)
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             # DEFAULT_SETPOINT_SHIFT_STEP is 0.5 -> payload = setpoint_shift * 2
             Telegram(GroupAddress('1/2/3'), payload=DPTArray(4)))
         self.assertTrue(climate.initialized_for_setpoint_shift_calculations)
@@ -712,8 +712,8 @@ class TestClimate(Testcase):
             'TestClimate',
             group_address_temperature='1/2/3')
         await climate.sync(False)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram1 = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram1 = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram1,
             Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
@@ -728,8 +728,8 @@ class TestClimate(Testcase):
             group_address_operation_mode='1/2/3',
             group_address_operation_mode_state='1/2/4')
         await climate_mode.sync(False)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram1 = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram1 = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram1,
             Telegram(GroupAddress('1/2/4'), TelegramType.GROUP_READ))
@@ -744,8 +744,8 @@ class TestClimate(Testcase):
             group_address_operation_mode='1/2/23',
             group_address_controller_status_state='1/2/24')
         await climate_mode.sync(False)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram1 = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram1 = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram1,
             Telegram(GroupAddress('1/2/24'), TelegramType.GROUP_READ))
@@ -760,8 +760,8 @@ class TestClimate(Testcase):
             group_address_controller_mode='1/2/13',
             group_address_controller_mode_state='1/2/14')
         await climate_mode.sync(False)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram1 = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram1 = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram1,
             Telegram(GroupAddress('1/2/14'), TelegramType.GROUP_READ))
@@ -780,16 +780,16 @@ class TestClimate(Testcase):
             group_address_controller_mode='1/2/13',
             group_address_controller_mode_state='1/2/14')
         await climate_mode.sync(False)
-        self.assertEqual(xknx.telegrams.qsize(), 3)
-        telegram1 = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 3)
+        telegram1 = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram1,
             Telegram(GroupAddress('1/2/5'), TelegramType.GROUP_READ))
-        telegram2 = await xknx.telegrams.get()
+        telegram2 = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram2,
             Telegram(GroupAddress('1/2/6'), TelegramType.GROUP_READ))
-        telegram3 = await xknx.telegrams.get()
+        telegram3 = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram3,
             Telegram(GroupAddress('1/2/14'), TelegramType.GROUP_READ))
@@ -1056,12 +1056,12 @@ class TestClimate(Testcase):
         await climate.turn_on()
         self.assertEqual(climate.is_on, True)
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             Telegram(GroupAddress('1/2/2'), payload=DPTBinary(True)))
         await climate.turn_off()
         self.assertEqual(climate.is_on, False)
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             Telegram(GroupAddress('1/2/2'), payload=DPTBinary(False)))
 
         climate_inv = Climate(
@@ -1072,10 +1072,10 @@ class TestClimate(Testcase):
         await climate_inv.turn_on()
         self.assertEqual(climate_inv.is_on, True)
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             Telegram(GroupAddress('1/2/2'), payload=DPTBinary(False)))
         await climate_inv.turn_off()
         self.assertEqual(climate_inv.is_on, False)
         self.assertEqual(
-            await xknx.telegrams.get(),
+            await xknx.telegrams_out.q.get(),
             Telegram(GroupAddress('1/2/2'), payload=DPTBinary(True)))

@@ -60,16 +60,16 @@ class TestRemoteValueStep(Testcase):
             xknx,
             group_address=GroupAddress("1/2/3"))
         await remote_value.decrease()
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram,
             Telegram(
                 GroupAddress('1/2/3'),
                 payload=DPTBinary(0)))
         await remote_value.increase()
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram,
             Telegram(

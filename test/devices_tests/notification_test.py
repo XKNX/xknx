@@ -26,8 +26,8 @@ class TestNotification(Testcase):
             group_address='1/2/3',
             group_address_state='1/2/4')
         await notification.sync(False)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/4'), TelegramType.GROUP_READ))
 
@@ -95,15 +95,15 @@ class TestNotification(Testcase):
         xknx = XKNX()
         notification = Notification(xknx, 'Warning', group_address='1/2/3')
         await notification.set("Ein Prosit!")
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'),
                                   payload=DPTArray(DPTString().to_knx("Ein Prosit!"))))
         # test if message longer than 14 chars gets cropped
         await notification.set("This is too long.")
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'),
                                   payload=DPTArray(DPTString().to_knx("This is too lo"))))
@@ -127,7 +127,7 @@ class TestNotification(Testcase):
         with patch('logging.Logger.warning') as mock_warn:
             await notification.do("execute")
             mock_warn.assert_called_with('Could not understand action %s for device %s', 'execute', 'Warning')
-        self.assertEqual(xknx.telegrams.qsize(), 0)
+        self.assertEqual(xknx.telegrams_out.qsize(), 0)
 
     #
     # STATE ADDRESSES

@@ -2,5 +2,5 @@
 # flake8: noqa
 from .config import Config
 from .stateupdater import StateUpdater
-from .telegram_queue import TelegramQueue
+from .telegram_queue import TelegramQueue, TelegramQueueIn, TelegramQueueOut
 from .value_reader import ValueReader

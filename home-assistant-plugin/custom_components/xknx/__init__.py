@@ -240,7 +240,7 @@ class KNXModule:
             address_filters = list(
                 map(AddressFilter, self.config[DOMAIN][CONF_XKNX_FIRE_EVENT_FILTER])
             )
-            self.xknx.telegram_queue.register_telegram_received_cb(
+            self.xknx.telegrams_in.register_telegram_cb(
                 self.telegram_received_cb, address_filters
             )
 

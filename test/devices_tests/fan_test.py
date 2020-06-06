@@ -27,9 +27,9 @@ class TestFan(Testcase):
                   group_address_speed_state='1/2/3')
         await fan.sync(False)
 
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
 
-        telegram1 = await xknx.telegrams.get()
+        telegram1 = await xknx.telegrams_out.q.get()
         self.assertEqual(telegram1,
                          Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
 
@@ -46,9 +46,9 @@ class TestFan(Testcase):
                   group_address_speed_state='1/2/4')
         await fan.sync(False)
 
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
 
-        telegram1 = await xknx.telegrams.get()
+        telegram1 = await xknx.telegrams_out.q.get()
         self.assertEqual(telegram1,
                          Telegram(GroupAddress('1/2/4'), TelegramType.GROUP_READ))
 
@@ -64,8 +64,8 @@ class TestFan(Testcase):
                   name="TestFan",
                   group_address_speed='1/2/3')
         await fan.set_speed(55)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         # 140 is 55% as byte (0...255)
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'), payload=DPTArray(140)))
@@ -134,7 +134,7 @@ class TestFan(Testcase):
                   group_address_speed='1/2/3')
         with patch('logging.Logger.warning') as mock_warn:
             await fan.do("execute")
-            self.assertEqual(xknx.telegrams.qsize(), 0)
+            self.assertEqual(xknx.telegrams_out.qsize(), 0)
             mock_warn.assert_called_with('Could not understand action %s for device %s', 'execute', 'TestFan')
 
     @pytest.mark.anyio

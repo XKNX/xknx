@@ -22,9 +22,9 @@ class TestSwitch(Testcase):
         switch = Switch(xknx, "TestOutlet", group_address_state='1/2/3')
         await switch.sync(False)
 
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
 
-        telegram = await xknx.telegrams.get()
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
 
@@ -37,9 +37,9 @@ class TestSwitch(Testcase):
                         group_address_state='1/2/4')
         await switch.sync(False)
 
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
 
-        telegram = await xknx.telegrams.get()
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/4'), TelegramType.GROUP_READ))
 
@@ -99,8 +99,8 @@ class TestSwitch(Testcase):
         xknx = XKNX()
         switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
         await switch.set_on()
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'), payload=DPTBinary(1)))
 
@@ -113,8 +113,8 @@ class TestSwitch(Testcase):
         xknx = XKNX()
         switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
         await switch.set_off()
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'), payload=DPTBinary(0)))
 
@@ -139,7 +139,7 @@ class TestSwitch(Testcase):
         with patch('logging.Logger.warning') as mock_warn:
             await switch.do("execute")
             mock_warn.assert_called_with('Could not understand action %s for device %s', 'execute', 'TestOutlet')
-        self.assertEqual(xknx.telegrams.qsize(), 0)
+        self.assertEqual(xknx.telegrams_out.qsize(), 0)
 
     #
     # TEST has_group_address

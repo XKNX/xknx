@@ -1981,9 +1981,9 @@ class TestSensor(Testcase):
 
         await sensor.sync(False)
 
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
 
-        telegram = await xknx.telegrams.get()
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
 
@@ -2000,7 +2000,7 @@ class TestSensor(Testcase):
 
         await sensor.sync(False)
 
-        self.assertEqual(xknx.telegrams.qsize(), 0)
+        self.assertEqual(xknx.telegrams_out.qsize(), 0)
 
     #
     # HAS GROUP ADDRESS

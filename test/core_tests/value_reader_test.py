@@ -30,6 +30,7 @@ class TestValueReader(Testcase):
         result = None
         async with anyio.create_task_group() as tg:
             xknx.task_group = tg
+            await xknx.telegrams_in.start()
 
             async def _reader():
                 nonlocal result
@@ -37,13 +38,13 @@ class TestValueReader(Testcase):
             read_task = await xknx.spawn(_reader)
 
             # queue the response
-            await xknx.telegram_queue.process_telegram_incoming(response_telegram)
-            # dropping off the taskgroup waits for the task to end
+            await xknx.telegrams.put(response_telegram)
+            await xknx.telegrams_in.stop()
 
         # GroupValueRead telegram is still in the queue because we are not actually processing it
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
         # Callback was removed again
-        self.assertEqual(xknx.telegram_queue.telegram_received_cbs, [])
+        assert not xknx.telegrams_in.callbacks
         # Telegram was received
         self.assertEqual(value_reader.received_telegram,
                         response_telegram)
@@ -61,13 +62,12 @@ class TestValueReader(Testcase):
         timed_out_read = await value_reader.read()
 
         # GroupValueRead telegram is still in the queue because we are not actually processing it
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
         # Warning was logged
         logger_warning_mock.assert_called_once_with(
             "Error: KNX bus did not respond in time to GroupValueRead request for: %s", GroupAddress('0/0/0'))
         # Callback was removed again
-        self.assertEqual(xknx.telegram_queue.telegram_received_cbs,
-                         [])
+        assert not xknx.telegrams_in.callbacks
         # No telegram was received
         self.assertIsNone(value_reader.received_telegram)
         # Unsuccessfull read() returns None
@@ -80,8 +80,8 @@ class TestValueReader(Testcase):
         value_reader = ValueReader(xknx, GroupAddress('0/0/0'))
 
         await value_reader.send_group_read()
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(telegram,
                          Telegram(group_address=GroupAddress('0/0/0'),
                                   telegramtype=TelegramType.GROUP_READ))

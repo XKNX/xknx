@@ -195,8 +195,8 @@ class SensorExposeLoopTest(Testcase):
                 # HA sends strings for new values
                 stringified_value = str(test_value)
                 await expose.set(stringified_value)
-                self.assertEqual(xknx.telegrams.qsize(), 1)
-                outgoing_telegram = await xknx.telegrams.get()
+                self.assertEqual(xknx.telegrams_out.qsize(), 1)
+                outgoing_telegram = await xknx.telegrams_out.q.get()
                 self.assertEqual(
                     outgoing_telegram,
                     Telegram(
@@ -237,8 +237,8 @@ class SensorExposeLoopTest(Testcase):
                 self.assertEqual(incoming_value, test_value)
 
                 await expose.set(test_value)
-                self.assertEqual(xknx.telegrams.qsize(), 1)
-                outgoing_telegram = await xknx.telegrams.get()
+                self.assertEqual(xknx.telegrams_out.qsize(), 1)
+                outgoing_telegram = await xknx.telegrams_out.q.get()
                 self.assertEqual(
                     outgoing_telegram,
                     Telegram(

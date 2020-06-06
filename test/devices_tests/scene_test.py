@@ -28,7 +28,7 @@ class TestScene(Testcase):
             group_address='1/2/1',
             scene_number=23)
         await scene.sync(False)
-        self.assertEqual(xknx.telegrams.qsize(), 0)
+        self.assertEqual(xknx.telegrams_out.qsize(), 0)
 
     #
     # TEST RUN SCENE
@@ -43,8 +43,8 @@ class TestScene(Testcase):
             group_address='1/2/1',
             scene_number=23)
         await scene.run()
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/1'), payload=DPTArray(0x16)))
 
@@ -58,8 +58,8 @@ class TestScene(Testcase):
             group_address='1/2/1',
             scene_number=23)
         await scene.do("run")
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/1'), payload=DPTArray(0x16)))
 
@@ -75,7 +75,7 @@ class TestScene(Testcase):
         with patch('logging.Logger.warning') as mockWarn:
             await scene.do("execute")
             mockWarn.assert_called_with('Could not understand action %s for device %s', 'execute', 'TestScene')
-        self.assertEqual(xknx.telegrams.qsize(), 0)
+        assert xknx.telegrams_out.qsize() == 0
 
     #
     # TEST has_group_address

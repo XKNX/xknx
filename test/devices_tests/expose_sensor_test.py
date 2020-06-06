@@ -70,8 +70,8 @@ class TestExposeSensor(Testcase):
             group_address='1/2/3',
             value_type="binary")
         await expose_sensor.set(False)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram,
             Telegram(
@@ -89,9 +89,9 @@ class TestExposeSensor(Testcase):
             group_address='1/2/3',
             value_type="percent")
         await expose_sensor.set(75)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
 
-        telegram = await xknx.telegrams.get()
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram,
             Telegram(
@@ -109,8 +109,8 @@ class TestExposeSensor(Testcase):
             group_address='1/2/3',
             value_type="temperature")
         await expose_sensor.set(21.0)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram,
             Telegram(
@@ -135,8 +135,8 @@ class TestExposeSensor(Testcase):
         telegram = Telegram(GroupAddress('1/2/3'))
         telegram.telegramtype = TelegramType.GROUP_READ
         await expose_sensor.process(telegram)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram,
             Telegram(
@@ -158,8 +158,8 @@ class TestExposeSensor(Testcase):
         telegram = Telegram(GroupAddress('1/2/3'))
         telegram.telegramtype = TelegramType.GROUP_READ
         await expose_sensor.process(telegram)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram,
             Telegram(
@@ -181,8 +181,8 @@ class TestExposeSensor(Testcase):
         telegram = Telegram(GroupAddress('1/2/3'))
         telegram.telegramtype = TelegramType.GROUP_READ
         await expose_sensor.process(telegram)
-        self.assertEqual(xknx.telegrams.qsize(), 1)
-        telegram = await xknx.telegrams.get()
+        self.assertEqual(xknx.telegrams_out.qsize(), 1)
+        telegram = await xknx.telegrams_out.q.get()
         self.assertEqual(
             telegram,
             Telegram(

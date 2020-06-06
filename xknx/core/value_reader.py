@@ -27,7 +27,7 @@ class ValueReader:
 
     async def read(self):
         """Send group read and wait for response."""
-        with self.xknx.telegram_queue.receiver() as recv:
+        with self.xknx.telegram_receiver() as recv:
             await self.send_group_read()
             try:
                 # anyio buglet
@@ -35,7 +35,6 @@ class ValueReader:
                     async for telegram in recv:
                         if await self.telegram_received(telegram):
                             return telegram
-                        await self.response_received.wait()
             except TimeoutError:
                 self.xknx.logger.warning("Error: KNX bus did not respond in time to GroupValueRead request for: %s",
                                         self.group_address)
