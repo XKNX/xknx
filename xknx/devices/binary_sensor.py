@@ -8,7 +8,7 @@ A binary sensor can be:
 
 A BinarySensor may also have Actions attached which are executed after state was changed.
 """
-import asyncio
+import anyio
 import time
 from enum import Enum
 
@@ -156,7 +156,7 @@ class BinarySensor(Device):
         else:
             await self._set_internal_state(BinarySensorState.ON)
             if self.reset_after is not None:
-                await asyncio.sleep(self.reset_after/1000)
+                await anyio.sleep(self.reset_after/1000)
                 await self._set_internal_state(BinarySensorState.OFF)
 
     def is_on(self):
