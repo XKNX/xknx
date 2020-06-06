@@ -7,6 +7,7 @@ Due to nonexisting support of UDP multicast within anyio some special treatment 
 import anyio
 import socket
 from sys import platform
+from contextlib import asynccontextmanager
 
 from xknx.exceptions import CouldNotParseKNXIP, XKNXException
 from xknx.knxip import KNXIPFrame
@@ -77,6 +78,19 @@ class UDPClient:
         callb = UDPClient.Callback(callback, service_types)
         self.callbacks.append(callb)
         return callb
+
+    @asynccontextmanager
+    def receiver(self, *service_types):
+        """Context manager returning an iterator for incoming packets."""
+        q = anyio.create_queue(10)
+        async def _receiver(knxipframe, _):
+            await q.put(knxipframe)
+        try:
+            callb = UDPClient.Callback(_receiver, service_types)
+            self.callbacks.append(callb)
+            yield q
+        finally:
+            self.callbacks.remove(callb)
 
     def unregister_callback(self, callb):
         """Unregister callback."""
