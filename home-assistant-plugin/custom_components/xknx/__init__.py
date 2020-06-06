@@ -14,10 +14,10 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
-    STATE_ON,
     STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN
+    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
@@ -213,7 +213,7 @@ class KNXModule:
 
     def connection_config_tunneling(self):
         """Return the connection_config if tunneling is configured."""
-        gateway_ip = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_HOST)
+        gateway_ip = self.config[DOMAIN][CONF_XKNX_TUNNELING][CONF_HOST]
         gateway_port = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_PORT)
         local_ip = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_XKNX_LOCAL_IP)
         if gateway_port is None:
@@ -223,6 +223,7 @@ class KNXModule:
             gateway_ip=gateway_ip,
             gateway_port=gateway_port,
             local_ip=local_ip,
+            auto_reconnect=True,
         )
 
     def connection_config_auto(self):
@@ -260,8 +261,13 @@ class KNXModule:
                 self.exposures.append(exposure)
             else:
                 exposure = KNXExposeSensor(
-                    self.hass, self.xknx, expose_type, entity_id,
-                    attribute, default, address
+                    self.hass,
+                    self.xknx,
+                    expose_type,
+                    entity_id,
+                    attribute,
+                    default,
+                    address,
                 )
                 exposure.async_register()
                 self.exposures.append(exposure)
@@ -354,10 +360,7 @@ class KNXExposeSensor:
         else:
             _name = self.entity_id
         self.device = ExposeSensor(
-            self.xknx,
-            name=_name,
-            group_address=self.address,
-            value_type=self.type,
+            self.xknx, name=_name, group_address=self.address, value_type=self.type,
         )
         self.xknx.devices.add(self.device)
         async_track_state_change(self.hass, self.entity_id, self._async_entity_changed)

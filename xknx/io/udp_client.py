@@ -49,6 +49,7 @@ class UDPClient:
     async def data_received_callback(self, raw):
         """Parse and process KNXIP frame. Callback for having received an UDP packet."""
         if raw:
+            self.xknx.raw_socket_logger.debug("Received from %s: %s", addr, data.hex())
             try:
                 knxipframe = KNXIPFrame(self.xknx)
                 knxipframe.from_knx(raw)
