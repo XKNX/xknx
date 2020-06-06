@@ -40,8 +40,6 @@ class ValueReader:
             self.xknx.logger.warning("Error: KNX bus did not respond in time to GroupValueRead request for: %s",
                                     self.group_address)
             return None
-        except BaseException as exc:
-            pass
         finally:
             self.xknx.telegram_queue.unregister_telegram_received_cb(cb_obj)
         return self.received_telegram

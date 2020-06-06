@@ -4,7 +4,6 @@ Abstraction for handling KNX/IP tunnels.
 Tunnels connect to KNX/IP devices directly via UDP and build a static UDP connection.
 """
 import anyio
-from contextlib import asynccontextmanager
 
 from xknx.exceptions import XKNXException
 from xknx.knxip import KNXIPFrame, KNXIPServiceType, TunnellingRequest

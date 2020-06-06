@@ -2,13 +2,14 @@
 import anyio
 import logging
 import signal
-from sys import platform
 from contextlib import asynccontextmanager
 
 from xknx.core import Config, TelegramQueue
 from xknx.devices import Devices
 from xknx.io import ConnectionConfig, KNXIPInterface
 from xknx.telegram import GroupAddressType, PhysicalAddress
+
+import sniffio
 
 from .__version__ import __version__ as VERSION
 
@@ -133,7 +134,7 @@ class XKNX:
         scope = None
         async def _spawn(evt,p,a,k):
             nonlocal scope
-            async with anyio.open_cancel_scope() as scope:
+            async with anyio.open_cancel_scope() as scope:  # pylint: disable=unused-variable
                 await evt.set()
                 await p(*a,**k)
 

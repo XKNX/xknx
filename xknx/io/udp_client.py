@@ -15,7 +15,7 @@ from xknx.knxip import KNXIPFrame
 class UDPClient:
     """Class for handling (sending and receiving) UDP packets."""
 
-    # pylint: disable=too-few-public-methods
+    # pylint: disable=too-few-public-methods,too-many-instance-attributes
 
     class Callback:
         """Callback class for handling callbacks for different 'KNX service types' of received packets."""
@@ -45,11 +45,12 @@ class UDPClient:
         self.bind_to_multicast_addr = bind_to_multicast_addr
         self.socket = None
         self.callbacks = []
+        self._read_task = None
 
-    async def data_received_callback(self, raw):
+    async def data_received_callback(self, raw, addr):
         """Parse and process KNXIP frame. Callback for having received an UDP packet."""
         if raw:
-            self.xknx.raw_socket_logger.debug("Received from %s: %s", addr, data.hex())
+            self.xknx.raw_socket_logger.debug("Received from %s:%s", addr, raw.hex())
             try:
                 knxipframe = KNXIPFrame(self.xknx)
                 knxipframe.from_knx(raw)
@@ -137,7 +138,7 @@ class UDPClient:
 
     async def _reader(self):
         async for raw,addr in self.socket.receive_packets(999):
-            await self.data_received_callback(raw)
+            await self.data_received_callback(raw, addr)
 
     async def send(self, knxipframe):
         """Send KNXIPFrame to socket."""

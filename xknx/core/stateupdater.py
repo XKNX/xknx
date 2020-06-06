@@ -1,8 +1,6 @@
 """Module for reading the values of all devices from device vector from KNX bus in periodic cycles."""
 import anyio
 
-from contextlib import asynccontextmanager
-
 class StateUpdater():
     """Class for reading the values of all devices from KNX bus."""
 
