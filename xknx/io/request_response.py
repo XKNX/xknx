@@ -3,7 +3,7 @@ Base class for sending a specific type of KNX/IP Packet to a KNX/IP device and w
 
 Will report if the corresponding answer was not received.
 """
-import asyncio
+import anyio
 
 from xknx.knxip import ErrorCode
 
@@ -18,7 +18,7 @@ class RequestResponse():
         self.xknx = xknx
         self.udpclient = udp_client
         self.awaited_response_class = awaited_response_class
-        self.response_received_or_timeout = asyncio.Event()
+        self.response_received = anyio.create_event()
         self.success = False
         self.timeout_in_seconds = timeout_in_seconds
         self.timeout_handle = None
@@ -32,10 +32,14 @@ class RequestResponse():
         callb = self.udpclient.register_callback(
             self.response_rec_callback, [self.awaited_response_class.service_type])
         await self.send_request()
-        await self.start_timeout()
-        await self.response_received_or_timeout.wait()
-        await self.stop_timeout()
-        self.udpclient.unregister_callback(callb)
+        try:
+            async with anyio.fail_after(self.timeout_in_seconds):
+                await self.response_received.wait()
+        except TimeoutError:
+            self.xknx.logger.warning("Error: KNX bus did not respond in time to request of type '%s'",
+                                 self.__class__.__name__)
+        finally:
+            self.udpclient.unregister_callback(callb)
 
     async def send_request(self):
         """Build knxipframe (within derived class) and send via UDP."""
@@ -48,7 +52,7 @@ class RequestResponse():
         if not isinstance(knxipframe.body, self.awaited_response_class):
             self.xknx.logger.warning("Cant understand knxipframe")
             return
-        self.response_received_or_timeout.set()
+        await self.response_received.set()
         if knxipframe.body.status_code == ErrorCode.E_NO_ERROR:
             self.success = True
             self.on_success_hook(knxipframe)
@@ -65,18 +69,3 @@ class RequestResponse():
                                  self.__class__.__name__,
                                  self.awaited_response_class.__name__, knxipframe.body.status_code)
 
-    def timeout(self):
-        """Handle timeout for not having received expected knxipframe."""
-        self.xknx.logger.warning("Error: KNX bus did not respond in time to request of type '%s'",
-                                 self.__class__.__name__)
-        self.response_received_or_timeout.set()
-
-    async def start_timeout(self):
-        """Start timeout."""
-        loop = asyncio.get_event_loop()
-        self.timeout_handle = loop.call_later(
-            self.timeout_in_seconds, self.timeout)
-
-    async def stop_timeout(self):
-        """Stop timeout."""
-        self.timeout_handle.cancel()
