@@ -95,59 +95,56 @@ class GatewayScanner():
         self.stop_on_found = stop_on_found
         self.scan_filter = scan_filter
         self.found_gateways = []  # List[GatewayDescriptor]
-        self._udp_clients = []
         self._response_received = anyio.create_event()
-        self._timeout_handle = None
 
     async def scan(self) -> List[GatewayDescriptor]:
         """Scan and return a list of GatewayDescriptors on success."""
-        await self._send_search_requests()
-        try:
+        async with anyio.create_task_group() as tg:
+            await self._send_search_requests(tg)
             async with anyio.move_on_after(self.timeout_in_seconds):
                 await self._response_received.wait()
-        finally:
-            await self._stop()
+
+            await tg.cancel_scope.cancel()
         return self.found_gateways
 
-    async def _stop(self):
-        """Stop tearing down udpclient."""
-        for udp_client in self._udp_clients:
-            await udp_client.stop()
-
-    async def _send_search_requests(self):
+    async def _send_search_requests(self, tg):
         """Find all interfaces with active IPv4 connection to search for gateways."""
         # pylint: disable=no-member
         for interface in netifaces.interfaces():
             try:
                 af_inet = netifaces.ifaddresses(interface)[netifaces.AF_INET]
-                ip_addr = af_inet[0]["addr"]
-                await self._search_interface(interface, ip_addr)
             except KeyError:
-                self.xknx.logger.info("Could not connect to an KNX/IP device on %s", interface)
                 continue
+            ip_addr = af_inet[0]["addr"]
+            await tg.spawn(self._search_interface, interface, ip_addr)
 
     async def _search_interface(self, interface, ip_addr):
         """Send a search request on a specific interface."""
-        self.xknx.logger.debug("Searching on %s / %s", interface, ip_addr)
+        try:
+            self.xknx.logger.debug("Searching on %s / %s", interface, ip_addr)
 
-        udp_client = UDPClient(self.xknx,
-                               (ip_addr, 0, interface),
-                               (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
-                               multicast=True)
+            udp_client = UDPClient(self.xknx,
+                                (ip_addr, 0, interface),
+                                (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+                                multicast=True)
 
-        udp_client.register_callback(
-            self._response_rec_callback, [KNXIPServiceType.SEARCH_RESPONSE])
-        await udp_client.connect()
+            with udp_client.receiver(KNXIPServiceType.SEARCH_RESPONSE) as recv:
+                await udp_client.connect()
 
-        self._udp_clients.append(udp_client)
+                self._udp_clients.append(udp_client)
 
-        (local_addr, local_port) = udp_client.getsockname()
-        knx_ip_frame = KNXIPFrame(self.xknx)
-        knx_ip_frame.init(KNXIPServiceType.SEARCH_REQUEST)
-        knx_ip_frame.body.discovery_endpoint = \
-            HPAI(ip_addr=local_addr, port=local_port)
-        knx_ip_frame.normalize()
-        await udp_client.send(knx_ip_frame)
+                (local_addr, local_port) = udp_client.getsockname()
+                knx_ip_frame = KNXIPFrame(self.xknx)
+                knx_ip_frame.init(KNXIPServiceType.SEARCH_REQUEST)
+                knx_ip_frame.body.discovery_endpoint = \
+                    HPAI(ip_addr=local_addr, port=local_port)
+                knx_ip_frame.normalize()
+                await udp_client.send(knx_ip_frame)
+                async with anyio.move_on_after(self.timeout_in_seconds):
+                    async for msg in recv:
+                        await self._response_rec_callback(msg, udp_client)
+        except Exception as exc:
+            self.xknx.logger.info("Could not connect to an KNX/IP device on %s: %s", interface, exc)
 
     async def _response_rec_callback(self, knx_ip_frame: KNXIPFrame, udp_client: UDPClient) -> None:
         """Verify and handle knxipframe. Callback from internal udpclient."""
