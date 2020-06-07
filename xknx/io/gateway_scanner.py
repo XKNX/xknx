@@ -116,10 +116,11 @@ class GatewayScanner():
             except KeyError:
                 continue
             ip_addr = af_inet[0]["addr"]
-            await tg.spawn(self._search_interface, interface, ip_addr)
+            await tg.spawn(self._search_interface, interface, ip_addr, tg.cancel_scope)
 
-    async def _search_interface(self, interface, ip_addr):
+    async def _search_interface(self, interface, ip_addr, scope):
         """Send a search request on a specific interface."""
+        udp_client = None
         try:
             self.xknx.logger.debug("Searching on %s / %s", interface, ip_addr)
 
@@ -140,7 +141,8 @@ class GatewayScanner():
                 await udp_client.send(knx_ip_frame)
                 async with anyio.move_on_after(self.timeout_in_seconds):
                     async for msg in recv:
-                        if await self._response_rec_callback(msg, udp_client):
+                        if await self._response_rec_callback(msg, udp_client) and self.stop_on_found:
+                            await tg.cancel()
                             break
         except Exception as exc:
             self.xknx.logger.exception("Could not connect to an KNX/IP device on %s", interface, exc_info=exc)
