@@ -62,7 +62,7 @@ class TestStringRepresentations(unittest.TestCase):
             device_class='motion')
         self.assertEqual(
             str(binary_sensor),
-            '<BinarySensor group_address_state="GroupAddress("1/2/3")" name="Fnord" state="BinarySensorState.OFF"/>')
+            '<BinarySensor name="Fnord" remote_value="None/GroupAddress("1/2/3")/None/None" state="False"/>')
 
     def test_climate(self):
         """Test string representation of climate object."""

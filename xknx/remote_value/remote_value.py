@@ -77,7 +77,7 @@ class RemoteValue():
         # pylint: disable=unused-argument
         self.xknx.logger.warning("to_knx not implemented for %s", self.__class__.__name__)
 
-    async def process(self, telegram):
+    async def process(self, telegram, always_callback=False):
         """Process incoming telegram."""
         if not self.has_group_address(telegram.group_address):
             return False
@@ -86,7 +86,8 @@ class RemoteValue():
                                         payload=telegram.payload,
                                         group_address=telegram.group_address,
                                         device_name=self.device_name)
-        if self.payload != telegram.payload or self.payload is None:
+        if self.payload is None or always_callback \
+                or self.payload != telegram.payload:
             self.payload = telegram.payload
             if self.after_update_cb is not None:
                 await self.after_update_cb()

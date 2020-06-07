@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 
 from xknx import XKNX
 from xknx.devices import (
-    Action, ActionBase, ActionCallback, BinarySensorState, Light)
+    Action, ActionBase, ActionCallback, Light)
 
 
 class TestAction(unittest.TestCase):
@@ -49,22 +49,22 @@ class TestAction(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         action = ActionBase(xknx, counter=2, hook="on")
         self.assertTrue(action.test_if_applicable(
-            BinarySensorState.ON, 2))
+            True, 2))
         self.assertFalse(action.test_if_applicable(
-            BinarySensorState.ON, 3))
+            True, 3))
         self.assertFalse(action.test_if_applicable(
-            BinarySensorState.OFF, 2))
+            False, 2))
 
     def test_if_applicable_hook_off(self):
         """Test test_if_applicable method with hook set to 'off'."""
         xknx = XKNX(loop=self.loop)
         action = ActionBase(xknx, counter=2, hook="off")
         self.assertTrue(action.test_if_applicable(
-            BinarySensorState.OFF, 2))
+            False, 2))
         self.assertFalse(action.test_if_applicable(
-            BinarySensorState.OFF, 3))
+            False, 3))
         self.assertFalse(action.test_if_applicable(
-            BinarySensorState.ON, 2))
+            True, 2))
 
     #
     # TEST EXECUTE

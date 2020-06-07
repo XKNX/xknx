@@ -16,6 +16,7 @@ class RemoteValueSwitch(RemoteValue):
                  xknx,
                  group_address=None,
                  group_address_state=None,
+                 sync_state=True,
                  device_name=None,
                  after_update_cb=None,
                  invert=False):
@@ -24,6 +25,7 @@ class RemoteValueSwitch(RemoteValue):
         super().__init__(xknx,
                          group_address,
                          group_address_state,
+                         sync_state=sync_state,
                          device_name=device_name,
                          after_update_cb=after_update_cb)
         self.invert = invert

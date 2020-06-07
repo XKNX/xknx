@@ -1,7 +1,7 @@
 """Module for handling devices like Lights, Switches or Covers."""
 # flake8: noqa
 from .action import Action, ActionBase, ActionCallback
-from .binary_sensor import BinarySensor, BinarySensorState
+from .binary_sensor import BinarySensor
 from .climate import Climate
 from .climate_mode import ClimateMode
 from .cover import Cover

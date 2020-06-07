@@ -24,15 +24,10 @@ class ActionBase():
 
     def test_if_applicable(self, state, counter=None):
         """Test if should be executed for this state and this counter number."""
-        from .binary_sensor import BinarySensorState
-        if (state == BinarySensorState.ON) \
-                and (self.hook == "on") \
-                and self.test_counter(counter):
-            return True
-        if (state == BinarySensorState.OFF) \
-                and (self.hook == "off") \
-                and self.test_counter(counter):
-            return True
+        if state and (self.hook == "on"):
+            return self.test_counter(counter)
+        if not state and (self.hook == "off"):
+            return self.test_counter(counter)
         return False
 
     async def execute(self):
