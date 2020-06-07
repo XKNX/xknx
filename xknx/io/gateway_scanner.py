@@ -144,6 +144,10 @@ class GatewayScanner():
                             break
         except Exception as exc:
             self.xknx.logger.exception("Could not connect to an KNX/IP device on %s", interface, exc_info=exc)
+        finally:
+            if udp_client is not None:
+                async with anyio.move_on_after(1, shield=True):
+                    await udp_client.stop()
 
     async def _response_rec_callback(self, knx_ip_frame: KNXIPFrame, udp_client: UDPClient) -> None:
         """Verify and handle knxipframe. Callback from internal udpclient."""
