@@ -131,8 +131,6 @@ class GatewayScanner():
             with udp_client.receiver(KNXIPServiceType.SEARCH_RESPONSE) as recv:
                 await udp_client.connect()
 
-                self._udp_clients.append(udp_client)
-
                 (local_addr, local_port) = udp_client.getsockname()
                 knx_ip_frame = KNXIPFrame(self.xknx)
                 knx_ip_frame.init(KNXIPServiceType.SEARCH_REQUEST)
@@ -142,9 +140,10 @@ class GatewayScanner():
                 await udp_client.send(knx_ip_frame)
                 async with anyio.move_on_after(self.timeout_in_seconds):
                     async for msg in recv:
-                        await self._response_rec_callback(msg, udp_client)
+                        if await self._response_rec_callback(msg, udp_client):
+                            break
         except Exception as exc:
-            self.xknx.logger.info("Could not connect to an KNX/IP device on %s: %s", interface, exc)
+            self.xknx.logger.exception("Could not connect to an KNX/IP device on %s", interface, exc_info=exc)
 
     async def _response_rec_callback(self, knx_ip_frame: KNXIPFrame, udp_client: UDPClient) -> None:
         """Verify and handle knxipframe. Callback from internal udpclient."""
@@ -166,6 +165,7 @@ class GatewayScanner():
             pass
 
         await self._add_found_gateway(gateway)
+        return True
 
     async def _add_found_gateway(self, gateway):
         if self.scan_filter.match(gateway):
