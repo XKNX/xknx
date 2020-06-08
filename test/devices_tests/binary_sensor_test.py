@@ -22,13 +22,6 @@ class TestBinarySensor(unittest.TestCase):
         """Tear down test class."""
         self.loop.close()
 
-    def test_initialization_wrong_significant_bit(self):
-        """Test initialization with wrong significant_bit parameter."""
-        # pylint: disable=invalid-name
-        xknx = XKNX(loop=self.loop)
-        with self.assertRaises(TypeError):
-            BinarySensor(xknx, 'TestInput', '1/2/3', significant_bit="1")
-
     #
     # TEST PROCESS
     #
@@ -60,31 +53,6 @@ class TestBinarySensor(unittest.TestCase):
 
         self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_on)))
         self.loop.run_until_complete(asyncio.sleep(reset_after_ms*2/1000))
-        self.assertEqual(binaryinput.state, False)
-
-    def test_process_significant_bit(self):
-        """Test process / reading telegrams from telegram queue with specific significant bit set."""
-        xknx = XKNX(loop=self.loop)
-        binaryinput = BinarySensor(xknx, 'TestInput', '1/2/3', significant_bit=3)
-
-        self.assertEqual(binaryinput.state, False)
-
-        # Wrong significant bit: 0000 1011 = 11
-        telegram_on = Telegram(group_address=GroupAddress('1/2/3'))
-        telegram_on.payload = DPTBinary(11)
-        self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_on)))
-        self.assertEqual(binaryinput.state, False)
-
-        # Correct significant bit: 0000 1101 = 13
-        telegram_on = Telegram(group_address=GroupAddress('1/2/3'))
-        telegram_on.payload = DPTBinary(13)
-        self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_on)))
-        self.assertEqual(binaryinput.state, True)
-
-        # Resetting, significant bit: 0000 0011 = 3
-        telegram_off = Telegram(group_address=GroupAddress('1/2/3'))
-        telegram_off.payload = DPTBinary(3)
-        self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_off)))
         self.assertEqual(binaryinput.state, False)
 
     def test_process_action(self):
