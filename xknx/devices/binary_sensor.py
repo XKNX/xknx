@@ -98,7 +98,7 @@ class BinarySensor(Device):
         return self.remote_value.state_addresses()
 
     async def _state_from_remote_value(self):
-        """Callback from ReomteValue. Sets the internal state."""
+        """Update the internal state from ReomteValue (Callback)."""
         await self._set_internal_state(self.remote_value.value)
 
     async def _set_internal_state(self, state):
