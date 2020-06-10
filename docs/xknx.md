@@ -101,9 +101,28 @@ await xknx.devices['TestSwitch'].set_off()
 ```
 
 
-# [](#header-2)Callbacks
+# [](#header-2)Iterators and Callbacks
 
-The `telegram_received_cb` will be called for each KNX telegram received by the XKNX daemon. Example:
+When you use the XKNX object as a context manager, you can iterate over
+incoming telegrams.
+
+```python
+import anyio
+from xknx import XKNX
+
+async def telegram_received_cb(telegram):
+
+async def main():
+    async with XKNX().run() as xknx:
+        with xknx.telegram_receiver() as recv:
+            async for telegram in recv:
+                print("Telegram received: {0}".format(telegram))
+
+# pylint: disable=invalid-name
+anyio.run(main)
+```
+
+This can also be accomplished with the `telegram_received_cb` callback:
 
 ```python
 import anyio
@@ -121,7 +140,31 @@ async def main():
 anyio.run(main)
 ```
 
-For all devices stored in the `devices` storage (see [above](#devices)) a callback for each update may be defined:
+For all devices stored in the `devices` storage (see [above](#devices)), an iterator triggers
+for each update:
+
+```python
+import anyio
+from xknx import XKNX
+from xknx.devices import Switch
+
+
+async def device_updated_cb(device):
+
+
+async def main():
+    async with XKNX().run() as xknx:
+        async with Switch(xknx,
+                          name='TestSwitch',
+                          group_address='1/1/11') as switch:
+            async for _ in switch:
+                print("Update received")
+
+# pylint: disable=invalid-name
+anyio.run(main)
+```
+
+This can also be achieved with a callback:
 
 ```python
 import anyio
@@ -148,6 +191,5 @@ async def main():
 anyio.run(main)
 ```
 
-
-
+Neither of these methods tells you which value(s) have changed.
 
