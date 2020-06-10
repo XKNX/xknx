@@ -26,19 +26,11 @@ class TestDevice(Testcase):
         xknx = XKNX()
         device = Device(xknx, 'TestDevice')
 
-        after_update_callback1 = Mock()
-        after_update_callback2 = Mock()
+        after_update_callback1 = AsyncMock()
+        after_update_callback2 = AsyncMock()
 
-        async def async_after_update_callback1(device):
-            """Async callback No. 1."""
-            after_update_callback1(device)
-
-        async def async_after_update_callback2(device):
-            """Async callback No. 2."""
-            after_update_callback2(device)
-
-        device.register_device_updated_cb(async_after_update_callback1)
-        device.register_device_updated_cb(async_after_update_callback2)
+        device.register_device_updated_cb(after_update_callback1)
+        device.register_device_updated_cb(after_update_callback2)
 
         # Triggering first time. Both have to be called
         await device.after_update()
@@ -55,7 +47,7 @@ class TestDevice(Testcase):
         after_update_callback2.reset_mock()
 
         # Unregistering first callback
-        device.unregister_device_updated_cb(async_after_update_callback1)
+        device.unregister_device_updated_cb(after_update_callback1)
         await device.after_update()
         after_update_callback1.assert_not_called()
         after_update_callback2.assert_called_with(device)
@@ -63,7 +55,7 @@ class TestDevice(Testcase):
         after_update_callback2.reset_mock()
 
         # Unregistering second callback
-        device.unregister_device_updated_cb(async_after_update_callback2)
+        device.unregister_device_updated_cb(after_update_callback2)
         await device.after_update()
         after_update_callback1.assert_not_called()
         after_update_callback2.assert_not_called()
