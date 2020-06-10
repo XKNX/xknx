@@ -129,8 +129,9 @@ class TestGatewayScanner(Testcase):
         self.assertEqual(_search_interface_mock.call_count, 2)
         expected_calls = [(('lo0', '127.0.0.1'),),
                           (('en1', '10.1.1.2'),)]
-        self.assertEqual(_search_interface_mock.call_args_list, expected_calls)
-        self.assertEqual(test_scan, [])
+        actual_calls = [((val[0][0], val[0][1]),) for val in _search_interface_mock.call_args_list]
+        assert actual_calls == expected_calls
+        assert test_scan == []
 
 
 def fake_router_search_response(xknx: XKNX) -> SearchResponse:
