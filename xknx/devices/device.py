@@ -98,3 +98,11 @@ class Device:
         """Execute 'do' commands."""
         # pylint: disable=invalid-name
         self.xknx.logger.info("Do not implemented action '%s' for %s", action, self.__class__.__name__)
+
+    def add_to_xknx(self):
+        """Add myself to xknx's device list."""
+        self.xknx.devices.add(self)
+
+    def remove_from_xknx(self):
+        """Remove myself from xknx's device list."""
+        self.xknx.devices.remove(self)

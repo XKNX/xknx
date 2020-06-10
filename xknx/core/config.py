@@ -9,7 +9,7 @@ import yaml
 
 from xknx.devices import (
     BinarySensor, Climate, Cover, DateTime, ExposeSensor, Fan, Light,
-    Notification, Scene, Sensor, Switch)
+    Notification, Scene, Sensor, Switch, device_types)
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
 from xknx.telegram import PhysicalAddress
@@ -85,129 +85,84 @@ class Config:
 
     def parse_group(self, doc, group):
         """Parse a group entry of xknx.yaml."""
+        entries = doc['groups'][group]
         try:
-            if group.startswith("binary_sensor"):
-                self.parse_group_binary_sensor(doc["groups"][group])
-            elif group.startswith("climate"):
-                self.parse_group_climate(doc["groups"][group])
-            elif group.startswith("cover"):
-                self.parse_group_cover(doc["groups"][group])
-            elif group.startswith("datetime"):
-                self.parse_group_datetime(doc["groups"][group])
-            elif group.startswith("expose_sensor"):
-                self.parse_group_expose_sensor(doc["groups"][group])
-            elif group.startswith("fan"):
-                self.parse_group_fan(doc["groups"][group])
-            elif group.startswith("light"):
-                self.parse_group_light(doc["groups"][group])
-            elif group.startswith("notification"):
-                self.parse_group_notification(doc["groups"][group])
-            elif group.startswith("scene"):
-                self.parse_group_scene(doc["groups"][group])
-            elif group.startswith("sensor"):
-                self.parse_group_sensor(doc["groups"][group])
-            elif group.startswith("switch"):
-                self.parse_group_switch(doc["groups"][group])
+            for name,cls in device_types.items():
+                if group.startswith(name):
+                    self.parse_cls(cls, entries)
+                    return
+            self.xknx.logger.error("Error while reading config file: Unknown device type for %s", group)
+
         except XKNXException as ex:
             self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", group, ex)
 
+    def parse_cls(self, cls, entries):
+        for name,entry in entries.items():
+            dev = cls.from_config(self.xknx, name, entry)
+            dev.add_to_xknx()
+
     def parse_group_binary_sensor(self, entries):
-        """Parse a binary_sensor section of xknx.yaml."""
-        for entry in entries:
-            binary_sensor = BinarySensor.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
-            self.xknx.devices.add(binary_sensor)
+        """Parse a binary_sensor section of xknx.yaml.
+
+        This function is deprecated."""
+        self.parse_cls(BinarySensor, entries)
 
     def parse_group_climate(self, entries):
-        """Parse a climate section of xknx.yaml."""
-        for entry in entries:
-            climate = Climate.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
-            self.xknx.devices.add(climate)
-            if climate.mode is not None:
-                self.xknx.devices.add(climate.mode)
+        """Parse a climate section of xknx.yaml.
+
+        This function is deprecated."""
+        self.parse_cls(Climate, entries)
 
     def parse_group_cover(self, entries):
-        """Parse a cover section of xknx.yaml."""
-        for entry in entries:
-            cover = Cover.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
-            self.xknx.devices.add(cover)
+        """Parse a cover section of xknx.yaml.
+
+        This function is deprecated."""
+        self.parse_cls(Cover, entries)
 
     def parse_group_datetime(self, entries):
-        """Parse a datetime section of xknx.yaml."""
-        for entry in entries:
-            datetime = DateTime.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
-            self.xknx.devices.add(datetime)
+        """Parse a datetime section of xknx.yaml.
+
+        This function is deprecated."""
+        self.parse_cls(DateTime, entries)
 
     def parse_group_expose_sensor(self, entries):
-        """Parse a exposed sensor section of xknx.yaml."""
-        for entry in entries:
-            expose_sensor = ExposeSensor.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
-            self.xknx.devices.add(expose_sensor)
+        """Parse a exposed sensor section of xknx.yaml.
+
+        This function is deprecated."""
+        self.parse_cls(ExposeSensor, entries)
 
     def parse_group_fan(self, entries):
-        """Parse a fan section of xknx.yaml."""
-        for entry in entries:
-            fan = Fan.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
-            self.xknx.devices.add(fan)
+        """Parse a fan section of xknx.yaml.
+
+        This function is deprecated."""
+        self.parse_cls(Fan, entries)
 
     def parse_group_light(self, entries):
-        """Parse a light section of xknx.yaml."""
-        for entry in entries:
-            light = Light.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
-            self.xknx.devices.add(light)
+        """Parse a light section of xknx.yaml.
+
+        This function is deprecated."""
+        self.parse_cls(Light, entries)
 
     def parse_group_notification(self, entries):
-        """Parse a sensor section of xknx.yaml."""
-        for entry in entries:
-            notification = Notification.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
-            self.xknx.devices.add(notification)
+        """Parse a sensor section of xknx.yaml.
+
+        This function is deprecated."""
+        self.parse_cls(Notification, entries)
 
     def parse_group_scene(self, entries):
-        """Parse a scene section of xknx.yaml."""
-        for entry in entries:
-            scene = Scene.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
-            self.xknx.devices.add(scene)
+        """Parse a scene section of xknx.yaml.
+
+        This function is deprecated."""
+        self.parse_cls(Scene, entries)
 
     def parse_group_sensor(self, entries):
-        """Parse a sensor section of xknx.yaml."""
-        for entry in entries:
-            sensor = Sensor.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
-            self.xknx.devices.add(sensor)
+        """Parse a sensor section of xknx.yaml.
+
+        This function is deprecated."""
+        self.parse_cls(Sensor, entries)
 
     def parse_group_switch(self, entries):
-        """Parse a switch section of xknx.yaml."""
-        for entry in entries:
-            switch = Switch.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
-            self.xknx.devices.add(switch)
+        """Parse a switch section of xknx.yaml.
+
+        This function is deprecated."""
+        self.parse_cls(Switch, entries)

@@ -16,3 +16,17 @@ from .scene import Scene
 from .sensor import Sensor
 from .switch import Switch
 from .travelcalculator import TravelCalculator, TravelStatus
+
+device_types = dict(
+		binary_sensor = BinarySensor,
+		climate = Climate,
+		cover = Cover,
+		datetime = DateTime,
+		expose_sensor = ExposeSensor,
+		fan = Fan,
+		light = Light,
+		notification = Notification,
+		scene = Scene,
+		sensor = Sensor,
+		switch = Switch,
+)
