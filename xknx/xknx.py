@@ -18,6 +18,9 @@ from .__version__ import __version__ as VERSION
 
 
 class _TelegramsDispatcher:
+    # pylint: disable=too-few-public-methods
+    # this class is temporary and will vanish as soon as telegram.direction
+    # is removed
     def __init__(self, xknx):
         self.xknx = xknx
     async def put(self, telegram):

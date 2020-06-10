@@ -142,9 +142,9 @@ class GatewayScanner():
                 async with anyio.move_on_after(self.timeout_in_seconds):
                     async for msg in recv:
                         if await self._response_rec_callback(msg, udp_client) and self.stop_on_found:
-                            await tg.cancel()
+                            await scope.cancel()
                             break
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             self.xknx.logger.exception("Could not connect to an KNX/IP device on %s", interface, exc_info=exc)
         finally:
             if udp_client is not None:
