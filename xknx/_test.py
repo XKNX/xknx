@@ -1,20 +1,22 @@
-"""
-This is a helper class to support async testcases.
-"""
+"""This is a helper class to support async testcases."""
 
 import unittest
 from unittest.mock import MagicMock
 
 class Testcase:
     # pylint: disable=too-few-public-methods
+    """A fake-unittest class.
+    
+    This class is a replacement for Unittest.Testacse. It allows the user
+    to continue to use unittests assertFOO methods without actually
+    subclassing `unittest.TestCase`, as that breaks pytest.
     """
-    A fake-unittest class which allows the user to use unittests assertFOO
-    methods without subclassing `unittest.TestCase`.
-    """
+
     __unittest = None
 
     def __getattr__(self, k):
         # pylint: disable=attribute-defined-outside-init
+        """Redirect assert* functions to unittext."""
         if k.startswith("assert"):
             if self.__unittest is None:
                 self.__unittest = unittest.TestCase()
@@ -35,6 +37,7 @@ except ImportError:
         async def __call__(self, *args, **kwargs):
             # no it is not useless.
             # pylint: disable=useless-super-delegation
+            """Translate async-to-sync calling convention."""
             side, self._mock_side_effect = self._mock_side_effect, None
             try:
                 res = super().__call__(*args, **kwargs)

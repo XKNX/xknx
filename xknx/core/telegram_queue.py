@@ -38,6 +38,7 @@ class TelegramQueue():
             return False
 
         async def __call__(self, telegram):
+            """Call the callback if not filtered off."""
             if not self.is_within_filter(telegram):
                 return False
             return await self.callback(telegram)
@@ -95,11 +96,11 @@ class TelegramQueue():
         await self.xknx.spawn(self._run)
 
     async def put(self, telegram):
-        """Enqueue a telegram"""
+        """Enqueue a telegram."""
         await self.q.put(telegram)
 
     def qsize(self):
-        """Return the size of this queue"""
+        """Return the size of this queue."""
         return self.q.qsize()
 
     async def _run(self):
@@ -124,6 +125,7 @@ class TelegramQueue():
 
     async def process_all_telegrams(self):
         """Process all queued telegrams.
+
         Only used for testing.
         """
         while not self.q.empty():
@@ -132,6 +134,7 @@ class TelegramQueue():
 
     async def process_telegram(self, telegram):
         """Process one queued telegram.
+
         Called from reader task.
         """
         processed = False
@@ -141,9 +144,10 @@ class TelegramQueue():
 
 
 class TelegramQueueIn(TelegramQueue):
-    """A Telegram queue that processes incoming telegrams
-    """
+    """A Telegram queue that processes incoming telegrams."""
+
     async def process_telegram(self, telegram):
+        """Distribute to callbacks and devices."""
         processed = await super().process_telegram(telegram)
 
         # This code previously blocked distributing to devices when
@@ -157,11 +161,12 @@ class TelegramQueueIn(TelegramQueue):
         return processed
 
 class TelegramQueueOut(TelegramQueue):
-    """A Telegram queue that sends off outgoing telegrams.
-    """
+    """A Telegram queue that sends off outgoing telegrams."""
+
     _out_cb = None
 
     async def start(self):
+        """Start processing."""
         await super().start()
 
         async def _out_callback(telegram):
@@ -174,6 +179,7 @@ class TelegramQueueOut(TelegramQueue):
         self._out_cb = self.register_telegram_cb(_out_callback)
 
     async def stop(self):
+        """Stop processing."""
         if self._out_cb is not None:
             self.unregister_telegram_cb(self._out_cb)
             self._out_cb = None

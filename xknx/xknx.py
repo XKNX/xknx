@@ -143,8 +143,7 @@ class XKNX:
         self.started = True
 
     def telegram_receiver(self, *a):
-        """Shortcut to `TelegramQueueIn.receiver`.
-        """
+        """Shortcut to `TelegramQueueIn.receiver`."""
         return self.telegrams_in.receiver(*a)
 
     async def spawn(self, p,*a,**k):
