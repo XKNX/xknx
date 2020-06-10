@@ -8,7 +8,7 @@ from xknx.io import Tunnelling, UDPClient
 from xknx.knxip import ErrorCode, KNXIPFrame, KNXIPServiceType, TunnellingAck
 from xknx.telegram import GroupAddress, PhysicalAddress, Telegram
 
-from xknx._test import Testcase
+from xknx._test import Testcase, AsyncMock
 
 class TestTunnelling(Testcase):
     """Test class for xknx/io/Tunnelling objects."""
@@ -38,7 +38,7 @@ class TestTunnelling(Testcase):
         exp_knxipframe.body.sequence_counter = sequence_counter
         exp_knxipframe.normalize()
         print(exp_knxipframe)
-        with patch('xknx.io.UDPClient.send') as mock_udp_send, \
+        with patch('xknx.io.UDPClient.send', new_callable=AsyncMock) as mock_udp_send, \
                 patch('xknx.io.UDPClient.getsockname') as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
             await tunnelling.start()

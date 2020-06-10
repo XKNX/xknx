@@ -7,7 +7,7 @@ from xknx.io import Disconnect, UDPClient
 from xknx.knxip import (
     HPAI, DisconnectResponse, ErrorCode, KNXIPFrame, KNXIPServiceType)
 
-from xknx._test import Testcase
+from xknx._test import Testcase, AsyncMock
 
 class TestDisconnect(Testcase):
     """Test class for xknx/io/Disconnect objects."""
@@ -31,7 +31,7 @@ class TestDisconnect(Testcase):
         exp_knxipframe.body.control_endpoint = HPAI(
             ip_addr='192.168.1.3', port=4321)
         exp_knxipframe.normalize()
-        with patch('xknx.io.UDPClient.send') as mock_udp_send, \
+        with patch('xknx.io.UDPClient.send', new_callable=AsyncMock) as mock_udp_send, \
                 patch('xknx.io.UDPClient.getsockname') as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
             await disconnect.start()

@@ -8,7 +8,7 @@ from xknx.knxip import (
     HPAI, ConnectRequestType, ConnectResponse, ErrorCode, KNXIPFrame,
     KNXIPServiceType)
 
-from xknx._test import Testcase
+from xknx._test import Testcase, AsyncMock
 
 class TestConnect(Testcase):
     """Test class for xknx/io/Connect objects."""
@@ -32,7 +32,7 @@ class TestConnect(Testcase):
             ip_addr='192.168.1.3', port=4321)
         exp_knxipframe.body.request_type = ConnectRequestType.TUNNEL_CONNECTION
         exp_knxipframe.normalize()
-        with patch('xknx.io.UDPClient.send') as mock_udp_send, \
+        with patch('xknx.io.UDPClient.send', new_callable=AsyncMock) as mock_udp_send, \
                 patch('xknx.io.UDPClient.getsockname') as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
             await connect.start()
