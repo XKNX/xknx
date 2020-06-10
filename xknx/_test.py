@@ -35,7 +35,7 @@ except ImportError:
         async def __call__(self, *args, **kwargs):
             # no it is not useless.
             # pylint: disable=useless-super-delegation
-            side, self._mock_side_effect = self._mock_side_effect,None
+            side, self._mock_side_effect = self._mock_side_effect, None
             try:
                 res = super().__call__(*args, **kwargs)
                 if side is not None:

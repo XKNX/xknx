@@ -1,5 +1,5 @@
 """Example for Sensor device. See docs/sensor.md and docs/binary_sensor.md for a detailed explanation."""
-import asyncio
+import anyio
 
 from xknx import XKNX
 from xknx.devices import BinarySensor, Sensor
@@ -30,4 +30,4 @@ async def main():
 
 
 # pylint: disable=invalid-name
-asyncio.run(main())
+anyio.run(main)

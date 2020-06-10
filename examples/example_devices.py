@@ -1,5 +1,5 @@
 """Example for internal devices storage."""
-import asyncio
+import anyio
 
 from xknx import XKNX
 from xknx.devices import Switch
@@ -14,8 +14,8 @@ async def main():
         xknx.devices.add(switch)
 
         await xknx.devices["TestOutlet"].set_on()
-        await asyncio.sleep(2)
+        await anyio.sleep(2)
         await xknx.devices["TestOutlet"].set_off()
 
 # pylint: disable=invalid-name
-asyncio.run(main())
+anyio.run(main)

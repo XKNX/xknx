@@ -33,7 +33,7 @@ groups:
 When XKNX is started with START_STATE_UPDATER enabled, XKNX will automatically send the time to the KNX bus with the `sync_state`-loop. If your main code doesn't need to do anything else, it should simply wait for an interrupt.
 
 ```python
-import asyncio
+import anyio
 from xknx import XKNX
 from xknx.devices import DateTime
 
@@ -45,7 +45,7 @@ async def main():
         await xknx.loop_until_sigint()
 
 # pylint: disable=invalid-name
-asyncio.run(main())
+anyio.run(main)
 ```
 
 ## [](#header-2)Interface

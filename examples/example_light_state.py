@@ -1,5 +1,5 @@
 """Example for reading the state from the KNX bus."""
-import asyncio
+import anyio
 
 from xknx import XKNX
 from xknx.devices import Light
@@ -21,4 +21,4 @@ async def main():
         print(light)
 
 
-asyncio.run(main())
+anyio.run(main)

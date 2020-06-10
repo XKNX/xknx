@@ -1,5 +1,5 @@
 """Example for switching a light on and off."""
-import asyncio
+import anyio
 
 from xknx import XKNX
 from xknx.devices import Light
@@ -16,9 +16,9 @@ async def main():
 
         for i in [0, 31, 63, 95, 127, 159, 191, 223, 255]:
             await light.set_brightness(i)
-            await asyncio.sleep(1)
+            await anyio.sleep(1)
 
         await light.set_off()
 
 
-asyncio.run(main())
+anyio.run(main)

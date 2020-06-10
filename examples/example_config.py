@@ -1,5 +1,5 @@
 """Example for config file parser."""
-import asyncio
+import anyio
 
 from xknx import XKNX
 
@@ -13,4 +13,4 @@ async def main():
 
 
 # pylint: disable=invalid-name
-asyncio.run(main())
+anyio.run(main)

@@ -1,5 +1,5 @@
 """Example on how to disconnect/reset all available tunneling channels."""
-import asyncio
+import anyio
 
 from xknx import XKNX
 from xknx.io import ConnectionState, Disconnect, GatewayScanner, UDPClient
@@ -50,4 +50,4 @@ async def main():
                 print("Disconnected ", i)
 
 # pylint: disable=invalid-name
-asyncio.run(main())
+anyio.run(main)

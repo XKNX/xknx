@@ -14,9 +14,6 @@ try:
 except ImportError:
     from async_generator import asynccontextmanager
 
-from xknx.exceptions import XKNXException
-from xknx.telegram import TelegramDirection
-
 
 class TelegramQueue():
     """Class for telegram queue."""

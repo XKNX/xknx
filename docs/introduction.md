@@ -11,7 +11,7 @@ XKNX is using [asyncio](https://www.python.org/dev/peps/pep-3156/) for single-th
 This allows concurrency in a thread safe manner. 
 
 ```python
-import asyncio
+import anyio
 from xknx import XKNX
 
 async def main():
@@ -20,7 +20,7 @@ async def main():
         # USING THE XKNX OBJECT, e.g. for 
         # controlling lights, dimmers, shutters
 
-asyncio.run(main())
+anyio.run(main)
 ```
 
 # [](#header-2)Explanation En Dé­tail:
@@ -29,7 +29,7 @@ asyncio.run(main())
 async def main():
 ```
 
-`main()` function. The `async` qualifier markes the function asy an asyncio function. See [asyncio](https://www.python.org/dev/peps/pep-3156/) documentation for details.
+`main()` function. The `async` qualifier markes `main` as an async function. See [asyncio](https://www.python.org/dev/peps/pep-3156/) and [anyio](https://anyio.readthedocs.io/) documentation for details.
  
 
 ```python
@@ -58,13 +58,8 @@ Asynchronous stop of the XKNX object. `xknx.stop()` will disconnect from Tunnels
 This is a legacy method. Consider using an async context manager instead.
 
 ```
-asyncio.run(main())
+anyio.run(main)
 ```
 
-Boilerplate code, for starting an asynchonous function. See [asyncio](https://www.python.org/dev/peps/pep-3156/) documentation for details.
-
-
-_Important Note:_ If you are using Python 3.5 you have to replace the `await` syntax with the `@asyncio.coroutine` syntax.
-
-
+Boilerplate code, for starting an asynchonous function. See [anyio](https://anyio.readthedocs.io/) documentation for details.
 

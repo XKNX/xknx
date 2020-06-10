@@ -11,7 +11,7 @@ XKNX is an Asynchronous  Python library for reading and writing [KNX](https://en
 ## [](#header-2)Overview
 
 XKNX...
-* ... does [cooperative multitasking via asyncio](https://github.com/XKNX/xknx/blob/master/examples/example_light_state.py) and is 100% thread safe.
+* ... does [cooperative multitasking via anyio](https://github.com/XKNX/xknx/blob/master/examples/example_light_state.py) and is 100% thread safe.
 * ... provides support for KNX/IP [routing](https://github.com/XKNX/xknx/blob/master/xknx/io/routing.py) *and* [tunneling](https://github.com/XKNX/xknx/blob/master/xknx/io/tunnel.py) devices.
 * ... has strong coverage with [unit tests](https://github.com/XKNX/xknx/tree/master/test).
 * ... automatically updates and synchronizes all devices in the background periodically.
@@ -34,7 +34,7 @@ sudo pip3 install xknx
 ## [](#header-2)Hello World
 
 ```python
-import asyncio
+import anyio
 from xknx import XKNX
 from xknx.devices import Light
 
@@ -44,12 +44,12 @@ async def main():
                       name='HelloWorldLight',
                       group_address_switch='1/0/9')
         await light.set_on()
-        await asyncio.sleep(2)
+        await anyio.sleep(2)
         await light.set_off()
 
 
 # pylint: disable=invalid-name
-asyncio.run(main())
+anyio.run(main)
 ```
 
 For more examples please check out the [examples page](https://github.com/XKNX/xknx/tree/master/examples)

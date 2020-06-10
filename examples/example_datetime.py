@@ -1,5 +1,5 @@
 """Example for DateTime device."""
-import asyncio
+import anyio
 
 from xknx import XKNX
 from xknx.devices import DateTime, DateTimeBroadcastType
@@ -13,7 +13,7 @@ async def main():
     print("Sending time to KNX bus every hour")
     async with xknx.run(state_updater=True):
         while True:
-            asyncio.sleep(99999)
+            anyio.sleep(99999)
 
 # pylint: disable=invalid-name
-asyncio.run(main())
+anyio.run(main)

@@ -1,5 +1,5 @@
 """Example on how to connecto to a KNX/IP tunneling device."""
-import asyncio
+import anyio
 
 from xknx import XKNX
 from xknx.dpt import DPTBinary
@@ -37,13 +37,13 @@ async def main():
         await tunnel.connect()
 
         await tunnel.send_telegram(Telegram(GroupAddress('1/1/9'), payload=DPTBinary(0)))
-        await asyncio.sleep(2)
+        await anyio.sleep(2)
         await tunnel.send_telegram(Telegram(GroupAddress('1/1/9'), payload=DPTBinary(1)))
-        await asyncio.sleep(2)
+        await anyio.sleep(2)
 
         await tunnel.connectionstate()
     finally:
         await tunnel.disconnect()
 
 # pylint: disable=invalid-name
-asyncio.run(main())
+anyio.run(main)

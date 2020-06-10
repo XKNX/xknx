@@ -26,7 +26,7 @@ import sys
 import re
 
 try:
-    import asyncio
+    import anyio
 
     from xknx import XKNX
     from xknx.devices import Sensor
@@ -188,9 +188,9 @@ async def main():
     try:
         async with xknx.run():
             while True:
-                await asyncio.sleep(99999)
+                await anyio.sleep(99999)
     finally:
         await mqttc.loop_stop()
         await mqttc.disconnect()
 
-asyncio.run(main())
+anyio.run(main)

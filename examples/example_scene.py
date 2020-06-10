@@ -1,5 +1,5 @@
 """Example for switching a light on and off."""
-import asyncio
+import anyio
 
 from xknx import XKNX
 from xknx.devices import Scene
@@ -16,4 +16,4 @@ async def main():
         await scene.run()
 
 
-asyncio.run(main())
+anyio.run(main)

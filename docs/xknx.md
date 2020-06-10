@@ -106,7 +106,7 @@ await xknx.devices['TestSwitch'].set_off()
 The `telegram_received_cb` will be called for each KNX telegram received by the XKNX daemon. Example:
 
 ```python
-import asyncio
+import anyio
 from xknx import XKNX
 
 async def telegram_received_cb(telegram):
@@ -118,13 +118,13 @@ async def main():
     await xknx.stop()
 
 # pylint: disable=invalid-name
-asyncio.run(main())
+anyio.run(main)
 ```
 
 For all devices stored in the `devices` storage (see [above](#devices)) a callback for each update may be defined:
 
 ```python
-import asyncio
+import anyio
 from xknx import XKNX
 from xknx.devices import Switch
 
@@ -145,7 +145,7 @@ async def main():
     await xknx.stop()
 
 # pylint: disable=invalid-name
-asyncio.run(main())
+anyio.run(main)
 ```
 
 

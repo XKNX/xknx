@@ -1,5 +1,5 @@
 """Example for the telegram monitor callback."""
-import asyncio
+import anyio
 import getopt
 import sys
 
@@ -52,4 +52,4 @@ async def main(argv):
 
 if __name__ == "__main__":
     # pylint: disable=invalid-name
-    asyncio.run(main(sys.argv[1:]))
+    anyio.run(main, sys.argv[1:])

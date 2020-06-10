@@ -1,5 +1,5 @@
 """Example on how to read a value from KNX bus."""
-import asyncio
+import anyio
 
 from xknx import XKNX
 from xknx.core import ValueReader
@@ -22,4 +22,4 @@ async def main():
 
 
 # pylint: disable=invalid-name
-asyncio.run(main())
+anyio.run(main)

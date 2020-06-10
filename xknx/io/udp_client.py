@@ -6,7 +6,6 @@ Due to nonexisting support of UDP multicast within anyio some special treatment 
 """
 import anyio
 import socket
-from sys import platform
 from contextlib import contextmanager
 
 from xknx.exceptions import CouldNotParseKNXIP, XKNXException
@@ -32,7 +31,7 @@ class UDPClient:
                 len(self.service_types) == 0 or \
                 service_type in self.service_types
 
-    def __init__(self, xknx, local_addr, remote_addr, multicast=False, bind_to_multicast_addr=False):
+    def __init__(self, xknx, local_addr, remote_addr, multicast=False, bind_to_multicast_addr=None):
         """Initialize UDPClient class."""
         # pylint: disable=too-many-arguments
         if not isinstance(local_addr, tuple):
@@ -43,7 +42,6 @@ class UDPClient:
         self.local_addr = local_addr
         self.remote_addr = remote_addr
         self.multicast = multicast
-        self.bind_to_multicast_addr = bind_to_multicast_addr
         self.socket = None
         self.callbacks = []
         self._read_task = None
@@ -97,7 +95,7 @@ class UDPClient:
         self.callbacks.remove(callb)
 
     @staticmethod
-    async def create_multicast_sock(own_ip, remote_addr, bind_to_multicast_addr):
+    async def create_multicast_sock(own_ip, remote_addr):
         """Create UDP multicast socket."""
         if own_ip is None:
             # Easy and compatible way to find the IP address of the default interface
@@ -127,7 +125,7 @@ class UDPClient:
     async def connect(self):
         """Connect UDP socket. Open UDP port and build mulitcast socket if necessary."""
         if self.multicast:
-            self.socket = await self.create_multicast_sock(self.local_addr[0], self.remote_addr, self.bind_to_multicast_addr)
+            self.socket = await self.create_multicast_sock(self.local_addr[0], self.remote_addr)
 
         else:
             self.socket = await anyio.create_udp_socket(interface=self.local_addr[0], port=self.local_addr[1], target_host=self.remote_addr[0], target_port=self.remote_addr[1])

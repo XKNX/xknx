@@ -1,5 +1,5 @@
 """Example for Climate device."""
-import asyncio
+import anyio
 
 from xknx import XKNX
 from xknx.devices import Climate
@@ -19,4 +19,4 @@ async def main():
 
 
 # pylint: disable=invalid-name
-asyncio.run(main())
+anyio.run(main)

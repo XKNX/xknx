@@ -1,5 +1,5 @@
 """Example for GatewayScanner."""
-import asyncio
+import anyio
 
 from xknx import XKNX
 from xknx.io import GatewayScanner
@@ -27,4 +27,4 @@ async def main():
                     gateway.local_ip))
 
 # pylint: disable=invalid-name
-asyncio.run(main())
+anyio.run(main)

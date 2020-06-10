@@ -1,5 +1,5 @@
 """Example for daemon mode within XKNX."""
-import asyncio
+import anyio
 
 from xknx import XKNX
 from xknx.devices import Switch
@@ -21,8 +21,8 @@ async def main():
     # Wait until Ctrl-C is pressed
     async with xknx.run():
         while True:
-            await asyncio.sleep(99999)
+            await anyio.sleep(99999)
 
 
 # pylint: disable=invalid-name
-asyncio.run(main())
+anyio.run(main)
