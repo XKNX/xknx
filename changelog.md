@@ -5,6 +5,20 @@ AsyncXKNX fork
 --------------
 
 * Uses anyio, thus natively compatible with Trio.
+  * using pytest
+  * using AsyncMock (local stub for 3.6 compatibility)
+* split in/out telegrams to separate queues
+  * TelegramDirection deleted
+* core.Devices collects devices by name only
+  * nameless devices are no longer acceptable
+* added ability to remove devices cleanly
+* streamlined device creation via config file
+  * adds the ability to support different config methods
+* add context managers and event iterators
+  * xknx core, packets
+  * devices, update events
+  * UDP client, packets
+* dropped py3.5 compatibility (this is reversible, if required)
 
 Upcoming version (unreleased)
 -----------------------------
