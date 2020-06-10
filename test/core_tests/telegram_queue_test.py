@@ -7,8 +7,7 @@ from xknx import XKNX
 from xknx.dpt import DPTBinary
 from xknx.devices import Device
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.telegram import (
-    AddressFilter, GroupAddress, Telegram, TelegramDirection)
+from xknx.telegram import AddressFilter, GroupAddress, Telegram
 
 from xknx._test import Testcase, AsyncMock
 
@@ -25,16 +24,15 @@ class TestTelegramQueueIn(Testcase):
         xknx = XKNX()
 
         telegram_in = Telegram(
-            direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
 
         async with xknx.telegrams_in.run_test():
             self.assertFalse(xknx.telegrams_in.queue_stopped.is_set())
-            # queue shall now consume telegrams from xknx.telegrams
+            # queue shall now consume telegrams from xknx.telegrams_in
             self.assertEqual(xknx.telegrams_in.qsize(), 0)
-            await xknx.telegrams.put(telegram_in)
-            await xknx.telegrams.put(telegram_in)
+            await xknx.telegrams_in.put(telegram_in)
+            await xknx.telegrams_in.put(telegram_in)
             # "put" might actually run the consumer immediately
             # self.assertEqual(xknx.telegrams_in.qsize(), 2)
             # wait until telegrams are consumed
@@ -52,26 +50,24 @@ class TestTelegramQueueIn(Testcase):
         sleep_time = 0.05  # 1 / 20
 
         telegram_in = Telegram(
-            direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
 
         telegram_out = Telegram(
-            direction=TelegramDirection.OUTGOING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
 
         async with xknx.telegrams_in.run_test():
 
             # no sleep for incoming telegrams
-            await xknx.telegrams.put(telegram_in)
-            await xknx.telegrams.put(telegram_in)
+            await xknx.telegrams_in.put(telegram_in)
+            await xknx.telegrams_in.put(telegram_in)
             while xknx.telegrams_in.qsize():
                 await anyio.sleep(0.01)
             self.assertEqual(async_sleep_mock.call_count, 0)
             # sleep for outgoing telegrams
-            await xknx.telegrams.put(telegram_out)
-            await xknx.telegrams.put(telegram_out)
+            await xknx.telegrams_out.put(telegram_out)
+            await xknx.telegrams_out.put(telegram_out)
             while xknx.telegrams_in.qsize():
                 await anyio.sleep(0.01)
             self.assertEqual(async_sleep_mock.call_count, 2)
@@ -95,7 +91,6 @@ class TestTelegramQueueIn(Testcase):
             async_telegram_received_cb)
 
         telegram = Telegram(
-            direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
         await xknx.telegrams_in.process_telegram(telegram)
@@ -110,7 +105,6 @@ class TestTelegramQueueIn(Testcase):
         # No callback or similar nonlinearity required.
         with xknx.telegrams_in.receiver() as recv:
             telegram = Telegram(
-                direction=TelegramDirection.INCOMING,
                 payload=DPTBinary(1),
                 group_address=GroupAddress("1/2/3"))
             await xknx.telegrams_in.process_telegram(telegram)
@@ -137,7 +131,6 @@ class TestTelegramQueueIn(Testcase):
         xknx.telegrams_in.unregister_telegram_cb(callback)
 
         telegram = Telegram(
-            direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
         await xknx.telegrams_in.process_telegram(telegram)
@@ -160,7 +153,6 @@ class TestTelegramQueueIn(Testcase):
         xknx.devices.add(device)
 
         telegram = Telegram(
-            direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
         await xknx.telegrams_in.process_telegram(telegram)
@@ -182,7 +174,6 @@ class TestTelegramQueueIn(Testcase):
         devices_by_ga_mock.return_value = [test_device]
 
         telegram = Telegram(
-            direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
         await xknx.telegrams_in.process_telegram(telegram)
@@ -208,7 +199,6 @@ class TestTelegramQueueIn(Testcase):
             async_telegram_received_cb)
 
         telegram = Telegram(
-            direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
         await xknx.telegrams_in.process_telegram(telegram)
@@ -224,7 +214,6 @@ class TestTelegramQueueIn(Testcase):
         xknx = XKNX()
 
         telegram = Telegram(
-            direction=TelegramDirection.OUTGOING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
 
@@ -255,7 +244,6 @@ class TestTelegramQueueIn(Testcase):
         process_tg_in_mock.side_effect = process_exception
 
         telegram = Telegram(
-            direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
 
@@ -271,11 +259,9 @@ class TestTelegramQueueIn(Testcase):
         xknx = XKNX()
 
         telegram_in = Telegram(
-            direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
         telegram_out = Telegram(
-            direction=TelegramDirection.OUTGOING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
 
@@ -284,8 +270,8 @@ class TestTelegramQueueIn(Testcase):
             await xknx.telegrams_in.start()
             await xknx.telegrams_out.start()
 
-            await xknx.telegrams.put(telegram_in)
-            await xknx.telegrams.put(telegram_out)
+            await xknx.telegrams_in.put(telegram_in)
+            await xknx.telegrams_out.put(telegram_out)
             await xknx.telegrams_in.process_all_telegrams()
             await xknx.telegrams_out.process_all_telegrams()
             await tg.cancel_scope.cancel()
@@ -310,7 +296,6 @@ class TestTelegramQueueIn(Testcase):
             async_telegram_received_cb)
 
         telegram = Telegram(
-            direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
         await xknx.telegrams_in.process_telegram(telegram)
@@ -335,7 +320,6 @@ class TestTelegramQueueIn(Testcase):
             [AddressFilter("2/4-8/*"), AddressFilter("1/2/-8")])
 
         telegram = Telegram(
-            direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
         await xknx.telegrams_in.process_telegram(telegram)
@@ -360,7 +344,6 @@ class TestTelegramQueueIn(Testcase):
             [AddressFilter("2/4-8/*"), AddressFilter("1/2/8-")])
 
         telegram = Telegram(
-            direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
             group_address=GroupAddress("1/2/3"))
         await xknx.telegrams_in.process_telegram(telegram)

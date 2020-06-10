@@ -43,7 +43,7 @@ class ValueReader:
     async def send_group_read(self):
         """Send group read."""
         telegram = Telegram(self.group_address, TelegramType.GROUP_READ)
-        await self.xknx.telegrams.put(telegram)
+        await self.xknx.telegrams_out.put(telegram)
 
     async def telegram_received(self, telegram):
         """Test if telegram has correct group address and trigger event."""

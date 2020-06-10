@@ -162,7 +162,7 @@ class KNXIPInterface():
 
     async def telegram_received(self, telegram):
         """Put received telegram into queue. Callback for having received telegram."""
-        await self.xknx.telegrams.put(telegram)
+        await self.xknx.telegrams_in.put(telegram)
 
     async def send_telegram(self, telegram):
         """Send telegram to connected device (either Tunneling or Routing)."""

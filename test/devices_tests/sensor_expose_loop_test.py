@@ -4,8 +4,7 @@ import pytest
 from xknx import XKNX
 from xknx.devices import BinarySensor, ExposeSensor, Sensor
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.telegram import (
-    GroupAddress, Telegram, TelegramDirection, TelegramType)
+from xknx.telegram import GroupAddress, Telegram, TelegramType
 
 from xknx._test import Testcase
 
@@ -183,7 +182,6 @@ class SensorExposeLoopTest(Testcase):
 
                 incoming_telegram = Telegram(GroupAddress('1/1/1'),
                                              TelegramType.GROUP_WRITE,
-                                             direction=TelegramDirection.INCOMING,
                                              payload=test_payload)
                 await sensor.process(incoming_telegram)
                 incoming_value = sensor.resolve_state()
@@ -202,7 +200,6 @@ class SensorExposeLoopTest(Testcase):
                     Telegram(
                         GroupAddress('2/2/2'),
                         TelegramType.GROUP_WRITE,
-                        direction=TelegramDirection.OUTGOING,
                         payload=test_payload))
 
     @pytest.mark.anyio
@@ -230,7 +227,6 @@ class SensorExposeLoopTest(Testcase):
 
                 incoming_telegram = Telegram(GroupAddress('1/1/1'),
                                              TelegramType.GROUP_WRITE,
-                                             direction=TelegramDirection.INCOMING,
                                              payload=test_payload)
                 await sensor.process(incoming_telegram)
                 incoming_value = sensor.is_on()
@@ -244,5 +240,4 @@ class SensorExposeLoopTest(Testcase):
                     Telegram(
                         GroupAddress('2/2/2'),
                         TelegramType.GROUP_WRITE,
-                        direction=TelegramDirection.OUTGOING,
                         payload=test_payload))

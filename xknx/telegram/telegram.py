@@ -19,13 +19,6 @@ from enum import Enum
 from .address import GroupAddress
 
 
-class TelegramDirection(Enum):
-    """Enum class for the communication direction of a telegram (from KNX bus or to KNX bus)."""
-
-    INCOMING = 1
-    OUTGOING = 2
-
-
 class TelegramType(Enum):
     """Enum class for type of telegram."""
 
@@ -41,10 +34,8 @@ class Telegram:
 
     def __init__(self, group_address=GroupAddress(None),
                  telegramtype=TelegramType.GROUP_WRITE,
-                 direction=TelegramDirection.OUTGOING,
                  payload=None):
         """Initialize Telegram class."""
-        self.direction = direction
         self.telegramtype = telegramtype
         self.group_address = group_address
         self.payload = payload
@@ -52,11 +43,10 @@ class Telegram:
     def __str__(self):
         """Return object as readable string."""
         return '<Telegram group_address="{0}", payload="{1}" ' \
-            'telegramtype="{2}" direction="{3}" />'.format(
+            'telegramtype="{2}" />'.format(
                 self.group_address.__repr__(),
                 self.payload,
-                self.telegramtype,
-                self.direction)
+                self.telegramtype)
 
     def __eq__(self, other):
         """Equal operator."""

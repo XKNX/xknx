@@ -10,27 +10,11 @@ except ImportError:
 from xknx.core import Config, TelegramQueueIn, TelegramQueueOut
 from xknx.devices import Devices
 from xknx.io import ConnectionConfig, KNXIPInterface
-from xknx.telegram import GroupAddressType, PhysicalAddress, TelegramDirection
+from xknx.telegram import GroupAddressType, PhysicalAddress
 
 import sniffio
 
 from .__version__ import __version__ as VERSION
-
-
-class _TelegramsDispatcher:
-    # pylint: disable=too-few-public-methods
-    # this class is temporary and will vanish as soon as telegram.direction
-    # is removed
-    def __init__(self, xknx):
-        self.xknx = xknx
-
-    async def put(self, telegram):
-        if telegram.direction == TelegramDirection.INCOMING:
-            await self.xknx.telegrams_in.put(telegram)
-        elif telegram.direction == TelegramDirection.OUTGOING:
-            await self.xknx.telegrams_out.put(telegram)
-        else:
-            raise RuntimeError("Telegram without direction")
 
 
 class XKNX:
@@ -52,7 +36,6 @@ class XKNX:
         """Initialize XKNX class."""
         # pylint: disable=too-many-arguments
         self.devices = Devices()
-        self.telegrams = _TelegramsDispatcher(self)
         self.telegrams_in = TelegramQueueIn(self)
         self.telegrams_out = TelegramQueueOut(self)
         self.state_updater = None

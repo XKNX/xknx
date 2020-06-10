@@ -18,8 +18,7 @@ from xknx.knxip import (
     DisconnectResponse, KNXIPFrame, KNXIPHeader, KNXIPServiceType, KNXMedium,
     SearchRequest, SearchResponse, TunnellingAck, TunnellingRequest)
 from xknx.remote_value import RemoteValue
-from xknx.telegram import (
-    GroupAddress, PhysicalAddress, Telegram, TelegramDirection)
+from xknx.telegram import GroupAddress, PhysicalAddress, Telegram
 
 from xknx._test import Testcase
 
@@ -232,7 +231,6 @@ class TestStringRepresentations(Testcase):
             '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/None/None" value="None" unit="%"/>')
         # await sensor.sensor_value.set(25)
         telegram = Telegram(group_address=GroupAddress('1/2/3'),
-                            direction=TelegramDirection.INCOMING,
                             payload=DPTArray((0x40)))
         await sensor.process_group_write(telegram)
         self.assertEqual(
@@ -404,8 +402,7 @@ class TestStringRepresentations(Testcase):
             payload=DPTBinary(7))
         self.assertEqual(
             str(telegram),
-            '<Telegram group_address="GroupAddress("1/2/3")", payload="<DPTBinary value="7" />" telegramtype="TelegramType.GROUP_WRITE" direction='
-            '"TelegramDirection.OUTGOING" />')
+            '<Telegram group_address="GroupAddress("1/2/3")", payload="<DPTBinary value="7" />" telegramtype="TelegramType.GROUP_WRITE" />')
 
     def test_dib_generic(self):
         """Test string representation of DIBGeneric."""

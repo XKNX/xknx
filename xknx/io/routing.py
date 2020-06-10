@@ -9,7 +9,6 @@ except ImportError:
     from async_generator import asynccontextmanager
 
 from xknx.knxip import APCICommand, KNXIPFrame, KNXIPServiceType
-from xknx.telegram import TelegramDirection
 
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .udp_client import UDPClient
@@ -47,7 +46,6 @@ class Routing():
             self.xknx.logger.warning("APCI not implemented: %s", knxipframe)
         else:
             telegram = knxipframe.body.telegram
-            telegram.direction = TelegramDirection.INCOMING
 
             if self.telegram_received_callback is not None:
                 await self.telegram_received_callback(telegram)

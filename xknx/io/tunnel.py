@@ -7,7 +7,6 @@ import anyio
 
 from xknx.exceptions import XKNXException
 from xknx.knxip import KNXIPFrame, KNXIPServiceType, TunnellingRequest
-from xknx.telegram import TelegramDirection
 
 from .connect import Connect
 from .connectionstate import ConnectionState
@@ -64,7 +63,6 @@ class Tunnel():
         else:
             await self.send_ack(knxipframe.body.communication_channel_id, knxipframe.body.sequence_counter)
             telegram = knxipframe.body.cemi.telegram
-            telegram.direction = TelegramDirection.INCOMING
             if self.telegram_received_callback is not None:
                 await self.telegram_received_callback(telegram)
 

@@ -106,7 +106,7 @@ class RemoteValue():
         telegram.telegramtype = TelegramType.GROUP_RESPONSE \
             if response else TelegramType.GROUP_WRITE
         telegram.payload = self.payload
-        await self.xknx.telegrams.put(telegram)
+        await self.xknx.telegrams_out.put(telegram)
 
     async def set(self, value):
         """Set new value."""

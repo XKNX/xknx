@@ -298,7 +298,7 @@ class KNXModule:
         telegram = Telegram()
         telegram.payload = payload
         telegram.group_address = address
-        await self.xknx.telegrams.put(telegram)
+        await self.xknx.telegrams_out.put(telegram)
 
 
 class KNXAutomation:

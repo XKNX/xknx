@@ -6,8 +6,7 @@ import pytest
 from xknx import XKNX
 from xknx.core import ValueReader
 from xknx.dpt import DPTBinary
-from xknx.telegram import (
-    GroupAddress, Telegram, TelegramDirection, TelegramType)
+from xknx.telegram import GroupAddress, Telegram, TelegramType
 
 from xknx._test import Testcase
 
@@ -21,7 +20,6 @@ class TestValueReader(Testcase):
         test_group_address = GroupAddress("0/0/0")
         response_telegram = Telegram(group_address=test_group_address,
                                      telegramtype=TelegramType.GROUP_RESPONSE,
-                                     direction=TelegramDirection.INCOMING,
                                      payload=DPTBinary(1))
 
         value_reader = ValueReader(xknx, test_group_address)
@@ -38,7 +36,7 @@ class TestValueReader(Testcase):
             read_task = await xknx.spawn(_reader)
 
             # queue the response
-            await xknx.telegrams.put(response_telegram)
+            await xknx.telegrams_in.put(response_telegram)
             await xknx.telegrams_in.stop()
 
         # GroupValueRead telegram is still in the queue because we are not actually processing it
@@ -93,19 +91,15 @@ class TestValueReader(Testcase):
         test_group_address = GroupAddress("0/0/0")
         expected_telegram_1 = Telegram(group_address=test_group_address,
                                        telegramtype=TelegramType.GROUP_RESPONSE,
-                                       direction=TelegramDirection.INCOMING,
                                        payload=DPTBinary(1))
         expected_telegram_2 = Telegram(group_address=test_group_address,
                                        telegramtype=TelegramType.GROUP_WRITE,
-                                       direction=TelegramDirection.INCOMING,
                                        payload=DPTBinary(1))
         telegram_wrong_address = Telegram(group_address=GroupAddress("0/0/1"),
                                           telegramtype=TelegramType.GROUP_RESPONSE,
-                                          direction=TelegramDirection.INCOMING,
                                           payload=DPTBinary(1))
         telegram_wrong_type = Telegram(group_address=test_group_address,
                                        telegramtype=TelegramType.GROUP_READ,
-                                       direction=TelegramDirection.INCOMING,
                                        payload=DPTBinary(1))
 
         value_reader = ValueReader(xknx, test_group_address)

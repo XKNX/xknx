@@ -1,7 +1,6 @@
 """Unit test for Telegram objects."""
 
-from xknx.telegram import (
-    GroupAddress, Telegram, TelegramDirection, TelegramType)
+from xknx.telegram import GroupAddress, Telegram, TelegramType
 
 from xknx._test import Testcase
 
@@ -25,7 +24,3 @@ class TestTelegram(Testcase):
         self.assertNotEqual(
             Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ),
             Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_WRITE))
-        self.assertNotEqual(
-            Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ),
-            Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ,
-                     TelegramDirection.INCOMING))
