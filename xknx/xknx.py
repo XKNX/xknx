@@ -23,6 +23,7 @@ class _TelegramsDispatcher:
     # is removed
     def __init__(self, xknx):
         self.xknx = xknx
+
     async def put(self, telegram):
         if telegram.direction == TelegramDirection.INCOMING:
             await self.xknx.telegrams_in.put(telegram)
@@ -30,6 +31,7 @@ class _TelegramsDispatcher:
             await self.xknx.telegrams_out.put(telegram)
         else:
             raise RuntimeError("Telegram without direction")
+
 
 class XKNX:
     """Class for reading and writing KNX/IP packets."""
@@ -88,11 +90,11 @@ class XKNX:
 
             try:
                 await self._start(state_updater=state_updater,
-                                connection_config=connection_config)
+                                  connection_config=connection_config)
                 yield self
                 await tg.cancel_scope.cancel()
             finally:
-                async with anyio.move_on_after(2,shield=True):
+                async with anyio.move_on_after(2, shield=True):
                     await self._stop()
                     await self._stopped.set()
 
@@ -101,12 +103,12 @@ class XKNX:
                     daemon_mode=False,
                     connection_config=None):
         """Start XKNX module. Connect to KNX/IP devices and start state updater.
-        
+
         This is a compatibility method which starts a separate task for XKNX.
         You might want to use `async with xknx.run()` instead.
         """
         if daemon_mode:
-            async with self.run(state_updater=state_updater,connection_config=connection_config):
+            async with self.run(state_updater=state_updater, connection_config=connection_config):
                 await self.loop_until_sigint()
             return
         if sniffio.current_async_library() != "asyncio":
@@ -115,7 +117,7 @@ class XKNX:
         import asyncio
         self._stopped = anyio.create_event()
         self._main_task = asyncio.create_task(self._run(state_updater=state_updater,
-            connection_config=connection_config))
+                                                        connection_config=connection_config))
 
     async def _run(self, **kw):
         async with self.run(**kw):
@@ -123,8 +125,8 @@ class XKNX:
                 await anyio.sleep(9999)
 
     async def _start(self,
-                    state_updater=False,
-                    connection_config=None):
+                     state_updater=False,
+                     connection_config=None):
         if connection_config is None:
             if self.connection_config is None:
                 connection_config = ConnectionConfig()
@@ -149,20 +151,21 @@ class XKNX:
         """Shortcut to `TelegramQueueIn.receiver`."""
         return self.telegrams_in.receiver(*a)
 
-    async def spawn(self, p,*a,**k):
+    async def spawn(self, p, *a, **k):
         """Start a task.
 
         Returns a cancel scope.
         """
         scope = None
-        async def _spawn(evt,p,a,k):
+
+        async def _spawn(evt, p, a, k):
             nonlocal scope
             async with anyio.open_cancel_scope() as scope:  # pylint: disable=unused-variable
                 await evt.set()
-                await p(*a,**k)
+                await p(*a, **k)
 
         evt = anyio.create_event()
-        await self.task_group.spawn(_spawn,evt,p,a,k)
+        await self.task_group.spawn(_spawn, evt, p, a, k)
         await evt.wait()
         return scope
 

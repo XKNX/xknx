@@ -65,8 +65,10 @@ class TelegramQueue():
     def receiver(self, *address_filters):
         """Context manager returning an iterator for queued telegrams."""
         q = anyio.create_queue(10)
+
         async def _receiver(telegram, _=None):
             await q.put(telegram)
+
         callb = TelegramQueue.Callback(_receiver, address_filters)
         try:
             self.callbacks.add(callb)
@@ -160,6 +162,7 @@ class TelegramQueueIn(TelegramQueue):
                 processed = True
         return processed
 
+
 class TelegramQueueOut(TelegramQueue):
     """A Telegram queue that sends off outgoing telegrams."""
 
@@ -184,4 +187,3 @@ class TelegramQueueOut(TelegramQueue):
             self.unregister_telegram_cb(self._out_cb)
             self._out_cb = None
         await super().stop()
-

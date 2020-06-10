@@ -3,10 +3,11 @@
 import unittest
 from unittest.mock import MagicMock
 
+
 class Testcase:
     # pylint: disable=too-few-public-methods
     """A fake-unittest class.
-    
+
     This class is a replacement for Unittest.Testacse. It allows the user
     to continue to use unittests assertFOO methods without actually
     subclassing `unittest.TestCase`, as that breaks pytest.
@@ -22,6 +23,7 @@ class Testcase:
                 self.__unittest = unittest.TestCase()
             return getattr(self.__unittest, k)
         raise AttributeError(k)
+
 
 try:
     from unittest.mock import AsyncMock

@@ -36,7 +36,7 @@ class RequestResponse():
                             break
             except TimeoutError:
                 self.xknx.logger.warning("Error: KNX bus did not respond in time to request of type '%s'",
-                                 self.__class__.__name__)
+                                         self.__class__.__name__)
 
     async def send_request(self):
         """Build knxipframe (within derived class) and send via UDP."""
@@ -65,4 +65,3 @@ class RequestResponse():
         self.xknx.logger.warning("Error: KNX bus responded to request of type '%s' with error in '%s': %s",
                                  self.__class__.__name__,
                                  self.awaited_response_class.__name__, knxipframe.body.status_code)
-

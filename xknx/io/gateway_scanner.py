@@ -125,9 +125,9 @@ class GatewayScanner():
             self.xknx.logger.debug("Searching on %s / %s", interface, ip_addr)
 
             udp_client = UDPClient(self.xknx,
-                                (ip_addr, 0, interface),
-                                (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
-                                multicast=True)
+                                   (ip_addr, 0, interface),
+                                   (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+                                   multicast=True)
 
             with udp_client.receiver(KNXIPServiceType.SEARCH_RESPONSE) as recv:
                 await udp_client.connect()
@@ -178,4 +178,3 @@ class GatewayScanner():
             self.found_gateways.append(gateway)
             if len(self.found_gateways) >= self.stop_on_found:
                 await self._response_received.set()
-

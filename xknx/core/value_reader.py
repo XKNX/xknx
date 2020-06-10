@@ -37,7 +37,7 @@ class ValueReader:
                             return telegram
             except TimeoutError:
                 self.xknx.logger.warning("Error: KNX bus did not respond in time to GroupValueRead request for: %s",
-                                        self.group_address)
+                                         self.group_address)
         return None
 
     async def send_group_read(self):

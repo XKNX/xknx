@@ -81,8 +81,10 @@ class UDPClient:
     def receiver(self, *service_types):
         """Context manager returning an iterator for incoming packets."""
         q = anyio.create_queue(10)
+
         async def _receiver(knxipframe, _):
             await q.put(knxipframe)
+
         try:
             callb = UDPClient.Callback(_receiver, service_types)
             self.callbacks.append(callb)
@@ -100,7 +102,7 @@ class UDPClient:
         if own_ip is None:
             # Easy and compatible way to find the IP address of the default interface
             ext_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            ext_sock.connect(("8.8.8.8", 53)) # does not send a packet
+            ext_sock.connect(("8.8.8.8", 53))  # does not send a packet
             own_ip = ext_sock.getsockname()[0]
             ext_sock.close()
 
@@ -128,12 +130,15 @@ class UDPClient:
             self.socket = await self.create_multicast_sock(self.local_addr[0], self.remote_addr)
 
         else:
-            self.socket = await anyio.create_udp_socket(interface=self.local_addr[0], port=self.local_addr[1], target_host=self.remote_addr[0], target_port=self.remote_addr[1])
+            self.socket = await anyio.create_udp_socket(interface=self.local_addr[0],
+                                                        port=self.local_addr[1],
+                                                        target_host=self.remote_addr[0],
+                                                        target_port=self.remote_addr[1])
 
         self._read_task = await self.xknx.spawn(self._reader)
 
     async def _reader(self):
-        async for raw,addr in self.socket.receive_packets(999):
+        async for raw, addr in self.socket.receive_packets(999):
             await self.data_received_callback(raw, addr)
 
     async def send(self, knxipframe):
