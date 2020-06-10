@@ -7,9 +7,7 @@ Module for reading configfiles (xknx.yaml).
 
 import yaml
 
-from xknx.devices import (
-    BinarySensor, Climate, Cover, DateTime, ExposeSensor, Fan, Light,
-    Notification, Scene, Sensor, Switch, device_types)
+from xknx.devices import device_types
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
 from xknx.telegram import PhysicalAddress
@@ -101,68 +99,3 @@ class Config:
             dev = cls.from_config(self.xknx, name, entry)
             dev.add_to_xknx()
 
-    def parse_group_binary_sensor(self, entries):
-        """Parse a binary_sensor section of xknx.yaml.
-
-        This function is deprecated."""
-        self.parse_cls(BinarySensor, entries)
-
-    def parse_group_climate(self, entries):
-        """Parse a climate section of xknx.yaml.
-
-        This function is deprecated."""
-        self.parse_cls(Climate, entries)
-
-    def parse_group_cover(self, entries):
-        """Parse a cover section of xknx.yaml.
-
-        This function is deprecated."""
-        self.parse_cls(Cover, entries)
-
-    def parse_group_datetime(self, entries):
-        """Parse a datetime section of xknx.yaml.
-
-        This function is deprecated."""
-        self.parse_cls(DateTime, entries)
-
-    def parse_group_expose_sensor(self, entries):
-        """Parse a exposed sensor section of xknx.yaml.
-
-        This function is deprecated."""
-        self.parse_cls(ExposeSensor, entries)
-
-    def parse_group_fan(self, entries):
-        """Parse a fan section of xknx.yaml.
-
-        This function is deprecated."""
-        self.parse_cls(Fan, entries)
-
-    def parse_group_light(self, entries):
-        """Parse a light section of xknx.yaml.
-
-        This function is deprecated."""
-        self.parse_cls(Light, entries)
-
-    def parse_group_notification(self, entries):
-        """Parse a sensor section of xknx.yaml.
-
-        This function is deprecated."""
-        self.parse_cls(Notification, entries)
-
-    def parse_group_scene(self, entries):
-        """Parse a scene section of xknx.yaml.
-
-        This function is deprecated."""
-        self.parse_cls(Scene, entries)
-
-    def parse_group_sensor(self, entries):
-        """Parse a sensor section of xknx.yaml.
-
-        This function is deprecated."""
-        self.parse_cls(Sensor, entries)
-
-    def parse_group_switch(self, entries):
-        """Parse a switch section of xknx.yaml.
-
-        This function is deprecated."""
-        self.parse_cls(Switch, entries)
