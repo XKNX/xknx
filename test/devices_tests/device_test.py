@@ -1,6 +1,7 @@
 """Unit test for Switch objects."""
 from unittest.mock import Mock, patch
 import pytest
+import anyio
 
 from xknx import XKNX
 from xknx.devices import Device
@@ -59,6 +60,27 @@ class TestDevice(Testcase):
         await device.after_update()
         after_update_callback1.assert_not_called()
         after_update_callback2.assert_not_called()
+
+    @pytest.mark.anyio
+    async def test_process_run(self):
+        """Test process / reading telegrams from telegram queue. Test if callback was called."""
+        xknx = XKNX()
+        device = Device(xknx, 'TestDevice')
+        called = 0
+        async with anyio.create_task_group() as tg:
+            async def tester():
+                await device.after_update()
+                await anyio.sleep(0.1)
+                await device.after_update()
+                await anyio.sleep(0.1)
+                await tg.cancel_scope.cancel()
+
+            async with device.run():
+                await tg.spawn(tester)
+                async for _ in device:
+                    called += 1
+
+        assert called == 2
 
     @pytest.mark.anyio
     async def test_process(self):

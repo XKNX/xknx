@@ -3,8 +3,15 @@ Device is the base class for all implemented devices (e.g. Lights/Switches/Senso
 
 It provides basis functionality for reading the state from the KNX bus.
 """
+import anyio
+
 from xknx.exceptions import XKNXException
 from xknx.telegram import Telegram, TelegramType
+
+try:
+    from contextlib import asynccontextmanager
+except ImportError:
+    from async_generator import asynccontextmanager
 
 
 class Device:
@@ -15,8 +22,44 @@ class Device:
         self.xknx = xknx
         self.name = name
         self.device_updated_cbs = []
+        self.__evt = None
         if device_updated_cb is not None:
             self.register_device_updated_cb(device_updated_cb)
+
+    def __repr__(self):
+        return "<%s:%s>" % (self.__class__.__name__, self.name)
+
+    @asynccontextmanager
+    async def run(self):
+        """Async context manager for using a device.
+
+        The context adds the device to XKNX and returns an iterator which
+        yields the device after an update.
+        """
+        if self.__evt is not None:
+            raise RuntimeError("You cannot call 'Device.run' twice.")
+        self.__evt = anyio.create_event()
+        self.add_to_xknx()
+        try:
+            yield self
+        finally:
+            self.remove_from_xknx()
+            evt, self.__evt = self.__evt, None
+            await evt.set()
+
+    def __aiter__(self):
+        """Async iterator setup (no-op)."""
+        return self
+
+    async def __anext__(self):
+        """Async iterator for changes.
+
+        This will coalesce multiple calls, which due to the async nature of
+        xknx is inevitable anyway."""
+        await self.__evt.wait()
+        if self.__evt is None:
+            raise StopAsyncIteration
+        return self
 
     def register_device_updated_cb(self, device_updated_cb):
         """Register device updated callback."""
@@ -27,7 +70,11 @@ class Device:
         self.device_updated_cbs.remove(device_updated_cb)
 
     async def after_update(self):
-        """Execute callbacks after internal state has been changed."""
+        """Execute callbacks after internal state has changed."""
+        if self.__evt is not None:
+            evt, self.__evt = self.__evt, anyio.create_event()
+            await evt.set()
+
         for device_updated_cb in self.device_updated_cbs:
             # pylint: disable=not-callable
             await device_updated_cb(self)
