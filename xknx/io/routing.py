@@ -3,7 +3,10 @@ Abstraction for handling KNX/IP routing.
 
 Routing uses UDP Multicast to broadcast and receive KNX/IP messages.
 """
-from contextlib import asynccontextmanager
+try:
+    from contextlib import asynccontextmanager
+except ImportError:
+    from async_generator import asynccontextmanager
 
 from xknx.knxip import APCICommand, KNXIPFrame, KNXIPServiceType
 from xknx.telegram import TelegramDirection

@@ -2,7 +2,10 @@
 import anyio
 import logging
 import signal
-from contextlib import asynccontextmanager
+try:
+    from contextlib import asynccontextmanager
+except ImportError:
+    from async_generator import asynccontextmanager
 
 from xknx.core import Config, TelegramQueueIn, TelegramQueueOut
 from xknx.devices import Devices

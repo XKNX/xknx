@@ -8,7 +8,11 @@ The underlaying KNXIPInterface will poll the queue and send the packets to the c
 You may register callbacks to be notified if a telegram was pushed to the queue.
 """
 import anyio
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import contextmanager
+try:
+    from contextlib import asynccontextmanager
+except ImportError:
+    from async_generator import asynccontextmanager
 
 from xknx.exceptions import XKNXException
 from xknx.telegram import TelegramDirection
