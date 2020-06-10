@@ -298,7 +298,7 @@ class TestConfig(Testcase):
         self.assertEqual(
             xknx.devices['Office.Climate'].mode,
             ClimateMode(xknx,
-                        name=None,
+                        name='Office.Climate._mode',
                         group_address_operation_mode='1/7/6',
                         device_updated_cb=xknx.devices.device_updated))
 
@@ -309,7 +309,7 @@ class TestConfig(Testcase):
         self.assertEqual(
             xknx.devices['Attic.Climate'].mode,
             ClimateMode(xknx,
-                        name=None,
+                        name='Attic.Climate._mode',
                         group_address_operation_mode_protection='1/7/8',
                         group_address_operation_mode_night='1/7/9',
                         group_address_operation_mode_comfort='1/7/10',
@@ -322,7 +322,7 @@ class TestConfig(Testcase):
         self.assertEqual(
             xknx.devices['Bath.Climate'].mode,
             ClimateMode(xknx,
-                        name=None,
+                        name='Bath.Climate._mode',
                         group_address_operation_mode='1/7/6',
                         group_address_operation_mode_state='1/7/7',
                         device_updated_cb=xknx.devices.device_updated))
@@ -334,7 +334,7 @@ class TestConfig(Testcase):
         self.assertEqual(
             xknx.devices['Cellar.Climate'].mode,
             ClimateMode(xknx,
-                        name=None,
+                        name='Cellar.Climate._mode',
                         group_address_controller_status='1/7/12',
                         group_address_controller_status_state='1/7/13',
                         device_updated_cb=xknx.devices.device_updated))
@@ -513,7 +513,7 @@ class TestConfig(Testcase):
     async def test_config_file_error(self):
         """Test error message when reading an errornous config file."""
         with patch('logging.Logger.error') as mock_err, \
-                patch('xknx.core.Config.parse_group_light') as mock_parse:
+                patch('xknx.core.Config.parse_cls') as mock_parse:
             mock_parse.side_effect = XKNXException()
             XKNX(config='xknx.yaml')
-            self.assertEqual(mock_err.call_count, 1)
+            self.assertEqual(mock_err.call_count, 13)

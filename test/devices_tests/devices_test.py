@@ -49,14 +49,6 @@ class TestDevices(Testcase):
             # pylint: disable=pointless-statement
             devices["TestOutlet_X"]
 
-        self.assertEqual(devices[0], light1)
-        self.assertEqual(devices[1], switch1)
-        self.assertEqual(devices[2], light2)
-        self.assertEqual(devices[3], switch2)
-        with self.assertRaises(IndexError):
-            # pylint: disable=pointless-statement
-            devices[4]
-
     @pytest.mark.anyio
     async def test_device_by_group_address(self):
         """Test get devices by group address."""
@@ -69,13 +61,13 @@ class TestDevices(Testcase):
         devices.add(light1)
 
         sensor1 = BinarySensor(xknx,
-                               'DiningRoom.Motion.Sensor',
+                               'DiningRoom.Motion.Sensor1',
                                group_address_state='3/0/1',
                                significant_bit=2)
         devices.add(sensor1)
 
         sensor2 = BinarySensor(xknx,
-                               'DiningRoom.Motion.Sensor',
+                               'DiningRoom.Motion.Sensor2',
                                group_address_state='3/0/1',
                                significant_bit=3)
         devices.add(sensor2)
@@ -107,13 +99,13 @@ class TestDevices(Testcase):
         devices.add(light1)
 
         sensor1 = BinarySensor(xknx,
-                               'DiningRoom.Motion.Sensor',
+                               'DiningRoom.Motion.Sensor1',
                                group_address_state='3/0/1',
                                significant_bit=2)
         devices.add(sensor1)
 
         sensor2 = BinarySensor(xknx,
-                               'DiningRoom.Motion.Sensor',
+                               'DiningRoom.Motion.Sensor2',
                                group_address_state='3/0/1',
                                significant_bit=3)
         devices.add(sensor2)
@@ -142,14 +134,14 @@ class TestDevices(Testcase):
         self.assertEqual(len(devices), 1)
 
         sensor1 = BinarySensor(xknx,
-                               'DiningRoom.Motion.Sensor',
+                               'DiningRoom.Motion.Sensor1',
                                group_address_state='3/0/1',
                                significant_bit=2)
         devices.add(sensor1)
         self.assertEqual(len(devices), 2)
 
         sensor2 = BinarySensor(xknx,
-                               'DiningRoom.Motion.Sensor',
+                               'DiningRoom.Motion.Sensor2',
                                group_address_state='3/0/1',
                                significant_bit=3)
         devices.add(sensor2)

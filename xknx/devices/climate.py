@@ -168,7 +168,7 @@ class Climate(Device):
         if "mode" in config:
             climate_mode = ClimateMode.from_config(
                 xknx=xknx,
-                name=None,
+                name=name+'._mode',
                 config=config['mode'])
 
         return cls(xknx,
