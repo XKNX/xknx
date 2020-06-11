@@ -46,7 +46,6 @@ class _DPTClimateMode(DPTBase):
     @classmethod
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
-        print(f"to_knx: {value}")
         for knx_value, mode in cls.SUPPORTED_MODES.items():
             if mode == value:
                 return (knx_value,)
