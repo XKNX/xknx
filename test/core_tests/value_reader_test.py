@@ -43,9 +43,6 @@ class TestValueReader(Testcase):
         self.assertEqual(xknx.telegrams_out.qsize(), 1)
         # Callback was removed again
         assert not xknx.telegrams_in.callbacks
-        # Telegram was received
-        self.assertEqual(value_reader.received_telegram,
-                        response_telegram)
         # Successfull read() returns the telegram
         self.assertEqual(result,
                         response_telegram)
@@ -66,8 +63,6 @@ class TestValueReader(Testcase):
             "Error: KNX bus did not respond in time to GroupValueRead request for: %s", GroupAddress('0/0/0'))
         # Callback was removed again
         assert not xknx.telegrams_in.callbacks
-        # No telegram was received
-        self.assertIsNone(value_reader.received_telegram)
         # Unsuccessfull read() returns None
         self.assertIsNone(timed_out_read)
 
@@ -109,10 +104,7 @@ class TestValueReader(Testcase):
 
         self.assertFalse(await async_telegram_received(telegram_wrong_address))
         self.assertFalse(await async_telegram_received(telegram_wrong_type))
-        self.assertIsNone(value_reader.received_telegram)
 
         self.assertTrue(await async_telegram_received(expected_telegram_1))
-        self.assertEqual(value_reader.received_telegram, expected_telegram_1)
 
         self.assertTrue(await async_telegram_received(expected_telegram_2))
-        self.assertEqual(value_reader.received_telegram, expected_telegram_2)

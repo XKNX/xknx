@@ -52,5 +52,4 @@ class ValueReader:
             return False
         if self.group_address != telegram.group_address:
             return False
-        self.received_telegram = telegram
         return True
