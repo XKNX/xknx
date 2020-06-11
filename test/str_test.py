@@ -105,9 +105,9 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(climate_mode),
             '<ClimateMode name="Wohnzimmer Mode" '
-            'group_address_operation_mode="GroupAddress("1/2/5")" group_address_operation_mode_state="GroupAddress("1/2/6")'
-            '" group_address_controller_status="GroupAddress("1/2/10")" group_address_controller_status_state="GroupAddress("1/2/11")" '
-            'group_address_controller_mode="GroupAddress("1/2/12")" group_address_controller_mode_state="GroupAddress("1/2/13")" />')
+            'operation_mode="GroupAddress("1/2/5")/GroupAddress("1/2/6")/None/None" '
+            'controller_mode="GroupAddress("1/2/12")/GroupAddress("1/2/13")/None/None" '
+            'controller_status="GroupAddress("1/2/10")/GroupAddress("1/2/11")/None/None" />')
 
     def test_cover(self):
         """Test string representation of cover object."""
