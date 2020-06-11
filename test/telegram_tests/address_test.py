@@ -11,6 +11,7 @@ class TestPhysicalAddress(Testcase):
 
     valid_addresses = (
             ('0.0.0', 0),
+            ('123', 123),
             ('1.0.0', 4096),
             ('1.1.0', 4352),
             ('1.1.1', 4353),
@@ -18,10 +19,11 @@ class TestPhysicalAddress(Testcase):
             ('1.1.111', 4463),
             ('1.11.111', 7023),
             ('11.11.111', 47983),
+            (PhysicalAddress('11.11.111'), 47983),
             ('15.15.255', 65535),
             ((0xff, 0xff), 65535),
             (0, 0),
-            (65535, 65535)
+            (65535, 65535),
         )
     @pytest.mark.parametrize("address,result",valid_addresses)
     def test_valid(self, address, result):
@@ -35,16 +37,16 @@ class TestPhysicalAddress(Testcase):
             '15.15.255a',
             'a15.15.255',
             'abc',
-            '123',
             65536,
             (0xff, 0xfff),
             (0xfff, 0xff),
             (-1, -1),
-            []
+            [],
         )
     @pytest.mark.parametrize("address",invalid_addresses)
     def test_invalid(self, address):
         """Test with some invalid addresses."""
+        print(address)
         with self.assertRaises(CouldNotParseAddress):
             PhysicalAddress(address)
 
@@ -117,6 +119,7 @@ class TestGroupAddress(Testcase):
             (0, 0),
             (65535, 65535),
             ((0xff, 0xff), 65535),
+            (GroupAddress('1/1/111'), 2415),
             (None, 0)
         )
     @pytest.mark.parametrize("address,result",valid_addresses)
