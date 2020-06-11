@@ -93,7 +93,8 @@ class KNXIPInterface():
             await self.start_routing(
                 self.connection_config.local_ip,
                 self.connection_config.bind_to_multicast_addr)
-        elif self.connection_config.connection_type == ConnectionType.TUNNELING:
+        elif self.connection_config.connection_type == ConnectionType.TUNNELING and \
+                self.connection_config.gateway_ip is not None:
             await self.start_tunnelling(
                 self.connection_config.local_ip,
                 self.connection_config.gateway_ip,
