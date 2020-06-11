@@ -3,10 +3,10 @@ Module for managing the climate mode.
 
 Climate modes can be 'auto', 'comfort', 'standby', 'economy' or 'protection'.
 """
-from xknx.dpt import DPTBinary, HVACOperationMode
+from xknx.dpt import HVACOperationMode
 from xknx.exceptions import DeviceIllegalValue
-from xknx.remote_value import RemoteValueClimateMode
-from xknx.telegram import GroupAddress
+from xknx.remote_value import (
+    RemoteValueClimateBinaryMode, RemoteValueClimateMode)
 
 from .device import Device
 
@@ -33,28 +33,6 @@ class ClimateMode(Device):
         """Initialize ClimateMode class."""
         # pylint: disable=too-many-arguments, too-many-locals, too-many-branches, too-many-statements
         super().__init__(xknx, name, device_updated_cb)
-        if isinstance(group_address_operation_mode, (str, int)):
-            group_address_operation_mode = GroupAddress(group_address_operation_mode)
-        if isinstance(group_address_operation_mode_state, (str, int)):
-            group_address_operation_mode_state = GroupAddress(group_address_operation_mode_state)
-        if isinstance(group_address_operation_mode_protection, (str, int)):
-            group_address_operation_mode_protection = GroupAddress(group_address_operation_mode_protection)
-        if isinstance(group_address_operation_mode_night, (str, int)):
-            group_address_operation_mode_night = GroupAddress(group_address_operation_mode_night)
-        if isinstance(group_address_operation_mode_comfort, (str, int)):
-            group_address_operation_mode_comfort = GroupAddress(group_address_operation_mode_comfort)
-        if isinstance(group_address_controller_status, (str, int)):
-            group_address_controller_status = GroupAddress(group_address_controller_status)
-        if isinstance(group_address_controller_status_state, (str, int)):
-            group_address_controller_status_state = GroupAddress(group_address_controller_status_state)
-        if isinstance(group_address_controller_mode, (str, int)):
-            group_address_controller_mode = GroupAddress(group_address_controller_mode)
-        if isinstance(group_address_controller_mode_state, (str, int)):
-            group_address_controller_mode_state = GroupAddress(group_address_controller_mode_state)
-
-        self.group_address_operation_mode_protection = group_address_operation_mode_protection
-        self.group_address_operation_mode_night = group_address_operation_mode_night
-        self.group_address_operation_mode_comfort = group_address_operation_mode_comfort
 
         self.remote_value_operation_mode = RemoteValueClimateMode(
             xknx,
@@ -81,11 +59,36 @@ class ClimateMode(Device):
             climate_mode_type=RemoteValueClimateMode.ClimateModeType.CONTROLLER_STATUS,
             after_update_cb=None)
 
+        self.remote_value_operation_mode_comfort = RemoteValueClimateBinaryMode(
+            xknx,
+            group_address=group_address_operation_mode_comfort,
+            group_address_state=group_address_operation_mode_comfort,
+            sync_state=True,
+            device_name=name,
+            operation_mode=HVACOperationMode.COMFORT,
+            after_update_cb=None)
+        self.remote_value_operation_mode_night = RemoteValueClimateBinaryMode(
+            xknx,
+            group_address=group_address_operation_mode_night,
+            group_address_state=group_address_operation_mode_night,
+            sync_state=True,
+            device_name=name,
+            operation_mode=HVACOperationMode.NIGHT,
+            after_update_cb=None)
+        self.remote_value_operation_mode_protection = RemoteValueClimateBinaryMode(
+            xknx,
+            group_address=group_address_operation_mode_protection,
+            group_address_state=group_address_operation_mode_protection,
+            sync_state=True,
+            device_name=name,
+            operation_mode=HVACOperationMode.FROST_PROTECTION,
+            after_update_cb=None)
+
         self.operation_mode = HVACOperationMode.STANDBY
 
         self.operation_modes_ = []
         if operation_modes is None:
-            self.operation_modes_ = self.guess_operation_modes()
+            self.operation_modes_ = self.gather_operation_modes()
         else:
             for mode in operation_modes:
                 if isinstance(mode, str):
@@ -132,19 +135,27 @@ class ClimateMode(Device):
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
-        for rv in self._climate_mode_remote_values():
+        for rv in self.__iter_remote_values():
             if rv.has_group_address(group_address):
                 return True
-        return group_address in (
-            self.group_address_operation_mode_protection,
-            self.group_address_operation_mode_night,
-            self.group_address_operation_mode_comfort)
+        return False
 
-    def _climate_mode_remote_values(self):
+    def __iter_remote_values(self):
+        """Iterate climate mode RemoteValue classes."""
+        yield from self.__iter_remote_values_climate_mode()
+        yield from self.__iter_remote_values_climate_binary_mode()
+
+    def __iter_remote_values_climate_mode(self):
         """Iterate climate mode RemoteValue classes."""
         yield from (self.remote_value_controller_mode,
                     self.remote_value_controller_status,
                     self.remote_value_operation_mode)
+
+    def __iter_remote_values_climate_binary_mode(self):
+        """Iterate climate mode RemoteValue classes."""
+        yield from (self.remote_value_operation_mode_comfort,
+                    self.remote_value_operation_mode_night,
+                    self.remote_value_operation_mode_protection)
 
     async def _set_internal_operation_mode(self, operation_mode):
         """Set internal value of operation mode. Call hooks if operation mode was changed."""
@@ -158,26 +169,15 @@ class ClimateMode(Device):
                 operation_mode not in self.operation_modes_:
             raise DeviceIllegalValue("operation mode not supported", operation_mode)
 
-        for rv in self._climate_mode_remote_values():
+        for rv in self.__iter_remote_values_climate_mode():
             if rv.writable and \
                     operation_mode in rv.supported_operation_modes():
                 await rv.set(operation_mode)
 
-        if self.group_address_operation_mode_protection is not None:
-            protection_mode = operation_mode == HVACOperationMode.FROST_PROTECTION
-            await self.send(
-                self.group_address_operation_mode_protection,
-                DPTBinary(protection_mode))
-        if self.group_address_operation_mode_night is not None:
-            night_mode = operation_mode == HVACOperationMode.NIGHT
-            await self.send(
-                self.group_address_operation_mode_night,
-                DPTBinary(night_mode))
-        if self.group_address_operation_mode_comfort is not None:
-            comfort_mode = operation_mode == HVACOperationMode.COMFORT
-            await self.send(
-                self.group_address_operation_mode_comfort,
-                DPTBinary(comfort_mode))
+        for rv in self.__iter_remote_values_climate_binary_mode():
+            if rv.writable:
+                # foreign operation modes will set the RemoteValue to False
+                await rv.set(operation_mode)
 
         await self._set_internal_operation_mode(operation_mode)
 
@@ -188,38 +188,33 @@ class ClimateMode(Device):
             return []
         return self.operation_modes_
 
-    def guess_operation_modes(self):
-        """Guess operation modes from group addresses."""
+    def gather_operation_modes(self):
+        """Gather operation modes from RemoteValues."""
         operation_modes = []
-        for rv in self._climate_mode_remote_values():
+        for rv in self.__iter_remote_values():
             if rv.writable:
                 operation_modes.extend(rv.supported_operation_modes())
-        if not operation_modes:
-            operation_modes.append(HVACOperationMode.STANDBY)
-        # Operation modes only supported partially
-        if self.group_address_operation_mode_comfort:
-            operation_modes.append(HVACOperationMode.COMFORT)
-        if self.group_address_operation_mode_night:
-            operation_modes.append(HVACOperationMode.NIGHT)
-        if self.group_address_operation_mode_protection:
-            operation_modes.append(HVACOperationMode.FROST_PROTECTION)
         # remove duplicates
         return list(set(operation_modes))
 
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
         if self.supports_operation_mode:
-            for rv in self._climate_mode_remote_values():
+            for rv in self.__iter_remote_values():
                 if await rv.process(telegram):
-                    await self._set_internal_operation_mode(rv.value)
-        # Note: telegrams setting splitted up operation modes are not yet implemented
+                    # don't set when binary climate mode rv is False
+                    if rv.value:
+                        await self._set_internal_operation_mode(rv.value)
+                        return
+            # if no operation mode has been set and all binary operation modes are False
+            await self._set_internal_operation_mode(HVACOperationMode.STANDBY)
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
         state_addresses = []
 
         if self.supports_operation_mode:
-            for rv in self._climate_mode_remote_values():
+            for rv in self.__iter_remote_values():
                 state_addresses.extend(rv.state_addresses())
             # Note: telegrams setting splitted up operation modes are not yet implemented
         return state_addresses

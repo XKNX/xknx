@@ -6,8 +6,9 @@ DPT .
 from enum import Enum
 
 from xknx.dpt import (
-    DPTArray, DPTControllerStatus, DPTHVACContrMode, DPTHVACMode)
-from xknx.exceptions import ConversionError
+    DPTArray, DPTBinary, DPTControllerStatus, DPTHVACContrMode, DPTHVACMode,
+    HVACOperationMode)
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 from .remote_value import RemoteValue
 
@@ -58,3 +59,50 @@ class RemoteValueClimateMode(RemoteValue):
     def from_knx(self, payload):
         """Convert current payload to value."""
         return self._climate_mode_transcoder.from_knx(payload.value)
+
+
+class RemoteValueClimateBinaryMode(RemoteValue):
+    """Abstraction for remote value of split up KNX climate modes."""
+
+    def __init__(self,
+                 xknx,
+                 group_address=None,
+                 group_address_state=None,
+                 sync_state=True,
+                 device_name=None,
+                 after_update_cb=None,
+                 operation_mode=None):
+        """Initialize remote value of KNX DPT 1 representing a climate operation mode."""
+        # pylint: disable=too-many-arguments
+        if not isinstance(operation_mode, HVACOperationMode):
+            raise ConversionError("invalid operation mode type", operation_mode=operation_mode, device_name=device_name)
+        self.operation_mode = operation_mode
+        super().__init__(xknx,
+                         group_address=group_address,
+                         group_address_state=group_address_state,
+                         sync_state=True,
+                         device_name=device_name,
+                         after_update_cb=after_update_cb)
+
+    def supported_operation_modes(self):
+        """Return a list of the configured operation mode."""
+        # standby when all binary operation modes are OFF
+        return [self.operation_mode, HVACOperationMode.STANDBY]
+
+    def payload_valid(self, payload):
+        """Test if telegram payload may be parsed."""
+        return isinstance(payload, DPTBinary)
+
+    def to_knx(self, value):
+        """Convert value to payload."""
+        if isinstance(value, HVACOperationMode):
+            return DPTBinary(value == self.operation_mode)
+        raise ConversionError("value invalid", value=value, device_name=self.device_name)
+
+    def from_knx(self, payload):
+        """Convert current payload to value."""
+        if payload == DPTBinary(1):
+            return self.operation_mode
+        if payload == DPTBinary(0):
+            return None
+        raise CouldNotParseTelegram("payload invalid", payload=payload, device_name=self.device_name)

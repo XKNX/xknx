@@ -153,6 +153,9 @@ class TestClimate(unittest.TestCase):
                  GroupAddress("1/2/4"),
                  GroupAddress("1/2/12"),
                  GroupAddress("1/2/13"),
+                 GroupAddress("1/2/6"),
+                 GroupAddress("1/2/7"),
+                 GroupAddress("1/2/8"),
                  GroupAddress("1/2/10")]))
 
     #
@@ -356,30 +359,20 @@ class TestClimate(unittest.TestCase):
 
         self.loop.run_until_complete(asyncio.Task(climate_mode.set_operation_mode(HVACOperationMode.COMFORT)))
         self.assertEqual(xknx.telegrams.qsize(), 4)
-        telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                GroupAddress('1/2/4'),
-                payload=DPTArray(1)))
-        telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                GroupAddress('1/2/5'),
-                payload=DPTBinary(0)))
-        telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                GroupAddress('1/2/6'),
-                payload=DPTBinary(0)))
-        telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                GroupAddress('1/2/7'),
-                payload=DPTBinary(1)))
+        telegrams = []
+        for _ in range(4):
+            telegrams.append(xknx.telegrams.get_nowait())
+
+        test_telegrams = [Telegram(GroupAddress('1/2/4'),
+                                   payload=DPTArray(1)),
+                          Telegram(GroupAddress('1/2/5'),
+                                   payload=DPTBinary(False)),
+                          Telegram(GroupAddress('1/2/6'),
+                                   payload=DPTBinary(False)),
+                          Telegram(GroupAddress('1/2/7'),
+                                   payload=DPTBinary(True))]
+
+        self.assertSetEqual(set(telegrams), set(test_telegrams))
 
     #
     # TEST initialized_for_setpoint_shift_calculations
