@@ -10,7 +10,7 @@ import ipaddress
 from enum import Enum
 from platform import system as get_os_name
 
-import netifaces
+import socket
 
 from xknx.exceptions import XKNXException
 
@@ -168,39 +168,14 @@ class KNXIPInterface():
         """Send telegram to connected device (either Tunneling or Routing)."""
         await self.interface.send_telegram(telegram)
 
-    def find_local_ip(self, gateway_ip: str) -> str:
-        """Find local IP address on same subnet as gateway."""
-        def _scan_interfaces(gateway: ipaddress.IPv4Address) -> str:
-            """Return local IP address on same subnet as given gateway."""
-            for interface in netifaces.interfaces():
-                try:
-                    af_inet = netifaces.ifaddresses(interface)[netifaces.AF_INET]
-                    for link in af_inet:
-                        network = ipaddress.IPv4Network((link["addr"],
-                                                         link["netmask"]),
-                                                        strict=False)
-                        if gateway in network:
-                            self.xknx.logger.debug("Using interface: %s", interface)
-                            return link["addr"]
-                except KeyError:
-                    self.xknx.logger.debug("Could not find IPv4 address on interface %s", interface)
-                    continue
-            return None
-
-        def _find_default_gateway() -> ipaddress.IPv4Address:
-            """Return IP address of default gateway."""
-            gws = netifaces.gateways()
-            return ipaddress.IPv4Address(gws['default'][netifaces.AF_INET][0])
-
-        gateway = ipaddress.IPv4Address(gateway_ip)
-        local_ip = _scan_interfaces(gateway)
-        if local_ip is None:
-            self.xknx.logger.debug(
-                "No interface on same subnet as gateway found. Falling back to default gateway.")
-            default_gateway = _find_default_gateway()
-            local_ip = _scan_interfaces(default_gateway)
-        return local_ip
-
+    @staticmethod
+    def find_local_ip(gateway_ip: str) -> str:
+        ext_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            ext_sock.connect((gateway_ip, 53))  # does not send a packet
+            return ext_sock.getsockname()[0]
+        finally:
+            ext_sock.close()
 
 def validate_ip(address: str, address_name: str = "IP address") -> None:
     """Raise an exception if address cannot be parsed as IPv4 address."""

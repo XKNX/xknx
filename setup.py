@@ -14,7 +14,6 @@ with open(path.join(THIS_DIRECTORY, "xknx/__version__.py")) as fp:
 
 REQUIRES = [
     'pyyaml>=5.1',
-    'netifaces>=0.10.9',
     'anyio>=1.3,<2',
     "async_generator >= 1.9 ; python_version < '3.7'",
 ]
