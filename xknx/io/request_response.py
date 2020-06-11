@@ -58,7 +58,8 @@ class RequestResponse():
 
     def on_success_hook(self, knxipframe):
         """Do something after having received a valid answer. May be overwritten in derived class."""
-        self.xknx.logger.debug('Success: received correct answer from KNX bus: %s', knxipframe.body.status_code)
+        # self.xknx.logger.debug('Success: received correct answer from KNX bus: %s', knxipframe.body.status_code)
+        pass
 
     def on_error_hook(self, knxipframe):
         """Do something after having received error within given time. May be overwritten in derived class."""
