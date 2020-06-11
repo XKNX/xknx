@@ -23,9 +23,9 @@ class RemoteValue():
         """Initialize RemoteValue class."""
         # pylint: disable=too-many-arguments
         self.xknx = xknx
-        if isinstance(group_address, (str, int)):
+        if group_address is not None:
             group_address = GroupAddress(group_address)
-        if isinstance(group_address_state, (str, int)):
+        if group_address_state is not None:
             group_address_state = GroupAddress(group_address_state)
 
         self.group_address = group_address
@@ -44,7 +44,7 @@ class RemoteValue():
     @property
     def readable(self):
         """Evaluate if remote value should be read from bus."""
-        return self.sync_state and isinstance(self.group_address_state, GroupAddress)
+        return bool(self.sync_state and self.group_address_state)
 
     @property
     def writable(self):
@@ -58,7 +58,7 @@ class RemoteValue():
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
         if self.readable:
-            return [self.group_address_state, ]
+            return [self.group_address_state]
         return []
 
     def payload_valid(self, payload):
