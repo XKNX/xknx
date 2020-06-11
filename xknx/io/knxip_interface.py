@@ -111,17 +111,21 @@ class KNXIPInterface():
         if not gateways:
             raise XKNXException("No Gateways found")
 
-        gateway = gateways[0]
-        if gateway.supports_tunnelling and \
-                scan_filter.routing is not True:
-            await self.start_tunnelling(gateway.local_ip,
-                                        gateway.ip_addr,
-                                        gateway.port,
-                                        self.connection_config.auto_reconnect,
-                                        self.connection_config.auto_reconnect_wait)
-        elif gateway.supports_routing:
-            bind_to_multicast_addr = get_os_name() != "Darwin"  # = Mac OS
-            await self.start_routing(gateway.local_ip, bind_to_multicast_addr)
+        for gateway in gateways:
+            if gateway.supports_tunnelling and \
+                    scan_filter.routing is not True:
+                await self.start_tunnelling(gateway.local_ip,
+                                            gateway.ip_addr,
+                                            gateway.port,
+                                            self.connection_config.auto_reconnect,
+                                            self.connection_config.auto_reconnect_wait)
+                return
+            if gateway.supports_routing and \
+                    scan_filter.tunnelling is not True:
+                bind_to_multicast_addr = get_os_name() != "Darwin"  # = Mac OS
+                await self.start_routing(gateway.local_ip, bind_to_multicast_addr)
+                return
+        raise XKNXException("No gateway found")
 
     async def start_tunnelling(self, local_ip, gateway_ip, gateway_port,
                                auto_reconnect, auto_reconnect_wait):
