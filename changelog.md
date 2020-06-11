@@ -2,6 +2,11 @@
 
 ## Upcoming version (unreleased)
 
+### Internals
+
+- Allow to pass GroupAddress and PhysicalAddress objects to wherever an address is acceptable.
+- Stop heartbeat and reconnect tasks before disconnecting
+
 ## 0.13.0 New weather device and bugfixes for HA integration
 
 ### Deprecation notes

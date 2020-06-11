@@ -12,6 +12,7 @@ class TestPhysicalAddress(TestCase):
         """Test with some valid addresses."""
         valid_addresses = (
             ("0.0.0", 0),
+            ("123", 123),
             ("1.0.0", 4096),
             ("1.1.0", 4352),
             ("1.1.1", 4353),
@@ -19,6 +20,7 @@ class TestPhysicalAddress(TestCase):
             ("1.1.111", 4463),
             ("1.11.111", 7023),
             ("11.11.111", 47983),
+            (PhysicalAddress("11.11.111"), 47983),
             ("15.15.255", 65535),
             ((0xFF, 0xFF), 65535),
             (0, 0),
@@ -37,7 +39,6 @@ class TestPhysicalAddress(TestCase):
             "15.15.255a",
             "a15.15.255",
             "abc",
-            "123",
             65536,
             (0xFF, 0xFFF),
             (0xFFF, 0xFF),
@@ -127,6 +128,7 @@ class TestGroupAddress(TestCase):
             (0, 0),
             (65535, 65535),
             ((0xFF, 0xFF), 65535),
+            (GroupAddress("1/1/111"), 2415),
             (None, 0),
         )
         for address in valid_addresses:
