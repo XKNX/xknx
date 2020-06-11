@@ -127,7 +127,8 @@ class TestValueReader(Testcase):
                 await evt.set()
 
             await xknx.spawn(reader)
+            await anyio.sleep(0.1)  # reader starting up
             await xknx.telegrams_in.put(telegram_wrong_address)
             await xknx.telegrams_in.put(expected_telegram)
-            async with anyio.fail_after(0.1):
+            async with anyio.fail_after(999):
                 await evt.wait()
