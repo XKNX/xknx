@@ -108,3 +108,32 @@ class TestValueReader(Testcase):
         self.assertTrue(await async_telegram_received(expected_telegram_1))
 
         self.assertTrue(await async_telegram_received(expected_telegram_2))
+
+    @pytest.mark.anyio
+    async def test_value_reader_loop(self):
+        """Test value reader: telegram_received."""
+        xknx = XKNX()
+        test_group_address = GroupAddress("0/0/0")
+        value_reader = ValueReader(xknx, test_group_address)
+        expected_telegram = Telegram(group_address=test_group_address,
+                                     telegramtype=TelegramType.GROUP_WRITE,
+                                     payload=DPTBinary(1))
+        telegram_wrong_address = Telegram(group_address=GroupAddress("0/0/1"),
+                                          telegramtype=TelegramType.GROUP_WRITE,
+                                          payload=DPTBinary(1))
+        success = False
+        async def reader():
+            await xknx.telegrams_in.start()
+            res = await value_reader.read()
+            assert res == expected_telegram
+            await xknx.telegrams_in.stop()
+
+            nonlocal success
+            success = True
+
+        async with anyio.create_task_group() as tg:
+            xknx.task_group = tg
+            await tg.spawn(reader)
+            await xknx.telegrams_in.put(telegram_wrong_address)
+            await xknx.telegrams_in.put(expected_telegram)
+        assert success
