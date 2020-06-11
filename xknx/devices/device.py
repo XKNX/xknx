@@ -41,6 +41,7 @@ class Device:
         self.__evt = anyio.create_event()
         self.add_to_xknx()
         try:
+            await self.sync(wait_for_result=False)
             yield self
         finally:
             self.remove_from_xknx()
