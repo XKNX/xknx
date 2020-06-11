@@ -6,6 +6,7 @@ build/
 dist/
 Gemfile.lock
 xknx.egg-info/
+.eggs/
 .cache
 .tox
 .DS_Store
@@ -15,3 +16,4 @@ venv
 .vscode/
 .sass-cache/
 .pytest_cache/
+/.pybuild/
