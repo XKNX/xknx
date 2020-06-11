@@ -9,7 +9,7 @@ from xknx.devices import Device
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import AddressFilter, GroupAddress, Telegram
 
-from xknx._test import Testcase, AsyncMock
+from xknx._test import Testcase, AsyncMock, xknx_running
 
 class TestTelegramQueueIn(Testcase):
     """Test class for the incoming telegram queue."""
@@ -256,17 +256,15 @@ class TestTelegramQueueIn(Testcase):
     async def test_process_all_telegrams(self, process_telegram_mock):
         """Test process_all_telegrams for clearing the queue."""
         # pylint: disable=no-self-use
-        xknx = XKNX()
+        async with xknx_running() as xknx:
 
-        telegram_in = Telegram(
-            payload=DPTBinary(1),
-            group_address=GroupAddress("1/2/3"))
-        telegram_out = Telegram(
-            payload=DPTBinary(1),
-            group_address=GroupAddress("1/2/3"))
+            telegram_in = Telegram(
+                payload=DPTBinary(1),
+                group_address=GroupAddress("1/2/3"))
+            telegram_out = Telegram(
+                payload=DPTBinary(1),
+                group_address=GroupAddress("1/2/3"))
 
-        async with anyio.create_task_group() as tg:
-            xknx.task_group = tg
             await xknx.telegrams_in.start()
             await xknx.telegrams_out.start()
 
@@ -274,7 +272,6 @@ class TestTelegramQueueIn(Testcase):
             await xknx.telegrams_out.put(telegram_out)
             await xknx.telegrams_in.process_all_telegrams()
             await xknx.telegrams_out.process_all_telegrams()
-            await tg.cancel_scope.cancel()
 
         self.assertEqual(process_telegram_mock.call_count, 2)
 

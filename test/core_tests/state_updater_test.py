@@ -8,7 +8,7 @@ from xknx import XKNX
 from xknx.core import StateUpdater
 from xknx.devices import Light
 
-from xknx._test import Testcase, AsyncMock
+from xknx._test import Testcase, AsyncMock, xknx_running
 
 class TestStateupdater(Testcase):
     """Test class for xknx/io/Disconnect objects."""
@@ -16,15 +16,12 @@ class TestStateupdater(Testcase):
     @pytest.mark.anyio
     async def test_state_updater(self):
         """Test State updater."""
-        xknx = XKNX()
-        light = Light(
-            xknx,
-            name='TestLight',
-            group_address_switch='1/0/9')
-        xknx.devices.add(light)
-
-        async with anyio.create_task_group() as tg:
-            xknx.task_group = tg
+        async with xknx_running() as xknx:
+            light = Light(
+                xknx,
+                name='TestLight',
+                group_address_switch='1/0/9')
+            xknx.devices.add(light)
             state_updater = StateUpdater(xknx, timeout=0, start_timeout=0)
 
             async def stopper():

@@ -1,7 +1,14 @@
 """This is a helper class to support async testcases."""
 
+import anyio
 import unittest
 from unittest.mock import MagicMock
+from .xknx import XKNX
+
+try:
+    from contextlib import asynccontextmanager
+except ImportError:
+    from async_generator import asynccontextmanager
 
 
 class Testcase:
@@ -48,3 +55,15 @@ except ImportError:
             finally:
                 self._mock_side_effect = side
             return res
+
+@asynccontextmanager
+async def xknx_running():
+    xknx = XKNX()
+    async with anyio.create_task_group() as tg:
+        xknx.task_group = tg
+        try:
+            yield xknx
+        finally:
+            xknx.task_group = None
+            await tg.cancel_scope.cancel()
+
