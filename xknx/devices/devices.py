@@ -14,6 +14,7 @@ class Devices:
         """Initialize Devices class."""
         self.__devices = {}
         self.device_updated_cbs = []
+        self.__groups = {}
 
     def register_device_updated_cb(self, device_updated_cb):
         """Register callback for devices beeing updated."""
@@ -29,9 +30,11 @@ class Devices:
 
     def devices_by_group_address(self, group_address):
         """Return device(s) by group address."""
-        for device in self.__devices.values():
-            if device.has_group_address(group_address):
-                yield device
+        if group_address not in self.__groups:
+            # don't create a heap of empty entries
+            return
+        for device in self.__groups.get(group_address, {}).values():
+            yield device
 
     def __getitem__(self, key):
         """Return device by name."""
@@ -53,9 +56,17 @@ class Devices:
             raise XKNXException("The device '%s' is already registered" % (device.name,))
         device.register_device_updated_cb(self.device_updated)
         self.__devices[device.name] = device
+        for group in device.all_addresses():
+            try:
+                self.__groups[group][device.name] = device
+            except KeyError:
+                self.__groups[group] = devs = {}
+                devs[device.name] = device
 
     def remove(self, device):
         """Remove device from device list."""
+        for group in device.all_addresses():
+            self.__groups[group].remove(device)
         del self.__devices[device.name]
         device.unregister_device_updated_cb(self.device_updated)
 

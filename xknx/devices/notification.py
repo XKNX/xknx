@@ -54,6 +54,10 @@ class Notification(Device):
         """Test if device has given group address."""
         return self._message.has_group_address(group_address)
 
+    def all_addresses(self):
+        """Return all group addresses which this device uses"""
+        return self._message.all_addresses()
+
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
         return self._message.state_addresses()

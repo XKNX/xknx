@@ -293,6 +293,17 @@ class Climate(Device):
         if self.mode is not None:
             await self.mode.process_group_write(telegram)
 
+    def all_addresses(self):
+        """Return all group addresses which this device uses"""
+        res = []
+        res.extend(self.temperature.all_addresses())
+        res.extend(self.target_temperature.all_addresses())
+        res.extend(self._setpoint_shift.all_addresses())
+        res.extend(self.on.all_addresses())
+        if self.mode is not None:
+            res.extend(self.mode.all_addresses())
+        return res
+
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
         state_addresses = []

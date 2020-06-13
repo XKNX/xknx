@@ -73,11 +73,14 @@ class Fan(Device):
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
+    def all_addresses(self):
+        """Return all group addresses which this device uses"""
+        """Return group addresses which should be requested to sync state."""
+        return self.speed.all_addresses()
+
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
-        state_addresses = []
-        state_addresses.extend(self.speed.state_addresses())
-        return state_addresses
+        return self.speed.state_addresses()
 
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""

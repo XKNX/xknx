@@ -71,6 +71,10 @@ class Switch(Device):
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
+    def all_addresses(self):
+        """Return all group addresses which this device uses"""
+        return self.switch.all_addresses()
+
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
         return self.switch.state_addresses()

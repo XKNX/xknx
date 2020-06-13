@@ -245,6 +245,19 @@ class ClimateMode(Device):
         operation_mode = DPTControllerStatus.from_knx(telegram.payload.value)
         await self._set_internal_operation_mode(operation_mode)
 
+    def all_addresses(self):
+        """Return all group addresses which this device uses"""
+        return [x for x in (self.group_address_operation_mode,
+                            self.group_address_operation_mode_state,
+                            self.group_address_operation_mode_protection,
+                            self.group_address_operation_mode_night,
+                            self.group_address_operation_mode_comfort,
+                            self.group_address_controller_status,
+                            self.group_address_controller_status_state,
+                            self.group_address_controller_mode,
+                            self.group_address_controller_mode_state,
+                            ) if x is not None]
+
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
         state_addresses = []

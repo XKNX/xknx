@@ -55,6 +55,15 @@ class RemoteValue():
         """Test if device has given group address."""
         return group_address in [self.group_address, self.group_address_state]
 
+    def all_addresses(self):
+        """Return all group addresses which this device uses"""
+        res = []
+        if self.group_address is not None:
+            res.append(self.group_address)
+        if self.group_address_state is not None:
+            res.append(self.group_address_state)
+        return res
+
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
         if self.readable:

@@ -310,6 +310,17 @@ class Light(Device):
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
+    def all_addresses(self):
+        """Return all group addresses which this device uses"""
+        res = []
+        res.extend(self.switch.all_addresses())
+        res.extend(self.color.all_addresses())
+        res.extend(self.rgbw.all_addresses())
+        res.extend(self.brightness.all_addresses())
+        res.extend(self.tunable_white.all_addresses())
+        res.extend(self.color_temperature.all_addresses())
+        return res
+
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
         state_addresses = []

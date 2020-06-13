@@ -50,6 +50,10 @@ class Sensor(Device):
         """Test if device has given group address."""
         return self.sensor_value.has_group_address(group_address)
 
+    def all_addresses(self):
+        """Return all group addresses which this device uses"""
+        return self.sensor_value.all_addresses()
+
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
         return self.sensor_value.state_addresses()

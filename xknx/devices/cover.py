@@ -224,6 +224,13 @@ class Cover(Device):
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
+    def all_addresses(self):
+        """Return all group addresses which this device uses"""
+        res = []
+        res.extend(self.position.all_addresses())
+        res.extend(self.angle.all_addresses())
+        return res
+
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
         if self.travelcalculator.is_traveling():

@@ -100,6 +100,12 @@ class BinarySensor(Device):
         """Test if device has given group address."""
         return group_address in [self.group_address_state]
 
+    def all_addresses(self):
+        """Return all group addresses which this device uses"""
+        if self.group_address_state is not None:
+            return [self.group_address_state]
+        return []
+
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
         if self.sync_state and \

@@ -13,7 +13,6 @@ try:
 except ImportError:
     from async_generator import asynccontextmanager
 
-
 class Device:
     """Base class for devices."""
 
@@ -110,6 +109,10 @@ class Device:
         telegram.telegramtype = TelegramType.GROUP_RESPONSE \
             if response else TelegramType.GROUP_WRITE
         await self.xknx.telegrams_out.put(telegram)
+
+    def all_addresses(self):
+        """Return all group addresses which this device uses"""
+        return []
 
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""

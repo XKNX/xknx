@@ -61,9 +61,9 @@ class ExposeSensor(Device):
         """Test if device has given group address."""
         return self.sensor_value.has_group_address(group_address)
 
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        return []
+    def all_addresses(self):
+        """Return all group addresses which this device uses"""
+        return self.sensor_value.all_addresses()
 
     async def process_group_read(self, telegram):
         """Process incoming GROUP READ telegram."""
