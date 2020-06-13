@@ -66,7 +66,7 @@ class Devices:
     def remove(self, device):
         """Remove device from device list."""
         for group in device.all_addresses():
-            self.__groups[group].remove(device)
+            del self.__groups[group][device.name]
         del self.__devices[device.name]
         device.unregister_device_updated_cb(self.device_updated)
 
