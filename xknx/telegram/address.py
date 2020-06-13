@@ -58,10 +58,15 @@ class BaseAddress:  # pylint: disable=too-few-public-methods
         """
         if other is None:
             return False
-        if not isinstance(other, self.__class__):
+        if type(self) is not type(other):
             raise TypeError()
         return self.raw == other.raw
 
+    def __hash__(self):
+        """Required to use addresses as dict keys."""
+        if self.raw is None:
+            return hash(None)
+        return self.raw
 
 class PhysicalAddress(BaseAddress):
     """Class for handling KNX pyhsical addresses."""
