@@ -25,11 +25,7 @@ class RemoteValueSwitch(RemoteValue):
         super().__init__(xknx,
                          group_address,
                          group_address_state,
-<<<<<<< HEAD
                          sync_state=sync_state,
-=======
-                         sync_state=True,
->>>>>>> remote-value-climate-mode
                          device_name=device_name,
                          after_update_cb=after_update_cb)
         self.invert = invert
