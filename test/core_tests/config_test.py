@@ -432,17 +432,6 @@ class TestConfig(unittest.TestCase):
                          device_class='motion',
                          device_updated_cb=TestConfig.xknx.devices.device_updated))
 
-    def test_config_sensor_binary_significant_bit(self):
-        """Test reading Sensor with differing significant bit from config file."""
-        self.assertEqual(
-            TestConfig.xknx.devices['Kitchen.Presence'],
-            BinarySensor(TestConfig.xknx,
-                         'Kitchen.Presence',
-                         group_address_state='3/0/2',
-                         significant_bit=2,
-                         device_class='motion',
-                         device_updated_cb=TestConfig.xknx.devices.device_updated))
-
     def test_config_scene(self):
         """Test reading Scene from config file."""
         self.assertEqual(
