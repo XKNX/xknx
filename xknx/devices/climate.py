@@ -48,7 +48,7 @@ class SetpointShiftValue(RemoteValue1Count):
             return None
         return super().value * self.setpoint_shift_step
 
-    async def set(self, value):
+    async def set(self, value, response=False):
         """Set new value from Kelvin."""
         if value > self.max_temp_delta:
             self.xknx.logger.warning("setpoint_shift_max exceeded at %s: %s",
