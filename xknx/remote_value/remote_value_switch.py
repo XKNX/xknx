@@ -25,7 +25,11 @@ class RemoteValueSwitch(RemoteValue):
         super().__init__(xknx,
                          group_address,
                          group_address_state,
+<<<<<<< HEAD
                          sync_state=sync_state,
+=======
+                         sync_state=True,
+>>>>>>> remote-value-climate-mode
                          device_name=device_name,
                          after_update_cb=after_update_cb)
         self.invert = invert
@@ -49,10 +53,10 @@ class RemoteValueSwitch(RemoteValue):
         raise CouldNotParseTelegram("payload invalid", payload=payload, device_name=self.device_name)
 
     async def off(self):
-        """Set value to down."""
+        """Set value to OFF."""
         await self.set(False)
 
     async def on(self):
-        """Set value to UP."""
+        """Set value to ON."""
         # pylint: disable=invalid-name
         await self.set(True)

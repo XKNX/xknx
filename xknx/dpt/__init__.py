@@ -46,8 +46,7 @@ from .dpt_4byte_int import (
 )
 from .dpt_date import DPTDate
 from .dpt_datetime import DPTDateTime
-from .dpt_hvac_contr_mode import DPTHVACContrMode
-from .dpt_hvac_mode import DPTControllerStatus, DPTHVACMode, HVACOperationMode
+from .dpt_hvac_mode import DPTHVACContrMode, DPTControllerStatus, DPTHVACMode, HVACOperationMode
 from .dpt_scaling import DPTAngle, DPTScaling
 from .dpt_string import DPTString
 from .dpt_time import DPTTime

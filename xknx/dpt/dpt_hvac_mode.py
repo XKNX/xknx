@@ -30,46 +30,70 @@ class HVACOperationMode(Enum):
     NODEM = "NoDem"
 
 
-class DPTHVACMode(DPTBase):
+class _DPTClimateMode(DPTBase):
+    """Base class for KNX Climate modes."""
+
+    SUPPORTED_MODES = {}
+
+    @classmethod
+    def from_knx(cls, raw):
+        """Parse/deserialize from KNX/IP raw data."""
+        cls.test_bytesarray(raw, 1)
+        if raw[0] in cls.SUPPORTED_MODES:
+            return cls.SUPPORTED_MODES[raw[0]]
+        raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
+
+    @classmethod
+    def to_knx(cls, value):
+        """Serialize to KNX/IP raw data."""
+        for knx_value, mode in cls.SUPPORTED_MODES.items():
+            if mode == value:
+                return (knx_value,)
+        raise ConversionError("Could not parse HVACOperationMode", value=value)
+        # TODO serialize cls.__name__ ??
+
+
+class DPTHVACContrMode(_DPTClimateMode):
+    """
+    Abstraction for KNX HVAC controller mode.
+
+    DPT 20.105
+    """
+
+    SUPPORTED_MODES = {
+        0: HVACOperationMode.AUTO,
+        1: HVACOperationMode.HEAT,
+        2: HVACOperationMode.MORNING_WARMUP,
+        3: HVACOperationMode.COOL,
+        4: HVACOperationMode.NIGHT_PURGE,
+        5: HVACOperationMode.PRECOOL,
+        6: HVACOperationMode.OFF,
+        7: HVACOperationMode.TEST,
+        8: HVACOperationMode.EMERGENCY_HEAT,
+        9: HVACOperationMode.FAN_ONLY,
+        10: HVACOperationMode.FREE_COOL,
+        11: HVACOperationMode.ICE,
+        14: HVACOperationMode.DRY,
+        20: HVACOperationMode.NODEM}
+
+
+class DPTHVACMode(_DPTClimateMode):
     """
     Abstraction for KNX HVAC mode.
 
     DPT 20.102
     """
 
-    @classmethod
-    def from_knx(cls, raw):
-        """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 1)
-        if raw[0] == 0x04:
-            return HVACOperationMode.FROST_PROTECTION
-        if raw[0] == 0x03:
-            return HVACOperationMode.NIGHT
-        if raw[0] == 0x02:
-            return HVACOperationMode.STANDBY
-        if raw[0] == 0x01:
-            return HVACOperationMode.COMFORT
-        if raw[0] == 0x00:
-            return HVACOperationMode.AUTO
-        raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
-
-    @classmethod
-    def to_knx(cls, value):
-        """Serialize to KNX/IP raw data."""
-        if value == HVACOperationMode.AUTO:
-            return (0,)
-        if value == HVACOperationMode.COMFORT:
-            return (1,)
-        if value == HVACOperationMode.STANDBY:
-            return (2,)
-        if value == HVACOperationMode.NIGHT:
-            return (3,)
-        if value == HVACOperationMode.FROST_PROTECTION:
-            return (4,)
-        raise ConversionError("Could not parse HVACOperationMode", value=value)
+    SUPPORTED_MODES = {
+        0: HVACOperationMode.AUTO,
+        1: HVACOperationMode.COMFORT,
+        2: HVACOperationMode.STANDBY,
+        3: HVACOperationMode.NIGHT,
+        4: HVACOperationMode.FROST_PROTECTION}
+    SUPPORTED_MODES_INV = dict((reversed(item) for item in SUPPORTED_MODES.items()))
 
 
-class DPTControllerStatus(DPTBase):
+class DPTControllerStatus(_DPTClimateMode):
     """
     Abstraction for KNX HVAC Controller status.
 
@@ -79,6 +103,14 @@ class DPTControllerStatus(DPTBase):
     The values of this type were retrieved by reverse engineering. Any
     notes on the correct implementation of this type are highly appreciated.
     """
+
+    SUPPORTED_MODES = {
+        0x21: HVACOperationMode.COMFORT,
+        0x22: HVACOperationMode.STANDBY,
+        0x24: HVACOperationMode.NIGHT,
+        0x28: HVACOperationMode.FROST_PROTECTION}
+
+    SUPPORTED_MODES_INV = dict((reversed(item) for item in SUPPORTED_MODES.items()))
 
     @classmethod
     def from_knx(cls, raw):
@@ -93,18 +125,3 @@ class DPTControllerStatus(DPTBase):
         if raw[0] & 1 > 0:
             return HVACOperationMode.COMFORT
         raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
-
-    @classmethod
-    def to_knx(cls, value):
-        """Serialize to KNX/IP raw data."""
-        if value == HVACOperationMode.AUTO:
-            raise ConversionError("Cant serialize DPTControllerStatus", value=value)
-        if value == HVACOperationMode.COMFORT:
-            return (0x21,)
-        if value == HVACOperationMode.STANDBY:
-            return (0x22,)
-        if value == HVACOperationMode.NIGHT:
-            return (0x24,)
-        if value == HVACOperationMode.FROST_PROTECTION:
-            return (0x28,)
-        raise ConversionError("Could not parse DPTControllerStatus", value=value)

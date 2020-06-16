@@ -148,12 +148,15 @@ class TestClimate(unittest.TestCase):
             group_address_on_off_state='1/2/12',
             mode=climate_mode)
         self.assertEqual(
-            climate.state_addresses(),
-            [GroupAddress("1/2/1"),
-             GroupAddress("1/2/4"),
-             GroupAddress("1/2/12"),
-             GroupAddress("1/2/13"),
-             GroupAddress("1/2/10")])
+            set(climate.state_addresses()),
+            set([GroupAddress("1/2/1"),
+                 GroupAddress("1/2/4"),
+                 GroupAddress("1/2/12"),
+                 GroupAddress("1/2/13"),
+                 GroupAddress("1/2/6"),
+                 GroupAddress("1/2/7"),
+                 GroupAddress("1/2/8"),
+                 GroupAddress("1/2/10")]))
 
     #
     # TEST CALLBACK
@@ -356,30 +359,20 @@ class TestClimate(unittest.TestCase):
 
         self.loop.run_until_complete(asyncio.Task(climate_mode.set_operation_mode(HVACOperationMode.COMFORT)))
         self.assertEqual(xknx.telegrams.qsize(), 4)
-        telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                GroupAddress('1/2/4'),
-                payload=DPTArray(1)))
-        telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                GroupAddress('1/2/5'),
-                payload=DPTBinary(0)))
-        telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                GroupAddress('1/2/6'),
-                payload=DPTBinary(0)))
-        telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                GroupAddress('1/2/7'),
-                payload=DPTBinary(1)))
+        telegrams = []
+        for _ in range(4):
+            telegrams.append(xknx.telegrams.get_nowait())
+
+        test_telegrams = [Telegram(GroupAddress('1/2/4'),
+                                   payload=DPTArray(1)),
+                          Telegram(GroupAddress('1/2/5'),
+                                   payload=DPTBinary(False)),
+                          Telegram(GroupAddress('1/2/6'),
+                                   payload=DPTBinary(False)),
+                          Telegram(GroupAddress('1/2/7'),
+                                   payload=DPTBinary(True))]
+
+        self.assertSetEqual(set(telegrams), set(test_telegrams))
 
     #
     # TEST initialized_for_setpoint_shift_calculations
@@ -765,18 +758,14 @@ class TestClimate(unittest.TestCase):
             group_address_controller_mode_state='1/2/14')
         self.loop.run_until_complete(asyncio.Task(climate_mode.sync(False)))
         self.assertEqual(xknx.telegrams.qsize(), 3)
-        telegram1 = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram1,
-            Telegram(GroupAddress('1/2/5'), TelegramType.GROUP_READ))
-        telegram2 = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram2,
-            Telegram(GroupAddress('1/2/6'), TelegramType.GROUP_READ))
-        telegram3 = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram3,
-            Telegram(GroupAddress('1/2/14'), TelegramType.GROUP_READ))
+
+        telegrams = []
+        for _ in range(3):
+            telegrams.append(xknx.telegrams.get_nowait())
+        self.assertSetEqual(set(telegrams),
+                            set([Telegram(GroupAddress('1/2/5'), TelegramType.GROUP_READ),
+                                 Telegram(GroupAddress('1/2/6'), TelegramType.GROUP_READ),
+                                 Telegram(GroupAddress('1/2/14'), TelegramType.GROUP_READ)]))
 
     #
     # TEST PROCESS
@@ -908,12 +897,12 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_operation_mode='1/2/5')
         self.assertEqual(
-            climate_mode.operation_modes,
-            [HVACOperationMode.AUTO,
-             HVACOperationMode.COMFORT,
-             HVACOperationMode.STANDBY,
-             HVACOperationMode.NIGHT,
-             HVACOperationMode.FROST_PROTECTION])
+            set(climate_mode.operation_modes),
+            set([HVACOperationMode.AUTO,
+                 HVACOperationMode.COMFORT,
+                 HVACOperationMode.STANDBY,
+                 HVACOperationMode.NIGHT,
+                 HVACOperationMode.FROST_PROTECTION]))
 
     def test_supported_operation_modes_controller_status(self):
         """Test get_supported_operation_modes with combined group address."""
@@ -923,11 +912,11 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_controller_status='1/2/5')
         self.assertEqual(
-            climate_mode.operation_modes,
-            [HVACOperationMode.COMFORT,
-             HVACOperationMode.STANDBY,
-             HVACOperationMode.NIGHT,
-             HVACOperationMode.FROST_PROTECTION])
+            set(climate_mode.operation_modes),
+            set([HVACOperationMode.COMFORT,
+                 HVACOperationMode.STANDBY,
+                 HVACOperationMode.NIGHT,
+                 HVACOperationMode.FROST_PROTECTION]))
 
     def test_supported_operation_modes_no_mode(self):
         """Test get_supported_operation_modes no operation_modes supported."""
@@ -947,12 +936,12 @@ class TestClimate(unittest.TestCase):
             group_address_operation_mode_protection='1/2/5',
             group_address_operation_mode_night='1/2/6',
             group_address_operation_mode_comfort='1/2/7')
-        self.assertEqual(
-            climate_mode.operation_modes,
-            [HVACOperationMode.COMFORT,
-             HVACOperationMode.STANDBY,
-             HVACOperationMode.NIGHT,
-             HVACOperationMode.FROST_PROTECTION])
+
+        self.assertSetEqual(set(climate_mode.operation_modes),
+                            set([HVACOperationMode.COMFORT,
+                                 HVACOperationMode.STANDBY,
+                                 HVACOperationMode.NIGHT,
+                                 HVACOperationMode.FROST_PROTECTION]))
 
     def test_supported_operation_modes_only_night(self):
         """Test get_supported_operation_modes with only night mode supported."""
@@ -962,9 +951,9 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_operation_mode_night='1/2/7')
         self.assertEqual(
-            climate_mode.operation_modes,
-            [HVACOperationMode.STANDBY,
-             HVACOperationMode.NIGHT])
+            set(climate_mode.operation_modes),
+            set([HVACOperationMode.STANDBY,
+                 HVACOperationMode.NIGHT]))
 
     def test_custom_supported_operation_modes(self):
         """Test get_supported_operation_modes with custom mode."""
