@@ -1,14 +1,14 @@
 """Generate a markdown table that can be copied to home-assistant.io sensor.knx documentation."""
 try:
-    from xknx.devices.remote_value_sensor import RemoteValueSensor
-    from xknx.knx.dpt import DPTBase
+    from xknx.remote_value import RemoteValueSensor
+    from xknx.dpt import DPTBase
 except ModuleNotFoundError:
     exit("Add the `xknx` directory to pythons path via `export PYTHONPATH=$HOME/directory/to/xknx`")
 
 
 # Defines the column order of the printed table.
 # ["dpt_number", "value_type", "dpt_size", "unit", "dpt_range"]
-COLUMN_ORDER = ["dpt_number", "value_type", "dpt_size", "unit"]
+COLUMN_ORDER = ["dpt_number", "value_type", "dpt_size", "dpt_range", "unit"]
 
 # Defines the column adjustment of the printed table.
 # "left", "right" or "center"

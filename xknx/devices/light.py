@@ -10,12 +10,11 @@ It provides functionality for
 * setting the absolute color temperature.
 * reading the current state from KNX bus.
 """
+from xknx.remote_value import (
+    RemoteValueColorRGB, RemoteValueColorRGBW, RemoteValueDpt2ByteUnsigned,
+    RemoteValueScaling, RemoteValueSwitch)
+
 from .device import Device
-from .remote_value_color_rgb import RemoteValueColorRGB
-from .remote_value_color_rgbw import RemoteValueColorRGBW
-from .remote_value_dpt_2_byte_unsigned import RemoteValueDpt2ByteUnsigned
-from .remote_value_scaling import RemoteValueScaling
-from .remote_value_switch import RemoteValueSwitch
 
 
 # pylint: disable=too-many-public-methods, too-many-instance-attributes

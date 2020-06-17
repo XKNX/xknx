@@ -6,7 +6,8 @@ from unittest.mock import Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Cover
-from xknx.knx import DPTArray, DPTBinary, GroupAddress, Telegram, TelegramType
+from xknx.dpt import DPTArray, DPTBinary
+from xknx.telegram import GroupAddress, Telegram, TelegramType
 
 
 class TestCover(unittest.TestCase):
@@ -192,7 +193,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(GroupAddress('1/2/2'), payload=DPTBinary(1)))
+                         Telegram(GroupAddress('1/2/2'), payload=DPTBinary(0)))
 
     #
     # TEST SET SHORT DOWN
@@ -211,7 +212,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(GroupAddress('1/2/2'), payload=DPTBinary(0)))
+                         Telegram(GroupAddress('1/2/2'), payload=DPTBinary(1)))
 
     #
     # TEST STOP
@@ -229,7 +230,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(GroupAddress('1/2/2'), payload=DPTBinary(0)))
+                         Telegram(GroupAddress('1/2/2'), payload=DPTBinary(1)))
 
     #
     # TEST POSITION

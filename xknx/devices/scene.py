@@ -1,6 +1,7 @@
 """Module for managing a KNX scene."""
+from xknx.remote_value import RemoteValueSceneNumber
+
 from .device import Device
-from .remote_value_scene_number import RemoteValueSceneNumber
 
 
 class Scene(Device):

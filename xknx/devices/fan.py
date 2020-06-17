@@ -6,8 +6,9 @@ It provides functionality for
 * setting fan to specific speed
 * reading the current speed from KNX bus.
 """
+from xknx.remote_value import RemoteValueScaling
+
 from .device import Device
-from .remote_value_scaling import RemoteValueScaling
 
 
 class Fan(Device):

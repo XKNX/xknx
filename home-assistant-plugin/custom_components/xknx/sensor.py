@@ -1,5 +1,6 @@
 """Support for KNX/IP sensors."""
 import voluptuous as vol
+from xknx.devices import Sensor as XknxSensor
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_TYPE
@@ -44,9 +45,7 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
 @callback
 def async_add_entities_config(hass, config, async_add_entities):
     """Set up sensor for KNX platform configured within platform."""
-    import xknx
-
-    sensor = xknx.devices.Sensor(
+    sensor = XknxSensor(
         hass.data[DATA_XKNX].xknx,
         name=config[CONF_NAME],
         group_address_state=config[CONF_STATE_ADDRESS],
@@ -70,13 +69,17 @@ class KNXSensor(Entity):
 
         async def after_update_callback(device):
             """Call after device was updated."""
-            await self.async_update_ha_state()
+            self.async_write_ha_state()
 
         self.device.register_device_updated_cb(after_update_callback)
 
     async def async_added_to_hass(self):
         """Store register state change callback."""
         self.async_register_callbacks()
+
+    async def async_update(self):
+        """Update the state from KNX."""
+        await self.device.sync()
 
     @property
     def name(self):

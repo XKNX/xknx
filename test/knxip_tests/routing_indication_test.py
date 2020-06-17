@@ -1,12 +1,12 @@
 """Unit test for KNX/IP RountingIndication objects."""
 import asyncio
+import time
 import unittest
 
 from xknx import XKNX
-from xknx.knx import (
-    DPTArray, DPTBinary, DPTTemperature, DPTTime, GroupAddress,
-    PhysicalAddress, Telegram, TelegramType)
+from xknx.dpt import DPTArray, DPTBinary, DPTTemperature, DPTTime
 from xknx.knxip import CEMIFrame, KNXIPFrame, KNXIPServiceType
+from xknx.telegram import GroupAddress, PhysicalAddress, Telegram, TelegramType
 
 
 class Test_KNXIP(unittest.TestCase):
@@ -66,7 +66,7 @@ class Test_KNXIP(unittest.TestCase):
         telegram.group_address = GroupAddress(337)
 
         telegram.payload = DPTArray(DPTTime().to_knx(
-            {'hours': 13, 'minutes': 23, 'seconds': 42}))
+            time.strptime("13:23:42", "%H:%M:%S")))
 
         knxipframe.body.telegram = telegram
 

@@ -6,8 +6,9 @@ It provides functionality for
 * switching 'on' and 'off'.
 * reading the current state from KNX bus.
 """
+from xknx.remote_value import RemoteValueSwitch
+
 from .device import Device
-from .remote_value_switch import RemoteValueSwitch
 
 
 class Switch(Device):

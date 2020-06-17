@@ -5,8 +5,9 @@ from unittest.mock import patch
 
 from xknx import XKNX
 from xknx.core import ValueReader
-from xknx.knx import (
-    DPTBinary, GroupAddress, Telegram, TelegramDirection, TelegramType)
+from xknx.dpt import DPTBinary
+from xknx.telegram import (
+    GroupAddress, Telegram, TelegramDirection, TelegramType)
 
 
 class TestValueReader(unittest.TestCase):

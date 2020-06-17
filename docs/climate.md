@@ -55,12 +55,14 @@ groups:
 * **group_address_operation_mode_protection** KNX address for switching on/off frost/heat protection mode.
 * **group_address_operation_mode_night** KNX address for switching on/off night nmode.
 * **group_address_operation_mode_comfort** KNX address for switching on/off comfort mode.
-* **group_address_operation_mode** KNX address for controller status.
-* **group_address_operation_mode_state** KNX address for controller status state.
-* **group_address_operation_mode** KNX address for controller mode.
-* **group_address_operation_mode_state** KNX address for controller mode status.
 
-`group_address_operation_mode_protection` / `group_address_operation_mode_night` / `group_address_operation_mode_comfort` are not necessary if `group_address_operation_mode` was specified.
+
+* **group_address_controller_status** KNX address for controller status.
+* **group_address_controller_status_state** KNX address for controller status state.
+* **group_address_controller_mode** KNX address for controller mode.
+* **group_address_controller_mode_state** KNX address for controller mode status.
+
+**Note:** `group_address_operation_mode_protection` / `group_address_operation_mode_night` / `group_address_operation_mode_comfort` are not necessary if `group_address_operation_mode` was specified.
 
 
 ```python
@@ -91,6 +93,7 @@ climate = Climate(
         setpoint_shift_min=-6,
         group_address_on_off='',
         group_address_on_off_state='',
+        on_off_invert=False,
         min_temp=18,
         max_temp=26,
         mode=climate_mode,

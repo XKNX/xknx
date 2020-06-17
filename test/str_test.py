@@ -5,21 +5,22 @@ import unittest
 from xknx import XKNX
 from xknx.devices import (
     Action, ActionBase, ActionCallback, BinarySensor, Climate, ClimateMode,
-    Cover, DateTime, ExposeSensor, Fan, Light, Notification, RemoteValue,
-    Scene, Sensor, Switch)
+    Cover, DateTime, ExposeSensor, Fan, Light, Notification, Scene, Sensor,
+    Switch)
+from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import (
     ConversionError, CouldNotParseAddress, CouldNotParseKNXIP,
     CouldNotParseTelegram, DeviceIllegalValue)
 from xknx.io.gateway_scanner import GatewayDescriptor
-from xknx.knx import (
-    DPTArray, DPTBinary, GroupAddress, PhysicalAddress, Telegram,
-    TelegramDirection)
 from xknx.knxip import (
     HPAI, CEMIFrame, ConnectionStateRequest, ConnectionStateResponse,
     ConnectRequest, ConnectRequestType, ConnectResponse, DIBDeviceInformation,
     DIBGeneric, DIBServiceFamily, DIBSuppSVCFamilies, DisconnectRequest,
     DisconnectResponse, KNXIPFrame, KNXIPHeader, KNXIPServiceType, KNXMedium,
     SearchRequest, SearchResponse, TunnellingAck, TunnellingRequest)
+from xknx.remote_value import RemoteValue
+from xknx.telegram import (
+    GroupAddress, PhysicalAddress, Telegram, TelegramDirection)
 
 
 # pylint: disable=too-many-public-methods,invalid-name
@@ -61,7 +62,7 @@ class TestStringRepresentations(unittest.TestCase):
             device_class='motion')
         self.assertEqual(
             str(binary_sensor),
-            '<BinarySensor group_address_state="GroupAddress("1/2/3")" name="Fnord" state="BinarySensorState.OFF"/>')
+            '<BinarySensor name="Fnord" remote_value="None/GroupAddress("1/2/3")/None/None" state="False"/>')
 
     def test_climate(self):
         """Test string representation of climate object."""
@@ -104,9 +105,9 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(climate_mode),
             '<ClimateMode name="Wohnzimmer Mode" '
-            'group_address_operation_mode="GroupAddress("1/2/5")" group_address_operation_mode_state="GroupAddress("1/2/6")'
-            '" group_address_controller_status="GroupAddress("1/2/10")" group_address_controller_status_state="GroupAddress("1/2/11")" '
-            'group_address_controller_mode="GroupAddress("1/2/12")" group_address_controller_mode_state="GroupAddress("1/2/13")" />')
+            'operation_mode="GroupAddress("1/2/5")/GroupAddress("1/2/6")/None/None" '
+            'controller_mode="GroupAddress("1/2/12")/GroupAddress("1/2/13")/None/None" '
+            'controller_status="GroupAddress("1/2/10")/GroupAddress("1/2/11")/None/None" />')
 
     def test_cover(self):
         """Test string representation of cover object."""
@@ -193,12 +194,15 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_state='1/2/4')
         self.assertEqual(
             str(notification),
-            '<Notification name="Alarm" group_address="GroupAddress("1/2/3")" group_address_state="GroupAddress("1/2/4")" message="" />')
-        notification.message = 'Einbrecher im Haus'
+            '<Notification name="Alarm" message="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" />')
+        self.loop.run_until_complete(asyncio.Task(notification.set('Einbrecher im Haus')))
         self.assertEqual(
             str(notification),
-            '<Notification name="Alarm" group_address="GroupAddress("1/2/3")" group_address_state="GroupAddress("1/2/4")" '
-            'message="Einbrecher im Haus" />')
+            '<Notification name="Alarm" '
+            'message="GroupAddress("1/2/3")/'
+            'GroupAddress("1/2/4")/'
+            '<DPTArray value="[0x45,0x69,0x6e,0x62,0x72,0x65,0x63,0x68,0x65,0x72,0x20,0x69,0x6d,0x20]" />/'
+            'Einbrecher im " />')
 
     def test_scene(self):
         """Test string representation of scene object."""
@@ -269,7 +273,7 @@ class TestStringRepresentations(unittest.TestCase):
             group_address="1/2/3")
         self.assertEqual(
             str(dateTime),
-            '<DateTime name="Zeit" group_address="GroupAddress("1/2/3")" broadcast_type="TIME" />')
+            '<DateTime name="Zeit" group_address="GroupAddress("1/2/3")/None/None/None" broadcast_type="TIME" />')
 
     def test_action_base(self):
         """Test string representation of action base."""

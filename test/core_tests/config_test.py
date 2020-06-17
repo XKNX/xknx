@@ -6,12 +6,11 @@ from unittest.mock import patch
 from xknx import XKNX
 from xknx.core import Config
 from xknx.devices import (
-    Action, BinarySensor, Climate, ClimateMode, Cover, DateTime,
-    DateTimeBroadcastType, ExposeSensor, Fan, Light, Notification, Scene,
-    Sensor, Switch)
+    Action, BinarySensor, Climate, ClimateMode, Cover, DateTime, ExposeSensor,
+    Fan, Light, Notification, Scene, Sensor, Switch)
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
-from xknx.knx import PhysicalAddress
+from xknx.telegram import PhysicalAddress
 
 
 # pylint: disable=too-many-public-methods,invalid-name
@@ -321,7 +320,7 @@ class TestConfig(unittest.TestCase):
                 TestConfig.xknx,
                 'General.Time',
                 group_address='2/1/1',
-                broadcast_type=DateTimeBroadcastType.TIME,
+                broadcast_type="TIME",
                 device_updated_cb=TestConfig.xknx.devices.device_updated))
         self.assertEqual(
             TestConfig.xknx.devices['General.DateTime'],
@@ -329,7 +328,7 @@ class TestConfig(unittest.TestCase):
                 TestConfig.xknx,
                 'General.DateTime',
                 group_address='2/1/2',
-                broadcast_type=DateTimeBroadcastType.DATETIME,
+                broadcast_type="DATETIME",
                 device_updated_cb=TestConfig.xknx.devices.device_updated))
         self.assertEqual(
             TestConfig.xknx.devices['General.Date'],
@@ -337,7 +336,7 @@ class TestConfig(unittest.TestCase):
                 TestConfig.xknx,
                 'General.Date',
                 group_address='2/1/3',
-                broadcast_type=DateTimeBroadcastType.DATE,
+                broadcast_type="DATE",
                 device_updated_cb=TestConfig.xknx.devices.device_updated))
 
     def test_config_notification(self):
@@ -429,17 +428,6 @@ class TestConfig(unittest.TestCase):
                          'DiningRoom.Motion.Sensor',
                          group_address_state='3/0/1',
                          sync_state=False,
-                         device_class='motion',
-                         device_updated_cb=TestConfig.xknx.devices.device_updated))
-
-    def test_config_sensor_binary_significant_bit(self):
-        """Test reading Sensor with differing significant bit from config file."""
-        self.assertEqual(
-            TestConfig.xknx.devices['Kitchen.Presence'],
-            BinarySensor(TestConfig.xknx,
-                         'Kitchen.Presence',
-                         group_address_state='3/0/2',
-                         significant_bit=2,
                          device_class='motion',
                          device_updated_cb=TestConfig.xknx.devices.device_updated))
 
