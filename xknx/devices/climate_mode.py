@@ -107,7 +107,7 @@ class ClimateMode(Device):
             group_address_controller_mode is not None or \
             group_address_controller_mode_state is not None
 
-    @ classmethod
+    @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
         # pylint: disable=too-many-locals
@@ -212,11 +212,9 @@ class ClimateMode(Device):
     def state_addresses(self):
         """Return group addresses which should be requested to sync state."""
         state_addresses = []
-
         if self.supports_operation_mode:
             for rv in self.__iter_remote_values():
                 state_addresses.extend(rv.state_addresses())
-            # Note: telegrams setting splitted up operation modes are not yet implemented
         return state_addresses
 
     def __str__(self):
