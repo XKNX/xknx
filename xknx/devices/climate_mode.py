@@ -107,7 +107,7 @@ class ClimateMode(Device):
             group_address_controller_mode is not None or \
             group_address_controller_mode_state is not None
 
-    @ classmethod
+    @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
         # pylint: disable=too-many-locals
