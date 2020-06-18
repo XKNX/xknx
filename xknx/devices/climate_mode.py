@@ -213,7 +213,7 @@ class ClimateMode(Device):
     async def sync(self):
         if self.supports_operation_mode:
             for rv in self.__iter_remote_values():
-                rv.read_state()
+                await rv.read_state()
 
     def __str__(self):
         """Return object as readable string."""

@@ -295,7 +295,8 @@ class Climate(Device):
         await self.target_temperature.read_state()
         await self._setpoint_shift.read_state()
         await self.on.read_state()
-        # TODO: read state of mode from here?
+        if self.mode is not None:
+            await self.mode.sync()
 
     def __str__(self):
         """Return object as readable string."""
