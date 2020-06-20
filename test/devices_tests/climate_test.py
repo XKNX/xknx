@@ -913,10 +913,13 @@ class TestClimate(unittest.TestCase):
             xknx,
             'TestClimate',
             group_address_operation_mode_night='1/2/7')
+        # If one binary climate object is set, all 4 operation modes are supported.
         self.assertEqual(
             set(climate_mode.operation_modes),
             set([HVACOperationMode.STANDBY,
-                 HVACOperationMode.NIGHT]))
+                 HVACOperationMode.NIGHT,
+                 HVACOperationMode.COMFORT,
+                 HVACOperationMode.FROST_PROTECTION]))
 
     def test_custom_supported_operation_modes(self):
         """Test get_supported_operation_modes with custom mode."""

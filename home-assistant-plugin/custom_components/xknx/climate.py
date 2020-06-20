@@ -43,6 +43,7 @@ CONF_CONTROLLER_MODE_STATE_ADDRESS = "controller_mode_state_address"
 CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS = "operation_mode_frost_protection_address"
 CONF_OPERATION_MODE_NIGHT_ADDRESS = "operation_mode_night_address"
 CONF_OPERATION_MODE_COMFORT_ADDRESS = "operation_mode_comfort_address"
+CONF_OPERATION_MODE_STANDBY_ADDRESS = "operation_mode_standby_address"
 CONF_OPERATION_MODES = "operation_modes"
 CONF_ON_OFF_ADDRESS = "on_off_address"
 CONF_ON_OFF_STATE_ADDRESS = "on_off_state_address"
@@ -55,9 +56,9 @@ DEFAULT_SETPOINT_SHIFT_STEP = 0.5
 DEFAULT_SETPOINT_SHIFT_MAX = 6
 DEFAULT_SETPOINT_SHIFT_MIN = -6
 DEFAULT_ON_OFF_INVERT = False
-# Map KNX operation modes to HA modes. This list might not be full.
+# Map KNX operation modes to HA modes. This list might not be complete.
 OPERATION_MODES = {
-    # Map DPT 201.105 HVAC control modes
+    # Map DPT 20.105 HVAC control modes
     "Auto": HVAC_MODE_AUTO,
     "Heat": HVAC_MODE_HEAT,
     "Cool": HVAC_MODE_COOL,
@@ -69,7 +70,7 @@ OPERATION_MODES = {
 OPERATION_MODES_INV = dict(reversed(item) for item in OPERATION_MODES.items())
 
 PRESET_MODES = {
-    # Map DPT 201.100 HVAC operating modes to HA presets
+    # Map DPT 20.102 HVAC operating modes to HA presets
     "Frost Protection": PRESET_ECO,
     "Night": PRESET_SLEEP,
     "Standby": PRESET_AWAY,
@@ -104,6 +105,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS): cv.string,
         vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): cv.string,
         vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
+        vol.Optional(CONF_OPERATION_MODE_STANDBY_ADDRESS): cv.string,
         vol.Optional(CONF_ON_OFF_ADDRESS): cv.string,
         vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
         vol.Optional(CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT): cv.boolean,
@@ -160,6 +162,9 @@ def async_add_entities_config(hass, config, async_add_entities):
         ),
         group_address_operation_mode_comfort=config.get(
             CONF_OPERATION_MODE_COMFORT_ADDRESS
+        ),
+        group_address_operation_mode_standby=config.get(
+            CONF_OPERATION_MODE_STANDBY_ADDRESS
         ),
         operation_modes=config.get(CONF_OPERATION_MODES),
     )

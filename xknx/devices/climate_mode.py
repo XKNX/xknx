@@ -24,6 +24,7 @@ class ClimateMode(Device):
                  group_address_operation_mode_protection=None,
                  group_address_operation_mode_night=None,
                  group_address_operation_mode_comfort=None,
+                 group_address_operation_mode_standby=None,
                  group_address_controller_status=None,
                  group_address_controller_status_state=None,
                  group_address_controller_mode=None,
@@ -67,6 +68,14 @@ class ClimateMode(Device):
             device_name=name,
             operation_mode=HVACOperationMode.COMFORT,
             after_update_cb=None)
+        self.remote_value_operation_mode_standby = RemoteValueClimateBinaryMode(
+            xknx,
+            group_address=group_address_operation_mode_standby,
+            group_address_state=group_address_operation_mode_standby,
+            sync_state=True,
+            device_name=name,
+            operation_mode=HVACOperationMode.STANDBY,
+            after_update_cb=None)
         self.remote_value_operation_mode_night = RemoteValueClimateBinaryMode(
             xknx,
             group_address=group_address_operation_mode_night,
@@ -102,6 +111,7 @@ class ClimateMode(Device):
             group_address_operation_mode_protection is not None or \
             group_address_operation_mode_night is not None or \
             group_address_operation_mode_comfort is not None or \
+            group_address_operation_mode_standby is not None or \
             group_address_controller_status is not None or \
             group_address_controller_status_state is not None or \
             group_address_controller_mode is not None or \
@@ -116,6 +126,7 @@ class ClimateMode(Device):
         group_address_operation_mode_protection = config.get('group_address_operation_mode_protection')
         group_address_operation_mode_night = config.get('group_address_operation_mode_night')
         group_address_operation_mode_comfort = config.get('group_address_operation_mode_comfort')
+        group_address_operation_mode_standby = config.get('group_address_operation_mode_standby')
         group_address_controller_status = config.get('group_address_controller_status')
         group_address_controller_status_state = config.get('group_address_controller_status_state')
         group_address_controller_mode = config.get('group_address_controller_mode')
@@ -128,6 +139,7 @@ class ClimateMode(Device):
                    group_address_operation_mode_protection=group_address_operation_mode_protection,
                    group_address_operation_mode_night=group_address_operation_mode_night,
                    group_address_operation_mode_comfort=group_address_operation_mode_comfort,
+                   group_address_operation_mode_standby=group_address_operation_mode_standby,
                    group_address_controller_status=group_address_controller_status,
                    group_address_controller_status_state=group_address_controller_status_state,
                    group_address_controller_mode=group_address_controller_mode,
@@ -142,20 +154,13 @@ class ClimateMode(Device):
 
     def __iter_remote_values(self):
         """Iterate climate mode RemoteValue classes."""
-        yield from self.__iter_remote_values_climate_mode()
-        yield from self.__iter_remote_values_climate_binary_mode()
-
-    def __iter_remote_values_climate_mode(self):
-        """Iterate climate mode RemoteValue classes."""
         yield from (self.remote_value_controller_mode,
                     self.remote_value_controller_status,
-                    self.remote_value_operation_mode)
-
-    def __iter_remote_values_climate_binary_mode(self):
-        """Iterate climate mode RemoteValue classes."""
-        yield from (self.remote_value_operation_mode_comfort,
+                    self.remote_value_operation_mode,
+                    self.remote_value_operation_mode_comfort,
                     self.remote_value_operation_mode_night,
-                    self.remote_value_operation_mode_protection)
+                    self.remote_value_operation_mode_protection,
+                    self.remote_value_operation_mode_standby)
 
     async def _set_internal_operation_mode(self, operation_mode):
         """Set internal value of operation mode. Call hooks if operation mode was changed."""
@@ -169,14 +174,9 @@ class ClimateMode(Device):
                 operation_mode not in self.operation_modes_:
             raise DeviceIllegalValue("operation mode not supported", operation_mode)
 
-        for rv in self.__iter_remote_values_climate_mode():
+        for rv in self.__iter_remote_values():
             if rv.writable and \
                     operation_mode in rv.supported_operation_modes():
-                await rv.set(operation_mode)
-
-        for rv in self.__iter_remote_values_climate_binary_mode():
-            if rv.writable:
-                # foreign operation modes will set the RemoteValue to False
                 await rv.set(operation_mode)
 
         await self._set_internal_operation_mode(operation_mode)
