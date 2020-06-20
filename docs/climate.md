@@ -27,7 +27,7 @@ climate_target_temp = Climate(
     group_address_target_temperature='2/2/3',
     group_address_target_temperature_state='2/2/4'
 )
-``` 
+```
 
 ## [](#header-2)Configuration via **xknx.yaml**
 
@@ -35,33 +35,58 @@ Climate devices are usually configured via [`xknx.yaml`](/configuration):
 
 ```yaml
 groups:
-    climate:
-        Children.Climate: {group_address_temperature: '1/7/2', group_address_setpoint_shift: '1/7/3', group_address_target_temperature_state: '1/7/4'}
-        Office.Climate: {group_address_temperature: '1/7/5', group_address_operation_mode: '1/7/6'}
-        Attic.Climate: {group_address_temperature: '1/7/7', group_address_operation_mode_protection: '1/7/8', group_address_operation_mode_night: '1/7/9', group_address_operation_mode_comfort: '1/7/10'}
+  climate:
+    Children.Climate:
+      {
+        group_address_temperature: "1/7/2",
+        group_address_setpoint_shift: "1/7/3",
+        group_address_target_temperature_state: "1/7/4",
+      }
+    Office.Climate:
+      {
+        group_address_temperature: "1/7/5",
+        group_address_operation_mode: "1/7/6",
+      }
+    Attic.Climate:
+      {
+        group_address_temperature: "1/7/7",
+        group_address_operation_mode_protection: "1/7/8",
+        group_address_operation_mode_night: "1/7/9",
+        group_address_operation_mode_comfort: "1/7/10",
+      }
 ```
 
 ## [](#header-2)Interface
 
-* **group_address_temperature** KNX address of current room temperature
-* **group_address_setpoint_shift** KNX address to set setpoint_shift (base temperature deviation).
-* **group_address_setpoint_shift_state** KNX address to read current setpoint_shift.
-* **group_address_target_temperature** KNX address for setting the target temperature if setpoint shift is not supported.
-* **group_address_target_temperature_state** KNX address for reading the target temperature from the KNX bus. Used in for setpoint_shift calculations.
-
+- **group_address_temperature** KNX address of current room temperature.
+- **group_address_target_temperature** KNX address for setting the target temperature if setpoint shift is not supported.
+- **group_address_target_temperature_state** KNX address for reading the target temperature from the KNX bus. Used in for setpoint_shift calculations as base temperature.
+- **group_address_setpoint_shift** KNX address to set setpoint_shift (base temperature deviation).
+- **group_address_setpoint_shift_state** KNX address to read current setpoint_shift.
+- **setpoint_shift_step** Set the multiplier for setpoint_shift (DPT 6) calculations.
+- **setpoint_shift_max** Maximum value for setpoint_shift.
+- **setpoint_shift_min** Minimum value for setpoint_shift.
+- **group_address_on_off** KNX address for turning climate device on or off.
+- **group_address_on_off_state** KNX address for reading the on/off state.
+- **on_off_invert** Invert on/off.
+- **max_temp** Maximum value for target temperature.
+- **min_temp** Minimum value for target temperature.
+- **mode** ClimateMode instance for this climate device
 
 * **group_address_operation_mode** KNX address for operation mode.
 * **group_address_operation_mode_state** KNX address for operation mode status.
 * **group_address_operation_mode_protection** KNX address for switching on/off frost/heat protection mode.
 * **group_address_operation_mode_night** KNX address for switching on/off night nmode.
 * **group_address_operation_mode_comfort** KNX address for switching on/off comfort mode.
+* **group_address_operation_mode_standby** KNX address for switching on/off standby mode.
 * **group_address_operation_mode** KNX address for controller status.
 * **group_address_operation_mode_state** KNX address for controller status state.
 * **group_address_operation_mode** KNX address for controller mode.
 * **group_address_operation_mode_state** KNX address for controller mode status.
+* **operation_modes** Overrides the supported operation modes.
 
-`group_address_operation_mode_protection` / `group_address_operation_mode_night` / `group_address_operation_mode_comfort` are not necessary if `group_address_operation_mode` was specified.
-
+`group_address_operation_mode_protection` / `group_address_operation_mode_night` / `group_address_operation_mode_comfort` / `group_address_operation_mode_standby` are not necessary if `group_address_operation_mode` was specified. When one of these is set `True`, the others will be set `False`. When one of these is set "Standby", "Comfort", "Frost_Protection" and "Night" will be set as supported. If `group_address_operation_mode_standby` is omitted, "Standby" is set when the other 3 are set to `False`.
+If only a subset of operation modes shall be used a list of supported modes may be passed to `operation_modes`.
 
 ```python
 climate_mode = ClimateMode(xknx,

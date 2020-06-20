@@ -43,6 +43,7 @@ CONF_CONTROLLER_MODE_STATE_ADDRESS = "controller_mode_state_address"
 CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS = "operation_mode_frost_protection_address"
 CONF_OPERATION_MODE_NIGHT_ADDRESS = "operation_mode_night_address"
 CONF_OPERATION_MODE_COMFORT_ADDRESS = "operation_mode_comfort_address"
+CONF_OPERATION_MODE_STANDBY_ADDRESS = "operation_mode_standby_address"
 CONF_OPERATION_MODES = "operation_modes"
 CONF_ON_OFF_ADDRESS = "on_off_address"
 CONF_ON_OFF_STATE_ADDRESS = "on_off_state_address"
@@ -104,6 +105,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS): cv.string,
         vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): cv.string,
         vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
+        vol.Optional(CONF_OPERATION_MODE_STANDBY_ADDRESS): cv.string,
         vol.Optional(CONF_ON_OFF_ADDRESS): cv.string,
         vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
         vol.Optional(CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT): cv.boolean,
@@ -160,6 +162,9 @@ def async_add_entities_config(hass, config, async_add_entities):
         ),
         group_address_operation_mode_comfort=config.get(
             CONF_OPERATION_MODE_COMFORT_ADDRESS
+        ),
+        group_address_operation_mode_standby=config.get(
+            CONF_OPERATION_MODE_STANDBY_ADDRESS
         ),
         operation_modes=config.get(CONF_OPERATION_MODES),
     )

@@ -75,7 +75,10 @@ class RemoteValueClimateBinaryMode(RemoteValue):
         """Initialize remote value of KNX DPT 1 representing a climate operation mode."""
         # pylint: disable=too-many-arguments
         if not isinstance(operation_mode, HVACOperationMode):
-            raise ConversionError("invalid operation mode type", operation_mode=operation_mode, device_name=device_name)
+            raise ConversionError("Invalid operation mode type", operation_mode=operation_mode, device_name=device_name)
+        if operation_mode not in self.supported_operation_modes():
+            raise ConversionError("Operation mode not supported for binary mode object",
+                                  operation_mode=operation_mode, device_name=device_name)
         self.operation_mode = operation_mode
         super().__init__(xknx,
                          group_address=group_address,
@@ -84,10 +87,13 @@ class RemoteValueClimateBinaryMode(RemoteValue):
                          device_name=device_name,
                          after_update_cb=after_update_cb)
 
-    def supported_operation_modes(self):
+    @staticmethod
+    def supported_operation_modes():
         """Return a list of the configured operation mode."""
-        # standby when all binary operation modes are OFF
-        return [self.operation_mode, HVACOperationMode.STANDBY]
+        return [HVACOperationMode.COMFORT,
+                HVACOperationMode.FROST_PROTECTION,
+                HVACOperationMode.NIGHT,
+                HVACOperationMode.STANDBY]
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
@@ -96,6 +102,7 @@ class RemoteValueClimateBinaryMode(RemoteValue):
     def to_knx(self, value):
         """Convert value to payload."""
         if isinstance(value, HVACOperationMode):
+            # foreign operation modes will set the RemoteValue to False
             return DPTBinary(value == self.operation_mode)
         raise ConversionError("value invalid", value=value, device_name=self.device_name)
 
