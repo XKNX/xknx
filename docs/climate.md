@@ -79,13 +79,13 @@ groups:
 * **group_address_operation_mode_night** KNX address for switching on/off night nmode.
 * **group_address_operation_mode_comfort** KNX address for switching on/off comfort mode.
 * **group_address_operation_mode_standby** KNX address for switching on/off standby mode.
-* **group_address_operation_mode** KNX address for controller status.
-* **group_address_operation_mode_state** KNX address for controller status state.
-* **group_address_operation_mode** KNX address for controller mode.
-* **group_address_operation_mode_state** KNX address for controller mode status.
+* **group_address_controller_status** KNX address for controller status.
+* **group_address_controller_status_state** KNX address for controller status state.
+* **group_address_controller_mode** KNX address for controller mode.
+* **group_address_controller_mode_state** KNX address for controller mode status.
 * **operation_modes** Overrides the supported operation modes.
 
-`group_address_operation_mode_protection` / `group_address_operation_mode_night` / `group_address_operation_mode_comfort` / `group_address_operation_mode_standby` are not necessary if `group_address_operation_mode` was specified. When one of these is set `True`, the others will be set `False`. When one of these is set "Standby", "Comfort", "Frost_Protection" and "Night" will be set as supported. If `group_address_operation_mode_standby` is omitted, "Standby" is set when the other 3 are set to `False`.
+**Note:** `group_address_operation_mode_protection` / `group_address_operation_mode_night` / `group_address_operation_mode_comfort` / `group_address_operation_mode_standby` are not necessary if `group_address_operation_mode` was specified. When one of these is set `True`, the others will be set `False`. When one of these is set "Standby", "Comfort", "Frost_Protection" and "Night" will be set as supported. If `group_address_operation_mode_standby` is omitted, "Standby" is set when the other 3 are set to `False`.
 If only a subset of operation modes shall be used a list of supported modes may be passed to `operation_modes`.
 
 ```python
