@@ -145,14 +145,7 @@ class ClimateMode(Device):
                    group_address_controller_mode=group_address_controller_mode,
                    group_address_controller_mode_state=group_address_controller_mode_state)
 
-    def has_group_address(self, group_address):
-        """Test if device has given group address."""
-        for rv in self.__iter_remote_values():
-            if rv.has_group_address(group_address):
-                return True
-        return False
-
-    def __iter_remote_values(self):
+    def _iter_remote_values(self):
         """Iterate climate mode RemoteValue classes."""
         yield from (self.remote_value_controller_mode,
                     self.remote_value_controller_status,
@@ -174,7 +167,7 @@ class ClimateMode(Device):
                 operation_mode not in self.operation_modes_:
             raise DeviceIllegalValue("operation mode not supported", operation_mode)
 
-        for rv in self.__iter_remote_values():
+        for rv in self._iter_remote_values():
             if rv.writable and \
                     operation_mode in rv.supported_operation_modes():
                 await rv.set(operation_mode)
@@ -191,7 +184,7 @@ class ClimateMode(Device):
     def gather_operation_modes(self):
         """Gather operation modes from RemoteValues."""
         operation_modes = []
-        for rv in self.__iter_remote_values():
+        for rv in self._iter_remote_values():
             if rv.writable:
                 operation_modes.extend(rv.supported_operation_modes())
         # remove duplicates
@@ -200,7 +193,7 @@ class ClimateMode(Device):
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
         if self.supports_operation_mode:
-            for rv in self.__iter_remote_values():
+            for rv in self._iter_remote_values():
                 if await rv.process(telegram):
                     # don't set when binary climate mode rv is False
                     if rv.value:
@@ -209,10 +202,10 @@ class ClimateMode(Device):
             # if no operation mode has been set and all binary operation modes are False
             await self._set_internal_operation_mode(HVACOperationMode.STANDBY)
 
-    #TODO: state_updater
     async def sync(self):
+        """Read states of device from KNX bus."""
         if self.supports_operation_mode:
-            for rv in self.__iter_remote_values():
+            for rv in self._iter_remote_values():
                 await rv.read_state()
 
     def __str__(self):

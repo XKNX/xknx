@@ -40,12 +40,13 @@ class RemoteValue():
         self.payload = None
 
         # TODO: naming? unclear that it holds minutes
-        if self.xknx.state_updater and sync_state:
+        if self.xknx.state_updater and sync_state and self.group_address_state:
             self.state_updater = StateUpdater(
                 xknx,
-                expiration_min=sync_state,
-                callback=self.read_state)
-            # await self.read_state()
+                device_name=device_name,
+                group_address=group_address_state,
+                interval_min=sync_state,
+                read_state_awaitable=self.read_state)
 
     @property
     def initialized(self):
@@ -92,7 +93,7 @@ class RemoteValue():
                                         group_address=telegram.group_address,
                                         device_name=self.device_name)
         if self.state_updater:
-            self.state_updater.reset()
+            self.state_updater.update_received()
         if self.payload is None or always_callback \
                 or self.payload != telegram.payload:
             self.payload = telegram.payload
@@ -140,11 +141,10 @@ class RemoteValue():
             self.xknx.logger.debug("Sync %s", self.device_name)
             from xknx.core import ValueReader
             value_reader = ValueReader(self.xknx, self.group_address_state)
-            # TODO: why would we not wait for result?
+            # TODO: why would we not wait for result? Because of unit tests.
             if wait_for_result:
                 telegram = await value_reader.read()
                 if telegram is not None:
-                    # TODO: will this telegram be prcessed twice?
                     await self.process(telegram)
                 else:
                     self.xknx.logger.warning(

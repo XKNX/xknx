@@ -31,6 +31,10 @@ class Switch(Device):
             device_name=self.name,
             after_update_cb=self.after_update)
 
+    def _iter_remote_values(self):
+        """Iterate the devices RemoteValue classes."""
+        yield self.switch
+
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
@@ -43,10 +47,6 @@ class Switch(Device):
                    name,
                    group_address=group_address,
                    group_address_state=group_address_state)
-
-    def has_group_address(self, group_address):
-        """Test if device has given group address."""
-        return self.switch.has_group_address(group_address)
 
     @property
     def state(self):
@@ -74,9 +74,6 @@ class Switch(Device):
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
         await self.switch.process(telegram)
-
-    async def sync(self):
-        await self.switch.read_state()
 
     def __str__(self):
         """Return object as readable string."""

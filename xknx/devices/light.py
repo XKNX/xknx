@@ -96,6 +96,15 @@ class Light(Device):
         self.min_kelvin = min_kelvin
         self.max_kelvin = max_kelvin
 
+    def _iter_remote_values(self):
+        """Iterate the devices RemoteValue classes."""
+        yield from (self.switch,
+                    self.brightness,
+                    self.color,
+                    self.rgbw,
+                    self.tunable_white,
+                    self.color_temperature)
+
     @property
     def supports_brightness(self):
         """Return if light supports brightness."""
@@ -169,15 +178,6 @@ class Light(Device):
                    group_address_color_temperature_state=group_address_color_temperature_state,
                    min_kelvin=min_kelvin,
                    max_kelvin=max_kelvin)
-
-    def has_group_address(self, group_address):
-        """Test if device has given group address."""
-        return (self.switch.has_group_address(group_address) or
-                self.brightness.has_group_address(group_address) or
-                self.color.has_group_address(group_address) or
-                self.rgbw.has_group_address(group_address) or
-                self.tunable_white.has_group_address(group_address) or
-                self.color_temperature.has_group_address(group_address))
 
     def __str__(self):
         """Return object as readable string."""
@@ -312,20 +312,8 @@ class Light(Device):
 
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
-        await self.switch.process(telegram)
-        await self.color.process(telegram)
-        await self.rgbw.process(telegram)
-        await self.brightness.process(telegram)
-        await self.tunable_white.process(telegram)
-        await self.color_temperature.process(telegram)
-
-    async def sync(self):
-        await self.switch.read_state()
-        await self.color.read_state()
-        await self.rgbw.read_state()
-        await self.brightness.read_state()
-        await self.tunable_white.read_state()
-        await self.color_temperature.read_state()
+        for remote_value in self._iter_remote_values():
+            await remote_value.process(telegram)
 
     def __eq__(self, other):
         """Equal operator."""

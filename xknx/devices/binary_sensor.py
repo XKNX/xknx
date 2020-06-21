@@ -50,7 +50,7 @@ class BinarySensor(Device):
         self._count_set_off = 0
         self._last_set = None
         self._reset_task = None
-        # TODO: log a warning if reset_after and sync_state are true ? This would cause actions to self-fire.
+        # TODO: log a warning if reset_after and sync_state are true ? This could cause actions to self-fire.
         self.remote_value = RemoteValueSwitch(xknx,
                                               group_address_state=group_address_state,
                                               sync_state=sync_state,
@@ -58,6 +58,10 @@ class BinarySensor(Device):
                                               # after_update called internally
                                               after_update_cb=self._state_from_remote_value
                                               )
+
+    def _iter_remote_values(self):
+        """Iterate the devices RemoteValue classes."""
+        yield self.remote_value
 
     def __del__(self):
         """Destructor. Cleaning up if this was not done before."""
@@ -88,13 +92,6 @@ class BinarySensor(Device):
                    ignore_internal_state=ignore_internal_state,
                    device_class=device_class,
                    actions=actions)
-
-    def has_group_address(self, group_address):
-        """Test if device has given group address."""
-        return self.remote_value.has_group_address(group_address)
-
-    async def sync(self):
-        await self.remote_value.read_state()
 
     async def _state_from_remote_value(self):
         """Update the internal state from ReomteValue (Callback)."""

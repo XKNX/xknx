@@ -36,6 +36,10 @@ class Fan(Device):
             range_from=0,
             range_to=100)
 
+    def _iter_remote_values(self):
+        """Iterate the devices RemoteValue classes."""
+        yield self.speed
+
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
@@ -49,10 +53,6 @@ class Fan(Device):
             name,
             group_address_speed=group_address_speed,
             group_address_speed_state=group_address_speed_state)
-
-    def has_group_address(self, group_address):
-        """Test if device has given group address."""
-        return self.speed.has_group_address(group_address)
 
     def __str__(self):
         """Return object as readable string."""
@@ -76,9 +76,6 @@ class Fan(Device):
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
         await self.speed.process(telegram)
-
-    async def sync(self):
-        await self.speed.read_state()
 
     @property
     def current_speed(self):

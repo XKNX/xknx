@@ -86,6 +86,13 @@ class Cover(Device):
             travel_time_down,
             travel_time_up)
 
+    def _iter_remote_values(self):
+        """Iterate the devices RemoteValue classes."""
+        yield from (self.updown,
+                    self.step,
+                    self.position,
+                    self.angle)
+
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
@@ -123,13 +130,6 @@ class Cover(Device):
             travel_time_up=travel_time_up,
             invert_position=invert_position,
             invert_angle=invert_angle)
-
-    def has_group_address(self, group_address):
-        """Test if device has given group address."""
-        return self.updown.has_group_address(group_address) \
-            or self.step.has_group_address(group_address) \
-            or self.position.has_group_address(group_address) \
-            or self.angle.has_group_address(group_address)
 
     def __str__(self):
         """Return object as readable string."""
@@ -224,17 +224,12 @@ class Cover(Device):
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
-    #TODO: state_updater
-    # def state_addresses(self):
-    #     """Return group addresses which should be requested to sync state."""
-    #     if self.travelcalculator.is_traveling():
-    #         # Cover is traveling, requesting state will return false results
-    #         return[]
     async def sync(self):
+        """Read states of device from KNX bus."""
         # TODO: if not self.travelcalculator.is_traveling():
-            # when Cover is traveling, requesting state will return false results
-            # but this is manual syncing so it may be ok
-            # should state updater wait for cover to stop?
+        # when Cover is traveling, requesting state will return false results
+        # but this is manual syncing so it may be ok
+        # should state updater wait for cover to stop?
         await self.position.read_state()
         await self.angle.read_state()
 

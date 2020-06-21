@@ -19,8 +19,9 @@ class RemoteValueSceneNumber(RemoteValue):
         """Initialize remote value of KNX DPT 17.001 (DPT_Scene_Number)."""
         # pylint: disable=too-many-arguments
         super().__init__(xknx,
-                         group_address,
-                         None,
+                         group_address=group_address,
+                         group_address_state=None,
+                         sync_state=False,
                          device_name=device_name,
                          after_update_cb=after_update_cb)
 

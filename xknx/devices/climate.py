@@ -132,6 +132,13 @@ class Climate(Device):
 
         self.mode = mode
 
+    def _iter_remote_values(self):
+        """Iterate the devices RemoteValue classes."""
+        yield from (self.temperature,
+                    self.target_temperature,
+                    self._setpoint_shift,
+                    self.on)
+
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
@@ -189,10 +196,7 @@ class Climate(Device):
         """Test if device has given group address."""
         if self.mode is not None and self.mode.has_group_address(group_address):
             return True
-        return self.temperature.has_group_address(group_address) or \
-            self.target_temperature.has_group_address(group_address) or \
-            self._setpoint_shift.has_group_address(group_address) or \
-            self.on.has_group_address(group_address)
+        return super().has_group_address(group_address)
 
     @property
     def is_on(self):
@@ -283,18 +287,14 @@ class Climate(Device):
 
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
-        await self.temperature.process(telegram)
-        await self.target_temperature.process(telegram)
-        await self._setpoint_shift.process(telegram)
-        await self.on.process(telegram)
+        for remote_value in self._iter_remote_values():
+            await remote_value.process(telegram)
         if self.mode is not None:
             await self.mode.process_group_write(telegram)
 
     async def sync(self):
-        await self.temperature.read_state()
-        await self.target_temperature.read_state()
-        await self._setpoint_shift.read_state()
-        await self.on.read_state()
+        """Read states of device from KNX bus."""
+        await super().sync()
         if self.mode is not None:
             await self.mode.sync()
 

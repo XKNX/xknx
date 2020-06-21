@@ -34,6 +34,10 @@ class DateTime(Device):
                                                  device_name=name,
                                                  after_update_cb=self.after_update)
 
+    def _iter_remote_values(self):
+        """Iterate the devices RemoteValue classes."""
+        yield self._remote_value
+
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
@@ -43,14 +47,6 @@ class DateTime(Device):
                    name,
                    broadcast_type=broadcast_type,
                    group_address=group_address)
-
-    def has_group_address(self, group_address):
-        """Test if device has given group address."""
-        return self._remote_value.has_group_address(group_address)
-
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        return self._remote_value.state_addresses()
 
     async def broadcast_localtime(self, response=False):
         """Broadcast the local time to KNX bus."""
@@ -67,10 +63,10 @@ class DateTime(Device):
         else:
             await self._remote_value.send(response=True)
 
-    async def sync(self, wait_for_result=True):
+    async def sync(self):
         """Read state of device from KNX bus. Used here to broadcast time to KNX bus."""
         if self.localtime:
-            await self.broadcast_localtime(False)
+            await self.broadcast_localtime(response=False)
 
     def __str__(self):
         """Return object as readable string."""

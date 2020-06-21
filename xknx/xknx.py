@@ -7,6 +7,7 @@ from sys import platform
 from xknx.core import Config, TelegramQueue
 from xknx.devices import Devices
 from xknx.io import ConnectionConfig, KNXIPInterface
+from xknx.remote_value import StateUpdater
 from xknx.telegram import GroupAddressType, PhysicalAddress
 
 from .__version__ import __version__ as VERSION
@@ -67,7 +68,6 @@ class XKNX:
                 self.logger.warning("Could not close loop, reason: %s", exp)
 
     async def start(self,
-                    state_updater=False,
                     daemon_mode=False,
                     connection_config=None):
         """Start XKNX module. Connect to KNX/IP devices and start state updater."""
@@ -82,16 +82,9 @@ class XKNX:
         await self.knxip_interface.start()
         await self.telegram_queue.start()
 
-        # TODO:
-        # if state_updater:
-        #     from xknx.core import StateUpdater
-        #     self.state_updater = StateUpdater(self)
-        #     await self.state_updater.start()
-
+        self.started.set()
         if daemon_mode:
             await self.loop_until_sigint()
-
-        self.started.set()
 
     async def join(self):
         """Wait until all telegrams were processed."""
@@ -105,8 +98,7 @@ class XKNX:
 
     async def stop(self):
         """Stop XKNX module."""
-        if self.state_updater:
-            await self.state_updater.stop()
+        StateUpdater.stop_all()
         await self.join()
         await self.telegram_queue.stop()
         await self._stop_knxip_interface_if_exists()

@@ -6,7 +6,6 @@ from unittest.mock import Mock, patch
 from xknx import XKNX
 from xknx.devices import Device
 from xknx.dpt import DPTArray
-from xknx.exceptions import XKNXException
 from xknx.telegram import GroupAddress, Telegram, TelegramType
 
 
@@ -155,7 +154,7 @@ class TestDevice(unittest.TestCase):
             self.loop.run_until_complete(asyncio.Task(device.do("xx")))
             mock_info.assert_called_with("Do not implemented action '%s' for %s", 'xx', 'Device')
 
-    #TODO: state_updater
+    # TODO: state_updater
     # def test_sync_not_wait_for_response(self):
     #     """Testing _sync_impl() method without waiting for response (send_group_read should be called directly)."""
     #     # pylint: disable=protected-access

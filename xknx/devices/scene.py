@@ -25,6 +25,10 @@ class Scene(Device):
             after_update_cb=self.after_update)
         self.scene_number = int(scene_number)
 
+    def _iter_remote_values(self):
+        """Iterate the devices RemoteValue classes."""
+        yield self.scene_value
+
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
@@ -37,10 +41,6 @@ class Scene(Device):
             name=name,
             group_address=group_address,
             scene_number=scene_number)
-
-    def has_group_address(self, group_address):
-        """Test if device has given group address."""
-        return self.scene_value.has_group_address(group_address)
 
     def __str__(self):
         """Return object as readable string."""
