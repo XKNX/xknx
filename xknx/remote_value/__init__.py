@@ -16,4 +16,3 @@ from .remote_value_string import RemoteValueString
 from .remote_value_switch import RemoteValueSwitch
 from .remote_value_temp import RemoteValueTemp
 from .remote_value_updown import RemoteValueUpDown
-from .state_updater import StateUpdater

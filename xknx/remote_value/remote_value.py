@@ -9,8 +9,6 @@ Remote value can be :
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram, TelegramType
 
-from .state_updater import StateUpdater
-
 
 class RemoteValue():
     """Class for managing remote knx value."""
@@ -39,17 +37,18 @@ class RemoteValue():
         self.feature_name = "Unknown" \
             if feature_name is None else feature_name
         self.after_update_cb = after_update_cb
-        self.state_updater = None
         self.payload = None
 
         # TODO: naming? unclear that it holds minutes
-        if self.xknx.state_updater and sync_state and self.group_address_state:
-            self.state_updater = StateUpdater(
-                xknx,
-                device_name=device_name,
-                group_address=group_address_state,
-                interval_min=sync_state,
-                read_state_awaitable=self.read_state)
+        if sync_state and self.group_address_state:
+            self.xknx.state_updater.register_remote_value(self)
+
+    def __del__(self):
+        """Destructor. Removing self from StateUpdater if was registered."""
+        try:
+            self.xknx.state_updater.unregister_remote_value(self)
+        except KeyError:
+            pass
 
     @property
     def initialized(self):
@@ -94,9 +93,9 @@ class RemoteValue():
             raise CouldNotParseTelegram("payload invalid",
                                         payload=telegram.payload,
                                         group_address=telegram.group_address,
-                                        device_name=self.device_name)
-        if self.state_updater:
-            self.state_updater.update_received()
+                                        device_name=self.device_name,
+                                        feature_name=self.feature_name)
+        self.xknx.state_updater.update_received(self)
         if self.payload is None or always_callback \
                 or self.payload != telegram.payload:
             self.payload = telegram.payload
