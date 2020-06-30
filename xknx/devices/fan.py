@@ -32,6 +32,7 @@ class Fan(Device):
             group_address_speed,
             group_address_speed_state,
             device_name=self.name,
+            feature_name="Speed",
             after_update_cb=self.after_update,
             range_from=0,
             range_to=100)

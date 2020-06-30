@@ -35,6 +35,7 @@ class SetpointShiftValue(RemoteValue1Count):
                          group_address,
                          group_address_state,
                          device_name=device_name,
+                         feature_name="Setpoint shift value",
                          after_update_cb=after_update_cb)
 
         self.setpoint_shift_step = setpoint_shift_step
@@ -99,6 +100,7 @@ class Climate(Device):
             xknx,
             group_address_state=group_address_temperature,
             device_name=self.name,
+            feature_name="Current Temperature",
             after_update_cb=self.after_update)
 
         self.target_temperature = RemoteValueTemp(
@@ -106,6 +108,7 @@ class Climate(Device):
             group_address_target_temperature,
             group_address_target_temperature_state,
             device_name=self.name,
+            feature_name="Target temperature",
             after_update_cb=self.after_update)
 
         self._setpoint_shift = SetpointShiftValue(

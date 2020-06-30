@@ -21,6 +21,7 @@ class Notification(Device):
                                           group_address=group_address,
                                           group_address_state=group_address_state,
                                           device_name=name,
+                                          feature_name="Message",
                                           after_update_cb=self.after_update)
 
     def _iter_remote_values(self):

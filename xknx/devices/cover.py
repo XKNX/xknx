@@ -64,6 +64,7 @@ class Cover(Device):
             group_address_position,
             group_address_position_state,
             device_name=self.name,
+            feature_name="Position",
             after_update_cb=self.after_update,
             range_from=position_range_from,
             range_to=position_range_to)
@@ -75,6 +76,7 @@ class Cover(Device):
             group_address_angle,
             group_address_angle_state,
             device_name=self.name,
+            feature_name="Tilt angle",
             after_update_cb=self.after_update,
             range_from=angle_range_from,
             range_to=angle_range_to)

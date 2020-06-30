@@ -52,6 +52,7 @@ class Light(Device):
             group_address_switch,
             group_address_switch_state,
             device_name=self.name,
+            feature_name="State",
             after_update_cb=self.after_update)
 
         self.brightness = RemoteValueScaling(
@@ -59,6 +60,7 @@ class Light(Device):
             group_address_brightness,
             group_address_brightness_state,
             device_name=self.name,
+            feature_name="Brightness",
             after_update_cb=self.after_update,
             range_from=0,
             range_to=255)
@@ -82,6 +84,7 @@ class Light(Device):
             group_address_tunable_white,
             group_address_tunable_white_state,
             device_name=self.name,
+            feature_name="Tunable white",
             after_update_cb=self.after_update,
             range_from=0,
             range_to=255)
@@ -91,6 +94,7 @@ class Light(Device):
             group_address_color_temperature,
             group_address_color_temperature_state,
             device_name=self.name,
+            feature_name="Color temperature",
             after_update_cb=self.after_update)
 
         self.min_kelvin = min_kelvin

@@ -18,6 +18,7 @@ class RemoteValueSwitch(RemoteValue):
                  group_address_state=None,
                  sync_state=True,
                  device_name=None,
+                 feature_name="State",
                  after_update_cb=None,
                  invert=False):
         """Initialize remote value of KNX DPT 1.001."""
@@ -27,6 +28,7 @@ class RemoteValueSwitch(RemoteValue):
                          group_address_state,
                          sync_state=sync_state,
                          device_name=device_name,
+                         feature_name=feature_name,
                          after_update_cb=after_update_cb)
         self.invert = invert
 
@@ -38,7 +40,8 @@ class RemoteValueSwitch(RemoteValue):
         """Convert value to payload."""
         if isinstance(value, bool):
             return DPTBinary(value ^ self.invert)
-        raise ConversionError("value invalid", value=value, device_name=self.device_name)
+        raise ConversionError("value invalid",
+                              value=value, device_name=self.device_name, feature_name=self.feature_name)
 
     def from_knx(self, payload):
         """Convert current payload to value."""
@@ -46,7 +49,8 @@ class RemoteValueSwitch(RemoteValue):
             return self.invert
         if payload == DPTBinary(1):
             return not self.invert
-        raise CouldNotParseTelegram("payload invalid", payload=payload, device_name=self.device_name)
+        raise CouldNotParseTelegram("payload invalid",
+                                    payload=payload, device_name=self.device_name, feature_name=self.feature_name)
 
     async def off(self):
         """Set value to OFF."""

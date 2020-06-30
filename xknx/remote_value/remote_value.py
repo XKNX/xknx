@@ -22,6 +22,7 @@ class RemoteValue():
                  group_address_state=None,
                  sync_state=True,
                  device_name=None,
+                 feature_name=None,
                  after_update_cb=None):
         """Initialize RemoteValue class."""
         # pylint: disable=too-many-arguments
@@ -35,6 +36,8 @@ class RemoteValue():
         self.group_address_state = group_address_state
         self.device_name = "Unknown" \
             if device_name is None else device_name
+        self.feature_name = "Unknown" \
+            if feature_name is None else feature_name
         self.after_update_cb = after_update_cb
         self.state_updater = None
         self.payload = None
@@ -120,10 +123,12 @@ class RemoteValue():
     async def set(self, value, response=False):
         """Set new value."""
         if not self.initialized:
-            self.xknx.logger.info("Setting value of uninitialized device: %s (value: %s)", self.device_name, value)
+            self.xknx.logger.info("Setting value of uninitialized device: %s - %s (value: %s)",
+                                  self.device_name, self.feature_name, value)
             return
         if not self.writable:
-            self.xknx.logger.warning("Attempted to set value for non-writable device: %s (value: %s)", self.device_name, value)
+            self.xknx.logger.warning("Attempted to set value for non-writable device: %s - %s (value: %s)",
+                                     self.device_name, self.feature_name, value)
             return
 
         payload = self.to_knx(value)  # pylint: disable=assignment-from-no-return
@@ -138,7 +143,7 @@ class RemoteValue():
     async def read_state(self, wait_for_result=False):
         """Send GroupValueRead telegram for state address to KNX bus."""
         if self.readable:
-            self.xknx.logger.debug("Sync %s", self.device_name)
+            self.xknx.logger.debug("Sync %s - %s", self.device_name, self.feature_name)
             from xknx.core import ValueReader
             value_reader = ValueReader(self.xknx, self.group_address_state)
             # TODO: why would we not wait for result? Because of unit tests.
@@ -148,8 +153,8 @@ class RemoteValue():
                     await self.process(telegram)
                 else:
                     self.xknx.logger.warning(
-                        "Could not sync group address '%s' from %s",
-                        self.group_address_state, self.device_name)
+                        "Could not sync group address '%s' for %s - %s",
+                        self.group_address_state, self.device_name, self.feature_name)
             else:
                 await value_reader.send_group_read()
 
@@ -168,9 +173,10 @@ class RemoteValue():
 
     def __str__(self):
         """Return object as string representation."""
-        return '<{} device_name="{}" {}/>'.format(
+        return '<{} device_name="{}" feature_name="{}" {}/>'.format(
             self.__class__.__name__,
             self.device_name,
+            self.feature_name,
             self.group_addr_str())
 
     def __eq__(self, other):

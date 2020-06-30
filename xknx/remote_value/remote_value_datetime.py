@@ -30,18 +30,21 @@ class RemoteValueDateTime(RemoteValue):
                  sync_state=True,
                  value_type='time',
                  device_name=None,
+                 feature_name="DateTime",
                  after_update_cb=None):
         """Initialize RemoteValueSensor class."""
         # pylint: disable=too-many-arguments
         try:
             self.dpt_class = DateTimeType[value_type.upper()].value
         except KeyError:
-            raise ConversionError("invalid datetime value type", value_type=value_type, device_name=device_name)
+            raise ConversionError("invalid datetime value type",
+                                  value_type=value_type, device_name=device_name, feature_name=feature_name)
         super().__init__(xknx,
                          group_address,
                          group_address_state,
                          sync_state=sync_state,
                          device_name=device_name,
+                         feature_name=feature_name,
                          after_update_cb=after_update_cb)
 
     def payload_valid(self, payload):

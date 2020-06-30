@@ -16,6 +16,7 @@ class RemoteValueScaling(RemoteValue):
                  group_address=None,
                  group_address_state=None,
                  device_name=None,
+                 feature_name="Value",
                  after_update_cb=None,
                  range_from=0,
                  range_to=100):
@@ -25,6 +26,7 @@ class RemoteValueScaling(RemoteValue):
                          group_address,
                          group_address_state,
                          device_name=device_name,
+                         feature_name=feature_name,
                          after_update_cb=after_update_cb)
         self.range_from = range_from
         self.range_to = range_to

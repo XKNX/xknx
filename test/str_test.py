@@ -46,11 +46,11 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_state='1/2/4')
         self.assertEqual(
             str(remote_value),
-            '<RemoteValue device_name="MyDevice" GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None/>')
+            '<RemoteValue device_name="MyDevice" feature_name="Unknown" GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None/>')
         remote_value.payload = DPTArray([0x01, 0x02])
         self.assertEqual(
             str(remote_value),
-            '<RemoteValue device_name="MyDevice" GroupAddress("1/2/3")/GroupAddress("1/2/4")/<DPTArray value="[0x1,0x2]" />/None/>')
+            '<RemoteValue device_name="MyDevice" feature_name="Unknown" GroupAddress("1/2/3")/GroupAddress("1/2/4")/<DPTArray value="[0x1,0x2]" />/None/>')
 
     def test_binary_sensor(self):
         """Test string representation of binary sensor object."""

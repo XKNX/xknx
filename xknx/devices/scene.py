@@ -20,8 +20,9 @@ class Scene(Device):
         # TODO: state_updater: disable for scene number per default?
         self.scene_value = RemoteValueSceneNumber(
             xknx,
-            group_address,
+            group_address=group_address,
             device_name=self.name,
+            feature_name="Scene number",
             after_update_cb=self.after_update)
         self.scene_number = int(scene_number)
 

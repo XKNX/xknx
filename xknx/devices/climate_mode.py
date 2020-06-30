@@ -41,6 +41,7 @@ class ClimateMode(Device):
             group_address_state=group_address_operation_mode_state,
             sync_state=True,
             device_name=name,
+            feature_name="Operation mode",
             climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE,
             after_update_cb=None)
         self.remote_value_controller_mode = RemoteValueClimateMode(
@@ -49,6 +50,7 @@ class ClimateMode(Device):
             group_address_state=group_address_controller_mode_state,
             sync_state=True,
             device_name=name,
+            feature_name="Controller mode",
             climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_CONTR_MODE,
             after_update_cb=None)
         self.remote_value_controller_status = RemoteValueClimateMode(
@@ -57,6 +59,7 @@ class ClimateMode(Device):
             group_address_state=group_address_controller_status_state,
             sync_state=True,
             device_name=name,
+            feature_name="Controller status",
             climate_mode_type=RemoteValueClimateMode.ClimateModeType.CONTROLLER_STATUS,
             after_update_cb=None)
 
@@ -66,6 +69,7 @@ class ClimateMode(Device):
             group_address_state=group_address_operation_mode_comfort,
             sync_state=True,
             device_name=name,
+            feature_name="Operation mode Comfort",
             operation_mode=HVACOperationMode.COMFORT,
             after_update_cb=None)
         self.remote_value_operation_mode_standby = RemoteValueClimateBinaryMode(
@@ -74,6 +78,7 @@ class ClimateMode(Device):
             group_address_state=group_address_operation_mode_standby,
             sync_state=True,
             device_name=name,
+            feature_name="Operation mode Standby",
             operation_mode=HVACOperationMode.STANDBY,
             after_update_cb=None)
         self.remote_value_operation_mode_night = RemoteValueClimateBinaryMode(
@@ -82,6 +87,7 @@ class ClimateMode(Device):
             group_address_state=group_address_operation_mode_night,
             sync_state=True,
             device_name=name,
+            feature_name="Operation mode Night",
             operation_mode=HVACOperationMode.NIGHT,
             after_update_cb=None)
         self.remote_value_operation_mode_protection = RemoteValueClimateBinaryMode(
@@ -90,6 +96,7 @@ class ClimateMode(Device):
             group_address_state=group_address_operation_mode_protection,
             sync_state=True,
             device_name=name,
+            feature_name="Operation mode Protection",
             operation_mode=HVACOperationMode.FROST_PROTECTION,
             after_update_cb=None)
 

@@ -29,6 +29,7 @@ class RemoteValueClimateMode(RemoteValue):
                  group_address_state=None,
                  sync_state=True,
                  device_name=None,
+                 feature_name="Climate Mode",
                  climate_mode_type=None,
                  after_update_cb=None):
         """Initialize remote value of KNX climate mode."""
@@ -38,9 +39,11 @@ class RemoteValueClimateMode(RemoteValue):
                          group_address_state=group_address_state,
                          sync_state=sync_state,
                          device_name=device_name,
+                         feature_name=feature_name,
                          after_update_cb=after_update_cb)
         if not isinstance(climate_mode_type, self.ClimateModeType):
-            raise ConversionError("invalid climate mode type", climate_mode_type=climate_mode_type, device_name=device_name)
+            raise ConversionError("invalid climate mode type",
+                                  climate_mode_type=climate_mode_type, device_name=device_name, feature_name=feature_name)
         self._climate_mode_transcoder = climate_mode_type.value
 
     def supported_operation_modes(self):
@@ -70,21 +73,24 @@ class RemoteValueClimateBinaryMode(RemoteValue):
                  group_address_state=None,
                  sync_state=True,
                  device_name=None,
+                 feature_name="Climate Mode Binary",
                  after_update_cb=None,
                  operation_mode=None):
         """Initialize remote value of KNX DPT 1 representing a climate operation mode."""
         # pylint: disable=too-many-arguments
         if not isinstance(operation_mode, HVACOperationMode):
-            raise ConversionError("Invalid operation mode type", operation_mode=operation_mode, device_name=device_name)
+            raise ConversionError("Invalid operation mode type",
+                                  operation_mode=operation_mode, device_name=device_name, feature_name=feature_name)
         if operation_mode not in self.supported_operation_modes():
             raise ConversionError("Operation mode not supported for binary mode object",
-                                  operation_mode=operation_mode, device_name=device_name)
+                                  operation_mode=operation_mode, device_name=device_name, feature_name=feature_name)
         self.operation_mode = operation_mode
         super().__init__(xknx,
                          group_address=group_address,
                          group_address_state=group_address_state,
                          sync_state=True,
                          device_name=device_name,
+                         feature_name=feature_name,
                          after_update_cb=after_update_cb)
 
     @staticmethod
@@ -104,7 +110,8 @@ class RemoteValueClimateBinaryMode(RemoteValue):
         if isinstance(value, HVACOperationMode):
             # foreign operation modes will set the RemoteValue to False
             return DPTBinary(value == self.operation_mode)
-        raise ConversionError("value invalid", value=value, device_name=self.device_name)
+        raise ConversionError("value invalid",
+                              value=value, device_name=self.device_name, feature_name=self.feature_name)
 
     def from_knx(self, payload):
         """Convert current payload to value."""
@@ -112,4 +119,5 @@ class RemoteValueClimateBinaryMode(RemoteValue):
             return self.operation_mode
         if payload == DPTBinary(0):
             return None
-        raise CouldNotParseTelegram("payload invalid", payload=payload, device_name=self.device_name)
+        raise CouldNotParseTelegram("payload invalid",
+                                    payload=payload, device_name=self.device_name, feature_name=self.feature_name)
