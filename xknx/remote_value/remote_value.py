@@ -41,7 +41,7 @@ class RemoteValue():
 
         # TODO: naming? unclear that it holds minutes
         if sync_state and self.group_address_state:
-            self.xknx.state_updater.register_remote_value(self)
+            self.xknx.state_updater.register_remote_value(self, tracker_options=sync_state)
 
     def __del__(self):
         """Destructor. Removing self from StateUpdater if was registered."""

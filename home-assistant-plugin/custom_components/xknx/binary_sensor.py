@@ -36,7 +36,8 @@ AUTOMATIONS_SCHEMA = vol.All(cv.ensure_list, [AUTOMATION_SCHEMA])
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_SYNC_STATE, default=True): cv.boolean,
+        vol.Optional(CONF_SYNC_STATE, default=True):
+            vol.Any(vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)), cv.boolean, cv.string),
         vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=False): cv.boolean,
         vol.Required(CONF_STATE_ADDRESS): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): cv.string,
