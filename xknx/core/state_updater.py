@@ -7,7 +7,6 @@ from xknx.exceptions import ConversionError
 from xknx.remote_value import RemoteValue
 from xknx.telegram import GroupAddress
 
-
 DEFAULT_UPDATE_INTERVAL = 60
 
 
@@ -24,7 +23,6 @@ class StateUpdater():
                               remote_value: RemoteValue,
                               tracker_options=None):
         """Register a RemoteValue to initialize its state and/or track for expiration."""
-
         def parse_tracker_options(tracker_options):
             """Parse tracker type and expiration time."""
             tracker_type = StateTrackerType.EXPIRE
