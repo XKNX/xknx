@@ -55,9 +55,9 @@ DEFAULT_SETPOINT_SHIFT_STEP = 0.5
 DEFAULT_SETPOINT_SHIFT_MAX = 6
 DEFAULT_SETPOINT_SHIFT_MIN = -6
 DEFAULT_ON_OFF_INVERT = False
-# Map KNX operation modes to HA modes. This list might not be full.
+# Map KNX operation modes to HA modes. This list might not be complete.
 OPERATION_MODES = {
-    # Map DPT 201.105 HVAC control modes
+    # Map DPT 20.105 HVAC control modes
     "Auto": HVAC_MODE_AUTO,
     "Heat": HVAC_MODE_HEAT,
     "Cool": HVAC_MODE_COOL,
@@ -69,7 +69,7 @@ OPERATION_MODES = {
 OPERATION_MODES_INV = dict(reversed(item) for item in OPERATION_MODES.items())
 
 PRESET_MODES = {
-    # Map DPT 201.100 HVAC operating modes to HA presets
+    # Map DPT 20.102 HVAC operating modes to HA presets
     "Frost Protection": PRESET_ECO,
     "Night": PRESET_SLEEP,
     "Standby": PRESET_AWAY,
