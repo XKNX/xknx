@@ -82,6 +82,7 @@ class XKNX:
                 async with anyio.move_on_after(2, shield=True):
                     await self._stop()
                     await self._stopped.set()
+            pass # exiting taskgroup
 
     async def start(self,
                     state_updater=False,
