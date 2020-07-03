@@ -402,7 +402,7 @@ class TestStringRepresentations(Testcase):
             payload=DPTBinary(7))
         self.assertEqual(
             str(telegram),
-            '<Telegram group_address="GroupAddress("1/2/3")", payload="<DPTBinary value="7" />" telegramtype="TelegramType.GROUP_WRITE" />')
+            '<Telegram 1/2/3 <DPTBinary value="7" /> GROUP_WRITE />')
 
     def test_dib_generic(self):
         """Test string representation of DIBGeneric."""

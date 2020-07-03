@@ -42,11 +42,14 @@ class Telegram:
 
     def __str__(self):
         """Return object as readable string."""
-        return '<Telegram group_address="{0}", payload="{1}" ' \
-            'telegramtype="{2}" />'.format(
-                self.group_address.__repr__(),
+        if self.payload is None:
+            return '<Telegram {0} {1} />'.format(
+                    self.group_address,
+                    self.telegramtype.name)
+        return '<Telegram {0} {1} {2} />'.format(
+                self.group_address,
                 self.payload,
-                self.telegramtype)
+                self.telegramtype.name)
 
     def __eq__(self, other):
         """Equal operator."""
