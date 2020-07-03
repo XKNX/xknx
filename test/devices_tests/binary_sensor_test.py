@@ -33,14 +33,12 @@ class TestBinarySensor(Testcase):
 
         self.assertEqual(binaryinput.state, BinarySensorState.OFF)
 
-        telegram_on = Telegram()
-        telegram_on.payload = DPTBinary(1)
+        telegram_on = Telegram(payload=DPTBinary(1))
         await binaryinput.process(telegram_on)
 
         self.assertEqual(binaryinput.state, BinarySensorState.ON)
 
-        telegram_off = Telegram()
-        telegram_off.payload = DPTBinary(0)
+        telegram_off = Telegram(payload = DPTBinary(0))
         await binaryinput.process(telegram_off)
         self.assertEqual(binaryinput.state, BinarySensorState.OFF)
 
@@ -62,20 +60,17 @@ class TestBinarySensor(Testcase):
         self.assertEqual(binaryinput.state, BinarySensorState.OFF)
 
         # Wrong significant bit: 0000 1011 = 11
-        telegram_on = Telegram()
-        telegram_on.payload = DPTBinary(11)
+        telegram_on = Telegram(payload = DPTBinary(11))
         await binaryinput.process(telegram_on)
         self.assertEqual(binaryinput.state, BinarySensorState.OFF)
 
         # Correct significant bit: 0000 1101 = 13
-        telegram_on = Telegram()
-        telegram_on.payload = DPTBinary(13)
+        telegram_on = Telegram(payload = DPTBinary(13))
         await binaryinput.process(telegram_on)
         self.assertEqual(binaryinput.state, BinarySensorState.ON)
 
         # Resetting, significant bit: 0000 0011 = 3
-        telegram_off = Telegram()
-        telegram_off.payload = DPTBinary(3)
+        telegram_off = Telegram(payload = DPTBinary(3))
         await binaryinput.process(telegram_off)
         self.assertEqual(binaryinput.state, BinarySensorState.OFF)
 
@@ -108,8 +103,7 @@ class TestBinarySensor(Testcase):
             xknx.devices['TestOutlet'].state,
             False)
 
-        telegram_on = Telegram()
-        telegram_on.payload = DPTBinary(1)
+        telegram_on = Telegram(payload = DPTBinary(1))
         await binary_sensor.process(telegram_on)
 
         self.assertEqual(
@@ -119,8 +113,7 @@ class TestBinarySensor(Testcase):
             xknx.devices['TestOutlet'].state,
             True)
 
-        telegram_off = Telegram()
-        telegram_off.payload = DPTBinary(0)
+        telegram_off = Telegram(payload = DPTBinary(0))
         await binary_sensor.process(telegram_off)
 
         self.assertEqual(
@@ -153,8 +146,7 @@ class TestBinarySensor(Testcase):
             xknx.devices['TestOutlet'].state,
             False)
 
-        telegram_on = Telegram()
-        telegram_on.payload = DPTBinary(1)
+        telegram_on = Telegram(payload = DPTBinary(1))
         await binary_sensor.process(telegram_on)
 
         self.assertEqual(
@@ -234,8 +226,7 @@ class TestBinarySensor(Testcase):
             after_update_callback(device)
         switch.register_device_updated_cb(async_after_update_callback)
 
-        telegram = Telegram()
-        telegram.payload = DPTBinary(1)
+        telegram = Telegram(payload = DPTBinary(1))
         await switch.process(telegram)
         after_update_callback.assert_called_with(switch)
 

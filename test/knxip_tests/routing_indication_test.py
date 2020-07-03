@@ -55,11 +55,9 @@ class Test_KNXIP(Testcase):
         knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
         knxipframe.body.src_addr = PhysicalAddress("1.2.2")
 
-        telegram = Telegram()
-        telegram.group_address = GroupAddress(337)
-
-        telegram.payload = DPTArray(DPTTime().to_knx(
-            {'hours': 13, 'minutes': 23, 'seconds': 42}))
+        telegram = Telegram(group_address = GroupAddress(337),
+                payload = DPTArray(DPTTime().to_knx(
+                    {'hours': 13, 'minutes': 23, 'seconds': 42})))
 
         knxipframe.body.telegram = telegram
 
@@ -256,9 +254,8 @@ class Test_KNXIP(Testcase):
     @pytest.mark.anyio
     async def test_maximum_apci(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, testing maximum APCI."""
-        telegram = Telegram()
-        telegram.group_address = GroupAddress(337)
-        telegram.payload = DPTBinary(DPTBinary.APCI_MAX_VALUE)
+        telegram = Telegram(group_address = GroupAddress(337),
+                payload = DPTBinary(DPTBinary.APCI_MAX_VALUE))
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)

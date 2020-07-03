@@ -110,11 +110,10 @@ class RemoteValue():
 
     async def send(self, response=False):
         """Send payload as telegram to KNX bus."""
-        telegram = Telegram()
-        telegram.group_address = self.group_address
-        telegram.telegramtype = TelegramType.GROUP_RESPONSE \
-            if response else TelegramType.GROUP_WRITE
-        telegram.payload = self.payload
+        telegram = Telegram(group_address = self.group_address,
+                telegramtype = TelegramType.GROUP_RESPONSE \
+                    if response else TelegramType.GROUP_WRITE,
+                payload = self.payload)
         await self.xknx.telegrams_out.put(telegram)
 
     async def set(self, value):

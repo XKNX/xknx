@@ -39,9 +39,6 @@ class CEMIFrame(KNXIPBody):
     @property
     def telegram(self):
         """Return telegram."""
-        telegram = Telegram()
-        telegram.payload = self.payload
-        telegram.group_address = self.dst_addr
 
         def resolve_telegram_type(cmd):
             """Return telegram type from APCI Command."""
@@ -53,10 +50,8 @@ class CEMIFrame(KNXIPBody):
                 return TelegramType.GROUP_RESPONSE
             raise ConversionError("Telegram not implemented for {0}".format(self.cmd))
 
-        telegram.telegramtype = resolve_telegram_type(self.cmd)
-
-        # TODO: Set telegram.direction [additional flag within KNXIP]
-        return telegram
+        return Telegram(group_address=self.dst_addr, payload=self.payload, 
+                telegramtype=resolve_telegram_type(self.cmd))
 
     @telegram.setter
     def telegram(self, telegram):

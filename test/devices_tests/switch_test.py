@@ -54,16 +54,14 @@ class TestSwitch(Testcase):
 
         self.assertEqual(switch.state, False)
 
-        telegram_on = Telegram()
-        telegram_on.group_address = GroupAddress('1/2/3')
-        telegram_on.payload = DPTBinary(1)
+        telegram_on = Telegram(group_address = GroupAddress('1/2/3'),
+                payload = DPTBinary(1))
         await switch.process(telegram_on)
 
         self.assertEqual(switch.state, True)
 
-        telegram_off = Telegram()
-        telegram_off.group_address = GroupAddress('1/2/3')
-        telegram_off.payload = DPTBinary(0)
+        telegram_off = Telegram(group_address = GroupAddress('1/2/3'),
+                payload = DPTBinary(0))
         await switch.process(telegram_off)
 
         self.assertEqual(switch.state, False)
@@ -83,9 +81,8 @@ class TestSwitch(Testcase):
             after_update_callback(device)
         switch.register_device_updated_cb(async_after_update_callback)
 
-        telegram = Telegram()
-        telegram.group_address = GroupAddress('1/2/3')
-        telegram.payload = DPTBinary(1)
+        telegram = Telegram(group_address = GroupAddress('1/2/3'),
+                payload = DPTBinary(1))
         await switch.process(telegram)
 
         after_update_callback.assert_called_with(switch)

@@ -103,11 +103,10 @@ class Device:
     # TODO: remove need for send function in device - only use set and RemoteValue.send
     async def send(self, group_address, payload=None, response=False):
         """Send payload as telegram to KNX bus."""
-        telegram = Telegram()
-        telegram.group_address = group_address
-        telegram.payload = payload
-        telegram.telegramtype = TelegramType.GROUP_RESPONSE \
-            if response else TelegramType.GROUP_WRITE
+        telegram = Telegram(group_address = group_address,
+                payload = payload,
+                telegramtype = TelegramType.GROUP_RESPONSE \
+                    if response else TelegramType.GROUP_WRITE)
         await self.xknx.telegrams_out.put(telegram)
 
     def all_addresses(self):
