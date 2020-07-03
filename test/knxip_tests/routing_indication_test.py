@@ -97,11 +97,9 @@ class Test_KNXIP(unittest.TestCase):
         knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
         knxipframe.body.cemi.src_addr = PhysicalAddress("1.2.2")
 
-        telegram = Telegram()
-        telegram.group_address = GroupAddress(337)
-
-        telegram.payload = DPTArray(
-            DPTTime().to_knx(time.strptime("13:23:42", "%H:%M:%S"))
+        telegram = Telegram(
+            group_address=GroupAddress(337),
+            payload=DPTArray(DPTTime().to_knx(time.strptime("13:23:42", "%H:%M:%S"))),
         )
 
         knxipframe.body.cemi.telegram = telegram
@@ -430,9 +428,9 @@ class Test_KNXIP(unittest.TestCase):
 
     def test_maximum_apci(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, testing maximum APCI."""
-        telegram = Telegram()
-        telegram.group_address = GroupAddress(337)
-        telegram.payload = DPTBinary(DPTBinary.APCI_MAX_VALUE)
+        telegram = Telegram(
+            group_address=GroupAddress(337), payload=DPTBinary(DPTBinary.APCI_MAX_VALUE)
+        )
         xknx = XKNX(loop=self.loop)
         knxipframe = KNXIPFrame(xknx)
         knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)

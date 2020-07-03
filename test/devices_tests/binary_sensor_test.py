@@ -33,22 +33,25 @@ class TestBinarySensor(unittest.TestCase):
 
         self.assertEqual(binaryinput.state, None)
 
-        telegram_on = Telegram(group_address=GroupAddress("1/2/3"))
-        telegram_on.payload = DPTBinary(1)
+        telegram_on = Telegram(
+            group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+        )
         self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_on)))
 
         self.assertEqual(binaryinput.state, True)
 
-        telegram_off = Telegram(group_address=GroupAddress("1/2/3"))
-        telegram_off.payload = DPTBinary(0)
+        telegram_off = Telegram(
+            group_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
+        )
         self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_off)))
         self.assertEqual(binaryinput.state, False)
 
         binaryinput2 = BinarySensor(xknx, "TestInput", "1/2/4")
         self.assertEqual(binaryinput2.state, None)
 
-        telegram_off2 = Telegram(group_address=GroupAddress("1/2/4"))
-        telegram_off2.payload = DPTBinary(0)
+        telegram_off2 = Telegram(
+            group_address=GroupAddress("1/2/4"), payload=DPTBinary(0)
+        )
         self.loop.run_until_complete(asyncio.Task(binaryinput2.process(telegram_off2)))
         self.assertEqual(binaryinput2.state, False)
 
@@ -59,8 +62,9 @@ class TestBinarySensor(unittest.TestCase):
         binaryinput = BinarySensor(
             xknx, "TestInput", "1/2/3", reset_after=reset_after_ms
         )
-        telegram_on = Telegram(group_address=GroupAddress("1/2/3"))
-        telegram_on.payload = DPTBinary(1)
+        telegram_on = Telegram(
+            group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+        )
 
         self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_on)))
         self.loop.run_until_complete(asyncio.sleep(reset_after_ms * 2 / 1000))
@@ -80,15 +84,17 @@ class TestBinarySensor(unittest.TestCase):
         self.assertEqual(xknx.devices["TestInput"].state, None)
         self.assertEqual(xknx.devices["TestOutlet"].state, False)
 
-        telegram_on = Telegram(group_address=GroupAddress("1/2/3"))
-        telegram_on.payload = DPTBinary(1)
+        telegram_on = Telegram(
+            group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+        )
         self.loop.run_until_complete(asyncio.Task(binary_sensor.process(telegram_on)))
 
         self.assertEqual(xknx.devices["TestInput"].state, True)
         self.assertEqual(xknx.devices["TestOutlet"].state, True)
 
-        telegram_off = Telegram(group_address=GroupAddress("1/2/3"))
-        telegram_off.payload = DPTBinary(0)
+        telegram_off = Telegram(
+            group_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
+        )
         self.loop.run_until_complete(asyncio.Task(binary_sensor.process(telegram_off)))
 
         self.assertEqual(xknx.devices["TestInput"].state, False)
@@ -108,8 +114,9 @@ class TestBinarySensor(unittest.TestCase):
         self.assertEqual(xknx.devices["TestInput"].state, None)
         self.assertEqual(xknx.devices["TestOutlet"].state, False)
 
-        telegram_on = Telegram(group_address=GroupAddress("1/2/3"))
-        telegram_on.payload = DPTBinary(1)
+        telegram_on = Telegram(
+            group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+        )
 
         with patch("time.time") as mock_time:
             mock_time.return_value = 1599076123.0
@@ -187,8 +194,7 @@ class TestBinarySensor(unittest.TestCase):
 
         switch.register_device_updated_cb(async_after_update_callback)
 
-        telegram = Telegram(group_address=GroupAddress("1/2/3"))
-        telegram.payload = DPTBinary(1)
+        telegram = Telegram(group_address=GroupAddress("1/2/3"), payload=DPTBinary(1))
         self.loop.run_until_complete(asyncio.Task(switch.process(telegram)))
         after_update_callback.assert_called_with(switch)
 
