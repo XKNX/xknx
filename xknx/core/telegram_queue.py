@@ -15,7 +15,7 @@ except ImportError:
     from async_generator import asynccontextmanager
 
 
-class TelegramQueue():
+class _TelegramQueue():
     """Class for telegram queue."""
 
     class Callback:
@@ -53,7 +53,7 @@ class TelegramQueue():
 
     def register_telegram_cb(self, telegram_cb, address_filters=None):
         """Register callback for a telegram beeing received from KNX bus."""
-        callback = TelegramQueue.Callback(telegram_cb, address_filters)
+        callback = _TelegramQueue.Callback(telegram_cb, address_filters)
         self.callbacks.add(callback)
         return callback
 
@@ -69,7 +69,7 @@ class TelegramQueue():
         async def _receiver(telegram, _=None):
             await q.put(telegram)
 
-        callb = TelegramQueue.Callback(_receiver, address_filters)
+        callb = _TelegramQueue.Callback(_receiver, address_filters)
         try:
             self.callbacks.add(callb)
             yield q
@@ -145,7 +145,7 @@ class TelegramQueue():
         return processed
 
 
-class TelegramQueueIn(TelegramQueue):
+class TelegramQueueIn(_TelegramQueue):
     """A Telegram queue that processes incoming telegrams."""
 
     async def process_telegram(self, telegram):
@@ -163,7 +163,7 @@ class TelegramQueueIn(TelegramQueue):
         return processed
 
 
-class TelegramQueueOut(TelegramQueue):
+class TelegramQueueOut(_TelegramQueue):
     """A Telegram queue that sends off outgoing telegrams."""
 
     _out_cb = None

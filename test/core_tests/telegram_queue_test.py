@@ -231,7 +231,7 @@ class TestTelegramQueueIn(Testcase):
             if_mock.send_telegram.assert_called_once_with(telegram)
 
     @patch('logging.Logger.error')
-    @patch('xknx.core.TelegramQueueIn.process_telegram',
+    @patch('xknx.core.telegram_queue.TelegramQueueIn.process_telegram',
             new_callable=AsyncMock)
     @pytest.mark.anyio
     async def test_process_exception(self, process_tg_in_mock, logging_error_mock):
@@ -251,7 +251,7 @@ class TestTelegramQueueIn(Testcase):
             await xknx.telegrams_in.process_telegram(telegram)
         logging_error_mock.assert_not_called()
 
-    @patch('xknx.core.TelegramQueue.process_telegram', new_callable=AsyncMock)
+    @patch('xknx.core.telegram_queue._TelegramQueue.process_telegram', new_callable=AsyncMock)
     @pytest.mark.anyio
     async def test_process_all_telegrams(self, process_telegram_mock):
         """Test process_all_telegrams for clearing the queue."""
