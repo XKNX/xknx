@@ -28,7 +28,7 @@ class XKNX:
     def __init__(self,
                  config=None,
                  loop=None,  # pylint: disable=unused-argument
-                 own_address=PhysicalAddress(DEFAULT_ADDRESS),
+                 own_address=None,
                  address_format=GroupAddressType.LONG,
                  telegram_received_cb=None,
                  device_updated_cb=None,
@@ -42,6 +42,8 @@ class XKNX:
         self.knxip_interface = None
         self.started = False
         self.address_format = address_format
+        if own_address is None:
+            own_address=PhysicalAddress(self.DEFAULT_ADDRESS)
         self.own_address = own_address
         self.rate_limit = rate_limit
         self.logger = logging.getLogger('xknx.log')
