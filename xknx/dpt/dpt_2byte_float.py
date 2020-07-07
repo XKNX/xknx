@@ -8,6 +8,8 @@ from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
 
+from math import log10
+
 
 class DPT2ByteFloat(DPTBase):
     """
@@ -39,6 +41,8 @@ class DPT2ByteFloat(DPTBase):
         if not cls._test_boundaries(value):
             raise ConversionError("Cant parse %s" % cls.__name__, value=value)
 
+        if value:
+            value = round(value, 5-int(log10(abs(value))))
         return value
 
     @classmethod

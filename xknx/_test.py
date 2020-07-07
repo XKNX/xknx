@@ -3,6 +3,7 @@
 import anyio
 import unittest
 from unittest.mock import MagicMock
+from math import log10
 from .xknx import XKNX
 
 try:
@@ -30,6 +31,12 @@ class Testcase:
                 self.__unittest = unittest.TestCase()
             return getattr(self.__unittest, k)
         raise AttributeError(k)
+
+    def assertAlmostEqual(self, a, b, prec=6):
+        if a == b: return
+        an = round(a, prec-int(log10(abs(a))))
+        bn = round(b, prec-int(log10(abs(b))))
+        assert an == bn, (a,an,b,bn)
 
 
 try:

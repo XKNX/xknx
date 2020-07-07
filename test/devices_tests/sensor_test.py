@@ -27,7 +27,7 @@ class TestSensor(Testcase):
             value_type="absolute_temperature")
         sensor.sensor_value.payload = DPTArray((0x44, 0xD7, 0xD2, 0x8B,))
 
-        self.assertEqual(sensor.resolve_state(), 1726.5794677734375)
+        self.assertAlmostEqual(sensor.resolve_state(), 1726.5794677734375)
         self.assertEqual(sensor.unit_of_measurement(), "K")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -42,7 +42,7 @@ class TestSensor(Testcase):
             value_type="acceleration")
         sensor.sensor_value.payload = DPTArray((0x45, 0x94, 0xD8, 0x5D,))
 
-        self.assertEqual(sensor.resolve_state(), 4763.04541015625)
+        self.assertAlmostEqual(sensor.resolve_state(), 4763.04541015625)
         self.assertEqual(sensor.unit_of_measurement(), "m/s²")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -57,7 +57,7 @@ class TestSensor(Testcase):
             value_type="acceleration_angular")
         sensor.sensor_value.payload = DPTArray((0x45, 0xEA, 0x62, 0x34,))
 
-        self.assertEqual(sensor.resolve_state(), 7500.275390625)
+        self.assertAlmostEqual(sensor.resolve_state(), 7500.275390625)
         self.assertEqual(sensor.unit_of_measurement(), "rad/s²")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -72,7 +72,7 @@ class TestSensor(Testcase):
             value_type="activation_energy")
         sensor.sensor_value.payload = DPTArray((0x46, 0x0, 0x3E, 0xEE,))
 
-        self.assertEqual(sensor.resolve_state(), 8207.732421875)
+        self.assertAlmostEqual(sensor.resolve_state(), 8207.732421875)
         self.assertEqual(sensor.unit_of_measurement(), "J/mol")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -87,7 +87,7 @@ class TestSensor(Testcase):
             value_type="active_energy")
         sensor.sensor_value.payload = DPTArray((0x26, 0x37, 0x49, 0x7F,))
 
-        self.assertEqual(sensor.resolve_state(), 641157503)
+        self.assertAlmostEqual(sensor.resolve_state(), 641157503)
         self.assertEqual(sensor.unit_of_measurement(), "Wh")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -117,7 +117,7 @@ class TestSensor(Testcase):
             value_type="activity")
         sensor.sensor_value.payload = DPTArray((0x45, 0x76, 0x0, 0xA3,))
 
-        self.assertEqual(sensor.resolve_state(), 3936.039794921875)
+        self.assertAlmostEqual(sensor.resolve_state(), 3936.039794921875)
         self.assertEqual(sensor.unit_of_measurement(), "s⁻¹")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -132,7 +132,7 @@ class TestSensor(Testcase):
             value_type="amplitude")
         sensor.sensor_value.payload = DPTArray((0x45, 0x9A, 0xED, 0x8,))
 
-        self.assertEqual(sensor.resolve_state(), 4957.62890625)
+        self.assertAlmostEqual(sensor.resolve_state(), 4957.62890625)
         self.assertEqual(sensor.unit_of_measurement(), "")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -162,7 +162,7 @@ class TestSensor(Testcase):
             value_type="angle_deg")
         sensor.sensor_value.payload = DPTArray((0x44, 0x5C, 0x20, 0x2B,))
 
-        self.assertEqual(sensor.resolve_state(), 880.5026245117188)
+        self.assertAlmostEqual(sensor.resolve_state(), 880.5026245117188)
         self.assertEqual(sensor.unit_of_measurement(), "°")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -177,7 +177,7 @@ class TestSensor(Testcase):
             value_type="angle_rad")
         sensor.sensor_value.payload = DPTArray((0x44, 0x36, 0x75, 0x1,))
 
-        self.assertEqual(sensor.resolve_state(), 729.8281860351562)
+        self.assertAlmostEqual(sensor.resolve_state(), 729.8281860351562)
         self.assertEqual(sensor.unit_of_measurement(), "rad")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -192,7 +192,7 @@ class TestSensor(Testcase):
             value_type="angular_frequency")
         sensor.sensor_value.payload = DPTArray((0x43, 0xBC, 0x20, 0x8D,))
 
-        self.assertEqual(sensor.resolve_state(), 376.2543029785156)
+        self.assertAlmostEqual(sensor.resolve_state(), 376.2543029785156)
         self.assertEqual(sensor.unit_of_measurement(), "rad/s")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -207,7 +207,7 @@ class TestSensor(Testcase):
             value_type="angular_momentum")
         sensor.sensor_value.payload = DPTArray((0xC2, 0x75, 0xB7, 0xB5,))
 
-        self.assertEqual(sensor.resolve_state(), -61.42940139770508)
+        self.assertAlmostEqual(sensor.resolve_state(), -61.42940139770508)
         self.assertEqual(sensor.unit_of_measurement(), "J s")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -222,7 +222,7 @@ class TestSensor(Testcase):
             value_type="angular_velocity")
         sensor.sensor_value.payload = DPTArray((0xC4, 0xD9, 0x10, 0xB3,))
 
-        self.assertEqual(sensor.resolve_state(), -1736.5218505859375)
+        self.assertAlmostEqual(sensor.resolve_state(), -1736.5218505859375)
         self.assertEqual(sensor.unit_of_measurement(), "rad/s")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -267,7 +267,7 @@ class TestSensor(Testcase):
             value_type="area")
         sensor.sensor_value.payload = DPTArray((0x45, 0x63, 0x1E, 0xCD,))
 
-        self.assertEqual(sensor.resolve_state(), 3633.925048828125)
+        self.assertAlmostEqual(sensor.resolve_state(), 3633.925048828125)
         self.assertEqual(sensor.unit_of_measurement(), "m²")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -297,7 +297,7 @@ class TestSensor(Testcase):
             value_type="capacitance")
         sensor.sensor_value.payload = DPTArray((0x45, 0xC9, 0x1D, 0x9D,))
 
-        self.assertEqual(sensor.resolve_state(), 6435.70166015625)
+        self.assertAlmostEqual(sensor.resolve_state(), 6435.70166015625)
         self.assertEqual(sensor.unit_of_measurement(), "F")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -312,7 +312,7 @@ class TestSensor(Testcase):
             value_type="charge_density_surface")
         sensor.sensor_value.payload = DPTArray((0x45, 0xDB, 0x66, 0x99,))
 
-        self.assertEqual(sensor.resolve_state(), 7020.82470703125)
+        self.assertAlmostEqual(sensor.resolve_state(), 7020.82470703125)
         self.assertEqual(sensor.unit_of_measurement(), "C/m²")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -327,7 +327,7 @@ class TestSensor(Testcase):
             value_type="charge_density_volume")
         sensor.sensor_value.payload = DPTArray((0xC4, 0x8C, 0x33, 0xD7,))
 
-        self.assertEqual(sensor.resolve_state(), -1121.6199951171875)
+        self.assertAlmostEqual(sensor.resolve_state(), -1121.6199951171875)
         self.assertEqual(sensor.unit_of_measurement(), "C/m³")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -357,7 +357,7 @@ class TestSensor(Testcase):
             value_type="common_temperature")
         sensor.sensor_value.payload = DPTArray((0x45, 0xD9, 0xC6, 0x3F,))
 
-        self.assertEqual(sensor.resolve_state(), 6968.78076171875)
+        self.assertAlmostEqual(sensor.resolve_state(), 6968.78076171875)
         self.assertEqual(sensor.unit_of_measurement(), "°C")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -372,7 +372,7 @@ class TestSensor(Testcase):
             value_type="compressibility")
         sensor.sensor_value.payload = DPTArray((0x45, 0x89, 0x94, 0xAB,))
 
-        self.assertEqual(sensor.resolve_state(), 4402.58349609375)
+        self.assertAlmostEqual(sensor.resolve_state(), 4402.58349609375)
         self.assertEqual(sensor.unit_of_measurement(), "m²/N")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -387,7 +387,7 @@ class TestSensor(Testcase):
             value_type="conductance")
         sensor.sensor_value.payload = DPTArray((0x45, 0xA6, 0x28, 0xF9,))
 
-        self.assertEqual(sensor.resolve_state(), 5317.12158203125)
+        self.assertAlmostEqual(sensor.resolve_state(), 5317.12158203125)
         self.assertEqual(sensor.unit_of_measurement(), "S")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -492,7 +492,7 @@ class TestSensor(Testcase):
             value_type="density")
         sensor.sensor_value.payload = DPTArray((0x44, 0xA5, 0xCB, 0x27,))
 
-        self.assertEqual(sensor.resolve_state(), 1326.3485107421875)
+        self.assertAlmostEqual(sensor.resolve_state(), 1326.3485107421875)
         self.assertEqual(sensor.unit_of_measurement(), "kg/m³")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -507,7 +507,7 @@ class TestSensor(Testcase):
             value_type="electrical_conductivity")
         sensor.sensor_value.payload = DPTArray((0xC4, 0xC6, 0xF5, 0x6E,))
 
-        self.assertEqual(sensor.resolve_state(), -1591.669677734375)
+        self.assertAlmostEqual(sensor.resolve_state(), -1591.669677734375)
         self.assertEqual(sensor.unit_of_measurement(), "S/m")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -522,7 +522,7 @@ class TestSensor(Testcase):
             value_type="electric_charge")
         sensor.sensor_value.payload = DPTArray((0x46, 0x14, 0xF6, 0xA0,))
 
-        self.assertEqual(sensor.resolve_state(), 9533.65625)
+        self.assertAlmostEqual(sensor.resolve_state(), 9533.65625)
         self.assertEqual(sensor.unit_of_measurement(), "C")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -537,7 +537,7 @@ class TestSensor(Testcase):
             value_type="electric_current")
         sensor.sensor_value.payload = DPTArray((0x45, 0xAD, 0x45, 0x90,))
 
-        self.assertEqual(sensor.resolve_state(), 5544.6953125)
+        self.assertAlmostEqual(sensor.resolve_state(), 5544.6953125)
         self.assertEqual(sensor.unit_of_measurement(), "A")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -552,7 +552,7 @@ class TestSensor(Testcase):
             value_type="electric_current_density")
         sensor.sensor_value.payload = DPTArray((0x45, 0x7C, 0x57, 0xF6,))
 
-        self.assertEqual(sensor.resolve_state(), 4037.49755859375)
+        self.assertAlmostEqual(sensor.resolve_state(), 4037.49755859375)
         self.assertEqual(sensor.unit_of_measurement(), "A/m²")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -567,7 +567,7 @@ class TestSensor(Testcase):
             value_type="electric_dipole_moment")
         sensor.sensor_value.payload = DPTArray((0x45, 0x58, 0xF1, 0x73,))
 
-        self.assertEqual(sensor.resolve_state(), 3471.090576171875)
+        self.assertAlmostEqual(sensor.resolve_state(), 3471.090576171875)
         self.assertEqual(sensor.unit_of_measurement(), "C m")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -582,7 +582,7 @@ class TestSensor(Testcase):
             value_type="electric_displacement")
         sensor.sensor_value.payload = DPTArray((0xC5, 0x34, 0x8B, 0x0,))
 
-        self.assertEqual(sensor.resolve_state(), -2888.6875)
+        self.assertAlmostEqual(sensor.resolve_state(), -2888.6875)
         self.assertEqual(sensor.unit_of_measurement(), "C/m²")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -597,7 +597,7 @@ class TestSensor(Testcase):
             value_type="electric_field_strength")
         sensor.sensor_value.payload = DPTArray((0xC6, 0x17, 0x1C, 0x39,))
 
-        self.assertEqual(sensor.resolve_state(), -9671.0556640625)
+        self.assertAlmostEqual(sensor.resolve_state(), -9671.0556640625)
         self.assertEqual(sensor.unit_of_measurement(), "V/m")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -612,7 +612,7 @@ class TestSensor(Testcase):
             value_type="electric_flux")
         sensor.sensor_value.payload = DPTArray((0x45, 0x8F, 0x6C, 0xFD,))
 
-        self.assertEqual(sensor.resolve_state(), 4589.62353515625)
+        self.assertAlmostEqual(sensor.resolve_state(), 4589.62353515625)
         self.assertEqual(sensor.unit_of_measurement(), "c")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -627,7 +627,7 @@ class TestSensor(Testcase):
             value_type="electric_flux_density")
         sensor.sensor_value.payload = DPTArray((0xC6, 0x0, 0x50, 0xA8,))
 
-        self.assertEqual(sensor.resolve_state(), -8212.1640625)
+        self.assertAlmostEqual(sensor.resolve_state(), -8212.1640625)
         self.assertEqual(sensor.unit_of_measurement(), "C/m²")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -642,7 +642,7 @@ class TestSensor(Testcase):
             value_type="electric_polarization")
         sensor.sensor_value.payload = DPTArray((0x45, 0xF8, 0x89, 0xC6,))
 
-        self.assertEqual(sensor.resolve_state(), 7953.2216796875)
+        self.assertAlmostEqual(sensor.resolve_state(), 7953.2216796875)
         self.assertEqual(sensor.unit_of_measurement(), "C/m²")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -657,7 +657,7 @@ class TestSensor(Testcase):
             value_type="electric_potential")
         sensor.sensor_value.payload = DPTArray((0xC6, 0x18, 0xA4, 0xAF,))
 
-        self.assertEqual(sensor.resolve_state(), -9769.1708984375)
+        self.assertAlmostEqual(sensor.resolve_state(), -9769.1708984375)
         self.assertEqual(sensor.unit_of_measurement(), "V")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -672,7 +672,7 @@ class TestSensor(Testcase):
             value_type="electric_potential_difference")
         sensor.sensor_value.payload = DPTArray((0xC6, 0xF, 0x1D, 0x6,))
 
-        self.assertEqual(sensor.resolve_state(), -9159.255859375)
+        self.assertAlmostEqual(sensor.resolve_state(), -9159.255859375)
         self.assertEqual(sensor.unit_of_measurement(), "V")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -687,7 +687,7 @@ class TestSensor(Testcase):
             value_type="electromagnetic_moment")
         sensor.sensor_value.payload = DPTArray((0x45, 0x82, 0x48, 0xAE,))
 
-        self.assertEqual(sensor.resolve_state(), 4169.0849609375)
+        self.assertAlmostEqual(sensor.resolve_state(), 4169.0849609375)
         self.assertEqual(sensor.unit_of_measurement(), "A m²")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -702,7 +702,7 @@ class TestSensor(Testcase):
             value_type="electromotive_force")
         sensor.sensor_value.payload = DPTArray((0x45, 0xBC, 0xEF, 0xEB,))
 
-        self.assertEqual(sensor.resolve_state(), 6045.98974609375)
+        self.assertAlmostEqual(sensor.resolve_state(), 6045.98974609375)
         self.assertEqual(sensor.unit_of_measurement(), "V")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -717,7 +717,7 @@ class TestSensor(Testcase):
             value_type="energy")
         sensor.sensor_value.payload = DPTArray((0x45, 0x4B, 0xB3, 0xF8,))
 
-        self.assertEqual(sensor.resolve_state(), 3259.248046875)
+        self.assertAlmostEqual(sensor.resolve_state(), 3259.248046875)
         self.assertEqual(sensor.unit_of_measurement(), "J")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -732,7 +732,7 @@ class TestSensor(Testcase):
             value_type="enthalpy")
         sensor.sensor_value.payload = DPTArray((0x76, 0xDD,))
 
-        self.assertEqual(sensor.resolve_state(), 287866.88)
+        self.assertAlmostEqual(sensor.resolve_state(), 287866.88, 5)
         self.assertEqual(sensor.unit_of_measurement(), "H")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -762,7 +762,7 @@ class TestSensor(Testcase):
             value_type="force")
         sensor.sensor_value.payload = DPTArray((0x45, 0x9E, 0x2C, 0xE1,))
 
-        self.assertEqual(sensor.resolve_state(), 5061.60986328125)
+        self.assertAlmostEqual(sensor.resolve_state(), 5061.60986328125)
         self.assertEqual(sensor.unit_of_measurement(), "N")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -777,7 +777,7 @@ class TestSensor(Testcase):
             value_type="frequency")
         sensor.sensor_value.payload = DPTArray((0x45, 0xC2, 0x3C, 0x44,))
 
-        self.assertEqual(sensor.resolve_state(), 6215.533203125)
+        self.assertAlmostEqual(sensor.resolve_state(), 6215.533203125)
         self.assertEqual(sensor.unit_of_measurement(), "Hz")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -792,7 +792,7 @@ class TestSensor(Testcase):
             value_type="heatcapacity")
         sensor.sensor_value.payload = DPTArray((0xC5, 0xB3, 0x56, 0x7E,))
 
-        self.assertEqual(sensor.resolve_state(), -5738.8115234375)
+        self.assertAlmostEqual(sensor.resolve_state(), -5738.8115234375)
         self.assertEqual(sensor.unit_of_measurement(), "J/K")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -807,7 +807,7 @@ class TestSensor(Testcase):
             value_type="heatflowrate")
         sensor.sensor_value.payload = DPTArray((0x44, 0xEC, 0x80, 0x7A,))
 
-        self.assertEqual(sensor.resolve_state(), 1892.014892578125)
+        self.assertAlmostEqual(sensor.resolve_state(), 1892.014892578125)
         self.assertEqual(sensor.unit_of_measurement(), "W")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -822,7 +822,7 @@ class TestSensor(Testcase):
             value_type="heat_quantity")
         sensor.sensor_value.payload = DPTArray((0xC5, 0xA6, 0xB6, 0xD5,))
 
-        self.assertEqual(sensor.resolve_state(), -5334.85400390625)
+        self.assertAlmostEqual(sensor.resolve_state(), -5334.85400390625)
         self.assertEqual(sensor.unit_of_measurement(), "J")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -837,7 +837,7 @@ class TestSensor(Testcase):
             value_type="humidity")
         sensor.sensor_value.payload = DPTArray((0x7E, 0xE1,))
 
-        self.assertEqual(sensor.resolve_state(), 577044.48)
+        self.assertAlmostEqual(sensor.resolve_state(), 577044.48, 5)
         self.assertEqual(sensor.unit_of_measurement(), "%")
         self.assertEqual(sensor.ha_device_class(), 'humidity')
 
@@ -852,7 +852,7 @@ class TestSensor(Testcase):
             value_type="impedance")
         sensor.sensor_value.payload = DPTArray((0x45, 0xDD, 0x79, 0x6D,))
 
-        self.assertEqual(sensor.resolve_state(), 7087.17822265625)
+        self.assertAlmostEqual(sensor.resolve_state(), 7087.17822265625)
         self.assertEqual(sensor.unit_of_measurement(), "Ω")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -867,7 +867,7 @@ class TestSensor(Testcase):
             value_type="illuminance")
         sensor.sensor_value.payload = DPTArray((0x7C, 0x5E,))
 
-        self.assertEqual(sensor.resolve_state(), 366346.24)
+        self.assertAlmostEqual(sensor.resolve_state(), 366346.24, 5)
         self.assertEqual(sensor.unit_of_measurement(), "lx")
         self.assertEqual(sensor.ha_device_class(), 'illuminance')
 
@@ -882,7 +882,7 @@ class TestSensor(Testcase):
             value_type="kelvin_per_percent")
         sensor.sensor_value.payload = DPTArray((0xFA, 0xBD,))
 
-        self.assertEqual(sensor.resolve_state(), -441384.96)
+        self.assertAlmostEqual(sensor.resolve_state(), -441384.96)
         self.assertEqual(sensor.unit_of_measurement(), "K/%")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -897,7 +897,7 @@ class TestSensor(Testcase):
             value_type="length")
         sensor.sensor_value.payload = DPTArray((0xC5, 0x9D, 0xAE, 0xC5,))
 
-        self.assertEqual(sensor.resolve_state(), -5045.84619140625)
+        self.assertAlmostEqual(sensor.resolve_state(), -5045.84619140625)
         self.assertEqual(sensor.unit_of_measurement(), "m")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -927,7 +927,7 @@ class TestSensor(Testcase):
             value_type="light_quantity")
         sensor.sensor_value.payload = DPTArray((0x45, 0x4A, 0xF5, 0x68,))
 
-        self.assertEqual(sensor.resolve_state(), 3247.337890625)
+        self.assertAlmostEqual(sensor.resolve_state(), 3247.337890625)
         self.assertEqual(sensor.unit_of_measurement(), "lm s")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -942,7 +942,7 @@ class TestSensor(Testcase):
             value_type="long_delta_timesec")
         sensor.sensor_value.payload = DPTArray((0x45, 0xB2, 0x17, 0x54,))
 
-        self.assertEqual(sensor.resolve_state(), 1169299284)
+        self.assertAlmostEqual(sensor.resolve_state(), 1169299284)
         self.assertEqual(sensor.unit_of_measurement(), "s")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -957,7 +957,7 @@ class TestSensor(Testcase):
             value_type="luminance")
         sensor.sensor_value.payload = DPTArray((0x45, 0x18, 0xD9, 0x76,))
 
-        self.assertEqual(sensor.resolve_state(), 2445.59130859375)
+        self.assertAlmostEqual(sensor.resolve_state(), 2445.59130859375)
         self.assertEqual(sensor.unit_of_measurement(), "cd/m²")
         self.assertEqual(sensor.ha_device_class(), 'illuminance')
 
@@ -972,7 +972,7 @@ class TestSensor(Testcase):
             value_type="luminous_flux")
         sensor.sensor_value.payload = DPTArray((0x45, 0xBD, 0x16, 0x9,))
 
-        self.assertEqual(sensor.resolve_state(), 6050.75439453125)
+        self.assertAlmostEqual(sensor.resolve_state(), 6050.75439453125)
         self.assertEqual(sensor.unit_of_measurement(), "lm")
         self.assertEqual(sensor.ha_device_class(), 'illuminance')
 
@@ -987,7 +987,7 @@ class TestSensor(Testcase):
             value_type="luminous_intensity")
         sensor.sensor_value.payload = DPTArray((0x46, 0xB, 0xBE, 0x7E,))
 
-        self.assertEqual(sensor.resolve_state(), 8943.623046875)
+        self.assertAlmostEqual(sensor.resolve_state(), 8943.623046875)
         self.assertEqual(sensor.unit_of_measurement(), "cd")
         self.assertEqual(sensor.ha_device_class(), 'illuminance')
 
@@ -1002,7 +1002,7 @@ class TestSensor(Testcase):
             value_type="magnetic_field_strength")
         sensor.sensor_value.payload = DPTArray((0x44, 0x15, 0xF1, 0xAD,))
 
-        self.assertEqual(sensor.resolve_state(), 599.7761840820312)
+        self.assertAlmostEqual(sensor.resolve_state(), 599.7761840820312)
         self.assertEqual(sensor.unit_of_measurement(), "A/m")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1017,7 +1017,7 @@ class TestSensor(Testcase):
             value_type="magnetic_flux")
         sensor.sensor_value.payload = DPTArray((0xC5, 0xCB, 0x3C, 0x98,))
 
-        self.assertEqual(sensor.resolve_state(), -6503.57421875)
+        self.assertAlmostEqual(sensor.resolve_state(), -6503.57421875)
         self.assertEqual(sensor.unit_of_measurement(), "Wb")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1032,7 +1032,7 @@ class TestSensor(Testcase):
             value_type="magnetic_flux_density")
         sensor.sensor_value.payload = DPTArray((0x45, 0xB6, 0xBD, 0x42,))
 
-        self.assertEqual(sensor.resolve_state(), 5847.6572265625)
+        self.assertAlmostEqual(sensor.resolve_state(), 5847.6572265625)
         self.assertEqual(sensor.unit_of_measurement(), "T")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1047,7 +1047,7 @@ class TestSensor(Testcase):
             value_type="magnetic_moment")
         sensor.sensor_value.payload = DPTArray((0xC3, 0x8E, 0x7F, 0x73,))
 
-        self.assertEqual(sensor.resolve_state(), -284.9956970214844)
+        self.assertAlmostEqual(sensor.resolve_state(), -284.9956970214844)
         self.assertEqual(sensor.unit_of_measurement(), "A m²")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1062,7 +1062,7 @@ class TestSensor(Testcase):
             value_type="magnetic_polarization")
         sensor.sensor_value.payload = DPTArray((0x45, 0x8C, 0xFA, 0xCB,))
 
-        self.assertEqual(sensor.resolve_state(), 4511.34912109375)
+        self.assertAlmostEqual(sensor.resolve_state(), 4511.34912109375)
         self.assertEqual(sensor.unit_of_measurement(), "T")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1077,7 +1077,7 @@ class TestSensor(Testcase):
             value_type="magnetization")
         sensor.sensor_value.payload = DPTArray((0x45, 0xF7, 0x9D, 0xA2,))
 
-        self.assertEqual(sensor.resolve_state(), 7923.7041015625)
+        self.assertAlmostEqual(sensor.resolve_state(), 7923.7041015625)
         self.assertEqual(sensor.unit_of_measurement(), "A/m")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1092,7 +1092,7 @@ class TestSensor(Testcase):
             value_type="magnetomotive_force")
         sensor.sensor_value.payload = DPTArray((0xC6, 0x4, 0xC2, 0xDA,))
 
-        self.assertEqual(sensor.resolve_state(), -8496.712890625)
+        self.assertAlmostEqual(sensor.resolve_state(), -8496.712890625)
         self.assertEqual(sensor.unit_of_measurement(), "A")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1107,7 +1107,7 @@ class TestSensor(Testcase):
             value_type="mass")
         sensor.sensor_value.payload = DPTArray((0x45, 0x8F, 0x70, 0xA4,))
 
-        self.assertEqual(sensor.resolve_state(), 4590.080078125)
+        self.assertAlmostEqual(sensor.resolve_state(), 4590.080078125)
         self.assertEqual(sensor.unit_of_measurement(), "kg")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1122,7 +1122,7 @@ class TestSensor(Testcase):
             value_type="mass_flux")
         sensor.sensor_value.payload = DPTArray((0xC6, 0x7, 0x34, 0xFF,))
 
-        self.assertEqual(sensor.resolve_state(), -8653.2490234375)
+        self.assertAlmostEqual(sensor.resolve_state(), -8653.2490234375)
         self.assertEqual(sensor.unit_of_measurement(), "kg/s")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1137,7 +1137,7 @@ class TestSensor(Testcase):
             value_type="mol")
         sensor.sensor_value.payload = DPTArray((0xC4, 0xA0, 0xF4, 0x68,))
 
-        self.assertEqual(sensor.resolve_state(), -1287.6376953125)
+        self.assertAlmostEqual(sensor.resolve_state(), -1287.6376953125)
         self.assertEqual(sensor.unit_of_measurement(), "mol")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1152,7 +1152,7 @@ class TestSensor(Testcase):
             value_type="momentum")
         sensor.sensor_value.payload = DPTArray((0xC5, 0x27, 0xAA, 0x5B,))
 
-        self.assertEqual(sensor.resolve_state(), -2682.647216796875)
+        self.assertAlmostEqual(sensor.resolve_state(), -2682.647216796875)
         self.assertEqual(sensor.unit_of_measurement(), "N/s")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1227,7 +1227,7 @@ class TestSensor(Testcase):
             value_type="phaseanglerad")
         sensor.sensor_value.payload = DPTArray((0x45, 0x54, 0xAC, 0x2E,))
 
-        self.assertEqual(sensor.resolve_state(), 3402.76123046875)
+        self.assertAlmostEqual(sensor.resolve_state(), 3402.76123046875)
         self.assertEqual(sensor.unit_of_measurement(), "rad")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1242,7 +1242,7 @@ class TestSensor(Testcase):
             value_type="phaseangledeg")
         sensor.sensor_value.payload = DPTArray((0xC5, 0x25, 0x13, 0x38,))
 
-        self.assertEqual(sensor.resolve_state(), -2641.201171875)
+        self.assertAlmostEqual(sensor.resolve_state(), -2641.201171875)
         self.assertEqual(sensor.unit_of_measurement(), "°")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1257,7 +1257,7 @@ class TestSensor(Testcase):
             value_type="power")
         sensor.sensor_value.payload = DPTArray((0x45, 0xCB, 0xE2, 0x5C,))
 
-        self.assertEqual(sensor.resolve_state(), 6524.294921875)
+        self.assertAlmostEqual(sensor.resolve_state(), 6524.294921875)
         self.assertEqual(sensor.unit_of_measurement(), "W")
         self.assertEqual(sensor.ha_device_class(), 'power')
 
@@ -1272,7 +1272,7 @@ class TestSensor(Testcase):
             value_type="power_2byte")
         sensor.sensor_value.payload = DPTArray((0x6D, 0x91,))
 
-        self.assertEqual(sensor.resolve_state(), 116736.0)
+        self.assertAlmostEqual(sensor.resolve_state(), 116736.0)
         self.assertEqual(sensor.unit_of_measurement(), "kW")
         self.assertEqual(sensor.ha_device_class(), 'power')
 
@@ -1287,7 +1287,7 @@ class TestSensor(Testcase):
             value_type="power_density")
         sensor.sensor_value.payload = DPTArray((0x65, 0x3E,))
 
-        self.assertEqual(sensor.resolve_state(), 54968.32)
+        self.assertAlmostEqual(sensor.resolve_state(), 54968.32, 5)
         self.assertEqual(sensor.unit_of_measurement(), "W/m²")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1302,7 +1302,7 @@ class TestSensor(Testcase):
             value_type="powerfactor")
         sensor.sensor_value.payload = DPTArray((0xC5, 0x35, 0x28, 0x21,))
 
-        self.assertEqual(sensor.resolve_state(), -2898.508056640625)
+        self.assertAlmostEqual(sensor.resolve_state(), -2898.508056640625)
         self.assertEqual(sensor.unit_of_measurement(), "cosΦ")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1317,7 +1317,7 @@ class TestSensor(Testcase):
             value_type="ppm")
         sensor.sensor_value.payload = DPTArray((0x7F, 0x74,))
 
-        self.assertEqual(sensor.resolve_state(), 625213.44)
+        self.assertAlmostEqual(sensor.resolve_state(), 625213.44, 5)
         self.assertEqual(sensor.unit_of_measurement(), "ppm")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1332,7 +1332,7 @@ class TestSensor(Testcase):
             value_type="pressure")
         sensor.sensor_value.payload = DPTArray((0xC5, 0xE6, 0xE6, 0x63,))
 
-        self.assertEqual(sensor.resolve_state(), -7388.79833984375)
+        self.assertAlmostEqual(sensor.resolve_state(), -7388.79833984375)
         self.assertEqual(sensor.unit_of_measurement(), "Pa")
         self.assertEqual(sensor.ha_device_class(), 'pressure')
 
@@ -1347,7 +1347,7 @@ class TestSensor(Testcase):
             value_type="pressure_2byte")
         sensor.sensor_value.payload = DPTArray((0x7C, 0xF4,))
 
-        self.assertEqual(sensor.resolve_state(), 415498.24)
+        self.assertAlmostEqual(sensor.resolve_state(), 415498.24, 5)
         self.assertEqual(sensor.unit_of_measurement(), "Pa")
         self.assertEqual(sensor.ha_device_class(), 'pressure')
 
@@ -1377,7 +1377,7 @@ class TestSensor(Testcase):
             value_type="rain_amount")
         sensor.sensor_value.payload = DPTArray((0xE0, 0xD0,))
 
-        self.assertEqual(sensor.resolve_state(), -75366.4)
+        self.assertAlmostEqual(sensor.resolve_state(), -75366.4)
         self.assertEqual(sensor.unit_of_measurement(), "l/m²")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1392,7 +1392,7 @@ class TestSensor(Testcase):
             value_type="reactance")
         sensor.sensor_value.payload = DPTArray((0x45, 0xB0, 0x50, 0x91,))
 
-        self.assertEqual(sensor.resolve_state(), 5642.07080078125)
+        self.assertAlmostEqual(sensor.resolve_state(), 5642.07080078125)
         self.assertEqual(sensor.unit_of_measurement(), "Ω")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1422,7 +1422,7 @@ class TestSensor(Testcase):
             value_type="reactive_energy_kvarh")
         sensor.sensor_value.payload = DPTArray((0xCC, 0x62, 0x5, 0x31,))
 
-        self.assertEqual(sensor.resolve_state(), -865991375)
+        self.assertAlmostEqual(sensor.resolve_state(), -865991375)
         self.assertEqual(sensor.unit_of_measurement(), "kVARh")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1437,7 +1437,7 @@ class TestSensor(Testcase):
             value_type="resistance")
         sensor.sensor_value.payload = DPTArray((0xC5, 0xFC, 0x5F, 0xC2,))
 
-        self.assertEqual(sensor.resolve_state(), -8075.9697265625)
+        self.assertAlmostEqual(sensor.resolve_state(), -8075.9697265625)
         self.assertEqual(sensor.unit_of_measurement(), "Ω")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1452,7 +1452,7 @@ class TestSensor(Testcase):
             value_type="resistivity")
         sensor.sensor_value.payload = DPTArray((0xC5, 0x57, 0x76, 0xC3,))
 
-        self.assertEqual(sensor.resolve_state(), -3447.422607421875)
+        self.assertAlmostEqual(sensor.resolve_state(), -3447.422607421875)
         self.assertEqual(sensor.unit_of_measurement(), "Ω m")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1497,7 +1497,7 @@ class TestSensor(Testcase):
             value_type="self_inductance")
         sensor.sensor_value.payload = DPTArray((0xC4, 0xA1, 0xB0, 0x6,))
 
-        self.assertEqual(sensor.resolve_state(), -1293.500732421875)
+        self.assertAlmostEqual(sensor.resolve_state(), -1293.500732421875)
         self.assertEqual(sensor.unit_of_measurement(), "H")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1512,7 +1512,7 @@ class TestSensor(Testcase):
             value_type="solid_angle")
         sensor.sensor_value.payload = DPTArray((0xC5, 0xC6, 0xE5, 0x47,))
 
-        self.assertEqual(sensor.resolve_state(), -6364.65966796875)
+        self.assertAlmostEqual(sensor.resolve_state(), -6364.65966796875)
         self.assertEqual(sensor.unit_of_measurement(), "sr")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1527,7 +1527,7 @@ class TestSensor(Testcase):
             value_type="sound_intensity")
         sensor.sensor_value.payload = DPTArray((0xC4, 0xF2, 0x56, 0xE6,))
 
-        self.assertEqual(sensor.resolve_state(), -1938.715576171875)
+        self.assertAlmostEqual(sensor.resolve_state(), -1938.715576171875)
         self.assertEqual(sensor.unit_of_measurement(), "W/m²")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1542,7 +1542,7 @@ class TestSensor(Testcase):
             value_type="speed")
         sensor.sensor_value.payload = DPTArray((0xC5, 0xCD, 0x1C, 0x6A,))
 
-        self.assertEqual(sensor.resolve_state(), -6563.5517578125)
+        self.assertAlmostEqual(sensor.resolve_state(), -6563.5517578125)
         self.assertEqual(sensor.unit_of_measurement(), "m/s")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1557,7 +1557,7 @@ class TestSensor(Testcase):
             value_type="stress")
         sensor.sensor_value.payload = DPTArray((0x45, 0xDC, 0xA8, 0xF2,))
 
-        self.assertEqual(sensor.resolve_state(), 7061.1181640625)
+        self.assertAlmostEqual(sensor.resolve_state(), 7061.1181640625)
         self.assertEqual(sensor.unit_of_measurement(), "Pa")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1572,7 +1572,7 @@ class TestSensor(Testcase):
             value_type="surface_tension")
         sensor.sensor_value.payload = DPTArray((0x46, 0xB, 0xAC, 0x11,))
 
-        self.assertEqual(sensor.resolve_state(), 8939.0166015625)
+        self.assertAlmostEqual(sensor.resolve_state(), 8939.0166015625)
         self.assertEqual(sensor.unit_of_measurement(), "N/m")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1587,7 +1587,7 @@ class TestSensor(Testcase):
             value_type="temperature")
         sensor.sensor_value.payload = DPTArray((0x77, 0x88,))
 
-        self.assertEqual(sensor.resolve_state(), 315883.52)
+        self.assertAlmostEqual(sensor.resolve_state(), 315883.52, 5)
         self.assertEqual(sensor.unit_of_measurement(), "°C")
         self.assertEqual(sensor.ha_device_class(), 'temperature')
 
@@ -1602,7 +1602,7 @@ class TestSensor(Testcase):
             value_type="temperature_a")
         sensor.sensor_value.payload = DPTArray((0xF1, 0xDB,))
 
-        self.assertEqual(sensor.resolve_state(), -257720.32)
+        self.assertAlmostEqual(sensor.resolve_state(), -257720.32, 5)
         self.assertEqual(sensor.unit_of_measurement(), "K/h")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1617,7 +1617,7 @@ class TestSensor(Testcase):
             value_type="temperature_difference")
         sensor.sensor_value.payload = DPTArray((0xC6, 0xC, 0x50, 0xBC,))
 
-        self.assertEqual(sensor.resolve_state(), -8980.18359375)
+        self.assertAlmostEqual(sensor.resolve_state(), -8980.18359375)
         self.assertEqual(sensor.unit_of_measurement(), "K")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1632,7 +1632,7 @@ class TestSensor(Testcase):
             value_type="temperature_difference_2byte")
         sensor.sensor_value.payload = DPTArray((0xA9, 0xF4,))
 
-        self.assertEqual(sensor.resolve_state(), -495.36)
+        self.assertAlmostEqual(sensor.resolve_state(), -495.36)
         self.assertEqual(sensor.unit_of_measurement(), "K")
         self.assertEqual(sensor.ha_device_class(), 'temperature')
 
@@ -1647,7 +1647,7 @@ class TestSensor(Testcase):
             value_type="temperature_f")
         sensor.sensor_value.payload = DPTArray((0x67, 0xA9,))
 
-        self.assertEqual(sensor.resolve_state(), 80322.56)
+        self.assertAlmostEqual(sensor.resolve_state(), 80322.56, 5)
         self.assertEqual(sensor.unit_of_measurement(), "°F")
         self.assertEqual(sensor.ha_device_class(), 'temperature')
 
@@ -1662,7 +1662,7 @@ class TestSensor(Testcase):
             value_type="thermal_capacity")
         sensor.sensor_value.payload = DPTArray((0x45, 0x83, 0xEA, 0xB3,))
 
-        self.assertEqual(sensor.resolve_state(), 4221.33740234375)
+        self.assertAlmostEqual(sensor.resolve_state(), 4221.33740234375)
         self.assertEqual(sensor.unit_of_measurement(), "J/K")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1677,7 +1677,7 @@ class TestSensor(Testcase):
             value_type="thermal_conductivity")
         sensor.sensor_value.payload = DPTArray((0xC5, 0x9C, 0x4D, 0x22,))
 
-        self.assertEqual(sensor.resolve_state(), -5001.6416015625)
+        self.assertAlmostEqual(sensor.resolve_state(), -5001.6416015625)
         self.assertEqual(sensor.unit_of_measurement(), "W/mK")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1692,7 +1692,7 @@ class TestSensor(Testcase):
             value_type="thermoelectric_power")
         sensor.sensor_value.payload = DPTArray((0x41, 0xCF, 0x9E, 0x4F,))
 
-        self.assertEqual(sensor.resolve_state(), 25.952299118041992)
+        self.assertAlmostEqual(sensor.resolve_state(), 25.952299118041992)
         self.assertEqual(sensor.unit_of_measurement(), "V/K")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1707,7 +1707,7 @@ class TestSensor(Testcase):
             value_type="time_1")
         sensor.sensor_value.payload = DPTArray((0x5E, 0x1E,))
 
-        self.assertEqual(sensor.resolve_state(), 32071.68)
+        self.assertAlmostEqual(sensor.resolve_state(), 32071.68, 5)
         self.assertEqual(sensor.unit_of_measurement(), "s")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1722,7 +1722,7 @@ class TestSensor(Testcase):
             value_type="time_2")
         sensor.sensor_value.payload = DPTArray((0xFB, 0x29,))
 
-        self.assertEqual(sensor.resolve_state(), -405995.52)
+        self.assertAlmostEqual(sensor.resolve_state(), -405995.52, 5)
         self.assertEqual(sensor.unit_of_measurement(), "ms")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1827,7 +1827,7 @@ class TestSensor(Testcase):
             value_type="time_seconds")
         sensor.sensor_value.payload = DPTArray((0x45, 0xEC, 0x91, 0x7C,))
 
-        self.assertEqual(sensor.resolve_state(), 7570.185546875)
+        self.assertAlmostEqual(sensor.resolve_state(), 7570.185546875)
         self.assertEqual(sensor.unit_of_measurement(), "s")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1842,7 +1842,7 @@ class TestSensor(Testcase):
             value_type="torque")
         sensor.sensor_value.payload = DPTArray((0xC5, 0x9, 0x23, 0x5F,))
 
-        self.assertEqual(sensor.resolve_state(), -2194.210693359375)
+        self.assertAlmostEqual(sensor.resolve_state(), -2194.210693359375)
         self.assertEqual(sensor.unit_of_measurement(), "N m")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1857,7 +1857,7 @@ class TestSensor(Testcase):
             value_type="voltage")
         sensor.sensor_value.payload = DPTArray((0x6D, 0xBF,))
 
-        self.assertEqual(sensor.resolve_state(), 120504.32)
+        self.assertAlmostEqual(sensor.resolve_state(), 120504.32, 5)
         self.assertEqual(sensor.unit_of_measurement(), "mV")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1872,7 +1872,7 @@ class TestSensor(Testcase):
             value_type="volume")
         sensor.sensor_value.payload = DPTArray((0x46, 0x16, 0x98, 0x43,))
 
-        self.assertEqual(sensor.resolve_state(), 9638.0654296875)
+        self.assertAlmostEqual(sensor.resolve_state(), 9638.0654296875)
         self.assertEqual(sensor.unit_of_measurement(), "m³")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1887,7 +1887,7 @@ class TestSensor(Testcase):
             value_type="volume_flow")
         sensor.sensor_value.payload = DPTArray((0x7C, 0xF5,))
 
-        self.assertEqual(sensor.resolve_state(), 415825.92)
+        self.assertAlmostEqual(sensor.resolve_state(), 415825.92, 5)
         self.assertEqual(sensor.unit_of_measurement(), "l/h")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1902,7 +1902,7 @@ class TestSensor(Testcase):
             value_type="volume_flux")
         sensor.sensor_value.payload = DPTArray((0xC5, 0x4, 0x2D, 0x72,))
 
-        self.assertEqual(sensor.resolve_state(), -2114.84033203125)
+        self.assertAlmostEqual(sensor.resolve_state(), -2114.84033203125)
         self.assertEqual(sensor.unit_of_measurement(), "m³/s")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1917,7 +1917,7 @@ class TestSensor(Testcase):
             value_type="weight")
         sensor.sensor_value.payload = DPTArray((0x45, 0x20, 0x10, 0xE8,))
 
-        self.assertEqual(sensor.resolve_state(), 2561.056640625)
+        self.assertAlmostEqual(sensor.resolve_state(), 2561.056640625)
         self.assertEqual(sensor.unit_of_measurement(), "N")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1932,7 +1932,7 @@ class TestSensor(Testcase):
             value_type="work")
         sensor.sensor_value.payload = DPTArray((0x45, 0x64, 0x5D, 0xBE,))
 
-        self.assertEqual(sensor.resolve_state(), 3653.85888671875)
+        self.assertAlmostEqual(sensor.resolve_state(), 3653.85888671875)
         self.assertEqual(sensor.unit_of_measurement(), "J")
         self.assertEqual(sensor.ha_device_class(), None)
 
@@ -1947,7 +1947,7 @@ class TestSensor(Testcase):
             value_type="wind_speed_ms")
         sensor.sensor_value.payload = DPTArray((0x7D, 0x98,))
 
-        self.assertEqual(sensor.resolve_state(), 469237.76)
+        self.assertAlmostEqual(sensor.resolve_state(), 469237.76, 5)
         self.assertEqual(sensor.unit_of_measurement(), "m/s")
         self.assertEqual(sensor.ha_device_class(), None)
 

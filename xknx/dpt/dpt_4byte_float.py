@@ -10,6 +10,7 @@ from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
 
+from math import log10
 
 class DPT4ByteFloat(DPTBase):
     """
@@ -31,9 +32,13 @@ class DPT4ByteFloat(DPTBase):
         """Parse/deserialize from KNX/IP raw data (big endian)."""
         cls.test_bytesarray(raw, 4)
         try:
-            return struct.unpack(">f", bytes(raw))[0]
+            res = struct.unpack(">f", bytes(raw))[0]
         except struct.error:
             raise ConversionError("Cant parse %s" % cls.__name__, raw=raw)
+        else:
+            if res:
+                res = round(res, 14-int(log10(abs(res))))
+            return res
 
     @classmethod
     def to_knx(cls, value):
