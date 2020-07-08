@@ -37,7 +37,7 @@ class DPT4ByteFloat(DPTBase):
             raise ConversionError("Cant parse %s" % cls.__name__, raw=raw)
         else:
             if res:
-                res = round(res, 14-int(log10(abs(res))))
+                res = round(res, 7-int(log10(abs(res))))
             return res
 
     @classmethod
