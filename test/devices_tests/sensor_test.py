@@ -1827,7 +1827,7 @@ class TestSensor(Testcase):
             value_type="time_seconds")
         sensor.sensor_value.payload = DPTArray((0x45, 0xEC, 0x91, 0x7C,))
 
-        self.assertAlmostEqual(sensor.resolve_state(), 7570.185546875, 7)
+        self.assertAlmostEqual(sensor.resolve_state(), 7570.185546875, 6)
         self.assertEqual(sensor.unit_of_measurement(), "s")
         self.assertEqual(sensor.ha_device_class(), None)
 
