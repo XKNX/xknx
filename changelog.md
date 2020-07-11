@@ -8,6 +8,14 @@ Upcoming version (unreleased)
 
 * Added config option ignore_internal_state in binary sensors (@andreasnanko #267)
 
+### Breaking changes
+
+* Removed `bind_to_multicast` option in ConnectionConfig and UDPClient
+
+### Bugfixes
+
+* enable multicast on macOS and fix a bug where unknown cemi frames raise a TypeError on routing connections
+
 ### Internals
 
 * Automatically publish packages to pypi (@Julius2342 #277)
