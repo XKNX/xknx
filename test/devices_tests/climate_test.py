@@ -980,7 +980,7 @@ class TestClimate(unittest.TestCase):
 
     def test_custom_supported_operation_modes_as_str(self):
         """Test get_supported_operation_modes with custom mode as str list."""
-        str_modes = ['STANDBY', 'FROST_PROTECTION']
+        str_modes = ['Standby', 'Frost Protection']
         modes = [HVACOperationMode.STANDBY, HVACOperationMode.FROST_PROTECTION]
         xknx = XKNX(loop=self.loop)
         climate_mode = ClimateMode(

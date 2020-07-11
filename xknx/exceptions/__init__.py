@@ -2,4 +2,5 @@
 # flake8: noqa
 from .exception import (
     ConversionError, CouldNotParseAddress, CouldNotParseKNXIP,
-    CouldNotParseTelegram, DeviceIllegalValue, XKNXException)
+    CouldNotParseTelegram, DeviceIllegalValue, UnsupportedCEMIMessage,
+    XKNXException)

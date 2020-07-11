@@ -6,6 +6,7 @@ Due to lame support of UDP multicast within asyncio some special treatment for m
 """
 import asyncio
 import socket
+from sys import platform
 
 from xknx.exceptions import CouldNotParseKNXIP, XKNXException
 from xknx.knxip import KNXIPFrame
@@ -51,6 +52,7 @@ class UDPClient:
 
         def datagram_received(self, data, addr):
             """Call assigned callback. Callback for datagram received."""
+            self.xknx.raw_socket_logger.debug("Received from %s: %s", addr, data.hex())
             if self.data_received_callback is not None:
                 self.data_received_callback(data)
 
@@ -148,7 +150,10 @@ class UDPClient:
         # - bind() with own_ip does not work with ROUTING_INDICATIONS on Gira
         #   knx router - for an unknown reason.
         if bind_to_multicast_addr:
-            sock.bind((remote_addr[0], remote_addr[1]))
+            if platform == "win32":
+                sock.bind(('', remote_addr[1]))
+            else:
+                sock.bind((remote_addr[0], remote_addr[1]))
         else:
             sock.bind((own_ip, 0))
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)

@@ -39,13 +39,27 @@ class CouldNotParseKNXIP(XKNXException):
     """Exception class for wrong KNXIP data."""
 
     def __init__(self, description=""):
-        """Initialize CouldNotParseTelegram class."""
+        """Initialize CouldNotParseKNXIP class."""
         super().__init__()
         self.description = description
 
     def __str__(self):
         """Return object as readable string."""
         return '<CouldNotParseKNXIP description="{0}" />' \
+            .format(self.description)
+
+
+class UnsupportedCEMIMessage(XKNXException):
+    """Exception class for unsupported CEMI Messages."""
+
+    def __init__(self, description=""):
+        """Initialize UnsupportedCEMIMessage class."""
+        super().__init__()
+        self.description = description
+
+    def __str__(self):
+        """Return object as readable string."""
+        return '<UnsupportedCEMIMessage description="{0}" />' \
             .format(self.description)
 
 

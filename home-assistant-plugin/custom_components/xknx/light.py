@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_WHITE_VALUE,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import callback
@@ -132,7 +132,7 @@ def async_add_entities_config(hass, config, async_add_entities):
     async_add_entities([KNXLight(light)])
 
 
-class KNXLight(Light):
+class KNXLight(LightEntity):
     """Representation of a KNX light."""
 
     def __init__(self, device):
@@ -154,13 +154,17 @@ class KNXLight(Light):
 
         async def after_update_callback(device):
             """Call after device was updated."""
-            await self.async_update_ha_state()
+            self.async_write_ha_state()
 
         self.device.register_device_updated_cb(after_update_callback)
 
     async def async_added_to_hass(self):
         """Store register state change callback."""
         self.async_register_callbacks()
+
+    async def async_update(self):
+        """Request a state update from KNX bus."""
+        await self.device.sync()
 
     @property
     def name(self):
@@ -180,9 +184,13 @@ class KNXLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        if not self.device.supports_brightness:
-            return None
-        return self.device.current_brightness
+        if self.device.supports_brightness:
+            return self.device.current_brightness
+        hsv_color = self._hsv_color
+        if self.device.supports_color and hsv_color:
+            # pylint: disable=unsubscriptable-object
+            return round(hsv_color[-1] / 100 * 255)
+        return None
 
     @property
     def hs_color(self):
@@ -191,6 +199,14 @@ class KNXLight(Light):
         if self.device.supports_rgbw or self.device.supports_color:
             rgb, _ = self.device.current_color
         return color_util.color_RGB_to_hs(*rgb) if rgb else None
+
+    @property
+    def _hsv_color(self):
+        """Return the HSV color value."""
+        rgb = None
+        if self.device.supports_rgbw or self.device.supports_color:
+            rgb, _ = self.device.current_color
+        return color_util.color_RGB_to_hsv(*rgb) if rgb else None
 
     @property
     def white_value(self):
@@ -270,8 +286,13 @@ class KNXLight(Light):
         update_color_temp = ATTR_COLOR_TEMP in kwargs
 
         # avoid conflicting changes and weird effects
-        if not (self.is_on or update_brightness or update_color
-                or update_white_value or update_color_temp):
+        if not (
+            self.is_on
+            or update_brightness
+            or update_color
+            or update_white_value
+            or update_color_temp
+        ):
             await self.device.set_on()
 
         if self.device.supports_brightness and (update_brightness and not update_color):
@@ -280,7 +301,8 @@ class KNXLight(Light):
             # changed, as RGB color implicitly sets the brightness as well
             await self.device.set_brightness(brightness)
         elif (self.device.supports_rgbw or self.device.supports_color) and (
-                update_brightness or update_color or update_white_value):
+            update_brightness or update_color or update_white_value
+        ):
             # change RGB color, white value (if supported), and brightness
             # if brightness or hs_color was not yet set use the default value
             # to calculate RGB from as a fallback
