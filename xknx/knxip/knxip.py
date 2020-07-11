@@ -6,7 +6,6 @@ Depending on the service_type_ident different types of body classes are instanci
 """
 from xknx.exceptions import CouldNotParseKNXIP
 
-from .cemi_frame import CEMIFrame
 from .connect_request import ConnectRequest
 from .connect_response import ConnectResponse
 from .connectionstate_request import ConnectionStateRequest
@@ -15,6 +14,7 @@ from .disconnect_request import DisconnectRequest
 from .disconnect_response import DisconnectResponse
 from .header import KNXIPHeader
 from .knxip_enum import KNXIPServiceType
+from .routing_indication import RoutingIndication
 from .search_request import SearchRequest
 from .search_response import SearchResponse
 from .tunnelling_ack import TunnellingAck
@@ -36,7 +36,7 @@ class KNXIPFrame:
 
         if service_type_ident == \
                 KNXIPServiceType.ROUTING_INDICATION:
-            self.body = CEMIFrame(self.xknx)
+            self.body = RoutingIndication(self.xknx)
         elif service_type_ident == \
                 KNXIPServiceType.CONNECT_REQUEST:
             self.body = ConnectRequest(self.xknx)

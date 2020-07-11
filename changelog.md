@@ -6,6 +6,7 @@
 
 - Removed significant_bit attribute in BinarySensor
 - DateTime devices are initialized with sting for broadcast_type: "time", "date" or "datetime" instead of an Enum value
+- * Removed `bind_to_multicast` option in ConnectionConfig and UDPClient
 
 ### New Features
 
@@ -15,6 +16,7 @@
 
 ### Bugfixes
 
+* enable multicast on macOS and fix a bug where unknown cemi frames raise a TypeError on routing connections
 - BinarySensor: reset_after is now implemented as asyncio.Task to prevent blocking the loop
 - ClimateMode: binary climate modes should be fully functional now (sending, receiving and syncing)
 

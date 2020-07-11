@@ -3,7 +3,7 @@ Module for Serialization and Deserialization of a KNX Tunnel Request information
 
 Connect requests are used to transmit a KNX telegram within an existing KNX tunnel connection.
 """
-from xknx.exceptions import CouldNotParseKNXIP
+from xknx.exceptions import CouldNotParseKNXIP, UnsupportedCEMIMessage
 
 from .body import KNXIPBody
 from .cemi_frame import CEMIFrame, CEMIMessageCode
@@ -43,9 +43,15 @@ class TunnellingRequest(KNXIPBody):
                 raise CouldNotParseKNXIP("connection header wrong length")
             self.communication_channel_id = header[1]
             self.sequence_counter = header[2]
-            return 4
+            return TunnellingRequest.HEADER_LENGTH
         pos = header_from_knx(raw)
-        pos += self.cemi.from_knx(raw[pos:])
+        try:
+            pos += self.cemi.from_knx(raw[pos:])
+        except UnsupportedCEMIMessage as unsupported_cemi_err:
+            self.xknx.logger.warning("CEMI not supported: %s", unsupported_cemi_err)
+            # Set cemi to None - this is checked in Tunnel() to send Ack even for unsupported CEMI messages.
+            self.cemi = None
+            pos += len(raw)
         return pos
 
     def to_knx(self):

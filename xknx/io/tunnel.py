@@ -63,10 +63,11 @@ class Tunnel():
             self.xknx.logger.warning("Service not implemented: %s", knxipframe)
         else:
             self.send_ack(knxipframe.body.communication_channel_id, knxipframe.body.sequence_counter)
-            telegram = knxipframe.body.cemi.telegram
-            telegram.direction = TelegramDirection.INCOMING
-            if self.telegram_received_callback is not None:
-                self.telegram_received_callback(telegram)
+            if knxipframe.body.cemi is not None:
+                telegram = knxipframe.body.cemi.telegram
+                telegram.direction = TelegramDirection.INCOMING
+                if self.telegram_received_callback is not None:
+                    self.telegram_received_callback(telegram)
 
     def send_ack(self, communication_channel_id, sequence_counter):
         """Send tunnelling ACK after tunnelling request received."""

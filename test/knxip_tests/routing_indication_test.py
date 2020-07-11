@@ -5,7 +5,8 @@ import unittest
 
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary, DPTTemperature, DPTTime
-from xknx.knxip import CEMIFrame, KNXIPFrame, KNXIPServiceType
+from xknx.knxip import (
+    CEMIFrame, KNXIPFrame, KNXIPServiceType, RoutingIndication)
 from xknx.telegram import GroupAddress, PhysicalAddress, Telegram, TelegramType
 
 
@@ -32,13 +33,14 @@ class Test_KNXIP(unittest.TestCase):
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 
-        self.assertTrue(isinstance(knxipframe.body, CEMIFrame))
+        self.assertTrue(isinstance(knxipframe.body, RoutingIndication))
+        self.assertTrue(isinstance(knxipframe.body.cemi, CEMIFrame))
 
-        self.assertEqual(knxipframe.body.src_addr, PhysicalAddress("1.2.2"))
-        self.assertEqual(knxipframe.body.dst_addr, GroupAddress(337))
+        self.assertEqual(knxipframe.body.cemi.src_addr, PhysicalAddress("1.2.2"))
+        self.assertEqual(knxipframe.body.cemi.dst_addr, GroupAddress(337))
 
-        self.assertEqual(len(knxipframe.body.payload.value), 1)
-        self.assertEqual(knxipframe.body.payload.value[0], 0xf0)
+        self.assertEqual(len(knxipframe.body.cemi.payload.value), 1)
+        self.assertEqual(knxipframe.body.cemi.payload.value[0], 0xf0)
 
     def test_from_knx_to_knx(self):
         """Test parsing and streaming CEMIFrame KNX/IP."""
@@ -60,7 +62,7 @@ class Test_KNXIP(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         knxipframe = KNXIPFrame(xknx)
         knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe.body.src_addr = PhysicalAddress("1.2.2")
+        knxipframe.body.cemi.src_addr = PhysicalAddress("1.2.2")
 
         telegram = Telegram()
         telegram.group_address = GroupAddress(337)
@@ -68,9 +70,9 @@ class Test_KNXIP(unittest.TestCase):
         telegram.payload = DPTArray(DPTTime().to_knx(
             time.strptime("13:23:42", "%H:%M:%S")))
 
-        knxipframe.body.telegram = telegram
+        knxipframe.body.cemi.telegram = telegram
 
-        knxipframe.body.set_hops(5)
+        knxipframe.body.cemi.set_hops(5)
         knxipframe.normalize()
 
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x14, 0x29, 0x00,
@@ -90,7 +92,7 @@ class Test_KNXIP(unittest.TestCase):
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 
-        telegram = knxipframe.body.telegram
+        telegram = knxipframe.body.cemi.telegram
 
         self.assertEqual(telegram.group_address, GroupAddress(337))
 
@@ -114,15 +116,15 @@ class Test_KNXIP(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
-        telegram = knxipframe.body.telegram
+        telegram = knxipframe.body.cemi.telegram
         self.assertEqual(telegram,
                          Telegram(GroupAddress("329"), payload=DPTBinary(1)))
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.body.src_addr = PhysicalAddress("15.15.249")
-        knxipframe2.body.telegram = telegram
-        knxipframe2.body.set_hops(5)
+        knxipframe2.body.cemi.src_addr = PhysicalAddress("15.15.249")
+        knxipframe2.body.cemi.telegram = telegram
+        knxipframe2.body.cemi.set_hops(5)
         knxipframe2.normalize()
 
         self.assertEqual(knxipframe2.header.to_knx(), list(raw[0:6]))
@@ -138,15 +140,15 @@ class Test_KNXIP(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
-        telegram = knxipframe.body.telegram
+        telegram = knxipframe.body.cemi.telegram
         self.assertEqual(telegram,
                          Telegram(GroupAddress("329"), payload=DPTBinary(0)))
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.body.src_addr = PhysicalAddress("15.15.249")
-        knxipframe2.body.telegram = telegram
-        knxipframe2.body.set_hops(5)
+        knxipframe2.body.cemi.src_addr = PhysicalAddress("15.15.249")
+        knxipframe2.body.cemi.telegram = telegram
+        knxipframe2.body.cemi.set_hops(5)
         knxipframe2.normalize()
 
         self.assertEqual(knxipframe2.header.to_knx(), list(raw[0:6]))
@@ -162,15 +164,15 @@ class Test_KNXIP(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
-        telegram = knxipframe.body.telegram
+        telegram = knxipframe.body.cemi.telegram
         self.assertEqual(telegram,
                          Telegram(GroupAddress("331"), payload=DPTArray(0x65)))
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.body.src_addr = PhysicalAddress("15.15.249")
-        knxipframe2.body.telegram = telegram
-        knxipframe2.body.set_hops(5)
+        knxipframe2.body.cemi.src_addr = PhysicalAddress("15.15.249")
+        knxipframe2.body.cemi.telegram = telegram
+        knxipframe2.body.cemi.set_hops(5)
         knxipframe2.normalize()
 
         self.assertEqual(knxipframe2.header.to_knx(), list(raw[0:6]))
@@ -186,7 +188,7 @@ class Test_KNXIP(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
-        telegram = knxipframe.body.telegram
+        telegram = knxipframe.body.cemi.telegram
         self.assertEqual(telegram,
                          Telegram(GroupAddress("2049"),
                                   payload=DPTArray(
@@ -194,9 +196,9 @@ class Test_KNXIP(unittest.TestCase):
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.body.src_addr = PhysicalAddress("1.4.2")
-        knxipframe2.body.telegram = telegram
-        knxipframe2.body.set_hops(5)
+        knxipframe2.body.cemi.src_addr = PhysicalAddress("1.4.2")
+        knxipframe2.body.cemi.telegram = telegram
+        knxipframe2.body.cemi.set_hops(5)
         knxipframe2.normalize()
 
         self.assertEqual(knxipframe2.header.to_knx(), list(raw[0:6]))
@@ -212,15 +214,15 @@ class Test_KNXIP(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
-        telegram = knxipframe.body.telegram
+        telegram = knxipframe.body.cemi.telegram
         self.assertEqual(telegram,
                          Telegram(GroupAddress("440"), TelegramType.GROUP_READ))
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.body.src_addr = PhysicalAddress("15.15.249")
-        knxipframe2.body.telegram = telegram
-        knxipframe2.body.set_hops(5)
+        knxipframe2.body.cemi.src_addr = PhysicalAddress("15.15.249")
+        knxipframe2.body.cemi.telegram = telegram
+        knxipframe2.body.cemi.set_hops(5)
         knxipframe2.normalize()
 
         self.assertEqual(knxipframe2.header.to_knx(), list(raw[0:6]))
@@ -236,7 +238,7 @@ class Test_KNXIP(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
-        telegram = knxipframe.body.telegram
+        telegram = knxipframe.body.cemi.telegram
         self.assertEqual(telegram,
                          Telegram(GroupAddress("392"),
                                   TelegramType.GROUP_RESPONSE,
@@ -244,9 +246,9 @@ class Test_KNXIP(unittest.TestCase):
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.body.src_addr = PhysicalAddress("1.3.1")
-        knxipframe2.body.telegram = telegram
-        knxipframe2.body.set_hops(5)
+        knxipframe2.body.cemi.src_addr = PhysicalAddress("1.3.1")
+        knxipframe2.body.cemi.telegram = telegram
+        knxipframe2.body.cemi.set_hops(5)
         knxipframe2.normalize()
 
         self.assertEqual(knxipframe2.header.to_knx(), list(raw[0:6]))
@@ -261,9 +263,9 @@ class Test_KNXIP(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         knxipframe = KNXIPFrame(xknx)
         knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe.body.src_addr = PhysicalAddress("1.3.1")
-        knxipframe.body.telegram = telegram
-        knxipframe.body.set_hops(5)
+        knxipframe.body.cemi.src_addr = PhysicalAddress("1.3.1")
+        knxipframe.body.cemi.telegram = telegram
+        knxipframe.body.cemi.set_hops(5)
         knxipframe.normalize()
 
         raw = ((0x06, 0x10, 0x05, 0x30, 0x00, 0x11, 0x29, 0x00,
@@ -274,4 +276,4 @@ class Test_KNXIP(unittest.TestCase):
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
         knxipframe2.from_knx(knxipframe.to_knx())
-        self.assertEqual(knxipframe2.body.telegram, telegram)
+        self.assertEqual(knxipframe2.body.cemi.telegram, telegram)
