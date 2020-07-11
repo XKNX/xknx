@@ -39,7 +39,6 @@ class RemoteValue():
         self.after_update_cb = after_update_cb
         self.payload = None
 
-        # TODO: naming? unclear that it holds minutes
         if sync_state and self.group_address_state:
             self.xknx.state_updater.register_remote_value(self, tracker_options=sync_state)
 
@@ -145,7 +144,6 @@ class RemoteValue():
             self.xknx.logger.debug("Sync %s - %s", self.device_name, self.feature_name)
             from xknx.core import ValueReader
             value_reader = ValueReader(self.xknx, self.group_address_state)
-            # TODO: why would we not wait for result? Because of unit tests.
             if wait_for_result:
                 telegram = await value_reader.read()
                 if telegram is not None:

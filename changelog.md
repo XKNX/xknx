@@ -5,14 +5,25 @@
 ### Breaking changes
 
 - Removed significant_bit attribute in BinarySensor
+- DateTime devices are initialized with sting for broadcast_type: "time", "date" or "datetime" instead of an Enum value
 
 ### New Features
 
+- new StateUpdater: Devices `sync_state` can be set to `init` to just initialize state on startup, `expire [minutes]` to read the state from the KNX bus when it was not updated for [minutes] or `every [minutes]` to update it regularly every [minutes]
 - Added config option ignore_internal_state in binary sensors (@andreasnanko #267)
+- ClimateMode: add `group_address_operation_mode_standby` as binary operation mode
+
+### Bugfixes
+
+- BinarySensor: reset_after is now implemented as asyncio.Task to prevent blocking the loop
+- ClimateMode: binary climate modes should be fully functional now (sending, receiving and syncing)
 
 ### Internals
 
-- Use RemoteValue class in BinarySensor device
+- Use RemoteValue class in BinarySensor, DateTime and ClimateMode device
+- use time.struct_time for internal time and date representation
+- use a regular Bool type for BinarySensor state representation
+- RemoteValue.process has always_callback attribute to run the callbacks on every process even if the payload didn't change
 - Automatically publish packages to pypi (@Julius2342 #277)
 - keep xknx version in `xknx/__version__.py` (@farmio #278)
 - add raw_socket logger (@farmio #299)
