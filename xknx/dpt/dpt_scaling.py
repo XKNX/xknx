@@ -14,13 +14,16 @@ class DPTScaling(DPTBase):
     value_min = 0
     value_max = 100
     resolution = 100/255
+    dpt_main_number = 5
+    dpt_sub_number = 1
+    value_type = "percent"
     unit = "%"
     payload_length = 1
 
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 1)
+        cls.test_bytesarray(raw)
 
         knx_value = raw[0]
         delta = cls.value_max - cls.value_min
@@ -61,4 +64,7 @@ class DPTAngle(DPTScaling):
     value_min = 0
     value_max = 360
     resolution = 360/255
+    dpt_main_number = 5
+    dpt_sub_number = 3
+    value_type = "angle"
     unit = "°"

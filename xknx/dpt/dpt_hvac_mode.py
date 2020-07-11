@@ -35,10 +35,12 @@ class _DPTClimateMode(DPTBase):
 
     SUPPORTED_MODES = {}
 
+    payload_length = 1
+
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 1)
+        cls.test_bytesarray(raw)
         if raw[0] in cls.SUPPORTED_MODES:
             return cls.SUPPORTED_MODES[raw[0]]
         raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
@@ -114,7 +116,7 @@ class DPTControllerStatus(_DPTClimateMode):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 1)
+        cls.test_bytesarray(raw)
         if raw[0] & 8 > 0:
             return HVACOperationMode.FROST_PROTECTION
         if raw[0] & 4 > 0:

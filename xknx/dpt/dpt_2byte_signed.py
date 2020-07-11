@@ -21,6 +21,9 @@ class DPT2ByteSigned(DPTBase):
 
     value_min = -32768
     value_max = 32767
+    dpt_main_number = 8
+    dpt_sub_number = None
+    value_type = "2byte_signed"
     unit = ""
     resolution = 1
     payload_length = 2
@@ -30,7 +33,7 @@ class DPT2ByteSigned(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 2)
+        cls.test_bytesarray(raw)
 
         try:
             return struct.unpack(cls._struct_format, bytes(raw))[0]
@@ -57,18 +60,27 @@ class DPT2ByteSigned(DPTBase):
 class DPTValue2Count(DPT2ByteSigned):
     """DPT 8.001 DPT_Value_2_Count (pulses)."""
 
+    dpt_main_number = 8
+    dpt_sub_number = 1
+    value_type = "pulse_2byte_signed"
     unit = "pulses"
 
 
 class DPTDeltaTimeMsec(DPT2ByteSigned):
     """DPT 8.002 DPT_DeltaTimeMsec (ms)."""
 
+    dpt_main_number = 8
+    dpt_sub_number = 2
+    value_type = "delta_time_ms"
     unit = "ms"
 
 
 class DPTDeltaTime10Msec(DPT2ByteSigned):
     """DPT 8.003 DPT_DeltaTime10Msec (ms)."""
 
+    dpt_main_number = 8
+    dpt_sub_number = 3
+    value_type = "delta_time_10ms"
     unit = "ms"
     resolution = 10
 
@@ -76,6 +88,9 @@ class DPTDeltaTime10Msec(DPT2ByteSigned):
 class DPTDeltaTime100Msec(DPT2ByteSigned):
     """DPT 8.004 DPT_DeltaTime100Msec (ms)."""
 
+    dpt_main_number = 8
+    dpt_sub_number = 4
+    value_type = "delta_time_100ms"
     unit = "ms"
     resolution = 100
 
@@ -83,24 +98,36 @@ class DPTDeltaTime100Msec(DPT2ByteSigned):
 class DPTDeltaTimeSec(DPT2ByteSigned):
     """DPT 8.005 DPT_DeltaTimeSec (s)."""
 
+    dpt_main_number = 8
+    dpt_sub_number = 5
+    value_type = "delta_time_sec"
     unit = "s"
 
 
 class DPTDeltaTimeMin(DPT2ByteSigned):
     """DPT 8.006 DPT_DeltaTimeMin (min)."""
 
+    dpt_main_number = 8
+    dpt_sub_number = 6
+    value_type = "delta_time_min"
     unit = "min"
 
 
 class DPTDeltaTimeHrs(DPT2ByteSigned):
     """DPT 8.007 DPT_DeltaTimeHrs (h)."""
 
+    dpt_main_number = 8
+    dpt_sub_number = 7
+    value_type = "delta_time_hrs"
     unit = "h"
 
 
 class DPTPercentV16(DPT2ByteSigned):
     """DPT 8.010 DPT_Percent_V16 (%)."""
 
+    dpt_main_number = 8
+    dpt_sub_number = 10
+    value_type = "percentV16"
     unit = "%"
     resolution = 0.01
 
@@ -108,4 +135,7 @@ class DPTPercentV16(DPT2ByteSigned):
 class DPTRotationAngle(DPT2ByteSigned):
     """DPT 8.011 DPT_Rotation_Angle (°)."""
 
+    dpt_main_number = 8
+    dpt_sub_number = 11
+    value_type = "rotation_angle"
     unit = "°"

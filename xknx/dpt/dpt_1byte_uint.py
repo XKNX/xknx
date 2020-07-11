@@ -4,15 +4,18 @@ from xknx.exceptions import ConversionError
 from .dpt import DPTBase
 
 
-class DPTValue1Ucount(DPTBase):
+class DPTValue1ByteUnsigned(DPTBase):
     """
     Abstraction for KNX 1 Octet.
 
-    DPT 5.010
+    DPT 5.***
     """
 
     value_min = 0
     value_max = 255
+    dpt_main_number = 5
+    dpt_sub_number = None
+    value_type = "1byte_unsigned"
     unit = ""
     resolution = 1
     payload_length = 1
@@ -20,7 +23,7 @@ class DPTValue1Ucount(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 1)
+        cls.test_bytesarray(raw)
 
         value = raw[0]
 
@@ -46,35 +49,58 @@ class DPTValue1Ucount(DPTBase):
         return cls.value_min <= value <= cls.value_max
 
 
-class DPTPercentU8(DPTValue1Ucount):
+class DPTPercentU8(DPTValue1ByteUnsigned):
     """
     Abstraction for KNX 1 Octet Percent.
 
     DPT 5.004
     """
 
+    dpt_main_number = 5
+    dpt_sub_number = 4
+    value_type = "percentU8"
     unit = "%"
 
 
-class DPTDecimalFactor(DPTValue1Ucount):
+class DPTDecimalFactor(DPTValue1ByteUnsigned):
     """
     Abstraction for KNX 1 Octet Percent.
 
     DPT 5.005
     """
 
+    dpt_main_number = 5
+    dpt_sub_number = 5
+    value_type = "decimal_factor"
 
-class DPTTariff(DPTValue1Ucount):
+
+class DPTTariff(DPTValue1ByteUnsigned):
     """
     Abstraction for KNX 1 Octet tariff information.
 
     DPT 5.006
     """
 
+    dpt_main_number = 5
+    dpt_sub_number = 6
+    value_type = "tariff"
     value_max = 254
 
 
-class DPTSceneNumber(DPTValue1Ucount):
+class DPTValue1Ucount(DPTValue1ByteUnsigned):
+    """
+    Abstraction for KNX 1 Octet counter pulses.
+
+    DPT 5.010
+    """
+
+    dpt_main_number = 5
+    dpt_sub_number = 10
+    value_type = "pulse"
+    unit = "counter pulses"
+
+
+class DPTSceneNumber(DPTValue1ByteUnsigned):
     """
     Abstraction for KNX 1 Octet Scene Number.
 
@@ -83,11 +109,15 @@ class DPTSceneNumber(DPTValue1Ucount):
 
     value_min = 1
     value_max = 64
+    dpt_main_number = 17
+    dpt_sub_number = 1
+    value_type = "scene_number"
+    unit = ""
 
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 1)
+        cls.test_bytesarray(raw)
 
         value = raw[0] + 1
 
