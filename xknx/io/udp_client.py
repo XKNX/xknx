@@ -66,7 +66,7 @@ class UDPClient:
             if hasattr(self, 'xknx'):
                 self.xknx.logger.info('closing transport %s', exc)
 
-    def __init__(self, xknx, local_addr, remote_addr, multicast=False, bind_to_multicast_addr=False):
+    def __init__(self, xknx, local_addr, remote_addr, multicast=False):
         """Initialize UDPClient class."""
         # pylint: disable=too-many-arguments
         if not isinstance(local_addr, tuple):
@@ -77,7 +77,6 @@ class UDPClient:
         self.local_addr = local_addr
         self.remote_addr = remote_addr
         self.multicast = multicast
-        self.bind_to_multicast_addr = bind_to_multicast_addr
         self.transport = None
         self.callbacks = []
 
@@ -116,43 +115,41 @@ class UDPClient:
         self.callbacks.remove(callb)
 
     @staticmethod
-    def create_multicast_sock(own_ip, remote_addr, bind_to_multicast_addr):
+    def create_multicast_sock(own_ip, remote_addr):
         """Create UDP multicast socket."""
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.setblocking(False)
 
         sock.setsockopt(
-            socket.SOL_IP,
+            socket.IPPROTO_IP,
             socket.IP_MULTICAST_IF,
             socket.inet_aton(own_ip))
         sock.setsockopt(
-            socket.SOL_IP,
+            socket.IPPROTO_IP,
             socket.IP_ADD_MEMBERSHIP,
             socket.inet_aton(remote_addr[0]) +
             socket.inet_aton(own_ip))
         sock.setsockopt(
             socket.IPPROTO_IP,
             socket.IP_MULTICAST_TTL, 2)
-        sock.setsockopt(
-            socket.IPPROTO_IP,
-            socket.IP_MULTICAST_IF,
-            socket.inet_aton(own_ip))
 
-        # I have no idea why we have to use different bind calls here
-        # - bind() with multicast addr does not work with gateway search requests
-        #   on some machines. It only works if called with own ip. It also doesn't
-        #   work on Mac OS.
-        # - bind() with own_ip does not work with ROUTING_INDICATIONS on Gira
-        #   knx router - for an unknown reason.
-        if bind_to_multicast_addr:
-            if platform == "win32":
-                sock.bind(('', remote_addr[1]))
-            else:
-                sock.bind((remote_addr[0], remote_addr[1]))
+        if platform == "win32":
+            # '' represents INADDR_ANY
+            sock.bind(('', remote_addr[1]))
+        elif platform == "darwin":
+            # allows multiple sockets to the same port by multiple processes
+            # behaves like SO_REUSEADDR for bind for INADDR_ANY
+            # (GatewayScanner opens multiple sockets)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+            sock.bind(('', remote_addr[1]))
         else:
-            sock.bind((own_ip, 0))
+            sock.bind((remote_addr[0], remote_addr[1]))
+
+        # ignore multicast datagrams sent by the host itself
+        # don't use when running multiple routing instances on a single host (interface)
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
+
         return sock
 
     async def connect(self):
@@ -162,7 +159,7 @@ class UDPClient:
             data_received_callback=self.data_received_callback)
 
         if self.multicast:
-            sock = UDPClient.create_multicast_sock(self.local_addr[0], self.remote_addr, self.bind_to_multicast_addr)
+            sock = UDPClient.create_multicast_sock(self.local_addr[0], self.remote_addr)
             (transport, _) = await self.xknx.loop.create_datagram_endpoint(
                 lambda: udp_client_factory, sock=sock)
             self.transport = transport

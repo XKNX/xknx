@@ -551,8 +551,8 @@ class TestStringRepresentations(unittest.TestCase):
         tunnelling_request.sequence_counter = 42
         self.assertEqual(
             str(tunnelling_request),
-            '<TunnellingRequest communication_channel_id="23" sequence_counter="42" cemi="<CEMIFrame SourceAddress="GroupAddress("0/0/0")" Destina'
-            'tionAddress="GroupAddress("0/0/0")" Flags="               0" Command="APCICommand.GROUP_READ" payload="None" />" />')
+            '<TunnellingRequest communication_channel_id="23" sequence_counter="42" cemi="<CEMIFrame SourceAddress="PhysicalAddress("0.0.0")"'
+            ' DestinationAddress="GroupAddress("0/0/0")" Flags="               0" Command="APCICommand.GROUP_READ" payload="None" />" />')
 
     def test_tunnelling_ack(self):
         """Test string representation of KNX/IP TunnellingAck."""
