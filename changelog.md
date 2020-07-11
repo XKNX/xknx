@@ -4,9 +4,10 @@
 
 ### Breaking changes
 
+- Sensor: "DPT-5", "DPT-7", "DPT-8", "DPT-9", "DPT-13", "DPT-14" are no longer valid as value_type in favor of eg. "2byte_signed"
 - Removed significant_bit attribute in BinarySensor
 - DateTime devices are initialized with sting for broadcast_type: "time", "date" or "datetime" instead of an Enum value
-- * Removed `bind_to_multicast` option in ConnectionConfig and UDPClient
+- Removed `bind_to_multicast` option in ConnectionConfig and UDPClient
 
 ### New Features
 
@@ -16,12 +17,13 @@
 
 ### Bugfixes
 
-* enable multicast on macOS and fix a bug where unknown cemi frames raise a TypeError on routing connections
+- enable multicast on macOS and fix a bug where unknown cemi frames raise a TypeError on routing connections
 - BinarySensor: reset_after is now implemented as asyncio.Task to prevent blocking the loop
 - ClimateMode: binary climate modes should be fully functional now (sending, receiving and syncing)
 
 ### Internals
 
+- DPT classes can now be searched via value_type string or dpt number from any parent class (DPTBase for all) to be used in Sensor
 - Use RemoteValue class in BinarySensor, DateTime and ClimateMode device
 - use time.struct_time for internal time and date representation
 - use a regular Bool type for BinarySensor state representation
