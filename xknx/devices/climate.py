@@ -35,20 +35,18 @@ class SetpointShiftValue(RemoteValue1Count):
                          group_address,
                          group_address_state,
                          device_name=device_name,
+                         feature_name="Setpoint shift value",
                          after_update_cb=after_update_cb)
 
         self.setpoint_shift_step = setpoint_shift_step
         self.min_temp_delta = min_temp_delta
         self.max_temp_delta = max_temp_delta
 
-    @property
-    def value(self):
-        """Return current value in Kelvin."""
-        if super().value is None:
-            return None
-        return super().value * self.setpoint_shift_step
+    def from_knx(self, payload):
+        """Convert current payload to value."""
+        return super().from_knx(payload) * self.setpoint_shift_step
 
-    async def set(self, value):
+    async def set(self, value, response=False):
         """Set new value from Kelvin."""
         if value > self.max_temp_delta:
             self.xknx.logger.warning("setpoint_shift_max exceeded at %s: %s",
@@ -102,6 +100,7 @@ class Climate(Device):
             xknx,
             group_address_state=group_address_temperature,
             device_name=self.name,
+            feature_name="Current Temperature",
             after_update_cb=self.after_update)
 
         self.target_temperature = RemoteValueTemp(
@@ -109,6 +108,7 @@ class Climate(Device):
             group_address_target_temperature,
             group_address_target_temperature_state,
             device_name=self.name,
+            feature_name="Target temperature",
             after_update_cb=self.after_update)
 
         self._setpoint_shift = SetpointShiftValue(
@@ -134,6 +134,13 @@ class Climate(Device):
             invert=on_off_invert)
 
         self.mode = mode
+
+    def _iter_remote_values(self):
+        """Iterate the devices RemoteValue classes."""
+        yield from (self.temperature,
+                    self.target_temperature,
+                    self._setpoint_shift,
+                    self.on)
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -192,10 +199,7 @@ class Climate(Device):
         """Test if device has given group address."""
         if self.mode is not None and self.mode.has_group_address(group_address):
             return True
-        return self.temperature.has_group_address(group_address) or \
-            self.target_temperature.has_group_address(group_address) or \
-            self._setpoint_shift.has_group_address(group_address) or \
-            self.on.has_group_address(group_address)
+        return super().has_group_address(group_address)
 
     @property
     def is_on(self):
@@ -286,24 +290,16 @@ class Climate(Device):
 
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
-        await self.temperature.process(telegram)
-        await self.target_temperature.process(telegram)
-        await self._setpoint_shift.process(telegram)
-        await self.on.process(telegram)
+        for remote_value in self._iter_remote_values():
+            await remote_value.process(telegram)
         if self.mode is not None:
             await self.mode.process_group_write(telegram)
 
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        state_addresses = []
-        state_addresses.extend(self.temperature.state_addresses())
-        state_addresses.extend(self.target_temperature.state_addresses())
-        state_addresses.extend(self._setpoint_shift.state_addresses())
-        if self.supports_on_off:
-            state_addresses.extend(self.on.state_addresses())
+    async def sync(self):
+        """Read states of device from KNX bus."""
+        await super().sync()
         if self.mode is not None:
-            state_addresses.extend(self.mode.state_addresses())
-        return state_addresses
+            await self.mode.sync()
 
     def __str__(self):
         """Return object as readable string."""

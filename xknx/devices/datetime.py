@@ -5,21 +5,11 @@ DateTime is a virtual/pseudo device, using the infrastructure for
 beeing configured via xknx.yaml and synchronized periodically
 by StateUpdate.
 """
+import time
 
-from enum import Enum
-
-from xknx.dpt import DPTArray, DPTDate, DPTDateTime, DPTTime
-from xknx.telegram import GroupAddress
+from xknx.remote_value import RemoteValueDateTime
 
 from .device import Device
-
-
-class DateTimeBroadcastType(Enum):
-    """Enum class for the broadcast type of the enum."""
-
-    DATETIME = 1
-    DATE = 2
-    TIME = 3
 
 
 class DateTime(Device):
@@ -29,67 +19,61 @@ class DateTime(Device):
     def __init__(self,
                  xknx,
                  name,
-                 broadcast_type=DateTimeBroadcastType.TIME,
+                 broadcast_type='TIME',
+                 localtime=True,
                  group_address=None,
                  device_updated_cb=None):
         """Initialize DateTime class."""
         super().__init__(xknx, name, device_updated_cb)
+        self.localtime = localtime
+        self._broadcast_type = broadcast_type.upper()
+        self._remote_value = RemoteValueDateTime(xknx,
+                                                 group_address=group_address,
+                                                 sync_state=False,
+                                                 value_type=broadcast_type,
+                                                 device_name=name,
+                                                 after_update_cb=self.after_update)
 
-        self.broadcast_type = broadcast_type
-
-        if isinstance(group_address, (str, int)):
-            group_address = GroupAddress(group_address)
-
-        self.group_address = group_address
+    def _iter_remote_values(self):
+        """Iterate the devices RemoteValue classes."""
+        yield self._remote_value
 
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
-        broadcast_type_string = config.get('broadcast_type', 'time').upper()
-        broadcast_type = DateTimeBroadcastType[broadcast_type_string]
+        broadcast_type = config.get('broadcast_type', 'time').upper()
         group_address = config.get('group_address')
         return cls(xknx,
                    name,
                    broadcast_type=broadcast_type,
                    group_address=group_address)
 
-    def has_group_address(self, group_address):
-        """Test if device has given group address."""
-        return self.group_address == group_address
+    async def broadcast_localtime(self, response=False):
+        """Broadcast the local time to KNX bus."""
+        await self._remote_value.set(time.localtime(), response=response)
 
-    async def broadcast_time(self, response):
-        """Broadcast time to KNX bus."""
-        if self.broadcast_type == DateTimeBroadcastType.DATETIME:
-            broadcast_data = DPTDateTime.current_datetime_as_knx()
-            await self.send(
-                self.group_address,
-                DPTArray(broadcast_data),
-                response=response)
-        elif self.broadcast_type == DateTimeBroadcastType.DATE:
-            broadcast_data = DPTDate.current_date_as_knx()
-            await self.send(
-                self.group_address,
-                DPTArray(broadcast_data),
-                response=response)
-        elif self.broadcast_type == DateTimeBroadcastType.TIME:
-            broadcast_data = DPTTime.current_time_as_knx()
-            await self.send(
-                self.group_address,
-                DPTArray(broadcast_data),
-                response=response)
+    async def set(self, struct_time: time.struct_time):
+        """Set time and send to KNX bus."""
+        await self._remote_value.set(struct_time)
 
     async def process_group_read(self, telegram):
-        """Process incoming GROUP RESPONSE telegram."""
-        await self.broadcast_time(True)
+        """Process incoming GROUP READ telegram."""
+        if self.localtime:
+            await self.broadcast_localtime(True)
+        else:
+            await self._remote_value.send(response=True)
 
-    async def sync(self, wait_for_result=True):
+    async def sync(self):
         """Read state of device from KNX bus. Used here to broadcast time to KNX bus."""
-        await self.broadcast_time(False)
+        if self.localtime:
+            await self.broadcast_localtime(response=False)
 
     def __str__(self):
         """Return object as readable string."""
         return '<DateTime name="{0}" group_address="{1}" broadcast_type="{2}" />' \
-            .format(self.name, self.group_address.__repr__(), self.broadcast_type.name)
+            .format(self.name,
+                    self._remote_value.group_addr_str(),
+                    self._broadcast_type)
 
     def __eq__(self, other):
         """Equal operator."""

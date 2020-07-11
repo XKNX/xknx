@@ -33,6 +33,10 @@ class Sensor(Device):
             device_name=self.name,
             after_update_cb=self.after_update)
 
+    def _iter_remote_values(self):
+        """Iterate the devices RemoteValue classes."""
+        yield self.sensor_value
+
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
@@ -45,14 +49,6 @@ class Sensor(Device):
                    group_address_state=group_address_state,
                    sync_state=sync_state,
                    value_type=value_type)
-
-    def has_group_address(self, group_address):
-        """Test if device has given group address."""
-        return self.sensor_value.has_group_address(group_address)
-
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        return self.sensor_value.state_addresses()
 
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""

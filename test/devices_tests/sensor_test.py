@@ -1857,30 +1857,13 @@ class TestSensor(unittest.TestCase):
             value_type="temperature",
             group_address_state='1/2/3')
 
-        self.loop.run_until_complete(asyncio.Task(sensor.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(sensor.sync()))
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
-
-    def test_sync_passive(self):
-        """Test sync function / not sending group reads to KNX bus."""
-        xknx = XKNX(loop=self.loop)
-        sensor = Sensor(
-            xknx,
-            'TestSensor',
-            value_type="temperature",
-            group_address_state='1/2/3',
-            sync_state=False)
-
-        self.loop.run_until_complete(asyncio.Task(sensor.sync(False)))
-
-        self.assertEqual(xknx.telegrams.qsize(), 0)
-
-        with self.assertRaises(asyncio.queues.QueueEmpty):
-            xknx.telegrams.get_nowait()
 
     #
     # HAS GROUP ADDRESS
@@ -1895,30 +1878,6 @@ class TestSensor(unittest.TestCase):
             group_address_state='1/2/3')
         self.assertTrue(sensor.has_group_address(GroupAddress('1/2/3')))
         self.assertFalse(sensor.has_group_address(GroupAddress('1/2/4')))
-
-    #
-    # STATE ADDRESSES
-    #
-    def test_state_addresses(self):
-        """Test state addresses of sensor object."""
-        xknx = XKNX(loop=self.loop)
-        sensor = Sensor(
-            xknx,
-            'TestSensor',
-            value_type='temperature',
-            group_address_state='1/2/3')
-        self.assertEqual(sensor.state_addresses(), [GroupAddress('1/2/3')])
-
-    def test_state_addresses_passive(self):
-        """Test state addresses of passive sensor object."""
-        xknx = XKNX(loop=self.loop)
-        sensor = Sensor(
-            xknx,
-            'TestSensor',
-            value_type='temperature',
-            group_address_state='1/2/3',
-            sync_state=False)
-        self.assertEqual(sensor.state_addresses(), [])
 
     #
     # TEST PROCESS

@@ -13,12 +13,14 @@ from xknx.telegram import GroupAddress, Telegram, TelegramType
 class RemoteValue():
     """Class for managing remote knx value."""
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(self,
                  xknx,
                  group_address=None,
                  group_address_state=None,
                  sync_state=True,
                  device_name=None,
+                 feature_name=None,
                  after_update_cb=None):
         """Initialize RemoteValue class."""
         # pylint: disable=too-many-arguments
@@ -30,11 +32,22 @@ class RemoteValue():
 
         self.group_address = group_address
         self.group_address_state = group_address_state
-        self.sync_state = sync_state
         self.device_name = "Unknown" \
             if device_name is None else device_name
+        self.feature_name = "Unknown" \
+            if feature_name is None else feature_name
         self.after_update_cb = after_update_cb
         self.payload = None
+
+        if sync_state and self.group_address_state:
+            self.xknx.state_updater.register_remote_value(self, tracker_options=sync_state)
+
+    def __del__(self):
+        """Destructor. Removing self from StateUpdater if was registered."""
+        try:
+            self.xknx.state_updater.unregister_remote_value(self)
+        except KeyError:
+            pass
 
     @property
     def initialized(self):
@@ -44,7 +57,7 @@ class RemoteValue():
     @property
     def readable(self):
         """Evaluate if remote value should be read from bus."""
-        return self.sync_state and isinstance(self.group_address_state, GroupAddress)
+        return isinstance(self.group_address_state, GroupAddress)
 
     @property
     def writable(self):
@@ -54,12 +67,6 @@ class RemoteValue():
     def has_group_address(self, group_address):
         """Test if device has given group address."""
         return group_address in [self.group_address, self.group_address_state]
-
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        if self.readable:
-            return [self.group_address_state, ]
-        return []
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed - to be implemented in derived class.."""
@@ -77,7 +84,7 @@ class RemoteValue():
         # pylint: disable=unused-argument
         self.xknx.logger.warning("to_knx not implemented for %s", self.__class__.__name__)
 
-    async def process(self, telegram):
+    async def process(self, telegram, always_callback=False):
         """Process incoming telegram."""
         if not self.has_group_address(telegram.group_address):
             return False
@@ -85,8 +92,11 @@ class RemoteValue():
             raise CouldNotParseTelegram("payload invalid",
                                         payload=telegram.payload,
                                         group_address=telegram.group_address,
-                                        device_name=self.device_name)
-        if self.payload != telegram.payload or self.payload is None:
+                                        device_name=self.device_name,
+                                        feature_name=self.feature_name)
+        self.xknx.state_updater.update_received(self)
+        if self.payload is None or always_callback \
+                or self.payload != telegram.payload:
             self.payload = telegram.payload
             if self.after_update_cb is not None:
                 await self.after_update_cb()
@@ -108,13 +118,15 @@ class RemoteValue():
         telegram.payload = self.payload
         await self.xknx.telegrams.put(telegram)
 
-    async def set(self, value):
+    async def set(self, value, response=False):
         """Set new value."""
         if not self.initialized:
-            self.xknx.logger.info("Setting value of uninitialized device: %s (value: %s)", self.device_name, value)
+            self.xknx.logger.info("Setting value of uninitialized device: %s - %s (value: %s)",
+                                  self.device_name, self.feature_name, value)
             return
         if not self.writable:
-            self.xknx.logger.warning("Attempted to set value for non-writable device: %s (value: %s)", self.device_name, value)
+            self.xknx.logger.warning("Attempted to set value for non-writable device: %s - %s (value: %s)",
+                                     self.device_name, self.feature_name, value)
             return
 
         payload = self.to_knx(value)  # pylint: disable=assignment-from-no-return
@@ -122,9 +134,26 @@ class RemoteValue():
         if self.payload is None or payload != self.payload:
             self.payload = payload
             updated = True
-        await self.send()
+        await self.send(response)
         if updated and self.after_update_cb is not None:
             await self.after_update_cb()
+
+    async def read_state(self, wait_for_result=False):
+        """Send GroupValueRead telegram for state address to KNX bus."""
+        if self.readable:
+            self.xknx.logger.debug("Sync %s - %s", self.device_name, self.feature_name)
+            from xknx.core import ValueReader
+            value_reader = ValueReader(self.xknx, self.group_address_state)
+            if wait_for_result:
+                telegram = await value_reader.read()
+                if telegram is not None:
+                    await self.process(telegram)
+                else:
+                    self.xknx.logger.warning(
+                        "Could not sync group address '%s' for %s - %s",
+                        self.group_address_state, self.device_name, self.feature_name)
+            else:
+                await value_reader.send_group_read()
 
     @property
     def unit_of_measurement(self):
@@ -141,9 +170,10 @@ class RemoteValue():
 
     def __str__(self):
         """Return object as string representation."""
-        return '<{} device_name="{}" {}/>'.format(
+        return '<{} device_name="{}" feature_name="{}" {}/>'.format(
             self.__class__.__name__,
             self.device_name,
+            self.feature_name,
             self.group_addr_str())
 
     def __eq__(self, other):

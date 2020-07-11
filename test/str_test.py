@@ -46,11 +46,12 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_state='1/2/4')
         self.assertEqual(
             str(remote_value),
-            '<RemoteValue device_name="MyDevice" GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None/>')
+            '<RemoteValue device_name="MyDevice" feature_name="Unknown" GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None/>')
         remote_value.payload = DPTArray([0x01, 0x02])
         self.assertEqual(
             str(remote_value),
-            '<RemoteValue device_name="MyDevice" GroupAddress("1/2/3")/GroupAddress("1/2/4")/<DPTArray value="[0x1,0x2]" />/None/>')
+            '<RemoteValue device_name="MyDevice" feature_name="Unknown" '
+            'GroupAddress("1/2/3")/GroupAddress("1/2/4")/<DPTArray value="[0x1,0x2]" />/None/>')
 
     def test_binary_sensor(self):
         """Test string representation of binary sensor object."""
@@ -62,7 +63,7 @@ class TestStringRepresentations(unittest.TestCase):
             device_class='motion')
         self.assertEqual(
             str(binary_sensor),
-            '<BinarySensor group_address_state="GroupAddress("1/2/3")" name="Fnord" state="BinarySensorState.OFF"/>')
+            '<BinarySensor name="Fnord" remote_value="None/GroupAddress("1/2/3")/None/None" state="False"/>')
 
     def test_climate(self):
         """Test string representation of climate object."""
@@ -105,9 +106,9 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(climate_mode),
             '<ClimateMode name="Wohnzimmer Mode" '
-            'group_address_operation_mode="GroupAddress("1/2/5")" group_address_operation_mode_state="GroupAddress("1/2/6")'
-            '" group_address_controller_status="GroupAddress("1/2/10")" group_address_controller_status_state="GroupAddress("1/2/11")" '
-            'group_address_controller_mode="GroupAddress("1/2/12")" group_address_controller_mode_state="GroupAddress("1/2/13")" />')
+            'operation_mode="GroupAddress("1/2/5")/GroupAddress("1/2/6")/None/None" '
+            'controller_mode="GroupAddress("1/2/12")/GroupAddress("1/2/13")/None/None" '
+            'controller_status="GroupAddress("1/2/10")/GroupAddress("1/2/11")/None/None" />')
 
     def test_cover(self):
         """Test string representation of cover object."""
@@ -273,7 +274,7 @@ class TestStringRepresentations(unittest.TestCase):
             group_address="1/2/3")
         self.assertEqual(
             str(dateTime),
-            '<DateTime name="Zeit" group_address="GroupAddress("1/2/3")" broadcast_type="TIME" />')
+            '<DateTime name="Zeit" group_address="GroupAddress("1/2/3")/None/None/None" broadcast_type="TIME" />')
 
     def test_action_base(self):
         """Test string representation of action base."""

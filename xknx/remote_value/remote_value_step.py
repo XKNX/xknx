@@ -25,6 +25,7 @@ class RemoteValueStep(RemoteValue):
                  group_address=None,
                  group_address_state=None,
                  device_name=None,
+                 feature_name="Step",
                  after_update_cb=None,
                  invert=False):
         """Initialize remote value of KNX DPT 1.007."""
@@ -33,6 +34,7 @@ class RemoteValueStep(RemoteValue):
                          group_address,
                          group_address_state,
                          device_name=device_name,
+                         feature_name=feature_name,
                          after_update_cb=after_update_cb)
         self.invert = invert
 
@@ -50,7 +52,8 @@ class RemoteValueStep(RemoteValue):
             return DPTBinary(0) if self.invert else DPTBinary(1)
         if value == self.Direction.DECREASE:
             return DPTBinary(1) if self.invert else DPTBinary(0)
-        raise ConversionError("value invalid", value=value, device_name=self.device_name)
+        raise ConversionError("value invalid",
+                              value=value, device_name=self.device_name, feature_name=self.feature_name)
 
     def from_knx(self, payload):
         """Convert current payload to value."""
@@ -58,7 +61,8 @@ class RemoteValueStep(RemoteValue):
             return self.Direction.DECREASE if self.invert else self.Direction.INCREASE
         if payload == DPTBinary(0):
             return self.Direction.INCREASE if self.invert else self.Direction.DECREASE
-        raise CouldNotParseTelegram("payload invalid", payload=payload, device_name=self.device_name)
+        raise CouldNotParseTelegram("payload invalid",
+                                    payload=payload, device_name=self.device_name, feature_name=self.feature_name)
 
     async def increase(self):
         """Increase value."""

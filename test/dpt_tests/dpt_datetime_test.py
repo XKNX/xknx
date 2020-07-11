@@ -1,7 +1,8 @@
 """Unit test for KNX datetime objects."""
+import time
 import unittest
 
-from xknx.dpt import DPTDateTime, DPTWeekday
+from xknx.dpt import DPTDateTime
 from xknx.exceptions import ConversionError
 
 
@@ -14,28 +15,15 @@ class TestDPTDateTime(unittest.TestCase):
     def test_from_knx(self):
         """Test parsing of DPTDateTime object from binary values. Example 1."""
         self.assertEqual(
-            DPTDateTime().from_knx((0x75, 0x0B, 0x1C, 0x17, 0x07, 0x18, 0x00, 0x00)), {
-                'year': 2017,
-                'month': 11,
-                'day': 28,
-                'weekday': DPTWeekday.NONE,
-                'hours': 23,
-                'minutes': 7,
-                'seconds': 24
-            })
+            DPTDateTime().from_knx((0x75, 0x0B, 0x1C, 0x17, 0x07, 0x18, 0x20, 0x80)),
+            time.strptime("2017-11-28 23:7:24", "%Y-%m-%d %H:%M:%S")
+        )
 
     def test_to_knx(self):
         """Testing KNX/Byte representation of DPTDateTime object."""
-        raw = DPTDateTime().to_knx({
-            'year': 2017,
-            'month': 11,
-            'day': 28,
-            'weekday': DPTWeekday.NONE,
-            'hours': 23,
-            'minutes': 7,
-            'seconds': 24
-        })
-        self.assertEqual(raw, (0x75, 0x0B, 0x1C, 0x17, 0x07, 0x18, 0x00, 0x00))
+        raw = DPTDateTime().to_knx(
+            time.strptime("2017-11-28 23:7:24", "%Y-%m-%d %H:%M:%S"))
+        self.assertEqual(raw, (0x75, 0x0B, 0x1C, 0x57, 0x07, 0x18, 0x20, 0x80))
 
     #
     # TEST EARLIEST DATE POSSIBLE
@@ -43,28 +31,15 @@ class TestDPTDateTime(unittest.TestCase):
     def test_from_knx_date_in_past(self):
         """Test parsing of DPTDateTime object from binary values. Example 1."""
         self.assertEqual(
-            DPTDateTime().from_knx((0x00, 0x1, 0x1, 0x20, 0x00, 0x00, 0x00, 0x00)), {
-                'year': 1900,
-                'month': 1,
-                'day': 1,
-                'weekday': DPTWeekday.MONDAY,
-                'hours': 0,
-                'minutes': 0,
-                'seconds': 0
-            })
+            DPTDateTime().from_knx((0x00, 0x1, 0x1, 0x20, 0x00, 0x00, 0x00, 0x00)),
+            time.strptime("1900 1 1 0 0 0", "%Y %m %d %H %M %S")
+        )
 
     def test_to_knx_date_in_past(self):
         """Testing KNX/Byte representation of DPTDateTime object."""
-        raw = DPTDateTime().to_knx({
-            'year': 1900,
-            'month': 1,
-            'day': 1,
-            'weekday': DPTWeekday.MONDAY,
-            'hours': 0,
-            'minutes': 0,
-            'seconds': 0
-        })
-        self.assertEqual(raw, (0x00, 0x1, 0x1, 0x20, 0x00, 0x00, 0x00, 0x00))
+        raw = DPTDateTime().to_knx(
+            time.strptime("1900-1-1 1 0:0:0", "%Y-%m-%d %w %H:%M:%S"))
+        self.assertEqual(raw, (0x00, 0x1, 0x1, 0x20, 0x00, 0x00, 0x20, 0x80))
 
     #
     # TEST LATEST DATE IN THE FUTURE
@@ -72,28 +47,15 @@ class TestDPTDateTime(unittest.TestCase):
     def test_from_knx_date_in_future(self):
         """Test parsing of DPTDateTime object from binary values. Example 1."""
         self.assertEqual(
-            DPTDateTime().from_knx((0xFF, 0x0C, 0x1F, 0xF7, 0x3B, 0x3B, 0x00, 0x00)), {
-                'year': 2155,
-                'month': 12,
-                'day': 31,
-                'weekday': DPTWeekday.SUNDAY,
-                'hours': 23,
-                'minutes': 59,
-                'seconds': 59
-            })
+            DPTDateTime().from_knx((0xFF, 0x0C, 0x1F, 0xF7, 0x3B, 0x3B, 0x20, 0x80)),
+            time.strptime("2155-12-31 0 23:59:59", "%Y-%m-%d %w %H:%M:%S")
+        )
 
     def test_to_knx_date_in_future(self):
         """Testing KNX/Byte representation of DPTDateTime object."""
-        raw = DPTDateTime().to_knx({
-            'year': 2155,
-            'month': 12,
-            'day': 31,
-            'weekday': DPTWeekday.SUNDAY,
-            'hours': 23,
-            'minutes': 59,
-            'seconds': 59
-        })
-        self.assertEqual(raw, (0xFF, 0x0C, 0x1F, 0xF7, 0x3B, 0x3B, 0x00, 0x00))
+        raw = DPTDateTime().to_knx(
+            time.strptime("2155-12-31 0 23:59:59", "%Y-%m-%d %w %H:%M:%S"))
+        self.assertEqual(raw, (0xFF, 0x0C, 0x1F, 0xF7, 0x3B, 0x3B, 0x20, 0x80))
 
     #
     # TEST WRONG KNX
@@ -116,80 +78,3 @@ class TestDPTDateTime(unittest.TestCase):
         """Test parsing from DPTDateTime object from wrong string value."""
         with self.assertRaises(ConversionError):
             DPTDateTime().to_knx("hello")
-
-    def test_to_knx_wrong_seconds(self):
-        """Test parsing from DPTDateTime object from wrong seconds value."""
-        with self.assertRaises(ConversionError):
-            DPTDateTime().to_knx({
-                'year': 2002,
-                'month': 2,
-                'day': 20,
-                'hours': 12,
-                'minutes': 42,
-                'seconds': 61
-            })
-
-    def test_to_knx_wrong_minutes(self):
-        """Test parsing from DPTDateTime object from wrong minutes value."""
-        with self.assertRaises(ConversionError):
-            DPTDateTime().to_knx({
-                'year': 2002,
-                'month': 12,
-                'day': 20,
-                'hours': 12,
-                'minutes': 61,
-                'seconds': 53
-            })
-
-    def test_to_knx_wrong_hours(self):
-        """Test parsing from DPTDateTime object from wrong hours value."""
-        with self.assertRaises(ConversionError):
-            DPTDateTime().to_knx({
-                'year': 2002,
-                'month': 2,
-                'day': 20,
-                'hours': 24,
-                'minutes': 42,
-                'seconds': 53
-            })
-
-    def test_to_knx_wrong_day(self):
-        """Test parsing from DPTDateTime object from wrong day value."""
-        with self.assertRaises(ConversionError):
-            DPTDateTime().to_knx({
-                'year': 2002,
-                'month': 1,
-                'day': 32,
-                'hours': 12,
-                'minutes': 42,
-                'seconds': 53
-            })
-
-    def test_to_knx_wrong_year(self):
-        """Test parsing from DPTDateTime object from wrong year value."""
-        with self.assertRaises(ConversionError):
-            DPTDateTime().to_knx({
-                'year': 2156,
-                'month': 1,
-                'day': 20,
-                'hours': 12,
-                'minutes': 42,
-                'seconds': 53
-            })
-
-    def test_to_knx_wrong_month(self):
-        """Test parsing from DPTDateTime object from wrong month value."""
-        with self.assertRaises(ConversionError):
-            DPTDateTime().to_knx({
-                'year': 2002,
-                'month': 0,
-                'day': 20,
-                'hours': 12,
-                'minutes': 42,
-                'seconds': 53
-            })
-
-    def test_test_range_wrong_weekday(self):
-        """Test range testing with wrong weekday (Cant be tested with normal from_/to_knx)."""
-        # pylint: disable=protected-access
-        self.assertFalse(DPTDateTime._test_range(1900, 1, 1, 8, 0, 0, 0))

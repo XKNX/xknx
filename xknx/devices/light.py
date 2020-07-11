@@ -52,6 +52,7 @@ class Light(Device):
             group_address_switch,
             group_address_switch_state,
             device_name=self.name,
+            feature_name="State",
             after_update_cb=self.after_update)
 
         self.brightness = RemoteValueScaling(
@@ -59,6 +60,7 @@ class Light(Device):
             group_address_brightness,
             group_address_brightness_state,
             device_name=self.name,
+            feature_name="Brightness",
             after_update_cb=self.after_update,
             range_from=0,
             range_to=255)
@@ -82,6 +84,7 @@ class Light(Device):
             group_address_tunable_white,
             group_address_tunable_white_state,
             device_name=self.name,
+            feature_name="Tunable white",
             after_update_cb=self.after_update,
             range_from=0,
             range_to=255)
@@ -91,10 +94,20 @@ class Light(Device):
             group_address_color_temperature,
             group_address_color_temperature_state,
             device_name=self.name,
+            feature_name="Color temperature",
             after_update_cb=self.after_update)
 
         self.min_kelvin = min_kelvin
         self.max_kelvin = max_kelvin
+
+    def _iter_remote_values(self):
+        """Iterate the devices RemoteValue classes."""
+        yield from (self.switch,
+                    self.brightness,
+                    self.color,
+                    self.rgbw,
+                    self.tunable_white,
+                    self.color_temperature)
 
     @property
     def supports_brightness(self):
@@ -169,15 +182,6 @@ class Light(Device):
                    group_address_color_temperature_state=group_address_color_temperature_state,
                    min_kelvin=min_kelvin,
                    max_kelvin=max_kelvin)
-
-    def has_group_address(self, group_address):
-        """Test if device has given group address."""
-        return (self.switch.has_group_address(group_address) or
-                self.brightness.has_group_address(group_address) or
-                self.color.has_group_address(group_address) or
-                self.rgbw.has_group_address(group_address) or
-                self.tunable_white.has_group_address(group_address) or
-                self.color_temperature.has_group_address(group_address))
 
     def __str__(self):
         """Return object as readable string."""
@@ -310,25 +314,10 @@ class Light(Device):
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        state_addresses = []
-        state_addresses.extend(self.switch.state_addresses())
-        state_addresses.extend(self.color.state_addresses())
-        state_addresses.extend(self.rgbw.state_addresses())
-        state_addresses.extend(self.brightness.state_addresses())
-        state_addresses.extend(self.tunable_white.state_addresses())
-        state_addresses.extend(self.color_temperature.state_addresses())
-        return state_addresses
-
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
-        await self.switch.process(telegram)
-        await self.color.process(telegram)
-        await self.rgbw.process(telegram)
-        await self.brightness.process(telegram)
-        await self.tunable_white.process(telegram)
-        await self.color_temperature.process(telegram)
+        for remote_value in self._iter_remote_values():
+            await remote_value.process(telegram)
 
     def __eq__(self, other):
         """Equal operator."""
