@@ -15,8 +15,8 @@ class DPTDateTime(DPTBase):
     @classmethod
     def from_knx(cls, raw) -> time.struct_time:
         """Parse/deserialize from KNX/IP raw data."""
-        # pylint: disable-msg=too-many-locals
-        cls.test_bytesarray(raw, 8)
+        # pylint: disable=too-many-locals
+        cls.test_bytesarray(raw)
 
         year = raw[0] + 1900
         month = raw[1] & 0x0F

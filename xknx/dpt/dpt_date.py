@@ -15,7 +15,7 @@ class DPTDate(DPTBase):
     @classmethod
     def from_knx(cls, raw) -> time.struct_time:
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 3)
+        cls.test_bytesarray(raw)
 
         day = raw[0] & 0x1F
         month = raw[1] & 0x0F
