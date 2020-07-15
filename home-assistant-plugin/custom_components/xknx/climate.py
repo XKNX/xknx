@@ -3,6 +3,7 @@ from typing import List, Optional
 
 import voluptuous as vol
 from xknx.devices import Climate as XknxClimate, ClimateMode as XknxClimateMode
+from xknx.devices.climate import SetpointShiftMode
 from xknx.dpt import HVACOperationMode
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
@@ -28,6 +29,7 @@ from . import ATTR_DISCOVER_DEVICES, DATA_XKNX
 
 CONF_SETPOINT_SHIFT_ADDRESS = "setpoint_shift_address"
 CONF_SETPOINT_SHIFT_STATE_ADDRESS = "setpoint_shift_state_address"
+CONF_SETPOINT_SHIFT_MODE = "setpoint_shift_mode"
 CONF_SETPOINT_SHIFT_STEP = "setpoint_shift_step"
 CONF_SETPOINT_SHIFT_MAX = "setpoint_shift_max"
 CONF_SETPOINT_SHIFT_MIN = "setpoint_shift_min"
@@ -52,6 +54,7 @@ CONF_MIN_TEMP = "min_temp"
 CONF_MAX_TEMP = "max_temp"
 
 DEFAULT_NAME = "KNX Climate"
+DEFAULT_SETPOINT_SHIFT_MODE = "DPT6010"
 DEFAULT_SETPOINT_SHIFT_STEP = 0.5
 DEFAULT_SETPOINT_SHIFT_MAX = 6
 DEFAULT_SETPOINT_SHIFT_MIN = -6
@@ -82,6 +85,9 @@ PRESET_MODES_INV = dict(reversed(item) for item in PRESET_MODES.items())
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_SETPOINT_SHIFT_MODE, default=DEFAULT_SETPOINT_SHIFT_MODE): cv.enum(
+            SetpointShiftMode
+        ),
         vol.Optional(
             CONF_SETPOINT_SHIFT_STEP, default=DEFAULT_SETPOINT_SHIFT_STEP
         ): vol.All(float, vol.Range(min=0, max=2)),
@@ -182,6 +188,7 @@ def async_add_entities_config(hass, config, async_add_entities):
         group_address_setpoint_shift_state=config.get(
             CONF_SETPOINT_SHIFT_STATE_ADDRESS
         ),
+        setpoint_shift_mode=config[CONF_SETPOINT_SHIFT_MODE],
         setpoint_shift_step=config[CONF_SETPOINT_SHIFT_STEP],
         setpoint_shift_max=config[CONF_SETPOINT_SHIFT_MAX],
         setpoint_shift_min=config[CONF_SETPOINT_SHIFT_MIN],
