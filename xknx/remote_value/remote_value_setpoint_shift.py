@@ -22,6 +22,7 @@ class RemoteValueSetpointShift(RemoteValue1Count):
                          group_address,
                          group_address_state,
                          device_name=device_name,
+                         feature_name="Setpoint shift value",
                          after_update_cb=after_update_cb)
 
         self.setpoint_shift_step = setpoint_shift_step
