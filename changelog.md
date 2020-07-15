@@ -13,6 +13,7 @@
 
 - new StateUpdater: Devices `sync_state` can be set to `init` to just initialize state on startup, `expire [minutes]` to read the state from the KNX bus when it was not updated for [minutes] or `every [minutes]` to update it regularly every [minutes]
 - Added config option ignore_internal_state in binary sensors (@andreasnanko #267)
+- Add support for 2byte float type (DPT 9.002) to climate shiftpoint
 - ClimateMode: add `group_address_operation_mode_standby` as binary operation mode
 
 ### Bugfixes
@@ -28,6 +29,7 @@
 - use time.struct_time for internal time and date representation
 - use a regular Bool type for BinarySensor state representation
 - RemoteValue.process has always_callback attribute to run the callbacks on every process even if the payload didn't change
+- Separate incoming and outgoing telegram queues; apply rate limit only for outgoing telegrams
 - Automatically publish packages to pypi (@Julius2342 #277)
 - keep xknx version in `xknx/__version__.py` (@farmio #278)
 - add raw_socket logger (@farmio #299)
