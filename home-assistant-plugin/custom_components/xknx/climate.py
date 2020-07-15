@@ -290,8 +290,6 @@ class KNXClimate(ClimateEntity):
         """Return current operation ie. heat, cool, idle."""
         if self.device.supports_on_off and not self.device.is_on:
             return HVAC_MODE_OFF
-        if self.device.supports_on_off and self.device.is_on:
-            return HVAC_MODE_HEAT
         if self.device.mode.supports_operation_mode:
             return OPERATION_MODES.get(
                 self.device.mode.operation_mode.value, HVAC_MODE_HEAT
