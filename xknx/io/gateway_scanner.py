@@ -94,7 +94,7 @@ class GatewayScanner():
         self.timeout_in_seconds = timeout_in_seconds
         self.stop_on_found = stop_on_found
         self.scan_filter = scan_filter
-        self.found_gateways = []  # List[GatewayDescriptor]
+        self.found_gateways = []  # type: List[GatewayDescriptor]
         self._udp_clients = []
         self._response_received_or_timeout = asyncio.Event()
         self._timeout_handle = None
