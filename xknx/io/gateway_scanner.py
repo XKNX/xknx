@@ -7,7 +7,7 @@ GatewayScanner is an abstraction for searching for KNX/IP devices on the local n
 """
 
 import asyncio
-from typing import List
+from typing import List, Optional
 
 import netifaces
 
@@ -87,7 +87,7 @@ class GatewayScanner():
     def __init__(self,
                  xknx,
                  timeout_in_seconds: int = 4,
-                 stop_on_found: int = 1,
+                 stop_on_found: Optional[int] = 1,
                  scan_filter: GatewayScanFilter = GatewayScanFilter()) -> None:
         """Initialize GatewayScanner class."""
         self.xknx = xknx
@@ -172,6 +172,8 @@ class GatewayScanner():
     def _add_found_gateway(self, gateway):
         if self.scan_filter.match(gateway):
             self.found_gateways.append(gateway)
+            if self.stop_on_found is None or self.stop_on_found <= 0:
+                return
             if len(self.found_gateways) >= self.stop_on_found:
                 self._response_received_or_timeout.set()
 
