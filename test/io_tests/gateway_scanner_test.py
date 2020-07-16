@@ -146,7 +146,7 @@ class TestGatewayScanner(unittest.TestCase):
 
 
 def fake_router_search_response(xknx: XKNX) -> KNXIPFrame:
-    """Return the SearchResponse of a KNX/IP Router."""
+    """Return the KNXIPFrame of a KNX/IP Router with a SearchResponse body."""
     _frame_header = KNXIPHeader(xknx)
     _frame_header.service_type_ident = KNXIPServiceType.SEARCH_RESPONSE
     _frame_body = SearchResponse(xknx)
