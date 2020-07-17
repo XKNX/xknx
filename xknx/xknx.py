@@ -6,7 +6,7 @@ from sys import platform
 
 from xknx.core import Config, TelegramQueue
 from xknx.devices import Devices
-from xknx.io import ConnectionConfig, KNXIPInterface
+from xknx.io import ConnectionConfig, KNXIPInterface, DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.telegram import GroupAddressType, PhysicalAddress
 
 from .__version__ import __version__ as VERSION
@@ -27,7 +27,9 @@ class XKNX:
                  address_format=GroupAddressType.LONG,
                  telegram_received_cb=None,
                  device_updated_cb=None,
-                 rate_limit=DEFAULT_RATE_LIMIT):
+                 rate_limit=DEFAULT_RATE_LIMIT,
+                 multicast_group=DEFAULT_MCAST_GRP,
+                 multicast_port=DEFAULT_MCAST_PORT):
         """Initialize XKNX class."""
         # pylint: disable=too-many-arguments
         self.devices = Devices()
@@ -41,6 +43,8 @@ class XKNX:
         self.address_format = address_format
         self.own_address = own_address
         self.rate_limit = rate_limit
+        self.multicast_group = multicast_group
+        self.multicast_port = multicast_port
         self.logger = logging.getLogger('xknx.log')
         self.knx_logger = logging.getLogger('xknx.knx')
         self.telegram_logger = logging.getLogger('xknx.telegram')
