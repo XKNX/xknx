@@ -6,7 +6,8 @@ from sys import platform
 
 from xknx.core import Config, TelegramQueue
 from xknx.devices import Devices
-from xknx.io import ConnectionConfig, KNXIPInterface, DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
+from xknx.io import (
+    DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT, ConnectionConfig, KNXIPInterface)
 from xknx.telegram import GroupAddressType, PhysicalAddress
 
 from .__version__ import __version__ as VERSION
