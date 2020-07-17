@@ -98,9 +98,15 @@ class GatewayScanner():
         self._udp_clients = []
         self._response_received_or_timeout = asyncio.Event()
         self._timeout_handle = None
+        self._count_upper_bound = 0
+        """Clean value of self.stop_on_found, computed when ``scan`` is called."""
 
     async def scan(self) -> List[GatewayDescriptor]:
         """Scan and return a list of GatewayDescriptors on success."""
+        if self.stop_on_found is None:
+            self._count_upper_bound = 0
+        else:
+            self._count_upper_bound = max(0, self.stop_on_found)
         await self._send_search_requests()
         await self._start_timeout()
         await self._response_received_or_timeout.wait()
@@ -172,9 +178,7 @@ class GatewayScanner():
     def _add_found_gateway(self, gateway):
         if self.scan_filter.match(gateway):
             self.found_gateways.append(gateway)
-            if self.stop_on_found is None or self.stop_on_found <= 0:
-                return
-            if len(self.found_gateways) >= self.stop_on_found:
+            if 0 < self._count_upper_bound <= len(self.found_gateways):
                 self._response_received_or_timeout.set()
 
     def _timeout(self):
