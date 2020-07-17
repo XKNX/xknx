@@ -43,6 +43,12 @@ class Config:
             if "rate_limit" in doc["general"]:
                 self.xknx.rate_limit = \
                     doc["general"]["rate_limit"]
+            if "multicast_group" in doc["general"]:
+                self.xknx.multicast_group = \
+                    doc["general"]["multicast_group"]
+            if "multicast_port" in doc["general"]:
+                self.xknx.multicast_port = \
+                    doc["general"]["multicast_port"]
 
     def parse_connection(self, doc):
         """Parse the connection section of xknx.yaml."""
