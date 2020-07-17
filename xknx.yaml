@@ -2,6 +2,8 @@
 general:
     own_address: '15.15.249'
     rate_limit: 18
+    multicast_group: '224.1.2.3'
+    multicast_port: 1337
 
 connection:
     auto:
