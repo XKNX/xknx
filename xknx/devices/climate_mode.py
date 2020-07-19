@@ -6,7 +6,8 @@ Climate modes can be 'auto', 'comfort', 'standby', 'economy' or 'protection'.
 from xknx.dpt import HVACOperationMode
 from xknx.exceptions import DeviceIllegalValue
 from xknx.remote_value import (
-    RemoteValueClimateBinaryMode, RemoteValueClimateMode)
+    RemoteValueBinaryHeatCool, RemoteValueBinaryOperationMode,
+    RemoteValueClimateMode)
 
 from .device import Device
 
@@ -29,6 +30,8 @@ class ClimateMode(Device):
                  group_address_controller_status_state=None,
                  group_address_controller_mode=None,
                  group_address_controller_mode_state=None,
+                 group_address_heat_cool=None,
+                 group_address_heat_cool_state=None,
                  operation_modes=None,
                  device_updated_cb=None):
         """Initialize ClimateMode class."""
@@ -63,7 +66,7 @@ class ClimateMode(Device):
             climate_mode_type=RemoteValueClimateMode.ClimateModeType.CONTROLLER_STATUS,
             after_update_cb=None)
 
-        self.remote_value_operation_mode_comfort = RemoteValueClimateBinaryMode(
+        self.remote_value_operation_mode_comfort = RemoteValueBinaryOperationMode(
             xknx,
             group_address=group_address_operation_mode_comfort,
             group_address_state=group_address_operation_mode_comfort,
@@ -72,7 +75,7 @@ class ClimateMode(Device):
             feature_name="Operation mode Comfort",
             operation_mode=HVACOperationMode.COMFORT,
             after_update_cb=None)
-        self.remote_value_operation_mode_standby = RemoteValueClimateBinaryMode(
+        self.remote_value_operation_mode_standby = RemoteValueBinaryOperationMode(
             xknx,
             group_address=group_address_operation_mode_standby,
             group_address_state=group_address_operation_mode_standby,
@@ -81,7 +84,7 @@ class ClimateMode(Device):
             feature_name="Operation mode Standby",
             operation_mode=HVACOperationMode.STANDBY,
             after_update_cb=None)
-        self.remote_value_operation_mode_night = RemoteValueClimateBinaryMode(
+        self.remote_value_operation_mode_night = RemoteValueBinaryOperationMode(
             xknx,
             group_address=group_address_operation_mode_night,
             group_address_state=group_address_operation_mode_night,
@@ -90,7 +93,7 @@ class ClimateMode(Device):
             feature_name="Operation mode Night",
             operation_mode=HVACOperationMode.NIGHT,
             after_update_cb=None)
-        self.remote_value_operation_mode_protection = RemoteValueClimateBinaryMode(
+        self.remote_value_operation_mode_protection = RemoteValueBinaryOperationMode(
             xknx,
             group_address=group_address_operation_mode_protection,
             group_address_state=group_address_operation_mode_protection,
@@ -98,6 +101,15 @@ class ClimateMode(Device):
             device_name=name,
             feature_name="Operation mode Protection",
             operation_mode=HVACOperationMode.FROST_PROTECTION,
+            after_update_cb=None)
+        self.remote_value_heat_cool = RemoteValueBinaryHeatCool(
+            xknx,
+            group_address=group_address_heat_cool,
+            group_address_state=group_address_heat_cool_state,
+            sync_state=True,
+            device_name=name,
+            feature_name="Heat/Cool",
+            operation_mode=HVACOperationMode.HEAT,
             after_update_cb=None)
 
         self.operation_mode = HVACOperationMode.STANDBY
@@ -122,7 +134,9 @@ class ClimateMode(Device):
             group_address_controller_status is not None or \
             group_address_controller_status_state is not None or \
             group_address_controller_mode is not None or \
-            group_address_controller_mode_state is not None
+            group_address_controller_mode_state is not None or \
+            group_address_heat_cool is not None or \
+            group_address_heat_cool_state is not None
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -138,6 +152,8 @@ class ClimateMode(Device):
         group_address_controller_status_state = config.get('group_address_controller_status_state')
         group_address_controller_mode = config.get('group_address_controller_mode')
         group_address_controller_mode_state = config.get('group_address_controller_mode_state')
+        group_address_heat_cool = config.get('group_address_heat_cool')
+        group_address_heat_cool_state = config.get('group_address_heat_cool_state')
 
         return cls(xknx,
                    name,
@@ -150,7 +166,9 @@ class ClimateMode(Device):
                    group_address_controller_status=group_address_controller_status,
                    group_address_controller_status_state=group_address_controller_status_state,
                    group_address_controller_mode=group_address_controller_mode,
-                   group_address_controller_mode_state=group_address_controller_mode_state)
+                   group_address_controller_mode_state=group_address_controller_mode_state,
+                   group_address_heat_cool=group_address_heat_cool,
+                   group_address_heat_cool_state=group_address_heat_cool_state)
 
     def _iter_remote_values(self):
         """Iterate climate mode RemoteValue classes."""
@@ -160,7 +178,8 @@ class ClimateMode(Device):
                     self.remote_value_operation_mode_comfort,
                     self.remote_value_operation_mode_night,
                     self.remote_value_operation_mode_protection,
-                    self.remote_value_operation_mode_standby)
+                    self.remote_value_operation_mode_standby,
+                    self.remote_value_heat_cool)
 
     async def _set_internal_operation_mode(self, operation_mode):
         """Set internal value of operation mode. Call hooks if operation mode was changed."""
