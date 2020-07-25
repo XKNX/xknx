@@ -1,33 +1,26 @@
-sudo: false
+os: linux
+dist: xenial
+language: python
 
-matrix:
+jobs:
   include:
-    - python: "3.6"
+    - python: "3.7"
       env: TOXENV=flake8
-    - python: "3.6"
+    - python: "3.7"
       env: TOXENV=pylint
-    - python: "3.6"
+    - python: "3.7"
       env: TOXENV=pydocstyle
     - python: "3.5"
       env: TOXENV=py35
     - python: "3.6"
       env: TOXENV=py36
     - python: "3.7"
-      dist: xenial # required for Python >= 3.7
       env: TOXENV=py37
-#    - python: "3.7-dev"
-#      env: TOXENV=py36
-#    - python: "nightly"
-#      env: TOXENV=py36
 
 cache:
   directories:
     - $HOME/.cache/pip
-language: python
-script: travis_wait tox
-after_success: coveralls
-
 # command to install dependencies
 install: "pip install -r requirements/testing.txt"
-
+script: travis_wait tox
 after_success: coveralls

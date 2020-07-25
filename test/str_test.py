@@ -303,7 +303,7 @@ class TestStringRepresentations(unittest.TestCase):
         """Test string representation of action callback."""
         xknx = XKNX(loop=self.loop)
 
-        def cb():
+        def cb():  # noqa: D401
             """Callback."""
 
         action = ActionCallback(

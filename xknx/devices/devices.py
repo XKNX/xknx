@@ -23,7 +23,7 @@ class Devices:
         self.device_updated_cbs.remove(device_updated_cb)
 
     def __iter__(self):
-        """Iterator."""
+        """Iterate registered devices."""
         yield from self.__devices
 
     def devices_by_group_address(self, group_address):

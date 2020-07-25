@@ -40,6 +40,7 @@ class Device:
             self.xknx.logger.error("Error while syncing device: %s", ex)
 
     async def _sync_impl(self, wait_for_result=True):
+        # pylint: disable=import-outside-toplevel
         self.xknx.logger.debug("Sync %s", self.name)
         for group_address in self.state_addresses():
             from xknx.core import ValueReader
