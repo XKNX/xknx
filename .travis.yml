@@ -12,10 +12,13 @@ jobs:
       env: TOXENV=pydocstyle
     - python: "3.5"
       env: TOXENV=py35
+      after_success: coveralls
     - python: "3.6"
       env: TOXENV=py36
+      after_success: coveralls
     - python: "3.7"
       env: TOXENV=py37
+      after_success: coveralls
 
 cache:
   directories:
@@ -23,4 +26,3 @@ cache:
 # command to install dependencies
 install: "pip install -r requirements/testing.txt"
 script: travis_wait tox
-after_success: coveralls
