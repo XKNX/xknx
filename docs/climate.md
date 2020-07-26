@@ -73,16 +73,18 @@ groups:
 - **min_temp** Minimum value for target temperature.
 - **mode** ClimateMode instance for this climate device
 
-* **group_address_operation_mode** KNX address for operation mode.
-* **group_address_operation_mode_state** KNX address for operation mode status.
-* **group_address_operation_mode_protection** KNX address for switching on/off frost/heat protection mode.
-* **group_address_operation_mode_night** KNX address for switching on/off night nmode.
-* **group_address_operation_mode_comfort** KNX address for switching on/off comfort mode.
-* **group_address_operation_mode_standby** KNX address for switching on/off standby mode.
+* **group_address_operation_mode** KNX address for operation mode. DPT 20.102
+* **group_address_operation_mode_state** KNX address for operation mode status. DPT 20.102
+* **group_address_operation_mode_protection** KNX address for switching on/off frost/heat protection mode. DPT 1
+* **group_address_operation_mode_night** KNX address for switching on/off night nmode. DPT 1
+* **group_address_operation_mode_comfort** KNX address for switching on/off comfort mode. DPT 1
+* **group_address_operation_mode_standby** KNX address for switching on/off standby mode. DPT 1
 * **group_address_controller_status** KNX address for controller status.
 * **group_address_controller_status_state** KNX address for controller status state.
-* **group_address_controller_mode** KNX address for controller mode.
-* **group_address_controller_mode_state** KNX address for controller mode status.
+* **group_address_controller_mode** KNX address for controller mode. DPT 20.105
+* **group_address_controller_mode_state** KNX address for controller mode status. DPT 20.105
+* **group_address_heat_cool** KNX address for switching heating / cooling mode. DPT 1
+* **group_address_heat_cool_state** KNX address for reading heating / cooling mode. DPT 1
 * **operation_modes** Overrides the supported operation modes.
 
 **Note:** `group_address_operation_mode_protection` / `group_address_operation_mode_night` / `group_address_operation_mode_comfort` / `group_address_operation_mode_standby` are not necessary if `group_address_operation_mode` was specified. When one of these is set `True`, the others will be set `False`. When one of these is set "Standby", "Comfort", "Frost_Protection" and "Night" will be set as supported. If `group_address_operation_mode_standby` is omitted, "Standby" is set when the other 3 are set to `False`.

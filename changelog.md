@@ -15,6 +15,7 @@
 - Added config option ignore_internal_state in binary sensors (@andreasnanko #267)
 - Add support for 2byte float type (DPT 9.002) to climate shiftpoint
 - ClimateMode: add `group_address_operation_mode_standby` as binary operation mode
+- ClimateMode: add `group_address_heat_cool` and `group_address_heat_cool_state for switching heating mode / cooling mode with DPT1
 
 ### Bugfixes
 

@@ -64,8 +64,8 @@ class RemoteValueClimateMode(RemoteValue):
         return self._climate_mode_transcoder.from_knx(payload.value)
 
 
-class RemoteValueClimateBinaryMode(RemoteValue):
-    """Abstraction for remote value of split up KNX climate modes."""
+class _RemoteValueBinaryClimateMode(RemoteValue):
+    """Base class for binary climate mode remote values."""
 
     def __init__(self,
                  xknx,
@@ -96,10 +96,7 @@ class RemoteValueClimateBinaryMode(RemoteValue):
     @staticmethod
     def supported_operation_modes():
         """Return a list of the configured operation mode."""
-        return [HVACOperationMode.COMFORT,
-                HVACOperationMode.FROST_PROTECTION,
-                HVACOperationMode.NIGHT,
-                HVACOperationMode.STANDBY]
+        raise NotImplementedError('supported_operation_modes has to return a list')
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
@@ -113,11 +110,44 @@ class RemoteValueClimateBinaryMode(RemoteValue):
         raise ConversionError("value invalid",
                               value=value, device_name=self.device_name, feature_name=self.feature_name)
 
+
+class RemoteValueBinaryOperationMode(_RemoteValueBinaryClimateMode):
+    """Abstraction for remote value of split up KNX climate modes."""
+
+    @staticmethod
+    def supported_operation_modes():
+        """Return a list of the configured operation mode."""
+        return [HVACOperationMode.COMFORT,
+                HVACOperationMode.FROST_PROTECTION,
+                HVACOperationMode.NIGHT,
+                HVACOperationMode.STANDBY]
+
     def from_knx(self, payload):
         """Convert current payload to value."""
         if payload == DPTBinary(1):
             return self.operation_mode
         if payload == DPTBinary(0):
             return None
+        raise CouldNotParseTelegram("payload invalid",
+                                    payload=payload, device_name=self.device_name, feature_name=self.feature_name)
+
+
+class RemoteValueBinaryHeatCool(_RemoteValueBinaryClimateMode):
+    """Abstraction for remote value of heat/cool controller mode."""
+
+    @staticmethod
+    def supported_operation_modes():
+        """Return a list of the configured operation mode."""
+        return [HVACOperationMode.HEAT,
+                HVACOperationMode.COOL]
+
+    def from_knx(self, payload):
+        """Convert current payload to value."""
+        if payload == DPTBinary(1):
+            return self.operation_mode
+        if payload == DPTBinary(0):
+            # return the other operation mode
+            return next((_op for _op in self.supported_operation_modes() if _op is not self.operation_mode),
+                        None)
         raise CouldNotParseTelegram("payload invalid",
                                     payload=payload, device_name=self.device_name, feature_name=self.feature_name)

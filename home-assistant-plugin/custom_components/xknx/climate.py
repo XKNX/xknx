@@ -42,6 +42,8 @@ CONF_CONTROLLER_STATUS_ADDRESS = "controller_status_address"
 CONF_CONTROLLER_STATUS_STATE_ADDRESS = "controller_status_state_address"
 CONF_CONTROLLER_MODE_ADDRESS = "controller_mode_address"
 CONF_CONTROLLER_MODE_STATE_ADDRESS = "controller_mode_state_address"
+CONF_HEAT_COOL_ADDRESS = "heat_cool_address"
+CONF_HEAT_COOL_STATE_ADDRESS = "heat_cool_state_address"
 CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS = "operation_mode_frost_protection_address"
 CONF_OPERATION_MODE_NIGHT_ADDRESS = "operation_mode_night_address"
 CONF_OPERATION_MODE_COMFORT_ADDRESS = "operation_mode_comfort_address"
@@ -108,6 +110,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_CONTROLLER_STATUS_STATE_ADDRESS): cv.string,
         vol.Optional(CONF_CONTROLLER_MODE_ADDRESS): cv.string,
         vol.Optional(CONF_CONTROLLER_MODE_STATE_ADDRESS): cv.string,
+        vol.Optional(CONF_HEAT_COOL_ADDRESS): cv.string,
+        vol.Optional(CONF_HEAT_COOL_STATE_ADDRESS): cv.string,
         vol.Optional(CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS): cv.string,
         vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): cv.string,
         vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
@@ -171,6 +175,12 @@ def async_add_entities_config(hass, config, async_add_entities):
         ),
         group_address_operation_mode_standby=config.get(
             CONF_OPERATION_MODE_STANDBY_ADDRESS
+        ),
+        group_address_heat_cool=config.get(
+            CONF_HEAT_COOL_ADDRESS
+        ),
+        group_address_heat_cool_state=config.get(
+            CONF_HEAT_COOL_STATE_ADDRESS
         ),
         operation_modes=config.get(CONF_OPERATION_MODES),
     )
