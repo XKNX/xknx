@@ -4,7 +4,6 @@
 
 ### Breaking changes
 
-- Sensor: "DPT-5", "DPT-7", "DPT-8", "DPT-9", "DPT-13", "DPT-14" are no longer valid as value_type in favor of eg. "2byte_signed"
 - Removed significant_bit attribute in BinarySensor
 - DateTime devices are initialized with sting for broadcast_type: "time", "date" or "datetime" instead of an Enum value
 - Removed `bind_to_multicast` option in ConnectionConfig and UDPClient
@@ -12,6 +11,7 @@
 ### New Features
 
 - new StateUpdater: Devices `sync_state` can be set to `init` to just initialize state on startup, `expire [minutes]` to read the state from the KNX bus when it was not updated for [minutes] or `every [minutes]` to update it regularly every [minutes]
+- Sensor and ExposeSensor now also accepts `value_type` of int (generic DPT) or float (specific DPT) if implemented.
 - Added config option ignore_internal_state in binary sensors (@andreasnanko #267)
 - Add support for 2byte float type (DPT 9.002) to climate shiftpoint
 - ClimateMode: add `group_address_operation_mode_standby` as binary operation mode

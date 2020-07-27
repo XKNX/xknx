@@ -83,6 +83,19 @@ class TestDPT(unittest.TestCase):
 class TestDPTBase(unittest.TestCase):
     """Test class for transcoder base object."""
 
+    def test_dpt_subclasses_definition_types(self):
+        """Test value_type and dpt_*_number values for correct type in subclasses of DPTBase."""
+        for dpt in DPTBase.__recursive_subclasses__():
+            if hasattr(dpt, 'value_type'):
+                self.assertTrue(isinstance(dpt.value_type, str),
+                                msg="Wrong type for value_type in %s - str expected" % dpt)
+            if hasattr(dpt, 'dpt_main_number'):
+                self.assertTrue(isinstance(dpt.dpt_main_number, int),
+                                msg="Wrong type for dpt_main_number in %s - int expected" % dpt)
+            if hasattr(dpt, 'dpt_sub_number'):
+                self.assertTrue(isinstance(dpt.dpt_sub_number, (int, type(None))),
+                                msg="Wrong type for dpt_sub_number in %s - int or `None` expected" % dpt)
+
     def test_dpt_subclasses_no_duplicate_value_types(self):
         """Test for duplicate value_type values in subclasses of DPTBase."""
         value_types = []
@@ -107,3 +120,16 @@ class TestDPTBase(unittest.TestCase):
                 dpt_tuples.append((dpt.dpt_main_number, dpt.dpt_sub_number))
         self.assertCountEqual(dpt_tuples,
                               set(dpt_tuples))
+
+    def test_dpt_alternative_notations(self):
+        """Test the parser for accepting alternateive notations for the same DPT class."""
+        dpt1 = DPTBase.parse_transcoder("2byte_unsigned")
+        dpt2 = DPTBase.parse_transcoder(7)
+        dpt3 = DPTBase.parse_transcoder("DPT-7")
+        self.assertEqual(dpt1, dpt2)
+        self.assertEqual(dpt2, dpt3)
+        dpt4 = DPTBase.parse_transcoder("temperature")
+        dpt5 = DPTBase.parse_transcoder(9.001)
+        dpt6 = DPTBase.parse_transcoder("9.001")
+        self.assertEqual(dpt4, dpt5)
+        self.assertEqual(dpt5, dpt6)

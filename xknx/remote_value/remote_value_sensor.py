@@ -24,7 +24,7 @@ class RemoteValueSensor(RemoteValue):
                  after_update_cb=None):
         """Initialize RemoteValueSensor class."""
         # pylint: disable=too-many-arguments
-        _dpt_class = DPTBase.transcoder_by_value_type(value_type)
+        _dpt_class = DPTBase.parse_transcoder(value_type)
         if _dpt_class is None:
             raise ConversionError("invalid value type", value_type=value_type, device_name=device_name)
         self.dpt_class = _dpt_class
