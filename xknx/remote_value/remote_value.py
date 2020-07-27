@@ -142,6 +142,7 @@ class RemoteValue():
         """Send GroupValueRead telegram for state address to KNX bus."""
         if self.readable:
             self.xknx.logger.debug("Sync %s - %s", self.device_name, self.feature_name)
+            # pylint: disable=import-outside-toplevel
             from xknx.core import ValueReader
             value_reader = ValueReader(self.xknx, self.group_address_state)
             if wait_for_result:
