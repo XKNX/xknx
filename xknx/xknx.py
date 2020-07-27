@@ -71,6 +71,7 @@ class XKNX:
                     daemon_mode=False,
                     connection_config=None):
         """Start XKNX module. Connect to KNX/IP devices and start state updater."""
+        # pylint: disable=import-outside-toplevel
         if connection_config is None:
             if self.connection_config is None:
                 connection_config = ConnectionConfig()

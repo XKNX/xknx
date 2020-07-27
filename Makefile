@@ -38,7 +38,7 @@ pydocstyle:
 	 @pydocstyle xknx test/*.py test/*.py *.py examples/*.py
 
 coverage:
-	py.test --cov-report html --cov xknx --verbose
+	pytest --cov-report html --cov xknx --verbose
 
 clean:
 	-rm -rf build dist xknx.egg-info
