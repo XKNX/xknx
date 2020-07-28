@@ -163,17 +163,17 @@ class TestStateUpdater(unittest.TestCase):
         xknx.state_updater.start()
         self.assertTrue(xknx.state_updater.started)
         # start
-        xknx.state_updater._workers[id(remote_value_1)].start.assert_called_once()
-        xknx.state_updater._workers[id(remote_value_2)].start.assert_called_once()
+        xknx.state_updater._workers[id(remote_value_1)].start.assert_called_once_with()
+        xknx.state_updater._workers[id(remote_value_2)].start.assert_called_once_with()
         # update
         xknx.state_updater.update_received(remote_value_2)
         xknx.state_updater._workers[id(remote_value_1)].update_received.assert_not_called()
-        xknx.state_updater._workers[id(remote_value_2)].update_received.assert_called_once()
+        xknx.state_updater._workers[id(remote_value_2)].update_received.assert_called_once_with()
         # stop
         xknx.state_updater.stop()
         self.assertFalse(xknx.state_updater.started)
-        xknx.state_updater._workers[id(remote_value_1)].stop.assert_called_once()
-        xknx.state_updater._workers[id(remote_value_2)].stop.assert_called_once()
+        xknx.state_updater._workers[id(remote_value_1)].stop.assert_called_once_with()
+        xknx.state_updater._workers[id(remote_value_2)].stop.assert_called_once_with()
         # don't update when not started
         xknx.state_updater.update_received(remote_value_1)
         xknx.state_updater._workers[id(remote_value_1)].update_received.assert_not_called()
