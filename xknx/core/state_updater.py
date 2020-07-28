@@ -21,7 +21,7 @@ class StateUpdater():
 
     def register_remote_value(self,
                               remote_value: RemoteValue,
-                              tracker_options=None):
+                              tracker_options=True):
         """Register a RemoteValue to initialize its state and/or track for expiration."""
         def parse_tracker_options(tracker_options):
             """Parse tracker type and expiration time."""
@@ -39,15 +39,20 @@ class StateUpdater():
                     tracker_type = StateTrackerType.INIT
                 elif _options[0].upper() == "EXPIRE":
                     tracker_type = StateTrackerType.EXPIRE
-                    if _options[1].isdigit():
-                        update_interval = int(_options[1])
                 elif _options[0].upper() == "EVERY":
                     tracker_type = StateTrackerType.PERIODICALLY
+                else:
+                    self.xknx.logger.warning('Can not parse StateUpdater tracker_options "%s" for %s. Using default %s %s minutes.' %
+                                             (tracker_options, remote_value, tracker_type, update_interval))
+                    return (tracker_type, update_interval)
+                try:
                     if _options[1].isdigit():
                         update_interval = int(_options[1])
+                except IndexError:
+                    pass  # No time given (no _options[1])
             else:
-                self.xknx.logger.warning('Can not parse StateUpdater tracker_options "%s" for %s. Using default %s %s minutes.' %
-                                         (tracker_options, remote_value, tracker_type, update_interval))
+                self.xknx.logger.warning('Can not parse StateUpdater tracker_options type %s "%s" for %s. Using default %s %s minutes.' %
+                                         (type(tracker_options), tracker_options, remote_value, tracker_type, update_interval))
             return (tracker_type, update_interval)
 
         tracker_type, update_inteval = parse_tracker_options(tracker_options)
