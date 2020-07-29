@@ -1,10 +1,10 @@
 """Implementation of Basic KNX DPT_1_Ucount Values."""
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .dpt import DPTTranscoder
 
 
-class DPTValue1ByteUnsigned(DPTBase):
+class DPTValue1ByteUnsigned(DPTTranscoder):
     """
     Abstraction for KNX 1 Octet.
 

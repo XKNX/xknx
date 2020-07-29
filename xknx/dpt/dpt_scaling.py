@@ -1,10 +1,10 @@
 """Implementation of scaled KNX DPT_1_Ucount Values."""
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .dpt import DPTTranscoder
 
 
-class DPTScaling(DPTBase):
+class DPTScaling(DPTTranscoder):
     """
     Abstraction for KNX 1 Octet Percent.
 

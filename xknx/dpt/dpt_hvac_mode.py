@@ -4,7 +4,7 @@ from enum import Enum
 
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP
 
-from .dpt import DPTBase
+from .dpt import DPTTranscoder
 
 
 class HVACOperationMode(Enum):
@@ -30,7 +30,7 @@ class HVACOperationMode(Enum):
     NODEM = "NoDem"
 
 
-class _DPTClimateMode(DPTBase):
+class _DPTClimateMode(DPTTranscoder):
     """Base class for KNX Climate modes."""
 
     SUPPORTED_MODES = {}

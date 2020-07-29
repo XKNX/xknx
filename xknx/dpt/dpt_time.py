@@ -4,10 +4,10 @@ import time
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .dpt import DPTTranscoder
 
 
-class DPTTime(DPTBase):
+class DPTTime(DPTTranscoder):
     """
     Abstraction for KNX 3 Octet Time.
 

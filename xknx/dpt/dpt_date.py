@@ -4,10 +4,10 @@ import time
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .dpt import DPTTranscoder
 
 
-class DPTDate(DPTBase):
+class DPTDate(DPTTranscoder):
     """Abstraction for KNX 3 octet date (DPT 11.001)."""
 
     payload_length = 3

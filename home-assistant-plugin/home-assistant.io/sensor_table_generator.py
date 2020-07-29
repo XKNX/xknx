@@ -1,6 +1,6 @@
 """Generate a markdown table that can be copied to home-assistant.io sensor.knx documentation."""
 try:
-    from xknx.dpt import DPTBase
+    from xknx.dpt import DPTTranscoder
 except ModuleNotFoundError:
     exit("Add the `xknx` directory to pythons path via `export PYTHONPATH=$HOME/directory/to/xknx`")
 
@@ -62,7 +62,7 @@ class Row():
 class DPTRow(Row):
     """A row holding information for a DPT."""
 
-    def __init__(self, dpt_class: DPTBase):
+    def __init__(self, dpt_class: DPTTranscoder):
         dpt_range = ""
         if hasattr(dpt_class, "value_min") and hasattr(dpt_class, "value_max"):
             dpt_range = "%s ... %s" % (dpt_class.value_min, dpt_class.value_max)
@@ -73,7 +73,7 @@ class DPTRow(Row):
                          dpt_size=str(dpt_class.payload_length),
                          dpt_range=dpt_range)
 
-    def _get_dpt_number_from_docstring(self, dpt_class: DPTBase):
+    def _get_dpt_number_from_docstring(self, dpt_class: DPTTranscoder):
         """Extract dpt number from class docstring."""
         docstring = dpt_class.__doc__
         try:
@@ -123,8 +123,8 @@ def table_delimiter():
 def print_table():
     """Read the values and print the table to stdout."""
     rows = []
-    for dpt in DPTBase.__recursive_subclasses__():
-        if dpt.has_distinct_value_type():
+    for dpt in DPTTranscoder.__recursive_subclasses__():
+        if dpt._has_distinct_value_type():
             rows.append(DPTRow(dpt_class=dpt))
 
     rows.sort(key=lambda row: row.dpt_number_int())

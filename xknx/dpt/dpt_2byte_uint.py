@@ -2,10 +2,10 @@
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .dpt import DPTTranscoder
 
 
-class DPT2ByteUnsigned(DPTBase):
+class DPT2ByteUnsigned(DPTTranscoder):
     """
     Abstraction for KNX 2 Byte "2-octet unsigned value".
 
