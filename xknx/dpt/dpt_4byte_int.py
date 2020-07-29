@@ -10,10 +10,10 @@ import struct
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .dpt import DPTTranscoder
 
 
-class DPT4ByteUnsigned(DPTBase):
+class DPT4ByteUnsigned(DPTTranscoder):
     """
     Abstraction for KNX 4 Byte "32-bit unsigned".
 

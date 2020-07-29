@@ -2,7 +2,7 @@
 from xknx.exceptions import ConversionError
 
 
-class DPTBase:
+class DPTTranscoder:
     """
     Base class for KNX data point type transcoder.
 
@@ -61,54 +61,56 @@ class DPTBase:
             yield subclass
 
     @classmethod
-    def has_distinct_dpt_numbers(cls):
+    def _has_distinct_dpt_numbers(cls):
         """Return True if dpt numbers are defined (not inherited)."""
         return 'dpt_main_number' in cls.__dict__ and 'dpt_sub_number' in cls.__dict__
 
     @classmethod
-    def has_distinct_value_type(cls):
+    def _has_distinct_value_type(cls):
         """Return True if value_type is defined (not inherited)."""
         return 'value_type' in cls.__dict__
 
     @staticmethod
-    def transcoder_by_dpt(dpt_main, dpt_sub=None):
-        """Return Class reference of DPTBase subclass with matching DPT number."""
-        for dpt in DPTBase.__recursive_subclasses__():
-            if dpt.has_distinct_dpt_numbers():
+    def _by_dpt_numbers(dpt_main, dpt_sub=None):
+        """Return Class reference of DPTTranscoder subclass with matching DPT number."""
+        # pylint: disable=protected-access
+        for dpt in DPTTranscoder.__recursive_subclasses__():
+            if dpt._has_distinct_dpt_numbers():
                 if dpt_main == dpt.dpt_main_number and dpt_sub == dpt.dpt_sub_number:
                     return dpt
         return None
 
     @staticmethod
-    def transcoder_by_value_type(value_type):
-        """Return Class reference of DPTBase subclass with matching value_type."""
-        for dpt in DPTBase.__recursive_subclasses__():
-            if dpt.has_distinct_value_type():
+    def _by_value_type(value_type):
+        """Return Class reference of DPTTranscoder subclass with matching value_type."""
+        # pylint: disable=protected-access
+        for dpt in DPTTranscoder.__recursive_subclasses__():
+            if dpt._has_distinct_value_type():
                 if value_type == dpt.value_type:
                     return dpt
         return None
 
     @staticmethod
-    def parse_transcoder(value_type):
-        """Return Class reference of DPTBase subclass from value_type or DPT number."""
+    def parse_type(value_type):
+        """Return Class reference of DPTTranscoder subclass from value_type string or DPT number."""
         if isinstance(value_type, int):
-            return DPTBase.transcoder_by_dpt(value_type)
+            return DPTTranscoder._by_dpt_numbers(value_type)
         if isinstance(value_type, float):
             # avoid modulo for floating point rounding errors
             main, sub = map(int, str(value_type).split('.'))
-            return DPTBase.transcoder_by_dpt(main, sub)
+            return DPTTranscoder._by_dpt_numbers(main, sub)
         if isinstance(value_type, str):
             _string_type = value_type.strip()
-            transcoder = DPTBase.transcoder_by_value_type(_string_type)
+            transcoder = DPTTranscoder._by_value_type(_string_type)
             if transcoder is None:
-                # Try to parse the value_type if it is a string but not found by DPTBase.transcoder_by_value_type()
+                # Try to parse the value_type if it is a string but not found by DPTTranscoder._by_value_type()
                 # for backwards compatibility (eg. "DPT-5") and strings representing numbers (eg. "7", "9.001")
                 _string_type = _string_type.upper().strip(" DPT-")
                 if _string_type.isdigit():
-                    transcoder = DPTBase.parse_transcoder(int(_string_type))
+                    transcoder = DPTTranscoder.parse_type(int(_string_type))
                 else:
                     try:
-                        transcoder = DPTBase.parse_transcoder(float(_string_type))
+                        transcoder = DPTTranscoder.parse_type(float(_string_type))
                     except ValueError:
                         pass
             return transcoder

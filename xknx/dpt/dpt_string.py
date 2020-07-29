@@ -1,10 +1,10 @@
 """Implementation of 3.17 Datapoint Types String."""
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .dpt import DPTTranscoder
 
 
-class DPTString(DPTBase):
+class DPTString(DPTTranscoder):
     """
     Abstraction for KNX 14 Octet ASCII String.
 

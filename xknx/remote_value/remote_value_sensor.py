@@ -4,7 +4,7 @@ Module for managing a remote value typically used within a sensor.
 The module maps a given value_type to a DPT class and uses this class
 for serialization and deserialization of the KNX value.
 """
-from xknx.dpt import DPTArray, DPTBase
+from xknx.dpt import DPTArray, DPTTranscoder
 from xknx.exceptions import ConversionError
 
 from .remote_value import RemoteValue
@@ -24,7 +24,7 @@ class RemoteValueSensor(RemoteValue):
                  after_update_cb=None):
         """Initialize RemoteValueSensor class."""
         # pylint: disable=too-many-arguments
-        _dpt_class = DPTBase.parse_transcoder(value_type)
+        _dpt_class = DPTTranscoder.parse_type(value_type)
         if _dpt_class is None:
             raise ConversionError("invalid value type", value_type=value_type, device_name=device_name)
         self.dpt_class = _dpt_class

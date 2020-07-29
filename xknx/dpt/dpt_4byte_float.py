@@ -8,10 +8,10 @@ import struct
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .dpt import DPTTranscoder
 
 
-class DPT4ByteFloat(DPTBase):
+class DPT4ByteFloat(DPTTranscoder):
     """
     Abstraction for KNX 4 Octet Floating Point Numbers, with a maximum usable range as specified in IEEE 754.
 

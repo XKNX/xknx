@@ -6,10 +6,10 @@ They correspond to the the following KDN DPT 9 class.
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .dpt import DPTTranscoder
 
 
-class DPT2ByteFloat(DPTBase):
+class DPT2ByteFloat(DPTTranscoder):
     """
     Abstraction for KNX 2 Octet Floating Point Numbers.
 

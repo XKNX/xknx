@@ -25,7 +25,8 @@
 
 ### Internals
 
-- DPT classes can now be searched via value_type string or dpt number from any parent class (DPTBase for all) to be used in Sensor
+- Use new DPTTranscoder class as base for DPT implementations - use DPTBase as base class for DPTArray and DPTBinary
+- DPT classes can now be searched via value_type string or dpt number from any parent class (DPTTranscoder for all) to be used in Sensor
 - Use RemoteValue class in BinarySensor, DateTime and ClimateMode device
 - use time.struct_time for internal time and date representation
 - use a regular Bool type for BinarySensor state representation

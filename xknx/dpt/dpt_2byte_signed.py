@@ -9,10 +9,10 @@ import struct
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .dpt import DPTTranscoder
 
 
-class DPT2ByteSigned(DPTBase):
+class DPT2ByteSigned(DPTTranscoder):
     """
     Abstraction for KNX 2 Byte signed values.
 

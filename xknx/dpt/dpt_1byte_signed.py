@@ -2,10 +2,10 @@
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .dpt import DPTTranscoder
 
 
-class DPTSignedRelativeValue(DPTBase):
+class DPTSignedRelativeValue(DPTTranscoder):
     """
     Abstraction for KNX 1 Byte "1-octet Signed Relative Value".
 
