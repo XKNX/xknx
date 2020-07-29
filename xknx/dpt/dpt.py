@@ -117,7 +117,16 @@ class DPTTranscoder:
         return None
 
 
-class DPTBinary():
+class _DPTPayload():
+    """Base class for telegram payloads."""
+    # pylint: disable=too-few-public-methods
+
+    def __eq__(self, other):
+        """Equal operator."""
+        return DPTComparator.compare(self, other)
+
+
+class DPTBinary(_DPTPayload):
     """The DPTBinary is a base class for all datatypes encoded directly into the last 6 bit of the APCI (mostly integer)."""
 
     # pylint: disable=too-few-public-methods
@@ -135,16 +144,12 @@ class DPTBinary():
 
         self.value = value
 
-    def __eq__(self, other):
-        """Equal operator."""
-        return DPTComparator.compare(self, other)
-
     def __str__(self):
         """Return object as readable string."""
         return '<DPTBinary value="{0}" />'.format(self.value)
 
 
-class DPTArray():
+class DPTArray(_DPTPayload):
     """The DPTArray is a base class for all datatypes appended to the KNX telegram."""
 
     # pylint: disable=too-few-public-methods
@@ -158,10 +163,6 @@ class DPTArray():
             self.value = value
         else:
             raise TypeError()
-
-    def __eq__(self, other):
-        """Equal operator."""
-        return DPTComparator.compare(self, other)
 
     def __str__(self):
         """Return object as readable string."""
