@@ -119,8 +119,8 @@ class DPTTranscoder:
 
 class _DPTPayload():
     """Base class for telegram payloads."""
-    # pylint: disable=too-few-public-methods
 
+    # pylint: disable=too-few-public-methods
     def __eq__(self, other):
         """Equal operator."""
         return DPTComparator.compare(self, other)
