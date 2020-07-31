@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 from xknx import XKNX
 from xknx.devices import ActionCallback, DateTime, ExposeSensor
-from xknx.dpt import DPTArray, DPTBase, DPTBinary
+from xknx.dpt import DPTArray, DPTBinary, DPTTranscoder
 from xknx.exceptions import XKNXException
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
 from xknx.telegram import AddressFilter, GroupAddress, Telegram
@@ -298,7 +298,7 @@ class KNXModule:
             """Calculate payload depending on type of attribute."""
             if attr_type:
                 try:
-                    transcoder = DPTBase.parse_transcoder(attr_type)
+                    transcoder = DPTTranscoder.parse_type(attr_type)
                     return DPTArray(transcoder.to_knx(attr_payload))
                 except AttributeError as ex:
                     _LOGGER.error("Invalid type for knx.send service: %s", attr_type)
