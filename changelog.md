@@ -10,6 +10,8 @@
 
 ### New Features
 
+- HA integration: `knx.send` service takes `type` attribute to allow sending DPT encoded values like `sensor`
+- HA integration: `sensor` and `expose` accept int and float values for `type` (parsed as DPT numbers)
 - new StateUpdater: Devices `sync_state` can be set to `init` to just initialize state on startup, `expire [minutes]` to read the state from the KNX bus when it was not updated for [minutes] or `every [minutes]` to update it regularly every [minutes]
 - Sensor and ExposeSensor now also accepts `value_type` of int (generic DPT) or float (specific DPT) if implemented.
 - Added config option ignore_internal_state in binary sensors (@andreasnanko #267)

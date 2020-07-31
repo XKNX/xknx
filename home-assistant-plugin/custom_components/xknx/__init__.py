@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 from xknx import XKNX
 from xknx.devices import ActionCallback, DateTime, ExposeSensor
-from xknx.dpt import DPTArray, DPTBinary
+from xknx.dpt import DPTArray, DPTBinary, DPTTranscoder
 from xknx.exceptions import XKNXException
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
 from xknx.telegram import AddressFilter, GroupAddress, Telegram
@@ -47,6 +47,7 @@ CONF_XKNX_EXPOSE_ADDRESS = "address"
 SERVICE_XKNX_SEND = "send"
 SERVICE_XKNX_ATTR_ADDRESS = "address"
 SERVICE_XKNX_ATTR_PAYLOAD = "payload"
+SERVICE_XKNX_ATTR_TYPE = "type"
 
 ATTR_DISCOVER_DEVICES = "devices"
 
@@ -62,7 +63,9 @@ ROUTING_SCHEMA = vol.Schema({vol.Optional(CONF_XKNX_LOCAL_IP): cv.string})
 
 EXPOSE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_XKNX_EXPOSE_TYPE): cv.string,
+        vol.Required(CONF_XKNX_EXPOSE_TYPE): vol.Any(
+            int, float, str
+        ),
         vol.Optional(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_XKNX_EXPOSE_ATTRIBUTE): cv.string,
         vol.Optional(CONF_XKNX_EXPOSE_DEFAULT): cv.match_all,
@@ -97,6 +100,9 @@ SERVICE_XKNX_SEND_SCHEMA = vol.Schema(
         vol.Required(SERVICE_XKNX_ATTR_ADDRESS): cv.string,
         vol.Required(SERVICE_XKNX_ATTR_PAYLOAD): vol.Any(
             cv.positive_int, [cv.positive_int]
+        ),
+        vol.Optional(SERVICE_XKNX_ATTR_TYPE): vol.Any(
+            int, float, str
         ),
     }
 )
@@ -286,9 +292,19 @@ class KNXModule:
         """Service for sending an arbitrary KNX message to the KNX bus."""
         attr_payload = call.data.get(SERVICE_XKNX_ATTR_PAYLOAD)
         attr_address = call.data.get(SERVICE_XKNX_ATTR_ADDRESS)
+        attr_type = call.data.get(SERVICE_XKNX_ATTR_TYPE)
 
         def calculate_payload(attr_payload):
             """Calculate payload depending on type of attribute."""
+            if attr_type:
+                print(attr_type)
+                print(type(attr_type))
+                try:
+                    transcoder = DPTTranscoder.parse_type(attr_type)
+                    return DPTArray(transcoder.to_knx(attr_payload))
+                except AttributeError as ex:
+                    _LOGGER.error("Invalid type for knx.send service: %s", attr_type)
+                    raise ex
             if isinstance(attr_payload, int):
                 return DPTBinary(attr_payload)
             return DPTArray(attr_payload)
