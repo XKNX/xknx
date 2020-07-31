@@ -128,8 +128,16 @@ class TestDPTTranscoder(unittest.TestCase):
         dpt3 = DPTTranscoder.parse_type("DPT-7")
         self.assertEqual(dpt1, dpt2)
         self.assertEqual(dpt2, dpt3)
+
         dpt4 = DPTTranscoder.parse_type("temperature")
         dpt5 = DPTTranscoder.parse_type(9.001)
         dpt6 = DPTTranscoder.parse_type("9.001")
         self.assertEqual(dpt4, dpt5)
         self.assertEqual(dpt5, dpt6)
+
+    def test_dpt_not_implemented(self):
+        """Test the parser for processing wrong dpt values."""
+        self.assertIsNone(DPTTranscoder.parse_type("unknown"))
+        self.assertIsNone(DPTTranscoder.parse_type(0))
+        self.assertIsNone(DPTTranscoder.parse_type(5.99999))
+        self.assertIsNone(DPTTranscoder.parse_type(["list"]))
