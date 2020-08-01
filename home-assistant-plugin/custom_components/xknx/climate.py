@@ -30,10 +30,10 @@ from . import ATTR_DISCOVER_DEVICES, DATA_XKNX
 CONF_SETPOINT_SHIFT_ADDRESS = "setpoint_shift_address"
 CONF_SETPOINT_SHIFT_STATE_ADDRESS = "setpoint_shift_state_address"
 CONF_SETPOINT_SHIFT_MODE = "setpoint_shift_mode"
-CONF_SETPOINT_SHIFT_STEP = "setpoint_shift_step"
 CONF_SETPOINT_SHIFT_MAX = "setpoint_shift_max"
 CONF_SETPOINT_SHIFT_MIN = "setpoint_shift_min"
 CONF_TEMPERATURE_ADDRESS = "temperature_address"
+CONF_TEMPERATURE_STEP = "temperature_step"
 CONF_TARGET_TEMPERATURE_ADDRESS = "target_temperature_address"
 CONF_TARGET_TEMPERATURE_STATE_ADDRESS = "target_temperature_state_address"
 CONF_OPERATION_MODE_ADDRESS = "operation_mode_address"
@@ -57,9 +57,9 @@ CONF_MAX_TEMP = "max_temp"
 
 DEFAULT_NAME = "KNX Climate"
 DEFAULT_SETPOINT_SHIFT_MODE = "DPT6010"
-DEFAULT_SETPOINT_SHIFT_STEP = 0.5
 DEFAULT_SETPOINT_SHIFT_MAX = 6
 DEFAULT_SETPOINT_SHIFT_MIN = -6
+DEFAULT_TEMPERATURE_STEP = 0.1
 DEFAULT_ON_OFF_INVERT = False
 # Map KNX operation modes to HA modes. This list might not be complete.
 OPERATION_MODES = {
@@ -91,14 +91,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             SetpointShiftMode
         ),
         vol.Optional(
-            CONF_SETPOINT_SHIFT_STEP, default=DEFAULT_SETPOINT_SHIFT_STEP
-        ): vol.All(float, vol.Range(min=0, max=2)),
-        vol.Optional(
             CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX
         ): vol.All(int, vol.Range(min=0, max=32)),
         vol.Optional(
             CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN
         ): vol.All(int, vol.Range(min=-32, max=0)),
+        vol.Optional(
+            CONF_TEMPERATURE_STEP, default=DEFAULT_TEMPERATURE_STEP
+        ): vol.All(float, vol.Range(min=0, max=2)),
         vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
         vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): cv.string,
         vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
@@ -199,9 +199,9 @@ def async_add_entities_config(hass, config, async_add_entities):
             CONF_SETPOINT_SHIFT_STATE_ADDRESS
         ),
         setpoint_shift_mode=config[CONF_SETPOINT_SHIFT_MODE],
-        setpoint_shift_step=config[CONF_SETPOINT_SHIFT_STEP],
         setpoint_shift_max=config[CONF_SETPOINT_SHIFT_MAX],
         setpoint_shift_min=config[CONF_SETPOINT_SHIFT_MIN],
+        temperature_step=config[CONF_TEMPERATURE_STEP],
         group_address_on_off=config.get(CONF_ON_OFF_ADDRESS),
         group_address_on_off_state=config.get(CONF_ON_OFF_STATE_ADDRESS),
         min_temp=config.get(CONF_MIN_TEMP),

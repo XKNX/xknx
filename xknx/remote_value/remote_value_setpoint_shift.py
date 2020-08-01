@@ -15,7 +15,7 @@ class RemoteValueSetpointShift(RemoteValue1Count):
                  group_address_state=None,
                  device_name=None,
                  after_update_cb=None,
-                 setpoint_shift_step=0.5):
+                 setpoint_shift_step=0.1):
         """Initialize RemoteValueSetpointShift class."""
         # pylint: disable=too-many-arguments
         super().__init__(xknx,

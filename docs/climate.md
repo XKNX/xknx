@@ -63,9 +63,9 @@ groups:
 - **group_address_target_temperature_state** KNX address for reading the target temperature from the KNX bus. Used in for setpoint_shift calculations as base temperature.
 - **group_address_setpoint_shift** KNX address to set setpoint_shift (base temperature deviation).
 - **group_address_setpoint_shift_state** KNX address to read current setpoint_shift.
-- **setpoint_shift_step** Set the multiplier for setpoint_shift (DPT 6) calculations.
 - **setpoint_shift_max** Maximum value for setpoint_shift.
 - **setpoint_shift_min** Minimum value for setpoint_shift.
+- **temperature_step** Set the multiplier for setpoint_shift (DPT 6) calculations and the step size for HA UI-elements.
 - **group_address_on_off** KNX address for turning climate device on or off.
 - **group_address_on_off_state** KNX address for reading the on/off state.
 - **on_off_invert** Invert on/off.
@@ -113,7 +113,7 @@ climate = Climate(
         group_address_target_temperature_state='',
         group_address_setpoint_shift='',
         group_address_setpoint_shift_state='',
-        setpoint_shift_step=0.1,
+        temperature_step=0.1,
         setpoint_shift_max=6,
         setpoint_shift_min=-6,
         group_address_on_off='',

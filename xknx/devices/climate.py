@@ -23,7 +23,6 @@ class SetpointShiftMode(Enum):
 
 DEFAULT_SETPOINT_SHIFT_MAX = 6
 DEFAULT_SETPOINT_SHIFT_MIN = -6
-DEFAULT_SETPOINT_SHIFT_STEP = 0.5
 DEFAULT_TEMPERATURE_STEP = 0.1
 DEFAULT_SETPOINT_SHIFT_MODE = SetpointShiftMode.DPT6010
 
@@ -41,9 +40,9 @@ class Climate(Device):
                  group_address_setpoint_shift=None,
                  group_address_setpoint_shift_state=None,
                  setpoint_shift_mode=DEFAULT_SETPOINT_SHIFT_MODE,
-                 setpoint_shift_step=DEFAULT_SETPOINT_SHIFT_STEP,
                  setpoint_shift_max=DEFAULT_SETPOINT_SHIFT_MAX,
                  setpoint_shift_min=DEFAULT_SETPOINT_SHIFT_MIN,
+                 temperature_step=DEFAULT_TEMPERATURE_STEP,
                  group_address_on_off=None,
                  group_address_on_off_state=None,
                  on_off_invert=False,
@@ -64,9 +63,9 @@ class Climate(Device):
 
         self.min_temp = min_temp
         self.max_temp = max_temp
-        self.setpoint_shift_step = setpoint_shift_step
         self.setpoint_shift_min = setpoint_shift_min
         self.setpoint_shift_max = setpoint_shift_max
+        self.temperature_step = temperature_step
 
         self.temperature = RemoteValueTemp(
             xknx,
@@ -97,7 +96,7 @@ class Climate(Device):
                 group_address_setpoint_shift_state,
                 device_name=self.name,
                 after_update_cb=self.after_update,
-                setpoint_shift_step=setpoint_shift_step)
+                setpoint_shift_step=self.temperature_step)
 
         self.supports_on_off = \
             group_address_on_off is not None or \
@@ -136,12 +135,12 @@ class Climate(Device):
             config.get('group_address_setpoint_shift_state')
         setpoint_shift_mode = \
             config.get('setpoint_shift_mode', DEFAULT_SETPOINT_SHIFT_MODE)
-        setpoint_shift_step = \
-            config.get('setpoint_shift_step', DEFAULT_SETPOINT_SHIFT_STEP)
         setpoint_shift_max = \
             config.get('setpoint_shift_max', DEFAULT_SETPOINT_SHIFT_MAX)
         setpoint_shift_min = \
             config.get('setpoint_shift_min', DEFAULT_SETPOINT_SHIFT_MIN)
+        temperature_step = \
+            config.get('temperature_step', DEFAULT_TEMPERATURE_STEP)
         group_address_on_off = \
             config.get('group_address_on_off')
         group_address_on_off_state = \
@@ -166,9 +165,9 @@ class Climate(Device):
                    group_address_setpoint_shift=group_address_setpoint_shift,
                    group_address_setpoint_shift_state=group_address_setpoint_shift_state,
                    setpoint_shift_mode=setpoint_shift_mode,
-                   setpoint_shift_step=setpoint_shift_step,
                    setpoint_shift_max=setpoint_shift_max,
                    setpoint_shift_min=setpoint_shift_min,
+                   temperature_step=temperature_step,
                    group_address_on_off=group_address_on_off,
                    group_address_on_off_state=group_address_on_off_state,
                    on_off_invert=on_off_invert,
@@ -208,13 +207,6 @@ class Climate(Device):
         if self.target_temperature.value is None:
             return False
         return True
-
-    @property
-    def temperature_step(self):
-        """Return smallest possible temperature step."""
-        if self._setpoint_shift.initialized:
-            return self.setpoint_shift_step
-        return DEFAULT_TEMPERATURE_STEP
 
     async def set_target_temperature(self, target_temperature):
         """Send new target temperature or setpoint_shift to KNX bus."""
@@ -301,8 +293,8 @@ class Climate(Device):
         return '<Climate name="{0}" ' \
             'temperature="{1}" ' \
             'target_temperature="{2}" ' \
-            'setpoint_shift="{3}" ' \
-            'setpoint_shift_step="{4}" ' \
+            'temperature_step="{3}" ' \
+            'setpoint_shift="{4}" ' \
             'setpoint_shift_max="{5}" ' \
             'setpoint_shift_min="{6}" ' \
             'group_address_on_off="{7}" ' \
@@ -311,8 +303,8 @@ class Climate(Device):
                 self.name,
                 self.temperature.group_addr_str(),
                 self.target_temperature.group_addr_str(),
+                self.temperature_step,
                 self._setpoint_shift.group_addr_str(),
-                self._setpoint_shift.setpoint_shift_step,
                 self.setpoint_shift_max,
                 self.setpoint_shift_min,
                 self.on.group_addr_str())

@@ -4,6 +4,7 @@
 
 ### Breaking changes
 
+- Climate: `setpoint_shift_step` renamed for `temperatur_step`. This attribute can be applied to all temperature modes. Default is `0.1`
 - Removed significant_bit attribute in BinarySensor
 - DateTime devices are initialized with sting for broadcast_type: "time", "date" or "datetime" instead of an Enum value
 - Removed `bind_to_multicast` option in ConnectionConfig and UDPClient
