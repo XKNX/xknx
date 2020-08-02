@@ -5,6 +5,7 @@ from unittest.mock import Mock
 
 from xknx import XKNX
 from xknx.devices import Climate, ClimateMode
+from xknx.devices.climate import SetpointShiftMode
 from xknx.dpt import (
     DPT2ByteFloat, DPTArray, DPTBinary, DPTControllerStatus, DPTHVACContrMode,
     DPTHVACMode, DPTTemperature, DPTValue1Count, HVACOperationMode)
@@ -607,6 +608,7 @@ class TestClimate(unittest.TestCase):
     #
     # TEST BASE TEMPERATURE
     #
+
     def test_base_temperature(self):
         """Test base temperature."""
         # pylint: disable=no-self-use
@@ -647,6 +649,47 @@ class TestClimate(unittest.TestCase):
         self.assertTrue(climate.initialized_for_setpoint_shift_calculations)
         self.assertEqual(climate.base_temperature, 20.00)
         self.assertEqual(climate.target_temperature.value, 22)
+
+    def test_target_temperature_step_mode_9002(self):
+        """Test increase target temperature with modified step size."""
+        # pylint: disable=no-self-use
+        xknx = XKNX(loop=self.loop)
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            group_address_target_temperature_state='1/2/2',
+            group_address_setpoint_shift='1/2/3',
+            setpoint_shift_mode=SetpointShiftMode.DPT9002,
+            setpoint_shift_max=10,
+            setpoint_shift_min=-10)
+
+        # base temperature is 20 °C
+        self.loop.run_until_complete(asyncio.Task(climate.target_temperature.process(
+            Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(20.00)))
+        )))
+        self.loop.run_until_complete(asyncio.Task(climate.set_setpoint_shift(0)))
+        self.assertTrue(climate.initialized_for_setpoint_shift_calculations)
+        self.assertEqual(climate.base_temperature, 20.00)
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(GroupAddress('1/2/3'), payload=DPTArray((0x00, 0x00))))  # 0
+        # - 0.6 °C = 19.4
+        self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(19.40)))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(GroupAddress('1/2/3'), payload=DPTArray((0x87, 0xC4))))  # -0.6
+        # simulate incoming new target temperature for next calculation
+        self.loop.run_until_complete(asyncio.Task(climate.target_temperature.process(
+            Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(19.40)))
+        )))
+        # + 3.5 °C = 23.5
+        self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(23.50)))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(GroupAddress('1/2/3'), payload=DPTArray((0x01, 0x5E))))  # +3.5
 
     #
     # TEST TEMPERATURE STEP
