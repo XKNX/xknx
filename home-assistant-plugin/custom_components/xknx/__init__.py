@@ -209,7 +209,9 @@ class KNXModule:
             return self.connection_config_tunneling()
         if CONF_XKNX_ROUTING in self.config[DOMAIN]:
             return self.connection_config_routing()
-        return self.connection_config_auto()
+        # return None to let xknx use config from xknx.yaml connection block if given
+        #   otherwise it will use default ConnectionConfig (Automatic)
+        return None
 
     def connection_config_routing(self):
         """Return the connection_config if routing is configured."""
@@ -232,11 +234,6 @@ class KNXModule:
             local_ip=local_ip,
             auto_reconnect=True,
         )
-
-    def connection_config_auto(self):
-        """Return the connection_config if auto is configured."""
-        # pylint: disable=no-self-use
-        return ConnectionConfig()
 
     def register_callbacks(self):
         """Register callbacks within XKNX object."""
