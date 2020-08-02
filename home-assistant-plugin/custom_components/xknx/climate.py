@@ -319,7 +319,7 @@ class KNXClimate(ClimateEntity):
             _operations.append(HVAC_MODE_HEAT)
             _operations.append(HVAC_MODE_OFF)
 
-        _modes = list(filter(None, _operations))
+        _modes = list(set(filter(None, _operations)))
         # default to ["heat"]
         return _modes if _modes else [HVAC_MODE_HEAT]
 
