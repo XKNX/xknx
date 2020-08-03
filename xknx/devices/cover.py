@@ -8,7 +8,7 @@ It provides functionality for
 * Cover will also predict the current position.
 """
 from xknx.remote_value import (
-    RemoteValueScaling, RemoteValueStep, RemoteValueUpDown)
+    RemoteValueScaling, RemoteValueStep, RemoteValueSwitch, RemoteValueUpDown)
 
 from .device import Device
 from .travelcalculator import TravelCalculator
@@ -30,6 +30,7 @@ class Cover(Device):
                  name,
                  group_address_long=None,
                  group_address_short=None,
+                 group_address_stop=None,
                  group_address_position=None,
                  group_address_position_state=None,
                  group_address_angle=None,
@@ -52,6 +53,12 @@ class Cover(Device):
         self.step = RemoteValueStep(
             xknx,
             group_address_short,
+            device_name=self.name,
+            after_update_cb=self.after_update)
+
+        self.stop_ = RemoteValueSwitch(
+            xknx,
+            group_address=group_address_stop,
             device_name=self.name,
             after_update_cb=self.after_update)
 
@@ -90,6 +97,7 @@ class Cover(Device):
         """Iterate the devices RemoteValue classes."""
         yield from (self.updown,
                     self.step,
+                    self.stop_,
                     self.position,
                     self.angle)
 
@@ -100,6 +108,8 @@ class Cover(Device):
             config.get('group_address_long')
         group_address_short = \
             config.get('group_address_short')
+        group_address_stop = \
+            config.get('group_address_stop')
         group_address_position = \
             config.get('group_address_position')
         group_address_position_state = \
@@ -122,6 +132,7 @@ class Cover(Device):
             name,
             group_address_long=group_address_long,
             group_address_short=group_address_short,
+            group_address_stop=group_address_stop,
             group_address_position=group_address_position,
             group_address_position_state=group_address_position_state,
             group_address_angle=group_address_angle,
@@ -136,14 +147,16 @@ class Cover(Device):
         return '<Cover name="{0}" ' \
             'updown="{1}" ' \
             'step="{2}" ' \
-            'position="{3}" ' \
-            'angle="{4}" '\
-            'travel_time_down="{5}" ' \
-            'travel_time_up="{6}" />' \
+            'stop="{3}" ' \
+            'position="{4}" ' \
+            'angle="{5}" '\
+            'travel_time_down="{6}" ' \
+            'travel_time_up="{7}" />' \
             .format(
                 self.name,
                 self.updown.group_addr_str(),
                 self.step.group_addr_str(),
+                self.stop_.group_addr_str(),
                 self.position.group_addr_str(),
                 self.angle.group_addr_str(),
                 self.travel_time_down,
@@ -169,14 +182,20 @@ class Cover(Device):
 
     async def stop(self):
         """Stop cover."""
-        # Thats the KNX way of doing this. electrical engineers ... m-)
-        await self.step.increase()
+        if self.stop_.writable:
+            await self.stop_.on()
+        elif self.step.writable:
+            await self.step.increase()
+        else:
+            self.xknx.logger.warning('Stop not supported for device %s', self.get_name())
+            return
         self.travelcalculator.stop()
+        await self.after_update()
 
     async def set_position(self, position):
         """Move cover to a desginated postion."""
         # No direct positioning group address defined
-        if not self.position.group_address:
+        if not self.position.writable:
             current_position = self.current_position()
             if position < current_position:
                 await self.updown.up()
@@ -203,7 +222,7 @@ class Cover(Device):
         # unless device was traveling to fully open
         # or fully closed state
         if (
-                not self.position.group_address and
+                not self.position.writable and
                 self.position_reached() and
                 not self.is_open() and
                 not self.is_closed()):
@@ -235,8 +254,19 @@ class Cover(Device):
 
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
-        position_processed = await self.position.process(telegram)
-        if position_processed:
+        if await self.updown.process(telegram):
+            if self.updown.value == RemoteValueUpDown.Direction.UP:
+                self.travelcalculator.start_travel_up()
+            else:
+                self.travelcalculator.start_travel_down()
+            # call after_update to account for travelcalculator changes
+            await self.after_update()
+
+        if await self.step.process(telegram):
+            if self.is_traveling():
+                self.travelcalculator.stop()
+
+        if await self.position.process(telegram):
             self.travelcalculator.set_position(self.position.value)
             await self.after_update()
 
@@ -273,6 +303,11 @@ class Cover(Device):
     def is_closing(self):
         """Return if the cover is closing or not."""
         return self.travelcalculator.is_closing()
+
+    @property
+    def supports_stop(self):
+        """Return if cover supports manual stopping."""
+        return self.stop_.writable or self.step.writable
 
     @property
     def supports_position(self):

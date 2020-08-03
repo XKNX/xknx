@@ -22,6 +22,7 @@ from . import ATTR_DISCOVER_DEVICES, DATA_XKNX
 
 CONF_MOVE_LONG_ADDRESS = "move_long_address"
 CONF_MOVE_SHORT_ADDRESS = "move_short_address"
+CONF_STOP_ADDRESS = "stop_address"
 CONF_POSITION_ADDRESS = "position_address"
 CONF_POSITION_STATE_ADDRESS = "position_state_address"
 CONF_ANGLE_ADDRESS = "angle_address"
@@ -38,6 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_MOVE_LONG_ADDRESS): cv.string,
         vol.Optional(CONF_MOVE_SHORT_ADDRESS): cv.string,
+        vol.Optional(CONF_STOP_ADDRESS): cv.string,
         vol.Optional(CONF_POSITION_ADDRESS): cv.string,
         vol.Optional(CONF_POSITION_STATE_ADDRESS): cv.string,
         vol.Optional(CONF_ANGLE_ADDRESS): cv.string,
@@ -80,6 +82,7 @@ def async_add_entities_config(hass, config, async_add_entities):
         name=config[CONF_NAME],
         group_address_long=config.get(CONF_MOVE_LONG_ADDRESS),
         group_address_short=config.get(CONF_MOVE_SHORT_ADDRESS),
+        group_address_stop=config.get(CONF_STOP_ADDRESS),
         group_address_position_state=config.get(CONF_POSITION_STATE_ADDRESS),
         group_address_angle=config.get(CONF_ANGLE_ADDRESS),
         group_address_angle_state=config.get(CONF_ANGLE_STATE_ADDRESS),
@@ -109,6 +112,8 @@ class KNXCover(CoverEntity):
         async def after_update_callback(device):
             """Call after device was updated."""
             self.async_write_ha_state()
+            if self.device.is_traveling():
+                self.start_auto_updater()
 
         self.device.register_device_updated_cb(after_update_callback)
 
@@ -139,8 +144,10 @@ class KNXCover(CoverEntity):
     def supported_features(self):
         """Flag supported features."""
         supported_features = (
-            SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION | SUPPORT_STOP
+            SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
         )
+        if self.device.supports_stop:
+            supported_features |= SUPPORT_STOP
         if self.device.supports_angle:
             supported_features |= SUPPORT_SET_TILT_POSITION
         return supported_features
@@ -173,22 +180,17 @@ class KNXCover(CoverEntity):
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
-        if not self.device.is_closed():
-            await self.device.set_down()
-            self.start_auto_updater()
+        await self.device.set_down()
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        if not self.device.is_open():
-            await self.device.set_up()
-            self.start_auto_updater()
+        await self.device.set_up()
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         if ATTR_POSITION in kwargs:
             knx_position = 100 - kwargs[ATTR_POSITION]
             await self.device.set_position(knx_position)
-            self.start_auto_updater()
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
