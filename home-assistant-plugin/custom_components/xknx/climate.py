@@ -88,7 +88,6 @@ PLATFORM_SCHEMA = vol.All(
     cv.deprecated("setpoint_shift_step", replacement_key=CONF_TEMPERATURE_STEP),
     PLATFORM_SCHEMA.extend(
         {
-            # cv.deprecated("setpoint_shift_step", replacement_key=CONF_TEMPERATURE_STEP): cv.match_all,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_SETPOINT_SHIFT_MODE, default=DEFAULT_SETPOINT_SHIFT_MODE): cv.enum(
                 SetpointShiftMode
