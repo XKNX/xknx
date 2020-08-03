@@ -6,7 +6,7 @@ Remote value can be :
 - a group address for reading a KNX value,
 - or a group of both representing the same value.
 """
-from xknx.exceptions import CouldNotParseTelegram
+from xknx.exceptions import CouldNotParseAddress, CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram, TelegramType
 
 
@@ -25,13 +25,28 @@ class RemoteValue():
         """Initialize RemoteValue class."""
         # pylint: disable=too-many-arguments
         self.xknx = xknx
-        if isinstance(group_address, (str, int)):
-            group_address = GroupAddress(group_address)
-        if isinstance(group_address_state, (str, int)):
-            group_address_state = GroupAddress(group_address_state)
 
-        self.group_address = group_address
-        self.group_address_state = group_address_state
+        def validate_group_address(address):
+            """Validate group address or raise exception."""
+            if address is None:
+                return None
+            if isinstance(address, GroupAddress):
+                return address
+            try:
+                return GroupAddress(address)
+            except CouldNotParseAddress as ex:
+                self.xknx.logger.error("Invalid group address %s for %s - %s",
+                                       group_address=address, device_name=device_name, feature_name=feature_name)
+                raise ex
+
+        self.group_addresses_passive = []
+        if isinstance(group_address, list):
+            self.group_address = validate_group_address(group_address[0])
+            for address in group_address[1:]:
+                self.group_addresses_passive.append(validate_group_address(address))
+        else:
+            self.group_address = validate_group_address(group_address)
+        self.group_address_state = validate_group_address(group_address_state)
         self.device_name = "Unknown" \
             if device_name is None else device_name
         self.feature_name = "Unknown" \
@@ -52,7 +67,7 @@ class RemoteValue():
     @property
     def initialized(self):
         """Evaluate if remote value is initialized with group address."""
-        return bool(self.group_address_state or self.group_address)
+        return bool(self.group_address_state or self.group_address or len(self.group_addresses_passive))
 
     @property
     def readable(self):
@@ -66,7 +81,12 @@ class RemoteValue():
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
-        return group_address in [self.group_address, self.group_address_state]
+        def _addresses():
+            """Yield all group_addresses."""
+            yield self.group_address
+            yield self.group_address_state
+            yield from self.group_addresses_passive
+        return group_address in _addresses()
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed - to be implemented in derived class.."""
