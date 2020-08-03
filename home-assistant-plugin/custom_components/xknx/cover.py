@@ -147,13 +147,29 @@ class KNXCover(CoverEntity):
 
     @property
     def current_cover_position(self):
-        """Return the current position of the cover."""
-        return self.device.current_position()
+        """Return current position of cover.
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        # In KNX 0 is open, 100 is closed.
+        try:
+            return 100 - self.device.current_position()
+        except TypeError:
+            return None
 
     @property
     def is_closed(self):
         """Return if the cover is closed."""
         return self.device.is_closed()
+
+    @property
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        return self.device.is_opening()
+
+    @property
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        return self.device.is_closing()
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
@@ -170,8 +186,8 @@ class KNXCover(CoverEntity):
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         if ATTR_POSITION in kwargs:
-            position = kwargs[ATTR_POSITION]
-            await self.device.set_position(position)
+            knx_position = 100 - kwargs[ATTR_POSITION]
+            await self.device.set_position(knx_position)
             self.start_auto_updater()
 
     async def async_stop_cover(self, **kwargs):
@@ -181,16 +197,22 @@ class KNXCover(CoverEntity):
 
     @property
     def current_cover_tilt_position(self):
-        """Return current tilt position of cover."""
+        """Return current position of cover tilt.
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        # In KNX 0 is open, 100 is closed.
         if not self.device.supports_angle:
             return None
-        return self.device.current_angle()
+        try:
+            return 100 - self.device.current_angle()
+        except TypeError:
+            return None
 
     async def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
         if ATTR_TILT_POSITION in kwargs:
-            tilt_position = kwargs[ATTR_TILT_POSITION]
-            await self.device.set_angle(tilt_position)
+            knx_tilt_position = 100 - kwargs[ATTR_TILT_POSITION]
+            await self.device.set_angle(knx_tilt_position)
 
     def start_auto_updater(self):
         """Start the autoupdater to update Home Assistant while cover is moving."""

@@ -154,6 +154,7 @@ class TestCover(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(cover.set_up()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
+        # DPT 1.008 - 0:up 1:down
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/1'), payload=DPTBinary(0)))
 
@@ -192,6 +193,7 @@ class TestCover(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(cover.set_short_up()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
+        # DPT 1.008 - 0:up 1:down
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/2'), payload=DPTBinary(0)))
 
@@ -211,6 +213,7 @@ class TestCover(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(cover.set_short_down()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
+        # DPT 1.008 - 0:up 1:down
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/2'), payload=DPTBinary(1)))
 
@@ -264,8 +267,9 @@ class TestCover(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(cover.set_position(50)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
+        # DPT 1.008 - 0:up 1:down
         self.assertEqual(telegram,
-                         Telegram(GroupAddress('1/2/1'), payload=DPTBinary(1)))
+                         Telegram(GroupAddress('1/2/1'), payload=DPTBinary(0)))
 
     def test_position_without_position_address_down(self):
         """Test moving cover down - with no absolute positioning supported."""
@@ -281,7 +285,7 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
-                         Telegram(GroupAddress('1/2/1'), payload=DPTBinary(0)))
+                         Telegram(GroupAddress('1/2/1'), payload=DPTBinary(1)))
 
     def test_angle(self):
         """Test changing angle."""
@@ -327,7 +331,7 @@ class TestCover(unittest.TestCase):
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_state='1/2/4')
-        telegram = Telegram(GroupAddress('1/2/4'), payload=DPTArray(42))
+        telegram = Telegram(GroupAddress('1/2/4'), payload=DPTArray(213))
         self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
         self.assertEqual(cover.current_position(), 84)
 
@@ -343,7 +347,7 @@ class TestCover(unittest.TestCase):
             group_address_angle_state='1/2/4')
         telegram = Telegram(GroupAddress('1/2/4'), payload=DPTArray(42))
         self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
-        self.assertEqual(cover.current_angle(), 84)
+        self.assertEqual(cover.current_angle(), 16)
 
     def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback is executed."""
@@ -386,24 +390,57 @@ class TestCover(unittest.TestCase):
         with patch('time.time') as mock_time:
             mock_time.return_value = 1517000000.0
             self.assertFalse(cover.is_traveling())
+            self.assertFalse(cover.is_opening())
+            self.assertFalse(cover.is_closing())
             self.assertTrue(cover.position_reached())
-
-            self.loop.run_until_complete(asyncio.Task(cover.set_up()))
+            # we start with open covers (up)
+            self.loop.run_until_complete(asyncio.Task(cover.set_down()))
             self.assertTrue(cover.is_traveling())
-            self.assertFalse(cover.is_open())
-            self.assertTrue(cover.is_closed())
+            self.assertTrue(cover.is_open())
+            self.assertFalse(cover.is_closed())
+            self.assertFalse(cover.is_opening())
+            self.assertTrue(cover.is_closing())
 
             mock_time.return_value = 1517000005.0  # 5 Seconds, half way
             self.assertFalse(cover.position_reached())
             self.assertTrue(cover.is_traveling())
             self.assertFalse(cover.is_open())
             self.assertFalse(cover.is_closed())
+            self.assertFalse(cover.is_opening())
+            self.assertTrue(cover.is_closing())
 
-            mock_time.return_value = 1517000010.0  # 10 Seconds, fully open
+            mock_time.return_value = 1517000010.0  # 10 Seconds, fully closed
             self.assertTrue(cover.position_reached())
             self.assertFalse(cover.is_traveling())
-            self.assertTrue(cover.is_open())
+            self.assertFalse(cover.is_open())
+            self.assertTrue(cover.is_closed())
+            self.assertFalse(cover.is_opening())
+            self.assertFalse(cover.is_closing())
+            # up again
+            self.loop.run_until_complete(asyncio.Task(cover.set_up()))
+            self.assertFalse(cover.position_reached())
+            self.assertTrue(cover.is_traveling())
+            self.assertFalse(cover.is_open())
+            self.assertTrue(cover.is_closed())
+            self.assertTrue(cover.is_opening())
+            self.assertFalse(cover.is_closing())
+
+            mock_time.return_value = 1517000015.0  # 15 Seconds, half way
+            self.assertFalse(cover.position_reached())
+            self.assertTrue(cover.is_traveling())
+            self.assertFalse(cover.is_open())
             self.assertFalse(cover.is_closed())
+            self.assertTrue(cover.is_opening())
+            self.assertFalse(cover.is_closing())
+
+            mock_time.return_value = 1517000016.0  # 16 Seconds, manual stop
+            self.loop.run_until_complete(asyncio.Task(cover.stop()))
+            self.assertTrue(cover.position_reached())
+            self.assertFalse(cover.is_traveling())
+            self.assertFalse(cover.is_open())
+            self.assertFalse(cover.is_closed())
+            self.assertFalse(cover.is_opening())
+            self.assertFalse(cover.is_closing())
 
     #
     # TEST AUTO STOP

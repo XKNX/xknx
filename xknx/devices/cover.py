@@ -47,18 +47,16 @@ class Cover(Device):
             xknx,
             group_address_long,
             device_name=self.name,
-            after_update_cb=self.after_update,
-            invert=invert_position)
+            after_update_cb=self.after_update)
 
         self.step = RemoteValueStep(
             xknx,
             group_address_short,
             device_name=self.name,
-            after_update_cb=self.after_update,
-            invert=invert_position)
+            after_update_cb=self.after_update)
 
-        position_range_from = 0 if invert_position else 100
-        position_range_to = 100 if invert_position else 0
+        position_range_from = 100 if invert_position else 0
+        position_range_to = 0 if invert_position else 100
         self.position = RemoteValueScaling(
             xknx,
             group_address_position,
@@ -69,8 +67,8 @@ class Cover(Device):
             range_from=position_range_from,
             range_to=position_range_to)
 
-        angle_range_from = 0 if invert_angle else 100
-        angle_range_to = 100 if invert_angle else 0
+        angle_range_from = 100 if invert_angle else 0
+        angle_range_to = 0 if invert_angle else 100
         self.angle = RemoteValueScaling(
             xknx,
             group_address_angle,
@@ -181,9 +179,9 @@ class Cover(Device):
         if not self.position.group_address:
             current_position = self.current_position()
             if position < current_position:
-                await self.updown.down()
-            elif position > current_position:
                 await self.updown.up()
+            elif position > current_position:
+                await self.updown.down()
             self.travelcalculator.start_travel(position)
             return
 
@@ -267,6 +265,14 @@ class Cover(Device):
     def is_closed(self):
         """Return if cover is closed."""
         return self.travelcalculator.is_closed()
+
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        return self.travelcalculator.is_opening()
+
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        return self.travelcalculator.is_closing()
 
     @property
     def supports_position(self):
