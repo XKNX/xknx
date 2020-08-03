@@ -84,47 +84,51 @@ PRESET_MODES = {
 
 PRESET_MODES_INV = dict(reversed(item) for item in PRESET_MODES.items())
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_SETPOINT_SHIFT_MODE, default=DEFAULT_SETPOINT_SHIFT_MODE): cv.enum(
-            SetpointShiftMode
-        ),
-        vol.Optional(
-            CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX
-        ): vol.All(int, vol.Range(min=0, max=32)),
-        vol.Optional(
-            CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN
-        ): vol.All(int, vol.Range(min=-32, max=0)),
-        vol.Optional(
-            CONF_TEMPERATURE_STEP, default=DEFAULT_TEMPERATURE_STEP
-        ): vol.All(float, vol.Range(min=0, max=2)),
-        vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
-        vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
-        vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
-        vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
-        vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): cv.string,
-        vol.Optional(CONF_CONTROLLER_STATUS_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_CONTROLLER_MODE_ADDRESS): cv.string,
-        vol.Optional(CONF_CONTROLLER_MODE_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_HEAT_COOL_ADDRESS): cv.string,
-        vol.Optional(CONF_HEAT_COOL_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS): cv.string,
-        vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): cv.string,
-        vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
-        vol.Optional(CONF_OPERATION_MODE_STANDBY_ADDRESS): cv.string,
-        vol.Optional(CONF_ON_OFF_ADDRESS): cv.string,
-        vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT): cv.boolean,
-        vol.Optional(CONF_OPERATION_MODES): vol.All(
-            cv.ensure_list, [vol.In({**OPERATION_MODES, **PRESET_MODES})]
-        ),
-        vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated("setpoint_shift_step", replacement_key=CONF_TEMPERATURE_STEP),
+    PLATFORM_SCHEMA.extend(
+        {
+            # cv.deprecated("setpoint_shift_step", replacement_key=CONF_TEMPERATURE_STEP): cv.match_all,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_SETPOINT_SHIFT_MODE, default=DEFAULT_SETPOINT_SHIFT_MODE): cv.enum(
+                SetpointShiftMode
+            ),
+            vol.Optional(
+                CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX
+            ): vol.All(int, vol.Range(min=0, max=32)),
+            vol.Optional(
+                CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN
+            ): vol.All(int, vol.Range(min=-32, max=0)),
+            vol.Optional(
+                CONF_TEMPERATURE_STEP, default=DEFAULT_TEMPERATURE_STEP
+            ): vol.All(float, vol.Range(min=0, max=2)),
+            vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
+            vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
+            vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
+            vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
+            vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): cv.string,
+            vol.Optional(CONF_CONTROLLER_STATUS_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_CONTROLLER_MODE_ADDRESS): cv.string,
+            vol.Optional(CONF_CONTROLLER_MODE_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_HEAT_COOL_ADDRESS): cv.string,
+            vol.Optional(CONF_HEAT_COOL_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS): cv.string,
+            vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): cv.string,
+            vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
+            vol.Optional(CONF_OPERATION_MODE_STANDBY_ADDRESS): cv.string,
+            vol.Optional(CONF_ON_OFF_ADDRESS): cv.string,
+            vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT): cv.boolean,
+            vol.Optional(CONF_OPERATION_MODES): vol.All(
+                cv.ensure_list, [vol.In({**OPERATION_MODES, **PRESET_MODES})]
+            ),
+            vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
+            vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
+        }
+    )
 )
 
 
