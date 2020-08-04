@@ -54,6 +54,10 @@ class TestCover(unittest.TestCase):
             group_address_position='1/4/16',
             group_address_angle='1/4/18')
         self.assertFalse(cover.supports_stop)
+        with patch('logging.Logger.warning') as mock_warn:
+            self.loop.run_until_complete(asyncio.Task(cover.stop()))
+            self.assertEqual(xknx.telegrams.qsize(), 0)
+            mock_warn.assert_called_with('Stop not supported for device %s', 'Children.Venetian')
 
     def test_supports_position_true(self):
         """Test support_position_true."""
