@@ -390,6 +390,64 @@ class TestCover(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
         self.assertEqual(cover.current_angle(), 16)
 
+    def test_process_up(self):
+        """Test process / reading telegrams from telegram queue. Test if up/down is processed correctly."""
+        xknx = XKNX(loop=self.loop)
+        cover = Cover(
+            xknx,
+            'TestCover',
+            group_address_long='1/2/1',
+            group_address_short='1/2/2')
+        cover.travelcalculator.set_position(50)
+        self.assertFalse(cover.is_traveling())
+        telegram = Telegram(GroupAddress('1/2/1'), payload=DPTBinary(0))
+        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        self.assertTrue(cover.is_opening())
+
+    def test_process_down(self):
+        """Test process / reading telegrams from telegram queue. Test if up/down is processed correctly."""
+        xknx = XKNX(loop=self.loop)
+        cover = Cover(
+            xknx,
+            'TestCover',
+            group_address_long='1/2/1',
+            group_address_short='1/2/2')
+        cover.travelcalculator.set_position(50)
+        self.assertFalse(cover.is_traveling())
+        telegram = Telegram(GroupAddress('1/2/1'), payload=DPTBinary(1))
+        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        self.assertTrue(cover.is_closing())
+
+    def test_process_stop(self):
+        """Test process / reading telegrams from telegram queue. Test if stop is processed correctly."""
+        xknx = XKNX(loop=self.loop)
+        cover = Cover(
+            xknx,
+            'TestCover',
+            group_address_long='1/2/1',
+            group_address_stop='1/2/2',)
+        cover.travelcalculator.set_position(50)
+        self.loop.run_until_complete(asyncio.Task(cover.set_down()))
+        self.assertTrue(cover.is_traveling())
+        telegram = Telegram(GroupAddress('1/2/2'), payload=DPTBinary(1))
+        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        self.assertFalse(cover.is_traveling())
+
+    def test_process_short_stop(self):
+        """Test process / reading telegrams from telegram queue. Test if stop is processed correctly."""
+        xknx = XKNX(loop=self.loop)
+        cover = Cover(
+            xknx,
+            'TestCover',
+            group_address_long='1/2/1',
+            group_address_short='1/2/2',)
+        cover.travelcalculator.set_position(50)
+        self.loop.run_until_complete(asyncio.Task(cover.set_down()))
+        self.assertTrue(cover.is_traveling())
+        telegram = Telegram(GroupAddress('1/2/2'), payload=DPTBinary(1))
+        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        self.assertFalse(cover.is_traveling())
+
     def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback is executed."""
         # pylint: disable=no-self-use
@@ -494,6 +552,7 @@ class TestCover(unittest.TestCase):
             xknx,
             'TestCover',
             group_address_long='1/2/1',
+            group_address_stop='1/2/2',
             travel_time_down=10,
             travel_time_up=10)
         with patch('xknx.devices.Cover.stop') as mock_stop, patch('time.time') as mock_time:

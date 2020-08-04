@@ -222,6 +222,7 @@ class Cover(Device):
         # unless device was traveling to fully open
         # or fully closed state
         if (
+                self.supports_stop and
                 not self.position.writable and
                 self.position_reached() and
                 not self.is_open() and
@@ -261,8 +262,8 @@ class Cover(Device):
                 self.travelcalculator.start_travel_down()
             # call after_update to account for travelcalculator changes
             await self.after_update()
-
-        if await self.step.process(telegram):
+        # stop from bus
+        if await self.stop_.process(telegram) or await self.step.process(telegram):
             if self.is_traveling():
                 self.travelcalculator.stop()
 
