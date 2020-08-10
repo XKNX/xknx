@@ -43,12 +43,14 @@ class Cover(Device):
         """Initialize Cover class."""
         # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
-
+        # self.after_update for position changes is called after updating the
+        # travelcalculator (in process_group_write and set_*) - angle changes
+        # are updated from RemoteValue objects
         self.updown = RemoteValueUpDown(
             xknx,
             group_address_long,
             device_name=self.name,
-            after_update_cb=self.after_update)
+            after_update_cb=None)
 
         self.step = RemoteValueStep(
             xknx,
@@ -60,7 +62,7 @@ class Cover(Device):
             xknx,
             group_address=group_address_stop,
             device_name=self.name,
-            after_update_cb=self.after_update)
+            after_update_cb=None)
 
         position_range_from = 100 if invert_position else 0
         position_range_to = 0 if invert_position else 100
@@ -70,7 +72,7 @@ class Cover(Device):
             group_address_position_state,
             device_name=self.name,
             feature_name="Position",
-            after_update_cb=self.after_update,
+            after_update_cb=None,
             range_from=position_range_from,
             range_to=position_range_to)
 
@@ -166,11 +168,13 @@ class Cover(Device):
         """Move cover down."""
         await self.updown.down()
         self.travelcalculator.start_travel_down()
+        await self.after_update()
 
     async def set_up(self):
         """Move cover up."""
         await self.updown.up()
         self.travelcalculator.start_travel_up()
+        await self.after_update()
 
     async def set_short_down(self):
         """Move cover short down."""
@@ -194,18 +198,26 @@ class Cover(Device):
 
     async def set_position(self, position):
         """Move cover to a desginated postion."""
-        # No direct positioning group address defined
         if not self.position.writable:
+            # No direct positioning group address defined
+            # fully open or close is always possible even if current position is not known
             current_position = self.current_position()
-            if position < current_position:
+            if current_position is None:
+                if position == self.travelcalculator.position_open:
+                    await self.updown.up()
+                elif position == self.travelcalculator.position_closed:
+                    await self.updown.down()
+                else:
+                    self.xknx.logger.warning("Current position unknown. Initialize cover by moving to end position.")
+                    return
+            elif position < current_position:
                 await self.updown.up()
             elif position > current_position:
                 await self.updown.down()
-            self.travelcalculator.start_travel(position)
-            return
-
-        await self.position.set(position)
+        else:
+            await self.position.set(position)
         self.travelcalculator.start_travel(position)
+        await self.after_update()
 
     async def set_angle(self, angle):
         """Move cover to designated angle."""
@@ -213,7 +225,6 @@ class Cover(Device):
             self.xknx.logger.warning('Angle not supported for device %s', self.get_name())
             return
         await self.angle.set(angle)
-        await self.after_update()
 
     async def auto_stop_if_necessary(self):
         """Do auto stop if necessary."""
@@ -246,10 +257,6 @@ class Cover(Device):
 
     async def sync(self):
         """Read states of device from KNX bus."""
-        # TODO: if not self.travelcalculator.is_traveling():
-        # when Cover is traveling, requesting state will return false results
-        # but this is manual syncing so it may be ok
-        # should state updater wait for cover to stop?
         await self.position.read_state()
         await self.angle.read_state()
 
@@ -266,9 +273,17 @@ class Cover(Device):
         if await self.stop_.process(telegram) or await self.step.process(telegram):
             if self.is_traveling():
                 self.travelcalculator.stop()
+                await self.after_update()
 
         if await self.position.process(telegram):
-            self.travelcalculator.set_position(self.position.value)
+            # distinction between new target position and position update from bus
+            if telegram.group_address == self.position.group_address_state:
+                if self.is_traveling():
+                    self.travelcalculator.update_position(self.position.value)
+                else:
+                    self.travelcalculator.set_position(self.position.value)
+            else:
+                self.travelcalculator.start_travel(self.position.value)
             await self.after_update()
 
         await self.angle.process(telegram)

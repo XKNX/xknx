@@ -42,7 +42,7 @@ class TravelCalculator:
         self.travel_time_down = travel_time_down
         self.travel_time_up = travel_time_up
 
-        self.travel_to_position = 0
+        self.travel_to_position = None
         self.travel_started_time = 0
         self.travel_direction = TravelStatus.STOPPED
 
@@ -51,13 +51,20 @@ class TravelCalculator:
         self.position_open = 0
 
     def set_position(self, position):
-        """Set known position of cover."""
-        self.last_known_position = position
+        """Set position and target of cover."""
         self.travel_to_position = position
-        self.position_type = PositionType.CONFIRMED
+        self.update_position(position)
+
+    def update_position(self, position):
+        """Update known position of cover."""
+        self.last_known_position = position
+        if position == self.travel_to_position:
+            self.position_type = PositionType.CONFIRMED
 
     def stop(self):
         """Stop traveling."""
+        if self.position_type == PositionType.UNKNOWN:
+            return
         self.last_known_position = self.current_position()
         self.travel_to_position = self.last_known_position
         self.position_type = PositionType.CALCULATED
@@ -65,6 +72,9 @@ class TravelCalculator:
 
     def start_travel(self, travel_to_position):
         """Start traveling to position."""
+        if self.position_type == PositionType.UNKNOWN:
+            self.set_position(travel_to_position)
+            return
         self.stop()
         self.travel_started_time = time.time()
         self.travel_to_position = travel_to_position
@@ -87,6 +97,8 @@ class TravelCalculator:
         """Return current (calculated or known) position."""
         if self.position_type == PositionType.CALCULATED:
             return self._calculate_position()
+        if self.position_type == PositionType.UNKNOWN:
+            return None
         return self.last_known_position
 
     def is_traveling(self):

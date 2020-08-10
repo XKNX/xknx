@@ -26,9 +26,11 @@
 - enable multicast on macOS and fix a bug where unknown cemi frames raise a TypeError on routing connections
 - BinarySensor: reset_after is now implemented as asyncio.Task to prevent blocking the loop
 - ClimateMode: binary climate modes should be fully functional now (sending, receiving and syncing)
+- Cover: position update from bus does update current position, but not target position (when moving)
 
 ### Internals
 
+- Cover travelcalculator doesn't start from 0% but is initialized by first movement or status telegram
 - Cover uses 0% for open cover and 100% for closed cover now
 - DPT classes can now be searched via value_type string or dpt number from any parent class (DPTBase for all) to be used in Sensor
 - Use RemoteValue class in BinarySensor, DateTime and ClimateMode device

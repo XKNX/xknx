@@ -315,6 +315,7 @@ class TestCover(unittest.TestCase):
         # DPT 1.008 - 0:up 1:down
         self.assertEqual(telegram,
                          Telegram(GroupAddress('1/2/1'), payload=DPTBinary(0)))
+        self.assertEqual(cover.travelcalculator.travel_to_position, 50)
 
     def test_position_without_position_address_down(self):
         """Test moving cover down - with no absolute positioning supported."""
@@ -327,6 +328,50 @@ class TestCover(unittest.TestCase):
             group_address_position_state='1/2/4')
         cover.travelcalculator.set_position(70)
         self.loop.run_until_complete(asyncio.Task(cover.set_position(80)))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        telegram = xknx.telegrams.get_nowait()
+        self.assertEqual(telegram,
+                         Telegram(GroupAddress('1/2/1'), payload=DPTBinary(1)))
+        self.assertEqual(cover.travelcalculator.travel_to_position, 80)
+
+    def test_position_without_position_address_uninitialized_up(self):
+        """Test moving uninitialized cover to absolute position - with no absolute positioning supported."""
+        xknx = XKNX(loop=self.loop)
+        cover = Cover(
+            xknx,
+            'TestCover',
+            group_address_long='1/2/1',
+            group_address_short='1/2/2',
+            group_address_position_state='1/2/4')
+
+        with patch('logging.Logger.warning') as mock_warn:
+            self.loop.run_until_complete(asyncio.Task(cover.set_position(50)))
+            self.assertEqual(xknx.telegrams.qsize(), 0)
+            mock_warn.assert_called_with('Current position unknown. Initialize cover by moving to end position.')
+
+        self.loop.run_until_complete(asyncio.Task(cover.set_position(0)))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        telegram = xknx.telegrams.get_nowait()
+        self.assertEqual(telegram,
+                         Telegram(GroupAddress('1/2/1'), payload=DPTBinary(0)))
+
+    def test_position_without_position_address_uninitialized_down(self):
+        """Test moving uninitialized cover to absolute position - with no absolute positioning supported."""
+        xknx = XKNX(loop=self.loop)
+        cover = Cover(
+            xknx,
+            'TestCover',
+            group_address_long='1/2/1',
+            group_address_short='1/2/2',
+            group_address_position_state='1/2/4')
+
+        with patch('logging.Logger.warning') as mock_warn:
+            self.loop.run_until_complete(asyncio.Task(cover.set_position(50)))
+            self.assertEqual(xknx.telegrams.qsize(), 0)
+            mock_warn.assert_called_with('Current position unknown. Initialize cover by moving to end position.')
+
+        self.loop.run_until_complete(asyncio.Task(cover.set_position(100)))
+        print(cover.travelcalculator.position_closed)
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram,
@@ -366,7 +411,7 @@ class TestCover(unittest.TestCase):
     #
     # TEST PROCESS
     #
-    def test_process(self):
+    def test_process_position(self):
         """Test process / reading telegrams from telegram queue. Test if position is processed correctly."""
         xknx = XKNX(loop=self.loop)
         cover = Cover(
@@ -376,9 +421,29 @@ class TestCover(unittest.TestCase):
             group_address_short='1/2/2',
             group_address_position='1/2/3',
             group_address_position_state='1/2/4')
+        # initial position process - position is unknown so this is the new state - not moving
+        telegram = Telegram(GroupAddress('1/2/3'), payload=DPTArray(213))
+        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        self.assertEqual(cover.current_position(), 84)
+        self.assertFalse(cover.is_traveling())
+        # state telegram updates current position - we are not moving so this is new state - not moving
+        telegram = Telegram(GroupAddress('1/2/4'), payload=DPTArray(42))
+        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        self.assertEqual(cover.current_position(), 16)
+        self.assertFalse(cover.is_traveling())
+        self.assertEqual(cover.travelcalculator.travel_to_position, 16)
+        # new position - movement starts
+        telegram = Telegram(GroupAddress('1/2/3'), payload=DPTArray(255))
+        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        self.assertEqual(cover.current_position(), 16)
+        self.assertTrue(cover.is_closing())
+        self.assertEqual(cover.travelcalculator.travel_to_position, 100)
+        # new state while moving - movement goes on; travelcalculator updated
         telegram = Telegram(GroupAddress('1/2/4'), payload=DPTArray(213))
         self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
         self.assertEqual(cover.current_position(), 84)
+        self.assertTrue(cover.is_closing())
+        self.assertEqual(cover.travelcalculator.travel_to_position, 100)
 
     def test_process_angle(self):
         """Test process / reading telegrams from telegram queue. Test if position is processed correctly."""
@@ -461,8 +526,11 @@ class TestCover(unittest.TestCase):
             'TestCover',
             group_address_long='1/2/1',
             group_address_short='1/2/2',
-            group_address_position='1/2/3',
-            group_address_position_state='1/2/4')
+            group_address_stop='1/2/3',
+            group_address_position='1/2/4',
+            group_address_position_state='1/2/5',
+            group_address_angle='1/2/6',
+            group_address_angle_state='1/2/7')
 
         after_update_callback = Mock()
 
@@ -470,10 +538,24 @@ class TestCover(unittest.TestCase):
             """Async callback."""
             after_update_callback(device)
         cover.register_device_updated_cb(async_after_update_callback)
-
-        telegram = Telegram(GroupAddress('1/2/4'), payload=DPTArray(42))
+        for address, payload, feature in [
+                ('1/2/1', DPTBinary(1), "long"),
+                ('1/2/2', DPTBinary(1), "short"),
+                ('1/2/4', DPTArray(42), "position"),
+                ('1/2/5', DPTArray(42), "position state"),
+                ('1/2/6', DPTArray(42), "angle"),
+                ('1/2/7', DPTArray(51), "angle state")]:
+            with self.subTest(address=address, feature=feature):
+                telegram = Telegram(GroupAddress(address), payload=payload)
+                self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+                after_update_callback.assert_called_with(cover)
+                after_update_callback.reset_mock()
+        # Stop only when cover is travelling
+        telegram = Telegram(GroupAddress('1/2/3'), payload=DPTBinary(1))
         self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
-
+        after_update_callback.assert_not_called()
+        self.loop.run_until_complete(asyncio.Task(cover.set_down()))
+        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
         after_update_callback.assert_called_with(cover)
 
     #
@@ -497,7 +579,8 @@ class TestCover(unittest.TestCase):
             self.assertFalse(cover.is_opening())
             self.assertFalse(cover.is_closing())
             self.assertTrue(cover.position_reached())
-            # we start with open covers (up)
+            # we start with state open covers (up)
+            cover.travelcalculator.set_position(0)
             self.loop.run_until_complete(asyncio.Task(cover.set_down()))
             self.assertTrue(cover.is_traveling())
             self.assertTrue(cover.is_open())
@@ -565,6 +648,9 @@ class TestCover(unittest.TestCase):
             mock_stop.return_value = fut
 
             mock_time.return_value = 1517000000.0
+            # we start with state 0 - open covers (up) this is assumed immediately
+            self.loop.run_until_complete(asyncio.Task(cover.set_position(0)))
+
             self.loop.run_until_complete(asyncio.Task(cover.set_position(50)))
 
             mock_time.return_value = 1517000001.0
