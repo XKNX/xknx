@@ -21,6 +21,7 @@
 
 ### Bugfixes
 
+- Tunneling: don't process incoming L_Data.con confirmation frames. This avoids processing every outgoing telegram twice.
 - enable multicast on macOS and fix a bug where unknown cemi frames raise a TypeError on routing connections
 - BinarySensor: reset_after is now implemented as asyncio.Task to prevent blocking the loop
 - ClimateMode: binary climate modes should be fully functional now (sending, receiving and syncing)
