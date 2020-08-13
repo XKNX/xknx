@@ -10,6 +10,8 @@
 
 ### New Features
 
+- Cover: add optional `group_address_stop` for manual stopping
+- Cover: start travel calculator when up/down telegram from bus is received
 - HA integration: `knx.send` service takes `type` attribute to allow sending DPT encoded values like `sensor`
 - HA integration: `sensor` and `expose` accept int and float values for `type` (parsed as DPT numbers)
 - new StateUpdater: Devices `sync_state` can be set to `init` to just initialize state on startup, `expire [minutes]` to read the state from the KNX bus when it was not updated for [minutes] or `every [minutes]` to update it regularly every [minutes]
@@ -25,9 +27,12 @@
 - enable multicast on macOS and fix a bug where unknown cemi frames raise a TypeError on routing connections
 - BinarySensor: reset_after is now implemented as asyncio.Task to prevent blocking the loop
 - ClimateMode: binary climate modes should be fully functional now (sending, receiving and syncing)
+- Cover: position update from bus does update current position, but not target position (when moving)
 
 ### Internals
 
+- Cover travelcalculator doesn't start from 0% but is initialized by first movement or status telegram
+- Cover uses 0% for open cover and 100% for closed cover now
 - DPT classes can now be searched via value_type string or dpt number from any parent class (DPTBase for all) to be used in Sensor
 - Use RemoteValue class in BinarySensor, DateTime and ClimateMode device
 - use time.struct_time for internal time and date representation
