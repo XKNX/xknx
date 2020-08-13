@@ -127,7 +127,7 @@ class CEMIFrame():
         # KNX Chapter 3.6.3/4.1.4.3 "Additional information."
         # Additional information is not yet parsed.
         addil = cemi[1]
-
+        # Control field 1 and Control field 2 - first 2 octets after Additional information
         self.flags = cemi[2 + addil] * 256 + cemi[3 + addil]
 
         self.src_addr = PhysicalAddress((cemi[4 + addil], cemi[5 + addil]))
