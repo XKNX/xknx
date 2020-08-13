@@ -30,10 +30,10 @@ from . import ATTR_DISCOVER_DEVICES, DATA_XKNX
 CONF_SETPOINT_SHIFT_ADDRESS = "setpoint_shift_address"
 CONF_SETPOINT_SHIFT_STATE_ADDRESS = "setpoint_shift_state_address"
 CONF_SETPOINT_SHIFT_MODE = "setpoint_shift_mode"
-CONF_SETPOINT_SHIFT_STEP = "setpoint_shift_step"
 CONF_SETPOINT_SHIFT_MAX = "setpoint_shift_max"
 CONF_SETPOINT_SHIFT_MIN = "setpoint_shift_min"
 CONF_TEMPERATURE_ADDRESS = "temperature_address"
+CONF_TEMPERATURE_STEP = "temperature_step"
 CONF_TARGET_TEMPERATURE_ADDRESS = "target_temperature_address"
 CONF_TARGET_TEMPERATURE_STATE_ADDRESS = "target_temperature_state_address"
 CONF_OPERATION_MODE_ADDRESS = "operation_mode_address"
@@ -57,9 +57,9 @@ CONF_MAX_TEMP = "max_temp"
 
 DEFAULT_NAME = "KNX Climate"
 DEFAULT_SETPOINT_SHIFT_MODE = "DPT6010"
-DEFAULT_SETPOINT_SHIFT_STEP = 0.5
 DEFAULT_SETPOINT_SHIFT_MAX = 6
 DEFAULT_SETPOINT_SHIFT_MIN = -6
+DEFAULT_TEMPERATURE_STEP = 0.1
 DEFAULT_ON_OFF_INVERT = False
 # Map KNX operation modes to HA modes. This list might not be complete.
 OPERATION_MODES = {
@@ -84,47 +84,50 @@ PRESET_MODES = {
 
 PRESET_MODES_INV = dict(reversed(item) for item in PRESET_MODES.items())
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_SETPOINT_SHIFT_MODE, default=DEFAULT_SETPOINT_SHIFT_MODE): cv.enum(
-            SetpointShiftMode
-        ),
-        vol.Optional(
-            CONF_SETPOINT_SHIFT_STEP, default=DEFAULT_SETPOINT_SHIFT_STEP
-        ): vol.All(float, vol.Range(min=0, max=2)),
-        vol.Optional(
-            CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX
-        ): vol.All(int, vol.Range(min=0, max=32)),
-        vol.Optional(
-            CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN
-        ): vol.All(int, vol.Range(min=-32, max=0)),
-        vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
-        vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
-        vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
-        vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
-        vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): cv.string,
-        vol.Optional(CONF_CONTROLLER_STATUS_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_CONTROLLER_MODE_ADDRESS): cv.string,
-        vol.Optional(CONF_CONTROLLER_MODE_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_HEAT_COOL_ADDRESS): cv.string,
-        vol.Optional(CONF_HEAT_COOL_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS): cv.string,
-        vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): cv.string,
-        vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
-        vol.Optional(CONF_OPERATION_MODE_STANDBY_ADDRESS): cv.string,
-        vol.Optional(CONF_ON_OFF_ADDRESS): cv.string,
-        vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT): cv.boolean,
-        vol.Optional(CONF_OPERATION_MODES): vol.All(
-            cv.ensure_list, [vol.In({**OPERATION_MODES, **PRESET_MODES})]
-        ),
-        vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated("setpoint_shift_step", replacement_key=CONF_TEMPERATURE_STEP),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_SETPOINT_SHIFT_MODE, default=DEFAULT_SETPOINT_SHIFT_MODE): cv.enum(
+                SetpointShiftMode
+            ),
+            vol.Optional(
+                CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX
+            ): vol.All(int, vol.Range(min=0, max=32)),
+            vol.Optional(
+                CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN
+            ): vol.All(int, vol.Range(min=-32, max=0)),
+            vol.Optional(
+                CONF_TEMPERATURE_STEP, default=DEFAULT_TEMPERATURE_STEP
+            ): vol.All(float, vol.Range(min=0, max=2)),
+            vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
+            vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
+            vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
+            vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
+            vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): cv.string,
+            vol.Optional(CONF_CONTROLLER_STATUS_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_CONTROLLER_MODE_ADDRESS): cv.string,
+            vol.Optional(CONF_CONTROLLER_MODE_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_HEAT_COOL_ADDRESS): cv.string,
+            vol.Optional(CONF_HEAT_COOL_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS): cv.string,
+            vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): cv.string,
+            vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
+            vol.Optional(CONF_OPERATION_MODE_STANDBY_ADDRESS): cv.string,
+            vol.Optional(CONF_ON_OFF_ADDRESS): cv.string,
+            vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT): cv.boolean,
+            vol.Optional(CONF_OPERATION_MODES): vol.All(
+                cv.ensure_list, [vol.In({**OPERATION_MODES, **PRESET_MODES})]
+            ),
+            vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
+            vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
+        }
+    )
 )
 
 
@@ -199,9 +202,9 @@ def async_add_entities_config(hass, config, async_add_entities):
             CONF_SETPOINT_SHIFT_STATE_ADDRESS
         ),
         setpoint_shift_mode=config[CONF_SETPOINT_SHIFT_MODE],
-        setpoint_shift_step=config[CONF_SETPOINT_SHIFT_STEP],
         setpoint_shift_max=config[CONF_SETPOINT_SHIFT_MAX],
         setpoint_shift_min=config[CONF_SETPOINT_SHIFT_MIN],
+        temperature_step=config[CONF_TEMPERATURE_STEP],
         group_address_on_off=config.get(CONF_ON_OFF_ADDRESS),
         group_address_on_off_state=config.get(CONF_ON_OFF_STATE_ADDRESS),
         min_temp=config.get(CONF_MIN_TEMP),
@@ -316,10 +319,11 @@ class KNXClimate(ClimateEntity):
         ]
 
         if self.device.supports_on_off:
-            _operations.append(HVAC_MODE_HEAT)
+            if not _operations:
+                _operations.append(HVAC_MODE_HEAT)
             _operations.append(HVAC_MODE_OFF)
 
-        _modes = list(filter(None, _operations))
+        _modes = list(set(filter(None, _operations)))
         # default to ["heat"]
         return _modes if _modes else [HVAC_MODE_HEAT]
 
@@ -327,12 +331,13 @@ class KNXClimate(ClimateEntity):
         """Set operation mode."""
         if self.device.supports_on_off and hvac_mode == HVAC_MODE_OFF:
             await self.device.turn_off()
-        elif self.device.supports_on_off and hvac_mode == HVAC_MODE_HEAT:
-            await self.device.turn_on()
-        elif self.device.mode.supports_operation_mode:
-            knx_operation_mode = HVACOperationMode(OPERATION_MODES_INV.get(hvac_mode))
-            await self.device.mode.set_operation_mode(knx_operation_mode)
-            self.async_write_ha_state()
+        else:
+            if self.device.supports_on_off and not self.device.is_on:
+                await self.device.turn_on()
+            if self.device.mode.supports_operation_mode:
+                knx_operation_mode = HVACOperationMode(OPERATION_MODES_INV.get(hvac_mode))
+                await self.device.mode.set_operation_mode(knx_operation_mode)
+        self.async_write_ha_state()
 
     @property
     def preset_mode(self) -> Optional[str]:
