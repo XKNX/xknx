@@ -46,11 +46,12 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_state='1/2/4')
         self.assertEqual(
             str(remote_value),
-            '<RemoteValue device_name="MyDevice" GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None/>')
+            '<RemoteValue device_name="MyDevice" feature_name="Unknown" GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None/>')
         remote_value.payload = DPTArray([0x01, 0x02])
         self.assertEqual(
             str(remote_value),
-            '<RemoteValue device_name="MyDevice" GroupAddress("1/2/3")/GroupAddress("1/2/4")/<DPTArray value="[0x1,0x2]" />/None/>')
+            '<RemoteValue device_name="MyDevice" feature_name="Unknown" '
+            'GroupAddress("1/2/3")/GroupAddress("1/2/4")/<DPTArray value="[0x1,0x2]" />/None/>')
 
     def test_binary_sensor(self):
         """Test string representation of binary sensor object."""
@@ -62,7 +63,7 @@ class TestStringRepresentations(unittest.TestCase):
             device_class='motion')
         self.assertEqual(
             str(binary_sensor),
-            '<BinarySensor group_address_state="GroupAddress("1/2/3")" name="Fnord" state="BinarySensorState.OFF"/>')
+            '<BinarySensor name="Fnord" remote_value="None/GroupAddress("1/2/3")/None/None" state="False"/>')
 
     def test_climate(self):
         """Test string representation of climate object."""
@@ -74,7 +75,7 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_target_temperature='1/2/2',
             group_address_setpoint_shift='1/2/3',
             group_address_setpoint_shift_state='1/2/4',
-            setpoint_shift_step=0.1,
+            temperature_step=0.1,
             setpoint_shift_max=20,
             setpoint_shift_min=-20,
             group_address_on_off='1/2/14',
@@ -82,9 +83,9 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(climate),
             '<Climate name="Wohnzimmer" temperature="None/GroupAddress("1/2/1")/None/None" '
-            'target_temperature="GroupAddress("1/2/2")/None/None/None" '
+            'target_temperature="GroupAddress("1/2/2")/None/None/None" temperature_step="0.1" '
             'setpoint_shift="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" '
-            'setpoint_shift_step="0.1" setpoint_shift_max="20" setpoint_shift_min="-20" '
+            'setpoint_shift_max="20" setpoint_shift_min="-20" '
             'group_address_on_off="GroupAddress("1/2/14")/GroupAddress("1/2/15")/None/None" />')
 
     def test_climate_mode(self):
@@ -105,9 +106,9 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(climate_mode),
             '<ClimateMode name="Wohnzimmer Mode" '
-            'group_address_operation_mode="GroupAddress("1/2/5")" group_address_operation_mode_state="GroupAddress("1/2/6")'
-            '" group_address_controller_status="GroupAddress("1/2/10")" group_address_controller_status_state="GroupAddress("1/2/11")" '
-            'group_address_controller_mode="GroupAddress("1/2/12")" group_address_controller_mode_state="GroupAddress("1/2/13")" />')
+            'operation_mode="GroupAddress("1/2/5")/GroupAddress("1/2/6")/None/None" '
+            'controller_mode="GroupAddress("1/2/12")/GroupAddress("1/2/13")/None/None" '
+            'controller_status="GroupAddress("1/2/10")/GroupAddress("1/2/11")/None/None" />')
 
     def test_cover(self):
         """Test string representation of cover object."""
@@ -115,8 +116,9 @@ class TestStringRepresentations(unittest.TestCase):
         cover = Cover(
             xknx,
             name='Rolladen',
-            group_address_long='1/2/3',
-            group_address_short='1/2/4',
+            group_address_long='1/2/2',
+            group_address_short='1/2/3',
+            group_address_stop='1/2/4',
             group_address_position='1/2/5',
             group_address_position_state='1/2/6',
             group_address_angle='1/2/7',
@@ -125,9 +127,10 @@ class TestStringRepresentations(unittest.TestCase):
             travel_time_up=10)
         self.assertEqual(
             str(cover),
-            '<Cover name="Rolladen" updown="GroupAddress("1/2/3")/None/None/None" step="GroupAddress("1/2/4")/None/None/None" position="Group'
-            'Address("1/2/5")/GroupAddress("1/2/6")/None/None" angle="GroupAddress("1/2/7")/GroupAddress("1/2/8")/None/None" travel_time_down="8'
-            '" travel_time_up="10" />')
+            '<Cover name="Rolladen" updown="GroupAddress("1/2/2")/None/None/None" step="GroupAddress("1/2/3")/None/None/None" '
+            'stop="GroupAddress("1/2/4")/None/None/None" position="GroupAddress("1/2/5")/GroupAddress("1/2/6")/None/None" '
+            'angle="GroupAddress("1/2/7")/GroupAddress("1/2/8")/None/None" '
+            'travel_time_down="8" travel_time_up="10" />')
 
     def test_fan(self):
         """Test string representation of fan object."""
@@ -273,7 +276,7 @@ class TestStringRepresentations(unittest.TestCase):
             group_address="1/2/3")
         self.assertEqual(
             str(dateTime),
-            '<DateTime name="Zeit" group_address="GroupAddress("1/2/3")" broadcast_type="TIME" />')
+            '<DateTime name="Zeit" group_address="GroupAddress("1/2/3")/None/None/None" broadcast_type="TIME" />')
 
     def test_action_base(self):
         """Test string representation of action base."""
@@ -551,8 +554,8 @@ class TestStringRepresentations(unittest.TestCase):
         tunnelling_request.sequence_counter = 42
         self.assertEqual(
             str(tunnelling_request),
-            '<TunnellingRequest communication_channel_id="23" sequence_counter="42" cemi="<CEMIFrame SourceAddress="GroupAddress("0/0/0")" Destina'
-            'tionAddress="GroupAddress("0/0/0")" Flags="               0" Command="APCICommand.GROUP_READ" payload="None" />" />')
+            '<TunnellingRequest communication_channel_id="23" sequence_counter="42" cemi="<CEMIFrame SourceAddress="PhysicalAddress("0.0.0")"'
+            ' DestinationAddress="GroupAddress("0/0/0")" Flags="               0" Command="APCICommand.GROUP_READ" payload="None" />" />')
 
     def test_tunnelling_ack(self):
         """Test string representation of KNX/IP TunnellingAck."""

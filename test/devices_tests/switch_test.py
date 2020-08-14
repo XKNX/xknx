@@ -28,7 +28,7 @@ class TestSwitch(unittest.TestCase):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX(loop=self.loop)
         switch = Switch(xknx, "TestOutlet", group_address_state='1/2/3')
-        self.loop.run_until_complete(asyncio.Task(switch.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(switch.sync()))
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
@@ -42,7 +42,7 @@ class TestSwitch(unittest.TestCase):
         switch = Switch(xknx, "TestOutlet",
                         group_address='1/2/3',
                         group_address_state='1/2/4')
-        self.loop.run_until_complete(asyncio.Task(switch.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(switch.sync()))
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 

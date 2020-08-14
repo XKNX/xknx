@@ -42,24 +42,29 @@ class TravelCalculator:
         self.travel_time_down = travel_time_down
         self.travel_time_up = travel_time_up
 
-        self.travel_to_position = 0
+        self.travel_to_position = None
         self.travel_started_time = 0
         self.travel_direction = TravelStatus.STOPPED
 
-        # 0 is closed, 100 is fully open
-        self.position_closed = 0
-        self.position_open = 100
-
-        self.time_set_from_outside = None
+        # 100 is closed, 0 is fully open
+        self.position_closed = 100
+        self.position_open = 0
 
     def set_position(self, position):
-        """Set known position of cover."""
-        self.last_known_position = position
+        """Set position and target of cover."""
         self.travel_to_position = position
-        self.position_type = PositionType.CONFIRMED
+        self.update_position(position)
+
+    def update_position(self, position):
+        """Update known position of cover."""
+        self.last_known_position = position
+        if position == self.travel_to_position:
+            self.position_type = PositionType.CONFIRMED
 
     def stop(self):
         """Stop traveling."""
+        if self.position_type == PositionType.UNKNOWN:
+            return
         self.last_known_position = self.current_position()
         self.travel_to_position = self.last_known_position
         self.position_type = PositionType.CALCULATED
@@ -67,15 +72,18 @@ class TravelCalculator:
 
     def start_travel(self, travel_to_position):
         """Start traveling to position."""
+        if self.position_type == PositionType.UNKNOWN:
+            self.set_position(travel_to_position)
+            return
         self.stop()
-        self.travel_started_time = self.current_time()
+        self.travel_started_time = time.time()
         self.travel_to_position = travel_to_position
         self.position_type = PositionType.CALCULATED
 
         self.travel_direction = \
-            TravelStatus.DIRECTION_UP \
+            TravelStatus.DIRECTION_DOWN \
             if travel_to_position > self.last_known_position else \
-            TravelStatus.DIRECTION_DOWN
+            TravelStatus.DIRECTION_UP
 
     def start_travel_up(self):
         """Start traveling up."""
@@ -89,11 +97,21 @@ class TravelCalculator:
         """Return current (calculated or known) position."""
         if self.position_type == PositionType.CALCULATED:
             return self._calculate_position()
+        if self.position_type == PositionType.UNKNOWN:
+            return None
         return self.last_known_position
 
     def is_traveling(self):
         """Return if cover is traveling."""
         return self.current_position() != self.travel_to_position
+
+    def is_opening(self):
+        """Return if the cover is opening."""
+        return self.is_traveling() and self.travel_direction == TravelStatus.DIRECTION_UP
+
+    def is_closing(self):
+        """Return if the cover is closing."""
+        return self.is_traveling() and self.travel_direction == TravelStatus.DIRECTION_DOWN
 
     def position_reached(self):
         """Return if cover has reached designated position."""
@@ -113,10 +131,10 @@ class TravelCalculator:
 
         def position_reached_or_exceeded(relative_position):
             """Return if designated position was reached."""
-            if relative_position >= 0 \
+            if relative_position <= 0 \
                     and self.travel_direction == TravelStatus.DIRECTION_DOWN:
                 return True
-            if relative_position <= 0 \
+            if relative_position >= 0 \
                     and self.travel_direction == TravelStatus.DIRECTION_UP:
                 return True
             return False
@@ -125,9 +143,10 @@ class TravelCalculator:
             return self.travel_to_position
 
         travel_time = self._calculate_travel_time(relative_position)
-        if self.current_time() > self.travel_started_time + travel_time:
+        if time.time() > self.travel_started_time + travel_time:
             return self.travel_to_position
-        progress = (self.current_time()-self.travel_started_time)/travel_time
+
+        progress = (time.time()-self.travel_started_time)/travel_time
         position = self.last_known_position + relative_position * progress
         return int(position)
 
@@ -135,22 +154,15 @@ class TravelCalculator:
         """Calculate time to travel to relative position."""
         travel_direction = \
             TravelStatus.DIRECTION_UP \
-            if relative_position > 0 else \
+            if relative_position < 0 else \
             TravelStatus.DIRECTION_DOWN
         travel_time_full = \
             self.travel_time_up \
             if travel_direction == TravelStatus.DIRECTION_UP else \
             self.travel_time_down
-        travel_range = self.position_open - self.position_closed
+        travel_range = self.position_closed - self.position_open
 
         return travel_time_full * abs(relative_position) / travel_range
-
-    def current_time(self):
-        """Get current time. May be modified from outside (for unit tests)."""
-        # time_set_from_outside is  used within unit tests
-        if self.time_set_from_outside is not None:
-            return self.time_set_from_outside
-        return time.time()
 
     def __eq__(self, other):
         """Equal operator."""

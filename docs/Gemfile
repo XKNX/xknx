@@ -1,4 +1,5 @@
 gem "jekyll"
 gem "jekyll-theme-minimal"
+gem "kramdown-parser-gfm"
 
 source 'https://rubygems.org'

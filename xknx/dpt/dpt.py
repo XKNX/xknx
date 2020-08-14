@@ -1,12 +1,10 @@
 """Implementation of Basic KNX datatypes."""
-from enum import Enum
-
 from xknx.exceptions import ConversionError
 
 
 class DPTBase:
     """
-    Base class for KNX data types.
+    Base class for KNX data point type transcoder.
 
     KNX communicates using Group-addresses, and every Group Object represents a data point of some type.
     To have a standardized interpretation of the data there are a number of Data Point types (DPT).
@@ -41,20 +39,84 @@ class DPTBase:
 
     """
 
-    # pylint: disable=too-few-public-methods
-    @staticmethod
-    def test_bytesarray(raw, length):
+    payload_length = None
+
+    @classmethod
+    def test_bytesarray(cls, raw):
         """Test if array of raw bytes has the correct length and values of correct type."""
+        if cls.payload_length is None:
+            raise NotImplementedError("payload_length has to be defined for: %s" % cls)
         if not isinstance(raw, (tuple, list)) \
-                or len(raw) != length \
+                or len(raw) != cls.payload_length \
                 or any(not isinstance(byte, int) for byte in raw) \
                 or any(byte < 0 for byte in raw) \
                 or any(byte > 255 for byte in raw):
             raise ConversionError("Invalid raw bytes", raw=raw)
 
+    @classmethod
+    def __recursive_subclasses__(cls):
+        """Yield all subclasses and their subclasses."""
+        for subclass in cls.__subclasses__():
+            yield from subclass.__recursive_subclasses__()
+            yield subclass
 
-class DPTBinary(DPTBase):
-    """The DPTBinary is a base class for all datatypes encoded directly into the first Byte of the payload (mostly integer)."""
+    @classmethod
+    def has_distinct_dpt_numbers(cls):
+        """Return True if dpt numbers are defined (not inherited)."""
+        return 'dpt_main_number' in cls.__dict__ and 'dpt_sub_number' in cls.__dict__
+
+    @classmethod
+    def has_distinct_value_type(cls):
+        """Return True if value_type is defined (not inherited)."""
+        return 'value_type' in cls.__dict__
+
+    @staticmethod
+    def transcoder_by_dpt(dpt_main, dpt_sub=None):
+        """Return Class reference of DPTBase subclass with matching DPT number."""
+        for dpt in DPTBase.__recursive_subclasses__():
+            if dpt.has_distinct_dpt_numbers():
+                if dpt_main == dpt.dpt_main_number and dpt_sub == dpt.dpt_sub_number:
+                    return dpt
+        return None
+
+    @staticmethod
+    def transcoder_by_value_type(value_type):
+        """Return Class reference of DPTBase subclass with matching value_type."""
+        for dpt in DPTBase.__recursive_subclasses__():
+            if dpt.has_distinct_value_type():
+                if value_type == dpt.value_type:
+                    return dpt
+        return None
+
+    @staticmethod
+    def parse_transcoder(value_type):
+        """Return Class reference of DPTBase subclass from value_type or DPT number."""
+        if isinstance(value_type, int):
+            return DPTBase.transcoder_by_dpt(value_type)
+        if isinstance(value_type, float):
+            # avoid modulo for floating point rounding errors
+            main, sub = map(int, str(value_type).split('.'))
+            return DPTBase.transcoder_by_dpt(main, sub)
+        if isinstance(value_type, str):
+            _string_type = value_type.strip()
+            transcoder = DPTBase.transcoder_by_value_type(_string_type)
+            if transcoder is None:
+                # Try to parse the value_type if it is a string but not found by DPTBase.transcoder_by_value_type()
+                # for backwards compatibility (eg. "DPT-5") and strings representing numbers (eg. "7", "9.001")
+                _string_type = _string_type.upper().strip(" DPT-")
+                if _string_type.isdigit():
+                    transcoder = DPTBase.parse_transcoder(int(_string_type))
+                else:
+                    try:
+                        transcoder = DPTBase.parse_transcoder(float(_string_type))
+                    except ValueError:
+                        pass
+            return transcoder
+        return None
+
+
+class DPTBinary():
+    """The DPTBinary is a base class for all datatypes encoded directly into the last 6 bit of the APCI (mostly integer)."""
 
     # pylint: disable=too-few-public-methods
 
@@ -80,7 +142,7 @@ class DPTBinary(DPTBase):
         return '<DPTBinary value="{0}" />'.format(self.value)
 
 
-class DPTArray(DPTBase):
+class DPTArray():
     """The DPTArray is a base class for all datatypes appended to the KNX telegram."""
 
     # pylint: disable=too-few-public-methods
@@ -142,16 +204,3 @@ class DPTComparator():
             return len(a.value) == 0 and b.value == 0
 
         raise TypeError()
-
-
-class DPTWeekday(Enum):
-    """Enum class for week days."""
-
-    MONDAY = 1
-    TUESDAY = 2
-    WEDNESDAY = 3
-    THURSDAY = 4
-    FRIDAY = 5
-    SATURDAY = 6
-    SUNDAY = 7
-    NONE = 0

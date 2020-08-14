@@ -16,6 +16,9 @@ class DPT2ByteUnsigned(DPTBase):
 
     value_min = 0
     value_max = 65535
+    dpt_main_number = 7
+    dpt_sub_number = None
+    value_type = "2byte_unsigned"
     unit = ""
     resolution = 1
     payload_length = 2
@@ -23,7 +26,7 @@ class DPT2ByteUnsigned(DPTBase):
     @classmethod
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 2)
+        cls.test_bytesarray(raw)
         return (raw[0] * 256) + raw[1]
 
     @classmethod
@@ -46,18 +49,27 @@ class DPT2ByteUnsigned(DPTBase):
 class DPT2Ucount(DPT2ByteUnsigned):
     """DPT 7.001 DPT_Value_2_Ucount."""
 
+    dpt_main_number = 7
+    dpt_sub_number = 1
+    value_type = "pulse_2byte"
     unit = "pulses"
 
 
 class DPTTimePeriodMsec(DPT2ByteUnsigned):
     """DPT 7.002 DPT_TimePeriodMsec (ms)."""
 
+    dpt_main_number = 7
+    dpt_sub_number = 2
+    value_type = "time_period_msec"
     unit = "ms"
 
 
 class DPTTimePeriod10Msec(DPT2ByteUnsigned):
     """DPT 7.003 DPT_TimePeriod10Msec (ms)."""
 
+    dpt_main_number = 7
+    dpt_sub_number = 3
+    value_type = "time_period_10msec"
     unit = "ms"
     resolution = 10
 
@@ -65,6 +77,9 @@ class DPTTimePeriod10Msec(DPT2ByteUnsigned):
 class DPTTimePeriod100Msec(DPT2ByteUnsigned):
     """DPT 7.004 DPT_TimePeriod100Msec (ms)."""
 
+    dpt_main_number = 7
+    dpt_sub_number = 4
+    value_type = "time_period_100msec"
     unit = "ms"
     resolution = 100
 
@@ -72,40 +87,61 @@ class DPTTimePeriod100Msec(DPT2ByteUnsigned):
 class DPTTimePeriodSec(DPT2ByteUnsigned):
     """DPT 7.005 DPT_TimePeriodSec (s)."""
 
+    dpt_main_number = 7
+    dpt_sub_number = 5
+    value_type = "time_period_sec"
     unit = "s"
 
 
 class DPTTimePeriodMin(DPT2ByteUnsigned):
     """DPT 7.006 DPT_TimePeriodMin (min)."""
 
+    dpt_main_number = 7
+    dpt_sub_number = 6
+    value_type = "time_period_min"
     unit = "min"
 
 
 class DPTTimePeriodHrs(DPT2ByteUnsigned):
     """DPT 7.007 DPT_TimePeriodHrs (h)."""
 
+    dpt_main_number = 7
+    dpt_sub_number = 7
+    value_type = "time_period_hrs"
     unit = "h"
 
 
 class DPTLengthMm(DPT2ByteUnsigned):
     """DPT 7.011 Abstraction for KNX 2 Byte DPT_Length_mm (mm)."""
 
+    dpt_main_number = 7
+    dpt_sub_number = 11
+    value_type = "length_mm"
     unit = "mm"
 
 
 class DPTUElCurrentmA(DPT2ByteUnsigned):
     """DPT 7.012 Abstraction for KNX 2 Byte DPTUElCurrentmA."""
 
+    dpt_main_number = 7
+    dpt_sub_number = 12
+    value_type = "current"
     unit = "mA"
 
 
 class DPTBrightness(DPT2ByteUnsigned):
     """DPT 7.013 DPT_Brightness (lux)."""
 
+    dpt_main_number = 7
+    dpt_sub_number = 13
+    value_type = "brightness"
     unit = "lx"
 
 
 class DPTColorTemperature(DPT2ByteUnsigned):
     """DPT 7.600 DPT_Color_Temperature (K)."""
 
+    dpt_main_number = 7
+    dpt_sub_number = 600
+    value_type = "color_temperature"
     unit = "K"

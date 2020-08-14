@@ -3,8 +3,7 @@ Device is the base class for all implemented devices (e.g. Lights/Switches/Senso
 
 It provides basis functionality for reading the state from the KNX bus.
 """
-from xknx.exceptions import XKNXException
-from xknx.telegram import Telegram, TelegramType
+from xknx.telegram import TelegramType
 
 
 class Device:
@@ -17,6 +16,13 @@ class Device:
         self.device_updated_cbs = []
         if device_updated_cb is not None:
             self.register_device_updated_cb(device_updated_cb)
+
+    def _iter_remote_values(self):
+        """Iterate the devices RemoteValue classes."""
+        raise NotImplementedError('_iter_remote_values has to be implemented')
+        # yield self.remote_value
+        # or
+        # yield from (<list all used RemoteValue instances>)
 
     def register_device_updated_cb(self, device_updated_cb):
         """Register device updated callback."""
@@ -32,42 +38,10 @@ class Device:
             # pylint: disable=not-callable
             await device_updated_cb(self)
 
-    async def sync(self, wait_for_result=True):
-        """Read state of device from KNX bus."""
-        try:
-            await self._sync_impl(wait_for_result)
-        except XKNXException as ex:
-            self.xknx.logger.error("Error while syncing device: %s", ex)
-
-    async def _sync_impl(self, wait_for_result=True):
-        # pylint: disable=import-outside-toplevel
-        self.xknx.logger.debug("Sync %s", self.name)
-        for group_address in self.state_addresses():
-            from xknx.core import ValueReader
-            value_reader = ValueReader(self.xknx, group_address)
-            if wait_for_result:
-                telegram = await value_reader.read()
-                if telegram is not None:
-                    await self.process(telegram)
-                else:
-                    self.xknx.logger.warning("Could not sync group address '%s' from %s", group_address, self)
-            else:
-                await value_reader.send_group_read()
-
-    # TODO: remove need for send function in device - only use set and RemoteValue.send
-    async def send(self, group_address, payload=None, response=False):
-        """Send payload as telegram to KNX bus."""
-        telegram = Telegram()
-        telegram.group_address = group_address
-        telegram.payload = payload
-        telegram.telegramtype = TelegramType.GROUP_RESPONSE \
-            if response else TelegramType.GROUP_WRITE
-        await self.xknx.telegrams.put(telegram)
-
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        # pylint: disable=no-self-use
-        return []
+    async def sync(self):
+        """Read states of device from KNX bus."""
+        for remote_value in self._iter_remote_values():
+            await remote_value.read_state()
 
     async def process(self, telegram):
         """Process incoming telegram."""
@@ -94,6 +68,13 @@ class Device:
     def get_name(self):
         """Return name of device."""
         return self.name
+
+    def has_group_address(self, group_address):
+        """Test if device has given group address."""
+        for remote_value in self._iter_remote_values():
+            if remote_value.has_group_address(group_address):
+                return True
+        return False
 
     async def do(self, action):
         """Execute 'do' commands."""

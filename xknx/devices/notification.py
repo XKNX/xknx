@@ -21,7 +21,12 @@ class Notification(Device):
                                           group_address=group_address,
                                           group_address_state=group_address_state,
                                           device_name=name,
+                                          feature_name="Message",
                                           after_update_cb=self.after_update)
+
+    def _iter_remote_values(self):
+        """Iterate the devices RemoteValue classes."""
+        yield self._message
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -49,14 +54,6 @@ class Notification(Device):
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
         await self._message.process(telegram)
-
-    def has_group_address(self, group_address):
-        """Test if device has given group address."""
-        return self._message.has_group_address(group_address)
-
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        return self._message.state_addresses()
 
     async def do(self, action):
         """Execute 'do' commands."""

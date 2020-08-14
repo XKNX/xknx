@@ -17,12 +17,16 @@ class RemoteValueColorRGBW(RemoteValue):
                  group_address=None,
                  group_address_state=None,
                  device_name=None,
+                 feature_name="Color RGBW",
                  after_update_cb=None):
         """Initialize remote value of KNX DPT 251.600 (DPT_Color_RGBW)."""
         # pylint: disable=too-many-arguments
-        super(RemoteValueColorRGBW, self).__init__(
-            xknx, group_address, group_address_state,
-            device_name=device_name, after_update_cb=after_update_cb)
+        super().__init__(xknx,
+                         group_address,
+                         group_address_state,
+                         device_name=device_name,
+                         feature_name=feature_name,
+                         after_update_cb=after_update_cb)
         self.previous_value = (0, 0, 0, 0)
 
     def payload_valid(self, payload):

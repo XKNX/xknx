@@ -261,3 +261,8 @@ class GroupAddress(BaseAddress):
     def __repr__(self):
         """Return object as readable string."""
         return 'GroupAddress("{0}")'.format(self)
+
+    def __hash__(self):
+        """Hash function."""
+        # used to turn lists of Telegram into sets in unittests
+        return hash(repr(self))

@@ -4,7 +4,7 @@ import time
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase, DPTWeekday
+from .dpt import DPTBase
 
 
 class DPTTime(DPTBase):
@@ -14,10 +14,12 @@ class DPTTime(DPTBase):
     DPT 10.001
     """
 
+    payload_length = 3
+
     @classmethod
-    def from_knx(cls, raw):
+    def from_knx(cls, raw) -> time.struct_time:
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 3)
+        cls.test_bytesarray(raw)
 
         weekday = (raw[0] & 0xE0) >> 5
         hours = raw[0] & 0x1F
@@ -27,43 +29,36 @@ class DPTTime(DPTBase):
         if not DPTTime._test_range(weekday, hours, minutes, seconds):
             raise ConversionError("Cant parse DPTTime", raw=raw)
 
-        return {'weekday': DPTWeekday(weekday),
-                'hours': hours,
-                'minutes': minutes,
-                'seconds': seconds}
+        try:
+            if weekday == 0:
+                # struct_time has no concept of "no day"; default to monday (for %w this is 1)
+                weekday = 1
+            elif weekday == 7:
+                # in knx Sunday is 7; in strftime %w its 0
+                weekday = 0
+            # strptime conversion used for catching exceptions; filled with default values
+            return time.strptime("{} {} {} {}".format(hours, minutes, seconds, weekday), "%H %M %S %w")
+        except ValueError:
+            raise ConversionError("Cant parse DPTTime", raw=raw)
 
     @classmethod
-    def to_knx(cls, values):
+    def to_knx(cls, value: time.struct_time):
         """Serialize to KNX/IP raw data from dict with elements weekday,hours,minutes,seconds."""
-        if not isinstance(values, dict):
-            raise ConversionError("Cant serialize DPTTime", values=values)
-        weekday = values.get('weekday', DPTWeekday.NONE).value
-        hours = values.get('hours', 0)
-        minutes = values.get('minutes', 0)
-        seconds = values.get('seconds', 0)
+        if not isinstance(value, time.struct_time):
+            raise ConversionError("Cant serialize DPTTime - time.struct_time expected", value=value)
 
-        if not DPTTime._test_range(weekday, hours, minutes, seconds):
-            raise ConversionError("Cant serialize DPTTime", values=values)
+        _default_time = time.strptime("", "")
+        weekday = 0
+        # if 0 year, 1 month, 2 day, 6 weekday, 7 yearday, 8 dst are equal to default assume "any weekday" (0)
+        for index in [0, 1, 2, 6, 7, 8]:
+            if value[index] is not _default_time[index]:
+                weekday = value.tm_wday + 1
+                break
 
-        return weekday << 5 | hours, minutes, seconds
-
-    @classmethod
-    def _current_time(cls):
-        """Return current local time as struct."""
-        localtime = time.localtime()
-        weekday = localtime.tm_wday + 1
-        hours = localtime.tm_hour
-        minutes = localtime.tm_min
-        seconds = localtime.tm_sec
-        return {'weekday': DPTWeekday(weekday),
-                'hours': hours,
-                'minutes': minutes,
-                'seconds': seconds}
-
-    @classmethod
-    def current_time_as_knx(cls):
-        """Return current local time as KNX bytes."""
-        return cls.to_knx(cls._current_time())
+        return (weekday << 5 | value.tm_hour,
+                value.tm_min,
+                value.tm_sec
+                )
 
     @staticmethod
     def _test_range(weekday, hours, minutes, seconds):

@@ -3,6 +3,7 @@ import asyncio
 import unittest
 
 from xknx import XKNX
+from xknx.dpt import DPTBase
 from xknx.exceptions import ConversionError
 from xknx.remote_value import RemoteValueSensor
 
@@ -27,7 +28,5 @@ class TestRemoteValueSensor(unittest.TestCase):
 
     def test_payload_length_defined(self):
         """Test if all members of DPTMAP implement payload_length."""
-        for value_type in RemoteValueSensor.DPTMAP:
-            self.assertTrue(
-                isinstance(RemoteValueSensor.DPTMAP[value_type].payload_length,
-                           int))
+        for dpt_class in DPTBase.__recursive_subclasses__():
+            self.assertTrue(isinstance(dpt_class.payload_length, int))

@@ -10,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 from . import ATTR_DISCOVER_DEVICES, DATA_XKNX, KNXAutomation
 
 CONF_STATE_ADDRESS = "state_address"
-CONF_SIGNIFICANT_BIT = "significant_bit"
-CONF_DEFAULT_SIGNIFICANT_BIT = 1
 CONF_SYNC_STATE = "sync_state"
 CONF_IGNORE_INTERNAL_STATE = "ignore_internal_state"
 CONF_AUTOMATION = "automation"
@@ -35,19 +33,20 @@ AUTOMATION_SCHEMA = vol.Schema(
 
 AUTOMATIONS_SCHEMA = vol.All(cv.ensure_list, [AUTOMATION_SCHEMA])
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(
-            CONF_SIGNIFICANT_BIT, default=CONF_DEFAULT_SIGNIFICANT_BIT
-        ): cv.positive_int,
-        vol.Optional(CONF_SYNC_STATE, default=True): cv.boolean,
-        vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=False): cv.boolean,
-        vol.Required(CONF_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): cv.string,
-        vol.Optional(CONF_RESET_AFTER): cv.positive_int,
-        vol.Optional(CONF_AUTOMATION): AUTOMATIONS_SCHEMA,
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated("significant_bit"),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_SYNC_STATE, default=True):
+                vol.Any(vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)), cv.boolean, cv.string),
+            vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=False): cv.boolean,
+            vol.Required(CONF_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_DEVICE_CLASS): cv.string,
+            vol.Optional(CONF_RESET_AFTER): cv.positive_int,
+            vol.Optional(CONF_AUTOMATION): AUTOMATIONS_SCHEMA,
+        }
+    )
 )
 
 
@@ -81,7 +80,6 @@ def async_add_entities_config(hass, config, async_add_entities):
         sync_state=config[CONF_SYNC_STATE],
         ignore_internal_state=config[CONF_IGNORE_INTERNAL_STATE],
         device_class=config.get(CONF_DEVICE_CLASS),
-        significant_bit=config[CONF_SIGNIFICANT_BIT],
         reset_after=config.get(CONF_RESET_AFTER),
     )
     hass.data[DATA_XKNX].xknx.devices.add(binary_sensor)

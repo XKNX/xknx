@@ -35,7 +35,7 @@ class TestScene(unittest.TestCase):
             'TestScene',
             group_address='1/2/1',
             scene_number=23)
-        self.loop.run_until_complete(asyncio.Task(scene.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(scene.sync()))
         self.assertEqual(xknx.telegrams.qsize(), 0)
 
     #

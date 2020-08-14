@@ -6,7 +6,8 @@ Tunnels connect to KNX/IP devices directly via UDP and build a static UDP connec
 import asyncio
 
 from xknx.exceptions import XKNXException
-from xknx.knxip import KNXIPFrame, KNXIPServiceType, TunnellingRequest
+from xknx.knxip import (
+    CEMIMessageCode, KNXIPFrame, KNXIPServiceType, TunnellingRequest)
 from xknx.telegram import TelegramDirection
 
 from .connect import Connect
@@ -63,10 +64,14 @@ class Tunnel():
             self.xknx.logger.warning("Service not implemented: %s", knxipframe)
         else:
             self.send_ack(knxipframe.body.communication_channel_id, knxipframe.body.sequence_counter)
-            telegram = knxipframe.body.cemi.telegram
-            telegram.direction = TelegramDirection.INCOMING
-            if self.telegram_received_callback is not None:
-                self.telegram_received_callback(telegram)
+            # Don't handle invalid cemi frames (None) and only handle incoming L_DATA_IND frames.
+            # Ignore L_DATA_CON confirmation frames. L_DATA_REQ frames should only be outgoing.
+            if knxipframe.body.cemi is not None and \
+                    knxipframe.body.cemi.code is CEMIMessageCode.L_DATA_IND:
+                telegram = knxipframe.body.cemi.telegram
+                telegram.direction = TelegramDirection.INCOMING
+                if self.telegram_received_callback is not None:
+                    self.telegram_received_callback(telegram)
 
     def send_ack(self, communication_channel_id, sequence_counter):
         """Send tunnelling ACK after tunnelling request received."""

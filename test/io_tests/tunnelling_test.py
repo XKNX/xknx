@@ -45,7 +45,6 @@ class TestTunnelling(unittest.TestCase):
         exp_knxipframe.body.communication_channel_id = communication_channel_id
         exp_knxipframe.body.sequence_counter = sequence_counter
         exp_knxipframe.normalize()
-        print(exp_knxipframe)
         with patch('xknx.io.UDPClient.send') as mock_udp_send, \
                 patch('xknx.io.UDPClient.getsockname') as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
