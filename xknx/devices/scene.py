@@ -17,12 +17,18 @@ class Scene(Device):
         # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
 
+        # TODO: state_updater: disable for scene number per default?
         self.scene_value = RemoteValueSceneNumber(
             xknx,
-            group_address,
+            group_address=group_address,
             device_name=self.name,
+            feature_name="Scene number",
             after_update_cb=self.after_update)
         self.scene_number = int(scene_number)
+
+    def _iter_remote_values(self):
+        """Iterate the devices RemoteValue classes."""
+        yield self.scene_value
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -36,10 +42,6 @@ class Scene(Device):
             name=name,
             group_address=group_address,
             scene_number=scene_number)
-
-    def has_group_address(self, group_address):
-        """Test if device has given group address."""
-        return self.scene_value.has_group_address(group_address)
 
     def __str__(self):
         """Return object as readable string."""
@@ -60,10 +62,6 @@ class Scene(Device):
             await self.run()
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
-
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        return []
 
     def __eq__(self, other):
         """Equal operator."""

@@ -2,10 +2,9 @@
 layout: default
 ---
 
-Binary Sensor
-=============
+# Binary Sensor
 
-Binary sensors which have either the state "on" or "off". Binary sensors could be e.g. a switch in the wall (the thing you press on when switching on the light) or a motion detector. 
+Binary sensors which have either the state "on" or "off". Binary sensors could be e.g. a switch in the wall (the thing you press on when switching on the light) or a motion detector.
 
 Switches are mainly intended to act on input, which means to execute so called `Actions`. An action can be toggling a switch or a light or the moving of a cover.
 
@@ -17,13 +16,12 @@ The logic within switches can further handle if a button is pressed once or twic
 binarysensor = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3', device_class='motion')
 ```
 
-* `xknx` is the XKNX object.
-* `name` is the name of the object.
-* `group_address_state` is the KNX group address of the sensor device.
-* `sync_state` defines if the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
-* `significant_bit` Defining which bit should be relevant for the binary state. Defaults to `1`
-* `reset_after` may be used to reset the internal state to `OFF` again after given time in ms. Defaults to `None`
-* `device_class` may be used to store the type of sensor, e.g. "motion" for motion detectors.
+- `xknx` is the XKNX object.
+- `name` is the name of the object.
+- `group_address_state` is the KNX group address of the sensor device.
+- `sync_state` defines if the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
+- `reset_after` may be used to reset the internal state to `OFF` again after given time in ms. Defaults to `None`
+- `device_class` may be used to store the type of sensor, e.g. "motion" for motion detectors.
 
 ## [](#header-2)Example
 
@@ -45,7 +43,7 @@ action_off = Action(
     method='off')
 binarysensor.actions.append(action_off)
 xknx.devices.add(binarysensor)
-``` 
+```
 
 ## [](#header-2)Configuration via **xknx.yaml**
 
@@ -53,42 +51,45 @@ Binary sensor objects are usually configured via [`xknx.yaml`](/configuration):
 
 ```yaml
 groups:
+  binary_sensor:
+    Livingroom.Switch_1:
+      group_address_state: "1/2/7"
+      actions:
+        - { target: Livingroom.Outlet_1, method: "on" }
+        - { target: Livingroom.Outlet_2, method: "on" }
 
-    binary_sensor:
-        Livingroom.Switch_1:
-            group_address_state: "1/2/7"
-            actions:
-              - {target: Livingroom.Outlet_1, method: "on"}
-              - {target: Livingroom.Outlet_2, method: "on"}
+    Livingroom.Switch_2:
+      group_address_state: "1/2/8"
+      actions:
+        - { target: Livingroom.Outlet_1, method: "off" }
+        - { target: Livingroom.Outlet_2, method: "off" }
 
-        Livingroom.Switch_2:
-            group_address_state: "1/2/8"
-            actions:
-              - {target: Livingroom.Outlet_1, method: "off"}
-              - {target: Livingroom.Outlet_2, method: "off"}
+    Livingroom.Switch_3:
+      group_address_state: "1/2/5"
+      actions:
+        - { target: Livingroom.Shutter_1, method: up }
+        # Only executed if the button was switched twice:
+        - { counter: 2, target: Livingroom.Shutter_1, method: short_up }
 
-        Livingroom.Switch_3:
-            group_address_state: "1/2/5"
-            actions:
-              - {target: Livingroom.Shutter_1, method: up}
-              # Only executed if the button was switched twice:
-              - {counter: 2, target: Livingroom.Shutter_1, method: short_up}
+    Livingroom.Switch_4:
+      group_address_state: "1/2/6"
+      actions:
+        - { target: Livingroom.Shutter_1, method: down }
+        # Only executed if the button was switched twice:
+        - { counter: 2, target: Livingroom.Shutter_1, method: short_down }
 
-        Livingroom.Switch_4:
-            group_address_state: "1/2/6"
-            actions:
-              - {target: Livingroom.Shutter_1, method: down}
-              # Only executed if the button was switched twice:
-              - {counter: 2, target: Livingroom.Shutter_1, method: short_down}
+  switch:
+    Livingroom.Outlet_1: { group_address: "1/3/1" }
+    Livingroom.Outlet_2: { group_address: "1/3/2" }
 
-
-    switch:
-        Livingroom.Outlet_1: {group_address: '1/3/1'}
-        Livingroom.Outlet_2: {group_address: '1/3/2'}
-
-    cover:
-        Livingroom.Shutter_1: {group_address_long: 3171, group_address_short: 3172, group_address_position_state: 3173, group_address_position: 3174, travelling_time_down: 51, travelling_time_up: 61}
+  cover:
+    Livingroom.Shutter_1:
+      {
+        group_address_long: 3171,
+        group_address_short: 3172,
+        group_address_position_state: 3173,
+        group_address_position: 3174,
+        travelling_time_down: 51,
+        travelling_time_up: 61,
+      }
 ```
-
-
-

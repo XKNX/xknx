@@ -39,7 +39,8 @@ class TelegramQueue():
         """Initialize TelegramQueue class."""
         self.xknx = xknx
         self.telegram_received_cbs = []
-        self.queue_stopped = asyncio.Event()
+        self.outgoing_queue = asyncio.Queue()
+        self._consumer_task = None
 
     def register_telegram_received_cb(self, telegram_received_cb, address_filters=None):
         """Register callback for a telegram beeing received from KNX bus."""
@@ -53,54 +54,77 @@ class TelegramQueue():
 
     async def start(self):
         """Start telegram queue."""
-        self.xknx.loop.create_task(self.run())
-
-    async def run(self):
-        """Endless loop for processing telegrams."""
-        while True:
-            telegram = await self.xknx.telegrams.get()
-
-            # Breaking up queue if None is pushed to the queue
-            if telegram is None:
-                self.xknx.telegrams.task_done()
-                break
-
-            await self.process_telegram(telegram)
-            self.xknx.telegrams.task_done()
-
-            if telegram.direction == TelegramDirection.OUTGOING:
-                # limit rate to knx bus - defaults to 20 per second
-                await asyncio.sleep(1 / self.xknx.rate_limit)
-
-        self.queue_stopped.set()
+        self._consumer_task = asyncio.gather(
+            self._telegram_consumer(),
+            self._outgoing_rate_limiter()
+        )
 
     async def stop(self):
         """Stop telegram queue."""
         self.xknx.logger.debug("Stopping TelegramQueue")
         # If a None object is pushed to the queue, the queue stops
         await self.xknx.telegrams.put(None)
-        await self.queue_stopped.wait()
+        await self._consumer_task
 
-    async def process_all_telegrams(self):
-        """Process all telegrams being queued."""
-        while not self.xknx.telegrams.empty():
-            telegram = self.xknx.telegrams.get_nowait()
-            await self.process_telegram(telegram)
-            self.xknx.telegrams.task_done()
+    async def _telegram_consumer(self):
+        """Endless loop for processing telegrams."""
+        while True:
+            telegram = await self.xknx.telegrams.get()
+            # Breaking up queue if None is pushed to the queue
+            if telegram is None:
+                self.outgoing_queue.put_nowait(None)
+                await self.outgoing_queue.join()
+                self.xknx.telegrams.task_done()
+                break
 
-    async def process_telegram(self, telegram):
-        """Process telegram."""
-        self.xknx.telegram_logger.debug(telegram)
-        try:
-            if telegram.direction == TelegramDirection.INCOMING:
-                await self.process_telegram_incoming(telegram)
-            elif telegram.direction == TelegramDirection.OUTGOING:
+            try:
+                if telegram.direction == TelegramDirection.INCOMING:
+                    await self.process_telegram_incoming(telegram)
+                    self.xknx.telegrams.task_done()
+                elif telegram.direction == TelegramDirection.OUTGOING:
+                    self.outgoing_queue.put_nowait(telegram)
+                    # self.xknx.telegrams.task_done() for outgoing is called in _outgoing_rate_limiter.
+            except XKNXException as ex:
+                self.xknx.logger.error("Error while processing telegram %s", ex)
+
+    async def _outgoing_rate_limiter(self):
+        """Endless loop for processing outgoing telegrams."""
+        while True:
+            telegram = await self.outgoing_queue.get()
+            # Breaking up queue if None is pushed to the queue
+            if telegram is None:
+                self.outgoing_queue.task_done()
+                break
+
+            try:
                 await self.process_telegram_outgoing(telegram)
-        except XKNXException as ex:
-            self.xknx.logger.error("Error while processing telegram %s", ex)
+            except XKNXException as ex:
+                self.xknx.logger.error("Error while processing outgoing telegram %s", ex)
+            finally:
+                self.outgoing_queue.task_done()
+                self.xknx.telegrams.task_done()
+
+            # limit rate to knx bus - defaults to 20 per second
+            if self.xknx.rate_limit:
+                await asyncio.sleep(1 / self.xknx.rate_limit)
+
+    async def _process_all_telegrams(self):
+        """Process all telegrams being queued. Used in unit tests."""
+        while not self.xknx.telegrams.empty():
+            try:
+                telegram = self.xknx.telegrams.get_nowait()
+                if telegram.direction == TelegramDirection.INCOMING:
+                    await self.process_telegram_incoming(telegram)
+                elif telegram.direction == TelegramDirection.OUTGOING:
+                    await self.process_telegram_outgoing(telegram)
+            except XKNXException as ex:
+                self.xknx.logger.error("Error while processing telegram %s", ex)
+            finally:
+                self.xknx.telegrams.task_done()
 
     async def process_telegram_outgoing(self, telegram):
         """Process outgoing telegram."""
+        self.xknx.telegram_logger.debug(telegram)
         if self.xknx.knxip_interface is not None:
             await self.xknx.knxip_interface.send_telegram(telegram)
         else:
@@ -108,6 +132,7 @@ class TelegramQueue():
 
     async def process_telegram_incoming(self, telegram):
         """Process incoming telegram."""
+        self.xknx.telegram_logger.debug(telegram)
         processed = False
         for telegram_received_cb in self.telegram_received_cbs:
             if telegram_received_cb.is_within_filter(telegram):

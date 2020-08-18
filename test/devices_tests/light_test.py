@@ -144,33 +144,23 @@ class TestLight(unittest.TestCase):
                       group_address_tunable_white_state='1/2/7',
                       group_address_color_temperature_state='1/2/8',
                       group_address_rgbw_state='1/2/9')
-        self.loop.run_until_complete(asyncio.Task(light.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(light.sync()))
 
         self.assertEqual(xknx.telegrams.qsize(), 6)
 
-        telegram1 = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram1,
-                         Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ))
+        telegrams = []
+        for _ in range(6):
+            telegrams.append(xknx.telegrams.get_nowait())
 
-        telegram2 = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram2,
-                         Telegram(GroupAddress('1/2/6'), TelegramType.GROUP_READ))
+        test_telegrams = [Telegram(GroupAddress('1/2/3'), TelegramType.GROUP_READ),
+                          Telegram(GroupAddress('1/2/5'), TelegramType.GROUP_READ),
+                          Telegram(GroupAddress('1/2/6'), TelegramType.GROUP_READ),
+                          Telegram(GroupAddress('1/2/7'), TelegramType.GROUP_READ),
+                          Telegram(GroupAddress('1/2/8'), TelegramType.GROUP_READ),
+                          Telegram(GroupAddress('1/2/9'), TelegramType.GROUP_READ)]
 
-        telegram6 = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram6,
-                         Telegram(GroupAddress('1/2/9'), TelegramType.GROUP_READ))
-
-        telegram3 = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram3,
-                         Telegram(GroupAddress('1/2/5'), TelegramType.GROUP_READ))
-
-        telegram4 = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram4,
-                         Telegram(GroupAddress('1/2/7'), TelegramType.GROUP_READ))
-
-        telegram5 = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram5,
-                         Telegram(GroupAddress('1/2/8'), TelegramType.GROUP_READ))
+        self.assertEqual(len(set(telegrams)), 6)
+        self.assertEqual(set(telegrams), set(test_telegrams))
 
     #
     # SYNC WITH STATE ADDRESS
@@ -192,28 +182,23 @@ class TestLight(unittest.TestCase):
                       group_address_color_temperature_state='1/2/12',
                       group_address_rgbw='1/2/13',
                       group_address_rgbw_state='1/2/14')
-        self.loop.run_until_complete(asyncio.Task(light.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(light.sync()))
 
         self.assertEqual(xknx.telegrams.qsize(), 6)
 
-        telegram1 = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram1,
-                         Telegram(GroupAddress('1/2/4'), TelegramType.GROUP_READ))
-        telegram2 = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram2,
-                         Telegram(GroupAddress('1/2/8'), TelegramType.GROUP_READ))
-        telegram6 = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram6,
-                         Telegram(GroupAddress('1/2/14'), TelegramType.GROUP_READ))
-        telegram3 = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram3,
-                         Telegram(GroupAddress('1/2/6'), TelegramType.GROUP_READ))
-        telegram4 = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram4,
-                         Telegram(GroupAddress('1/2/10'), TelegramType.GROUP_READ))
-        telegram5 = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram5,
-                         Telegram(GroupAddress('1/2/12'), TelegramType.GROUP_READ))
+        telegrams = []
+        for _ in range(6):
+            telegrams.append(xknx.telegrams.get_nowait())
+
+        test_telegrams = [Telegram(GroupAddress('1/2/4'), TelegramType.GROUP_READ),
+                          Telegram(GroupAddress('1/2/6'), TelegramType.GROUP_READ),
+                          Telegram(GroupAddress('1/2/8'), TelegramType.GROUP_READ),
+                          Telegram(GroupAddress('1/2/10'), TelegramType.GROUP_READ),
+                          Telegram(GroupAddress('1/2/12'), TelegramType.GROUP_READ),
+                          Telegram(GroupAddress('1/2/14'), TelegramType.GROUP_READ)]
+
+        self.assertEqual(len(set(telegrams)), 6)
+        self.assertEqual(set(telegrams), set(test_telegrams))
 
     #
     # TEST SET ON

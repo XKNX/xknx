@@ -10,10 +10,12 @@ from .dpt import DPTBase
 class DPTDate(DPTBase):
     """Abstraction for KNX 3 octet date (DPT 11.001)."""
 
+    payload_length = 3
+
     @classmethod
-    def from_knx(cls, raw):
+    def from_knx(cls, raw) -> time.struct_time:
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw, 3)
+        cls.test_bytesarray(raw)
 
         day = raw[0] & 0x1F
         month = raw[1] & 0x0F
@@ -27,15 +29,15 @@ class DPTDate(DPTBase):
         else:
             year += 2000
 
-        return {
-            'day': day,
-            'month': month,
-            'year': year
-        }
+        try:
+            # strptime conversion used for catching exceptions; filled with default values
+            return time.strptime("{} {} {}".format(year, month, day), "%Y %m %d")
+        except ValueError:
+            raise ConversionError("Cant parse DPTDate", raw=raw)
 
     @classmethod
-    def to_knx(cls, values):
-        """Serialize to KNX/IP raw data from dict with elements day,month,year."""
+    def to_knx(cls, value: time.struct_time):
+        """Serialize to KNX/IP raw data from time.struct_time."""
         def _knx_year(year):
             if 2000 <= year < 2090:
                 return year-2000
@@ -43,34 +45,12 @@ class DPTDate(DPTBase):
                 return year-1900
             raise ConversionError("Cant serialize DPTDate", year=year)
 
-        if not isinstance(values, dict):
-            raise ConversionError("Cant serialize DPTDate", values=values)
-        day = values.get('day', 0)
-        month = values.get('month', 0)
-        year = _knx_year(values.get('year', 0))
+        if not isinstance(value, time.struct_time):
+            raise ConversionError("Cant serialize DPTDate", value=value)
 
-        if not DPTDate._test_range(day, month, year):
-            raise ConversionError("Cant serialize DPTDate", values=values)
-
-        return day, month, year
-
-    @classmethod
-    def _current_date(cls):
-        """Return current local date as struct."""
-        localtime = time.localtime()
-        day = localtime.tm_mday
-        month = localtime.tm_mon
-        year = localtime.tm_year
-        return {
-            'day': day,
-            'month': month,
-            'year': year
-        }
-
-    @classmethod
-    def current_date_as_knx(cls):
-        """Return current local date as KNX bytes."""
-        return cls.to_knx(cls._current_date())
+        return (value.tm_mday,
+                value.tm_mon,
+                _knx_year(value.tm_year))
 
     @staticmethod
     def _test_range(day, month, year):

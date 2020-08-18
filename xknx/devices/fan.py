@@ -32,9 +32,14 @@ class Fan(Device):
             group_address_speed,
             group_address_speed_state,
             device_name=self.name,
+            feature_name="Speed",
             after_update_cb=self.after_update,
             range_from=0,
             range_to=100)
+
+    def _iter_remote_values(self):
+        """Iterate the devices RemoteValue classes."""
+        yield self.speed
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -49,10 +54,6 @@ class Fan(Device):
             name,
             group_address_speed=group_address_speed,
             group_address_speed_state=group_address_speed_state)
-
-    def has_group_address(self, group_address):
-        """Test if device has given group address."""
-        return self.speed.has_group_address(group_address)
 
     def __str__(self):
         """Return object as readable string."""
@@ -72,12 +73,6 @@ class Fan(Device):
             await self.set_speed(int(action[6:]))
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
-
-    def state_addresses(self):
-        """Return group addresses which should be requested to sync state."""
-        state_addresses = []
-        state_addresses.extend(self.speed.state_addresses())
-        return state_addresses
 
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""

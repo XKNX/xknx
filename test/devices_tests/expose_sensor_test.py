@@ -132,7 +132,7 @@ class TestExposeSensor(unittest.TestCase):
             'TestSensor',
             value_type='binary',
             group_address='1/2/3')
-        expose_sensor.sensor_value.payload = DPTArray(1)
+        expose_sensor.sensor_value.payload = DPTBinary(1)
 
         telegram = Telegram(GroupAddress('1/2/3'))
         telegram.telegramtype = TelegramType.GROUP_READ
@@ -144,7 +144,7 @@ class TestExposeSensor(unittest.TestCase):
             Telegram(
                 GroupAddress('1/2/3'),
                 TelegramType.GROUP_RESPONSE,
-                payload=DPTArray(True)))
+                payload=DPTBinary(True)))
 
     def test_process_percent(self):
         """Test reading percent expose sensor from bus."""
@@ -203,19 +203,6 @@ class TestExposeSensor(unittest.TestCase):
             group_address='1/2/3')
         self.assertTrue(expose_sensor.has_group_address(GroupAddress('1/2/3')))
         self.assertFalse(expose_sensor.has_group_address(GroupAddress('1/2/4')))
-
-    #
-    # STATE ADDRESSES
-    #
-    def test_state_addresses(self):
-        """Test expose sensor returns empty list as state addresses."""
-        xknx = XKNX(loop=self.loop)
-        expose_sensor = ExposeSensor(
-            xknx,
-            'TestSensor',
-            value_type='temperature',
-            group_address='1/2/3')
-        self.assertEqual(expose_sensor.state_addresses(), [])
 
     #
     # PROCESS CALLBACK

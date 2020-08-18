@@ -153,12 +153,11 @@ class GatewayScanner():
             self.xknx.logger.warning("Cant understand knxipframe")
             return
 
-        (found_local_ip, _) = udp_client.getsockname()
         gateway = GatewayDescriptor(name=knx_ip_frame.body.device_name,
                                     ip_addr=knx_ip_frame.body.control_endpoint.ip_addr,
                                     port=knx_ip_frame.body.control_endpoint.port,
                                     local_interface=udp_client.local_addr[2],
-                                    local_ip=found_local_ip)
+                                    local_ip=udp_client.local_addr[0])
         try:
             dib = knx_ip_frame.body[DIBSuppSVCFamilies]
             gateway.supports_routing = dib.supports(DIBServiceFamily.ROUTING)

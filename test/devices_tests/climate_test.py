@@ -5,6 +5,7 @@ from unittest.mock import Mock
 
 from xknx import XKNX
 from xknx.devices import Climate, ClimateMode
+from xknx.devices.climate import SetpointShiftMode
 from xknx.dpt import (
     DPT2ByteFloat, DPTArray, DPTBinary, DPTControllerStatus, DPTHVACContrMode,
     DPTHVACMode, DPTTemperature, DPTValue1Count, HVACOperationMode)
@@ -104,56 +105,34 @@ class TestClimate(unittest.TestCase):
         climate_mode = ClimateMode(
             xknx,
             name=None,
-            group_address_operation_mode='1/2/5',
+            group_address_operation_mode='1/2/4',
+            group_address_operation_mode_state='1/2/5',
             group_address_operation_mode_protection='1/2/6',
             group_address_operation_mode_night='1/2/7',
             group_address_operation_mode_comfort='1/2/8',
-            group_address_controller_mode='1/2/9',
-            group_address_controller_mode_state='1/2/10')
+            group_address_operation_mode_standby='1/2/9',
+            group_address_controller_status='1/2/10',
+            group_address_controller_status_state='1/2/11',
+            group_address_controller_mode='1/2/12',
+            group_address_controller_mode_state='1/2/13',
+            group_address_heat_cool='1/2/14',
+            group_address_heat_cool_state='1/2/15')
 
         climate = Climate(xknx, name='TestClimate', mode=climate_mode)
 
+        self.assertTrue(climate.has_group_address(GroupAddress('1/2/4')))
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/5')))
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/6')))
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/7')))
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/8')))
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/9')))
         self.assertTrue(climate.has_group_address(GroupAddress('1/2/10')))
+        self.assertTrue(climate.has_group_address(GroupAddress('1/2/11')))
+        self.assertTrue(climate.has_group_address(GroupAddress('1/2/12')))
+        self.assertTrue(climate.has_group_address(GroupAddress('1/2/13')))
+        self.assertTrue(climate.has_group_address(GroupAddress('1/2/14')))
+        self.assertTrue(climate.has_group_address(GroupAddress('1/2/15')))
         self.assertFalse(climate.has_group_address(GroupAddress('1/2/99')))
-
-    #
-    # STATE ADDRESSES
-    #
-    def test_state_addresses(self):
-        """Test state_addresses of Climate and ClimateMode."""
-        xknx = XKNX(loop=self.loop)
-        climate_mode = ClimateMode(
-            xknx,
-            name=None,
-            group_address_operation_mode='1/2/5',
-            group_address_operation_mode_state='1/2/13',
-            group_address_operation_mode_protection='1/2/6',
-            group_address_operation_mode_night='1/2/7',
-            group_address_operation_mode_comfort='1/2/8',
-            group_address_controller_mode='1/2/9',
-            group_address_controller_mode_state='1/2/10')
-        climate = Climate(
-            xknx,
-            'TestClimate',
-            group_address_temperature='1/2/1',
-            group_address_target_temperature='1/2/2',
-            group_address_setpoint_shift='1/2/3',
-            group_address_setpoint_shift_state='1/2/4',
-            group_address_on_off='1/2/11',
-            group_address_on_off_state='1/2/12',
-            mode=climate_mode)
-        self.assertEqual(
-            climate.state_addresses(),
-            [GroupAddress("1/2/1"),
-             GroupAddress("1/2/4"),
-             GroupAddress("1/2/12"),
-             GroupAddress("1/2/13"),
-             GroupAddress("1/2/10")])
 
     #
     # TEST CALLBACK
@@ -356,30 +335,46 @@ class TestClimate(unittest.TestCase):
 
         self.loop.run_until_complete(asyncio.Task(climate_mode.set_operation_mode(HVACOperationMode.COMFORT)))
         self.assertEqual(xknx.telegrams.qsize(), 4)
+        telegrams = []
+        for _ in range(4):
+            telegrams.append(xknx.telegrams.get_nowait())
+
+        test_telegrams = [Telegram(GroupAddress('1/2/4'),
+                                   payload=DPTArray(1)),
+                          Telegram(GroupAddress('1/2/5'),
+                                   payload=DPTBinary(False)),
+                          Telegram(GroupAddress('1/2/6'),
+                                   payload=DPTBinary(False)),
+                          Telegram(GroupAddress('1/2/7'),
+                                   payload=DPTBinary(True))]
+
+        self.assertSetEqual(set(telegrams), set(test_telegrams))
+
+    def test_set_heat_cool_binary(self):
+        """Test set_operation_mode with binary heat/cool group adddresses defined."""
+        xknx = XKNX(loop=self.loop)
+        climate_mode = ClimateMode(
+            xknx,
+            'TestClimate',
+            group_address_heat_cool='1/2/14',
+            group_address_heat_cool_state='1/2/15')
+
+        self.loop.run_until_complete(asyncio.Task(climate_mode.set_operation_mode(HVACOperationMode.HEAT)))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress('1/2/4'),
-                payload=DPTArray(1)))
+                GroupAddress('1/2/14'),
+                payload=DPTBinary(True)))
+        self.loop.run_until_complete(asyncio.Task(climate_mode.set_operation_mode(HVACOperationMode.COOL)))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress('1/2/5'),
-                payload=DPTBinary(0)))
-        telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                GroupAddress('1/2/6'),
-                payload=DPTBinary(0)))
-        telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                GroupAddress('1/2/7'),
-                payload=DPTBinary(1)))
+                GroupAddress('1/2/14'),
+                payload=DPTBinary(False)))
 
     #
     # TEST initialized_for_setpoint_shift_calculations
@@ -474,8 +469,8 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            # DEFAULT_SETPOINT_SHIFT_STEP is 0.5 -> payload = setpoint_shift * 2
-            Telegram(GroupAddress('1/2/3'), payload=DPTArray(6)))
+            # DEFAULT_TEMPERATURE_STEP is 0.1 -> payload = setpoint_shift * 10
+            Telegram(GroupAddress('1/2/3'), payload=DPTArray(30)))
 
         self.loop.run_until_complete(asyncio.Task(climate.target_temperature.set(23.00)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -489,7 +484,7 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 2)
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            Telegram(GroupAddress('1/2/3'), payload=DPTArray(8)))
+            Telegram(GroupAddress('1/2/3'), payload=DPTArray(40)))
         self.assertEqual(
             xknx.telegrams.get_nowait(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(24.00))))
@@ -500,7 +495,7 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 2)
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            Telegram(GroupAddress('1/2/3'), payload=DPTArray(7)))
+            Telegram(GroupAddress('1/2/3'), payload=DPTArray(35)))
         self.assertEqual(
             xknx.telegrams.get_nowait(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(23.50))))
@@ -529,8 +524,8 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            # DEFAULT_SETPOINT_SHIFT_STEP is 0.5 -> payload = setpoint_shift * 2
-            Telegram(GroupAddress('1/2/3'), payload=DPTArray(2)))
+            # DEFAULT_TEMPERATURE_STEP is 0.1 -> payload = setpoint_shift * 10
+            Telegram(GroupAddress('1/2/3'), payload=DPTArray(10)))
 
         self.loop.run_until_complete(asyncio.Task(climate.target_temperature.set(23.00)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -544,7 +539,7 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 2)
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            Telegram(GroupAddress('1/2/3'), payload=DPTArray(0xFD)))  # -3
+            Telegram(GroupAddress('1/2/3'), payload=DPTArray(0xF1)))  # -15
         self.assertEqual(
             xknx.telegrams.get_nowait(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(20.50))))
@@ -555,7 +550,7 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 2)
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            Telegram(GroupAddress('1/2/3'), payload=DPTArray(0xFA)))  # -6
+            Telegram(GroupAddress('1/2/3'), payload=DPTArray(0xE2)))  # -30
         self.assertEqual(
             xknx.telegrams.get_nowait(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(19.00))))
@@ -579,7 +574,7 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_target_temperature='1/2/2',
             group_address_setpoint_shift='1/2/3',
-            setpoint_shift_step=0.1,
+            temperature_step=0.5,
             setpoint_shift_max=10,
             setpoint_shift_min=-10)
 
@@ -587,8 +582,8 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            # setpoint_shift_step is 0.1 -> payload = setpoint_shift * 10
-            Telegram(GroupAddress('1/2/3'), payload=DPTArray(30)))
+            # temperature_step is 0.5 -> payload = setpoint_shift * 2
+            Telegram(GroupAddress('1/2/3'), payload=DPTArray(6)))
 
         self.loop.run_until_complete(asyncio.Task(climate.target_temperature.set(23.00)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -600,7 +595,7 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 2)
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            Telegram(GroupAddress('1/2/3'), payload=DPTArray(40)))
+            Telegram(GroupAddress('1/2/3'), payload=DPTArray(8)))
         self.assertEqual(
             xknx.telegrams.get_nowait(),
             Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(24.00))))
@@ -613,6 +608,7 @@ class TestClimate(unittest.TestCase):
     #
     # TEST BASE TEMPERATURE
     #
+
     def test_base_temperature(self):
         """Test base temperature."""
         # pylint: disable=no-self-use
@@ -637,8 +633,8 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            # DEFAULT_SETPOINT_SHIFT_STEP is 0.5 -> payload = setpoint_shift * 2
-            Telegram(GroupAddress('1/2/3'), payload=DPTArray(2)))
+            # DEFAULT_TEMPERATURE_STEP is 0.1 -> payload = setpoint_shift * 10
+            Telegram(GroupAddress('1/2/3'), payload=DPTArray(10)))
         self.assertTrue(climate.initialized_for_setpoint_shift_calculations)
         self.assertEqual(climate.base_temperature, 20.00)
 
@@ -648,11 +644,52 @@ class TestClimate(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 2)
         self.assertEqual(
             xknx.telegrams.get_nowait(),
-            # DEFAULT_SETPOINT_SHIFT_STEP is 0.5 -> payload = setpoint_shift * 2
-            Telegram(GroupAddress('1/2/3'), payload=DPTArray(4)))
+            # DEFAULT_TEMPERATURE_STEP is 0.1 -> payload = setpoint_shift * 10
+            Telegram(GroupAddress('1/2/3'), payload=DPTArray(20)))
         self.assertTrue(climate.initialized_for_setpoint_shift_calculations)
         self.assertEqual(climate.base_temperature, 20.00)
         self.assertEqual(climate.target_temperature.value, 22)
+
+    def test_target_temperature_step_mode_9002(self):
+        """Test increase target temperature with modified step size."""
+        # pylint: disable=no-self-use
+        xknx = XKNX(loop=self.loop)
+        climate = Climate(
+            xknx,
+            'TestClimate',
+            group_address_target_temperature_state='1/2/2',
+            group_address_setpoint_shift='1/2/3',
+            setpoint_shift_mode=SetpointShiftMode.DPT9002,
+            setpoint_shift_max=10,
+            setpoint_shift_min=-10)
+
+        # base temperature is 20 °C
+        self.loop.run_until_complete(asyncio.Task(climate.target_temperature.process(
+            Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(20.00)))
+        )))
+        self.loop.run_until_complete(asyncio.Task(climate.set_setpoint_shift(0)))
+        self.assertTrue(climate.initialized_for_setpoint_shift_calculations)
+        self.assertEqual(climate.base_temperature, 20.00)
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(GroupAddress('1/2/3'), payload=DPTArray((0x00, 0x00))))  # 0
+        # - 0.6 °C = 19.4
+        self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(19.40)))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(GroupAddress('1/2/3'), payload=DPTArray((0x87, 0xC4))))  # -0.6
+        # simulate incoming new target temperature for next calculation
+        self.loop.run_until_complete(asyncio.Task(climate.target_temperature.process(
+            Telegram(GroupAddress('1/2/2'), payload=DPTArray(DPT2ByteFloat().to_knx(19.40)))
+        )))
+        # + 3.5 °C = 23.5
+        self.loop.run_until_complete(asyncio.Task(climate.set_target_temperature(23.50)))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(
+            xknx.telegrams.get_nowait(),
+            Telegram(GroupAddress('1/2/3'), payload=DPTArray((0x01, 0x5E))))  # +3.5
 
     #
     # TEST TEMPERATURE STEP
@@ -678,7 +715,7 @@ class TestClimate(unittest.TestCase):
             group_address_target_temperature='1/2/2',
             group_address_setpoint_shift='1/2/3')
         # default temperature_step for setpoint_shift
-        self.assertEqual(climate.temperature_step, 0.5)
+        self.assertEqual(climate.temperature_step, 0.1)
 
         climate = Climate(
             xknx,
@@ -686,7 +723,7 @@ class TestClimate(unittest.TestCase):
             group_address_target_temperature_state='1/2/1',
             group_address_target_temperature='1/2/2',
             group_address_setpoint_shift='1/2/3',
-            setpoint_shift_step=0.3)
+            temperature_step=0.3)
         self.assertEqual(climate.temperature_step, 0.3)
 
     #
@@ -699,7 +736,7 @@ class TestClimate(unittest.TestCase):
             xknx,
             'TestClimate',
             group_address_temperature='1/2/3')
-        self.loop.run_until_complete(asyncio.Task(climate.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(climate.sync()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -714,7 +751,7 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_operation_mode='1/2/3',
             group_address_operation_mode_state='1/2/4')
-        self.loop.run_until_complete(asyncio.Task(climate_mode.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(climate_mode.sync()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -729,7 +766,7 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_operation_mode='1/2/23',
             group_address_controller_status_state='1/2/24')
-        self.loop.run_until_complete(asyncio.Task(climate_mode.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(climate_mode.sync()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -744,7 +781,7 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_controller_mode='1/2/13',
             group_address_controller_mode_state='1/2/14')
-        self.loop.run_until_complete(asyncio.Task(climate_mode.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(climate_mode.sync()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -763,20 +800,31 @@ class TestClimate(unittest.TestCase):
             group_address_controller_status_state='1/2/6',
             group_address_controller_mode='1/2/13',
             group_address_controller_mode_state='1/2/14')
-        self.loop.run_until_complete(asyncio.Task(climate_mode.sync(False)))
+        self.loop.run_until_complete(asyncio.Task(climate_mode.sync()))
         self.assertEqual(xknx.telegrams.qsize(), 3)
+
+        telegrams = []
+        for _ in range(3):
+            telegrams.append(xknx.telegrams.get_nowait())
+        self.assertSetEqual(set(telegrams),
+                            set([Telegram(GroupAddress('1/2/5'), TelegramType.GROUP_READ),
+                                 Telegram(GroupAddress('1/2/6'), TelegramType.GROUP_READ),
+                                 Telegram(GroupAddress('1/2/14'), TelegramType.GROUP_READ)]))
+
+    def test_sync_heat_cool(self):
+        """Test sync function / sending group reads to KNX bus for heat/cool."""
+        xknx = XKNX(loop=self.loop)
+        climate_mode = ClimateMode(
+            xknx,
+            'TestClimate',
+            group_address_heat_cool='1/2/14',
+            group_address_heat_cool_state='1/2/15')
+        self.loop.run_until_complete(asyncio.Task(climate_mode.sync()))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram1,
-            Telegram(GroupAddress('1/2/5'), TelegramType.GROUP_READ))
-        telegram2 = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram2,
-            Telegram(GroupAddress('1/2/6'), TelegramType.GROUP_READ))
-        telegram3 = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram3,
-            Telegram(GroupAddress('1/2/14'), TelegramType.GROUP_READ))
+            Telegram(GroupAddress('1/2/15'), TelegramType.GROUP_READ))
 
     #
     # TEST PROCESS
@@ -897,6 +945,25 @@ class TestClimate(unittest.TestCase):
         self.loop.run_until_complete(asyncio.Task(climate.process(telegram)))
         after_update_callback.assert_called_with(climate)
 
+    def test_process_heat_cool(self):
+        """Test process / reading telegrams from telegram queue. Test if heat/cool is set correctly."""
+        xknx = XKNX(loop=self.loop)
+        climate_mode = ClimateMode(
+            xknx,
+            'TestClimate',
+            group_address_heat_cool='1/2/14',
+            group_address_heat_cool_state='1/2/15')
+
+        telegram = Telegram(GroupAddress('1/2/14'))
+        telegram.payload = DPTBinary(False)
+        self.loop.run_until_complete(asyncio.Task(climate_mode.process(telegram)))
+        self.assertEqual(climate_mode.operation_mode, HVACOperationMode.COOL)
+
+        telegram = Telegram(GroupAddress('1/2/14'))
+        telegram.payload = DPTBinary(True)
+        self.loop.run_until_complete(asyncio.Task(climate_mode.process(telegram)))
+        self.assertEqual(climate_mode.operation_mode, HVACOperationMode.HEAT)
+
     #
     # SUPPORTED OPERATION MODES
     #
@@ -908,12 +975,12 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_operation_mode='1/2/5')
         self.assertEqual(
-            climate_mode.operation_modes,
-            [HVACOperationMode.AUTO,
-             HVACOperationMode.COMFORT,
-             HVACOperationMode.STANDBY,
-             HVACOperationMode.NIGHT,
-             HVACOperationMode.FROST_PROTECTION])
+            set(climate_mode.operation_modes),
+            set([HVACOperationMode.AUTO,
+                 HVACOperationMode.COMFORT,
+                 HVACOperationMode.STANDBY,
+                 HVACOperationMode.NIGHT,
+                 HVACOperationMode.FROST_PROTECTION]))
 
     def test_supported_operation_modes_controller_status(self):
         """Test get_supported_operation_modes with combined group address."""
@@ -923,11 +990,11 @@ class TestClimate(unittest.TestCase):
             'TestClimate',
             group_address_controller_status='1/2/5')
         self.assertEqual(
-            climate_mode.operation_modes,
-            [HVACOperationMode.COMFORT,
-             HVACOperationMode.STANDBY,
-             HVACOperationMode.NIGHT,
-             HVACOperationMode.FROST_PROTECTION])
+            set(climate_mode.operation_modes),
+            set([HVACOperationMode.COMFORT,
+                 HVACOperationMode.STANDBY,
+                 HVACOperationMode.NIGHT,
+                 HVACOperationMode.FROST_PROTECTION]))
 
     def test_supported_operation_modes_no_mode(self):
         """Test get_supported_operation_modes no operation_modes supported."""
@@ -947,12 +1014,12 @@ class TestClimate(unittest.TestCase):
             group_address_operation_mode_protection='1/2/5',
             group_address_operation_mode_night='1/2/6',
             group_address_operation_mode_comfort='1/2/7')
-        self.assertEqual(
-            climate_mode.operation_modes,
-            [HVACOperationMode.COMFORT,
-             HVACOperationMode.STANDBY,
-             HVACOperationMode.NIGHT,
-             HVACOperationMode.FROST_PROTECTION])
+
+        self.assertSetEqual(set(climate_mode.operation_modes),
+                            set([HVACOperationMode.COMFORT,
+                                 HVACOperationMode.STANDBY,
+                                 HVACOperationMode.NIGHT,
+                                 HVACOperationMode.FROST_PROTECTION]))
 
     def test_supported_operation_modes_only_night(self):
         """Test get_supported_operation_modes with only night mode supported."""
@@ -961,10 +1028,26 @@ class TestClimate(unittest.TestCase):
             xknx,
             'TestClimate',
             group_address_operation_mode_night='1/2/7')
+        # If one binary climate object is set, all 4 operation modes are supported.
         self.assertEqual(
-            climate_mode.operation_modes,
-            [HVACOperationMode.STANDBY,
-             HVACOperationMode.NIGHT])
+            set(climate_mode.operation_modes),
+            set([HVACOperationMode.STANDBY,
+                 HVACOperationMode.NIGHT,
+                 HVACOperationMode.COMFORT,
+                 HVACOperationMode.FROST_PROTECTION]))
+
+    def test_supported_operation_modes_heat_cool(self):
+        """Test get_supported_operation_modes with heat_cool group address."""
+        xknx = XKNX(loop=self.loop)
+        climate_mode = ClimateMode(
+            xknx,
+            'TestClimate',
+            group_address_heat_cool='1/2/14',
+            group_address_heat_cool_state='1/2/15')
+        self.assertEqual(
+            set(climate_mode.operation_modes),
+            set([HVACOperationMode.HEAT,
+                 HVACOperationMode.COOL]))
 
     def test_custom_supported_operation_modes(self):
         """Test get_supported_operation_modes with custom mode."""

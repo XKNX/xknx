@@ -3,8 +3,8 @@ import logging
 
 import voluptuous as vol
 from xknx import XKNX
-from xknx.devices import ActionCallback, DateTime, DateTimeBroadcastType, ExposeSensor
-from xknx.dpt import DPTArray, DPTBinary
+from xknx.devices import ActionCallback, DateTime, ExposeSensor
+from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import XKNXException
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
 from xknx.telegram import AddressFilter, GroupAddress, Telegram
@@ -47,6 +47,7 @@ CONF_XKNX_EXPOSE_ADDRESS = "address"
 SERVICE_XKNX_SEND = "send"
 SERVICE_XKNX_ATTR_ADDRESS = "address"
 SERVICE_XKNX_ATTR_PAYLOAD = "payload"
+SERVICE_XKNX_ATTR_TYPE = "type"
 
 ATTR_DISCOVER_DEVICES = "devices"
 
@@ -62,7 +63,9 @@ ROUTING_SCHEMA = vol.Schema({vol.Optional(CONF_XKNX_LOCAL_IP): cv.string})
 
 EXPOSE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_XKNX_EXPOSE_TYPE): cv.string,
+        vol.Required(CONF_XKNX_EXPOSE_TYPE): vol.Any(
+            int, float, str
+        ),
         vol.Optional(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_XKNX_EXPOSE_ATTRIBUTE): cv.string,
         vol.Optional(CONF_XKNX_EXPOSE_DEFAULT): cv.match_all,
@@ -97,6 +100,9 @@ SERVICE_XKNX_SEND_SCHEMA = vol.Schema(
         vol.Required(SERVICE_XKNX_ATTR_ADDRESS): cv.string,
         vol.Required(SERVICE_XKNX_ATTR_PAYLOAD): vol.Any(
             cv.positive_int, [cv.positive_int]
+        ),
+        vol.Optional(SERVICE_XKNX_ATTR_TYPE): vol.Any(
+            int, float, str
         ),
     }
 )
@@ -203,7 +209,9 @@ class KNXModule:
             return self.connection_config_tunneling()
         if CONF_XKNX_ROUTING in self.config[DOMAIN]:
             return self.connection_config_routing()
-        return self.connection_config_auto()
+        # return None to let xknx use config from xknx.yaml connection block if given
+        #   otherwise it will use default ConnectionConfig (Automatic)
+        return None
 
     def connection_config_routing(self):
         """Return the connection_config if routing is configured."""
@@ -226,11 +234,6 @@ class KNXModule:
             local_ip=local_ip,
             auto_reconnect=True,
         )
-
-    def connection_config_auto(self):
-        """Return the connection_config if auto is configured."""
-        # pylint: disable=no-self-use
-        return ConnectionConfig()
 
     def register_callbacks(self):
         """Register callbacks within XKNX object."""
@@ -286,9 +289,17 @@ class KNXModule:
         """Service for sending an arbitrary KNX message to the KNX bus."""
         attr_payload = call.data.get(SERVICE_XKNX_ATTR_PAYLOAD)
         attr_address = call.data.get(SERVICE_XKNX_ATTR_ADDRESS)
+        attr_type = call.data.get(SERVICE_XKNX_ATTR_TYPE)
 
         def calculate_payload(attr_payload):
             """Calculate payload depending on type of attribute."""
+            if attr_type:
+                try:
+                    transcoder = DPTBase.parse_transcoder(attr_type)
+                    return DPTArray(transcoder.to_knx(attr_payload))
+                except AttributeError as ex:
+                    _LOGGER.error("Invalid type for knx.send service: %s", attr_type)
+                    raise ex
             if isinstance(attr_payload, int):
                 return DPTBinary(attr_payload)
             return DPTArray(attr_payload)
@@ -332,7 +343,7 @@ class KNXExposeTime:
     def async_register(self):
         """Register listener."""
         broadcast_type_string = self.type.upper()
-        broadcast_type = DateTimeBroadcastType[broadcast_type_string]
+        broadcast_type = broadcast_type_string
         self.device = DateTime(
             self.xknx, "Time", broadcast_type=broadcast_type, group_address=self.address
         )

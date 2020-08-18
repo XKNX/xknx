@@ -16,6 +16,7 @@ class RemoteValueDpt2ByteUnsigned(RemoteValue):
                  group_address=None,
                  group_address_state=None,
                  device_name=None,
+                 feature_name="Value",
                  after_update_cb=None):
         """Initialize remote value of KNX DPT 7.001."""
         # pylint: disable=too-many-arguments
@@ -23,6 +24,7 @@ class RemoteValueDpt2ByteUnsigned(RemoteValue):
                          group_address,
                          group_address_state,
                          device_name=device_name,
+                         feature_name=feature_name,
                          after_update_cb=after_update_cb)
 
     def payload_valid(self, payload):

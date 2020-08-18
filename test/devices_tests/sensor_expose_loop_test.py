@@ -114,6 +114,7 @@ class SensorExposeLoopTest(unittest.TestCase):
             ('pressure', DPTArray((0xC5, 0xE6, 0xE6, 0x63,)), -7388.7983),
             ('pressure_2byte', DPTArray((0x7C, 0xF4,)), 415498.24),
             ('pulse', DPTArray((0xFC,)), 252),
+            ('pulse_2byte_signed', DPTArray((0x80, 0x44)), -32700),
             ('rain_amount', DPTArray((0xF0, 0x1)), -335380.48),
             ('reactance', DPTArray((0x45, 0xB0, 0x50, 0x91,)), 5642.0708),
             ('reactive_energy', DPTArray((0x1A, 0x49, 0x6D, 0xA7,)), 441019815),
@@ -158,18 +159,12 @@ class SensorExposeLoopTest(unittest.TestCase):
             ('wind_speed_kmh', DPTArray((0x7F, 0x55)), 615055.36),
 
             # # Generic DPT Without Min/Max and Unit.
-            ('DPT-5', DPTArray((0x1F)), 31),
             ('1byte_unsigned', DPTArray((0x08)), 8),
-            ('DPT-7', DPTArray((0xD4, 0x31)), 54321),
             ('2byte_unsigned', DPTArray((0x30, 0x39)), 12345),
-            ('DPT-8', DPTArray((0x80, 0x44)), -32700),
             ('2byte_signed', DPTArray((0x00, 0x01)), 1),
-            ('DPT-9', DPTArray((0x2E, 0xA9)), 545.6),
-            ('DPT-12', DPTArray((0x07, 0x5B, 0xCD, 0x15)), 123456789),
+            ('2byte_float', DPTArray((0x2E, 0xA9)), 545.6),
             ('4byte_unsigned', DPTArray((0x00, 0x00, 0x00, 0x00)), 0),
-            ('DPT-13', DPTArray((0x02, 0xE5, 0x5E, 0xF7)), 48586487),
             ('4byte_signed', DPTArray((0xFD, 0x1A, 0xA1, 0x09)), -48586487),
-            ('DPT-14', DPTArray((0x47, 0xC0, 0xF7, 0x20)), 98798.25),
             ('4byte_float', DPTArray((0xC2, 0x09, 0xEE, 0xCC)), -34.4832)
         ]
 
