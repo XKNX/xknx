@@ -13,7 +13,7 @@ from .knxip_enum import KNXIPServiceType
 
 
 class SearchResponse(KNXIPBody):
-    """Representation of a KNX Connect Request."""
+    """Representation of a KNX Connect Response."""
 
     # pylint: disable=too-many-instance-attributes
 

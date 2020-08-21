@@ -7,7 +7,7 @@ GatewayScanner is an abstraction for searching for KNX/IP devices on the local n
 """
 
 import asyncio
-from typing import List
+from typing import List, Optional
 
 import netifaces
 
@@ -87,20 +87,26 @@ class GatewayScanner():
     def __init__(self,
                  xknx,
                  timeout_in_seconds: int = 4,
-                 stop_on_found: int = 1,
+                 stop_on_found: Optional[int] = 1,
                  scan_filter: GatewayScanFilter = GatewayScanFilter()) -> None:
         """Initialize GatewayScanner class."""
         self.xknx = xknx
         self.timeout_in_seconds = timeout_in_seconds
         self.stop_on_found = stop_on_found
         self.scan_filter = scan_filter
-        self.found_gateways = []  # List[GatewayDescriptor]
+        self.found_gateways = []  # type: List[GatewayDescriptor]
         self._udp_clients = []
         self._response_received_or_timeout = asyncio.Event()
         self._timeout_handle = None
+        self._count_upper_bound = 0
+        """Clean value of self.stop_on_found, computed when ``scan`` is called."""
 
     async def scan(self) -> List[GatewayDescriptor]:
         """Scan and return a list of GatewayDescriptors on success."""
+        if self.stop_on_found is None:
+            self._count_upper_bound = 0
+        else:
+            self._count_upper_bound = max(0, self.stop_on_found)
         await self._send_search_requests()
         await self._start_timeout()
         await self._response_received_or_timeout.wait()
@@ -171,7 +177,7 @@ class GatewayScanner():
     def _add_found_gateway(self, gateway):
         if self.scan_filter.match(gateway):
             self.found_gateways.append(gateway)
-            if len(self.found_gateways) >= self.stop_on_found:
+            if 0 < self._count_upper_bound <= len(self.found_gateways):
                 self._response_received_or_timeout.set()
 
     def _timeout(self):
