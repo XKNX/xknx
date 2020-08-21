@@ -2,6 +2,16 @@
 
 ## Upcoming version (unreleased)
 
+### New Features
+
+- support for configuring the previously hard-coded multicast address (@jochembroekhoff #312)
+
+### Internals
+
+- GatewayScanner: Passing None or an integer <= 0 to the `stop_on_found` parameter now causes the scanner to only stop once the timeout is reached (@jochembroekhoff #311)
+
+## 0.12.0 New StateUpdater, improvements to the HA integrations and bug fixes 2020-08-14
+
 ### Breaking changes
 
 - Climate: `setpoint_shift_step` renamed for `temperature_step`. This attribute can be applied to all temperature modes. Default is `0.1`
