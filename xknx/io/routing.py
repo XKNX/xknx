@@ -6,7 +6,6 @@ Routing uses UDP Multicast to broadcast and receive KNX/IP messages.
 from xknx.knxip import APCICommand, KNXIPFrame, KNXIPServiceType
 from xknx.telegram import TelegramDirection
 
-from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .udp_client import UDPClient
 
 
@@ -21,7 +20,7 @@ class Routing():
 
         self.udpclient = UDPClient(self.xknx,
                                    (local_ip, 0),
-                                   (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+                                   (self.xknx.multicast_group, self.xknx.multicast_port),
                                    multicast=True)
 
         self.udpclient.register_callback(

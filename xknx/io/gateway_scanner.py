@@ -15,7 +15,6 @@ from xknx.knxip import (
     HPAI, DIBServiceFamily, DIBSuppSVCFamilies, KNXIPFrame, KNXIPServiceType,
     SearchResponse)
 
-from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .udp_client import UDPClient
 
 
@@ -137,7 +136,7 @@ class GatewayScanner():
 
         udp_client = UDPClient(self.xknx,
                                (ip_addr, 0, interface),
-                               (DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+                               (self.xknx.multicast_group, self.xknx.multicast_port),
                                multicast=True)
 
         udp_client.register_callback(
