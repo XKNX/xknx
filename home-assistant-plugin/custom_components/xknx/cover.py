@@ -5,6 +5,7 @@ from xknx.devices import Cover as XknxCover
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    DEVICE_CLASS_BLIND,
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
@@ -139,6 +140,13 @@ class KNXCover(CoverEntity):
     def should_poll(self):
         """No polling needed within KNX."""
         return False
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        if self.device.supports_angle:
+            return DEVICE_CLASS_BLIND
+        return None
 
     @property
     def supported_features(self):
