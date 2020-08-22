@@ -27,6 +27,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import Script
 
 from .const import DOMAIN
+from .schema import CoverSchema
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,42 +83,6 @@ EXPOSE_SCHEMA = vol.Schema(
     }
 )
 
-DEFAULT_TRAVEL_TIME = 25
-DEFAULT_COVER_NAME = "KNX Cover"
-
-CONF_MOVE_LONG_ADDRESS = "move_long_address"
-CONF_MOVE_SHORT_ADDRESS = "move_short_address"
-CONF_STOP_ADDRESS = "stop_address"
-CONF_POSITION_ADDRESS = "position_address"
-CONF_POSITION_STATE_ADDRESS = "position_state_address"
-CONF_ANGLE_ADDRESS = "angle_address"
-CONF_ANGLE_STATE_ADDRESS = "angle_state_address"
-CONF_TRAVELLING_TIME_DOWN = "travelling_time_down"
-CONF_TRAVELLING_TIME_UP = "travelling_time_up"
-CONF_INVERT_POSITION = "invert_position"
-CONF_INVERT_ANGLE = "invert_angle"
-
-COVER_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_COVER_NAME): cv.string,
-        vol.Optional(CONF_MOVE_LONG_ADDRESS): cv.string,
-        vol.Optional(CONF_MOVE_SHORT_ADDRESS): cv.string,
-        vol.Optional(CONF_STOP_ADDRESS): cv.string,
-        vol.Optional(CONF_POSITION_ADDRESS): cv.string,
-        vol.Optional(CONF_POSITION_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_ANGLE_ADDRESS): cv.string,
-        vol.Optional(CONF_ANGLE_STATE_ADDRESS): cv.string,
-        vol.Optional(
-            CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
-        ): cv.positive_int,
-        vol.Optional(
-            CONF_TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME
-        ): cv.positive_int,
-        vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
-        vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
-    }
-)
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -136,7 +101,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_XKNX_EXPOSE): vol.All(
                     cv.ensure_list, [EXPOSE_SCHEMA]
                 ),
-                vol.Optional(CONF_XKNX_COVER): vol.All(cv.ensure_list, [COVER_SCHEMA]),
+                vol.Optional(CONF_XKNX_COVER): vol.All(cv.ensure_list, [CoverSchema.COVER_SCHEMA]),
             }
         )
     },
@@ -171,19 +136,19 @@ async def async_setup(hass, config):
             cover = XknxCover(
                 hass.data[DATA_XKNX].xknx,
                 name=cover_config[CONF_NAME],
-                group_address_long=cover_config.get(CONF_MOVE_LONG_ADDRESS),
-                group_address_short=cover_config.get(CONF_MOVE_SHORT_ADDRESS),
-                group_address_stop=cover_config.get(CONF_STOP_ADDRESS),
+                group_address_long=cover_config.get(CoverSchema.CONF_MOVE_LONG_ADDRESS),
+                group_address_short=cover_config.get(CoverSchema.CONF_MOVE_SHORT_ADDRESS),
+                group_address_stop=cover_config.get(CoverSchema.CONF_STOP_ADDRESS),
                 group_address_position_state=cover_config.get(
-                    CONF_POSITION_STATE_ADDRESS
+                    CoverSchema.CONF_POSITION_STATE_ADDRESS
                 ),
-                group_address_angle=cover_config.get(CONF_ANGLE_ADDRESS),
-                group_address_angle_state=cover_config.get(CONF_ANGLE_STATE_ADDRESS),
-                group_address_position=cover_config.get(CONF_POSITION_ADDRESS),
-                travel_time_down=cover_config[CONF_TRAVELLING_TIME_DOWN],
-                travel_time_up=cover_config[CONF_TRAVELLING_TIME_UP],
-                invert_position=cover_config[CONF_INVERT_POSITION],
-                invert_angle=cover_config[CONF_INVERT_ANGLE],
+                group_address_angle=cover_config.get(CoverSchema.CONF_ANGLE_ADDRESS),
+                group_address_angle_state=cover_config.get(CoverSchema.CONF_ANGLE_STATE_ADDRESS),
+                group_address_position=cover_config.get(CoverSchema.CONF_POSITION_ADDRESS),
+                travel_time_down=cover_config[CoverSchema.CONF_TRAVELLING_TIME_DOWN],
+                travel_time_up=cover_config[CoverSchema.CONF_TRAVELLING_TIME_UP],
+                invert_position=cover_config[CoverSchema.CONF_INVERT_POSITION],
+                invert_angle=cover_config[CoverSchema.CONF_INVERT_ANGLE],
             )
 
             hass.data[DATA_XKNX].xknx.devices.add(cover)
