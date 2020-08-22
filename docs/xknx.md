@@ -23,7 +23,9 @@ xknx = XKNX(config='xknx.yaml',
             address_format=GroupAddressType.LONG
             telegram_received_cb=None,
             device_updated_cb=None,
-            rate_limit=DEFAULT_RATE_LIMIT)
+            rate_limit=DEFAULT_RATE_LIMIT,
+            multicast_group=DEFAULT_MCAST_GRP,
+            multicast_port=DEFAULT_MCAST_PORT)
 ```
 
 The constructor of the XKNX object takes several parameters:
@@ -38,6 +40,8 @@ The constructor of the XKNX object takes several parameters:
 * `telegram_received_cb` is a callback which is called after every received KNX telegram. See [callbacks](#callbacks) documentation for details.
 * `device_updated_cb` is an async callback after a [XKNX device](#devices) was updated. See [callbacks](#callbacks) documentation for details.
 * `rate_limit` in telegrams per second - can be used to limit the outgoing traffic to the KNX/IP interface. The default value is 20 packets per second.
+* `multicast_group` is the multicast IP address - can be used to override the default multicast address (`224.0.23.12`)
+* `multicast_port` is the multicast port - can be used to override the default multicast port (`3671`)
 
 # [](#header-2)Starting
 

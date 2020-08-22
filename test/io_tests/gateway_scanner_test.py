@@ -145,8 +145,8 @@ class TestGatewayScanner(unittest.TestCase):
         self.assertEqual(test_scan, [])
 
 
-def fake_router_search_response(xknx: XKNX) -> SearchResponse:
-    """Return the SearchResponse of a KNX/IP Router."""
+def fake_router_search_response(xknx: XKNX) -> KNXIPFrame:
+    """Return the KNXIPFrame of a KNX/IP Router with a SearchResponse body."""
     _frame_header = KNXIPHeader(xknx)
     _frame_header.service_type_ident = KNXIPServiceType.SEARCH_RESPONSE
     _frame_body = SearchResponse(xknx)
