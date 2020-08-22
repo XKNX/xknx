@@ -51,7 +51,7 @@ hass
 Starting via service is also possible, but you have to change the configuration to make sure PYTHONPATH [is set correctly](https://stackoverflow.com/questions/45374910/how-to-pass-environment-variables-to-a-service-started-by-systemd).
 
 
-Configuration:
+Configuration (HA < 0.115):
 --------------
 
 The configuration for the manually checked out version works the same as described within [Home Assistant KNX documentation](https://home-assistant.io/integrations/#search/knx) with the difference that the integration and platform is called `xknx` instead of `knx` (which is the HA default KNX integration and platform name).
@@ -73,6 +73,28 @@ switch:
   - platform: xknx
     name: Kitchen.Coffee
     address: '1/1/6'
+```
+
+Configuration (HA > 0.115):
+--------------
+
+Since Version 0.115 HA now requires to set up an integration only via [one integration config key](https://github.com/home-assistant/architecture/blob/master/adr/0007-integration-config-yaml-structure.md) in the `configuration.yaml`. Thus the config will now looks as follows:
+
+```yaml 
+xknx:
+  tunneling:
+    host: '192.168.2.23'
+    port: 3671
+    local_ip: '192.168.2.109'
+  light:
+  - name: Kitchen-Light-1
+    address: '1/0/9'
+    brightness_address: '1/0/11'
+  switch:
+  - name: Kitchen.Coffee
+    address: '1/1/6'
+  cover: !include knx_cover.yaml
+  
 ```
 
 

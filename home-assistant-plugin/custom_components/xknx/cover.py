@@ -1,6 +1,5 @@
 """Support for KNX/IP covers."""
 import voluptuous as vol
-from xknx.devices import Cover as XknxCover
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -20,81 +19,21 @@ from homeassistant.helpers.event import async_track_utc_time_change
 
 from . import ATTR_DISCOVER_DEVICES, DATA_XKNX
 
-CONF_MOVE_LONG_ADDRESS = "move_long_address"
-CONF_MOVE_SHORT_ADDRESS = "move_short_address"
-CONF_STOP_ADDRESS = "stop_address"
-CONF_POSITION_ADDRESS = "position_address"
-CONF_POSITION_STATE_ADDRESS = "position_state_address"
-CONF_ANGLE_ADDRESS = "angle_address"
-CONF_ANGLE_STATE_ADDRESS = "angle_state_address"
-CONF_TRAVELLING_TIME_DOWN = "travelling_time_down"
-CONF_TRAVELLING_TIME_UP = "travelling_time_up"
-CONF_INVERT_POSITION = "invert_position"
-CONF_INVERT_ANGLE = "invert_angle"
-
-DEFAULT_TRAVEL_TIME = 25
-DEFAULT_NAME = "KNX Cover"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MOVE_LONG_ADDRESS): cv.string,
-        vol.Optional(CONF_MOVE_SHORT_ADDRESS): cv.string,
-        vol.Optional(CONF_STOP_ADDRESS): cv.string,
-        vol.Optional(CONF_POSITION_ADDRESS): cv.string,
-        vol.Optional(CONF_POSITION_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_ANGLE_ADDRESS): cv.string,
-        vol.Optional(CONF_ANGLE_STATE_ADDRESS): cv.string,
-        vol.Optional(
-            CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
-        ): cv.positive_int,
-        vol.Optional(
-            CONF_TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME
-        ): cv.positive_int,
-        vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
-        vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
-    }
-)
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up cover(s) for KNX platform."""
     if discovery_info is not None:
         async_add_entities_discovery(hass, discovery_info, async_add_entities)
-    else:
-        async_add_entities_config(hass, config, async_add_entities)
 
 
 @callback
 def async_add_entities_discovery(hass, discovery_info, async_add_entities):
-    """Set up covers for KNX platform configured via xknx.yaml."""
+    """Set up covers for KNX platform."""
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_XKNX].xknx.devices[device_name]
         entities.append(KNXCover(device))
     async_add_entities(entities)
-
-
-@callback
-def async_add_entities_config(hass, config, async_add_entities):
-    """Set up cover for KNX platform configured within platform."""
-    cover = XknxCover(
-        hass.data[DATA_XKNX].xknx,
-        name=config[CONF_NAME],
-        group_address_long=config.get(CONF_MOVE_LONG_ADDRESS),
-        group_address_short=config.get(CONF_MOVE_SHORT_ADDRESS),
-        group_address_stop=config.get(CONF_STOP_ADDRESS),
-        group_address_position_state=config.get(CONF_POSITION_STATE_ADDRESS),
-        group_address_angle=config.get(CONF_ANGLE_ADDRESS),
-        group_address_angle_state=config.get(CONF_ANGLE_STATE_ADDRESS),
-        group_address_position=config.get(CONF_POSITION_ADDRESS),
-        travel_time_down=config[CONF_TRAVELLING_TIME_DOWN],
-        travel_time_up=config[CONF_TRAVELLING_TIME_UP],
-        invert_position=config[CONF_INVERT_POSITION],
-        invert_angle=config[CONF_INVERT_ANGLE],
-    )
-
-    hass.data[DATA_XKNX].xknx.devices.add(cover)
-    async_add_entities([KNXCover(cover)])
 
 
 class KNXCover(CoverEntity):
@@ -143,9 +82,7 @@ class KNXCover(CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = (
-            SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
-        )
+        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
         if self.device.supports_stop:
             supported_features |= SUPPORT_STOP
         if self.device.supports_angle:

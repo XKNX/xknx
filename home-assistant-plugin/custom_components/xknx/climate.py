@@ -89,9 +89,9 @@ PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_SETPOINT_SHIFT_MODE, default=DEFAULT_SETPOINT_SHIFT_MODE): cv.enum(
-                SetpointShiftMode
-            ),
+            vol.Optional(
+                CONF_SETPOINT_SHIFT_MODE, default=DEFAULT_SETPOINT_SHIFT_MODE
+            ): cv.enum(SetpointShiftMode),
             vol.Optional(
                 CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX
             ): vol.All(int, vol.Range(min=0, max=32)),
@@ -127,7 +127,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
             vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
         }
-    )
+    ),
 )
 
 
@@ -179,12 +179,8 @@ def async_add_entities_config(hass, config, async_add_entities):
         group_address_operation_mode_standby=config.get(
             CONF_OPERATION_MODE_STANDBY_ADDRESS
         ),
-        group_address_heat_cool=config.get(
-            CONF_HEAT_COOL_ADDRESS
-        ),
-        group_address_heat_cool_state=config.get(
-            CONF_HEAT_COOL_STATE_ADDRESS
-        ),
+        group_address_heat_cool=config.get(CONF_HEAT_COOL_ADDRESS),
+        group_address_heat_cool_state=config.get(CONF_HEAT_COOL_STATE_ADDRESS),
         operation_modes=config.get(CONF_OPERATION_MODES),
     )
     hass.data[DATA_XKNX].xknx.devices.add(climate_mode)
@@ -335,7 +331,9 @@ class KNXClimate(ClimateEntity):
             if self.device.supports_on_off and not self.device.is_on:
                 await self.device.turn_on()
             if self.device.mode.supports_operation_mode:
-                knx_operation_mode = HVACOperationMode(OPERATION_MODES_INV.get(hvac_mode))
+                knx_operation_mode = HVACOperationMode(
+                    OPERATION_MODES_INV.get(hvac_mode)
+                )
                 await self.device.mode.set_operation_mode(knx_operation_mode)
         self.async_write_ha_state()
 

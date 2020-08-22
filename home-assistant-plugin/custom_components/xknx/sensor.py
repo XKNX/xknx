@@ -17,12 +17,11 @@ DEFAULT_NAME = "KNX Sensor"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_SYNC_STATE, default=True):
-            vol.Any(vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)), cv.boolean, cv.string),
-        vol.Required(CONF_STATE_ADDRESS): cv.string,
-        vol.Required(CONF_TYPE): vol.Any(
-            int, float, str
+        vol.Optional(CONF_SYNC_STATE, default=True): vol.Any(
+            vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)), cv.boolean, cv.string
         ),
+        vol.Required(CONF_STATE_ADDRESS): cv.string,
+        vol.Required(CONF_TYPE): vol.Any(int, float, str),
     }
 )
 

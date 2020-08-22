@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 from xknx import XKNX
-from xknx.devices import ActionCallback, DateTime, ExposeSensor
+from xknx.devices import ActionCallback, DateTime, ExposeSensor, Cover as XknxCover
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import XKNXException
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_HOST,
     CONF_PORT,
+    CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_ON,
@@ -25,9 +26,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import Script
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "xknx"
 DATA_XKNX = "data_knx"
 CONF_XKNX_CONFIG = "config_file"
 
@@ -43,6 +45,15 @@ CONF_XKNX_EXPOSE_TYPE = "type"
 CONF_XKNX_EXPOSE_ATTRIBUTE = "attribute"
 CONF_XKNX_EXPOSE_DEFAULT = "default"
 CONF_XKNX_EXPOSE_ADDRESS = "address"
+
+CONF_XKNX_LIGHT = "light"
+CONF_XKNX_COVER = "cover"
+CONF_XKNX_BINARY_SENSOR = "binary_sensor"
+CONF_XKNX_SCENE = "scene"
+CONF_XKNX_SENSOR = "sensor"
+CONF_XKNX_SWITCH = "switch"
+CONF_XKNX_NOTIFY = "notify"
+CONF_XKNX_CLIMATE = "climate"
 
 SERVICE_XKNX_SEND = "send"
 SERVICE_XKNX_ATTR_ADDRESS = "address"
@@ -63,13 +74,47 @@ ROUTING_SCHEMA = vol.Schema({vol.Optional(CONF_XKNX_LOCAL_IP): cv.string})
 
 EXPOSE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_XKNX_EXPOSE_TYPE): vol.Any(
-            int, float, str
-        ),
+        vol.Required(CONF_XKNX_EXPOSE_TYPE): vol.Any(int, float, str),
         vol.Optional(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_XKNX_EXPOSE_ATTRIBUTE): cv.string,
         vol.Optional(CONF_XKNX_EXPOSE_DEFAULT): cv.match_all,
         vol.Required(CONF_XKNX_EXPOSE_ADDRESS): cv.string,
+    }
+)
+
+DEFAULT_TRAVEL_TIME = 25
+DEFAULT_COVER_NAME = "KNX Cover"
+
+CONF_MOVE_LONG_ADDRESS = "move_long_address"
+CONF_MOVE_SHORT_ADDRESS = "move_short_address"
+CONF_STOP_ADDRESS = "stop_address"
+CONF_POSITION_ADDRESS = "position_address"
+CONF_POSITION_STATE_ADDRESS = "position_state_address"
+CONF_ANGLE_ADDRESS = "angle_address"
+CONF_ANGLE_STATE_ADDRESS = "angle_state_address"
+CONF_TRAVELLING_TIME_DOWN = "travelling_time_down"
+CONF_TRAVELLING_TIME_UP = "travelling_time_up"
+CONF_INVERT_POSITION = "invert_position"
+CONF_INVERT_ANGLE = "invert_angle"
+
+COVER_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_COVER_NAME): cv.string,
+        vol.Optional(CONF_MOVE_LONG_ADDRESS): cv.string,
+        vol.Optional(CONF_MOVE_SHORT_ADDRESS): cv.string,
+        vol.Optional(CONF_STOP_ADDRESS): cv.string,
+        vol.Optional(CONF_POSITION_ADDRESS): cv.string,
+        vol.Optional(CONF_POSITION_STATE_ADDRESS): cv.string,
+        vol.Optional(CONF_ANGLE_ADDRESS): cv.string,
+        vol.Optional(CONF_ANGLE_STATE_ADDRESS): cv.string,
+        vol.Optional(
+            CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
+        ): cv.positive_int,
+        vol.Optional(
+            CONF_TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME
+        ): cv.positive_int,
+        vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
+        vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
     }
 )
 
@@ -88,7 +133,10 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_XKNX_RATE_LIMIT, default=20): vol.All(
                     vol.Coerce(int), vol.Range(min=1, max=100)
                 ),
-                vol.Optional(CONF_XKNX_EXPOSE): vol.All(cv.ensure_list, [EXPOSE_SCHEMA]),
+                vol.Optional(CONF_XKNX_EXPOSE): vol.All(
+                    cv.ensure_list, [EXPOSE_SCHEMA]
+                ),
+                vol.Optional(CONF_XKNX_COVER): vol.All(cv.ensure_list, [COVER_SCHEMA]),
             }
         )
     },
@@ -101,9 +149,7 @@ SERVICE_XKNX_SEND_SCHEMA = vol.Schema(
         vol.Required(SERVICE_XKNX_ATTR_PAYLOAD): vol.Any(
             cv.positive_int, [cv.positive_int]
         ),
-        vol.Optional(SERVICE_XKNX_ATTR_TYPE): vol.Any(
-            int, float, str
-        ),
+        vol.Optional(SERVICE_XKNX_ATTR_TYPE): vol.Any(int, float, str),
     }
 )
 
@@ -119,6 +165,28 @@ async def async_setup(hass, config):
         hass.components.persistent_notification.async_create(
             f"Can't connect to KNX interface: <br><b>{ex}</b>", title="KNX"
         )
+
+    if CONF_XKNX_COVER in config[DOMAIN]:
+        for cover_config in config[DOMAIN][CONF_XKNX_COVER]:
+            cover = XknxCover(
+                hass.data[DATA_XKNX].xknx,
+                name=cover_config[CONF_NAME],
+                group_address_long=cover_config.get(CONF_MOVE_LONG_ADDRESS),
+                group_address_short=cover_config.get(CONF_MOVE_SHORT_ADDRESS),
+                group_address_stop=cover_config.get(CONF_STOP_ADDRESS),
+                group_address_position_state=cover_config.get(
+                    CONF_POSITION_STATE_ADDRESS
+                ),
+                group_address_angle=cover_config.get(CONF_ANGLE_ADDRESS),
+                group_address_angle_state=cover_config.get(CONF_ANGLE_STATE_ADDRESS),
+                group_address_position=cover_config.get(CONF_POSITION_ADDRESS),
+                travel_time_down=cover_config[CONF_TRAVELLING_TIME_DOWN],
+                travel_time_up=cover_config[CONF_TRAVELLING_TIME_UP],
+                invert_position=cover_config[CONF_INVERT_POSITION],
+                invert_angle=cover_config[CONF_INVERT_ANGLE],
+            )
+
+            hass.data[DATA_XKNX].xknx.devices.add(cover)
 
     for component, discovery_type in (
         ("switch", "Switch"),
