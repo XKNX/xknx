@@ -1,9 +1,12 @@
 from homeassistant.const import (
     CONF_NAME,
     CONF_DEVICE_CLASS,
+    CONF_ADDRESS,
 )
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
+
+from .const import ColorTempModes
 
 
 class CoverSchema:
@@ -89,4 +92,51 @@ class BinarySensorSchema:
                 vol.Optional(CONF_AUTOMATION): AUTOMATIONS_SCHEMA,
             }
         ),
+    )
+
+
+class LightSchema:
+    """Voluptuous schema for KNX lights"""
+
+    CONF_STATE_ADDRESS = "state_address"
+    CONF_BRIGHTNESS_ADDRESS = "brightness_address"
+    CONF_BRIGHTNESS_STATE_ADDRESS = "brightness_state_address"
+    CONF_COLOR_ADDRESS = "color_address"
+    CONF_COLOR_STATE_ADDRESS = "color_state_address"
+    CONF_COLOR_TEMP_ADDRESS = "color_temperature_address"
+    CONF_COLOR_TEMP_STATE_ADDRESS = "color_temperature_state_address"
+    CONF_COLOR_TEMP_MODE = "color_temperature_mode"
+    CONF_RGBW_ADDRESS = "rgbw_address"
+    CONF_RGBW_STATE_ADDRESS = "rgbw_state_address"
+    CONF_MIN_KELVIN = "min_kelvin"
+    CONF_MAX_KELVIN = "max_kelvin"
+
+    DEFAULT_NAME = "KNX Light"
+    DEFAULT_COLOR_TEMP_MODE = "absolute"
+    DEFAULT_MIN_KELVIN = 2700  # 370 mireds
+    DEFAULT_MAX_KELVIN = 6000  # 166 mireds
+
+    SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_ADDRESS): cv.string,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_BRIGHTNESS_ADDRESS): cv.string,
+            vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_COLOR_ADDRESS): cv.string,
+            vol.Optional(CONF_COLOR_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_COLOR_TEMP_ADDRESS): cv.string,
+            vol.Optional(CONF_COLOR_TEMP_STATE_ADDRESS): cv.string,
+            vol.Optional(
+                CONF_COLOR_TEMP_MODE, default=DEFAULT_COLOR_TEMP_MODE
+            ): cv.enum(ColorTempModes),
+            vol.Optional(CONF_RGBW_ADDRESS): cv.string,
+            vol.Optional(CONF_RGBW_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_MIN_KELVIN, default=DEFAULT_MIN_KELVIN): vol.All(
+                vol.Coerce(int), vol.Range(min=1)
+            ),
+            vol.Optional(CONF_MAX_KELVIN, default=DEFAULT_MAX_KELVIN): vol.All(
+                vol.Coerce(int), vol.Range(min=1)
+            ),
+        }
     )

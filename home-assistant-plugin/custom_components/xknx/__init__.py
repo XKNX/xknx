@@ -26,7 +26,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import Script
 
-from .schema import CoverSchema, BinarySensorSchema
+from .schema import CoverSchema, BinarySensorSchema, LightSchema
+from .helpers import create_cover, create_light
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,6 +109,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_XKNX_BINARY_SENSOR): vol.All(
                     cv.ensure_list, [BinarySensorSchema.SCHEMA]
                 ),
+                vol.Optional(CONF_XKNX_LIGHT): vol.All(
+                    cv.ensure_list, [LightSchema.SCHEMA]
+                ),
             }
         )
     },
@@ -139,31 +143,9 @@ async def async_setup(hass, config):
 
     if CONF_XKNX_COVER in config[DOMAIN]:
         for cover_config in config[DOMAIN][CONF_XKNX_COVER]:
-            cover = XknxCover(
-                hass.data[DATA_XKNX].xknx,
-                name=cover_config[CONF_NAME],
-                group_address_long=cover_config.get(CoverSchema.CONF_MOVE_LONG_ADDRESS),
-                group_address_short=cover_config.get(
-                    CoverSchema.CONF_MOVE_SHORT_ADDRESS
-                ),
-                group_address_stop=cover_config.get(CoverSchema.CONF_STOP_ADDRESS),
-                group_address_position_state=cover_config.get(
-                    CoverSchema.CONF_POSITION_STATE_ADDRESS
-                ),
-                group_address_angle=cover_config.get(CoverSchema.CONF_ANGLE_ADDRESS),
-                group_address_angle_state=cover_config.get(
-                    CoverSchema.CONF_ANGLE_STATE_ADDRESS
-                ),
-                group_address_position=cover_config.get(
-                    CoverSchema.CONF_POSITION_ADDRESS
-                ),
-                travel_time_down=cover_config[CoverSchema.CONF_TRAVELLING_TIME_DOWN],
-                travel_time_up=cover_config[CoverSchema.CONF_TRAVELLING_TIME_UP],
-                invert_position=cover_config[CoverSchema.CONF_INVERT_POSITION],
-                invert_angle=cover_config[CoverSchema.CONF_INVERT_ANGLE],
+            hass.data[DATA_XKNX].xknx.devices.add(
+                create_cover(hass.data[DATA_XKNX].xknx, cover_config)
             )
-
-            hass.data[DATA_XKNX].xknx.devices.add(cover)
 
     if CONF_XKNX_BINARY_SENSOR in config[DOMAIN]:
         for binary_sensor_config in config[DOMAIN][CONF_XKNX_BINARY_SENSOR]:
@@ -175,6 +157,12 @@ async def async_setup(hass, config):
                     {ATTR_DISCOVER_CONFIG: binary_sensor_config},
                     config,
                 )
+            )
+
+    if CONF_XKNX_LIGHT in config[DOMAIN]:
+        for light_config in config[DOMAIN][CONF_XKNX_LIGHT]:
+            hass.data[DATA_XKNX].xknx.devices.add(
+                create_light(hass.data[DATA_XKNX].xknx, light_config)
             )
 
     for component, discovery_type in (
