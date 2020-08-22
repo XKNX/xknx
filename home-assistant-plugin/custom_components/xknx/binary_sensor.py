@@ -3,62 +3,26 @@ import voluptuous as vol
 from xknx.devices import BinarySensor
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from . import ATTR_DISCOVER_DEVICES, DATA_XKNX, KNXAutomation
+from homeassistant.const import CONF_NAME, CONF_DEVICE_CLASS
 
-CONF_STATE_ADDRESS = "state_address"
-CONF_SYNC_STATE = "sync_state"
-CONF_IGNORE_INTERNAL_STATE = "ignore_internal_state"
-CONF_AUTOMATION = "automation"
-CONF_HOOK = "hook"
-CONF_DEFAULT_HOOK = "on"
-CONF_COUNTER = "counter"
-CONF_DEFAULT_COUNTER = 1
-CONF_ACTION = "action"
-CONF_RESET_AFTER = "reset_after"
-
-CONF__ACTION = "turn_off_action"
-
-DEFAULT_NAME = "KNX Binary Sensor"
-AUTOMATION_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_HOOK, default=CONF_DEFAULT_HOOK): cv.string,
-        vol.Optional(CONF_COUNTER, default=CONF_DEFAULT_COUNTER): cv.port,
-        vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
-    }
-)
-
-AUTOMATIONS_SCHEMA = vol.All(cv.ensure_list, [AUTOMATION_SCHEMA])
-
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated("significant_bit"),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_SYNC_STATE, default=True): vol.Any(
-                vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)),
-                cv.boolean,
-                cv.string,
-            ),
-            vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=False): cv.boolean,
-            vol.Required(CONF_STATE_ADDRESS): cv.string,
-            vol.Optional(CONF_DEVICE_CLASS): cv.string,
-            vol.Optional(CONF_RESET_AFTER): cv.positive_int,
-            vol.Optional(CONF_AUTOMATION): AUTOMATIONS_SCHEMA,
-        }
-    ),
-)
+from .schema import BinarySensorSchema
+from . import ATTR_DISCOVER_DEVICES, ATTR_DISCOVER_CONFIG, DATA_XKNX, KNXAutomation
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up binary sensor(s) for KNX platform."""
-    if discovery_info is not None:
+    if (
+        discovery_info is not None
+        and discovery_info.get(ATTR_DISCOVER_DEVICES) is not None
+    ):
         async_add_entities_discovery(hass, discovery_info, async_add_entities)
     else:
-        async_add_entities_config(hass, config, async_add_entities)
+        async_add_entities_config(
+            hass, discovery_info[ATTR_DISCOVER_CONFIG], async_add_entities
+        )
 
 
 @callback
@@ -74,26 +38,24 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
 @callback
 def async_add_entities_config(hass, config, async_add_entities):
     """Set up binary senor for KNX platform configured within platform."""
-    name = config[CONF_NAME]
-
     binary_sensor = BinarySensor(
         hass.data[DATA_XKNX].xknx,
-        name=name,
-        group_address_state=config[CONF_STATE_ADDRESS],
-        sync_state=config[CONF_SYNC_STATE],
-        ignore_internal_state=config[CONF_IGNORE_INTERNAL_STATE],
+        name=config[CONF_NAME],
+        group_address_state=config[BinarySensorSchema.CONF_STATE_ADDRESS],
+        sync_state=config[BinarySensorSchema.CONF_SYNC_STATE],
+        ignore_internal_state=config[BinarySensorSchema.CONF_IGNORE_INTERNAL_STATE],
         device_class=config.get(CONF_DEVICE_CLASS),
-        reset_after=config.get(CONF_RESET_AFTER),
+        reset_after=config.get(BinarySensorSchema.CONF_RESET_AFTER),
     )
     hass.data[DATA_XKNX].xknx.devices.add(binary_sensor)
 
     entity = KNXBinarySensor(binary_sensor)
-    automations = config.get(CONF_AUTOMATION)
+    automations = config.get(BinarySensorSchema.CONF_AUTOMATION)
     if automations is not None:
         for automation in automations:
-            counter = automation[CONF_COUNTER]
-            hook = automation[CONF_HOOK]
-            action = automation[CONF_ACTION]
+            counter = automation[BinarySensorSchema.CONF_COUNTER]
+            hook = automation[BinarySensorSchema.CONF_HOOK]
+            action = automation[BinarySensorSchema.CONF_ACTION]
             entity.automations.append(
                 KNXAutomation(
                     hass=hass,
@@ -103,6 +65,7 @@ def async_add_entities_config(hass, config, async_add_entities):
                     counter=counter,
                 )
             )
+
     async_add_entities([entity])
 
 

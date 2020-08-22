@@ -5,5 +5,5 @@
     "requirements": [],
     "issue_tracker": "https://github.com/XKNX/xknx/issues",
     "quality_scale": "silver",
-    "codeowners": ["@Julius2342", "@farmio", "@marvin-w"],
+    "codeowners": ["@Julius2342", "@farmio", "@marvin-w"]
 }

@@ -87,12 +87,12 @@ xknx:
     port: 3671
     local_ip: '192.168.2.109'
   light:
-  - name: Kitchen-Light-1
-    address: '1/0/9'
-    brightness_address: '1/0/11'
+    - name: Kitchen-Light-1
+      address: '1/0/9'
+      brightness_address: '1/0/11'
   switch:
-  - name: Kitchen.Coffee
-    address: '1/1/6'
+    - name: Kitchen.Coffee
+      address: '1/1/6'
   cover: !include knx_cover.yaml
   
 ```

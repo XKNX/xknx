@@ -26,8 +26,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import Script
 
+from .schema import CoverSchema, BinarySensorSchema
 from .const import DOMAIN
-from .schema import CoverSchema
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +62,7 @@ SERVICE_XKNX_ATTR_PAYLOAD = "payload"
 SERVICE_XKNX_ATTR_TYPE = "type"
 
 ATTR_DISCOVER_DEVICES = "devices"
+ATTR_DISCOVER_CONFIG = "config"
 
 TUNNELING_SCHEMA = vol.Schema(
     {
@@ -101,7 +102,12 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_XKNX_EXPOSE): vol.All(
                     cv.ensure_list, [EXPOSE_SCHEMA]
                 ),
-                vol.Optional(CONF_XKNX_COVER): vol.All(cv.ensure_list, [CoverSchema.COVER_SCHEMA]),
+                vol.Optional(CONF_XKNX_COVER): vol.All(
+                    cv.ensure_list, [CoverSchema.SCHEMA]
+                ),
+                vol.Optional(CONF_XKNX_BINARY_SENSOR): vol.All(
+                    cv.ensure_list, [BinarySensorSchema.SCHEMA]
+                ),
             }
         )
     },
@@ -137,14 +143,20 @@ async def async_setup(hass, config):
                 hass.data[DATA_XKNX].xknx,
                 name=cover_config[CONF_NAME],
                 group_address_long=cover_config.get(CoverSchema.CONF_MOVE_LONG_ADDRESS),
-                group_address_short=cover_config.get(CoverSchema.CONF_MOVE_SHORT_ADDRESS),
+                group_address_short=cover_config.get(
+                    CoverSchema.CONF_MOVE_SHORT_ADDRESS
+                ),
                 group_address_stop=cover_config.get(CoverSchema.CONF_STOP_ADDRESS),
                 group_address_position_state=cover_config.get(
                     CoverSchema.CONF_POSITION_STATE_ADDRESS
                 ),
                 group_address_angle=cover_config.get(CoverSchema.CONF_ANGLE_ADDRESS),
-                group_address_angle_state=cover_config.get(CoverSchema.CONF_ANGLE_STATE_ADDRESS),
-                group_address_position=cover_config.get(CoverSchema.CONF_POSITION_ADDRESS),
+                group_address_angle_state=cover_config.get(
+                    CoverSchema.CONF_ANGLE_STATE_ADDRESS
+                ),
+                group_address_position=cover_config.get(
+                    CoverSchema.CONF_POSITION_ADDRESS
+                ),
                 travel_time_down=cover_config[CoverSchema.CONF_TRAVELLING_TIME_DOWN],
                 travel_time_up=cover_config[CoverSchema.CONF_TRAVELLING_TIME_UP],
                 invert_position=cover_config[CoverSchema.CONF_INVERT_POSITION],
@@ -152,6 +164,18 @@ async def async_setup(hass, config):
             )
 
             hass.data[DATA_XKNX].xknx.devices.add(cover)
+
+    if CONF_XKNX_BINARY_SENSOR in config[DOMAIN]:
+        for binary_sensor_config in config[DOMAIN][CONF_XKNX_BINARY_SENSOR]:
+            hass.async_create_task(
+                discovery.async_load_platform(
+                    hass,
+                    "binary_sensor",
+                    DOMAIN,
+                    {ATTR_DISCOVER_CONFIG: binary_sensor_config},
+                    config,
+                )
+            )
 
     for component, discovery_type in (
         ("switch", "Switch"),
