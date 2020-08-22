@@ -22,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import Script
 
 _LOGGER = logging.getLogger(__name__)
@@ -321,7 +321,7 @@ class KNXAutomation:
         self.hass = hass
         self.device = device
         script_name = f"{device.get_name()} turn ON script"
-        self.script = Script(hass, action, script_name)
+        self.script = Script(hass, action, script_name, DOMAIN)
 
         self.action = ActionCallback(
             hass.data[DATA_XKNX].xknx, self.script.async_run, hook=hook, counter=counter
@@ -375,10 +375,13 @@ class KNXExposeSensor:
             self.xknx, name=_name, group_address=self.address, value_type=self.type,
         )
         self.xknx.devices.add(self.device)
-        async_track_state_change(self.hass, self.entity_id, self._async_entity_changed)
+        async_track_state_change_event(
+            self.hass, [self.entity_id], self._async_entity_changed
+        )
 
-    async def _async_entity_changed(self, entity_id, old_state, new_state):
+    async def _async_entity_changed(self, event):
         """Handle entity change."""
+        new_state = event.data.get("new_state")
         if new_state is None:
             return
         if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
@@ -386,6 +389,8 @@ class KNXExposeSensor:
 
         if self.expose_attribute is not None:
             new_attribute = new_state.attributes.get(self.expose_attribute)
+            old_state = event.data.get("old_state")
+
             if old_state is not None:
                 old_attribute = old_state.attributes.get(self.expose_attribute)
                 if old_attribute == new_attribute:
