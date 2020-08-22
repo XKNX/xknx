@@ -27,8 +27,8 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import Script
 
 from .schema import CoverSchema, BinarySensorSchema, LightSchema
-from .helpers import create_cover, create_light
-from .const import DOMAIN
+from .factory import create_knx_device
+from .const import DOMAIN, DeviceTypes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,7 +144,9 @@ async def async_setup(hass, config):
     if CONF_XKNX_COVER in config[DOMAIN]:
         for cover_config in config[DOMAIN][CONF_XKNX_COVER]:
             hass.data[DATA_XKNX].xknx.devices.add(
-                create_cover(hass.data[DATA_XKNX].xknx, cover_config)
+                create_knx_device(
+                    DeviceTypes.cover, hass.data[DATA_XKNX].xknx, cover_config
+                )
             )
 
     if CONF_XKNX_BINARY_SENSOR in config[DOMAIN]:
@@ -162,7 +164,9 @@ async def async_setup(hass, config):
     if CONF_XKNX_LIGHT in config[DOMAIN]:
         for light_config in config[DOMAIN][CONF_XKNX_LIGHT]:
             hass.data[DATA_XKNX].xknx.devices.add(
-                create_light(hass.data[DATA_XKNX].xknx, light_config)
+                create_knx_device(
+                    DeviceTypes.light, hass.data[DATA_XKNX].xknx, light_config
+                )
             )
 
     for component, discovery_type in (

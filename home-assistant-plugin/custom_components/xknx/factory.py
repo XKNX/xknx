@@ -1,5 +1,5 @@
 """Helper functions to initialize KNX devices from config"""
-from xknx.devices import Cover as XknxCover, Light as XknxLight
+from xknx.devices import Device, Cover as XknxCover, Light as XknxLight
 from xknx import XKNX
 from homeassistant.helpers.typing import ConfigType
 from .schema import CoverSchema, LightSchema
@@ -9,10 +9,20 @@ from homeassistant.const import (
     CONF_NAME,
 )
 
-from .const import ColorTempModes
+from .const import ColorTempModes, DeviceTypes
 
 
-def create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
+def create_knx_device(
+    device_type: DeviceTypes, knx_module: XKNX, config: ConfigType
+) -> Device:
+    """Factory for creating KNX devices"""
+    return {
+        DeviceTypes.light: lambda module, conf: __create_light(module, conf),
+        DeviceTypes.cover: lambda module, conf: __create_cover(module, conf),
+    }[device_type](knx_module, config)
+
+
+def __create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
     """Creates a KNX Cover device to be used within XKNX"""
     return XknxCover(
         knx_module,
@@ -33,7 +43,7 @@ def create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
     )
 
 
-def create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
+def __create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
     """Creates a KNX Light device to be used within XKNX"""
     group_address_tunable_white = None
     group_address_tunable_white_state = None
