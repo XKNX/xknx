@@ -1,5 +1,17 @@
 """Constants for the KNX integration"""
 from enum import Enum
+from homeassistant.components.climate.const import (
+    HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
+    HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    PRESET_AWAY,
+    PRESET_COMFORT,
+    PRESET_ECO,
+    PRESET_SLEEP,
+)
 
 DOMAIN = "xknx"
 
@@ -22,3 +34,24 @@ class DeviceTypes(Enum):
     notify = "notify"
     scene = "scene"
     sensor = "sensor"
+    climate_mode = "climate_mode"
+
+
+# Map KNX operation modes to HA modes. This list might not be complete.
+OPERATION_MODES = {
+    # Map DPT 20.105 HVAC control modes
+    "Auto": HVAC_MODE_AUTO,
+    "Heat": HVAC_MODE_HEAT,
+    "Cool": HVAC_MODE_COOL,
+    "Off": HVAC_MODE_OFF,
+    "Fan only": HVAC_MODE_FAN_ONLY,
+    "Dry": HVAC_MODE_DRY,
+}
+
+PRESET_MODES = {
+    # Map DPT 20.102 HVAC operating modes to HA presets
+    "Frost Protection": PRESET_ECO,
+    "Night": PRESET_SLEEP,
+    "Standby": PRESET_AWAY,
+    "Comfort": PRESET_COMFORT,
+}

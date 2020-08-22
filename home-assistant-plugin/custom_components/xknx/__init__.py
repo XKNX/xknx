@@ -26,7 +26,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import Script
 
-from .schema import CoverSchema, BinarySensorSchema, LightSchema
+from .schema import CoverSchema, BinarySensorSchema, LightSchema, ClimateSchema
 from .factory import create_knx_device
 from .const import DOMAIN, DeviceTypes
 
@@ -112,6 +112,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_XKNX_LIGHT): vol.All(
                     cv.ensure_list, [LightSchema.SCHEMA]
                 ),
+                vol.Optional(CONF_XKNX_CLIMATE): vol.All(
+                    cv.ensure_list, [ClimateSchema.SCHEMA]
+                ),
             }
         )
     },
@@ -168,6 +171,18 @@ async def async_setup(hass, config):
                     DeviceTypes.light, hass.data[DATA_XKNX].xknx, light_config
                 )
             )
+
+    if CONF_XKNX_CLIMATE in config[DOMAIN]:
+        for climate_config in config[DOMAIN][CONF_XKNX_CLIMATE]:
+            climate_mode = create_knx_device(
+                DeviceTypes.climate_mode, hass.data[DATA_XKNX].xknx, climate_config
+            )
+            hass.data[DATA_XKNX].xknx.devices.add(climate_mode)
+            climate = create_knx_device(
+                DeviceTypes.climate, hass.data[DATA_XKNX].xknx, climate_config
+            )
+            climate.mode = climate_mode
+            hass.data[DATA_XKNX].xknx.devices.add(climate)
 
     for component, discovery_type in (
         ("switch", "Switch"),

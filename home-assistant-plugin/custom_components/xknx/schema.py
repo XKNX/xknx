@@ -5,8 +5,8 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-
-from .const import ColorTempModes
+from xknx.devices.climate import SetpointShiftMode
+from .const import ColorTempModes, OPERATION_MODES, PRESET_MODES
 
 
 class CoverSchema:
@@ -139,4 +139,93 @@ class LightSchema:
                 vol.Coerce(int), vol.Range(min=1)
             ),
         }
+    )
+
+
+class ClimateSchema:
+    """Voluptuous schema for KNX climate devices"""
+
+    CONF_SETPOINT_SHIFT_ADDRESS = "setpoint_shift_address"
+    CONF_SETPOINT_SHIFT_STATE_ADDRESS = "setpoint_shift_state_address"
+    CONF_SETPOINT_SHIFT_MODE = "setpoint_shift_mode"
+    CONF_SETPOINT_SHIFT_MAX = "setpoint_shift_max"
+    CONF_SETPOINT_SHIFT_MIN = "setpoint_shift_min"
+    CONF_TEMPERATURE_ADDRESS = "temperature_address"
+    CONF_TEMPERATURE_STEP = "temperature_step"
+    CONF_TARGET_TEMPERATURE_ADDRESS = "target_temperature_address"
+    CONF_TARGET_TEMPERATURE_STATE_ADDRESS = "target_temperature_state_address"
+    CONF_OPERATION_MODE_ADDRESS = "operation_mode_address"
+    CONF_OPERATION_MODE_STATE_ADDRESS = "operation_mode_state_address"
+    CONF_CONTROLLER_STATUS_ADDRESS = "controller_status_address"
+    CONF_CONTROLLER_STATUS_STATE_ADDRESS = "controller_status_state_address"
+    CONF_CONTROLLER_MODE_ADDRESS = "controller_mode_address"
+    CONF_CONTROLLER_MODE_STATE_ADDRESS = "controller_mode_state_address"
+    CONF_HEAT_COOL_ADDRESS = "heat_cool_address"
+    CONF_HEAT_COOL_STATE_ADDRESS = "heat_cool_state_address"
+    CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS = (
+        "operation_mode_frost_protection_address"
+    )
+    CONF_OPERATION_MODE_NIGHT_ADDRESS = "operation_mode_night_address"
+    CONF_OPERATION_MODE_COMFORT_ADDRESS = "operation_mode_comfort_address"
+    CONF_OPERATION_MODE_STANDBY_ADDRESS = "operation_mode_standby_address"
+    CONF_OPERATION_MODES = "operation_modes"
+    CONF_ON_OFF_ADDRESS = "on_off_address"
+    CONF_ON_OFF_STATE_ADDRESS = "on_off_state_address"
+    CONF_ON_OFF_INVERT = "on_off_invert"
+    CONF_MIN_TEMP = "min_temp"
+    CONF_MAX_TEMP = "max_temp"
+
+    DEFAULT_NAME = "KNX Climate"
+    DEFAULT_SETPOINT_SHIFT_MODE = "DPT6010"
+    DEFAULT_SETPOINT_SHIFT_MAX = 6
+    DEFAULT_SETPOINT_SHIFT_MIN = -6
+    DEFAULT_TEMPERATURE_STEP = 0.1
+    DEFAULT_ON_OFF_INVERT = False
+
+    SCHEMA = vol.All(
+        cv.deprecated("setpoint_shift_step", replacement_key=CONF_TEMPERATURE_STEP),
+        vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(
+                    CONF_SETPOINT_SHIFT_MODE, default=DEFAULT_SETPOINT_SHIFT_MODE
+                ): cv.enum(SetpointShiftMode),
+                vol.Optional(
+                    CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX
+                ): vol.All(int, vol.Range(min=0, max=32)),
+                vol.Optional(
+                    CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN
+                ): vol.All(int, vol.Range(min=-32, max=0)),
+                vol.Optional(
+                    CONF_TEMPERATURE_STEP, default=DEFAULT_TEMPERATURE_STEP
+                ): vol.All(float, vol.Range(min=0, max=2)),
+                vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
+                vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
+                vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
+                vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
+                vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): cv.string,
+                vol.Optional(CONF_CONTROLLER_STATUS_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_CONTROLLER_MODE_ADDRESS): cv.string,
+                vol.Optional(CONF_CONTROLLER_MODE_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_HEAT_COOL_ADDRESS): cv.string,
+                vol.Optional(CONF_HEAT_COOL_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS): cv.string,
+                vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): cv.string,
+                vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
+                vol.Optional(CONF_OPERATION_MODE_STANDBY_ADDRESS): cv.string,
+                vol.Optional(CONF_ON_OFF_ADDRESS): cv.string,
+                vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
+                vol.Optional(
+                    CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT
+                ): cv.boolean,
+                vol.Optional(CONF_OPERATION_MODES): vol.All(
+                    cv.ensure_list, [vol.In({**OPERATION_MODES, **PRESET_MODES})]
+                ),
+                vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
+                vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
+            }
+        ),
     )
