@@ -23,7 +23,7 @@ from xknx.exceptions import XKNXException
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
 from xknx.telegram import AddressFilter, GroupAddress, Telegram
 
-from .const import DOMAIN, DeviceTypes
+from .const import DATA_XKNX, DOMAIN, DeviceTypes
 from .factory import create_knx_device
 from .schema import (
     BinarySensorSchema,
@@ -40,7 +40,6 @@ from .schema import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_XKNX = "data_knx"
 CONF_XKNX_CONFIG = "config_file"
 
 CONF_XKNX_ROUTING = "routing"
@@ -138,6 +137,7 @@ KNX_CONFIG_PLATFORM_MAPPING = {
     CONF_XKNX_NOTIFY: DeviceTypes.notify,
     CONF_XKNX_SCENE: DeviceTypes.scene,
     CONF_XKNX_BINARY_SENSOR: DeviceTypes.binary_sensor,
+    CONF_XKNX_CLIMATE: DeviceTypes.climate,
 }
 
 
@@ -161,21 +161,6 @@ async def async_setup(hass, config):
                         device_type, hass.data[DATA_XKNX].xknx, device_config, hass
                     )
                 )
-
-    if CONF_XKNX_CLIMATE in config[DOMAIN]:
-        for climate_config in config[DOMAIN][CONF_XKNX_CLIMATE]:
-            climate_mode = create_knx_device(
-                DeviceTypes.climate_mode,
-                hass.data[DATA_XKNX].xknx,
-                climate_config,
-                hass,
-            )
-            hass.data[DATA_XKNX].xknx.devices.add(climate_mode)
-            climate = create_knx_device(
-                DeviceTypes.climate, hass.data[DATA_XKNX].xknx, climate_config, hass
-            )
-            climate.mode = climate_mode
-            hass.data[DATA_XKNX].xknx.devices.add(climate)
 
     for component, discovery_type in (
         ("switch", "Switch"),

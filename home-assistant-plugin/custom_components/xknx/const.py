@@ -15,6 +15,7 @@ from homeassistant.components.climate.const import (
 )
 
 DOMAIN = "xknx"
+DATA_XKNX = "data_knx"
 
 
 class ColorTempModes(Enum):
@@ -35,7 +36,6 @@ class DeviceTypes(Enum):
     notify = "notify"
     scene = "scene"
     sensor = "sensor"
-    climate_mode = "climate_mode"
 
 
 # Map KNX operation modes to HA modes. This list might not be complete.
