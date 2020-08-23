@@ -16,9 +16,8 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.script import Script
 from xknx import XKNX
-from xknx.devices import ActionCallback, DateTime, ExposeSensor
+from xknx.devices import DateTime, ExposeSensor
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import XKNXException
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
@@ -138,6 +137,7 @@ KNX_CONFIG_PLATFORM_MAPPING = {
     CONF_XKNX_SENSOR: DeviceTypes.sensor,
     CONF_XKNX_NOTIFY: DeviceTypes.notify,
     CONF_XKNX_SCENE: DeviceTypes.scene,
+    CONF_XKNX_BINARY_SENSOR: DeviceTypes.binary_sensor,
 }
 
 
@@ -158,30 +158,21 @@ async def async_setup(hass, config):
             for device_config in config[DOMAIN][PLATFORM_CONFIG]:
                 hass.data[DATA_XKNX].xknx.devices.add(
                     create_knx_device(
-                        device_type, hass.data[DATA_XKNX].xknx, device_config
+                        device_type, hass.data[DATA_XKNX].xknx, device_config, hass
                     )
                 )
-
-    if CONF_XKNX_BINARY_SENSOR in config[DOMAIN]:
-        for binary_sensor_config in config[DOMAIN][CONF_XKNX_BINARY_SENSOR]:
-            hass.async_create_task(
-                discovery.async_load_platform(
-                    hass,
-                    "binary_sensor",
-                    DOMAIN,
-                    {ATTR_DISCOVER_CONFIG: binary_sensor_config},
-                    config,
-                )
-            )
 
     if CONF_XKNX_CLIMATE in config[DOMAIN]:
         for climate_config in config[DOMAIN][CONF_XKNX_CLIMATE]:
             climate_mode = create_knx_device(
-                DeviceTypes.climate_mode, hass.data[DATA_XKNX].xknx, climate_config
+                DeviceTypes.climate_mode,
+                hass.data[DATA_XKNX].xknx,
+                climate_config,
+                hass,
             )
             hass.data[DATA_XKNX].xknx.devices.add(climate_mode)
             climate = create_knx_device(
-                DeviceTypes.climate, hass.data[DATA_XKNX].xknx, climate_config
+                DeviceTypes.climate, hass.data[DATA_XKNX].xknx, climate_config, hass
             )
             climate.mode = climate_mode
             hass.data[DATA_XKNX].xknx.devices.add(climate)
@@ -381,22 +372,6 @@ class KNXModule:
         telegram.payload = payload
         telegram.group_address = address
         await self.xknx.telegrams.put(telegram)
-
-
-class KNXAutomation:
-    """Wrapper around xknx.devices.ActionCallback object.."""
-
-    def __init__(self, hass, device, hook, action, counter=1):
-        """Initialize Automation class."""
-        self.hass = hass
-        self.device = device
-        script_name = f"{device.get_name()} turn ON script"
-        self.script = Script(hass, action, script_name, DOMAIN)
-
-        self.action = ActionCallback(
-            hass.data[DATA_XKNX].xknx, self.script.async_run, hook=hook, counter=counter
-        )
-        device.actions.append(self.action)
 
 
 class KNXExposeTime:

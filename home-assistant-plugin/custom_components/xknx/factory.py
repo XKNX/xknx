@@ -1,7 +1,11 @@
 """Factory function to initialize KNX devices from config."""
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, CONF_TYPE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType
 from xknx import XKNX
+from xknx.devices import ActionCallback as XknxActionCallback
+from xknx.devices import BinarySensor as XknxBinarySensor
 from xknx.devices import Climate as XknxClimate
 from xknx.devices import ClimateMode as XknxClimateMode
 from xknx.devices import Cover as XknxCover
@@ -12,8 +16,9 @@ from xknx.devices import Scene as XknxScene
 from xknx.devices import Sensor as XknxSensor
 from xknx.devices import Switch as XknxSwitch
 
-from .const import ColorTempModes, DeviceTypes
+from .const import DOMAIN, ColorTempModes, DeviceTypes
 from .schema import (
+    BinarySensorSchema,
     ClimateSchema,
     CoverSchema,
     LightSchema,
@@ -24,7 +29,7 @@ from .schema import (
 
 
 def create_knx_device(
-    device_type: DeviceTypes, knx_module: XKNX, config: ConfigType
+    device_type: DeviceTypes, knx_module: XKNX, config: ConfigType, hass: HomeAssistant
 ) -> XknxDevice:
     """Factory for creating KNX devices."""
     if device_type is DeviceTypes.light:
@@ -50,6 +55,9 @@ def create_knx_device(
 
     if device_type is DeviceTypes.scene:
         return __create_scene(knx_module, config)
+
+    if device_type is DeviceTypes.binary_sensor:
+        return __create_binary_sensor(knx_module, config, hass)
 
 
 def __create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
@@ -220,4 +228,35 @@ def __create_scene(knx_module: XKNX, config: ConfigType) -> XknxScene:
         name=config[CONF_NAME],
         group_address=config[CONF_ADDRESS],
         scene_number=config[SceneSchema.CONF_SCENE_NUMBER],
+    )
+
+
+def __create_binary_sensor(
+    knx_module: XKNX, config: ConfigType, hass: HomeAssistant
+) -> XknxBinarySensor:
+    """Creates a KNX binary sensor to be used within XKNX."""
+    device_name = config[CONF_NAME]
+    actions = []
+    automations = config.get(BinarySensorSchema.CONF_AUTOMATION)
+    if automations is not None:
+        for automation in automations:
+            counter = automation[BinarySensorSchema.CONF_COUNTER]
+            hook = automation[BinarySensorSchema.CONF_HOOK]
+            action = automation[BinarySensorSchema.CONF_ACTION]
+            script_name = f"{device_name} turn ON script"
+            script = Script(hass, action, script_name, DOMAIN)
+            action = XknxActionCallback(
+                knx_module, script.async_run, hook=hook, counter=counter
+            )
+            actions.append(action)
+
+    return XknxBinarySensor(
+        knx_module,
+        name=device_name,
+        group_address_state=config[BinarySensorSchema.CONF_STATE_ADDRESS],
+        sync_state=config[BinarySensorSchema.CONF_SYNC_STATE],
+        ignore_internal_state=config[BinarySensorSchema.CONF_IGNORE_INTERNAL_STATE],
+        device_class=config.get(CONF_DEVICE_CLASS),
+        reset_after=config.get(BinarySensorSchema.CONF_RESET_AFTER),
+        actions=actions,
     )
