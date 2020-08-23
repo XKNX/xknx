@@ -27,18 +27,29 @@ def create_knx_device(
     device_type: DeviceTypes, knx_module: XKNX, config: ConfigType
 ) -> XknxDevice:
     """Factory for creating KNX devices."""
-    return {
-        DeviceTypes.light: lambda module, conf: __create_light(module, conf),
-        DeviceTypes.cover: lambda module, conf: __create_cover(module, conf),
-        DeviceTypes.climate: lambda module, conf: __create_climate(module, conf),
-        DeviceTypes.climate_mode: lambda module, conf: __create_climate_mode(
-            module, conf
-        ),
-        DeviceTypes.switch: lambda module, conf: __create_switch(module, conf),
-        DeviceTypes.sensor: lambda module, conf: __create_sensor(module, conf),
-        DeviceTypes.notify: lambda module, conf: __create_notify(module, conf),
-        DeviceTypes.scene: lambda module, conf: __create_scene(module, conf),
-    }[device_type](knx_module, config)
+    if device_type is DeviceTypes.light:
+        return __create_light(knx_module, config)
+
+    if device_type is DeviceTypes.cover:
+        return __create_cover(knx_module, config)
+
+    if device_type is DeviceTypes.climate:
+        return __create_climate(knx_module, config)
+
+    if device_type is DeviceTypes.climate_mode:
+        return __create_climate_mode(knx_module, config)
+
+    if device_type is DeviceTypes.switch:
+        return __create_switch(knx_module, config)
+
+    if device_type is DeviceTypes.sensor:
+        return __create_sensor(knx_module, config)
+
+    if device_type is DeviceTypes.notify:
+        return __create_notify(knx_module, config)
+
+    if device_type is DeviceTypes.scene:
+        return __create_scene(knx_module, config)
 
 
 def __create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:

@@ -4,12 +4,30 @@ from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
+    CONF_HOST,
     CONF_NAME,
+    CONF_PORT,
     CONF_TYPE,
 )
 from xknx.devices.climate import SetpointShiftMode
 
 from .const import OPERATION_MODES, PRESET_MODES, ColorTempModes
+
+
+class ConnectionSchema:
+    """Voluptuous schema for KNX connection."""
+
+    CONF_XKNX_LOCAL_IP = "local_ip"
+
+    TUNNELING_SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_HOST): cv.string,
+            vol.Optional(CONF_XKNX_LOCAL_IP): cv.string,
+            vol.Optional(CONF_PORT): cv.port,
+        }
+    )
+
+    ROUTING_SCHEMA = vol.Schema({vol.Optional(CONF_XKNX_LOCAL_IP): cv.string})
 
 
 class CoverSchema:

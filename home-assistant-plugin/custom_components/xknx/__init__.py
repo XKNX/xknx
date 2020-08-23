@@ -29,6 +29,7 @@ from .factory import create_knx_device
 from .schema import (
     BinarySensorSchema,
     ClimateSchema,
+    ConnectionSchema,
     CoverSchema,
     ExposeSchema,
     LightSchema,
@@ -45,7 +46,6 @@ CONF_XKNX_CONFIG = "config_file"
 
 CONF_XKNX_ROUTING = "routing"
 CONF_XKNX_TUNNELING = "tunneling"
-CONF_XKNX_LOCAL_IP = "local_ip"
 CONF_XKNX_FIRE_EVENT = "fire_event"
 CONF_XKNX_FIRE_EVENT_FILTER = "fire_event_filter"
 CONF_XKNX_STATE_UPDATER = "state_updater"
@@ -69,23 +69,17 @@ SERVICE_XKNX_ATTR_TYPE = "type"
 ATTR_DISCOVER_DEVICES = "devices"
 ATTR_DISCOVER_CONFIG = "config"
 
-TUNNELING_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_XKNX_LOCAL_IP): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-    }
-)
-
-ROUTING_SCHEMA = vol.Schema({vol.Optional(CONF_XKNX_LOCAL_IP): cv.string})
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_XKNX_CONFIG): cv.string,
-                vol.Exclusive(CONF_XKNX_ROUTING, "connection_type"): ROUTING_SCHEMA,
-                vol.Exclusive(CONF_XKNX_TUNNELING, "connection_type"): TUNNELING_SCHEMA,
+                vol.Exclusive(
+                    CONF_XKNX_ROUTING, "connection_type"
+                ): ConnectionSchema.ROUTING_SCHEMA,
+                vol.Exclusive(
+                    CONF_XKNX_TUNNELING, "connection_type"
+                ): ConnectionSchema.TUNNELING_SCHEMA,
                 vol.Inclusive(CONF_XKNX_FIRE_EVENT, "fire_ev"): cv.boolean,
                 vol.Inclusive(CONF_XKNX_FIRE_EVENT_FILTER, "fire_ev"): vol.All(
                     cv.ensure_list, [cv.string]
@@ -287,7 +281,9 @@ class KNXModule:
 
     def connection_config_routing(self):
         """Return the connection_config if routing is configured."""
-        local_ip = self.config[DOMAIN][CONF_XKNX_ROUTING].get(CONF_XKNX_LOCAL_IP)
+        local_ip = self.config[DOMAIN][CONF_XKNX_ROUTING].get(
+            ConnectionSchema.CONF_XKNX_LOCAL_IP
+        )
         return ConnectionConfig(
             connection_type=ConnectionType.ROUTING, local_ip=local_ip
         )
@@ -296,7 +292,9 @@ class KNXModule:
         """Return the connection_config if tunneling is configured."""
         gateway_ip = self.config[DOMAIN][CONF_XKNX_TUNNELING][CONF_HOST]
         gateway_port = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_PORT)
-        local_ip = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_XKNX_LOCAL_IP)
+        local_ip = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(
+            ConnectionSchema.CONF_XKNX_LOCAL_IP
+        )
         if gateway_port is None:
             gateway_port = DEFAULT_MCAST_PORT
         return ConnectionConfig(
