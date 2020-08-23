@@ -1,15 +1,11 @@
 """Support for KNX/IP binary sensors."""
-import voluptuous as vol
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.core import callback
 from xknx.devices import BinarySensor
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-
-from homeassistant.const import CONF_NAME, CONF_DEVICE_CLASS
-
+from . import ATTR_DISCOVER_CONFIG, ATTR_DISCOVER_DEVICES, DATA_XKNX, KNXAutomation
 from .schema import BinarySensorSchema
-from . import ATTR_DISCOVER_DEVICES, ATTR_DISCOVER_CONFIG, DATA_XKNX, KNXAutomation
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

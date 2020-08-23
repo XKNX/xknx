@@ -1,37 +1,15 @@
 """Support for KNX/IP sensors."""
-import voluptuous as vol
-from xknx.devices import Sensor as XknxSensor
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_TYPE
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from . import ATTR_DISCOVER_DEVICES, DATA_XKNX
-
-CONF_STATE_ADDRESS = "state_address"
-CONF_SYNC_STATE = "sync_state"
-DEFAULT_NAME = "KNX Sensor"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_SYNC_STATE, default=True): vol.Any(
-            vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)), cv.boolean, cv.string
-        ),
-        vol.Required(CONF_STATE_ADDRESS): cv.string,
-        vol.Required(CONF_TYPE): vol.Any(int, float, str),
-    }
-)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up sensor(s) for KNX platform."""
     if discovery_info is not None:
         async_add_entities_discovery(hass, discovery_info, async_add_entities)
-    else:
-        async_add_entities_config(hass, config, async_add_entities)
 
 
 @callback
@@ -42,20 +20,6 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
         device = hass.data[DATA_XKNX].xknx.devices[device_name]
         entities.append(KNXSensor(device))
     async_add_entities(entities)
-
-
-@callback
-def async_add_entities_config(hass, config, async_add_entities):
-    """Set up sensor for KNX platform configured within platform."""
-    sensor = XknxSensor(
-        hass.data[DATA_XKNX].xknx,
-        name=config[CONF_NAME],
-        group_address_state=config[CONF_STATE_ADDRESS],
-        sync_state=config[CONF_SYNC_STATE],
-        value_type=config[CONF_TYPE],
-    )
-    hass.data[DATA_XKNX].xknx.devices.add(sensor)
-    async_add_entities([KNXSensor(sensor)])
 
 
 class KNXSensor(Entity):

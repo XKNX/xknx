@@ -1,19 +1,12 @@
 """Support KNX devices."""
 import logging
 
+import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-from xknx import XKNX
-from xknx.devices import ActionCallback, DateTime, ExposeSensor, Cover as XknxCover
-from xknx.dpt import DPTArray, DPTBase, DPTBinary
-from xknx.exceptions import XKNXException
-from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
-from xknx.telegram import AddressFilter, GroupAddress, Telegram
-
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_HOST,
     CONF_PORT,
-    CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_ON,
@@ -22,13 +15,28 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import Script
+from xknx import XKNX
+from xknx.devices import ActionCallback, DateTime, ExposeSensor
+from xknx.dpt import DPTArray, DPTBase, DPTBinary
+from xknx.exceptions import XKNXException
+from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
+from xknx.telegram import AddressFilter, GroupAddress, Telegram
 
-from .schema import CoverSchema, BinarySensorSchema, LightSchema, ClimateSchema
-from .factory import create_knx_device
 from .const import DOMAIN, DeviceTypes
+from .factory import create_knx_device
+from .schema import (
+    BinarySensorSchema,
+    ClimateSchema,
+    CoverSchema,
+    ExposeSchema,
+    LightSchema,
+    NotifySchema,
+    SceneSchema,
+    SensorSchema,
+    SwitchSchema,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,10 +51,6 @@ CONF_XKNX_FIRE_EVENT_FILTER = "fire_event_filter"
 CONF_XKNX_STATE_UPDATER = "state_updater"
 CONF_XKNX_RATE_LIMIT = "rate_limit"
 CONF_XKNX_EXPOSE = "expose"
-CONF_XKNX_EXPOSE_TYPE = "type"
-CONF_XKNX_EXPOSE_ATTRIBUTE = "attribute"
-CONF_XKNX_EXPOSE_DEFAULT = "default"
-CONF_XKNX_EXPOSE_ADDRESS = "address"
 
 CONF_XKNX_LIGHT = "light"
 CONF_XKNX_COVER = "cover"
@@ -75,16 +79,6 @@ TUNNELING_SCHEMA = vol.Schema(
 
 ROUTING_SCHEMA = vol.Schema({vol.Optional(CONF_XKNX_LOCAL_IP): cv.string})
 
-EXPOSE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_XKNX_EXPOSE_TYPE): vol.Any(int, float, str),
-        vol.Optional(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_XKNX_EXPOSE_ATTRIBUTE): cv.string,
-        vol.Optional(CONF_XKNX_EXPOSE_DEFAULT): cv.match_all,
-        vol.Required(CONF_XKNX_EXPOSE_ADDRESS): cv.string,
-    }
-)
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -101,7 +95,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Coerce(int), vol.Range(min=1, max=100)
                 ),
                 vol.Optional(CONF_XKNX_EXPOSE): vol.All(
-                    cv.ensure_list, [EXPOSE_SCHEMA]
+                    cv.ensure_list, [ExposeSchema.SCHEMA]
                 ),
                 vol.Optional(CONF_XKNX_COVER): vol.All(
                     cv.ensure_list, [CoverSchema.SCHEMA]
@@ -114,6 +108,18 @@ CONFIG_SCHEMA = vol.Schema(
                 ),
                 vol.Optional(CONF_XKNX_CLIMATE): vol.All(
                     cv.ensure_list, [ClimateSchema.SCHEMA]
+                ),
+                vol.Optional(CONF_XKNX_NOTIFY): vol.All(
+                    cv.ensure_list, [NotifySchema.SCHEMA]
+                ),
+                vol.Optional(CONF_XKNX_SWITCH): vol.All(
+                    cv.ensure_list, [SwitchSchema.SCHEMA]
+                ),
+                vol.Optional(CONF_XKNX_SENSOR): vol.All(
+                    cv.ensure_list, [SensorSchema.SCHEMA]
+                ),
+                vol.Optional(CONF_XKNX_SCENE): vol.All(
+                    cv.ensure_list, [SceneSchema.SCHEMA]
                 ),
             }
         )
@@ -131,6 +137,15 @@ SERVICE_XKNX_SEND_SCHEMA = vol.Schema(
     }
 )
 
+KNX_CONFIG_PLATFORM_MAPPING = {
+    CONF_XKNX_COVER: DeviceTypes.cover,
+    CONF_XKNX_SWITCH: DeviceTypes.switch,
+    CONF_XKNX_LIGHT: DeviceTypes.light,
+    CONF_XKNX_SENSOR: DeviceTypes.sensor,
+    CONF_XKNX_NOTIFY: DeviceTypes.notify,
+    CONF_XKNX_SCENE: DeviceTypes.scene,
+}
+
 
 async def async_setup(hass, config):
     """Set up the KNX component."""
@@ -144,13 +159,14 @@ async def async_setup(hass, config):
             f"Can't connect to KNX interface: <br><b>{ex}</b>", title="KNX"
         )
 
-    if CONF_XKNX_COVER in config[DOMAIN]:
-        for cover_config in config[DOMAIN][CONF_XKNX_COVER]:
-            hass.data[DATA_XKNX].xknx.devices.add(
-                create_knx_device(
-                    DeviceTypes.cover, hass.data[DATA_XKNX].xknx, cover_config
+    for PLATFORM_CONFIG, device_type in KNX_CONFIG_PLATFORM_MAPPING.items():
+        if PLATFORM_CONFIG in config[DOMAIN]:
+            for device_config in config[DOMAIN][PLATFORM_CONFIG]:
+                hass.data[DATA_XKNX].xknx.devices.add(
+                    create_knx_device(
+                        device_type, hass.data[DATA_XKNX].xknx, device_config
+                    )
                 )
-            )
 
     if CONF_XKNX_BINARY_SENSOR in config[DOMAIN]:
         for binary_sensor_config in config[DOMAIN][CONF_XKNX_BINARY_SENSOR]:
@@ -161,14 +177,6 @@ async def async_setup(hass, config):
                     DOMAIN,
                     {ATTR_DISCOVER_CONFIG: binary_sensor_config},
                     config,
-                )
-            )
-
-    if CONF_XKNX_LIGHT in config[DOMAIN]:
-        for light_config in config[DOMAIN][CONF_XKNX_LIGHT]:
-            hass.data[DATA_XKNX].xknx.devices.add(
-                create_knx_device(
-                    DeviceTypes.light, hass.data[DATA_XKNX].xknx, light_config
                 )
             )
 
@@ -318,11 +326,11 @@ class KNXModule:
         if CONF_XKNX_EXPOSE not in self.config[DOMAIN]:
             return
         for to_expose in self.config[DOMAIN][CONF_XKNX_EXPOSE]:
-            expose_type = to_expose.get(CONF_XKNX_EXPOSE_TYPE)
+            expose_type = to_expose.get(ExposeSchema.CONF_XKNX_EXPOSE_TYPE)
             entity_id = to_expose.get(CONF_ENTITY_ID)
-            attribute = to_expose.get(CONF_XKNX_EXPOSE_ATTRIBUTE)
-            default = to_expose.get(CONF_XKNX_EXPOSE_DEFAULT)
-            address = to_expose.get(CONF_XKNX_EXPOSE_ADDRESS)
+            attribute = to_expose.get(ExposeSchema.CONF_XKNX_EXPOSE_ATTRIBUTE)
+            default = to_expose.get(ExposeSchema.CONF_XKNX_EXPOSE_DEFAULT)
+            address = to_expose.get(ExposeSchema.CONF_XKNX_EXPOSE_ADDRESS)
             if expose_type in ["time", "date", "datetime"]:
                 exposure = KNXExposeTime(self.xknx, expose_type, address)
                 exposure.async_register()

@@ -1,5 +1,6 @@
-"""Constants for the KNX integration"""
+"""Constants for the KNX integration."""
 from enum import Enum
+
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,

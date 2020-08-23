@@ -1,16 +1,19 @@
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_DEVICE_CLASS,
-    CONF_ADDRESS,
-)
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_DEVICE_CLASS,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_TYPE,
+)
 from xknx.devices.climate import SetpointShiftMode
-from .const import ColorTempModes, OPERATION_MODES, PRESET_MODES
+
+from .const import OPERATION_MODES, PRESET_MODES, ColorTempModes
 
 
 class CoverSchema:
-    """Voluptuous schema for KNX covers"""
+    """Voluptuous schema for KNX covers."""
 
     DEFAULT_TRAVEL_TIME = 25
     DEFAULT_COVER_NAME = "KNX Cover"
@@ -50,7 +53,7 @@ class CoverSchema:
 
 
 class BinarySensorSchema:
-    """Voluptuous schema for KNX binary sensors"""
+    """Voluptuous schema for KNX binary sensors."""
 
     DEFAULT_BINARY_SENSOR_NAME = "KNX Binary Sensor"
 
@@ -96,7 +99,7 @@ class BinarySensorSchema:
 
 
 class LightSchema:
-    """Voluptuous schema for KNX lights"""
+    """Voluptuous schema for KNX lights."""
 
     CONF_STATE_ADDRESS = "state_address"
     CONF_BRIGHTNESS_ADDRESS = "brightness_address"
@@ -143,7 +146,7 @@ class LightSchema:
 
 
 class ClimateSchema:
-    """Voluptuous schema for KNX climate devices"""
+    """Voluptuous schema for KNX climate devices."""
 
     CONF_SETPOINT_SHIFT_ADDRESS = "setpoint_shift_address"
     CONF_SETPOINT_SHIFT_STATE_ADDRESS = "setpoint_shift_state_address"
@@ -228,4 +231,87 @@ class ClimateSchema:
                 vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
             }
         ),
+    )
+
+
+class SwitchSchema:
+    """Voluptuous schema for KNX switches."""
+
+    CONF_STATE_ADDRESS = "state_address"
+
+    DEFAULT_NAME = "KNX Switch"
+    SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_ADDRESS): cv.string,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_STATE_ADDRESS): cv.string,
+        }
+    )
+
+
+class ExposeSchema:
+    """Voluptuous schema for KNX exposures."""
+
+    CONF_XKNX_EXPOSE_TYPE = "type"
+    CONF_XKNX_EXPOSE_ATTRIBUTE = "attribute"
+    CONF_XKNX_EXPOSE_DEFAULT = "default"
+    CONF_XKNX_EXPOSE_ADDRESS = "address"
+
+    SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_XKNX_EXPOSE_TYPE): vol.Any(int, float, str),
+            vol.Optional(CONF_ENTITY_ID): cv.entity_id,
+            vol.Optional(CONF_XKNX_EXPOSE_ATTRIBUTE): cv.string,
+            vol.Optional(CONF_XKNX_EXPOSE_DEFAULT): cv.match_all,
+            vol.Required(CONF_XKNX_EXPOSE_ADDRESS): cv.string,
+        }
+    )
+
+
+class NotifySchema:
+    """Voluptuous schema for KNX notifications."""
+
+    DEFAULT_NAME = "KNX Notify"
+
+    SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_ADDRESS): cv.string,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        }
+    )
+
+
+class SensorSchema:
+    """Voluptuous schema for KNX sensors."""
+
+    CONF_STATE_ADDRESS = "state_address"
+    CONF_SYNC_STATE = "sync_state"
+    DEFAULT_NAME = "KNX Sensor"
+
+    SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_SYNC_STATE, default=True): vol.Any(
+                vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)),
+                cv.boolean,
+                cv.string,
+            ),
+            vol.Required(CONF_STATE_ADDRESS): cv.string,
+            vol.Required(CONF_TYPE): vol.Any(int, float, str),
+        }
+    )
+
+
+class SceneSchema:
+    """Voluptuous schema for KNX scenes."""
+
+    CONF_SCENE_NUMBER = "scene_number"
+
+    DEFAULT_NAME = "KNX SCENE"
+    SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Required(CONF_ADDRESS): cv.string,
+            vol.Required(CONF_SCENE_NUMBER): cv.positive_int,
+        }
     )

@@ -1,10 +1,7 @@
 """Support for KNX/IP covers."""
-import voluptuous as vol
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
@@ -12,9 +9,7 @@ from homeassistant.components.cover import (
     SUPPORT_STOP,
     CoverEntity,
 )
-from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_utc_time_change
 
 from . import ATTR_DISCOVER_DEVICES, DATA_XKNX

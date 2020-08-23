@@ -1,27 +1,32 @@
-"""Helper functions to initialize KNX devices from config"""
-from xknx.devices import (
-    Device as XknxDevice,
-    Cover as XknxCover,
-    Light as XknxLight,
-    Climate as XknxClimate,
-    ClimateMode as XknxClimateMode,
-)
-from xknx import XKNX
+"""Factory function to initialize KNX devices from config."""
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE
 from homeassistant.helpers.typing import ConfigType
-from .schema import CoverSchema, LightSchema, ClimateSchema
-
-from homeassistant.const import (
-    CONF_ADDRESS,
-    CONF_NAME,
-)
+from xknx import XKNX
+from xknx.devices import Climate as XknxClimate
+from xknx.devices import ClimateMode as XknxClimateMode
+from xknx.devices import Cover as XknxCover
+from xknx.devices import Device as XknxDevice
+from xknx.devices import Light as XknxLight
+from xknx.devices import Notification as XknxNotification
+from xknx.devices import Scene as XknxScene
+from xknx.devices import Sensor as XknxSensor
+from xknx.devices import Switch as XknxSwitch
 
 from .const import ColorTempModes, DeviceTypes
+from .schema import (
+    ClimateSchema,
+    CoverSchema,
+    LightSchema,
+    SceneSchema,
+    SensorSchema,
+    SwitchSchema,
+)
 
 
 def create_knx_device(
     device_type: DeviceTypes, knx_module: XKNX, config: ConfigType
 ) -> XknxDevice:
-    """Factory for creating KNX devices"""
+    """Factory for creating KNX devices."""
     return {
         DeviceTypes.light: lambda module, conf: __create_light(module, conf),
         DeviceTypes.cover: lambda module, conf: __create_cover(module, conf),
@@ -29,11 +34,15 @@ def create_knx_device(
         DeviceTypes.climate_mode: lambda module, conf: __create_climate_mode(
             module, conf
         ),
+        DeviceTypes.switch: lambda module, conf: __create_switch(module, conf),
+        DeviceTypes.sensor: lambda module, conf: __create_sensor(module, conf),
+        DeviceTypes.notify: lambda module, conf: __create_notify(module, conf),
+        DeviceTypes.scene: lambda module, conf: __create_scene(module, conf),
     }[device_type](knx_module, config)
 
 
 def __create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
-    """Creates a KNX Cover device to be used within XKNX"""
+    """Creates a KNX Cover device to be used within XKNX."""
     return XknxCover(
         knx_module,
         name=config[CONF_NAME],
@@ -54,7 +63,7 @@ def __create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
 
 
 def __create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
-    """Creates a KNX Light device to be used within XKNX"""
+    """Creates a KNX Light device to be used within XKNX."""
     group_address_tunable_white = None
     group_address_tunable_white_state = None
     group_address_color_temp = None
@@ -93,7 +102,7 @@ def __create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
 
 
 def __create_climate(knx_module: XKNX, config: ConfigType) -> XknxClimate:
-    """Creates a KNX Climate device to be used within XKNX"""
+    """Creates a KNX Climate device to be used within XKNX."""
     return XknxClimate(
         knx_module,
         name=config[CONF_NAME],
@@ -123,7 +132,7 @@ def __create_climate(knx_module: XKNX, config: ConfigType) -> XknxClimate:
 
 
 def __create_climate_mode(knx_module: XKNX, config: ConfigType) -> XknxClimateMode:
-    """Creates a KNX Climate Mode device to be used within XKNX"""
+    """Creates a KNX Climate Mode device to be used within XKNX."""
     return XknxClimateMode(
         knx_module,
         name=f"{config[CONF_NAME]} Mode",
@@ -162,4 +171,42 @@ def __create_climate_mode(knx_module: XKNX, config: ConfigType) -> XknxClimateMo
             ClimateSchema.CONF_HEAT_COOL_STATE_ADDRESS
         ),
         operation_modes=config.get(ClimateSchema.CONF_OPERATION_MODES),
+    )
+
+
+def __create_switch(knx_module: XKNX, config: ConfigType) -> XknxSwitch:
+    """Creates a KNX switch to be used within XKNX."""
+    return XknxSwitch(
+        knx_module,
+        name=config[CONF_NAME],
+        group_address=config[CONF_ADDRESS],
+        group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
+    )
+
+
+def __create_sensor(knx_module: XKNX, config: ConfigType) -> XknxSensor:
+    """Creates a KNX sensor to be used within XKNX."""
+    return XknxSensor(
+        knx_module,
+        name=config[CONF_NAME],
+        group_address_state=config[SensorSchema.CONF_STATE_ADDRESS],
+        sync_state=config[SensorSchema.CONF_SYNC_STATE],
+        value_type=config[CONF_TYPE],
+    )
+
+
+def __create_notify(knx_module: XKNX, config: ConfigType) -> XknxNotification:
+    """Creates a KNX notification to be used within XKNX."""
+    return XknxNotification(
+        knx_module, name=config[CONF_NAME], group_address=config[CONF_ADDRESS],
+    )
+
+
+def __create_scene(knx_module: XKNX, config: ConfigType) -> XknxScene:
+    """Creates a KNX scene to be used within XKNX."""
+    return XknxScene(
+        knx_module,
+        name=config[CONF_NAME],
+        group_address=config[CONF_ADDRESS],
+        scene_number=config[SceneSchema.CONF_SCENE_NUMBER],
     )

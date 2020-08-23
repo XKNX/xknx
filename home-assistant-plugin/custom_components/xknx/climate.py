@@ -1,12 +1,7 @@
 """Support for KNX/IP climate devices."""
 from typing import List, Optional
 
-import voluptuous as vol
-from xknx.devices import Climate as XknxClimate, ClimateMode as XknxClimateMode
-from xknx.devices.climate import SetpointShiftMode
-from xknx.dpt import HVACOperationMode
-
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
@@ -14,9 +9,9 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from xknx.dpt import HVACOperationMode
 
 from . import ATTR_DISCOVER_DEVICES, DATA_XKNX
 from .const import OPERATION_MODES, PRESET_MODES

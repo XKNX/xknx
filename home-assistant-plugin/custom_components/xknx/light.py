@@ -1,26 +1,19 @@
 """Support for KNX/IP lights."""
-import voluptuous as vol
-from xknx.devices import Light as XknxLight
-
+import homeassistant.util.color as color_util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_WHITE_VALUE,
-    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_WHITE_VALUE,
     LightEntity,
 )
-from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.color as color_util
 
 from . import ATTR_DISCOVER_DEVICES, DATA_XKNX
-from .const import ColorTempModes
 
 DEFAULT_COLOR = (0.0, 0.0)
 DEFAULT_BRIGHTNESS = 255

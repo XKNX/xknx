@@ -1,32 +1,14 @@
 """Support for KNX/IP switches."""
-import voluptuous as vol
-from xknx.devices import Switch as XknxSwitch
-
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
-from homeassistant.const import CONF_ADDRESS, CONF_NAME
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 
 from . import ATTR_DISCOVER_DEVICES, DATA_XKNX
-
-CONF_STATE_ADDRESS = "state_address"
-
-DEFAULT_NAME = "KNX Switch"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ADDRESS): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_STATE_ADDRESS): cv.string,
-    }
-)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up switch(es) for KNX platform."""
     if discovery_info is not None:
         async_add_entities_discovery(hass, discovery_info, async_add_entities)
-    else:
-        async_add_entities_config(hass, config, async_add_entities)
 
 
 @callback
@@ -37,19 +19,6 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
         device = hass.data[DATA_XKNX].xknx.devices[device_name]
         entities.append(KNXSwitch(device))
     async_add_entities(entities)
-
-
-@callback
-def async_add_entities_config(hass, config, async_add_entities):
-    """Set up switch for KNX platform configured within platform."""
-    switch = XknxSwitch(
-        hass.data[DATA_XKNX].xknx,
-        name=config[CONF_NAME],
-        group_address=config[CONF_ADDRESS],
-        group_address_state=config.get(CONF_STATE_ADDRESS),
-    )
-    hass.data[DATA_XKNX].xknx.devices.add(switch)
-    async_add_entities([KNXSwitch(switch)])
 
 
 class KNXSwitch(SwitchEntity):
