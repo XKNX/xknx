@@ -26,3 +26,4 @@
 |[Sensor](./example_sensor.py)|Example for Sensor device|
 |[Switch](./example_switch.py)|Example for Switch device|
 |[Scene](./example_scene.py)|Example for switching a light on and off|
+|[Weather](./example_weather.py)|Example for Weather device and reading sensor data|

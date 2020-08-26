@@ -16,3 +16,4 @@ from .scene import Scene
 from .sensor import Sensor
 from .switch import Switch
 from .travelcalculator import TravelCalculator, TravelStatus
+from .weather import Weather
