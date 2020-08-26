@@ -16,3 +16,4 @@ venv
 .sass-cache/
 .pytest_cache/
 .mypy_cache/
+.python-version
