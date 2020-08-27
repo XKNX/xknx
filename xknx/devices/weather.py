@@ -142,17 +142,8 @@ class Weather(Device):
 
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
-        await self._temperature.process(telegram)
-        await self._brightness_south.process(telegram)
-        await self._brightness_west.process(telegram)
-        await self._brightness_east.process(telegram)
-        await self._wind_speed.process(telegram)
-        await self._rain_alarm.process(telegram)
-        await self._wind_alarm.process(telegram)
-        await self._frost_alarm.process(telegram)
-        await self._day_night.process(telegram)
-        await self._air_pressure.process(telegram)
-        await self._humidity.process(telegram)
+        for remote_value in self._iter_remote_values():
+            await remote_value.process(telegram)
 
     @property
     def temperature(self) -> float:
