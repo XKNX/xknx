@@ -2,7 +2,7 @@
 import asyncio
 
 from xknx import XKNX
-from xknx.devices import Weather
+from xknx.devices import Weather, Sensor
 from xknx.io import ConnectionConfig, ConnectionType
 
 import logging
@@ -12,7 +12,7 @@ async def main():
     """Connect to KNX/IP device and create a weather device and read its sensors."""
     xknx = XKNX()
     await xknx.start(connection_config=ConnectionConfig(connection_type=ConnectionType.TUNNELING,
-                                                        local_ip='xxx', gateway_ip='xxx'))
+                                                        local_ip='192.168.0.50', gateway_ip='192.168.0.100'))
 
     weather = Weather(
         xknx,
