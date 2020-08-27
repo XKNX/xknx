@@ -36,6 +36,8 @@ class TestConfig(unittest.TestCase):
         """Test reading general section from config file."""
         self.assertEqual(TestConfig.xknx.own_address, PhysicalAddress('15.15.249'))
         self.assertEqual(TestConfig.xknx.rate_limit, 18)
+        self.assertEqual(TestConfig.xknx.multicast_group, "224.1.2.3")
+        self.assertEqual(TestConfig.xknx.multicast_port, 1337)
 
     #
     # XKNX Connection Config
@@ -267,7 +269,7 @@ class TestConfig(unittest.TestCase):
                     group_address_target_temperature='1/7/4',
                     group_address_setpoint_shift='1/7/3',
                     group_address_setpoint_shift_state='1/7/14',
-                    setpoint_shift_step=0.1,
+                    temperature_step=0.5,
                     setpoint_shift_min=-10,
                     setpoint_shift_max=10,
                     device_updated_cb=TestConfig.xknx.devices.device_updated))

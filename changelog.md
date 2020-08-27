@@ -2,14 +2,28 @@
 
 ## Upcoming version (unreleased)
 
+### New Features
+
+- support for configuring the previously hard-coded multicast address (@jochembroekhoff #312)
+
+### Internals
+
+- Use new DPTTranscoder class as base for DPT implementations - use _DPTPayload as base class for DPTArray and DPTBinary (for future type checking)
+- GatewayScanner: Passing None or an integer <= 0 to the `stop_on_found` parameter now causes the scanner to only stop once the timeout is reached (@jochembroekhoff #311)
+
+## 0.12.0 New StateUpdater, improvements to the HA integrations and bug fixes 2020-08-14
+
 ### Breaking changes
 
+- Climate: `setpoint_shift_step` renamed for `temperature_step`. This attribute can be applied to all temperature modes. Default is `0.1`
 - Removed significant_bit attribute in BinarySensor
 - DateTime devices are initialized with sting for broadcast_type: "time", "date" or "datetime" instead of an Enum value
 - Removed `bind_to_multicast` option in ConnectionConfig and UDPClient
 
 ### New Features
 
+- Cover: add optional `group_address_stop` for manual stopping
+- Cover: start travel calculator when up/down telegram from bus is received
 - HA integration: `knx.send` service takes `type` attribute to allow sending DPT encoded values like `sensor`
 - HA integration: `sensor` and `expose` accept int and float values for `type` (parsed as DPT numbers)
 - new StateUpdater: Devices `sync_state` can be set to `init` to just initialize state on startup, `expire [minutes]` to read the state from the KNX bus when it was not updated for [minutes] or `every [minutes]` to update it regularly every [minutes]
@@ -21,14 +35,17 @@
 
 ### Bugfixes
 
+- Tunneling: don't process incoming L_Data.con confirmation frames. This avoids processing every outgoing telegram twice.
 - enable multicast on macOS and fix a bug where unknown cemi frames raise a TypeError on routing connections
 - BinarySensor: reset_after is now implemented as asyncio.Task to prevent blocking the loop
 - ClimateMode: binary climate modes should be fully functional now (sending, receiving and syncing)
+- Cover: position update from bus does update current position, but not target position (when moving)
 
 ### Internals
 
-- Use new DPTTranscoder class as base for DPT implementations - use _DPTPayload as base class for DPTArray and DPTBinary (for future type checking)
-- DPT classes can now be searched via value_type string or dpt number from any parent class (DPTTranscoder for all) to be used in Sensor
+- Cover travelcalculator doesn't start from 0% but is initialized by first movement or status telegram
+- Cover uses 0% for open cover and 100% for closed cover now
+- DPT classes can now be searched via value_type string or dpt number from any parent class (DPTBase for all) to be used in Sensor
 - Use RemoteValue class in BinarySensor, DateTime and ClimateMode device
 - use time.struct_time for internal time and date representation
 - use a regular Bool type for BinarySensor state representation

@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 from xknx import XKNX
-from xknx.devices import ActionCallback, DateTime, ExposeSensor
+from xknx.devices import DateTime, ExposeSensor
 from xknx.dpt import DPTArray, DPTBinary, DPTTranscoder
 from xknx.exceptions import XKNXException
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
@@ -22,27 +22,43 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers.script import Script
+from homeassistant.helpers.event import async_track_state_change_event
+
+from .const import DATA_XKNX, DOMAIN, DeviceTypes
+from .factory import create_knx_device
+from .schema import (
+    BinarySensorSchema,
+    ClimateSchema,
+    ConnectionSchema,
+    CoverSchema,
+    ExposeSchema,
+    LightSchema,
+    NotifySchema,
+    SceneSchema,
+    SensorSchema,
+    SwitchSchema,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "xknx"
-DATA_XKNX = "data_knx"
 CONF_XKNX_CONFIG = "config_file"
 
 CONF_XKNX_ROUTING = "routing"
 CONF_XKNX_TUNNELING = "tunneling"
-CONF_XKNX_LOCAL_IP = "local_ip"
 CONF_XKNX_FIRE_EVENT = "fire_event"
 CONF_XKNX_FIRE_EVENT_FILTER = "fire_event_filter"
 CONF_XKNX_STATE_UPDATER = "state_updater"
 CONF_XKNX_RATE_LIMIT = "rate_limit"
 CONF_XKNX_EXPOSE = "expose"
-CONF_XKNX_EXPOSE_TYPE = "type"
-CONF_XKNX_EXPOSE_ATTRIBUTE = "attribute"
-CONF_XKNX_EXPOSE_DEFAULT = "default"
-CONF_XKNX_EXPOSE_ADDRESS = "address"
+
+CONF_XKNX_LIGHT = "light"
+CONF_XKNX_COVER = "cover"
+CONF_XKNX_BINARY_SENSOR = "binary_sensor"
+CONF_XKNX_SCENE = "scene"
+CONF_XKNX_SENSOR = "sensor"
+CONF_XKNX_SWITCH = "switch"
+CONF_XKNX_NOTIFY = "notify"
+CONF_XKNX_CLIMATE = "climate"
 
 SERVICE_XKNX_SEND = "send"
 SERVICE_XKNX_ATTR_ADDRESS = "address"
@@ -51,35 +67,17 @@ SERVICE_XKNX_ATTR_TYPE = "type"
 
 ATTR_DISCOVER_DEVICES = "devices"
 
-TUNNELING_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_XKNX_LOCAL_IP): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-    }
-)
-
-ROUTING_SCHEMA = vol.Schema({vol.Optional(CONF_XKNX_LOCAL_IP): cv.string})
-
-EXPOSE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_XKNX_EXPOSE_TYPE): vol.Any(
-            int, float, str
-        ),
-        vol.Optional(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_XKNX_EXPOSE_ATTRIBUTE): cv.string,
-        vol.Optional(CONF_XKNX_EXPOSE_DEFAULT): cv.match_all,
-        vol.Required(CONF_XKNX_EXPOSE_ADDRESS): cv.string,
-    }
-)
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_XKNX_CONFIG): cv.string,
-                vol.Exclusive(CONF_XKNX_ROUTING, "connection_type"): ROUTING_SCHEMA,
-                vol.Exclusive(CONF_XKNX_TUNNELING, "connection_type"): TUNNELING_SCHEMA,
+                vol.Exclusive(
+                    CONF_XKNX_ROUTING, "connection_type"
+                ): ConnectionSchema.ROUTING_SCHEMA,
+                vol.Exclusive(
+                    CONF_XKNX_TUNNELING, "connection_type"
+                ): ConnectionSchema.TUNNELING_SCHEMA,
                 vol.Inclusive(CONF_XKNX_FIRE_EVENT, "fire_ev"): cv.boolean,
                 vol.Inclusive(CONF_XKNX_FIRE_EVENT_FILTER, "fire_ev"): vol.All(
                     cv.ensure_list, [cv.string]
@@ -88,7 +86,33 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_XKNX_RATE_LIMIT, default=20): vol.All(
                     vol.Coerce(int), vol.Range(min=1, max=100)
                 ),
-                vol.Optional(CONF_XKNX_EXPOSE): vol.All(cv.ensure_list, [EXPOSE_SCHEMA]),
+                vol.Optional(CONF_XKNX_EXPOSE): vol.All(
+                    cv.ensure_list, [ExposeSchema.SCHEMA]
+                ),
+                vol.Optional(CONF_XKNX_COVER): vol.All(
+                    cv.ensure_list, [CoverSchema.SCHEMA]
+                ),
+                vol.Optional(CONF_XKNX_BINARY_SENSOR): vol.All(
+                    cv.ensure_list, [BinarySensorSchema.SCHEMA]
+                ),
+                vol.Optional(CONF_XKNX_LIGHT): vol.All(
+                    cv.ensure_list, [LightSchema.SCHEMA]
+                ),
+                vol.Optional(CONF_XKNX_CLIMATE): vol.All(
+                    cv.ensure_list, [ClimateSchema.SCHEMA]
+                ),
+                vol.Optional(CONF_XKNX_NOTIFY): vol.All(
+                    cv.ensure_list, [NotifySchema.SCHEMA]
+                ),
+                vol.Optional(CONF_XKNX_SWITCH): vol.All(
+                    cv.ensure_list, [SwitchSchema.SCHEMA]
+                ),
+                vol.Optional(CONF_XKNX_SENSOR): vol.All(
+                    cv.ensure_list, [SensorSchema.SCHEMA]
+                ),
+                vol.Optional(CONF_XKNX_SCENE): vol.All(
+                    cv.ensure_list, [SceneSchema.SCHEMA]
+                ),
             }
         )
     },
@@ -101,11 +125,20 @@ SERVICE_XKNX_SEND_SCHEMA = vol.Schema(
         vol.Required(SERVICE_XKNX_ATTR_PAYLOAD): vol.Any(
             cv.positive_int, [cv.positive_int]
         ),
-        vol.Optional(SERVICE_XKNX_ATTR_TYPE): vol.Any(
-            int, float, str
-        ),
+        vol.Optional(SERVICE_XKNX_ATTR_TYPE): vol.Any(int, float, str),
     }
 )
+
+KNX_CONFIG_PLATFORM_MAPPING = {
+    CONF_XKNX_COVER: DeviceTypes.cover,
+    CONF_XKNX_SWITCH: DeviceTypes.switch,
+    CONF_XKNX_LIGHT: DeviceTypes.light,
+    CONF_XKNX_SENSOR: DeviceTypes.sensor,
+    CONF_XKNX_NOTIFY: DeviceTypes.notify,
+    CONF_XKNX_SCENE: DeviceTypes.scene,
+    CONF_XKNX_BINARY_SENSOR: DeviceTypes.binary_sensor,
+    CONF_XKNX_CLIMATE: DeviceTypes.climate,
+}
 
 
 async def async_setup(hass, config):
@@ -119,6 +152,15 @@ async def async_setup(hass, config):
         hass.components.persistent_notification.async_create(
             f"Can't connect to KNX interface: <br><b>{ex}</b>", title="KNX"
         )
+
+    for platform_config, device_type in KNX_CONFIG_PLATFORM_MAPPING.items():
+        if platform_config in config[DOMAIN]:
+            for device_config in config[DOMAIN][platform_config]:
+                hass.data[DATA_XKNX].xknx.devices.add(
+                    create_knx_device(
+                        hass, device_type, hass.data[DATA_XKNX].xknx, device_config
+                    )
+                )
 
     for component, discovery_type in (
         ("switch", "Switch"),
@@ -209,11 +251,15 @@ class KNXModule:
             return self.connection_config_tunneling()
         if CONF_XKNX_ROUTING in self.config[DOMAIN]:
             return self.connection_config_routing()
-        return self.connection_config_auto()
+        # return None to let xknx use config from xknx.yaml connection block if given
+        #   otherwise it will use default ConnectionConfig (Automatic)
+        return None
 
     def connection_config_routing(self):
         """Return the connection_config if routing is configured."""
-        local_ip = self.config[DOMAIN][CONF_XKNX_ROUTING].get(CONF_XKNX_LOCAL_IP)
+        local_ip = self.config[DOMAIN][CONF_XKNX_ROUTING].get(
+            ConnectionSchema.CONF_XKNX_LOCAL_IP
+        )
         return ConnectionConfig(
             connection_type=ConnectionType.ROUTING, local_ip=local_ip
         )
@@ -222,7 +268,9 @@ class KNXModule:
         """Return the connection_config if tunneling is configured."""
         gateway_ip = self.config[DOMAIN][CONF_XKNX_TUNNELING][CONF_HOST]
         gateway_port = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_PORT)
-        local_ip = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_XKNX_LOCAL_IP)
+        local_ip = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(
+            ConnectionSchema.CONF_XKNX_LOCAL_IP
+        )
         if gateway_port is None:
             gateway_port = DEFAULT_MCAST_PORT
         return ConnectionConfig(
@@ -232,11 +280,6 @@ class KNXModule:
             local_ip=local_ip,
             auto_reconnect=True,
         )
-
-    def connection_config_auto(self):
-        """Return the connection_config if auto is configured."""
-        # pylint: disable=no-self-use
-        return ConnectionConfig()
 
     def register_callbacks(self):
         """Register callbacks within XKNX object."""
@@ -257,11 +300,11 @@ class KNXModule:
         if CONF_XKNX_EXPOSE not in self.config[DOMAIN]:
             return
         for to_expose in self.config[DOMAIN][CONF_XKNX_EXPOSE]:
-            expose_type = to_expose.get(CONF_XKNX_EXPOSE_TYPE)
+            expose_type = to_expose.get(ExposeSchema.CONF_XKNX_EXPOSE_TYPE)
             entity_id = to_expose.get(CONF_ENTITY_ID)
-            attribute = to_expose.get(CONF_XKNX_EXPOSE_ATTRIBUTE)
-            default = to_expose.get(CONF_XKNX_EXPOSE_DEFAULT)
-            address = to_expose.get(CONF_XKNX_EXPOSE_ADDRESS)
+            attribute = to_expose.get(ExposeSchema.CONF_XKNX_EXPOSE_ATTRIBUTE)
+            default = to_expose.get(ExposeSchema.CONF_XKNX_EXPOSE_DEFAULT)
+            address = to_expose.get(ExposeSchema.CONF_XKNX_EXPOSE_ADDRESS)
             if expose_type in ["time", "date", "datetime"]:
                 exposure = KNXExposeTime(self.xknx, expose_type, address)
                 exposure.async_register()
@@ -296,13 +339,11 @@ class KNXModule:
 
         def calculate_payload(attr_payload):
             """Calculate payload depending on type of attribute."""
-            if attr_type:
-                try:
-                    transcoder = DPTTranscoder.parse_type(attr_type)
-                    return DPTArray(transcoder.to_knx(attr_payload))
-                except AttributeError as ex:
-                    _LOGGER.error("Invalid type for knx.send service: %s", attr_type)
-                    raise ex
+            if attr_type is not None:
+                transcoder = DPTTranscoder.parse_type(attr_type)
+                if transcoder is None:
+                    raise ValueError(f"Invalid type for knx.send service: {attr_type}")
+                return DPTArray(transcoder.to_knx(attr_payload))
             if isinstance(attr_payload, int):
                 return DPTBinary(attr_payload)
             return DPTArray(attr_payload)
@@ -314,22 +355,6 @@ class KNXModule:
         telegram.payload = payload
         telegram.group_address = address
         await self.xknx.telegrams.put(telegram)
-
-
-class KNXAutomation:
-    """Wrapper around xknx.devices.ActionCallback object.."""
-
-    def __init__(self, hass, device, hook, action, counter=1):
-        """Initialize Automation class."""
-        self.hass = hass
-        self.device = device
-        script_name = f"{device.get_name()} turn ON script"
-        self.script = Script(hass, action, script_name)
-
-        self.action = ActionCallback(
-            hass.data[DATA_XKNX].xknx, self.script.async_run, hook=hook, counter=counter
-        )
-        device.actions.append(self.action)
 
 
 class KNXExposeTime:
@@ -378,10 +403,13 @@ class KNXExposeSensor:
             self.xknx, name=_name, group_address=self.address, value_type=self.type,
         )
         self.xknx.devices.add(self.device)
-        async_track_state_change(self.hass, self.entity_id, self._async_entity_changed)
+        async_track_state_change_event(
+            self.hass, [self.entity_id], self._async_entity_changed
+        )
 
-    async def _async_entity_changed(self, entity_id, old_state, new_state):
+    async def _async_entity_changed(self, event):
         """Handle entity change."""
+        new_state = event.data.get("new_state")
         if new_state is None:
             return
         if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
@@ -389,6 +417,8 @@ class KNXExposeSensor:
 
         if self.expose_attribute is not None:
             new_attribute = new_state.attributes.get(self.expose_attribute)
+            old_state = event.data.get("old_state")
+
             if old_state is not None:
                 old_attribute = old_state.attributes.get(self.expose_attribute)
                 if old_attribute == new_attribute:
