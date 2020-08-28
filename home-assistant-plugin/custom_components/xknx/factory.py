@@ -42,7 +42,7 @@ def create_knx_device(
         return _create_cover(knx_module, config)
 
     if platform is SupportedPlatforms.climate:
-        return _create_climate(hass, knx_module, config)
+        return _create_climate(knx_module, config)
 
     if platform is SupportedPlatforms.switch:
         return _create_switch(knx_module, config)
@@ -121,7 +121,7 @@ def _create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
 
 
 def _create_climate(
-    hass: HomeAssistant, knx_module: XKNX, config: ConfigType
+    knx_module: XKNX, config: ConfigType
 ) -> XknxClimate:
     """Return a KNX Climate device to be used within XKNX."""
     climate_mode = XknxClimateMode(

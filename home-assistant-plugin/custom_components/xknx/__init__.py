@@ -148,11 +148,13 @@ async def async_setup(hass, config):
                 create_knx_device(
                     hass, platform, hass.data[DATA_XKNX].xknx, device_config
                 )
-            hass.async_create_task(
-                discovery.async_load_platform(
-                    hass, platform.value, DOMAIN, {}, config
-                )
+
+    for platform in SUPPORTED_PLATFORMS:
+        hass.async_create_task(
+            discovery.async_load_platform(
+                hass, platform.value, DOMAIN, {}, config
             )
+        )
 
     hass.services.async_register(
         DOMAIN,
