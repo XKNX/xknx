@@ -62,7 +62,3 @@ class Scene(Device):
             await self.run()
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
-
-    def __eq__(self, other):
-        """Equal operator."""
-        return self.__dict__ == other.__dict__

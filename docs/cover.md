@@ -20,8 +20,6 @@ cover = Cover(xknx,
               travel_time_down=50,
               travel_time_up=60)
 
-xknx.devices.add(cover)
-
 # Accessing cover
 await xknx.devices['TestShutter'].set_up()
 ```

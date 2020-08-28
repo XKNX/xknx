@@ -162,7 +162,3 @@ class BinarySensor(Device):
         """Return object as readable string."""
         return '<BinarySensor name="{0}" remote_value="{1}" state="{2}"/>' \
             .format(self.name, self.remote_value.group_addr_str(), self.state)
-
-    def __eq__(self, other):
-        """Equal operator."""
-        return self.__dict__ == other.__dict__

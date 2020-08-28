@@ -9,6 +9,11 @@
 ### Internals
 
 - GatewayScanner: Passing None or an integer <= 0 to the `stop_on_found` parameter now causes the scanner to only stop once the timeout is reached (@jochembroekhoff #311)
+- Devices are now added automatically to the xknx.devices list after initialization
+
+### Bugfixes
+
+- Device: Fixes a bug (#339) introduced in 0.12.0 so that it is again possible to have multiple devices with the same name in the HA integration
 
 ## 0.12.0 New StateUpdater, improvements to the HA integrations and bug fixes 2020-08-14
 

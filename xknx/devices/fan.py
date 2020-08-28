@@ -82,7 +82,3 @@ class Fan(Device):
     def current_speed(self):
         """Return current speed of fan."""
         return self.speed.value
-
-    def __eq__(self, other):
-        """Equal operator."""
-        return self.__dict__ == other.__dict__

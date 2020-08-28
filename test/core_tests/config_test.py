@@ -124,8 +124,7 @@ class TestConfig(unittest.TestCase):
                   'Living-Room.Light_1',
                   group_address_switch='1/6/9',
                   min_kelvin=2700,
-                  max_kelvin=6000,
-                  device_updated_cb=TestConfig.xknx.devices.device_updated))
+                  max_kelvin=6000))
 
     def test_config_light_state(self):
         """Test reading Light with dimming address from config file."""
@@ -138,8 +137,7 @@ class TestConfig(unittest.TestCase):
                   group_address_brightness='1/7/6',
                   group_address_brightness_state='1/7/7',
                   min_kelvin=2700,
-                  max_kelvin=6000,
-                  device_updated_cb=TestConfig.xknx.devices.device_updated))
+                  max_kelvin=6000))
 
     def test_config_light_color(self):
         """Test reading Light with with dimming and color address."""
@@ -152,8 +150,7 @@ class TestConfig(unittest.TestCase):
                   group_address_color='1/6/7',
                   group_address_color_state='1/6/8',
                   min_kelvin=2700,
-                  max_kelvin=6000,
-                  device_updated_cb=TestConfig.xknx.devices.device_updated))
+                  max_kelvin=6000))
 
     def test_config_color_temperature(self):
         """Test reading Light with with dimming and color temperature address."""
@@ -168,8 +165,7 @@ class TestConfig(unittest.TestCase):
                   group_address_color_temperature='1/6/14',
                   group_address_color_temperature_state='1/6/15',
                   min_kelvin=2700,
-                  max_kelvin=6000,
-                  device_updated_cb=TestConfig.xknx.devices.device_updated))
+                  max_kelvin=6000))
 
     def test_config_tunable_white(self):
         """Test reading Light with with dimming and tunable white address."""
@@ -184,8 +180,7 @@ class TestConfig(unittest.TestCase):
                   group_address_tunable_white='1/6/24',
                   group_address_tunable_white_state='1/6/25',
                   min_kelvin=2700,
-                  max_kelvin=6000,
-                  device_updated_cb=TestConfig.xknx.devices.device_updated))
+                  max_kelvin=6000))
 
     def test_config_switch(self):
         """Test reading Switch from config file."""
@@ -193,8 +188,7 @@ class TestConfig(unittest.TestCase):
             TestConfig.xknx.devices['Livingroom.Outlet_2'],
             Switch(TestConfig.xknx,
                    'Livingroom.Outlet_2',
-                   group_address='1/3/2',
-                   device_updated_cb=TestConfig.xknx.devices.device_updated))
+                   group_address='1/3/2'))
 
     def test_config_fan(self):
         """Test reading Fan from config file."""
@@ -203,8 +197,7 @@ class TestConfig(unittest.TestCase):
             Fan(TestConfig.xknx,
                 'Kitchen.Fan_1',
                 group_address_speed='1/3/21',
-                group_address_speed_state='1/3/22',
-                device_updated_cb=TestConfig.xknx.devices.device_updated))
+                group_address_speed_state='1/3/22'))
 
     def test_config_cover(self):
         """Test reading Cover from config file."""
@@ -217,8 +210,7 @@ class TestConfig(unittest.TestCase):
                   group_address_position_state='1/4/7',
                   group_address_position='1/4/8',
                   travel_time_down=50,
-                  travel_time_up=60,
-                  device_updated_cb=TestConfig.xknx.devices.device_updated))
+                  travel_time_up=60))
 
     def test_config_cover_venetian(self):
         """Test reading Cover with angle from config file."""
@@ -231,8 +223,7 @@ class TestConfig(unittest.TestCase):
                   group_address_position_state='1/4/17',
                   group_address_position='1/4/16',
                   group_address_angle='1/4/18',
-                  group_address_angle_state='1/4/19',
-                  device_updated_cb=TestConfig.xknx.devices.device_updated))
+                  group_address_angle_state='1/4/19'))
 
     def test_config_cover_venetian_with_inverted_position(self):
         """Test reading Cover with angle from config file with inverted position/angle."""
@@ -247,8 +238,7 @@ class TestConfig(unittest.TestCase):
                   group_address_angle='1/4/18',
                   group_address_angle_state='1/4/19',
                   invert_position=True,
-                  invert_angle=True,
-                  device_updated_cb=TestConfig.xknx.devices.device_updated))
+                  invert_angle=True))
 
     def test_config_climate_temperature(self):
         """Test reading Climate object from config file."""
@@ -256,8 +246,7 @@ class TestConfig(unittest.TestCase):
             TestConfig.xknx.devices['Kitchen.Climate'],
             Climate(TestConfig.xknx,
                     'Kitchen.Climate',
-                    group_address_temperature='1/7/1',
-                    device_updated_cb=TestConfig.xknx.devices.device_updated))
+                    group_address_temperature='1/7/1'))
 
     def test_config_climate_target_temperature_and_setpoint_shift(self):
         """Test reading Climate object with target_temperature_address and setpoint shift from config file."""
@@ -271,8 +260,7 @@ class TestConfig(unittest.TestCase):
                     group_address_setpoint_shift_state='1/7/14',
                     temperature_step=0.5,
                     setpoint_shift_min=-10,
-                    setpoint_shift_max=10,
-                    device_updated_cb=TestConfig.xknx.devices.device_updated))
+                    setpoint_shift_max=10))
 
     def test_config_climate_operation_mode(self):
         """Test reading Climate object with operation mode in one group address from config file."""
@@ -280,8 +268,7 @@ class TestConfig(unittest.TestCase):
             TestConfig.xknx.devices['Office.Climate'].mode,
             ClimateMode(TestConfig.xknx,
                         name=None,
-                        group_address_operation_mode='1/7/6',
-                        device_updated_cb=TestConfig.xknx.devices.device_updated))
+                        group_address_operation_mode='1/7/6'))
 
     def test_config_climate_operation_mode2(self):
         """Test reading Climate object with operation mode in different group addresses  from config file."""
@@ -291,8 +278,7 @@ class TestConfig(unittest.TestCase):
                         name=None,
                         group_address_operation_mode_protection='1/7/8',
                         group_address_operation_mode_night='1/7/9',
-                        group_address_operation_mode_comfort='1/7/10',
-                        device_updated_cb=TestConfig.xknx.devices.device_updated))
+                        group_address_operation_mode_comfort='1/7/10'))
 
     def test_config_climate_operation_mode_state(self):
         """Test reading Climate object with status address for operation mode."""
@@ -301,8 +287,7 @@ class TestConfig(unittest.TestCase):
             ClimateMode(TestConfig.xknx,
                         name=None,
                         group_address_operation_mode='1/7/6',
-                        group_address_operation_mode_state='1/7/7',
-                        device_updated_cb=TestConfig.xknx.devices.device_updated))
+                        group_address_operation_mode_state='1/7/7'))
 
     def test_config_climate_controller_status_state(self):
         """Test reading Climate object with addresses for controller status."""
@@ -311,8 +296,7 @@ class TestConfig(unittest.TestCase):
             ClimateMode(TestConfig.xknx,
                         name=None,
                         group_address_controller_status='1/7/12',
-                        group_address_controller_status_state='1/7/13',
-                        device_updated_cb=TestConfig.xknx.devices.device_updated))
+                        group_address_controller_status_state='1/7/13'))
 
     def test_config_datetime(self):
         """Test reading DateTime objects from config file."""
@@ -322,24 +306,21 @@ class TestConfig(unittest.TestCase):
                 TestConfig.xknx,
                 'General.Time',
                 group_address='2/1/1',
-                broadcast_type="TIME",
-                device_updated_cb=TestConfig.xknx.devices.device_updated))
+                broadcast_type="TIME"))
         self.assertEqual(
             TestConfig.xknx.devices['General.DateTime'],
             DateTime(
                 TestConfig.xknx,
                 'General.DateTime',
                 group_address='2/1/2',
-                broadcast_type="DATETIME",
-                device_updated_cb=TestConfig.xknx.devices.device_updated))
+                broadcast_type="DATETIME"))
         self.assertEqual(
             TestConfig.xknx.devices['General.Date'],
             DateTime(
                 TestConfig.xknx,
                 'General.Date',
                 group_address='2/1/3',
-                broadcast_type="DATE",
-                device_updated_cb=TestConfig.xknx.devices.device_updated))
+                broadcast_type="DATE"))
 
     def test_config_notification(self):
         """Test reading DateTime object from config file."""
@@ -349,8 +330,7 @@ class TestConfig(unittest.TestCase):
                 TestConfig.xknx,
                 'AlarmWindow',
                 group_address='2/7/1',
-                group_address_state='2/7/2',
-                device_updated_cb=TestConfig.xknx.devices.device_updated))
+                group_address_state='2/7/2'))
 
     def test_config_binary_sensor(self):
         """Test reading BinarySensor from config file."""
@@ -366,8 +346,7 @@ class TestConfig(unittest.TestCase):
                              Action(TestConfig.xknx,
                                     target="Livingroom.Outlet_2",
                                     counter=2,
-                                    method="on")],
-                         device_updated_cb=TestConfig.xknx.devices.device_updated))
+                                    method="on")]))
 
     def test_config_sensor_percent(self):
         """Test reading percent Sensor from config file."""
@@ -377,8 +356,7 @@ class TestConfig(unittest.TestCase):
                    'Heating.Valve1',
                    group_address_state='2/0/0',
                    value_type='percent',
-                   sync_state=True,
-                   device_updated_cb=TestConfig.xknx.devices.device_updated))
+                   sync_state=True))
 
     def test_config_sensor_percent_passive(self):
         """Test passive percent Sensor from config file."""
@@ -388,8 +366,7 @@ class TestConfig(unittest.TestCase):
                    'Heating.Valve2',
                    group_address_state='2/0/1',
                    value_type='percent',
-                   sync_state=False,
-                   device_updated_cb=TestConfig.xknx.devices.device_updated))
+                   sync_state=False))
 
     def test_config_sensor_temperature_type(self):
         """Test reading temperature Sensor from config file."""
@@ -398,8 +375,7 @@ class TestConfig(unittest.TestCase):
             Sensor(TestConfig.xknx,
                    'Kitchen.Temperature',
                    group_address_state='2/0/2',
-                   value_type='temperature',
-                   device_updated_cb=TestConfig.xknx.devices.device_updated))
+                   value_type='temperature'))
 
     def test_config_expose_sensor(self):
         """Test reading ExposeSensor from config file."""
@@ -409,8 +385,7 @@ class TestConfig(unittest.TestCase):
                 TestConfig.xknx,
                 'Outside.Temperature',
                 group_address='2/0/3',
-                value_type='temperature',
-                device_updated_cb=TestConfig.xknx.devices.device_updated))
+                value_type='temperature'))
 
     def test_config_sensor_binary_device_class(self):
         """Test reading Sensor with device_class from config file."""
@@ -419,8 +394,7 @@ class TestConfig(unittest.TestCase):
             BinarySensor(TestConfig.xknx,
                          'Kitchen.Motion.Sensor',
                          group_address_state='3/0/0',
-                         device_class='motion',
-                         device_updated_cb=TestConfig.xknx.devices.device_updated))
+                         device_class='motion'))
 
     def test_config_sensor_binary_passive(self):
         """Test reading Sensor with sync_state False from config file."""
@@ -430,8 +404,7 @@ class TestConfig(unittest.TestCase):
                          'DiningRoom.Motion.Sensor',
                          group_address_state='3/0/1',
                          sync_state=False,
-                         device_class='motion',
-                         device_updated_cb=TestConfig.xknx.devices.device_updated))
+                         device_class='motion'))
 
     def test_config_scene(self):
         """Test reading Scene from config file."""
@@ -441,8 +414,7 @@ class TestConfig(unittest.TestCase):
                 TestConfig.xknx,
                 "Romantic",
                 group_address='7/0/1',
-                scene_number=23,
-                device_updated_cb=TestConfig.xknx.devices.device_updated))
+                scene_number=23))
 
     def test_config_file_not_found(self):
         """Test error message when reading a non exisiting config file."""

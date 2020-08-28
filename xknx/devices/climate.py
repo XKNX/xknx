@@ -308,7 +308,3 @@ class Climate(Device):
                 self.setpoint_shift_max,
                 self.setpoint_shift_min,
                 self.on.group_addr_str())
-
-    def __eq__(self, other):
-        """Equal operator."""
-        return self.__dict__ == other.__dict__
