@@ -52,14 +52,13 @@ class TestBinarySensor(unittest.TestCase):
         telegram_on.payload = DPTBinary(1)
 
         self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_on)))
-        self.loop.run_until_complete(asyncio.sleep(reset_after_ms*2/1000))
+        self.loop.run_until_complete(asyncio.sleep(reset_after_ms * 2 / 1000))
         self.assertEqual(binaryinput.state, False)
 
     def test_process_action(self):
         """Test process / reading telegrams from telegram queue. Test if action is executed."""
         xknx = XKNX(loop=self.loop)
-        switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
-        xknx.devices.add(switch)
+        Switch(xknx, 'TestOutlet', group_address='1/2/3')
 
         binary_sensor = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3')
         action_on = Action(
@@ -74,7 +73,6 @@ class TestBinarySensor(unittest.TestCase):
             target='TestOutlet',
             method='off')
         binary_sensor.actions.append(action_off)
-        xknx.devices.add(binary_sensor)
 
         self.assertEqual(
             xknx.devices['TestInput'].state,
@@ -109,7 +107,6 @@ class TestBinarySensor(unittest.TestCase):
         """Test process / reading telegrams from telegram queue. Test if action is executed."""
         xknx = XKNX(loop=self.loop)
         switch = Switch(xknx, 'TestOutlet', group_address='5/5/5')
-        xknx.devices.add(switch)
 
         binary_sensor = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3', ignore_internal_state=True)
         action_on = Action(
@@ -118,7 +115,6 @@ class TestBinarySensor(unittest.TestCase):
             target='TestOutlet',
             method='on')
         binary_sensor.actions.append(action_on)
-        xknx.devices.add(binary_sensor)
 
         self.assertEqual(
             xknx.devices['TestInput'].state,
@@ -202,6 +198,7 @@ class TestBinarySensor(unittest.TestCase):
         async def async_after_update_callback(device):
             """Async callback."""
             after_update_callback(device)
+
         switch.register_device_updated_cb(async_after_update_callback)
 
         telegram = Telegram(group_address=GroupAddress('1/2/3'))

@@ -80,7 +80,3 @@ class Switch(Device):
         return '<Switch name="{0}" switch="{1}" />' \
             .format(self.name,
                     self.switch.group_addr_str())
-
-    def __eq__(self, other):
-        """Equal operator."""
-        return self.__dict__ == other.__dict__

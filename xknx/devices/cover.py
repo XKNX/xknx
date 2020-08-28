@@ -334,7 +334,3 @@ class Cover(Device):
     def supports_angle(self):
         """Return if cover supports tilt angle."""
         return self.angle.initialized
-
-    def __eq__(self, other):
-        """Equal operator."""
-        return self.__dict__ == other.__dict__

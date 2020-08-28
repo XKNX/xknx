@@ -27,7 +27,6 @@ binarysensor = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3', devi
 
 ```python
 outlet = Switch(xknx, 'TestOutlet', group_address='1/2/3')
-xknx.devices.devices.append(outlet)
 
 binarysensor = BinarySensor(xknx, 'TestInput', group_address_state='2/3/4')
 action_on = Action(
@@ -42,7 +41,6 @@ action_off = Action(
     target='TestOutlet',
     method='off')
 binarysensor.actions.append(action_off)
-xknx.devices.add(binarysensor)
 ```
 
 ## [](#header-2)Configuration via **xknx.yaml**

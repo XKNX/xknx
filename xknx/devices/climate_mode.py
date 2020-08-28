@@ -246,7 +246,3 @@ class ClimateMode(Device):
                 self.remote_value_operation_mode.group_addr_str(),
                 self.remote_value_controller_mode.group_addr_str(),
                 self.remote_value_controller_status.group_addr_str(),)
-
-    def __eq__(self, other):
-        """Equal operator."""
-        return self.__dict__ == other.__dict__

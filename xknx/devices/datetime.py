@@ -74,7 +74,3 @@ class DateTime(Device):
             .format(self.name,
                     self._remote_value.group_addr_str(),
                     self._broadcast_type)
-
-    def __eq__(self, other):
-        """Equal operator."""
-        return self.__dict__ == other.__dict__

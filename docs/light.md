@@ -23,7 +23,6 @@ light = Light(xknx,
               name='TestLight',
               group_address_switch='1/2/3',
               group_address_brightness='1/2/5')
-xknx.devices.add(light)
 
 # Accessing light
 await xknx.devices['TestLight'].set_on()
