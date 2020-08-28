@@ -2,8 +2,13 @@
 
 ## Upcoming version (unreleased)
 
+### Deprecation notes
+
+- Python 3.5 is no longer supported
+
 ### New Features
 
+- Adds support for a weather station via a dedicated weather device
 - support for configuring the previously hard-coded multicast address (@jochembroekhoff #312)
 
 ### Internals

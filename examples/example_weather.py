@@ -27,8 +27,6 @@ async def main():
         group_address_rain_alarm='7/0/0'
     )
 
-    xknx.devices.add(weather)
-
     await weather.sync()
     await asyncio.sleep(10)
     print(weather.max_brightness)

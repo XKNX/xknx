@@ -1,12 +1,13 @@
 """Unit test for Weather objects."""
 import asyncio
+import datetime
 import unittest
-from unittest.mock import Mock
 
 from xknx import XKNX
 from xknx.devices import Weather
-from xknx.dpt import DPTArray
-from xknx.telegram import GroupAddress, Telegram, TelegramType
+from xknx.devices.weather import WeatherCondition
+from xknx.dpt import DPTArray, DPTBinary
+from xknx.telegram import GroupAddress
 
 
 class TestWeather(unittest.TestCase):
@@ -59,6 +60,30 @@ class TestWeather(unittest.TestCase):
         self.assertEqual(weather._brightness_south.unit_of_measurement, "lx")
         self.assertEqual(weather._brightness_south.ha_device_class, 'illuminance')
 
+    def test_pressure(self):
+        """Test resolve state with pressure."""
+        xknx = XKNX(loop=self.loop)
+        weather = Weather(name="weather",
+                          xknx=xknx,
+                          group_address_air_pressure="1/3/4")
+        weather._air_pressure.payload = DPTArray((0xC5, 0xE6, 0xE6, 0x63,))
+
+        self.assertEqual(weather.air_pressure, -7388.79833984375)
+        self.assertEqual(weather._air_pressure.unit_of_measurement, "Pa")
+        self.assertEqual(weather._air_pressure.ha_device_class, 'pressure')
+
+    def test_humidity(self):
+        """Test humidity."""
+        xknx = XKNX(loop=self.loop)
+        weather = Weather(name="weather",
+                          xknx=xknx,
+                          group_address_humidity="1/2/4")
+        weather._humidity.payload = DPTArray((0x7E, 0xE1,))
+
+        self.assertEqual(weather.humidity, 577044.48)
+        self.assertEqual(weather._humidity.unit_of_measurement, "%")
+        self.assertEqual(weather._humidity.ha_device_class, 'humidity')
+
     def test_wind_speed(self):
         """Test wind speed received."""
         xknx = XKNX(loop=self.loop)
@@ -71,6 +96,159 @@ class TestWeather(unittest.TestCase):
         self.assertEqual(weather.wind_speed, 469237.76)
         self.assertEqual(weather._wind_speed.unit_of_measurement, "m/s")
         self.assertEqual(weather._wind_speed.ha_device_class, None)
+
+    def test_state_lightning(self):
+        """Test current_state returns lightning if wind alarm and rain alarm are true."""
+        xknx = XKNX(loop=self.loop)
+        weather: Weather = Weather(name="weather",
+                                   xknx=xknx,
+                                   group_address_rain_alarm="1/3/8",
+                                   group_address_wind_alarm="1/3/9")
+
+        weather._rain_alarm.payload = DPTBinary(1)
+        weather._wind_alarm.payload = DPTBinary(1)
+
+        self.assertEqual(weather.ha_current_state(), WeatherCondition.lightning_rainy)
+
+    def test_state_snowy_rainy(self):
+        """Test snow rain if frost alarm and rain alarm are true."""
+        xknx = XKNX(loop=self.loop)
+        weather: Weather = Weather(name="weather",
+                                   xknx=xknx,
+                                   group_address_rain_alarm="1/3/8",
+                                   group_address_frost_alarm="1/3/10")
+
+        weather._rain_alarm.payload = DPTBinary(1)
+        weather._frost_alarm.payload = DPTBinary(1)
+
+        self.assertEqual(weather.ha_current_state(), WeatherCondition.snowy_rainy)
+
+    def test_wind_alarm(self):
+        """Test basic state mapping."""
+        xknx = XKNX(loop=self.loop)
+        weather: Weather = Weather(name="weather",
+                                   xknx=xknx,
+                                   group_address_rain_alarm="1/3/8",
+                                   group_address_wind_alarm="1/3/9",
+                                   group_address_frost_alarm="1/3/10")
+
+        weather._wind_alarm.payload = DPTBinary(1)
+
+        self.assertEqual(weather.ha_current_state(), WeatherCondition.windy)
+
+    def test_rain_alarm(self):
+        """Test basic state mapping."""
+        xknx = XKNX(loop=self.loop)
+        weather: Weather = Weather(name="weather",
+                                   xknx=xknx,
+                                   group_address_rain_alarm="1/3/8",
+                                   group_address_wind_alarm="1/3/9",
+                                   group_address_frost_alarm="1/3/10")
+
+        weather._rain_alarm.payload = DPTBinary(1)
+
+        self.assertEqual(weather.ha_current_state(), WeatherCondition.rainy)
+
+    def test_cloudy_summer(self):
+        """Test cloudy summer if illuminance matches defined interval."""
+        xknx = XKNX(loop=self.loop)
+        weather: Weather = Weather(name="weather",
+                                   xknx=xknx,
+                                   group_address_brightness_east="1/3/5",
+                                   group_address_brightness_south="1/3/6")
+
+        weather._brightness_south.payload = DPTArray((0x46, 0x45,))
+
+        summer_date = datetime.datetime(2020, 10, 5, 18, 00)
+
+        self.assertEqual(weather.ha_current_state(current_date=summer_date), WeatherCondition.cloudy)
+
+    def test_sunny_summer(self):
+        """Test returns sunny condition if illuminance is in defined interval"""
+        xknx = XKNX(loop=self.loop)
+        weather: Weather = Weather(name="weather",
+                                   xknx=xknx,
+                                   group_address_brightness_east="1/3/5",
+                                   group_address_brightness_south="1/3/6",
+                                   group_address_brightness_west="1/3/7")
+
+        weather._brightness_south.payload = DPTArray((0x7C, 0x5C,))
+
+        summer_date = datetime.datetime(2020, 10, 5, 18, 00)
+
+        self.assertEqual(weather.ha_current_state(current_date=summer_date), WeatherCondition.sunny)
+
+    def test_sunny_winter(self):
+        """Test sunny winter if illuminance matches defined interval."""
+        xknx = XKNX(loop=self.loop)
+        weather: Weather = Weather(name="weather",
+                                   xknx=xknx,
+                                   group_address_brightness_south="1/3/6",
+                                   group_address_brightness_west="1/3/7")
+
+        weather._brightness_south.payload = DPTArray((0x7C, 0x5C,))
+
+        winter_date = datetime.datetime(2020, 12, 5, 18, 00)
+
+        self.assertEqual(weather.ha_current_state(current_date=winter_date), WeatherCondition.sunny)
+
+    def test_cloudy_winter(self):
+        """Test cloudy winter if illuminance matches defined interval."""
+        xknx = XKNX(loop=self.loop)
+        weather: Weather = Weather(name="weather",
+                                   xknx=xknx,
+                                   group_address_brightness_east="1/3/5",
+                                   group_address_brightness_south="1/3/6",
+                                   group_address_brightness_west="1/3/7")
+
+        weather._brightness_south.payload = DPTArray((0x46, 0x45,))
+
+        winter_date = datetime.datetime(2020, 12, 31, 18, 00)
+
+        self.assertEqual(weather.ha_current_state(current_date=winter_date), WeatherCondition.cloudy)
+
+    def test_day_night(self):
+        """Test day night mapping."""
+        xknx = XKNX(loop=self.loop)
+        weather: Weather = Weather(name="weather",
+                                   xknx=xknx,
+                                   group_address_day_night="1/3/20")
+
+        weather._day_night.payload = DPTBinary(0)
+
+        self.assertEqual(weather.ha_current_state(), WeatherCondition.clear_night)
+
+    def test_weather_default(self):
+        """Test default state mapping."""
+        xknx = XKNX(loop=self.loop)
+        weather: Weather = Weather(name="weather",
+                                   xknx=xknx)
+
+        self.assertEqual(weather.ha_current_state(), WeatherCondition.exceptional)
+
+    #
+    # Expose Sensor tests
+    #
+    def test_expose_sensor(self):
+        """Test default state mapping."""
+        xknx = XKNX(loop=self.loop)
+        Weather(name="weather",
+                xknx=xknx,
+                group_address_brightness_east="1/3/5",
+                group_address_brightness_south="1/3/6",
+                group_address_brightness_west="1/3/7")
+
+        self.assertEqual(len(xknx.devices), 1)
+
+        Weather(name="weather",
+                xknx=xknx,
+                group_address_brightness_east="1/3/5",
+                group_address_brightness_south="1/3/6",
+                group_address_brightness_west="1/3/7",
+                group_address_wind_alarm="1/5/4",
+                expose_sensors=True)
+
+        self.assertEqual(len(xknx.devices), 6)
 
     #
     # GENERATOR _iter_remote_values

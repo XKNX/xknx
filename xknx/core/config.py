@@ -1,5 +1,5 @@
 """
-Module for reading configfiles (xknx.yaml).
+Module for reading config files (xknx.yaml).
 
 * it will parse the given file
 * and add the found devices to the devies vector of XKNX.
@@ -9,7 +9,7 @@ import yaml
 
 from xknx.devices import (
     BinarySensor, Climate, Cover, DateTime, ExposeSensor, Fan, Light,
-    Notification, Scene, Sensor, Switch)
+    Notification, Scene, Sensor, Switch, Weather)
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
 from xknx.telegram import PhysicalAddress
@@ -89,6 +89,7 @@ class Config:
             for group in doc["groups"]:
                 self.parse_group(doc, group)
 
+    # pylint: disable=too-many-branches
     def parse_group(self, doc, group):
         """Parse a group entry of xknx.yaml."""
         try:
@@ -114,6 +115,8 @@ class Config:
                 self.parse_group_sensor(doc["groups"][group])
             elif group.startswith("switch"):
                 self.parse_group_switch(doc["groups"][group])
+            elif group.startswith("weather"):
+                self.parse_group_weather(doc["groups"][group])
         except XKNXException as ex:
             self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", group, ex)
 
@@ -201,6 +204,14 @@ class Config:
         """Parse a switch section of xknx.yaml."""
         for entry in entries:
             Switch.from_config(
+                self.xknx,
+                entry,
+                entries[entry])
+
+    def parse_group_weather(self, entries):
+        """Parse a weather section of xknx.yaml."""
+        for entry in entries:
+            Weather.from_config(
                 self.xknx,
                 entry,
                 entries[entry])
