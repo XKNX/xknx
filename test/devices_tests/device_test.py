@@ -21,6 +21,27 @@ class TestDevice(unittest.TestCase):
         """Tear down test class."""
         self.loop.close()
 
+    def test_device_updated_cb(self):
+        """Test device updated cb is added to the device."""
+        xknx = XKNX(loop=self.loop)
+
+        after_update_callback = Mock()
+
+        async def async_after_update_callback(device1):
+            """Async callback"""
+            after_update_callback(device1)
+        device = Device(xknx, 'TestDevice', device_updated_cb=async_after_update_callback)
+
+        self.loop.run_until_complete(asyncio.Task(device.after_update()))
+        after_update_callback.assert_called_with(device)
+
+    def test_iter_remote_value_raises_exception(self):
+        """Test _iter_remote_value raises NotImplementedError."""
+        xknx = XKNX(loop=self.loop)
+        device = Device(xknx, 'TestDevice')
+
+        self.assertRaises(NotImplementedError, device._iter_remote_values)
+
     def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
         xknx = XKNX(loop=self.loop)
