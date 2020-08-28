@@ -1,6 +1,8 @@
 ---
 layout: default
----
+title: Binary Sensor
+nav_order: 9
+--- 
 
 # Binary Sensor
 

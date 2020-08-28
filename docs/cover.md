@@ -1,6 +1,8 @@
 ---
 layout: default
----
+title: Cover
+nav_order: 5
+--- 
 
 # [](#header-1)Covers and Shutters
 

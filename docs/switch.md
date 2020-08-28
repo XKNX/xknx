@@ -1,6 +1,8 @@
 ---
 layout: default
----
+title: Switches
+nav_order: 6
+--- 
 
 # [](#header-1)Switches
 

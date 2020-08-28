@@ -1,6 +1,8 @@
 ---
 layout: default
----
+title: Home Assistant Integration
+nav_order: 12
+--- 
 
 
 Home Assistant KNX Integration

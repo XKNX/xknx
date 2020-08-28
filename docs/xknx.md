@@ -1,5 +1,7 @@
 ---
 layout: default
+title: XKNX Object
+nav_order: 3
 ---
 
 # [](#header-1)The XKNX Object

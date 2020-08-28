@@ -1,6 +1,8 @@
 ---
 layout: default
----
+title: Climate / HVAC
+nav_order: 10
+--- 
 
 # [](#header-1)HVAC/Climate controls
 

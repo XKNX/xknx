@@ -1,6 +1,8 @@
 ---
 layout: default
----
+title: Time
+nav_order: 7
+--- 
 
 # [](#header-1)Time
 
