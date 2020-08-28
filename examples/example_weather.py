@@ -1,12 +1,13 @@
 """Example for Weather device. See docs/weather.md for a detailed explanation."""
 import asyncio
+import logging
 
 from xknx import XKNX
-from xknx.devices import Weather, Sensor
+from xknx.devices import Weather
 from xknx.io import ConnectionConfig, ConnectionType
 
-import logging
 logging.basicConfig(level=logging.DEBUG)
+
 
 async def main():
     """Connect to KNX/IP device and create a weather device and read its sensors."""
@@ -30,8 +31,9 @@ async def main():
 
     await weather.sync()
     await asyncio.sleep(10)
+    print(weather.max_brightness)
+    print(weather.ha_current_state)
     print(weather)
-
 
     await xknx.stop()
 

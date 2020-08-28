@@ -11,16 +11,68 @@ It provides functionality for
 * reading current humidity (DPT 9.007)
 
 """
-from typing import Optional, Generator, Union, Any
+from datetime import date, datetime
+from enum import Enum
+from typing import Optional, Callable, Generator
 
 from xknx.remote_value import RemoteValueSensor, RemoteValueSwitch, RemoteValue
-
 from .device import Device
 
 
+class WeatherCondition(Enum):
+    """Home assistant weather conditions (partially)."""
+    clear_night = 'clear-night'
+    cloudy = 'cloudy'
+    lightning = 'lightning'
+    lightning_rainy = 'lightning-rainy'
+    partly_cloudy = 'partly-cloudy'
+    pouring = 'pouring'
+    rainy = 'rainy'
+    snowy = 'snowy'
+    snowy_rainy = 'snowy-rainy'
+    sunny = 'sunny'
+    windy = 'windy'
+    windy_variant = 'windy_variant'
+    exceptional = 'exceptional'
+
+
+class Season(Enum):
+    """Seasonal mapping for illuminance."""
+    winter = 0
+    summer = 1
+
+
+YEAR = 2000  # dummy leap year to allow input X-02-29 (leap day)
+# Map year to winter and summer in order to be able to have seasonal illuminance checks
+# Sun during summer is stronger than in winter
+seasons = [(Season.winter, (date(YEAR, 1, 1), date(YEAR, 4, 20))),
+           (Season.summer, (date(YEAR, 4, 21), date(YEAR, 10, 20))),
+           (Season.winter, (date(YEAR, 10, 21), date(YEAR, 12, 31)))]
+
+
+def get_season(now):
+    """Return winter or summer."""
+    if isinstance(now, datetime):
+        now = now.date()
+    now = now.replace(year=YEAR)
+    return next(season for season, (start, end) in seasons
+                if start <= now <= end)
+
+
+# Define current condition
+ILLUMINANCE_MAPPING = (
+    (Season.summer, lambda lx: 7500 <= lx <= 20000, WeatherCondition.cloudy),
+    (Season.summer, lambda lx: lx > 20000, WeatherCondition.sunny),
+    (Season.winter, lambda lx: 1500 <= lx <= 4500, WeatherCondition.cloudy),
+    (Season.winter, lambda lx: lx > 4500, WeatherCondition.sunny),
+)
+
+
+# pylint: disable=too-many-public-methods, too-many-instance-attributes
 class Weather(Device):
     """Class for managing a weather device."""
 
+    # pylint: disable=too-many-locals
     def __init__(self,
                  xknx,
                  name: str,
@@ -37,7 +89,7 @@ class Weather(Device):
                  group_address_humidity: Optional[str] = None,
                  expose_sensors: bool = True,
                  sync_state: bool = True,
-                 device_updated_cb=None):
+                 device_updated_cb=None) -> None:
         """Initialize Weather class."""
         # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
@@ -126,19 +178,11 @@ class Weather(Device):
             device_name=self.name,
             after_update_cb=self.after_update)
 
-    def _iter_remote_values(self):
+    def _iter_remote_values(self) -> Generator[RemoteValue, None, None]:
         """Iterate the devices remote values."""
-        yield self._temperature
-        yield self._brightness_south
-        yield self._brightness_east
-        yield self._brightness_west
-        yield self._wind_speed
-        yield self._rain_alarm
-        yield self._wind_alarm
-        yield self._frost_alarm
-        yield self._day_night
-        yield self._air_pressure
-        yield self._humidity
+        yield from [self._temperature, self._brightness_south, self._brightness_east, self._brightness_west,
+                    self._wind_speed, self._rain_alarm, self._rain_alarm, self._wind_alarm, self._frost_alarm,
+                    self._day_night, self._air_pressure, self._humidity]
 
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""
@@ -151,22 +195,22 @@ class Weather(Device):
         return self._temperature.value
 
     @property
-    def brightness_south(self):
+    def brightness_south(self) -> float:
         """Return brightness south"""
-        return self._brightness_south.value
+        return 0.0 if self._brightness_south.value is None else self._brightness_south.value
 
     @property
-    def brightness_east(self):
+    def brightness_east(self) -> float:
         """Return brightness east"""
-        return self._brightness_east.value
+        return 0.0 if self._brightness_east.value is None else self._brightness_east.value
 
     @property
-    def brightness_west(self):
+    def brightness_west(self) -> float:
         """Return brightness west"""
-        return self._brightness_west.value
+        return 0.0 if self._brightness_west.value is None else self._brightness_west.value
 
     @property
-    def wind_speed(self):
+    def wind_speed(self) -> Optional[float]:
         """Return wind speed in m/s"""
         return self._wind_speed.value
 
@@ -196,9 +240,42 @@ class Weather(Device):
         return self._air_pressure.value
 
     @property
-    def humidity(self):
+    def humidity(self) -> Optional[float]:
         """Return humidity in %"""
         return self._humidity.value
+
+    @property
+    def max_brightness(self) -> float:
+        """Return highest illuminance from all sensors."""
+        return max(self.brightness_west, self.brightness_south, self.brightness_east)
+
+    @property
+    def ha_current_state(self, current_date=date.today()) -> WeatherCondition:
+        """Return the current state for home assistant."""
+        if self.wind_alarm and self.rain_alarm:
+            return WeatherCondition.lightning_rainy
+
+        if self.frost_alarm and self.rain_alarm:
+            return WeatherCondition.snowy_rainy
+
+        if self.rain_alarm:
+            return WeatherCondition.rainy
+
+        if self.wind_alarm:
+            return WeatherCondition.windy
+
+        current_season: Season = get_season(current_date)
+        season: Season
+        function: Callable[[float], bool]
+        result: WeatherCondition
+        for season, function, result in ILLUMINANCE_MAPPING:
+            if season == current_season and function(self.max_brightness):
+                return result
+
+        if self.day_night is False:
+            return WeatherCondition.clear_night
+
+        return WeatherCondition.exceptional
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -219,7 +296,3 @@ class Weather(Device):
                     self.day_night,
                     self.air_pressure,
                     self.humidity)
-
-    def __eq__(self, other) -> bool:
-        """Equal operator."""
-        return self.__dict__ == other.__dict__
