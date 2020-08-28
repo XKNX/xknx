@@ -1,7 +1,7 @@
 """Unit test for telegram received callback."""
 import asyncio
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from xknx import XKNX
 from xknx.dpt import DPTBinary
@@ -220,7 +220,7 @@ class TestTelegramQueue(unittest.TestCase):
         if_mock.send_telegram.assert_called_once_with(telegram)
 
     @patch('logging.Logger.error')
-    @patch('xknx.core.TelegramQueue.process_telegram_incoming')
+    @patch('xknx.core.TelegramQueue.process_telegram_incoming', new_callable=MagicMock)
     def test_process_exception(self, process_tg_in_mock, logging_error_mock):
         """Test process_telegram exception handling."""
         # pylint: disable=no-self-use
