@@ -10,9 +10,6 @@ jobs:
       env: TOXENV=pylint
     - python: "3.8"
       env: TOXENV=pydocstyle
-    - python: "3.5"
-      env: TOXENV=py35
-      after_success: coveralls
     - python: "3.6"
       env: TOXENV=py36
       after_success: coveralls
