@@ -25,7 +25,7 @@ Create a symbolic link to your custom components directory:
 
 ```bash
 mkdir -p ~/.homeassistant
-ln -s ~/xknx/home-assistant-plugin/custom_components ~/.homeassistant/custom_components
+ln -s ~/xknx/home-assistant-plugin/custom_components/xknx ~/.homeassistant/custom_components
 ```
 
 Run HA as usual either via service or by directly typing in `hass`.
