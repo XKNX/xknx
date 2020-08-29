@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from xknx import XKNX
-from xknx.devices import Device
+from xknx.devices import Device, Sensor
 from xknx.dpt import DPTArray
 from xknx.telegram import GroupAddress, Telegram, TelegramType
 
@@ -30,6 +30,7 @@ class TestDevice(unittest.TestCase):
         async def async_after_update_callback(device1):
             """Async callback"""
             after_update_callback(device1)
+
         device = Device(xknx, 'TestDevice', device_updated_cb=async_after_update_callback)
 
         self.loop.run_until_complete(asyncio.Task(device.after_update()))
@@ -126,6 +127,16 @@ class TestDevice(unittest.TestCase):
                 telegramtype=TelegramType.GROUP_RESPONSE)
             self.loop.run_until_complete(asyncio.Task(device.process(telegram)))
             mock_group_response.assert_called_with(telegram)
+
+    def test_sync_with_wait(self):
+        """Test sync with wait_for_result=True."""
+        xknx = XKNX(loop=self.loop)
+        sensor = Sensor(xknx, 'Sensor', group_address_state="1/2/3", value_type="wind_speed_ms")
+
+        with patch('xknx.remote_value.RemoteValue.read_state') as read_state_mock:
+            self.loop.run_until_complete(asyncio.Task(sensor.sync(wait_for_result=True)))
+
+            read_state_mock.assert_called_with(wait_for_result=True)
 
     def test_process_group_write(self):
         """Test if process_group_write. Nothing really to test here."""
