@@ -20,12 +20,14 @@ extension-pkg-whitelist=netifaces
 # inconsistent-return-statements - doesn't handle raise
 # too-many-ancestors - it's too strict.
 # wrong-import-order - isort guards this
+# fixme - TODO
 disable=
   format,
   abstract-class-little-used,
   abstract-method,
   cyclic-import,
   duplicate-code,
+  fixme,
   inconsistent-return-statements,
   locally-disabled,
   not-context-manager,

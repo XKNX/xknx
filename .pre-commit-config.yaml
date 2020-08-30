@@ -34,10 +34,6 @@ repos:
       - id: no-commit-to-branch
         args:
           - --branch=master
-  - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.24.2
-    hooks:
-      - id: yamllint
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.1.0
     hooks:
