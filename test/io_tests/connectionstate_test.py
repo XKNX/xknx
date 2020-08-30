@@ -67,5 +67,5 @@ class TestConnectionState(unittest.TestCase):
         res_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_RESPONSE)
         with patch('logging.Logger.debug') as mock_debug:
             connectionstate.response_rec_callback(res_knxipframe, None)
-            mock_debug.assert_called_with('Success: received correct answer from KNX bus: %s', ErrorCode.E_NO_ERROR)
+            mock_debug.assert_called_with('Success: Received correct answer from KNX bus: %s', ErrorCode.E_NO_ERROR)
             self.assertTrue(connectionstate.success)
