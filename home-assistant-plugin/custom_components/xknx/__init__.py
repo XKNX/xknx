@@ -337,7 +337,7 @@ class KNXExposeTime:
             name=self.expose_type.capitalize(),
             broadcast_type=self.expose_type.upper(),
             localtime=True,
-            group_address=self.address
+            group_address=self.address,
         )
 
 

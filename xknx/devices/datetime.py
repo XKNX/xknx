@@ -40,9 +40,12 @@ class DateTime(Device):
         )
         self._broadcast_task = None
         if self.localtime:
-            self._broadcast_task = self.xknx.loop.create_task(self._broadcast_loop(minutes=60))
+            self._broadcast_task = self.xknx.loop.create_task(
+                self._broadcast_loop(minutes=60)
+            )
 
     def __del__(self):
+        """Destructor. Cleaning up if this was not done before."""
         if self._broadcast_task:
             self._broadcast_task.cancel()
 
@@ -60,6 +63,7 @@ class DateTime(Device):
         )
 
     async def _broadcast_loop(self, minutes: int = 60):
+        """Endless loop for broadcasting local time."""
         while True:
             await self.broadcast_localtime()
             await asyncio.sleep(minutes * 60)
