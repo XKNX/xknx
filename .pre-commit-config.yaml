@@ -1,9 +1,18 @@
+---
 repos:
   - repo: https://github.com/asottile/pyupgrade
     rev: v2.7.2
     hooks:
       - id: pyupgrade
         args: [--py37-plus]
+  - repo: https://github.com/psf/black
+    rev: 20.8b1
+    hooks:
+      - id: black
+        args:
+          - --safe
+          - --quiet
+        files: ^((xknx|test|examples|home-assistant-plugin|docs)/.+)?[^/]+\.py$
   - repo: https://gitlab.com/pycqa/flake8
     rev: 3.8.3
     hooks:
@@ -11,8 +20,8 @@ repos:
         additional_dependencies:
           - flake8-docstrings==1.5.0
           - flake8-isort==3.0.1
-          - pydocstyle==5.0.2
-        files: ^(xknx|test)/.+\.py$
+          - pydocstyle==5.1.0
+        files: ^(xknx|test|examples|docs)/.+\.py$
   - repo: https://github.com/pre-commit/mirrors-isort
     rev: v4.3.21
     hooks:
@@ -26,16 +35,11 @@ repos:
       - id: no-commit-to-branch
         args:
           - --branch=master
-  - repo: https://github.com/prettier/prettier
-    rev: 2.0.4
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.24.2
     hooks:
-      - id: prettier
-        stages: [manual]
+      - id: yamllint
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.1.0
     hooks:
-    -   id: trailing-whitespace
-  - repo: https://github.com/pre-commit/mirrors-autopep8
-    rev: 'v1.5.4'
-    hooks:
-    -   id: autopep8
+      - id: trailing-whitespace

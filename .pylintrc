@@ -1,13 +1,55 @@
 [MASTER]
+ignore=test
+load-plugins=pylint_strict_informational
+persistent=no
 reports=no
 extension-pkg-whitelist=netifaces
 
 [MESSAGES CONTROL]
-disable=duplicate-code,fixme,locally-disabled
+# Reasons disabled:
+# format - handled by black
+# locally-disabled - it spams too much
+# duplicate-code - unavoidable
+# cyclic-import - doesn't test if both import on load
+# abstract-class-little-used - prevents from setting right foundation
+# unused-argument - generic callbacks and setup methods create a lot of warnings
+# raise-missing-from - we use this in order to avoid too generic exception to the user
+# too-many-* - are not enforced for the sake of readability
+# too-few-* - same as too-many-*
+# abstract-method - with intro of async there are always methods missing
+# inconsistent-return-statements - doesn't handle raise
+# too-many-ancestors - it's too strict.
+# wrong-import-order - isort guards this
+disable=
+  format,
+  abstract-class-little-used,
+  abstract-method,
+  cyclic-import,
+  duplicate-code,
+  inconsistent-return-statements,
+  locally-disabled,
+  not-context-manager,
+  raise-missing-from,
+  too-few-public-methods,
+  too-many-ancestors,
+  too-many-arguments,
+  too-many-branches,
+  too-many-instance-attributes,
+  too-many-lines,
+  too-many-locals,
+  too-many-public-methods,
+  too-many-return-statements,
+  too-many-statements,
+  too-many-boolean-expressions,
+  unused-argument,
+  wrong-import-order
+# enable useless-suppression temporarily every now and then to clean them up
+enable=
+  use-symbolic-message-instead
 
 [REPORTS]
+score=no
 output-format=colorized
 
 [FORMAT]
-indent-string='    '
-max-line-length=150
+expected-line-ending-format=LF
