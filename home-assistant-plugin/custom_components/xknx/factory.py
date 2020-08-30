@@ -1,4 +1,9 @@
 """Factory function to initialize KNX devices from config."""
+from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, CONF_TYPE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.script import Script
+from homeassistant.helpers.typing import ConfigType
+
 from xknx import XKNX
 from xknx.devices import (
     ActionCallback as XknxActionCallback,
@@ -14,11 +19,6 @@ from xknx.devices import (
     Switch as XknxSwitch,
 )
 
-from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, CONF_TYPE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.script import Script
-from homeassistant.helpers.typing import ConfigType
-
 from .const import DOMAIN, ColorTempModes, SupportedPlatforms
 from .schema import (
     BinarySensorSchema,
@@ -32,7 +32,10 @@ from .schema import (
 
 
 def create_knx_device(
-    hass: HomeAssistant, platform: SupportedPlatforms, knx_module: XKNX, config: ConfigType
+    hass: HomeAssistant,
+    platform: SupportedPlatforms,
+    knx_module: XKNX,
+    config: ConfigType,
 ) -> XknxDevice:
     """Return the requested XKNX device."""
     if platform is SupportedPlatforms.light:
@@ -120,9 +123,7 @@ def _create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
     )
 
 
-def _create_climate(
-    knx_module: XKNX, config: ConfigType
-) -> XknxClimate:
+def _create_climate(knx_module: XKNX, config: ConfigType) -> XknxClimate:
     """Return a KNX Climate device to be used within XKNX."""
     climate_mode = XknxClimateMode(
         knx_module,
@@ -217,7 +218,9 @@ def _create_sensor(knx_module: XKNX, config: ConfigType) -> XknxSensor:
 def _create_notify(knx_module: XKNX, config: ConfigType) -> XknxNotification:
     """Return a KNX notification to be used within XKNX."""
     return XknxNotification(
-        knx_module, name=config[CONF_NAME], group_address=config[CONF_ADDRESS],
+        knx_module,
+        name=config[CONF_NAME],
+        group_address=config[CONF_ADDRESS],
     )
 
 

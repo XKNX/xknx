@@ -4,9 +4,20 @@ import unittest
 from unittest.mock import patch
 
 from xknx.dpt import (
-    DPT2ByteFloat, DPT4ByteFloat, DPTElectricCurrent, DPTElectricPotential,
-    DPTEnthalpy, DPTFrequency, DPTHumidity, DPTLux, DPTPartsPerMillion,
-    DPTPhaseAngleDeg, DPTPower, DPTTemperature, DPTVoltage)
+    DPT2ByteFloat,
+    DPT4ByteFloat,
+    DPTElectricCurrent,
+    DPTElectricPotential,
+    DPTEnthalpy,
+    DPTFrequency,
+    DPTHumidity,
+    DPTLux,
+    DPTPartsPerMillion,
+    DPTPhaseAngleDeg,
+    DPTPower,
+    DPTTemperature,
+    DPTVoltage,
+)
 from xknx.exceptions import ConversionError
 
 
@@ -20,13 +31,13 @@ class TestDPTFloat(unittest.TestCase):
     #
     def test_value_from_documentation(self):
         """Test parsing and streaming of DPT2ByteFloat -30.00. Example from the internet[tm]."""
-        self.assertEqual(DPT2ByteFloat().to_knx(-30.00), (0x8a, 0x24))
-        self.assertEqual(DPT2ByteFloat().from_knx((0x8a, 0x24)), -30.00)
+        self.assertEqual(DPT2ByteFloat().to_knx(-30.00), (0x8A, 0x24))
+        self.assertEqual(DPT2ByteFloat().from_knx((0x8A, 0x24)), -30.00)
 
     def test_value_taken_from_live_thermostat(self):
         """Test parsing and streaming of DPT2ByteFloat 19.96."""
-        self.assertEqual(DPT2ByteFloat().to_knx(16.96), (0x06, 0xa0))
-        self.assertEqual(DPT2ByteFloat().from_knx((0x06, 0xa0)), 16.96)
+        self.assertEqual(DPT2ByteFloat().to_knx(16.96), (0x06, 0xA0))
+        self.assertEqual(DPT2ByteFloat().from_knx((0x06, 0xA0)), 16.96)
 
     def test_zero_value(self):
         """Test parsing and streaming of DPT2ByteFloat zero value."""
@@ -35,8 +46,8 @@ class TestDPTFloat(unittest.TestCase):
 
     def test_room_temperature(self):
         """Test parsing and streaming of DPT2ByteFloat 21.00. Room temperature."""
-        self.assertEqual(DPT2ByteFloat().to_knx(21.00), (0x0c, 0x1a))
-        self.assertEqual(DPT2ByteFloat().from_knx((0x0c, 0x1a)), 21.00)
+        self.assertEqual(DPT2ByteFloat().to_knx(21.00), (0x0C, 0x1A))
+        self.assertEqual(DPT2ByteFloat().from_knx((0x0C, 0x1A)), 21.00)
 
     def test_high_temperature(self):
         """Test parsing and streaming of DPT2ByteFloat 500.00, 499.84, 500.16. Testing rounding issues."""
@@ -66,12 +77,16 @@ class TestDPTFloat(unittest.TestCase):
     def test_max(self):
         """Test parsing and streaming of DPT2ByteFloat with maximum value."""
         self.assertEqual(DPT2ByteFloat().to_knx(DPT2ByteFloat.value_max), (0x7F, 0xFF))
-        self.assertEqual(DPT2ByteFloat().from_knx((0x7F, 0xFF)), DPT2ByteFloat.value_max)
+        self.assertEqual(
+            DPT2ByteFloat().from_knx((0x7F, 0xFF)), DPT2ByteFloat.value_max
+        )
 
     def test_min(self):
         """Test parsing and streaming of DPT2ByteFloat with minimum value."""
         self.assertEqual(DPT2ByteFloat().to_knx(DPT2ByteFloat.value_min), (0xF8, 0x00))
-        self.assertEqual(DPT2ByteFloat().from_knx((0xF8, 0x00)), DPT2ByteFloat.value_min)
+        self.assertEqual(
+            DPT2ByteFloat().from_knx((0xF8, 0x00)), DPT2ByteFloat.value_min
+        )
 
     def test_close_to_max(self):
         """Test parsing and streaming of DPT2ByteFloat with maximum value -1."""
@@ -201,13 +216,19 @@ class TestDPTFloat(unittest.TestCase):
 
     def test_14_057(self):
         """Test DPT4ByteFloat object."""
-        self.assertEqual(round(DPT4ByteFloat().from_knx((0x3F, 0x71, 0xEB, 0x86)), 7), 0.9450001)
-        self.assertEqual(DPT4ByteFloat().to_knx(0.945000052452), (0x3F, 0x71, 0xEB, 0x86))
+        self.assertEqual(
+            round(DPT4ByteFloat().from_knx((0x3F, 0x71, 0xEB, 0x86)), 7), 0.9450001
+        )
+        self.assertEqual(
+            DPT4ByteFloat().to_knx(0.945000052452), (0x3F, 0x71, 0xEB, 0x86)
+        )
         self.assertEqual(DPT4ByteFloat().unit, "")
 
     def test_4byte_float_values_from_voltage_meter(self):
         """Test parsing DPT4ByteFloat from voltage meter."""
-        self.assertEqual(round(DPT4ByteFloat().from_knx((0x43, 0x65, 0xE3, 0xD7)), 2), 229.89)
+        self.assertEqual(
+            round(DPT4ByteFloat().from_knx((0x43, 0x65, 0xE3, 0xD7)), 2), 229.89
+        )
         self.assertEqual(DPT4ByteFloat().to_knx(229.89), (0x43, 0x65, 0xE3, 0xD7))
 
     def test_4byte_float_zero_value(self):
@@ -232,7 +253,7 @@ class TestDPTFloat(unittest.TestCase):
 
     def test_4byte_flaot_from_knx_unpack_error(self):
         """Test DPT4ByteFloat parsing with unpack error."""
-        with patch('struct.unpack') as unpackMock:
+        with patch("struct.unpack") as unpackMock:
             unpackMock.side_effect = struct.error()
             with self.assertRaises(ConversionError):
                 DPT4ByteFloat().from_knx((0x01, 0x23, 0x02, 0x02))

@@ -16,7 +16,6 @@ Please join XKNX on Discord (https://discord.gg/EuAQDXU) and chat with JohanElmi
 specific questions.
 """
 
-from __future__ import print_function
 
 # Disabling some Pylint checks as it assumes that the global variables are all constants.
 # pylint: disable=invalid-name
@@ -24,44 +23,48 @@ from __future__ import print_function
 
 try:
     import asyncio
+    import re
+    import sys
+
+    # The following library is not included.
+    from myhouse_sensors_mqtt import MetricType, SensorClientMqtt
+
+    # import time
+    import paho.mqtt.client as mqtt
 
     from xknx import XKNX
     from xknx.devices import Sensor
-    import sys
-    import re
-    # import time
-    import paho.mqtt.client as mqtt
-    # The following library is not included.
-    from myhouse_sensors_mqtt import SensorClientMqtt
-    from myhouse_sensors_mqtt import MetricType
+
     # import pprint
 except ImportError as import_err:
-    err_list = str(import_err).split(' ')
-    print('Unable to import module: ' + err_list[3])
-    print('Please install the ' + err_list[3] + ' module for Python.')
+    err_list = str(import_err).split(" ")
+    print("Unable to import module: " + err_list[3])
+    print("Please install the " + err_list[3] + " module for Python.")
     sys.exit()
 
-BROKER_ADDRESS = '127.0.0.1'
+BROKER_ADDRESS = "127.0.0.1"
 # Give this client a name on the MQTT bus.
-mqttc = mqtt.Client('main_power_central')
+mqttc = mqtt.Client("main_power_central")
 
 # Library to deal with verification of values.
 # It also triggers and send values to the MQTT bus if the values has changed.
 # With no changes it can go up to max_interval_seconds before it's sent.
 # This allows me to fetch fast changes without storing all data at a 15s interval.
-mh_sensor = SensorClientMqtt(change_trigger_percent=5,
-                             max_interval_seconds=600,
-                             metric_class='sensor',
-                             debug=True)
+mh_sensor = SensorClientMqtt(
+    change_trigger_percent=5,
+    max_interval_seconds=600,
+    metric_class="sensor",
+    debug=True,
+)
 
 # Pre-compile some regexp filters that will be used to catch the different types.
-RE_METER_READING = re.compile('MeterReading_')
-RE_ACTIVE_POWER = re.compile('ActivePower')
-RE_REACTIVE_POWER = re.compile('ReactivePower')
-RE_APPARENT_POWER = re.compile('ApparentPower')
-RE_VOLTAGE = re.compile('Voltage_')
-RE_CURRENT = re.compile('Current_')
-RE_FREQUENCY = re.compile('Frequency_')
+RE_METER_READING = re.compile("MeterReading_")
+RE_ACTIVE_POWER = re.compile("ActivePower")
+RE_REACTIVE_POWER = re.compile("ReactivePower")
+RE_APPARENT_POWER = re.compile("ApparentPower")
+RE_VOLTAGE = re.compile("Voltage_")
+RE_CURRENT = re.compile("Current_")
+RE_FREQUENCY = re.compile("Frequency_")
 
 
 @asyncio.coroutine
@@ -72,26 +75,46 @@ def device_updated_cb(device):
     # print(device.name + ' ' + str(device.resolve_state()) + ' ' + device.unit_of_measurement())
     topic = None
     value = None
-    if re.search('^EL-T-O_', device.name):
+    if re.search("^EL-T-O_", device.name):
         metric = str(device.name)[7:]
         value = device.resolve_state()
         if RE_ACTIVE_POWER.search(metric):
-            topic = mh_sensor.get_mqtt_sensor_metric(MetricType.WATT, 'main_power_central', metric)
+            topic = mh_sensor.get_mqtt_sensor_metric(
+                MetricType.WATT, "main_power_central", metric
+            )
         elif RE_REACTIVE_POWER.search(metric):
-            topic = mh_sensor.get_mqtt_sensor_metric(MetricType.VAR, 'main_power_central', metric)
+            topic = mh_sensor.get_mqtt_sensor_metric(
+                MetricType.VAR, "main_power_central", metric
+            )
         elif RE_APPARENT_POWER.search(metric):
-            topic = mh_sensor.get_mqtt_sensor_metric(MetricType.VA, 'main_power_central', metric)
+            topic = mh_sensor.get_mqtt_sensor_metric(
+                MetricType.VA, "main_power_central", metric
+            )
         elif RE_VOLTAGE.search(metric):
-            topic = mh_sensor.get_mqtt_sensor_metric(MetricType.VOLTAGE, 'main_power_central', metric)
+            topic = mh_sensor.get_mqtt_sensor_metric(
+                MetricType.VOLTAGE, "main_power_central", metric
+            )
         elif RE_CURRENT.search(metric):
-            topic = mh_sensor.get_mqtt_sensor_metric(MetricType.CURRENT, 'main_power_central', metric)
+            topic = mh_sensor.get_mqtt_sensor_metric(
+                MetricType.CURRENT, "main_power_central", metric
+            )
         elif RE_METER_READING.search(metric):
-            topic = mh_sensor.get_mqtt_sensor_metric(MetricType.KWH, 'main_power_central', metric)
+            topic = mh_sensor.get_mqtt_sensor_metric(
+                MetricType.KWH, "main_power_central", metric
+            )
         elif RE_FREQUENCY:
-            topic = mh_sensor.get_mqtt_sensor_metric(MetricType.CUSTOM, 'main_power_central', metric)
+            topic = mh_sensor.get_mqtt_sensor_metric(
+                MetricType.CUSTOM, "main_power_central", metric
+            )
     else:
-        print("Uncatched metric: " + device.name + ' ' + str(device.resolve_state()) +
-              ' ' + device.unit_of_measurement())
+        print(
+            "Uncatched metric: "
+            + device.name
+            + " "
+            + str(device.resolve_state())
+            + " "
+            + device.unit_of_measurement()
+        )
 
     if topic and value:
         # This will create a topic like:
@@ -110,7 +133,7 @@ def device_updated_cb(device):
         # My latest version of the library doesn't send the value after the MQTT Topic, but a JSON structure
         # that also contains time.
 
-        print(topic + ' ' + str(value))
+        print(topic + " " + str(value))
         # ts = int(time.time() * 1000)
         mqttc.publish(topic, value)
 
@@ -132,44 +155,82 @@ async def main():
 
     # Generic Types not specifically supported by XKNX
     Sensor(
-        xknx, 'EL-T-O_MeterReading_ActiveEnergy', group_address_state='5/6/11', value_type="DPT-13")
+        xknx,
+        "EL-T-O_MeterReading_ActiveEnergy",
+        group_address_state="5/6/11",
+        value_type="DPT-13",
+    )
     Sensor(
-        xknx, 'EL-T-O_MeterReading_ReactiveEnergy', group_address_state='5/6/16', value_type="DPT-13")
+        xknx,
+        "EL-T-O_MeterReading_ReactiveEnergy",
+        group_address_state="5/6/16",
+        value_type="DPT-13",
+    )
 
     # Active Power
     Sensor(
-        xknx, 'EL-T-O_TotalActivePower', group_address_state='5/6/24', value_type="power")
+        xknx,
+        "EL-T-O_TotalActivePower",
+        group_address_state="5/6/24",
+        value_type="power",
+    )
     Sensor(
-        xknx, 'EL-T-O_ActivePower_L1', group_address_state='5/6/25', value_type="power")
+        xknx, "EL-T-O_ActivePower_L1", group_address_state="5/6/25", value_type="power"
+    )
     # ...
 
     # Reactive Power
     Sensor(
-        xknx, 'EL-T-O_TotalReactivePower', group_address_state='5/6/28', value_type="power")
+        xknx,
+        "EL-T-O_TotalReactivePower",
+        group_address_state="5/6/28",
+        value_type="power",
+    )
     Sensor(
-        xknx, 'EL-T-O_ReactivePower_L1', group_address_state='5/6/29', value_type="power")
+        xknx,
+        "EL-T-O_ReactivePower_L1",
+        group_address_state="5/6/29",
+        value_type="power",
+    )
     # ...
 
     # Apparent Power
     Sensor(
-        xknx, 'EL-T-O_TotalReactivePower', group_address_state='5/6/32', value_type="power")
+        xknx,
+        "EL-T-O_TotalReactivePower",
+        group_address_state="5/6/32",
+        value_type="power",
+    )
     Sensor(
-        xknx, 'EL-T-O_ApparentPower_L1', group_address_state='5/6/33', value_type="power")
+        xknx,
+        "EL-T-O_ApparentPower_L1",
+        group_address_state="5/6/33",
+        value_type="power",
+    )
     # ...
 
     # Current
     Sensor(
-        xknx, 'EL-T-O_Current_L1', group_address_state='5/6/45', value_type="electric_current")
+        xknx,
+        "EL-T-O_Current_L1",
+        group_address_state="5/6/45",
+        value_type="electric_current",
+    )
     # ...
 
     # Voltage
     Sensor(
-        xknx, 'EL-T-O_Voltage_L1-N', group_address_state='5/6/48', value_type="electric_potential")
+        xknx,
+        "EL-T-O_Voltage_L1-N",
+        group_address_state="5/6/48",
+        value_type="electric_potential",
+    )
     # ...
 
     # Frequency
     Sensor(
-        xknx, 'EL-T-O_Frequency', group_address_state='5/6/53', value_type="frequency")
+        xknx, "EL-T-O_Frequency", group_address_state="5/6/53", value_type="frequency"
+    )
 
     mqttc.connect(BROKER_ADDRESS, 8883, 60)
     mqttc.loop_start()
@@ -180,6 +241,7 @@ async def main():
     await xknx.stop()
     await mqttc.loop_stop()
     await mqttc.disconnect()
+
 
 # pylint: disable=invalid-name
 loop = asyncio.get_event_loop()

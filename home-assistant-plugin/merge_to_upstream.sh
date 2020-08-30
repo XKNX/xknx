@@ -2,7 +2,7 @@
 
 source helper.sh
 
-if [ "$MACHINE" == "Linux" ]; 
+if [ "$MACHINE" == "Linux" ];
 then
     rm -Rf ${HA_UPSTREAM}/homeassistant/components/knx/*
     cp -R ${XKNX_REPO}/home-assistant-plugin/custom_components/xknx/* ${HA_UPSTREAM}/homeassistant/components/knx/
@@ -14,7 +14,7 @@ then
     sed -i "s/DEFAULT_NAME = 'XKNX/DEFAULT_NAME = 'KNX/g" ${HA_UPSTREAM}/homeassistant/components/knx/*.py
     sed -i "s/_XKNX_/_KNX_/g" ${HA_UPSTREAM}/homeassistant/components/knx/*.py
     sed -i "s/DATA_XKNX/DATA_KNX/g" ${HA_UPSTREAM}/homeassistant/components/knx/*.py
-    sed -i "s/DOMAIN = \"xknx\"/DOMAIN = \"knx\"/g" ${HA_UPSTREAM}/homeassistant/components/knx/*.py 
+    sed -i "s/DOMAIN = \"xknx\"/DOMAIN = \"knx\"/g" ${HA_UPSTREAM}/homeassistant/components/knx/*.py
 else
     rm -f ${HA_UPSTREAM}/homeassistant/components/knx/*
     cp ${XKNX_REPO}/home-assistant-plugin/custom_components/xknx/* ${HA_UPSTREAM}/homeassistant/components/knx/

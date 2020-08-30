@@ -1,13 +1,10 @@
 """Module for handling commands which may be attached to BinarySensor class."""
 
 
-class ActionBase():
+class ActionBase:
     """Base Class for handling commands."""
 
-    def __init__(self,
-                 xknx,
-                 hook="on",
-                 counter=1):
+    def __init__(self, xknx, hook="on", counter=1):
         """Initialize Action_Base class."""
         self.xknx = xknx
         self.hook = hook
@@ -36,8 +33,7 @@ class ActionBase():
 
     def __str__(self):
         """Return object as readable string."""
-        return '<ActionBase hook="{0}" counter="{1}"/>' \
-            .format(self.hook, self.counter)
+        return f'<ActionBase hook="{self.hook}" counter="{self.counter}"/>'
 
     def __eq__(self, other):
         """Equal operator."""
@@ -47,12 +43,7 @@ class ActionBase():
 class Action(ActionBase):
     """Class for handling commands."""
 
-    def __init__(self,
-                 xknx,
-                 hook="on",
-                 target=None,
-                 method=None,
-                 counter=1):
+    def __init__(self, xknx, hook="on", target=None, method=None, counter=1):
         """Initialize Action class."""
         # pylint: disable=too-many-arguments
         super().__init__(xknx, hook, counter)
@@ -66,34 +57,29 @@ class Action(ActionBase):
         target = config.get("target")
         method = config.get("method")
         counter = config.get("counter", 1)
-        return cls(xknx,
-                   hook=hook,
-                   target=target,
-                   method=method,
-                   counter=counter)
+        return cls(xknx, hook=hook, target=target, method=method, counter=counter)
 
     async def execute(self):
         """Execute action."""
         if self.target is not None:
             if self.target not in self.xknx.devices:
-                self.xknx.logger.warning("Unknown device %s witin action %s.", self.target, self)
+                self.xknx.logger.warning(
+                    "Unknown device %s witin action %s.", self.target, self
+                )
                 return
             await self.xknx.devices[self.target].do(self.method)
 
     def __str__(self):
         """Return object as readable string."""
-        return '<Action target="{0}" method="{1}" {2}/>' \
-            .format(self.target, self.method, super(Action, self).__str__())
+        return '<Action target="{}" method="{}" {}/>'.format(
+            self.target, self.method, super().__str__()
+        )
 
 
 class ActionCallback(ActionBase):
     """Class for handling commands via callbacks."""
 
-    def __init__(self,
-                 xknx,
-                 callback,
-                 hook="on",
-                 counter=1):
+    def __init__(self, xknx, callback, hook="on", counter=1):
         """Initialize Action class."""
         # pylint: disable=too-many-arguments
         super().__init__(xknx, hook, counter)
@@ -105,5 +91,6 @@ class ActionCallback(ActionBase):
 
     def __str__(self):
         """Return object as readable string."""
-        return '<ActionCallback callback="{}" {}/>' \
-            .format(self.callback.__name__, super().__str__())
+        return '<ActionCallback callback="{}" {}/>'.format(
+            self.callback.__name__, super().__str__()
+        )

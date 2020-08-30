@@ -6,8 +6,10 @@ from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary, HVACOperationMode
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.remote_value import (
-    RemoteValueBinaryHeatCool, RemoteValueBinaryOperationMode,
-    RemoteValueClimateMode)
+    RemoteValueBinaryHeatCool,
+    RemoteValueBinaryOperationMode,
+    RemoteValueClimateMode,
+)
 from xknx.telegram import GroupAddress, Telegram
 
 
@@ -27,25 +29,29 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         """Test to_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueClimateMode(
-            xknx,
-            climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE)
-        self.assertEqual(remote_value.to_knx(HVACOperationMode.COMFORT), DPTArray((0x01, )))
+            xknx, climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE
+        )
+        self.assertEqual(
+            remote_value.to_knx(HVACOperationMode.COMFORT), DPTArray((0x01,))
+        )
 
     def test_to_knx_binary(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueBinaryOperationMode(
-            xknx,
-            operation_mode=HVACOperationMode.COMFORT)
-        self.assertEqual(remote_value.to_knx(HVACOperationMode.COMFORT), DPTBinary(True))
+            xknx, operation_mode=HVACOperationMode.COMFORT
+        )
+        self.assertEqual(
+            remote_value.to_knx(HVACOperationMode.COMFORT), DPTBinary(True)
+        )
         self.assertEqual(remote_value.to_knx(HVACOperationMode.NIGHT), DPTBinary(False))
 
     def test_to_knx_heat_cool(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueBinaryHeatCool(
-            xknx,
-            operation_mode=HVACOperationMode.HEAT)
+            xknx, operation_mode=HVACOperationMode.HEAT
+        )
         self.assertEqual(remote_value.to_knx(HVACOperationMode.HEAT), DPTBinary(True))
         self.assertEqual(remote_value.to_knx(HVACOperationMode.COOL), DPTBinary(False))
 
@@ -53,34 +59,40 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         """Test from_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueClimateMode(
-            xknx,
-            climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE)
-        self.assertEqual(remote_value.from_knx(DPTArray((0x02, ))), HVACOperationMode.STANDBY)
+            xknx, climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE
+        )
+        self.assertEqual(
+            remote_value.from_knx(DPTArray((0x02,))), HVACOperationMode.STANDBY
+        )
 
     def test_from_knx_binary(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueBinaryOperationMode(
-            xknx,
-            operation_mode=HVACOperationMode.COMFORT)
-        self.assertEqual(remote_value.from_knx(DPTBinary(True)), HVACOperationMode.COMFORT)
+            xknx, operation_mode=HVACOperationMode.COMFORT
+        )
+        self.assertEqual(
+            remote_value.from_knx(DPTBinary(True)), HVACOperationMode.COMFORT
+        )
         self.assertEqual(remote_value.from_knx(DPTBinary(False)), None)
 
     def test_from_knx_heat_cool(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueBinaryHeatCool(
-            xknx,
-            operation_mode=HVACOperationMode.HEAT)
+            xknx, operation_mode=HVACOperationMode.HEAT
+        )
         self.assertEqual(remote_value.from_knx(DPTBinary(True)), HVACOperationMode.HEAT)
-        self.assertEqual(remote_value.from_knx(DPTBinary(False)), HVACOperationMode.COOL)
+        self.assertEqual(
+            remote_value.from_knx(DPTBinary(False)), HVACOperationMode.COOL
+        )
 
     def test_to_knx_error_operation_mode(self):
         """Test to_knx function with wrong parameter."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueClimateMode(
-            xknx,
-            climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE)
+            xknx, climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE
+        )
         with self.assertRaises(ConversionError):
             remote_value.to_knx(256)
         with self.assertRaises(ConversionError):
@@ -90,8 +102,8 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         """Test to_knx function with wrong parameter."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueBinaryOperationMode(
-            xknx,
-            operation_mode=HVACOperationMode.NIGHT)
+            xknx, operation_mode=HVACOperationMode.NIGHT
+        )
         with self.assertRaises(ConversionError):
             remote_value.to_knx(256)
         with self.assertRaises(ConversionError):
@@ -103,23 +115,24 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         remote_value = RemoteValueClimateMode(
             xknx,
             group_address=GroupAddress("1/2/3"),
-            climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE)
-        self.loop.run_until_complete(asyncio.Task(remote_value.set(HVACOperationMode.NIGHT)))
+            climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE,
+        )
+        self.loop.run_until_complete(
+            asyncio.Task(remote_value.set(HVACOperationMode.NIGHT))
+        )
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram,
-            Telegram(
-                GroupAddress('1/2/3'),
-                payload=DPTArray((0x03, ))))
-        self.loop.run_until_complete(asyncio.Task(remote_value.set(HVACOperationMode.FROST_PROTECTION)))
+            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTArray((0x03,)))
+        )
+        self.loop.run_until_complete(
+            asyncio.Task(remote_value.set(HVACOperationMode.FROST_PROTECTION))
+        )
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram,
-            Telegram(
-                GroupAddress('1/2/3'),
-                payload=DPTArray((0x04, ))))
+            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTArray((0x04,)))
+        )
 
     def test_set_binary(self):
         """Test setting value."""
@@ -127,23 +140,24 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         remote_value = RemoteValueBinaryOperationMode(
             xknx,
             group_address=GroupAddress("1/2/3"),
-            operation_mode=HVACOperationMode.STANDBY)
-        self.loop.run_until_complete(asyncio.Task(remote_value.set(HVACOperationMode.STANDBY)))
+            operation_mode=HVACOperationMode.STANDBY,
+        )
+        self.loop.run_until_complete(
+            asyncio.Task(remote_value.set(HVACOperationMode.STANDBY))
+        )
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram,
-            Telegram(
-                GroupAddress('1/2/3'),
-                payload=DPTBinary(True)))
-        self.loop.run_until_complete(asyncio.Task(remote_value.set(HVACOperationMode.FROST_PROTECTION)))
+            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(True))
+        )
+        self.loop.run_until_complete(
+            asyncio.Task(remote_value.set(HVACOperationMode.FROST_PROTECTION))
+        )
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram,
-            Telegram(
-                GroupAddress('1/2/3'),
-                payload=DPTBinary(False)))
+            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(False))
+        )
 
     def test_process_operation_mode(self):
         """Test process telegram."""
@@ -151,10 +165,11 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         remote_value = RemoteValueClimateMode(
             xknx,
             group_address=GroupAddress("1/2/3"),
-            climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE)
+            climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE,
+        )
         telegram = Telegram(
-            group_address=GroupAddress("1/2/3"),
-            payload=DPTArray((0x00, )))
+            group_address=GroupAddress("1/2/3"), payload=DPTArray((0x00,))
+        )
         self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
         self.assertEqual(remote_value.value, HVACOperationMode.AUTO)
 
@@ -164,10 +179,11 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         remote_value = RemoteValueBinaryOperationMode(
             xknx,
             group_address=GroupAddress("1/2/3"),
-            operation_mode=HVACOperationMode.FROST_PROTECTION)
+            operation_mode=HVACOperationMode.FROST_PROTECTION,
+        )
         telegram = Telegram(
-            group_address=GroupAddress("1/2/3"),
-            payload=DPTBinary(True))
+            group_address=GroupAddress("1/2/3"), payload=DPTBinary(True)
+        )
         self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
         self.assertEqual(remote_value.value, HVACOperationMode.FROST_PROTECTION)
 
@@ -177,16 +193,23 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         remote_value = RemoteValueClimateMode(
             xknx,
             group_address=GroupAddress("1/2/3"),
-            climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE)
+            climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE,
+        )
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                group_address=GroupAddress("1/2/3"),
-                payload=DPTBinary(1))
+                group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            )
             self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"),
-                payload=DPTArray((0x64, 0x65, )))
+                payload=DPTArray(
+                    (
+                        0x64,
+                        0x65,
+                    )
+                ),
+            )
             self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
 
     def test_to_process_error_heat_cool(self):
@@ -195,14 +218,21 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         remote_value = RemoteValueBinaryHeatCool(
             xknx,
             group_address=GroupAddress("1/2/3"),
-            operation_mode=HVACOperationMode.COOL)
+            operation_mode=HVACOperationMode.COOL,
+        )
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                group_address=GroupAddress("1/2/3"),
-                payload=DPTArray((0x01, )))
+                group_address=GroupAddress("1/2/3"), payload=DPTArray((0x01,))
+            )
             self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"),
-                payload=DPTArray((0x64, 0x65, )))
+                payload=DPTArray(
+                    (
+                        0x64,
+                        0x65,
+                    )
+                ),
+            )
             self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))

@@ -6,8 +6,10 @@ Climate modes can be 'auto', 'comfort', 'standby', 'economy' or 'protection'.
 from xknx.dpt import HVACOperationMode
 from xknx.exceptions import DeviceIllegalValue
 from xknx.remote_value import (
-    RemoteValueBinaryHeatCool, RemoteValueBinaryOperationMode,
-    RemoteValueClimateMode)
+    RemoteValueBinaryHeatCool,
+    RemoteValueBinaryOperationMode,
+    RemoteValueClimateMode,
+)
 
 from .device import Device
 
@@ -17,23 +19,25 @@ class ClimateMode(Device):
 
     # pylint: disable=invalid-name,too-many-instance-attributes
 
-    def __init__(self,
-                 xknx,
-                 name,
-                 group_address_operation_mode=None,
-                 group_address_operation_mode_state=None,
-                 group_address_operation_mode_protection=None,
-                 group_address_operation_mode_night=None,
-                 group_address_operation_mode_comfort=None,
-                 group_address_operation_mode_standby=None,
-                 group_address_controller_status=None,
-                 group_address_controller_status_state=None,
-                 group_address_controller_mode=None,
-                 group_address_controller_mode_state=None,
-                 group_address_heat_cool=None,
-                 group_address_heat_cool_state=None,
-                 operation_modes=None,
-                 device_updated_cb=None):
+    def __init__(
+        self,
+        xknx,
+        name,
+        group_address_operation_mode=None,
+        group_address_operation_mode_state=None,
+        group_address_operation_mode_protection=None,
+        group_address_operation_mode_night=None,
+        group_address_operation_mode_comfort=None,
+        group_address_operation_mode_standby=None,
+        group_address_controller_status=None,
+        group_address_controller_status_state=None,
+        group_address_controller_mode=None,
+        group_address_controller_mode_state=None,
+        group_address_heat_cool=None,
+        group_address_heat_cool_state=None,
+        operation_modes=None,
+        device_updated_cb=None,
+    ):
         """Initialize ClimateMode class."""
         # pylint: disable=too-many-arguments, too-many-locals, too-many-branches, too-many-statements
         super().__init__(xknx, name, device_updated_cb)
@@ -46,7 +50,8 @@ class ClimateMode(Device):
             device_name=name,
             feature_name="Operation mode",
             climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE,
-            after_update_cb=None)
+            after_update_cb=None,
+        )
         self.remote_value_controller_mode = RemoteValueClimateMode(
             xknx,
             group_address=group_address_controller_mode,
@@ -55,7 +60,8 @@ class ClimateMode(Device):
             device_name=name,
             feature_name="Controller mode",
             climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_CONTR_MODE,
-            after_update_cb=None)
+            after_update_cb=None,
+        )
         self.remote_value_controller_status = RemoteValueClimateMode(
             xknx,
             group_address=group_address_controller_status,
@@ -64,7 +70,8 @@ class ClimateMode(Device):
             device_name=name,
             feature_name="Controller status",
             climate_mode_type=RemoteValueClimateMode.ClimateModeType.CONTROLLER_STATUS,
-            after_update_cb=None)
+            after_update_cb=None,
+        )
 
         self.remote_value_operation_mode_comfort = RemoteValueBinaryOperationMode(
             xknx,
@@ -74,7 +81,8 @@ class ClimateMode(Device):
             device_name=name,
             feature_name="Operation mode Comfort",
             operation_mode=HVACOperationMode.COMFORT,
-            after_update_cb=None)
+            after_update_cb=None,
+        )
         self.remote_value_operation_mode_standby = RemoteValueBinaryOperationMode(
             xknx,
             group_address=group_address_operation_mode_standby,
@@ -83,7 +91,8 @@ class ClimateMode(Device):
             device_name=name,
             feature_name="Operation mode Standby",
             operation_mode=HVACOperationMode.STANDBY,
-            after_update_cb=None)
+            after_update_cb=None,
+        )
         self.remote_value_operation_mode_night = RemoteValueBinaryOperationMode(
             xknx,
             group_address=group_address_operation_mode_night,
@@ -92,7 +101,8 @@ class ClimateMode(Device):
             device_name=name,
             feature_name="Operation mode Night",
             operation_mode=HVACOperationMode.NIGHT,
-            after_update_cb=None)
+            after_update_cb=None,
+        )
         self.remote_value_operation_mode_protection = RemoteValueBinaryOperationMode(
             xknx,
             group_address=group_address_operation_mode_protection,
@@ -101,7 +111,8 @@ class ClimateMode(Device):
             device_name=name,
             feature_name="Operation mode Protection",
             operation_mode=HVACOperationMode.FROST_PROTECTION,
-            after_update_cb=None)
+            after_update_cb=None,
+        )
         self.remote_value_heat_cool = RemoteValueBinaryHeatCool(
             xknx,
             group_address=group_address_heat_cool,
@@ -110,7 +121,8 @@ class ClimateMode(Device):
             device_name=name,
             feature_name="Heat/Cool",
             operation_mode=HVACOperationMode.HEAT,
-            after_update_cb=None)
+            after_update_cb=None,
+        )
 
         self.operation_mode = HVACOperationMode.STANDBY
 
@@ -124,62 +136,81 @@ class ClimateMode(Device):
                 elif isinstance(mode, HVACOperationMode):
                     self.operation_modes_.append(mode)
 
-        self.supports_operation_mode = \
-            group_address_operation_mode is not None or \
-            group_address_operation_mode_state is not None or \
-            group_address_operation_mode_protection is not None or \
-            group_address_operation_mode_night is not None or \
-            group_address_operation_mode_comfort is not None or \
-            group_address_operation_mode_standby is not None or \
-            group_address_controller_status is not None or \
-            group_address_controller_status_state is not None or \
-            group_address_controller_mode is not None or \
-            group_address_controller_mode_state is not None or \
-            group_address_heat_cool is not None or \
-            group_address_heat_cool_state is not None
+        self.supports_operation_mode = (
+            group_address_operation_mode is not None
+            or group_address_operation_mode_state is not None
+            or group_address_operation_mode_protection is not None
+            or group_address_operation_mode_night is not None
+            or group_address_operation_mode_comfort is not None
+            or group_address_operation_mode_standby is not None
+            or group_address_controller_status is not None
+            or group_address_controller_status_state is not None
+            or group_address_controller_mode is not None
+            or group_address_controller_mode_state is not None
+            or group_address_heat_cool is not None
+            or group_address_heat_cool_state is not None
+        )
 
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
         # pylint: disable=too-many-locals
-        group_address_operation_mode = config.get('group_address_operation_mode')
-        group_address_operation_mode_state = config.get('group_address_operation_mode_state')
-        group_address_operation_mode_protection = config.get('group_address_operation_mode_protection')
-        group_address_operation_mode_night = config.get('group_address_operation_mode_night')
-        group_address_operation_mode_comfort = config.get('group_address_operation_mode_comfort')
-        group_address_operation_mode_standby = config.get('group_address_operation_mode_standby')
-        group_address_controller_status = config.get('group_address_controller_status')
-        group_address_controller_status_state = config.get('group_address_controller_status_state')
-        group_address_controller_mode = config.get('group_address_controller_mode')
-        group_address_controller_mode_state = config.get('group_address_controller_mode_state')
-        group_address_heat_cool = config.get('group_address_heat_cool')
-        group_address_heat_cool_state = config.get('group_address_heat_cool_state')
+        group_address_operation_mode = config.get("group_address_operation_mode")
+        group_address_operation_mode_state = config.get(
+            "group_address_operation_mode_state"
+        )
+        group_address_operation_mode_protection = config.get(
+            "group_address_operation_mode_protection"
+        )
+        group_address_operation_mode_night = config.get(
+            "group_address_operation_mode_night"
+        )
+        group_address_operation_mode_comfort = config.get(
+            "group_address_operation_mode_comfort"
+        )
+        group_address_operation_mode_standby = config.get(
+            "group_address_operation_mode_standby"
+        )
+        group_address_controller_status = config.get("group_address_controller_status")
+        group_address_controller_status_state = config.get(
+            "group_address_controller_status_state"
+        )
+        group_address_controller_mode = config.get("group_address_controller_mode")
+        group_address_controller_mode_state = config.get(
+            "group_address_controller_mode_state"
+        )
+        group_address_heat_cool = config.get("group_address_heat_cool")
+        group_address_heat_cool_state = config.get("group_address_heat_cool_state")
 
-        return cls(xknx,
-                   name,
-                   group_address_operation_mode=group_address_operation_mode,
-                   group_address_operation_mode_state=group_address_operation_mode_state,
-                   group_address_operation_mode_protection=group_address_operation_mode_protection,
-                   group_address_operation_mode_night=group_address_operation_mode_night,
-                   group_address_operation_mode_comfort=group_address_operation_mode_comfort,
-                   group_address_operation_mode_standby=group_address_operation_mode_standby,
-                   group_address_controller_status=group_address_controller_status,
-                   group_address_controller_status_state=group_address_controller_status_state,
-                   group_address_controller_mode=group_address_controller_mode,
-                   group_address_controller_mode_state=group_address_controller_mode_state,
-                   group_address_heat_cool=group_address_heat_cool,
-                   group_address_heat_cool_state=group_address_heat_cool_state)
+        return cls(
+            xknx,
+            name,
+            group_address_operation_mode=group_address_operation_mode,
+            group_address_operation_mode_state=group_address_operation_mode_state,
+            group_address_operation_mode_protection=group_address_operation_mode_protection,
+            group_address_operation_mode_night=group_address_operation_mode_night,
+            group_address_operation_mode_comfort=group_address_operation_mode_comfort,
+            group_address_operation_mode_standby=group_address_operation_mode_standby,
+            group_address_controller_status=group_address_controller_status,
+            group_address_controller_status_state=group_address_controller_status_state,
+            group_address_controller_mode=group_address_controller_mode,
+            group_address_controller_mode_state=group_address_controller_mode_state,
+            group_address_heat_cool=group_address_heat_cool,
+            group_address_heat_cool_state=group_address_heat_cool_state,
+        )
 
     def _iter_remote_values(self):
         """Iterate climate mode RemoteValue classes."""
-        yield from (self.remote_value_controller_mode,
-                    self.remote_value_controller_status,
-                    self.remote_value_operation_mode,
-                    self.remote_value_operation_mode_comfort,
-                    self.remote_value_operation_mode_night,
-                    self.remote_value_operation_mode_protection,
-                    self.remote_value_operation_mode_standby,
-                    self.remote_value_heat_cool)
+        yield from (
+            self.remote_value_controller_mode,
+            self.remote_value_controller_status,
+            self.remote_value_operation_mode,
+            self.remote_value_operation_mode_comfort,
+            self.remote_value_operation_mode_night,
+            self.remote_value_operation_mode_protection,
+            self.remote_value_operation_mode_standby,
+            self.remote_value_heat_cool,
+        )
 
     async def _set_internal_operation_mode(self, operation_mode):
         """Set internal value of operation mode. Call hooks if operation mode was changed."""
@@ -189,13 +220,14 @@ class ClimateMode(Device):
 
     async def set_operation_mode(self, operation_mode):
         """Set the operation mode of a thermostat. Send new operation_mode to BUS and update internal state."""
-        if not self.supports_operation_mode or \
-                operation_mode not in self.operation_modes_:
+        if (
+            not self.supports_operation_mode
+            or operation_mode not in self.operation_modes_
+        ):
             raise DeviceIllegalValue("operation mode not supported", operation_mode)
 
         for rv in self._iter_remote_values():
-            if rv.writable and \
-                    operation_mode in rv.supported_operation_modes():
+            if rv.writable and operation_mode in rv.supported_operation_modes():
                 await rv.set(operation_mode)
 
         await self._set_internal_operation_mode(operation_mode)
@@ -236,13 +268,15 @@ class ClimateMode(Device):
 
     def __str__(self):
         """Return object as readable string."""
-        return '<ClimateMode name="{0}" ' \
-            'operation_mode="{1}" ' \
-            'controller_mode="{2}" ' \
-            'controller_status="{3}" ' \
-            '/>' \
-            .format(
+        return (
+            '<ClimateMode name="{}" '
+            'operation_mode="{}" '
+            'controller_mode="{}" '
+            'controller_status="{}" '
+            "/>".format(
                 self.name,
                 self.remote_value_operation_mode.group_addr_str(),
                 self.remote_value_controller_mode.group_addr_str(),
-                self.remote_value_controller_status.group_addr_str(),)
+                self.remote_value_controller_status.group_addr_str(),
+            )
+        )

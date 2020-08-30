@@ -2,8 +2,13 @@
 import pytest
 
 from xknx.exceptions import (
-    ConversionError, CouldNotParseAddress, CouldNotParseKNXIP,
-    CouldNotParseTelegram, DeviceIllegalValue, XKNXException)
+    ConversionError,
+    CouldNotParseAddress,
+    CouldNotParseKNXIP,
+    CouldNotParseTelegram,
+    DeviceIllegalValue,
+    XKNXException,
+)
 
 
 @pytest.mark.parametrize(

@@ -39,10 +39,13 @@ class Telegram:
 
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, group_address=GroupAddress(None),
-                 telegramtype=TelegramType.GROUP_WRITE,
-                 direction=TelegramDirection.OUTGOING,
-                 payload=None):
+    def __init__(
+        self,
+        group_address=GroupAddress(None),
+        telegramtype=TelegramType.GROUP_WRITE,
+        direction=TelegramDirection.OUTGOING,
+        payload=None,
+    ):
         """Initialize Telegram class."""
         self.direction = direction
         self.telegramtype = telegramtype
@@ -51,12 +54,15 @@ class Telegram:
 
     def __str__(self):
         """Return object as readable string."""
-        return '<Telegram group_address="{0}", payload="{1}" ' \
-            'telegramtype="{2}" direction="{3}" />'.format(
+        return (
+            '<Telegram group_address="{}", payload="{}" '
+            'telegramtype="{}" direction="{}" />'.format(
                 self.group_address.__repr__(),
                 self.payload,
                 self.telegramtype,
-                self.direction)
+                self.direction,
+            )
+        )
 
     def __eq__(self, other):
         """Equal operator."""

@@ -13,7 +13,7 @@ from xknx.exceptions import XKNXException
 from xknx.telegram import TelegramDirection
 
 
-class TelegramQueue():
+class TelegramQueue:
     """Class for telegram queue."""
 
     class Callback:
@@ -55,8 +55,7 @@ class TelegramQueue():
     async def start(self):
         """Start telegram queue."""
         self._consumer_task = asyncio.gather(
-            self._telegram_consumer(),
-            self._outgoing_rate_limiter()
+            self._telegram_consumer(), self._outgoing_rate_limiter()
         )
 
     async def stop(self):
@@ -99,7 +98,9 @@ class TelegramQueue():
             try:
                 await self.process_telegram_outgoing(telegram)
             except XKNXException as ex:
-                self.xknx.logger.error("Error while processing outgoing telegram %s", ex)
+                self.xknx.logger.error(
+                    "Error while processing outgoing telegram %s", ex
+                )
             finally:
                 self.outgoing_queue.task_done()
                 self.xknx.telegrams.task_done()
@@ -142,5 +143,6 @@ class TelegramQueue():
 
         if not processed:
             for device in self.xknx.devices.devices_by_group_address(
-                    telegram.group_address):
+                telegram.group_address
+            ):
                 await device.process(telegram)

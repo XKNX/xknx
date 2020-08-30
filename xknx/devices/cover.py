@@ -8,7 +8,11 @@ It provides functionality for
 * Cover will also predict the current position.
 """
 from xknx.remote_value import (
-    RemoteValueScaling, RemoteValueStep, RemoteValueSwitch, RemoteValueUpDown)
+    RemoteValueScaling,
+    RemoteValueStep,
+    RemoteValueSwitch,
+    RemoteValueUpDown,
+)
 
 from .device import Device
 from .travelcalculator import TravelCalculator
@@ -25,21 +29,23 @@ class Cover(Device):
     DEFAULT_TRAVEL_TIME_DOWN = 22
     DEFAULT_TRAVEL_TIME_UP = 22
 
-    def __init__(self,
-                 xknx,
-                 name,
-                 group_address_long=None,
-                 group_address_short=None,
-                 group_address_stop=None,
-                 group_address_position=None,
-                 group_address_position_state=None,
-                 group_address_angle=None,
-                 group_address_angle_state=None,
-                 travel_time_down=DEFAULT_TRAVEL_TIME_DOWN,
-                 travel_time_up=DEFAULT_TRAVEL_TIME_UP,
-                 invert_position=False,
-                 invert_angle=False,
-                 device_updated_cb=None):
+    def __init__(
+        self,
+        xknx,
+        name,
+        group_address_long=None,
+        group_address_short=None,
+        group_address_stop=None,
+        group_address_position=None,
+        group_address_position_state=None,
+        group_address_angle=None,
+        group_address_angle_state=None,
+        travel_time_down=DEFAULT_TRAVEL_TIME_DOWN,
+        travel_time_up=DEFAULT_TRAVEL_TIME_UP,
+        invert_position=False,
+        invert_angle=False,
+        device_updated_cb=None,
+    ):
         """Initialize Cover class."""
         # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
@@ -47,22 +53,22 @@ class Cover(Device):
         # travelcalculator (in process_group_write and set_*) - angle changes
         # are updated from RemoteValue objects
         self.updown = RemoteValueUpDown(
-            xknx,
-            group_address_long,
-            device_name=self.name,
-            after_update_cb=None)
+            xknx, group_address_long, device_name=self.name, after_update_cb=None
+        )
 
         self.step = RemoteValueStep(
             xknx,
             group_address_short,
             device_name=self.name,
-            after_update_cb=self.after_update)
+            after_update_cb=self.after_update,
+        )
 
         self.stop_ = RemoteValueSwitch(
             xknx,
             group_address=group_address_stop,
             device_name=self.name,
-            after_update_cb=None)
+            after_update_cb=None,
+        )
 
         position_range_from = 100 if invert_position else 0
         position_range_to = 0 if invert_position else 100
@@ -74,7 +80,8 @@ class Cover(Device):
             feature_name="Position",
             after_update_cb=None,
             range_from=position_range_from,
-            range_to=position_range_to)
+            range_to=position_range_to,
+        )
 
         angle_range_from = 100 if invert_angle else 0
         angle_range_to = 0 if invert_angle else 100
@@ -86,48 +93,32 @@ class Cover(Device):
             feature_name="Tilt angle",
             after_update_cb=self.after_update,
             range_from=angle_range_from,
-            range_to=angle_range_to)
+            range_to=angle_range_to,
+        )
 
         self.travel_time_down = travel_time_down
         self.travel_time_up = travel_time_up
 
-        self.travelcalculator = TravelCalculator(
-            travel_time_down,
-            travel_time_up)
+        self.travelcalculator = TravelCalculator(travel_time_down, travel_time_up)
 
     def _iter_remote_values(self):
         """Iterate the devices RemoteValue classes."""
-        yield from (self.updown,
-                    self.step,
-                    self.stop_,
-                    self.position,
-                    self.angle)
+        yield from (self.updown, self.step, self.stop_, self.position, self.angle)
 
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
-        group_address_long = \
-            config.get('group_address_long')
-        group_address_short = \
-            config.get('group_address_short')
-        group_address_stop = \
-            config.get('group_address_stop')
-        group_address_position = \
-            config.get('group_address_position')
-        group_address_position_state = \
-            config.get('group_address_position_state')
-        group_address_angle = \
-            config.get('group_address_angle')
-        group_address_angle_state = \
-            config.get('group_address_angle_state')
-        travel_time_down = \
-            config.get('travel_time_down', cls.DEFAULT_TRAVEL_TIME_DOWN)
-        travel_time_up = \
-            config.get('travel_time_up', cls.DEFAULT_TRAVEL_TIME_UP)
-        invert_position = \
-            config.get('invert_position', False)
-        invert_angle = \
-            config.get('invert_angle', False)
+        group_address_long = config.get("group_address_long")
+        group_address_short = config.get("group_address_short")
+        group_address_stop = config.get("group_address_stop")
+        group_address_position = config.get("group_address_position")
+        group_address_position_state = config.get("group_address_position_state")
+        group_address_angle = config.get("group_address_angle")
+        group_address_angle_state = config.get("group_address_angle_state")
+        travel_time_down = config.get("travel_time_down", cls.DEFAULT_TRAVEL_TIME_DOWN)
+        travel_time_up = config.get("travel_time_up", cls.DEFAULT_TRAVEL_TIME_UP)
+        invert_position = config.get("invert_position", False)
+        invert_angle = config.get("invert_angle", False)
 
         return cls(
             xknx,
@@ -142,19 +133,20 @@ class Cover(Device):
             travel_time_down=travel_time_down,
             travel_time_up=travel_time_up,
             invert_position=invert_position,
-            invert_angle=invert_angle)
+            invert_angle=invert_angle,
+        )
 
     def __str__(self):
         """Return object as readable string."""
-        return '<Cover name="{0}" ' \
-            'updown="{1}" ' \
-            'step="{2}" ' \
-            'stop="{3}" ' \
-            'position="{4}" ' \
-            'angle="{5}" '\
-            'travel_time_down="{6}" ' \
-            'travel_time_up="{7}" />' \
-            .format(
+        return (
+            '<Cover name="{}" '
+            'updown="{}" '
+            'step="{}" '
+            'stop="{}" '
+            'position="{}" '
+            'angle="{}" '
+            'travel_time_down="{}" '
+            'travel_time_up="{}" />'.format(
                 self.name,
                 self.updown.group_addr_str(),
                 self.step.group_addr_str(),
@@ -162,7 +154,9 @@ class Cover(Device):
                 self.position.group_addr_str(),
                 self.angle.group_addr_str(),
                 self.travel_time_down,
-                self.travel_time_up)
+                self.travel_time_up,
+            )
+        )
 
     async def set_down(self):
         """Move cover down."""
@@ -191,7 +185,9 @@ class Cover(Device):
         elif self.step.writable:
             await self.step.increase()
         else:
-            self.xknx.logger.warning('Stop not supported for device %s', self.get_name())
+            self.xknx.logger.warning(
+                "Stop not supported for device %s", self.get_name()
+            )
             return
         self.travelcalculator.stop()
         await self.after_update()
@@ -208,7 +204,9 @@ class Cover(Device):
                 elif position == self.travelcalculator.position_closed:
                     await self.updown.down()
                 else:
-                    self.xknx.logger.warning("Current position unknown. Initialize cover by moving to end position.")
+                    self.xknx.logger.warning(
+                        "Current position unknown. Initialize cover by moving to end position."
+                    )
                     return
             elif position < current_position:
                 await self.updown.up()
@@ -222,7 +220,9 @@ class Cover(Device):
     async def set_angle(self, angle):
         """Move cover to designated angle."""
         if not self.supports_angle:
-            self.xknx.logger.warning('Angle not supported for device %s', self.get_name())
+            self.xknx.logger.warning(
+                "Angle not supported for device %s", self.get_name()
+            )
             return
         await self.angle.set(angle)
 
@@ -233,11 +233,12 @@ class Cover(Device):
         # unless device was traveling to fully open
         # or fully closed state
         if (
-                self.supports_stop and
-                not self.position.writable and
-                self.position_reached() and
-                not self.is_open() and
-                not self.is_closed()):
+            self.supports_stop
+            and not self.position.writable
+            and self.position_reached()
+            and not self.is_open()
+            and not self.is_closed()
+        ):
             await self.stop()
 
     async def do(self, action):
@@ -253,7 +254,9 @@ class Cover(Device):
         elif action == "stop":
             await self.stop()
         else:
-            self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
+            self.xknx.logger.warning(
+                "Could not understand action %s for device %s", action, self.get_name()
+            )
 
     async def sync(self, wait_for_result=False):
         """Read states of device from KNX bus."""

@@ -9,9 +9,7 @@ async def main():
     """Connect to KNX/IP device, switch on outlet, wait 2 seconds and switch of off again."""
     xknx = XKNX()
     await xknx.start()
-    switch = Switch(xknx,
-                    name='TestOutlet',
-                    group_address='1/1/11')
+    switch = Switch(xknx, name="TestOutlet", group_address="1/1/11")
     await switch.set_on()
     await asyncio.sleep(2)
     await switch.set_off()

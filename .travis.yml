@@ -5,11 +5,9 @@ language: python
 jobs:
   include:
     - python: "3.8"
-      env: TOXENV=flake8
-    - python: "3.8"
       env: TOXENV=pylint
     - python: "3.8"
-      env: TOXENV=pydocstyle
+      env: TOXENV=lint
     - python: "3.6"
       env: TOXENV=py36
       after_success: coveralls

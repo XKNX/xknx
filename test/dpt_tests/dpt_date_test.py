@@ -13,39 +13,36 @@ class TestDPTDate(unittest.TestCase):
         """Test parsing of DPTDate object from binary values. Example 1."""
         self.assertEqual(
             DPTDate().from_knx((0x04, 0x01, 0x02)),
-            time.strptime("2002-01-04", "%Y-%m-%d")
+            time.strptime("2002-01-04", "%Y-%m-%d"),
         )
 
     def test_from_knx_old_date(self):
         """Test parsing of DPTDate object from binary values. Example 2."""
         self.assertEqual(
             DPTDate().from_knx((0x1F, 0x01, 0x5A)),
-            time.strptime("1990-01-31", "%Y-%m-%d")
+            time.strptime("1990-01-31", "%Y-%m-%d"),
         )
 
     def test_from_knx_future_date(self):
         """Test parsing of DPTDate object from binary values. Example 3."""
         self.assertEqual(
             DPTDate().from_knx((0x04, 0x0C, 0x59)),
-            time.strptime("2089-12-4", "%Y-%m-%d")
+            time.strptime("2089-12-4", "%Y-%m-%d"),
         )
 
     def test_to_knx(self):
         """Testing KNX/Byte representation of DPTDate object. Example 1."""
-        raw = DPTDate().to_knx(
-            time.strptime("2002-1-04", "%Y-%m-%d"))
+        raw = DPTDate().to_knx(time.strptime("2002-1-04", "%Y-%m-%d"))
         self.assertEqual(raw, (0x04, 0x01, 0x02))
 
     def test_to_knx_old_date(self):
         """Testing KNX/Byte representation of DPTDate object. Example 2."""
-        raw = DPTDate().to_knx(
-            time.strptime("1990-01-31", "%Y-%m-%d"))
+        raw = DPTDate().to_knx(time.strptime("1990-01-31", "%Y-%m-%d"))
         self.assertEqual(raw, (0x1F, 0x01, 0x5A))
 
     def test_to_knx_future_date(self):
         """Testing KNX/Byte representation of DPTDate object. Example 3."""
-        raw = DPTDate().to_knx(
-            time.strptime("2089-12-04", "%Y-%m-%d"))
+        raw = DPTDate().to_knx(time.strptime("2089-12-04", "%Y-%m-%d"))
         self.assertEqual(raw, (0x04, 0x0C, 0x59))
 
     def test_from_knx_wrong_parameter(self):

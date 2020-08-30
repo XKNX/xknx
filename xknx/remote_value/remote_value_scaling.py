@@ -11,30 +11,33 @@ from .remote_value import RemoteValue
 class RemoteValueScaling(RemoteValue):
     """Abstraction for remote value of KNX DPT 5.001 (DPT_Scaling)."""
 
-    def __init__(self,
-                 xknx,
-                 group_address=None,
-                 group_address_state=None,
-                 device_name=None,
-                 feature_name="Value",
-                 after_update_cb=None,
-                 range_from=0,
-                 range_to=100):
+    def __init__(
+        self,
+        xknx,
+        group_address=None,
+        group_address_state=None,
+        device_name=None,
+        feature_name="Value",
+        after_update_cb=None,
+        range_from=0,
+        range_to=100,
+    ):
         """Initialize remote value of KNX DPT 5.001 (DPT_Scaling)."""
         # pylint: disable=too-many-arguments
-        super().__init__(xknx,
-                         group_address,
-                         group_address_state,
-                         device_name=device_name,
-                         feature_name=feature_name,
-                         after_update_cb=after_update_cb)
+        super().__init__(
+            xknx,
+            group_address,
+            group_address_state,
+            device_name=device_name,
+            feature_name=feature_name,
+            after_update_cb=after_update_cb,
+        )
         self.range_from = range_from
         self.range_to = range_to
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
-        return (isinstance(payload, DPTArray)
-                and len(payload.value) == 1)
+        return isinstance(payload, DPTArray) and len(payload.value) == 1
 
     def to_knx(self, value):
         """Convert value to payload."""
@@ -53,9 +56,9 @@ class RemoteValueScaling(RemoteValue):
     @staticmethod
     def _calc_from_knx(range_from, range_to, raw):
         delta = range_to - range_from
-        return round((raw/255)*delta) + range_from
+        return round((raw / 255) * delta) + range_from
 
     @staticmethod
     def _calc_to_knx(range_from, range_to, value):
         delta = range_to - range_from
-        return round((value-range_from)/delta*255)
+        return round((value - range_from) / delta * 255)

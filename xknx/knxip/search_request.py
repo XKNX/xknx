@@ -18,7 +18,9 @@ class SearchRequest(KNXIPBody):
     def __init__(self, xknx):
         """Initialize SearchRequest object."""
         super().__init__(xknx)
-        self.discovery_endpoint = HPAI(ip_addr=xknx.multicast_group, port=xknx.multicast_port)
+        self.discovery_endpoint = HPAI(
+            ip_addr=xknx.multicast_group, port=xknx.multicast_port
+        )
 
     def calculated_length(self):
         """Get length of KNX/IP body."""
@@ -37,5 +39,6 @@ class SearchRequest(KNXIPBody):
 
     def __str__(self):
         """Return object as readable string."""
-        return '<SearchRequest discovery_endpoint="{0}" />' \
-            .format(self.discovery_endpoint)
+        return '<SearchRequest discovery_endpoint="{}" />'.format(
+            self.discovery_endpoint
+        )

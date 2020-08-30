@@ -30,12 +30,11 @@ class ConnectRequest(KNXIPBody):
 
     def calculated_length(self):
         """Get length of KNX/IP body."""
-        return HPAI.LENGTH + \
-            HPAI.LENGTH + \
-            ConnectRequest.CRI_LENGTH
+        return HPAI.LENGTH + HPAI.LENGTH + ConnectRequest.CRI_LENGTH
 
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
+
         def cri_from_knx(cri):
             """Parse CRI (Connection Request Information)."""
             if cri[0] != ConnectRequest.CRI_LENGTH:
@@ -53,6 +52,7 @@ class ConnectRequest(KNXIPBody):
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
+
         def cri_to_knx():
             """Serialize CRI (Connect Request Information)."""
             cri = []
@@ -61,6 +61,7 @@ class ConnectRequest(KNXIPBody):
             cri.append(self.flags)
             cri.append(0x00)  # Reserved
             return cri
+
         data = []
         data.extend(self.control_endpoint.to_knx())
         data.extend(self.data_endpoint.to_knx())
@@ -69,8 +70,9 @@ class ConnectRequest(KNXIPBody):
 
     def __str__(self):
         """Return object as readable string."""
-        return '<ConnectRequest control_endpoint="{0}" data_endpoint="{1}" ' \
-            'request_type="{2}" />' .format(
-                self.control_endpoint,
-                self.data_endpoint,
-                self.request_type)
+        return (
+            '<ConnectRequest control_endpoint="{}" data_endpoint="{}" '
+            'request_type="{}" />'.format(
+                self.control_endpoint, self.data_endpoint, self.request_type
+            )
+        )

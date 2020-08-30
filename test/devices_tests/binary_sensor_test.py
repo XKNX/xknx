@@ -28,17 +28,17 @@ class TestBinarySensor(unittest.TestCase):
     def test_process(self):
         """Test process / reading telegrams from telegram queue."""
         xknx = XKNX(loop=self.loop)
-        binaryinput = BinarySensor(xknx, 'TestInput', '1/2/3')
+        binaryinput = BinarySensor(xknx, "TestInput", "1/2/3")
 
         self.assertEqual(binaryinput.state, False)
 
-        telegram_on = Telegram(group_address=GroupAddress('1/2/3'))
+        telegram_on = Telegram(group_address=GroupAddress("1/2/3"))
         telegram_on.payload = DPTBinary(1)
         self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_on)))
 
         self.assertEqual(binaryinput.state, True)
 
-        telegram_off = Telegram(group_address=GroupAddress('1/2/3'))
+        telegram_off = Telegram(group_address=GroupAddress("1/2/3"))
         telegram_off.payload = DPTBinary(0)
         self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_off)))
         self.assertEqual(binaryinput.state, False)
@@ -47,8 +47,10 @@ class TestBinarySensor(unittest.TestCase):
         """Test process / reading telegrams from telegram queue."""
         xknx = XKNX(loop=self.loop)
         reset_after_ms = 0.01
-        binaryinput = BinarySensor(xknx, 'TestInput', '1/2/3', reset_after=reset_after_ms)
-        telegram_on = Telegram(group_address=GroupAddress('1/2/3'))
+        binaryinput = BinarySensor(
+            xknx, "TestInput", "1/2/3", reset_after=reset_after_ms
+        )
+        telegram_on = Telegram(group_address=GroupAddress("1/2/3"))
         telegram_on.payload = DPTBinary(1)
 
         self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_on)))
@@ -58,105 +60,67 @@ class TestBinarySensor(unittest.TestCase):
     def test_process_action(self):
         """Test process / reading telegrams from telegram queue. Test if action is executed."""
         xknx = XKNX(loop=self.loop)
-        Switch(xknx, 'TestOutlet', group_address='1/2/3')
+        Switch(xknx, "TestOutlet", group_address="1/2/3")
 
-        binary_sensor = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3')
-        action_on = Action(
-            xknx,
-            hook='on',
-            target='TestOutlet',
-            method='on')
+        binary_sensor = BinarySensor(xknx, "TestInput", group_address_state="1/2/3")
+        action_on = Action(xknx, hook="on", target="TestOutlet", method="on")
         binary_sensor.actions.append(action_on)
-        action_off = Action(
-            xknx,
-            hook='off',
-            target='TestOutlet',
-            method='off')
+        action_off = Action(xknx, hook="off", target="TestOutlet", method="off")
         binary_sensor.actions.append(action_off)
 
-        self.assertEqual(
-            xknx.devices['TestInput'].state,
-            False)
-        self.assertEqual(
-            xknx.devices['TestOutlet'].state,
-            False)
+        self.assertEqual(xknx.devices["TestInput"].state, False)
+        self.assertEqual(xknx.devices["TestOutlet"].state, False)
 
-        telegram_on = Telegram(group_address=GroupAddress('1/2/3'))
+        telegram_on = Telegram(group_address=GroupAddress("1/2/3"))
         telegram_on.payload = DPTBinary(1)
         self.loop.run_until_complete(asyncio.Task(binary_sensor.process(telegram_on)))
 
-        self.assertEqual(
-            xknx.devices['TestInput'].state,
-            True)
-        self.assertEqual(
-            xknx.devices['TestOutlet'].state,
-            True)
+        self.assertEqual(xknx.devices["TestInput"].state, True)
+        self.assertEqual(xknx.devices["TestOutlet"].state, True)
 
-        telegram_off = Telegram(group_address=GroupAddress('1/2/3'))
+        telegram_off = Telegram(group_address=GroupAddress("1/2/3"))
         telegram_off.payload = DPTBinary(0)
         self.loop.run_until_complete(asyncio.Task(binary_sensor.process(telegram_off)))
 
-        self.assertEqual(
-            xknx.devices['TestInput'].state,
-            False)
-        self.assertEqual(
-            xknx.devices['TestOutlet'].state,
-            False)
+        self.assertEqual(xknx.devices["TestInput"].state, False)
+        self.assertEqual(xknx.devices["TestOutlet"].state, False)
 
     def test_process_action_ignore_internal_state(self):
         """Test process / reading telegrams from telegram queue. Test if action is executed."""
         xknx = XKNX(loop=self.loop)
-        switch = Switch(xknx, 'TestOutlet', group_address='5/5/5')
+        switch = Switch(xknx, "TestOutlet", group_address="5/5/5")
 
-        binary_sensor = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3', ignore_internal_state=True)
-        action_on = Action(
-            xknx,
-            hook='on',
-            target='TestOutlet',
-            method='on')
+        binary_sensor = BinarySensor(
+            xknx, "TestInput", group_address_state="1/2/3", ignore_internal_state=True
+        )
+        action_on = Action(xknx, hook="on", target="TestOutlet", method="on")
         binary_sensor.actions.append(action_on)
 
-        self.assertEqual(
-            xknx.devices['TestInput'].state,
-            False)
-        self.assertEqual(
-            xknx.devices['TestOutlet'].state,
-            False)
+        self.assertEqual(xknx.devices["TestInput"].state, False)
+        self.assertEqual(xknx.devices["TestOutlet"].state, False)
 
-        telegram_on = Telegram(group_address=GroupAddress('1/2/3'))
+        telegram_on = Telegram(group_address=GroupAddress("1/2/3"))
         telegram_on.payload = DPTBinary(1)
         self.loop.run_until_complete(asyncio.Task(binary_sensor.process(telegram_on)))
 
-        self.assertEqual(
-            xknx.devices['TestInput'].state,
-            True)
-        self.assertEqual(
-            xknx.devices['TestOutlet'].state,
-            True)
+        self.assertEqual(xknx.devices["TestInput"].state, True)
+        self.assertEqual(xknx.devices["TestOutlet"].state, True)
 
         self.loop.run_until_complete(asyncio.Task(switch.set_off()))
-        self.assertEqual(
-            xknx.devices['TestOutlet'].state,
-            False)
-        self.assertEqual(
-            xknx.devices['TestInput'].state,
-            True)
+        self.assertEqual(xknx.devices["TestOutlet"].state, False)
+        self.assertEqual(xknx.devices["TestInput"].state, True)
 
         self.loop.run_until_complete(asyncio.sleep(1))
         self.loop.run_until_complete(asyncio.Task(binary_sensor.process(telegram_on)))
 
-        self.assertEqual(
-            xknx.devices['TestInput'].state,
-            True)
-        self.assertEqual(
-            xknx.devices['TestOutlet'].state,
-            True)
+        self.assertEqual(xknx.devices["TestInput"].state, True)
+        self.assertEqual(xknx.devices["TestOutlet"].state, True)
 
     def test_process_wrong_payload(self):
         """Test process wrong telegram (wrong payload type)."""
         xknx = XKNX(loop=self.loop)
-        binary_sensor = BinarySensor(xknx, 'Warning', group_address_state='1/2/3')
-        telegram = Telegram(GroupAddress('1/2/3'), payload=DPTArray((0x1, 0x2, 0x3)))
+        binary_sensor = BinarySensor(xknx, "Warning", group_address_state="1/2/3")
+        telegram = Telegram(GroupAddress("1/2/3"), payload=DPTArray((0x1, 0x2, 0x3)))
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(asyncio.Task(binary_sensor.process(telegram)))
 
@@ -166,9 +130,11 @@ class TestBinarySensor(unittest.TestCase):
     def test_is_on(self):
         """Test is_on() and is_off() of a BinarySensor with state 'on'."""
         xknx = XKNX(loop=self.loop)
-        binaryinput = BinarySensor(xknx, 'TestInput', '1/2/3')
+        binaryinput = BinarySensor(xknx, "TestInput", "1/2/3")
         # pylint: disable=protected-access
-        self.loop.run_until_complete(asyncio.Task(binaryinput._set_internal_state(True)))
+        self.loop.run_until_complete(
+            asyncio.Task(binaryinput._set_internal_state(True))
+        )
         self.assertTrue(binaryinput.is_on())
         self.assertFalse(binaryinput.is_off())
 
@@ -178,9 +144,11 @@ class TestBinarySensor(unittest.TestCase):
     def test_is_off(self):
         """Test is_on() and is_off() of a BinarySensor with state 'off'."""
         xknx = XKNX(loop=self.loop)
-        binaryinput = BinarySensor(xknx, 'TestInput', '1/2/3')
+        binaryinput = BinarySensor(xknx, "TestInput", "1/2/3")
         # pylint: disable=protected-access
-        self.loop.run_until_complete(asyncio.Task(binaryinput._set_internal_state(False)))
+        self.loop.run_until_complete(
+            asyncio.Task(binaryinput._set_internal_state(False))
+        )
         self.assertFalse(binaryinput.is_on())
         self.assertTrue(binaryinput.is_off())
 
@@ -191,7 +159,7 @@ class TestBinarySensor(unittest.TestCase):
         """Test after_update_callback after state of switch was changed."""
         # pylint: disable=no-self-use
         xknx = XKNX(loop=self.loop)
-        switch = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3')
+        switch = BinarySensor(xknx, "TestInput", group_address_state="1/2/3")
 
         after_update_callback = Mock()
 
@@ -201,7 +169,7 @@ class TestBinarySensor(unittest.TestCase):
 
         switch.register_device_updated_cb(async_after_update_callback)
 
-        telegram = Telegram(group_address=GroupAddress('1/2/3'))
+        telegram = Telegram(group_address=GroupAddress("1/2/3"))
         telegram.payload = DPTBinary(1)
         self.loop.run_until_complete(asyncio.Task(switch.process(telegram)))
         after_update_callback.assert_called_with(switch)
@@ -212,8 +180,8 @@ class TestBinarySensor(unittest.TestCase):
     def test_counter(self):
         """Test counter functionality."""
         xknx = XKNX(loop=self.loop)
-        switch = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3')
-        with patch('time.time') as mock_time:
+        switch = BinarySensor(xknx, "TestInput", group_address_state="1/2/3")
+        with patch("time.time") as mock_time:
             mock_time.return_value = 1517000000.0
             self.assertEqual(switch.bump_and_get_counter(True), 1)
 

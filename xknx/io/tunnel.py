@@ -6,8 +6,7 @@ Tunnels connect to KNX/IP devices directly via UDP and build a static UDP connec
 import asyncio
 
 from xknx.exceptions import XKNXException
-from xknx.knxip import (
-    CEMIMessageCode, KNXIPFrame, KNXIPServiceType, TunnellingRequest)
+from xknx.knxip import CEMIMessageCode, KNXIPFrame, KNXIPServiceType, TunnellingRequest
 from xknx.telegram import TelegramDirection
 
 from .connect import Connect
@@ -17,14 +16,22 @@ from .tunnelling import Tunnelling
 from .udp_client import UDPClient
 
 
-class Tunnel():
+class Tunnel:
     """Class for handling KNX/IP tunnels."""
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, xknx, src_address, local_ip, gateway_ip, gateway_port,
-                 telegram_received_callback=None, auto_reconnect=False,
-                 auto_reconnect_wait=3):
+    def __init__(
+        self,
+        xknx,
+        src_address,
+        local_ip,
+        gateway_ip,
+        gateway_port,
+        telegram_received_callback=None,
+        auto_reconnect=False,
+        auto_reconnect_wait=3,
+    ):
         """Initialize Tunnel class."""
         # pylint: disable=too-many-arguments
         self.xknx = xknx
@@ -49,25 +56,30 @@ class Tunnel():
 
     def init_udp_client(self):
         """Initialize udp_client."""
-        self.udp_client = UDPClient(self.xknx,
-                                    (self.local_ip, 0),
-                                    (self.gateway_ip, self.gateway_port))
+        self.udp_client = UDPClient(
+            self.xknx, (self.local_ip, 0), (self.gateway_ip, self.gateway_port)
+        )
 
         self.udp_client.register_callback(
-            self.tunnel_reqest_received, [TunnellingRequest.service_type])
+            self.tunnel_reqest_received, [TunnellingRequest.service_type]
+        )
 
     def tunnel_reqest_received(self, knxipframe, udp_client):
         """Handle incoming tunnel request."""
         # pylint: disable=unused-argument
-        if knxipframe.header.service_type_ident != \
-                KNXIPServiceType.TUNNELLING_REQUEST:
+        if knxipframe.header.service_type_ident != KNXIPServiceType.TUNNELLING_REQUEST:
             self.xknx.logger.warning("Service not implemented: %s", knxipframe)
         else:
-            self.send_ack(knxipframe.body.communication_channel_id, knxipframe.body.sequence_counter)
+            self.send_ack(
+                knxipframe.body.communication_channel_id,
+                knxipframe.body.sequence_counter,
+            )
             # Don't handle invalid cemi frames (None) and only handle incoming L_DATA_IND frames.
             # Ignore L_DATA_CON confirmation frames. L_DATA_REQ frames should only be outgoing.
-            if knxipframe.body.cemi is not None and \
-                    knxipframe.body.cemi.code is CEMIMessageCode.L_DATA_IND:
+            if (
+                knxipframe.body.cemi is not None
+                and knxipframe.body.cemi.code is CEMIMessageCode.L_DATA_IND
+            ):
                 telegram = knxipframe.body.cemi.telegram
                 telegram.direction = TelegramDirection.INCOMING
                 if self.telegram_received_callback is not None:
@@ -93,9 +105,7 @@ class Tunnel():
 
     async def connect(self):
         """Connect/build tunnel."""
-        connect = Connect(
-            self.xknx,
-            self.udp_client)
+        connect = Connect(self.xknx, self.udp_client)
         await connect.start()
         if not connect.success:
             if self.auto_reconnect:
@@ -110,7 +120,8 @@ class Tunnel():
         self.xknx.logger.debug(
             "Tunnel established communication_channel=%s, id=%s",
             connect.communication_channel,
-            connect.identifier)
+            connect.identifier,
+        )
         self._reconnect_task = None
         self.communication_channel = connect.communication_channel
         self.sequence_number = 0
@@ -133,10 +144,14 @@ class Tunnel():
         """
         success = await self._send_telegram_impl(telegram)
         if not success:
-            self.xknx.logger.warning("Sending of telegram failed. Retrying a second time.")
+            self.xknx.logger.warning(
+                "Sending of telegram failed. Retrying a second time."
+            )
             success = await self._send_telegram_impl(telegram)
             if not success:
-                self.xknx.logger.warning("Resending telegram failed. Reconnecting to tunnel.")
+                self.xknx.logger.warning(
+                    "Resending telegram failed. Reconnecting to tunnel."
+                )
                 await self.reconnect()
                 success = await self._send_telegram_impl(telegram)
                 if not success:
@@ -151,7 +166,8 @@ class Tunnel():
             telegram,
             self.src_address,
             self.sequence_number,
-            self.communication_channel)
+            self.communication_channel,
+        )
         await tunnelling.start()
         return tunnelling.success
 
@@ -166,7 +182,8 @@ class Tunnel():
         conn_state = ConnectionState(
             self.xknx,
             self.udp_client,
-            communication_channel_id=self.communication_channel)
+            communication_channel_id=self.communication_channel,
+        )
         await conn_state.start()
         return conn_state.success
 
@@ -180,11 +197,15 @@ class Tunnel():
         disconnect = Disconnect(
             self.xknx,
             self.udp_client,
-            communication_channel_id=self.communication_channel)
+            communication_channel_id=self.communication_channel,
+        )
         await disconnect.start()
         if not disconnect.success and not ignore_error:
             raise XKNXException("Could not disconnect channel")
-        self.xknx.logger.debug("Tunnel disconnected (communication_channel: %s)", self.communication_channel)
+        self.xknx.logger.debug(
+            "Tunnel disconnected (communication_channel: %s)",
+            self.communication_channel,
+        )
         # close udp client to prevent open file descriptors
         await self.udp_client.stop()
 

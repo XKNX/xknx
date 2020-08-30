@@ -1,6 +1,11 @@
 """Abstraction to send ConnectRequest and wait for ConnectResponse."""
 from xknx.knxip import (
-    HPAI, ConnectRequestType, ConnectResponse, KNXIPFrame, KNXIPServiceType)
+    HPAI,
+    ConnectRequestType,
+    ConnectResponse,
+    KNXIPFrame,
+    KNXIPServiceType,
+)
 
 from .request_response import RequestResponse
 
@@ -24,10 +29,8 @@ class Connect(RequestResponse):
         knxipframe.body.request_type = ConnectRequestType.TUNNEL_CONNECTION
 
         # set control_endpoint and data_endpoint to the same udp_connection
-        knxipframe.body.control_endpoint = HPAI(
-            ip_addr=local_addr, port=local_port)
-        knxipframe.body.data_endpoint = HPAI(
-            ip_addr=local_addr, port=local_port)
+        knxipframe.body.control_endpoint = HPAI(ip_addr=local_addr, port=local_port)
+        knxipframe.body.data_endpoint = HPAI(ip_addr=local_addr, port=local_port)
         return knxipframe
 
     def on_success_hook(self, knxipframe):

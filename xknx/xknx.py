@@ -7,7 +7,11 @@ from sys import platform
 from xknx.core import Config, StateUpdater, TelegramQueue
 from xknx.devices import Devices
 from xknx.io import (
-    DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT, ConnectionConfig, KNXIPInterface)
+    DEFAULT_MCAST_GRP,
+    DEFAULT_MCAST_PORT,
+    ConnectionConfig,
+    KNXIPInterface,
+)
 from xknx.telegram import GroupAddressType, PhysicalAddress
 
 from .__version__ import __version__ as VERSION
@@ -18,19 +22,21 @@ class XKNX:
 
     # pylint: disable=too-many-instance-attributes
 
-    DEFAULT_ADDRESS = '15.15.250'
+    DEFAULT_ADDRESS = "15.15.250"
     DEFAULT_RATE_LIMIT = 20
 
-    def __init__(self,
-                 config=None,
-                 loop=None,
-                 own_address=PhysicalAddress(DEFAULT_ADDRESS),
-                 address_format=GroupAddressType.LONG,
-                 telegram_received_cb=None,
-                 device_updated_cb=None,
-                 rate_limit=DEFAULT_RATE_LIMIT,
-                 multicast_group=DEFAULT_MCAST_GRP,
-                 multicast_port=DEFAULT_MCAST_PORT):
+    def __init__(
+        self,
+        config=None,
+        loop=None,
+        own_address=PhysicalAddress(DEFAULT_ADDRESS),
+        address_format=GroupAddressType.LONG,
+        telegram_received_cb=None,
+        device_updated_cb=None,
+        rate_limit=DEFAULT_RATE_LIMIT,
+        multicast_group=DEFAULT_MCAST_GRP,
+        multicast_port=DEFAULT_MCAST_PORT,
+    ):
         """Initialize XKNX class."""
         # pylint: disable=too-many-arguments
         self.devices = Devices()
@@ -46,10 +52,10 @@ class XKNX:
         self.rate_limit = rate_limit
         self.multicast_group = multicast_group
         self.multicast_port = multicast_port
-        self.logger = logging.getLogger('xknx.log')
-        self.knx_logger = logging.getLogger('xknx.knx')
-        self.telegram_logger = logging.getLogger('xknx.telegram')
-        self.raw_socket_logger = logging.getLogger('xknx.raw_socket')
+        self.logger = logging.getLogger("xknx.log")
+        self.knx_logger = logging.getLogger("xknx.knx")
+        self.telegram_logger = logging.getLogger("xknx.telegram")
+        self.raw_socket_logger = logging.getLogger("xknx.raw_socket")
         self.connection_config = None
         self.version = VERSION
 
@@ -71,10 +77,9 @@ class XKNX:
             except RuntimeError as exp:
                 self.logger.warning("Could not close loop, reason: %s", exp)
 
-    async def start(self,
-                    state_updater=False,
-                    daemon_mode=False,
-                    connection_config=None):
+    async def start(
+        self, state_updater=False, daemon_mode=False, connection_config=None
+    ):
         """Start XKNX module. Connect to KNX/IP devices and start state updater."""
         if connection_config is None:
             if self.connection_config is None:
@@ -82,8 +87,11 @@ class XKNX:
             else:
                 connection_config = self.connection_config
         self.knxip_interface = KNXIPInterface(self, connection_config=connection_config)
-        self.logger.info('XKNX v%s starting %s connection to KNX bus.',
-                         VERSION, connection_config.connection_type.name.lower())
+        self.logger.info(
+            "XKNX v%s starting %s connection to KNX bus.",
+            VERSION,
+            connection_config.connection_type.name.lower(),
+        )
         await self.knxip_interface.start()
         await self.telegram_queue.start()
         if state_updater:
@@ -112,12 +120,14 @@ class XKNX:
 
     async def loop_until_sigint(self):
         """Loop until Crtl-C was pressed."""
+
         def sigint_handler():
             """End loop."""
             self.sigint_received.set()
+
         if platform == "win32":
-            self.logger.warning('Windows does not support signals')
+            self.logger.warning("Windows does not support signals")
         else:
             self.loop.add_signal_handler(signal.SIGINT, sigint_handler)
-        self.logger.warning('Press Ctrl+C to stop')
+        self.logger.warning("Press Ctrl+C to stop")
         await self.sigint_received.wait()

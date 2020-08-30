@@ -9,7 +9,7 @@ from xknx.telegram import TelegramDirection
 from .udp_client import UDPClient
 
 
-class Routing():
+class Routing:
     """Class for handling KNX/IP routing."""
 
     def __init__(self, xknx, telegram_received_callback, local_ip):
@@ -18,28 +18,31 @@ class Routing():
         self.telegram_received_callback = telegram_received_callback
         self.local_ip = local_ip
 
-        self.udpclient = UDPClient(self.xknx,
-                                   (local_ip, 0),
-                                   (self.xknx.multicast_group, self.xknx.multicast_port),
-                                   multicast=True)
+        self.udpclient = UDPClient(
+            self.xknx,
+            (local_ip, 0),
+            (self.xknx.multicast_group, self.xknx.multicast_port),
+            multicast=True,
+        )
 
         self.udpclient.register_callback(
-            self.response_rec_callback,
-            [KNXIPServiceType.ROUTING_INDICATION])
+            self.response_rec_callback, [KNXIPServiceType.ROUTING_INDICATION]
+        )
 
     def response_rec_callback(self, knxipframe, _):
         """Verify and handle knxipframe. Callback from internal udpclient."""
-        if knxipframe.header.service_type_ident != \
-                KNXIPServiceType.ROUTING_INDICATION:
+        if knxipframe.header.service_type_ident != KNXIPServiceType.ROUTING_INDICATION:
             self.xknx.logger.warning("Service type not implemented: %s", knxipframe)
         elif knxipframe.body.cemi is None:
             # ignore unsupported CEMI frame
             return
         elif knxipframe.body.cemi.src_addr == self.xknx.own_address:
             self.xknx.logger.debug("Ignoring own packet")
-        elif knxipframe.body.cemi.cmd not in (APCICommand.GROUP_READ,
-                                              APCICommand.GROUP_WRITE,
-                                              APCICommand.GROUP_RESPONSE):
+        elif knxipframe.body.cemi.cmd not in (
+            APCICommand.GROUP_READ,
+            APCICommand.GROUP_WRITE,
+            APCICommand.GROUP_RESPONSE,
+        ):
             self.xknx.logger.warning("APCI not implemented: %s", knxipframe)
         else:
             telegram = knxipframe.body.cemi.telegram
