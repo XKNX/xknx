@@ -240,10 +240,10 @@ class Climate(Device):
     def validate_value(self, value, min_value, max_value):
         """Check boundaries of temperature and return valid temperature value."""
         if (min_value is not None) and (value < min_value):
-            self.xknx.logger.warning("min value exceeded at %s: %s", self.name, value)
+            self.xknx.logger.warning("Min value exceeded at %s: %s", self.name, value)
             return min_value
         if (max_value is not None) and (value > max_value):
-            self.xknx.logger.warning("max value exceeded at %s: %s", self.name, value)
+            self.xknx.logger.warning("Max value exceeded at %s: %s", self.name, value)
             return max_value
         return value
 

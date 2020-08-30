@@ -70,7 +70,7 @@ class TestValueReader(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         # Warning was logged
         logger_warning_mock.assert_called_once_with(
-            "Error: KNX bus did not respond in time to GroupValueRead request for: %s", GroupAddress('0/0/0'))
+            "Error: KNX bus did not respond in time (%s secs) to GroupValueRead request for: %s", 0, GroupAddress('0/0/0'))
         # Callback was removed again
         self.assertEqual(xknx.telegram_queue.telegram_received_cbs,
                          [])

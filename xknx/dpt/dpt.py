@@ -129,7 +129,7 @@ class DPTBinary():
         if not isinstance(value, int):
             raise TypeError()
         if value > DPTBinary.APCI_BITMASK:
-            raise ConversionError("Cant init DPTBinary", value=value)
+            raise ConversionError("Cannot init DPTBinary", value=value)
 
         self.value = value
 

@@ -64,7 +64,7 @@ class UDPClient:
         def connection_lost(self, exc):
             """Log error. Callback for connection lost."""
             if hasattr(self, 'xknx'):
-                self.xknx.logger.info('closing transport %s', exc)
+                self.xknx.logger.info('Closing transport: %s', exc)
 
     def __init__(self, xknx, local_addr, remote_addr, multicast=False):
         """Initialize UDPClient class."""

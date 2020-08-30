@@ -27,7 +27,7 @@ class DPTTime(DPTBase):
         seconds = raw[2] & 0x3F
 
         if not DPTTime._test_range(weekday, hours, minutes, seconds):
-            raise ConversionError("Cant parse DPTTime", raw=raw)
+            raise ConversionError("Cannot parse DPTTime", raw=raw)
 
         try:
             if weekday == 0:
@@ -39,13 +39,13 @@ class DPTTime(DPTBase):
             # strptime conversion used for catching exceptions; filled with default values
             return time.strptime("{} {} {} {}".format(hours, minutes, seconds, weekday), "%H %M %S %w")
         except ValueError:
-            raise ConversionError("Cant parse DPTTime", raw=raw)
+            raise ConversionError("Cannot parse DPTTime", raw=raw)
 
     @classmethod
     def to_knx(cls, value: time.struct_time):
         """Serialize to KNX/IP raw data from dict with elements weekday,hours,minutes,seconds."""
         if not isinstance(value, time.struct_time):
-            raise ConversionError("Cant serialize DPTTime - time.struct_time expected", value=value)
+            raise ConversionError("Cannot serialize DPTTime - time.struct_time expected", value=value)
 
         _default_time = time.strptime("", "")
         weekday = 0

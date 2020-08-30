@@ -51,7 +51,7 @@ class TestConnect(unittest.TestCase):
         wrong_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_REQUEST)
         with patch('logging.Logger.warning') as mock_warning:
             connect.response_rec_callback(wrong_knxipframe, None)
-            mock_warning.assert_called_with('Cant understand knxipframe')
+            mock_warning.assert_called_with('Cannot understand knxipframe')
 
         # Response KNX/IP-Frame with error:
         err_knxipframe = KNXIPFrame(xknx)

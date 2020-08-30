@@ -46,7 +46,7 @@ class RequestResponse():
     def response_rec_callback(self, knxipframe, _):
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knxipframe.body, self.awaited_response_class):
-            self.xknx.logger.warning("Cant understand knxipframe")
+            self.xknx.logger.warning("Cannot understand knxipframe")
             return
         self.response_received_or_timeout.set()
         if knxipframe.body.status_code == ErrorCode.E_NO_ERROR:
@@ -57,7 +57,7 @@ class RequestResponse():
 
     def on_success_hook(self, knxipframe):
         """Do something after having received a valid answer. May be overwritten in derived class."""
-        self.xknx.logger.debug('Success: received correct answer from KNX bus: %s', knxipframe.body.status_code)
+        self.xknx.logger.debug('Success: Received correct answer from KNX bus: %s', knxipframe.body.status_code)
 
     def on_error_hook(self, knxipframe):
         """Do something after having received error within given time. May be overwritten in derived class."""
@@ -67,8 +67,8 @@ class RequestResponse():
 
     def timeout(self):
         """Handle timeout for not having received expected knxipframe."""
-        self.xknx.logger.warning("Error: KNX bus did not respond in time to request of type '%s'",
-                                 self.__class__.__name__)
+        self.xknx.logger.warning("Error: KNX bus did not respond in time (%s secs) to request of type '%s'",
+                                 self.timeout_in_seconds, self.__class__.__name__)
         self.response_received_or_timeout.set()
 
     async def start_timeout(self):

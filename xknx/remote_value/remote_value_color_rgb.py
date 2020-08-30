@@ -36,15 +36,15 @@ class RemoteValueColorRGB(RemoteValue):
     def to_knx(self, value):
         """Convert value to payload."""
         if not isinstance(value, (list, tuple)):
-            raise ConversionError("Cant serialize RemoteValueColorRGB (wrong type)",
+            raise ConversionError("Cannot serialize RemoteValueColorRGB (wrong type)",
                                   value=value, type=type(value))
         if len(value) != 3:
-            raise ConversionError("Cant serialize DPT 232.600 (wrong length)",
+            raise ConversionError("Cannot serialize DPT 232.600 (wrong length)",
                                   value=value, type=type(value))
         if any(not isinstance(color, int) for color in value) \
                 or any(color < 0 for color in value) \
                 or any(color > 255 for color in value):
-            raise ConversionError("Cant serialize DPT 232.600 (wrong bytes)", value=value)
+            raise ConversionError("Cannot serialize DPT 232.600 (wrong bytes)", value=value)
 
         return DPTArray(list(value))
 

@@ -81,7 +81,7 @@ class Device:
     async def do(self, action):
         """Execute 'do' commands."""
         # pylint: disable=invalid-name
-        self.xknx.logger.info("Do not implemented action '%s' for %s", action, self.__class__.__name__)
+        self.xknx.logger.info("'do()' not implemented for action '%s' of %s", action, self.__class__.__name__)
 
     def __eq__(self, other):
         """Compare for quality."""

@@ -63,8 +63,8 @@ class ValueReader:
 
     def timeout(self):
         """Handle timeout for not having received expected group response."""
-        self.xknx.logger.warning("Error: KNX bus did not respond in time to GroupValueRead request for: %s",
-                                 self.group_address)
+        self.xknx.logger.warning("Error: KNX bus did not respond in time (%s secs) to GroupValueRead request for: %s",
+                                 self.timeout_in_seconds, self.group_address)
         self.response_received_or_timeout.set()
 
     async def start_timeout(self):
