@@ -1,7 +1,7 @@
 """Unit test for RemoveValue objects."""
 import asyncio
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
@@ -89,14 +89,15 @@ class TestRemoteValue(unittest.TestCase):
         remote_value = RemoteValueSwitch(xknx, group_address_state="1/2/3")
 
         with patch('xknx.remote_value.RemoteValue.payload_valid') as patch_valid, \
-                patch('xknx.core.ValueReader.read') as patch_read:
+                patch('xknx.core.ValueReader.read', new_callable=MagicMock) as patch_read:
             patch_valid.return_value = True
 
+            fut = asyncio.Future()
             telegram = Telegram(
                 GroupAddress('1/2/3'),
                 payload=DPTBinary(1))
-
-            patch_read.return_value = telegram
+            fut.set_result(telegram)
+            patch_read.return_value = fut
 
             self.loop.run_until_complete(asyncio.Task(remote_value.read_state(wait_for_result=True)))
 
@@ -108,10 +109,12 @@ class TestRemoteValue(unittest.TestCase):
         remote_value = RemoteValueSwitch(xknx, group_address_state="1/2/3")
 
         with patch('xknx.remote_value.RemoteValue.payload_valid') as patch_valid, \
-                patch('xknx.core.ValueReader.read') as patch_read, \
+                patch('xknx.core.ValueReader.read', new_callable=MagicMock) as patch_read, \
                 patch('logging.Logger.warning') as mock_info:
+            fut = asyncio.Future()
+            fut.set_result(None)
             patch_valid.return_value = False
-            patch_read.return_value = None
+            patch_read.return_value = fut
 
             self.loop.run_until_complete(asyncio.Task(remote_value.read_state(wait_for_result=True)))
 

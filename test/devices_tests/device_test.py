@@ -1,7 +1,7 @@
 """Unit test for Switch objects."""
 import asyncio
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Device, Sensor
@@ -133,7 +133,10 @@ class TestDevice(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         sensor = Sensor(xknx, 'Sensor', group_address_state="1/2/3", value_type="wind_speed_ms")
 
-        with patch('xknx.remote_value.RemoteValue.read_state') as read_state_mock:
+        with patch('xknx.remote_value.RemoteValue.read_state', new_callable=MagicMock) as read_state_mock:
+            fut = asyncio.Future()
+            fut.set_result(None)
+            read_state_mock.return_value = fut
             self.loop.run_until_complete(asyncio.Task(sensor.sync(wait_for_result=True)))
 
             read_state_mock.assert_called_with(wait_for_result=True)

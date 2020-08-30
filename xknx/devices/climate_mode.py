@@ -228,11 +228,11 @@ class ClimateMode(Device):
             # if no operation mode has been set and all binary operation modes are False
             await self._set_internal_operation_mode(HVACOperationMode.STANDBY)
 
-    async def sync(self):
+    async def sync(self, wait_for_result=False):
         """Read states of device from KNX bus."""
         if self.supports_operation_mode:
             for rv in self._iter_remote_values():
-                await rv.read_state()
+                await rv.read_state(wait_for_result=wait_for_result)
 
     def __str__(self):
         """Return object as readable string."""
