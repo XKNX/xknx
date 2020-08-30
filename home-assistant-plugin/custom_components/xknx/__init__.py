@@ -267,7 +267,7 @@ class KNXModule:
             attribute = to_expose.get(ExposeSchema.CONF_XKNX_EXPOSE_ATTRIBUTE)
             default = to_expose.get(ExposeSchema.CONF_XKNX_EXPOSE_DEFAULT)
             address = to_expose.get(ExposeSchema.CONF_XKNX_EXPOSE_ADDRESS)
-            if expose_type in ["time", "date", "datetime"]:
+            if expose_type.lower() in ["time", "date", "datetime"]:
                 exposure = KNXExposeTime(self.xknx, expose_type, address)
                 exposure.async_register()
                 self.exposures.append(exposure)
@@ -322,20 +322,22 @@ class KNXModule:
 class KNXExposeTime:
     """Object to Expose Time/Date object to KNX bus."""
 
-    def __init__(self, xknx, expose_type, address):
+    def __init__(self, xknx: XKNX, expose_type: str, address: str):
         """Initialize of Expose class."""
         self.xknx = xknx
-        self.type = expose_type
+        self.expose_type = expose_type
         self.address = address
         self.device = None
 
     @callback
     def async_register(self):
         """Register listener."""
-        broadcast_type_string = self.type.upper()
-        broadcast_type = broadcast_type_string
         self.device = DateTime(
-            self.xknx, "Time", broadcast_type=broadcast_type, group_address=self.address
+            self.xknx,
+            name=self.expose_type.capitalize(),
+            broadcast_type=self.expose_type.upper(),
+            localtime=True,
+            group_address=self.address
         )
 
 
