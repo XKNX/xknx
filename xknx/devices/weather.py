@@ -49,7 +49,7 @@ class Season(Enum):
 YEAR = 2000  # dummy leap year to allow input X-02-29 (leap day)
 # Map year to winter and summer in order to be able to have seasonal illuminance checks
 # Sun during summer is stronger than in winter
-seasons = [
+SEASONS = [
     (Season.winter, (date(YEAR, 1, 1), date(YEAR, 4, 20))),
     (Season.summer, (date(YEAR, 4, 21), date(YEAR, 10, 1))),
     (Season.winter, (date(YEAR, 10, 2), date(YEAR, 12, 31))),
@@ -383,7 +383,7 @@ class Weather(Device):
                 now = now.date()
             now = now.replace(year=YEAR)
             return next(
-                season for season, (start, end) in seasons if start <= now <= end
+                season for season, (start, end) in SEASONS if start <= now <= end
             )
 
         if self.wind_alarm and self.rain_alarm:
