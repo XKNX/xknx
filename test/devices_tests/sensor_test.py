@@ -1548,7 +1548,7 @@ class TestSensor(unittest.TestCase):
         self.assertEqual(sensor.unit_of_measurement(), "%")
         self.assertEqual(sensor.ha_device_class(), None)
 
-    def test_str_percentU8(self):
+    def test_str_percent_u8(self):
         """Test resolve state with percentU8 sensor."""
         xknx = XKNX(loop=self.loop)
         sensor = Sensor(
@@ -1560,7 +1560,7 @@ class TestSensor(unittest.TestCase):
         self.assertEqual(sensor.unit_of_measurement(), "%")
         self.assertEqual(sensor.ha_device_class(), None)
 
-    def test_str_percentV8(self):
+    def test_str_percent_v8(self):
         """Test resolve state with percentV8 sensor."""
         xknx = XKNX(loop=self.loop)
         sensor = Sensor(
@@ -1572,7 +1572,7 @@ class TestSensor(unittest.TestCase):
         self.assertEqual(sensor.unit_of_measurement(), "%")
         self.assertEqual(sensor.ha_device_class(), None)
 
-    def test_str_percentV16(self):
+    def test_str_percent_v16(self):
         """Test resolve state with percentV16 sensor."""
         xknx = XKNX(loop=self.loop)
         sensor = Sensor(

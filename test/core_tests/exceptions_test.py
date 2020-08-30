@@ -1,4 +1,4 @@
-"""Unit tests for exceptions"""
+"""Unit tests for exceptions."""
 import pytest
 
 from xknx.exceptions import (

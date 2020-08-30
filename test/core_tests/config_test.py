@@ -3,6 +3,8 @@ import asyncio
 import unittest
 from unittest.mock import patch
 
+import yaml
+
 from xknx import XKNX
 from xknx.core import Config
 from xknx.devices import (
@@ -57,7 +59,6 @@ class TestConfig(unittest.TestCase):
     #
     def test_config_connection(self):
         """Test connection section from config file."""
-        import yaml
 
         # Default connection setting from xknx.yaml (auto:)
         self.assertEqual(
@@ -116,7 +117,6 @@ class TestConfig(unittest.TestCase):
 
     def test_config_invalid_connection(self):
         """Test invalid connection section from config file."""
-        import yaml
 
         test_configs = [
             (
