@@ -1,7 +1,4 @@
 """Voluptuous schemas for the KNX integration."""
-import voluptuous as vol
-from xknx.devices.climate import SetpointShiftMode
-
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE_CLASS,
@@ -12,6 +9,9 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
+
+from xknx.devices.climate import SetpointShiftMode
 
 from .const import (
     CONF_STATE_ADDRESS,

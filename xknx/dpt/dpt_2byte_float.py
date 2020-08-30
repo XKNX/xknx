@@ -30,8 +30,8 @@ class DPT2ByteFloat(DPTBase):
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
         data = (raw[0] * 256) + raw[1]
-        exponent = (data >> 11) & 0x0f
-        significand = data & 0x7ff
+        exponent = (data >> 11) & 0x0F
+        significand = data & 0x7FF
         sign = data >> 15
 
         if sign == 1:
@@ -47,6 +47,7 @@ class DPT2ByteFloat(DPTBase):
     @classmethod
     def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
+
         def calc_exponent(float_value, sign):
             """Return float exponent."""
             exponent = 0
@@ -57,8 +58,8 @@ class DPT2ByteFloat(DPTBase):
                 significand >>= 1
 
             if sign:
-                significand ^= 0x7ff  # invert
-                significand += 1     # and add 1
+                significand ^= 0x7FF  # invert
+                significand += 1  # and add 1
 
             return exponent, significand
 
@@ -70,8 +71,9 @@ class DPT2ByteFloat(DPTBase):
             sign = 1 if knx_value < 0 else 0
             exponent, significand = calc_exponent(knx_value, sign)
 
-            return (sign << 7) | (exponent << 3) | (significand >> 8), \
-                significand & 0xff
+            return (sign << 7) | (exponent << 3) | (
+                significand >> 8
+            ), significand & 0xFF
         except ValueError:
             raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
 

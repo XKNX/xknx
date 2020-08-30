@@ -8,7 +8,7 @@ layout: default
 
 XKNX is using [asyncio](https://www.python.org/dev/peps/pep-3156/) for single-threaded concurrent code using coroutines.
 
-This allows concurrency in a thread safe manner. 
+This allows concurrency in a thread safe manner.
 
 ```python
 import asyncio
@@ -18,7 +18,7 @@ async def main():
     xknx = XKNX()
     await xknx.start()
 
-    # USING THE XKNX OBJECT, e.g. for 
+    # USING THE XKNX OBJECT, e.g. for
     # controlling lights, dimmers, shutters
 
     await xknx.stop()
@@ -35,7 +35,7 @@ async def main():
 ```
 
 `main()` function. The `async` qualifier markes the function asy an asyncio function. See [asyncio](https://www.python.org/dev/peps/pep-3156/) documentation for details.
- 
+
 
 ```python
     xknx = XKNX()
@@ -53,7 +53,7 @@ Asynchronous start of the XKNX object. `xknx.start()` will connect to a KNX/IP d
     await xknx.stop()
 ```
 
-Asynchronous stop of the XKNX object. `xknx.stop()` will disconnect from Tunnels - which is important bc most of the devices have a limited amount of channels. 
+Asynchronous stop of the XKNX object. `xknx.stop()` will disconnect from Tunnels - which is important bc most of the devices have a limited amount of channels.
 
 ```
 loop = asyncio.get_event_loop()

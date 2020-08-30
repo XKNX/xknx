@@ -12,14 +12,13 @@ Documentation within:
     File: AN117 v02.01 KNX IP Communication Medium DV.pdf
 """
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.exceptions import (
-    ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage)
+from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage
 from xknx.telegram import GroupAddress, PhysicalAddress, Telegram, TelegramType
 
 from .knxip_enum import APCICommand, CEMIFlags, CEMIMessageCode
 
 
-class CEMIFrame():
+class CEMIFrame:
     """Representation of a CEMI Frame."""
 
     # pylint: disable=too-many-instance-attributes
@@ -50,7 +49,7 @@ class CEMIFrame():
                 return TelegramType.GROUP_READ
             if cmd == APCICommand.GROUP_RESPONSE:
                 return TelegramType.GROUP_RESPONSE
-            raise ConversionError("Telegram not implemented for {0}".format(self.cmd))
+            raise ConversionError(f"Telegram not implemented for {self.cmd}")
 
         telegram.telegramtype = resolve_telegram_type(self.cmd)
 
@@ -65,14 +64,16 @@ class CEMIFrame():
 
         # TODO: Move to separate function, together with setting of
         # CEMIMessageCode
-        self.flags = (CEMIFlags.FRAME_TYPE_STANDARD |
-                      CEMIFlags.DO_NOT_REPEAT |
-                      CEMIFlags.BROADCAST |
-                      CEMIFlags.PRIORITY_LOW |
-                      CEMIFlags.NO_ACK_REQUESTED |
-                      CEMIFlags.CONFIRM_NO_ERROR |
-                      CEMIFlags.DESTINATION_GROUP_ADDRESS |
-                      CEMIFlags.HOP_COUNT_1ST)
+        self.flags = (
+            CEMIFlags.FRAME_TYPE_STANDARD
+            | CEMIFlags.DO_NOT_REPEAT
+            | CEMIFlags.BROADCAST
+            | CEMIFlags.PRIORITY_LOW
+            | CEMIFlags.NO_ACK_REQUESTED
+            | CEMIFlags.CONFIRM_NO_ERROR
+            | CEMIFlags.DESTINATION_GROUP_ADDRESS
+            | CEMIFlags.HOP_COUNT_1ST
+        )
 
         # TODO: use telegram.direction
         def resolve_cmd(telegramtype):
@@ -84,6 +85,7 @@ class CEMIFrame():
             if telegramtype == TelegramType.GROUP_RESPONSE:
                 return APCICommand.GROUP_RESPONSE
             raise TypeError()
+
         self.cmd = resolve_cmd(telegram.telegramtype)
 
     def set_hops(self, hops):
@@ -108,12 +110,18 @@ class CEMIFrame():
         try:
             self.code = CEMIMessageCode(raw[0])
         except ValueError:
-            raise UnsupportedCEMIMessage("CEMIMessageCode not implemented: {0} ".format(raw[0]))
+            raise UnsupportedCEMIMessage(
+                "CEMIMessageCode not implemented: {} ".format(raw[0])
+            )
 
-        if self.code not in (CEMIMessageCode.L_DATA_IND,
-                             CEMIMessageCode.L_Data_REQ,
-                             CEMIMessageCode.L_DATA_CON):
-            raise UnsupportedCEMIMessage("Could not handle CEMIMessageCode: {0} / {1}".format(self.code, raw[0]))
+        if self.code not in (
+            CEMIMessageCode.L_DATA_IND,
+            CEMIMessageCode.L_Data_REQ,
+            CEMIMessageCode.L_DATA_CON,
+        ):
+            raise UnsupportedCEMIMessage(
+                "Could not handle CEMIMessageCode: {} / {}".format(self.code, raw[0])
+            )
 
         return self.from_knx_data_link_layer(raw)
 
@@ -121,7 +129,9 @@ class CEMIFrame():
         """Parse L_DATA_IND, CEMIMessageCode.L_Data_REQ, CEMIMessageCode.L_DATA_CON."""
         if len(cemi) < 11:
             # eg. ETS Line-Scan issues L_DATA_IND with length 10
-            raise UnsupportedCEMIMessage("CEMI too small. Length: {0}; CEMI: {1}".format(len(cemi), cemi))
+            raise UnsupportedCEMIMessage(
+                "CEMI too small. Length: {}; CEMI: {}".format(len(cemi), cemi)
+            )
 
         # AddIL (Additional Info Length), as specified within
         # KNX Chapter 3.6.3/4.1.4.3 "Additional information."
@@ -133,8 +143,9 @@ class CEMIFrame():
         self.src_addr = PhysicalAddress((cemi[4 + addil], cemi[5 + addil]))
 
         if self.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS:
-            self.dst_addr = GroupAddress((cemi[6 + addil], cemi[7 + addil]),
-                                         levels=self.xknx.address_format)
+            self.dst_addr = GroupAddress(
+                (cemi[6 + addil], cemi[7 + addil]), levels=self.xknx.address_format
+            )
         else:
             self.dst_addr = PhysicalAddress((cemi[6 + addil], cemi[7 + addil]))
 
@@ -149,19 +160,20 @@ class CEMIFrame():
             self.cmd = APCICommand(tpci_apci & 0xFFC0)
         except ValueError:
             raise UnsupportedCEMIMessage(
-                "APCI not supported: {0:#012b}".format(tpci_apci & 0xFFC0))
+                "APCI not supported: {:#012b}".format(tpci_apci & 0xFFC0)
+            )
 
-        apdu = cemi[10 + addil:]
+        apdu = cemi[10 + addil :]
         if len(apdu) != self.mpdu_len:
             raise CouldNotParseKNXIP(
-                "APDU LEN should be {} but is {}".format(
-                    self.mpdu_len, len(apdu)))
+                "APDU LEN should be {} but is {}".format(self.mpdu_len, len(apdu))
+            )
 
         if len(apdu) == 1:
             apci = tpci_apci & DPTBinary.APCI_BITMASK
             self.payload = DPTBinary(apci)
         else:
-            self.payload = DPTArray(cemi[11 + addil:])
+            self.payload = DPTArray(cemi[11 + addil :])
 
         return 10 + addil + len(apdu)
 
@@ -187,35 +199,38 @@ class CEMIFrame():
                 appended_payload = []
             data = [
                 1 + len(appended_payload),
-                (cmd.value >> 8) & 0xff,
-                (cmd.value & 0xff) |
-                (encoded_payload & DPTBinary.APCI_BITMASK)]
+                (cmd.value >> 8) & 0xFF,
+                (cmd.value & 0xFF) | (encoded_payload & DPTBinary.APCI_BITMASK),
+            ]
             data.extend(appended_payload)
             return data
 
         if self.payload is None:
             data.extend(encode_cmd_and_payload(self.cmd))
         elif isinstance(self.payload, DPTBinary):
-            data.extend(encode_cmd_and_payload(
-                self.cmd,
-                encoded_payload=self.payload.value))
+            data.extend(
+                encode_cmd_and_payload(self.cmd, encoded_payload=self.payload.value)
+            )
         elif isinstance(self.payload, DPTArray):
-            data.extend(encode_cmd_and_payload(
-                self.cmd,
-                appended_payload=self.payload.value))
+            data.extend(
+                encode_cmd_and_payload(self.cmd, appended_payload=self.payload.value)
+            )
         else:
             raise TypeError()
         return data
 
     def __str__(self):
         """Return object as readable string."""
-        return '<CEMIFrame SourceAddress="{0}" DestinationAddress="{1}" ' \
-               'Flags="{2:16b}" Command="{3}" payload="{4}" />'.format(
-                   self.src_addr.__repr__(),
-                   self.dst_addr.__repr__(),
-                   self.flags,
-                   self.cmd,
-                   self.payload)
+        return (
+            '<CEMIFrame SourceAddress="{}" DestinationAddress="{}" '
+            'Flags="{:16b}" Command="{}" payload="{}" />'.format(
+                self.src_addr.__repr__(),
+                self.dst_addr.__repr__(),
+                self.flags,
+                self.cmd,
+                self.payload,
+            )
+        )
 
     def __eq__(self, other):
         """Equal operator."""

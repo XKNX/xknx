@@ -34,38 +34,27 @@ class KNXIPFrame:
         """Init object by service_type_ident. Will instanciate a body object depending on service_type_ident."""
         self.header.service_type_ident = service_type_ident
 
-        if service_type_ident == \
-                KNXIPServiceType.ROUTING_INDICATION:
+        if service_type_ident == KNXIPServiceType.ROUTING_INDICATION:
             self.body = RoutingIndication(self.xknx)
-        elif service_type_ident == \
-                KNXIPServiceType.CONNECT_REQUEST:
+        elif service_type_ident == KNXIPServiceType.CONNECT_REQUEST:
             self.body = ConnectRequest(self.xknx)
-        elif service_type_ident == \
-                KNXIPServiceType.CONNECT_RESPONSE:
+        elif service_type_ident == KNXIPServiceType.CONNECT_RESPONSE:
             self.body = ConnectResponse(self.xknx)
-        elif service_type_ident == \
-                KNXIPServiceType.TUNNELLING_REQUEST:
+        elif service_type_ident == KNXIPServiceType.TUNNELLING_REQUEST:
             self.body = TunnellingRequest(self.xknx)
-        elif service_type_ident == \
-                KNXIPServiceType.TUNNELLING_ACK:
+        elif service_type_ident == KNXIPServiceType.TUNNELLING_ACK:
             self.body = TunnellingAck(self.xknx)
-        elif service_type_ident == \
-                KNXIPServiceType.SEARCH_REQUEST:
+        elif service_type_ident == KNXIPServiceType.SEARCH_REQUEST:
             self.body = SearchRequest(self.xknx)
-        elif service_type_ident == \
-                KNXIPServiceType.SEARCH_RESPONSE:
+        elif service_type_ident == KNXIPServiceType.SEARCH_RESPONSE:
             self.body = SearchResponse(self.xknx)
-        elif service_type_ident == \
-                KNXIPServiceType.DISCONNECT_REQUEST:
+        elif service_type_ident == KNXIPServiceType.DISCONNECT_REQUEST:
             self.body = DisconnectRequest(self.xknx)
-        elif service_type_ident == \
-                KNXIPServiceType.DISCONNECT_RESPONSE:
+        elif service_type_ident == KNXIPServiceType.DISCONNECT_RESPONSE:
             self.body = DisconnectResponse(self.xknx)
-        elif service_type_ident == \
-                KNXIPServiceType.CONNECTIONSTATE_REQUEST:
+        elif service_type_ident == KNXIPServiceType.CONNECTIONSTATE_REQUEST:
             self.body = ConnectionStateRequest(self.xknx)
-        elif service_type_ident == \
-                KNXIPServiceType.CONNECTIONSTATE_RESPONSE:
+        elif service_type_ident == KNXIPServiceType.CONNECTIONSTATE_RESPONSE:
             self.body = ConnectionStateResponse(self.xknx)
         else:
             raise TypeError(self.header.service_type_ident)
@@ -95,8 +84,7 @@ class KNXIPFrame:
 
     def __str__(self):
         """Return object as readable string."""
-        return '<KNXIPFrame {0}\n body="{1}" />' \
-            .format(self.header, self.body)
+        return f'<KNXIPFrame {self.header}\n body="{self.body}" />'
 
     def __eq__(self, other):
         """Equal operator."""

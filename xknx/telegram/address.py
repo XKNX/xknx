@@ -25,9 +25,11 @@ def address_tuple_to_int(address):
     Valid values inside the `address` tuple are:
     * Positive Numbers between 0 and 255 (binary)
     """
-    if any(not isinstance(byte, int) for byte in address) \
-       or any(byte < 0 for byte in address) \
-       or any(byte > 255 for byte in address):
+    if (
+        any(not isinstance(byte, int) for byte in address)
+        or any(byte < 0 for byte in address)
+        or any(byte > 255 for byte in address)
+    ):
         raise CouldNotParseAddress(address)
     return address[0] * 256 + address[1]
 
@@ -69,7 +71,9 @@ class PhysicalAddress(BaseAddress):
     MAX_AREA = 15
     MAX_MAIN = 15
     MAX_LINE = 255
-    ADDRESS_RE = re_compile(r'^(?P<area>\d{1,2})\.(?P<main>\d{1,2})\.(?P<line>\d{1,3})$')
+    ADDRESS_RE = re_compile(
+        r"^(?P<area>\d{1,2})\.(?P<main>\d{1,2})\.(?P<line>\d{1,3})$"
+    )
 
     def __init__(self, address):
         """Initialize Address class."""
@@ -101,9 +105,9 @@ class PhysicalAddress(BaseAddress):
         match = self.ADDRESS_RE.match(address)
         if not match:
             raise CouldNotParseAddress(address)
-        area = int(match.group('area'))
-        main = int(match.group('main'))
-        line = int(match.group('line'))
+        area = int(match.group("area"))
+        main = int(match.group("main"))
+        line = int(match.group("line"))
         if area > self.MAX_AREA or main > self.MAX_MAIN or line > self.MAX_LINE:
             raise CouldNotParseAddress(address)
         return (area << 12) + (main << 8) + line
@@ -162,7 +166,9 @@ class GroupAddress(BaseAddress):
     MAX_SUB_SHORT = 2047
     MAX_FREE = 65535
 
-    ADDRESS_RE = re_compile(r'^(?P<main>\d{1,2})(/(?P<middle>\d{1,2}))?/(?P<sub>\d{1,4})$')
+    ADDRESS_RE = re_compile(
+        r"^(?P<main>\d{1,2})(/(?P<middle>\d{1,2}))?/(?P<sub>\d{1,4})$"
+    )
 
     def __init__(self, address, levels=GroupAddressType.LONG):
         """Initialize Address class."""
@@ -198,9 +204,11 @@ class GroupAddress(BaseAddress):
         match = self.ADDRESS_RE.match(address)
         if not match:
             raise CouldNotParseAddress(address)
-        main = int(match.group('main'))
-        middle = int(match.group('middle')) if match.group('middle') is not None else None
-        sub = int(match.group('sub'))
+        main = int(match.group("main"))
+        middle = (
+            int(match.group("middle")) if match.group("middle") is not None else None
+        )
+        sub = int(match.group("sub"))
         if main > self.MAX_MAIN:
             raise CouldNotParseAddress(address)
         if middle is not None:
@@ -211,7 +219,11 @@ class GroupAddress(BaseAddress):
         else:
             if sub > self.MAX_SUB_SHORT:
                 raise CouldNotParseAddress(address)
-        return (main << 11) + (middle << 8) + sub if middle is not None else (main << 11) + sub
+        return (
+            (main << 11) + (middle << 8) + sub
+            if middle is not None
+            else (main << 11) + sub
+        )
 
     @property
     def main(self):
@@ -221,7 +233,11 @@ class GroupAddress(BaseAddress):
         Works only if the group dont uses `GroupAddressType.FREE`, returns `None`
         in any other case.
         """
-        return (self.raw >> 11) & self.MAX_MAIN if self.levels != GroupAddressType.FREE else None
+        return (
+            (self.raw >> 11) & self.MAX_MAIN
+            if self.levels != GroupAddressType.FREE
+            else None
+        )
 
     @property
     def middle(self):
@@ -231,7 +247,11 @@ class GroupAddress(BaseAddress):
         Works only if the group uses `GroupAddressType.LONG`, returns `None` in
         any other case.
         """
-        return (self.raw >> 8) & self.MAX_MIDDLE if self.levels == GroupAddressType.LONG else None
+        return (
+            (self.raw >> 8) & self.MAX_MIDDLE
+            if self.levels == GroupAddressType.LONG
+            else None
+        )
 
     @property
     def sub(self):
@@ -253,14 +273,14 @@ class GroupAddress(BaseAddress):
         Honors the used `GroupAddressType` of this group.
         """
         if self.levels == GroupAddressType.LONG:
-            return '{0.main}/{0.middle}/{0.sub}'.format(self)
+            return "{0.main}/{0.middle}/{0.sub}".format(self)
         if self.levels == GroupAddressType.SHORT:
-            return '{0.main}/{0.sub}'.format(self)
-        return '{0.sub}'.format(self)
+            return "{0.main}/{0.sub}".format(self)
+        return f"{self.sub}"
 
     def __repr__(self):
         """Return object as readable string."""
-        return 'GroupAddress("{0}")'.format(self)
+        return f'GroupAddress("{self}")'
 
     def __hash__(self):
         """Hash function."""

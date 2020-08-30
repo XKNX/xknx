@@ -14,8 +14,15 @@ from .header import KNXIPHeader
 from .hpai import HPAI
 from .knxip import KNXIPFrame
 from .knxip_enum import (
-    APCICommand, CEMIFlags, CEMIMessageCode, ConnectRequestType,
-    DIBServiceFamily, DIBTypeCode, KNXIPServiceType, KNXMedium)
+    APCICommand,
+    CEMIFlags,
+    CEMIMessageCode,
+    ConnectRequestType,
+    DIBServiceFamily,
+    DIBTypeCode,
+    KNXIPServiceType,
+    KNXMedium,
+)
 from .routing_indication import RoutingIndication
 from .search_request import SearchRequest
 from .search_response import SearchResponse

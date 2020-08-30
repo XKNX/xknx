@@ -6,7 +6,7 @@ layout: default
 
 ## [](#header-2)Overview
 
-The weather device is basically a set of sensors that you can obtain from your weather station. 
+The weather device is basically a set of sensors that you can obtain from your weather station.
 
 ## [](#header-2)Example
 
@@ -38,7 +38,7 @@ The weather device is basically a set of sensors that you can obtain from your w
 ## [](#header-2)Configuration via xknx.yaml
 
 ```yaml
-groups:    
+groups:
     weather:
         Home:
           {
@@ -93,7 +93,7 @@ groups:
 
     await weather.sync()
     await asyncio.sleep(10) # wait for bus responses
-    
+
     print(weather.humidity) # get humidity
     print(weather.ha_current_state()) # get the current state mapped as a WeatherCondition enum value. (for HA mainly)
     print(weather.wind_speed) # get the current wind speed in m/s

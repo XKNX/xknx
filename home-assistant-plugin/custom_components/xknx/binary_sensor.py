@@ -1,8 +1,8 @@
 """Support for KNX/IP binary sensors."""
-from xknx.devices import BinarySensor as XknxBinarySensor
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
+
+from xknx.devices import BinarySensor as XknxBinarySensor
 
 from . import DATA_XKNX
 

@@ -16,13 +16,14 @@ class TestDPTDateTime(unittest.TestCase):
         """Test parsing of DPTDateTime object from binary values. Example 1."""
         self.assertEqual(
             DPTDateTime().from_knx((0x75, 0x0B, 0x1C, 0x17, 0x07, 0x18, 0x20, 0x80)),
-            time.strptime("2017-11-28 23:7:24", "%Y-%m-%d %H:%M:%S")
+            time.strptime("2017-11-28 23:7:24", "%Y-%m-%d %H:%M:%S"),
         )
 
     def test_to_knx(self):
         """Testing KNX/Byte representation of DPTDateTime object."""
         raw = DPTDateTime().to_knx(
-            time.strptime("2017-11-28 23:7:24", "%Y-%m-%d %H:%M:%S"))
+            time.strptime("2017-11-28 23:7:24", "%Y-%m-%d %H:%M:%S")
+        )
         self.assertEqual(raw, (0x75, 0x0B, 0x1C, 0x57, 0x07, 0x18, 0x20, 0x80))
 
     #
@@ -32,13 +33,14 @@ class TestDPTDateTime(unittest.TestCase):
         """Test parsing of DPTDateTime object from binary values. Example 1."""
         self.assertEqual(
             DPTDateTime().from_knx((0x00, 0x1, 0x1, 0x20, 0x00, 0x00, 0x00, 0x00)),
-            time.strptime("1900 1 1 0 0 0", "%Y %m %d %H %M %S")
+            time.strptime("1900 1 1 0 0 0", "%Y %m %d %H %M %S"),
         )
 
     def test_to_knx_date_in_past(self):
         """Testing KNX/Byte representation of DPTDateTime object."""
         raw = DPTDateTime().to_knx(
-            time.strptime("1900-1-1 1 0:0:0", "%Y-%m-%d %w %H:%M:%S"))
+            time.strptime("1900-1-1 1 0:0:0", "%Y-%m-%d %w %H:%M:%S")
+        )
         self.assertEqual(raw, (0x00, 0x1, 0x1, 0x20, 0x00, 0x00, 0x20, 0x80))
 
     #
@@ -48,13 +50,14 @@ class TestDPTDateTime(unittest.TestCase):
         """Test parsing of DPTDateTime object from binary values. Example 1."""
         self.assertEqual(
             DPTDateTime().from_knx((0xFF, 0x0C, 0x1F, 0xF7, 0x3B, 0x3B, 0x20, 0x80)),
-            time.strptime("2155-12-31 0 23:59:59", "%Y-%m-%d %w %H:%M:%S")
+            time.strptime("2155-12-31 0 23:59:59", "%Y-%m-%d %w %H:%M:%S"),
         )
 
     def test_to_knx_date_in_future(self):
         """Testing KNX/Byte representation of DPTDateTime object."""
         raw = DPTDateTime().to_knx(
-            time.strptime("2155-12-31 0 23:59:59", "%Y-%m-%d %w %H:%M:%S"))
+            time.strptime("2155-12-31 0 23:59:59", "%Y-%m-%d %w %H:%M:%S")
+        )
         self.assertEqual(raw, (0xFF, 0x0C, 0x1F, 0xF7, 0x3B, 0x3B, 0x20, 0x80))
 
     #

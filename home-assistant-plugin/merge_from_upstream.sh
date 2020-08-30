@@ -2,7 +2,7 @@
 
 source helper.sh
 
-if [ "$MACHINE" == "Linux" ]; 
+if [ "$MACHINE" == "Linux" ];
 then
     rm -Rf ${XKNX_REPO}/home-assistant-plugin/custom_components/xknx/*
     cp -r ${HA_UPSTREAM}/homeassistant/components/knx/* ${XKNX_REPO}/home-assistant-plugin/custom_components/xknx/

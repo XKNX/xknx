@@ -12,19 +12,24 @@ logging.basicConfig(level=logging.WARN)
 async def main():
     """Connect to KNX/IP device and create a weather device and read its sensors."""
     xknx = XKNX()
-    await xknx.start(connection_config=ConnectionConfig(connection_type=ConnectionType.TUNNELING,
-                                                        local_ip='192.168.0.50', gateway_ip='192.168.0.100'))
+    await xknx.start(
+        connection_config=ConnectionConfig(
+            connection_type=ConnectionType.TUNNELING,
+            local_ip="192.168.0.50",
+            gateway_ip="192.168.0.100",
+        )
+    )
 
     weather = Weather(
         xknx,
-        'Home',
-        group_address_temperature='7/0/1',
-        group_address_brightness_south='7/0/5',
-        group_address_brightness_east='7/0/4',
-        group_address_brightness_west='7/0/3',
-        group_address_wind_speed='7/0/2',
-        group_address_day_night='7/0/7',
-        group_address_rain_alarm='7/0/0'
+        "Home",
+        group_address_temperature="7/0/1",
+        group_address_brightness_south="7/0/5",
+        group_address_brightness_east="7/0/4",
+        group_address_brightness_west="7/0/3",
+        group_address_wind_speed="7/0/2",
+        group_address_day_night="7/0/7",
+        group_address_rain_alarm="7/0/0",
     )
 
     await weather.sync(wait_for_result=True)

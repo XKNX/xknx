@@ -20,7 +20,7 @@ time_device = DateTime(
 
 # Sending time to knx bus
 await xknx.devices['TimeTest'].sync()
-``` 
+```
 
 * `xknx` is the XKNX object.
 * `name` is the name of the object.
@@ -41,7 +41,7 @@ groups:
 
 ## [](#header-2)Daemon mode
 
-When XKNX is started in [daemon mode](/xknx), with START_STATE_UPDATER enabled, XKNX will automatically send the time to the KNX bus with the `sync_state`-loop. 
+When XKNX is started in [daemon mode](/xknx), with START_STATE_UPDATER enabled, XKNX will automatically send the time to the KNX bus with the `sync_state`-loop.
 
 ```python
 import asyncio
@@ -71,7 +71,7 @@ from xknx.devices import DateTime
 xknx = XKNX()
 time_device = DateTime(xknx, 'TimeTest', group_address='1/2/3', broadcast_type='time')
 
-# Sending Time to KNX bus 
+# Sending Time to KNX bus
 await time_device.broadcast_localtime()
 ```
 

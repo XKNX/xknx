@@ -12,8 +12,13 @@ from typing import List, Optional
 import netifaces
 
 from xknx.knxip import (
-    HPAI, DIBServiceFamily, DIBSuppSVCFamilies, KNXIPFrame, KNXIPServiceType,
-    SearchResponse)
+    HPAI,
+    DIBServiceFamily,
+    DIBSuppSVCFamilies,
+    KNXIPFrame,
+    KNXIPServiceType,
+    SearchResponse,
+)
 
 from .udp_client import UDPClient
 
@@ -23,14 +28,16 @@ class GatewayDescriptor:
 
     # pylint: disable=too-few-public-methods
 
-    def __init__(self,
-                 name: str,
-                 ip_addr: str,
-                 port: int,
-                 local_interface: str,
-                 local_ip: str,
-                 supports_tunnelling: bool = False,
-                 supports_routing: bool = False) -> None:
+    def __init__(
+        self,
+        name: str,
+        ip_addr: str,
+        port: int,
+        local_interface: str,
+        local_ip: str,
+        supports_tunnelling: bool = False,
+        supports_routing: bool = False,
+    ) -> None:
         """Initialize GatewayDescriptor class."""
         # pylint: disable=too-many-arguments
         self.name = name
@@ -43,14 +50,15 @@ class GatewayDescriptor:
 
     def __str__(self):
         """Return object as readable string."""
-        return '<GatewayDescriptor name="{0}" addr="{1}:{2}" local="{3}@{4}" routing="{5}" tunnelling="{6}" />'.format(
+        return '<GatewayDescriptor name="{}" addr="{}:{}" local="{}@{}" routing="{}" tunnelling="{}" />'.format(
             self.name,
             self.ip_addr,
             self.port,
             self.local_ip,
             self.local_interface,
             self.supports_routing,
-            self.supports_tunnelling)
+            self.supports_tunnelling,
+        )
 
 
 class GatewayScanFilter:
@@ -58,10 +66,9 @@ class GatewayScanFilter:
 
     # pylint: disable=too-few-public-methods
 
-    def __init__(self,
-                 name: str = None,
-                 tunnelling: bool = None,
-                 routing: bool = None) -> None:
+    def __init__(
+        self, name: str = None, tunnelling: bool = None, routing: bool = None
+    ) -> None:
         """Initialize GatewayScanFilter class."""
         self.name = name
         self.tunnelling = tunnelling
@@ -71,23 +78,28 @@ class GatewayScanFilter:
         """Check whether the given GatewayDescriptor matches the filter."""
         if self.name is not None and self.name != gateway.name:
             return False
-        if self.tunnelling is not None and self.tunnelling != gateway.supports_tunnelling:
+        if (
+            self.tunnelling is not None
+            and self.tunnelling != gateway.supports_tunnelling
+        ):
             return False
         if self.routing is not None and self.routing != gateway.supports_routing:
             return False
         return True
 
 
-class GatewayScanner():
+class GatewayScanner:
     """Class for searching KNX/IP devices."""
 
     # pylint: disable=too-few-public-methods
     # pylint: disable=too-many-instance-attributes
-    def __init__(self,
-                 xknx,
-                 timeout_in_seconds: int = 4,
-                 stop_on_found: Optional[int] = 1,
-                 scan_filter: GatewayScanFilter = GatewayScanFilter()) -> None:
+    def __init__(
+        self,
+        xknx,
+        timeout_in_seconds: int = 4,
+        stop_on_found: Optional[int] = 1,
+        scan_filter: GatewayScanFilter = GatewayScanFilter(),
+    ) -> None:
         """Initialize GatewayScanner class."""
         self.xknx = xknx
         self.timeout_in_seconds = timeout_in_seconds
@@ -127,20 +139,25 @@ class GatewayScanner():
                 ip_addr = af_inet[0]["addr"]
                 await self._search_interface(interface, ip_addr)
             except KeyError:
-                self.xknx.logger.info("Could not connect to an KNX/IP device on %s", interface)
+                self.xknx.logger.info(
+                    "Could not connect to an KNX/IP device on %s", interface
+                )
                 continue
 
     async def _search_interface(self, interface, ip_addr):
         """Send a search request on a specific interface."""
         self.xknx.logger.debug("Searching on %s / %s", interface, ip_addr)
 
-        udp_client = UDPClient(self.xknx,
-                               (ip_addr, 0, interface),
-                               (self.xknx.multicast_group, self.xknx.multicast_port),
-                               multicast=True)
+        udp_client = UDPClient(
+            self.xknx,
+            (ip_addr, 0, interface),
+            (self.xknx.multicast_group, self.xknx.multicast_port),
+            multicast=True,
+        )
 
         udp_client.register_callback(
-            self._response_rec_callback, [KNXIPServiceType.SEARCH_RESPONSE])
+            self._response_rec_callback, [KNXIPServiceType.SEARCH_RESPONSE]
+        )
         await udp_client.connect()
 
         self._udp_clients.append(udp_client)
@@ -148,22 +165,25 @@ class GatewayScanner():
         (local_addr, local_port) = udp_client.getsockname()
         knx_ip_frame = KNXIPFrame(self.xknx)
         knx_ip_frame.init(KNXIPServiceType.SEARCH_REQUEST)
-        knx_ip_frame.body.discovery_endpoint = \
-            HPAI(ip_addr=local_addr, port=local_port)
+        knx_ip_frame.body.discovery_endpoint = HPAI(ip_addr=local_addr, port=local_port)
         knx_ip_frame.normalize()
         udp_client.send(knx_ip_frame)
 
-    def _response_rec_callback(self, knx_ip_frame: KNXIPFrame, udp_client: UDPClient) -> None:
+    def _response_rec_callback(
+        self, knx_ip_frame: KNXIPFrame, udp_client: UDPClient
+    ) -> None:
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knx_ip_frame.body, SearchResponse):
             self.xknx.logger.warning("Could not understand knxipframe")
             return
 
-        gateway = GatewayDescriptor(name=knx_ip_frame.body.device_name,
-                                    ip_addr=knx_ip_frame.body.control_endpoint.ip_addr,
-                                    port=knx_ip_frame.body.control_endpoint.port,
-                                    local_interface=udp_client.local_addr[2],
-                                    local_ip=udp_client.local_addr[0])
+        gateway = GatewayDescriptor(
+            name=knx_ip_frame.body.device_name,
+            ip_addr=knx_ip_frame.body.control_endpoint.ip_addr,
+            port=knx_ip_frame.body.control_endpoint.port,
+            local_interface=udp_client.local_addr[2],
+            local_ip=udp_client.local_addr[0],
+        )
         try:
             dib = knx_ip_frame.body[DIBSuppSVCFamilies]
             gateway.supports_routing = dib.supports(DIBServiceFamily.ROUTING)
@@ -186,7 +206,8 @@ class GatewayScanner():
     async def _start_timeout(self):
         """Start time out."""
         self._timeout_handle = self.xknx.loop.call_later(
-            self.timeout_in_seconds, self._timeout)
+            self.timeout_in_seconds, self._timeout
+        )
 
     async def _stop_timeout(self):
         """Stop/cancel timeout."""

@@ -9,6 +9,7 @@ from xknx.exceptions import ConversionError
 
 class TestDPT2ByteSigned(unittest.TestCase):
     """Test class for KNX 2 byte signed objects."""
+
     # pylint: disable=too-many-public-methods,invalid-name
 
     def test_signed_settings(self):
@@ -48,14 +49,14 @@ class TestDPT2ByteSigned(unittest.TestCase):
 
     def test_from_knx_unpack_error(self):
         """Test DPT2ByteSigned parsing with unpack error."""
-        with patch('struct.unpack') as unpackMock:
+        with patch("struct.unpack") as unpackMock:
             unpackMock.side_effect = struct.error()
             with self.assertRaises(ConversionError):
                 DPT2ByteSigned().from_knx((0x01, 0x23))
 
     def test_to_knx_pack_error(self):
         """Test serializing DPT2ByteSigned with pack error."""
-        with patch('struct.pack') as packMock:
+        with patch("struct.pack") as packMock:
             packMock.side_effect = struct.error()
             with self.assertRaises(ConversionError):
                 DPT2ByteSigned().to_knx(1234)

@@ -23,32 +23,46 @@ class Test_KNXIP_DisconnectReq(unittest.TestCase):
 
     def test_disconnect_request(self):
         """Test parsing and streaming DisconnectRequest KNX/IP packet."""
-        raw = ((0x06, 0x10, 0x02, 0x09, 0x00, 0x10, 0x15, 0x00,
-                0x08, 0x01, 0xC0, 0xA8, 0xC8, 0x0C, 0xC3, 0xB4))
+        raw = (
+            0x06,
+            0x10,
+            0x02,
+            0x09,
+            0x00,
+            0x10,
+            0x15,
+            0x00,
+            0x08,
+            0x01,
+            0xC0,
+            0xA8,
+            0xC8,
+            0x0C,
+            0xC3,
+            0xB4,
+        )
         xknx = XKNX(loop=self.loop)
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 
         self.assertTrue(isinstance(knxipframe.body, DisconnectRequest))
 
+        self.assertEqual(knxipframe.body.communication_channel_id, 21)
         self.assertEqual(
-            knxipframe.body.communication_channel_id, 21)
-        self.assertEqual(
-            knxipframe.body.control_endpoint,
-            HPAI(ip_addr='192.168.200.12', port=50100))
+            knxipframe.body.control_endpoint, HPAI(ip_addr="192.168.200.12", port=50100)
+        )
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.DISCONNECT_REQUEST)
         knxipframe2.body.communication_channel_id = 21
-        knxipframe2.body.control_endpoint = HPAI(
-            ip_addr='192.168.200.12', port=50100)
+        knxipframe2.body.control_endpoint = HPAI(ip_addr="192.168.200.12", port=50100)
         knxipframe2.normalize()
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
     def test_from_knx_wrong_length(self):
         """Test parsing and streaming wrong DisconnectRequest."""
-        raw = ((0x06, 0x10, 0x02, 0x09, 0x00, 0x10))
+        raw = (0x06, 0x10, 0x02, 0x09, 0x00, 0x10)
         xknx = XKNX(loop=self.loop)
         knxipframe = KNXIPFrame(xknx)
         with self.assertRaises(CouldNotParseKNXIP):

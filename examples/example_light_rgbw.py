@@ -10,10 +10,12 @@ async def main():
     xknx = XKNX()
     await xknx.start()
 
-    rgbw = RemoteValueColorRGBW(xknx,
-                                group_address='1/1/40',
-                                group_address_state='1/1/41',
-                                device_name="RGBWLight")
+    rgbw = RemoteValueColorRGBW(
+        xknx,
+        group_address="1/1/40",
+        group_address_state="1/1/41",
+        device_name="RGBWLight",
+    )
 
     await rgbw.set([255, 255, 255, 0, 15])  # cold-white
     await asyncio.sleep(1)

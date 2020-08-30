@@ -1,14 +1,6 @@
 """Support KNX devices."""
 import logging
 
-import voluptuous as vol
-from xknx import XKNX
-from xknx.devices import DateTime, ExposeSensor
-from xknx.dpt import DPTArray, DPTBase, DPTBinary
-from xknx.exceptions import XKNXException
-from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
-from xknx.telegram import AddressFilter, GroupAddress, Telegram
-
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_HOST,
@@ -23,6 +15,14 @@ from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
+import voluptuous as vol
+
+from xknx import XKNX
+from xknx.devices import DateTime, ExposeSensor
+from xknx.dpt import DPTArray, DPTBase, DPTBinary
+from xknx.exceptions import XKNXException
+from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
+from xknx.telegram import AddressFilter, GroupAddress, Telegram
 
 from .const import DATA_XKNX, DOMAIN, SupportedPlatforms
 from .factory import create_knx_device
@@ -151,9 +151,7 @@ async def async_setup(hass, config):
 
     for platform in SUPPORTED_PLATFORMS:
         hass.async_create_task(
-            discovery.async_load_platform(
-                hass, platform.value, DOMAIN, {}, config
-            )
+            discovery.async_load_platform(hass, platform.value, DOMAIN, {}, config)
         )
 
     hass.services.async_register(
@@ -363,7 +361,10 @@ class KNXExposeSensor:
         else:
             _name = self.entity_id
         self.device = ExposeSensor(
-            self.xknx, name=_name, group_address=self.address, value_type=self.type,
+            self.xknx,
+            name=_name,
+            group_address=self.address,
+            value_type=self.type,
         )
         async_track_state_change_event(
             self.hass, [self.entity_id], self._async_entity_changed

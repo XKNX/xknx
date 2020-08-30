@@ -27,8 +27,7 @@ class SearchResponse(KNXIPBody):
 
     def calculated_length(self):
         """Get length of KNX/IP body."""
-        return HPAI.LENGTH + \
-            sum([dib.calculated_length() for dib in self.dibs])
+        return HPAI.LENGTH + sum([dib.calculated_length() for dib in self.dibs])
 
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
@@ -57,9 +56,9 @@ class SearchResponse(KNXIPBody):
 
     def __str__(self):
         """Return object as readable string."""
-        return '<SearchResponse control_endpoint="{0}" dibs="[\n{1}\n]" />' \
-            .format(self.control_endpoint,
-                    ',\n'.join(dib.__str__() for dib in self.dibs))
+        return '<SearchResponse control_endpoint="{}" dibs="[\n{}\n]" />'.format(
+            self.control_endpoint, ",\n".join(dib.__str__() for dib in self.dibs)
+        )
 
     def __getitem__(self, clazz):
         """Return the first DIB of given class."""

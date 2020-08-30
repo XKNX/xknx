@@ -37,7 +37,7 @@ class DPTSignedRelativeValue(DPTBase):
                 raise ValueError
             if knx_value < 0:
                 knx_value += 0x100
-            return (knx_value & 0xff,)
+            return (knx_value & 0xFF,)
         except ValueError:
             raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
 

@@ -55,23 +55,17 @@ class AddressFilter:
     def _match_level3(self, address):
         return (
             self.level_filters[0].match(address.main)
-            and
-            self.level_filters[1].match(address.middle)
-            and
-            self.level_filters[2].match(address.sub)
+            and self.level_filters[1].match(address.middle)
+            and self.level_filters[2].match(address.sub)
         )
 
     def _match_level2(self, address):
-        return (
-            self.level_filters[0].match(address.main)
-            and
-            self.level_filters[1].match(address.sub)
-        )
+        return self.level_filters[0].match(address.main) and self.level_filters[
+            1
+        ].match(address.sub)
 
     def _match_free(self, address):
-        return (
-            self.level_filters[0].match(address.sub)
-        )
+        return self.level_filters[0].match(address.sub)
 
     class Range:
         """Class for filtering patterns like "8", "*", "8-10"."""
@@ -104,10 +98,8 @@ class AddressFilter:
 
         def _init_range(self, pattern):
             (range_from, range_to) = pattern.split("-")
-            self.range_from = int(range_from) \
-                if range_from else 0
-            self.range_to = int(range_to) \
-                if range_to else GroupAddress.MAX_FREE
+            self.range_from = int(range_from) if range_from else 0
+            self.range_to = int(range_to) if range_to else GroupAddress.MAX_FREE
 
         @staticmethod
         def _adjust_range(digit):
@@ -119,8 +111,7 @@ class AddressFilter:
 
         def _flip_range_if_necessary(self):
             if self.range_from > self.range_to:
-                self.range_to, self.range_from =\
-                    self.range_from, self.range_to
+                self.range_to, self.range_from = self.range_from, self.range_to
 
         def get_range(self):
             """Return the range (from,to) of this pattern."""
@@ -128,8 +119,7 @@ class AddressFilter:
 
         def match(self, digit):
             """Return if given digit is within range of pattern."""
-            return \
-                self.range_from <= digit <= self.range_to
+            return self.range_from <= digit <= self.range_to
 
     class LevelFilter:
         """Class for filtering patterns like "8,11-14,20"."""

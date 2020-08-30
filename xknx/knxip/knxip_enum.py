@@ -15,7 +15,7 @@ class KNXIPServiceType(Enum):
     CONNECTIONSTATE_REQUEST = 0x0207
     CONNECTIONSTATE_RESPONSE = 0x0208
     DISCONNECT_REQUEST = 0x0209
-    DISCONNECT_RESPONSE = 0x020a
+    DISCONNECT_RESPONSE = 0x020A
     DEVICE_CONFIGURATION_REQUEST = 0x0310
     DEVICE_CONFIGURATION_ACK = 0x0111
     TUNNELLING_REQUEST = 0x0420
@@ -32,17 +32,17 @@ class CEMIMessageCode(Enum):
 
     # FROM NETWORK LAYER TO DATA LINK LAYER
     L_RAW_REQ = 0x10
-    L_Data_REQ = 0x11       # Data Service.
+    L_Data_REQ = 0x11  # Data Service.
     # Primitive used for transmitting a data frame
     L_POLL_DATA_REQ = 0x13  # Poll Data Service
 
     # FROM DATA LINK LAYER TO NETWORK LAYER
     L_POLL_DATA_CON = 0x25  # Poll Data Service
-    L_DATA_IND = 0x29       # Data Service.
+    L_DATA_IND = 0x29  # Data Service.
     # Primitive used for receiving a data frame
-    L_BUSMON_IND = 0x2B     # Bus Monitor Service
+    L_BUSMON_IND = 0x2B  # Bus Monitor Service
     L_RAW_IND = 0x2D
-    L_DATA_CON = 0x2E       # Data Service.
+    L_DATA_CON = 0x2E  # Data Service.
     # Primitive used for local confirmation
     # that a frame was sent
     # (does not indicate a successful receive though)
@@ -57,7 +57,7 @@ class APCICommand(Enum):
     GROUP_RESPONSE = 0x40
 
 
-class CEMIFlags():
+class CEMIFlags:
     """Enum class for KNX/IP CEMI Flags."""
 
     # pylint: disable=too-few-public-methods

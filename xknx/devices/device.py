@@ -21,7 +21,7 @@ class Device:
 
     def _iter_remote_values(self):
         """Iterate the devices RemoteValue classes."""
-        raise NotImplementedError('_iter_remote_values has to be implemented')
+        raise NotImplementedError("_iter_remote_values has to be implemented")
         # yield self.remote_value
         # or
         # yield from (<list all used RemoteValue instances>)
@@ -81,7 +81,11 @@ class Device:
     async def do(self, action):
         """Execute 'do' commands."""
         # pylint: disable=invalid-name
-        self.xknx.logger.info("'do()' not implemented for action '%s' of %s", action, self.__class__.__name__)
+        self.xknx.logger.info(
+            "'do()' not implemented for action '%s' of %s",
+            action,
+            self.__class__.__name__,
+        )
 
     def __eq__(self, other):
         """Compare for quality."""

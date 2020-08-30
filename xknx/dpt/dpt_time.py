@@ -37,7 +37,9 @@ class DPTTime(DPTBase):
                 # in knx Sunday is 7; in strftime %w its 0
                 weekday = 0
             # strptime conversion used for catching exceptions; filled with default values
-            return time.strptime("{} {} {} {}".format(hours, minutes, seconds, weekday), "%H %M %S %w")
+            return time.strptime(
+                f"{hours} {minutes} {seconds} {weekday}", "%H %M %S %w"
+            )
         except ValueError:
             raise ConversionError("Could not parse DPTTime", raw=raw)
 
@@ -45,7 +47,9 @@ class DPTTime(DPTBase):
     def to_knx(cls, value: time.struct_time):
         """Serialize to KNX/IP raw data from dict with elements weekday,hours,minutes,seconds."""
         if not isinstance(value, time.struct_time):
-            raise ConversionError("Could not serialize DPTTime - time.struct_time expected", value=value)
+            raise ConversionError(
+                "Could not serialize DPTTime - time.struct_time expected", value=value
+            )
 
         _default_time = time.strptime("", "")
         weekday = 0
@@ -55,10 +59,7 @@ class DPTTime(DPTBase):
                 weekday = value.tm_wday + 1
                 break
 
-        return (weekday << 5 | value.tm_hour,
-                value.tm_min,
-                value.tm_sec
-                )
+        return (weekday << 5 | value.tm_hour, value.tm_min, value.tm_sec)
 
     @staticmethod
     def _test_range(weekday, hours, minutes, seconds):
