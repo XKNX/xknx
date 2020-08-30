@@ -255,10 +255,10 @@ class Cover(Device):
         else:
             self.xknx.logger.warning("Could not understand action %s for device %s", action, self.get_name())
 
-    async def sync(self):
+    async def sync(self, wait_for_result=False):
         """Read states of device from KNX bus."""
-        await self.position.read_state()
-        await self.angle.read_state()
+        await self.position.read_state(wait_for_result=wait_for_result)
+        await self.angle.read_state(wait_for_result=wait_for_result)
 
     async def process_group_write(self, telegram):
         """Process incoming GROUP WRITE telegram."""

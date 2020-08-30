@@ -40,10 +40,10 @@ class Device:
             # pylint: disable=not-callable
             await device_updated_cb(self)
 
-    async def sync(self):
+    async def sync(self, wait_for_result=False):
         """Read states of device from KNX bus."""
         for remote_value in self._iter_remote_values():
-            await remote_value.read_state()
+            await remote_value.read_state(wait_for_result=wait_for_result)
 
     async def process(self, telegram):
         """Process incoming telegram."""
