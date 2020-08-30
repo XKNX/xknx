@@ -24,7 +24,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import DATA_XKNX, DOMAIN, DeviceTypes
+from .const import DATA_XKNX, DOMAIN, SupportedPlatforms
 from .factory import create_knx_device
 from .schema import (
     BinarySensorSchema,
@@ -51,21 +51,10 @@ CONF_XKNX_STATE_UPDATER = "state_updater"
 CONF_XKNX_RATE_LIMIT = "rate_limit"
 CONF_XKNX_EXPOSE = "expose"
 
-CONF_XKNX_LIGHT = "light"
-CONF_XKNX_COVER = "cover"
-CONF_XKNX_BINARY_SENSOR = "binary_sensor"
-CONF_XKNX_SCENE = "scene"
-CONF_XKNX_SENSOR = "sensor"
-CONF_XKNX_SWITCH = "switch"
-CONF_XKNX_NOTIFY = "notify"
-CONF_XKNX_CLIMATE = "climate"
-
 SERVICE_XKNX_SEND = "send"
 SERVICE_XKNX_ATTR_ADDRESS = "address"
 SERVICE_XKNX_ATTR_PAYLOAD = "payload"
 SERVICE_XKNX_ATTR_TYPE = "type"
-
-ATTR_DISCOVER_DEVICES = "devices"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -89,28 +78,28 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_XKNX_EXPOSE): vol.All(
                     cv.ensure_list, [ExposeSchema.SCHEMA]
                 ),
-                vol.Optional(CONF_XKNX_COVER): vol.All(
+                vol.Optional(SupportedPlatforms.cover.value): vol.All(
                     cv.ensure_list, [CoverSchema.SCHEMA]
                 ),
-                vol.Optional(CONF_XKNX_BINARY_SENSOR): vol.All(
+                vol.Optional(SupportedPlatforms.binary_sensor.value): vol.All(
                     cv.ensure_list, [BinarySensorSchema.SCHEMA]
                 ),
-                vol.Optional(CONF_XKNX_LIGHT): vol.All(
+                vol.Optional(SupportedPlatforms.light.value): vol.All(
                     cv.ensure_list, [LightSchema.SCHEMA]
                 ),
-                vol.Optional(CONF_XKNX_CLIMATE): vol.All(
+                vol.Optional(SupportedPlatforms.climate.value): vol.All(
                     cv.ensure_list, [ClimateSchema.SCHEMA]
                 ),
-                vol.Optional(CONF_XKNX_NOTIFY): vol.All(
+                vol.Optional(SupportedPlatforms.notify.value): vol.All(
                     cv.ensure_list, [NotifySchema.SCHEMA]
                 ),
-                vol.Optional(CONF_XKNX_SWITCH): vol.All(
+                vol.Optional(SupportedPlatforms.switch.value): vol.All(
                     cv.ensure_list, [SwitchSchema.SCHEMA]
                 ),
-                vol.Optional(CONF_XKNX_SENSOR): vol.All(
+                vol.Optional(SupportedPlatforms.sensor.value): vol.All(
                     cv.ensure_list, [SensorSchema.SCHEMA]
                 ),
-                vol.Optional(CONF_XKNX_SCENE): vol.All(
+                vol.Optional(SupportedPlatforms.scene.value): vol.All(
                     cv.ensure_list, [SceneSchema.SCHEMA]
                 ),
             }
@@ -129,16 +118,16 @@ SERVICE_XKNX_SEND_SCHEMA = vol.Schema(
     }
 )
 
-KNX_CONFIG_PLATFORM_MAPPING = {
-    CONF_XKNX_COVER: DeviceTypes.cover,
-    CONF_XKNX_SWITCH: DeviceTypes.switch,
-    CONF_XKNX_LIGHT: DeviceTypes.light,
-    CONF_XKNX_SENSOR: DeviceTypes.sensor,
-    CONF_XKNX_NOTIFY: DeviceTypes.notify,
-    CONF_XKNX_SCENE: DeviceTypes.scene,
-    CONF_XKNX_BINARY_SENSOR: DeviceTypes.binary_sensor,
-    CONF_XKNX_CLIMATE: DeviceTypes.climate,
-}
+SUPPORTED_PLATFORMS = [
+    SupportedPlatforms.cover,
+    SupportedPlatforms.switch,
+    SupportedPlatforms.light,
+    SupportedPlatforms.sensor,
+    SupportedPlatforms.notify,
+    SupportedPlatforms.scene,
+    SupportedPlatforms.binary_sensor,
+    SupportedPlatforms.climate,
+]
 
 
 async def async_setup(hass, config):
@@ -153,29 +142,17 @@ async def async_setup(hass, config):
             f"Can't connect to KNX interface: <br><b>{ex}</b>", title="KNX"
         )
 
-    for platform_config, device_type in KNX_CONFIG_PLATFORM_MAPPING.items():
-        if platform_config in config[DOMAIN]:
-            for device_config in config[DOMAIN][platform_config]:
-                hass.data[DATA_XKNX].xknx.devices.add(
-                    create_knx_device(
-                        hass, device_type, hass.data[DATA_XKNX].xknx, device_config
-                    )
+    for platform in SUPPORTED_PLATFORMS:
+        if platform.value in config[DOMAIN]:
+            for device_config in config[DOMAIN][platform.value]:
+                create_knx_device(
+                    hass, platform, hass.data[DATA_XKNX].xknx, device_config
                 )
 
-    for component, discovery_type in (
-        ("switch", "Switch"),
-        ("climate", "Climate"),
-        ("cover", "Cover"),
-        ("light", "Light"),
-        ("sensor", "Sensor"),
-        ("binary_sensor", "BinarySensor"),
-        ("scene", "Scene"),
-        ("notify", "Notification"),
-    ):
-        found_devices = _get_devices(hass, discovery_type)
+    for platform in SUPPORTED_PLATFORMS:
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, component, DOMAIN, {ATTR_DISCOVER_DEVICES: found_devices}, config
+                hass, platform.value, DOMAIN, {}, config
             )
         )
 
@@ -187,19 +164,6 @@ async def async_setup(hass, config):
     )
 
     return True
-
-
-def _get_devices(hass, discovery_type):
-    """Get the KNX devices."""
-    return list(
-        map(
-            lambda device: device.name,
-            filter(
-                lambda device: type(device).__name__ == discovery_type,
-                hass.data[DATA_XKNX].xknx.devices,
-            ),
-        )
-    )
 
 
 class KNXModule:
@@ -375,7 +339,6 @@ class KNXExposeTime:
         self.device = DateTime(
             self.xknx, "Time", broadcast_type=broadcast_type, group_address=self.address
         )
-        self.xknx.devices.add(self.device)
 
 
 class KNXExposeSensor:
@@ -402,7 +365,6 @@ class KNXExposeSensor:
         self.device = ExposeSensor(
             self.xknx, name=_name, group_address=self.address, value_type=self.type,
         )
-        self.xknx.devices.add(self.device)
         async_track_state_change_event(
             self.hass, [self.entity_id], self._async_entity_changed
         )

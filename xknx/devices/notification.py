@@ -67,7 +67,3 @@ class Notification(Device):
         return '<Notification name="{0}" message="{1}" />' \
             .format(self.name,
                     self._message.group_addr_str())
-
-    def __eq__(self, other):
-        """Equal operator."""
-        return self.__dict__ == other.__dict__

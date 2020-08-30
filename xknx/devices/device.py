@@ -9,13 +9,15 @@ from xknx.telegram import TelegramType
 class Device:
     """Base class for devices."""
 
-    def __init__(self, xknx, name, device_updated_cb=None):
+    def __init__(self, xknx, name: str, device_updated_cb=None):
         """Initialize Device class."""
         self.xknx = xknx
         self.name = name
         self.device_updated_cbs = []
         if device_updated_cb is not None:
             self.register_device_updated_cb(device_updated_cb)
+
+        self.xknx.devices.add(self)
 
     def _iter_remote_values(self):
         """Iterate the devices RemoteValue classes."""
@@ -80,3 +82,7 @@ class Device:
         """Execute 'do' commands."""
         # pylint: disable=invalid-name
         self.xknx.logger.info("Do not implemented action '%s' for %s", action, self.__class__.__name__)
+
+    def __eq__(self, other):
+        """Compare for quality."""
+        return self.__dict__ == other.__dict__

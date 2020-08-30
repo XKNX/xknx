@@ -87,7 +87,3 @@ class ExposeSensor(Device):
                     self.sensor_value.group_addr_str(),
                     self.resolve_state(),
                     self.unit_of_measurement())
-
-    def __eq__(self, other):
-        """Equal operator."""
-        return self.__dict__ == other.__dict__

@@ -17,7 +17,6 @@ time_device = DateTime(
     broadcast_type='TIME',
     localtime=True
 )
-xknx.devices.add(time_device)
 
 # Sending time to knx bus
 await xknx.devices['TimeTest'].sync()
@@ -52,7 +51,6 @@ from xknx.devices import DateTime
 async def main():
     xknx = XKNX()
     time = DateTime(xknx, 'TimeTest', group_address='1/2/3')
-    xknx.devices.add(time)
     print("Sending time to KNX bus every hour")
     await xknx.start(daemon_mode=True, state_updater=True)
     await xknx.stop()

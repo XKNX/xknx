@@ -318,7 +318,3 @@ class Light(Device):
         """Process incoming GROUP WRITE telegram."""
         for remote_value in self._iter_remote_values():
             await remote_value.process(telegram)
-
-    def __eq__(self, other):
-        """Equal operator."""
-        return self.__dict__ == other.__dict__

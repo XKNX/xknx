@@ -75,7 +75,6 @@ Example:
 switch = Switch(xknx,
                 name='TestSwitch',
                 group_address='1/1/11')
-xknx.devices.add(switch)
 
 await xknx.devices['TestSwitch'].set_on()
 await xknx.devices['TestSwitch'].set_off()
@@ -121,7 +120,6 @@ async def main():
     switch = Switch(xknx,
                     name='TestSwitch',
                     group_address='1/1/11')
-    xknx.devices.add(switch)
 
     await xknx.start(daemon_mode=True)
 

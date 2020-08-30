@@ -1,5 +1,5 @@
 """
-Module for reading configfiles (xknx.yaml).
+Module for reading config files (xknx.yaml).
 
 * it will parse the given file
 * and add the found devices to the devies vector of XKNX.
@@ -9,7 +9,7 @@ import yaml
 
 from xknx.devices import (
     BinarySensor, Climate, Cover, DateTime, ExposeSensor, Fan, Light,
-    Notification, Scene, Sensor, Switch)
+    Notification, Scene, Sensor, Switch, Weather)
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
 from xknx.telegram import PhysicalAddress
@@ -89,6 +89,7 @@ class Config:
             for group in doc["groups"]:
                 self.parse_group(doc, group)
 
+    # pylint: disable=too-many-branches
     def parse_group(self, doc, group):
         """Parse a group entry of xknx.yaml."""
         try:
@@ -114,106 +115,103 @@ class Config:
                 self.parse_group_sensor(doc["groups"][group])
             elif group.startswith("switch"):
                 self.parse_group_switch(doc["groups"][group])
+            elif group.startswith("weather"):
+                self.parse_group_weather(doc["groups"][group])
         except XKNXException as ex:
             self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", group, ex)
 
     def parse_group_binary_sensor(self, entries):
         """Parse a binary_sensor section of xknx.yaml."""
         for entry in entries:
-            binary_sensor = BinarySensor.from_config(
+            BinarySensor.from_config(
                 self.xknx,
                 entry,
                 entries[entry])
-            self.xknx.devices.add(binary_sensor)
 
     def parse_group_climate(self, entries):
         """Parse a climate section of xknx.yaml."""
         for entry in entries:
-            climate = Climate.from_config(
+            Climate.from_config(
                 self.xknx,
                 entry,
                 entries[entry])
-            self.xknx.devices.add(climate)
-            if climate.mode is not None:
-                self.xknx.devices.add(climate.mode)
 
     def parse_group_cover(self, entries):
         """Parse a cover section of xknx.yaml."""
         for entry in entries:
-            cover = Cover.from_config(
+            Cover.from_config(
                 self.xknx,
                 entry,
                 entries[entry])
-            self.xknx.devices.add(cover)
 
     def parse_group_datetime(self, entries):
         """Parse a datetime section of xknx.yaml."""
         for entry in entries:
-            datetime = DateTime.from_config(
+            DateTime.from_config(
                 self.xknx,
                 entry,
                 entries[entry])
-            self.xknx.devices.add(datetime)
 
     def parse_group_expose_sensor(self, entries):
         """Parse a exposed sensor section of xknx.yaml."""
         for entry in entries:
-            expose_sensor = ExposeSensor.from_config(
+            ExposeSensor.from_config(
                 self.xknx,
                 entry,
                 entries[entry])
-            self.xknx.devices.add(expose_sensor)
 
     def parse_group_fan(self, entries):
         """Parse a fan section of xknx.yaml."""
         for entry in entries:
-            fan = Fan.from_config(
+            Fan.from_config(
                 self.xknx,
                 entry,
                 entries[entry])
-            self.xknx.devices.add(fan)
 
     def parse_group_light(self, entries):
         """Parse a light section of xknx.yaml."""
         for entry in entries:
-            light = Light.from_config(
+            Light.from_config(
                 self.xknx,
                 entry,
                 entries[entry])
-            self.xknx.devices.add(light)
 
     def parse_group_notification(self, entries):
         """Parse a sensor section of xknx.yaml."""
         for entry in entries:
-            notification = Notification.from_config(
+            Notification.from_config(
                 self.xknx,
                 entry,
                 entries[entry])
-            self.xknx.devices.add(notification)
 
     def parse_group_scene(self, entries):
         """Parse a scene section of xknx.yaml."""
         for entry in entries:
-            scene = Scene.from_config(
+            Scene.from_config(
                 self.xknx,
                 entry,
                 entries[entry])
-            self.xknx.devices.add(scene)
 
     def parse_group_sensor(self, entries):
         """Parse a sensor section of xknx.yaml."""
         for entry in entries:
-            sensor = Sensor.from_config(
+            Sensor.from_config(
                 self.xknx,
                 entry,
                 entries[entry])
-            self.xknx.devices.add(sensor)
 
     def parse_group_switch(self, entries):
         """Parse a switch section of xknx.yaml."""
         for entry in entries:
-            switch = Switch.from_config(
+            Switch.from_config(
                 self.xknx,
                 entry,
                 entries[entry])
-            self.xknx.devices.add(switch)
+
+    def parse_group_weather(self, entries):
+        """Parse a weather section of xknx.yaml."""
+        for entry in entries:
+            Weather.from_config(
+                self.xknx,
+                entry,
+                entries[entry])

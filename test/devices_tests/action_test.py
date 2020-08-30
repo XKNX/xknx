@@ -83,8 +83,7 @@ class TestAction(unittest.TestCase):
             xknx,
             'Light1',
             group_address_switch='1/6/4')
-        xknx.devices.add(light)
-        action = Action(xknx, target='Light1', method='on')
+        action = Action(xknx, target=light.name, method='on')
         with patch('xknx.devices.Light.do') as mock_do:
             fut = asyncio.Future()
             fut.set_result(None)
