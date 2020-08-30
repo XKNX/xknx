@@ -15,6 +15,8 @@
 
 - GatewayScanner: Passing None or an integer <= 0 to the `stop_on_found` parameter now causes the scanner to only stop once the timeout is reached (@jochembroekhoff #311)
 - Devices are now added automatically to the xknx.devices list after initialization
+- Device.sync() method now again has a `wait_for_result` parameter that allows the user to wait for the telegrams
+- The default timeout of the `ValueReader` has been extended from 1 second to 2 seconds
 
 ### Bugfixes
 

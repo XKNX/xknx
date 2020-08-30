@@ -1,12 +1,12 @@
 """Unit test for RemoveValue objects."""
 import asyncio
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.remote_value import RemoteValue
+from xknx.remote_value import RemoteValue, RemoteValueSwitch
 from xknx.telegram import GroupAddress, Telegram
 
 
@@ -82,6 +82,44 @@ class TestRemoteValue(unittest.TestCase):
                 payload=DPTArray((0x01, 0x02)))
             with self.assertRaises(CouldNotParseTelegram):
                 self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+
+    def test_read_state(self):
+        """Test read state while waiting for the result."""
+        xknx = XKNX(loop=self.loop)
+        remote_value = RemoteValueSwitch(xknx, group_address_state="1/2/3")
+
+        with patch('xknx.remote_value.RemoteValue.payload_valid') as patch_valid, \
+                patch('xknx.core.ValueReader.read', new_callable=MagicMock) as patch_read:
+            patch_valid.return_value = True
+
+            fut = asyncio.Future()
+            telegram = Telegram(
+                GroupAddress('1/2/3'),
+                payload=DPTBinary(1))
+            fut.set_result(telegram)
+            patch_read.return_value = fut
+
+            self.loop.run_until_complete(asyncio.Task(remote_value.read_state(wait_for_result=True)))
+
+            self.assertTrue(remote_value.value)
+
+    def test_read_state_none(self):
+        """Test read state while waiting for the result but got None."""
+        xknx = XKNX(loop=self.loop)
+        remote_value = RemoteValueSwitch(xknx, group_address_state="1/2/3")
+
+        with patch('xknx.remote_value.RemoteValue.payload_valid') as patch_valid, \
+                patch('xknx.core.ValueReader.read', new_callable=MagicMock) as patch_read, \
+                patch('logging.Logger.warning') as mock_info:
+            fut = asyncio.Future()
+            fut.set_result(None)
+            patch_valid.return_value = False
+            patch_read.return_value = fut
+
+            self.loop.run_until_complete(asyncio.Task(remote_value.read_state(wait_for_result=True)))
+
+            mock_info.assert_called_with("Could not sync group address '%s' for %s - %s",
+                                         GroupAddress("1/2/3"), 'Unknown', 'State')
 
     def test_eq(self):
         """Test __eq__ operator."""

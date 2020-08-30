@@ -6,7 +6,7 @@ from xknx import XKNX
 from xknx.devices import Weather
 from xknx.io import ConnectionConfig, ConnectionType
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARN)
 
 
 async def main():
@@ -27,10 +27,9 @@ async def main():
         group_address_rain_alarm='7/0/0'
     )
 
-    await weather.sync()
-    await asyncio.sleep(10)
+    await weather.sync(wait_for_result=True)
     print(weather.max_brightness)
-    print(weather.ha_current_state)
+    print(weather.ha_current_state())
     print(weather)
 
     await xknx.stop()

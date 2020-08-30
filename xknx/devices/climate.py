@@ -282,11 +282,11 @@ class Climate(Device):
         if self.mode is not None:
             await self.mode.process_group_write(telegram)
 
-    async def sync(self):
+    async def sync(self, wait_for_result=False):
         """Read states of device from KNX bus."""
-        await super().sync()
+        await super().sync(wait_for_result=wait_for_result)
         if self.mode is not None:
-            await self.mode.sync()
+            await self.mode.sync(wait_for_result=wait_for_result)
 
     def __str__(self):
         """Return object as readable string."""
