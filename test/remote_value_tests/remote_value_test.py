@@ -28,7 +28,7 @@ class TestRemoteValue(unittest.TestCase):
         remote_value = RemoteValue(xknx)
         with patch('logging.Logger.warning') as mock_warn:
             remote_value.payload_valid(DPTBinary(0))
-            mock_warn.assert_called_with('payload_valid not implemented for %s', 'RemoteValue')
+            mock_warn.assert_called_with("'payload_valid()' not implemented for %s", 'RemoteValue')
 
     def test_warn_to_knx(self):
         """Test for warning if to_knx is not implemented."""
@@ -36,7 +36,7 @@ class TestRemoteValue(unittest.TestCase):
         remote_value = RemoteValue(xknx)
         with patch('logging.Logger.warning') as mock_warn:
             remote_value.to_knx(23)
-            mock_warn.assert_called_with('to_knx not implemented for %s', 'RemoteValue')
+            mock_warn.assert_called_with("'to_knx()' not implemented for %s", 'RemoteValue')
 
     def test_warn_from_knx(self):
         """Test for warning if from_knx is not implemented."""
@@ -44,7 +44,7 @@ class TestRemoteValue(unittest.TestCase):
         remote_value = RemoteValue(xknx)
         with patch('logging.Logger.warning') as mock_warn:
             remote_value.from_knx(DPTBinary(0))
-            mock_warn.assert_called_with('from_knx not implemented for %s', 'RemoteValue')
+            mock_warn.assert_called_with("'from_knx()' not implemented for %s", 'RemoteValue')
 
     def test_info_set_uninitialized(self):
         """Test for info if RemoteValue is not initialized."""
@@ -118,7 +118,7 @@ class TestRemoteValue(unittest.TestCase):
 
             self.loop.run_until_complete(asyncio.Task(remote_value.read_state(wait_for_result=True)))
 
-            mock_info.assert_called_with("Could not sync group address '%s' for %s - %s",
+            mock_info.assert_called_with("Could not sync group address '%s' (%s - %s)",
                                          GroupAddress("1/2/3"), 'Unknown', 'State')
 
     def test_eq(self):

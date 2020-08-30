@@ -82,7 +82,7 @@ class DPTRow(Row):
                 if text.startswith("DPT"):
                     return text.split()[1]
         except IndexError:
-            print("Error: Can't read docstring for: %s" % dpt_class)
+            print("Error: Could not read docstring for: %s" % dpt_class)
         return None
 
     def dpt_number_int(self):
@@ -93,7 +93,7 @@ class DPTRow(Row):
                 dpt_minor = 0
             return (int(dpt_major) * 1000) + int(dpt_minor)
         except ValueError:
-            print("Error: Can't parse dpt_number: %s" % self.dpt_number)
+            print("Error: Could not parse dpt_number: %s" % self.dpt_number)
 
 
 def table_delimiter():

@@ -30,7 +30,7 @@ class DPTScaling(DPTBase):
         value = round((knx_value/255)*delta) + cls.value_min
 
         if not cls._test_boundaries(value):
-            raise ConversionError("Cant parse %s" % cls.__name__, value=value, raw=raw)
+            raise ConversionError("Could not parse %s" % cls.__name__, value=value, raw=raw)
 
         return value
 
@@ -46,7 +46,7 @@ class DPTScaling(DPTBase):
 
             return (knx_value,)
         except ValueError:
-            raise ConversionError("Cant serialize %s" % cls.__name__, value=value)
+            raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
 
     @classmethod
     def _test_boundaries(cls, value):

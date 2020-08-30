@@ -40,7 +40,7 @@ class DPT2ByteFloat(DPTBase):
         value = float(significand << exponent) / 100
 
         if not cls._test_boundaries(value):
-            raise ConversionError("Cant parse %s" % cls.__name__, value=value)
+            raise ConversionError("Could not parse %s" % cls.__name__, value=value)
 
         return value
 
@@ -73,7 +73,7 @@ class DPT2ByteFloat(DPTBase):
             return (sign << 7) | (exponent << 3) | (significand >> 8), \
                 significand & 0xff
         except ValueError:
-            raise ConversionError("Cant serialize %s" % cls.__name__, value=value)
+            raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
 
     @classmethod
     def _test_boundaries(cls, value):

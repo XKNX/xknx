@@ -71,18 +71,18 @@ class RemoteValue():
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed - to be implemented in derived class.."""
         # pylint: disable=unused-argument
-        self.xknx.logger.warning("payload_valid not implemented for %s", self.__class__.__name__)
+        self.xknx.logger.warning("'payload_valid()' not implemented for %s", self.__class__.__name__)
         return True
 
     def from_knx(self, payload):
         """Convert current payload to value - to be implemented in derived class."""
         # pylint: disable=unused-argument
-        self.xknx.logger.warning("from_knx not implemented for %s", self.__class__.__name__)
+        self.xknx.logger.warning("'from_knx()' not implemented for %s", self.__class__.__name__)
 
     def to_knx(self, value):
         """Convert value to payload - to be implemented in derived class."""
         # pylint: disable=unused-argument
-        self.xknx.logger.warning("to_knx not implemented for %s", self.__class__.__name__)
+        self.xknx.logger.warning("'to_knx()' not implemented for %s", self.__class__.__name__)
 
     async def process(self, telegram, always_callback=False):
         """Process incoming telegram."""
@@ -151,7 +151,7 @@ class RemoteValue():
                     await self.process(telegram)
                 else:
                     self.xknx.logger.warning(
-                        "Could not sync group address '%s' for %s - %s",
+                        "Could not sync group address '%s' (%s - %s)",
                         self.group_address_state, self.device_name, self.feature_name)
             else:
                 await value_reader.send_group_read()

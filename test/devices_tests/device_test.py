@@ -170,4 +170,4 @@ class TestDevice(unittest.TestCase):
         device = Device(xknx, 'TestDevice')
         with patch('logging.Logger.info') as mock_info:
             self.loop.run_until_complete(asyncio.Task(device.do("xx")))
-            mock_info.assert_called_with("Do not implemented action '%s' for %s", 'xx', 'Device')
+            mock_info.assert_called_with("'do()' not implemented for action '%s' of %s", 'xx', 'Device')

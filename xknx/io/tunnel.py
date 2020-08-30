@@ -99,7 +99,7 @@ class Tunnel():
         await connect.start()
         if not connect.success:
             if self.auto_reconnect:
-                msg = "Cannot connect to KNX. Retry in {} seconds.".format(
+                msg = "Could not connect to KNX. Retry in {} seconds.".format(
                     self.auto_reconnect_wait
                 )
                 self.xknx.logger.warning(msg)

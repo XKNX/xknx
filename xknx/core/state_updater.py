@@ -42,7 +42,7 @@ class StateUpdater():
                 elif _options[0].upper() == "EVERY":
                     tracker_type = StateTrackerType.PERIODICALLY
                 else:
-                    self.xknx.logger.warning('Can not parse StateUpdater tracker_options "%s" for %s. Using default %s %s minutes.' %
+                    self.xknx.logger.warning('Could not parse StateUpdater tracker_options "%s" for %s. Using default %s %s minutes.' %
                                              (tracker_options, remote_value, tracker_type, update_interval))
                     return (tracker_type, update_interval)
                 try:
@@ -51,7 +51,7 @@ class StateUpdater():
                 except IndexError:
                     pass  # No time given (no _options[1])
             else:
-                self.xknx.logger.warning('Can not parse StateUpdater tracker_options type %s "%s" for %s. Using default %s %s minutes.' %
+                self.xknx.logger.warning('Could not parse StateUpdater tracker_options type %s "%s" for %s. Using default %s %s minutes.' %
                                          (type(tracker_options), tracker_options, remote_value, tracker_type, update_interval))
             return (tracker_type, update_interval)
 

@@ -50,7 +50,7 @@ class TestDisconnect(unittest.TestCase):
         wrong_knxipframe.init(KNXIPServiceType.DISCONNECT_REQUEST)
         with patch('logging.Logger.warning') as mock_warning:
             disconnect.response_rec_callback(wrong_knxipframe, None)
-            mock_warning.assert_called_with('Cant understand knxipframe')
+            mock_warning.assert_called_with('Could not understand knxipframe')
 
         # Response KNX/IP-Frame with error:
         err_knxipframe = KNXIPFrame(xknx)
@@ -67,5 +67,5 @@ class TestDisconnect(unittest.TestCase):
         res_knxipframe.init(KNXIPServiceType.DISCONNECT_RESPONSE)
         with patch('logging.Logger.debug') as mock_debug:
             disconnect.response_rec_callback(res_knxipframe, None)
-            mock_debug.assert_called_with('Success: received correct answer from KNX bus: %s', ErrorCode.E_NO_ERROR)
+            mock_debug.assert_called_with('Success: Received correct answer from KNX bus: %s', ErrorCode.E_NO_ERROR)
             self.assertTrue(disconnect.success)
