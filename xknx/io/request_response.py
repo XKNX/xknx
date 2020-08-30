@@ -46,7 +46,7 @@ class RequestResponse():
     def response_rec_callback(self, knxipframe, _):
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knxipframe.body, self.awaited_response_class):
-            self.xknx.logger.warning("Cannot understand knxipframe")
+            self.xknx.logger.warning("Could not understand knxipframe")
             return
         self.response_received_or_timeout.set()
         if knxipframe.body.status_code == ErrorCode.E_NO_ERROR:

@@ -39,7 +39,7 @@ class DPTSignedRelativeValue(DPTBase):
                 knx_value += 0x100
             return (knx_value & 0xff,)
         except ValueError:
-            raise ConversionError("Cannot serialize %s" % cls.__name__, value=value)
+            raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
 
     @classmethod
     def _test_boundaries(cls, value):

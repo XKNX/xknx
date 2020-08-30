@@ -22,7 +22,7 @@ class DPTDate(DPTBase):
         year = raw[2] & 0x7F
 
         if not DPTDate._test_range(day, month, year):
-            raise ConversionError("Cannot parse DPTDate", raw=raw)
+            raise ConversionError("Could not parse DPTDate", raw=raw)
 
         if year >= 90:
             year += 1900
@@ -33,7 +33,7 @@ class DPTDate(DPTBase):
             # strptime conversion used for catching exceptions; filled with default values
             return time.strptime("{} {} {}".format(year, month, day), "%Y %m %d")
         except ValueError:
-            raise ConversionError("Cannot parse DPTDate", raw=raw)
+            raise ConversionError("Could not parse DPTDate", raw=raw)
 
     @classmethod
     def to_knx(cls, value: time.struct_time):
@@ -43,10 +43,10 @@ class DPTDate(DPTBase):
                 return year-2000
             if 1990 <= year < 2000:
                 return year-1900
-            raise ConversionError("Cannot serialize DPTDate", year=year)
+            raise ConversionError("Could not serialize DPTDate", year=year)
 
         if not isinstance(value, time.struct_time):
-            raise ConversionError("Cannot serialize DPTDate", value=value)
+            raise ConversionError("Could not serialize DPTDate", value=value)
 
         return (value.tm_mday,
                 value.tm_mon,

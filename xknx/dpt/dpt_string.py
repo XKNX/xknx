@@ -40,7 +40,7 @@ class DPTString(DPTBase):
             raw.extend([0] * (cls.payload_length - len(raw)))
             return raw
         except ValueError:
-            raise ConversionError("Cannot serialize %s" % cls.__name__, value=value)
+            raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
 
     @classmethod
     def _test_boundaries(cls, value):

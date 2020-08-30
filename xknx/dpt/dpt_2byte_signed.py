@@ -38,7 +38,7 @@ class DPT2ByteSigned(DPTBase):
         try:
             return struct.unpack(cls._struct_format, bytes(raw))[0]
         except struct.error:
-            raise ConversionError("Cannot parse %s" % cls.__name__, raw=raw)
+            raise ConversionError("Could not parse %s" % cls.__name__, raw=raw)
 
     @classmethod
     def to_knx(cls, value):
@@ -49,7 +49,7 @@ class DPT2ByteSigned(DPTBase):
                 raise ValueError
             return tuple(struct.pack(cls._struct_format, knx_value))
         except (ValueError, struct.error):
-            raise ConversionError("Cannot serialize %s" % cls.__name__, value=value)
+            raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
 
     @classmethod
     def _test_boundaries(cls, value):

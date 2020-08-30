@@ -59,16 +59,16 @@ class RemoteValueColorRGBW(RemoteValue):
         * < 4 bytes: error
         """
         if not isinstance(value, (list, tuple)):
-            raise ConversionError("Cannot serialize RemoteValueColorRGBW (wrong type, expecting list of 4-6 bytes))",
+            raise ConversionError("Could not serialize RemoteValueColorRGBW (wrong type, expecting list of 4-6 bytes))",
                                   value=value, type=type(value))
         if len(value) < 4 or len(value) > 6:
-            raise ConversionError("Cannot serialize value to DPT 251.600 (wrong length, expecting list of 4-6 bytes)",
+            raise ConversionError("Could not serialize value to DPT 251.600 (wrong length, expecting list of 4-6 bytes)",
                                   value=value, type=type(value))
         rgbw = value[:4]
         if any(not isinstance(color, int) for color in rgbw) \
                 or any(color < 0 for color in rgbw) \
                 or any(color > 255 for color in rgbw):
-            raise ConversionError("Cannot serialize DPT 251.600 (wrong RGBW values)", value=value)
+            raise ConversionError("Could not serialize DPT 251.600 (wrong RGBW values)", value=value)
         if len(value) < 5:
             return DPTArray(list(rgbw) + [0x00, 0x0f])
         if len(value) < 6:

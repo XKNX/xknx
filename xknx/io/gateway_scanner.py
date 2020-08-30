@@ -156,7 +156,7 @@ class GatewayScanner():
     def _response_rec_callback(self, knx_ip_frame: KNXIPFrame, udp_client: UDPClient) -> None:
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knx_ip_frame.body, SearchResponse):
-            self.xknx.logger.warning("Cannot understand knxipframe")
+            self.xknx.logger.warning("Could not understand knxipframe")
             return
 
         gateway = GatewayDescriptor(name=knx_ip_frame.body.device_name,

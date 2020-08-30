@@ -65,13 +65,13 @@ class DPTDateTime(DPTBase):
             return time.strptime(time_string, time_format)
 
         except ValueError:
-            raise ConversionError("Cannot parse DPTDateTime", raw=raw)
+            raise ConversionError("Could not parse DPTDateTime", raw=raw)
 
     @classmethod
     def to_knx(cls, value: time.struct_time):
         """Serialize to KNX/IP raw data from time.struct_time."""
         if not isinstance(value, time.struct_time):
-            raise ConversionError("Cannot serialize DPTDateTime", value=value)
+            raise ConversionError("Could not serialize DPTDateTime", value=value)
 
         knx_year = (value.tm_year - 1900) & 0xFF
         month = value.tm_mon
