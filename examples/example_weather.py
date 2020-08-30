@@ -29,7 +29,7 @@ async def main():
 
     await weather.sync(wait_for_result=True)
     print(weather.max_brightness)
-    print(weather.ha_current_state)
+    print(weather.ha_current_state())
     print(weather)
 
     await xknx.stop()
