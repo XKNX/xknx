@@ -2,6 +2,8 @@
 
 ## Upcoming version (unreleased)
 
+## 0.13.0 New weather device and bugfixes for HA integration
+
 ### Deprecation notes
 
 - Python 3.5 is no longer supported
