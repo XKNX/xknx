@@ -4,8 +4,6 @@ Module for reading config files (xknx.yaml).
 * it will parse the given file
 * and add the found devices to the devies vector of XKNX.
 """
-import yaml
-
 from xknx.devices import (
     BinarySensor,
     Climate,
@@ -23,6 +21,7 @@ from xknx.devices import (
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
 from xknx.telegram import PhysicalAddress
+import yaml
 
 
 class Config:

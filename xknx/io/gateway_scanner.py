@@ -10,7 +10,6 @@ import asyncio
 from typing import List, Optional
 
 import netifaces
-
 from xknx.knxip import (
     HPAI,
     DIBServiceFamily,

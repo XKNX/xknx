@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock
 
 from pytest import fixture, raises
-
 from xknx.dpt import DPTBinary
 from xknx.exceptions import CouldNotParseKNXIP, UnsupportedCEMIMessage
 from xknx.knxip.cemi_frame import CEMIFrame

@@ -1,9 +1,9 @@
 """Support for KNX scenes."""
 from typing import Any
 
-from homeassistant.components.scene import Scene
-
 from xknx.devices import Scene as XknxScene
+
+from homeassistant.components.scene import Scene
 
 from . import DATA_XKNX
 

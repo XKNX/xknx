@@ -10,7 +10,6 @@ from enum import Enum
 import ipaddress
 
 import netifaces
-
 from xknx.exceptions import XKNXException
 
 from .const import DEFAULT_MCAST_PORT

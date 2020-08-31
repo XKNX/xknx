@@ -1,4 +1,7 @@
 """Voluptuous schemas for the KNX integration."""
+import voluptuous as vol
+from xknx.devices.climate import SetpointShiftMode
+
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE_CLASS,
@@ -9,9 +12,6 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
-
-from xknx.devices.climate import SetpointShiftMode
 
 from .const import (
     CONF_STATE_ADDRESS,
@@ -338,5 +338,48 @@ class SceneSchema:
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Required(CONF_ADDRESS): cv.string,
             vol.Required(CONF_SCENE_NUMBER): cv.positive_int,
+        }
+    )
+
+
+class WeatherSchema:
+    """Voluptuous schema for KNX weather station."""
+
+    CONF_SYNC_STATE = CONF_SYNC_STATE
+    CONF_XKNX_TEMPERATURE_ADDRESS = "address_temperature"
+    CONF_XKNX_BRIGHTNESS_SOUTH_ADDRESS = "address_brightness_south"
+    CONF_XKNX_BRIGHTNESS_EAST_ADDRESS = "address_brightness_east"
+    CONF_XKNX_BRIGHTNESS_WEST_ADDRESS = "address_brightness_west"
+    CONF_XKNX_WIND_SPEED_ADDRESS = "address_wind_speed"
+    CONF_XKNX_RAIN_ALARM_ADDRESS = "address_rain_alarm"
+    CONF_XKNX_FROST_ALARM_ADDRESS = "address_frost_alarm"
+    CONF_XKNX_WIND_ALARM_ADDRESS = "address_wind_alarm"
+    CONF_XKNX_DAY_NIGHT_ADDRESS = "address_day_night"
+    CONF_XKNX_AIR_PRESSURE_ADDRESS = "address_air_pressure"
+    CONF_XKNX_HUMIDITY_ADDRESS = "address_humidity"
+    CONF_XKNX_EXPOSE_SENSORS = "expose_sensors"
+
+    DEFAULT_NAME = "KNX Weather Station"
+
+    SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_SYNC_STATE, default=True): vol.Any(
+                vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)),
+                cv.boolean,
+                cv.string,
+            ),
+            vol.Optional(CONF_XKNX_EXPOSE_SENSORS, default=False): cv.boolean,
+            vol.Required(CONF_XKNX_TEMPERATURE_ADDRESS): cv.string,
+            vol.Optional(CONF_XKNX_BRIGHTNESS_SOUTH_ADDRESS): cv.string,
+            vol.Optional(CONF_XKNX_BRIGHTNESS_EAST_ADDRESS): cv.string,
+            vol.Optional(CONF_XKNX_BRIGHTNESS_WEST_ADDRESS): cv.string,
+            vol.Optional(CONF_XKNX_WIND_SPEED_ADDRESS): cv.string,
+            vol.Optional(CONF_XKNX_RAIN_ALARM_ADDRESS): cv.string,
+            vol.Optional(CONF_XKNX_FROST_ALARM_ADDRESS): cv.string,
+            vol.Optional(CONF_XKNX_WIND_ALARM_ADDRESS): cv.string,
+            vol.Optional(CONF_XKNX_DAY_NIGHT_ADDRESS): cv.string,
+            vol.Optional(CONF_XKNX_AIR_PRESSURE_ADDRESS): cv.string,
+            vol.Optional(CONF_XKNX_HUMIDITY_ADDRESS): cv.string,
         }
     )

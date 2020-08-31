@@ -1,8 +1,8 @@
 """Support for KNX/IP switches."""
+from xknx.devices import Switch as XknxSwitch
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
-
-from xknx.devices import Switch as XknxSwitch
 
 from . import DATA_XKNX
 

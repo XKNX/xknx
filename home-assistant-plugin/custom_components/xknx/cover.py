@@ -1,4 +1,6 @@
 """Support for KNX/IP covers."""
+from xknx.devices import Cover as XknxCover
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -12,8 +14,6 @@ from homeassistant.components.cover import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_utc_time_change
-
-from xknx.devices import Cover as XknxCover
 
 from . import DATA_XKNX
 

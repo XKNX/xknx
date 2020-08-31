@@ -1,8 +1,8 @@
 """Support for KNX/IP sensors."""
+from xknx.devices import Sensor as XknxSensor
+
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-
-from xknx.devices import Sensor as XknxSensor
 
 from . import DATA_XKNX
 
