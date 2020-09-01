@@ -23,7 +23,7 @@ class Test_KNXIP_Header(unittest.TestCase):
 
     def test_from_knx(self):
         """Test parsing and streaming wrong Header (wrong length byte)."""
-        raw = ((0x06, 0x10, 0x04, 0x21, 0x00, 0x0a))
+        raw = (0x06, 0x10, 0x04, 0x21, 0x00, 0x0A)
         xknx = XKNX(loop=self.loop)
         header = KNXIPHeader(xknx)
         self.assertEqual(header.from_knx(raw), 6)
@@ -51,7 +51,7 @@ class Test_KNXIP_Header(unittest.TestCase):
 
     def test_from_knx_wrong_header(self):
         """Test parsing and streaming wrong Header (wrong length)."""
-        raw = ((0x06, 0x10, 0x04, 0x21, 0x00))
+        raw = (0x06, 0x10, 0x04, 0x21, 0x00)
         xknx = XKNX(loop=self.loop)
         header = KNXIPHeader(xknx)
         with self.assertRaises(CouldNotParseKNXIP):
@@ -59,7 +59,7 @@ class Test_KNXIP_Header(unittest.TestCase):
 
     def test_from_knx_wrong_header2(self):
         """Test parsing and streaming wrong Header (wrong length byte)."""
-        raw = ((0x05, 0x10, 0x04, 0x21, 0x00, 0x0a))
+        raw = (0x05, 0x10, 0x04, 0x21, 0x00, 0x0A)
         xknx = XKNX(loop=self.loop)
         header = KNXIPHeader(xknx)
         with self.assertRaises(CouldNotParseKNXIP):
@@ -67,7 +67,7 @@ class Test_KNXIP_Header(unittest.TestCase):
 
     def test_from_knx_wrong_header3(self):
         """Test parsing and streaming wrong Header (wrong protocol version)."""
-        raw = ((0x06, 0x11, 0x04, 0x21, 0x00, 0x0a))
+        raw = (0x06, 0x11, 0x04, 0x21, 0x00, 0x0A)
         xknx = XKNX(loop=self.loop)
         header = KNXIPHeader(xknx)
         with self.assertRaises(CouldNotParseKNXIP):

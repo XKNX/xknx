@@ -13,8 +13,7 @@ class RemoteValueTemp(RemoteValue):
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
-        return (isinstance(payload, DPTArray)
-                and len(payload.value) == 2)
+        return isinstance(payload, DPTArray) and len(payload.value) == 2
 
     def to_knx(self, value):
         """Convert value to payload."""

@@ -30,6 +30,7 @@ class ConnectionStateResponse(KNXIPBody):
 
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
+
         def info_from_knx(info):
             """Parse info bytes."""
             if len(info) < 2:
@@ -37,24 +38,29 @@ class ConnectionStateResponse(KNXIPBody):
             self.communication_channel_id = info[0]
             self.status_code = ErrorCode(info[1])
             return 2
+
         pos = info_from_knx(raw)
         return pos
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
+
         def info_to_knx():
             """Serialize information bytes."""
             info = []
             info.append(self.communication_channel_id)
             info.append(self.status_code.value)
             return info
+
         data = []
         data.extend(info_to_knx())
         return data
 
     def __str__(self):
         """Return object as readable string."""
-        return '<ConnectionStateResponse CommunicationChannelID="{0}" ' \
-            'status_code="{1}" />'.format(
-                self.communication_channel_id,
-                self.status_code)
+        return (
+            '<ConnectionStateResponse CommunicationChannelID="{}" '
+            'status_code="{}" />'.format(
+                self.communication_channel_id, self.status_code
+            )
+        )

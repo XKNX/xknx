@@ -4,8 +4,7 @@ import unittest
 
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
-from xknx.knxip import (
-    DisconnectResponse, ErrorCode, KNXIPFrame, KNXIPServiceType)
+from xknx.knxip import DisconnectResponse, ErrorCode, KNXIPFrame, KNXIPServiceType
 
 
 class Test_KNXIP_DisconnectResp(unittest.TestCase):
@@ -24,17 +23,17 @@ class Test_KNXIP_DisconnectResp(unittest.TestCase):
 
     def test_disconnect_response(self):
         """Test parsing and streaming DisconnectResponse KNX/IP packet."""
-        raw = ((0x06, 0x10, 0x02, 0x0A, 0x00, 0x08, 0x15, 0x25))
+        raw = (0x06, 0x10, 0x02, 0x0A, 0x00, 0x08, 0x15, 0x25)
         xknx = XKNX(loop=self.loop)
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 
         self.assertTrue(isinstance(knxipframe.body, DisconnectResponse))
 
+        self.assertEqual(knxipframe.body.communication_channel_id, 21)
         self.assertEqual(
-            knxipframe.body.communication_channel_id, 21)
-        self.assertEqual(
-            knxipframe.body.status_code, ErrorCode.E_NO_MORE_UNIQUE_CONNECTIONS)
+            knxipframe.body.status_code, ErrorCode.E_NO_MORE_UNIQUE_CONNECTIONS
+        )
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.DISCONNECT_RESPONSE)
@@ -46,7 +45,7 @@ class Test_KNXIP_DisconnectResp(unittest.TestCase):
 
     def test_from_knx_wrong_length(self):
         """Test parsing and streaming wrong DisconnectResponse."""
-        raw = ((0x06, 0x10, 0x02, 0x0A, 0x00, 0x08, 0x15))
+        raw = (0x06, 0x10, 0x02, 0x0A, 0x00, 0x08, 0x15)
         xknx = XKNX(loop=self.loop)
         knxipframe = KNXIPFrame(xknx)
         with self.assertRaises(CouldNotParseKNXIP):

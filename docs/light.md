@@ -6,7 +6,7 @@ layout: default
 
 ## [](#header-2)Overview
 
-The Light object is either a representation of a binary or dimm actor, LED-controller or DALI-gateway. 
+The Light object is either a representation of a binary or dimm actor, LED-controller or DALI-gateway.
 
 Expected datapoint types for light functions and their corresponding state addresses:
 - switch: DPT 1.001
@@ -27,7 +27,7 @@ light = Light(xknx,
 # Accessing light
 await xknx.devices['TestLight'].set_on()
 await xknx.devices['TestLight'].set_brightness(23)
-``` 
+```
 
 ## [](#header-2)Configuration via **xknx.yaml**
 

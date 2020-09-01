@@ -47,23 +47,17 @@ class TestAction(unittest.TestCase):
         """Test test_if_applicable method with hook set to 'on'."""
         xknx = XKNX(loop=self.loop)
         action = ActionBase(xknx, counter=2, hook="on")
-        self.assertTrue(action.test_if_applicable(
-            True, 2))
-        self.assertFalse(action.test_if_applicable(
-            True, 3))
-        self.assertFalse(action.test_if_applicable(
-            False, 2))
+        self.assertTrue(action.test_if_applicable(True, 2))
+        self.assertFalse(action.test_if_applicable(True, 3))
+        self.assertFalse(action.test_if_applicable(False, 2))
 
     def test_if_applicable_hook_off(self):
         """Test test_if_applicable method with hook set to 'off'."""
         xknx = XKNX(loop=self.loop)
         action = ActionBase(xknx, counter=2, hook="off")
-        self.assertTrue(action.test_if_applicable(
-            False, 2))
-        self.assertFalse(action.test_if_applicable(
-            False, 3))
-        self.assertFalse(action.test_if_applicable(
-            True, 2))
+        self.assertTrue(action.test_if_applicable(False, 2))
+        self.assertFalse(action.test_if_applicable(False, 3))
+        self.assertFalse(action.test_if_applicable(True, 2))
 
     #
     # TEST EXECUTE
@@ -72,24 +66,21 @@ class TestAction(unittest.TestCase):
         """Test if execute method of BaseAction shows correct info message."""
         xknx = XKNX(loop=self.loop)
         action = ActionBase(xknx)
-        with patch('logging.Logger.info') as mock_info:
+        with patch("logging.Logger.info") as mock_info:
             self.loop.run_until_complete(asyncio.Task(action.execute()))
-            mock_info.assert_called_with('Execute not implemented for %s', 'ActionBase')
+            mock_info.assert_called_with("Execute not implemented for %s", "ActionBase")
 
     def test_execute_action(self):
         """Test if execute method of Action calls correct do method of device."""
         xknx = XKNX(loop=self.loop)
-        light = Light(
-            xknx,
-            'Light1',
-            group_address_switch='1/6/4')
-        action = Action(xknx, target=light.name, method='on')
-        with patch('xknx.devices.Light.do') as mock_do:
+        light = Light(xknx, "Light1", group_address_switch="1/6/4")
+        action = Action(xknx, target=light.name, method="on")
+        with patch("xknx.devices.Light.do") as mock_do:
             fut = asyncio.Future()
             fut.set_result(None)
             mock_do.return_value = fut
             self.loop.run_until_complete(asyncio.Task(action.execute()))
-            mock_do.assert_called_with('on')
+            mock_do.assert_called_with("on")
 
     def test_execute_action_callback(self):
         """Test if execute method of ActionCallback calls correct callback method."""
@@ -108,8 +99,9 @@ class TestAction(unittest.TestCase):
         """Test if execute method of Action calls correct do method of device."""
         xknx = XKNX(loop=self.loop)
 
-        action = Action(xknx, target='Light1', method='on')
-        with patch('logging.Logger.warning') as logger_warning_mock:
+        action = Action(xknx, target="Light1", method="on")
+        with patch("logging.Logger.warning") as logger_warning_mock:
             self.loop.run_until_complete(asyncio.Task(action.execute()))
             logger_warning_mock.assert_called_once_with(
-                "Unknown device %s witin action %s.", action.target, action)
+                "Unknown device %s witin action %s.", action.target, action
+            )

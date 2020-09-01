@@ -19,8 +19,6 @@ class Disconnect(RequestResponse):
         (local_addr, local_port) = self.udpclient.getsockname()
         knxipframe = KNXIPFrame(self.xknx)
         knxipframe.init(KNXIPServiceType.DISCONNECT_REQUEST)
-        knxipframe.body.communication_channel_id = \
-            self.communication_channel_id
-        knxipframe.body.control_endpoint = HPAI(
-            ip_addr=local_addr, port=local_port)
+        knxipframe.body.communication_channel_id = self.communication_channel_id
+        knxipframe.body.control_endpoint = HPAI(ip_addr=local_addr, port=local_port)
         return knxipframe

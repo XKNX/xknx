@@ -34,12 +34,12 @@ class ConnectResponse(KNXIPBody):
     def calculated_length(self):
         """Get length of KNX/IP body."""
         if self.status_code == ErrorCode.E_NO_ERROR:
-            return 2 + HPAI.LENGTH + \
-                ConnectResponse.CRD_LENGTH
+            return 2 + HPAI.LENGTH + ConnectResponse.CRD_LENGTH
         return 2
 
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
+
         def crd_from_knx(crd):
             """Parse CRD (Connection Response Data Block)."""
             if crd[0] != ConnectResponse.CRD_LENGTH:
@@ -47,7 +47,7 @@ class ConnectResponse(KNXIPBody):
             if len(crd) < ConnectResponse.CRD_LENGTH:
                 raise CouldNotParseKNXIP("CRD data has wrong length")
             self.request_type = ConnectRequestType(crd[1])
-            self.identifier = crd[2]*256+crd[3]
+            self.identifier = crd[2] * 256 + crd[3]
             return 4
 
         self.communication_channel = raw[0]
@@ -61,6 +61,7 @@ class ConnectResponse(KNXIPBody):
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
+
         def crd_to_knx():
             """Serialize CRD (Connect Response Data Block)."""
             crd = []
@@ -69,6 +70,7 @@ class ConnectResponse(KNXIPBody):
             crd.append((self.identifier >> 8) & 255)
             crd.append(self.identifier & 255)
             return crd
+
         data = []
         data.append(self.communication_channel)
         data.append(self.status_code.value)
@@ -81,9 +83,14 @@ class ConnectResponse(KNXIPBody):
 
     def __str__(self):
         """Return object as readable string."""
-        return '<ConnectResponse communication_channel="{0}" ' \
-            'status_code="{1}" control_endpoint="{2}" ' \
-            'request_type="{3}" identifier="{4}" />' \
-            .format(self.communication_channel, self.status_code,
-                    self.control_endpoint, self.request_type,
-                    self.identifier)
+        return (
+            '<ConnectResponse communication_channel="{}" '
+            'status_code="{}" control_endpoint="{}" '
+            'request_type="{}" identifier="{}" />'.format(
+                self.communication_channel,
+                self.status_code,
+                self.control_endpoint,
+                self.request_type,
+                self.identifier,
+            )
+        )

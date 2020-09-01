@@ -16,23 +16,27 @@ class DateTime(Device):
     """Class for virtual date/time device."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self,
-                 xknx,
-                 name,
-                 broadcast_type='TIME',
-                 localtime=True,
-                 group_address=None,
-                 device_updated_cb=None):
+    def __init__(
+        self,
+        xknx,
+        name,
+        broadcast_type="TIME",
+        localtime=True,
+        group_address=None,
+        device_updated_cb=None,
+    ):
         """Initialize DateTime class."""
         super().__init__(xknx, name, device_updated_cb)
         self.localtime = localtime
         self._broadcast_type = broadcast_type.upper()
-        self._remote_value = RemoteValueDateTime(xknx,
-                                                 group_address=group_address,
-                                                 sync_state=False,
-                                                 value_type=broadcast_type,
-                                                 device_name=name,
-                                                 after_update_cb=self.after_update)
+        self._remote_value = RemoteValueDateTime(
+            xknx,
+            group_address=group_address,
+            sync_state=False,
+            value_type=broadcast_type,
+            device_name=name,
+            after_update_cb=self.after_update,
+        )
 
     def _iter_remote_values(self):
         """Iterate the devices RemoteValue classes."""
@@ -41,12 +45,11 @@ class DateTime(Device):
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
-        broadcast_type = config.get('broadcast_type', 'time').upper()
-        group_address = config.get('group_address')
-        return cls(xknx,
-                   name,
-                   broadcast_type=broadcast_type,
-                   group_address=group_address)
+        broadcast_type = config.get("broadcast_type", "time").upper()
+        group_address = config.get("group_address")
+        return cls(
+            xknx, name, broadcast_type=broadcast_type, group_address=group_address
+        )
 
     async def broadcast_localtime(self, response=False):
         """Broadcast the local time to KNX bus."""
@@ -70,7 +73,6 @@ class DateTime(Device):
 
     def __str__(self):
         """Return object as readable string."""
-        return '<DateTime name="{0}" group_address="{1}" broadcast_type="{2}" />' \
-            .format(self.name,
-                    self._remote_value.group_addr_str(),
-                    self._broadcast_type)
+        return '<DateTime name="{}" group_address="{}" broadcast_type="{}" />'.format(
+            self.name, self._remote_value.group_addr_str(), self._broadcast_type
+        )

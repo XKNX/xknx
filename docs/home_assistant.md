@@ -56,7 +56,7 @@ Configuration:
 
 The configuration for the manually checked out version works the same as described within [Home Assistant KNX documentation](https://home-assistant.io/integrations/#search/knx) with the difference that the integration and platform is called `xknx` instead of `knx` (which is the HA default KNX integration and platform name).
 
-```yaml 
+```yaml
 xknx:
   tunneling:
     host: '192.168.2.23'

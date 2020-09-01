@@ -20,7 +20,7 @@ assignees: ''
 <!--
 Please provide details about your installation.
 - Manufacturer and model of relevant actors, sensors or interfaces.
-- if you have access to ETS: 
+- if you have access to ETS:
   - provide relevant group address parameters (DPT, Flags)
   - if applicable: excerpt of bus monitor output
 -->

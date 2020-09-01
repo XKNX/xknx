@@ -2,7 +2,9 @@
 try:
     from xknx.dpt import DPTBase
 except ModuleNotFoundError:
-    exit("Add the `xknx` directory to pythons path via `export PYTHONPATH=$HOME/directory/to/xknx`")
+    exit(
+        "Add the `xknx` directory to pythons path via `export PYTHONPATH=$HOME/directory/to/xknx`"
+    )
 
 
 # Defines the column order of the printed table.
@@ -16,19 +18,23 @@ COLUMN_ADJUSTMENT = {
     "unit": "left",
     "dpt_number": "right",
     "dpt_size": "right",
-    "dpt_range": "center"}
+    "dpt_range": "center",
+}
 
 
-class Row():
+class Row:
     """A row in the table. Table header text is defined in __init__ defaults."""
+
     column_width = {}
 
-    def __init__(self,
-                 value_type="type",
-                 unit="unit",
-                 dpt_number="KNX DPT",
-                 dpt_size="size in byte",
-                 dpt_range="range"):
+    def __init__(
+        self,
+        value_type="type",
+        unit="unit",
+        dpt_number="KNX DPT",
+        dpt_size="size in byte",
+        dpt_range="range",
+    ):
         self.value_type = value_type
         self._update_column_width("value_type", value_type)
         self.unit = unit
@@ -65,13 +71,15 @@ class DPTRow(Row):
     def __init__(self, dpt_class: DPTBase):
         dpt_range = ""
         if hasattr(dpt_class, "value_min") and hasattr(dpt_class, "value_max"):
-            dpt_range = "%s ... %s" % (dpt_class.value_min, dpt_class.value_max)
+            dpt_range = f"{dpt_class.value_min} ... {dpt_class.value_max}"
 
-        super().__init__(value_type=dpt_class.value_type,
-                         unit=dpt_class.unit,
-                         dpt_number=self._get_dpt_number_from_docstring(dpt_class),
-                         dpt_size=str(dpt_class.payload_length),
-                         dpt_range=dpt_range)
+        super().__init__(
+            value_type=dpt_class.value_type,
+            unit=dpt_class.unit,
+            dpt_number=self._get_dpt_number_from_docstring(dpt_class),
+            dpt_size=str(dpt_class.payload_length),
+            dpt_range=dpt_range,
+        )
 
     def _get_dpt_number_from_docstring(self, dpt_class: DPTBase):
         """Extract dpt number from class docstring."""
@@ -98,6 +106,7 @@ class DPTRow(Row):
 
 def table_delimiter():
     """Build a row of table delimiters."""
+
     def table_delimiter_ljust(width):
         return "|-" + "-" * width + "-"
 

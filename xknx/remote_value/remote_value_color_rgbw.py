@@ -12,27 +12,30 @@ from .remote_value import RemoteValue
 class RemoteValueColorRGBW(RemoteValue):
     """Abstraction for remote value of KNX DPT 251.600 (DPT_Color_RGBW)."""
 
-    def __init__(self,
-                 xknx,
-                 group_address=None,
-                 group_address_state=None,
-                 device_name=None,
-                 feature_name="Color RGBW",
-                 after_update_cb=None):
+    def __init__(
+        self,
+        xknx,
+        group_address=None,
+        group_address_state=None,
+        device_name=None,
+        feature_name="Color RGBW",
+        after_update_cb=None,
+    ):
         """Initialize remote value of KNX DPT 251.600 (DPT_Color_RGBW)."""
         # pylint: disable=too-many-arguments
-        super().__init__(xknx,
-                         group_address,
-                         group_address_state,
-                         device_name=device_name,
-                         feature_name=feature_name,
-                         after_update_cb=after_update_cb)
+        super().__init__(
+            xknx,
+            group_address,
+            group_address_state,
+            device_name=device_name,
+            feature_name=feature_name,
+            after_update_cb=after_update_cb,
+        )
         self.previous_value = (0, 0, 0, 0)
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
-        return (isinstance(payload, DPTArray)
-                and len(payload.value) == 6)
+        return isinstance(payload, DPTArray) and len(payload.value) == 6
 
     def to_knx(self, value):
         """
@@ -59,18 +62,28 @@ class RemoteValueColorRGBW(RemoteValue):
         * < 4 bytes: error
         """
         if not isinstance(value, (list, tuple)):
-            raise ConversionError("Could not serialize RemoteValueColorRGBW (wrong type, expecting list of 4-6 bytes))",
-                                  value=value, type=type(value))
+            raise ConversionError(
+                "Could not serialize RemoteValueColorRGBW (wrong type, expecting list of 4-6 bytes))",
+                value=value,
+                type=type(value),
+            )
         if len(value) < 4 or len(value) > 6:
-            raise ConversionError("Could not serialize value to DPT 251.600 (wrong length, expecting list of 4-6 bytes)",
-                                  value=value, type=type(value))
+            raise ConversionError(
+                "Could not serialize value to DPT 251.600 (wrong length, expecting list of 4-6 bytes)",
+                value=value,
+                type=type(value),
+            )
         rgbw = value[:4]
-        if any(not isinstance(color, int) for color in rgbw) \
-                or any(color < 0 for color in rgbw) \
-                or any(color > 255 for color in rgbw):
-            raise ConversionError("Could not serialize DPT 251.600 (wrong RGBW values)", value=value)
+        if (
+            any(not isinstance(color, int) for color in rgbw)
+            or any(color < 0 for color in rgbw)
+            or any(color > 255 for color in rgbw)
+        ):
+            raise ConversionError(
+                "Could not serialize DPT 251.600 (wrong RGBW values)", value=value
+            )
         if len(value) < 5:
-            return DPTArray(list(rgbw) + [0x00, 0x0f])
+            return DPTArray(list(rgbw) + [0x00, 0x0F])
         if len(value) < 6:
             return DPTArray(list(rgbw) + [0x00] + list(value[4:]))
         return DPTArray(value)

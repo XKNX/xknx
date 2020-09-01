@@ -16,7 +16,9 @@ class TestDPTControllerStatus(unittest.TestCase):
         self.assertEqual(DPTHVACMode.to_knx(HVACOperationMode.COMFORT), (0x01,))
         self.assertEqual(DPTHVACMode.to_knx(HVACOperationMode.STANDBY), (0x02,))
         self.assertEqual(DPTHVACMode.to_knx(HVACOperationMode.NIGHT), (0x03,))
-        self.assertEqual(DPTHVACMode.to_knx(HVACOperationMode.FROST_PROTECTION), (0x04,))
+        self.assertEqual(
+            DPTHVACMode.to_knx(HVACOperationMode.FROST_PROTECTION), (0x04,)
+        )
 
     def test_mode_to_knx_wrong_value(self):
         """Test serializing DPTHVACMode to KNX with wrong value."""
@@ -29,7 +31,9 @@ class TestDPTControllerStatus(unittest.TestCase):
         self.assertEqual(DPTHVACMode.from_knx((0x01,)), HVACOperationMode.COMFORT)
         self.assertEqual(DPTHVACMode.from_knx((0x02,)), HVACOperationMode.STANDBY)
         self.assertEqual(DPTHVACMode.from_knx((0x03,)), HVACOperationMode.NIGHT)
-        self.assertEqual(DPTHVACMode.from_knx((0x04,)), HVACOperationMode.FROST_PROTECTION)
+        self.assertEqual(
+            DPTHVACMode.from_knx((0x04,)), HVACOperationMode.FROST_PROTECTION
+        )
 
     def test_controller_status_to_knx(self):
         """Test serializing DPTControllerStatus to KNX."""
@@ -38,7 +42,9 @@ class TestDPTControllerStatus(unittest.TestCase):
         self.assertEqual(DPTControllerStatus.to_knx(HVACOperationMode.COMFORT), (0x21,))
         self.assertEqual(DPTControllerStatus.to_knx(HVACOperationMode.STANDBY), (0x22,))
         self.assertEqual(DPTControllerStatus.to_knx(HVACOperationMode.NIGHT), (0x24,))
-        self.assertEqual(DPTControllerStatus.to_knx(HVACOperationMode.FROST_PROTECTION), (0x28,))
+        self.assertEqual(
+            DPTControllerStatus.to_knx(HVACOperationMode.FROST_PROTECTION), (0x28,)
+        )
 
     def test_controller_status_to_knx_wrong_value(self):
         """Test serializing DPTControllerStatus to KNX with wrong value."""
@@ -47,17 +53,29 @@ class TestDPTControllerStatus(unittest.TestCase):
 
     def test_controller_status_from_knx(self):
         """Test parsing DPTControllerStatus from KNX."""
-        self.assertEqual(DPTControllerStatus.from_knx((0x21,)), HVACOperationMode.COMFORT)
-        self.assertEqual(DPTControllerStatus.from_knx((0x22,)), HVACOperationMode.STANDBY)
+        self.assertEqual(
+            DPTControllerStatus.from_knx((0x21,)), HVACOperationMode.COMFORT
+        )
+        self.assertEqual(
+            DPTControllerStatus.from_knx((0x22,)), HVACOperationMode.STANDBY
+        )
         self.assertEqual(DPTControllerStatus.from_knx((0x24,)), HVACOperationMode.NIGHT)
-        self.assertEqual(DPTControllerStatus.from_knx((0x28,)), HVACOperationMode.FROST_PROTECTION)
+        self.assertEqual(
+            DPTControllerStatus.from_knx((0x28,)), HVACOperationMode.FROST_PROTECTION
+        )
 
     def test_controller_status_from_knx_other_bits_set(self):
         """Test parsing DPTControllerStatus from KNX."""
-        self.assertEqual(DPTControllerStatus.from_knx((0x21,)), HVACOperationMode.COMFORT)
-        self.assertEqual(DPTControllerStatus.from_knx((0x23,)), HVACOperationMode.STANDBY)
+        self.assertEqual(
+            DPTControllerStatus.from_knx((0x21,)), HVACOperationMode.COMFORT
+        )
+        self.assertEqual(
+            DPTControllerStatus.from_knx((0x23,)), HVACOperationMode.STANDBY
+        )
         self.assertEqual(DPTControllerStatus.from_knx((0x27,)), HVACOperationMode.NIGHT)
-        self.assertEqual(DPTControllerStatus.from_knx((0x2F,)), HVACOperationMode.FROST_PROTECTION)
+        self.assertEqual(
+            DPTControllerStatus.from_knx((0x2F,)), HVACOperationMode.FROST_PROTECTION
+        )
 
     def test_mode_from_knx_wrong_value(self):
         """Test parsing of DPTControllerStatus with wrong value)."""

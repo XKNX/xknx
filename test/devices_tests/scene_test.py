@@ -30,11 +30,7 @@ class TestScene(unittest.TestCase):
     def test_sync(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX(loop=self.loop)
-        scene = Scene(
-            xknx,
-            'TestScene',
-            group_address='1/2/1',
-            scene_number=23)
+        scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
         self.loop.run_until_complete(asyncio.Task(scene.sync()))
         self.assertEqual(xknx.telegrams.qsize(), 0)
 
@@ -44,42 +40,34 @@ class TestScene(unittest.TestCase):
     def test_run(self):
         """Test running scene."""
         xknx = XKNX(loop=self.loop)
-        scene = Scene(
-            xknx,
-            'TestScene',
-            group_address='1/2/1',
-            scene_number=23)
+        scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
         self.loop.run_until_complete(asyncio.Task(scene.run()))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram,
-                         Telegram(GroupAddress('1/2/1'), payload=DPTArray(0x16)))
+        self.assertEqual(
+            telegram, Telegram(GroupAddress("1/2/1"), payload=DPTArray(0x16))
+        )
 
     def test_do(self):
         """Test running scene with do command."""
         xknx = XKNX(loop=self.loop)
-        scene = Scene(
-            xknx,
-            'TestScene',
-            group_address='1/2/1',
-            scene_number=23)
+        scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
         self.loop.run_until_complete(asyncio.Task(scene.do("run")))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram,
-                         Telegram(GroupAddress('1/2/1'), payload=DPTArray(0x16)))
+        self.assertEqual(
+            telegram, Telegram(GroupAddress("1/2/1"), payload=DPTArray(0x16))
+        )
 
     def test_wrong_do(self):
         """Test wrong do command."""
         xknx = XKNX(loop=self.loop)
-        scene = Scene(
-            xknx,
-            'TestScene',
-            group_address='1/2/1',
-            scene_number=23)
-        with patch('logging.Logger.warning') as mockWarn:
+        scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
+        with patch("logging.Logger.warning") as mockWarn:
             self.loop.run_until_complete(asyncio.Task(scene.do("execute")))
-            mockWarn.assert_called_with('Could not understand action %s for device %s', 'execute', 'TestScene')
+            mockWarn.assert_called_with(
+                "Could not understand action %s for device %s", "execute", "TestScene"
+            )
         self.assertEqual(xknx.telegrams.qsize(), 0)
 
     #
@@ -88,10 +76,6 @@ class TestScene(unittest.TestCase):
     def test_has_group_address(self):
         """Test has_group_address."""
         xknx = XKNX(loop=self.loop)
-        scene = Scene(
-            xknx,
-            'TestScene',
-            group_address='1/2/1',
-            scene_number=23)
-        self.assertTrue(scene.has_group_address(GroupAddress('1/2/1')))
-        self.assertFalse(scene.has_group_address(GroupAddress('2/2/2')))
+        scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
+        self.assertTrue(scene.has_group_address(GroupAddress("1/2/1")))
+        self.assertFalse(scene.has_group_address(GroupAddress("2/2/2")))

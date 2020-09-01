@@ -15,7 +15,7 @@ switch = Switch(xknx, 'TestOutlet', group_address='1/2/3')
 
 # Accessing switch
 await xknx.devices['TestOutlet'].set_on()
-``` 
+```
 
 ## [](#header-2)Configuration via **xknx.yaml**
 
@@ -25,7 +25,7 @@ Switches are usually configured via [`xknx.yaml`](/configuration):
 groups:
     switch:
         Livingroom.Outlet_1: {group_address: '1/3/1'}
-        Livingroom.Outlet_2: {group_address: '1/3/2'} 
+        Livingroom.Outlet_2: {group_address: '1/3/2'}
 ```
 
 ## [](#header-2)Interface

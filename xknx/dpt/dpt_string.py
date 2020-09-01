@@ -21,7 +21,7 @@ class DPTString(DPTBase):
     def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
-        value = str()
+        value = ""
         for byte in raw:
             if byte != 0x00:
                 value += chr(byte)

@@ -37,6 +37,7 @@ from .schema import (
     SceneSchema,
     SensorSchema,
     SwitchSchema,
+    WeatherSchema,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,6 +103,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(SupportedPlatforms.scene.value): vol.All(
                     cv.ensure_list, [SceneSchema.SCHEMA]
                 ),
+                vol.Optional(SupportedPlatforms.weather.value): vol.All(
+                    cv.ensure_list, [WeatherSchema.SCHEMA]
+                ),
             }
         )
     },
@@ -118,17 +122,6 @@ SERVICE_XKNX_SEND_SCHEMA = vol.Schema(
     }
 )
 
-SUPPORTED_PLATFORMS = [
-    SupportedPlatforms.cover,
-    SupportedPlatforms.switch,
-    SupportedPlatforms.light,
-    SupportedPlatforms.sensor,
-    SupportedPlatforms.notify,
-    SupportedPlatforms.scene,
-    SupportedPlatforms.binary_sensor,
-    SupportedPlatforms.climate,
-]
-
 
 async def async_setup(hass, config):
     """Set up the KNX component."""
@@ -142,18 +135,17 @@ async def async_setup(hass, config):
             f"Could not connect to KNX interface: <br><b>{ex}</b>", title="KNX"
         )
 
-    for platform in SUPPORTED_PLATFORMS:
+    for platform in SupportedPlatforms:
         if platform.value in config[DOMAIN]:
             for device_config in config[DOMAIN][platform.value]:
                 create_knx_device(
                     hass, platform, hass.data[DATA_XKNX].xknx, device_config
                 )
 
-    for platform in SUPPORTED_PLATFORMS:
+    # We need to wait until all entities are loaded into the device list since they could also be created from other platforms
+    for platform in SupportedPlatforms:
         hass.async_create_task(
-            discovery.async_load_platform(
-                hass, platform.value, DOMAIN, {}, config
-            )
+            discovery.async_load_platform(hass, platform.value, DOMAIN, {}, config)
         )
 
     hass.services.async_register(
@@ -363,7 +355,10 @@ class KNXExposeSensor:
         else:
             _name = self.entity_id
         self.device = ExposeSensor(
-            self.xknx, name=_name, group_address=self.address, value_type=self.type,
+            self.xknx,
+            name=_name,
+            group_address=self.address,
+            value_type=self.type,
         )
         async_track_state_change_event(
             self.hass, [self.entity_id], self._async_entity_changed

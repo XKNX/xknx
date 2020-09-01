@@ -46,11 +46,13 @@ class DPTBase:
         """Test if array of raw bytes has the correct length and values of correct type."""
         if cls.payload_length is None:
             raise NotImplementedError("payload_length has to be defined for: %s" % cls)
-        if not isinstance(raw, (tuple, list)) \
-                or len(raw) != cls.payload_length \
-                or any(not isinstance(byte, int) for byte in raw) \
-                or any(byte < 0 for byte in raw) \
-                or any(byte > 255 for byte in raw):
+        if (
+            not isinstance(raw, (tuple, list))
+            or len(raw) != cls.payload_length
+            or any(not isinstance(byte, int) for byte in raw)
+            or any(byte < 0 for byte in raw)
+            or any(byte > 255 for byte in raw)
+        ):
             raise ConversionError("Invalid raw bytes", raw=raw)
 
     @classmethod
@@ -63,12 +65,12 @@ class DPTBase:
     @classmethod
     def has_distinct_dpt_numbers(cls):
         """Return True if dpt numbers are defined (not inherited)."""
-        return 'dpt_main_number' in cls.__dict__ and 'dpt_sub_number' in cls.__dict__
+        return "dpt_main_number" in cls.__dict__ and "dpt_sub_number" in cls.__dict__
 
     @classmethod
     def has_distinct_value_type(cls):
         """Return True if value_type is defined (not inherited)."""
-        return 'value_type' in cls.__dict__
+        return "value_type" in cls.__dict__
 
     @staticmethod
     def transcoder_by_dpt(dpt_main, dpt_sub=None):
@@ -95,7 +97,7 @@ class DPTBase:
             return DPTBase.transcoder_by_dpt(value_type)
         if isinstance(value_type, float):
             # avoid modulo for floating point rounding errors
-            main, sub = map(int, str(value_type).split('.'))
+            main, sub = map(int, str(value_type).split("."))
             return DPTBase.transcoder_by_dpt(main, sub)
         if isinstance(value_type, str):
             _string_type = value_type.strip()
@@ -115,7 +117,7 @@ class DPTBase:
         return None
 
 
-class DPTBinary():
+class DPTBinary:
     """The DPTBinary is a base class for all datatypes encoded directly into the last 6 bit of the APCI (mostly integer)."""
 
     # pylint: disable=too-few-public-methods
@@ -139,10 +141,10 @@ class DPTBinary():
 
     def __str__(self):
         """Return object as readable string."""
-        return '<DPTBinary value="{0}" />'.format(self.value)
+        return f'<DPTBinary value="{self.value}" />'
 
 
-class DPTArray():
+class DPTArray:
     """The DPTArray is a base class for all datatypes appended to the KNX telegram."""
 
     # pylint: disable=too-few-public-methods
@@ -151,7 +153,9 @@ class DPTArray():
         if isinstance(value, int):
             self.value = (value,)
         elif isinstance(value, (list, bytes)):
-            self.value = tuple(value,)
+            self.value = tuple(
+                value,
+            )
         elif isinstance(value, tuple):
             self.value = value
         else:
@@ -163,11 +167,10 @@ class DPTArray():
 
     def __str__(self):
         """Return object as readable string."""
-        return '<DPTArray value="[{0}]" />'.format(
-            ','.join(hex(b) for b in self.value))
+        return '<DPTArray value="[{}]" />'.format(",".join(hex(b) for b in self.value))
 
 
-class DPTComparator():
+class DPTComparator:
     """Helper class to compare different types of DPT objects."""
 
     # pylint: disable=too-few-public-methods

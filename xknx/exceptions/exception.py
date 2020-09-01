@@ -27,12 +27,15 @@ class CouldNotParseTelegram(XKNXException):
         self.parameter = kwargs
 
     def _format_parameter(self):
-        return " ".join(['%s="%s"' % (key, value) for (key, value) in sorted(self.parameter.items())])
+        return " ".join(
+            [f'{key}="{value}"' for (key, value) in sorted(self.parameter.items())]
+        )
 
     def __str__(self):
         """Return object as readable string."""
-        return '<CouldNotParseTelegram description="{0}" {1}/>' \
-            .format(self.description, self._format_parameter())
+        return '<CouldNotParseTelegram description="{}" {}/>'.format(
+            self.description, self._format_parameter()
+        )
 
 
 class CouldNotParseKNXIP(XKNXException):
@@ -45,8 +48,7 @@ class CouldNotParseKNXIP(XKNXException):
 
     def __str__(self):
         """Return object as readable string."""
-        return '<CouldNotParseKNXIP description="{0}" />' \
-            .format(self.description)
+        return f'<CouldNotParseKNXIP description="{self.description}" />'
 
 
 class UnsupportedCEMIMessage(XKNXException):
@@ -59,8 +61,7 @@ class UnsupportedCEMIMessage(XKNXException):
 
     def __str__(self):
         """Return object as readable string."""
-        return '<UnsupportedCEMIMessage description="{0}" />' \
-            .format(self.description)
+        return f'<UnsupportedCEMIMessage description="{self.description}" />'
 
 
 class ConversionError(XKNXException):
@@ -73,11 +74,13 @@ class ConversionError(XKNXException):
         self.parameter = kwargs
 
     def _format_parameter(self):
-        return " ".join(['%s="%s"' % (key, value) for (key, value) in sorted(self.parameter.items())])
+        return " ".join(
+            [f'{key}="{value}"' for (key, value) in sorted(self.parameter.items())]
+        )
 
     def __str__(self):
         """Return object as readable string."""
-        return '<ConversionError description="{0}" {1}/>'.format(self.description, self._format_parameter())
+        return f'<ConversionError description="{self.description}" {self._format_parameter()}/>'
 
 
 class CouldNotParseAddress(XKNXException):
@@ -90,7 +93,7 @@ class CouldNotParseAddress(XKNXException):
 
     def __str__(self):
         """Return object as readable string."""
-        return '<CouldNotParseAddress address="{0}" />'.format(self.address)
+        return f'<CouldNotParseAddress address="{self.address}" />'
 
 
 class DeviceIllegalValue(XKNXException):
@@ -104,6 +107,6 @@ class DeviceIllegalValue(XKNXException):
 
     def __str__(self):
         """Return object as readable string."""
-        return '<DeviceIllegalValue description="{0}" value="{1}" />'.format(
-            self.value,
-            self.description)
+        return '<DeviceIllegalValue description="{}" value="{}" />'.format(
+            self.value, self.description
+        )

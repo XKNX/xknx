@@ -7,7 +7,15 @@ from .request_response import RequestResponse
 class Tunnelling(RequestResponse):
     """Class to TunnelingRequest and wait for TunnelingResponse."""
 
-    def __init__(self, xknx, udp_client, telegram, src_address, sequence_counter, communication_channel_id):
+    def __init__(
+        self,
+        xknx,
+        udp_client,
+        telegram,
+        src_address,
+        sequence_counter,
+        communication_channel_id,
+    ):
         """Initialize Tunnelling class."""
         # pylint: disable=too-many-arguments
         self.xknx = xknx

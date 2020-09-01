@@ -43,7 +43,7 @@ class TestTravelCalculator(unittest.TestCase):
     def test_travel_down(self):
         """Test travel up."""
         travelcalculator = TravelCalculator(25, 50)
-        with patch('time.time') as mock_time:
+        with patch("time.time") as mock_time:
             mock_time.return_value = 1580000000.0
             travelcalculator.set_position(40)
             travelcalculator.start_travel(60)
@@ -52,8 +52,8 @@ class TestTravelCalculator(unittest.TestCase):
             self.assertEqual(travelcalculator.current_position(), 40)
             self.assertFalse(travelcalculator.position_reached())
             self.assertEqual(
-                travelcalculator.travel_direction,
-                TravelStatus.DIRECTION_DOWN)
+                travelcalculator.travel_direction, TravelStatus.DIRECTION_DOWN
+            )
 
             mock_time.return_value = 1580000001.0
             self.assertEqual(travelcalculator.current_position(), 44)
@@ -79,7 +79,7 @@ class TestTravelCalculator(unittest.TestCase):
     def test_travel_up(self):
         """Test travel down."""
         travelcalculator = TravelCalculator(25, 50)
-        with patch('time.time') as mock_time:
+        with patch("time.time") as mock_time:
             mock_time.return_value = 1580000000.0
             travelcalculator.set_position(70)
             travelcalculator.start_travel(50)
@@ -88,8 +88,8 @@ class TestTravelCalculator(unittest.TestCase):
             self.assertEqual(travelcalculator.current_position(), 70)
             self.assertFalse(travelcalculator.position_reached())
             self.assertEqual(
-                travelcalculator.travel_direction,
-                TravelStatus.DIRECTION_UP)
+                travelcalculator.travel_direction, TravelStatus.DIRECTION_UP
+            )
 
             mock_time.return_value = 1580000002.0
             self.assertEqual(travelcalculator.current_position(), 66)
@@ -115,14 +115,14 @@ class TestTravelCalculator(unittest.TestCase):
     def test_stop(self):
         """Test stopping."""
         travelcalculator = TravelCalculator(25, 50)
-        with patch('time.time') as mock_time:
+        with patch("time.time") as mock_time:
             mock_time.return_value = 1580000000.0
             travelcalculator.set_position(80)
             travelcalculator.start_travel(60)
 
             self.assertEqual(
-                travelcalculator.travel_direction,
-                TravelStatus.DIRECTION_UP)
+                travelcalculator.travel_direction, TravelStatus.DIRECTION_UP
+            )
 
             # stop aftert two seconds
             mock_time.return_value = 1580000002.0
@@ -148,21 +148,21 @@ class TestTravelCalculator(unittest.TestCase):
     def test_change_direction(self):
         """Test changing direction while travelling."""
         travelcalculator = TravelCalculator(50, 25)
-        with patch('time.time') as mock_time:
+        with patch("time.time") as mock_time:
             mock_time.return_value = 1580000000.0
             travelcalculator.set_position(60)
             travelcalculator.start_travel(80)
             self.assertEqual(
-                travelcalculator.travel_direction,
-                TravelStatus.DIRECTION_DOWN)
+                travelcalculator.travel_direction, TravelStatus.DIRECTION_DOWN
+            )
 
             # change direction after two seconds
             mock_time.return_value = 1580000002.0
             self.assertEqual(travelcalculator.current_position(), 64)
             travelcalculator.start_travel(48)
             self.assertEqual(
-                travelcalculator.travel_direction,
-                TravelStatus.DIRECTION_UP)
+                travelcalculator.travel_direction, TravelStatus.DIRECTION_UP
+            )
 
             self.assertEqual(travelcalculator.current_position(), 64)
             self.assertFalse(travelcalculator.position_reached())
@@ -178,7 +178,7 @@ class TestTravelCalculator(unittest.TestCase):
     def test_travel_full_up(self):
         """Test travelling to the full up position."""
         travelcalculator = TravelCalculator(25, 50)
-        with patch('time.time') as mock_time:
+        with patch("time.time") as mock_time:
             mock_time.return_value = 1580000000.0
             travelcalculator.set_position(30)
             travelcalculator.start_travel_up()
@@ -196,7 +196,7 @@ class TestTravelCalculator(unittest.TestCase):
     def test_travel_full_down(self):
         """Test travelling to the full down position."""
         travelcalculator = TravelCalculator(25, 50)
-        with patch('time.time') as mock_time:
+        with patch("time.time") as mock_time:
             mock_time.return_value = 1580000000.0
             travelcalculator.set_position(20)
             travelcalculator.start_travel_down()
@@ -214,7 +214,7 @@ class TestTravelCalculator(unittest.TestCase):
     def test_is_traveling(self):
         """Test if cover is traveling and position reached."""
         travelcalculator = TravelCalculator(25, 50)
-        with patch('time.time') as mock_time:
+        with patch("time.time") as mock_time:
             mock_time.return_value = 1580000000.0
             self.assertFalse(travelcalculator.is_traveling())
             self.assertTrue(travelcalculator.position_reached())
@@ -237,7 +237,7 @@ class TestTravelCalculator(unittest.TestCase):
     def test_is_opening_closing(self):
         """Test reports is_opening and is_closing."""
         travelcalculator = TravelCalculator(25, 50)
-        with patch('time.time') as mock_time:
+        with patch("time.time") as mock_time:
             mock_time.return_value = 1580000000.0
             self.assertFalse(travelcalculator.is_opening())
             self.assertFalse(travelcalculator.is_closing())

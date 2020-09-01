@@ -40,7 +40,7 @@ export MACHINE=${machine}
 # $2 target
 ###
 function replace_values() {
-    if [ "$MACHINE" == "Linux" ]; 
+    if [ "$MACHINE" == "Linux" ];
     then
         sed -i "$1" "$2"
     else
