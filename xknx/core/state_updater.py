@@ -10,7 +10,7 @@ from xknx.telegram import GroupAddress
 DEFAULT_UPDATE_INTERVAL = 60
 
 
-class StateUpdater:
+class StateUpdater():
     """Class for keeping the states of RemoteValues up to date."""
 
     def __init__(self, xknx):
@@ -19,9 +19,10 @@ class StateUpdater:
         self.started = False
         self._workers = {}
 
-    def register_remote_value(self, remote_value: RemoteValue, tracker_options=True):
+    def register_remote_value(self,
+                              remote_value: RemoteValue,
+                              tracker_options=True):
         """Register a RemoteValue to initialize its state and/or track for expiration."""
-
         def parse_tracker_options(tracker_options):
             """Parse tracker type and expiration time."""
             tracker_type = StateTrackerType.EXPIRE
@@ -41,10 +42,8 @@ class StateUpdater:
                 elif _options[0].upper() == "EVERY":
                     tracker_type = StateTrackerType.PERIODICALLY
                 else:
-                    self.xknx.logger.warning(
-                        'Could not parse StateUpdater tracker_options "%s" for %s. Using default %s %s minutes.'
-                        % (tracker_options, remote_value, tracker_type, update_interval)
-                    )
+                    self.xknx.logger.warning('Could not parse StateUpdater tracker_options "%s" for %s. Using default %s %s minutes.' %
+                                             (tracker_options, remote_value, tracker_type, update_interval))
                     return (tracker_type, update_interval)
                 try:
                     if _options[1].isdigit():
@@ -52,16 +51,8 @@ class StateUpdater:
                 except IndexError:
                     pass  # No time given (no _options[1])
             else:
-                self.xknx.logger.warning(
-                    'Could not parse StateUpdater tracker_options type %s "%s" for %s. Using default %s %s minutes.'
-                    % (
-                        type(tracker_options),
-                        tracker_options,
-                        remote_value,
-                        tracker_type,
-                        update_interval,
-                    )
-                )
+                self.xknx.logger.warning('Could not parse StateUpdater tracker_options type %s "%s" for %s. Using default %s %s minutes.' %
+                                         (type(tracker_options), tracker_options, remote_value, tracker_type, update_interval))
             return (tracker_type, update_interval)
 
         tracker_type, update_inteval = parse_tracker_options(tracker_options)
@@ -72,14 +63,11 @@ class StateUpdater:
             group_address=remote_value.group_address_state,
             tracker_type=tracker_type,
             interval_min=update_inteval,
-            read_state_awaitable=partial(remote_value.read_state, wait_for_result=True),
-        )
+            read_state_awaitable=partial(
+                remote_value.read_state, wait_for_result=True))
         self._workers[id(remote_value)] = tracker
 
-        self.xknx.logger.debug(
-            "StateUpdater registered %s %s for %s"
-            % (tracker_type, update_inteval, remote_value)
-        )
+        self.xknx.logger.debug("StateUpdater registered %s %s for %s" % (tracker_type, update_inteval, remote_value))
         if self.started:
             tracker.start()
 
@@ -89,7 +77,8 @@ class StateUpdater:
 
     def update_received(self, remote_value: RemoteValue):
         """Reset the timer when a state update was received."""
-        if self.started and id(remote_value) in self._workers:
+        if self.started and \
+                id(remote_value) in self._workers:
             self._workers[id(remote_value)].update_received()
 
     def start(self):
@@ -115,29 +104,23 @@ class StateTrackerType(Enum):
     PERIODICALLY = 3
 
 
-class _StateTracker:
+class _StateTracker():
     """Keeps track of the age of the state from one RemoteValue."""
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(
-        self,
-        xknx,
-        device_name: str = None,
-        feature_name: str = None,
-        group_address: GroupAddress = None,
-        tracker_type: StateTrackerType = StateTrackerType.EXPIRE,
-        interval_min: int = 60,
-        read_state_awaitable=None,
-    ):
+    def __init__(self,
+                 xknx,
+                 device_name: str = None,
+                 feature_name: str = None,
+                 group_address: GroupAddress = None,
+                 tracker_type: StateTrackerType = StateTrackerType.EXPIRE,
+                 interval_min: int = 60,
+                 read_state_awaitable=None):
         """Initialize StateTracker class."""
         # pylint: disable=too-many-arguments
         if interval_min > 1440:
-            raise ConversionError(
-                "Interval_min to long. Maximum is 1440 minutes (1 day)",
-                interval_min=interval_min,
-                device_name=device_name,
-                feature_name=feature_name,
-            )
+            raise ConversionError("Interval_min to long. Maximum is 1440 minutes (1 day)",
+                                  interval_min=interval_min, device_name=device_name, feature_name=feature_name)
         self.xknx = xknx
         self.device_name = device_name
         self.feature_name = feature_name
@@ -149,17 +132,16 @@ class _StateTracker:
 
     def start(self):
         """Start StateTracker - read state on call."""
-        self.xknx.logger.debug(
-            "StateUpdater initializing %s for %s - %s"
-            % (self.group_address, self.device_name, self.feature_name)
-        )
+        self.xknx.logger.debug("StateUpdater initializing %s for %s - %s" %
+                               (self.group_address, self.device_name, self.feature_name))
         if self.tracker_type is not StateTrackerType.INIT:
             self._start_waiting()
         self._read_state()
 
     def _start_waiting(self):
         """Start StateTracker - wait for value to expire."""
-        self._task = self.xknx.loop.create_task(self._update_loop())
+        self._task = self.xknx.loop.create_task(
+            self._update_loop())
 
     def stop(self):
         """Stop StateTracker."""
@@ -190,8 +172,6 @@ class _StateTracker:
         """Schedule to read the state from the KNX bus."""
         # wait until there is nothing else to send to the bus
         await self.xknx.telegram_queue.outgoing_queue.join()
-        self.xknx.logger.debug(
-            "StateUpdater scheduled reading %s for %s - %s"
-            % (self.group_address, self.device_name, self.feature_name)
-        )
+        self.xknx.logger.debug("StateUpdater scheduled reading %s for %s - %s" %
+                               (self.group_address, self.device_name, self.feature_name))
         self.xknx.loop.create_task(self._read_state_awaitable())
