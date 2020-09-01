@@ -137,6 +137,8 @@ class TestDateTime(unittest.TestCase):
     def test_has_group_address(self):
         """Test if has_group_address function works."""
         xknx = XKNX(loop=self.loop)
-        datetime = DateTime(xknx, "TestDateTime", group_address="1/2/3")
+        datetime = DateTime(
+            xknx, "TestDateTime", group_address="1/2/3", localtime=False
+        )
         self.assertTrue(datetime.has_group_address(GroupAddress("1/2/3")))
         self.assertFalse(datetime.has_group_address(GroupAddress("1/2/4")))

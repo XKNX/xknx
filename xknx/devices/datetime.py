@@ -38,11 +38,7 @@ class DateTime(Device):
             device_name=name,
             after_update_cb=self.after_update,
         )
-        self._broadcast_task = None
-        if self.localtime:
-            self._broadcast_task = self.xknx.loop.create_task(
-                self._broadcast_loop(minutes=60)
-            )
+        self._broadcast_task = self._create_broadcast_task(minutes=60)
 
     def __del__(self):
         """Destructor. Cleaning up if this was not done before."""
@@ -62,11 +58,18 @@ class DateTime(Device):
             xknx, name, broadcast_type=broadcast_type, group_address=group_address
         )
 
-    async def _broadcast_loop(self, minutes: int = 60):
-        """Endless loop for broadcasting local time."""
-        while True:
-            await self.broadcast_localtime()
-            await asyncio.sleep(minutes * 60)
+    def _create_broadcast_task(self, minutes: int = 60):
+        """Create an asyncio.Task for broadcasting local time periodically if `localtime` is set."""
+
+        async def broadcast_loop(self, minutes: int):
+            """Endless loop for broadcasting local time."""
+            while True:
+                await self.broadcast_localtime()
+                await asyncio.sleep(minutes * 60)
+
+        if self.localtime:
+            return self.xknx.loop.create_task(broadcast_loop(self, minutes=minutes))
+        return None
 
     async def broadcast_localtime(self, response=False):
         """Broadcast the local time to KNX bus."""

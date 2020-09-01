@@ -370,7 +370,7 @@ class TestStringRepresentations(unittest.TestCase):
     def test_datetime(self):
         """Test string representation of datetime object."""
         xknx = XKNX(loop=self.loop)
-        dateTime = DateTime(xknx, name="Zeit", group_address="1/2/3")
+        dateTime = DateTime(xknx, name="Zeit", group_address="1/2/3", localtime=False)
         self.assertEqual(
             str(dateTime),
             '<DateTime name="Zeit" group_address="GroupAddress("1/2/3")/None/None/None" broadcast_type="TIME" />',
