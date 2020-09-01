@@ -53,7 +53,7 @@ class TestDPTValue1Ucount(unittest.TestCase):
     def test_from_knx_wrong_parameter2(self):
         """Test parsing of DPTValue1Ucount with wrong value (array containing string)."""
         with self.assertRaises(ConversionError):
-            DPTValue1Ucount().from_knx(("0x23"))
+            DPTValue1Ucount().from_knx("0x23")
 
 
 class TestDPTTariff(unittest.TestCase):

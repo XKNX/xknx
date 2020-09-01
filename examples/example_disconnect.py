@@ -21,33 +21,25 @@ async def main():
         print("Gateway does not support tunneling")
         return
 
-    udp_client = UDPClient(
-        xknx,
-        (gateway.local_ip, 0),
-        (gateway.ip_addr, gateway.port))
+    udp_client = UDPClient(xknx, (gateway.local_ip, 0), (gateway.ip_addr, gateway.port))
 
     await udp_client.connect()
 
     for i in range(0, 255):
 
-        conn_state = ConnectionState(
-            xknx,
-            udp_client,
-            communication_channel_id=i)
+        conn_state = ConnectionState(xknx, udp_client, communication_channel_id=i)
 
         await conn_state.start()
 
         if conn_state.success:
             print("Disconnecting ", i)
-            disconnect = Disconnect(
-                xknx,
-                udp_client,
-                communication_channel_id=i)
+            disconnect = Disconnect(xknx, udp_client, communication_channel_id=i)
 
             await disconnect.start()
 
             if disconnect.success:
                 print("Disconnected ", i)
+
 
 # pylint: disable=invalid-name
 loop = asyncio.get_event_loop()

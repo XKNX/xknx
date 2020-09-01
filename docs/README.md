@@ -1,4 +1,4 @@
-# XKNX website 
+# XKNX website
 
 This is the source for the [XKNX website](http://xknx.io).
 

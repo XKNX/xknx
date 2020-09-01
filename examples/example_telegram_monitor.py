@@ -9,7 +9,7 @@ from xknx.telegram import AddressFilter
 
 async def telegram_received_cb(telegram):
     """Do something with the received telegram."""
-    print("Telegram received: {0}".format(telegram))
+    print(f"Telegram received: {telegram}")
     return True
 
 
@@ -20,7 +20,9 @@ def show_help():
     print("Usage:")
     print("")
     print(__file__, "                            Listen to all telegrams")
-    print(__file__, "-f --filter 1/2/*,1/4/[5-6]    Filter for specific group addresses")
+    print(
+        __file__, "-f --filter 1/2/*,1/4/[5-6]    Filter for specific group addresses"
+    )
     print(__file__, "-h --help                      Print help")
     print("")
 
@@ -29,7 +31,8 @@ async def monitor(address_filters):
     """Set telegram_received_cb within XKNX and connect to KNX/IP device in daemon mode."""
     xknx = XKNX()
     xknx.telegram_queue.register_telegram_received_cb(
-        telegram_received_cb, address_filters)
+        telegram_received_cb, address_filters
+    )
     await xknx.start(daemon_mode=True)
     await xknx.stop()
 
@@ -43,11 +46,11 @@ async def main(argv):
         sys.exit(2)
     address_filters = None
     for opt, arg in opts:
-        if opt in ['-h', '--help']:
+        if opt in ["-h", "--help"]:
             show_help()
             sys.exit()
-        if opt in ['-f', '--filter']:
-            address_filters = list(map(AddressFilter, arg.split(',')))
+        if opt in ["-f", "--filter"]:
+            address_filters = list(map(AddressFilter, arg.split(",")))
     await monitor(address_filters)
 
 

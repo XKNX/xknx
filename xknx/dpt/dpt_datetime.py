@@ -30,7 +30,7 @@ class DPTDateTime(DPTBase):
         # workingday_invalid = raw[6] & 0x20
         year_invalid = raw[6] & 0x10
         date_invalid = raw[6] & 0x08  # month, day
-        weekday_invalid = (raw[6] & 0x04)
+        weekday_invalid = raw[6] & 0x04
         time_invalid = raw[6] & 0x02  # hours, minutes, seconds
 
         if fault:
@@ -82,12 +82,13 @@ class DPTDateTime(DPTBase):
         seconds = value.tm_sec
         dst = value.tm_isdst == 1  # tm_isdst can be -1
 
-        return (knx_year,
-                month,
-                day,
-                weekday << 5 | hours,
-                minutes,
-                seconds,
-                0x20 | dst,  # 0x20 working day not valid
-                0x80  # assume clock with ext. sync signal
-                )
+        return (
+            knx_year,
+            month,
+            day,
+            weekday << 5 | hours,
+            minutes,
+            seconds,
+            0x20 | dst,  # 0x20 working day not valid
+            0x80,  # assume clock with ext. sync signal
+        )

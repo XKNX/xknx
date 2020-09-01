@@ -27,18 +27,12 @@ class UDPClient:
 
         def has_service(self, service_type):
             """Test if callback is listening for given service type."""
-            return \
-                len(self.service_types) == 0 or \
-                service_type in self.service_types
+            return len(self.service_types) == 0 or service_type in self.service_types
 
     class UDPClientFactory(asyncio.DatagramProtocol):
         """Abstraction for managing the asyncio-udp transports."""
 
-        def __init__(self,
-                     xknx,
-                     own_ip,
-                     multicast=False,
-                     data_received_callback=None):
+        def __init__(self, xknx, own_ip, multicast=False, data_received_callback=None):
             """Initialize UDPClientFactory class."""
             self.xknx = xknx
             self.own_ip = own_ip
@@ -58,13 +52,13 @@ class UDPClient:
 
         def error_received(self, exc):
             """Handle errors. Callback for error received."""
-            if hasattr(self, 'xknx'):
-                self.xknx.logger.warning('Error received: %s', exc)
+            if hasattr(self, "xknx"):
+                self.xknx.logger.warning("Error received: %s", exc)
 
         def connection_lost(self, exc):
             """Log error. Callback for connection lost."""
-            if hasattr(self, 'xknx'):
-                self.xknx.logger.info('Closing transport.')
+            if hasattr(self, "xknx"):
+                self.xknx.logger.info("Closing transport.")
 
     def __init__(self, xknx, local_addr, remote_addr, multicast=False):
         """Initialize UDPClient class."""
@@ -99,7 +93,9 @@ class UDPClient:
                 callback.callback(knxipframe, self)
                 handled = True
         if not handled:
-            self.xknx.logger.debug("UNHANDLED: %s", knxipframe.header.service_type_ident)
+            self.xknx.logger.debug(
+                "UNHANDLED: %s", knxipframe.header.service_type_ident
+            )
 
     def register_callback(self, callback, service_types=None):
         """Register callback."""
@@ -122,27 +118,24 @@ class UDPClient:
         sock.setblocking(False)
 
         sock.setsockopt(
-            socket.IPPROTO_IP,
-            socket.IP_MULTICAST_IF,
-            socket.inet_aton(own_ip))
+            socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(own_ip)
+        )
         sock.setsockopt(
             socket.IPPROTO_IP,
             socket.IP_ADD_MEMBERSHIP,
-            socket.inet_aton(remote_addr[0]) +
-            socket.inet_aton(own_ip))
-        sock.setsockopt(
-            socket.IPPROTO_IP,
-            socket.IP_MULTICAST_TTL, 2)
+            socket.inet_aton(remote_addr[0]) + socket.inet_aton(own_ip),
+        )
+        sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
 
         if platform == "win32":
             # '' represents INADDR_ANY
-            sock.bind(('', remote_addr[1]))
+            sock.bind(("", remote_addr[1]))
         elif platform == "darwin":
             # allows multiple sockets to the same port by multiple processes
             # behaves like SO_REUSEADDR for bind for INADDR_ANY
             # (GatewayScanner opens multiple sockets)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-            sock.bind(('', remote_addr[1]))
+            sock.bind(("", remote_addr[1]))
         else:
             sock.bind((remote_addr[0], remote_addr[1]))
 
@@ -155,20 +148,25 @@ class UDPClient:
     async def connect(self):
         """Connect UDP socket. Open UDP port and build mulitcast socket if necessary."""
         udp_client_factory = UDPClient.UDPClientFactory(
-            self.xknx, self.local_addr[0], multicast=self.multicast,
-            data_received_callback=self.data_received_callback)
+            self.xknx,
+            self.local_addr[0],
+            multicast=self.multicast,
+            data_received_callback=self.data_received_callback,
+        )
 
         if self.multicast:
             sock = UDPClient.create_multicast_sock(self.local_addr[0], self.remote_addr)
             (transport, _) = await self.xknx.loop.create_datagram_endpoint(
-                lambda: udp_client_factory, sock=sock)
+                lambda: udp_client_factory, sock=sock
+            )
             self.transport = transport
 
         else:
             (transport, _) = await self.xknx.loop.create_datagram_endpoint(
                 lambda: udp_client_factory,
                 local_addr=self.local_addr,
-                remote_addr=self.remote_addr)
+                remote_addr=self.remote_addr,
+            )
             self.transport = transport
 
     def send(self, knxipframe):
@@ -189,7 +187,7 @@ class UDPClient:
 
     def getremote(self):
         """Return peername."""
-        peer = self.transport.get_extra_info('peername')
+        peer = self.transport.get_extra_info("peername")
         return peer
 
     async def stop(self):

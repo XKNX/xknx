@@ -10,10 +10,7 @@ async def main():
     xknx = XKNX()
     await xknx.start()
 
-    climate = Climate(
-        xknx,
-        'TestClimate',
-        group_address_temperature='6/2/1')
+    climate = Climate(xknx, "TestClimate", group_address_temperature="6/2/1")
     await climate.sync()
 
     # Will print out state of climate including current temperature:

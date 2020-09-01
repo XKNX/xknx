@@ -3,7 +3,7 @@ XKNX - An Asynchronous KNX Library Written in Python
 
 [![Build Status](https://travis-ci.org/XKNX/xknx.svg?branch=master)](https://travis-ci.org/XKNX/xknx)
 [![Coverage Status](https://coveralls.io/repos/github/XKNX/xknx/badge.svg?branch=master)](https://coveralls.io/github/XKNX/xknx?branch=master)
-
+[![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
 Documentation
 -------------
@@ -17,6 +17,15 @@ Help
 We need your help for testing and improving XKNX. For questions, feature requests, bug reports either join the [XKNX chat on Discord](https://discord.gg/EuAQDXU) or write an [email](mailto:xknx@xknx.io).
 
 
+Development
+-----------
+
+Requirements: Python > 3.5
+
+Setting up your local environment:
+
+1. Install requirements: `pip install -r requirements/testing.txt`
+2. Install pre-commit hook: `pre-commit install`
 
 Home-Assistant Plugin
 ---------------------

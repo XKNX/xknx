@@ -31,15 +31,15 @@ class ValueReader:
     async def read(self):
         """Send group read and wait for response."""
         cb_obj = self.xknx.telegram_queue.register_telegram_received_cb(
-            self.telegram_received)
+            self.telegram_received
+        )
 
         await self.send_group_read()
         await self.start_timeout()
         await self.response_received_or_timeout.wait()
         await self.stop_timeout()
 
-        self.xknx.telegram_queue.unregister_telegram_received_cb(
-            cb_obj)
+        self.xknx.telegram_queue.unregister_telegram_received_cb(cb_obj)
         if not self.success:
             return None
         return self.received_telegram
@@ -52,7 +52,9 @@ class ValueReader:
     async def telegram_received(self, telegram):
         """Test if telegram has correct group address and trigger event."""
         if telegram.telegramtype not in (
-                TelegramType.GROUP_RESPONSE, TelegramType.GROUP_WRITE):
+            TelegramType.GROUP_RESPONSE,
+            TelegramType.GROUP_WRITE,
+        ):
             return False
         if self.group_address != telegram.group_address:
             return False
@@ -63,14 +65,18 @@ class ValueReader:
 
     def timeout(self):
         """Handle timeout for not having received expected group response."""
-        self.xknx.logger.warning("Error: KNX bus did not respond in time (%s secs) to GroupValueRead request for: %s",
-                                 self.timeout_in_seconds, self.group_address)
+        self.xknx.logger.warning(
+            "Error: KNX bus did not respond in time (%s secs) to GroupValueRead request for: %s",
+            self.timeout_in_seconds,
+            self.group_address,
+        )
         self.response_received_or_timeout.set()
 
     async def start_timeout(self):
         """Start timeout. Register callback for no answer received within timeout."""
         self.timeout_handle = self.xknx.loop.call_later(
-            self.timeout_in_seconds, self.timeout)
+            self.timeout_in_seconds, self.timeout
+        )
 
     async def stop_timeout(self):
         """Stop timeout."""

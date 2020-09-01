@@ -336,7 +336,7 @@ class DPTEnergy(DPT4ByteFloat):
     dpt_main_number = 14
     dpt_sub_number = 31
     value_type = "energy"
-    unit = 'J'
+    unit = "J"
 
 
 class DPTForce(DPT4ByteFloat):
@@ -354,7 +354,7 @@ class DPTFrequency(DPT4ByteFloat):
     dpt_main_number = 14
     dpt_sub_number = 33
     value_type = "frequency"
-    unit = 'Hz'
+    unit = "Hz"
 
 
 class DPTAngularFrequency(DPT4ByteFloat):
@@ -381,7 +381,7 @@ class DPTHeatFlowRate(DPT4ByteFloat):
     dpt_main_number = 14
     dpt_sub_number = 36
     value_type = "heatflowrate"
-    unit = 'W'
+    unit = "W"
 
 
 class DPTHeatQuantity(DPT4ByteFloat):
@@ -436,7 +436,7 @@ class DPTLuminousFlux(DPT4ByteFloat):
     dpt_main_number = 14
     dpt_sub_number = 42
     value_type = "luminous_flux"
-    unit = 'lm'
+    unit = "lm"
     ha_device_class = "illuminance"
 
 
@@ -546,7 +546,7 @@ class DPTPhaseAngleRad(DPT4ByteFloat):
     dpt_main_number = 14
     dpt_sub_number = 54
     value_type = "phaseanglerad"
-    unit = 'rad'
+    unit = "rad"
 
 
 class DPTPhaseAngleDeg(DPT4ByteFloat):
@@ -555,7 +555,7 @@ class DPTPhaseAngleDeg(DPT4ByteFloat):
     dpt_main_number = 14
     dpt_sub_number = 55
     value_type = "phaseangledeg"
-    unit = '°'
+    unit = "°"
 
 
 class DPTPower(DPT4ByteFloat):
@@ -574,7 +574,7 @@ class DPTPowerFactor(DPT4ByteFloat):
     dpt_main_number = 14
     dpt_sub_number = 57
     value_type = "powerfactor"
-    unit = 'cosΦ'
+    unit = "cosΦ"
 
 
 class DPTPressure(DPT4ByteFloat):
@@ -583,7 +583,7 @@ class DPTPressure(DPT4ByteFloat):
     dpt_main_number = 14
     dpt_sub_number = 58
     value_type = "pressure"
-    unit = 'Pa'
+    unit = "Pa"
     ha_device_class = "pressure"
 
 
@@ -647,7 +647,7 @@ class DPTSpeed(DPT4ByteFloat):
     dpt_main_number = 14
     dpt_sub_number = 65
     value_type = "speed"
-    unit = 'm/s'
+    unit = "m/s"
 
 
 class DPTStress(DPT4ByteFloat):

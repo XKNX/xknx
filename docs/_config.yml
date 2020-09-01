@@ -4,7 +4,10 @@ description: A KNX library written in Python
 meta:
     title: XKNX - A Python KNX library
     keywords: KNX,KNX/IP,EIB,Home Automation,Home Assistant
-    description: XKNX is a KNX library in Python. Helps you to control KNX devices like Lights, Shutters, Covers, Switches, Outlets, Thermostats via python scripts. 
+    description: >
+            XKNX is a KNX library in Python. Helps you to control KNX devices
+            like Lights, Shutters, Covers,Switches, Outlets, Thermostats
+            via python scripts.
     robots: index,follow,noarchive,noodp
     google-site-verification: Z_FsKIe3iX8aXRXZG8NUgqOr3d41c5k9cBGccgKOvwM
 

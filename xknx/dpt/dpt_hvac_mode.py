@@ -75,7 +75,8 @@ class DPTHVACContrMode(_DPTClimateMode):
         10: HVACOperationMode.FREE_COOL,
         11: HVACOperationMode.ICE,
         14: HVACOperationMode.DRY,
-        20: HVACOperationMode.NODEM}
+        20: HVACOperationMode.NODEM,
+    }
 
 
 class DPTHVACMode(_DPTClimateMode):
@@ -90,8 +91,9 @@ class DPTHVACMode(_DPTClimateMode):
         1: HVACOperationMode.COMFORT,
         2: HVACOperationMode.STANDBY,
         3: HVACOperationMode.NIGHT,
-        4: HVACOperationMode.FROST_PROTECTION}
-    SUPPORTED_MODES_INV = dict((reversed(item) for item in SUPPORTED_MODES.items()))
+        4: HVACOperationMode.FROST_PROTECTION,
+    }
+    SUPPORTED_MODES_INV = dict(reversed(item) for item in SUPPORTED_MODES.items())
 
 
 class DPTControllerStatus(_DPTClimateMode):
@@ -109,9 +111,10 @@ class DPTControllerStatus(_DPTClimateMode):
         0x21: HVACOperationMode.COMFORT,
         0x22: HVACOperationMode.STANDBY,
         0x24: HVACOperationMode.NIGHT,
-        0x28: HVACOperationMode.FROST_PROTECTION}
+        0x28: HVACOperationMode.FROST_PROTECTION,
+    }
 
-    SUPPORTED_MODES_INV = dict((reversed(item) for item in SUPPORTED_MODES.items()))
+    SUPPORTED_MODES_INV = dict(reversed(item) for item in SUPPORTED_MODES.items())
 
     @classmethod
     def from_knx(cls, raw):

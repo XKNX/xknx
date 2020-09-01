@@ -4,15 +4,24 @@ Module for reading config files (xknx.yaml).
 * it will parse the given file
 * and add the found devices to the devies vector of XKNX.
 """
-
-import yaml
-
 from xknx.devices import (
-    BinarySensor, Climate, Cover, DateTime, ExposeSensor, Fan, Light,
-    Notification, Scene, Sensor, Switch, Weather)
+    BinarySensor,
+    Climate,
+    Cover,
+    DateTime,
+    ExposeSensor,
+    Fan,
+    Light,
+    Notification,
+    Scene,
+    Sensor,
+    Switch,
+    Weather,
+)
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
 from xknx.telegram import PhysicalAddress
+import yaml
 
 
 class Config:
@@ -22,11 +31,11 @@ class Config:
         """Initialize Config class."""
         self.xknx = xknx
 
-    def read(self, file='xknx.yaml'):
+    def read(self, file="xknx.yaml"):
         """Read config."""
         self.xknx.logger.debug("Reading %s", file)
         try:
-            with open(file, 'r') as filehandle:
+            with open(file) as filehandle:
                 doc = yaml.safe_load(filehandle)
                 self.parse_general(doc)
                 self.parse_connection(doc)
@@ -38,28 +47,24 @@ class Config:
         """Parse the general section of xknx.yaml."""
         if "general" in doc:
             if "own_address" in doc["general"]:
-                self.xknx.own_address = \
-                    PhysicalAddress(doc["general"]["own_address"])
+                self.xknx.own_address = PhysicalAddress(doc["general"]["own_address"])
             if "rate_limit" in doc["general"]:
-                self.xknx.rate_limit = \
-                    doc["general"]["rate_limit"]
+                self.xknx.rate_limit = doc["general"]["rate_limit"]
             if "multicast_group" in doc["general"]:
-                self.xknx.multicast_group = \
-                    doc["general"]["multicast_group"]
+                self.xknx.multicast_group = doc["general"]["multicast_group"]
             if "multicast_port" in doc["general"]:
-                self.xknx.multicast_port = \
-                    doc["general"]["multicast_port"]
+                self.xknx.multicast_port = doc["general"]["multicast_port"]
 
     def parse_connection(self, doc):
         """Parse the connection section of xknx.yaml."""
-        if "connection" in doc \
-                and hasattr(doc["connection"], '__iter__'):
+        if "connection" in doc and hasattr(doc["connection"], "__iter__"):
             for conn, prefs in doc["connection"].items():
                 try:
                     if conn == "tunneling":
-                        if prefs is None or \
-                                "gateway_ip" not in prefs:
-                            raise XKNXException("`gateway_ip` is required for tunneling connection.")
+                        if prefs is None or "gateway_ip" not in prefs:
+                            raise XKNXException(
+                                "`gateway_ip` is required for tunneling connection."
+                            )
                         conn_type = ConnectionType.TUNNELING
                     elif conn == "routing":
                         conn_type = ConnectionType.ROUTING
@@ -67,12 +72,16 @@ class Config:
                         conn_type = ConnectionType.AUTOMATIC
                     self._parse_connection_prefs(conn_type, prefs)
                 except XKNXException as ex:
-                    self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", conn, ex)
+                    self.xknx.logger.error(
+                        "Error while reading config file: Could not parse %s: %s",
+                        conn,
+                        ex,
+                    )
                     raise ex
 
     def _parse_connection_prefs(self, conn_type: ConnectionType, prefs) -> None:
         connection_config = ConnectionConfig(connection_type=conn_type)
-        if hasattr(prefs, '__iter__'):
+        if hasattr(prefs, "__iter__"):
             for pref, value in prefs.items():
                 if pref == "gateway_ip":
                     connection_config.gateway_ip = value
@@ -84,8 +93,7 @@ class Config:
 
     def parse_groups(self, doc):
         """Parse the group section of xknx.yaml."""
-        if "groups" in doc \
-                and hasattr(doc["groups"], '__iter__'):
+        if "groups" in doc and hasattr(doc["groups"], "__iter__"):
             for group in doc["groups"]:
                 self.parse_group(doc, group)
 
@@ -118,100 +126,66 @@ class Config:
             elif group.startswith("weather"):
                 self.parse_group_weather(doc["groups"][group])
         except XKNXException as ex:
-            self.xknx.logger.error("Error while reading config file: Could not parse %s: %s", group, ex)
+            self.xknx.logger.error(
+                "Error while reading config file: Could not parse %s: %s", group, ex
+            )
 
     def parse_group_binary_sensor(self, entries):
         """Parse a binary_sensor section of xknx.yaml."""
         for entry in entries:
-            BinarySensor.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
+            BinarySensor.from_config(self.xknx, entry, entries[entry])
 
     def parse_group_climate(self, entries):
         """Parse a climate section of xknx.yaml."""
         for entry in entries:
-            Climate.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
+            Climate.from_config(self.xknx, entry, entries[entry])
 
     def parse_group_cover(self, entries):
         """Parse a cover section of xknx.yaml."""
         for entry in entries:
-            Cover.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
+            Cover.from_config(self.xknx, entry, entries[entry])
 
     def parse_group_datetime(self, entries):
         """Parse a datetime section of xknx.yaml."""
         for entry in entries:
-            DateTime.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
+            DateTime.from_config(self.xknx, entry, entries[entry])
 
     def parse_group_expose_sensor(self, entries):
         """Parse a exposed sensor section of xknx.yaml."""
         for entry in entries:
-            ExposeSensor.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
+            ExposeSensor.from_config(self.xknx, entry, entries[entry])
 
     def parse_group_fan(self, entries):
         """Parse a fan section of xknx.yaml."""
         for entry in entries:
-            Fan.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
+            Fan.from_config(self.xknx, entry, entries[entry])
 
     def parse_group_light(self, entries):
         """Parse a light section of xknx.yaml."""
         for entry in entries:
-            Light.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
+            Light.from_config(self.xknx, entry, entries[entry])
 
     def parse_group_notification(self, entries):
         """Parse a sensor section of xknx.yaml."""
         for entry in entries:
-            Notification.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
+            Notification.from_config(self.xknx, entry, entries[entry])
 
     def parse_group_scene(self, entries):
         """Parse a scene section of xknx.yaml."""
         for entry in entries:
-            Scene.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
+            Scene.from_config(self.xknx, entry, entries[entry])
 
     def parse_group_sensor(self, entries):
         """Parse a sensor section of xknx.yaml."""
         for entry in entries:
-            Sensor.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
+            Sensor.from_config(self.xknx, entry, entries[entry])
 
     def parse_group_switch(self, entries):
         """Parse a switch section of xknx.yaml."""
         for entry in entries:
-            Switch.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
+            Switch.from_config(self.xknx, entry, entries[entry])
 
     def parse_group_weather(self, entries):
         """Parse a weather section of xknx.yaml."""
         for entry in entries:
-            Weather.from_config(
-                self.xknx,
-                entry,
-                entries[entry])
+            Weather.from_config(self.xknx, entry, entries[entry])

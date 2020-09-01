@@ -28,21 +28,13 @@ class TestDevices(unittest.TestCase):
         """Test get item by name or by index."""
         xknx = XKNX(loop=self.loop)
 
-        light1 = Light(xknx,
-                       'Living-Room.Light_1',
-                       group_address_switch='1/6/7')
+        light1 = Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
 
-        switch1 = Switch(xknx,
-                         "TestOutlet_1",
-                         group_address='1/2/3')
+        switch1 = Switch(xknx, "TestOutlet_1", group_address="1/2/3")
 
-        light2 = Light(xknx,
-                       'Living-Room.Light_2',
-                       group_address_switch='1/6/8')
+        light2 = Light(xknx, "Living-Room.Light_2", group_address_switch="1/6/8")
 
-        switch2 = Switch(xknx,
-                         "TestOutlet_2",
-                         group_address='1/2/4')
+        switch2 = Switch(xknx, "TestOutlet_2", group_address="1/2/4")
 
         self.assertEqual(xknx.devices["Living-Room.Light_1"], light1)
         self.assertEqual(xknx.devices["TestOutlet_1"], switch1)
@@ -65,120 +57,97 @@ class TestDevices(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         devices = Devices()
 
-        light1 = Light(xknx,
-                       'Living-Room.Light_1',
-                       group_address_switch='1/6/7')
+        light1 = Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
         devices.add(light1)
 
-        sensor1 = BinarySensor(xknx,
-                               'DiningRoom.Motion.Sensor',
-                               group_address_state='3/0/1')
+        sensor1 = BinarySensor(
+            xknx, "DiningRoom.Motion.Sensor", group_address_state="3/0/1"
+        )
         devices.add(sensor1)
 
-        sensor2 = BinarySensor(xknx,
-                               'DiningRoom.Motion.Sensor',
-                               group_address_state='3/0/1')
+        sensor2 = BinarySensor(
+            xknx, "DiningRoom.Motion.Sensor", group_address_state="3/0/1"
+        )
         devices.add(sensor2)
 
-        light2 = Light(xknx,
-                       'Living-Room.Light_2',
-                       group_address_switch='1/6/8')
+        light2 = Light(xknx, "Living-Room.Light_2", group_address_switch="1/6/8")
         devices.add(light2)
 
         self.assertEqual(
-            tuple(devices.devices_by_group_address(GroupAddress('1/6/7'))),
-            (light1,))
+            tuple(devices.devices_by_group_address(GroupAddress("1/6/7"))), (light1,)
+        )
         self.assertEqual(
-            tuple(devices.devices_by_group_address(GroupAddress('1/6/8'))),
-            (light2,))
+            tuple(devices.devices_by_group_address(GroupAddress("1/6/8"))), (light2,)
+        )
         self.assertEqual(
-            tuple(devices.devices_by_group_address(GroupAddress('3/0/1'))),
-            (sensor1, sensor2))
+            tuple(devices.devices_by_group_address(GroupAddress("3/0/1"))),
+            (sensor1, sensor2),
+        )
 
     def test_iter(self):
         """Test __iter__() function."""
         xknx = XKNX(loop=self.loop)
         devices = Devices()
 
-        light1 = Light(xknx,
-                       'Living-Room.Light_1',
-                       group_address_switch='1/6/7')
+        light1 = Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
         devices.add(light1)
 
-        sensor1 = BinarySensor(xknx,
-                               'DiningRoom.Motion.Sensor',
-                               group_address_state='3/0/1')
+        sensor1 = BinarySensor(
+            xknx, "DiningRoom.Motion.Sensor", group_address_state="3/0/1"
+        )
         devices.add(sensor1)
 
-        sensor2 = BinarySensor(xknx,
-                               'DiningRoom.Motion.Sensor',
-                               group_address_state='3/0/1')
+        sensor2 = BinarySensor(
+            xknx, "DiningRoom.Motion.Sensor", group_address_state="3/0/1"
+        )
         devices.add(sensor2)
 
-        light2 = Light(xknx,
-                       'Living-Room.Light_2',
-                       group_address_switch='1/6/8')
+        light2 = Light(xknx, "Living-Room.Light_2", group_address_switch="1/6/8")
 
         devices.add(light2)
 
-        self.assertEqual(
-            tuple(devices.__iter__()),
-            (light1, sensor1, sensor2, light2))
+        self.assertEqual(tuple(devices.__iter__()), (light1, sensor1, sensor2, light2))
 
     def test_len(self):
         """Test len() function."""
         xknx = XKNX(loop=self.loop)
         self.assertEqual(len(xknx.devices), 0)
 
-        Light(xknx,
-              'Living-Room.Light_1',
-              group_address_switch='1/6/7')
+        Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
         self.assertEqual(len(xknx.devices), 1)
 
-        BinarySensor(xknx,
-                     'DiningRoom.Motion.Sensor',
-                     group_address_state='3/0/1')
+        BinarySensor(xknx, "DiningRoom.Motion.Sensor", group_address_state="3/0/1")
         self.assertEqual(len(xknx.devices), 2)
 
-        BinarySensor(xknx,
-                     'DiningRoom.Motion.Sensor',
-                     group_address_state='3/0/1')
+        BinarySensor(xknx, "DiningRoom.Motion.Sensor", group_address_state="3/0/1")
         self.assertEqual(len(xknx.devices), 3)
 
-        Light(xknx,
-              'Living-Room.Light_2',
-              group_address_switch='1/6/8')
+        Light(xknx, "Living-Room.Light_2", group_address_switch="1/6/8")
         self.assertEqual(len(xknx.devices), 4)
 
     def test_contains(self):
         """Test __contains__() function."""
         xknx = XKNX(loop=self.loop)
 
-        Light(xknx,
-              'Living-Room.Light_1',
-              group_address_switch='1/6/7')
+        Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
 
-        Light(xknx,
-              'Living-Room.Light_2',
-              group_address_switch='1/6/8')
+        Light(xknx, "Living-Room.Light_2", group_address_switch="1/6/8")
 
-        self.assertTrue('Living-Room.Light_1' in xknx.devices)
-        self.assertTrue('Living-Room.Light_2' in xknx.devices)
-        self.assertFalse('Living-Room.Light_3' in xknx.devices)
+        self.assertTrue("Living-Room.Light_1" in xknx.devices)
+        self.assertTrue("Living-Room.Light_2" in xknx.devices)
+        self.assertFalse("Living-Room.Light_3" in xknx.devices)
 
     def test_modification_of_device(self):
         """Test if devices object does store references and not copies of objects."""
         xknx = XKNX(loop=self.loop)
-        light1 = Light(xknx,
-                       'Living-Room.Light_1',
-                       group_address_switch='1/6/7')
+        light1 = Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
         for device in xknx.devices:
             self.loop.run_until_complete(asyncio.Task(device.set_on()))
         self.assertTrue(light1.state)
         device2 = xknx.devices["Living-Room.Light_1"]
         self.loop.run_until_complete(asyncio.Task(device2.set_off()))
         self.assertFalse(light1.state)
-        for device in xknx.devices.devices_by_group_address(GroupAddress('1/6/7')):
+        for device in xknx.devices.devices_by_group_address(GroupAddress("1/6/7")):
             self.loop.run_until_complete(asyncio.Task(device.set_on()))
         self.assertTrue(light1.state)
 
@@ -194,9 +163,9 @@ class TestDevices(unittest.TestCase):
     def test_sync(self):
         """Test sync function."""
         xknx = XKNX(loop=self.loop)
-        Device(xknx, 'TestDevice1')
-        Device(xknx, 'TestDevice2')
-        with patch('xknx.devices.Device.sync') as mock_sync:
+        Device(xknx, "TestDevice1")
+        Device(xknx, "TestDevice2")
+        with patch("xknx.devices.Device.sync") as mock_sync:
             fut = asyncio.Future()
             fut.set_result(None)
             mock_sync.return_value = fut
@@ -209,8 +178,8 @@ class TestDevices(unittest.TestCase):
     def test_device_updated_callback(self):
         """Test if device updated callback is called correctly if device was updated."""
         xknx = XKNX(loop=self.loop)
-        device1 = Device(xknx, 'TestDevice1')
-        device2 = Device(xknx, 'TestDevice2')
+        device1 = Device(xknx, "TestDevice1")
+        device2 = Device(xknx, "TestDevice2")
 
         after_update_callback1 = Mock()
         after_update_callback2 = Mock()

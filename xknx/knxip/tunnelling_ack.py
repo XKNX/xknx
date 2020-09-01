@@ -33,6 +33,7 @@ class TunnellingAck(KNXIPBody):
 
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
+
         def ack_from_knx(header):
             """Parse ACK information."""
             if header[0] != TunnellingAck.BODY_LENGTH:
@@ -43,11 +44,13 @@ class TunnellingAck(KNXIPBody):
             self.sequence_counter = header[2]
             self.status_code = ErrorCode(header[3])
             return 4
+
         pos = ack_from_knx(raw)
         return pos
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
+
         def ack_to_knx():
             """Serialize ACK information."""
             ack = []
@@ -56,13 +59,16 @@ class TunnellingAck(KNXIPBody):
             ack.append(self.sequence_counter)
             ack.append(self.status_code.value)
             return ack
+
         data = []
         data.extend(ack_to_knx())
         return data
 
     def __str__(self):
         """Return object as readable string."""
-        return '<TunnellingAck communication_channel_id="{0}" ' \
-            'sequence_counter="{1}" status_code="{2}" />' \
-            .format(self.communication_channel_id, self.sequence_counter,
-                    self.status_code)
+        return (
+            '<TunnellingAck communication_channel_id="{}" '
+            'sequence_counter="{}" status_code="{}" />'.format(
+                self.communication_channel_id, self.sequence_counter, self.status_code
+            )
+        )

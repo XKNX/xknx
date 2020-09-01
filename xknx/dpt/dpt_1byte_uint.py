@@ -28,7 +28,9 @@ class DPTValue1ByteUnsigned(DPTBase):
         value = raw[0]
 
         if not cls._test_boundaries(value):
-            raise ConversionError("Could not parse %s" % cls.__name__, value=value, raw=raw)
+            raise ConversionError(
+                "Could not parse %s" % cls.__name__, value=value, raw=raw
+            )
 
         return value
 
@@ -122,7 +124,9 @@ class DPTSceneNumber(DPTValue1ByteUnsigned):
         value = raw[0] + 1
 
         if not cls._test_boundaries(value):
-            raise ConversionError("Could not parse %s" % cls.__name__, value=value, raw=raw)
+            raise ConversionError(
+                "Could not parse %s" % cls.__name__, value=value, raw=raw
+            )
 
         return value
 

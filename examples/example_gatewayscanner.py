@@ -16,15 +16,20 @@ async def main():
 
     else:
         for gateway in gateways:
-            print("Gateway found: {0} / {1}:{2}".format(
-                gateway.name,
-                gateway.ip_addr,
-                gateway.port))
+            print(
+                "Gateway found: {} / {}:{}".format(
+                    gateway.name, gateway.ip_addr, gateway.port
+                )
+            )
             if gateway.supports_tunnelling:
                 print("- Device supports tunneling")
             if gateway.supports_routing:
-                print("- Device supports routing, connecting via {0}".format(
-                    gateway.local_ip))
+                print(
+                    "- Device supports routing, connecting via {}".format(
+                        gateway.local_ip
+                    )
+                )
+
 
 # pylint: disable=invalid-name
 loop = asyncio.get_event_loop()

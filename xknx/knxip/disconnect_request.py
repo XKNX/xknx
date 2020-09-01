@@ -30,6 +30,7 @@ class DisconnectRequest(KNXIPBody):
 
     def from_knx(self, raw):
         """Parse/deserialize from KNX/IP raw data."""
+
         def info_from_knx(info):
             """Parse info bytes."""
             if len(info) < 2:
@@ -44,12 +45,14 @@ class DisconnectRequest(KNXIPBody):
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
+
         def info_to_knx():
             """Serialize information bytes."""
             info = []
             info.append(self.communication_channel_id)
             info.append(0x00)  # Reserved
             return info
+
         data = []
         data.extend(info_to_knx())
         data.extend(self.control_endpoint.to_knx())
@@ -57,7 +60,9 @@ class DisconnectRequest(KNXIPBody):
 
     def __str__(self):
         """Return object as readable string."""
-        return '<DisconnectRequest CommunicationChannelID="{0}" ' \
-            'control_endpoint="{1}" />'.format(
-                self.communication_channel_id,
-                self.control_endpoint)
+        return (
+            '<DisconnectRequest CommunicationChannelID="{}" '
+            'control_endpoint="{}" />'.format(
+                self.communication_channel_id, self.control_endpoint
+            )
+        )

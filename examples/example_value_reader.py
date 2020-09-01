@@ -11,12 +11,12 @@ async def main():
     xknx = XKNX()
     await xknx.start()
 
-    value_reader = ValueReader(xknx, GroupAddress('2/0/8'))
+    value_reader = ValueReader(xknx, GroupAddress("2/0/8"))
     telegram = await value_reader.read()
     if telegram is not None:
         print(telegram)
 
-    value_reader = ValueReader(xknx, GroupAddress('2/1/8'))
+    value_reader = ValueReader(xknx, GroupAddress("2/1/8"))
     telegram = await value_reader.read()
     if telegram is not None:
         print(telegram)

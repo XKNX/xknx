@@ -10,10 +10,12 @@ async def main():
     xknx = XKNX()
     await xknx.start()
 
-    light = Light(xknx,
-                  name='TestLight2',
-                  group_address_switch='1/0/12',
-                  group_address_brightness='1/0/14')
+    light = Light(
+        xknx,
+        name="TestLight2",
+        group_address_switch="1/0/12",
+        group_address_brightness="1/0/14",
+    )
     await light.set_brightness(128)
 
     # Will do a group read of both addresses

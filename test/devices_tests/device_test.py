@@ -31,7 +31,9 @@ class TestDevice(unittest.TestCase):
             """Async callback"""
             after_update_callback(device1)
 
-        device = Device(xknx, 'TestDevice', device_updated_cb=async_after_update_callback)
+        device = Device(
+            xknx, "TestDevice", device_updated_cb=async_after_update_callback
+        )
 
         self.loop.run_until_complete(asyncio.Task(device.after_update()))
         after_update_callback.assert_called_with(device)
@@ -39,14 +41,14 @@ class TestDevice(unittest.TestCase):
     def test_iter_remote_value_raises_exception(self):
         """Test _iter_remote_value raises NotImplementedError."""
         xknx = XKNX(loop=self.loop)
-        device = Device(xknx, 'TestDevice')
+        device = Device(xknx, "TestDevice")
 
         self.assertRaises(NotImplementedError, device._iter_remote_values)
 
     def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
         xknx = XKNX(loop=self.loop)
-        device = Device(xknx, 'TestDevice')
+        device = Device(xknx, "TestDevice")
 
         after_update_callback1 = Mock()
         after_update_callback2 = Mock()
@@ -93,81 +95,98 @@ class TestDevice(unittest.TestCase):
     def test_process(self):
         """Test if telegram is handled by the correct process_* method."""
         xknx = XKNX(loop=self.loop)
-        device = Device(xknx, 'TestDevice')
+        device = Device(xknx, "TestDevice")
 
-        with patch('xknx.devices.Device.process_group_read') as mock_group_read:
+        with patch("xknx.devices.Device.process_group_read") as mock_group_read:
             fut = asyncio.Future()
             fut.set_result(None)
             mock_group_read.return_value = fut
             telegram = Telegram(
-                GroupAddress('1/2/1'),
+                GroupAddress("1/2/1"),
                 payload=DPTArray((0x01, 0x02)),
-                telegramtype=TelegramType.GROUP_READ)
+                telegramtype=TelegramType.GROUP_READ,
+            )
             self.loop.run_until_complete(asyncio.Task(device.process(telegram)))
             mock_group_read.assert_called_with(telegram)
 
-        with patch('xknx.devices.Device.process_group_write') as mock_group_write:
+        with patch("xknx.devices.Device.process_group_write") as mock_group_write:
             fut = asyncio.Future()
             fut.set_result(None)
             mock_group_write.return_value = fut
             telegram = Telegram(
-                GroupAddress('1/2/1'),
+                GroupAddress("1/2/1"),
                 payload=DPTArray((0x01, 0x02)),
-                telegramtype=TelegramType.GROUP_WRITE)
+                telegramtype=TelegramType.GROUP_WRITE,
+            )
             self.loop.run_until_complete(asyncio.Task(device.process(telegram)))
             mock_group_write.assert_called_with(telegram)
 
-        with patch('xknx.devices.Device.process_group_response') as mock_group_response:
+        with patch("xknx.devices.Device.process_group_response") as mock_group_response:
             fut = asyncio.Future()
             fut.set_result(None)
             mock_group_response.return_value = fut
             telegram = Telegram(
-                GroupAddress('1/2/1'),
+                GroupAddress("1/2/1"),
                 payload=DPTArray((0x01, 0x02)),
-                telegramtype=TelegramType.GROUP_RESPONSE)
+                telegramtype=TelegramType.GROUP_RESPONSE,
+            )
             self.loop.run_until_complete(asyncio.Task(device.process(telegram)))
             mock_group_response.assert_called_with(telegram)
 
     def test_sync_with_wait(self):
         """Test sync with wait_for_result=True."""
         xknx = XKNX(loop=self.loop)
-        sensor = Sensor(xknx, 'Sensor', group_address_state="1/2/3", value_type="wind_speed_ms")
+        sensor = Sensor(
+            xknx, "Sensor", group_address_state="1/2/3", value_type="wind_speed_ms"
+        )
 
-        with patch('xknx.remote_value.RemoteValue.read_state', new_callable=MagicMock) as read_state_mock:
+        with patch(
+            "xknx.remote_value.RemoteValue.read_state", new_callable=MagicMock
+        ) as read_state_mock:
             fut = asyncio.Future()
             fut.set_result(None)
             read_state_mock.return_value = fut
-            self.loop.run_until_complete(asyncio.Task(sensor.sync(wait_for_result=True)))
+            self.loop.run_until_complete(
+                asyncio.Task(sensor.sync(wait_for_result=True))
+            )
 
             read_state_mock.assert_called_with(wait_for_result=True)
 
     def test_process_group_write(self):
         """Test if process_group_write. Nothing really to test here."""
         xknx = XKNX(loop=self.loop)
-        device = Device(xknx, 'TestDevice')
-        self.loop.run_until_complete(asyncio.Task(device.process_group_write(Telegram())))
+        device = Device(xknx, "TestDevice")
+        self.loop.run_until_complete(
+            asyncio.Task(device.process_group_write(Telegram()))
+        )
 
     def test_process_group_response(self):
         """Test if process_group_read. Testing if mapped to group_write."""
         xknx = XKNX(loop=self.loop)
-        device = Device(xknx, 'TestDevice')
-        with patch('xknx.devices.Device.process_group_write') as mock_group_write:
+        device = Device(xknx, "TestDevice")
+        with patch("xknx.devices.Device.process_group_write") as mock_group_write:
             fut = asyncio.Future()
             fut.set_result(None)
             mock_group_write.return_value = fut
-            self.loop.run_until_complete(asyncio.Task(device.process_group_response(Telegram())))
+            self.loop.run_until_complete(
+                asyncio.Task(device.process_group_response(Telegram()))
+            )
             mock_group_write.assert_called_with(Telegram())
 
     def test_process_group_read(self):
         """Test if process_group_read. Nothing really to test here."""
         xknx = XKNX(loop=self.loop)
-        device = Device(xknx, 'TestDevice')
-        self.loop.run_until_complete(asyncio.Task(device.process_group_read(Telegram())))
+        device = Device(xknx, "TestDevice")
+        self.loop.run_until_complete(
+            asyncio.Task(device.process_group_read(Telegram()))
+        )
 
     def test_do(self):
         """Testing empty do."""
         xknx = XKNX(loop=self.loop)
-        device = Device(xknx, 'TestDevice')
-        with patch('logging.Logger.info') as mock_info:
+        device = Device(xknx, "TestDevice")
+        with patch("logging.Logger.info") as mock_info:
             self.loop.run_until_complete(asyncio.Task(device.do("xx")))
-            mock_info.assert_called_with("'do()' not implemented for action '%s' of %s", 'xx', 'Device')
+            mock_info.assert_called_with(
+                "'do()' not implemented for action '%s' of %s", "xx", "Device"
+            )

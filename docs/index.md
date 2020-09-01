@@ -4,7 +4,7 @@ layout: default
 
 # [](#header-1)Asynchronous Python Library for KNX
 
-XKNX is an Asynchronous  Python library for reading and writing [KNX](https://en.wikipedia.org/wiki/KNX_(standard))/IP packets. 
+XKNX is an Asynchronous  Python library for reading and writing [KNX](https://en.wikipedia.org/wiki/KNX_(standard))/IP packets.
 
 [![Coverage Status](https://coveralls.io/repos/github/XKNX/xknx/badge.svg?branch=master)](https://coveralls.io/github/XKNX/xknx?branch=master)
 
@@ -29,7 +29,7 @@ You can install XKNX as Python package via pip3:
 
 ```bash
 sudo pip3 install xknx
-``` 
+```
 
 ## [](#header-2)Hello World
 

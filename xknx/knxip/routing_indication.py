@@ -41,5 +41,4 @@ class RoutingIndication(KNXIPBody):
 
     def __str__(self):
         """Return object as readable string."""
-        return '<RoutingIndication cemi="{0}" />' \
-            .format(self.cemi)
+        return f'<RoutingIndication cemi="{self.cemi}" />'

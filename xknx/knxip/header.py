@@ -5,7 +5,7 @@ from .body import KNXIPBody
 from .knxip_enum import KNXIPServiceType
 
 
-class KNXIPHeader():
+class KNXIPHeader:
     """Class for serialization and deserialization of KNX/IP Header."""
 
     HEADERLENGTH = 0x06
@@ -40,8 +40,7 @@ class KNXIPHeader():
         """Set length of full KNX/IP packet from body + fixed header length."""
         if not isinstance(body, KNXIPBody):
             raise TypeError()
-        self.total_length = KNXIPHeader.HEADERLENGTH + \
-            body.calculated_length()
+        self.total_length = KNXIPHeader.HEADERLENGTH + body.calculated_length()
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
@@ -56,13 +55,16 @@ class KNXIPHeader():
 
     def __str__(self):
         """Return object as readable string."""
-        return '<KNXIPHeader HeaderLength="{0}" ProtocolVersion="{1}" ' \
-            'KNXIPServiceType="{2}" Reserve="{3}" TotalLength="{4}" />'.format(
+        return (
+            '<KNXIPHeader HeaderLength="{}" ProtocolVersion="{}" '
+            'KNXIPServiceType="{}" Reserve="{}" TotalLength="{}" />'.format(
                 self.header_length,
                 self.protocol_version,
                 self.service_type_ident,
                 self.b4_reserve,
-                self.total_length)
+                self.total_length,
+            )
+        )
 
     def __eq__(self, other):
         """Equal operator."""
