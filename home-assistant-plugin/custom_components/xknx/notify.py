@@ -1,9 +1,9 @@
 """Support for KNX/IP notification services."""
 from typing import List
 
-from homeassistant.components.notify import BaseNotificationService
-
 from xknx.devices import Notification as XknxNotification
+
+from homeassistant.components.notify import BaseNotificationService
 
 from . import DATA_XKNX
 

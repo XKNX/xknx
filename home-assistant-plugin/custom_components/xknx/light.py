@@ -1,4 +1,6 @@
 """Support for KNX/IP lights."""
+from xknx.devices import Light as XknxLight
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -12,8 +14,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import callback
 import homeassistant.util.color as color_util
-
-from xknx.devices import Light as XknxLight
 
 from . import DATA_XKNX
 
@@ -87,7 +87,6 @@ class KNXLight(LightEntity):
             return self.device.current_brightness
         hsv_color = self._hsv_color
         if self.device.supports_color and hsv_color:
-            # pylint: disable=unsubscriptable-object
             return round(hsv_color[-1] / 100 * 255)
         return None
 

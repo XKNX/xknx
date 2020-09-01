@@ -3,8 +3,6 @@ import asyncio
 import unittest
 from unittest.mock import patch
 
-import yaml
-
 from xknx import XKNX
 from xknx.core import Config
 from xknx.devices import (
@@ -26,6 +24,7 @@ from xknx.devices import (
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
 from xknx.telegram import PhysicalAddress
+import yaml
 
 
 # pylint: disable=too-many-public-methods,invalid-name

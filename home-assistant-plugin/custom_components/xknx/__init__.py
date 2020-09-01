@@ -1,6 +1,14 @@
 """Support KNX devices."""
 import logging
 
+import voluptuous as vol
+from xknx import XKNX
+from xknx.devices import DateTime, ExposeSensor
+from xknx.dpt import DPTArray, DPTBase, DPTBinary
+from xknx.exceptions import XKNXException
+from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
+from xknx.telegram import AddressFilter, GroupAddress, Telegram
+
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_HOST,
@@ -15,14 +23,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
-import voluptuous as vol
-
-from xknx import XKNX
-from xknx.devices import DateTime, ExposeSensor
-from xknx.dpt import DPTArray, DPTBase, DPTBinary
-from xknx.exceptions import XKNXException
-from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
-from xknx.telegram import AddressFilter, GroupAddress, Telegram
 
 from .const import DATA_XKNX, DOMAIN, SupportedPlatforms
 from .factory import create_knx_device
@@ -37,6 +37,7 @@ from .schema import (
     SceneSchema,
     SensorSchema,
     SwitchSchema,
+    WeatherSchema,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,6 +103,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(SupportedPlatforms.scene.value): vol.All(
                     cv.ensure_list, [SceneSchema.SCHEMA]
                 ),
+                vol.Optional(SupportedPlatforms.weather.value): vol.All(
+                    cv.ensure_list, [WeatherSchema.SCHEMA]
+                ),
             }
         )
     },
@@ -118,17 +122,6 @@ SERVICE_XKNX_SEND_SCHEMA = vol.Schema(
     }
 )
 
-SUPPORTED_PLATFORMS = [
-    SupportedPlatforms.cover,
-    SupportedPlatforms.switch,
-    SupportedPlatforms.light,
-    SupportedPlatforms.sensor,
-    SupportedPlatforms.notify,
-    SupportedPlatforms.scene,
-    SupportedPlatforms.binary_sensor,
-    SupportedPlatforms.climate,
-]
-
 
 async def async_setup(hass, config):
     """Set up the KNX component."""
@@ -142,14 +135,15 @@ async def async_setup(hass, config):
             f"Could not connect to KNX interface: <br><b>{ex}</b>", title="KNX"
         )
 
-    for platform in SUPPORTED_PLATFORMS:
+    for platform in SupportedPlatforms:
         if platform.value in config[DOMAIN]:
             for device_config in config[DOMAIN][platform.value]:
                 create_knx_device(
                     hass, platform, hass.data[DATA_XKNX].xknx, device_config
                 )
 
-    for platform in SUPPORTED_PLATFORMS:
+    # We need to wait until all entities are loaded into the device list since they could also be created from other platforms
+    for platform in SupportedPlatforms:
         hass.async_create_task(
             discovery.async_load_platform(hass, platform.value, DOMAIN, {}, config)
         )
