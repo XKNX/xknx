@@ -37,7 +37,7 @@ class TestConfig(unittest.TestCase):
         asyncio.set_event_loop(cls.loop)
         # patch creation of asyncio.Task in DateTime devices (would leave open tasks every time xknx.yaml is read)
         cls.datetime_patcher = patch(
-            "xknx.devices.DateTime._start_broadcast_loop", return_value=None
+            "xknx.devices.DateTime._create_broadcast_task", return_value=None
         )
         cls.datetime_patcher.start()
 
