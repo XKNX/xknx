@@ -1,5 +1,8 @@
 ---
 layout: default
+title: Sensor
+parent: Devices
+nav_order: 5
 ---
 
 # [](#header-1)Sensor - Monitor values of KNX

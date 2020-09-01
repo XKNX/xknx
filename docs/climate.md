@@ -1,5 +1,8 @@
 ---
 layout: default
+title: Climate / HVAC
+parent: Devices
+nav_order: 2
 ---
 
 # [](#header-1)HVAC/Climate controls

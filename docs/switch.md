@@ -1,5 +1,8 @@
 ---
 layout: default
+title: Switches
+parent: Devices
+nav_order: 6
 ---
 
 # [](#header-1)Switches

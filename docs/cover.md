@@ -1,5 +1,8 @@
 ---
 layout: default
+title: Cover
+parent: Devices
+nav_order: 3
 ---
 
 # [](#header-1)Covers and Shutters

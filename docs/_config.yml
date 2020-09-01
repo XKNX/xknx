@@ -11,11 +11,30 @@ meta:
     robots: index,follow,noarchive,noodp
     google-site-verification: Z_FsKIe3iX8aXRXZG8NUgqOr3d41c5k9cBGccgKOvwM
 
-theme: jekyll-theme-minimal
+theme: "just-the-docs"
 
 show_downloads: true
+
+logo: "/assets/img/xknx-1.png"
 
 xknx:
     zip_url: "https://github.com/XKNX/xknx/archive/master.zip"
     tar_url: "https://github.com/XKNX/xknx/archive/master.tar.gz"
     repository_url: "http://github.com/XKNX/xknx"
+
+# Enable or disable the site search
+# Supports true (default) or false
+search_enabled: true
+
+aux_links:
+  "XKNX on GitHub":
+    - "//github.com/xknx/xknx"
+
+color_scheme: dark
+
+# Footer "Edit this page on GitHub" link text
+gh_edit_link: true # show or hide edit this page link
+gh_edit_link_text: "Edit this page on GitHub."
+gh_edit_repository: "https://github.com/XKNX/xknx" # the github URL for your repo
+gh_edit_branch: "master" # the branch that your docs is served from
+gh_edit_view_mode: "edit" # "tree" or "edit" if you want the user to jump into the editor immediately

@@ -1,5 +1,5 @@
 gem "jekyll"
-gem "jekyll-theme-minimal"
+gem "just-the-docs"
 gem "kramdown-parser-gfm"
 
 source 'https://rubygems.org'

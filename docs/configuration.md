@@ -1,5 +1,7 @@
 ---
 layout: default
+title: Configuration
+nav_order: 12
 ---
 
 # Configuration
