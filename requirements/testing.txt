@@ -7,7 +7,7 @@ flake8-isort==3.0.1
 pydocstyle==5.1.0
 pylint==2.6.0
 pylint-strict-informational==0.1
-pytest==5.4.3
+pytest==6.0.1
 pytest-cov==2.10.0
 pytest-timeout==1.4.2
 setuptools==40.6.3
