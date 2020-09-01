@@ -183,6 +183,8 @@ class _StateTracker:
         #   when no telegram was received it will try again endlessly
         while True:
             await asyncio.sleep(self.update_interval)
+            # wait until there is nothing else to send to the bus
+            await self.xknx.telegram_queue.outgoing_queue.join()
             self._read_state()
 
     def _read_state(self):
