@@ -5,6 +5,7 @@ DateTime is a virtual/pseudo device, using the infrastructure for
 beeing configured via xknx.yaml and synchronized periodically
 by StateUpdate.
 """
+import asyncio
 import time
 
 from xknx.remote_value import RemoteValueDateTime
@@ -19,9 +20,9 @@ class DateTime(Device):
     def __init__(
         self,
         xknx,
-        name,
-        broadcast_type="TIME",
-        localtime=True,
+        name: str,
+        broadcast_type: str = "TIME",
+        localtime: bool = True,
         group_address=None,
         device_updated_cb=None,
     ):
@@ -37,6 +38,12 @@ class DateTime(Device):
             device_name=name,
             after_update_cb=self.after_update,
         )
+        self._broadcast_task = self._create_broadcast_task(minutes=60)
+
+    def __del__(self):
+        """Destructor. Cleaning up if this was not done before."""
+        if self._broadcast_task:
+            self._broadcast_task.cancel()
 
     def _iter_remote_values(self):
         """Iterate the devices RemoteValue classes."""
@@ -50,6 +57,19 @@ class DateTime(Device):
         return cls(
             xknx, name, broadcast_type=broadcast_type, group_address=group_address
         )
+
+    def _create_broadcast_task(self, minutes: int = 60):
+        """Create an asyncio.Task for broadcasting local time periodically if `localtime` is set."""
+
+        async def broadcast_loop(self, minutes: int):
+            """Endless loop for broadcasting local time."""
+            while True:
+                await self.broadcast_localtime()
+                await asyncio.sleep(minutes * 60)
+
+        if self.localtime:
+            return self.xknx.loop.create_task(broadcast_loop(self, minutes=minutes))
+        return None
 
     async def broadcast_localtime(self, response=False):
         """Broadcast the local time to KNX bus."""

@@ -36,6 +36,10 @@ class TestDateTime(unittest.TestCase):
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
             self.loop.run_until_complete(asyncio.Task(datetime.sync()))
 
+        # initial Telegram from broadcasting on init
+        self.assertEqual(xknx.telegrams.qsize(), 2)
+        _throwaway_initial = xknx.telegrams.get_nowait()
+
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram.group_address, GroupAddress("1/2/3"))
@@ -54,11 +58,15 @@ class TestDateTime(unittest.TestCase):
         datetime = DateTime(
             xknx, "TestDateTime", group_address="1/2/3", broadcast_type="DATE"
         )
+
         with patch("time.localtime") as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
             self.loop.run_until_complete(asyncio.Task(datetime.sync()))
 
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        # initial Telegram from broadcasting on init
+        self.assertEqual(xknx.telegrams.qsize(), 2)
+        _throwaway_initial = xknx.telegrams.get_nowait()
+
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram.group_address, GroupAddress("1/2/3"))
         self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
@@ -74,11 +82,15 @@ class TestDateTime(unittest.TestCase):
         datetime = DateTime(
             xknx, "TestDateTime", group_address="1/2/3", broadcast_type="TIME"
         )
+
         with patch("time.localtime") as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
             self.loop.run_until_complete(asyncio.Task(datetime.sync()))
 
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        # initial Telegram from broadcasting on init
+        self.assertEqual(xknx.telegrams.qsize(), 2)
+        _throwaway_initial = xknx.telegrams.get_nowait()
+
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram.group_address, GroupAddress("1/2/3"))
         self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
@@ -104,7 +116,11 @@ class TestDateTime(unittest.TestCase):
         with patch("time.localtime") as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
             self.loop.run_until_complete(asyncio.Task(datetime.process(telegram_read)))
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+
+        # initial Telegram from broadcasting on init
+        self.assertEqual(xknx.telegrams.qsize(), 2)
+        _throwaway_initial = xknx.telegrams.get_nowait()
+
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram,
@@ -121,6 +137,8 @@ class TestDateTime(unittest.TestCase):
     def test_has_group_address(self):
         """Test if has_group_address function works."""
         xknx = XKNX(loop=self.loop)
-        datetime = DateTime(xknx, "TestDateTime", group_address="1/2/3")
+        datetime = DateTime(
+            xknx, "TestDateTime", group_address="1/2/3", localtime=False
+        )
         self.assertTrue(datetime.has_group_address(GroupAddress("1/2/3")))
         self.assertFalse(datetime.has_group_address(GroupAddress("1/2/4")))

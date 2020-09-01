@@ -36,11 +36,18 @@ class TestConfig(unittest.TestCase):
         """Set up test class."""
         cls.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(cls.loop)
+        # patch creation of asyncio.Task in DateTime devices (would leave open tasks every time xknx.yaml is read)
+        cls.datetime_patcher = patch(
+            "xknx.devices.DateTime._create_broadcast_task", return_value=None
+        )
+        cls.datetime_patcher.start()
+
         cls.xknx = XKNX(config="xknx.yaml", loop=cls.loop)
 
     @classmethod
     def tearDownClass(cls):
         """Tear down test class."""
+        cls.datetime_patcher.stop()
         cls.loop.close()
 
     #
