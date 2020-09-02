@@ -98,7 +98,7 @@ class TestStringRepresentations(unittest.TestCase):
         )
         self.assertEqual(
             str(binary_sensor),
-            '<BinarySensor name="Fnord" remote_value="None/GroupAddress("1/2/3")/None/None" state="False"/>',
+            '<BinarySensor name="Fnord" remote_value="None/GroupAddress("1/2/3")/None/None" state="None"/>',
         )
 
     def test_climate(self):

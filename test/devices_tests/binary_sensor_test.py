@@ -30,7 +30,7 @@ class TestBinarySensor(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         binaryinput = BinarySensor(xknx, "TestInput", "1/2/3")
 
-        self.assertEqual(binaryinput.state, False)
+        self.assertEqual(binaryinput.state, None)
 
         telegram_on = Telegram(group_address=GroupAddress("1/2/3"))
         telegram_on.payload = DPTBinary(1)
@@ -42,6 +42,14 @@ class TestBinarySensor(unittest.TestCase):
         telegram_off.payload = DPTBinary(0)
         self.loop.run_until_complete(asyncio.Task(binaryinput.process(telegram_off)))
         self.assertEqual(binaryinput.state, False)
+
+        binaryinput2 = BinarySensor(xknx, "TestInput", "1/2/4")
+        self.assertEqual(binaryinput2.state, None)
+
+        telegram_off2 = Telegram(group_address=GroupAddress("1/2/4"))
+        telegram_off2.payload = DPTBinary(0)
+        self.loop.run_until_complete(asyncio.Task(binaryinput2.process(telegram_off2)))
+        self.assertEqual(binaryinput2.state, False)
 
     def test_process_reset_after(self):
         """Test process / reading telegrams from telegram queue."""
@@ -68,7 +76,7 @@ class TestBinarySensor(unittest.TestCase):
         action_off = Action(xknx, hook="off", target="TestOutlet", method="off")
         binary_sensor.actions.append(action_off)
 
-        self.assertEqual(xknx.devices["TestInput"].state, False)
+        self.assertEqual(xknx.devices["TestInput"].state, None)
         self.assertEqual(xknx.devices["TestOutlet"].state, False)
 
         telegram_on = Telegram(group_address=GroupAddress("1/2/3"))
@@ -96,7 +104,7 @@ class TestBinarySensor(unittest.TestCase):
         action_on = Action(xknx, hook="on", target="TestOutlet", method="on")
         binary_sensor.actions.append(action_on)
 
-        self.assertEqual(xknx.devices["TestInput"].state, False)
+        self.assertEqual(xknx.devices["TestInput"].state, None)
         self.assertEqual(xknx.devices["TestOutlet"].state, False)
 
         telegram_on = Telegram(group_address=GroupAddress("1/2/3"))
@@ -131,6 +139,8 @@ class TestBinarySensor(unittest.TestCase):
         """Test is_on() and is_off() of a BinarySensor with state 'on'."""
         xknx = XKNX(loop=self.loop)
         binaryinput = BinarySensor(xknx, "TestInput", "1/2/3")
+        self.assertFalse(binaryinput.is_on())
+        self.assertTrue(binaryinput.is_off())
         # pylint: disable=protected-access
         self.loop.run_until_complete(
             asyncio.Task(binaryinput._set_internal_state(True))

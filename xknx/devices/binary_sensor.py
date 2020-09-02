@@ -46,7 +46,7 @@ class BinarySensor(Device):
         self.device_class = device_class
         self.ignore_internal_state = ignore_internal_state
         self.reset_after = reset_after
-        self.state = False
+        self.state = None
 
         self._count_set_on = 0
         self._count_set_off = 0
@@ -154,7 +154,7 @@ class BinarySensor(Device):
 
     def is_on(self):
         """Return if binary sensor is 'on'."""
-        return self.state
+        return bool(self.state)
 
     def is_off(self):
         """Return if binary sensor is 'off'."""
