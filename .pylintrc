@@ -1,6 +1,5 @@
 [MASTER]
 ignore=test
-load-plugins=pylint_strict_informational
 persistent=no
 reports=no
 extension-pkg-whitelist=netifaces
