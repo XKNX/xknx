@@ -1,5 +1,8 @@
 ---
 layout: default
+title: Time
+parent: Devices
+nav_order: 7
 ---
 
 # [](#header-1)Time

@@ -1,5 +1,8 @@
 ---
 layout: default
+title: Weather
+parent: Devices
+nav_order: 8
 ---
 
 # [](#header-1)Weather device

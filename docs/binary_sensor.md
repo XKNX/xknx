@@ -1,5 +1,8 @@
 ---
 layout: default
+title: Binary Sensor
+parent: Devices
+nav_order: 1
 ---
 
 # Binary Sensor

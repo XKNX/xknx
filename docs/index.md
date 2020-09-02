@@ -1,5 +1,6 @@
 ---
 layout: default
+title: Asynchronous Python Library for KNX
 ---
 
 # [](#header-1)Asynchronous Python Library for KNX
@@ -23,12 +24,12 @@ XKNX...
 
 ## [](#header-2)Installation
 
-XKNX depends on Python >= 3.5. (All prior versions of Python < 3.5 have a bug in their multicast implementation.)
+XKNX depends on Python >= 3.6
 
-You can install XKNX as Python package via pip3:
+You can install XKNX as Python package via pip:
 
 ```bash
-sudo pip3 install xknx
+pip install xknx
 ```
 
 ## [](#header-2)Hello World
@@ -47,6 +48,7 @@ async def main():
     await light.set_on()
     await asyncio.sleep(2)
     await light.set_off()
+    await asyncio.sleep(2)
     await xknx.stop()
 
 

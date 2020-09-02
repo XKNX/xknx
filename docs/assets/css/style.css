@@ -1,0 +1,27 @@
+body, .side-bar, .search-input, .main-header {
+  background-color: #2f2e31;
+}
+
+.site-footer {
+  display: none;
+}
+
+a {
+  color: #23a7e2;
+}
+
+.main-content .anchor-heading svg {
+  color: #23a7e2;
+}
+
+.highlight .na {
+  color: #93a1a1;
+}
+
+pre.highlight, figure.highlight {
+  background-color: #44444a;
+}
+
+code {
+  background-color: inherit;
+}

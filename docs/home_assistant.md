@@ -1,5 +1,7 @@
 ---
 layout: default
+title: Home Assistant Integration
+nav_order: 13
 ---
 
 
