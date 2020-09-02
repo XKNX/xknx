@@ -1,6 +1,7 @@
 ---
 layout: default
 title: Asynchronous Python Library for KNX
+nav_exclude: true
 ---
 
 # [](#header-1)Asynchronous Python Library for KNX

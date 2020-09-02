@@ -84,27 +84,13 @@ class BinarySensorSchema:
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_SYNC_STATE = CONF_SYNC_STATE
     CONF_IGNORE_INTERNAL_STATE = "ignore_internal_state"
-    CONF_AUTOMATION = "automation"
-    CONF_HOOK = "hook"
-    CONF_DEFAULT_HOOK = "on"
-    CONF_COUNTER = "counter"
-    CONF_DEFAULT_COUNTER = 1
-    CONF_ACTION = "action"
     CONF_RESET_AFTER = "reset_after"
 
     DEFAULT_NAME = "KNX Binary Sensor"
-    AUTOMATION_SCHEMA = vol.Schema(
-        {
-            vol.Optional(CONF_HOOK, default=CONF_DEFAULT_HOOK): cv.string,
-            vol.Optional(CONF_COUNTER, default=CONF_DEFAULT_COUNTER): cv.port,
-            vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
-        }
-    )
-
-    AUTOMATIONS_SCHEMA = vol.All(cv.ensure_list, [AUTOMATION_SCHEMA])
 
     SCHEMA = vol.All(
         cv.deprecated("significant_bit"),
+        cv.deprecated("automation"),
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -113,11 +99,10 @@ class BinarySensorSchema:
                     cv.boolean,
                     cv.string,
                 ),
-                vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=False): cv.boolean,
+                vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=True): cv.boolean,
                 vol.Required(CONF_STATE_ADDRESS): cv.string,
                 vol.Optional(CONF_DEVICE_CLASS): cv.string,
                 vol.Optional(CONF_RESET_AFTER): cv.positive_int,
-                vol.Optional(CONF_AUTOMATION): AUTOMATIONS_SCHEMA,
             }
         ),
     )
