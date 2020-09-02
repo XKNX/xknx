@@ -241,12 +241,10 @@ class KNXModule:
     def connection_config_tunneling(self):
         """Return the connection_config if tunneling is configured."""
         gateway_ip = self.config[DOMAIN][CONF_XKNX_TUNNELING][CONF_HOST]
-        gateway_port = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_PORT)
+        gateway_port = self.config[DOMAIN][CONF_XKNX_TUNNELING][CONF_PORT]
         local_ip = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(
             ConnectionSchema.CONF_XKNX_LOCAL_IP
         )
-        if gateway_port is None:
-            gateway_port = DEFAULT_MCAST_PORT
         return ConnectionConfig(
             connection_type=ConnectionType.TUNNELING,
             gateway_ip=gateway_ip,

@@ -1,6 +1,7 @@
 """Voluptuous schemas for the KNX integration."""
 import voluptuous as vol
 from xknx.devices.climate import SetpointShiftMode
+from xknx.io import DEFAULT_MCAST_PORT
 
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -29,9 +30,9 @@ class ConnectionSchema:
 
     TUNNELING_SCHEMA = vol.Schema(
         {
+            vol.Optional(CONF_PORT, default=DEFAULT_MCAST_PORT): cv.port,
             vol.Required(CONF_HOST): cv.string,
             vol.Optional(CONF_XKNX_LOCAL_IP): cv.string,
-            vol.Optional(CONF_PORT): cv.port,
         }
     )
 
