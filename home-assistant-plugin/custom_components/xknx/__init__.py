@@ -6,8 +6,13 @@ from xknx import XKNX
 from xknx.devices import DateTime, ExposeSensor
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import XKNXException
-from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
-from xknx.telegram import AddressFilter, GroupAddress, Telegram
+from xknx.io import (
+    DEFAULT_MCAST_GRP,
+    DEFAULT_MCAST_PORT,
+    ConnectionConfig,
+    ConnectionType,
+)
+from xknx.telegram import AddressFilter, GroupAddress, PhysicalAddress, Telegram
 
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -48,6 +53,9 @@ CONF_XKNX_ROUTING = "routing"
 CONF_XKNX_TUNNELING = "tunneling"
 CONF_XKNX_FIRE_EVENT = "fire_event"
 CONF_XKNX_FIRE_EVENT_FILTER = "fire_event_filter"
+CONF_XKNX_INDIVIDUAL_ADDRESS = "individual_address"
+CONF_XKNX_MCAST_GRP = "multicast_group"
+CONF_XKNX_MCAST_PORT = "multicast_port"
 CONF_XKNX_STATE_UPDATER = "state_updater"
 CONF_XKNX_RATE_LIMIT = "rate_limit"
 CONF_XKNX_EXPOSE = "expose"
@@ -72,6 +80,11 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Inclusive(CONF_XKNX_FIRE_EVENT_FILTER, "fire_ev"): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
+                vol.Optional(
+                    CONF_XKNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS
+                ): cv.string,
+                vol.Optional(CONF_XKNX_MCAST_GRP, default=DEFAULT_MCAST_GRP): cv.string,
+                vol.Optional(CONF_XKNX_MCAST_PORT, default=DEFAULT_MCAST_PORT): cv.port,
                 vol.Optional(CONF_XKNX_STATE_UPDATER, default=True): cv.boolean,
                 vol.Optional(CONF_XKNX_RATE_LIMIT, default=20): vol.All(
                     vol.Coerce(int), vol.Range(min=1, max=100)
@@ -175,7 +188,12 @@ class KNXModule:
         self.xknx = XKNX(
             config=self.config_file(),
             loop=self.hass.loop,
+            own_address=PhysicalAddress(
+                self.config[DOMAIN][CONF_XKNX_INDIVIDUAL_ADDRESS]
+            ),
             rate_limit=self.config[DOMAIN][CONF_XKNX_RATE_LIMIT],
+            multicast_group=self.config[DOMAIN][CONF_XKNX_MCAST_GRP],
+            multicast_port=self.config[DOMAIN][CONF_XKNX_MCAST_PORT],
         )
 
     async def start(self):
