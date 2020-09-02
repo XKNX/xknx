@@ -1,5 +1,6 @@
 """Unit test for BinarySensor objects."""
 import asyncio
+import time
 import unittest
 from unittest.mock import Mock, patch
 
@@ -109,20 +110,27 @@ class TestBinarySensor(unittest.TestCase):
 
         telegram_on = Telegram(group_address=GroupAddress("1/2/3"))
         telegram_on.payload = DPTBinary(1)
-        self.loop.run_until_complete(asyncio.Task(binary_sensor.process(telegram_on)))
 
-        self.assertEqual(xknx.devices["TestInput"].state, True)
-        self.assertEqual(xknx.devices["TestOutlet"].state, True)
+        with patch("time.time") as mock_time:
+            mock_time.return_value = 1599076123.0
+            self.loop.run_until_complete(
+                asyncio.Task(binary_sensor.process(telegram_on))
+            )
 
-        self.loop.run_until_complete(asyncio.Task(switch.set_off()))
-        self.assertEqual(xknx.devices["TestOutlet"].state, False)
-        self.assertEqual(xknx.devices["TestInput"].state, True)
+            self.assertEqual(xknx.devices["TestInput"].state, True)
+            self.assertEqual(xknx.devices["TestOutlet"].state, True)
 
-        self.loop.run_until_complete(asyncio.sleep(1))
-        self.loop.run_until_complete(asyncio.Task(binary_sensor.process(telegram_on)))
+            self.loop.run_until_complete(asyncio.Task(switch.set_off()))
+            self.assertEqual(xknx.devices["TestOutlet"].state, False)
+            self.assertEqual(xknx.devices["TestInput"].state, True)
+            # add a second to the time to avoid double tap behaviour here
+            mock_time.return_value += BinarySensor.CONTEXT_TIMEOUT
+            self.loop.run_until_complete(
+                asyncio.Task(binary_sensor.process(telegram_on))
+            )
 
-        self.assertEqual(xknx.devices["TestInput"].state, True)
-        self.assertEqual(xknx.devices["TestOutlet"].state, True)
+            self.assertEqual(xknx.devices["TestInput"].state, True)
+            self.assertEqual(xknx.devices["TestOutlet"].state, True)
 
     def test_process_wrong_payload(self):
         """Test process wrong telegram (wrong payload type)."""
