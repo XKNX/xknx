@@ -15,8 +15,6 @@ theme: "just-the-docs"
 
 show_downloads: true
 
-logo: "/assets/img/xknx-1.png"
-
 xknx:
     zip_url: "https://github.com/XKNX/xknx/archive/master.zip"
     tar_url: "https://github.com/XKNX/xknx/archive/master.tar.gz"
