@@ -65,10 +65,11 @@ class BaseAddress:  # pylint: disable=too-few-public-methods
         return self.raw == other.raw
 
     def __hash__(self):
-        """Required to use addresses as dict keys."""
+        """Hash Address so it can be used as dict key."""
         if self.raw is None:
             return hash(None)
         return self.raw
+
 
 class PhysicalAddress(BaseAddress):
     """Class for handling KNX pyhsical addresses."""
