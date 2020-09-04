@@ -29,7 +29,7 @@ class XKNX:
         self,
         config=None,
         loop=None,
-        own_address=PhysicalAddress(DEFAULT_ADDRESS),
+        own_address=DEFAULT_ADDRESS,
         address_format=GroupAddressType.LONG,
         telegram_received_cb=None,
         device_updated_cb=None,
@@ -48,7 +48,7 @@ class XKNX:
         self.knxip_interface = None
         self.started = asyncio.Event()
         self.address_format = address_format
-        self.own_address = own_address
+        self.own_address = PhysicalAddress(own_address)
         self.rate_limit = rate_limit
         self.multicast_group = multicast_group
         self.multicast_port = multicast_port
