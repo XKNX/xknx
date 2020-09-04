@@ -99,7 +99,7 @@ class BinarySensorSchema:
                     cv.boolean,
                     cv.string,
                 ),
-                vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=True): cv.boolean,
+                vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=False): cv.boolean,
                 vol.Required(CONF_STATE_ADDRESS): cv.string,
                 vol.Optional(CONF_DEVICE_CLASS): cv.string,
                 vol.Optional(CONF_RESET_AFTER): cv.positive_int,

@@ -92,9 +92,8 @@ and your new automation will look like this:
 automation:
   - trigger:
       - platform: event
-        event_type: knx_binary_sensor
+        event_type: knx_binary_sensor.cover_abstell
         event_data:
-            entity_id: "binary_sensor.cover_abstell"
             counter: 1
             state: "on"
     action:
@@ -103,9 +102,8 @@ automation:
 
   - trigger:
      - platform: event
-       event_type: knx_binary_sensor
+       event_type: knx_binary_sensor.cover_abstell
        event_data:
-            entity_id: "binary_sensor.cover_abstell"
             counter: 1
             state: "off"
     action:
@@ -113,3 +111,6 @@ automation:
         entity_id: cover.sonne_abstellkammer
 
 ```
+
+If you intend to use the `counter` feature (counter > 1) make sure you also enable `ignore_internal_state`
+for your binary_sensor. Otherwise the counter will _not_ work correctly.

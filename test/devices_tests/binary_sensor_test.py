@@ -111,7 +111,7 @@ class TestBinarySensor(unittest.TestCase):
         telegram_on = Telegram(group_address=GroupAddress("1/2/3"))
         telegram_on.payload = DPTBinary(1)
 
-        with patch("time.time") as mock_time:
+        with patch("time.time") as mock_time, patch("asyncio.sleep") as mock_sleep:
             mock_time.return_value = 1599076123.0
             self.loop.run_until_complete(
                 asyncio.Task(binary_sensor.process(telegram_on))

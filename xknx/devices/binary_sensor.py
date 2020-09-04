@@ -52,6 +52,7 @@ class BinarySensor(Device):
         self._count_set_off = 0
         self._last_set = None
         self._reset_task = None
+        self._context_task = None
         # TODO: log a warning if reset_after and sync_state are true ? This could cause actions to self-fire.
         self.remote_value = RemoteValueSwitch(
             xknx,
@@ -70,6 +71,9 @@ class BinarySensor(Device):
         """Destructor. Cleaning up if this was not done before."""
         if self._reset_task:
             self._reset_task.cancel()
+
+        if self._context_task:
+            self._context_task.cancel()
 
     @classmethod
     def from_config(cls, xknx, name, config):
@@ -95,19 +99,41 @@ class BinarySensor(Device):
         )
 
     async def _state_from_remote_value(self):
-        """Update the internal state from ReomteValue (Callback)."""
+        """Update the internal state from RemoteValue (Callback)."""
         await self._set_internal_state(self.remote_value.value)
 
     async def _set_internal_state(self, state):
         """Set the internal state of the device. If state was changed after_update hooks and connected Actions are executed."""
         if state != self.state or self.ignore_internal_state:
             self.state = state
-            counter = self.bump_and_get_counter(state)
-            await self.after_update()
+            self.bump_and_get_counter(state)
 
-            for action in self.actions:
-                if action.test_if_applicable(self.state, counter):
-                    await action.execute()
+            if self.ignore_internal_state:
+                if self._context_task:
+                    self._context_task.cancel()
+                self._context_task = self.xknx.loop.create_task(
+                    self._counter_task(self.CONTEXT_TIMEOUT)
+                )
+            else:
+                await self._trigger_callbacks()
+
+    async def _counter_task(self, wait_seconds: int):
+        """Trigger after 1 second to prevent double triggers."""
+        await asyncio.sleep(wait_seconds)
+        await self._trigger_callbacks()
+
+    async def _trigger_callbacks(self):
+        """Trigger callbacks for device and execute actions if any."""
+        await self.after_update()
+
+        for action in self.actions:
+            if action.test_if_applicable(self.state, self.counter):
+                await action.execute()
+
+    @property
+    def counter(self):
+        """Return current counter for sensor."""
+        return self._count_set_on if self.state else self._count_set_off
 
     def bump_and_get_counter(self, state):
         """Bump counter and return the number of times a state was set to the same value within CONTEXT_TIMEOUT."""
