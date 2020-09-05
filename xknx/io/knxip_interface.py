@@ -140,7 +140,6 @@ class KNXIPInterface:
         )
         self.interface = Tunnel(
             self.xknx,
-            self.xknx.own_address,
             local_ip=local_ip,
             gateway_ip=gateway_ip,
             gateway_port=gateway_port,

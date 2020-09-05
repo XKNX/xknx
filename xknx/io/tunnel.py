@@ -24,7 +24,6 @@ class Tunnel:
     def __init__(
         self,
         xknx,
-        src_address,
         local_ip,
         gateway_ip,
         gateway_port,
@@ -35,7 +34,6 @@ class Tunnel:
         """Initialize Tunnel class."""
         # pylint: disable=too-many-arguments
         self.xknx = xknx
-        self.src_address = src_address
         self.local_ip = local_ip
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
@@ -44,6 +42,7 @@ class Tunnel:
         self.udp_client = None
         self.init_udp_client()
 
+        self._src_address = xknx.own_address
         self.sequence_number = 0
         self.communication_channel = None
         self.number_heartbeat_failed = 0
@@ -125,7 +124,7 @@ class Tunnel:
         self._reconnect_task = None
         self.communication_channel = connect.communication_channel
         # Use the individual address provided by the tunnelling server
-        self.src_address = PhysicalAddress(connect.identifier)
+        self._src_address = PhysicalAddress(connect.identifier)
         self.sequence_number = 0
         await self.start_heartbeat()
 
@@ -166,7 +165,7 @@ class Tunnel:
             self.xknx,
             self.udp_client,
             telegram,
-            self.src_address,
+            self._src_address,
             self.sequence_number,
             self.communication_channel,
         )
