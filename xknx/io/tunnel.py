@@ -7,7 +7,7 @@ import asyncio
 
 from xknx.exceptions import XKNXException
 from xknx.knxip import CEMIMessageCode, KNXIPFrame, KNXIPServiceType, TunnellingRequest
-from xknx.telegram import TelegramDirection
+from xknx.telegram import PhysicalAddress, TelegramDirection
 
 from .connect import Connect
 from .connectionstate import ConnectionState
@@ -124,6 +124,8 @@ class Tunnel:
         )
         self._reconnect_task = None
         self.communication_channel = connect.communication_channel
+        # Use the individual address provided by the tunnelling server
+        self.src_address = PhysicalAddress(connect.identifier)
         self.sequence_number = 0
         await self.start_heartbeat()
 
