@@ -18,7 +18,8 @@ async def main():
         return
 
     gateway = gateways[0]
-    src_address = PhysicalAddress("15.15.249")
+    # an individual address will most likely be assigned by the tunnelling server
+    xknx.own_address = PhysicalAddress("15.15.249")
 
     print(
         "Connecting to {}:{} from {}".format(
@@ -28,7 +29,6 @@ async def main():
 
     tunnel = Tunnel(
         xknx,
-        src_address,
         local_ip=gateway.local_ip,
         gateway_ip=gateway.ip_addr,
         gateway_port=gateway.port,
