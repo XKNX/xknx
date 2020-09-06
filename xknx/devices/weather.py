@@ -98,6 +98,7 @@ class Weather(Device):
             sync_state=sync_state,
             value_type="temperature",
             device_name=self.name,
+            feature_name="Temperature",
             after_update_cb=self.after_update,
         )
 
@@ -107,6 +108,7 @@ class Weather(Device):
             sync_state=sync_state,
             value_type="illuminance",
             device_name=self.name,
+            feature_name="Brightness south",
             after_update_cb=self.after_update,
         )
 
@@ -116,6 +118,7 @@ class Weather(Device):
             sync_state=sync_state,
             value_type="illuminance",
             device_name=self.name,
+            feature_name="Brightness west",
             after_update_cb=self.after_update,
         )
 
@@ -125,6 +128,7 @@ class Weather(Device):
             sync_state=sync_state,
             value_type="illuminance",
             device_name=self.name,
+            feature_name="Brightness east",
             after_update_cb=self.after_update,
         )
 
@@ -134,6 +138,7 @@ class Weather(Device):
             sync_state=sync_state,
             value_type="wind_speed_ms",
             device_name=self.name,
+            feature_name="Wind speed",
             after_update_cb=self.after_update,
         )
 
@@ -141,7 +146,7 @@ class Weather(Device):
             xknx,
             group_address_state=group_address_rain_alarm,
             device_name=self.name,
-            feature_name="State",
+            feature_name="Rain alarm",
             after_update_cb=self.after_update,
         )
 
@@ -149,7 +154,7 @@ class Weather(Device):
             xknx,
             group_address_state=group_address_frost_alarm,
             device_name=self.name,
-            feature_name="State",
+            feature_name="Frost alarm",
             after_update_cb=self.after_update,
         )
 
@@ -157,7 +162,7 @@ class Weather(Device):
             xknx,
             group_address_state=group_address_wind_alarm,
             device_name=self.name,
-            feature_name="State",
+            feature_name="Wind alarm",
             after_update_cb=self.after_update,
         )
 
@@ -165,7 +170,7 @@ class Weather(Device):
             xknx,
             group_address_state=group_address_day_night,
             device_name=self.name,
-            feature_name="State",
+            feature_name="Day/Night",
             after_update_cb=self.after_update,
         )
 
@@ -175,6 +180,7 @@ class Weather(Device):
             sync_state=sync_state,
             value_type="pressure",
             device_name=self.name,
+            feature_name="Air pressure",
             after_update_cb=self.after_update,
         )
 
@@ -184,6 +190,7 @@ class Weather(Device):
             sync_state=sync_state,
             value_type="humidity",
             device_name=self.name,
+            feature_name="Humidity",
             after_update_cb=self.after_update,
         )
 
