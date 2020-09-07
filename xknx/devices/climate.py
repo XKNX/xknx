@@ -11,7 +11,6 @@ from xknx.remote_value import (
     RemoteValueSwitch,
     RemoteValueTemp,
 )
-from xknx.telegram import GroupAddress
 
 from .climate_mode import ClimateMode
 from .device import Device
@@ -58,13 +57,6 @@ class Climate(Device):
         """Initialize Climate class."""
         # pylint: disable=too-many-arguments, too-many-locals, too-many-branches, too-many-statements
         super().__init__(xknx, name, device_updated_cb)
-        if isinstance(group_address_on_off, (str, int)):
-            group_address_on_off = GroupAddress(group_address_on_off)
-        if isinstance(group_address_on_off_state, (str, int)):
-            group_address_on_off_state = GroupAddress(group_address_on_off_state)
-
-        self.group_address_on_off = group_address_on_off
-        self.group_address_on_off_state = group_address_on_off_state
 
         self.min_temp = min_temp
         self.max_temp = max_temp

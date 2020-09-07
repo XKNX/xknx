@@ -233,9 +233,9 @@ class Tunnel:
         #      which can happen if disconnect fails? normally this fails because
         #      we have no connection...
         # await self.disconnect()
-        await self.disconnect(True)
         await self.stop_heartbeat()
         await self.stop_reconnect()
+        await self.disconnect(True)
 
     async def start_heartbeat(self):
         """Start heartbeat for monitoring state of tunnel, as suggested by 03.08.02 KNX Core 5.4."""

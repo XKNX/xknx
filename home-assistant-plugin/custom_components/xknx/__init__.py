@@ -12,7 +12,7 @@ from xknx.io import (
     ConnectionConfig,
     ConnectionType,
 )
-from xknx.telegram import AddressFilter, GroupAddress, PhysicalAddress, Telegram
+from xknx.telegram import AddressFilter, GroupAddress, Telegram
 
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -188,9 +188,7 @@ class KNXModule:
         self.xknx = XKNX(
             config=self.config_file(),
             loop=self.hass.loop,
-            own_address=PhysicalAddress(
-                self.config[DOMAIN][CONF_XKNX_INDIVIDUAL_ADDRESS]
-            ),
+            own_address=self.config[DOMAIN][CONF_XKNX_INDIVIDUAL_ADDRESS],
             rate_limit=self.config[DOMAIN][CONF_XKNX_RATE_LIMIT],
             multicast_group=self.config[DOMAIN][CONF_XKNX_MCAST_GRP],
             multicast_port=self.config[DOMAIN][CONF_XKNX_MCAST_PORT],
@@ -323,9 +321,7 @@ class KNXModule:
         payload = calculate_payload(attr_payload)
         address = GroupAddress(attr_address)
 
-        telegram = Telegram()
-        telegram.payload = payload
-        telegram.group_address = address
+        telegram = Telegram(group_address=address, payload=payload)
         await self.xknx.telegrams.put(telegram)
 
 

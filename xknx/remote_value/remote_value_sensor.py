@@ -65,6 +65,4 @@ class RemoteValueSensor(RemoteValue):
     @property
     def ha_device_class(self):
         """Return a string representing the home assistant device class."""
-        if hasattr(self.dpt_class, "ha_device_class"):
-            return self.dpt_class.ha_device_class
-        return None
+        return getattr(self.dpt_class, "ha_device_class", None)

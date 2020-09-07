@@ -60,9 +60,15 @@ class BaseAddress:  # pylint: disable=too-few-public-methods
         """
         if other is None:
             return False
-        if not isinstance(other, self.__class__):
+        if type(self) is not type(other):
             raise TypeError()
         return self.raw == other.raw
+
+    def __hash__(self):
+        """Hash Address so it can be used as dict key."""
+        if self.raw is None:
+            return hash(None)
+        return self.raw
 
 
 class PhysicalAddress(BaseAddress):
@@ -78,8 +84,13 @@ class PhysicalAddress(BaseAddress):
     def __init__(self, address):
         """Initialize Address class."""
         super().__init__()
-        if isinstance(address, str):
-            self.raw = self.__string_to_int(address)
+        if isinstance(address, PhysicalAddress):
+            self.raw = address.raw
+        elif isinstance(address, str):
+            if address.isdigit():
+                self.raw = int(address)
+            else:
+                self.raw = self.__string_to_int(address)
         elif isinstance(address, tuple) and len(address) == 2:
             self.raw = address_tuple_to_int(address)
         elif isinstance(address, int):
@@ -175,10 +186,13 @@ class GroupAddress(BaseAddress):
         super().__init__()
         self.levels = levels
 
-        if isinstance(address, str) and not address.isdigit():
-            self.raw = self.__string_to_int(address)
-        elif isinstance(address, str) and address.isdigit():
-            self.raw = int(address)
+        if isinstance(address, GroupAddress):
+            self.raw = address.raw
+        elif isinstance(address, str):
+            if address.isdigit():
+                self.raw = int(address)
+            else:
+                self.raw = self.__string_to_int(address)
         elif isinstance(address, tuple) and len(address) == 2:
             self.raw = address_tuple_to_int(address)
         elif isinstance(address, int):
@@ -281,8 +295,3 @@ class GroupAddress(BaseAddress):
     def __repr__(self):
         """Return object as readable string."""
         return f'GroupAddress("{self}")'
-
-    def __hash__(self):
-        """Hash function."""
-        # used to turn lists of Telegram into sets in unittests
-        return hash(repr(self))
