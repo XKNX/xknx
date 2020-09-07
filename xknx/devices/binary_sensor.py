@@ -22,7 +22,7 @@ class BinarySensor(Device):
 
     # pylint: disable=too-many-instance-attributes
 
-    CONTEXT_TIMEOUT = 1
+    DEFAULT_CONTEXT_TIMEOUT = 1
 
     def __init__(
         self,
@@ -34,6 +34,7 @@ class BinarySensor(Device):
         device_class=None,
         reset_after=None,
         actions=None,
+        context_timeout=DEFAULT_CONTEXT_TIMEOUT,
         device_updated_cb=None,
     ):
         """Initialize BinarySensor class."""
@@ -48,6 +49,7 @@ class BinarySensor(Device):
         self.reset_after = reset_after
         self.state = None
 
+        self._context_timeout = context_timeout
         self._count_set_on = 0
         self._count_set_off = 0
         self._last_set = None
@@ -79,6 +81,7 @@ class BinarySensor(Device):
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
         group_address_state = config.get("group_address_state")
+        context_timeout = config.get("context_timeout", 1)
         sync_state = config.get("sync_state", True)
         device_class = config.get("device_class")
         ignore_internal_state = config.get("ignore_internal_state", False)
@@ -94,6 +97,7 @@ class BinarySensor(Device):
             group_address_state=group_address_state,
             sync_state=sync_state,
             ignore_internal_state=ignore_internal_state,
+            context_timeout=context_timeout,
             device_class=device_class,
             actions=actions,
         )
@@ -112,7 +116,7 @@ class BinarySensor(Device):
                 if self._context_task:
                     self._context_task.cancel()
                 self._context_task = self.xknx.loop.create_task(
-                    self._counter_task(self.CONTEXT_TIMEOUT)
+                    self._counter_task(self._context_timeout)
                 )
             else:
                 await self._trigger_callbacks()
@@ -146,7 +150,7 @@ class BinarySensor(Device):
             new_set_time = time.time()
             time_diff = new_set_time - self._last_set
             self._last_set = new_set_time
-            return time_diff < self.CONTEXT_TIMEOUT
+            return time_diff < self._context_timeout
 
         if within_same_context():
             if state:

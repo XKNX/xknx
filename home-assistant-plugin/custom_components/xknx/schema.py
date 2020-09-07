@@ -84,6 +84,7 @@ class BinarySensorSchema:
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_SYNC_STATE = CONF_SYNC_STATE
     CONF_IGNORE_INTERNAL_STATE = "ignore_internal_state"
+    CONF_CONTEXT_TIMEOUT = "context_timeout"
     CONF_RESET_AFTER = "reset_after"
 
     DEFAULT_NAME = "KNX Binary Sensor"
@@ -99,7 +100,8 @@ class BinarySensorSchema:
                     cv.boolean,
                     cv.string,
                 ),
-                vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=False): cv.boolean,
+                vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=True): cv.boolean,
+                vol.Optional(CONF_CONTEXT_TIMEOUT, default=1): cv.string,
                 vol.Required(CONF_STATE_ADDRESS): cv.string,
                 vol.Optional(CONF_DEVICE_CLASS): cv.string,
                 vol.Optional(CONF_RESET_AFTER): cv.positive_int,

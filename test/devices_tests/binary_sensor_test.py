@@ -130,7 +130,7 @@ class TestBinarySensor(unittest.TestCase):
             self.assertEqual(xknx.devices["TestOutlet"].state, False)
             self.assertEqual(xknx.devices["TestInput"].state, True)
             # add a second to the time to avoid double tap behaviour here
-            mock_time.return_value += BinarySensor.CONTEXT_TIMEOUT
+            mock_time.return_value += BinarySensor.DEFAULT_CONTEXT_TIMEOUT
             self.loop.run_until_complete(
                 asyncio.Task(binary_sensor.process(telegram_on))
             )
