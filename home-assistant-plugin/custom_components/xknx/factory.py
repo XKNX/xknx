@@ -34,7 +34,6 @@ from .schema import (
 
 
 def create_knx_device(
-    hass: HomeAssistant,
     platform: SupportedPlatforms,
     knx_module: XKNX,
     config: ConfigType,
@@ -62,7 +61,7 @@ def create_knx_device(
         return _create_scene(knx_module, config)
 
     if platform is SupportedPlatforms.binary_sensor:
-        return _create_binary_sensor(hass, knx_module, config)
+        return _create_binary_sensor(knx_module, config)
 
     if platform is SupportedPlatforms.weather:
         return _create_weather(knx_module, config)
@@ -239,24 +238,9 @@ def _create_scene(knx_module: XKNX, config: ConfigType) -> XknxScene:
     )
 
 
-def _create_binary_sensor(
-    hass: HomeAssistant, knx_module: XKNX, config: ConfigType
-) -> XknxBinarySensor:
+def _create_binary_sensor(knx_module: XKNX, config: ConfigType) -> XknxBinarySensor:
     """Return a KNX binary sensor to be used within XKNX."""
     device_name = config[CONF_NAME]
-    actions = []
-    automations = config.get(BinarySensorSchema.CONF_AUTOMATION)
-    if automations is not None:
-        for automation in automations:
-            counter = automation[BinarySensorSchema.CONF_COUNTER]
-            hook = automation[BinarySensorSchema.CONF_HOOK]
-            action = automation[BinarySensorSchema.CONF_ACTION]
-            script_name = f"{device_name} turn ON script"
-            script = Script(hass, action, script_name, DOMAIN)
-            action = XknxActionCallback(
-                knx_module, script.async_run, hook=hook, counter=counter
-            )
-            actions.append(action)
 
     return XknxBinarySensor(
         knx_module,
@@ -265,8 +249,8 @@ def _create_binary_sensor(
         sync_state=config[BinarySensorSchema.CONF_SYNC_STATE],
         device_class=config.get(CONF_DEVICE_CLASS),
         ignore_internal_state=config[BinarySensorSchema.CONF_IGNORE_INTERNAL_STATE],
+        context_timeout=config[BinarySensorSchema.CONF_CONTEXT_TIMEOUT],
         reset_after=config.get(BinarySensorSchema.CONF_RESET_AFTER),
-        actions=actions,
     )
 
 

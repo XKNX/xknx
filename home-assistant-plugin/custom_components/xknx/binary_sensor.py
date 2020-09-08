@@ -1,7 +1,10 @@
 """Support for KNX/IP binary sensors."""
+import asyncio
+
 from xknx.devices import BinarySensor as XknxBinarySensor
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
 
 from . import DATA_XKNX
@@ -27,9 +30,18 @@ class KNXBinarySensor(BinarySensorEntity):
     def async_register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
 
-        async def after_update_callback(device):
+        async def after_update_callback(device: XknxBinarySensor):
             """Call after device was updated."""
             self.async_write_ha_state()
+
+            self.hass.bus.fire(
+                f"{DOMAIN}_{self.entity_id}",
+                {
+                    # how often has the input sensor been pressed
+                    "counter": device.counter,
+                    "state": STATE_ON if device.state else STATE_OFF,
+                },
+            )
 
         self.device.register_device_updated_cb(after_update_callback)
 

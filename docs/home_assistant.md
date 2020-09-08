@@ -1,6 +1,7 @@
 ---
 layout: default
 title: Home Assistant Integration
+has_children: true
 nav_order: 13
 ---
 

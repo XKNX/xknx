@@ -22,7 +22,7 @@ class BinarySensor(Device):
 
     # pylint: disable=too-many-instance-attributes
 
-    CONTEXT_TIMEOUT = 1
+    DEFAULT_CONTEXT_TIMEOUT = 1
 
     def __init__(
         self,
@@ -34,6 +34,7 @@ class BinarySensor(Device):
         device_class=None,
         reset_after=None,
         actions=None,
+        context_timeout=DEFAULT_CONTEXT_TIMEOUT,
         device_updated_cb=None,
     ):
         """Initialize BinarySensor class."""
@@ -48,10 +49,12 @@ class BinarySensor(Device):
         self.reset_after = reset_after
         self.state = None
 
+        self._context_timeout = context_timeout
         self._count_set_on = 0
         self._count_set_off = 0
         self._last_set = None
         self._reset_task = None
+        self._context_task = None
         # TODO: log a warning if reset_after and sync_state are true ? This could cause actions to self-fire.
         self.remote_value = RemoteValueSwitch(
             xknx,
@@ -71,10 +74,14 @@ class BinarySensor(Device):
         if self._reset_task:
             self._reset_task.cancel()
 
+        if self._context_task:
+            self._context_task.cancel()
+
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
         group_address_state = config.get("group_address_state")
+        context_timeout = config.get("context_timeout", 1)
         sync_state = config.get("sync_state", True)
         device_class = config.get("device_class")
         ignore_internal_state = config.get("ignore_internal_state", False)
@@ -90,24 +97,47 @@ class BinarySensor(Device):
             group_address_state=group_address_state,
             sync_state=sync_state,
             ignore_internal_state=ignore_internal_state,
+            context_timeout=context_timeout,
             device_class=device_class,
             actions=actions,
         )
 
     async def _state_from_remote_value(self):
-        """Update the internal state from ReomteValue (Callback)."""
+        """Update the internal state from RemoteValue (Callback)."""
         await self._set_internal_state(self.remote_value.value)
 
     async def _set_internal_state(self, state):
         """Set the internal state of the device. If state was changed after_update hooks and connected Actions are executed."""
         if state != self.state or self.ignore_internal_state:
             self.state = state
-            counter = self.bump_and_get_counter(state)
-            await self.after_update()
+            self.bump_and_get_counter(state)
 
-            for action in self.actions:
-                if action.test_if_applicable(self.state, counter):
-                    await action.execute()
+            if self.ignore_internal_state:
+                if self._context_task:
+                    self._context_task.cancel()
+                self._context_task = self.xknx.loop.create_task(
+                    self._counter_task(self._context_timeout)
+                )
+            else:
+                await self._trigger_callbacks()
+
+    async def _counter_task(self, wait_seconds: float):
+        """Trigger after 1 second to prevent double triggers."""
+        await asyncio.sleep(wait_seconds)
+        await self._trigger_callbacks()
+
+    async def _trigger_callbacks(self):
+        """Trigger callbacks for device and execute actions if any."""
+        await self.after_update()
+
+        for action in self.actions:
+            if action.test_if_applicable(self.state, self.counter):
+                await action.execute()
+
+    @property
+    def counter(self):
+        """Return current counter for sensor."""
+        return self._count_set_on if self.state else self._count_set_off
 
     def bump_and_get_counter(self, state):
         """Bump counter and return the number of times a state was set to the same value within CONTEXT_TIMEOUT."""
@@ -120,7 +150,7 @@ class BinarySensor(Device):
             new_set_time = time.time()
             time_diff = new_set_time - self._last_set
             self._last_set = new_set_time
-            return time_diff < self.CONTEXT_TIMEOUT
+            return time_diff < self._context_timeout
 
         if within_same_context():
             if state:

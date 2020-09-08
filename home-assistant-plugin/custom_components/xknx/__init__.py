@@ -151,9 +151,7 @@ async def async_setup(hass, config):
     for platform in SupportedPlatforms:
         if platform.value in config[DOMAIN]:
             for device_config in config[DOMAIN][platform.value]:
-                create_knx_device(
-                    hass, platform, hass.data[DATA_XKNX].xknx, device_config
-                )
+                create_knx_device(platform, hass.data[DATA_XKNX].xknx, device_config)
 
     # We need to wait until all entities are loaded into the device list since they could also be created from other platforms
     for platform in SupportedPlatforms:

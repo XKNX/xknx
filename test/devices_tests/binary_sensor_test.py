@@ -1,14 +1,18 @@
 """Unit test for BinarySensor objects."""
 import asyncio
-import time
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Action, BinarySensor, Switch
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
+
+
+class AsyncMock(MagicMock):
+    async def __call__(self, *args, **kwargs):
+        return super().__call__(*args, **kwargs)
 
 
 class TestBinarySensor(unittest.TestCase):
@@ -118,7 +122,9 @@ class TestBinarySensor(unittest.TestCase):
             group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
         )
 
-        with patch("time.time") as mock_time:
+        with patch("time.time") as mock_time, patch(
+            "asyncio.sleep", new_callable=AsyncMock
+        ) as mock_sleep:
             mock_time.return_value = 1599076123.0
             self.loop.run_until_complete(
                 asyncio.Task(binary_sensor.process(telegram_on))
@@ -131,7 +137,7 @@ class TestBinarySensor(unittest.TestCase):
             self.assertEqual(xknx.devices["TestOutlet"].state, False)
             self.assertEqual(xknx.devices["TestInput"].state, True)
             # add a second to the time to avoid double tap behaviour here
-            mock_time.return_value += BinarySensor.CONTEXT_TIMEOUT
+            mock_time.return_value += BinarySensor.DEFAULT_CONTEXT_TIMEOUT
             self.loop.run_until_complete(
                 asyncio.Task(binary_sensor.process(telegram_on))
             )
