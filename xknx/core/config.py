@@ -4,6 +4,8 @@ Module for reading config files (xknx.yaml).
 * it will parse the given file
 * and add the found devices to the devies vector of XKNX.
 """
+from enum import Enum
+
 from xknx.devices import (
     BinarySensor,
     Climate,
@@ -23,6 +25,13 @@ from xknx.io import ConnectionConfig, ConnectionType
 import yaml
 
 
+class Version(Enum):
+    """The used xknx.yaml structure version."""
+
+    VERSION_1 = 1
+    VERSION_2 = 2
+
+
 class Config:
     """Class for parsing xknx.yaml."""
 
@@ -36,11 +45,27 @@ class Config:
         try:
             with open(file) as filehandle:
                 doc = yaml.safe_load(filehandle)
-                self.parse_general(doc)
-                self.parse_connection(doc)
-                self.parse_groups(doc)
+                self.parse(doc)
         except FileNotFoundError as ex:
             self.xknx.logger.error("Error while reading %s: %s", file, ex)
+
+    @staticmethod
+    def parse_version(doc):
+        """Parse the version of the xknx.yaml."""
+        if "version" in doc:
+            return Version(doc["version"])
+
+        return Version.VERSION_1
+
+    def parse(self, doc):
+        """Parse the config from the YAML."""
+        version = Config.parse_version(doc)
+        if version is Version.VERSION_1:
+            self.parse_general(doc)
+            self.parse_connection(doc)
+            self.parse_groups(doc)
+        elif version is Version.VERSION_2:
+            raise NotImplementedError("Version 2 not yet implemented.")
 
     def parse_general(self, doc):
         """Parse the general section of xknx.yaml."""

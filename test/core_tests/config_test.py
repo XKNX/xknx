@@ -121,6 +121,15 @@ class TestConfig(unittest.TestCase):
             Config(TestConfig.xknx).parse_connection(config)
             self.assertEqual(TestConfig.xknx.connection_config, expected_conn)
 
+    def test_version_2(self):
+        """Test connection section from config file."""
+        # Replaces setting from xknx.yaml
+        test_config = """
+        version: 2
+        """
+        config = yaml.safe_load(test_config)
+        self.assertRaises(NotImplementedError, Config(TestConfig.xknx).parse, config)
+
     def test_config_invalid_connection(self):
         """Test invalid connection section from config file."""
 
