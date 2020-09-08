@@ -121,7 +121,7 @@ class BinarySensor(Device):
             else:
                 await self._trigger_callbacks()
 
-    async def _counter_task(self, wait_seconds: int):
+    async def _counter_task(self, wait_seconds: float):
         """Trigger after 1 second to prevent double triggers."""
         await asyncio.sleep(wait_seconds)
         await self._trigger_callbacks()

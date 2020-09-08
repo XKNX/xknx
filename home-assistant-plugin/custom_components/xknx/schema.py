@@ -101,7 +101,9 @@ class BinarySensorSchema:
                     cv.string,
                 ),
                 vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=True): cv.boolean,
-                vol.Optional(CONF_CONTEXT_TIMEOUT, default=1): cv.string,
+                vol.Optional(CONF_CONTEXT_TIMEOUT, default=1.0): vol.All(
+                    vol.Coerce(float), vol.Range(min=0, max=10)
+                ),
                 vol.Required(CONF_STATE_ADDRESS): cv.string,
                 vol.Optional(CONF_DEVICE_CLASS): cv.string,
                 vol.Optional(CONF_RESET_AFTER): cv.positive_int,

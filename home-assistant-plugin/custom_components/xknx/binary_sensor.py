@@ -35,7 +35,7 @@ class KNXBinarySensor(BinarySensorEntity):
             self.async_write_ha_state()
 
             self.hass.bus.fire(
-                f"knx_{self.entity_id}",
+                f"{DOMAIN}_{self.entity_id}",
                 {
                     # how often has the input sensor been pressed
                     "counter": device.counter,
