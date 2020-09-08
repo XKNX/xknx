@@ -338,8 +338,9 @@ class TestStringRepresentations(unittest.TestCase):
         )
         self.assertEqual(
             str(weather),
-            '<Weather name="Home" temperature="None/GroupAddress("7/0/1")/None/None" brightness_south="None/'
-            'GroupAddress("7/0/5")/None/None" brightness_west="None/GroupAddress("7/0/3")/None/None" '
+            '<Weather name="Home" temperature="None/GroupAddress("7/0/1")/None/None" '
+            'brightness_south="None/GroupAddress("7/0/5")/None/None" brightness_north="None/None/None/None"'
+            ' brightness_west="None/GroupAddress("7/0/3")/None/None" '
             'brightness_east="None/GroupAddress("7/0/4")/None/None" wind_speed="None/GroupAddress("7/0/2")/None/None"'
             ' rain_alarm="None/GroupAddress("7/0/0")/None/None" wind_alarm="None/GroupAddress("7/0/10")/None/None" '
             'frost_alarm="None/GroupAddress("7/0/8")/None/None" day_night="None/GroupAddress("7/0/7")/None/None" '
@@ -358,10 +359,10 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(weather),
             '<Weather name="Home" temperature="None/GroupAddress("7/0/1")/None/None" '
-            'brightness_south="None/GroupAddress("7/0/5")/None/None" '
+            'brightness_south="None/GroupAddress("7/0/5")/None/None" brightness_north="None/None/None/None" '
             'brightness_west="None/GroupAddress("7/0/3")/None/None" '
-            'brightness_east="None/GroupAddress("7/0/4")/None/None" wind_speed="None/GroupAddress("7/0/2")/None/None"'
-            ' rain_alarm="None/GroupAddress("7/0/0")/None/None" '
+            'brightness_east="None/GroupAddress("7/0/4")/None/None" wind_speed="None/GroupAddress("7/0/2")/None/None" '
+            'rain_alarm="None/GroupAddress("7/0/0")/None/None" '
             'wind_alarm="None/GroupAddress("7/0/10")/<DPTBinary value="1" />/True" '
             'frost_alarm="None/GroupAddress("7/0/8")/None/None" day_night="None/GroupAddress("7/0/7")/None/None" '
             'air_pressure="None/GroupAddress("7/0/9")/None/None" humidity="None/GroupAddress("7/0/9")/None/None" />',
