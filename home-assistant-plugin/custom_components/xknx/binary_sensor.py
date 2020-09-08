@@ -7,7 +7,7 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
 
-from . import DATA_XKNX
+from .const import DATA_XKNX, DOMAIN
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
