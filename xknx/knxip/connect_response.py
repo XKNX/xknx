@@ -2,7 +2,8 @@
 Module for Serialization and Deserialization of a KNX Connect Response information.
 
 Connect requests are used to start a new tunnel connection on a KNX/IP device.
-With an Connect Response the receiving party acknowledges the valid processing of the request.
+With a Connect Response the receiving party acknowledges the valid processing of the request,
+assigns a communication channel and an individual address for the client.
 """
 from xknx.exceptions import CouldNotParseKNXIP
 

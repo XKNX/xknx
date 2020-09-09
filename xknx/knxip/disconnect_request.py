@@ -1,7 +1,7 @@
 """
 Module for Serialization and Deserialization of a KNX Disconnect Request information.
 
-Connect requests are used to disconnect a tunnel from a KNX/IP device.
+Disconnect requests are used to disconnect a tunnel from a KNX/IP device.
 """
 from xknx.exceptions import CouldNotParseKNXIP
 
