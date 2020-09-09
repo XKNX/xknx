@@ -1,7 +1,7 @@
 """
-Module for Serialization and Deserialization of a KNX Tunneling Request information.
+Module for Serialization and Deserialization of a KNX Tunnelling Request information.
 
-Tunneling requests are used to transmit a KNX telegram within an existing KNX tunnel connection.
+Tunnelling requests are used to transmit a KNX telegram within an existing KNX tunnel connection.
 """
 from xknx.exceptions import CouldNotParseKNXIP, UnsupportedCEMIMessage
 
@@ -11,7 +11,7 @@ from .knxip_enum import KNXIPServiceType
 
 
 class TunnellingRequest(KNXIPBody):
-    """Representation of a KNX Tunneling Request."""
+    """Representation of a KNX Tunnelling Request."""
 
     # pylint: disable=too-many-instance-attributes
 
