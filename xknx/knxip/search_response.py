@@ -2,9 +2,9 @@
 Module for Serialization and Deserialization of KNX Search Response.
 
 Search Requests are used to search for KNX/IP devices within the network.
-With a search response the receiving party acknowledges the valid processing of the request.
-The search response contains all information of the found device (Name, serial number, supported features.).
-It supports an array-style access to the DIBs (use classname as index).
+A search response contains all information of a found device (Name, serial number, supported features.).
+It supports an array-style access to the DIBs (use classname as index). Every KNXnet/ip server shall send
+a search response and one device supporting multiple KNX connections may send multiple search responses.
 """
 from .body import KNXIPBody
 from .dib import DIB, DIBDeviceInformation
@@ -13,7 +13,7 @@ from .knxip_enum import KNXIPServiceType
 
 
 class SearchResponse(KNXIPBody):
-    """Representation of a KNX Connect Response."""
+    """Representation of a KNX Search Response."""
 
     # pylint: disable=too-many-instance-attributes
 

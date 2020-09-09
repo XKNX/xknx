@@ -1,8 +1,8 @@
 """
-Module for Serialization and Deserialization of a KNX Tunnel ACK information.
+Module for Serialization and Deserialization of a KNX Tunnelling ACK information.
 
-Connect requests are used to transmit a KNX telegram within an existing KNX tunnel connection.
-With an Tunnel ACK the receiving party acknowledges the valid processing of the request.
+Tunneling requests are used to transmit a KNX telegram within an existing KNX tunnel connection.
+With a Tunnelling ACK the receiving party acknowledges the valid processing of the request.
 """
 from xknx.exceptions import CouldNotParseKNXIP
 
@@ -12,7 +12,7 @@ from .knxip_enum import KNXIPServiceType
 
 
 class TunnellingAck(KNXIPBody):
-    """Representation of a KNX Connect Request."""
+    """Representation of a KNX Tunnelling Request."""
 
     # pylint: disable=too-many-instance-attributes
 
