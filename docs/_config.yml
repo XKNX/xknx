@@ -20,6 +20,8 @@ xknx:
     tar_url: "https://github.com/XKNX/xknx/archive/master.tar.gz"
     repository_url: "http://github.com/XKNX/xknx"
 
+logo: "/assets/img/xknx_logo_inverted.png"
+
 # Enable or disable the site search
 # Supports true (default) or false
 search_enabled: true
