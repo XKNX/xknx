@@ -59,7 +59,7 @@ class ExposeSensor(Device):
 
     async def process_group_read(self, telegram):
         """Process incoming GROUP READ telegram."""
-        await self.sensor_value.send(response=True)
+        await self.sensor_value.respond()
 
     async def set(self, value):
         """Set new value."""

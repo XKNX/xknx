@@ -10,7 +10,7 @@ You may register callbacks to be notified if a telegram was pushed to the queue.
 import asyncio
 
 from xknx.exceptions import XKNXException
-from xknx.telegram import TelegramDirection
+from xknx.telegram import TelegramDirection, TelegramType
 
 
 class TelegramQueue:
@@ -128,6 +128,11 @@ class TelegramQueue:
         self.xknx.telegram_logger.debug(telegram)
         if self.xknx.knxip_interface is not None:
             await self.xknx.knxip_interface.send_telegram(telegram)
+            if telegram.telegramtype == TelegramType.GROUP_WRITE:
+                for device in self.xknx.devices.devices_by_group_address(
+                    telegram.group_address
+                ):
+                    await device.process(telegram)
         else:
             self.xknx.logger.warning("No KNXIP interface defined")
 
@@ -140,7 +145,7 @@ class TelegramQueue:
                 ret = await telegram_received_cb.callback(telegram)
                 if ret:
                     processed = True
-
+        # TODO: why don't we process every incoming telegram by device?
         if not processed:
             for device in self.xknx.devices.devices_by_group_address(
                 telegram.group_address

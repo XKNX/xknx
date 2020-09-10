@@ -84,7 +84,7 @@ class DateTime(Device):
         if self.localtime:
             await self.broadcast_localtime(True)
         else:
-            await self._remote_value.send(response=True)
+            await self._remote_value.respond()
 
     async def sync(self, wait_for_result=False):
         """Read state of device from KNX bus. Used here to broadcast time to KNX bus."""
