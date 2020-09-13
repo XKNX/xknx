@@ -6,8 +6,9 @@ Module for reading config files (xknx.yaml).
 """
 from enum import Enum
 
-from xknx.config import ConfigV1
 import yaml
+
+from .config_v1 import ConfigV1
 
 
 class Version(Enum):
