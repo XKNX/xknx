@@ -6,7 +6,8 @@ import os
 import signal
 from sys import platform
 
-from xknx.core import Config, StateUpdater, TelegramQueue
+from xknx.config import Config
+from xknx.core import StateUpdater, TelegramQueue
 from xknx.devices import Devices
 from xknx.io import (
     DEFAULT_MCAST_GRP,

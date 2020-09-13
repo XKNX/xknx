@@ -35,8 +35,8 @@ class Version(Enum):
     VERSION_2 = 2
 
 
-class Config:
-    """Class for parsing xknx.yaml."""
+class ConfigV1:
+    """Use old config style."""
 
     def __init__(self, xknx):
         """Initialize Config class."""
@@ -61,14 +61,10 @@ class Config:
         return Version.VERSION_1
 
     def parse(self, doc):
-        """Parse the config from the YAML."""
-        version = Config.parse_version(doc)
-        if version is Version.VERSION_1:
-            self.parse_general(doc)
-            self.parse_connection(doc)
-            self.parse_groups(doc)
-        elif version is Version.VERSION_2:
-            raise NotImplementedError("Version 2 not yet implemented.")
+        """Parse the config."""
+        self.parse_general(doc)
+        self.parse_connection(doc)
+        self.parse_groups(doc)
 
     def parse_general(self, doc):
         """Parse the general section of xknx.yaml."""
