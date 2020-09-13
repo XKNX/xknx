@@ -76,6 +76,24 @@ class DPT4ByteSigned(DPT4ByteUnsigned):
     _struct_format = ">i"
 
 
+class DPTVolumeLiquidLitre(DPT4ByteUnsigned):
+    """DPT 12.1200 DPT_VolumeLiquid_Litre (water/gas total consumption)."""
+
+    dpt_main_number = 12
+    dpt_sub_number = 1200
+    value_type = "volume_liquid_litre"
+    unit = "l"
+
+
+class DPTVolumeM3(DPT4ByteUnsigned):
+    """DPT 12.1201 DPT_Volume_m3 (water/gas total consumption volume)."""
+
+    dpt_main_number = 12
+    dpt_sub_number = 1201
+    value_type = "volume_m3"
+    unit = "m³"
+
+
 class DPTValue4Count(DPT4ByteSigned):
     """DPT 13.001 DPT_Value_4_Count (pulse)."""
 

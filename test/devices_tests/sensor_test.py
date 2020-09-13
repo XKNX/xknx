@@ -66,6 +66,47 @@ class TestSensor(unittest.TestCase):
         self.assertEqual(sensor.unit_of_measurement(), "m/s²")
         self.assertEqual(sensor.ha_device_class(), None)
 
+    def test_str_volume_liquid_litre(self):
+        """Test resolve state with volume liquid sensor."""
+        xknx = XKNX(loop=self.loop)
+        sensor = Sensor(
+            xknx,
+            "TestSensor",
+            group_address_state="1/2/3",
+            value_type="volume_liquid_litre",
+        )
+        sensor.sensor_value.payload = DPTArray(
+            (
+                0x00,
+                0x00,
+                0x01,
+                0x00,
+            )
+        )
+
+        self.assertEqual(sensor.resolve_state(), 256)
+        self.assertEqual(sensor.unit_of_measurement(), "l")
+        self.assertEqual(sensor.ha_device_class(), None)
+
+    def test_str_volume_m3(self):
+        """Test resolve state with volume m3 sensor."""
+        xknx = XKNX(loop=self.loop)
+        sensor = Sensor(
+            xknx, "TestSensor", group_address_state="1/2/3", value_type="volume_m3"
+        )
+        sensor.sensor_value.payload = DPTArray(
+            (
+                0x00,
+                0x00,
+                0x01,
+                0x00,
+            )
+        )
+
+        self.assertEqual(sensor.resolve_state(), 256)
+        self.assertEqual(sensor.unit_of_measurement(), "m³")
+        self.assertEqual(sensor.ha_device_class(), None)
+
     def test_str_acceleration_angular(self):
         """Test resolve state with acceleration_angular sensor."""
         xknx = XKNX(loop=self.loop)
