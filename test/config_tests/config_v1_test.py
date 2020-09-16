@@ -23,7 +23,6 @@ from xknx.devices import (
 )
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
-from xknx.telegram import PhysicalAddress
 import yaml
 
 

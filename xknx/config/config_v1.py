@@ -23,7 +23,6 @@ from xknx.devices import (
 )
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
-import yaml
 
 logger = logging.getLogger("xknx.log")
 
@@ -41,24 +40,6 @@ class ConfigV1:
     def __init__(self, xknx):
         """Initialize Config class."""
         self.xknx = xknx
-
-    def read(self, file="xknx.yaml"):
-        """Read config."""
-        logger.debug("Reading %s", file)
-        try:
-            with open(file) as filehandle:
-                doc = yaml.safe_load(filehandle)
-                self.parse(doc)
-        except FileNotFoundError as ex:
-            logger.error("Error while reading %s: %s", file, ex)
-
-    @staticmethod
-    def parse_version(doc):
-        """Parse the version of the xknx.yaml."""
-        if "version" in doc:
-            return Version(doc["version"])
-
-        return Version.VERSION_1
 
     def parse(self, doc):
         """Parse the config."""
