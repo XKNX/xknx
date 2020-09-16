@@ -1,6 +1,19 @@
 # Changelog
 
-## Upcoming version (unreleased)
+## 0.14.0 New sensor types and refacoring of binary sensor automations
+
+### Breaking changes
+
+- Binary sensor automations within the home assistant integration have been refactored to use the HA built in events as automation source instead of having the automation schema directly attached to the sensors. (Migration Guide: https://xknx.io/migration_ha_0116.html)
+
+### New Features
+
+- Add support for new sensor types DPT 12.1200 (DPT_VolumeLiquid_Litre) and DPT 12.1201 (DPTVolumeM3).
+- Weather devices now have an additional `brightness_north` GA to measure the brightness. Additionally, all sensor values are now part of the HA device state attributes for a given weather device.
+
+### Bugfixes
+
+- Fix hourly broadcasting of localtime
 
 ### Internals
 
