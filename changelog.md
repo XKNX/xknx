@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.14.1 Bugfix release
+
+### Bugfixes
+
+- Use correct DPT 9.006 for the air pressure attribute of weather devices
+- Reset binary sensor counters after the context has been timed out in order to be able to use state change events within HA
+- Code cleanups
+
 ## 0.14.0 New sensor types and refacoring of binary sensor automations
 
 ### Breaking changes
