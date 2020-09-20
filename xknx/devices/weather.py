@@ -189,7 +189,7 @@ class Weather(Device):
             xknx,
             group_address_state=group_address_air_pressure,
             sync_state=sync_state,
-            value_type="pressure",
+            value_type="pressure_2byte",
             device_name=self.name,
             feature_name="Air pressure",
             after_update_cb=self.after_update,
