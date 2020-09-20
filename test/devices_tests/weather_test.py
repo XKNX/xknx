@@ -297,27 +297,6 @@ class TestWeather(unittest.TestCase):
 
         self.assertEqual(weather.ha_current_state(), WeatherCondition.exceptional)
 
-    def test_weather_state_attributes(self):
-        """Test state attributes of weather device."""
-        xknx = XKNX(loop=self.loop)
-        weather: Weather = Weather(
-            name="weather",
-            xknx=xknx,
-            group_address_brightness_east="1/3/5",
-            group_address_brightness_south="1/3/6",
-            group_address_brightness_west="1/3/7",
-        )
-
-        weather._brightness_south.payload = DPTArray(
-            (
-                0x46,
-                0x45,
-            )
-        )
-
-        self.assertEqual(len(weather.ha_state_attributes), 7)
-        self.assertEqual(weather.ha_state_attributes["brightness_south"], 4108.8)
-
     #
     # Expose Sensor tests
     #

@@ -13,7 +13,7 @@ It provides functionality for
 """
 from datetime import date, datetime
 from enum import Enum
-from typing import Any, Callable, Dict, Generator, Optional
+from typing import Callable, Generator, Optional
 
 from xknx.remote_value import RemoteValue, RemoteValueSensor, RemoteValueSwitch
 
@@ -450,19 +450,6 @@ class Weather(Device):
             return WeatherCondition.clear_night
 
         return WeatherCondition.exceptional
-
-    @property
-    def ha_state_attributes(self) -> Optional[Dict[str, Any]]:
-        """Return device specific state attributes."""
-        return {
-            "brightness_south": self.brightness_south,
-            "brightness_north": self.brightness_north,
-            "brightness_east": self.brightness_east,
-            "brightness_west": self.brightness_west,
-            "wind_alarm": self.wind_alarm,
-            "frost_alarm": self.frost_alarm,
-            "rain_alarm": self.rain_alarm,
-        }
 
     @classmethod
     def from_config(cls, xknx, name, config):
