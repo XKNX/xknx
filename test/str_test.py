@@ -247,9 +247,7 @@ class TestStringRepresentations(unittest.TestCase):
             str(notification),
             '<Notification name="Alarm" message="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" />',
         )
-        self.loop.run_until_complete(
-            asyncio.Task(notification.set("Einbrecher im Haus"))
-        )
+        self.loop.run_until_complete(notification.set("Einbrecher im Haus"))
         self.loop.run_until_complete(notification.process(xknx.telegrams.get_nowait()))
         self.assertEqual(
             str(notification),
@@ -279,13 +277,13 @@ class TestStringRepresentations(unittest.TestCase):
             str(sensor),
             '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/None/None" value="None" unit="%"/>',
         )
-        # self.loop.run_until_complete(asyncio.Task(sensor.sensor_value.set(25)))
+        # self.loop.run_until_complete(sensor.sensor_value.set(25))
         telegram = Telegram(
             group_address=GroupAddress("1/2/3"),
             direction=TelegramDirection.INCOMING,
             payload=DPTArray(0x40),
         )
-        self.loop.run_until_complete(asyncio.Task(sensor.process_group_write(telegram)))
+        self.loop.run_until_complete(sensor.process_group_write(telegram))
         self.assertEqual(
             str(sensor),
             '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/<DPTArray value="[0x40]" />/25" value="25" unit="%"/>',
@@ -354,9 +352,7 @@ class TestStringRepresentations(unittest.TestCase):
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
         )
-        self.loop.run_until_complete(
-            asyncio.Task(weather.process_group_write(telegram))
-        )
+        self.loop.run_until_complete(weather.process_group_write(telegram))
 
         self.assertEqual(
             str(weather),

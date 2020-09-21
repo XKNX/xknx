@@ -35,7 +35,7 @@ class TestDevice(unittest.TestCase):
             xknx, "TestDevice", device_updated_cb=async_after_update_callback
         )
 
-        self.loop.run_until_complete(asyncio.Task(device.after_update()))
+        self.loop.run_until_complete(device.after_update())
         after_update_callback.assert_called_with(device)
 
     def test_iter_remote_value_raises_exception(self):
@@ -65,14 +65,14 @@ class TestDevice(unittest.TestCase):
         device.register_device_updated_cb(async_after_update_callback2)
 
         # Triggering first time. Both have to be called
-        self.loop.run_until_complete(asyncio.Task(device.after_update()))
+        self.loop.run_until_complete(device.after_update())
         after_update_callback1.assert_called_with(device)
         after_update_callback2.assert_called_with(device)
         after_update_callback1.reset_mock()
         after_update_callback2.reset_mock()
 
         # Triggering 2nd time. Both have to be called
-        self.loop.run_until_complete(asyncio.Task(device.after_update()))
+        self.loop.run_until_complete(device.after_update())
         after_update_callback1.assert_called_with(device)
         after_update_callback2.assert_called_with(device)
         after_update_callback1.reset_mock()
@@ -80,7 +80,7 @@ class TestDevice(unittest.TestCase):
 
         # Unregistering first callback
         device.unregister_device_updated_cb(async_after_update_callback1)
-        self.loop.run_until_complete(asyncio.Task(device.after_update()))
+        self.loop.run_until_complete(device.after_update())
         after_update_callback1.assert_not_called()
         after_update_callback2.assert_called_with(device)
         after_update_callback1.reset_mock()
@@ -88,7 +88,7 @@ class TestDevice(unittest.TestCase):
 
         # Unregistering second callback
         device.unregister_device_updated_cb(async_after_update_callback2)
-        self.loop.run_until_complete(asyncio.Task(device.after_update()))
+        self.loop.run_until_complete(device.after_update())
         after_update_callback1.assert_not_called()
         after_update_callback2.assert_not_called()
 
@@ -106,7 +106,7 @@ class TestDevice(unittest.TestCase):
                 payload=DPTArray((0x01, 0x02)),
                 telegramtype=TelegramType.GROUP_READ,
             )
-            self.loop.run_until_complete(asyncio.Task(device.process(telegram)))
+            self.loop.run_until_complete(device.process(telegram))
             mock_group_read.assert_called_with(telegram)
 
         with patch("xknx.devices.Device.process_group_write") as mock_group_write:
@@ -118,7 +118,7 @@ class TestDevice(unittest.TestCase):
                 payload=DPTArray((0x01, 0x02)),
                 telegramtype=TelegramType.GROUP_WRITE,
             )
-            self.loop.run_until_complete(asyncio.Task(device.process(telegram)))
+            self.loop.run_until_complete(device.process(telegram))
             mock_group_write.assert_called_with(telegram)
 
         with patch("xknx.devices.Device.process_group_response") as mock_group_response:
@@ -130,7 +130,7 @@ class TestDevice(unittest.TestCase):
                 payload=DPTArray((0x01, 0x02)),
                 telegramtype=TelegramType.GROUP_RESPONSE,
             )
-            self.loop.run_until_complete(asyncio.Task(device.process(telegram)))
+            self.loop.run_until_complete(device.process(telegram))
             mock_group_response.assert_called_with(telegram)
 
     def test_sync_with_wait(self):
@@ -146,9 +146,7 @@ class TestDevice(unittest.TestCase):
             fut = asyncio.Future()
             fut.set_result(None)
             read_state_mock.return_value = fut
-            self.loop.run_until_complete(
-                asyncio.Task(sensor.sync(wait_for_result=True))
-            )
+            self.loop.run_until_complete(sensor.sync(wait_for_result=True))
 
             read_state_mock.assert_called_with(wait_for_result=True)
 
@@ -156,9 +154,7 @@ class TestDevice(unittest.TestCase):
         """Test if process_group_write. Nothing really to test here."""
         xknx = XKNX(loop=self.loop)
         device = Device(xknx, "TestDevice")
-        self.loop.run_until_complete(
-            asyncio.Task(device.process_group_write(Telegram()))
-        )
+        self.loop.run_until_complete(device.process_group_write(Telegram()))
 
     def test_process_group_response(self):
         """Test if process_group_read. Testing if mapped to group_write."""
@@ -168,25 +164,22 @@ class TestDevice(unittest.TestCase):
             fut = asyncio.Future()
             fut.set_result(None)
             mock_group_write.return_value = fut
-            self.loop.run_until_complete(
-                asyncio.Task(device.process_group_response(Telegram()))
-            )
+            self.loop.run_until_complete(device.process_group_response(Telegram()))
+
             mock_group_write.assert_called_with(Telegram())
 
     def test_process_group_read(self):
         """Test if process_group_read. Nothing really to test here."""
         xknx = XKNX(loop=self.loop)
         device = Device(xknx, "TestDevice")
-        self.loop.run_until_complete(
-            asyncio.Task(device.process_group_read(Telegram()))
-        )
+        self.loop.run_until_complete(device.process_group_read(Telegram()))
 
     def test_do(self):
         """Testing empty do."""
         xknx = XKNX(loop=self.loop)
         device = Device(xknx, "TestDevice")
         with patch("logging.Logger.info") as mock_info:
-            self.loop.run_until_complete(asyncio.Task(device.do("xx")))
+            self.loop.run_until_complete(device.do("xx"))
             mock_info.assert_called_with(
                 "'do()' not implemented for action '%s' of %s", "xx", "Device"
             )

@@ -142,17 +142,17 @@ class TestDevices(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         light1 = Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
         for device in xknx.devices:
-            self.loop.run_until_complete(asyncio.Task(device.set_on()))
+            self.loop.run_until_complete(device.set_on())
             self.loop.run_until_complete(
                 xknx.devices.process(xknx.telegrams.get_nowait())
             )
         self.assertTrue(light1.state)
         device2 = xknx.devices["Living-Room.Light_1"]
-        self.loop.run_until_complete(asyncio.Task(device2.set_off()))
+        self.loop.run_until_complete(device2.set_off())
         self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
         self.assertFalse(light1.state)
         for device in xknx.devices.devices_by_group_address(GroupAddress("1/6/7")):
-            self.loop.run_until_complete(asyncio.Task(device.set_on()))
+            self.loop.run_until_complete(device.set_on())
             self.loop.run_until_complete(
                 xknx.devices.process(xknx.telegrams.get_nowait())
             )
@@ -176,7 +176,7 @@ class TestDevices(unittest.TestCase):
             fut = asyncio.Future()
             fut.set_result(None)
             mock_sync.return_value = fut
-            self.loop.run_until_complete(asyncio.Task(xknx.devices.sync()))
+            self.loop.run_until_complete(xknx.devices.sync())
             self.assertEqual(mock_sync.call_count, 2)
 
     #
@@ -204,14 +204,14 @@ class TestDevices(unittest.TestCase):
         xknx.devices.register_device_updated_cb(async_after_update_callback2)
 
         # Triggering first device. Both callbacks to be called
-        self.loop.run_until_complete(asyncio.Task(device1.after_update()))
+        self.loop.run_until_complete(device1.after_update())
         after_update_callback1.assert_called_with(device1)
         after_update_callback2.assert_called_with(device1)
         after_update_callback1.reset_mock()
         after_update_callback2.reset_mock()
 
         # Triggering 2nd device. Both callbacks have to be called
-        self.loop.run_until_complete(asyncio.Task(device2.after_update()))
+        self.loop.run_until_complete(device2.after_update())
         after_update_callback1.assert_called_with(device2)
         after_update_callback2.assert_called_with(device2)
         after_update_callback1.reset_mock()
@@ -221,7 +221,7 @@ class TestDevices(unittest.TestCase):
         xknx.devices.unregister_device_updated_cb(async_after_update_callback1)
 
         # Triggering first device. Only second callback has to be called
-        self.loop.run_until_complete(asyncio.Task(device1.after_update()))
+        self.loop.run_until_complete(device1.after_update())
         after_update_callback1.assert_not_called()
         after_update_callback2.assert_called_with(device1)
         after_update_callback1.reset_mock()
@@ -231,7 +231,7 @@ class TestDevices(unittest.TestCase):
         xknx.devices.unregister_device_updated_cb(async_after_update_callback2)
 
         # Triggering second device. No callback should be called
-        self.loop.run_until_complete(asyncio.Task(device2.after_update()))
+        self.loop.run_until_complete(device2.after_update())
         after_update_callback1.assert_not_called()
         after_update_callback2.assert_not_called()
         after_update_callback1.reset_mock()

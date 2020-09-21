@@ -117,16 +117,14 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
             group_address=GroupAddress("1/2/3"),
             climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE,
         )
-        self.loop.run_until_complete(
-            asyncio.Task(remote_value.set(HVACOperationMode.NIGHT))
-        )
+        self.loop.run_until_complete(remote_value.set(HVACOperationMode.NIGHT))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram, Telegram(GroupAddress("1/2/3"), payload=DPTArray((0x03,)))
         )
         self.loop.run_until_complete(
-            asyncio.Task(remote_value.set(HVACOperationMode.FROST_PROTECTION))
+            remote_value.set(HVACOperationMode.FROST_PROTECTION)
         )
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -142,16 +140,14 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
             group_address=GroupAddress("1/2/3"),
             operation_mode=HVACOperationMode.STANDBY,
         )
-        self.loop.run_until_complete(
-            asyncio.Task(remote_value.set(HVACOperationMode.STANDBY))
-        )
+        self.loop.run_until_complete(remote_value.set(HVACOperationMode.STANDBY))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(True))
         )
         self.loop.run_until_complete(
-            asyncio.Task(remote_value.set(HVACOperationMode.FROST_PROTECTION))
+            remote_value.set(HVACOperationMode.FROST_PROTECTION)
         )
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -170,7 +166,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         telegram = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTArray((0x00,))
         )
-        self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+        self.loop.run_until_complete(remote_value.process(telegram))
         self.assertEqual(remote_value.value, HVACOperationMode.AUTO)
 
     def test_process_binary(self):
@@ -184,7 +180,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         telegram = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTBinary(True)
         )
-        self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+        self.loop.run_until_complete(remote_value.process(telegram))
         self.assertEqual(remote_value.value, HVACOperationMode.FROST_PROTECTION)
 
     def test_to_process_error_operation_mode(self):
@@ -199,7 +195,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
             )
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"),
@@ -210,7 +206,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
                     )
                 ),
             )
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            self.loop.run_until_complete(remote_value.process(telegram))
 
     def test_to_process_error_heat_cool(self):
         """Test process errornous telegram."""
@@ -224,7 +220,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"), payload=DPTArray((0x01,))
             )
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"),
@@ -235,4 +231,4 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
                     )
                 ),
             )
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            self.loop.run_until_complete(remote_value.process(telegram))

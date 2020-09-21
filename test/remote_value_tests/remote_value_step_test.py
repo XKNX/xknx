@@ -76,13 +76,13 @@ class TestRemoteValueStep(unittest.TestCase):
         """Test setting value."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueStep(xknx, group_address=GroupAddress("1/2/3"))
-        self.loop.run_until_complete(asyncio.Task(remote_value.decrease()))
+        self.loop.run_until_complete(remote_value.decrease())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(0))
         )
-        self.loop.run_until_complete(asyncio.Task(remote_value.increase()))
+        self.loop.run_until_complete(remote_value.increase())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -95,7 +95,7 @@ class TestRemoteValueStep(unittest.TestCase):
         remote_value = RemoteValueStep(xknx, group_address=GroupAddress("1/2/3"))
         telegram = Telegram(group_address=GroupAddress("1/2/3"), payload=DPTBinary(0))
         self.assertEqual(remote_value.value, None)
-        self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+        self.loop.run_until_complete(remote_value.process(telegram))
         self.assertEqual(remote_value.value, RemoteValueStep.Direction.DECREASE)
 
     def test_to_process_error(self):
@@ -106,11 +106,11 @@ class TestRemoteValueStep(unittest.TestCase):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"), payload=DPTArray(0x01)
             )
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"), payload=DPTBinary(3)
             )
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            self.loop.run_until_complete(remote_value.process(telegram))
             # pylint: disable=pointless-statement
             remote_value.value

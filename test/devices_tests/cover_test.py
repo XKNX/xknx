@@ -58,7 +58,7 @@ class TestCover(unittest.TestCase):
         )
         self.assertFalse(cover.supports_stop)
         with patch("logging.Logger.warning") as mock_warn:
-            self.loop.run_until_complete(asyncio.Task(cover.stop()))
+            self.loop.run_until_complete(cover.stop())
             self.assertEqual(xknx.telegrams.qsize(), 0)
             mock_warn.assert_called_with(
                 "Stop not supported for device %s", "Children.Venetian"
@@ -123,7 +123,7 @@ class TestCover(unittest.TestCase):
             group_address_short="1/2/2",
             group_address_position_state="1/2/3",
         )
-        self.loop.run_until_complete(asyncio.Task(cover.sync()))
+        self.loop.run_until_complete(cover.sync())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -141,7 +141,7 @@ class TestCover(unittest.TestCase):
             group_address_position="1/2/3",
             group_address_position_state="1/2/4",
         )
-        self.loop.run_until_complete(asyncio.Task(cover.sync()))
+        self.loop.run_until_complete(cover.sync())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -159,7 +159,7 @@ class TestCover(unittest.TestCase):
             group_address_position_state="1/2/3",
             group_address_angle_state="1/2/4",
         )
-        self.loop.run_until_complete(asyncio.Task(cover.sync()))
+        self.loop.run_until_complete(cover.sync())
         self.assertEqual(xknx.telegrams.qsize(), 2)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -181,7 +181,7 @@ class TestCover(unittest.TestCase):
             group_address_angle="1/2/3",
             group_address_angle_state="1/2/4",
         )
-        self.loop.run_until_complete(asyncio.Task(cover.sync()))
+        self.loop.run_until_complete(cover.sync())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -202,7 +202,7 @@ class TestCover(unittest.TestCase):
             group_address_position="1/2/3",
             group_address_position_state="1/2/4",
         )
-        self.loop.run_until_complete(asyncio.Task(cover.set_up()))
+        self.loop.run_until_complete(cover.set_up())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         # DPT 1.008 - 0:up 1:down
@@ -224,7 +224,7 @@ class TestCover(unittest.TestCase):
             group_address_position="1/2/3",
             group_address_position_state="1/2/4",
         )
-        self.loop.run_until_complete(asyncio.Task(cover.set_down()))
+        self.loop.run_until_complete(cover.set_down())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -245,7 +245,7 @@ class TestCover(unittest.TestCase):
             group_address_position="1/2/3",
             group_address_position_state="1/2/4",
         )
-        self.loop.run_until_complete(asyncio.Task(cover.set_short_up()))
+        self.loop.run_until_complete(cover.set_short_up())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         # DPT 1.008 - 0:up 1:down
@@ -267,7 +267,7 @@ class TestCover(unittest.TestCase):
             group_address_position="1/2/3",
             group_address_position_state="1/2/4",
         )
-        self.loop.run_until_complete(asyncio.Task(cover.set_short_down()))
+        self.loop.run_until_complete(cover.set_short_down())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         # DPT 1.008 - 0:up 1:down
@@ -289,7 +289,7 @@ class TestCover(unittest.TestCase):
             group_address_position="1/2/3",
             group_address_position_state="1/2/4",
         )
-        self.loop.run_until_complete(asyncio.Task(cover_short_stop.stop()))
+        self.loop.run_until_complete(cover_short_stop.stop())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -305,7 +305,7 @@ class TestCover(unittest.TestCase):
             group_address_position="1/2/3",
             group_address_position_state="1/2/4",
         )
-        self.loop.run_until_complete(asyncio.Task(cover_manual_stop.stop()))
+        self.loop.run_until_complete(cover_manual_stop.stop())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -326,7 +326,7 @@ class TestCover(unittest.TestCase):
             group_address_position="1/2/3",
             group_address_position_state="1/2/4",
         )
-        self.loop.run_until_complete(asyncio.Task(cover.set_position(50)))
+        self.loop.run_until_complete(cover.set_position(50))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -344,7 +344,7 @@ class TestCover(unittest.TestCase):
             group_address_position_state="1/2/4",
         )
         cover.travelcalculator.set_position(60)
-        self.loop.run_until_complete(asyncio.Task(cover.set_position(50)))
+        self.loop.run_until_complete(cover.set_position(50))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         # DPT 1.008 - 0:up 1:down
@@ -364,7 +364,7 @@ class TestCover(unittest.TestCase):
             group_address_position_state="1/2/4",
         )
         cover.travelcalculator.set_position(70)
-        self.loop.run_until_complete(asyncio.Task(cover.set_position(80)))
+        self.loop.run_until_complete(cover.set_position(80))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -384,13 +384,13 @@ class TestCover(unittest.TestCase):
         )
 
         with patch("logging.Logger.warning") as mock_warn:
-            self.loop.run_until_complete(asyncio.Task(cover.set_position(50)))
+            self.loop.run_until_complete(cover.set_position(50))
             self.assertEqual(xknx.telegrams.qsize(), 0)
             mock_warn.assert_called_with(
                 "Current position unknown. Initialize cover by moving to end position."
             )
 
-        self.loop.run_until_complete(asyncio.Task(cover.set_position(0)))
+        self.loop.run_until_complete(cover.set_position(0))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -409,13 +409,13 @@ class TestCover(unittest.TestCase):
         )
 
         with patch("logging.Logger.warning") as mock_warn:
-            self.loop.run_until_complete(asyncio.Task(cover.set_position(50)))
+            self.loop.run_until_complete(cover.set_position(50))
             self.assertEqual(xknx.telegrams.qsize(), 0)
             mock_warn.assert_called_with(
                 "Current position unknown. Initialize cover by moving to end position."
             )
 
-        self.loop.run_until_complete(asyncio.Task(cover.set_position(100)))
+        self.loop.run_until_complete(cover.set_position(100))
         print(cover.travelcalculator.position_closed)
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -436,7 +436,7 @@ class TestCover(unittest.TestCase):
             group_address_angle="1/4/18",
             group_address_angle_state="1/4/19",
         )
-        self.loop.run_until_complete(asyncio.Task(cover.set_angle(50)))
+        self.loop.run_until_complete(cover.set_angle(50))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -453,7 +453,7 @@ class TestCover(unittest.TestCase):
             group_address_short="1/4/15",
         )
         with patch("logging.Logger.warning") as mock_warn:
-            self.loop.run_until_complete(asyncio.Task(cover.set_angle(50)))
+            self.loop.run_until_complete(cover.set_angle(50))
             self.assertEqual(xknx.telegrams.qsize(), 0)
             mock_warn.assert_called_with(
                 "Angle not supported for device %s", "Children.Venetian"
@@ -475,24 +475,24 @@ class TestCover(unittest.TestCase):
         )
         # initial position process - position is unknown so this is the new state - not moving
         telegram = Telegram(GroupAddress("1/2/3"), payload=DPTArray(213))
-        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        self.loop.run_until_complete(cover.process(telegram))
         self.assertEqual(cover.current_position(), 84)
         self.assertFalse(cover.is_traveling())
         # state telegram updates current position - we are not moving so this is new state - not moving
         telegram = Telegram(GroupAddress("1/2/4"), payload=DPTArray(42))
-        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        self.loop.run_until_complete(cover.process(telegram))
         self.assertEqual(cover.current_position(), 16)
         self.assertFalse(cover.is_traveling())
         self.assertEqual(cover.travelcalculator.travel_to_position, 16)
         # new position - movement starts
         telegram = Telegram(GroupAddress("1/2/3"), payload=DPTArray(255))
-        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        self.loop.run_until_complete(cover.process(telegram))
         self.assertEqual(cover.current_position(), 16)
         self.assertTrue(cover.is_closing())
         self.assertEqual(cover.travelcalculator.travel_to_position, 100)
         # new state while moving - movement goes on; travelcalculator updated
         telegram = Telegram(GroupAddress("1/2/4"), payload=DPTArray(213))
-        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        self.loop.run_until_complete(cover.process(telegram))
         self.assertEqual(cover.current_position(), 84)
         self.assertTrue(cover.is_closing())
         self.assertEqual(cover.travelcalculator.travel_to_position, 100)
@@ -509,7 +509,7 @@ class TestCover(unittest.TestCase):
             group_address_angle_state="1/2/4",
         )
         telegram = Telegram(GroupAddress("1/2/4"), payload=DPTArray(42))
-        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        self.loop.run_until_complete(cover.process(telegram))
         self.assertEqual(cover.current_angle(), 16)
 
     def test_process_up(self):
@@ -521,7 +521,7 @@ class TestCover(unittest.TestCase):
         cover.travelcalculator.set_position(50)
         self.assertFalse(cover.is_traveling())
         telegram = Telegram(GroupAddress("1/2/1"), payload=DPTBinary(0))
-        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        self.loop.run_until_complete(cover.process(telegram))
         self.assertTrue(cover.is_opening())
 
     def test_process_down(self):
@@ -533,7 +533,7 @@ class TestCover(unittest.TestCase):
         cover.travelcalculator.set_position(50)
         self.assertFalse(cover.is_traveling())
         telegram = Telegram(GroupAddress("1/2/1"), payload=DPTBinary(1))
-        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        self.loop.run_until_complete(cover.process(telegram))
         self.assertTrue(cover.is_closing())
 
     def test_process_stop(self):
@@ -546,10 +546,10 @@ class TestCover(unittest.TestCase):
             group_address_stop="1/2/2",
         )
         cover.travelcalculator.set_position(50)
-        self.loop.run_until_complete(asyncio.Task(cover.set_down()))
+        self.loop.run_until_complete(cover.set_down())
         self.assertTrue(cover.is_traveling())
         telegram = Telegram(GroupAddress("1/2/2"), payload=DPTBinary(1))
-        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        self.loop.run_until_complete(cover.process(telegram))
         self.assertFalse(cover.is_traveling())
 
     def test_process_short_stop(self):
@@ -562,10 +562,10 @@ class TestCover(unittest.TestCase):
             group_address_short="1/2/2",
         )
         cover.travelcalculator.set_position(50)
-        self.loop.run_until_complete(asyncio.Task(cover.set_down()))
+        self.loop.run_until_complete(cover.set_down())
         self.assertTrue(cover.is_traveling())
         telegram = Telegram(GroupAddress("1/2/2"), payload=DPTBinary(1))
-        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        self.loop.run_until_complete(cover.process(telegram))
         self.assertFalse(cover.is_traveling())
 
     def test_process_callback(self):
@@ -601,15 +601,15 @@ class TestCover(unittest.TestCase):
         ]:
             with self.subTest(address=address, feature=feature):
                 telegram = Telegram(GroupAddress(address), payload=payload)
-                self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+                self.loop.run_until_complete(cover.process(telegram))
                 after_update_callback.assert_called_with(cover)
                 after_update_callback.reset_mock()
         # Stop only when cover is travelling
         telegram = Telegram(GroupAddress("1/2/3"), payload=DPTBinary(1))
-        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        self.loop.run_until_complete(cover.process(telegram))
         after_update_callback.assert_not_called()
-        self.loop.run_until_complete(asyncio.Task(cover.set_down()))
-        self.loop.run_until_complete(asyncio.Task(cover.process(telegram)))
+        self.loop.run_until_complete(cover.set_down())
+        self.loop.run_until_complete(cover.process(telegram))
         after_update_callback.assert_called_with(cover)
 
     #
@@ -636,7 +636,7 @@ class TestCover(unittest.TestCase):
             self.assertTrue(cover.position_reached())
             # we start with state open covers (up)
             cover.travelcalculator.set_position(0)
-            self.loop.run_until_complete(asyncio.Task(cover.set_down()))
+            self.loop.run_until_complete(cover.set_down())
             self.assertTrue(cover.is_traveling())
             self.assertTrue(cover.is_open())
             self.assertFalse(cover.is_closed())
@@ -659,7 +659,7 @@ class TestCover(unittest.TestCase):
             self.assertFalse(cover.is_opening())
             self.assertFalse(cover.is_closing())
             # up again
-            self.loop.run_until_complete(asyncio.Task(cover.set_up()))
+            self.loop.run_until_complete(cover.set_up())
             self.assertFalse(cover.position_reached())
             self.assertTrue(cover.is_traveling())
             self.assertFalse(cover.is_open())
@@ -676,7 +676,7 @@ class TestCover(unittest.TestCase):
             self.assertFalse(cover.is_closing())
 
             mock_time.return_value = 1517000016.0  # 16 Seconds, manual stop
-            self.loop.run_until_complete(asyncio.Task(cover.stop()))
+            self.loop.run_until_complete(cover.stop())
             self.assertTrue(cover.position_reached())
             self.assertFalse(cover.is_traveling())
             self.assertFalse(cover.is_open())
@@ -707,16 +707,16 @@ class TestCover(unittest.TestCase):
 
             mock_time.return_value = 1517000000.0
             # we start with state 0 - open covers (up) this is assumed immediately
-            self.loop.run_until_complete(asyncio.Task(cover.set_position(0)))
+            self.loop.run_until_complete(cover.set_position(0))
 
-            self.loop.run_until_complete(asyncio.Task(cover.set_position(50)))
+            self.loop.run_until_complete(cover.set_position(50))
 
             mock_time.return_value = 1517000001.0
-            self.loop.run_until_complete(asyncio.Task(cover.auto_stop_if_necessary()))
+            self.loop.run_until_complete(cover.auto_stop_if_necessary())
             mock_stop.assert_not_called()
 
             mock_time.return_value = 1517000005.0
-            self.loop.run_until_complete(asyncio.Task(cover.auto_stop_if_necessary()))
+            self.loop.run_until_complete(cover.auto_stop_if_necessary())
             mock_stop.assert_called_with()
             mock_stop.reset_mock()
 
@@ -733,23 +733,23 @@ class TestCover(unittest.TestCase):
         cover = Cover(xknx, "TestCover")
         with patch("xknx.devices.Cover.set_up") as mock:
             mock.return_value = asyncio.ensure_future(async_none())
-            self.loop.run_until_complete(asyncio.Task(cover.do("up")))
+            self.loop.run_until_complete(cover.do("up"))
             mock.assert_called_once_with()
         with patch("xknx.devices.Cover.set_short_up") as mock:
             mock.return_value = asyncio.ensure_future(async_none())
-            self.loop.run_until_complete(asyncio.Task(cover.do("short_up")))
+            self.loop.run_until_complete(cover.do("short_up"))
             mock.assert_called_once_with()
         with patch("xknx.devices.Cover.set_down") as mock:
             mock.return_value = asyncio.ensure_future(async_none())
-            self.loop.run_until_complete(asyncio.Task(cover.do("down")))
+            self.loop.run_until_complete(cover.do("down"))
             mock.assert_called_once_with()
         with patch("xknx.devices.Cover.set_short_down") as mock:
             mock.return_value = asyncio.ensure_future(async_none())
-            self.loop.run_until_complete(asyncio.Task(cover.do("short_down")))
+            self.loop.run_until_complete(cover.do("short_down"))
             mock.assert_called_once_with()
         with patch("xknx.devices.Cover.stop") as mock:
             mock.return_value = asyncio.ensure_future(async_none())
-            self.loop.run_until_complete(asyncio.Task(cover.do("stop")))
+            self.loop.run_until_complete(cover.do("stop"))
             mock.assert_called_once_with()
 
     def test_wrong_do(self):
@@ -757,7 +757,7 @@ class TestCover(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         cover = Cover(xknx, "TestCover")
         with patch("logging.Logger.warning") as mock_warn:
-            self.loop.run_until_complete(asyncio.Task(cover.do("execute")))
+            self.loop.run_until_complete(cover.do("execute"))
             self.assertEqual(xknx.telegrams.qsize(), 0)
             mock_warn.assert_called_with(
                 "Could not understand action %s for device %s", "execute", "TestCover"

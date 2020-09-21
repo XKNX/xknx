@@ -34,7 +34,7 @@ class TestDateTime(unittest.TestCase):
 
         with patch("time.localtime") as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
-            self.loop.run_until_complete(asyncio.Task(datetime.sync()))
+            self.loop.run_until_complete(datetime.sync())
 
         # initial Telegram from broadcasting on init
         self.assertEqual(xknx.telegrams.qsize(), 2)
@@ -61,7 +61,7 @@ class TestDateTime(unittest.TestCase):
 
         with patch("time.localtime") as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
-            self.loop.run_until_complete(asyncio.Task(datetime.sync()))
+            self.loop.run_until_complete(datetime.sync())
 
         # initial Telegram from broadcasting on init
         self.assertEqual(xknx.telegrams.qsize(), 2)
@@ -85,7 +85,7 @@ class TestDateTime(unittest.TestCase):
 
         with patch("time.localtime") as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
-            self.loop.run_until_complete(asyncio.Task(datetime.sync()))
+            self.loop.run_until_complete(datetime.sync())
 
         # initial Telegram from broadcasting on init
         self.assertEqual(xknx.telegrams.qsize(), 2)
@@ -115,7 +115,7 @@ class TestDateTime(unittest.TestCase):
         )
         with patch("time.localtime") as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
-            self.loop.run_until_complete(asyncio.Task(datetime.process(telegram_read)))
+            self.loop.run_until_complete(datetime.process(telegram_read))
 
         # initial Telegram from broadcasting on init
         self.assertEqual(xknx.telegrams.qsize(), 2)

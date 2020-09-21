@@ -37,17 +37,15 @@ class TestRemoteValue1Count(unittest.TestCase):
         """Test setting value."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValue1Count(xknx, group_address=GroupAddress("1/2/3"))
-        self.loop.run_until_complete(asyncio.Task(remote_value.set(100)))
+        self.loop.run_until_complete(remote_value.set(100))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram, Telegram(GroupAddress("1/2/3"), payload=DPTArray((0x64,)))
         )
         self.loop.run_until_complete(
-            asyncio.Task(
-                remote_value.set(
-                    101,
-                )
+            remote_value.set(
+                101,
             )
         )
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -63,7 +61,7 @@ class TestRemoteValue1Count(unittest.TestCase):
         telegram = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTArray((0x64,))
         )
-        self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+        self.loop.run_until_complete(remote_value.process(telegram))
         self.assertEqual(remote_value.value, 100)
 
     def test_to_process_error(self):
@@ -74,7 +72,7 @@ class TestRemoteValue1Count(unittest.TestCase):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
             )
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"),
@@ -85,4 +83,4 @@ class TestRemoteValue1Count(unittest.TestCase):
                     )
                 ),
             )
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            self.loop.run_until_complete(remote_value.process(telegram))

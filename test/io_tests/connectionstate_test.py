@@ -51,7 +51,7 @@ class TestConnectionState(unittest.TestCase):
             "xknx.io.UDPClient.getsockname"
         ) as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
-            self.loop.run_until_complete(asyncio.Task(connectionstate.start()))
+            self.loop.run_until_complete(connectionstate.start())
             mock_udp_send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type

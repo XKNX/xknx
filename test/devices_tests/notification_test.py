@@ -31,7 +31,7 @@ class TestNotification(unittest.TestCase):
         notification = Notification(
             xknx, "Warning", group_address="1/2/3", group_address_state="1/2/4"
         )
-        self.loop.run_until_complete(asyncio.Task(notification.sync()))
+        self.loop.run_until_complete(notification.sync())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -48,13 +48,13 @@ class TestNotification(unittest.TestCase):
         telegram_set = Telegram(
             GroupAddress("1/2/3"), payload=DPTArray(DPTString().to_knx("Ein Prosit!"))
         )
-        self.loop.run_until_complete(asyncio.Task(notification.process(telegram_set)))
+        self.loop.run_until_complete(notification.process(telegram_set))
         self.assertEqual(notification.message, "Ein Prosit!")
 
         telegram_unset = Telegram(
             GroupAddress("1/2/3"), payload=DPTArray(DPTString().to_knx(""))
         )
-        self.loop.run_until_complete(asyncio.Task(notification.process(telegram_unset)))
+        self.loop.run_until_complete(notification.process(telegram_unset))
         self.assertEqual(notification.message, "")
 
     def test_process_callback(self):
@@ -72,7 +72,7 @@ class TestNotification(unittest.TestCase):
         telegram_set = Telegram(
             GroupAddress("1/2/3"), payload=DPTArray(DPTString().to_knx("Ein Prosit!"))
         )
-        self.loop.run_until_complete(asyncio.Task(notification.process(telegram_set)))
+        self.loop.run_until_complete(notification.process(telegram_set))
         after_update_callback.assert_called_with(notification)
 
     def test_process_payload_invalid_length(self):
@@ -82,7 +82,7 @@ class TestNotification(unittest.TestCase):
         notification = Notification(xknx, "Warning", group_address="1/2/3")
         telegram = Telegram(GroupAddress("1/2/3"), payload=DPTArray((23, 24)))
         with self.assertRaises(CouldNotParseTelegram):
-            self.loop.run_until_complete(asyncio.Task(notification.process(telegram)))
+            self.loop.run_until_complete(notification.process(telegram))
 
     def test_process_wrong_payload(self):
         """Test process wrong telegram (wrong payload type)."""
@@ -90,7 +90,7 @@ class TestNotification(unittest.TestCase):
         notification = Notification(xknx, "Warning", group_address="1/2/3")
         telegram = Telegram(GroupAddress("1/2/3"), payload=DPTBinary(1))
         with self.assertRaises(CouldNotParseTelegram):
-            self.loop.run_until_complete(asyncio.Task(notification.process(telegram)))
+            self.loop.run_until_complete(notification.process(telegram))
 
     #
     # TEST SET MESSAGE
@@ -99,7 +99,7 @@ class TestNotification(unittest.TestCase):
         """Test notificationing off notification."""
         xknx = XKNX(loop=self.loop)
         notification = Notification(xknx, "Warning", group_address="1/2/3")
-        self.loop.run_until_complete(asyncio.Task(notification.set("Ein Prosit!")))
+        self.loop.run_until_complete(notification.set("Ein Prosit!"))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -110,9 +110,8 @@ class TestNotification(unittest.TestCase):
             ),
         )
         # test if message longer than 14 chars gets cropped
-        self.loop.run_until_complete(
-            asyncio.Task(notification.set("This is too long."))
-        )
+        self.loop.run_until_complete(notification.set("This is too long."))
+
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -130,9 +129,7 @@ class TestNotification(unittest.TestCase):
         """Test 'do' functionality."""
         xknx = XKNX(loop=self.loop)
         notification = Notification(xknx, "Warning", group_address="1/2/3")
-        self.loop.run_until_complete(
-            asyncio.Task(notification.do("message:Ein Prosit!"))
-        )
+        self.loop.run_until_complete(notification.do("message:Ein Prosit!"))
         self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
         self.assertEqual(notification.message, "Ein Prosit!")
 
@@ -141,7 +138,7 @@ class TestNotification(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         notification = Notification(xknx, "Warning", group_address="1/2/3")
         with patch("logging.Logger.warning") as mock_warn:
-            self.loop.run_until_complete(asyncio.Task(notification.do("execute")))
+            self.loop.run_until_complete(notification.do("execute"))
             mock_warn.assert_called_with(
                 "Could not understand action %s for device %s", "execute", "Warning"
             )

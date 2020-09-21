@@ -57,7 +57,7 @@ class TestRemoteValue(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValue(xknx)
         with patch("logging.Logger.info") as mock_info:
-            self.loop.run_until_complete(asyncio.Task(remote_value.set(23)))
+            self.loop.run_until_complete(remote_value.set(23))
             mock_info.assert_called_with(
                 "Setting value of uninitialized device: %s - %s (value: %s)",
                 "Unknown",
@@ -70,7 +70,7 @@ class TestRemoteValue(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValue(xknx, group_address_state=GroupAddress("1/2/3"))
         with patch("logging.Logger.warning") as mock_info:
-            self.loop.run_until_complete(asyncio.Task(remote_value.set(23)))
+            self.loop.run_until_complete(remote_value.set(23))
             mock_info.assert_called_with(
                 "Attempted to set value for non-writable device: %s - %s (value: %s)",
                 "Unknown",
@@ -96,9 +96,7 @@ class TestRemoteValue(unittest.TestCase):
 
             telegram = Telegram(GroupAddress("1/2/1"), payload=DPTArray((0x01, 0x02)))
             with self.assertRaises(CouldNotParseTelegram):
-                self.loop.run_until_complete(
-                    asyncio.Task(remote_value.process(telegram))
-                )
+                self.loop.run_until_complete(remote_value.process(telegram))
 
     def test_read_state(self):
         """Test read state while waiting for the result."""
@@ -115,9 +113,7 @@ class TestRemoteValue(unittest.TestCase):
             fut.set_result(telegram)
             patch_read.return_value = fut
 
-            self.loop.run_until_complete(
-                asyncio.Task(remote_value.read_state(wait_for_result=True))
-            )
+            self.loop.run_until_complete(remote_value.read_state(wait_for_result=True))
 
             self.assertTrue(remote_value.value)
 
@@ -134,9 +130,7 @@ class TestRemoteValue(unittest.TestCase):
             patch_valid.return_value = False
             patch_read.return_value = fut
 
-            self.loop.run_until_complete(
-                asyncio.Task(remote_value.read_state(wait_for_result=True))
-            )
+            self.loop.run_until_complete(remote_value.read_state(wait_for_result=True))
 
             mock_info.assert_called_with(
                 "Could not sync group address '%s' (%s - %s)",

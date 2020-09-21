@@ -48,13 +48,13 @@ class TestRemoteValueDptValue2Ucount(unittest.TestCase):
         remote_value = RemoteValueDpt2ByteUnsigned(
             xknx, group_address=GroupAddress("1/2/3")
         )
-        self.loop.run_until_complete(asyncio.Task(remote_value.set(2571)))
+        self.loop.run_until_complete(remote_value.set(2571))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram, Telegram(GroupAddress("1/2/3"), payload=DPTArray((0x0A, 0x0B)))
         )
-        self.loop.run_until_complete(asyncio.Task(remote_value.set(5500)))
+        self.loop.run_until_complete(remote_value.set(5500))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -79,7 +79,7 @@ class TestRemoteValueDptValue2Ucount(unittest.TestCase):
         telegram = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTArray((0x0A, 0x0B))
         )
-        self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+        self.loop.run_until_complete(remote_value.process(telegram))
         self.assertEqual(remote_value.value, 2571)
 
     def test_to_process_error(self):
@@ -92,12 +92,12 @@ class TestRemoteValueDptValue2Ucount(unittest.TestCase):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
             )
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"), payload=DPTArray((0x64,))
             )
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"),
@@ -109,4 +109,4 @@ class TestRemoteValueDptValue2Ucount(unittest.TestCase):
                     )
                 ),
             )
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            self.loop.run_until_complete(remote_value.process(telegram))
