@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.14.3 Bugfix release
+
+### Internals
+
+- Make connectivity less noisy on connection errors.
+
+## 0.14.2 Bugfix release
+
+### Bugfixes
+
+- Correctly reset the counter of the binary sensor after a trigger.
+
 ## 0.14.1 Bugfix release
 
 ### Bugfixes
