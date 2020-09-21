@@ -57,6 +57,10 @@ class ExposeSensor(Device):
 
         return cls(xknx, name, group_address=group_address, value_type=value_type)
 
+    async def process_group_write(self, telegram):
+        """Process incoming GROUP WRITE telegram."""
+        await self.sensor_value.process(telegram)
+
     async def process_group_read(self, telegram):
         """Process incoming GROUP READ telegram."""
         await self.sensor_value.respond()

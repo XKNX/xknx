@@ -150,7 +150,7 @@ class RemoteValue:
 
         payload = self.to_knx(value)  # pylint: disable=assignment-from-no-return
         await self._send(payload, response)
-        # after_update_cb() is called when the outgoing telegram is processed.
+        # self.payload is set and after_update_cb() called when the outgoing telegram is processed.
 
     async def respond(self):
         """Send current payload as GroupValueResponse telegram to KNX bus."""
@@ -162,6 +162,8 @@ class RemoteValue:
         if self.readable:
             self.xknx.logger.debug("Sync %s - %s", self.device_name, self.feature_name)
             # pylint: disable=import-outside-toplevel
+            # TODO: send a ReadRequset and start a timeout from here instead of ValueReader
+            #       cancel timeout form process(); delete ValueReader
             from xknx.core import ValueReader
 
             value_reader = ValueReader(self.xknx, self.group_address_state)

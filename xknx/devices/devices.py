@@ -64,6 +64,11 @@ class Devices:
         for device_updated_cb in self.device_updated_cbs:
             await device_updated_cb(device)
 
+    async def process(self, telegram):
+        """Process telegram."""
+        for device in self.devices_by_group_address(telegram.group_address):
+            await device.process(telegram)
+
     async def sync(self):
         """Read state of devices from KNX bus."""
         for device in self.__devices:
