@@ -116,8 +116,10 @@ class TestFan(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
         self.loop.run_until_complete(asyncio.Task(fan.do("speed:50")))
+        self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
         self.assertEqual(fan.current_speed, 50)
         self.loop.run_until_complete(asyncio.Task(fan.do("speed:25")))
+        self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
         self.assertEqual(fan.current_speed, 25)
 
     def test_wrong_do(self):

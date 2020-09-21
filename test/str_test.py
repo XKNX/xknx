@@ -250,6 +250,7 @@ class TestStringRepresentations(unittest.TestCase):
         self.loop.run_until_complete(
             asyncio.Task(notification.set("Einbrecher im Haus"))
         )
+        self.loop.run_until_complete(notification.process(xknx.telegrams.get_nowait()))
         self.assertEqual(
             str(notification),
             '<Notification name="Alarm" '
@@ -300,7 +301,8 @@ class TestStringRepresentations(unittest.TestCase):
             str(sensor),
             '<ExposeSensor name="MeinSensor" sensor="GroupAddress("1/2/3")/None/None/None" value="None" unit="%"/>',
         )
-        self.loop.run_until_complete(asyncio.Task(sensor.set(25)))
+        self.loop.run_until_complete(sensor.set(25))
+        self.loop.run_until_complete(sensor.process(xknx.telegrams.get_nowait()))
         self.assertEqual(
             str(sensor),
             '<ExposeSensor name="MeinSensor" sensor="GroupAddress("1/2/3")/None/<DPTArray value="[0x40]" />/25" value="25" unit="%"/>',
