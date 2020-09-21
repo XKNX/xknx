@@ -1,7 +1,6 @@
 """Factory function to initialize KNX devices from config."""
 from xknx import XKNX
 from xknx.devices import (
-    ActionCallback as XknxActionCallback,
     BinarySensor as XknxBinarySensor,
     Climate as XknxClimate,
     ClimateMode as XknxClimateMode,
@@ -16,11 +15,9 @@ from xknx.devices import (
 )
 
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, CONF_TYPE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, ColorTempModes, SupportedPlatforms
+from .const import ColorTempModes, SupportedPlatforms
 from .schema import (
     BinarySensorSchema,
     ClimateSchema,
@@ -270,6 +267,9 @@ def _create_weather(knx_module: XKNX, config: ConfigType) -> XknxWeather:
         ),
         group_address_brightness_west=config.get(
             WeatherSchema.CONF_XKNX_BRIGHTNESS_WEST_ADDRESS
+        ),
+        group_address_brightness_north=config.get(
+            WeatherSchema.CONF_XKNX_BRIGHTNESS_NORTH_ADDRESS
         ),
         group_address_wind_speed=config.get(WeatherSchema.CONF_XKNX_WIND_SPEED_ADDRESS),
         group_address_rain_alarm=config.get(WeatherSchema.CONF_XKNX_RAIN_ALARM_ADDRESS),

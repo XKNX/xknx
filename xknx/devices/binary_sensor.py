@@ -126,6 +126,11 @@ class BinarySensor(Device):
         await asyncio.sleep(wait_seconds)
         await self._trigger_callbacks()
 
+        self._count_set_on = 0
+        self._count_set_off = 0
+
+        await self.after_update()
+
     async def _trigger_callbacks(self):
         """Trigger callbacks for device and execute actions if any."""
         await self.after_update()

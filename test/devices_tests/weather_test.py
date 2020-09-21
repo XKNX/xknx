@@ -79,16 +79,9 @@ class TestWeather(unittest.TestCase):
         """Test resolve state with pressure."""
         xknx = XKNX(loop=self.loop)
         weather = Weather(name="weather", xknx=xknx, group_address_air_pressure="1/3/4")
-        weather._air_pressure.payload = DPTArray(
-            (
-                0xC5,
-                0xE6,
-                0xE6,
-                0x63,
-            )
-        )
+        weather._air_pressure.payload = DPTArray((0x6C, 0xAD))
 
-        self.assertEqual(weather.air_pressure, -7388.79833984375)
+        self.assertEqual(weather.air_pressure, 98058.24)
         self.assertEqual(weather._air_pressure.unit_of_measurement, "Pa")
         self.assertEqual(weather._air_pressure.ha_device_class, "pressure")
 

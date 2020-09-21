@@ -1,6 +1,39 @@
 # Changelog
 
-## Upcoming version (unreleased)
+## 0.14.3 Bugfix release
+
+### Internals
+
+- Make connectivity less noisy on connection errors.
+
+## 0.14.2 Bugfix release
+
+### Bugfixes
+
+- Correctly reset the counter of the binary sensor after a trigger.
+
+## 0.14.1 Bugfix release
+
+### Bugfixes
+
+- Use correct DPT 9.006 for the air pressure attribute of weather devices
+- Reset binary sensor counters after the context has been timed out in order to be able to use state change events within HA
+- Code cleanups
+
+## 0.14.0 New sensor types and refacoring of binary sensor automations
+
+### Breaking changes
+
+- Binary sensor automations within the home assistant integration have been refactored to use the HA built in events as automation source instead of having the automation schema directly attached to the sensors. (Migration Guide: https://xknx.io/migration_ha_0116.html)
+
+### New Features
+
+- Add support for new sensor types DPT 12.1200 (DPT_VolumeLiquid_Litre) and DPT 12.1201 (DPTVolumeM3).
+- Weather devices now have an additional `brightness_north` GA to measure the brightness. Additionally, all sensor values are now part of the HA device state attributes for a given weather device.
+
+### Bugfixes
+
+- Fix hourly broadcasting of localtime
 
 ### Internals
 

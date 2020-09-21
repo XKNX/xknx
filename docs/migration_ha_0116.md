@@ -62,22 +62,32 @@ and your new automation will look like this:
 ```yaml
 
 automation:
-  - trigger:
-      - platform: event
-        event_type: knx_binary_sensor.cover_abstell
-        event_data:
-            counter: 1
-            state: "on"
+  - alias: 'Binary sensor test counter=1 on'
+    trigger:
+      platform: numeric_state
+      entity_id: binary_sensor.cover_abstell
+      attribute: counter
+      above: 0
+      below: 2
+    condition:
+      - condition: state
+        entity_id: binary_sensor.cover_abstell
+        state: 'on'
     action:
       - service: cover.open_cover
         entity_id: cover.sonne_abstellkammer
 
-  - trigger:
-     - platform: event
-       event_type: knx_binary_sensor.cover_abstell
-       event_data:
-            counter: 1
-            state: "off"
+  - alias: 'Binary sensor test counter=1 off'
+    trigger:
+      platform: numeric_state
+      entity_id: binary_sensor.cover_abstell
+      attribute: counter
+      above: 0
+      below: 2
+    condition:
+      - condition: state
+        entity_id: binary_sensor.cover_abstell
+        state: 'off'
     action:
       - service: cover.close_cover
         entity_id: cover.sonne_abstellkammer

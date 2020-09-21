@@ -75,6 +75,7 @@ class Weather(Device):
         name: str,
         group_address_temperature: str = None,
         group_address_brightness_south: Optional[str] = None,
+        group_address_brightness_north: Optional[str] = None,
         group_address_brightness_west: Optional[str] = None,
         group_address_brightness_east: Optional[str] = None,
         group_address_wind_speed: Optional[str] = None,
@@ -109,6 +110,16 @@ class Weather(Device):
             value_type="illuminance",
             device_name=self.name,
             feature_name="Brightness south",
+            after_update_cb=self.after_update,
+        )
+
+        self._brightness_north = RemoteValueSensor(
+            xknx,
+            group_address_state=group_address_brightness_north,
+            sync_state=sync_state,
+            value_type="illuminance",
+            device_name=self.name,
+            feature_name="Brightness north",
             after_update_cb=self.after_update,
         )
 
@@ -178,7 +189,7 @@ class Weather(Device):
             xknx,
             group_address_state=group_address_air_pressure,
             sync_state=sync_state,
-            value_type="pressure",
+            value_type="pressure_2byte",
             device_name=self.name,
             feature_name="Air pressure",
             after_update_cb=self.after_update,
@@ -202,6 +213,7 @@ class Weather(Device):
         yield from [
             self._temperature,
             self._brightness_south,
+            self._brightness_north,
             self._brightness_east,
             self._brightness_west,
             self._wind_speed,
@@ -230,6 +242,15 @@ class Weather(Device):
             0.0
             if self._brightness_south.value is None
             else self._brightness_south.value
+        )
+
+    @property
+    def brightness_north(self) -> float:
+        """Return brightness north."""
+        return (
+            0.0
+            if self._brightness_north.value is None
+            else self._brightness_north.value
         )
 
     @property
@@ -284,7 +305,12 @@ class Weather(Device):
     @property
     def max_brightness(self) -> float:
         """Return highest illuminance from all sensors."""
-        return max(self.brightness_west, self.brightness_south, self.brightness_east)
+        return max(
+            self.brightness_west,
+            self.brightness_south,
+            self.brightness_north,
+            self.brightness_east,
+        )
 
     def expose_sensors(self):
         """Expose sensors to xknx."""
@@ -334,6 +360,13 @@ class Weather(Device):
                 None
                 if not self._brightness_south.initialized
                 else self._brightness_south.group_address_state.raw,
+                "illuminance",
+            ),
+            (
+                "_brightness_north",
+                None
+                if not self._brightness_north.initialized
+                else self._brightness_north.group_address_state.raw,
                 "illuminance",
             ),
             (
@@ -423,6 +456,7 @@ class Weather(Device):
         """Initialize object from configuration structure."""
         group_address_temperature = config.get("group_address_temperature")
         group_address_brightness_south = config.get("group_address_brightness_south")
+        group_address_brightness_north = config.get("group_address_brightness_north")
         group_address_brightness_west = config.get("group_address_brightness_west")
         group_address_brightness_east = config.get("group_address_brightness_east")
         group_address_wind_speed = config.get("group_address_wind_speed")
@@ -440,6 +474,7 @@ class Weather(Device):
             name,
             group_address_temperature=group_address_temperature,
             group_address_brightness_south=group_address_brightness_south,
+            group_address_brightness_north=group_address_brightness_north,
             group_address_brightness_west=group_address_brightness_west,
             group_address_brightness_east=group_address_brightness_east,
             group_address_wind_speed=group_address_wind_speed,
@@ -457,13 +492,14 @@ class Weather(Device):
         """Return object as readable string."""
         return (
             '<Weather name="{}" '
-            'temperature="{}" brightness_south="{}" brightness_west="{}" '
+            'temperature="{}" brightness_south="{}" brightness_north="{}" brightness_west="{}" '
             'brightness_east="{}" wind_speed="{}" rain_alarm="{}" '
             'wind_alarm="{}" frost_alarm="{}" day_night="{}" '
             'air_pressure="{}" humidity="{}" />'.format(
                 self.name,
                 self._temperature.group_addr_str(),
                 self._brightness_south.group_addr_str(),
+                self._brightness_north.group_addr_str(),
                 self._brightness_west.group_addr_str(),
                 self._brightness_east.group_addr_str(),
                 self._wind_speed.group_addr_str(),

@@ -9,7 +9,8 @@ You may register callbacks to be notified if a telegram was pushed to the queue.
 """
 import asyncio
 
-from xknx.exceptions import XKNXException
+
+from xknx.exceptions import CommunicationError, XKNXException
 from xknx.telegram import TelegramDirection, TelegramType
 
 
@@ -97,6 +98,9 @@ class TelegramQueue:
 
             try:
                 await self.process_telegram_outgoing(telegram)
+            except CommunicationError as ex:
+                if ex.should_log:
+                    self.xknx.logger.warning(ex)
             except XKNXException as ex:
                 self.xknx.logger.error(
                     "Error while processing outgoing telegram %s", ex
