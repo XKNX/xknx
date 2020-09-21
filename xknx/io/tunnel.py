@@ -5,7 +5,7 @@ Tunnels connect to KNX/IP devices directly via UDP and build a static UDP connec
 """
 import asyncio
 
-from xknx.exceptions import XKNXException
+from xknx.exceptions import CommunicationError, XKNXException
 from xknx.knxip import CEMIMessageCode, KNXIPFrame, KNXIPServiceType, TunnellingRequest
 from xknx.telegram import PhysicalAddress, TelegramDirection
 
@@ -52,6 +52,8 @@ class Tunnel:
 
         self._heartbeat_task = None
         self._reconnect_task = None
+
+        self._is_reconnecting = False
 
     def init_udp_client(self):
         """Initialize udp_client."""
@@ -115,13 +117,18 @@ class Tunnel:
                 task = self.xknx.loop.create_task(self.schedule_reconnect())
                 self._reconnect_task = task
                 return
-            raise XKNXException("Could not establish connection")
+            raise CommunicationError(
+                "Could not establish connection", not self._is_reconnecting
+            )
         self.xknx.logger.debug(
             "Tunnel established communication_channel=%s, id=%s",
             connect.communication_channel,
             connect.identifier,
         )
+        if self._is_reconnecting:
+            self.xknx.logger.info("Successfully reconnected to KNX bus.")
         self._reconnect_task = None
+        self._is_reconnecting = False
         self.communication_channel = connect.communication_channel
         # Use the individual address provided by the tunnelling server
         self._src_address = PhysicalAddress(connect.identifier)
@@ -145,18 +152,20 @@ class Tunnel:
         """
         success = await self._send_telegram_impl(telegram)
         if not success:
-            self.xknx.logger.warning(
+            self.xknx.logger.debug(
                 "Sending of telegram failed. Retrying a second time."
             )
             success = await self._send_telegram_impl(telegram)
             if not success:
-                self.xknx.logger.warning(
+                self.xknx.logger.debug(
                     "Resending telegram failed. Reconnecting to tunnel."
                 )
                 await self.reconnect()
                 success = await self._send_telegram_impl(telegram)
                 if not success:
-                    raise XKNXException("Could not send telegram to tunnel")
+                    raise CommunicationError(
+                        "Resending the telegram repeatedly failed.", False
+                    )
         self.increase_sequence_number()
 
     async def _send_telegram_impl(self, telegram):
@@ -212,6 +221,7 @@ class Tunnel:
 
     async def reconnect(self):
         """Reconnect to tunnel device."""
+        self._is_reconnecting = True
         await self.disconnect(True)
         self.init_udp_client()
         await self.start()
@@ -269,8 +279,13 @@ class Tunnel:
         """Heartbeat: handling error."""
         self.number_heartbeat_failed = self.number_heartbeat_failed + 1
         if self.number_heartbeat_failed > 3:
-            self.xknx.logger.warning("Heartbeat failed - reconnecting")
-            await self.stop_reconnect()
-            await self.reconnect()
-            self.number_heartbeat_failed = 0
-            await self.stop_heartbeat()
+            if not self._is_reconnecting:
+                self.xknx.logger.warning("Heartbeat to KNX bus failed. Reconnecting.")
+            try:
+                await self.stop_reconnect()
+                await self.reconnect()
+                self.number_heartbeat_failed = 0
+                await self.stop_heartbeat()
+            except CommunicationError as exc:
+                if exc.should_log:
+                    self.xknx.logger.warning(exc)

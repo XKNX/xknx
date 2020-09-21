@@ -58,14 +58,10 @@ class RequestResponse:
 
     def on_success_hook(self, knxipframe):
         """Do something after having received a valid answer. May be overwritten in derived class."""
-        self.xknx.logger.debug(
-            "Success: Received correct answer from KNX bus: %s",
-            knxipframe.body.status_code,
-        )
 
     def on_error_hook(self, knxipframe):
         """Do something after having received error within given time. May be overwritten in derived class."""
-        self.xknx.logger.warning(
+        self.xknx.logger.debug(
             "Error: KNX bus responded to request of type '%s' with error in '%s': %s",
             self.__class__.__name__,
             self.awaited_response_class.__name__,
@@ -74,7 +70,7 @@ class RequestResponse:
 
     def timeout(self):
         """Handle timeout for not having received expected knxipframe."""
-        self.xknx.logger.warning(
+        self.xknx.logger.debug(
             "Error: KNX bus did not respond in time (%s secs) to request of type '%s'",
             self.timeout_in_seconds,
             self.__class__.__name__,
