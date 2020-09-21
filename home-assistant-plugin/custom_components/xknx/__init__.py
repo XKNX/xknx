@@ -29,7 +29,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import DATA_XKNX, DOMAIN, SupportedPlatforms
+from .const import DOMAIN, SupportedPlatforms
 from .factory import create_knx_device
 from .schema import (
     BinarySensorSchema,
@@ -139,9 +139,9 @@ SERVICE_XKNX_SEND_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the KNX component."""
     try:
-        hass.data[DATA_XKNX] = KNXModule(hass, config)
-        hass.data[DATA_XKNX].async_create_exposures()
-        await hass.data[DATA_XKNX].start()
+        hass.data[DOMAIN] = KNXModule(hass, config)
+        hass.data[DOMAIN].async_create_exposures()
+        await hass.data[DOMAIN].start()
     except XKNXException as ex:
         _LOGGER.warning("Could not connect to KNX interface: %s", ex)
         hass.components.persistent_notification.async_create(
@@ -151,7 +151,7 @@ async def async_setup(hass, config):
     for platform in SupportedPlatforms:
         if platform.value in config[DOMAIN]:
             for device_config in config[DOMAIN][platform.value]:
-                create_knx_device(platform, hass.data[DATA_XKNX].xknx, device_config)
+                create_knx_device(platform, hass.data[DOMAIN].xknx, device_config)
 
     # We need to wait until all entities are loaded into the device list since they could also be created from other platforms
     for platform in SupportedPlatforms:
@@ -159,10 +159,16 @@ async def async_setup(hass, config):
             discovery.async_load_platform(hass, platform.value, DOMAIN, {}, config)
         )
 
+    if not hass.data[DOMAIN].xknx.devices:
+        _LOGGER.warning(
+            "No KNX devices are configured. Please read "
+            "https://www.home-assistant.io/blog/2020/09/17/release-115/#breaking-changes"
+        )
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_XKNX_SEND,
-        hass.data[DATA_XKNX].service_send_to_knx_bus,
+        hass.data[DOMAIN].service_send_to_knx_bus,
         schema=SERVICE_XKNX_SEND_SCHEMA,
     )
 
