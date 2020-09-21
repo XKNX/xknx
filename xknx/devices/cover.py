@@ -53,7 +53,11 @@ class Cover(Device):
         # travelcalculator (in process_group_write and set_*) - angle changes
         # are updated from RemoteValue objects
         self.updown = RemoteValueUpDown(
-            xknx, group_address_long, device_name=self.name, after_update_cb=None
+            xknx,
+            group_address_long,
+            device_name=self.name,
+            after_update_cb=None,
+            invert=invert_position,
         )
 
         self.step = RemoteValueStep(
