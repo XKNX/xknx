@@ -77,7 +77,7 @@ class Fan(Device):
             )
 
     async def process_group_write(self, telegram):
-        """Process incoming GROUP WRITE telegram."""
+        """Process incoming and outgoing GROUP WRITE telegram."""
         await self.speed.process(telegram)
 
     @property

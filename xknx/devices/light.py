@@ -339,6 +339,6 @@ class Light(Device):
             )
 
     async def process_group_write(self, telegram):
-        """Process incoming GROUP WRITE telegram."""
+        """Process incoming and outgoing GROUP WRITE telegram."""
         for remote_value in self._iter_remote_values():
             await remote_value.process(telegram)

@@ -56,7 +56,7 @@ class Sensor(Device):
         )
 
     async def process_group_write(self, telegram):
-        """Process incoming GROUP WRITE telegram."""
+        """Process incoming and outgoing GROUP WRITE telegram."""
         await self.sensor_value.process(telegram)
 
     def unit_of_measurement(self):
