@@ -17,6 +17,16 @@ class XKNXException(Exception):
         return str(self)
 
 
+class CommunicationError(XKNXException):
+    """Unable to communicate with KNX Bus."""
+
+    def __init__(self, message, should_log=True):
+        """Instantiate exception."""
+        super().__init__(message)
+
+        self.should_log = should_log
+
+
 class CouldNotParseTelegram(XKNXException):
     """Could not parse telegram error."""
 
