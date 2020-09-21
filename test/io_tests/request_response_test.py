@@ -27,4 +27,4 @@ class TestConnectResponse(unittest.TestCase):
         request_response.timeout_in_seconds = 0
 
         with self.assertRaises(NotImplementedError):
-            self.loop.run_until_complete(asyncio.Task(request_response.start()))
+            self.loop.run_until_complete(request_response.start())

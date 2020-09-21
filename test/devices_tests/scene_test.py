@@ -31,7 +31,7 @@ class TestScene(unittest.TestCase):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX(loop=self.loop)
         scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
-        self.loop.run_until_complete(asyncio.Task(scene.sync()))
+        self.loop.run_until_complete(scene.sync())
         self.assertEqual(xknx.telegrams.qsize(), 0)
 
     #
@@ -41,7 +41,7 @@ class TestScene(unittest.TestCase):
         """Test running scene."""
         xknx = XKNX(loop=self.loop)
         scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
-        self.loop.run_until_complete(asyncio.Task(scene.run()))
+        self.loop.run_until_complete(scene.run())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -52,7 +52,7 @@ class TestScene(unittest.TestCase):
         """Test running scene with do command."""
         xknx = XKNX(loop=self.loop)
         scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
-        self.loop.run_until_complete(asyncio.Task(scene.do("run")))
+        self.loop.run_until_complete(scene.do("run"))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -64,7 +64,7 @@ class TestScene(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
         with patch("logging.Logger.warning") as mockWarn:
-            self.loop.run_until_complete(asyncio.Task(scene.do("execute")))
+            self.loop.run_until_complete(scene.do("execute"))
             mockWarn.assert_called_with(
                 "Could not understand action %s for device %s", "execute", "TestScene"
             )

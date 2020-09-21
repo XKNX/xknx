@@ -115,7 +115,7 @@ class TestTelegramQueue(unittest.TestCase):
             group_address=GroupAddress("1/2/3"),
         )
         self.loop.run_until_complete(
-            asyncio.Task(xknx.telegram_queue.process_telegram_incoming(telegram))
+            xknx.telegram_queue.process_telegram_incoming(telegram)
         )
         telegram_received_callback.assert_called_once_with(telegram)
 
@@ -144,7 +144,7 @@ class TestTelegramQueue(unittest.TestCase):
             group_address=GroupAddress("1/2/3"),
         )
         self.loop.run_until_complete(
-            asyncio.Task(xknx.telegram_queue.process_telegram_incoming(telegram))
+            xknx.telegram_queue.process_telegram_incoming(telegram)
         )
         telegram_received_callback.assert_not_called()
 
@@ -170,7 +170,7 @@ class TestTelegramQueue(unittest.TestCase):
             group_address=GroupAddress("1/2/3"),
         )
         self.loop.run_until_complete(
-            asyncio.Task(xknx.telegram_queue.process_telegram_incoming(telegram))
+            xknx.telegram_queue.process_telegram_incoming(telegram)
         )
 
         devices_by_ga_mock.assert_called_once_with(GroupAddress("1/2/3"))
@@ -197,7 +197,7 @@ class TestTelegramQueue(unittest.TestCase):
             group_address=GroupAddress("1/2/3"),
         )
         self.loop.run_until_complete(
-            asyncio.Task(xknx.telegram_queue.process_telegram_incoming(telegram))
+            xknx.telegram_queue.process_telegram_incoming(telegram)
         )
         telegram_received_callback.assert_called_once_with(telegram)
         devices_by_ga_mock.assert_not_called()
@@ -221,7 +221,7 @@ class TestTelegramQueue(unittest.TestCase):
 
         # log a warning if there is no KNXIP interface instanciated
         self.loop.run_until_complete(
-            asyncio.Task(xknx.telegram_queue.process_telegram_outgoing(telegram))
+            xknx.telegram_queue.process_telegram_outgoing(telegram)
         )
         logger_warning_mock.assert_called_once_with("No KNXIP interface defined")
         if_mock.send_telegram.assert_not_called()
@@ -229,7 +229,7 @@ class TestTelegramQueue(unittest.TestCase):
         # if we have an interface send the telegram
         xknx.knxip_interface = if_mock
         self.loop.run_until_complete(
-            asyncio.Task(xknx.telegram_queue.process_telegram_outgoing(telegram))
+            xknx.telegram_queue.process_telegram_outgoing(telegram)
         )
         if_mock.send_telegram.assert_called_once_with(telegram)
 
@@ -254,9 +254,8 @@ class TestTelegramQueue(unittest.TestCase):
         )
 
         xknx.telegrams.put_nowait(telegram)
-        self.loop.run_until_complete(
-            asyncio.Task(xknx.telegram_queue._process_all_telegrams())
-        )
+        self.loop.run_until_complete(xknx.telegram_queue._process_all_telegrams())
+
         logging_error_mock.assert_called_once_with(
             "Error while processing telegram %s",
             CouldNotParseTelegram(
@@ -291,9 +290,7 @@ class TestTelegramQueue(unittest.TestCase):
 
         xknx.telegrams.put_nowait(telegram_in)
         xknx.telegrams.put_nowait(telegram_out)
-        res = self.loop.run_until_complete(
-            asyncio.Task(xknx.telegram_queue._process_all_telegrams())
-        )
+        res = self.loop.run_until_complete(xknx.telegram_queue._process_all_telegrams())
 
         self.assertIsNone(res)
         self.assertEqual(process_telegram_incoming_mock.call_count, 1)
@@ -321,9 +318,8 @@ class TestTelegramQueue(unittest.TestCase):
             group_address=GroupAddress("1/2/3"),
         )
         xknx.telegrams.put_nowait(telegram)
-        self.loop.run_until_complete(
-            asyncio.Task(xknx.telegram_queue._process_all_telegrams())
-        )
+        self.loop.run_until_complete(xknx.telegram_queue._process_all_telegrams())
+
         telegram_received_callback.assert_called_with(telegram)
 
     #
@@ -351,9 +347,8 @@ class TestTelegramQueue(unittest.TestCase):
             group_address=GroupAddress("1/2/3"),
         )
         xknx.telegrams.put_nowait(telegram)
-        self.loop.run_until_complete(
-            asyncio.Task(xknx.telegram_queue._process_all_telegrams())
-        )
+        self.loop.run_until_complete(xknx.telegram_queue._process_all_telegrams())
+
         telegram_received_callback.assert_called_with(telegram)
 
     #
@@ -381,7 +376,6 @@ class TestTelegramQueue(unittest.TestCase):
             group_address=GroupAddress("1/2/3"),
         )
         xknx.telegrams.put_nowait(telegram)
-        self.loop.run_until_complete(
-            asyncio.Task(xknx.telegram_queue._process_all_telegrams())
-        )
+        self.loop.run_until_complete(xknx.telegram_queue._process_all_telegrams())
+
         telegram_received_callback.assert_not_called()

@@ -2580,7 +2580,7 @@ class TestSensor(unittest.TestCase):
             xknx, "TestSensor", value_type="temperature", group_address_state="1/2/3"
         )
 
-        self.loop.run_until_complete(asyncio.Task(sensor.sync()))
+        self.loop.run_until_complete(sensor.sync())
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
@@ -2613,7 +2613,7 @@ class TestSensor(unittest.TestCase):
 
         telegram = Telegram(GroupAddress("1/2/3"))
         telegram.payload = DPTArray((0x06, 0xA0))
-        self.loop.run_until_complete(asyncio.Task(sensor.process(telegram)))
+        self.loop.run_until_complete(sensor.process(telegram))
         self.assertEqual(sensor.sensor_value.payload, DPTArray((0x06, 0xA0)))
         self.assertEqual(sensor.resolve_state(), 16.96)
 
@@ -2635,5 +2635,5 @@ class TestSensor(unittest.TestCase):
 
         telegram = Telegram(GroupAddress("1/2/3"))
         telegram.payload = DPTArray((0x01, 0x02))
-        self.loop.run_until_complete(asyncio.Task(sensor.process(telegram)))
+        self.loop.run_until_complete(sensor.process(telegram))
         after_update_callback.assert_called_with(sensor)

@@ -28,7 +28,7 @@ class TestSwitch(unittest.TestCase):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX(loop=self.loop)
         switch = Switch(xknx, "TestOutlet", group_address_state="1/2/3")
-        self.loop.run_until_complete(asyncio.Task(switch.sync()))
+        self.loop.run_until_complete(switch.sync())
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
@@ -43,7 +43,7 @@ class TestSwitch(unittest.TestCase):
         switch = Switch(
             xknx, "TestOutlet", group_address="1/2/3", group_address_state="1/2/4"
         )
-        self.loop.run_until_complete(asyncio.Task(switch.sync()))
+        self.loop.run_until_complete(switch.sync())
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
 
@@ -65,14 +65,14 @@ class TestSwitch(unittest.TestCase):
         telegram_on = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
         )
-        self.loop.run_until_complete(asyncio.Task(switch.process(telegram_on)))
+        self.loop.run_until_complete(switch.process(telegram_on))
 
         self.assertEqual(switch.state, True)
 
         telegram_off = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
         )
-        self.loop.run_until_complete(asyncio.Task(switch.process(telegram_off)))
+        self.loop.run_until_complete(switch.process(telegram_off))
 
         self.assertEqual(switch.state, False)
 
@@ -92,7 +92,7 @@ class TestSwitch(unittest.TestCase):
         switch.register_device_updated_cb(async_after_update_callback)
 
         telegram = Telegram(group_address=GroupAddress("1/2/3"), payload=DPTBinary(1))
-        self.loop.run_until_complete(asyncio.Task(switch.process(telegram)))
+        self.loop.run_until_complete(switch.process(telegram))
 
         after_update_callback.assert_called_with(switch)
 
@@ -103,7 +103,7 @@ class TestSwitch(unittest.TestCase):
         """Test switching on switch."""
         xknx = XKNX(loop=self.loop)
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
-        self.loop.run_until_complete(asyncio.Task(switch.set_on()))
+        self.loop.run_until_complete(switch.set_on())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -117,7 +117,7 @@ class TestSwitch(unittest.TestCase):
         """Test switching off switch."""
         xknx = XKNX(loop=self.loop)
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
-        self.loop.run_until_complete(asyncio.Task(switch.set_off()))
+        self.loop.run_until_complete(switch.set_off())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -131,10 +131,10 @@ class TestSwitch(unittest.TestCase):
         """Test 'do' functionality."""
         xknx = XKNX(loop=self.loop)
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
-        self.loop.run_until_complete(asyncio.Task(switch.do("on")))
+        self.loop.run_until_complete(switch.do("on"))
         self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
         self.assertTrue(switch.state)
-        self.loop.run_until_complete(asyncio.Task(switch.do("off")))
+        self.loop.run_until_complete(switch.do("off"))
         self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
         self.assertFalse(switch.state)
 
@@ -143,7 +143,7 @@ class TestSwitch(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
         with patch("logging.Logger.warning") as mock_warn:
-            self.loop.run_until_complete(asyncio.Task(switch.do("execute")))
+            self.loop.run_until_complete(switch.do("execute"))
             mock_warn.assert_called_with(
                 "Could not understand action %s for device %s", "execute", "TestOutlet"
             )

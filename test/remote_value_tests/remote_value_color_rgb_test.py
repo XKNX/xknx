@@ -59,14 +59,14 @@ class TestRemoteValueColorRGB(unittest.TestCase):
         """Test setting value."""
         xknx = XKNX(loop=self.loop)
         remote_value = RemoteValueColorRGB(xknx, group_address=GroupAddress("1/2/3"))
-        self.loop.run_until_complete(asyncio.Task(remote_value.set((100, 101, 102))))
+        self.loop.run_until_complete(remote_value.set((100, 101, 102)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram,
             Telegram(GroupAddress("1/2/3"), payload=DPTArray((0x64, 0x65, 0x66))),
         )
-        self.loop.run_until_complete(asyncio.Task(remote_value.set((100, 101, 104))))
+        self.loop.run_until_complete(remote_value.set((100, 101, 104)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
@@ -81,7 +81,7 @@ class TestRemoteValueColorRGB(unittest.TestCase):
         telegram = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTArray((0x64, 0x65, 0x66))
         )
-        self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+        self.loop.run_until_complete(remote_value.process(telegram))
         self.assertEqual(remote_value.value, (100, 101, 102))
 
     def test_to_process_error(self):
@@ -92,10 +92,10 @@ class TestRemoteValueColorRGB(unittest.TestCase):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
             )
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
                 group_address=GroupAddress("1/2/3"),
                 payload=DPTArray((0x64, 0x65, 0x66, 0x67)),
             )
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            self.loop.run_until_complete(remote_value.process(telegram))
