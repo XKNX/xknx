@@ -9,7 +9,6 @@ You may register callbacks to be notified if a telegram was pushed to the queue.
 """
 import asyncio
 
-
 from xknx.exceptions import CommunicationError, XKNXException
 from xknx.telegram import TelegramDirection, TelegramType
 
