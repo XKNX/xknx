@@ -65,6 +65,7 @@ class Cover(Device):
             group_address_short,
             device_name=self.name,
             after_update_cb=self.after_update,
+            invert=invert_position,
         )
 
         self.stop_ = RemoteValueSwitch(
