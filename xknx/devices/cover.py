@@ -264,7 +264,7 @@ class Cover(Device):
         await self.angle.read_state(wait_for_result=wait_for_result)
 
     async def process_group_write(self, telegram):
-        """Process incoming GROUP WRITE telegram."""
+        """Process incoming and outgoing GROUP WRITE telegram."""
         if await self.updown.process(telegram):
             if self.updown.value == RemoteValueUpDown.Direction.UP:
                 self.travelcalculator.start_travel_up()

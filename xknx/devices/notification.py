@@ -56,7 +56,7 @@ class Notification(Device):
         await self._message.set(cropped_message)
 
     async def process_group_write(self, telegram):
-        """Process incoming GROUP WRITE telegram."""
+        """Process incoming and outgoing GROUP WRITE telegram."""
         await self._message.process(telegram)
 
     async def do(self, action):

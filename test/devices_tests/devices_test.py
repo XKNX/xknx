@@ -143,12 +143,19 @@ class TestDevices(unittest.TestCase):
         light1 = Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
         for device in xknx.devices:
             self.loop.run_until_complete(asyncio.Task(device.set_on()))
+            self.loop.run_until_complete(
+                xknx.devices.process(xknx.telegrams.get_nowait())
+            )
         self.assertTrue(light1.state)
         device2 = xknx.devices["Living-Room.Light_1"]
         self.loop.run_until_complete(asyncio.Task(device2.set_off()))
+        self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
         self.assertFalse(light1.state)
         for device in xknx.devices.devices_by_group_address(GroupAddress("1/6/7")):
             self.loop.run_until_complete(asyncio.Task(device.set_on()))
+            self.loop.run_until_complete(
+                xknx.devices.process(xknx.telegrams.get_nowait())
+            )
         self.assertTrue(light1.state)
 
     def test_add_wrong_type(self):

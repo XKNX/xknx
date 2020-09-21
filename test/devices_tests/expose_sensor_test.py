@@ -214,4 +214,5 @@ class TestExposeSensor(unittest.TestCase):
         expose_sensor.register_device_updated_cb(async_after_update_callback)
 
         self.loop.run_until_complete(asyncio.Task(expose_sensor.set(21.0)))
+        self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
         after_update_callback.assert_called_with(expose_sensor)

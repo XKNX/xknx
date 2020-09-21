@@ -132,8 +132,10 @@ class TestSwitch(unittest.TestCase):
         xknx = XKNX(loop=self.loop)
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
         self.loop.run_until_complete(asyncio.Task(switch.do("on")))
+        self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
         self.assertTrue(switch.state)
         self.loop.run_until_complete(asyncio.Task(switch.do("off")))
+        self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
         self.assertFalse(switch.state)
 
     def test_wrong_do(self):

@@ -77,7 +77,7 @@ class TestBinarySensor(unittest.TestCase):
     def test_process_action(self):
         """Test process / reading telegrams from telegram queue. Test if action is executed."""
         xknx = XKNX(loop=self.loop)
-        Switch(xknx, "TestOutlet", group_address="1/2/3")
+        switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
 
         binary_sensor = BinarySensor(xknx, "TestInput", group_address_state="1/2/3")
         action_on = Action(xknx, hook="on", target="TestOutlet", method="on")
@@ -85,24 +85,27 @@ class TestBinarySensor(unittest.TestCase):
         action_off = Action(xknx, hook="off", target="TestOutlet", method="off")
         binary_sensor.actions.append(action_off)
 
-        self.assertEqual(xknx.devices["TestInput"].state, None)
-        self.assertEqual(xknx.devices["TestOutlet"].state, False)
+        self.assertEqual(binary_sensor.state, None)
+        self.assertEqual(switch.state, False)
 
         telegram_on = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
         )
         self.loop.run_until_complete(asyncio.Task(binary_sensor.process(telegram_on)))
+        # process outgoing telegram from queue
+        self.loop.run_until_complete(switch.process(xknx.telegrams.get_nowait()))
 
-        self.assertEqual(xknx.devices["TestInput"].state, True)
-        self.assertEqual(xknx.devices["TestOutlet"].state, True)
+        self.assertEqual(binary_sensor.state, True)
+        self.assertEqual(switch.state, True)
 
         telegram_off = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
         )
         self.loop.run_until_complete(asyncio.Task(binary_sensor.process(telegram_off)))
+        self.loop.run_until_complete(switch.process(xknx.telegrams.get_nowait()))
 
-        self.assertEqual(xknx.devices["TestInput"].state, False)
-        self.assertEqual(xknx.devices["TestOutlet"].state, False)
+        self.assertEqual(binary_sensor.state, False)
+        self.assertEqual(switch.state, False)
 
     def test_process_action_ignore_internal_state(self):
         """Test process / reading telegrams from telegram queue. Test if action is executed."""
@@ -115,8 +118,8 @@ class TestBinarySensor(unittest.TestCase):
         action_on = Action(xknx, hook="on", target="TestOutlet", method="on")
         binary_sensor.actions.append(action_on)
 
-        self.assertEqual(xknx.devices["TestInput"].state, None)
-        self.assertEqual(xknx.devices["TestOutlet"].state, False)
+        self.assertEqual(binary_sensor.state, None)
+        self.assertEqual(switch.state, False)
 
         telegram_on = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
@@ -129,21 +132,31 @@ class TestBinarySensor(unittest.TestCase):
             self.loop.run_until_complete(
                 asyncio.Task(binary_sensor.process(telegram_on))
             )
+            self.loop.run_until_complete(
+                xknx.devices.process(xknx.telegrams.get_nowait())
+            )
 
-            self.assertEqual(xknx.devices["TestInput"].state, True)
-            self.assertEqual(xknx.devices["TestOutlet"].state, True)
+            self.assertEqual(binary_sensor.state, True)
+            self.assertEqual(switch.state, True)
 
             self.loop.run_until_complete(asyncio.Task(switch.set_off()))
-            self.assertEqual(xknx.devices["TestOutlet"].state, False)
-            self.assertEqual(xknx.devices["TestInput"].state, True)
+            self.loop.run_until_complete(
+                xknx.devices.process(xknx.telegrams.get_nowait())
+            )
+
+            self.assertEqual(switch.state, False)
+            self.assertEqual(binary_sensor.state, True)
             # add a second to the time to avoid double tap behaviour here
             mock_time.return_value += BinarySensor.DEFAULT_CONTEXT_TIMEOUT
             self.loop.run_until_complete(
                 asyncio.Task(binary_sensor.process(telegram_on))
             )
+            self.loop.run_until_complete(
+                xknx.devices.process(xknx.telegrams.get_nowait())
+            )
 
-            self.assertEqual(xknx.devices["TestInput"].state, True)
-            self.assertEqual(xknx.devices["TestOutlet"].state, True)
+            self.assertEqual(binary_sensor.state, True)
+            self.assertEqual(switch.state, True)
 
     def test_process_wrong_payload(self):
         """Test process wrong telegram (wrong payload type)."""

@@ -133,6 +133,7 @@ class TestNotification(unittest.TestCase):
         self.loop.run_until_complete(
             asyncio.Task(notification.do("message:Ein Prosit!"))
         )
+        self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
         self.assertEqual(notification.message, "Ein Prosit!")
 
     def test_wrong_do(self):

@@ -249,7 +249,7 @@ class ClimateMode(Device):
         return list(set(operation_modes))
 
     async def process_group_write(self, telegram):
-        """Process incoming GROUP WRITE telegram."""
+        """Process incoming and outgoing GROUP WRITE telegram."""
         if self.supports_operation_mode:
             for rv in self._iter_remote_values():
                 if await rv.process(telegram):
