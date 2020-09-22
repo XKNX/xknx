@@ -251,14 +251,17 @@ class ClimateMode(Device):
     async def process_group_write(self, telegram):
         """Process incoming and outgoing GROUP WRITE telegram."""
         if self.supports_operation_mode:
+            processed = False
             for rv in self._iter_remote_values():
                 if await rv.process(telegram):
                     # don't set when binary climate mode rv is False
                     if rv.value:
                         await self._set_internal_operation_mode(rv.value)
                         return
+                    processed = True
             # if no operation mode has been set and all binary operation modes are False
-            await self._set_internal_operation_mode(HVACOperationMode.STANDBY)
+            if processed:
+                await self._set_internal_operation_mode(HVACOperationMode.STANDBY)
 
     async def sync(self, wait_for_result=False):
         """Read states of device from KNX bus."""
