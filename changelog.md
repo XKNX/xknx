@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.14.4 Bugfix release
+
+### Devices
+
+- Don't set standby operation mode if telegram was not processed by any RemoteValue
+- Allow covers to be inverted again
+- Correctly process outgoing telegrams in our own devices
+
 ## 0.14.3 Bugfix release
 
 ### Internals
