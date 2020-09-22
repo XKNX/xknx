@@ -232,6 +232,28 @@ class TestCover(unittest.TestCase):
         )
 
     #
+    # TEST SET DOWN INVERTED
+    #
+    def test_set_down_inverted(self):
+        """Test moving cover to 'down' position."""
+        xknx = XKNX(loop=self.loop)
+        cover = Cover(
+            xknx,
+            "TestCover",
+            group_address_long="1/2/1",
+            group_address_short="1/2/2",
+            group_address_position="1/2/3",
+            group_address_position_state="1/2/4",
+            invert_position=True,
+        )
+        self.loop.run_until_complete(cover.set_down())
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        telegram = xknx.telegrams.get_nowait()
+        self.assertEqual(
+            telegram, Telegram(GroupAddress("1/2/1"), payload=DPTBinary(0))
+        )
+
+    #
     # TEST SET SHORT UP
     #
     def test_set_short_up(self):
@@ -251,6 +273,29 @@ class TestCover(unittest.TestCase):
         # DPT 1.008 - 0:up 1:down
         self.assertEqual(
             telegram, Telegram(GroupAddress("1/2/2"), payload=DPTBinary(0))
+        )
+
+    #
+    # TEST SET UP INVERTED
+    #
+    def test_set_up_inverted(self):
+        """Test moving cover 'short up'."""
+        xknx = XKNX(loop=self.loop)
+        cover = Cover(
+            xknx,
+            "TestCover",
+            group_address_long="1/2/1",
+            group_address_short="1/2/2",
+            group_address_position="1/2/3",
+            group_address_position_state="1/2/4",
+            invert_position=True,
+        )
+        self.loop.run_until_complete(cover.set_short_up())
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        telegram = xknx.telegrams.get_nowait()
+        # DPT 1.008 - 0:up 1:down
+        self.assertEqual(
+            telegram, Telegram(GroupAddress("1/2/2"), payload=DPTBinary(1))
         )
 
     #
