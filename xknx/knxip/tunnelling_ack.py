@@ -20,11 +20,13 @@ class TunnellingAck(KNXIPBody):
 
     BODY_LENGTH = 4
 
-    def __init__(self, xknx):
+    def __init__(
+        self, xknx, communication_channel_id: int = 1, sequence_counter: int = 0
+    ):
         """Initialize TunnellingAck object."""
         super().__init__(xknx)
-        self.communication_channel_id = 1
-        self.sequence_counter = 0
+        self.communication_channel_id = communication_channel_id
+        self.sequence_counter = sequence_counter
         self.status_code = ErrorCode.E_NO_ERROR
 
     def calculated_length(self):

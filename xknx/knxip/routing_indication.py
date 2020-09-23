@@ -17,10 +17,10 @@ class RoutingIndication(KNXIPBody):
 
     service_type = KNXIPServiceType.ROUTING_INDICATION
 
-    def __init__(self, xknx):
+    def __init__(self, xknx, cemi: CEMIFrame = None):
         """Initialize SearchRequest object."""
         super().__init__(xknx)
-        self.cemi = CEMIFrame(xknx)
+        self.cemi = cemi if cemi is not None else CEMIFrame(xknx)
 
     def calculated_length(self):
         """Get length of KNX/IP body."""

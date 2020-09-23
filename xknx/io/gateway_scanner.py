@@ -16,6 +16,7 @@ from xknx.knxip import (
     DIBSuppSVCFamilies,
     KNXIPFrame,
     KNXIPServiceType,
+    SearchRequest,
     SearchResponse,
 )
 
@@ -162,11 +163,10 @@ class GatewayScanner:
         self._udp_clients.append(udp_client)
 
         (local_addr, local_port) = udp_client.getsockname()
-        knx_ip_frame = KNXIPFrame(self.xknx)
-        knx_ip_frame.init(KNXIPServiceType.SEARCH_REQUEST)
-        knx_ip_frame.body.discovery_endpoint = HPAI(ip_addr=local_addr, port=local_port)
-        knx_ip_frame.normalize()
-        udp_client.send(knx_ip_frame)
+        search_request = SearchRequest(
+            self.xknx, discovery_endpoint=HPAI(ip_addr=local_addr, port=local_port)
+        )
+        udp_client.send(KNXIPFrame.init_from_body(search_request))
 
     def _response_rec_callback(
         self, knx_ip_frame: KNXIPFrame, udp_client: UDPClient

@@ -1,5 +1,5 @@
 """Abstraction to send DisconnectRequest and wait for DisconnectResponse."""
-from xknx.knxip import HPAI, DisconnectResponse, KNXIPFrame, KNXIPServiceType
+from xknx.knxip import HPAI, DisconnectRequest, DisconnectResponse, KNXIPFrame
 
 from .request_response import RequestResponse
 
@@ -17,8 +17,9 @@ class Disconnect(RequestResponse):
     def create_knxipframe(self):
         """Create KNX/IP Frame object to be sent to device."""
         (local_addr, local_port) = self.udpclient.getsockname()
-        knxipframe = KNXIPFrame(self.xknx)
-        knxipframe.init(KNXIPServiceType.DISCONNECT_REQUEST)
-        knxipframe.body.communication_channel_id = self.communication_channel_id
-        knxipframe.body.control_endpoint = HPAI(ip_addr=local_addr, port=local_port)
-        return knxipframe
+        disconnect_request = DisconnectRequest(
+            self.xknx,
+            communication_channel_id=self.communication_channel_id,
+            control_endpoint=HPAI(ip_addr=local_addr, port=local_port),
+        )
+        return KNXIPFrame.init_from_body(disconnect_request)

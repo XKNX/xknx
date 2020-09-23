@@ -22,15 +22,24 @@ class ConnectResponse(KNXIPBody):
 
     CRD_LENGTH = 4
 
-    def __init__(self, xknx):
+    def __init__(
+        self,
+        xknx,
+        communication_channel: int = 0,
+        status_code: ErrorCode = ErrorCode.E_NO_ERROR,
+        request_type: ConnectRequestType = None,
+        control_endpoint: HPAI = HPAI(),
+        identifier: int = None,
+    ):
         """Initialize ConnectResponse class."""
         super().__init__(xknx)
 
-        self.communication_channel = 0
-        self.status_code = ErrorCode.E_NO_ERROR
-        self.request_type = None
+        self.communication_channel = communication_channel
+        self.status_code = status_code
+        self.request_type = request_type
         self.control_endpoint = HPAI()
-        self.identifier = None
+        # identifier shall contain KNX Individual Address assigned to this KNXnet/IP Tunnelling connection
+        self.identifier = identifier
 
     def calculated_length(self):
         """Get length of KNX/IP body."""

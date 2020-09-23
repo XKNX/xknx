@@ -19,12 +19,18 @@ class ConnectRequest(KNXIPBody):
 
     CRI_LENGTH = 4
 
-    def __init__(self, xknx):
+    def __init__(
+        self,
+        xknx,
+        request_type: ConnectRequestType = None,
+        control_endpoint: HPAI = HPAI(),
+        data_endpoint: HPAI = HPAI(),
+    ):
         """Initialize ConnectRequest object."""
         super().__init__(xknx)
-        self.request_type = None
-        self.control_endpoint = HPAI()
-        self.data_endpoint = HPAI()
+        self.request_type = request_type
+        self.control_endpoint = control_endpoint
+        self.data_endpoint = data_endpoint
         # KNX layer, 0x02 = TUNNEL_LINKLAYER
         self.flags = 0x02
 

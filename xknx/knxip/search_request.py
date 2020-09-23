@@ -15,11 +15,13 @@ class SearchRequest(KNXIPBody):
 
     service_type = KNXIPServiceType.SEARCH_REQUEST
 
-    def __init__(self, xknx):
+    def __init__(self, xknx, discovery_endpoint: HPAI = None):
         """Initialize SearchRequest object."""
         super().__init__(xknx)
-        self.discovery_endpoint = HPAI(
-            ip_addr=xknx.multicast_group, port=xknx.multicast_port
+        self.discovery_endpoint = (
+            discovery_endpoint
+            if discovery_endpoint is not None
+            else HPAI(ip_addr=xknx.multicast_group, port=xknx.multicast_port)
         )
 
     def calculated_length(self):

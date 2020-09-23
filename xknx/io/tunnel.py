@@ -6,7 +6,13 @@ Tunnels connect to KNX/IP devices directly via UDP and build a static UDP connec
 import asyncio
 
 from xknx.exceptions import CommunicationError, XKNXException
-from xknx.knxip import CEMIMessageCode, KNXIPFrame, KNXIPServiceType, TunnellingRequest
+from xknx.knxip import (
+    CEMIMessageCode,
+    KNXIPFrame,
+    KNXIPServiceType,
+    TunnellingAck,
+    TunnellingRequest,
+)
 from xknx.telegram import PhysicalAddress, TelegramDirection
 
 from .connect import Connect
@@ -88,12 +94,12 @@ class Tunnel:
 
     def send_ack(self, communication_channel_id, sequence_counter):
         """Send tunnelling ACK after tunnelling request received."""
-        ack_knxipframe = KNXIPFrame(self.xknx)
-        ack_knxipframe.init(KNXIPServiceType.TUNNELLING_ACK)
-        ack_knxipframe.body.communication_channel_id = communication_channel_id
-        ack_knxipframe.body.sequence_counter = sequence_counter
-        ack_knxipframe.normalize()
-        self.udp_client.send(ack_knxipframe)
+        ack = TunnellingAck(
+            self.xknx,
+            communication_channel_id=communication_channel_id,
+            sequence_counter=sequence_counter,
+        )
+        self.udp_client.send(KNXIPFrame.init_from_body(ack))
 
     async def start(self):
         """Start tunneling."""
