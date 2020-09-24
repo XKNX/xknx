@@ -40,9 +40,7 @@ class RequestResponse:
 
     async def send_request(self):
         """Build knxipframe (within derived class) and send via UDP."""
-        knxipframe = self.create_knxipframe()
-        # knxipframe.normalize()
-        self.udpclient.send(knxipframe)
+        self.udpclient.send(self.create_knxipframe())
 
     def response_rec_callback(self, knxipframe, _):
         """Verify and handle knxipframe. Callback from internal udpclient."""
