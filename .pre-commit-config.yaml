@@ -38,3 +38,16 @@ repos:
     rev: v2.1.0
     hooks:
       - id: trailing-whitespace
+  - repo: local
+    hooks:
+      # Run mypy through our wrapper script in order to get the possible
+      # pyenv and/or virtualenv activated; it may not have been e.g. if
+      # committing from a GUI tool that was not launched from an activated
+      # shell.
+      - id: mypy
+        name: mypy
+        entry: script/run-in-env.sh mypy
+        language: script
+        types: [python]
+        require_serial: true
+        files: ^xknx/.+\.py$

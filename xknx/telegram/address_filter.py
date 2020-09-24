@@ -21,6 +21,8 @@ Patterns can be
         AddressFilter("1-3,4,5")
         AddressFilter("-10")
 """
+from typing import List, Tuple, Union
+
 from xknx.exceptions import ConversionError
 
 from .address import GroupAddress
@@ -31,18 +33,18 @@ class AddressFilter:
 
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, pattern):
+    def __init__(self, pattern: str) -> None:
         """Initialize AddressFilter class."""
-        self.level_filters = []
+        self.level_filters: List = []
         self._parse_pattern(pattern)
 
-    def _parse_pattern(self, pattern):
+    def _parse_pattern(self, pattern: str) -> None:
         for part in pattern.split("/"):
             self.level_filters.append(AddressFilter.LevelFilter(part))
         if len(self.level_filters) > 3:
             raise ConversionError("Too many parts within pattern.", pattern=pattern)
 
-    def match(self, address):
+    def match(self, address: Union[str, GroupAddress]) -> bool:
         """Test if provided address matches Addressfilter."""
         if isinstance(address, str):
             address = GroupAddress(address)
@@ -52,31 +54,32 @@ class AddressFilter:
             return self._match_level2(address)
         return self._match_free(address)
 
-    def _match_level3(self, address):
-        return (
+    def _match_level3(self, address: GroupAddress) -> bool:
+        return bool(
             self.level_filters[0].match(address.main)
             and self.level_filters[1].match(address.middle)
             and self.level_filters[2].match(address.sub)
         )
 
-    def _match_level2(self, address):
-        return self.level_filters[0].match(address.main) and self.level_filters[
-            1
-        ].match(address.sub)
+    def _match_level2(self, address: GroupAddress) -> bool:
+        return bool(
+            self.level_filters[0].match(address.main)
+            and self.level_filters[1].match(address.sub)
+        )
 
-    def _match_free(self, address):
-        return self.level_filters[0].match(address.sub)
+    def _match_free(self, address: GroupAddress) -> bool:
+        return bool(self.level_filters[0].match(address.sub))
 
     class Range:
         """Class for filtering patterns like "8", "*", "8-10"."""
 
-        def __init__(self, pattern):
+        def __init__(self, pattern: str) -> None:
             """Initialize Range object."""
-            self.range_from = None
-            self.range_to = None
+            self.range_from: int = 0
+            self.range_to: int = 0
             self._parse_pattern(pattern)
 
-        def _parse_pattern(self, pattern):
+        def _parse_pattern(self, pattern: str) -> None:
             if pattern == "*":
                 self._init_wildcard()
             elif pattern.isdigit():
@@ -87,54 +90,54 @@ class AddressFilter:
             self.range_from = self._adjust_range(self.range_from)
             self._flip_range_if_necessary()
 
-        def _init_wildcard(self):
+        def _init_wildcard(self) -> None:
             self.range_from = 0
             self.range_to = GroupAddress.MAX_FREE
 
-        def _init_digit(self, pattern):
+        def _init_digit(self, pattern: str) -> None:
             digit = int(pattern)
             self.range_from = digit
             self.range_to = digit
 
-        def _init_range(self, pattern):
+        def _init_range(self, pattern: str) -> None:
             (range_from, range_to) = pattern.split("-")
             self.range_from = int(range_from) if range_from else 0
             self.range_to = int(range_to) if range_to else GroupAddress.MAX_FREE
 
         @staticmethod
-        def _adjust_range(digit):
+        def _adjust_range(digit: int) -> int:
             if digit > GroupAddress.MAX_FREE:
                 return GroupAddress.MAX_FREE
             if digit < 0:
                 return 0
             return digit
 
-        def _flip_range_if_necessary(self):
+        def _flip_range_if_necessary(self) -> None:
             if self.range_from > self.range_to:
                 self.range_to, self.range_from = self.range_from, self.range_to
 
-        def get_range(self):
+        def get_range(self) -> Tuple[int, int]:
             """Return the range (from,to) of this pattern."""
             return self.range_from, self.range_to
 
-        def match(self, digit):
+        def match(self, digit: int) -> bool:
             """Return if given digit is within range of pattern."""
-            return self.range_from <= digit <= self.range_to
+            return bool(self.range_from <= digit <= self.range_to)
 
     class LevelFilter:
         """Class for filtering patterns like "8,11-14,20"."""
 
         # pylint: disable=too-few-public-methods
-        def __init__(self, pattern):
+        def __init__(self, pattern: str) -> None:
             """Initialize LevelFilter."""
-            self.ranges = []
+            self.ranges: List = []
             self._parse_pattern(pattern)
 
-        def _parse_pattern(self, pattern):
+        def _parse_pattern(self, pattern: str) -> None:
             for part in pattern.split(","):
                 self.ranges.append(AddressFilter.Range(part))
 
-        def match(self, digit):
+        def match(self, digit: int) -> bool:
             """Return if given digit is within range of pattern."""
             for _range in self.ranges:
                 if _range.match(digit):

@@ -20,7 +20,7 @@ class XKNXException(Exception):
 class CommunicationError(XKNXException):
     """Unable to communicate with KNX Bus."""
 
-    def __init__(self, message, should_log=True):
+    def __init__(self, message, should_log=True) -> None:
         """Instantiate exception."""
         super().__init__(message)
 
@@ -30,7 +30,7 @@ class CommunicationError(XKNXException):
 class CouldNotParseTelegram(XKNXException):
     """Could not parse telegram error."""
 
-    def __init__(self, description, **kwargs):
+    def __init__(self, description, **kwargs) -> None:
         """Initialize CouldNotParseTelegram class."""
         super().__init__()
         self.description = description
@@ -51,7 +51,7 @@ class CouldNotParseTelegram(XKNXException):
 class CouldNotParseKNXIP(XKNXException):
     """Exception class for wrong KNXIP data."""
 
-    def __init__(self, description=""):
+    def __init__(self, description="") -> None:
         """Initialize CouldNotParseKNXIP class."""
         super().__init__()
         self.description = description
@@ -64,7 +64,7 @@ class CouldNotParseKNXIP(XKNXException):
 class UnsupportedCEMIMessage(XKNXException):
     """Exception class for unsupported CEMI Messages."""
 
-    def __init__(self, description=""):
+    def __init__(self, description="") -> None:
         """Initialize UnsupportedCEMIMessage class."""
         super().__init__()
         self.description = description
@@ -77,7 +77,7 @@ class UnsupportedCEMIMessage(XKNXException):
 class ConversionError(XKNXException):
     """Exception class for error while converting one type to another."""
 
-    def __init__(self, description, **kwargs):
+    def __init__(self, description, **kwargs) -> None:
         """Initialize ConversionError class."""
         super().__init__()
         self.description = description
@@ -96,7 +96,7 @@ class ConversionError(XKNXException):
 class CouldNotParseAddress(XKNXException):
     """Exception class for wrong address format."""
 
-    def __init__(self, address=None):
+    def __init__(self, address=None) -> None:
         """Initialize CouldNotParseAddress class."""
         super().__init__()
         self.address = address
@@ -109,7 +109,7 @@ class CouldNotParseAddress(XKNXException):
 class DeviceIllegalValue(XKNXException):
     """Exception class for setting a value of a device with an illegal value."""
 
-    def __init__(self, value, description):
+    def __init__(self, value, description) -> None:
         """Initialize DeviceIllegalValue class."""
         super().__init__()
         self.value = value
