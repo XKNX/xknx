@@ -15,6 +15,7 @@ It contains
 
 """
 from enum import Enum
+from typing import Any
 
 from .address import GroupAddress
 
@@ -41,18 +42,18 @@ class Telegram:
 
     def __init__(
         self,
-        group_address=GroupAddress(None),
-        telegramtype=TelegramType.GROUP_WRITE,
-        direction=TelegramDirection.OUTGOING,
-        payload=None,
-    ):
+        group_address: GroupAddress = GroupAddress(None),
+        telegramtype: TelegramType = TelegramType.GROUP_WRITE,
+        direction: TelegramDirection = TelegramDirection.OUTGOING,
+        payload: Any = None,
+    ) -> None:
         """Initialize Telegram class."""
         self.direction = direction
         self.telegramtype = telegramtype
         self.group_address = group_address
         self.payload = payload
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return object as readable string."""
         return (
             '<Telegram group_address="{}", payload="{}" '
@@ -64,11 +65,11 @@ class Telegram:
             )
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """Equal operator."""
-        return self.__dict__ == other.__dict__
+        return bool(self.__dict__ == other.__dict__)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Hash function."""
         # used to turn lists of Telegram into sets in unittests
         return hash(str(self))

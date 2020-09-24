@@ -14,11 +14,12 @@ The module supports all different writings of group addresses:
 """
 from enum import Enum
 from re import compile as re_compile
+from typing import Optional, Tuple, Union
 
 from xknx.exceptions import CouldNotParseAddress
 
 
-def address_tuple_to_int(address):
+def address_tuple_to_int(address: Tuple) -> int:
     """
     Convert the tuple `address` to an integer.
 
@@ -31,17 +32,17 @@ def address_tuple_to_int(address):
         or any(byte > 255 for byte in address)
     ):
         raise CouldNotParseAddress(address)
-    return address[0] * 256 + address[1]
+    return int(address[0] * 256 + address[1])
 
 
 class BaseAddress:  # pylint: disable=too-few-public-methods
     """Base class for all knx address types."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize instance variables needed by all subclasses."""
-        self.raw = None
+        self.raw: int = 0
 
-    def to_knx(self):
+    def to_knx(self) -> Tuple:
         """
         Serialize to KNX/IP raw data.
 
@@ -49,7 +50,7 @@ class BaseAddress:  # pylint: disable=too-few-public-methods
         """
         return (self.raw >> 8) & 255, self.raw & 255
 
-    def __eq__(self, other):
+    def __eq__(self, other: Optional[object]) -> bool:
         """
         Implement the equal operator.
 
@@ -62,12 +63,10 @@ class BaseAddress:  # pylint: disable=too-few-public-methods
             return False
         if type(self) is not type(other):
             raise TypeError()
-        return self.raw == other.raw
+        return self.__hash__() == other.__hash__()
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Hash Address so it can be used as dict key."""
-        if self.raw is None:
-            return hash(None)
         return self.raw
 
 
@@ -81,29 +80,29 @@ class PhysicalAddress(BaseAddress):
         r"^(?P<area>\d{1,2})\.(?P<main>\d{1,2})\.(?P<line>\d{1,3})$"
     )
 
-    def __init__(self, address):
+    def __init__(self, address: Union[object, str, int, tuple]) -> None:
         """Initialize Address class."""
         super().__init__()
         if isinstance(address, PhysicalAddress):
-            self.raw = address.raw
+            self.raw: int = address.raw
         elif isinstance(address, str):
             if address.isdigit():
-                self.raw = int(address)
+                self.raw: int = int(address)  # type: ignore
             else:
-                self.raw = self.__string_to_int(address)
+                self.raw: int = self.__string_to_int(address)  # type: ignore
         elif isinstance(address, tuple) and len(address) == 2:
-            self.raw = address_tuple_to_int(address)
+            self.raw: int = address_tuple_to_int(address)  # type: ignore
         elif isinstance(address, int):
-            self.raw = address
+            self.raw: int = address  # type: ignore
         elif address is None:
-            self.raw = 0
+            self.raw: int = 0  # type: ignore
         else:
             raise CouldNotParseAddress(address)
 
-        if isinstance(self.raw, int) and self.raw > 65535:
+        if self.raw > 65535:
             raise CouldNotParseAddress(address)
 
-    def __string_to_int(self, address):
+    def __string_to_int(self, address: str) -> int:
         """
         Parse `address` as string to an integer and do some simple checks.
 
@@ -124,31 +123,31 @@ class PhysicalAddress(BaseAddress):
         return (area << 12) + (main << 8) + line
 
     @property
-    def area(self):
+    def area(self) -> int:
         """Return area part of pyhsical address."""
         return (self.raw >> 12) & self.MAX_AREA
 
     @property
-    def main(self):
+    def main(self) -> int:
         """Return main part of pyhsical address."""
         return (self.raw >> 8) & self.MAX_MAIN
 
     @property
-    def line(self):
+    def line(self) -> int:
         """Return line part of pyhsical address."""
         return self.raw & self.MAX_LINE
 
     @property
-    def is_device(self):
+    def is_device(self) -> bool:
         """Return `True` if this address is a valid device address."""
         return self.line != 0
 
     @property
-    def is_line(self):
+    def is_line(self) -> bool:
         """Return `True` if this address is a valid line address."""
         return not self.is_device
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return this object as parsable string."""
         return 'PhysicalAddress("{0.area}.{0.main}.{0.line}")'.format(self)
 
@@ -181,7 +180,11 @@ class GroupAddress(BaseAddress):
         r"^(?P<main>\d{1,2})(/(?P<middle>\d{1,2}))?/(?P<sub>\d{1,4})$"
     )
 
-    def __init__(self, address, levels=GroupAddressType.LONG):
+    def __init__(
+        self,
+        address: Union[object, str, tuple, int],
+        levels: GroupAddressType = GroupAddressType.LONG,
+    ) -> None:
         """Initialize Address class."""
         super().__init__()
         self.levels = levels
@@ -202,10 +205,10 @@ class GroupAddress(BaseAddress):
         else:
             raise CouldNotParseAddress(address)
 
-        if isinstance(self.raw, int) and self.raw > 65535:
+        if self.raw > 65535:
             raise CouldNotParseAddress(address)
 
-    def __string_to_int(self, address):
+    def __string_to_int(self, address: str) -> int:
         """
         Parse `address` as string to an integer and do some simple checks.
 
@@ -240,7 +243,7 @@ class GroupAddress(BaseAddress):
         )
 
     @property
-    def main(self):
+    def main(self) -> Optional[int]:
         """
         Return the main group part as an integer.
 
@@ -254,7 +257,7 @@ class GroupAddress(BaseAddress):
         )
 
     @property
-    def middle(self):
+    def middle(self) -> Optional[int]:
         """
         Return the middle group part as an integer.
 
@@ -268,7 +271,7 @@ class GroupAddress(BaseAddress):
         )
 
     @property
-    def sub(self):
+    def sub(self) -> int:
         """
         Return the sub group part as an integer.
 
@@ -280,7 +283,7 @@ class GroupAddress(BaseAddress):
             return self.raw & self.MAX_SUB_LONG
         return self.raw
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Return object as in KNX notation (e.g. '1/2/3').
 
@@ -292,6 +295,6 @@ class GroupAddress(BaseAddress):
             return "{0.main}/{0.sub}".format(self)
         return f"{self.sub}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return f'GroupAddress("{self}")'

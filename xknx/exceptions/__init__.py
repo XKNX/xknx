@@ -10,3 +10,14 @@ from .exception import (
     UnsupportedCEMIMessage,
     XKNXException,
 )
+
+__all__ = [
+    "CommunicationError",
+    "ConversionError",
+    "CouldNotParseAddress",
+    "CouldNotParseKNXIP",
+    "CouldNotParseTelegram",
+    "DeviceIllegalValue",
+    "UnsupportedCEMIMessage",
+    "XKNXException",
+]
