@@ -5,7 +5,7 @@ Will report if the corresponding answer was not received.
 """
 import asyncio
 
-from xknx.knxip import ErrorCode
+from xknx.knxip import ErrorCode, KNXIPFrame
 
 
 class RequestResponse:
@@ -23,7 +23,7 @@ class RequestResponse:
         self.timeout_in_seconds = timeout_in_seconds
         self.timeout_handle = None
 
-    def create_knxipframe(self):
+    def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
         raise NotImplementedError("create_knxipframe has to be implemented")
 
@@ -40,9 +40,7 @@ class RequestResponse:
 
     async def send_request(self):
         """Build knxipframe (within derived class) and send via UDP."""
-        knxipframe = self.create_knxipframe()
-        knxipframe.normalize()
-        self.udpclient.send(knxipframe)
+        self.udpclient.send(self.create_knxipframe())
 
     def response_rec_callback(self, knxipframe, _):
         """Verify and handle knxipframe. Callback from internal udpclient."""

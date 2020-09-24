@@ -19,14 +19,23 @@ class TunnellingRequest(KNXIPBody):
 
     HEADER_LENGTH = 4
 
-    def __init__(self, xknx):
+    def __init__(
+        self,
+        xknx,
+        communication_channel_id: int = 1,
+        sequence_counter: int = 0,
+        cemi: CEMIFrame = None,
+    ):
         """Initialize TunnellingRequest object."""
         super().__init__(xknx)
 
-        self.communication_channel_id = 1
-        self.sequence_counter = 0
-        self.cemi = CEMIFrame(xknx)
-        self.cemi.code = CEMIMessageCode.L_Data_REQ
+        self.communication_channel_id = communication_channel_id
+        self.sequence_counter = sequence_counter
+        self.cemi = (
+            cemi
+            if cemi is not None
+            else CEMIFrame(xknx, code=CEMIMessageCode.L_Data_REQ)
+        )
 
     def calculated_length(self):
         """Get length of KNX/IP body."""

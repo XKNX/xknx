@@ -17,11 +17,13 @@ class ConnectionStateRequest(KNXIPBody):
 
     service_type = KNXIPServiceType.CONNECTIONSTATE_REQUEST
 
-    def __init__(self, xknx):
+    def __init__(
+        self, xknx, communication_channel_id: int = 1, control_endpoint: HPAI = HPAI()
+    ):
         """Initialize ConnectionStateRequest object."""
         super().__init__(xknx)
-        self.communication_channel_id = 1
-        self.control_endpoint = HPAI()
+        self.communication_channel_id = communication_channel_id
+        self.control_endpoint = control_endpoint
 
     def calculated_length(self):
         """Get length of KNX/IP body."""

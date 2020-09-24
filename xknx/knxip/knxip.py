@@ -6,6 +6,7 @@ Depending on the service_type_ident different types of body classes are instanci
 """
 from xknx.exceptions import CouldNotParseKNXIP
 
+from .body import KNXIPBody
 from .connect_request import ConnectRequest
 from .connect_response import ConnectResponse
 from .connectionstate_request import ConnectionStateRequest
@@ -58,6 +59,15 @@ class KNXIPFrame:
             self.body = ConnectionStateResponse(self.xknx)
         else:
             raise TypeError(self.header.service_type_ident)
+
+    @staticmethod
+    def init_from_body(knxip_body: KNXIPBody):
+        """Return KNXIPFrame from KNXIPBody."""
+        knxipframe = KNXIPFrame(knxip_body.xknx)
+        knxipframe.header.service_type_ident = knxip_body.__class__.service_type
+        knxipframe.body = knxip_body
+        knxipframe.normalize()
+        return knxipframe
 
     def from_knx(self, data):
         """Parse/deserialize from KNX/IP raw data."""

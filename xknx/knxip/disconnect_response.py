@@ -18,12 +18,17 @@ class DisconnectResponse(KNXIPBody):
 
     service_type = KNXIPServiceType.DISCONNECT_RESPONSE
 
-    def __init__(self, xknx):
+    def __init__(
+        self,
+        xknx,
+        communication_channel_id: int = 1,
+        status_code: ErrorCode = ErrorCode.E_NO_ERROR,
+    ):
         """Initialize DisconnectResponse object."""
         super().__init__(xknx)
 
-        self.communication_channel_id = 1
-        self.status_code = ErrorCode.E_NO_ERROR
+        self.communication_channel_id = communication_channel_id
+        self.status_code = status_code
 
     def calculated_length(self):
         """Get length of KNX/IP body."""
