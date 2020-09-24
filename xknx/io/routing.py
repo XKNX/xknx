@@ -6,6 +6,7 @@ Routing uses UDP Multicast to broadcast and receive KNX/IP messages.
 from xknx.knxip import (
     APCICommand,
     CEMIFrame,
+    CEMIMessageCode,
     KNXIPFrame,
     KNXIPServiceType,
     RoutingIndication,
@@ -59,9 +60,12 @@ class Routing:
 
     async def send_telegram(self, telegram):
         """Send Telegram to routing connected device."""
-        cemi = CEMIFrame(self.xknx)
-        cemi.src_addr = self.xknx.own_address
-        cemi.telegram = telegram
+        cemi = CEMIFrame.init_from_telegram(
+            self.xknx,
+            telegram=telegram,
+            code=CEMIMessageCode.L_DATA_IND,
+            src_addr=self.xknx.own_address,
+        )
         routing_indication = RoutingIndication(self.xknx, cemi=cemi)
         await self.send_knxipframe(KNXIPFrame.init_from_body(routing_indication))
 

@@ -14,7 +14,7 @@ class Disconnect(RequestResponse):
         super().__init__(xknx, self.udp_client, DisconnectResponse)
         self.communication_channel_id = communication_channel_id
 
-    def create_knxipframe(self):
+    def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
         (local_addr, local_port) = self.udpclient.getsockname()
         disconnect_request = DisconnectRequest(

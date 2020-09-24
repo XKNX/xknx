@@ -1,5 +1,11 @@
 """Abstraction to send a TunnelingRequest and wait for TunnelingResponse."""
-from xknx.knxip import CEMIFrame, KNXIPFrame, TunnellingAck, TunnellingRequest
+from xknx.knxip import (
+    CEMIFrame,
+    CEMIMessageCode,
+    KNXIPFrame,
+    TunnellingAck,
+    TunnellingRequest,
+)
 
 from .request_response import RequestResponse
 
@@ -30,9 +36,12 @@ class Tunnelling(RequestResponse):
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
-        cemi = CEMIFrame(self.xknx)
-        cemi.telegram = self.telegram
-        cemi.src_addr = self.src_address
+        cemi = CEMIFrame.init_from_telegram(
+            self.xknx,
+            telegram=self.telegram,
+            code=CEMIMessageCode.L_Data_REQ,
+            src_addr=self.src_address,
+        )
         tunnelling_request = TunnellingRequest(
             self.xknx,
             communication_channel_id=self.communication_channel_id,

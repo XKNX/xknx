@@ -7,7 +7,7 @@ from xknx.exceptions import UnsupportedCEMIMessage
 
 from .body import KNXIPBody
 from .cemi_frame import CEMIFrame
-from .knxip_enum import KNXIPServiceType
+from .knxip_enum import CEMIMessageCode, KNXIPServiceType
 
 
 class RoutingIndication(KNXIPBody):
@@ -20,7 +20,11 @@ class RoutingIndication(KNXIPBody):
     def __init__(self, xknx, cemi: CEMIFrame = None):
         """Initialize SearchRequest object."""
         super().__init__(xknx)
-        self.cemi = cemi if cemi is not None else CEMIFrame(xknx)
+        self.cemi = (
+            cemi
+            if cemi is not None
+            else CEMIFrame(xknx, code=CEMIMessageCode.L_DATA_IND)
+        )
 
     def calculated_length(self):
         """Get length of KNX/IP body."""

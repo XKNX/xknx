@@ -11,6 +11,8 @@ Documentation within:
     KNX IP Communication Medium
     File: AN117 v02.01 KNX IP Communication Medium DV.pdf
 """
+from typing import Union
+
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage
 from xknx.telegram import GroupAddress, PhysicalAddress, Telegram, TelegramType
@@ -23,19 +25,42 @@ class CEMIFrame:
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, xknx):
+    def __init__(
+        self,
+        xknx,
+        code: CEMIMessageCode = CEMIMessageCode.L_DATA_IND,
+        flags: int = 0,
+        cmd: APCICommand = APCICommand.GROUP_READ,
+        src_addr: PhysicalAddress = PhysicalAddress(None),
+        dst_addr: Union[GroupAddress, PhysicalAddress] = GroupAddress(None),
+        mpdu_len: int = 0,
+        payload=None,
+    ):
         """Initialize CEMIFrame object."""
         self.xknx = xknx
-        self.code = CEMIMessageCode.L_DATA_IND
-        self.flags = 0
-        self.cmd = APCICommand.GROUP_READ
-        self.src_addr = PhysicalAddress(None)
-        self.dst_addr = GroupAddress(None)
-        self.mpdu_len = 0
-        self.payload = None
+        self.code = code
+        self.flags = flags
+        self.cmd = cmd
+        self.src_addr = src_addr
+        self.dst_addr = dst_addr
+        self.mpdu_len = mpdu_len
+        self.payload = payload
+
+    @staticmethod
+    def init_from_telegram(
+        xknx,
+        telegram: Telegram,
+        code: CEMIMessageCode = CEMIMessageCode.L_DATA_IND,
+        src_addr: PhysicalAddress = PhysicalAddress(None),
+    ):
+        """Return CEMIFrame from a Telegram."""
+        cemi = CEMIFrame(xknx, code=code, src_addr=src_addr)
+        # dst_addr, payload and cmd are set by telegram.setter - mpdu_len not needed for outgoing telegram
+        cemi.telegram = telegram
+        return cemi
 
     @property
-    def telegram(self):
+    def telegram(self) -> Telegram:
         """Return telegram."""
 
         def resolve_telegram_type(cmd):
@@ -55,7 +80,7 @@ class CEMIFrame:
         )
 
     @telegram.setter
-    def telegram(self, telegram):
+    def telegram(self, telegram: Telegram):
         """Set telegram."""
         self.dst_addr = telegram.group_address
         self.payload = telegram.payload
@@ -74,7 +99,7 @@ class CEMIFrame:
         )
 
         # TODO: use telegram.direction
-        def resolve_cmd(telegramtype):
+        def resolve_cmd(telegramtype: TelegramType) -> APCICommand:
             """Resolve APCICommand from TelegramType."""
             if telegramtype == TelegramType.GROUP_READ:
                 return APCICommand.GROUP_READ
@@ -86,14 +111,14 @@ class CEMIFrame:
 
         self.cmd = resolve_cmd(telegram.telegramtype)
 
-    def set_hops(self, hops):
+    def set_hops(self, hops: int):
         """Set hops."""
         # Resetting hops
         self.flags &= 0xFFFF ^ 0x0070
         # Setting new hops
         self.flags |= hops << 4
 
-    def calculated_length(self):
+    def calculated_length(self) -> int:
         """Get length of KNX/IP body."""
         if self.payload is None:
             return 11
@@ -103,7 +128,7 @@ class CEMIFrame:
             return 11 + len(self.payload.value)
         raise TypeError()
 
-    def from_knx(self, raw):
+    def from_knx(self, raw) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         try:
             self.code = CEMIMessageCode(raw[0])
@@ -123,7 +148,7 @@ class CEMIFrame:
 
         return self.from_knx_data_link_layer(raw)
 
-    def from_knx_data_link_layer(self, cemi):
+    def from_knx_data_link_layer(self, cemi) -> int:
         """Parse L_DATA_IND, CEMIMessageCode.L_Data_REQ, CEMIMessageCode.L_DATA_CON."""
         if len(cemi) < 11:
             # eg. ETS Line-Scan issues L_DATA_IND with length 10
