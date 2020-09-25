@@ -7,6 +7,8 @@ It provides functionality for
 * reading the current state from KNX bus.
 * Cover will also predict the current position.
 """
+import logging
+
 from xknx.remote_value import (
     RemoteValueScaling,
     RemoteValueStep,
@@ -16,6 +18,8 @@ from xknx.remote_value import (
 
 from .device import Device
 from .travelcalculator import TravelCalculator
+
+logger = logging.getLogger("xknx_log")
 
 
 class Cover(Device):
@@ -190,9 +194,7 @@ class Cover(Device):
         elif self.step.writable:
             await self.step.increase()
         else:
-            self.xknx.logger.warning(
-                "Stop not supported for device %s", self.get_name()
-            )
+            logger.warning("Stop not supported for device %s", self.get_name())
             return
         self.travelcalculator.stop()
         await self.after_update()
@@ -209,7 +211,7 @@ class Cover(Device):
                 elif position == self.travelcalculator.position_closed:
                     await self.updown.down()
                 else:
-                    self.xknx.logger.warning(
+                    logger.warning(
                         "Current position unknown. Initialize cover by moving to end position."
                     )
                     return
@@ -225,9 +227,7 @@ class Cover(Device):
     async def set_angle(self, angle):
         """Move cover to designated angle."""
         if not self.supports_angle:
-            self.xknx.logger.warning(
-                "Angle not supported for device %s", self.get_name()
-            )
+            logger.warning("Angle not supported for device %s", self.get_name())
             return
         await self.angle.set(angle)
 
@@ -259,7 +259,7 @@ class Cover(Device):
         elif action == "stop":
             await self.stop()
         else:
-            self.xknx.logger.warning(
+            logger.warning(
                 "Could not understand action %s for device %s", action, self.get_name()
             )
 

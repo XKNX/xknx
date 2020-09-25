@@ -3,11 +3,15 @@ Module for Serialization and Deserialization of a KNX Tunnelling Request informa
 
 Tunnelling requests are used to transmit a KNX telegram within an existing KNX tunnel connection.
 """
+import logging
+
 from xknx.exceptions import CouldNotParseKNXIP, UnsupportedCEMIMessage
 
 from .body import KNXIPBody
 from .cemi_frame import CEMIFrame, CEMIMessageCode
 from .knxip_enum import KNXIPServiceType
+
+logger = logging.getLogger("xknx_log")
 
 
 class TunnellingRequest(KNXIPBody):
@@ -58,7 +62,7 @@ class TunnellingRequest(KNXIPBody):
         try:
             pos += self.cemi.from_knx(raw[pos:])
         except UnsupportedCEMIMessage as unsupported_cemi_err:
-            self.xknx.logger.warning("CEMI not supported: %s", unsupported_cemi_err)
+            logger.warning("CEMI not supported: %s", unsupported_cemi_err)
             # Set cemi to None - this is checked in Tunnel() to send Ack even for unsupported CEMI messages.
             self.cemi = None
             pos += len(raw)

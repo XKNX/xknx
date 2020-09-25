@@ -7,10 +7,12 @@ The module will
 * ... check if received telegrams have the correct group address.
 * ... store the received telegram for further processing.
 """
-
 import asyncio
+import logging
 
 from xknx.telegram import Telegram, TelegramType
+
+logger = logging.getLogger("xknx_log")
 
 
 class ValueReader:
@@ -65,7 +67,7 @@ class ValueReader:
 
     def timeout(self):
         """Handle timeout for not having received expected group response."""
-        self.xknx.logger.warning(
+        logger.warning(
             "Error: KNX bus did not respond in time (%s secs) to GroupValueRead request for: %s",
             self.timeout_in_seconds,
             self.group_address,

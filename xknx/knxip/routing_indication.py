@@ -3,11 +3,15 @@ Module for Serialization and Deserialization of KNX Routing Indications.
 
 Routing indications are used to transport CEMI Messages.
 """
+import logging
+
 from xknx.exceptions import UnsupportedCEMIMessage
 
 from .body import KNXIPBody
 from .cemi_frame import CEMIFrame
 from .knxip_enum import CEMIMessageCode, KNXIPServiceType
+
+logger = logging.getLogger("xknx_log")
 
 
 class RoutingIndication(KNXIPBody):
@@ -35,7 +39,7 @@ class RoutingIndication(KNXIPBody):
         try:
             return self.cemi.from_knx(raw)
         except UnsupportedCEMIMessage as unsupported_cemi_err:
-            self.xknx.logger.warning("CEMI not supported: %s", unsupported_cemi_err)
+            logger.warning("CEMI not supported: %s", unsupported_cemi_err)
             self.cemi = None
             return len(raw)
 

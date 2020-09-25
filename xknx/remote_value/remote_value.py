@@ -6,8 +6,12 @@ Remote value can be :
 - a group address for reading a KNX value,
 - or a group of both representing the same value.
 """
+import logging
+
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram, TelegramType
+
+logger = logging.getLogger("xknx_log")
 
 
 class RemoteValue:
@@ -73,7 +77,7 @@ class RemoteValue:
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed - to be implemented in derived class.."""
         # pylint: disable=unused-argument
-        self.xknx.logger.warning(
+        logger.warning(
             "'payload_valid()' not implemented for %s", self.__class__.__name__
         )
         return True
@@ -81,16 +85,12 @@ class RemoteValue:
     def from_knx(self, payload):
         """Convert current payload to value - to be implemented in derived class."""
         # pylint: disable=unused-argument
-        self.xknx.logger.warning(
-            "'from_knx()' not implemented for %s", self.__class__.__name__
-        )
+        logger.warning("'from_knx()' not implemented for %s", self.__class__.__name__)
 
     def to_knx(self, value):
         """Convert value to payload - to be implemented in derived class."""
         # pylint: disable=unused-argument
-        self.xknx.logger.warning(
-            "'to_knx()' not implemented for %s", self.__class__.__name__
-        )
+        logger.warning("'to_knx()' not implemented for %s", self.__class__.__name__)
 
     async def process(self, telegram, always_callback=False):
         """Process incoming telegram."""
@@ -132,7 +132,7 @@ class RemoteValue:
     async def set(self, value, response=False):
         """Set new value."""
         if not self.initialized:
-            self.xknx.logger.info(
+            logger.info(
                 "Setting value of uninitialized device: %s - %s (value: %s)",
                 self.device_name,
                 self.feature_name,
@@ -140,7 +140,7 @@ class RemoteValue:
             )
             return
         if not self.writable:
-            self.xknx.logger.warning(
+            logger.warning(
                 "Attempted to set value for non-writable device: %s - %s (value: %s)",
                 self.device_name,
                 self.feature_name,
@@ -160,7 +160,7 @@ class RemoteValue:
     async def read_state(self, wait_for_result=False):
         """Send GroupValueRead telegram for state address to KNX bus."""
         if self.readable:
-            self.xknx.logger.debug("Sync %s - %s", self.device_name, self.feature_name)
+            logger.debug("Sync %s - %s", self.device_name, self.feature_name)
             # pylint: disable=import-outside-toplevel
             # TODO: send a ReadRequset and start a timeout from here instead of ValueReader
             #       cancel timeout form process(); delete ValueReader
@@ -172,7 +172,7 @@ class RemoteValue:
                 if telegram is not None:
                     await self.process(telegram)
                 else:
-                    self.xknx.logger.warning(
+                    logger.warning(
                         "Could not sync group address '%s' (%s - %s)",
                         self.group_address_state,
                         self.device_name,

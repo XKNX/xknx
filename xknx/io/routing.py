@@ -3,6 +3,8 @@ Abstraction for handling KNX/IP routing.
 
 Routing uses UDP Multicast to broadcast and receive KNX/IP messages.
 """
+import logging
+
 from xknx.knxip import (
     APCICommand,
     CEMIFrame,
@@ -14,6 +16,8 @@ from xknx.knxip import (
 from xknx.telegram import TelegramDirection
 
 from .udp_client import UDPClient
+
+logger = logging.getLogger("xknx_log")
 
 
 class Routing:
@@ -39,18 +43,18 @@ class Routing:
     def response_rec_callback(self, knxipframe, _):
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if knxipframe.header.service_type_ident != KNXIPServiceType.ROUTING_INDICATION:
-            self.xknx.logger.warning("Service type not implemented: %s", knxipframe)
+            logger.warning("Service type not implemented: %s", knxipframe)
         elif knxipframe.body.cemi is None:
             # ignore unsupported CEMI frame
             return
         elif knxipframe.body.cemi.src_addr == self.xknx.own_address:
-            self.xknx.logger.debug("Ignoring own packet")
+            logger.debug("Ignoring own packet")
         elif knxipframe.body.cemi.cmd not in (
             APCICommand.GROUP_READ,
             APCICommand.GROUP_WRITE,
             APCICommand.GROUP_RESPONSE,
         ):
-            self.xknx.logger.warning("APCI not implemented: %s", knxipframe)
+            logger.warning("APCI not implemented: %s", knxipframe)
         else:
             telegram = knxipframe.body.cemi.telegram
             telegram.direction = TelegramDirection.INCOMING

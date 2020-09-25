@@ -7,6 +7,7 @@ GatewayScanner is an abstraction for searching for KNX/IP devices on the local n
 """
 
 import asyncio
+import logging
 from typing import List, Optional
 
 import netifaces
@@ -21,6 +22,8 @@ from xknx.knxip import (
 )
 
 from .udp_client import UDPClient
+
+logger = logging.getLogger("xknx_log")
 
 
 class GatewayDescriptor:
@@ -139,14 +142,12 @@ class GatewayScanner:
                 ip_addr = af_inet[0]["addr"]
                 await self._search_interface(interface, ip_addr)
             except KeyError:
-                self.xknx.logger.info(
-                    "Could not connect to an KNX/IP device on %s", interface
-                )
+                logger.info("Could not connect to an KNX/IP device on %s", interface)
                 continue
 
     async def _search_interface(self, interface, ip_addr):
         """Send a search request on a specific interface."""
-        self.xknx.logger.debug("Searching on %s / %s", interface, ip_addr)
+        logger.debug("Searching on %s / %s", interface, ip_addr)
 
         udp_client = UDPClient(
             self.xknx,
@@ -173,7 +174,7 @@ class GatewayScanner:
     ) -> None:
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knx_ip_frame.body, SearchResponse):
-            self.xknx.logger.warning("Could not understand knxipframe")
+            logger.warning("Could not understand knxipframe")
             return
 
         gateway = GatewayDescriptor(

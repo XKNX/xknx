@@ -15,7 +15,6 @@ class Connect(RequestResponse):
 
     def __init__(self, xknx, udp_client):
         """Initialize Connect class."""
-        self.xknx = xknx
         self.udp_client = udp_client
         super().__init__(xknx, self.udp_client, ConnectResponse)
         self.communication_channel = 0

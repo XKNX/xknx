@@ -5,6 +5,7 @@ Module for managing the climate within a room.
 * Manages and sends the desired setpoint to KNX bus.
 """
 from enum import Enum
+import logging
 
 from xknx.remote_value import (
     RemoteValueSetpointShift,
@@ -14,6 +15,8 @@ from xknx.remote_value import (
 
 from .climate_mode import ClimateMode
 from .device import Device
+
+logger = logging.getLogger("xknx_log")
 
 
 class SetpointShiftMode(Enum):
@@ -245,10 +248,10 @@ class Climate(Device):
     def validate_value(self, value, min_value, max_value):
         """Check boundaries of temperature and return valid temperature value."""
         if (min_value is not None) and (value < min_value):
-            self.xknx.logger.warning("Min value exceeded at %s: %s", self.name, value)
+            logger.warning("Min value exceeded at %s: %s", self.name, value)
             return min_value
         if (max_value is not None) and (value > max_value):
-            self.xknx.logger.warning("Max value exceeded at %s: %s", self.name, value)
+            logger.warning("Max value exceeded at %s: %s", self.name, value)
             return max_value
         return value
 

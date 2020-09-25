@@ -6,9 +6,13 @@ It provides functionality for
 * setting fan to specific speed
 * reading the current speed from KNX bus.
 """
+import logging
+
 from xknx.remote_value import RemoteValueScaling
 
 from .device import Device
+
+logger = logging.getLogger("xknx_log")
 
 
 class Fan(Device):
@@ -72,7 +76,7 @@ class Fan(Device):
         if action.startswith("speed:"):
             await self.set_speed(int(action[6:]))
         else:
-            self.xknx.logger.warning(
+            logger.warning(
                 "Could not understand action %s for device %s", action, self.get_name()
             )
 

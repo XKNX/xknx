@@ -27,7 +27,8 @@ xknx = XKNX(config='xknx.yaml',
             device_updated_cb=None,
             rate_limit=DEFAULT_RATE_LIMIT,
             multicast_group=DEFAULT_MCAST_GRP,
-            multicast_port=DEFAULT_MCAST_PORT)
+            multicast_port=DEFAULT_MCAST_PORT,
+            log_to_file=False)
 ```
 
 The constructor of the XKNX object takes several parameters:
@@ -44,6 +45,7 @@ The constructor of the XKNX object takes several parameters:
 * `rate_limit` in telegrams per second - can be used to limit the outgoing traffic to the KNX/IP interface. The default value is 20 packets per second.
 * `multicast_group` is the multicast IP address - can be used to override the default multicast address (`224.0.23.12`)
 * `multicast_port` is the multicast port - can be used to override the default multicast port (`3671`)
+* `log_to_file` is a boolean - when set to True we log to a dedicated file `xknx.log`
 
 # [](#header-2)Starting
 

@@ -10,6 +10,8 @@ It provides functionality for
 * setting the absolute color temperature.
 * reading the current state from KNX bus.
 """
+import logging
+
 from xknx.remote_value import (
     RemoteValueColorRGB,
     RemoteValueColorRGBW,
@@ -19,6 +21,8 @@ from xknx.remote_value import (
 )
 
 from .device import Device
+
+logger = logging.getLogger("xknx_log")
 
 
 # pylint: disable=too-many-public-methods, too-many-instance-attributes
@@ -251,9 +255,7 @@ class Light(Device):
     async def set_brightness(self, brightness):
         """Set brightness of light."""
         if not self.supports_brightness:
-            self.xknx.logger.warning(
-                "Dimming not supported for device %s", self.get_name()
-            )
+            logger.warning("Dimming not supported for device %s", self.get_name())
             return
         await self.brightness.set(brightness)
 
@@ -281,16 +283,12 @@ class Light(Device):
             if self.supports_rgbw:
                 await self.rgbw.set(list(color) + [white])
                 return
-            self.xknx.logger.warning(
-                "RGBW not supported for device %s", self.get_name()
-            )
+            logger.warning("RGBW not supported for device %s", self.get_name())
         else:
             if self.supports_color:
                 await self.color.set(color)
                 return
-            self.xknx.logger.warning(
-                "Colors not supported for device %s", self.get_name()
-            )
+            logger.warning("Colors not supported for device %s", self.get_name())
 
     @property
     def current_tunable_white(self):
@@ -300,9 +298,7 @@ class Light(Device):
     async def set_tunable_white(self, tunable_white):
         """Set relative color temperature of light."""
         if not self.supports_tunable_white:
-            self.xknx.logger.warning(
-                "Tunable white not supported for device %s", self.get_name()
-            )
+            logger.warning("Tunable white not supported for device %s", self.get_name())
             return
         await self.tunable_white.set(tunable_white)
 
@@ -314,7 +310,7 @@ class Light(Device):
     async def set_color_temperature(self, color_temperature):
         """Set absolute color temperature of light."""
         if not self.supports_color_temperature:
-            self.xknx.logger.warning(
+            logger.warning(
                 "Absolute Color Temperature not supported for device %s",
                 self.get_name(),
             )
@@ -334,7 +330,7 @@ class Light(Device):
         elif action.startswith("color_temperature:"):
             await self.set_color_temperature(int(action[18:]))
         else:
-            self.xknx.logger.warning(
+            logger.warning(
                 "Could not understand action %s for device %s", action, self.get_name()
             )
 

@@ -6,9 +6,13 @@ It provides functionality for
 * switching 'on' and 'off'.
 * reading the current state from KNX bus.
 """
+import logging
+
 from xknx.remote_value import RemoteValueSwitch
 
 from .device import Device
+
+logger = logging.getLogger("xknx_log")
 
 
 class Switch(Device):
@@ -72,7 +76,7 @@ class Switch(Device):
         elif action == "off":
             await self.set_off()
         else:
-            self.xknx.logger.warning(
+            logger.warning(
                 "Could not understand action %s for device %s", action, self.get_name()
             )
 
