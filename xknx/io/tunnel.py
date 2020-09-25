@@ -228,6 +228,7 @@ class Tunnel:
     async def reconnect(self):
         """Reconnect to tunnel device."""
         self._is_reconnecting = True
+        await self.stop_heartbeat()
         await self.disconnect(True)
         self.init_udp_client()
         await self.start()
