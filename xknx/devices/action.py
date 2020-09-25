@@ -1,4 +1,7 @@
 """Module for handling commands which may be attached to BinarySensor class."""
+import logging
+
+logger = logging.getLogger("xknx_log")
 
 
 class ActionBase:
@@ -29,7 +32,7 @@ class ActionBase:
 
     async def execute(self):
         """Execute action. To be overwritten in derived classes."""
-        self.xknx.logger.info("Execute not implemented for %s", self.__class__.__name__)
+        logger.info("Execute not implemented for %s", self.__class__.__name__)
 
     def __str__(self):
         """Return object as readable string."""
@@ -63,9 +66,7 @@ class Action(ActionBase):
         """Execute action."""
         if self.target is not None:
             if self.target not in self.xknx.devices:
-                self.xknx.logger.warning(
-                    "Unknown device %s witin action %s.", self.target, self
-                )
+                logger.warning("Unknown device %s witin action %s.", self.target, self)
                 return
             await self.xknx.devices[self.target].do(self.method)
 

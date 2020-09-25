@@ -1,7 +1,11 @@
 """Module for managing a notification via KNX."""
+import logging
+
 from xknx.remote_value import RemoteValueString
 
 from .device import Device
+
+logger = logging.getLogger("xknx_log")
 
 
 class Notification(Device):
@@ -64,7 +68,7 @@ class Notification(Device):
         if action.startswith("message:"):
             await self.set(action[8:])
         else:
-            self.xknx.logger.warning(
+            logger.warning(
                 "Could not understand action %s for device %s", action, self.get_name()
             )
 

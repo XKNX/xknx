@@ -5,11 +5,16 @@ The module is build upon asyncio udp functions.
 Due to lame support of UDP multicast within asyncio some special treatment for multicast is necessary.
 """
 import asyncio
+import logging
 import socket
 from sys import platform
 
 from xknx.exceptions import CouldNotParseKNXIP, XKNXException
 from xknx.knxip import KNXIPFrame
+
+raw_socket_logger = logging.getLogger("xknx_raw_socket")
+logger = logging.getLogger("xknx_log")
+knx_logger = logging.getLogger("xknx_knx")
 
 
 class UDPClient:
@@ -32,9 +37,8 @@ class UDPClient:
     class UDPClientFactory(asyncio.DatagramProtocol):
         """Abstraction for managing the asyncio-udp transports."""
 
-        def __init__(self, xknx, own_ip, multicast=False, data_received_callback=None):
+        def __init__(self, own_ip, multicast=False, data_received_callback=None):
             """Initialize UDPClientFactory class."""
-            self.xknx = xknx
             self.own_ip = own_ip
             self.multicast = multicast
             self.transport = None
@@ -46,19 +50,19 @@ class UDPClient:
 
         def datagram_received(self, data, addr):
             """Call assigned callback. Callback for datagram received."""
-            self.xknx.raw_socket_logger.debug("Received from %s: %s", addr, data.hex())
+            raw_socket_logger.debug("Received from %s: %s", addr, data.hex())
             if self.data_received_callback is not None:
                 self.data_received_callback(data)
 
         def error_received(self, exc):
             """Handle errors. Callback for error received."""
             if hasattr(self, "xknx"):
-                self.xknx.logger.warning("Error received: %s", exc)
+                logger.warning("Error received: %s", exc)
 
         def connection_lost(self, exc):
             """Log error. Callback for connection lost."""
             if hasattr(self, "xknx") and exc is not None:
-                self.xknx.logger.info("Closing transport.")
+                logger.info("Closing transport.")
 
     def __init__(self, xknx, local_addr, remote_addr, multicast=False):
         """Initialize UDPClient class."""
@@ -80,10 +84,10 @@ class UDPClient:
             try:
                 knxipframe = KNXIPFrame(self.xknx)
                 knxipframe.from_knx(raw)
-                self.xknx.knx_logger.debug("Received: %s", knxipframe)
+                knx_logger.debug("Received: %s", knxipframe)
                 self.handle_knxipframe(knxipframe)
             except CouldNotParseKNXIP as couldnotparseknxip:
-                self.xknx.logger.exception(couldnotparseknxip)
+                logger.exception(couldnotparseknxip)
 
     def handle_knxipframe(self, knxipframe):
         """Handle KNXIP Frame and call all callbacks which watch for the service type ident."""
@@ -93,9 +97,7 @@ class UDPClient:
                 callback.callback(knxipframe, self)
                 handled = True
         if not handled:
-            self.xknx.logger.debug(
-                "UNHANDLED: %s", knxipframe.header.service_type_ident
-            )
+            logger.debug("UNHANDLED: %s", knxipframe.header.service_type_ident)
 
     def register_callback(self, callback, service_types=None):
         """Register callback."""
@@ -148,7 +150,6 @@ class UDPClient:
     async def connect(self):
         """Connect UDP socket. Open UDP port and build mulitcast socket if necessary."""
         udp_client_factory = UDPClient.UDPClientFactory(
-            self.xknx,
             self.local_addr[0],
             multicast=self.multicast,
             data_received_callback=self.data_received_callback,
@@ -171,7 +172,7 @@ class UDPClient:
 
     def send(self, knxipframe):
         """Send KNXIPFrame to socket."""
-        self.xknx.knx_logger.debug("Sending: %s", knxipframe)
+        knx_logger.debug("Sending: %s", knxipframe)
         if self.transport is None:
             raise XKNXException("Transport not connected")
 

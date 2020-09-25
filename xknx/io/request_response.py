@@ -4,8 +4,11 @@ Base class for sending a specific type of KNX/IP Packet to a KNX/IP device and w
 Will report if the corresponding answer was not received.
 """
 import asyncio
+import logging
 
 from xknx.knxip import ErrorCode, KNXIPFrame
+
+logger = logging.getLogger("xknx_log")
 
 
 class RequestResponse:
@@ -45,7 +48,7 @@ class RequestResponse:
     def response_rec_callback(self, knxipframe, _):
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knxipframe.body, self.awaited_response_class):
-            self.xknx.logger.warning("Could not understand knxipframe")
+            logger.warning("Could not understand knxipframe")
             return
         self.response_received_or_timeout.set()
         if knxipframe.body.status_code == ErrorCode.E_NO_ERROR:
@@ -59,7 +62,7 @@ class RequestResponse:
 
     def on_error_hook(self, knxipframe):
         """Do something after having received error within given time. May be overwritten in derived class."""
-        self.xknx.logger.debug(
+        logger.debug(
             "Error: KNX bus responded to request of type '%s' with error in '%s': %s",
             self.__class__.__name__,
             self.awaited_response_class.__name__,
@@ -68,7 +71,7 @@ class RequestResponse:
 
     def timeout(self):
         """Handle timeout for not having received expected knxipframe."""
-        self.xknx.logger.debug(
+        logger.debug(
             "Error: KNX bus did not respond in time (%s secs) to request of type '%s'",
             self.timeout_in_seconds,
             self.__class__.__name__,

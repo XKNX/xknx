@@ -3,7 +3,11 @@ Device is the base class for all implemented devices (e.g. Lights/Switches/Senso
 
 It provides basis functionality for reading the state from the KNX bus.
 """
+import logging
+
 from xknx.telegram import TelegramType
+
+logger = logging.getLogger("xknx_log")
 
 
 class Device:
@@ -81,7 +85,7 @@ class Device:
     async def do(self, action):
         """Execute 'do' commands."""
         # pylint: disable=invalid-name
-        self.xknx.logger.info(
+        logger.info(
             "'do()' not implemented for action '%s' of %s",
             action,
             self.__class__.__name__,

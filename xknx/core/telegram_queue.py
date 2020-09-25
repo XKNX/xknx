@@ -8,9 +8,13 @@ The underlaying KNXIPInterface will poll the queue and send the packets to the c
 You may register callbacks to be notified if a telegram was pushed to the queue.
 """
 import asyncio
+import logging
 
 from xknx.exceptions import CommunicationError, XKNXException
 from xknx.telegram import TelegramDirection, TelegramType
+
+logger = logging.getLogger("xknx_log")
+telegram_logger = logging.getLogger("xknx_telegram")
 
 
 class TelegramQueue:
@@ -60,7 +64,7 @@ class TelegramQueue:
 
     async def stop(self):
         """Stop telegram queue."""
-        self.xknx.logger.debug("Stopping TelegramQueue")
+        logger.debug("Stopping TelegramQueue")
         # If a None object is pushed to the queue, the queue stops
         await self.xknx.telegrams.put(None)
         await self._consumer_task
@@ -84,7 +88,7 @@ class TelegramQueue:
                     self.outgoing_queue.put_nowait(telegram)
                     # self.xknx.telegrams.task_done() for outgoing is called in _outgoing_rate_limiter.
             except XKNXException as ex:
-                self.xknx.logger.error("Error while processing telegram %s", ex)
+                logger.error("Error while processing telegram %s", ex)
 
     async def _outgoing_rate_limiter(self):
         """Endless loop for processing outgoing telegrams."""
@@ -99,11 +103,9 @@ class TelegramQueue:
                 await self.process_telegram_outgoing(telegram)
             except CommunicationError as ex:
                 if ex.should_log:
-                    self.xknx.logger.warning(ex)
+                    logger.warning(ex)
             except XKNXException as ex:
-                self.xknx.logger.error(
-                    "Error while processing outgoing telegram %s", ex
-                )
+                logger.error("Error while processing outgoing telegram %s", ex)
             finally:
                 self.outgoing_queue.task_done()
                 self.xknx.telegrams.task_done()
@@ -122,23 +124,23 @@ class TelegramQueue:
                 elif telegram.direction == TelegramDirection.OUTGOING:
                     await self.process_telegram_outgoing(telegram)
             except XKNXException as ex:
-                self.xknx.logger.error("Error while processing telegram %s", ex)
+                logger.error("Error while processing telegram %s", ex)
             finally:
                 self.xknx.telegrams.task_done()
 
     async def process_telegram_outgoing(self, telegram):
         """Process outgoing telegram."""
-        self.xknx.telegram_logger.debug(telegram)
+        telegram_logger.debug(telegram)
         if self.xknx.knxip_interface is not None:
             await self.xknx.knxip_interface.send_telegram(telegram)
             if telegram.telegramtype == TelegramType.GROUP_WRITE:
                 await self.xknx.devices.process(telegram)
         else:
-            self.xknx.logger.warning("No KNXIP interface defined")
+            logger.warning("No KNXIP interface defined")
 
     async def process_telegram_incoming(self, telegram):
         """Process incoming telegram."""
-        self.xknx.telegram_logger.debug(telegram)
+        telegram_logger.debug(telegram)
         processed = False
         for telegram_received_cb in self.telegram_received_cbs:
             if telegram_received_cb.is_within_filter(telegram):

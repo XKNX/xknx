@@ -5,6 +5,7 @@ Module for reading config files (xknx.yaml).
 * and add the found devices to the devies vector of XKNX.
 """
 from enum import Enum
+import logging
 
 from xknx.devices import (
     BinarySensor,
@@ -24,6 +25,8 @@ from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
 import yaml
 
+logger = logging.getLogger("xknx_log")
+
 
 class Version(Enum):
     """The used xknx.yaml structure version."""
@@ -41,13 +44,13 @@ class Config:
 
     def read(self, file="xknx.yaml"):
         """Read config."""
-        self.xknx.logger.debug("Reading %s", file)
+        logger.debug("Reading %s", file)
         try:
             with open(file) as filehandle:
                 doc = yaml.safe_load(filehandle)
                 self.parse(doc)
         except FileNotFoundError as ex:
-            self.xknx.logger.error("Error while reading %s: %s", file, ex)
+            logger.error("Error while reading %s: %s", file, ex)
 
     @staticmethod
     def parse_version(doc):
@@ -96,7 +99,7 @@ class Config:
                         conn_type = ConnectionType.AUTOMATIC
                     self._parse_connection_prefs(conn_type, prefs)
                 except XKNXException as ex:
-                    self.xknx.logger.error(
+                    logger.error(
                         "Error while reading config file: Could not parse %s: %s",
                         conn,
                         ex,
@@ -150,7 +153,7 @@ class Config:
             elif group.startswith("weather"):
                 self.parse_group_weather(doc["groups"][group])
         except XKNXException as ex:
-            self.xknx.logger.error(
+            logger.error(
                 "Error while reading config file: Could not parse %s: %s", group, ex
             )
 

@@ -8,6 +8,7 @@ KNXIPInterface manages KNX/IP Tunneling or Routing connections.
 """
 from enum import Enum
 import ipaddress
+import logging
 
 import netifaces
 from xknx.exceptions import XKNXException
@@ -16,6 +17,8 @@ from .const import DEFAULT_MCAST_PORT
 from .gateway_scanner import GatewayScanFilter, GatewayScanner
 from .routing import Routing
 from .tunnel import Tunnel
+
+logger = logging.getLogger("xknx_log")
 
 
 class ConnectionType(Enum):
@@ -135,7 +138,7 @@ class KNXIPInterface:
         if local_ip is None:
             local_ip = self.find_local_ip(gateway_ip=gateway_ip)
         validate_ip(local_ip, address_name="Local IP address")
-        self.xknx.logger.debug(
+        logger.debug(
             "Starting tunnel from %s to %s:%s", local_ip, gateway_ip, gateway_port
         )
         self.interface = Tunnel(
@@ -152,7 +155,7 @@ class KNXIPInterface:
     async def start_routing(self, local_ip):
         """Start KNX/IP Routing."""
         validate_ip(local_ip, address_name="Local IP address")
-        self.xknx.logger.debug("Starting Routing from %s", local_ip)
+        logger.debug("Starting Routing from %s", local_ip)
         self.interface = Routing(self.xknx, self.telegram_received, local_ip)
         await self.interface.start()
 
@@ -170,7 +173,8 @@ class KNXIPInterface:
         """Send telegram to connected device (either Tunneling or Routing)."""
         await self.interface.send_telegram(telegram)
 
-    def find_local_ip(self, gateway_ip: str) -> str:
+    @staticmethod
+    def find_local_ip(gateway_ip: str) -> str:
         """Find local IP address on same subnet as gateway."""
 
         def _scan_interfaces(gateway: ipaddress.IPv4Address) -> str:
@@ -183,10 +187,10 @@ class KNXIPInterface:
                             (link["addr"], link["netmask"]), strict=False
                         )
                         if gateway in network:
-                            self.xknx.logger.debug("Using interface: %s", interface)
+                            logger.debug("Using interface: %s", interface)
                             return link["addr"]
                 except KeyError:
-                    self.xknx.logger.debug(
+                    logger.debug(
                         "Could not find IPv4 address on interface %s", interface
                     )
                     continue
@@ -200,7 +204,7 @@ class KNXIPInterface:
         gateway = ipaddress.IPv4Address(gateway_ip)
         local_ip = _scan_interfaces(gateway)
         if local_ip is None:
-            self.xknx.logger.warning(
+            logger.warning(
                 "No interface on same subnet as gateway found. Falling back to default gateway."
             )
             default_gateway = _find_default_gateway()

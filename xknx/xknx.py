@@ -1,6 +1,8 @@
 """XKNX is an Asynchronous Python module for reading and writing KNX/IP packets."""
 import asyncio
 import logging
+from logging.handlers import TimedRotatingFileHandler
+import os
 import signal
 from sys import platform
 
@@ -15,6 +17,8 @@ from xknx.io import (
 from xknx.telegram import GroupAddressType, PhysicalAddress
 
 from .__version__ import __version__ as VERSION
+
+logger = logging.getLogger("xknx_log")
 
 
 class XKNX:
@@ -36,6 +40,7 @@ class XKNX:
         rate_limit=DEFAULT_RATE_LIMIT,
         multicast_group=DEFAULT_MCAST_GRP,
         multicast_port=DEFAULT_MCAST_PORT,
+        log_directory=None,
     ):
         """Initialize XKNX class."""
         # pylint: disable=too-many-arguments
@@ -52,12 +57,11 @@ class XKNX:
         self.rate_limit = rate_limit
         self.multicast_group = multicast_group
         self.multicast_port = multicast_port
-        self.logger = logging.getLogger("xknx.log")
-        self.knx_logger = logging.getLogger("xknx.knx")
-        self.telegram_logger = logging.getLogger("xknx.telegram")
-        self.raw_socket_logger = logging.getLogger("xknx.raw_socket")
         self.connection_config = None
         self.version = VERSION
+
+        if log_directory is not None:
+            self.setup_logging(log_directory)
 
         if config is not None:
             Config(self).read(config)
@@ -75,7 +79,7 @@ class XKNX:
                 task = self.loop.create_task(self.stop())
                 self.loop.run_until_complete(task)
             except RuntimeError as exp:
-                self.logger.warning("Could not close loop, reason: %s", exp)
+                logger.warning("Could not close loop, reason: %s", exp)
 
     async def start(
         self, state_updater=False, daemon_mode=False, connection_config=None
@@ -87,7 +91,7 @@ class XKNX:
             else:
                 connection_config = self.connection_config
         self.knxip_interface = KNXIPInterface(self, connection_config=connection_config)
-        self.logger.info(
+        logger.info(
             "XKNX v%s starting %s connection to KNX bus.",
             VERSION,
             connection_config.connection_type.name.lower(),
@@ -126,8 +130,37 @@ class XKNX:
             self.sigint_received.set()
 
         if platform == "win32":
-            self.logger.warning("Windows does not support signals")
+            logger.warning("Windows does not support signals")
         else:
             self.loop.add_signal_handler(signal.SIGINT, sigint_handler)
-        self.logger.warning("Press Ctrl+C to stop")
+        logger.warning("Press Ctrl+C to stop")
         await self.sigint_received.wait()
+
+    @staticmethod
+    def setup_logging(log_directory: str):
+        """Configure logging to file."""
+        if not os.path.isdir(log_directory):
+            logger.warning("The provided log directory does not exist.")
+            return
+
+        _handler = TimedRotatingFileHandler(
+            filename=f"{log_directory}{os.sep}xknx.log",
+            when="midnight",
+            backupCount=7,
+            encoding="utf-8",
+        )
+        _formatter = logging.Formatter(
+            "%(asctime)s | %(name)s | %(levelname)s | %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        _handler.setFormatter(_formatter)
+        _handler.setLevel(logging.DEBUG)
+
+        for log_namespace in [
+            "xknx_log",
+            "xknx_knx",
+            "xknx_raw_socket",
+            "xknx_telegram",
+        ]:
+            _logger = logging.getLogger(log_namespace)
+            _logger.addHandler(_handler)

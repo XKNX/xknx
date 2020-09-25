@@ -4,6 +4,7 @@ Abstraction for handling KNX/IP tunnels.
 Tunnels connect to KNX/IP devices directly via UDP and build a static UDP connection.
 """
 import asyncio
+import logging
 
 from xknx.exceptions import CommunicationError, XKNXException
 from xknx.knxip import (
@@ -20,6 +21,8 @@ from .connectionstate import ConnectionState
 from .disconnect import Disconnect
 from .tunnelling import Tunnelling
 from .udp_client import UDPClient
+
+logger = logging.getLogger("xknx_log")
 
 
 class Tunnel:
@@ -75,7 +78,7 @@ class Tunnel:
         """Handle incoming tunnel request."""
         # pylint: disable=unused-argument
         if knxipframe.header.service_type_ident != KNXIPServiceType.TUNNELLING_REQUEST:
-            self.xknx.logger.warning("Service not implemented: %s", knxipframe)
+            logger.warning("Service not implemented: %s", knxipframe)
         else:
             self.send_ack(
                 knxipframe.body.communication_channel_id,
@@ -119,20 +122,20 @@ class Tunnel:
                 msg = "Could not connect to KNX. Retry in {} seconds.".format(
                     self.auto_reconnect_wait
                 )
-                self.xknx.logger.warning(msg)
+                logger.warning(msg)
                 task = self.xknx.loop.create_task(self.schedule_reconnect())
                 self._reconnect_task = task
                 return
             raise CommunicationError(
                 "Could not establish connection", not self._is_reconnecting
             )
-        self.xknx.logger.debug(
+        logger.debug(
             "Tunnel established communication_channel=%s, id=%s",
             connect.communication_channel,
             connect.identifier,
         )
         if self._is_reconnecting:
-            self.xknx.logger.info("Successfully reconnected to KNX bus.")
+            logger.info("Successfully reconnected to KNX bus.")
         self._reconnect_task = None
         self._is_reconnecting = False
         self.communication_channel = connect.communication_channel
@@ -158,14 +161,10 @@ class Tunnel:
         """
         success = await self._send_telegram_impl(telegram)
         if not success:
-            self.xknx.logger.debug(
-                "Sending of telegram failed. Retrying a second time."
-            )
+            logger.debug("Sending of telegram failed. Retrying a second time.")
             success = await self._send_telegram_impl(telegram)
             if not success:
-                self.xknx.logger.debug(
-                    "Resending telegram failed. Reconnecting to tunnel."
-                )
+                logger.debug("Resending telegram failed. Reconnecting to tunnel.")
                 await self.reconnect()
                 success = await self._send_telegram_impl(telegram)
                 if not success:
@@ -218,7 +217,7 @@ class Tunnel:
         await disconnect.start()
         if not disconnect.success and not ignore_error:
             raise XKNXException("Could not disconnect channel")
-        self.xknx.logger.debug(
+        logger.debug(
             "Tunnel disconnected (communication_channel: %s)",
             self.communication_channel,
         )
@@ -287,7 +286,7 @@ class Tunnel:
         self.number_heartbeat_failed = self.number_heartbeat_failed + 1
         if self.number_heartbeat_failed > 3:
             if not self._is_reconnecting:
-                self.xknx.logger.warning("Heartbeat to KNX bus failed. Reconnecting.")
+                logger.warning("Heartbeat to KNX bus failed. Reconnecting.")
             try:
                 await self.stop_reconnect()
                 await self.reconnect()
@@ -295,4 +294,4 @@ class Tunnel:
                 await self.stop_heartbeat()
             except CommunicationError as exc:
                 if exc.should_log:
-                    self.xknx.logger.warning(exc)
+                    logger.warning(exc)

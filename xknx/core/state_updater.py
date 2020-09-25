@@ -2,12 +2,15 @@
 import asyncio
 from enum import Enum
 from functools import partial
+import logging
 
 from xknx.exceptions import ConversionError
 from xknx.remote_value import RemoteValue
 from xknx.telegram import GroupAddress
 
 DEFAULT_UPDATE_INTERVAL = 60
+
+logger = logging.getLogger("xknx_log")
 
 
 class StateUpdater:
@@ -41,7 +44,7 @@ class StateUpdater:
                 elif _options[0].upper() == "EVERY":
                     tracker_type = StateTrackerType.PERIODICALLY
                 else:
-                    self.xknx.logger.warning(
+                    logger.warning(
                         'Could not parse StateUpdater tracker_options "%s" for %s. Using default %s %s minutes.'
                         % (tracker_options, remote_value, tracker_type, update_interval)
                     )
@@ -52,7 +55,7 @@ class StateUpdater:
                 except IndexError:
                     pass  # No time given (no _options[1])
             else:
-                self.xknx.logger.warning(
+                logger.warning(
                     'Could not parse StateUpdater tracker_options type %s "%s" for %s. Using default %s %s minutes.'
                     % (
                         type(tracker_options),
@@ -76,7 +79,7 @@ class StateUpdater:
         )
         self._workers[id(remote_value)] = tracker
 
-        self.xknx.logger.debug(
+        logger.debug(
             f"StateUpdater registered {tracker_type} {update_inteval} for {remote_value}"
         )
         if self.started:
@@ -93,14 +96,14 @@ class StateUpdater:
 
     def start(self):
         """Start StateUpdater. Initialize states."""
-        self.xknx.logger.debug("StateUpdater initializing values")
+        logger.debug("StateUpdater initializing values")
         self.started = True
         for worker in self._workers.values():
             worker.start()
 
     def stop(self):
         """Stop StateUpdater."""
-        self.xknx.logger.debug("StateUpdater stopping")
+        logger.debug("StateUpdater stopping")
         self.started = False
         for worker in self._workers.values():
             worker.stop()
@@ -148,7 +151,7 @@ class _StateTracker:
 
     def start(self):
         """Start StateTracker - read state on call."""
-        self.xknx.logger.debug(
+        logger.debug(
             "StateUpdater initializing %s for %s - %s"
             % (self.group_address, self.device_name, self.feature_name)
         )
@@ -189,7 +192,7 @@ class _StateTracker:
 
     def _read_state(self):
         """Schedule to read the state from the KNX bus."""
-        self.xknx.logger.debug(
+        logger.debug(
             "StateUpdater scheduled reading %s for %s - %s"
             % (self.group_address, self.device_name, self.feature_name)
         )
