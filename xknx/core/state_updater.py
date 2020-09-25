@@ -45,8 +45,11 @@ class StateUpdater:
                     tracker_type = StateTrackerType.PERIODICALLY
                 else:
                     logger.warning(
-                        'Could not parse StateUpdater tracker_options "%s" for %s. Using default %s %s minutes.'
-                        % (tracker_options, remote_value, tracker_type, update_interval)
+                        'Could not parse StateUpdater tracker_options "%s" for %s. Using default %s %s minutes.',
+                        tracker_options,
+                        remote_value,
+                        tracker_type,
+                        update_interval,
                     )
                     return (tracker_type, update_interval)
                 try:
@@ -56,14 +59,12 @@ class StateUpdater:
                     pass  # No time given (no _options[1])
             else:
                 logger.warning(
-                    'Could not parse StateUpdater tracker_options type %s "%s" for %s. Using default %s %s minutes.'
-                    % (
-                        type(tracker_options),
-                        tracker_options,
-                        remote_value,
-                        tracker_type,
-                        update_interval,
-                    )
+                    'Could not parse StateUpdater tracker_options type %s "%s" for %s. Using default %s %s minutes.',
+                    type(tracker_options),
+                    tracker_options,
+                    remote_value,
+                    tracker_type,
+                    update_interval,
                 )
             return (tracker_type, update_interval)
 
@@ -80,7 +81,10 @@ class StateUpdater:
         self._workers[id(remote_value)] = tracker
 
         logger.debug(
-            f"StateUpdater registered {tracker_type} {update_inteval} for {remote_value}"
+            "StateUpdater registered %s %s for %s",
+            tracker_type,
+            update_inteval,
+            remote_value,
         )
         if self.started:
             tracker.start()
@@ -152,8 +156,10 @@ class _StateTracker:
     def start(self):
         """Start StateTracker - read state on call."""
         logger.debug(
-            "StateUpdater initializing %s for %s - %s"
-            % (self.group_address, self.device_name, self.feature_name)
+            "StateUpdater initializing %s for %s - %s",
+            self.group_address,
+            self.device_name,
+            self.feature_name,
         )
         if self.tracker_type is not StateTrackerType.INIT:
             self._start_waiting()
@@ -193,7 +199,9 @@ class _StateTracker:
     def _read_state(self):
         """Schedule to read the state from the KNX bus."""
         logger.debug(
-            "StateUpdater scheduled reading %s for %s - %s"
-            % (self.group_address, self.device_name, self.feature_name)
+            "StateUpdater scheduled reading %s for %s - %s",
+            self.group_address,
+            self.device_name,
+            self.feature_name,
         )
         self.xknx.loop.create_task(self._read_state_awaitable())

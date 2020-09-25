@@ -43,9 +43,7 @@ disable=
   too-many-statements,
   too-many-boolean-expressions,
   unused-argument,
-  wrong-import-order,
-  logging-not-lazy,
-  logging-fstring-interpolation
+  wrong-import-order
 # enable useless-suppression temporarily every now and then to clean them up
 enable=
   use-symbolic-message-instead

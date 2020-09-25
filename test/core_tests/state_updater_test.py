@@ -117,8 +117,11 @@ class TestStateUpdater(unittest.TestCase):
             xknx, sync_state="invalid", group_address_state=GroupAddress("1/1/1")
         )
         logging_warning_mock.assert_called_once_with(
-            'Could not parse StateUpdater tracker_options "invalid" for %s. '
-            "Using default StateTrackerType.EXPIRE 60 minutes." % remote_value_invalid
+            'Could not parse StateUpdater tracker_options "%s" for %s. Using default %s %s minutes.',
+            "invalid",
+            remote_value_invalid,
+            StateTrackerType.EXPIRE,
+            60,
         )
         self.assertEqual(_get_only_tracker().tracker_type, StateTrackerType.EXPIRE)
         self.assertEqual(_get_only_tracker().update_interval, 60 * 60)
@@ -129,8 +132,12 @@ class TestStateUpdater(unittest.TestCase):
             xknx, sync_state=5.6, group_address_state=GroupAddress("1/1/1")
         )
         logging_warning_mock.assert_called_once_with(
-            "Could not parse StateUpdater tracker_options type <class 'float'> \"5.6\" for %s. "
-            "Using default StateTrackerType.EXPIRE 60 minutes." % remote_value_float
+            'Could not parse StateUpdater tracker_options type %s "%s" for %s. Using default %s %s minutes.',
+            float,
+            5.6,
+            remote_value_float,
+            StateTrackerType.EXPIRE,
+            60,
         )
         self.assertEqual(_get_only_tracker().tracker_type, StateTrackerType.EXPIRE)
         self.assertEqual(_get_only_tracker().update_interval, 60 * 60)
