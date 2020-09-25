@@ -173,7 +173,8 @@ class KNXIPInterface:
         """Send telegram to connected device (either Tunneling or Routing)."""
         await self.interface.send_telegram(telegram)
 
-    def find_local_ip(self, gateway_ip: str) -> str:
+    @staticmethod
+    def find_local_ip(gateway_ip: str) -> str:
         """Find local IP address on same subnet as gateway."""
 
         def _scan_interfaces(gateway: ipaddress.IPv4Address) -> str:

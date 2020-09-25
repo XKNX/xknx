@@ -2,6 +2,7 @@
 import asyncio
 import logging
 from logging.handlers import TimedRotatingFileHandler
+import os
 import signal
 from sys import platform
 
@@ -39,7 +40,7 @@ class XKNX:
         rate_limit=DEFAULT_RATE_LIMIT,
         multicast_group=DEFAULT_MCAST_GRP,
         multicast_port=DEFAULT_MCAST_PORT,
-        log_to_file=False,
+        log_directory=None,
     ):
         """Initialize XKNX class."""
         # pylint: disable=too-many-arguments
@@ -59,8 +60,8 @@ class XKNX:
         self.connection_config = None
         self.version = VERSION
 
-        if log_to_file:
-            self.setup_logging()
+        if log_directory is not None:
+            self.setup_logging(log_directory)
 
         if config is not None:
             Config(self).read(config)
@@ -136,10 +137,17 @@ class XKNX:
         await self.sigint_received.wait()
 
     @staticmethod
-    def setup_logging():
+    def setup_logging(log_directory: str):
         """Configure logging to file."""
+        if not os.path.isdir(log_directory):
+            logger.warning("The provided log directory does not exist.")
+            return
+
         _handler = TimedRotatingFileHandler(
-            filename="xknx.log", when="midnight", backupCount=7, encoding="utf-8"
+            filename=f"{log_directory}{os.sep}xknx.log",
+            when="midnight",
+            backupCount=7,
+            encoding="utf-8",
         )
         _formatter = logging.Formatter(
             "%(asctime)s | %(name)s | %(levelname)s | %(message)s",
