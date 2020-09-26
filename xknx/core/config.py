@@ -25,7 +25,7 @@ from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
 import yaml
 
-logger = logging.getLogger("xknx_log")
+logger = logging.getLogger("xknx.log")
 
 
 class Version(Enum):

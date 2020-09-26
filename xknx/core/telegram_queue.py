@@ -13,8 +13,8 @@ import logging
 from xknx.exceptions import CommunicationError, XKNXException
 from xknx.telegram import TelegramDirection, TelegramType
 
-logger = logging.getLogger("xknx_log")
-telegram_logger = logging.getLogger("xknx_telegram")
+logger = logging.getLogger("xknx.log")
+telegram_logger = logging.getLogger("xknx.telegram")
 
 
 class TelegramQueue:

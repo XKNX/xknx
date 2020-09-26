@@ -12,7 +12,7 @@ import logging
 
 from xknx.telegram import Telegram, TelegramType
 
-logger = logging.getLogger("xknx_log")
+logger = logging.getLogger("xknx.log")
 
 
 class ValueReader:

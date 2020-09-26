@@ -12,9 +12,9 @@ from sys import platform
 from xknx.exceptions import CouldNotParseKNXIP, XKNXException
 from xknx.knxip import KNXIPFrame
 
-raw_socket_logger = logging.getLogger("xknx_raw_socket")
-logger = logging.getLogger("xknx_log")
-knx_logger = logging.getLogger("xknx_knx")
+raw_socket_logger = logging.getLogger("xknx.raw_socket")
+logger = logging.getLogger("xknx.log")
+knx_logger = logging.getLogger("xknx.knx")
 
 
 class UDPClient:

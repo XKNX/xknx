@@ -7,7 +7,7 @@ import logging
 
 from xknx.telegram import TelegramType
 
-logger = logging.getLogger("xknx_log")
+logger = logging.getLogger("xknx.log")
 
 
 class Device:
