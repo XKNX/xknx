@@ -23,19 +23,19 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_to_knx(self):
         """Test to_knx function with normal operation."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueDptValue1Ucount(xknx)
         self.assertEqual(remote_value.to_knx(10), DPTArray((0x0A,)))
 
     def test_from_knx(self):
         """Test from_knx function with normal operation."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueDptValue1Ucount(xknx)
         self.assertEqual(remote_value.from_knx(DPTArray((0x0A,))), 10)
 
     def test_to_knx_error(self):
         """Test to_knx function with wrong parametern."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueDptValue1Ucount(xknx)
         with self.assertRaises(ConversionError):
             remote_value.to_knx(256)
@@ -44,7 +44,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_set(self):
         """Test setting value."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueDptValue1Ucount(
             xknx, group_address=GroupAddress("1/2/3")
         )
@@ -63,7 +63,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_process(self):
         """Test process telegram."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueDptValue1Ucount(
             xknx, group_address=GroupAddress("1/2/3")
         )
@@ -75,7 +75,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_to_process_error(self):
         """Test process errornous telegram."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueDptValue1Ucount(
             xknx, group_address=GroupAddress("1/2/3")
         )

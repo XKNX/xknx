@@ -28,7 +28,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_to_knx_operation_mode(self):
         """Test to_knx function with normal operation."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueClimateMode(
             xknx, climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE
         )
@@ -38,7 +38,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_to_knx_binary(self):
         """Test to_knx function with normal operation."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueBinaryOperationMode(
             xknx, operation_mode=HVACOperationMode.COMFORT
         )
@@ -49,7 +49,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_from_knx_binary_error(self):
         """Test from_knx function with invalid payload."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueBinaryOperationMode(
             xknx, operation_mode=HVACOperationMode.COMFORT
         )
@@ -58,7 +58,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_to_knx_heat_cool(self):
         """Test to_knx function with normal operation."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueBinaryHeatCool(
             xknx, operation_mode=HVACOperationMode.HEAT
         )
@@ -67,7 +67,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_from_knx_operation_mode(self):
         """Test from_knx function with normal operation."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueClimateMode(
             xknx, climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE
         )
@@ -77,7 +77,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_from_knx_binary_heat_cool(self):
         """Test from_knx function with invalid payload."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueBinaryHeatCool(
             xknx, operation_mode=HVACOperationMode.HEAT
         )
@@ -86,13 +86,13 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_from_knx_operation_mode_error(self):
         """Test from_knx function with invalid payload."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         with self.assertRaises(ConversionError):
             RemoteValueClimateMode(xknx, climate_mode_type=None)
 
     def test_from_knx_binary(self):
         """Test from_knx function with normal operation."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueBinaryOperationMode(
             xknx, operation_mode=HVACOperationMode.COMFORT
         )
@@ -103,7 +103,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_from_knx_heat_cool(self):
         """Test from_knx function with normal operation."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueBinaryHeatCool(
             xknx, operation_mode=HVACOperationMode.HEAT
         )
@@ -114,25 +114,25 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_from_knx_unsupported_operation_mode(self):
         """Test from_knx function with unsupported operation."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         with self.assertRaises(ConversionError):
             RemoteValueBinaryHeatCool(xknx, operation_mode=HVACOperationMode.NODEM)
 
     def test_from_knx_unknown_operation_mode(self):
         """Test from_knx function with unsupported operation."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         with self.assertRaises(ConversionError):
             RemoteValueBinaryHeatCool(xknx, operation_mode=None)
 
     def test_supported_operation_modes_not_implemented(self):
         """Test from_knx function with unsupported operation."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         with self.assertRaises(NotImplementedError):
             _RemoteValueBinaryClimateMode.supported_operation_modes()
 
     def test_to_knx_error_operation_mode(self):
         """Test to_knx function with wrong parameter."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueClimateMode(
             xknx, climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE
         )
@@ -143,7 +143,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_to_knx_error_binary(self):
         """Test to_knx function with wrong parameter."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueBinaryOperationMode(
             xknx, operation_mode=HVACOperationMode.NIGHT
         )
@@ -154,7 +154,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_set_operation_mode(self):
         """Test setting value."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueClimateMode(
             xknx,
             group_address=GroupAddress("1/2/3"),
@@ -177,7 +177,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_set_binary(self):
         """Test setting value."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueBinaryOperationMode(
             xknx,
             group_address=GroupAddress("1/2/3"),
@@ -200,7 +200,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_process_operation_mode(self):
         """Test process telegram."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueClimateMode(
             xknx,
             group_address=GroupAddress("1/2/3"),
@@ -214,7 +214,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_process_binary(self):
         """Test process telegram."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueBinaryOperationMode(
             xknx,
             group_address=GroupAddress("1/2/3"),
@@ -228,7 +228,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_to_process_error_operation_mode(self):
         """Test process errornous telegram."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueClimateMode(
             xknx,
             group_address=GroupAddress("1/2/3"),
@@ -253,7 +253,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
 
     def test_to_process_error_heat_cool(self):
         """Test process errornous telegram."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueBinaryHeatCool(
             xknx,
             group_address=GroupAddress("1/2/3"),

@@ -42,7 +42,7 @@ class TestConfig(unittest.TestCase):
         )
         cls.datetime_patcher.start()
 
-        cls.xknx = XKNX(config="xknx.yaml", loop=cls.loop)
+        cls.xknx = XKNX(config="xknx.yaml")
 
     @classmethod
     def tearDownClass(cls):
@@ -553,7 +553,7 @@ class TestConfig(unittest.TestCase):
     def test_config_file_not_found(self):
         """Test error message when reading a non exisiting config file."""
         with patch("logging.Logger.error") as mock_err:
-            XKNX(config="xknx_does_not_exist.yaml", loop=self.loop)
+            XKNX(config="xknx_does_not_exist.yaml")
             self.assertEqual(mock_err.call_count, 1)
 
     def test_config_file_error(self):
@@ -562,5 +562,5 @@ class TestConfig(unittest.TestCase):
             "xknx.core.Config.parse_group_light"
         ) as mock_parse:
             mock_parse.side_effect = XKNXException()
-            XKNX(config="xknx.yaml", loop=self.loop)
+            XKNX(config="xknx.yaml")
             self.assertEqual(mock_err.call_count, 1)

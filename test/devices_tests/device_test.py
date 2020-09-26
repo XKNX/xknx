@@ -23,7 +23,7 @@ class TestDevice(unittest.TestCase):
 
     def test_device_updated_cb(self):
         """Test device updated cb is added to the device."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         after_update_callback = Mock()
 
@@ -40,14 +40,14 @@ class TestDevice(unittest.TestCase):
 
     def test_iter_remote_value_raises_exception(self):
         """Test _iter_remote_value raises NotImplementedError."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device = Device(xknx, "TestDevice")
 
         self.assertRaises(NotImplementedError, device._iter_remote_values)
 
     def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device = Device(xknx, "TestDevice")
 
         after_update_callback1 = Mock()
@@ -94,7 +94,7 @@ class TestDevice(unittest.TestCase):
 
     def test_process(self):
         """Test if telegram is handled by the correct process_* method."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device = Device(xknx, "TestDevice")
 
         with patch("xknx.devices.Device.process_group_read") as mock_group_read:
@@ -135,7 +135,7 @@ class TestDevice(unittest.TestCase):
 
     def test_sync_with_wait(self):
         """Test sync with wait_for_result=True."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         sensor = Sensor(
             xknx, "Sensor", group_address_state="1/2/3", value_type="wind_speed_ms"
         )
@@ -152,13 +152,13 @@ class TestDevice(unittest.TestCase):
 
     def test_process_group_write(self):
         """Test if process_group_write. Nothing really to test here."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device = Device(xknx, "TestDevice")
         self.loop.run_until_complete(device.process_group_write(Telegram()))
 
     def test_process_group_response(self):
         """Test if process_group_read. Testing if mapped to group_write."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device = Device(xknx, "TestDevice")
         with patch("xknx.devices.Device.process_group_write") as mock_group_write:
             fut = asyncio.Future()
@@ -170,13 +170,13 @@ class TestDevice(unittest.TestCase):
 
     def test_process_group_read(self):
         """Test if process_group_read. Nothing really to test here."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device = Device(xknx, "TestDevice")
         self.loop.run_until_complete(device.process_group_read(Telegram()))
 
     def test_do(self):
         """Testing empty do."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device = Device(xknx, "TestDevice")
         with patch("logging.Logger.info") as mock_info:
             self.loop.run_until_complete(device.do("xx"))

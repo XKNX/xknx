@@ -24,7 +24,7 @@ class TestRemoteValue(unittest.TestCase):
 
     def test_warn_payload_valid(self):
         """Test for warning if payload_valid is not implemented."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValue(xknx)
         with patch("logging.Logger.warning") as mock_warn:
             remote_value.payload_valid(DPTBinary(0))
@@ -34,7 +34,7 @@ class TestRemoteValue(unittest.TestCase):
 
     def test_warn_to_knx(self):
         """Test for warning if to_knx is not implemented."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValue(xknx)
         with patch("logging.Logger.warning") as mock_warn:
             remote_value.to_knx(23)
@@ -44,7 +44,7 @@ class TestRemoteValue(unittest.TestCase):
 
     def test_warn_from_knx(self):
         """Test for warning if from_knx is not implemented."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValue(xknx)
         with patch("logging.Logger.warning") as mock_warn:
             remote_value.from_knx(DPTBinary(0))
@@ -54,7 +54,7 @@ class TestRemoteValue(unittest.TestCase):
 
     def test_info_set_uninitialized(self):
         """Test for info if RemoteValue is not initialized."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValue(xknx)
         with patch("logging.Logger.info") as mock_info:
             self.loop.run_until_complete(remote_value.set(23))
@@ -67,7 +67,7 @@ class TestRemoteValue(unittest.TestCase):
 
     def test_info_set_unwritable(self):
         """Test for warning if RemoteValue is read only."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValue(xknx, group_address_state=GroupAddress("1/2/3"))
         with patch("logging.Logger.warning") as mock_info:
             self.loop.run_until_complete(remote_value.set(23))
@@ -80,13 +80,13 @@ class TestRemoteValue(unittest.TestCase):
 
     def test_default_value_unit(self):
         """Test for the default value of unit_of_measurement."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValue(xknx)
         self.assertEqual(remote_value.unit_of_measurement, None)
 
     def test_process_invalid_payload(self):
         """Test if exception is raised when processing telegram with invalid payload."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValue(xknx)
         with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_valid, patch(
             "xknx.remote_value.RemoteValue.has_group_address"
@@ -100,7 +100,7 @@ class TestRemoteValue(unittest.TestCase):
 
     def test_read_state(self):
         """Test read state while waiting for the result."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueSwitch(xknx, group_address_state="1/2/3")
 
         with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_valid, patch(
@@ -119,7 +119,7 @@ class TestRemoteValue(unittest.TestCase):
 
     def test_read_state_none(self):
         """Test read state while waiting for the result but got None."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueSwitch(xknx, group_address_state="1/2/3")
 
         with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_valid, patch(
@@ -141,7 +141,7 @@ class TestRemoteValue(unittest.TestCase):
 
     def test_eq(self):
         """Test __eq__ operator."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value1 = RemoteValue(xknx, group_address=GroupAddress("1/1/1"))
         remote_value2 = RemoteValue(xknx, group_address=GroupAddress("1/1/1"))
         remote_value3 = RemoteValue(xknx, group_address=GroupAddress("1/1/2"))

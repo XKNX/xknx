@@ -26,7 +26,7 @@ class TestDevices(unittest.TestCase):
     #
     def test_get_item(self):
         """Test get item by name or by index."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         light1 = Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
 
@@ -54,7 +54,7 @@ class TestDevices(unittest.TestCase):
 
     def test_device_by_group_address(self):
         """Test get devices by group address."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         devices = Devices()
 
         light1 = Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
@@ -86,7 +86,7 @@ class TestDevices(unittest.TestCase):
 
     def test_iter(self):
         """Test __iter__() function."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         devices = Devices()
 
         light1 = Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
@@ -110,7 +110,7 @@ class TestDevices(unittest.TestCase):
 
     def test_len(self):
         """Test len() function."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         self.assertEqual(len(xknx.devices), 0)
 
         Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
@@ -127,7 +127,7 @@ class TestDevices(unittest.TestCase):
 
     def test_contains(self):
         """Test __contains__() function."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
 
@@ -139,7 +139,7 @@ class TestDevices(unittest.TestCase):
 
     def test_modification_of_device(self):
         """Test if devices object does store references and not copies of objects."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light1 = Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
         for device in xknx.devices:
             self.loop.run_until_complete(device.set_on())
@@ -160,7 +160,7 @@ class TestDevices(unittest.TestCase):
 
     def test_add_wrong_type(self):
         """Test if exception is raised when wrong type of devices is added."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         with self.assertRaises(TypeError):
             xknx.devices.add("fnord")
 
@@ -169,7 +169,7 @@ class TestDevices(unittest.TestCase):
     #
     def test_sync(self):
         """Test sync function."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         Device(xknx, "TestDevice1")
         Device(xknx, "TestDevice2")
         with patch("xknx.devices.Device.sync") as mock_sync:
@@ -184,7 +184,7 @@ class TestDevices(unittest.TestCase):
     #
     def test_device_updated_callback(self):
         """Test if device updated callback is called correctly if device was updated."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         device1 = Device(xknx, "TestDevice1")
         device2 = Device(xknx, "TestDevice2")
 

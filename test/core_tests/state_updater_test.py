@@ -26,7 +26,7 @@ class TestStateUpdater(unittest.TestCase):
 
     def test_register_unregister(self):
         """Test register and unregister."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         self.assertEqual(len(xknx.state_updater._workers), 0)
         # register when state address and sync_state is set
         remote_value_1 = RemoteValue(
@@ -54,7 +54,7 @@ class TestStateUpdater(unittest.TestCase):
 
     def test_tracker_parser(self):
         """Test parsing tracker options."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         def _get_only_tracker() -> _StateTracker:
             # _workers is unordered so it just works with 1 item
@@ -104,7 +104,7 @@ class TestStateUpdater(unittest.TestCase):
     @patch("logging.Logger.warning")
     def test_tracker_parser_invalid_options(self, logging_warning_mock):
         """Test parsing invalid tracker options."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         def _get_only_tracker() -> _StateTracker:
             # _workers is unordered so it just works with 1 item
@@ -152,7 +152,7 @@ class TestStateUpdater(unittest.TestCase):
 
     def test_state_updater_start_update_stop(self):
         """Test start, update_received and stop of StateUpdater."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value_1 = RemoteValue(
             xknx, sync_state=True, group_address_state=GroupAddress("1/1/1")
         )

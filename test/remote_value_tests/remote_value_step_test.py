@@ -23,7 +23,7 @@ class TestRemoteValueStep(unittest.TestCase):
 
     def test_to_knx(self):
         """Test to_knx function with normal operation."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueStep(xknx)
         self.assertEqual(
             remote_value.to_knx(RemoteValueStep.Direction.INCREASE), DPTBinary(1)
@@ -34,7 +34,7 @@ class TestRemoteValueStep(unittest.TestCase):
 
     def test_from_knx(self):
         """Test from_knx function with normal operation."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueStep(xknx)
         self.assertEqual(
             remote_value.from_knx(DPTBinary(1)), RemoteValueStep.Direction.INCREASE
@@ -45,7 +45,7 @@ class TestRemoteValueStep(unittest.TestCase):
 
     def test_to_knx_invert(self):
         """Test to_knx function with normal operation."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueStep(xknx, invert=True)
         self.assertEqual(
             remote_value.to_knx(RemoteValueStep.Direction.INCREASE), DPTBinary(0)
@@ -56,7 +56,7 @@ class TestRemoteValueStep(unittest.TestCase):
 
     def test_from_knx_invert(self):
         """Test from_knx function with normal operation."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueStep(xknx, invert=True)
         self.assertEqual(
             remote_value.from_knx(DPTBinary(1)), RemoteValueStep.Direction.DECREASE
@@ -67,14 +67,14 @@ class TestRemoteValueStep(unittest.TestCase):
 
     def test_to_knx_error(self):
         """Test to_knx function with wrong parametern."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueStep(xknx)
         with self.assertRaises(ConversionError):
             remote_value.to_knx(1)
 
     def test_set(self):
         """Test setting value."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueStep(xknx, group_address=GroupAddress("1/2/3"))
         self.loop.run_until_complete(remote_value.decrease())
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -91,7 +91,7 @@ class TestRemoteValueStep(unittest.TestCase):
 
     def test_process(self):
         """Test process telegram."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueStep(xknx, group_address=GroupAddress("1/2/3"))
         telegram = Telegram(group_address=GroupAddress("1/2/3"), payload=DPTBinary(0))
         self.assertEqual(remote_value.value, None)
@@ -100,7 +100,7 @@ class TestRemoteValueStep(unittest.TestCase):
 
     def test_to_process_error(self):
         """Test process errornous telegram."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueStep(xknx, group_address=GroupAddress("1/2/3"))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(

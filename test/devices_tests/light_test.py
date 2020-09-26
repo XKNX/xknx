@@ -29,7 +29,7 @@ class TestLight(unittest.TestCase):
     #
     def test_supports_dimm_yes(self):
         """Test supports_dimm attribute with a light with dimmer."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             "Diningroom.Light_1",
@@ -40,7 +40,7 @@ class TestLight(unittest.TestCase):
 
     def test_supports_dimm_no(self):
         """Test supports_dimm attribute with a Light without dimmer."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
         self.assertFalse(light.supports_brightness)
 
@@ -49,7 +49,7 @@ class TestLight(unittest.TestCase):
     #
     def test_supports_color_true(self):
         """Test supports_color true."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             "Diningroom.Light_1",
@@ -60,7 +60,7 @@ class TestLight(unittest.TestCase):
 
     def test_supports_color_false(self):
         """Test supports_color false."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
         self.assertFalse(light.supports_color)
 
@@ -69,7 +69,7 @@ class TestLight(unittest.TestCase):
     #
     def test_supports_rgbw_true(self):
         """Test supports_rgbw true."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             "Diningroom.Light_1",
@@ -81,7 +81,7 @@ class TestLight(unittest.TestCase):
 
     def test_supports_rgbw_false(self):
         """Test supports_color false."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             "Diningroom.Light_1",
@@ -95,7 +95,7 @@ class TestLight(unittest.TestCase):
     #
     def test_supports_tw_yes(self):
         """Test supports_tw attribute with a light with tunable white function."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             "Diningroom.Light_1",
@@ -106,7 +106,7 @@ class TestLight(unittest.TestCase):
 
     def test_supports_tw_no(self):
         """Test supports_tw attribute with a Light without tunable white function."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
         self.assertFalse(light.supports_tunable_white)
 
@@ -115,7 +115,7 @@ class TestLight(unittest.TestCase):
     #
     def test_supports_color_temp_true(self):
         """Test supports_color_temp attribute with a light with color temperature function."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             "Diningroom.Light_1",
@@ -126,7 +126,7 @@ class TestLight(unittest.TestCase):
 
     def test_supports_color_temp_false(self):
         """Test supports_color_temp attribute with a Light without color temperature function."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
         self.assertFalse(light.supports_color_temperature)
 
@@ -135,7 +135,7 @@ class TestLight(unittest.TestCase):
     #
     def test_sync(self):
         """Test sync function / sending group reads to KNX bus. Testing with a Light without dimm functionality."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -171,7 +171,7 @@ class TestLight(unittest.TestCase):
     #
     def test_sync_state_address(self):
         """Test sync function / sending group reads to KNX bus. Testing with a Light with dimm functionality."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -213,7 +213,7 @@ class TestLight(unittest.TestCase):
     #
     def test_set_on(self):
         """Test switching on a Light."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -232,7 +232,7 @@ class TestLight(unittest.TestCase):
     #
     def test_set_off(self):
         """Test switching off a Light."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -251,7 +251,7 @@ class TestLight(unittest.TestCase):
     #
     def test_set_brightness(self):
         """Test setting the brightness of a Light."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -268,7 +268,7 @@ class TestLight(unittest.TestCase):
     def test_set_brightness_not_dimmable(self):
         """Test setting the brightness of a non dimmable Light."""
         # pylint: disable=invalid-name
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
         with patch("logging.Logger.warning") as mock_warn:
             self.loop.run_until_complete(light.set_brightness(23))
@@ -282,7 +282,7 @@ class TestLight(unittest.TestCase):
     #
     def test_set_color(self):
         """Test setting the color of a Light."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -301,7 +301,7 @@ class TestLight(unittest.TestCase):
     def test_set_color_not_possible(self):
         """Test setting the color of a non light without color."""
         # pylint: disable=invalid-name
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
         with patch("logging.Logger.warning") as mock_warn:
             self.loop.run_until_complete(light.set_color((23, 24, 25)))
@@ -315,7 +315,7 @@ class TestLight(unittest.TestCase):
     #
     def test_set_color_rgbw(self):
         """Test setting RGBW value of a Light."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -336,7 +336,7 @@ class TestLight(unittest.TestCase):
     def test_set_color_rgbw_not_possible(self):
         """Test setting RGBW value of a non light without color."""
         # pylint: disable=invalid-name
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -356,7 +356,7 @@ class TestLight(unittest.TestCase):
     #
     def test_set_tw(self):
         """Test setting the tunable white value of a Light."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -373,7 +373,7 @@ class TestLight(unittest.TestCase):
     def test_set_tw_unsupported(self):
         """Test setting the tunable white value of a non tw Light."""
         # pylint: disable=invalid-name
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
         with patch("logging.Logger.warning") as mock_warn:
             self.loop.run_until_complete(light.set_tunable_white(23))
@@ -387,7 +387,7 @@ class TestLight(unittest.TestCase):
     #
     def test_set_color_temp(self):
         """Test setting the color temperature value of a Light."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -413,7 +413,7 @@ class TestLight(unittest.TestCase):
     def test_set_color_temp_unsupported(self):
         """Test setting the color temperature value of an unsupported Light."""
         # pylint: disable=invalid-name
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
         with patch("logging.Logger.warning") as mock_warn:
             self.loop.run_until_complete(light.set_color_temperature(4000))
@@ -427,7 +427,7 @@ class TestLight(unittest.TestCase):
     #
     def test_process_switch(self):
         """Test process / reading telegrams from telegram queue. Test if switch position is processed correctly."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -447,7 +447,7 @@ class TestLight(unittest.TestCase):
     def test_process_switch_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
         # pylint: disable=no-self-use
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -470,7 +470,7 @@ class TestLight(unittest.TestCase):
 
     def test_process_dimm(self):
         """Test process / reading telegrams from telegram queue. Test if brightness is processed."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -485,7 +485,7 @@ class TestLight(unittest.TestCase):
 
     def test_process_dimm_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -499,7 +499,7 @@ class TestLight(unittest.TestCase):
     def test_process_dimm_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
         # pylint: disable=invalid-name
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -512,7 +512,7 @@ class TestLight(unittest.TestCase):
 
     def test_process_color(self):
         """Test process / reading telegrams from telegram queue. Test if color is processed."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -526,7 +526,7 @@ class TestLight(unittest.TestCase):
 
     def test_process_color_rgbw(self):
         """Test process / reading telegrams from telegram queue. Test if RGBW is processed."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -543,7 +543,7 @@ class TestLight(unittest.TestCase):
 
     def test_process_tunable_white(self):
         """Test process / reading telegrams from telegram queue. Test if tunable white is processed."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -558,7 +558,7 @@ class TestLight(unittest.TestCase):
 
     def test_process_tunable_white_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -572,7 +572,7 @@ class TestLight(unittest.TestCase):
     def test_process_tunable_white_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
         # pylint: disable=invalid-name
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -585,7 +585,7 @@ class TestLight(unittest.TestCase):
 
     def test_process_color_temperature(self):
         """Test process / reading telegrams from telegram queue. Test if color temperature is processed."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -608,7 +608,7 @@ class TestLight(unittest.TestCase):
 
     def test_process_color_temperature_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -622,7 +622,7 @@ class TestLight(unittest.TestCase):
     def test_process_color_temperature_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
         # pylint: disable=invalid-name
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -638,7 +638,7 @@ class TestLight(unittest.TestCase):
     #
     def test_do(self):
         """Test 'do' functionality."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -665,7 +665,7 @@ class TestLight(unittest.TestCase):
 
     def test_wrong_do(self):
         """Test wrong do command."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
@@ -681,7 +681,7 @@ class TestLight(unittest.TestCase):
 
     def test_has_group_address(self):
         """Test has_group_address."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         light = Light(
             xknx,
             "Office.Light_1",

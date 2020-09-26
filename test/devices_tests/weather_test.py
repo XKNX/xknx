@@ -24,7 +24,7 @@ class TestWeather(unittest.TestCase):
 
     def test_temperature(self):
         """Test resolve state with temperature."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         weather = Weather(name="weather", xknx=xknx, group_address_temperature="1/3/4")
         weather._temperature.payload = DPTArray((0x19, 0xA))
 
@@ -35,7 +35,7 @@ class TestWeather(unittest.TestCase):
 
     def test_brightness(self):
         """Test resolve state for brightness east, west and south."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         weather: Weather = Weather(
             name="weather",
             xknx=xknx,
@@ -77,7 +77,7 @@ class TestWeather(unittest.TestCase):
 
     def test_pressure(self):
         """Test resolve state with pressure."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         weather = Weather(name="weather", xknx=xknx, group_address_air_pressure="1/3/4")
         weather._air_pressure.payload = DPTArray((0x6C, 0xAD))
 
@@ -87,7 +87,7 @@ class TestWeather(unittest.TestCase):
 
     def test_humidity(self):
         """Test humidity."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         weather = Weather(name="weather", xknx=xknx, group_address_humidity="1/2/4")
         weather._humidity.payload = DPTArray(
             (
@@ -102,7 +102,7 @@ class TestWeather(unittest.TestCase):
 
     def test_wind_speed(self):
         """Test wind speed received."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         weather: Weather = Weather(
             name="weather", xknx=xknx, group_address_brightness_east="1/3/8"
         )
@@ -120,7 +120,7 @@ class TestWeather(unittest.TestCase):
 
     def test_state_lightning(self):
         """Test current_state returns lightning if wind alarm and rain alarm are true."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         weather: Weather = Weather(
             name="weather",
             xknx=xknx,
@@ -135,7 +135,7 @@ class TestWeather(unittest.TestCase):
 
     def test_state_snowy_rainy(self):
         """Test snow rain if frost alarm and rain alarm are true."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         weather: Weather = Weather(
             name="weather",
             xknx=xknx,
@@ -150,7 +150,7 @@ class TestWeather(unittest.TestCase):
 
     def test_wind_alarm(self):
         """Test basic state mapping."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         weather: Weather = Weather(
             name="weather",
             xknx=xknx,
@@ -165,7 +165,7 @@ class TestWeather(unittest.TestCase):
 
     def test_rain_alarm(self):
         """Test basic state mapping."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         weather: Weather = Weather(
             name="weather",
             xknx=xknx,
@@ -180,7 +180,7 @@ class TestWeather(unittest.TestCase):
 
     def test_cloudy_summer(self):
         """Test cloudy summer if illuminance matches defined interval."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         weather: Weather = Weather(
             name="weather",
             xknx=xknx,
@@ -203,7 +203,7 @@ class TestWeather(unittest.TestCase):
 
     def test_sunny_summer(self):
         """Test returns sunny condition if illuminance is in defined interval"""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         weather: Weather = Weather(
             name="weather",
             xknx=xknx,
@@ -227,7 +227,7 @@ class TestWeather(unittest.TestCase):
 
     def test_sunny_winter(self):
         """Test sunny winter if illuminance matches defined interval."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         weather: Weather = Weather(
             name="weather",
             xknx=xknx,
@@ -250,7 +250,7 @@ class TestWeather(unittest.TestCase):
 
     def test_cloudy_winter(self):
         """Test cloudy winter if illuminance matches defined interval."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         weather: Weather = Weather(
             name="weather",
             xknx=xknx,
@@ -274,7 +274,7 @@ class TestWeather(unittest.TestCase):
 
     def test_day_night(self):
         """Test day night mapping."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         weather: Weather = Weather(
             name="weather", xknx=xknx, group_address_day_night="1/3/20"
         )
@@ -285,7 +285,7 @@ class TestWeather(unittest.TestCase):
 
     def test_weather_default(self):
         """Test default state mapping."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         weather: Weather = Weather(name="weather", xknx=xknx)
 
         self.assertEqual(weather.ha_current_state(), WeatherCondition.exceptional)
@@ -295,7 +295,7 @@ class TestWeather(unittest.TestCase):
     #
     def test_expose_sensor(self):
         """Test default state mapping."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         Weather(
             name="weather",
             xknx=xknx,
@@ -323,7 +323,7 @@ class TestWeather(unittest.TestCase):
     #
     def test_iter_remote_values(self):
         """Test sensor has group address."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         weather = Weather(
             name="weather",
             xknx=xknx,
@@ -341,7 +341,7 @@ class TestWeather(unittest.TestCase):
     #
     def test_has_group_address(self):
         """Test sensor has group address."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         weather = Weather(name="weather", xknx=xknx, group_address_temperature="1/3/4")
         self.assertTrue(weather._temperature.has_group_address(GroupAddress("1/3/4")))
         self.assertFalse(weather._temperature.has_group_address(GroupAddress("1/2/4")))

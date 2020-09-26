@@ -23,7 +23,7 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
 
     def test_to_knx(self):
         """Test to_knx function with normal operation."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx)
         input_list = [100, 101, 102, 127]
         input_tuple = (100, 101, 102, 127)
@@ -37,7 +37,7 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
 
     def test_from_knx(self):
         """Test from_knx function with normal operation."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx)
         self.assertEqual(
             remote_value.from_knx(DPTArray((0x64, 0x65, 0x66, 0x7F, 0x00, 0x00))),
@@ -62,7 +62,7 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
 
     def test_to_knx_error(self):
         """Test to_knx function with wrong parametern."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx)
         with self.assertRaises(ConversionError):
             remote_value.to_knx((101, 102, 103))
@@ -85,7 +85,7 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
 
     def test_set(self):
         """Test setting value."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx, group_address=GroupAddress("1/2/3"))
         self.loop.run_until_complete(remote_value.set((100, 101, 102, 103)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -110,7 +110,7 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
 
     def test_process(self):
         """Test process telegram."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx, group_address=GroupAddress("1/2/3"))
         telegram = Telegram(
             group_address=GroupAddress("1/2/3"),
@@ -121,7 +121,7 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
 
     def test_to_process_error(self):
         """Test process errornous telegram."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx, group_address=GroupAddress("1/2/3"))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(

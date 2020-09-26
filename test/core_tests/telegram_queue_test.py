@@ -27,7 +27,7 @@ class TestTelegramQueue(unittest.TestCase):
     def test_start(self):
         """Test start, run and stop."""
         # pylint: disable=no-self-use
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         telegram_in = Telegram(
             direction=TelegramDirection.INCOMING,
@@ -61,7 +61,7 @@ class TestTelegramQueue(unittest.TestCase):
 
         async_sleep_mock.return_value = asyncio.ensure_future(async_none())
 
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         xknx.rate_limit = 20  # 50 ms per outgoing telegram
         sleep_time = 0.05  # 1 / 20
 
@@ -99,7 +99,7 @@ class TestTelegramQueue(unittest.TestCase):
     def test_register(self):
         """Test telegram_received_callback after state of switch was changed."""
         # pylint: disable=no-self-use
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         telegram_received_callback = Mock()
 
@@ -125,7 +125,7 @@ class TestTelegramQueue(unittest.TestCase):
     def test_unregister(self):
         """Test telegram_received_callback after state of switch was changed."""
         # pylint: disable=no-self-use
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         telegram_received_callback = Mock()
 
@@ -155,7 +155,7 @@ class TestTelegramQueue(unittest.TestCase):
     def test_process_to_device(self, devices_by_ga_mock):
         """Test process_telegram_incoming for forwarding telegram to a device."""
         # pylint: disable=no-self-use
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         test_device = Mock()
         async_device_process = asyncio.Future()
@@ -180,7 +180,7 @@ class TestTelegramQueue(unittest.TestCase):
     def test_process_to_callback(self, devices_by_ga_mock):
         """Test process_telegram_incoming for returning after processing callback."""
         # pylint: disable=no-self-use
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         telegram_received_callback = Mock()
 
@@ -207,7 +207,7 @@ class TestTelegramQueue(unittest.TestCase):
     def test_outgoing(self, logger_warning_mock, if_mock):
         """Test outgoing telegrams in telegram queue."""
         # pylint: disable=no-self-use
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         async_if_send_telegram = asyncio.Future()
         async_if_send_telegram.set_result(None)
@@ -238,7 +238,7 @@ class TestTelegramQueue(unittest.TestCase):
     def test_process_exception(self, process_tg_in_mock, logging_error_mock):
         """Test process_telegram exception handling."""
         # pylint: disable=no-self-use
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         async def process_exception():
             raise CouldNotParseTelegram(
@@ -270,7 +270,7 @@ class TestTelegramQueue(unittest.TestCase):
     ):
         """Test _process_all_telegrams for clearing the queue."""
         # pylint: disable=no-self-use
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         async_process_mock = asyncio.Future()
         async_process_mock.set_result(None)
@@ -302,7 +302,7 @@ class TestTelegramQueue(unittest.TestCase):
     def test_no_filters(self):
         """Test telegram_received_callback after state of switch was changed."""
         # pylint: disable=no-self-use
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         telegram_received_callback = Mock()
 
@@ -328,7 +328,7 @@ class TestTelegramQueue(unittest.TestCase):
     def test_positive_filters(self):
         """Test telegram_received_callback after state of switch was changed."""
         # pylint: disable=no-self-use
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         telegram_received_callback = Mock()
 
@@ -357,7 +357,7 @@ class TestTelegramQueue(unittest.TestCase):
     def test_negative_filters(self):
         """Test telegram_received_callback after state of switch was changed."""
         # pylint: disable=no-self-use
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         telegram_received_callback = Mock()
 

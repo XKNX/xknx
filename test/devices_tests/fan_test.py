@@ -29,7 +29,7 @@ class TestFan(unittest.TestCase):
     #
     def test_sync(self):
         """Test sync function / sending group reads to KNX bus."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         fan = Fan(xknx, name="TestFan", group_address_speed_state="1/2/3")
         self.loop.run_until_complete(fan.sync())
 
@@ -45,7 +45,7 @@ class TestFan(unittest.TestCase):
     #
     def test_sync_state_address(self):
         """Test sync function / sending group reads to KNX bus."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         fan = Fan(
             xknx,
             name="TestFan",
@@ -67,7 +67,7 @@ class TestFan(unittest.TestCase):
     #
     def test_set_speed(self):
         """Test setting the speed of a Fan."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
         self.loop.run_until_complete(fan.set_speed(55))
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -82,7 +82,7 @@ class TestFan(unittest.TestCase):
     #
     def test_process_speed(self):
         """Test process / reading telegrams from telegram queue. Test if speed is processed."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
         self.assertEqual(fan.current_speed, None)
 
@@ -93,7 +93,7 @@ class TestFan(unittest.TestCase):
 
     def test_process_speed_wrong_payload(self):  # pylint: disable=invalid-name
         """Test process wrong telegrams. (wrong payload type)."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
         telegram = Telegram(GroupAddress("1/2/3"), payload=DPTBinary(1))
         with self.assertRaises(CouldNotParseTelegram):
@@ -102,7 +102,7 @@ class TestFan(unittest.TestCase):
     def test_process_fan_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
         # pylint: disable=invalid-name
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
         telegram = Telegram(GroupAddress("1/2/3"), payload=DPTArray((23, 24)))
         with self.assertRaises(CouldNotParseTelegram):
@@ -113,7 +113,7 @@ class TestFan(unittest.TestCase):
     #
     def test_do(self):
         """Test 'do' functionality."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
         self.loop.run_until_complete(fan.do("speed:50"))
         self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
@@ -124,7 +124,7 @@ class TestFan(unittest.TestCase):
 
     def test_wrong_do(self):
         """Test wrong do command."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
         with patch("logging.Logger.warning") as mock_warn:
             self.loop.run_until_complete(fan.do("execute"))
@@ -135,7 +135,7 @@ class TestFan(unittest.TestCase):
 
     def test_has_group_address(self):
         """Test has_group_address."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         fan = Fan(
             xknx,
             "TestFan",

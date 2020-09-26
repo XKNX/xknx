@@ -32,7 +32,7 @@ class TestXknxModule(unittest.TestCase):
 
     def test_log_to_file(self):
         """Test logging enable."""
-        XKNX(loop=self.loop, log_directory="/tmp/")
+        XKNX(log_directory="/tmp/")
 
         self.assertTrue(os.path.isfile("/tmp/xknx.log"))
 
@@ -40,7 +40,7 @@ class TestXknxModule(unittest.TestCase):
 
     def test_log_to_file_when_dir_does_not_exist(self):
         """Test logging enable with non existent directory."""
-        XKNX(loop=self.loop, log_directory="/xknx/is/fun")
+        XKNX(log_directory="/xknx/is/fun")
 
         self.assertFalse(os.path.isfile("/xknx/is/fun/xknx.log"))
 
@@ -50,7 +50,7 @@ class TestXknxModule(unittest.TestCase):
         async def telegram_received(telegram):
             """Telegram received."""
 
-        xknx = XKNX(loop=self.loop, telegram_received_cb=telegram_received)
+        xknx = XKNX(telegram_received_cb=telegram_received)
 
         self.assertEqual(len(xknx.telegram_queue.telegram_received_cbs), 1)
 
@@ -60,14 +60,14 @@ class TestXknxModule(unittest.TestCase):
         async def device_update(device):
             """Device updated."""
 
-        xknx = XKNX(loop=self.loop, device_updated_cb=device_update)
+        xknx = XKNX(device_updated_cb=device_update)
 
         self.assertEqual(len(xknx.devices.device_updated_cbs), 1)
 
     @patch("xknx.io.KNXIPInterface.start", new_callable=AsyncMock)
     def test_xknx_start(self, start_mock):
         """Test xknx start."""
-        xknx = XKNX(loop=self.loop, state_updater=True)
+        xknx = XKNX(state_updater=True)
 
         self.loop.run_until_complete(xknx.start())
 
@@ -79,7 +79,7 @@ class TestXknxModule(unittest.TestCase):
         """Test xknx start."""
 
         async def run_in_contextmanager():
-            async with XKNX(loop=self.loop, state_updater=True) as xknx:
+            async with XKNX(state_updater=True) as xknx:
                 self.assertTrue(xknx.started.is_set())
                 ipinterface_mock.assert_called_once()
 
@@ -88,7 +88,7 @@ class TestXknxModule(unittest.TestCase):
     @patch("xknx.io.KNXIPInterface.start", new_callable=AsyncMock)
     def test_xknx_start_and_stop_with_dedicated_connection_config(self, start_mock):
         """Test xknx start and stop with connection config."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
 
         connection_config = ConnectionConfig(connection_type=ConnectionType.TUNNELING)
         xknx.connection_config = connection_config

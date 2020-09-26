@@ -52,7 +52,7 @@ class Test_KNXIP_ConnectResponse(unittest.TestCase):
             0x11,
             0xFF,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
         self.assertTrue(isinstance(knxipframe.body, ConnectResponse))
@@ -101,7 +101,7 @@ class Test_KNXIP_ConnectResponse(unittest.TestCase):
             0x11,
             0xFF,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         with self.assertRaises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
@@ -128,7 +128,7 @@ class Test_KNXIP_ConnectResponse(unittest.TestCase):
             0x04,
             0x04,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         with self.assertRaises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
@@ -136,7 +136,7 @@ class Test_KNXIP_ConnectResponse(unittest.TestCase):
     def test_connect_response_connection_error(self):
         """Test parsing and streaming connection response KNX/IP packet with error."""
         raw = (0x06, 0x10, 0x02, 0x06, 0x00, 0x08, 0x00, 0x24)
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
         self.assertTrue(isinstance(knxipframe.body, ConnectResponse))

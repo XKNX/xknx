@@ -1444,7 +1444,7 @@ class SensorExposeLoopTest(unittest.TestCase):
 
         for value_type, test_payload, test_value in test_cases:
             with self.subTest(value_type=value_type):
-                xknx = XKNX(loop=self.loop)
+                xknx = XKNX()
                 sensor = Sensor(
                     xknx,
                     "TestSensor_%s" % value_type,
@@ -1497,7 +1497,7 @@ class SensorExposeLoopTest(unittest.TestCase):
 
         for value_type, test_payload, test_value in test_cases:
             with self.subTest(value_type=value_type):
-                xknx = XKNX(loop=self.loop)
+                xknx = XKNX()
                 sensor = BinarySensor(
                     xknx, "TestSensor_%s" % value_type, group_address_state="1/1/1"
                 )
