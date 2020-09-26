@@ -10,6 +10,7 @@ from xknx.remote_value import (
     RemoteValueBinaryOperationMode,
     RemoteValueClimateMode,
 )
+from xknx.remote_value.remote_value_climate_mode import _RemoteValueBinaryClimateMode
 from xknx.telegram import GroupAddress, Telegram
 
 
@@ -46,6 +47,15 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         )
         self.assertEqual(remote_value.to_knx(HVACOperationMode.NIGHT), DPTBinary(False))
 
+    def test_from_knx_binary_error(self):
+        """Test from_knx function with invalid payload."""
+        xknx = XKNX(loop=self.loop)
+        remote_value = RemoteValueBinaryOperationMode(
+            xknx, operation_mode=HVACOperationMode.COMFORT
+        )
+        with self.assertRaises(CouldNotParseTelegram):
+            remote_value.from_knx(DPTArray((0x9, 0xF)))
+
     def test_to_knx_heat_cool(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX(loop=self.loop)
@@ -64,6 +74,21 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         self.assertEqual(
             remote_value.from_knx(DPTArray((0x02,))), HVACOperationMode.STANDBY
         )
+
+    def test_from_knx_binary_heat_cool(self):
+        """Test from_knx function with invalid payload."""
+        xknx = XKNX(loop=self.loop)
+        remote_value = RemoteValueBinaryHeatCool(
+            xknx, operation_mode=HVACOperationMode.HEAT
+        )
+        with self.assertRaises(CouldNotParseTelegram):
+            remote_value.from_knx(DPTArray((0x9, 0xF)))
+
+    def test_from_knx_operation_mode_error(self):
+        """Test from_knx function with invalid payload."""
+        xknx = XKNX(loop=self.loop)
+        with self.assertRaises(ConversionError):
+            RemoteValueClimateMode(xknx, climate_mode_type=None)
 
     def test_from_knx_binary(self):
         """Test from_knx function with normal operation."""
@@ -86,6 +111,24 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         self.assertEqual(
             remote_value.from_knx(DPTBinary(False)), HVACOperationMode.COOL
         )
+
+    def test_from_knx_unsupported_operation_mode(self):
+        """Test from_knx function with unsupported operation."""
+        xknx = XKNX(loop=self.loop)
+        with self.assertRaises(ConversionError):
+            RemoteValueBinaryHeatCool(xknx, operation_mode=HVACOperationMode.NODEM)
+
+    def test_from_knx_unknown_operation_mode(self):
+        """Test from_knx function with unsupported operation."""
+        xknx = XKNX(loop=self.loop)
+        with self.assertRaises(ConversionError):
+            RemoteValueBinaryHeatCool(xknx, operation_mode=None)
+
+    def test_supported_operation_modes_not_implemented(self):
+        """Test from_knx function with unsupported operation."""
+        xknx = XKNX(loop=self.loop)
+        with self.assertRaises(NotImplementedError):
+            _RemoteValueBinaryClimateMode.supported_operation_modes()
 
     def test_to_knx_error_operation_mode(self):
         """Test to_knx function with wrong parameter."""

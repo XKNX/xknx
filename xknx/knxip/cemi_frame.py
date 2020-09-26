@@ -203,9 +203,9 @@ class CEMIFrame:
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
         if not isinstance(self.src_addr, (GroupAddress, PhysicalAddress)):
-            raise ConversionError("src_add not set")
+            raise ConversionError("src_addr not set")
         if not isinstance(self.dst_addr, (GroupAddress, PhysicalAddress)):
-            raise ConversionError("dst_add not set")
+            raise ConversionError("dst_addr not set")
 
         data = []
 
