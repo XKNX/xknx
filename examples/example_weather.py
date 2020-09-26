@@ -4,7 +4,6 @@ import logging
 
 from xknx import XKNX
 from xknx.devices import Weather
-from xknx.io import ConnectionConfig, ConnectionType
 
 logging.basicConfig(level=logging.WARN)
 
@@ -12,13 +11,7 @@ logging.basicConfig(level=logging.WARN)
 async def main():
     """Connect to KNX/IP device and create a weather device and read its sensors."""
     xknx = XKNX()
-    await xknx.start(
-        connection_config=ConnectionConfig(
-            connection_type=ConnectionType.TUNNELING,
-            local_ip="192.168.0.50",
-            gateway_ip="192.168.0.100",
-        )
-    )
+    await xknx.start()
 
     weather = Weather(
         xknx,
@@ -40,7 +33,4 @@ async def main():
     await xknx.stop()
 
 
-# pylint: disable=invalid-name
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
-loop.close()
+asyncio.run(main())

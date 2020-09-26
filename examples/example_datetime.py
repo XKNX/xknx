@@ -7,14 +7,11 @@ from xknx.devices import DateTime
 
 async def main():
     """Connect to KNX/IP device and broadcast time."""
-    xknx = XKNX()
+    xknx = XKNX(daemon_mode=True)
     DateTime(xknx, "TimeTest", group_address="1/2/3", broadcast_type="time")
     print("Sending time to KNX bus every hour")
-    await xknx.start(daemon_mode=True)
+    await xknx.start()
     await xknx.stop()
 
 
-# pylint: disable=invalid-name
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
-loop.close()
+asyncio.run(main())

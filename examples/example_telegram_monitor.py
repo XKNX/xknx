@@ -29,11 +29,11 @@ def show_help():
 
 async def monitor(address_filters):
     """Set telegram_received_cb within XKNX and connect to KNX/IP device in daemon mode."""
-    xknx = XKNX()
+    xknx = XKNX(daemon_mode=True)
     xknx.telegram_queue.register_telegram_received_cb(
         telegram_received_cb, address_filters
     )
-    await xknx.start(daemon_mode=True)
+    await xknx.start()
     await xknx.stop()
 
 
@@ -55,7 +55,4 @@ async def main(argv):
 
 
 if __name__ == "__main__":
-    # pylint: disable=invalid-name
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main(sys.argv[1:]))
-    loop.close()
+    asyncio.run(main(sys.argv[1:]))

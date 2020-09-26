@@ -41,6 +41,9 @@ class XKNX:
         multicast_group=DEFAULT_MCAST_GRP,
         multicast_port=DEFAULT_MCAST_PORT,
         log_directory=None,
+        state_updater=False,
+        daemon_mode=False,
+        connection_config=ConnectionConfig(),
     ):
         """Initialize XKNX class."""
         # pylint: disable=too-many-arguments
@@ -57,7 +60,9 @@ class XKNX:
         self.rate_limit = rate_limit
         self.multicast_group = multicast_group
         self.multicast_port = multicast_port
-        self.connection_config = None
+        self.connection_config = connection_config
+        self.start_state_updater = state_updater
+        self.daemon_mode = daemon_mode
         self.version = VERSION
 
         if log_directory is not None:
@@ -81,27 +86,31 @@ class XKNX:
             except RuntimeError as exp:
                 logger.warning("Could not close loop, reason: %s", exp)
 
-    async def start(
-        self, state_updater=False, daemon_mode=False, connection_config=None
-    ):
+    async def __aenter__(self):
+        """Start XKNX from context manager."""
+        await self.start()
+        return self
+
+    async def __aexit__(self, exc_type, exc, traceback):
+        """Stop XKNX from context manager."""
+        await self.stop()
+
+    async def start(self):
         """Start XKNX module. Connect to KNX/IP devices and start state updater."""
-        if connection_config is None:
-            if self.connection_config is None:
-                connection_config = ConnectionConfig()
-            else:
-                connection_config = self.connection_config
-        self.knxip_interface = KNXIPInterface(self, connection_config=connection_config)
+        self.knxip_interface = KNXIPInterface(
+            self, connection_config=self.connection_config
+        )
         logger.info(
             "XKNX v%s starting %s connection to KNX bus.",
             VERSION,
-            connection_config.connection_type.name.lower(),
+            self.connection_config.connection_type.name.lower(),
         )
         await self.knxip_interface.start()
         await self.telegram_queue.start()
-        if state_updater:
+        if self.start_state_updater:
             self.state_updater.start()
         self.started.set()
-        if daemon_mode:
+        if self.daemon_mode:
             await self.loop_until_sigint()
 
     async def join(self):

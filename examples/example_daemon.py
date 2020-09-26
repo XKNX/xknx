@@ -12,16 +12,13 @@ async def device_updated_cb(device):
 
 async def main():
     """Connect to KNX/IP device and listen if a switch was updated via KNX bus."""
-    xknx = XKNX(device_updated_cb=device_updated_cb)
+    xknx = XKNX(device_updated_cb=device_updated_cb, daemon_mode=True)
     Switch(xknx, name="TestOutlet", group_address="1/1/11")
 
     # Wait until Ctrl-C was pressed
-    await xknx.start(daemon_mode=True)
+    await xknx.start()
 
     await xknx.stop()
 
 
-# pylint: disable=invalid-name
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
-loop.close()
+asyncio.run(main())
