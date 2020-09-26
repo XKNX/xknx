@@ -464,3 +464,10 @@ class Test_KNXIP(unittest.TestCase):
         knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
         knxipframe2.from_knx(knxipframe.to_knx())
         self.assertEqual(knxipframe2.body.cemi.telegram, telegram)
+
+    def test_from_knx_invalid_cemi(self):
+        """Test parsing and streaming CEMIFrame KNX/IP packet with unsupported CEMICode."""
+        xknx = XKNX(loop=self.loop)
+        ri = RoutingIndication(xknx)
+
+        self.assertEqual(11, ri.from_knx([43, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0]))

@@ -48,6 +48,7 @@ from xknx.knxip import (
     KNXIPHeader,
     KNXIPServiceType,
     KNXMedium,
+    RoutingIndication,
     SearchRequest,
     SearchResponse,
     TunnellingAck,
@@ -695,4 +696,16 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(gateway_descriptor),
             '<GatewayDescriptor name="KNX-Interface" addr="192.168.2.3:1234" local="192.168.2.50@en1" routing="False" tunnelling="True" />',
+        )
+
+    #
+    # Routing Indication
+    #
+    def test_routing_indication_str(self):
+        """Test string representation of GatewayDescriptor."""
+        xknx = XKNX(loop=self.loop)
+        ri = RoutingIndication(xknx)
+        self.assertEqual(
+            str(ri),
+            '<RoutingIndication cemi="<CEMIFrame SourceAddress="PhysicalAddress("0.0.0")" DestinationAddress="GroupAddress("0/0/0")" Flags="               0" Command="APCICommand.GROUP_READ" payload="None" />" />',
         )
