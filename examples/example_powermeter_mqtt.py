@@ -147,7 +147,7 @@ async def main():
     global mqttc
 
     # Connect to KNX/IP device and listen if a switch was updated via KNX bus.
-    xknx = XKNX(device_updated_cb=device_updated_cb)
+    xknx = XKNX(device_updated_cb=device_updated_cb, daemon_mode=True)
 
     # The KNX addresses to monitor are defined below, but is normally placed in an external
     #  file that is loaded in on start.
@@ -235,14 +235,11 @@ async def main():
     mqttc.loop_start()
 
     # Wait until Ctrl-C was pressed
-    await xknx.start(daemon_mode=True)
+    await xknx.start()
 
     await xknx.stop()
     await mqttc.loop_stop()
     await mqttc.disconnect()
 
 
-# pylint: disable=invalid-name
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
-loop.close()
+asyncio.run(main())

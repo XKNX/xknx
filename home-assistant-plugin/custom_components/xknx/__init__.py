@@ -196,15 +196,13 @@ class KNXModule:
             rate_limit=self.config[DOMAIN][CONF_XKNX_RATE_LIMIT],
             multicast_group=self.config[DOMAIN][CONF_XKNX_MCAST_GRP],
             multicast_port=self.config[DOMAIN][CONF_XKNX_MCAST_PORT],
+            connection_config=self.connection_config(),
+            state_updater=self.config[DOMAIN][CONF_XKNX_STATE_UPDATER],
         )
 
     async def start(self):
         """Start KNX object. Connect to tunneling or Routing device."""
-        connection_config = self.connection_config()
-        await self.xknx.start(
-            state_updater=self.config[DOMAIN][CONF_XKNX_STATE_UPDATER],
-            connection_config=connection_config,
-        )
+        await self.xknx.start()
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         self.connected = True
 

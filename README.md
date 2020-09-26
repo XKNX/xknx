@@ -20,7 +20,7 @@ We need your help for testing and improving XKNX. For questions, feature request
 Development
 -----------
 
-Requirements: Python > 3.5
+You will need at least Python 3.7 in order to use XKNX.
 
 Setting up your local environment:
 
@@ -44,19 +44,14 @@ from xknx.devices import Light
 
 async def main():
     """Connect to KNX/IP bus, switch on light, wait 2 seconds and switch it off again."""
-    xknx = XKNX()
-    await xknx.start()
-    light = Light(xknx,
-                  name='TestLight',
-                  group_address_switch='1/0/9')
-    await light.set_on()
-    await asyncio.sleep(2)
-    await light.set_off()
-    await xknx.stop()
+    async with XKNX() as xknx:
+        light = Light(xknx,
+                      name='TestLight',
+                      group_address_switch='1/0/9')
+        await light.set_on()
+        await asyncio.sleep(2)
+        await light.set_off()
+        await xknx.stop()
 
-
-# pylint: disable=invalid-name
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
-loop.close()
+asyncio.run(main())
 ```

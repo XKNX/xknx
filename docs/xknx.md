@@ -28,7 +28,10 @@ xknx = XKNX(config='xknx.yaml',
             rate_limit=DEFAULT_RATE_LIMIT,
             multicast_group=DEFAULT_MCAST_GRP,
             multicast_port=DEFAULT_MCAST_PORT,
-            log_directory=None)
+            log_directory=None,
+            state_updater=False,
+            daemon_mode=False,
+            connection_config=None)
 ```
 
 The constructor of the XKNX object takes several parameters:
@@ -46,20 +49,17 @@ The constructor of the XKNX object takes several parameters:
 * `multicast_group` is the multicast IP address - can be used to override the default multicast address (`224.0.23.12`)
 * `multicast_port` is the multicast port - can be used to override the default multicast port (`3671`)
 * `log_directory` is the path to the log directory - when set to a valid directory we log to a dedicated file in this directory called `xknx.log`. The log files are rotated each night and will exist for 7 days. After that the oldest one will be deleted.
+* if `state_updater` is set, XKNX will start (once `start() is called) an asynchronous process for syncing the states of all connected devices every hour
+* if `daemon_mode` is set, start will only stop if Control-X is pressed. This function is useful for using XKNX as a daemon, e.g. for using the callback functions or using the internal action logic.
+* `connection_config` replaces a ConnectionConfig() that was read from a yaml config file.
 
 # [](#header-2)Starting
 
 ```python
-await xknx.start(state_updater=False,
-                 daemon_mode=False,
-                 connection_config=None)
+await xknx.start()
 ```
 
-`xknx.start()` will search for KNX/IP devices in the network and either build a KNX/IP-Tunnel or open a mulitcast KNX/IP-Routing connection. `start()` will take the following paramters
-
-* if `state_updater` is set, XKNX will start an asynchronous process for syncing the states of all connected devices every hour
-* if `daemon_mode` is set, start will only stop if Control-X is pressed. This function is useful for using XKNX as a daemon, e.g. for using the callback functions or using the internal action logic.
-* `connection_config` replaces a ConnectionConfig() that was read from a yaml config file.
+`xknx.start()` will search for KNX/IP devices in the network and either build a KNX/IP-Tunnel or open a mulitcast KNX/IP-Routing connection. `start()` will not take any parameters.
 
 # [](#header-2)Stopping
 
@@ -68,6 +68,42 @@ await xknx.stop()
 ```
 
 Will disconnect from tunneling devices and stop the different queues.
+
+# [](#header-2)Using XKNX as an asynchronous context manager
+
+Except of writing:
+
+```python
+import asyncio
+
+async def main():
+    xknx = XKNX()
+    await xknx.start()
+    switch = Switch(xknx,
+                name='TestSwitch',
+                group_address='1/1/11')
+
+    await switch.set_on()
+    await xknx.stop()
+
+asyncio.run(main())
+```
+
+you can now use the following syntax:
+
+```python
+import asyncio
+
+async def main():
+    async with XKNX() as xknx:
+        switch = Switch(xknx,
+                name='TestSwitch',
+                group_address='1/1/11')
+
+        await switch.set_on()
+
+asyncio.run(main())
+```
 
 # [](#header-2)Devices
 

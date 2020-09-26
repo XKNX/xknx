@@ -67,12 +67,23 @@ class TestXknxModule(unittest.TestCase):
     @patch("xknx.io.KNXIPInterface.start", new_callable=AsyncMock)
     def test_xknx_start(self, start_mock):
         """Test xknx start."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX(loop=self.loop, state_updater=True)
 
-        self.loop.run_until_complete(xknx.start(state_updater=True))
+        self.loop.run_until_complete(xknx.start())
 
         start_mock.assert_called_once()
         self.loop.run_until_complete(xknx.stop())
+
+    @patch("xknx.io.KNXIPInterface.start", new_callable=AsyncMock)
+    def test_xknx_start_as_context_manager(self, ipinterface_mock):
+        """Test xknx start."""
+
+        async def run_in_contextmanager():
+            async with XKNX(loop=self.loop, state_updater=True) as xknx:
+                self.assertTrue(xknx.started.is_set())
+                ipinterface_mock.assert_called_once()
+
+        self.loop.run_until_complete(run_in_contextmanager())
 
     @patch("xknx.io.KNXIPInterface.start", new_callable=AsyncMock)
     def test_xknx_start_and_stop_with_dedicated_connection_config(self, start_mock):
@@ -82,7 +93,7 @@ class TestXknxModule(unittest.TestCase):
         connection_config = ConnectionConfig(connection_type=ConnectionType.TUNNELING)
         xknx.connection_config = connection_config
 
-        self.loop.run_until_complete(xknx.start(state_updater=True))
+        self.loop.run_until_complete(xknx.start())
 
         start_mock.assert_called_once()
         self.assertEqual(xknx.knxip_interface.connection_config, connection_config)
