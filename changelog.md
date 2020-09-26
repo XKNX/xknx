@@ -4,12 +4,12 @@
 
 ### Logging
 
-- An additional `log_directory` parameter has been introduced that allows you to log your KNX logs to a dedicated file. We will likely silence more logs over the time but this option will help you and us in order to triage issues easier. It is disabled by default.
+- An additional `log_directory` parameter has been introduced that allows you to log your KNX logs to a dedicated file. We will likely silence more logs over the time but this option will help you and us to triage issues easier in the future. It is disabled by default.
 
 ### Internals
 
 - The heartbeat task, that is used to monitor the state of the tunnel and trigger reconnects if it doesn't respond, is now properly stopped once we receive the first reconnect request
-- `XKNX.start()` no longer takes arguments. There are now passed directly to the constructor when instantiating `XKNX()`
+- `XKNX.start()` no longer takes arguments. They are now passed directly to the constructor when instantiating `XKNX()`
 - Support for python 3.6 has been dropped
 - XKNX can now be used as an asynchronous context manager
 - Internal refactorings

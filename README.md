@@ -51,7 +51,6 @@ async def main():
         await light.set_on()
         await asyncio.sleep(2)
         await light.set_off()
-        await xknx.stop()
 
 asyncio.run(main())
 ```

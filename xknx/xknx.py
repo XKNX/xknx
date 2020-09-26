@@ -91,7 +91,7 @@ class XKNX:
         await self.start()
         return self
 
-    async def __aexit__(self, exc_type, exc, tb):
+    async def __aexit__(self, exc_type, exc, traceback):
         """Stop XKNX from context manager."""
         await self.stop()
 

@@ -31,7 +31,7 @@ xknx = XKNX(config='xknx.yaml',
             log_directory=None,
             state_updater=False,
             daemon_mode=False,
-            connection_config=None)
+            connection_config=ConnectionConfig())
 ```
 
 The constructor of the XKNX object takes several parameters:
