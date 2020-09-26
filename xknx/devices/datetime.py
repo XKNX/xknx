@@ -68,7 +68,7 @@ class DateTime(Device):
                 await asyncio.sleep(minutes * 60)
 
         if self.localtime:
-            return self.xknx.loop.create_task(broadcast_loop(self, minutes=minutes))
+            return asyncio.create_task(broadcast_loop(self, minutes=minutes))
         return None
 
     async def broadcast_localtime(self, response=False):

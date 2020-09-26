@@ -32,7 +32,6 @@ class XKNX:
     def __init__(
         self,
         config=None,
-        loop=None,
         own_address=DEFAULT_ADDRESS,
         address_format=GroupAddressType.LONG,
         telegram_received_cb=None,
@@ -49,7 +48,6 @@ class XKNX:
         # pylint: disable=too-many-arguments
         self.devices = Devices()
         self.telegrams = asyncio.Queue()
-        self.loop = loop or asyncio.get_event_loop()
         self.sigint_received = asyncio.Event()
         self.telegram_queue = TelegramQueue(self)
         self.state_updater = StateUpdater(self)
@@ -81,8 +79,8 @@ class XKNX:
         """Destructor. Cleaning up if this was not done before."""
         if self.started.is_set():
             try:
-                task = self.loop.create_task(self.stop())
-                self.loop.run_until_complete(task)
+                loop = asyncio.get_event_loop()
+                loop.run_until_complete(self.stop())
             except RuntimeError as exp:
                 logger.warning("Could not close loop, reason: %s", exp)
 
@@ -141,7 +139,8 @@ class XKNX:
         if platform == "win32":
             logger.warning("Windows does not support signals")
         else:
-            self.loop.add_signal_handler(signal.SIGINT, sigint_handler)
+            loop = asyncio.get_running_loop()
+            loop.add_signal_handler(signal.SIGINT, sigint_handler)
         logger.warning("Press Ctrl+C to stop")
         await self.sigint_received.wait()
 
