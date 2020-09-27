@@ -167,7 +167,7 @@ class _StateTracker:
 
     def _start_waiting(self):
         """Start StateTracker - wait for value to expire."""
-        self._task = self.xknx.loop.create_task(self._update_loop())
+        self._task = asyncio.create_task(self._update_loop())
 
     def stop(self):
         """Stop StateTracker."""
@@ -204,4 +204,4 @@ class _StateTracker:
             self.device_name,
             self.feature_name,
         )
-        self.xknx.loop.create_task(self._read_state_awaitable())
+        asyncio.create_task(self._read_state_awaitable())

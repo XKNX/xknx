@@ -48,7 +48,7 @@ class Test_KNXIP_TunnelingReq(unittest.TestCase):
             0x00,
             0x81,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 
@@ -75,7 +75,7 @@ class Test_KNXIP_TunnelingReq(unittest.TestCase):
     def test_from_knx_wrong_header(self):
         """Test parsing and streaming wrong TunnellingRequest (wrong header length byte)."""
         raw = (0x06, 0x10, 0x04, 0x20, 0x00, 0x15, 0x03)
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         with self.assertRaises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
@@ -83,7 +83,7 @@ class Test_KNXIP_TunnelingReq(unittest.TestCase):
     def test_from_knx_wrong_header2(self):
         """Test parsing and streaming wrong TunnellingRequest (wrong header length)."""
         raw = (0x06, 0x10, 0x04, 0x20, 0x00, 0x15, 0x04)
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         with self.assertRaises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)

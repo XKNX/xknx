@@ -191,7 +191,6 @@ class KNXModule:
         """Initialize of KNX object."""
         self.xknx = XKNX(
             config=self.config_file(),
-            loop=self.hass.loop,
             own_address=self.config[DOMAIN][CONF_XKNX_INDIVIDUAL_ADDRESS],
             rate_limit=self.config[DOMAIN][CONF_XKNX_RATE_LIMIT],
             multicast_group=self.config[DOMAIN][CONF_XKNX_MCAST_GRP],

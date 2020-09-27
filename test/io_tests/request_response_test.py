@@ -21,7 +21,7 @@ class TestConnectResponse(unittest.TestCase):
 
     def test_create_knxipframe_err(self):
         """Test if create_knxipframe of base class raises an exception."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
         request_response = RequestResponse(xknx, udp_client, DisconnectResponse)
         request_response.timeout_in_seconds = 0

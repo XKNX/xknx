@@ -26,7 +26,7 @@ class TestSwitch(unittest.TestCase):
     #
     def test_sync(self):
         """Test sync function / sending group reads to KNX bus."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address_state="1/2/3")
         self.loop.run_until_complete(switch.sync())
 
@@ -39,7 +39,7 @@ class TestSwitch(unittest.TestCase):
 
     def test_sync_state_address(self):
         """Test sync function / sending group reads to KNX bus. Test with Switch with explicit state address."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         switch = Switch(
             xknx, "TestOutlet", group_address="1/2/3", group_address_state="1/2/4"
         )
@@ -57,7 +57,7 @@ class TestSwitch(unittest.TestCase):
     #
     def test_process(self):
         """Test process / reading telegrams from telegram queue. Test if device was updated."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
 
         self.assertEqual(switch.state, False)
@@ -80,7 +80,7 @@ class TestSwitch(unittest.TestCase):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
         # pylint: disable=no-self-use
 
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
 
         after_update_callback = Mock()
@@ -101,7 +101,7 @@ class TestSwitch(unittest.TestCase):
     #
     def test_set_on(self):
         """Test switching on switch."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
         self.loop.run_until_complete(switch.set_on())
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -115,7 +115,7 @@ class TestSwitch(unittest.TestCase):
     #
     def test_set_off(self):
         """Test switching off switch."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
         self.loop.run_until_complete(switch.set_off())
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -129,7 +129,7 @@ class TestSwitch(unittest.TestCase):
     #
     def test_do(self):
         """Test 'do' functionality."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
         self.loop.run_until_complete(switch.do("on"))
         self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
@@ -140,7 +140,7 @@ class TestSwitch(unittest.TestCase):
 
     def test_wrong_do(self):
         """Test wrong do command."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
         with patch("logging.Logger.warning") as mock_warn:
             self.loop.run_until_complete(switch.do("execute"))
@@ -154,7 +154,7 @@ class TestSwitch(unittest.TestCase):
     #
     def test_has_group_address(self):
         """Test has_group_address."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
         self.assertTrue(switch.has_group_address(GroupAddress("1/2/3")))
         self.assertFalse(switch.has_group_address(GroupAddress("2/2/2")))

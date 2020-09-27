@@ -23,7 +23,7 @@ class Test_KNXIP(unittest.TestCase):
 
     def test_wrong_init(self):
         """Testing init method with wrong service_type_ident."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         with self.assertRaises(TypeError):
             knxipframe.init(23)
@@ -49,7 +49,7 @@ class Test_KNXIP(unittest.TestCase):
             0xB4,
             0x00,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         with self.assertRaises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)

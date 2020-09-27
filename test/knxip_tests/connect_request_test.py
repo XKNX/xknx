@@ -57,7 +57,7 @@ class Test_KNXIP_ConnectRequest(unittest.TestCase):
             0x02,
             0x00,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 
@@ -111,7 +111,7 @@ class Test_KNXIP_ConnectRequest(unittest.TestCase):
             0x02,
             0x00,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         with self.assertRaises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
@@ -145,7 +145,7 @@ class Test_KNXIP_ConnectRequest(unittest.TestCase):
             0x04,
             0x02,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         with self.assertRaises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)

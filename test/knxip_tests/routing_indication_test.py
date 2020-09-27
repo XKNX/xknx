@@ -45,7 +45,7 @@ class Test_KNXIP(unittest.TestCase):
             0x40,
             0xF0,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 
@@ -80,7 +80,7 @@ class Test_KNXIP(unittest.TestCase):
             0x40,
             0xF0,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 
@@ -92,7 +92,7 @@ class Test_KNXIP(unittest.TestCase):
 
     def test_telegram_set(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet with DPTArray/DPTTime as payload."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
         knxipframe.body.cemi.src_addr = PhysicalAddress("1.2.2")
@@ -156,7 +156,7 @@ class Test_KNXIP(unittest.TestCase):
             0x40,
             0xF0,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 
@@ -197,7 +197,7 @@ class Test_KNXIP(unittest.TestCase):
             0x00,
             0x81,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
         telegram = knxipframe.body.cemi.telegram
@@ -236,7 +236,7 @@ class Test_KNXIP(unittest.TestCase):
             0x00,
             0x80,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
         telegram = knxipframe.body.cemi.telegram
@@ -276,7 +276,7 @@ class Test_KNXIP(unittest.TestCase):
             0x80,
             0x65,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
         telegram = knxipframe.body.cemi.telegram
@@ -319,7 +319,7 @@ class Test_KNXIP(unittest.TestCase):
             0x07,
             0xC1,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
         telegram = knxipframe.body.cemi.telegram
@@ -363,7 +363,7 @@ class Test_KNXIP(unittest.TestCase):
             0x00,
             0x00,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
         telegram = knxipframe.body.cemi.telegram
@@ -404,7 +404,7 @@ class Test_KNXIP(unittest.TestCase):
             0x00,
             0x41,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
         telegram = knxipframe.body.cemi.telegram
@@ -431,7 +431,7 @@ class Test_KNXIP(unittest.TestCase):
         telegram = Telegram(
             group_address=GroupAddress(337), payload=DPTBinary(DPTBinary.APCI_MAX_VALUE)
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
         knxipframe.body.cemi.src_addr = PhysicalAddress("1.3.1")
@@ -467,7 +467,7 @@ class Test_KNXIP(unittest.TestCase):
 
     def test_from_knx_invalid_cemi(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet with unsupported CEMICode."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         ri = RoutingIndication(xknx)
 
         self.assertEqual(11, ri.from_knx([43, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0]))

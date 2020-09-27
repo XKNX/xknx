@@ -38,7 +38,7 @@ class Test_KNXIP_Discovery(unittest.TestCase):
             0x0E,
             0x57,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 

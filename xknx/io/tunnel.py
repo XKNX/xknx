@@ -119,12 +119,11 @@ class Tunnel:
         await connect.start()
         if not connect.success:
             if self.auto_reconnect:
-                msg = "Could not connect to KNX. Retry in {} seconds.".format(
-                    self.auto_reconnect_wait
+                logger.warning(
+                    "Could not connect to KNX. Retry in %s seconds.",
+                    self.auto_reconnect_wait,
                 )
-                logger.warning(msg)
-                task = self.xknx.loop.create_task(self.schedule_reconnect())
-                self._reconnect_task = task
+                self._reconnect_task = asyncio.create_task(self.schedule_reconnect())
                 return
             raise CommunicationError(
                 "Could not establish connection", not self._is_reconnecting
@@ -255,7 +254,7 @@ class Tunnel:
 
     async def start_heartbeat(self):
         """Start heartbeat for monitoring state of tunnel, as suggested by 03.08.02 KNX Core 5.4."""
-        self._heartbeat_task = self.xknx.loop.create_task(self.do_heartbeat())
+        self._heartbeat_task = asyncio.create_task(self.do_heartbeat())
 
     async def stop_heartbeat(self):
         """Stop heartbeat task if running."""

@@ -29,7 +29,7 @@ class TestConnect(unittest.TestCase):
 
     def test_connect(self):
         """Test connecting from KNX bus."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
         connect = Connect(xknx, udp_client)
         connect.timeout_in_seconds = 0

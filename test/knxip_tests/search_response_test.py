@@ -112,7 +112,7 @@ class Test_KNXIP_Discovery(unittest.TestCase):
             0x07,
             0x01,
         )
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         self.assertEqual(knxipframe.from_knx(raw), 80)
         self.assertEqual(knxipframe.to_knx(), list(raw))
@@ -142,6 +142,6 @@ class Test_KNXIP_Discovery(unittest.TestCase):
 
     def test_unknown_device_name(self):
         """Test device_name if no DIBDeviceInformation is present."""
-        xknx = XKNX(loop=self.loop)
+        xknx = XKNX()
         search_response = SearchResponse(xknx)
         self.assertEqual(search_response.device_name, "UNKNOWN")

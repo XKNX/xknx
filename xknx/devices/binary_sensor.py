@@ -115,7 +115,7 @@ class BinarySensor(Device):
             if self.ignore_internal_state:
                 if self._context_task:
                     self._context_task.cancel()
-                self._context_task = self.xknx.loop.create_task(
+                self._context_task = asyncio.create_task(
                     self._counter_task(self._context_timeout)
                 )
             else:
@@ -179,7 +179,7 @@ class BinarySensor(Device):
             if self.reset_after is not None and self.state:
                 if self._reset_task:
                     self._reset_task.cancel()
-                self._reset_task = self.xknx.loop.create_task(
+                self._reset_task = asyncio.create_task(
                     self._reset_state(self.reset_after / 1000)
                 )
 
