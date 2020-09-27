@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.15.0 Spring cleaning and quality of life changes
 
 ### Logging
 
@@ -13,6 +13,7 @@
 - Support for python 3.6 has been dropped
 - XKNX can now be used as an asynchronous context manager
 - Internal refactorings
+- Improve test coverage
 
 ## 0.14.4 Bugfix release
 
