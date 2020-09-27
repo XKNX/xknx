@@ -11,7 +11,7 @@ from .body import KNXIPBody
 from .cemi_frame import CEMIFrame, CEMIMessageCode
 from .knxip_enum import KNXIPServiceType
 
-logger = logging.getLogger("xknx_log")
+logger = logging.getLogger("xknx.log")
 
 
 class TunnellingRequest(KNXIPBody):

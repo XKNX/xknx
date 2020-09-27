@@ -16,7 +16,7 @@ from xknx.remote_value import (
 from .climate_mode import ClimateMode
 from .device import Device
 
-logger = logging.getLogger("xknx_log")
+logger = logging.getLogger("xknx.log")
 
 
 class SetpointShiftMode(Enum):

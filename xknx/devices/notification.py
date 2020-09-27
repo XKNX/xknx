@@ -5,7 +5,7 @@ from xknx.remote_value import RemoteValueString
 
 from .device import Device
 
-logger = logging.getLogger("xknx_log")
+logger = logging.getLogger("xknx.log")
 
 
 class Notification(Device):

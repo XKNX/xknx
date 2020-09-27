@@ -18,7 +18,7 @@ from .gateway_scanner import GatewayScanFilter, GatewayScanner
 from .routing import Routing
 from .tunnel import Tunnel
 
-logger = logging.getLogger("xknx_log")
+logger = logging.getLogger("xknx.log")
 
 
 class ConnectionType(Enum):

@@ -1,7 +1,7 @@
 """Module for handling commands which may be attached to BinarySensor class."""
 import logging
 
-logger = logging.getLogger("xknx_log")
+logger = logging.getLogger("xknx.log")
 
 
 class ActionBase:

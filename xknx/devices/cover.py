@@ -19,7 +19,7 @@ from xknx.remote_value import (
 from .device import Device
 from .travelcalculator import TravelCalculator
 
-logger = logging.getLogger("xknx_log")
+logger = logging.getLogger("xknx.log")
 
 
 class Cover(Device):

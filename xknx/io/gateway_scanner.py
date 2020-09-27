@@ -23,7 +23,7 @@ from xknx.knxip import (
 
 from .udp_client import UDPClient
 
-logger = logging.getLogger("xknx_log")
+logger = logging.getLogger("xknx.log")
 
 
 class GatewayDescriptor:

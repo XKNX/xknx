@@ -10,7 +10,7 @@ from xknx.telegram import GroupAddress
 
 DEFAULT_UPDATE_INTERVAL = 60
 
-logger = logging.getLogger("xknx_log")
+logger = logging.getLogger("xknx.state_updater")
 
 
 class StateUpdater:

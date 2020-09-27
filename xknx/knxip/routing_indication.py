@@ -11,7 +11,7 @@ from .body import KNXIPBody
 from .cemi_frame import CEMIFrame
 from .knxip_enum import CEMIMessageCode, KNXIPServiceType
 
-logger = logging.getLogger("xknx_log")
+logger = logging.getLogger("xknx.log")
 
 
 class RoutingIndication(KNXIPBody):

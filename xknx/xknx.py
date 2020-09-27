@@ -18,7 +18,7 @@ from xknx.telegram import GroupAddressType, PhysicalAddress
 
 from .__version__ import __version__ as VERSION
 
-logger = logging.getLogger("xknx_log")
+logger = logging.getLogger("xknx.log")
 
 
 class XKNX:
@@ -165,10 +165,11 @@ class XKNX:
         _handler.setLevel(logging.DEBUG)
 
         for log_namespace in [
-            "xknx_log",
-            "xknx_knx",
-            "xknx_raw_socket",
-            "xknx_telegram",
+            "xknx.log",
+            "xknx.knx",
+            "xknx.raw_socket",
+            "xknx.telegram",
+            "xknx.state_updater",
         ]:
             _logger = logging.getLogger(log_namespace)
             _logger.addHandler(_handler)

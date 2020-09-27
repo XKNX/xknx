@@ -1,7 +1,7 @@
 """Basis class for all KNX/IP bodies."""
 import logging
 
-logger = logging.getLogger("xknx_log")
+logger = logging.getLogger("xknx.log")
 
 
 class KNXIPBody:
