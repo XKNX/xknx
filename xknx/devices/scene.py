@@ -41,6 +41,11 @@ class Scene(Device):
         """Iterate the devices RemoteValue classes."""
         yield self.scene_value
 
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return unique id for this device."""
+        return f"{self.scene_value.group_address}"
+
     @classmethod
     def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Scene":
         """Initialize object from configuration structure."""

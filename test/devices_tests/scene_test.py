@@ -88,3 +88,9 @@ class TestScene(unittest.TestCase):
         scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
         self.assertTrue(scene.has_group_address(GroupAddress("1/2/1")))
         self.assertFalse(scene.has_group_address(GroupAddress("2/2/2")))
+
+    def test_unique_id(self):
+        """Test unique id functionality."""
+        xknx = XKNX()
+        scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
+        self.assertEqual(scene.unique_id, "1/2/1")

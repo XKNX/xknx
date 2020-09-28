@@ -174,3 +174,9 @@ class TestDevice(unittest.TestCase):
             mock_info.assert_called_with(
                 "'do()' not implemented for action '%s' of %s", "xx", "Device"
             )
+
+    def test_unique_id(self):
+        """Test unique id functionality."""
+        xknx = XKNX()
+        device = Device(xknx, "Test")
+        self.assertIsNone(device.unique_id)

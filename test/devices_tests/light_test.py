@@ -224,6 +224,7 @@ class TestLight(unittest.TestCase):
         light = Light(
             xknx,
             name="TestLight",
+            group_address_switch="1/3/5",
             group_address_switch_state="1/2/3",
             group_address_brightness_state="1/2/5",
             group_address_color_state="1/2/6",
@@ -1394,3 +1395,16 @@ class TestLight(unittest.TestCase):
         self.assertTrue(light.has_group_address(GroupAddress("1/1/16")))
 
         self.assertFalse(light.has_group_address(GroupAddress("1/7/13")))
+
+    def test_unique_id(self):
+        """Test unique id functionality."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_brightness="1/2/5",
+            group_address_tunable_white="1/2/9",
+            group_address_color_temperature="1/2/11",
+        )
+        self.assertEqual(light.unique_id, "1/2/3")

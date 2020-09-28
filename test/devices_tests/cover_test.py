@@ -988,7 +988,7 @@ class TestCover(unittest.TestCase):
             return None
 
         xknx = XKNX()
-        cover = Cover(xknx, "TestCover")
+        cover = Cover(xknx, "TestCover", group_address_long="2/4/5")
         with patch("xknx.devices.Cover.set_up") as mock:
             mock.return_value = asyncio.ensure_future(async_none())
             self.loop.run_until_complete(cover.do("up"))
@@ -1013,7 +1013,7 @@ class TestCover(unittest.TestCase):
     def test_wrong_do(self):
         """Test wrong do command."""
         xknx = XKNX()
-        cover = Cover(xknx, "TestCover")
+        cover = Cover(xknx, "TestCover", group_address_long="2/3/4")
         with patch("logging.Logger.warning") as mock_warn:
             self.loop.run_until_complete(cover.do("execute"))
             self.assertEqual(xknx.telegrams.qsize(), 0)
@@ -1045,3 +1045,18 @@ class TestCover(unittest.TestCase):
         self.assertTrue(cover.has_group_address(GroupAddress("1/2/5")))
         self.assertTrue(cover.has_group_address(GroupAddress("1/2/6")))
         self.assertFalse(cover.has_group_address(GroupAddress("1/2/7")))
+
+    def test_unique_id(self):
+        """Test unique id functionality."""
+        xknx = XKNX()
+        cover = Cover(
+            xknx,
+            "TestCover",
+            group_address_long="1/2/1",
+            group_address_short="1/2/2",
+            group_address_position="1/2/3",
+            group_address_position_state="1/2/4",
+            group_address_angle="1/2/5",
+            group_address_angle_state="1/2/6",
+        )
+        self.assertEqual(cover.unique_id, "1/2/1")

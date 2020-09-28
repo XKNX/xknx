@@ -2700,3 +2700,11 @@ class TestSensor(unittest.TestCase):
         )
         self.loop.run_until_complete(sensor.process(telegram))
         after_update_callback.assert_called_with(sensor)
+
+    def test_unique_id(self):
+        """Test unique id functionality."""
+        xknx = XKNX()
+        sensor = Sensor(
+            xknx, "TestSensor", group_address_state="1/2/3", value_type="temperature"
+        )
+        self.assertEqual(sensor.unique_id, "1/2/3")

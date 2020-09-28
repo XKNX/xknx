@@ -162,6 +162,11 @@ class Climate(Device):
                     value_type=value_type,
                 )
 
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return unique id for this device."""
+        return f"{self.temperature.group_address_state}"
+
     @classmethod
     def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Climate":
         """Initialize object from configuration structure."""

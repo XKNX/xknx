@@ -410,3 +410,11 @@ class TestBinarySensor(unittest.TestCase):
 
             mock_time.return_value = 1517000004.1  # TIME OUT ...
             self.assertEqual(switch.bump_and_get_counter(False), 1)
+
+    def test_unique_id(self):
+        """Test unique id functionality."""
+        xknx = XKNX()
+        switch = BinarySensor(
+            xknx, "TestInput", group_address_state="1/2/3", context_timeout=1
+        )
+        self.assertEqual(switch.unique_id, "1/2/3")
