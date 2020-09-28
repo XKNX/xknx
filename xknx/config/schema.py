@@ -1,10 +1,13 @@
 """Config validation."""
 import voluptuous as vol
 
+from ..devices.climate import SetpointShiftMode
+from ..devices.light import ColorTempModes
 from .config_validation import (
     boolean,
     ensure_group_address,
     ensure_list,
+    enum,
     positive_int,
     string,
 )
@@ -19,6 +22,7 @@ class RemoteValueSchema:
 
     CONF_STATE_UPDATE = "state_update"
     CONF_PASSIVE_GROUP_ADDRESSES = "passive_state_addresses"
+    CONF_INVERT = "invert"
 
     DEFAULT_STATE_UPDATE = "expire 60"
 
@@ -35,6 +39,8 @@ class RemoteValueSchema:
         }
     )
 
+    INVERTED_SCHEMA = SCHEMA.extend({vol.Optional(CONF_INVERT, default=False): boolean})
+
 
 class BaseDeviceSchema:
     """Schema validation for all devices."""
@@ -48,6 +54,11 @@ class BaseDeviceSchema:
             vol.Optional(CONF_FRIENDLY_NAME): string,
         }
     )
+
+
+##
+# Device schemas
+##
 
 
 class SwitchSchema:
@@ -84,5 +95,313 @@ class BinarySensorSchema:
             ),
             vol.Optional(CONF_DEVICE_CLASS): string,
             vol.Optional(CONF_RESET_AFTER): positive_int,
+        }
+    )
+
+
+class LightSchema:
+    """Voluptuous schema for KNX lights."""
+
+    CONF_BRIGHTNESS = "brightness"
+    CONF_RGBW = "rgbw"
+    CONF_COLOR_TEMPERATURE = "color_temperature"
+
+    CONF_COLOR_TEMP_MODE = "mode"
+    CONF_MIN_KELVIN = "min_kelvin"
+    CONF_MAX_KELVIN = "max_kelvin"
+
+    DEFAULT_COLOR_TEMP_MODE = "absolute"
+    DEFAULT_MIN_KELVIN = 2700  # 370 mireds
+    DEFAULT_MAX_KELVIN = 6000  # 166 mireds
+
+    SCHEMA = BaseDeviceSchema.SCHEMA.extend(
+        {
+            vol.Required(CONF_SWITCH): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Required(CONF_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_BRIGHTNESS): RemoteValueSchema.SCHEMA.extend(
+                {vol.Required(CONF_ADDRESS): ensure_group_address}
+            ),
+            vol.Optional(CONF_RGBW): RemoteValueSchema.SCHEMA.extend(
+                {vol.Required(CONF_ADDRESS): ensure_group_address}
+            ),
+            vol.Optional(CONF_COLOR_TEMPERATURE): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Required(CONF_ADDRESS): ensure_group_address,
+                    vol.Optional(
+                        CONF_COLOR_TEMP_MODE, default=DEFAULT_COLOR_TEMP_MODE
+                    ): enum(ColorTempModes),
+                    vol.Optional(CONF_MIN_KELVIN, default=DEFAULT_MIN_KELVIN): vol.All(
+                        vol.Coerce(int), vol.Range(min=1)
+                    ),
+                    vol.Optional(CONF_MAX_KELVIN, default=DEFAULT_MAX_KELVIN): vol.All(
+                        vol.Coerce(int), vol.Range(min=1)
+                    ),
+                }
+            ),
+        }
+    )
+
+
+class FanSchema:
+    """Voluptuous schema for KNX fans."""
+
+    CONF_SPEED = "speed"
+
+    SCHEMA = BaseDeviceSchema.SCHEMA.extend(
+        {
+            vol.Required(CONF_SPEED): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Required(CONF_ADDRESS): ensure_group_address,
+                }
+            ),
+        }
+    )
+
+
+class CoverSchema:
+    """Voluptuous schema for KNX covers."""
+
+    CONF_LONG_MOVEMENT = "long_movement"
+    CONF_SHORT_MOVEMENT = "short_movement"
+    CONF_STOP_ADDRESS = "stop_address"
+    CONF_POSITION = "position"
+    CONF_ANGLE = "angle"
+    CONF_TRAVELLING_TIME_DOWN = "travelling_time_down"
+    CONF_TRAVELLING_TIME_UP = "travelling_time_up"
+
+    DEFAULT_TRAVEL_TIME = 25
+
+    SCHEMA = BaseDeviceSchema.SCHEMA.extend(
+        {
+            vol.Required(CONF_LONG_MOVEMENT): RemoteValueSchema.INVERTED_SCHEMA.extend(
+                {
+                    vol.Required(CONF_ADDRESS): ensure_group_address,
+                    vol.Remove(CONF_STATE_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_SHORT_MOVEMENT): RemoteValueSchema.INVERTED_SCHEMA.extend(
+                {
+                    vol.Required(CONF_ADDRESS): ensure_group_address,
+                    vol.Remove(CONF_STATE_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_STOP_ADDRESS): ensure_group_address,
+            vol.Optional(CONF_POSITION): RemoteValueSchema.INVERTED_SCHEMA.extend(
+                {vol.Required(CONF_ADDRESS): ensure_group_address}
+            ),
+            vol.Optional(CONF_ANGLE): RemoteValueSchema.INVERTED_SCHEMA.extend(
+                {vol.Required(CONF_ADDRESS): ensure_group_address}
+            ),
+            vol.Optional(
+                CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
+            ): positive_int,
+            vol.Optional(
+                CONF_TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME
+            ): positive_int,
+        }
+    )
+
+
+class ClimateSchema:
+    """Voluptuous schema for KNX climates."""
+
+    CONF_TARGET_TEMPERATURE = "target_temperature"
+    CONF_SETPOINT_SHIFT = "setpoint_shift"
+    CONF_SETPOINT_SHIFT_MODE = "mode"
+    CONF_TEMPERATURE_STEP = "temperature_step"
+    CONF_MIN_TEMP = "min"
+    CONF_MAX_TEMP = "max"
+    CONF_OPERATION_MODE = "operation_mode"
+    CONF_BINARY_OPERATION_MODE = "binary_operation_mode"
+    CONF_CONTROLLER_STATUS = "controller_status"
+    CONF_CONTROLLER_MODE = "controller_mode"
+    CONF_HEAT_COOL = "heat_cool"
+    CONF_OPERATION_MODES = "operation_modes"
+    CONF_ON_OFF = "on_off"
+
+    CONF_FROST_PROTECTION_ADDRESS = "frost_protection_address"
+    CONF_NIGHT_ADDRESS = "night_address"
+    CONF_COMFORT_ADDRESS = "comfort_address"
+    CONF_STANDBY_ADDRESS = "standby_address"
+
+    # Map KNX operation modes to HA modes. This list might not be complete.
+    OPERATION_MODES = {
+        # Map DPT 20.105 HVAC control modes
+        "Auto": None,
+        "Heat": None,
+        "Cool": None,
+        "Off": None,
+        "Fan only": None,
+        "Dry": None,
+    }
+
+    PRESET_MODES = {
+        # Map DPT 20.102 HVAC operating modes to HA presets
+        "Frost Protection": None,
+        "Night": None,
+        "Standby": None,
+        "Comfort": None,
+    }
+
+    DEFAULT_SETPOINT_SHIFT_MODE = "DPT6010"
+    DEFAULT_SETPOINT_SHIFT_MAX = 6
+    DEFAULT_SETPOINT_SHIFT_MIN = -6
+    DEFAULT_TEMPERATURE_STEP = 0.1
+
+    SCHEMA = BaseDeviceSchema.SCHEMA.extend(
+        {
+            vol.Required(CONF_TARGET_TEMPERATURE): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
+                    vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
+                    vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
+                }
+            ),
+            vol.Optional(CONF_SETPOINT_SHIFT): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Required(CONF_ADDRESS): ensure_group_address,
+                    vol.Optional(
+                        CONF_SETPOINT_SHIFT_MODE, default=DEFAULT_SETPOINT_SHIFT_MODE
+                    ): enum(SetpointShiftMode),
+                    vol.Optional(
+                        CONF_MIN_TEMP, default=DEFAULT_SETPOINT_SHIFT_MAX
+                    ): vol.All(int, vol.Range(min=0, max=32)),
+                    vol.Optional(
+                        CONF_MAX_TEMP, default=DEFAULT_SETPOINT_SHIFT_MIN
+                    ): vol.All(int, vol.Range(min=-32, max=0)),
+                    vol.Optional(
+                        CONF_TEMPERATURE_STEP, default=DEFAULT_TEMPERATURE_STEP
+                    ): vol.All(float, vol.Range(min=0, max=2)),
+                }
+            ),
+            vol.Optional(CONF_OPERATION_MODE): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Required(CONF_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_CONTROLLER_STATUS): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Required(CONF_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_CONTROLLER_MODE): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Required(CONF_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_HEAT_COOL): RemoteValueSchema.INVERTED_SCHEMA.extend(
+                {
+                    vol.Required(CONF_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_ON_OFF): RemoteValueSchema.INVERTED_SCHEMA.extend(
+                {
+                    vol.Required(CONF_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_BINARY_OPERATION_MODE): vol.Schema(
+                {
+                    vol.Optional(CONF_FROST_PROTECTION_ADDRESS): ensure_group_address,
+                    vol.Optional(CONF_COMFORT_ADDRESS): ensure_group_address,
+                    vol.Optional(CONF_NIGHT_ADDRESS): ensure_group_address,
+                    vol.Optional(CONF_STANDBY_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_OPERATION_MODES): vol.All(
+                ensure_list, [vol.In({**OPERATION_MODES, **PRESET_MODES})]
+            ),
+        }
+    )
+
+
+class WeatherSchema:
+    """Voluptuous schema for KNX weather devices."""
+
+    CONF_TEMPERATURE = "temperature"
+    CONF_BRIGHTNESS_SOUTH = "brightness_south"
+    CONF_BRIGHTNESS_NORTH = "brightness_north"
+    CONF_BRIGHTNESS_EAST = "brightness_east"
+    CONF_BRIGHTNESS_WEST = "brightness_west"
+    CONF_RAIN_ALARM = "rain_alarm"
+    CONF_WIND_ALARM = "wind_alarm"
+    CONF_FROST_ALARM = "frost_alarm"
+    CONF_WIND_SPEED = "wind_speed"
+    CONF_DAY_NIGHT = "day_night"
+    CONF_AIR_PRESSURE = "air_pressure"
+    CONF_HUMIDITY = "humidity"
+    CONF_EXPOSE_SENSORS = "expose_sensors"
+
+    SCHEMA = BaseDeviceSchema.SCHEMA.extend(
+        {
+            vol.Required(CONF_TEMPERATURE): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Remove(CONF_ADDRESS): ensure_group_address,
+                    vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_BRIGHTNESS_SOUTH): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Remove(CONF_ADDRESS): ensure_group_address,
+                    vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_BRIGHTNESS_NORTH): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Remove(CONF_ADDRESS): ensure_group_address,
+                    vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_BRIGHTNESS_EAST): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Remove(CONF_ADDRESS): ensure_group_address,
+                    vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_BRIGHTNESS_WEST): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Remove(CONF_ADDRESS): ensure_group_address,
+                    vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_RAIN_ALARM): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Remove(CONF_ADDRESS): ensure_group_address,
+                    vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_WIND_ALARM): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Remove(CONF_ADDRESS): ensure_group_address,
+                    vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_WIND_SPEED): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Remove(CONF_ADDRESS): ensure_group_address,
+                    vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_DAY_NIGHT): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Remove(CONF_ADDRESS): ensure_group_address,
+                    vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_AIR_PRESSURE): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Remove(CONF_ADDRESS): ensure_group_address,
+                    vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_HUMIDITY): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Remove(CONF_ADDRESS): ensure_group_address,
+                    vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_EXPOSE_SENSORS, default=False): boolean,
         }
     )

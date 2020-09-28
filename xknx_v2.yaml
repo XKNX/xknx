@@ -2,6 +2,7 @@ version: "2"
 xknx:
   own_address: "15.15.249"
   rate_limit: 18
+  log_directory: "/tmp/"
   fire_event: True
   fire_event_filter: ["1/0/*", "6/2,3,4-6/*"]
   multicast_group: '224.1.2.3'
@@ -94,6 +95,7 @@ xknx:
         address: "4/0/2"
         state_address: "4/0/3"
         mode: DPT6010
+        temperature_step: 0.1
         min: -6
         max: 6
       operation_mode:
@@ -196,5 +198,5 @@ xknx:
       sensor:
         state_address: "9/9/9"
         sync_state: "expire 60"
-        value_type: "percent"
+        type: "percent"
 

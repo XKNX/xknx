@@ -1,8 +1,11 @@
 """Helper functions for config validation."""
+from enum import Enum
 from numbers import Number
-from typing import Any, List, TypeVar, Union
+import os
+from typing import Any, List, Type, TypeVar, Union
 
 import voluptuous as vol
+from xknx.dpt import DPTBase
 from xknx.telegram import GroupAddress
 
 # typing typevar
@@ -49,6 +52,33 @@ def ensure_list(value: Union[T, List[T], None]) -> List[T]:
 def ensure_group_address(value: str) -> str:
     """Ensure value is a valid KNX group address."""
     if not GroupAddress.ADDRESS_RE.match(value):
-        raise vol.Invalid("string is not a valid group address")
+        raise vol.Invalid(f"{value} is not a valid group address")
 
     return str(value)
+
+
+def isdir(value: Any) -> str:
+    """Validate that the value is an existing dir."""
+    if value is None:
+        raise vol.Invalid("not a directory")
+    dir_in = os.path.expanduser(str(value))
+
+    if not os.path.isdir(dir_in):
+        raise vol.Invalid("not a directory")
+    if not os.access(dir_in, os.W_OK):
+        raise vol.Invalid("directory not writable")
+    return dir_in
+
+
+def enum(value: Type[Enum]) -> vol.All:
+    """Create validator for specified enum."""
+    return vol.All(vol.In(value.__members__), value.__getitem__)
+
+
+def sensor_value_type(value: str) -> str:
+    """Validate sensor type."""
+    for dpt in DPTBase.__recursive_subclasses__():
+        if dpt.has_distinct_value_type() and dpt.value_type == value:
+            return str(value)
+
+    raise vol.Invalid(f"invalid value type {value}")
