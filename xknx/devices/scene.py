@@ -12,7 +12,7 @@ class Scene(Device):
     """Class for managing a scene."""
 
     def __init__(
-        self, xknx, name, group_address=None, scene_number=1, device_updated_cb=None
+        self, xknx, name, group_address, scene_number=1, device_updated_cb=None
     ):
         """Initialize Sceneclass."""
         # pylint: disable=too-many-arguments
@@ -31,6 +31,11 @@ class Scene(Device):
     def _iter_remote_values(self):
         """Iterate the devices RemoteValue classes."""
         yield self.scene_value
+
+    @property
+    def unique_id(self):
+        """Return unique id for this device."""
+        return f"scene_{hash(self.scene_value.group_address)}"
 
     @classmethod
     def from_config(cls, xknx, name, config):

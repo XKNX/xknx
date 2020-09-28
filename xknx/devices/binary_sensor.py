@@ -28,7 +28,7 @@ class BinarySensor(Device):
         self,
         xknx,
         name,
-        group_address_state=None,
+        group_address_state,
         sync_state=True,
         ignore_internal_state=False,
         device_class=None,
@@ -68,6 +68,11 @@ class BinarySensor(Device):
     def _iter_remote_values(self):
         """Iterate the devices RemoteValue classes."""
         yield self.remote_value
+
+    @property
+    def unique_id(self):
+        """Return unique id for this device."""
+        return f"binary_sensor_{hash(self.remote_value.group_address_state)}"
 
     def __del__(self):
         """Destructor. Cleaning up if this was not done before."""

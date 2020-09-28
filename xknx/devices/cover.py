@@ -37,7 +37,7 @@ class Cover(Device):
         self,
         xknx,
         name,
-        group_address_long=None,
+        group_address_long,
         group_address_short=None,
         group_address_stop=None,
         group_address_position=None,
@@ -113,6 +113,11 @@ class Cover(Device):
     def _iter_remote_values(self):
         """Iterate the devices RemoteValue classes."""
         yield from (self.updown, self.step, self.stop_, self.position, self.angle)
+
+    @property
+    def unique_id(self):
+        """Return unique id for this device."""
+        return f"cover_{hash(self.updown.group_address_state)}"
 
     @classmethod
     def from_config(cls, xknx, name, config):

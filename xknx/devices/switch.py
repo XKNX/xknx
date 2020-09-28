@@ -22,7 +22,7 @@ class Switch(Device):
         self,
         xknx,
         name,
-        group_address=None,
+        group_address,
         group_address_state=None,
         device_updated_cb=None,
     ):
@@ -41,6 +41,11 @@ class Switch(Device):
     def _iter_remote_values(self):
         """Iterate the devices RemoteValue classes."""
         yield self.switch
+
+    @property
+    def unique_id(self):
+        """Return unique id for this device."""
+        return f"switch_{hash(self.switch.group_address)}"
 
     @classmethod
     def from_config(cls, xknx, name, config):

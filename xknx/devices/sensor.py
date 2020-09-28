@@ -18,7 +18,7 @@ class Sensor(Device):
         self,
         xknx,
         name,
-        group_address_state=None,
+        group_address_state,
         sync_state=True,
         value_type=None,
         device_updated_cb=None,
@@ -39,6 +39,11 @@ class Sensor(Device):
     def _iter_remote_values(self):
         """Iterate the devices RemoteValue classes."""
         yield self.sensor_value
+
+    @property
+    def unique_id(self):
+        """Return unique id for this device."""
+        return f"sensor_{hash(self.sensor_value.group_address_state)}"
 
     @classmethod
     def from_config(cls, xknx, name, config):

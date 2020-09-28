@@ -775,7 +775,7 @@ class TestCover(unittest.TestCase):
             return None
 
         xknx = XKNX()
-        cover = Cover(xknx, "TestCover")
+        cover = Cover(xknx, "TestCover", group_address_long="2/4/5")
         with patch("xknx.devices.Cover.set_up") as mock:
             mock.return_value = asyncio.ensure_future(async_none())
             self.loop.run_until_complete(cover.do("up"))
@@ -800,7 +800,7 @@ class TestCover(unittest.TestCase):
     def test_wrong_do(self):
         """Test wrong do command."""
         xknx = XKNX()
-        cover = Cover(xknx, "TestCover")
+        cover = Cover(xknx, "TestCover", group_address_long="2/3/4")
         with patch("logging.Logger.warning") as mock_warn:
             self.loop.run_until_complete(cover.do("execute"))
             self.assertEqual(xknx.telegrams.qsize(), 0)

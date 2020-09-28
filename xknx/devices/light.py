@@ -37,7 +37,7 @@ class Light(Device):
         self,
         xknx,
         name,
-        group_address_switch=None,
+        group_address_switch,
         group_address_switch_state=None,
         group_address_brightness=None,
         group_address_brightness_state=None,
@@ -126,6 +126,11 @@ class Light(Device):
             self.tunable_white,
             self.color_temperature,
         )
+
+    @property
+    def unique_id(self):
+        """Return unique id for this device."""
+        return f"light_{hash(self.switch.group_address)}"
 
     @property
     def supports_brightness(self):

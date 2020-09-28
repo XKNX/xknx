@@ -73,7 +73,7 @@ class Weather(Device):
         self,
         xknx,
         name: str,
-        group_address_temperature: str = None,
+        group_address_temperature: str,
         group_address_brightness_south: Optional[str] = None,
         group_address_brightness_north: Optional[str] = None,
         group_address_brightness_west: Optional[str] = None,
@@ -224,6 +224,11 @@ class Weather(Device):
             self._air_pressure,
             self._humidity,
         ]
+
+    @property
+    def unique_id(self):
+        """Return unique id for this device."""
+        return f"weather_{hash(self._temperature.group_address_state)}"
 
     async def process_group_write(self, telegram):
         """Process incoming and outgoing GROUP WRITE telegram."""

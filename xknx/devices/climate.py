@@ -126,6 +126,11 @@ class Climate(Device):
             self.on,
         )
 
+    @property
+    def unique_id(self):
+        """Return unique id for this device."""
+        return f"climate_{hash(self.temperature.group_address_state)}"
+
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""

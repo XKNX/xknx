@@ -139,6 +139,7 @@ class TestLight(unittest.TestCase):
         light = Light(
             xknx,
             name="TestLight",
+            group_address_switch="1/3/5",
             group_address_switch_state="1/2/3",
             group_address_brightness_state="1/2/5",
             group_address_color_state="1/2/6",
