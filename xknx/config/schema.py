@@ -3,15 +3,19 @@ import voluptuous as vol
 
 from ..devices.climate import SetpointShiftMode
 from ..devices.light import ColorTempModes
+from ..remote_value.remote_value_datetime import DateTimeType
 from .config_validation import (
     boolean,
     ensure_group_address,
     ensure_list,
     enum,
+    match_all,
     positive_int,
+    sensor_value_type,
     string,
 )
 
+CONF_STATE_UPDATE = "state_update"
 CONF_ADDRESS = "address"
 CONF_STATE_ADDRESS = "state_address"
 CONF_SWITCH = "switch"
@@ -20,7 +24,6 @@ CONF_SWITCH = "switch"
 class RemoteValueSchema:
     """Schema validation for remote value configuration."""
 
-    CONF_STATE_UPDATE = "state_update"
     CONF_PASSIVE_GROUP_ADDRESSES = "passive_state_addresses"
     CONF_INVERT = "invert"
 
@@ -403,5 +406,100 @@ class WeatherSchema:
                 }
             ),
             vol.Optional(CONF_EXPOSE_SENSORS, default=False): boolean,
+        }
+    )
+
+
+class DateTimeSchema:
+    """Voluptuous schema for KNX date time devices."""
+
+    CONF_TIME = "time"
+    CONF_BROADCAST_TYPE = "broadcast_type"
+
+    SCHEMA = BaseDeviceSchema.SCHEMA.extend(
+        {
+            vol.Required(CONF_TIME): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Required(CONF_ADDRESS): ensure_group_address,
+                    vol.Remove(CONF_STATE_ADDRESS): ensure_group_address,
+                    vol.Optional(CONF_BROADCAST_TYPE, default=DateTimeType.TIME): enum(
+                        DateTimeType
+                    ),
+                }
+            ),
+        }
+    )
+
+
+class SceneSchema:
+    """Voluptuous schema for KNX scenes."""
+
+    CONF_SCENE = "scene"
+    CONF_SCENE_NUMBER = "scene_number"
+
+    SCHEMA = BaseDeviceSchema.SCHEMA.extend(
+        {
+            vol.Required(CONF_SCENE): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Required(CONF_ADDRESS): ensure_group_address,
+                    vol.Remove(CONF_STATE_ADDRESS): ensure_group_address,
+                    vol.Optional(CONF_STATE_UPDATE, default=False): False,
+                    vol.Required(CONF_SCENE_NUMBER): vol.All(
+                        vol.Coerce(int), vol.Range(min=1, max=64)
+                    ),
+                }
+            ),
+        }
+    )
+
+
+class NotificationSchema:
+    """Voluptuous schema for KNX notifications."""
+
+    SCHEMA = BaseDeviceSchema.SCHEMA.extend(
+        {
+            vol.Required(CONF_ADDRESS): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Required(CONF_ADDRESS): ensure_group_address,
+                }
+            ),
+        }
+    )
+
+
+class ExposeSchema:
+    """Voluptuous schema for KNX exposures."""
+
+    CONF_TYPE = "type"
+    CONF_ENTITY_ID = "entity_id"  # HA only
+    CONF_ATTRIBUTE = "attribute"
+    CONF_DEFAULT = "default"
+
+    SCHEMA = BaseDeviceSchema.SCHEMA.extend(
+        {
+            vol.Required(CONF_ADDRESS): ensure_group_address,
+            vol.Required(CONF_TYPE): sensor_value_type,
+            vol.Optional(CONF_DEFAULT): match_all,
+            vol.Optional(CONF_ATTRIBUTE): string,
+            vol.Optional(CONF_ENTITY_ID): string,
+        }
+    )
+
+
+class SensorSchema:
+    """Voluptuous schema for KNX sensors."""
+
+    CONF_TYPE = "type"
+    CONF_SENSOR = "sensor"
+
+    SCHEMA = BaseDeviceSchema.SCHEMA.extend(
+        {
+            vol.Required(CONF_SENSOR): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
+                    vol.Remove(CONF_ADDRESS): ensure_group_address,
+                    vol.Required(CONF_TYPE): sensor_value_type,
+                }
+            ),
         }
     )

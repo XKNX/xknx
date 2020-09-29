@@ -82,3 +82,8 @@ def sensor_value_type(value: str) -> str:
             return str(value)
 
     raise vol.Invalid(f"invalid value type {value}")
+
+
+def match_all(value: T) -> T:
+    """Validate that matches all values."""
+    return value
