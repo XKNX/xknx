@@ -1,9 +1,47 @@
 """Unit test for schema validation."""
+import glob
+import os
+from typing import List
 import unittest
 
+from pytest import raises
 import voluptuous as vol
-from xknx.config import BinarySensorSchema
+from xknx.config import (
+    BinarySensorSchema,
+    ClimateSchema,
+    ConnectionSchema,
+    CoverSchema,
+    DateTimeSchema,
+    ExposeSchema,
+    FanSchema,
+    LightSchema,
+    NotificationSchema,
+    SceneSchema,
+    SensorSchema,
+    SwitchSchema,
+    WeatherSchema,
+    XKNXSchema,
+)
 import yaml
+
+TEST_CONFIG_PATH = "test/config_tests/resources"
+
+CONFIG_MAPPING = [
+    ("binary_sensor", BinarySensorSchema.SCHEMA),
+    ("climate", ClimateSchema.SCHEMA),
+    ("connection", ConnectionSchema.SCHEMA),
+    ("cover", CoverSchema.SCHEMA),
+    ("datetime", DateTimeSchema.SCHEMA),
+    ("expose", ExposeSchema.SCHEMA),
+    ("fan", FanSchema.SCHEMA),
+    ("light", LightSchema.SCHEMA),
+    ("notification", NotificationSchema.SCHEMA),
+    ("scene", SceneSchema.SCHEMA),
+    ("sensor", SensorSchema.SCHEMA),
+    ("switch", SwitchSchema.SCHEMA),
+    ("weather", WeatherSchema.SCHEMA),
+    ("xknx", XKNXSchema.SCHEMA),
+]
 
 
 # pylint: disable=too-many-public-methods,invalid-name
@@ -11,106 +49,45 @@ class TestSchema(unittest.TestCase):
     """Test class for Schema logic."""
 
     #
-    # Binary Sensor Test
+    # Get files in directory
     #
-    def test_binary_sensor_schema_valid(self):
-        """Test binary sensor section from config file."""
+    @staticmethod
+    def get_files(directory, valid=False) -> List:
+        file_pattern = "invalid" if not valid else "valid"
 
-        # Replaces setting from xknx.yaml
-        test_configs = [
-            """
-        name: "test_complete"
-        friendly_name: ""
-        address:
-            state_address: "1/2/7"
-            state_update: "expire 60"
-            passive_state_addresses: ["8/8/8"]
-        context_timeout: 1
-        device_class: 'light'
-        reset_after: 3000 # ms
-        ignore_internal_state: False
-        """,
-            """
-                   name: "test_no_friendly_name"
-                   address:
-                       state_address: "1/2/7"
-                       state_update: "expire 60"
-                       passive_state_addresses:
-                   context_timeout: 1
-                   device_class: 'light'
-                   reset_after: 3000 # ms
-                   ignore_internal_state: 0
-                   """,
-            """
-                   name: "test_minimal"
-                   friendly_name: ""
-                   address:
-                       state_address: "1/2/7"
-                   ignore_internal_state: "on"
-                   """,
-            """
-                   name: "livingroom_switch1"
-                   friendly_name: ""
-                   address:
-                       state_address: "1/2/7"
-                       state_update: "expire 60"
-                       passive_state_addresses: ["8/8/8"]
-                   context_timeout: 1
-                   device_class: 'light'
-                   reset_after: 3000 # ms
-                   ignore_internal_state: "off"
-                   """,
-        ]
-        for yaml_string in test_configs:
-            config = yaml.safe_load(yaml_string)
-            self.assertIsNotNone(BinarySensorSchema.SCHEMA(config))
+        _list: List = glob.glob(
+            f"{TEST_CONFIG_PATH}{os.sep}{directory}{os.sep}{file_pattern}*.yaml"
+        )
+        result = []
+        for file in _list:
+            with open(file) as filehandle:
+                config = yaml.safe_load(filehandle)
+                matcher = config.get("name", ".*")
+                result.append((file, config, matcher))
+
+        return result
 
     #
-    # Binary Sensor Invalid Test
+    # Test all valid schemas in the resources directory.
     #
-    def test_binary_sensor_invalid(self):
-        """Test binary sensor section from config file."""
+    def test_schema_valid(self):
+        """Test valid schemas from config file."""
 
-        # Replaces setting from xknx.yaml
-        test_configs = [
-            """
-        name: "test_complete"
-        friendly_name: ""
-        address:
-            address: "2/2/2"
-            state_update: "expire 60"
-            passive_state_addresses: ["8/8/8"]
-        context_timeout: 1
-        device_class: 'light'
-        reset_after: 3000 # ms
-        ignore_internal_state: False
-        """,
-            """
-                   name: "test_no_friendly_name"
-                   context_timeout: 1
-                   device_class: 'light'
-                   reset_after: 3000 # ms
-                   ignore_internal_state: False
-                   """,
-            """
-                   name: "test_minimal"
-                   friendly_name:
-                   address:
-                   """,
-            """
-                   name: "livingroom_switch1"
-                   friendly_name: ["teer"]
-                   address:
-                       state_update: "expire 60"
-                   """,
-            """
-                               name: "livingroom_switch1"
-                               friendly_name: ""
-                               address:
-                                   state_address: "2/2/2/2"
-                                   state_update: "expire 60"
-                               """,
-        ]
-        for yaml_string in test_configs:
-            config = yaml.safe_load(yaml_string)
-            self.assertRaises(vol.Invalid, BinarySensorSchema.SCHEMA, config)
+        for entry, schema in CONFIG_MAPPING:
+            _list = TestSchema.get_files(entry, True)
+            for file, config, matcher in _list:
+                #  print(f"Testing {file} from {entry}.")
+                self.assertIsNotNone(schema(config))
+
+    #
+    # Test all invalid schemas in the resources directory
+    #
+    def test_schema_invalid(self):
+        """Test invalid schemas from config file."""
+
+        for entry, schema in CONFIG_MAPPING:
+            _list = TestSchema.get_files(entry)
+            for file, config, matches in _list:
+                with raises(vol.Invalid, match=matches):
+                    print(f"Testing {file} from {entry}.")
+                    schema(config)

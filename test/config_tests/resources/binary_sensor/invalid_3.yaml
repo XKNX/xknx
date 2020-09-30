@@ -1,0 +1,3 @@
+name: "string value is None for dictionary value .*friendly_name.*"
+friendly_name:
+address:

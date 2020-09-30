@@ -1,0 +1,5 @@
+name: "required key not provided .*address.*"
+context_timeout: 1
+device_class: 'light'
+reset_after: 3000 # ms
+ignore_internal_state: False

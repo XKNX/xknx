@@ -2,12 +2,14 @@
 from enum import Enum
 from numbers import Number
 import os
+import re
 from typing import Any, List, Type, TypeVar, Union
 
 import voluptuous as vol
 from xknx.dpt import DPTBase
 from xknx.telegram import GroupAddress
 
+# pylint: disable=invalid-name
 # typing typevar
 T = TypeVar("T")
 
@@ -51,6 +53,10 @@ def ensure_list(value: Union[T, List[T], None]) -> List[T]:
 
 def ensure_group_address(value: str) -> str:
     """Ensure value is a valid KNX group address."""
+    value = str(value)
+    if value.isdigit() and 0 <= int(value) <= GroupAddress.MAX_FREE:
+        return str(value)
+
     if not GroupAddress.ADDRESS_RE.match(value):
         raise vol.Invalid(f"{value} is not a valid group address")
 
@@ -75,13 +81,32 @@ def enum(value: Type[Enum]) -> vol.All:
     return vol.All(vol.In(value.__members__), value.__getitem__)
 
 
+VALID_SENSOR_TYPES = []
+for dpt in DPTBase.__recursive_subclasses__():
+    if dpt.has_distinct_value_type():
+        VALID_SENSOR_TYPES.append(dpt.value_type)
+
+
 def sensor_value_type(value: str) -> str:
     """Validate sensor type."""
-    for dpt in DPTBase.__recursive_subclasses__():
-        if dpt.has_distinct_value_type() and dpt.value_type == value:
-            return str(value)
+    if value in VALID_SENSOR_TYPES:
+        return str(value)
+
+    if value.lower() in ["binary", "time", "datetime", "date"]:
+        return str(value)
 
     raise vol.Invalid(f"invalid value type {value}")
+
+
+VALID_ENTITY_ID = re.compile(r"^(?!.+__)(?!_)[\da-z_]+(?<!_)\.(?!_)[\da-z_]+(?<!_)$")
+
+
+def valid_entity_id(entity_id: str) -> bool:
+    """Test if an entity ID is a valid format.
+
+    Format: <domain>.<entity> where both are slugs.
+    """
+    return VALID_ENTITY_ID.match(entity_id) is not None
 
 
 def match_all(value: T) -> T:

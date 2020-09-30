@@ -1,24 +1,38 @@
 """Config validation."""
+from enum import Enum
+
 import voluptuous as vol
 
 from ..devices.climate import SetpointShiftMode
 from ..devices.light import ColorTempModes
+from ..io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from ..remote_value.remote_value_datetime import DateTimeType
 from .config_validation import (
     boolean,
     ensure_group_address,
     ensure_list,
     enum,
+    isdir,
     match_all,
+    port,
     positive_int,
     sensor_value_type,
     string,
+    valid_entity_id,
 )
 
 CONF_STATE_UPDATE = "state_update"
 CONF_ADDRESS = "address"
 CONF_STATE_ADDRESS = "state_address"
 CONF_SWITCH = "switch"
+
+
+class ConnectionType(Enum):
+    """Connection type to use."""
+
+    TUNNELING = "tunneling"
+    ROUTING = "routing"
+    AUTO = "auto"
 
 
 class RemoteValueSchema:
@@ -55,6 +69,24 @@ class BaseDeviceSchema:
         {
             vol.Required(CONF_NAME): string,
             vol.Optional(CONF_FRIENDLY_NAME): string,
+        }
+    )
+
+
+class ConnectionSchema:
+    """Voluptuous schema for KNX connection."""
+
+    CONF_TYPE = "type"
+    CONF_LOCAL_IP = "local_ip"
+    CONF_HOST = "host"
+    CONF_PORT = "port"
+
+    SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_TYPE): enum(ConnectionType),
+            vol.Optional(CONF_PORT, default=DEFAULT_MCAST_PORT): port,
+            vol.Optional(CONF_LOCAL_IP): string,
+            vol.Optional(CONF_HOST): string,
         }
     )
 
@@ -270,11 +302,11 @@ class ClimateSchema:
                         CONF_SETPOINT_SHIFT_MODE, default=DEFAULT_SETPOINT_SHIFT_MODE
                     ): enum(SetpointShiftMode),
                     vol.Optional(
-                        CONF_MIN_TEMP, default=DEFAULT_SETPOINT_SHIFT_MAX
-                    ): vol.All(int, vol.Range(min=0, max=32)),
-                    vol.Optional(
-                        CONF_MAX_TEMP, default=DEFAULT_SETPOINT_SHIFT_MIN
+                        CONF_MIN_TEMP, default=DEFAULT_SETPOINT_SHIFT_MIN
                     ): vol.All(int, vol.Range(min=-32, max=0)),
+                    vol.Optional(
+                        CONF_MAX_TEMP, default=DEFAULT_SETPOINT_SHIFT_MAX
+                    ): vol.All(int, vol.Range(min=0, max=32)),
                     vol.Optional(
                         CONF_TEMPERATURE_STEP, default=DEFAULT_TEMPERATURE_STEP
                     ): vol.All(float, vol.Range(min=0, max=2)),
@@ -381,6 +413,12 @@ class WeatherSchema:
                     vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
                 }
             ),
+            vol.Optional(CONF_FROST_ALARM): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Remove(CONF_ADDRESS): ensure_group_address,
+                    vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
+                }
+            ),
             vol.Optional(CONF_WIND_SPEED): RemoteValueSchema.SCHEMA.extend(
                 {
                     vol.Remove(CONF_ADDRESS): ensure_group_address,
@@ -474,14 +512,16 @@ class ExposeSchema:
     CONF_ENTITY_ID = "entity_id"  # HA only
     CONF_ATTRIBUTE = "attribute"
     CONF_DEFAULT = "default"
+    CONF_NAME = "name"
 
     SCHEMA = BaseDeviceSchema.SCHEMA.extend(
         {
+            vol.Remove(CONF_NAME): False,
             vol.Required(CONF_ADDRESS): ensure_group_address,
             vol.Required(CONF_TYPE): sensor_value_type,
             vol.Optional(CONF_DEFAULT): match_all,
             vol.Optional(CONF_ATTRIBUTE): string,
-            vol.Optional(CONF_ENTITY_ID): string,
+            vol.Optional(CONF_ENTITY_ID): valid_entity_id,
         }
     )
 
@@ -501,5 +541,66 @@ class SensorSchema:
                     vol.Required(CONF_TYPE): sensor_value_type,
                 }
             ),
+        }
+    )
+
+
+class XKNXSchema:
+    """Voloptuous schema for XKNX config."""
+
+    CONF_OWN_ADDRESS = "own_address"
+    CONF_RATE_LIMIT = "rate_limit"
+    CONF_VERSION = "version"
+    CONF_LOG_DIRECTORY = "log_directory"
+    CONF_FIRE_EVENT = "fire_event"
+    CONF_FIRE_EVENT_FILTER = "fire_event_filter"
+    CONF_MULTICAST_GROUP = "multicast_group"
+    CONF_MULTICAST_PORT = "multicast_port"
+
+    CONF_CONNECTION = "connection"
+    CONF_BINARY_SENSOR = "binary_sensor"
+    CONF_SWITCH = "switch"
+    CONF_LIGHT = "light"
+    CONF_FAN = "fan"
+    CONF_COVER = "cover"
+    CONF_CLIMATE = "climate"
+    CONF_WEATHER = "weather"
+    CONF_DATETIME = "datetime"
+    CONF_NOTIFICATION = "notification"
+    CONF_SCENE = "scene"
+    CONF_EXPOSE = "expose_sensor"
+    CONF_SENSOR = "sensor"
+
+    SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_RATE_LIMIT, default=20): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=100)
+            ),
+            vol.Optional(CONF_VERSION, default=2): string,
+            vol.Optional(CONF_OWN_ADDRESS): string,
+            vol.Optional(CONF_LOG_DIRECTORY): isdir,
+            vol.Inclusive(CONF_FIRE_EVENT, "fire_ev"): boolean,
+            vol.Inclusive(CONF_FIRE_EVENT_FILTER, "fire_ev"): vol.All(
+                ensure_list, [string]
+            ),
+            vol.Optional(CONF_MULTICAST_GROUP, default=DEFAULT_MCAST_GRP): string,
+            vol.Optional(CONF_MULTICAST_PORT, default=DEFAULT_MCAST_PORT): port,
+            vol.Optional(CONF_CONNECTION): ConnectionSchema.SCHEMA,
+            vol.Optional(CONF_BINARY_SENSOR): vol.All(
+                ensure_list, [BinarySensorSchema.SCHEMA]
+            ),
+            vol.Optional(CONF_SWITCH): vol.All(ensure_list, [SwitchSchema.SCHEMA]),
+            vol.Optional(CONF_LIGHT): vol.All(ensure_list, [LightSchema.SCHEMA]),
+            vol.Optional(CONF_FAN): vol.All(ensure_list, [FanSchema.SCHEMA]),
+            vol.Optional(CONF_COVER): vol.All(ensure_list, [CoverSchema.SCHEMA]),
+            vol.Optional(CONF_CLIMATE): vol.All(ensure_list, [ClimateSchema.SCHEMA]),
+            vol.Optional(CONF_WEATHER): vol.All(ensure_list, [WeatherSchema.SCHEMA]),
+            vol.Optional(CONF_DATETIME): vol.All(ensure_list, [DateTimeSchema.SCHEMA]),
+            vol.Optional(CONF_NOTIFICATION): vol.All(
+                ensure_list, [NotificationSchema.SCHEMA]
+            ),
+            vol.Optional(CONF_SCENE): vol.All(ensure_list, [SceneSchema.SCHEMA]),
+            vol.Optional(CONF_EXPOSE): vol.All(ensure_list, [ExposeSchema.SCHEMA]),
+            vol.Optional(CONF_SENSOR): vol.All(ensure_list, [SensorSchema.SCHEMA]),
         }
     )

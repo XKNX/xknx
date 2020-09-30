@@ -1,0 +1,5 @@
+name: "value must be at most .*scene_number.*"
+friendly_name: "test"
+scene:
+  address: "7/0/1"
+  scene_number: 65

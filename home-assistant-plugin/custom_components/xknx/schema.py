@@ -327,9 +327,7 @@ class SceneSchema:
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Required(CONF_ADDRESS): cv.string,
-            vol.Required(CONF_SCENE_NUMBER): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=64)
-            ),
+            vol.Required(CONF_SCENE_NUMBER): cv.positive_int,
         }
     )
 

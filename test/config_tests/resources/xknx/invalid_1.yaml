@@ -7,10 +7,7 @@ fire_event_filter: ["1/0/*", "6/2,3,4-6/*"]
 multicast_group: '224.1.2.3'
 multicast_port: 1337
 connection: # optional
-  type: tunneling # or routing|auto
-  local_ip: "192.168.0.201"
-  host: "192.168.0.202"
-  port: 1337
+  type: fdgsdfgsdfg
 binary_sensor:
   - name: "livingroom_switch1"
     friendly_name: ""
@@ -121,7 +118,7 @@ climate:
       address: "4/0/15"
       state_address: "4/0/16"
       invert: False
- weather:
+weather:
   - name: home
     friendly_name: "Home"
     temperature:

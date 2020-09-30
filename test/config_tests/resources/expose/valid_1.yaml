@@ -1,0 +1,5 @@
+type: 'percentU8'
+entity_id: 'light.office'
+attribute: 'brightness'
+default: 0
+address: '0/3/1'

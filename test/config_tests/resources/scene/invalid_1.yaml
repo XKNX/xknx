@@ -1,0 +1,6 @@
+name: "not a valid value for .*state_update.*"
+friendly_name: "test"
+scene:
+  address: "7/0/1"
+  scene_number: 23
+  state_update: True

@@ -1,0 +1,5 @@
+name: "valve_bath"
+friendly_name: "Bathroom Valve"
+sensor:
+  state_address: "9/9/9"
+  type: "binary"

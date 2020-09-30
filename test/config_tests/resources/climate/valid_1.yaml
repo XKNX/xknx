@@ -1,0 +1,40 @@
+name: "bathroom"
+friendly_name: "Bathroom"
+target_temperature:
+  address: "4/0/0"
+  state_address: "4/0/1"
+  state_update: "expire 60"
+  min: -7
+  max: 30
+setpoint_shift:
+  address: "4/0/2"
+  state_address: "4/0/3"
+  mode: DPT6010
+  temperature_step: 0.1
+  min: -6
+  max: 6
+operation_mode:
+  address: "4/0/4"
+  state_address: "4/0/5"
+binary_operation_mode:
+  frost_protection_address: "4/0/6"
+  comfort_address: "4/0/7"
+  night_address: "4/0/8"
+  standby_address: "5/0/0"
+controller_status:
+  address: "4/0/9"
+  state_address: "4/0/10"
+controller_mode:
+  address: "4/0/11"
+  state_address: "4/0/12"
+heat_cool:
+  address: "4/0/13"
+  state_address: "4/0/14"
+  invert: False
+operation_modes:
+  - "Heat"
+  - "Cool"
+on_off:
+  address: "4/0/15"
+  state_address: "4/0/16"
+  invert: False
