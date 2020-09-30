@@ -4,6 +4,7 @@ Module for managing an climate mode remote values.
 DPT .
 """
 from enum import Enum
+from typing import List
 
 from xknx.dpt import (
     DPTArray,
@@ -38,6 +39,7 @@ class RemoteValueClimateMode(RemoteValue):
         feature_name="Climate Mode",
         climate_mode_type=None,
         after_update_cb=None,
+        listening_group_addresses: List[str] = None,
     ):
         """Initialize remote value of KNX climate mode."""
         # pylint: disable=too-many-arguments
@@ -49,6 +51,7 @@ class RemoteValueClimateMode(RemoteValue):
             device_name=device_name,
             feature_name=feature_name,
             after_update_cb=after_update_cb,
+            listening_group_addresses=listening_group_addresses,
         )
         if not isinstance(climate_mode_type, self.ClimateModeType):
             raise ConversionError(
