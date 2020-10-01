@@ -73,7 +73,9 @@ class Routing:
     async def start(self):
         """Start routing."""
         await self.udpclient.connect()
+        self.xknx.connected.set()
 
     async def stop(self):
         """Stop routing."""
         await self.udpclient.stop()
+        self.xknx.connected.clear()
