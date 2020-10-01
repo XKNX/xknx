@@ -224,9 +224,8 @@ class KNXModule:
             return self.connection_config_tunneling()
         if CONF_XKNX_ROUTING in self.config[DOMAIN]:
             return self.connection_config_routing()
-        # return None to let xknx use config from xknx.yaml connection block if given
-        #   otherwise it will use default ConnectionConfig (Automatic)
-        return None
+        # config from xknx.yaml always has priority later on
+        return ConnectionConfig()
 
     def connection_config_routing(self):
         """Return the connection_config if routing is configured."""
