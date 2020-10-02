@@ -66,7 +66,7 @@ class RemoteValue:
         return bool(
             self.group_address_state
             or self.group_address
-            or len(self.listening_group_addresses)
+            or self.listening_group_addresses
         )
 
     @property
@@ -240,5 +240,5 @@ class RemoteValue:
     def get_listening_group_addresses(passive_group_addresses: List[str]) -> List:
         """Obtain passive state group addresses."""
         if passive_group_addresses is None:
-            passive_group_addresses = []
+            return []
         return [GroupAddress(ga) for ga in passive_group_addresses]
