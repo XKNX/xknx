@@ -298,6 +298,7 @@ class ClimateSchema:
             vol.Optional(CONF_SETPOINT_SHIFT): RemoteValueSchema.SCHEMA.extend(
                 {
                     vol.Required(CONF_ADDRESS): ensure_group_address,
+                    vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
                     vol.Optional(
                         CONF_SETPOINT_SHIFT_MODE, default=DEFAULT_SETPOINT_SHIFT_MODE
                     ): enum(SetpointShiftMode),
@@ -574,7 +575,7 @@ class XKNXSchema:
     SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_RATE_LIMIT, default=20): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=100)
+                vol.Coerce(int), vol.Range(min=0, max=100)
             ),
             vol.Optional(CONF_VERSION, default=2): string,
             vol.Optional(CONF_OWN_ADDRESS): string,
