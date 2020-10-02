@@ -197,9 +197,11 @@ class TestBinarySensor(unittest.TestCase):
     #
     def test_process_callback(self):
         """Test after_update_callback after state of switch was changed."""
-        # pylint: disable=no-self-use
+        # pylint: disable=protected-access
         xknx = XKNX()
-        switch = BinarySensor(xknx, "TestInput", group_address_state="1/2/3")
+        switch = BinarySensor(
+            xknx, "TestInput", group_address_state="1/2/3", ignore_internal_state=False
+        )
 
         after_update_callback = Mock()
 
@@ -211,8 +213,90 @@ class TestBinarySensor(unittest.TestCase):
 
         telegram = Telegram(group_address=GroupAddress("1/2/3"), payload=DPTBinary(1))
         self.loop.run_until_complete(switch.process(telegram))
+        # no _context_task started because ignore_internal_state is False
+        self.assertIsNone(switch._context_task)
+        after_update_callback.assert_called_once_with(switch)
 
+        after_update_callback.reset_mock()
+        # send same telegram again
+        self.loop.run_until_complete(switch.process(telegram))
+        after_update_callback.assert_not_called()
+
+    def test_process_callback_ignore_internal_state(self):
+        """Test after_update_callback after state of switch was changed."""
+        # pylint: disable=protected-access
+        xknx = XKNX()
+        switch = BinarySensor(
+            xknx,
+            "TestInput",
+            group_address_state="1/2/3",
+            ignore_internal_state=True,
+            context_timeout=0.01,
+        )
+
+        after_update_callback = Mock()
+
+        async def async_after_update_callback(device):
+            """Async callback."""
+            after_update_callback(device)
+
+        switch.register_device_updated_cb(async_after_update_callback)
+
+        telegram = Telegram(group_address=GroupAddress("1/2/3"), payload=DPTBinary(1))
+        self.assertEqual(switch.counter, 0)
+
+        self.loop.run_until_complete(switch.process(telegram))
+        after_update_callback.assert_not_called()
+        self.assertEqual(switch.counter, 1)
+        self.loop.run_until_complete(switch._context_task)
         after_update_callback.assert_called_with(switch)
+        # once with counter 1 and once with counter 0
+        self.assertEqual(after_update_callback.call_count, 2)
+
+        after_update_callback.reset_mock()
+        # send same telegram again
+        self.loop.run_until_complete(switch.process(telegram))
+        self.assertEqual(switch.counter, 1)
+        self.loop.run_until_complete(switch.process(telegram))
+        self.assertEqual(switch.counter, 2)
+        after_update_callback.assert_not_called()
+
+        self.loop.run_until_complete(switch._context_task)
+        after_update_callback.assert_called_with(switch)
+        # once with counter 2 and once with counter 0
+        self.assertEqual(after_update_callback.call_count, 2)
+        self.assertEqual(switch.counter, 0)
+
+    def test_process_callback_ignore_internal_state_no_counter(self):
+        """Test after_update_callback after state of switch was changed."""
+        # pylint: disable=protected-access
+        xknx = XKNX()
+        switch = BinarySensor(
+            xknx,
+            "TestInput",
+            group_address_state="1/2/3",
+            ignore_internal_state=True,
+            context_timeout=0,
+        )
+
+        after_update_callback = Mock()
+
+        async def async_after_update_callback(device):
+            """Async callback."""
+            after_update_callback(device)
+
+        switch.register_device_updated_cb(async_after_update_callback)
+
+        telegram = Telegram(group_address=GroupAddress("1/2/3"), payload=DPTBinary(1))
+        self.loop.run_until_complete(switch.process(telegram))
+        # no _context_task started because context_timeout is False
+        self.assertIsNone(switch._context_task)
+        after_update_callback.assert_called_once_with(switch)
+
+        after_update_callback.reset_mock()
+        # send same telegram again
+        self.loop.run_until_complete(switch.process(telegram))
+        after_update_callback.assert_called_once_with(switch)
 
     #
     # TEST COUNTER

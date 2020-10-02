@@ -112,7 +112,7 @@ class BinarySensor(Device):
             self.state = state
             self.bump_and_get_counter(state)
 
-            if self.ignore_internal_state:
+            if self.ignore_internal_state and self._context_timeout:
                 if self._context_task:
                     self._context_task.cancel()
                 self._context_task = asyncio.create_task(
