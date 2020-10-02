@@ -3,6 +3,8 @@ Module for managing a DTP 7001 remote value.
 
 DPT 7.001.
 """
+from typing import List
+
 from xknx.dpt import DPT2ByteUnsigned, DPTArray
 
 from .remote_value import RemoteValue
@@ -19,6 +21,7 @@ class RemoteValueDpt2ByteUnsigned(RemoteValue):
         device_name=None,
         feature_name="Value",
         after_update_cb=None,
+        passive_group_addresses: List[str] = None,
     ):
         """Initialize remote value of KNX DPT 7.001."""
         # pylint: disable=too-many-arguments
@@ -29,6 +32,7 @@ class RemoteValueDpt2ByteUnsigned(RemoteValue):
             device_name=device_name,
             feature_name=feature_name,
             after_update_cb=after_update_cb,
+            passive_group_addresses=passive_group_addresses,
         )
 
     def payload_valid(self, payload):
