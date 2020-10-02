@@ -24,7 +24,7 @@ class RemoteValueSwitch(RemoteValue):
         feature_name="State",
         after_update_cb=None,
         invert=False,
-        listening_group_addresses: List[str] = None,
+        passive_group_addresses: List[str] = None,
     ):
         """Initialize remote value of KNX DPT 1.001."""
         # pylint: disable=too-many-arguments
@@ -36,7 +36,7 @@ class RemoteValueSwitch(RemoteValue):
             device_name=device_name,
             feature_name=feature_name,
             after_update_cb=after_update_cb,
-            listening_group_addresses=listening_group_addresses,
+            passive_group_addresses=passive_group_addresses,
         )
         self.invert = invert
 

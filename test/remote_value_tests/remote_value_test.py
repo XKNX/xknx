@@ -143,7 +143,7 @@ class TestRemoteValue(unittest.TestCase):
         """Test if listening group addresses are processed."""
         xknx = XKNX()
         remote_value = RemoteValue(
-            xknx, group_address="1/2/3", listening_group_addresses=["1/1/1"]
+            xknx, group_address="1/2/3", passive_group_addresses=["1/1/1"]
         )
         self.assertTrue(remote_value.writable)
         self.assertFalse(remote_value.readable)

@@ -19,7 +19,7 @@ class RemoteValueSetpointShift(RemoteValue1Count):
         device_name=None,
         after_update_cb=None,
         setpoint_shift_step=0.1,
-        listening_group_addresses: List[str] = None,
+        passive_group_addresses: List[str] = None,
     ):
         """Initialize RemoteValueSetpointShift class."""
         # pylint: disable=too-many-arguments
@@ -30,7 +30,7 @@ class RemoteValueSetpointShift(RemoteValue1Count):
             device_name=device_name,
             feature_name="Setpoint shift value",
             after_update_cb=after_update_cb,
-            listening_group_addresses=listening_group_addresses,
+            passive_group_addresses=passive_group_addresses,
         )
 
         self.setpoint_shift_step = setpoint_shift_step

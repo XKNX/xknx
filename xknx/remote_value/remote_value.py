@@ -28,13 +28,13 @@ class RemoteValue:
         device_name=None,
         feature_name=None,
         after_update_cb=None,
-        listening_group_addresses: List[str] = None,
+        passive_group_addresses: List[str] = None,
     ):
         """Initialize RemoteValue class."""
         # pylint: disable=too-many-arguments
         self.xknx = xknx
-        self.listening_group_addresses = RemoteValue.get_listening_group_addresses(
-            listening_group_addresses
+        self.passive_group_addresses = RemoteValue.get_passive_group_addresses(
+            passive_group_addresses
         )
         if group_address is not None:
             group_address = GroupAddress(group_address)
@@ -66,7 +66,7 @@ class RemoteValue:
         return bool(
             self.group_address_state
             or self.group_address
-            or self.listening_group_addresses
+            or self.passive_group_addresses
         )
 
     @property
@@ -86,7 +86,7 @@ class RemoteValue:
             """Yield all group_addresses."""
             yield self.group_address
             yield self.group_address_state
-            yield from self.listening_group_addresses
+            yield from self.passive_group_addresses
 
         return group_address in _internal_addresses()
 
@@ -237,7 +237,7 @@ class RemoteValue:
         return True
 
     @staticmethod
-    def get_listening_group_addresses(passive_group_addresses: List[str]) -> List:
+    def get_passive_group_addresses(passive_group_addresses: List[str]) -> List:
         """Obtain passive state group addresses."""
         if passive_group_addresses is None:
             return []
