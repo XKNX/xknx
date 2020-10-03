@@ -4,6 +4,7 @@
 
 ### Devices
 
+- BinarySensor: `reset_after` expects seconds, instead of ms now (to use same unit as `context_timeout`)
 - Binary Sensor: Change the default setting `context_timeout` for binary sensor from 1.0 to 0.0 and fixes a bug that would result in the update callback being executed twice thus executing certain automations in HA twice for binary sensor from 1.0 to 0.0 and fixes a bug that would result in the update callback being executed twice thus executing certain automations in HA twice.
 
 ## 0.15.0 Spring cleaning and quality of life changes
