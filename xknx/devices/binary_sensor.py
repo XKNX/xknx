@@ -10,6 +10,7 @@ A BinarySensor may also have Actions attached which are executed after state was
 """
 import asyncio
 import time
+from typing import List, Optional
 
 from xknx.remote_value import RemoteValueSwitch
 
@@ -21,20 +22,17 @@ class BinarySensor(Device):
     """Class for binary sensor."""
 
     # pylint: disable=too-many-instance-attributes
-
-    DEFAULT_CONTEXT_TIMEOUT = 0
-
     def __init__(
         self,
         xknx,
         name,
         group_address_state=None,
-        sync_state=True,
-        ignore_internal_state=True,
-        device_class=None,
-        reset_after=None,
-        actions=None,
-        context_timeout=DEFAULT_CONTEXT_TIMEOUT,
+        sync_state: bool = True,
+        ignore_internal_state: bool = True,
+        device_class: str = None,
+        reset_after: Optional[float] = None,
+        actions: List[Action] = None,
+        context_timeout: Optional[float] = None,
         device_updated_cb=None,
     ):
         """Initialize BinarySensor class."""
@@ -81,7 +79,8 @@ class BinarySensor(Device):
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
         group_address_state = config.get("group_address_state")
-        context_timeout = config.get("context_timeout", cls.DEFAULT_CONTEXT_TIMEOUT)
+        context_timeout = config.get("context_timeout")
+        reset_after = config.get("reset_after")
         sync_state = config.get("sync_state", True)
         device_class = config.get("device_class")
         ignore_internal_state = config.get("ignore_internal_state", True)
@@ -98,6 +97,7 @@ class BinarySensor(Device):
             sync_state=sync_state,
             ignore_internal_state=ignore_internal_state,
             context_timeout=context_timeout,
+            reset_after=reset_after,
             device_class=device_class,
             actions=actions,
         )
@@ -106,7 +106,7 @@ class BinarySensor(Device):
         """Update the internal state from RemoteValue (Callback)."""
         await self._set_internal_state(self.remote_value.value)
 
-    async def _set_internal_state(self, state):
+    async def _set_internal_state(self, state: bool):
         """Set the internal state of the device. If state was changed after_update hooks and connected Actions are executed."""
         if state != self.state or self.ignore_internal_state:
             self.state = state
@@ -144,10 +144,10 @@ class BinarySensor(Device):
         """Return current counter for sensor."""
         return self._count_set_on if self.state else self._count_set_off
 
-    def bump_and_get_counter(self, state):
+    def bump_and_get_counter(self, state: bool) -> int:
         """Bump counter and return the number of times a state was set to the same value within CONTEXT_TIMEOUT."""
 
-        def within_same_context():
+        def within_same_context() -> bool:
             """Check if state change was within same context (e.g. 'Button was pressed twice')."""
             if self._last_set is None:
                 self._last_set = time.time()
@@ -157,7 +157,7 @@ class BinarySensor(Device):
             self._last_set = new_set_time
             return time_diff < self._context_timeout
 
-        if within_same_context():
+        if self._context_timeout and within_same_context():
             if state:
                 self._count_set_on = self._count_set_on + 1
                 return self._count_set_on
@@ -180,18 +180,18 @@ class BinarySensor(Device):
                 if self._reset_task:
                     self._reset_task.cancel()
                 self._reset_task = asyncio.create_task(
-                    self._reset_state(self.reset_after / 1000)
+                    self._reset_state(self.reset_after)
                 )
 
-    async def _reset_state(self, wait_seconds):
+    async def _reset_state(self, wait_seconds: float):
         await asyncio.sleep(wait_seconds)
         await self._set_internal_state(False)
 
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return if binary sensor is 'on'."""
         return bool(self.state)
 
-    def is_off(self):
+    def is_off(self) -> bool:
         """Return if binary sensor is 'off'."""
         return not self.state
 

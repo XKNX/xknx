@@ -62,16 +62,16 @@ class TestBinarySensor(unittest.TestCase):
     def test_process_reset_after(self):
         """Test process / reading telegrams from telegram queue."""
         xknx = XKNX()
-        reset_after_ms = 0.01
+        reset_after_sec = 0.001
         binaryinput = BinarySensor(
-            xknx, "TestInput", "1/2/3", reset_after=reset_after_ms
+            xknx, "TestInput", "1/2/3", reset_after=reset_after_sec
         )
         telegram_on = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
         )
 
         self.loop.run_until_complete(binaryinput.process(telegram_on))
-        self.loop.run_until_complete(asyncio.sleep(reset_after_ms * 2 / 1000))
+        self.loop.run_until_complete(asyncio.sleep(reset_after_sec * 2))
         self.assertEqual(binaryinput.state, False)
 
     def test_process_action(self):
@@ -130,11 +130,9 @@ class TestBinarySensor(unittest.TestCase):
         ) as mock_sleep:
             mock_time.return_value = 1599076123.0
             self.loop.run_until_complete(binary_sensor.process(telegram_on))
-
             self.loop.run_until_complete(
                 xknx.devices.process(xknx.telegrams.get_nowait())
             )
-
             self.assertEqual(binary_sensor.state, True)
             self.assertEqual(switch.state, True)
 
@@ -142,17 +140,13 @@ class TestBinarySensor(unittest.TestCase):
             self.loop.run_until_complete(
                 xknx.devices.process(xknx.telegrams.get_nowait())
             )
-
             self.assertEqual(switch.state, False)
             self.assertEqual(binary_sensor.state, True)
-            # add a second to the time to avoid double tap behaviour here
-            mock_time.return_value += BinarySensor.DEFAULT_CONTEXT_TIMEOUT
-            self.loop.run_until_complete(binary_sensor.process(telegram_on))
 
+            self.loop.run_until_complete(binary_sensor.process(telegram_on))
             self.loop.run_until_complete(
                 xknx.devices.process(xknx.telegrams.get_nowait())
             )
-
             self.assertEqual(binary_sensor.state, True)
             self.assertEqual(switch.state, True)
 
@@ -231,7 +225,7 @@ class TestBinarySensor(unittest.TestCase):
             "TestInput",
             group_address_state="1/2/3",
             ignore_internal_state=True,
-            context_timeout=0.01,
+            context_timeout=0.001,
         )
 
         after_update_callback = Mock()
