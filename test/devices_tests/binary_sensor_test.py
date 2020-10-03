@@ -304,7 +304,9 @@ class TestBinarySensor(unittest.TestCase):
     def test_counter(self):
         """Test counter functionality."""
         xknx = XKNX()
-        switch = BinarySensor(xknx, "TestInput", group_address_state="1/2/3")
+        switch = BinarySensor(
+            xknx, "TestInput", group_address_state="1/2/3", context_timeout=1
+        )
         with patch("time.time") as mock_time:
             mock_time.return_value = 1517000000.0
             self.assertEqual(switch.bump_and_get_counter(True), 1)

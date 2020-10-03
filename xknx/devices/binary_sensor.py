@@ -22,7 +22,7 @@ class BinarySensor(Device):
 
     # pylint: disable=too-many-instance-attributes
 
-    DEFAULT_CONTEXT_TIMEOUT = 1
+    DEFAULT_CONTEXT_TIMEOUT = 0
 
     def __init__(
         self,
@@ -30,7 +30,7 @@ class BinarySensor(Device):
         name,
         group_address_state=None,
         sync_state=True,
-        ignore_internal_state=False,
+        ignore_internal_state=True,
         device_class=None,
         reset_after=None,
         actions=None,
@@ -81,10 +81,10 @@ class BinarySensor(Device):
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
         group_address_state = config.get("group_address_state")
-        context_timeout = config.get("context_timeout", 1)
+        context_timeout = config.get("context_timeout", cls.DEFAULT_CONTEXT_TIMEOUT)
         sync_state = config.get("sync_state", True)
         device_class = config.get("device_class")
-        ignore_internal_state = config.get("ignore_internal_state", False)
+        ignore_internal_state = config.get("ignore_internal_state", True)
         actions = []
         if "actions" in config:
             for action in config["actions"]:
