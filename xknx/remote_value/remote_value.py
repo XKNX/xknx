@@ -7,7 +7,6 @@ Remote value can be :
 - or a group of both representing the same value.
 """
 import logging
-from typing import List
 
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram, TelegramType
@@ -28,14 +27,10 @@ class RemoteValue:
         device_name=None,
         feature_name=None,
         after_update_cb=None,
-        passive_group_addresses: List[str] = None,
     ):
         """Initialize RemoteValue class."""
         # pylint: disable=too-many-arguments
         self.xknx = xknx
-        self.passive_group_addresses = RemoteValue.get_passive_group_addresses(
-            passive_group_addresses
-        )
         if group_address is not None:
             group_address = GroupAddress(group_address)
         if group_address_state is not None:
@@ -63,11 +58,7 @@ class RemoteValue:
     @property
     def initialized(self):
         """Evaluate if remote value is initialized with group address."""
-        return bool(
-            self.group_address_state
-            or self.group_address
-            or self.passive_group_addresses
-        )
+        return bool(self.group_address_state or self.group_address)
 
     @property
     def readable(self):
@@ -81,14 +72,7 @@ class RemoteValue:
 
     def has_group_address(self, group_address):
         """Test if device has given group address."""
-
-        def _internal_addresses():
-            """Yield all group_addresses."""
-            yield self.group_address
-            yield self.group_address_state
-            yield from self.passive_group_addresses
-
-        return group_address in _internal_addresses()
+        return group_address in [self.group_address, self.group_address_state]
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed - to be implemented in derived class.."""
@@ -235,10 +219,3 @@ class RemoteValue:
             if key not in self.__dict__:
                 return False
         return True
-
-    @staticmethod
-    def get_passive_group_addresses(passive_group_addresses: List[str]) -> List:
-        """Obtain passive state group addresses."""
-        if passive_group_addresses is None:
-            return []
-        return [GroupAddress(ga) for ga in passive_group_addresses]

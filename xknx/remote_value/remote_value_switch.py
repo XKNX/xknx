@@ -3,8 +3,6 @@ Module for managing an DPT Switch remote value.
 
 DPT 1.001.
 """
-from typing import List
-
 from xknx.dpt import DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
@@ -24,7 +22,6 @@ class RemoteValueSwitch(RemoteValue):
         feature_name="State",
         after_update_cb=None,
         invert=False,
-        passive_group_addresses: List[str] = None,
     ):
         """Initialize remote value of KNX DPT 1.001."""
         # pylint: disable=too-many-arguments
@@ -36,7 +33,6 @@ class RemoteValueSwitch(RemoteValue):
             device_name=device_name,
             feature_name=feature_name,
             after_update_cb=after_update_cb,
-            passive_group_addresses=passive_group_addresses,
         )
         self.invert = invert
 

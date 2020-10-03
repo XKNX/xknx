@@ -4,7 +4,6 @@ Module for managing an DPT Up/Down remote value.
 DPT 1.008.
 """
 from enum import Enum
-from typing import List
 
 from xknx.dpt import DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -31,7 +30,6 @@ class RemoteValueUpDown(RemoteValue):
         feature_name="Up/Down",
         after_update_cb=None,
         invert=False,
-        passive_group_addresses: List[str] = None,
     ):
         """Initialize remote value of KNX DPT 1.008."""
         # pylint: disable=too-many-arguments
@@ -42,7 +40,6 @@ class RemoteValueUpDown(RemoteValue):
             device_name=device_name,
             feature_name=feature_name,
             after_update_cb=after_update_cb,
-            passive_group_addresses=passive_group_addresses,
         )
         self.invert = invert
 
