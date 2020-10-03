@@ -16,7 +16,7 @@ We've changed the default behavior of the `ignore_internal_state` attribute. It 
 If you encounter issues with your current automations please set it to `False` again. We've analysed the current state
 and it appears that most of the people using it have it set to `True`.
 
-The binary sensor now has an additional `context_timeout` attribute which can be used in order to define the time period
+The binary sensor now has an additional `context_timeout` attribute which allows to define a time period
 in which your clicks should be counted towards the current context (i.e. incrementing the counter variable that you can
 use in your automations).
 
@@ -54,6 +54,7 @@ Your new binary sensor will now look like:
 
 - name: cover_abstell
   state_address: "2/0/33"
+  context_timeout: 1.0
 
 ```
 
@@ -96,4 +97,4 @@ automation:
 
 If you intend to use the `counter` feature (counter > 1) make sure you also enable `ignore_internal_state`
 for your binary_sensor and set the `context_timeout` attribute to the time in between you want it to react to your
-sensor clicks (defaults to 1 - which should be fine). Otherwise the counter will _not_ work correctly.
+sensor clicks (defaults to None - which disables this feature). Otherwise the counter will _not_ work correctly.
