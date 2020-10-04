@@ -97,7 +97,7 @@ class DPTBase:
             return DPTBase.transcoder_by_dpt(value_type)
         if isinstance(value_type, float):
             # avoid modulo for floating point rounding errors
-            main, sub = map(int, str(value_type).split("."))
+            main, sub = map(int, f"{value_type:.3f}".split("."))
             return DPTBase.transcoder_by_dpt(main, sub)
         if isinstance(value_type, str):
             _string_type = value_type.strip()
