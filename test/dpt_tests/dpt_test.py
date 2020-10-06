@@ -139,3 +139,6 @@ class TestDPTBase(unittest.TestCase):
         dpt6 = DPTBase.parse_transcoder("9.001")
         self.assertEqual(dpt4, dpt5)
         self.assertEqual(dpt5, dpt6)
+        dpt7 = DPTBase.parse_transcoder("active_energy")
+        dpt8 = DPTBase.parse_transcoder(13.010)
+        self.assertEqual(dpt7, dpt8, "parsing float failed")

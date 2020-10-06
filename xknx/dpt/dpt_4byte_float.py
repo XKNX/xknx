@@ -25,9 +25,6 @@ class DPT4ByteFloat(DPTBase):
 
     dpt_main_number = 14
     dpt_sub_number = None
-    value_type = "DPT-14"
-    dpt_main_number = 14
-    dpt_sub_number = None
     value_type = "4byte_float"
     unit = ""
     payload_length = 4
