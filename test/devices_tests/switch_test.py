@@ -76,6 +76,33 @@ class TestSwitch(unittest.TestCase):
 
         self.assertEqual(switch.state, False)
 
+    def test_process_reset_after(self):
+        """Test process reset_after."""
+        xknx = XKNX()
+        reset_after_sec = 0.001
+        switch = Switch(
+            xknx, "TestInput", group_address="1/2/3", reset_after=reset_after_sec
+        )
+        telegram_on = Telegram(
+            group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+        )
+
+        self.loop.run_until_complete(xknx.telegram_queue.start())
+
+        self.loop.run_until_complete(switch.process(telegram_on))
+        self.loop.run_until_complete(asyncio.sleep(reset_after_sec * 2))
+
+        self.assertFalse(xknx.telegram_queue._consumer_task.done())
+        # queue shall now consume telegrams from xknx.telegrams
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        # wait until telegrams are consumed
+        self.loop.run_until_complete(xknx.telegrams.join())
+
+        self.loop.run_until_complete(xknx.telegram_queue.stop())
+        self.assertTrue(xknx.telegram_queue._consumer_task.done())
+
+        self.assertEqual(switch.state, False)
+
     def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
         # pylint: disable=no-self-use
