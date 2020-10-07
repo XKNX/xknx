@@ -5,6 +5,7 @@ DPT 10.001, 11.001 and 19.001
 """
 from enum import Enum
 import time
+from typing import List
 
 from xknx.dpt import DPTArray, DPTDate, DPTDateTime, DPTTime
 from xknx.exceptions import ConversionError
@@ -33,6 +34,7 @@ class RemoteValueDateTime(RemoteValue):
         device_name=None,
         feature_name="DateTime",
         after_update_cb=None,
+        passive_group_addresses: List[str] = None,
     ):
         """Initialize RemoteValueSensor class."""
         # pylint: disable=too-many-arguments
@@ -53,6 +55,7 @@ class RemoteValueDateTime(RemoteValue):
             device_name=device_name,
             feature_name=feature_name,
             after_update_cb=after_update_cb,
+            passive_group_addresses=passive_group_addresses,
         )
 
     def payload_valid(self, payload):

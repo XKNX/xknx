@@ -139,6 +139,27 @@ class TestRemoteValue(unittest.TestCase):
                 "State",
             )
 
+    def test_process_listening_address(self):
+        """Test if listening group addresses are processed."""
+        xknx = XKNX()
+        remote_value = RemoteValue(
+            xknx, group_address="1/2/3", passive_group_addresses=["1/1/1"]
+        )
+        self.assertTrue(remote_value.writable)
+        self.assertFalse(remote_value.readable)
+        # RemoteValue is initialized with only passive group address
+        self.assertTrue(remote_value.initialized)
+        with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_valid:
+            patch_valid.return_value = True
+            test_payload = DPTArray((0x01, 0x02))
+            telegram = Telegram(GroupAddress("1/1/1"), payload=test_payload)
+            self.assertTrue(
+                self.loop.run_until_complete(
+                    asyncio.Task(remote_value.process(telegram))
+                )
+            )
+            self.assertEqual(remote_value.payload, test_payload)
+
     def test_eq(self):
         """Test __eq__ operator."""
         xknx = XKNX()

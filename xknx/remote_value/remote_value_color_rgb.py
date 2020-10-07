@@ -3,6 +3,8 @@ Module for managing an RGB remote value.
 
 DPT 232.600.
 """
+from typing import List
+
 from xknx.dpt import DPTArray
 from xknx.exceptions import ConversionError
 
@@ -20,6 +22,7 @@ class RemoteValueColorRGB(RemoteValue):
         device_name=None,
         feature_name="Color RGB",
         after_update_cb=None,
+        passive_group_addresses: List[str] = None,
     ):
         """Initialize remote value of KNX DPT 232.600 (DPT_Color_RGB)."""
         # pylint: disable=too-many-arguments
@@ -30,6 +33,7 @@ class RemoteValueColorRGB(RemoteValue):
             device_name=device_name,
             feature_name=feature_name,
             after_update_cb=after_update_cb,
+            passive_group_addresses=passive_group_addresses,
         )
 
     def payload_valid(self, payload):
