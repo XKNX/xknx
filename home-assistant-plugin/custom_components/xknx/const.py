@@ -18,6 +18,7 @@ DOMAIN = "xknx"
 
 CONF_STATE_ADDRESS = "state_address"
 CONF_SYNC_STATE = "sync_state"
+CONF_RESET_AFTER = "reset_after"
 
 
 class ColorTempModes(Enum):
