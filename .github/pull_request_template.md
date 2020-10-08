@@ -24,7 +24,7 @@ that your change is to big and it is suggested to split it into several smaller 
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
 - [ ] This change requires a documentation update
 
-# Checklist:
+## Checklist:
 
 - [ ] I have performed a self-review of my own code
 - [ ] The documentation has been adjusted accordingly
