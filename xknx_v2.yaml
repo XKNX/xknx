@@ -25,6 +25,7 @@ binary_sensor:
 switch:
   - name: "kitchen"
     friendly_name: "Kitchen Switch"
+    reset_after: 1
     switch:
       address: "2/4/5"
       state_address: "2/4/6"
@@ -46,6 +47,8 @@ light:
     rgbw:
       address: "2/4/5"
       state_address: "2/4/6"
+    color:
+      address: "2/1/1"
     color_temperature:
       address: "2/5/7"
       state_address: "2/5/8"

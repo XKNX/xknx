@@ -56,7 +56,9 @@ class RemoteValueSchema:
         }
     )
 
-    INVERTED_SCHEMA = SCHEMA.extend({vol.Optional(CONF_INVERT, default=False): boolean})
+    SCHEMA_INVERTABLE = SCHEMA.extend(
+        {vol.Optional(CONF_INVERT, default=False): boolean}
+    )
 
 
 class BaseDeviceSchema:
@@ -99,11 +101,14 @@ class ConnectionSchema:
 class SwitchSchema:
     """Schema validation for switches."""
 
+    CONF_RESET_AFTER = "reset_after"
+
     SCHEMA = BaseDeviceSchema.SCHEMA.extend(
         {
             vol.Required(CONF_SWITCH): RemoteValueSchema.SCHEMA.extend(
                 {vol.Required(CONF_ADDRESS): ensure_group_address}
-            )
+            ),
+            vol.Optional(CONF_RESET_AFTER): float,
         }
     )
 
@@ -140,6 +145,7 @@ class LightSchema:
     CONF_BRIGHTNESS = "brightness"
     CONF_RGBW = "rgbw"
     CONF_COLOR_TEMPERATURE = "color_temperature"
+    CONF_COLOR = "color"
 
     CONF_COLOR_TEMP_MODE = "mode"
     CONF_MIN_KELVIN = "min_kelvin"
@@ -160,6 +166,9 @@ class LightSchema:
                 {vol.Required(CONF_ADDRESS): ensure_group_address}
             ),
             vol.Optional(CONF_RGBW): RemoteValueSchema.SCHEMA.extend(
+                {vol.Required(CONF_ADDRESS): ensure_group_address}
+            ),
+            vol.Optional(CONF_COLOR): RemoteValueSchema.SCHEMA.extend(
                 {vol.Required(CONF_ADDRESS): ensure_group_address}
             ),
             vol.Optional(CONF_COLOR_TEMPERATURE): RemoteValueSchema.SCHEMA.extend(
@@ -211,23 +220,27 @@ class CoverSchema:
 
     SCHEMA = BaseDeviceSchema.SCHEMA.extend(
         {
-            vol.Required(CONF_LONG_MOVEMENT): RemoteValueSchema.INVERTED_SCHEMA.extend(
+            vol.Required(
+                CONF_LONG_MOVEMENT
+            ): RemoteValueSchema.SCHEMA_INVERTABLE.extend(
                 {
                     vol.Required(CONF_ADDRESS): ensure_group_address,
                     vol.Remove(CONF_STATE_ADDRESS): ensure_group_address,
                 }
             ),
-            vol.Optional(CONF_SHORT_MOVEMENT): RemoteValueSchema.INVERTED_SCHEMA.extend(
+            vol.Optional(
+                CONF_SHORT_MOVEMENT
+            ): RemoteValueSchema.SCHEMA_INVERTABLE.extend(
                 {
                     vol.Required(CONF_ADDRESS): ensure_group_address,
                     vol.Remove(CONF_STATE_ADDRESS): ensure_group_address,
                 }
             ),
             vol.Optional(CONF_STOP_ADDRESS): ensure_group_address,
-            vol.Optional(CONF_POSITION): RemoteValueSchema.INVERTED_SCHEMA.extend(
+            vol.Optional(CONF_POSITION): RemoteValueSchema.SCHEMA_INVERTABLE.extend(
                 {vol.Required(CONF_ADDRESS): ensure_group_address}
             ),
-            vol.Optional(CONF_ANGLE): RemoteValueSchema.INVERTED_SCHEMA.extend(
+            vol.Optional(CONF_ANGLE): RemoteValueSchema.SCHEMA_INVERTABLE.extend(
                 {vol.Required(CONF_ADDRESS): ensure_group_address}
             ),
             vol.Optional(
@@ -327,12 +340,12 @@ class ClimateSchema:
                     vol.Required(CONF_ADDRESS): ensure_group_address,
                 }
             ),
-            vol.Optional(CONF_HEAT_COOL): RemoteValueSchema.INVERTED_SCHEMA.extend(
+            vol.Optional(CONF_HEAT_COOL): RemoteValueSchema.SCHEMA_INVERTABLE.extend(
                 {
                     vol.Required(CONF_ADDRESS): ensure_group_address,
                 }
             ),
-            vol.Optional(CONF_ON_OFF): RemoteValueSchema.INVERTED_SCHEMA.extend(
+            vol.Optional(CONF_ON_OFF): RemoteValueSchema.SCHEMA_INVERTABLE.extend(
                 {
                     vol.Required(CONF_ADDRESS): ensure_group_address,
                 }
