@@ -1,0 +1,5 @@
+name: romantic
+friendly_name: "Romantic"
+scene:
+  address: "7/0/1"
+  scene_number: 64

@@ -12,7 +12,7 @@ VERSION = {}
 with open(path.join(THIS_DIRECTORY, "xknx/__version__.py")) as fp:
     exec(fp.read(), VERSION)
 
-REQUIRES = ["pyyaml>=5.1", "netifaces>=0.10.9"]
+REQUIRES = ["pyyaml>=5.1", "netifaces>=0.10.9", "voluptuous>=0.12.0"]
 
 setup(
     name="xknx",
@@ -33,7 +33,6 @@ setup(
         "Intended Audience :: Developers",
         "Topic :: System :: Hardware :: Hardware Drivers",
         "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],

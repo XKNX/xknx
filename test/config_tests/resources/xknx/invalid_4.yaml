@@ -1,0 +1,8 @@
+version: "2"
+own_address: "15.15.s"
+rate_limit: 18
+log_directory: "/tmp/"
+fire_event: True
+fire_event_filter: ["1/0/*", "6/2,3,4-6/*"]
+multicast_group: '224.1.2.3'
+multicast_port: 1337

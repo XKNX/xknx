@@ -1,4 +1,3 @@
-
 all:
 	@echo
 	@echo "Available targets"
@@ -25,8 +24,6 @@ build:
 	@python3 setup.py egg_info
 
 pypi:
-	# python3 setup.py register -r pypi
-	#@python3 setup.py sdist upload -r pypi
 	@rm -f dist/*
 	@python setup.py sdist
 	@twine upload dist/*

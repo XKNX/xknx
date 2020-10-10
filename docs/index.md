@@ -25,7 +25,7 @@ XKNX...
 
 ## [](#header-2)Installation
 
-XKNX depends on Python >= 3.6
+XKNX depends on Python >= 3.7
 
 You can install XKNX as Python package via pip:
 
