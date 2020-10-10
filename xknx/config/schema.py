@@ -11,6 +11,7 @@ from .config_validation import (
     boolean,
     ensure_group_address,
     ensure_list,
+    ensure_physical_address,
     enum,
     isdir,
     match_all,
@@ -591,7 +592,7 @@ class XKNXSchema:
                 vol.Coerce(int), vol.Range(min=0, max=100)
             ),
             vol.Optional(CONF_VERSION, default=2): string,
-            vol.Optional(CONF_OWN_ADDRESS): string,
+            vol.Optional(CONF_OWN_ADDRESS): ensure_physical_address,
             vol.Optional(CONF_LOG_DIRECTORY): isdir,
             vol.Inclusive(CONF_FIRE_EVENT, "fire_ev"): boolean,
             vol.Inclusive(CONF_FIRE_EVENT_FILTER, "fire_ev"): vol.All(
