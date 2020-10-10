@@ -55,12 +55,12 @@ def ensure_group_address(value: str) -> str:
     """Ensure value is a valid KNX group address."""
     value = str(value)
     if value.isdigit() and 0 <= int(value) <= GroupAddress.MAX_FREE:
-        return str(value)
+        return value
 
     if not GroupAddress.ADDRESS_RE.match(value):
         raise vol.Invalid(f"{value} is not a valid group address")
 
-    return str(value)
+    return value
 
 
 def isdir(value: Any) -> str:
@@ -81,16 +81,10 @@ def enum(value: Type[Enum]) -> vol.All:
     return vol.All(vol.In(value.__members__), value.__getitem__)
 
 
-VALID_SENSOR_TYPES = []
-for dpt in DPTBase.__recursive_subclasses__():
-    if dpt.has_distinct_value_type():
-        VALID_SENSOR_TYPES.append(dpt.value_type)
-
-
-def sensor_value_type(value: str) -> str:
+def sensor_value_type(value: T) -> T:
     """Validate sensor type."""
-    if value in VALID_SENSOR_TYPES:
-        return str(value)
+    if DPTBase.parse_transcoder(value):
+        return value
 
     if value.lower() in ["binary", "time", "datetime", "date"]:
         return str(value)
