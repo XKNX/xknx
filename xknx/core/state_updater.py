@@ -1,14 +1,12 @@
 """Module for keeping the value of a RemoteValue from KNX bus up to date."""
 import asyncio
 from enum import Enum
-from functools import partial
 import logging
 
-from xknx.exceptions import ConversionError
 from xknx.remote_value import RemoteValue
-from xknx.telegram import GroupAddress
 
 DEFAULT_UPDATE_INTERVAL = 60
+MAX_UPDATE_INTERVAL = 1440
 
 logger = logging.getLogger("xknx.state_updater")
 
@@ -21,6 +19,7 @@ class StateUpdater:
         self.xknx = xknx
         self.started = False
         self._workers = {}
+        self._one_by_one = asyncio.Lock()
 
     def register_remote_value(self, remote_value: RemoteValue, tracker_options=True):
         """Register a RemoteValue to initialize its state and/or track for expiration."""
@@ -66,24 +65,41 @@ class StateUpdater:
                     tracker_type,
                     update_interval,
                 )
+            if update_interval > MAX_UPDATE_INTERVAL:
+                logger.warning(
+                    "StateUpdater interval of %s to long for %s. Using maximum of %s minutes (1 day)",
+                    tracker_options,
+                    remote_value,
+                    MAX_UPDATE_INTERVAL,
+                )
+                update_interval = MAX_UPDATE_INTERVAL
             return (tracker_type, update_interval)
 
-        tracker_type, update_inteval = parse_tracker_options(tracker_options)
+        async def read_state_mutex():
+            """Schedule to read the state from the KNX bus - one at a time."""
+            async with self._one_by_one:
+                # wait until there is nothing else to send to the bus
+                await self.xknx.telegram_queue.outgoing_queue.join()
+                logger.debug(
+                    "StateUpdater reading %s for %s - %s",
+                    remote_value.group_address_state,
+                    remote_value.device_name,
+                    remote_value.feature_name,
+                )
+                await remote_value.read_state(wait_for_result=True)
+
+        tracker_type, update_interval = parse_tracker_options(tracker_options)
         tracker = _StateTracker(
-            self.xknx,
-            device_name=remote_value.device_name,
-            feature_name=remote_value.feature_name,
-            group_address=remote_value.group_address_state,
             tracker_type=tracker_type,
-            interval_min=update_inteval,
-            read_state_awaitable=partial(remote_value.read_state, wait_for_result=True),
+            interval_min=update_interval,
+            read_state_awaitable=read_state_mutex,
         )
         self._workers[id(remote_value)] = tracker
 
         logger.debug(
             "StateUpdater registered %s %s for %s",
             tracker_type,
-            update_inteval,
+            update_interval,
             remote_value,
         )
         if self.started:
@@ -127,43 +143,26 @@ class _StateTracker:
     # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
-        xknx,
-        device_name: str = None,
-        feature_name: str = None,
-        group_address: GroupAddress = None,
         tracker_type: StateTrackerType = StateTrackerType.EXPIRE,
         interval_min: int = 60,
         read_state_awaitable=None,
     ):
         """Initialize StateTracker class."""
         # pylint: disable=too-many-arguments
-        if interval_min > 1440:
-            raise ConversionError(
-                "Interval_min to long. Maximum is 1440 minutes (1 day)",
-                interval_min=interval_min,
-                device_name=device_name,
-                feature_name=feature_name,
-            )
-        self.xknx = xknx
-        self.device_name = device_name
-        self.feature_name = feature_name
-        self.group_address = group_address
         self.tracker_type = tracker_type
         self.update_interval = interval_min * 60
-        self._read_state_awaitable = read_state_awaitable
+        self._read_state = read_state_awaitable
         self._task = None
 
     def start(self):
         """Start StateTracker - read state on call."""
-        logger.debug(
-            "StateUpdater initializing %s for %s - %s",
-            self.group_address,
-            self.device_name,
-            self.feature_name,
-        )
+        self._task = asyncio.create_task(self._start_init())
+
+    async def _start_init(self):
+        """Initialize state, start update loop if appropriate."""
+        await self._read_state()
         if self.tracker_type is not StateTrackerType.INIT:
             self._start_waiting()
-        self._read_state()
 
     def _start_waiting(self):
         """Start StateTracker - wait for value to expire."""
@@ -192,16 +191,4 @@ class _StateTracker:
         #   when no telegram was received it will try again endlessly
         while True:
             await asyncio.sleep(self.update_interval)
-            # wait until there is nothing else to send to the bus
-            await self.xknx.telegram_queue.outgoing_queue.join()
-            self._read_state()
-
-    def _read_state(self):
-        """Schedule to read the state from the KNX bus."""
-        logger.debug(
-            "StateUpdater scheduled reading %s for %s - %s",
-            self.group_address,
-            self.device_name,
-            self.feature_name,
-        )
-        asyncio.create_task(self._read_state_awaitable())
+            await self._read_state()

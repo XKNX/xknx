@@ -1,0 +1,191 @@
+version: "2"
+own_address: "15.15.249"
+rate_limit: 18
+log_directory: "/tmp/"
+fire_event: True
+fire_event_filter: ["1/0/*", "6/2,3,4-6/*"]
+multicast_group: '224.1.2.3'
+multicast_port: 1337
+binary_sensor:
+  - name: "livingroom_switch1"
+    friendly_name: ""
+    address:
+      state_address: "1/2/7"
+      state_update: "expire 60"
+      passive_state_addresses: ["8/8/8"]
+    context_timeout: 1
+    device_class: 'light'
+    reset_after: 3000 # ms
+    ignore_internal_state: False
+switch:
+  - name: "kitchen"
+    friendly_name: "Kitchen Switch"
+    switch:
+      address: "2/4/5"
+      state_address: "2/4/6"
+      state_update: "expire 60"
+      passive_state_addresses: ["8/8/8"]
+light:
+  - friendly_name: "Office" # name missing
+    switch:
+      address: "2/1/5"
+      state_address: "2/4/5"
+      state_update: "expire 60"
+      passive_state_addresses: ["8/8/8"]
+    brightness:
+      address: "2/5/5"
+      state_address: "2/5/6"
+      state_update: "expire 60"
+      passive_state_addresses: ["8/8/8"]
+    rgbw:
+      address: "2/4/5"
+      state_address: "2/4/6"
+    color_temperature:
+      address: "2/5/7"
+      state_address: "2/5/8"
+      state_update: "expire 60"
+      mode: absolute
+      min_kelvin: 2550
+      max_kelvin: 6200
+fan:
+  - name: "office"
+    friendly_name: "Fan office"
+    speed:
+       address: "2/7/4"
+       state_address: "2/8/5"
+       state_update: "expire 60"
+cover:
+  - name: "livingroom_tv"
+    friendly_name: "Livingroom TV"
+    long_movement:
+      address: "3/3/3"
+      invert: True
+    short_movement:
+      address: "3/3/4"
+      invert: True
+    stop_address: "3/3/5"
+    position:
+      address: "3/3/6"
+      state_address: "3/3/7"
+      state_update: "expire 60"
+      invert: True
+    angle:
+      address: "3/3/8"
+      state_address: "3/3/9"
+      invert: True
+    travelling_time_up: 50
+    travelling_time_down: 30
+climate:
+  - name: "bathroom"
+    friendly_name: "Bathroom"
+    target_temperature:
+      address: "4/0/0"
+      state_address: "4/0/1"
+      state_update: "expire 60"
+      min: -7
+      max: 30
+    setpoint_shift:
+      address: "4/0/2"
+      state_address: "4/0/3"
+      mode: DPT6010
+      temperature_step: 0.1
+      min: -6
+      max: 6
+    operation_mode:
+      address: "4/0/4"
+      state_address: "4/0/5"
+    binary_operation_mode:
+      frost_protection_address: "4/0/6"
+      comfort_address: "4/0/7"
+      night_address: "4/0/8"
+      standby_address: "5/0/0"
+    controller_status:
+      address: "4/0/9"
+      state_address: "4/0/10"
+    controller_mode:
+      address: "4/0/11"
+      state_address: "4/0/12"
+    heat_cool:
+      address: "4/0/13"
+      state_address: "4/0/14"
+    operation_modes:
+      - "Heat"
+      - "Cool"
+    on_off:
+      address: "4/0/15"
+      state_address: "4/0/16"
+      invert: False
+weather:
+  - name: home
+    friendly_name: "Home"
+    temperature:
+      state_address: "7/0/0"
+      state_update: "expire 60"
+    brightness_south:
+      state_address: "7/0/1"
+      state_update: "expire 60"
+    brightness_west:
+      state_address: "7/0/2"
+      state_update: "expire 60"
+    brightness_east:
+      state_address: "7/0/3"
+      state_update: "expire 60"
+    brightness_north:
+      state_address: "7/0/11"
+      state_update: "expire 60"
+    rain_alarm:
+      state_address: "7/0/11"
+      state_update: "expire 60"
+    frost_alarm:
+      state_address: "7/0/4"
+      state_update: "expire 60"
+    wind_alarm:
+      state_address: "7/0/5"
+      state_update: "expire 60"
+    wind_speed:
+      state_address: "7/0/6"
+      state_update: "expire 60"
+    day_night:
+      state_address: "7/0/8"
+      state_update: "expire 60"
+    air_pressure:
+      state_address: "7/0/9"
+      state_update: "expire 60"
+    humidity:
+      state_address: "7/0/10"
+      state_update: "expire 60"
+    expose_sensors: True
+datetime:
+  - name: "Generaltime"
+    time:
+      address: "8/4/4"
+      broadcast_type: DATETIME
+notification:
+ - name: notification
+   address:
+      address: "2/7/1"
+      state_address: "2/7/2"
+scene:
+  - name: romantic
+    friendly_name: "Romantic"
+    scene:
+      address: "7/0/1"
+      scene_number: 23
+      state_update: False # default False
+expose_sensor:
+  - type: 'temperature'
+    entity_id: 'sensor.owm_temperature'
+    address: '0/0/3'
+  - type: 'percentU8'
+    entity_id: 'light.office'
+    attribute: 'brightness'
+    default: 0
+    address: '0/3/1'
+sensor:
+  - name: "valve_bath"
+    friendly_name: "Bathroom Valve"
+    sensor:
+      state_address: "9/9/9"
+      state_update: "expire 60"
+      type: "percent"
+

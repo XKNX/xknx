@@ -1,0 +1,10 @@
+name: "required key not provided .*state_address.*"
+friendly_name: ""
+address:
+  address: "2/2/2"
+  state_update: "expire 60"
+  passive_state_addresses: ["8/8/8"]
+context_timeout: 1
+device_class: 'light'
+reset_after: 3000 # ms
+ignore_internal_state: False

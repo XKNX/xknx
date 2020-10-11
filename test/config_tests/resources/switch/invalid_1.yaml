@@ -1,0 +1,6 @@
+name: "required key not provided .*address.*"
+friendly_name: "Kitchen Switch"
+switch:
+  state_address: "2/4/6"
+  state_update: "expire 60"
+  passive_state_addresses: ["8/8/8"]

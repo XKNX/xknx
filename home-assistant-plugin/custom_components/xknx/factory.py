@@ -202,6 +202,7 @@ def _create_switch(knx_module: XKNX, config: ConfigType) -> XknxSwitch:
         name=config[CONF_NAME],
         group_address=config[CONF_ADDRESS],
         group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
+        reset_after=config.get(SwitchSchema.CONF_RESET_AFTER),
     )
 
 

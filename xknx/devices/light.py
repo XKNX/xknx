@@ -10,6 +10,7 @@ It provides functionality for
 * setting the absolute color temperature.
 * reading the current state from KNX bus.
 """
+from enum import Enum
 import logging
 
 from xknx.remote_value import (
@@ -23,6 +24,13 @@ from xknx.remote_value import (
 from .device import Device
 
 logger = logging.getLogger("xknx.log")
+
+
+class ColorTempModes(Enum):
+    """Color temperature modes for config validation."""
+
+    absolute = "DPT-7.600"
+    relative = "DPT-5.001"
 
 
 # pylint: disable=too-many-public-methods, too-many-instance-attributes

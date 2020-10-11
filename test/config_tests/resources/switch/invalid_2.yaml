@@ -1,0 +1,6 @@
+name: "extra keys not allowed .*"
+friendly_name: "Kitchen Switch"
+switch:
+  address: "2/2/2"
+  state_address: "2/4/6"
+  passive_state_adsdresses: ["8/8/8"]

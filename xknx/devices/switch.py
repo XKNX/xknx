@@ -6,6 +6,7 @@ It provides functionality for
 * switching 'on' and 'off'.
 * reading the current state from KNX bus.
 """
+import asyncio
 import logging
 
 from xknx.remote_value import RemoteValueSwitch
@@ -22,6 +23,7 @@ class Switch(Device):
         self,
         xknx,
         name,
+        reset_after=None,
         group_address=None,
         group_address_state=None,
         device_updated_cb=None,
@@ -29,6 +31,10 @@ class Switch(Device):
         """Initialize Switch class."""
         # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
+
+        self.reset_after = reset_after
+        self._reset_task = None
+        self.state = False
 
         self.switch = RemoteValueSwitch(
             xknx,
@@ -42,6 +48,11 @@ class Switch(Device):
         """Iterate the devices RemoteValue classes."""
         yield self.switch
 
+    def __del__(self):
+        """Destructor. Cleaning up if this was not done before."""
+        if self._reset_task:
+            self._reset_task.cancel()
+
     @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
@@ -54,12 +65,6 @@ class Switch(Device):
             group_address=group_address,
             group_address_state=group_address_state,
         )
-
-    @property
-    def state(self):
-        """Return the current switch state of the device."""
-        # None will return False
-        return bool(self.switch.value)
 
     async def set_on(self):
         """Switch on switch."""
@@ -82,7 +87,18 @@ class Switch(Device):
 
     async def process_group_write(self, telegram):
         """Process incoming and outgoing GROUP WRITE telegram."""
-        await self.switch.process(telegram)
+        if await self.switch.process(telegram):
+            self.state = self.switch.value
+            if self.reset_after is not None and self.state:
+                if self._reset_task:
+                    self._reset_task.cancel()
+                self._reset_task = asyncio.create_task(
+                    self._reset_state(self.reset_after)
+                )
+
+    async def _reset_state(self, wait_seconds: float):
+        await asyncio.sleep(wait_seconds)
+        await self.set_off()
 
     def __str__(self):
         """Return object as readable string."""

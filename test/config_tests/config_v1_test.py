@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 
 from xknx import XKNX
-from xknx.core import Config
+from xknx.config import Config, ConfigV1
 from xknx.devices import (
     Action,
     BinarySensor,
@@ -23,7 +23,6 @@ from xknx.devices import (
 )
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
-from xknx.telegram import PhysicalAddress
 import yaml
 
 
@@ -118,7 +117,7 @@ class TestConfig(unittest.TestCase):
         ]
         for yaml_string, expected_conn in test_configs:
             config = yaml.safe_load(yaml_string)
-            Config(TestConfig.xknx).parse_connection(config)
+            ConfigV1(TestConfig.xknx).parse_connection(config)
             self.assertEqual(TestConfig.xknx.connection_config, expected_conn)
 
     def test_version_2(self):
@@ -147,7 +146,7 @@ class TestConfig(unittest.TestCase):
         for yaml_string, expected_exception, exception_message in test_configs:
             with self.assertRaises(expected_exception, msg=exception_message):
                 config = yaml.safe_load(yaml_string)
-                Config(TestConfig.xknx).parse_connection(config)
+                ConfigV1(TestConfig.xknx).parse_connection(config)
 
     #
     # XKNX Groups Config
@@ -559,7 +558,7 @@ class TestConfig(unittest.TestCase):
     def test_config_file_error(self):
         """Test error message when reading an errornous config file."""
         with patch("logging.Logger.error") as mock_err, patch(
-            "xknx.core.Config.parse_group_light"
+            "xknx.config.ConfigV1.parse_group_light"
         ) as mock_parse:
             mock_parse.side_effect = XKNXException()
             XKNX(config="xknx.yaml")

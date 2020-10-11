@@ -1,0 +1,5 @@
+name: "required key .*"
+friendly_name: "Bathroom Valve"
+sensor:
+  state_update: "expire 60"
+  type: "percent"
