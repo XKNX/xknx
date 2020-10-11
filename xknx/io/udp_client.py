@@ -89,7 +89,7 @@ class UDPClient:
             except CouldNotParseKNXIP as couldnotparseknxip:
                 logger.exception(couldnotparseknxip)
 
-    def handle_knxipframe(self, knxipframe):
+    def handle_knxipframe(self, knxipframe: KNXIPFrame) -> None:
         """Handle KNXIP Frame and call all callbacks which watch for the service type ident."""
         handled = False
         for callback in self.callbacks:

@@ -152,14 +152,14 @@ class KNXIPInterface:
         )
         await self.interface.start()
 
-    async def start_routing(self, local_ip):
+    async def start_routing(self, local_ip: str) -> None:
         """Start KNX/IP Routing."""
         validate_ip(local_ip, address_name="Local IP address")
         logger.debug("Starting Routing from %s", local_ip)
         self.interface = Routing(self.xknx, self.telegram_received, local_ip)
         await self.interface.start()
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Stop connected interfae (either Tunneling or Routing)."""
         if self.interface is not None:
             await self.interface.stop()
