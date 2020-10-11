@@ -262,7 +262,7 @@ class SwitchSchema:
             vol.Required(CONF_ADDRESS): cv.string,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_STATE_ADDRESS): cv.string,
-            vol.Optional(CONF_RESET_AFTER): cv.positive_float,
+            vol.Optional(CONF_RESET_AFTER): vol.All(vol.Coerce(int), vol.Range(min=0)),
         }
     )
 
