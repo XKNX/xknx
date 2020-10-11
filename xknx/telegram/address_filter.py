@@ -42,7 +42,7 @@ class AddressFilter:
         for part in pattern.split("/"):
             self.level_filters.append(AddressFilter.LevelFilter(part))
         if len(self.level_filters) > 3:
-            raise ConversionError("Too many parts within pattern.", pattern=pattern)
+            raise ConversionError("Too many parts within pattern.", pattern=pattern)  # type: ignore
 
     def match(self, address: Union[str, GroupAddress]) -> bool:
         """Test if provided address matches Addressfilter."""
