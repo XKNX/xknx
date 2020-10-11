@@ -20,7 +20,7 @@ class ValueReader:
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, xknx, group_address, timeout_in_seconds=2):
+    def __init__(self, xknx, group_address, timeout_in_seconds=1):
         """Initialize ValueReader class."""
         self.xknx = xknx
         self.group_address = group_address
