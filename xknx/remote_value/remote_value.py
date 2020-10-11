@@ -176,7 +176,6 @@ class RemoteValue:
     async def read_state(self, wait_for_result=False):
         """Send GroupValueRead telegram for state address to KNX bus."""
         if self.readable:
-            logger.debug("Sync %s - %s", self.device_name, self.feature_name)
             # pylint: disable=import-outside-toplevel
             # TODO: send a ReadRequset and start a timeout from here instead of ValueReader
             #       cancel timeout form process(); delete ValueReader
