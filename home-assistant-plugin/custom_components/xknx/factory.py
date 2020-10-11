@@ -164,6 +164,7 @@ def _create_climate(knx_module: XKNX, config: ConfigType) -> XknxClimate:
             ClimateSchema.CONF_HEAT_COOL_STATE_ADDRESS
         ),
         operation_modes=config.get(ClimateSchema.CONF_OPERATION_MODES),
+        controller_modes=config.get(ClimateSchema.CONF_CONTROLLER_MODES),
     )
 
     return XknxClimate(

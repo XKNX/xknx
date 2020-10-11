@@ -1,8 +1,11 @@
 """
-Module for managing the climate mode.
+Module for managing operation and controller modes.
 
-Climate modes can be 'auto', 'comfort', 'standby', 'economy' or 'protection'.
+Operation modes can be 'auto', 'comfort', 'standby', 'economy', 'protection' and use either a binary DPT or DPT 20.102.
+Controller modes use DPT 20.105.
 """
+from itertools import chain
+
 from xknx.dpt import HVACOperationMode
 from xknx.exceptions import DeviceIllegalValue
 from xknx.remote_value import (
@@ -36,6 +39,7 @@ class ClimateMode(Device):
         group_address_heat_cool=None,
         group_address_heat_cool_state=None,
         operation_modes=None,
+        controller_modes=None,
         device_updated_cb=None,
     ):
         """Initialize ClimateMode class."""
@@ -125,30 +129,43 @@ class ClimateMode(Device):
         )
 
         self.operation_mode = HVACOperationMode.STANDBY
+        self.controller_mode = HVACOperationMode.HEAT
 
-        self.operation_modes_ = []
+        self._operation_modes = []
         if operation_modes is None:
-            self.operation_modes_ = self.gather_operation_modes()
+            self._operation_modes = self.gather_operation_modes()
         else:
             for mode in operation_modes:
                 if isinstance(mode, str):
-                    self.operation_modes_.append(HVACOperationMode(mode))
+                    self._operation_modes.append(HVACOperationMode(mode))
                 elif isinstance(mode, HVACOperationMode):
-                    self.operation_modes_.append(mode)
+                    self._operation_modes.append(mode)
 
-        self.supports_operation_mode = (
-            group_address_operation_mode is not None
-            or group_address_operation_mode_state is not None
-            or group_address_operation_mode_protection is not None
-            or group_address_operation_mode_night is not None
-            or group_address_operation_mode_comfort is not None
-            or group_address_operation_mode_standby is not None
-            or group_address_controller_status is not None
-            or group_address_controller_status_state is not None
-            or group_address_controller_mode is not None
-            or group_address_controller_mode_state is not None
-            or group_address_heat_cool is not None
-            or group_address_heat_cool_state is not None
+        self._controller_modes = []
+        if controller_modes is None:
+            self._controller_modes = self.gather_controller_modes()
+        else:
+            for mode in controller_modes:
+                if isinstance(mode, str):
+                    self._controller_modes.append(HVACOperationMode(mode))
+                elif isinstance(mode, HVACOperationMode):
+                    self._controller_modes.append(mode)
+
+        self.supports_operation_mode = any(
+            operation_mode.initialized
+            for operation_mode in self._iter_normal_operation_modes()
+        ) or any(
+            operation_mode.initialized
+            for operation_mode in self._iter_binary_remote_values()
+        )
+        self.supports_controller_mode = any(
+            operation_mode.initialized
+            for operation_mode in self._iter_controller_remote_values()
+        )
+
+        self._use_binary_operation_modes = any(
+            operation_mode.initialized
+            for operation_mode in self._iter_binary_remote_values()
         )
 
     @classmethod
@@ -201,15 +218,33 @@ class ClimateMode(Device):
 
     def _iter_remote_values(self):
         """Iterate climate mode RemoteValue classes."""
+        return chain(
+            self._iter_normal_operation_modes(),
+            self._iter_controller_remote_values(),
+            self._iter_binary_remote_values(),
+        )
+
+    def _iter_normal_operation_modes(self):
+        """Iterate normal DPT 20.102 operation mode remote values."""
+        yield from (
+            self.remote_value_operation_mode,
+            self.remote_value_controller_status,
+        )
+
+    def _iter_controller_remote_values(self):
+        """Iterate DPT 20.105 controller remote values."""
         yield from (
             self.remote_value_controller_mode,
-            self.remote_value_controller_status,
-            self.remote_value_operation_mode,
+            self.remote_value_heat_cool,
+        )
+
+    def _iter_binary_remote_values(self):
+        """Iterate DPT 1 binary operation modes."""
+        yield from (
             self.remote_value_operation_mode_comfort,
             self.remote_value_operation_mode_night,
             self.remote_value_operation_mode_protection,
             self.remote_value_operation_mode_standby,
-            self.remote_value_heat_cool,
         )
 
     async def _set_internal_operation_mode(self, operation_mode):
@@ -218,55 +253,108 @@ class ClimateMode(Device):
             self.operation_mode = operation_mode
             await self.after_update()
 
+    async def _set_internal_controller_mode(self, controller_mode):
+        """Set internal value of controller mode. Call hooks if controller mode was changed."""
+        if controller_mode != self.controller_mode:
+            self.controller_mode = controller_mode
+            await self.after_update()
+
     async def set_operation_mode(self, operation_mode):
         """Set the operation mode of a thermostat. Send new operation_mode to BUS and update internal state."""
         if (
             not self.supports_operation_mode
-            or operation_mode not in self.operation_modes_
+            or operation_mode not in self._operation_modes
         ):
-            raise DeviceIllegalValue("operation mode not supported", operation_mode)
+            raise DeviceIllegalValue(
+                "operation (preset) mode not supported", operation_mode
+            )
 
-        for rv in self._iter_remote_values():
+        for rv in chain(
+            self._iter_normal_operation_modes(), self._iter_binary_remote_values()
+        ):
             if rv.writable and operation_mode in rv.supported_operation_modes():
                 await rv.set(operation_mode)
 
         await self._set_internal_operation_mode(operation_mode)
+
+    async def set_controller_mode(self, controller_mode):
+        """Set the controller mode of a thermostat. Send new controller mode to the bus and update internal state."""
+        if (
+            not self.supports_controller_mode
+            or controller_mode not in self._controller_modes
+        ):
+            raise DeviceIllegalValue(
+                "controller (HVAC) mode not supported", controller_mode
+            )
+
+        for rv in self._iter_controller_remote_values():
+            if rv.writable and controller_mode in rv.supported_operation_modes():
+                await rv.set(controller_mode)
+
+        await self._set_internal_controller_mode(controller_mode)
 
     @property
     def operation_modes(self):
         """Return all configured operation modes."""
         if not self.supports_operation_mode:
             return []
-        return self.operation_modes_
+        return self._operation_modes
+
+    @property
+    def controller_modes(self):
+        """Return all configures controller modes."""
+        if not self.supports_controller_mode:
+            return []
+        return self._controller_modes
 
     def gather_operation_modes(self):
         """Gather operation modes from RemoteValues."""
         operation_modes = []
-        for rv in self._iter_remote_values():
+        for rv in self._iter_binary_remote_values():
             if rv.writable:
                 operation_modes.extend(rv.supported_operation_modes())
+
+        for rv in self._iter_normal_operation_modes():
+            if rv.writable:
+                operation_modes.extend(rv.supported_operation_modes())
+
+        # remove duplicates
+        return list(set(operation_modes))
+
+    def gather_controller_modes(self):
+        """Gather controller modes from RemoteValues."""
+        operation_modes = []
+        for rv in self._iter_controller_remote_values():
+            if rv.writable:
+                operation_modes.extend(rv.supported_operation_modes())
+
         # remove duplicates
         return list(set(operation_modes))
 
     async def process_group_write(self, telegram):
         """Process incoming and outgoing GROUP WRITE telegram."""
         if self.supports_operation_mode:
-            processed = False
             for rv in self._iter_remote_values():
                 if await rv.process(telegram):
-                    # don't set when binary climate mode rv is False
                     if rv.value:
                         await self._set_internal_operation_mode(rv.value)
-                        return
-                    processed = True
-            # if no operation mode has been set and all binary operation modes are False
-            if processed:
-                await self._set_internal_operation_mode(HVACOperationMode.STANDBY)
+
+        if self.supports_controller_mode:
+            for rv in self._iter_controller_remote_values():
+                if await rv.process(telegram):
+                    if rv.value:
+                        await self._set_internal_controller_mode(rv.value)
 
     async def sync(self, wait_for_result=False):
         """Read states of device from KNX bus."""
         if self.supports_operation_mode:
-            for rv in self._iter_remote_values():
+            for rv in chain(
+                self._iter_normal_operation_modes(), self._iter_binary_remote_values()
+            ):
+                await rv.read_state(wait_for_result=wait_for_result)
+
+        if self.supports_controller_mode:
+            for rv in self._iter_controller_remote_values():
                 await rv.read_state(wait_for_result=wait_for_result)
 
     def __str__(self):
