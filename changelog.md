@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Internals
+
+- StateUpdater: Only request one GA at a time.
+
 ## 0.15.1 bugfix for binary sensors
 
 ### Devices
