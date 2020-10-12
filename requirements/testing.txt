@@ -11,5 +11,5 @@ pytest==6.1.1
 pytest-cov==2.10.1
 pytest-timeout==1.4.2
 setuptools==50.3.0
-tox==3.20.0
+tox==3.20.1
 mypy==0.790
