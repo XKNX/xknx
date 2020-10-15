@@ -14,12 +14,12 @@ logger = logging.getLogger("xknx.state_updater")
 class StateUpdater:
     """Class for keeping the states of RemoteValues up to date."""
 
-    def __init__(self, xknx):
+    def __init__(self, xknx, parallel_reads: int = 1):
         """Initialize StateUpdater class."""
         self.xknx = xknx
         self.started = False
         self._workers = {}
-        self._one_by_one = asyncio.Lock()
+        self._semaphore = asyncio.Semaphore(value=parallel_reads)
 
     def register_remote_value(self, remote_value: RemoteValue, tracker_options=True):
         """Register a RemoteValue to initialize its state and/or track for expiration."""
@@ -77,7 +77,7 @@ class StateUpdater:
 
         async def read_state_mutex():
             """Schedule to read the state from the KNX bus - one at a time."""
-            async with self._one_by_one:
+            async with self._semaphore:
                 # wait until there is nothing else to send to the bus
                 await self.xknx.telegram_queue.outgoing_queue.join()
                 logger.debug(

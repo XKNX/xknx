@@ -85,7 +85,7 @@ CONFIG_SCHEMA = vol.Schema(
                 ): cv.string,
                 vol.Optional(CONF_XKNX_MCAST_GRP, default=DEFAULT_MCAST_GRP): cv.string,
                 vol.Optional(CONF_XKNX_MCAST_PORT, default=DEFAULT_MCAST_PORT): cv.port,
-                vol.Optional(CONF_XKNX_STATE_UPDATER, default=True): cv.boolean,
+                vol.Optional(CONF_XKNX_STATE_UPDATER, default=3): cv.positive_int,
                 vol.Optional(CONF_XKNX_RATE_LIMIT, default=20): vol.All(
                     vol.Coerce(int), vol.Range(min=1, max=100)
                 ),

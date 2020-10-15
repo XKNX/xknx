@@ -41,7 +41,7 @@ class XKNX:
         multicast_group=DEFAULT_MCAST_GRP,
         multicast_port=DEFAULT_MCAST_PORT,
         log_directory=None,
-        state_updater=False,
+        state_updater=0,
         daemon_mode=False,
         connection_config=ConnectionConfig(),
     ):
@@ -51,7 +51,7 @@ class XKNX:
         self.telegrams = asyncio.Queue()
         self.sigint_received = asyncio.Event()
         self.telegram_queue = TelegramQueue(self)
-        self.state_updater = StateUpdater(self)
+        self.state_updater = StateUpdater(self, parallel_reads=state_updater)
         self.knxip_interface = None
         self.started = asyncio.Event()
         self.address_format = address_format
@@ -60,7 +60,6 @@ class XKNX:
         self.multicast_group = multicast_group
         self.multicast_port = multicast_port
         self.connection_config = connection_config
-        self.start_state_updater = state_updater
         self.daemon_mode = daemon_mode
         self.version = VERSION
 
@@ -106,7 +105,7 @@ class XKNX:
         )
         await self.knxip_interface.start()
         await self.telegram_queue.start()
-        if self.start_state_updater:
+        if self.state_updater:
             self.state_updater.start()
         self.started.set()
         if self.daemon_mode:
@@ -124,7 +123,8 @@ class XKNX:
 
     async def stop(self):
         """Stop XKNX module."""
-        self.state_updater.stop()
+        if self.state_updater:
+            self.state_updater.stop()
         await self.join()
         await self.telegram_queue.stop()
         await self._stop_knxip_interface_if_exists()
