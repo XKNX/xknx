@@ -15,6 +15,12 @@ class HVACOperationMode(Enum):
     STANDBY = "Standby"
     NIGHT = "Night"
     FROST_PROTECTION = "Frost Protection"
+
+
+class HVACControllerMode(Enum):
+    """Enum for the different KNX HVAC controller modes."""
+
+    AUTO = "Auto"
     HEAT = "Heat"
     MORNING_WARMUP = "Morning Warmup"
     COOL = "Cool"
@@ -62,20 +68,20 @@ class DPTHVACContrMode(_DPTClimateMode):
     """
 
     SUPPORTED_MODES = {
-        0: HVACOperationMode.AUTO,
-        1: HVACOperationMode.HEAT,
-        2: HVACOperationMode.MORNING_WARMUP,
-        3: HVACOperationMode.COOL,
-        4: HVACOperationMode.NIGHT_PURGE,
-        5: HVACOperationMode.PRECOOL,
-        6: HVACOperationMode.OFF,
-        7: HVACOperationMode.TEST,
-        8: HVACOperationMode.EMERGENCY_HEAT,
-        9: HVACOperationMode.FAN_ONLY,
-        10: HVACOperationMode.FREE_COOL,
-        11: HVACOperationMode.ICE,
-        14: HVACOperationMode.DRY,
-        20: HVACOperationMode.NODEM,
+        0: HVACControllerMode.AUTO,
+        1: HVACControllerMode.HEAT,
+        2: HVACControllerMode.MORNING_WARMUP,
+        3: HVACControllerMode.COOL,
+        4: HVACControllerMode.NIGHT_PURGE,
+        5: HVACControllerMode.PRECOOL,
+        6: HVACControllerMode.OFF,
+        7: HVACControllerMode.TEST,
+        8: HVACControllerMode.EMERGENCY_HEAT,
+        9: HVACControllerMode.FAN_ONLY,
+        10: HVACControllerMode.FREE_COOL,
+        11: HVACControllerMode.ICE,
+        14: HVACControllerMode.DRY,
+        20: HVACControllerMode.NODEM,
     }
 
 

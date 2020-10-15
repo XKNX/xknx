@@ -17,6 +17,7 @@ from xknx.dpt import (
     DPTValue1Count,
     HVACOperationMode,
 )
+from xknx.dpt.dpt_hvac_mode import HVACControllerMode
 from xknx.exceptions import CouldNotParseTelegram, DeviceIllegalValue
 from xknx.telegram import GroupAddress, Telegram, TelegramType
 
@@ -308,9 +309,9 @@ class TestClimate(unittest.TestCase):
             xknx, "TestClimate", group_address_controller_mode="1/2/4"
         )
 
-        for _, operation_mode in DPTHVACContrMode.SUPPORTED_MODES.items():
+        for _, controller_mode in DPTHVACContrMode.SUPPORTED_MODES.items():
             self.loop.run_until_complete(
-                climate_mode.set_operation_mode(operation_mode)
+                climate_mode.set_controller_mode(controller_mode)
             )
 
             self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -319,7 +320,7 @@ class TestClimate(unittest.TestCase):
                 telegram,
                 Telegram(
                     GroupAddress("1/2/4"),
-                    payload=DPTArray(DPTHVACContrMode.to_knx(operation_mode)),
+                    payload=DPTArray(DPTHVACContrMode.to_knx(controller_mode)),
                 ),
             )
 
@@ -330,6 +331,15 @@ class TestClimate(unittest.TestCase):
         with self.assertRaises(DeviceIllegalValue):
             self.loop.run_until_complete(
                 climate_mode.set_operation_mode(HVACOperationMode.AUTO)
+            )
+
+    def test_set_controller_mode_not_supported(self):
+        """Test set_controller_mode but not supported."""
+        xknx = XKNX()
+        climate_mode = ClimateMode(xknx, "TestClimate")
+        with self.assertRaises(DeviceIllegalValue):
+            self.loop.run_until_complete(
+                climate_mode.set_controller_mode(HVACControllerMode.HEAT)
             )
 
     def test_set_operation_mode_with_controller_status(self):
@@ -387,7 +397,7 @@ class TestClimate(unittest.TestCase):
         self.assertSetEqual(set(telegrams), set(test_telegrams))
 
     def test_set_heat_cool_binary(self):
-        """Test set_operation_mode with binary heat/cool group adddresses defined."""
+        """Test set_operation_mode with binary heat/cool group addresses defined."""
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
@@ -397,7 +407,7 @@ class TestClimate(unittest.TestCase):
         )
 
         self.loop.run_until_complete(
-            climate_mode.set_operation_mode(HVACOperationMode.HEAT)
+            climate_mode.set_controller_mode(HVACControllerMode.HEAT)
         )
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -405,7 +415,7 @@ class TestClimate(unittest.TestCase):
             telegram, Telegram(GroupAddress("1/2/14"), payload=DPTBinary(True))
         )
         self.loop.run_until_complete(
-            climate_mode.set_operation_mode(HVACOperationMode.COOL)
+            climate_mode.set_controller_mode(HVACControllerMode.COOL)
         )
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -1012,70 +1022,17 @@ class TestClimate(unittest.TestCase):
             self.loop.run_until_complete(climate_mode.process(telegram))
             self.assertEqual(climate_mode.operation_mode, operation_mode)
 
-    def test_process_binary_operation_mode(self):
-        """Test process / reading telegrams from telegram queue. Test binary operation mode is processed correctly."""
-        xknx = XKNX()
-        climate_mode = ClimateMode(
-            xknx,
-            "TestClimate",
-            group_address_operation_mode_protection="1/2/5",
-            group_address_operation_mode_night="1/2/6",
-            group_address_operation_mode_comfort="1/2/7",
-        )
-        # Note: disabling of inactive binary modes should be done by the
-        #       KNX actuator when a new mode is set on the bus.
-        self.assertIsNone(climate_mode.remote_value_operation_mode_protection.payload)
-        self.assertIsNone(climate_mode.remote_value_operation_mode_night.payload)
-        self.assertIsNone(climate_mode.remote_value_operation_mode_comfort.payload)
-        # Protection
-        telegram = Telegram(GroupAddress("1/2/5"))
-        telegram.payload = DPTBinary(True)
-        self.loop.run_until_complete(climate_mode.process(telegram))
-        self.assertEqual(
-            climate_mode.operation_mode, HVACOperationMode.FROST_PROTECTION
-        )
-        # disable Protection -> Standby
-        telegram = Telegram(GroupAddress("1/2/5"))
-        telegram.payload = DPTBinary(False)
-        self.loop.run_until_complete(climate_mode.process(telegram))
-        self.assertEqual(climate_mode.operation_mode, HVACOperationMode.STANDBY)
-        # Night
-        telegram = Telegram(GroupAddress("1/2/6"))
-        telegram.payload = DPTBinary(True)
-        self.loop.run_until_complete(climate_mode.process(telegram))
-        self.assertEqual(climate_mode.operation_mode, HVACOperationMode.NIGHT)
-        # disable Night -> Standby
-        telegram = Telegram(GroupAddress("1/2/6"))
-        telegram.payload = DPTBinary(False)
-        self.loop.run_until_complete(climate_mode.process(telegram))
-        self.assertEqual(climate_mode.operation_mode, HVACOperationMode.STANDBY)
-        # Comfort
-        telegram = Telegram(GroupAddress("1/2/7"))
-        telegram.payload = DPTBinary(True)
-        self.loop.run_until_complete(climate_mode.process(telegram))
-        self.assertEqual(climate_mode.operation_mode, HVACOperationMode.COMFORT)
-        # process unused group address -> no reaction
-        telegram = Telegram(GroupAddress("0/0/1"))
-        telegram.payload = DPTBinary(True)
-        self.loop.run_until_complete(climate_mode.process(telegram))
-        self.assertEqual(climate_mode.operation_mode, HVACOperationMode.COMFORT)
-        # disable Comfort -> Standby
-        telegram = Telegram(GroupAddress("1/2/7"))
-        telegram.payload = DPTBinary(False)
-        self.loop.run_until_complete(climate_mode.process(telegram))
-        self.assertEqual(climate_mode.operation_mode, HVACOperationMode.STANDBY)
-
     def test_process_controller_mode(self):
         """Test process / reading telegrams from telegram queue. Test if DPT20.105 controller mode is set correctly."""
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx, "TestClimate", group_address_controller_mode="1/2/5"
         )
-        for _, operation_mode in DPTHVACContrMode.SUPPORTED_MODES.items():
+        for _, controller_mode in DPTHVACContrMode.SUPPORTED_MODES.items():
             telegram = Telegram(GroupAddress("1/2/5"))
-            telegram.payload = DPTArray(DPTHVACContrMode.to_knx(operation_mode))
+            telegram.payload = DPTArray(DPTHVACContrMode.to_knx(controller_mode))
             self.loop.run_until_complete(climate_mode.process(telegram))
-            self.assertEqual(climate_mode.operation_mode, operation_mode)
+            self.assertEqual(climate_mode.controller_mode, controller_mode)
 
     def test_process_controller_status_wrong_payload(self):
         """Test process wrong telegram for controller status (wrong payload type)."""
@@ -1161,12 +1118,12 @@ class TestClimate(unittest.TestCase):
         telegram = Telegram(GroupAddress("1/2/14"))
         telegram.payload = DPTBinary(False)
         self.loop.run_until_complete(climate_mode.process(telegram))
-        self.assertEqual(climate_mode.operation_mode, HVACOperationMode.COOL)
+        self.assertEqual(climate_mode.controller_mode, HVACControllerMode.COOL)
 
         telegram = Telegram(GroupAddress("1/2/14"))
         telegram.payload = DPTBinary(True)
         self.loop.run_until_complete(climate_mode.process(telegram))
-        self.assertEqual(climate_mode.operation_mode, HVACOperationMode.HEAT)
+        self.assertEqual(climate_mode.controller_mode, HVACControllerMode.HEAT)
 
     #
     # SUPPORTED OPERATION MODES
@@ -1258,8 +1215,8 @@ class TestClimate(unittest.TestCase):
             group_address_heat_cool_state="1/2/15",
         )
         self.assertEqual(
-            set(climate_mode.operation_modes),
-            {HVACOperationMode.HEAT, HVACOperationMode.COOL},
+            set(climate_mode.controller_modes),
+            {HVACControllerMode.HEAT, HVACControllerMode.COOL},
         )
 
     def test_custom_supported_operation_modes(self):
@@ -1286,6 +1243,35 @@ class TestClimate(unittest.TestCase):
             operation_modes=str_modes,
         )
         self.assertEqual(climate_mode.operation_modes, modes)
+
+    def test_custom_supported_controller_modes_as_str(self):
+        """Test get_supported_operation_modes with custom mode as str list."""
+        str_modes = ["Heat", "Cool", HVACControllerMode.NODEM]
+        modes = [
+            HVACControllerMode.HEAT,
+            HVACControllerMode.COOL,
+            HVACControllerMode.NODEM,
+        ]
+        xknx = XKNX()
+        climate_mode = ClimateMode(
+            xknx,
+            "TestClimate",
+            group_address_controller_mode="1/2/7",
+            controller_modes=str_modes,
+        )
+        self.assertEqual(climate_mode.controller_modes, modes)
+
+    def test_custom_supported_controller_modes_when_controller_mode_unsupported(self):
+        """Test get_supported_operation_modes with custom mode as str list."""
+        str_modes = ["Heat", "Cool"]
+        modes = []
+        xknx = XKNX()
+        climate_mode = ClimateMode(
+            xknx,
+            "TestClimate",
+            controller_modes=str_modes,
+        )
+        self.assertEqual(climate_mode.controller_modes, modes)
 
     def test_process_power_status(self):
         """Test process / reading telegrams from telegram queue. Test if DPT20.105 controller mode is set correctly."""

@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Devices
+
+- ClimateMode: Refactor climate modes in operation_mode and controller_mode, also fixes a bug for binary operation modes where the mode would be set to AWAY no matter what value was sent to the bus.
+
 ### Internals
 
 - StateUpdater: Only request one GA at a time.
