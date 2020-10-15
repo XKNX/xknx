@@ -2,7 +2,7 @@
 from typing import List, Optional
 
 from xknx.devices import Climate as XknxClimate
-from xknx.dpt import HVACOperationMode
+from xknx.dpt import HVACControllerMode, HVACOperationMode
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -124,7 +124,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
             if self._device.supports_on_off and not self._device.is_on:
                 await self._device.turn_on()
             if self._device.mode.supports_controller_mode:
-                knx_controller_mode = HVACOperationMode(
+                knx_controller_mode = HVACControllerMode(
                     CONTROLLER_MODES_INV.get(hvac_mode)
                 )
                 await self._device.mode.set_controller_mode(knx_controller_mode)

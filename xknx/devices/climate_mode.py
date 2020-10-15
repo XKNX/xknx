@@ -6,7 +6,7 @@ Controller modes use DPT 20.105.
 """
 from itertools import chain
 
-from xknx.dpt import HVACOperationMode
+from xknx.dpt import HVACControllerMode, HVACOperationMode
 from xknx.exceptions import DeviceIllegalValue
 from xknx.remote_value import (
     RemoteValueBinaryHeatCool,
@@ -124,12 +124,12 @@ class ClimateMode(Device):
             sync_state=True,
             device_name=name,
             feature_name="Heat/Cool",
-            operation_mode=HVACOperationMode.HEAT,
+            controller_mode=HVACControllerMode.HEAT,
             after_update_cb=None,
         )
 
         self.operation_mode = HVACOperationMode.STANDBY
-        self.controller_mode = HVACOperationMode.HEAT
+        self.controller_mode = HVACControllerMode.HEAT
 
         self._operation_modes = []
         if operation_modes is None:
@@ -147,16 +147,16 @@ class ClimateMode(Device):
         else:
             for mode in controller_modes:
                 if isinstance(mode, str):
-                    self._controller_modes.append(HVACOperationMode(mode))
-                elif isinstance(mode, HVACOperationMode):
+                    self._controller_modes.append(HVACControllerMode(mode))
+                elif isinstance(mode, HVACControllerMode):
                     self._controller_modes.append(mode)
 
         self.supports_operation_mode = any(
             operation_mode.initialized
-            for operation_mode in self._iter_normal_operation_modes()
+            for operation_mode in self._iter_byte_operation_modes()
         ) or any(
             operation_mode.initialized
-            for operation_mode in self._iter_binary_remote_values()
+            for operation_mode in self._iter_binary_operation_modes()
         )
         self.supports_controller_mode = any(
             operation_mode.initialized
@@ -165,7 +165,7 @@ class ClimateMode(Device):
 
         self._use_binary_operation_modes = any(
             operation_mode.initialized
-            for operation_mode in self._iter_binary_remote_values()
+            for operation_mode in self._iter_binary_operation_modes()
         )
 
     @classmethod
@@ -219,12 +219,12 @@ class ClimateMode(Device):
     def _iter_remote_values(self):
         """Iterate climate mode RemoteValue classes."""
         return chain(
-            self._iter_normal_operation_modes(),
+            self._iter_byte_operation_modes(),
             self._iter_controller_remote_values(),
-            self._iter_binary_remote_values(),
+            self._iter_binary_operation_modes(),
         )
 
-    def _iter_normal_operation_modes(self):
+    def _iter_byte_operation_modes(self):
         """Iterate normal DPT 20.102 operation mode remote values."""
         yield from (
             self.remote_value_operation_mode,
@@ -238,7 +238,7 @@ class ClimateMode(Device):
             self.remote_value_heat_cool,
         )
 
-    def _iter_binary_remote_values(self):
+    def _iter_binary_operation_modes(self):
         """Iterate DPT 1 binary operation modes."""
         yield from (
             self.remote_value_operation_mode_comfort,
@@ -270,7 +270,7 @@ class ClimateMode(Device):
             )
 
         for rv in chain(
-            self._iter_normal_operation_modes(), self._iter_binary_remote_values()
+            self._iter_byte_operation_modes(), self._iter_binary_operation_modes()
         ):
             if rv.writable and operation_mode in rv.supported_operation_modes():
                 await rv.set(operation_mode)
@@ -302,7 +302,7 @@ class ClimateMode(Device):
 
     @property
     def controller_modes(self):
-        """Return all configures controller modes."""
+        """Return all configured controller modes."""
         if not self.supports_controller_mode:
             return []
         return self._controller_modes
@@ -310,11 +310,9 @@ class ClimateMode(Device):
     def gather_operation_modes(self):
         """Gather operation modes from RemoteValues."""
         operation_modes = []
-        for rv in self._iter_binary_remote_values():
-            if rv.writable:
-                operation_modes.extend(rv.supported_operation_modes())
-
-        for rv in self._iter_normal_operation_modes():
+        for rv in chain(
+            self._iter_binary_operation_modes(), self._iter_byte_operation_modes()
+        ):
             if rv.writable:
                 operation_modes.extend(rv.supported_operation_modes())
 
@@ -336,26 +334,16 @@ class ClimateMode(Device):
         if self.supports_operation_mode:
             for rv in self._iter_remote_values():
                 if await rv.process(telegram):
+                    #  ignore inactive RemoteValueBinaryOperationMode
                     if rv.value:
                         await self._set_internal_operation_mode(rv.value)
+                        return
 
         if self.supports_controller_mode:
             for rv in self._iter_controller_remote_values():
                 if await rv.process(telegram):
-                    if rv.value:
-                        await self._set_internal_controller_mode(rv.value)
-
-    async def sync(self, wait_for_result=False):
-        """Read states of device from KNX bus."""
-        if self.supports_operation_mode:
-            for rv in chain(
-                self._iter_normal_operation_modes(), self._iter_binary_remote_values()
-            ):
-                await rv.read_state(wait_for_result=wait_for_result)
-
-        if self.supports_controller_mode:
-            for rv in self._iter_controller_remote_values():
-                await rv.read_state(wait_for_result=wait_for_result)
+                    await self._set_internal_controller_mode(rv.value)
+                    return
 
     def __str__(self):
         """Return object as readable string."""

@@ -164,6 +164,7 @@ from .dpt_hvac_mode import (
     DPTControllerStatus,
     DPTHVACContrMode,
     DPTHVACMode,
+    HVACControllerMode,
     HVACOperationMode,
 )
 from .dpt_scaling import DPTAngle, DPTScaling

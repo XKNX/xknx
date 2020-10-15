@@ -17,6 +17,7 @@ from xknx.dpt import (
     DPTValue1Count,
     HVACOperationMode,
 )
+from xknx.dpt.dpt_hvac_mode import HVACControllerMode
 from xknx.exceptions import CouldNotParseTelegram, DeviceIllegalValue
 from xknx.telegram import GroupAddress, Telegram, TelegramType
 
@@ -332,6 +333,15 @@ class TestClimate(unittest.TestCase):
                 climate_mode.set_operation_mode(HVACOperationMode.AUTO)
             )
 
+    def test_set_controller_mode_not_supported(self):
+        """Test set_controller_mode but not supported."""
+        xknx = XKNX()
+        climate_mode = ClimateMode(xknx, "TestClimate")
+        with self.assertRaises(DeviceIllegalValue):
+            self.loop.run_until_complete(
+                climate_mode.set_controller_mode(HVACControllerMode.HEAT)
+            )
+
     def test_set_operation_mode_with_controller_status(self):
         """Test set_operation_mode with controller status adddressedefined."""
         xknx = XKNX()
@@ -397,7 +407,7 @@ class TestClimate(unittest.TestCase):
         )
 
         self.loop.run_until_complete(
-            climate_mode.set_controller_mode(HVACOperationMode.HEAT)
+            climate_mode.set_controller_mode(HVACControllerMode.HEAT)
         )
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -405,7 +415,7 @@ class TestClimate(unittest.TestCase):
             telegram, Telegram(GroupAddress("1/2/14"), payload=DPTBinary(True))
         )
         self.loop.run_until_complete(
-            climate_mode.set_controller_mode(HVACOperationMode.COOL)
+            climate_mode.set_controller_mode(HVACControllerMode.COOL)
         )
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -1108,12 +1118,12 @@ class TestClimate(unittest.TestCase):
         telegram = Telegram(GroupAddress("1/2/14"))
         telegram.payload = DPTBinary(False)
         self.loop.run_until_complete(climate_mode.process(telegram))
-        self.assertEqual(climate_mode.controller_mode, HVACOperationMode.COOL)
+        self.assertEqual(climate_mode.controller_mode, HVACControllerMode.COOL)
 
         telegram = Telegram(GroupAddress("1/2/14"))
         telegram.payload = DPTBinary(True)
         self.loop.run_until_complete(climate_mode.process(telegram))
-        self.assertEqual(climate_mode.controller_mode, HVACOperationMode.HEAT)
+        self.assertEqual(climate_mode.controller_mode, HVACControllerMode.HEAT)
 
     #
     # SUPPORTED OPERATION MODES
@@ -1206,7 +1216,7 @@ class TestClimate(unittest.TestCase):
         )
         self.assertEqual(
             set(climate_mode.controller_modes),
-            {HVACOperationMode.HEAT, HVACOperationMode.COOL},
+            {HVACControllerMode.HEAT, HVACControllerMode.COOL},
         )
 
     def test_custom_supported_operation_modes(self):
@@ -1233,6 +1243,35 @@ class TestClimate(unittest.TestCase):
             operation_modes=str_modes,
         )
         self.assertEqual(climate_mode.operation_modes, modes)
+
+    def test_custom_supported_controller_modes_as_str(self):
+        """Test get_supported_operation_modes with custom mode as str list."""
+        str_modes = ["Heat", "Cool", HVACControllerMode.NODEM]
+        modes = [
+            HVACControllerMode.HEAT,
+            HVACControllerMode.COOL,
+            HVACControllerMode.NODEM,
+        ]
+        xknx = XKNX()
+        climate_mode = ClimateMode(
+            xknx,
+            "TestClimate",
+            group_address_controller_mode="1/2/7",
+            controller_modes=str_modes,
+        )
+        self.assertEqual(climate_mode.controller_modes, modes)
+
+    def test_custom_supported_controller_modes_when_controller_mode_unsupported(self):
+        """Test get_supported_operation_modes with custom mode as str list."""
+        str_modes = ["Heat", "Cool"]
+        modes = []
+        xknx = XKNX()
+        climate_mode = ClimateMode(
+            xknx,
+            "TestClimate",
+            controller_modes=str_modes,
+        )
+        self.assertEqual(climate_mode.controller_modes, modes)
 
     def test_process_power_status(self):
         """Test process / reading telegrams from telegram queue. Test if DPT20.105 controller mode is set correctly."""
