@@ -47,6 +47,55 @@ class TestSensor(unittest.TestCase):
         self.assertEqual(sensor.unit_of_measurement(), "K")
         self.assertEqual(sensor.ha_device_class(), None)
 
+    def test_always_callback_sensor(self):
+        """Test always callback sensor."""
+        xknx = XKNX()
+        sensor = Sensor(
+            xknx,
+            "TestSensor",
+            group_address_state="1/2/3",
+            always_callback=False,
+            value_type="volume_liquid_litre",
+        )
+
+        after_update_callback = Mock()
+
+        async def async_after_update_callback(device):
+            """Async callback."""
+            after_update_callback(device)
+
+        sensor.register_device_updated_cb(async_after_update_callback)
+
+        payload = DPTArray(
+            (
+                0x00,
+                0x00,
+                0x01,
+                0x00,
+            )
+        )
+
+        #  set initial payload of sensor
+        sensor.sensor_value.payload = payload
+
+        telegram = Telegram(group_address=GroupAddress("1/2/3"), payload=payload)
+
+        # verify not called when always_callback is False
+        self.loop.run_until_complete(sensor.process(telegram))
+        after_update_callback.assert_not_called()
+        after_update_callback.reset_mock()
+
+        sensor.always_callback = True
+
+        # verify called when always_callback is True
+        self.loop.run_until_complete(sensor.process(telegram))
+        after_update_callback.assert_called_once()
+        after_update_callback.reset_mock()
+
+        # verify not called when processing read responses
+        self.loop.run_until_complete(sensor.process_group_response(telegram))
+        after_update_callback.assert_not_called()
+
     def test_str_acceleration(self):
         """Test resolve state with acceleration sensor."""
         xknx = XKNX()

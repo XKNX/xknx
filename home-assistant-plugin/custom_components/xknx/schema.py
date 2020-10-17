@@ -306,6 +306,7 @@ class NotifySchema:
 class SensorSchema:
     """Voluptuous schema for KNX sensors."""
 
+    CONF_ALWAYS_CALLBACK = "always_callback"
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_SYNC_STATE = CONF_SYNC_STATE
     DEFAULT_NAME = "KNX Sensor"
@@ -318,6 +319,7 @@ class SensorSchema:
                 cv.boolean,
                 cv.string,
             ),
+            vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
             vol.Required(CONF_STATE_ADDRESS): cv.string,
             vol.Required(CONF_TYPE): vol.Any(int, float, str),
         }
