@@ -15,6 +15,7 @@ Sensors are monitoring temperature, air humidity, pressure etc. from KNX bus.
     sensor = Sensor(
         xknx=xknx,
         name='DiningRoom.Temperature.Sensor',
+        always_callback=False,
         group_address_state='6/2/1',
         sync_state=True,
         value_type='temperature'
@@ -25,6 +26,7 @@ Sensors are monitoring temperature, air humidity, pressure etc. from KNX bus.
 
 * `xknx` is the XKNX object.
 * `name` is the name of the object.
+* `always_callback` defines if a callback/update should always be triggered no matter if the previous and the new state are identical.
 * `group_address_state` is the KNX group address of the sensor device.
 * `sync_state` defines if the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
 * `value_type` controls how the value should be rendered in a human readable representation. The attribut may have may have the values `percent`, `temperature`, `illuminance`, `speed_ms` or `current`.
