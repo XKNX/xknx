@@ -1,15 +1,17 @@
 # Changelog
 
-## Unreleased changes
+## 0.15.2 Winter is coming
 
 ### Devices
 
-- Sensor: add `always_callback` option
 - ClimateMode: Refactor climate modes in operation_mode and controller_mode, also fixes a bug for binary operation modes where the mode would be set to AWAY no matter what value was sent to the bus.
+- Sensor: Add `always_callback` option
+- Switch: Allow resetting switches after x seconds with the new `reset_after` option.
 
 ### Internals
 
 - StateUpdater: Only request 3 GAs at a time.
+- RemoteValue: Add support for passive group addresses
 
 ## 0.15.1 bugfix for binary sensors
 
