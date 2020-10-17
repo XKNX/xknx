@@ -9,7 +9,7 @@
 
 ### Internals
 
-- StateUpdater: Only request one GA at a time.
+- StateUpdater: Only request 3 GAs at a time.
 
 ## 0.15.1 bugfix for binary sensors
 
