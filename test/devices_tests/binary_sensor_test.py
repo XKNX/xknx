@@ -59,6 +59,26 @@ class TestBinarySensor(unittest.TestCase):
         self.loop.run_until_complete(binaryinput2.process(telegram_off2))
         self.assertEqual(binaryinput2.state, False)
 
+    def test_process_invert(self):
+        """Test process / reading telegrams from telegram queue."""
+        xknx = XKNX()
+        bs_invert = BinarySensor(xknx, "TestInput", "1/2/3", invert=True)
+
+        self.assertEqual(bs_invert.state, None)
+
+        telegram_on = Telegram(
+            group_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
+        )
+        self.loop.run_until_complete(bs_invert.process(telegram_on))
+
+        self.assertEqual(bs_invert.state, True)
+
+        telegram_off = Telegram(
+            group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+        )
+        self.loop.run_until_complete(bs_invert.process(telegram_off))
+        self.assertEqual(bs_invert.state, False)
+
     def test_process_reset_after(self):
         """Test process / reading telegrams from telegram queue."""
         xknx = XKNX()

@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased Changes
+
+### Devices
+
+- BinarySensor: added option to invert payloads
+- Switch: added option to invert payloads
+
+### Bugfixes
+
+- HA Switch entity: keep state without state_address
+
 ## 0.15.2 Winter is coming
 
 ### Devices

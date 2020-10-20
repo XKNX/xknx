@@ -25,8 +25,9 @@ class BinarySensor(Device):
     def __init__(
         self,
         xknx,
-        name,
+        name: str,
         group_address_state=None,
+        invert: Optional[bool] = False,
         sync_state: bool = True,
         ignore_internal_state: bool = True,
         device_class: str = None,
@@ -57,6 +58,7 @@ class BinarySensor(Device):
         self.remote_value = RemoteValueSwitch(
             xknx,
             group_address_state=group_address_state,
+            invert=invert,
             sync_state=sync_state,
             device_name=self.name,
             # after_update called internally
@@ -79,6 +81,7 @@ class BinarySensor(Device):
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
         group_address_state = config.get("group_address_state")
+        invert = config.get("invert")
         context_timeout = config.get("context_timeout")
         reset_after = config.get("reset_after")
         sync_state = config.get("sync_state", True)
@@ -94,6 +97,7 @@ class BinarySensor(Device):
             xknx,
             name,
             group_address_state=group_address_state,
+            invert=invert,
             sync_state=sync_state,
             ignore_internal_state=ignore_internal_state,
             context_timeout=context_timeout,

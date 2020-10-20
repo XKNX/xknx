@@ -17,6 +17,7 @@ from homeassistant.components.climate.const import (
 
 DOMAIN = "xknx"
 
+CONF_INVERT = "invert"
 CONF_STATE_ADDRESS = "state_address"
 CONF_SYNC_STATE = "sync_state"
 CONF_RESET_AFTER = "reset_after"
