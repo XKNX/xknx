@@ -461,7 +461,6 @@ class TestCover(unittest.TestCase):
             )
 
         self.loop.run_until_complete(cover.set_position(100))
-        print(cover.travelcalculator.position_closed)
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
