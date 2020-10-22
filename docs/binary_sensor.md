@@ -19,6 +19,8 @@ The logic within switches can further handle if a button is pressed once or twic
 binarysensor = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3', device_class='motion')
 ```
 
+## [](#header-2)Interface
+
 - `xknx` is the XKNX object.
 - `name` is the name of the object.
 - `group_address_state` is the KNX group address of the sensor device.
@@ -27,7 +29,8 @@ binarysensor = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3', devi
 - `ignore_internal_state` allows callback call regardless of the current binary sensor state. Defaults to `True`
 - `context_timeout` time in seconds telegrams should be counted towards the current context to increment the counter. To be used with `ignore_internal_state=True`. Defaults to `None`
 - `reset_after` may be used to reset the internal state to `OFF` again after given time in sec. Defaults to `None`
-- `device_class` may be used to store the type of sensor, e.g. "motion" for motion detectors.
+- `device_class` may be used to store the type of sensor, e.g. "motion" for motion detectors for Home-Assistant.
+- `device_updated_cb` awaitable callback for each update.
 
 ## [](#header-2)Example
 
