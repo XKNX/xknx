@@ -16,10 +16,11 @@ class RequestResponse:
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, xknx, udp_client, awaited_response_class, timeout_in_seconds=1):
+    def __init__(self, xknx, udp_client, awaited_response_class, timeout_in_seconds=1, net_bind=None):
         """Initialize RequstResponse class."""
         self.xknx = xknx
         self.udpclient = udp_client
+        self.net_bind = net_bind
         self.awaited_response_class = awaited_response_class
         self.response_received_or_timeout = asyncio.Event()
         self.success = False

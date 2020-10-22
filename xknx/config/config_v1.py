@@ -93,6 +93,12 @@ class ConfigV1:
                     connection_config.gateway_port = value
                 elif pref == "local_ip":
                     connection_config.local_ip = value
+                elif pref == "local_port":
+                    connection_config.local_port = value
+                elif pref == "bind_ip":
+                    connection_config.bind_ip = value
+                elif pref == "bind_port":
+                    connection_config.bind_port = value
         self.xknx.connection_config = connection_config
 
     def parse_groups(self, doc):

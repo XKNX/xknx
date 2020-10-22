@@ -34,8 +34,11 @@ class Tunnel:
         self,
         xknx,
         local_ip,
+        local_port,
         gateway_ip,
         gateway_port,
+        bind_ip=None,
+        bind_port=0,
         telegram_received_callback=None,
         auto_reconnect=False,
         auto_reconnect_wait=3,
@@ -44,6 +47,9 @@ class Tunnel:
         # pylint: disable=too-many-arguments
         self.xknx = xknx
         self.local_ip = local_ip
+        self.local_port = local_port
+        self.bind_ip = bind_ip
+        self.bind_port = bind_port
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
         self.telegram_received_callback = telegram_received_callback
@@ -67,7 +73,7 @@ class Tunnel:
     def init_udp_client(self):
         """Initialize udp_client."""
         self.udp_client = UDPClient(
-            self.xknx, (self.local_ip, 0), (self.gateway_ip, self.gateway_port)
+            self.xknx, (self.local_ip, self.local_port), (self.gateway_ip, self.gateway_port)
         )
 
         self.udp_client.register_callback(
@@ -115,7 +121,7 @@ class Tunnel:
 
     async def connect(self):
         """Connect/build tunnel."""
-        connect = Connect(self.xknx, self.udp_client)
+        connect = Connect(self.xknx, self.udp_client, net_bind=(self.bind_ip, self.bind_port))
         await connect.start()
         if not connect.success:
             if self.auto_reconnect:
@@ -197,6 +203,7 @@ class Tunnel:
             self.xknx,
             self.udp_client,
             communication_channel_id=self.communication_channel,
+            net_bind=(self.bind_ip, self.bind_port)
         )
         await conn_state.start()
         return conn_state.success
@@ -212,6 +219,7 @@ class Tunnel:
             self.xknx,
             self.udp_client,
             communication_channel_id=self.communication_channel,
+            net_bind=(self.bind_ip, self.bind_port)
         )
         await disconnect.start()
         if not disconnect.success and not ignore_error:

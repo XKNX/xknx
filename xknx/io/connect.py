@@ -13,10 +13,10 @@ from .request_response import RequestResponse
 class Connect(RequestResponse):
     """Class to send a ConnectRequest and wait for ConnectResponse.."""
 
-    def __init__(self, xknx, udp_client):
+    def __init__(self, xknx, udp_client, net_bind=None):
         """Initialize Connect class."""
         self.udp_client = udp_client
-        super().__init__(xknx, self.udp_client, ConnectResponse)
+        super().__init__(xknx, self.udp_client, ConnectResponse, net_bind=net_bind)
         self.communication_channel = 0
         self.identifier = 0
 
@@ -24,7 +24,10 @@ class Connect(RequestResponse):
         """Create KNX/IP Frame object to be sent to device."""
         (local_addr, local_port) = self.udp_client.getsockname()
         # set control_endpoint and data_endpoint to the same udp_connection
-        endpoint = HPAI(ip_addr=local_addr, port=local_port)
+        if self.net_bind:
+            endpoint = HPAI(ip_addr=self.net_bind[0], port=self.net_bind[1])
+        else:
+            endpoint = HPAI(ip_addr=local_addr, port=local_port)
         connect_request = ConnectRequest(
             self.xknx,
             request_type=ConnectRequestType.TUNNEL_CONNECTION,

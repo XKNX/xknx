@@ -52,8 +52,11 @@ class ConnectionConfig:
         self,
         connection_type: ConnectionType = ConnectionType.AUTOMATIC,
         local_ip: str = None,
+        local_port: int = 0,
         gateway_ip: str = None,
         gateway_port: int = DEFAULT_MCAST_PORT,
+        bind_ip: str = None,
+        bind_port: int = 0,
         auto_reconnect: bool = False,
         auto_reconnect_wait: int = 3,
         scan_filter: GatewayScanFilter = GatewayScanFilter(),
@@ -62,8 +65,11 @@ class ConnectionConfig:
         # pylint: disable=too-many-arguments
         self.connection_type = connection_type
         self.local_ip = local_ip
+        self.local_port = local_port
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
+        self.bind_ip = bind_ip
+        self.bind_port = bind_port
         self.auto_reconnect = auto_reconnect
         self.auto_reconnect_wait = auto_reconnect_wait
         if connection_type == ConnectionType.TUNNELING:
@@ -92,14 +98,17 @@ class KNXIPInterface:
             self.connection_config.connection_type == ConnectionType.ROUTING
             and self.connection_config.local_ip is not None
         ):
-            await self.start_routing(self.connection_config.local_ip)
+            await self.start_routing(self.connection_config.local_ip, self.connection_config.local_port)
         elif self.connection_config.connection_type == ConnectionType.TUNNELING:
             await self.start_tunnelling(
                 self.connection_config.local_ip,
+                self.connection_config.local_port,
                 self.connection_config.gateway_ip,
                 self.connection_config.gateway_port,
                 self.connection_config.auto_reconnect,
                 self.connection_config.auto_reconnect_wait,
+                bind_ip=self.connection_config.bind_ip,
+                bind_port=self.connection_config.bind_port,
             )
         else:
             await self.start_automatic(self.connection_config.scan_filter)
@@ -121,16 +130,20 @@ class KNXIPInterface:
         if gateway.supports_tunnelling and scan_filter.routing is not True:
             await self.start_tunnelling(
                 local_interface_ip,
+                self.connection_config.local_port,
                 gateway.ip_addr,
                 gateway.port,
                 self.connection_config.auto_reconnect,
                 self.connection_config.auto_reconnect_wait,
+                bind_ip=self.connection_config.bind_ip,
+                bind_port=self.connection_config.bind_port,
             )
         elif gateway.supports_routing:
-            await self.start_routing(local_interface_ip)
+            await self.start_routing(local_interface_ip, self.connection_config.local_port)
 
     async def start_tunnelling(
-        self, local_ip, gateway_ip, gateway_port, auto_reconnect, auto_reconnect_wait
+        self, local_ip, local_port, gateway_ip, gateway_port, auto_reconnect, auto_reconnect_wait,
+            bind_ip=None, bind_port=0,
     ):
         """Start KNX/IP tunnel."""
         # pylint: disable=too-many-arguments
@@ -139,24 +152,27 @@ class KNXIPInterface:
             local_ip = self.find_local_ip(gateway_ip=gateway_ip)
         validate_ip(local_ip, address_name="Local IP address")
         logger.debug(
-            "Starting tunnel from %s to %s:%s", local_ip, gateway_ip, gateway_port
+            "Starting tunnel from %s:%s to %s:%s", local_ip, local_port, gateway_ip, gateway_port
         )
         self.interface = Tunnel(
             self.xknx,
             local_ip=local_ip,
+            local_port=local_port,
             gateway_ip=gateway_ip,
             gateway_port=gateway_port,
+            bind_ip=bind_ip,
+            bind_port=bind_port,
             telegram_received_callback=self.telegram_received,
             auto_reconnect=auto_reconnect,
             auto_reconnect_wait=auto_reconnect_wait,
         )
         await self.interface.start()
 
-    async def start_routing(self, local_ip: str) -> None:
+    async def start_routing(self, local_ip: str, local_port: int) -> None:
         """Start KNX/IP Routing."""
         validate_ip(local_ip, address_name="Local IP address")
         logger.debug("Starting Routing from %s", local_ip)
-        self.interface = Routing(self.xknx, self.telegram_received, local_ip)
+        self.interface = Routing(self.xknx, self.telegram_received, local_ip, local_port)
         await self.interface.start()
 
     async def stop(self) -> None:
