@@ -22,6 +22,7 @@ binarysensor = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3', devi
 - `xknx` is the XKNX object.
 - `name` is the name of the object.
 - `group_address_state` is the KNX group address of the sensor device.
+- `invert` inverts the payload so state "on" is represented by 0 on bus and "off" by 1. Defaults to `False`
 - `sync_state` defines if the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
 - `ignore_internal_state` allows callback call regardless of the current binary sensor state. Defaults to `True`
 - `context_timeout` time in seconds telegrams should be counted towards the current context to increment the counter. To be used with `ignore_internal_state=True`. Defaults to `None`

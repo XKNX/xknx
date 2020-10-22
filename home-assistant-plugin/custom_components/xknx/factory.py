@@ -203,6 +203,7 @@ def _create_switch(knx_module: XKNX, config: ConfigType) -> XknxSwitch:
         name=config[CONF_NAME],
         group_address=config[CONF_ADDRESS],
         group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
+        invert=config.get(SwitchSchema.CONF_INVERT),
         reset_after=config.get(SwitchSchema.CONF_RESET_AFTER),
     )
 
@@ -246,6 +247,7 @@ def _create_binary_sensor(knx_module: XKNX, config: ConfigType) -> XknxBinarySen
         knx_module,
         name=device_name,
         group_address_state=config[BinarySensorSchema.CONF_STATE_ADDRESS],
+        invert=config.get(BinarySensorSchema.CONF_INVERT),
         sync_state=config[BinarySensorSchema.CONF_SYNC_STATE],
         device_class=config.get(CONF_DEVICE_CLASS),
         ignore_internal_state=config[BinarySensorSchema.CONF_IGNORE_INTERNAL_STATE],
