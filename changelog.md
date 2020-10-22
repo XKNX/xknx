@@ -5,6 +5,8 @@
 ### Devices
 
 - BinarySensor: added option to invert payloads
+- BinarySensor: `ignore_internal_state` and counter are only applied to GroupValueWrite telegrams, not GroupValueRespond.
+- BinarySensor: if `context_timeout` is set `ignore_internal_state` is set to True.
 - Switch: added option to invert payloads
 
 ### Bugfixes
