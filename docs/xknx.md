@@ -171,6 +171,30 @@ loop.run_until_complete(main())
 loop.close()
 ```
 
+# [](#header-2)Dockerised xknx's app 
 
+If you planned to run xknx into a container, you have to setup udp port binding from your host to the container.
+The host ip and port must be setup into the configuration file or env variables.
 
+Available env variables are:
+- XKNX_GENERAL_OWN_ADDRESS
+- XKNX_GENERAL_RATE_LIMIT
+- XKNX_GENERAL_MULTICAST_GROUP
+- XKNX_GENERAL_MULTICAST_PORT
+- XKNX_CONNECTION_GATEWAY_IP: Your KNX Gateway IP address
+- XKNX_CONNECTION_GATEWAY_PORT: Your KNX Gateway UDP port
+- XKNX_CONNECTION_LOCAL_IP
+- XKNX_CONNECTION_LOCAL_PORT: Container internal UDP port, target of the forward from the host
+- XKNX_CONNECTION_BIND_IP: IP address of the host machine
+- XKNX_CONNECTION_BIND_PORT: UDP port used in the host machine, must be forwarded to the container
 
+Exanple of a `docker run` with an xknx based app:
+
+```bash
+docker run --name myapp -d \
+  -e XKNX_CONNECTION_GATEWAY_IP='192.168.0.123' \
+  -e XKNX_CONNECTION_LOCAL_PORT=12399 \
+  -e XKNX_CONNECTION_BIND_IP='192.168.0.100' 
+  -e XKNX_CONNECTION_BIND_PORT=12300 \
+  -p 12300:12399/udp myapp:latest
+```
