@@ -6,6 +6,7 @@ Module for reading config files (xknx.yaml).
 """
 from enum import Enum
 import logging
+import os
 
 from xknx.devices import (
     BinarySensor,
@@ -42,10 +43,12 @@ class ConfigV1:
         self.xknx = xknx
 
     def parse(self, doc):
-        """Parse the config."""
+        """Parse the config and read ENV vars."""
         self.parse_general(doc)
         self.parse_connection(doc)
         self.parse_groups(doc)
+        self.env_general()
+        self.env_connection()
 
     def parse_general(self, doc):
         """Parse the general section of xknx.yaml."""
@@ -58,6 +61,17 @@ class ConfigV1:
                 self.xknx.multicast_group = doc["general"]["multicast_group"]
             if "multicast_port" in doc["general"]:
                 self.xknx.multicast_port = doc["general"]["multicast_port"]
+
+    def env_general(self):
+        """Get Env Vars for the general section."""
+        if os.getenv('XKNX_GENERAL_OWN_ADDRESS', default=None):
+            self.xknx.own_address = os.getenv('XKNX_GENERAL_OWN_ADDRESS')
+        if os.getenv('XKNX_GENERAL_RATE_LIMIT', default=None):
+            self.xknx.rate_limit = os.getenv('XKNX_GENERAL_RATE_LIMIT')
+        if os.getenv('XKNX_GENERAL_MULTICAST_GROUP', default=None):
+            self.xknx.multicast_group = os.getenv('XKNX_GENERAL_MULTICAST_GROUP')
+        if os.getenv('XKNX_GENERAL_MULTICAST_PORT', default=None):
+            self.xknx.multicast_port = os.getenv('XKNX_GENERAL_MULTICAST_PORT')
 
     def parse_connection(self, doc):
         """Parse the connection section of xknx.yaml."""
@@ -100,6 +114,20 @@ class ConfigV1:
                 elif pref == "bind_port":
                     connection_config.bind_port = value
         self.xknx.connection_config = connection_config
+
+    def env_connection(self):
+        if os.getenv('XKNX_CONNECTION_GATEWAY_IP', default=None):
+            self.xknx.connection_config.gateway_ip = os.getenv('XKNX_CONNECTION_GATEWAY_IP')
+        if os.getenv('XKNX_CONNECTION_GATEWAY_PORT', default=None):
+            self.xknx.connection_config.gateway_port = os.getenv('XKNX_CONNECTION_GATEWAY_PORT')
+        if os.getenv('XKNX_CONNECTION_LOCAL_IP', default=None):
+            self.xknx.connection_config.local_ip = os.getenv('XKNX_CONNECTION_LOCAL_IP')
+        if os.getenv('XKNX_CONNECTION_LOCAL_PORT', default=None):
+            self.xknx.connection_config.local_port = os.getenv('XKNX_CONNECTION_LOCAL_PORT')
+        if os.getenv('XKNX_CONNECTION_BIND_IP', default=None):
+            self.xknx.connection_config.bind_ip = os.getenv('XKNX_CONNECTION_BIND_IP')
+        if os.getenv('XKNX_CONNECTION_BIND_PORT', default=None):
+            self.xknx.connection_config.bind_port = os.getenv('XKNX_CONNECTION_BIND_PORT')
 
     def parse_groups(self, doc):
         """Parse the group section of xknx.yaml."""

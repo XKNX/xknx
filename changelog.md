@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.3
+
+### Connection and dockerized apps
+
+- Add new optional config `bind_ip` and `bind_port` for connections to be able to dockerise xknx's apps.
+- Add optional config `local_port` to be able to map a host udp port to a container udp port.
+- Read env vars after reading config file to allow dynamic config for dockerized apps.
+
 ## 0.15.2 Winter is coming
 
 ### Devices
