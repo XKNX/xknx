@@ -98,7 +98,7 @@ class KNXIPInterface:
             self.connection_config.connection_type == ConnectionType.ROUTING
             and self.connection_config.local_ip is not None
         ):
-            await self.start_routing(self.connection_config.local_ip, self.connection_config.local_port)
+            await self.start_routing(self.connection_config.local_ip)
         elif self.connection_config.connection_type == ConnectionType.TUNNELING:
             await self.start_tunnelling(
                 self.connection_config.local_ip,
@@ -139,7 +139,7 @@ class KNXIPInterface:
                 bind_port=self.connection_config.bind_port,
             )
         elif gateway.supports_routing:
-            await self.start_routing(local_interface_ip, self.connection_config.local_port)
+            await self.start_routing(local_interface_ip)
 
     async def start_tunnelling(
         self, local_ip, local_port, gateway_ip, gateway_port, auto_reconnect, auto_reconnect_wait,
@@ -168,11 +168,11 @@ class KNXIPInterface:
         )
         await self.interface.start()
 
-    async def start_routing(self, local_ip: str, local_port: int) -> None:
+    async def start_routing(self, local_ip: str) -> None:
         """Start KNX/IP Routing."""
         validate_ip(local_ip, address_name="Local IP address")
         logger.debug("Starting Routing from %s", local_ip)
-        self.interface = Routing(self.xknx, self.telegram_received, local_ip, local_port)
+        self.interface = Routing(self.xknx, self.telegram_received, local_ip)
         await self.interface.start()
 
     async def stop(self) -> None:

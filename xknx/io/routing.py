@@ -23,7 +23,7 @@ logger = logging.getLogger("xknx.log")
 class Routing:
     """Class for handling KNX/IP routing."""
 
-    def __init__(self, xknx, telegram_received_callback, local_ip, local_port):
+    def __init__(self, xknx, telegram_received_callback, local_ip):
         """Initialize Routing class."""
         self.xknx = xknx
         self.telegram_received_callback = telegram_received_callback
@@ -31,7 +31,7 @@ class Routing:
 
         self.udpclient = UDPClient(
             self.xknx,
-            (local_ip, local_port),
+            (local_ip, 0),
             (self.xknx.multicast_group, self.xknx.multicast_port),
             multicast=True,
         )
