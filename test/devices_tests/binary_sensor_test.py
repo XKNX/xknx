@@ -106,9 +106,9 @@ class TestBinarySensor(unittest.TestCase):
         # multiple telegrams during reset_after time period shall reset timer
         self.loop.run_until_complete(binaryinput.process(telegram_on))
         async_after_update_callback.assert_called_once()
-        self.loop.run_until_complete(asyncio.sleep(reset_after_sec / 2))
         self.loop.run_until_complete(binaryinput.process(telegram_on))
-        # second telegram resets timer but doesn't run callback
+        self.loop.run_until_complete(binaryinput.process(telegram_on))
+        # second and third telegram resets timer but doesn't run callback
         async_after_update_callback.assert_called_once()
         self.assertTrue(binaryinput.state)
         self.loop.run_until_complete(asyncio.sleep(reset_after_sec * 1.1))
