@@ -9,7 +9,7 @@ nav_order: 13
 Home Assistant KNX Integration
 ========================
 
-XKNX is shipped within [Home Assistant (HA)](https://www.home-assistant.io/), the great solution for home automation, in the form of the included [KNX integration](https://www.home-assistant.io/integrations/#search/KNX).
+XKNX is shipped within [Home Assistant (HA)](https://www.home-assistant.io/), the great solution for home automation, in the form of the included [KNX integration](https://www.home-assistant.io/integrations/knx/).
 
 For development and debugging reasons - or to catch up with the newest features - you may still want to use the custom component version of the plugin.
 
@@ -57,25 +57,21 @@ Starting via service is also possible, but you have to change the configuration 
 Configuration:
 --------------
 
-The configuration for the manually checked out version works the same as described within [Home Assistant KNX documentation](https://home-assistant.io/integrations/#search/knx) with the difference that the integration and platform is called `xknx` instead of `knx` (which is the HA default KNX integration and platform name).
+The configuration for the manually checked out version works the same as described within [Home Assistant KNX documentation](https://www.home-assistant.io/integrations/knx/) with the difference that the integration and platform is called `xknx` instead of `knx` (which is the HA default KNX integration and platform name).
 
 ```yaml
 xknx:
   tunneling:
     host: '192.168.2.23'
-    port: 3671
-    local_ip: '192.168.2.109'
 
-light:
-  - platform: xknx
-    name: Kitchen-Light-1
-    address: '1/0/9'
-    brightness_address: '1/0/11'
+  light:
+    - name: Kitchen-Light-1
+      address: '1/0/9'
+      brightness_address: '1/0/11'
 
-switch:
-  - platform: xknx
-    name: Kitchen.Coffee
-    address: '1/1/6'
+  switch:
+    - name: Kitchen.Coffee
+      address: '1/1/6'
 ```
 
 

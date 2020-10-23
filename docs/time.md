@@ -30,6 +30,7 @@ await xknx.devices['TimeTest'].sync()
 * `group_address` is the KNX group address of the sensor device.
 * `broadcast_type` defines the value type that will be sent to the KNX bus. Valid attributes are: 'time', 'date' and 'datetime'. Default: `time`
 * `localtime` If set `True` sync() and GroupValueRead requests always return the current local time. On `False` the set value will be sent. Default: `True`
+* `device_updated_cb` awaitable callback for each update.
 
 
 ## [](#header-2)Configuration via **xknx.yaml**
@@ -52,16 +53,11 @@ from xknx import XKNX
 from xknx.devices import DateTime
 
 async def main():
-    xknx = XKNX()
-    time = DateTime(xknx, 'TimeTest', group_address='1/2/3')
-    print("Sending time to KNX bus every hour")
-    await xknx.start(daemon_mode=True, state_updater=True)
-    await xknx.stop()
+    async with XKNX(daemon_mode=True) as xknx:
+        time = DateTime(xknx, 'TimeTest', group_address='1/2/3')
+        print("Sending time to KNX bus every hour")
 
-# pylint: disable=invalid-name
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
-loop.close()
+asyncio.run(main())
 ```
 
 ## [](#header-2)Interface
@@ -74,6 +70,7 @@ from xknx.devices import DateTime
 xknx = XKNX()
 time_device = DateTime(xknx, 'TimeTest', group_address='1/2/3', broadcast_type='time')
 
+await xknx.start()
 # Sending Time to KNX bus
 await time_device.broadcast_localtime()
 ```

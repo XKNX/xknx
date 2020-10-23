@@ -25,9 +25,7 @@ async def main():
 
     await xknx.stop()
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
-loop.close()
+asyncio.run(main())
 ```
 
 # [](#header-2)Explanation En Dé­tail:
@@ -57,16 +55,6 @@ Asynchronous start of the XKNX object. `xknx.start()` will connect to a KNX/IP d
 
 Asynchronous stop of the XKNX object. `xknx.stop()` will disconnect from Tunnels - which is important bc most of the devices have a limited amount of channels.
 
-```
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
-loop.close()
-```
-
-Boilerplate code, for starting an asynchonous function. See [asyncio](https://www.python.org/dev/peps/pep-3156/) documentation for details.
-
-
-_Important Note:_ If you are using Python 3.5 you have to replace the `await` syntax with the `@asyncio.coroutine` syntax.
 
 
 
