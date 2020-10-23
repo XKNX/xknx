@@ -4,6 +4,7 @@ from xknx.devices import Cover as XknxCover
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    DEVICE_CLASSES,
     DEVICE_CLASS_BLIND,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
@@ -47,6 +48,8 @@ class KNXCover(KnxEntity, CoverEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
+        if self._device.device_class in DEVICE_CLASSES:
+            return self._device.device_class
         if self._device.supports_angle:
             return DEVICE_CLASS_BLIND
         return None
