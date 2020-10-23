@@ -79,6 +79,11 @@ class TestSensor(unittest.TestCase):
         sensor.sensor_value.payload = payload
 
         telegram = Telegram(group_address=GroupAddress("1/2/3"), payload=payload)
+        response_telegram = Telegram(
+            group_address=GroupAddress("1/2/3"),
+            payload=payload,
+            telegramtype=TelegramType.GROUP_RESPONSE,
+        )
 
         # verify not called when always_callback is False
         self.loop.run_until_complete(sensor.process(telegram))
@@ -93,7 +98,7 @@ class TestSensor(unittest.TestCase):
         after_update_callback.reset_mock()
 
         # verify not called when processing read responses
-        self.loop.run_until_complete(sensor.process_group_response(telegram))
+        self.loop.run_until_complete(sensor.process(response_telegram))
         after_update_callback.assert_not_called()
 
     def test_str_acceleration(self):
