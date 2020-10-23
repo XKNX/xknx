@@ -65,12 +65,16 @@ class ConfigV1:
     def env_general(self):
         """Get Env Vars for the general section."""
         if os.getenv('XKNX_GENERAL_OWN_ADDRESS', default=None):
+            logger.debug('XKNX_GENERAL_OWN_ADDRESS overwrite from env')
             self.xknx.own_address = os.getenv('XKNX_GENERAL_OWN_ADDRESS')
         if os.getenv('XKNX_GENERAL_RATE_LIMIT', default=None):
+            logger.debug('XKNX_GENERAL_RATE_LIMIT overwrite from env')
             self.xknx.rate_limit = os.getenv('XKNX_GENERAL_RATE_LIMIT')
         if os.getenv('XKNX_GENERAL_MULTICAST_GROUP', default=None):
+            logger.debug('XKNX_GENERAL_MULTICAST_GROUP overwrite from env')
             self.xknx.multicast_group = os.getenv('XKNX_GENERAL_MULTICAST_GROUP')
         if os.getenv('XKNX_GENERAL_MULTICAST_PORT', default=None):
+            logger.debug('XKNX_GENERAL_MULTICAST_PORT overwrite from env')
             self.xknx.multicast_port = os.getenv('XKNX_GENERAL_MULTICAST_PORT')
 
     def parse_connection(self, doc):
@@ -117,17 +121,23 @@ class ConfigV1:
 
     def env_connection(self):
         if os.getenv('XKNX_CONNECTION_GATEWAY_IP', default=None):
+            logger.debug('XKNX_CONNECTION_GATEWAY_IP overwrite from env')
             self.xknx.connection_config.gateway_ip = os.getenv('XKNX_CONNECTION_GATEWAY_IP')
         if os.getenv('XKNX_CONNECTION_GATEWAY_PORT', default=None):
-            self.xknx.connection_config.gateway_port = os.getenv('XKNX_CONNECTION_GATEWAY_PORT')
+            logger.debug('XKNX_CONNECTION_GATEWAY_PORT overwrite from env')
+            self.xknx.connection_config.gateway_port = int(os.getenv('XKNX_CONNECTION_GATEWAY_PORT'))
         if os.getenv('XKNX_CONNECTION_LOCAL_IP', default=None):
+            logger.debug('XKNX_CONNECTION_LOCAL_IP overwrite from env')
             self.xknx.connection_config.local_ip = os.getenv('XKNX_CONNECTION_LOCAL_IP')
         if os.getenv('XKNX_CONNECTION_LOCAL_PORT', default=None):
-            self.xknx.connection_config.local_port = os.getenv('XKNX_CONNECTION_LOCAL_PORT')
+            logger.debug('XKNX_CONNECTION_LOCAL_PORT overwrite from env')
+            self.xknx.connection_config.local_port = int(os.getenv('XKNX_CONNECTION_LOCAL_PORT'))
         if os.getenv('XKNX_CONNECTION_BIND_IP', default=None):
+            logger.debug('XKNX_CONNECTION_BIND_IP overwrite from env')
             self.xknx.connection_config.bind_ip = os.getenv('XKNX_CONNECTION_BIND_IP')
         if os.getenv('XKNX_CONNECTION_BIND_PORT', default=None):
-            self.xknx.connection_config.bind_port = os.getenv('XKNX_CONNECTION_BIND_PORT')
+            logger.debug('XKNX_CONNECTION_BIND_PORT overwrite from env')
+            self.xknx.connection_config.bind_port = int(os.getenv('XKNX_CONNECTION_BIND_PORT'))
 
     def parse_groups(self, doc):
         """Parse the group section of xknx.yaml."""
