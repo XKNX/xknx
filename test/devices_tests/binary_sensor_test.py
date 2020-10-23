@@ -7,7 +7,7 @@ from xknx import XKNX
 from xknx.devices import Action, BinarySensor, Switch
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram import GroupAddress, Telegram, TelegramType
 
 
 class AsyncMock(MagicMock):
@@ -83,16 +83,38 @@ class TestBinarySensor(unittest.TestCase):
         """Test process / reading telegrams from telegram queue."""
         xknx = XKNX()
         reset_after_sec = 0.001
+        async_after_update_callback = AsyncMock()
         binaryinput = BinarySensor(
-            xknx, "TestInput", "1/2/3", reset_after=reset_after_sec
+            xknx,
+            "TestInput",
+            "1/2/3",
+            reset_after=reset_after_sec,
+            device_updated_cb=async_after_update_callback,
         )
         telegram_on = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
         )
 
         self.loop.run_until_complete(binaryinput.process(telegram_on))
-        self.loop.run_until_complete(asyncio.sleep(reset_after_sec * 2))
-        self.assertEqual(binaryinput.state, False)
+        self.assertTrue(binaryinput.state)
+        self.loop.run_until_complete(asyncio.sleep(reset_after_sec * 1.1))
+        self.assertFalse(binaryinput.state)
+        # once for 'on' and once for 'off'
+        self.assertEqual(async_after_update_callback.call_count, 2)
+
+        async_after_update_callback.reset_mock()
+        # multiple telegrams during reset_after time period shall reset timer
+        self.loop.run_until_complete(binaryinput.process(telegram_on))
+        async_after_update_callback.assert_called_once()
+        self.loop.run_until_complete(binaryinput.process(telegram_on))
+        self.loop.run_until_complete(binaryinput.process(telegram_on))
+        # second and third telegram resets timer but doesn't run callback
+        async_after_update_callback.assert_called_once()
+        self.assertTrue(binaryinput.state)
+        self.loop.run_until_complete(asyncio.sleep(reset_after_sec * 1.1))
+        self.assertFalse(binaryinput.state)
+        # once for 'on' and once for 'off'
+        self.assertEqual(async_after_update_callback.call_count, 2)
 
     def test_process_action(self):
         """Test process / reading telegrams from telegram queue. Test if action is executed."""
@@ -216,12 +238,7 @@ class TestBinarySensor(unittest.TestCase):
         switch = BinarySensor(
             xknx, "TestInput", group_address_state="1/2/3", ignore_internal_state=False
         )
-
-        after_update_callback = Mock()
-
-        async def async_after_update_callback(device):
-            """Async callback."""
-            after_update_callback(device)
+        async_after_update_callback = AsyncMock()
 
         switch.register_device_updated_cb(async_after_update_callback)
 
@@ -229,12 +246,12 @@ class TestBinarySensor(unittest.TestCase):
         self.loop.run_until_complete(switch.process(telegram))
         # no _context_task started because ignore_internal_state is False
         self.assertIsNone(switch._context_task)
-        after_update_callback.assert_called_once_with(switch)
+        async_after_update_callback.assert_called_once_with(switch)
 
-        after_update_callback.reset_mock()
+        async_after_update_callback.reset_mock()
         # send same telegram again
         self.loop.run_until_complete(switch.process(telegram))
-        after_update_callback.assert_not_called()
+        async_after_update_callback.assert_not_called()
 
     def test_process_callback_ignore_internal_state(self):
         """Test after_update_callback after state of switch was changed."""
@@ -247,12 +264,7 @@ class TestBinarySensor(unittest.TestCase):
             ignore_internal_state=True,
             context_timeout=0.001,
         )
-
-        after_update_callback = Mock()
-
-        async def async_after_update_callback(device):
-            """Async callback."""
-            after_update_callback(device)
+        async_after_update_callback = AsyncMock()
 
         switch.register_device_updated_cb(async_after_update_callback)
 
@@ -260,25 +272,25 @@ class TestBinarySensor(unittest.TestCase):
         self.assertEqual(switch.counter, 0)
 
         self.loop.run_until_complete(switch.process(telegram))
-        after_update_callback.assert_not_called()
+        async_after_update_callback.assert_not_called()
         self.assertEqual(switch.counter, 1)
         self.loop.run_until_complete(switch._context_task)
-        after_update_callback.assert_called_with(switch)
+        async_after_update_callback.assert_called_with(switch)
         # once with counter 1 and once with counter 0
-        self.assertEqual(after_update_callback.call_count, 2)
+        self.assertEqual(async_after_update_callback.call_count, 2)
 
-        after_update_callback.reset_mock()
+        async_after_update_callback.reset_mock()
         # send same telegram again
         self.loop.run_until_complete(switch.process(telegram))
         self.assertEqual(switch.counter, 1)
         self.loop.run_until_complete(switch.process(telegram))
         self.assertEqual(switch.counter, 2)
-        after_update_callback.assert_not_called()
+        async_after_update_callback.assert_not_called()
 
         self.loop.run_until_complete(switch._context_task)
-        after_update_callback.assert_called_with(switch)
+        async_after_update_callback.assert_called_with(switch)
         # once with counter 2 and once with counter 0
-        self.assertEqual(after_update_callback.call_count, 2)
+        self.assertEqual(async_after_update_callback.call_count, 2)
         self.assertEqual(switch.counter, 0)
 
     def test_process_callback_ignore_internal_state_no_counter(self):
@@ -292,12 +304,7 @@ class TestBinarySensor(unittest.TestCase):
             ignore_internal_state=True,
             context_timeout=0,
         )
-
-        after_update_callback = Mock()
-
-        async def async_after_update_callback(device):
-            """Async callback."""
-            after_update_callback(device)
+        async_after_update_callback = AsyncMock()
 
         switch.register_device_updated_cb(async_after_update_callback)
 
@@ -305,12 +312,49 @@ class TestBinarySensor(unittest.TestCase):
         self.loop.run_until_complete(switch.process(telegram))
         # no _context_task started because context_timeout is False
         self.assertIsNone(switch._context_task)
-        after_update_callback.assert_called_once_with(switch)
+        async_after_update_callback.assert_called_once_with(switch)
 
-        after_update_callback.reset_mock()
+        async_after_update_callback.reset_mock()
         # send same telegram again
         self.loop.run_until_complete(switch.process(telegram))
-        after_update_callback.assert_called_once_with(switch)
+        async_after_update_callback.assert_called_once_with(switch)
+
+    def test_process_group_value_response(self):
+        """Test precess of GroupValueResponse telegrams."""
+        # pylint: disable=protected-access
+        xknx = XKNX()
+        switch = BinarySensor(
+            xknx,
+            "TestInput",
+            group_address_state="1/2/3",
+            ignore_internal_state=True,
+        )
+        async_after_update_callback = AsyncMock()
+
+        switch.register_device_updated_cb(async_after_update_callback)
+
+        write_telegram = Telegram(
+            group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+        )
+        response_telegram = Telegram(
+            group_address=GroupAddress("1/2/3"),
+            payload=DPTBinary(1),
+            telegramtype=TelegramType.GROUP_RESPONSE,
+        )
+        self.assertIsNone(switch.state)
+        # initial GroupValueResponse changes state and runs callback
+        self.loop.run_until_complete(switch.process(response_telegram))
+        self.assertTrue(switch.state)
+        async_after_update_callback.assert_called_once_with(switch)
+        # GroupValueWrite with same payload runs callback because of `ignore_internal_state`
+        async_after_update_callback.reset_mock()
+        self.loop.run_until_complete(switch.process(write_telegram))
+        self.assertTrue(switch.state)
+        async_after_update_callback.assert_called_once_with(switch)
+        # GroupValueResponse should not run callback when state has not changed
+        async_after_update_callback.reset_mock()
+        self.loop.run_until_complete(switch.process(response_telegram))
+        async_after_update_callback.assert_not_called()
 
     #
     # TEST COUNTER

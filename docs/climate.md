@@ -11,61 +11,16 @@ nav_order: 2
 
 Climate are representations of KNX HVAC/Climate controls.
 
-## [](#header-2)Example
-
-```python
-climate_setpoint_shift = Climate(
-    xknx,
-    'TestClimateSPS',
-    group_address_temperature='1/2/2',
-    group_address_target_temperature_state='1/2/5',
-    group_address_setpoint_shift='1/2/3',
-    group_address_setpoint_shift_state='1/2/4'
-)
-
-climate_target_temp = Climate(
-    xknx,
-    'TestClimateTT',
-    group_address_temperature='2/2/2',
-    group_address_target_temperature='2/2/3',
-    group_address_target_temperature_state='2/2/4'
-)
-```
-
-## [](#header-2)Configuration via **xknx.yaml**
-
-Climate devices are usually configured via [`xknx.yaml`](/configuration):
-
-```yaml
-groups:
-  climate:
-    Children.Climate:
-      {
-        group_address_temperature: "1/7/2",
-        group_address_setpoint_shift: "1/7/3",
-        group_address_target_temperature_state: "1/7/4",
-      }
-    Office.Climate:
-      {
-        group_address_temperature: "1/7/5",
-        group_address_operation_mode: "1/7/6",
-      }
-    Attic.Climate:
-      {
-        group_address_temperature: "1/7/7",
-        group_address_operation_mode_protection: "1/7/8",
-        group_address_operation_mode_night: "1/7/9",
-        group_address_operation_mode_comfort: "1/7/10",
-      }
-```
-
 ## [](#header-2)Interface
 
+- **xknx** is the XKNX object.
+- **name** is the name of the object.
 - **group_address_temperature** KNX address of current room temperature.
 - **group_address_target_temperature** KNX address for setting the target temperature if setpoint shift is not supported.
 - **group_address_target_temperature_state** KNX address for reading the target temperature from the KNX bus. Used in for setpoint_shift calculations as base temperature.
 - **group_address_setpoint_shift** KNX address to set setpoint_shift (base temperature deviation).
 - **group_address_setpoint_shift_state** KNX address to read current setpoint_shift.
+- **setpoint_shift_mode** Enum for setpoint_shift payload encoding. Can be DPT 6.010 or DPT 9.002. Default: SetpointShiftMode.DPT6010
 - **setpoint_shift_max** Maximum value for setpoint_shift.
 - **setpoint_shift_min** Minimum value for setpoint_shift.
 - **temperature_step** Set the multiplier for setpoint_shift (DPT 6) calculations and the step size for HA UI-elements.
@@ -75,7 +30,10 @@ groups:
 - **max_temp** Maximum value for target temperature.
 - **min_temp** Minimum value for target temperature.
 - **mode** ClimateMode instance for this climate device
+- **device_updated_cb** awaitable callback for each update.
 
+* **xknx** is the XKNX object.
+* **name** is the name of the object.
 * **group_address_operation_mode** KNX address for operation mode. DPT 20.102
 * **group_address_operation_mode_state** KNX address for operation mode status. DPT 20.102
 * **group_address_operation_mode_protection** KNX address for switching on/off frost/heat protection mode. DPT 1
@@ -90,6 +48,7 @@ groups:
 * **group_address_heat_cool_state** KNX address for reading heating / cooling mode. DPT 1
 * **operation_modes** Overrides the supported operation modes.
 * **controller_modes** Overrides the supported controller modes.
+* **device_updated_cb** awaitable callback for each update.
 
 **Note:** `group_address_operation_mode_protection` / `group_address_operation_mode_night` / `group_address_operation_mode_comfort` / `group_address_operation_mode_standby` are not necessary if `group_address_operation_mode` was specified. When one of these is set `True`, the others will be set `False`. When one of these is set "Standby", "Comfort", "Frost_Protection" and "Night" will be set as supported. If `group_address_operation_mode_standby` is omitted, "Standby" is set when the other 3 are set to `False`.
 If only a subset of operation modes shall be used a list of supported modes may be passed to `operation_modes`.
@@ -136,4 +95,52 @@ await climate.set_setpoint_shift(1)
 # Reading climate device
 await climate.sync()
 print("Current temperature: ", climate.temperature)
+```
+
+## [](#header-2)Example
+
+```python
+climate_setpoint_shift = Climate(
+    xknx,
+    'TestClimateSPS',
+    group_address_temperature='1/2/2',
+    group_address_target_temperature_state='1/2/5',
+    group_address_setpoint_shift='1/2/3',
+    group_address_setpoint_shift_state='1/2/4'
+)
+
+climate_target_temp = Climate(
+    xknx,
+    'TestClimateTT',
+    group_address_temperature='2/2/2',
+    group_address_target_temperature='2/2/3',
+    group_address_target_temperature_state='2/2/4'
+)
+```
+
+## [](#header-2)Configuration via **xknx.yaml**
+
+Climate devices are usually configured via [`xknx.yaml`](/configuration):
+
+```yaml
+groups:
+  climate:
+    Children.Climate:
+      {
+        group_address_temperature: "1/7/2",
+        group_address_setpoint_shift: "1/7/3",
+        group_address_target_temperature_state: "1/7/4",
+      }
+    Office.Climate:
+      {
+        group_address_temperature: "1/7/5",
+        group_address_operation_mode: "1/7/6",
+      }
+    Attic.Climate:
+      {
+        group_address_temperature: "1/7/7",
+        group_address_operation_mode_protection: "1/7/8",
+        group_address_operation_mode_night: "1/7/9",
+        group_address_operation_mode_comfort: "1/7/10",
+      }
 ```
