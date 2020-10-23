@@ -29,7 +29,7 @@ class BinarySensor(Device):
         group_address_state=None,
         invert: Optional[bool] = False,
         sync_state: bool = True,
-        ignore_internal_state: bool = True,
+        ignore_internal_state: bool = False,
         device_class: str = None,
         reset_after: Optional[float] = None,
         actions: List[Action] = None,
@@ -44,7 +44,7 @@ class BinarySensor(Device):
 
         self.actions = actions
         self.device_class = device_class
-        self.ignore_internal_state = ignore_internal_state
+        self.ignore_internal_state = ignore_internal_state or bool(context_timeout)
         self.reset_after = reset_after
         self.state = None
 
@@ -86,7 +86,7 @@ class BinarySensor(Device):
         reset_after = config.get("reset_after")
         sync_state = config.get("sync_state", True)
         device_class = config.get("device_class")
-        ignore_internal_state = config.get("ignore_internal_state", True)
+        ignore_internal_state = config.get("ignore_internal_state", False)
         actions = []
         if "actions" in config:
             for action in config["actions"]:
@@ -179,13 +179,19 @@ class BinarySensor(Device):
     async def process_group_write(self, telegram):
         """Process incoming and outgoing GROUP WRITE telegram."""
         if await self.remote_value.process(telegram, always_callback=True):
+            self._process_reset_after()
 
-            if self.reset_after is not None and self.state:
-                if self._reset_task:
-                    self._reset_task.cancel()
-                self._reset_task = asyncio.create_task(
-                    self._reset_state(self.reset_after)
-                )
+    async def process_group_response(self, telegram):
+        """Process incoming GroupValueResponse telegrams."""
+        if await self.remote_value.process(telegram, always_callback=False):
+            self._process_reset_after()
+
+    def _process_reset_after(self):
+        """Create Task for resetting state if 'reset_after' is configured."""
+        if self.reset_after is not None and self.state:
+            if self._reset_task:
+                self._reset_task.cancel()
+            self._reset_task = asyncio.create_task(self._reset_state(self.reset_after))
 
     async def _reset_state(self, wait_seconds: float):
         await asyncio.sleep(wait_seconds)
