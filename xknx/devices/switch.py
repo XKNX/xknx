@@ -8,6 +8,7 @@ It provides functionality for
 """
 import asyncio
 import logging
+from typing import Optional
 
 from xknx.remote_value import RemoteValueSwitch
 
@@ -22,10 +23,11 @@ class Switch(Device):
     def __init__(
         self,
         xknx,
-        name,
-        reset_after=None,
+        name: str,
         group_address=None,
         group_address_state=None,
+        invert: Optional[bool] = False,
+        reset_after: Optional[float] = None,
         device_updated_cb=None,
     ):
         """Initialize Switch class."""
@@ -40,8 +42,8 @@ class Switch(Device):
             xknx,
             group_address,
             group_address_state,
+            invert=invert,
             device_name=self.name,
-            after_update_cb=self.after_update,
         )
 
     def _iter_remote_values(self):
@@ -58,12 +60,16 @@ class Switch(Device):
         """Initialize object from configuration structure."""
         group_address = config.get("group_address")
         group_address_state = config.get("group_address_state")
+        invert = config.get("invert")
+        reset_after = config.get("reset_after")
 
         return cls(
             xknx,
             name,
             group_address=group_address,
             group_address_state=group_address_state,
+            invert=invert,
+            reset_after=reset_after,
         )
 
     async def set_on(self):
@@ -95,6 +101,7 @@ class Switch(Device):
                 self._reset_task = asyncio.create_task(
                     self._reset_state(self.reset_after)
                 )
+            await self.after_update()
 
     async def _reset_state(self, wait_seconds: float):
         await asyncio.sleep(wait_seconds)

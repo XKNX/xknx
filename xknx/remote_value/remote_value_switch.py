@@ -3,7 +3,7 @@ Module for managing an DPT Switch remote value.
 
 DPT 1.001.
 """
-from typing import List
+from typing import List, Optional
 
 from xknx.dpt import DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -19,11 +19,11 @@ class RemoteValueSwitch(RemoteValue):
         xknx,
         group_address=None,
         group_address_state=None,
-        sync_state=True,
-        device_name=None,
-        feature_name="State",
+        sync_state: bool = True,
+        device_name: str = None,
+        feature_name: str = "State",
         after_update_cb=None,
-        invert=False,
+        invert: Optional[bool] = False,
         passive_group_addresses: List[str] = None,
     ):
         """Initialize remote value of KNX DPT 1.001."""
@@ -38,7 +38,7 @@ class RemoteValueSwitch(RemoteValue):
             after_update_cb=after_update_cb,
             passive_group_addresses=passive_group_addresses,
         )
-        self.invert = invert
+        self.invert = bool(invert)
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""

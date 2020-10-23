@@ -59,21 +59,36 @@ class TestSwitch(unittest.TestCase):
         """Test process / reading telegrams from telegram queue. Test if device was updated."""
         xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
-
         self.assertEqual(switch.state, False)
 
         telegram_on = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
         )
         self.loop.run_until_complete(switch.process(telegram_on))
-
         self.assertEqual(switch.state, True)
 
         telegram_off = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
         )
         self.loop.run_until_complete(switch.process(telegram_off))
+        self.assertEqual(switch.state, False)
 
+    def test_process_invert(self):
+        """Test process / reading telegrams from telegram queue with inverted switch."""
+        xknx = XKNX()
+        switch = Switch(xknx, "TestOutlet", group_address="1/2/3", invert=True)
+        self.assertEqual(switch.state, False)
+
+        telegram_on = Telegram(
+            group_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
+        )
+        self.loop.run_until_complete(switch.process(telegram_on))
+        self.assertEqual(switch.state, True)
+
+        telegram_off = Telegram(
+            group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+        )
+        self.loop.run_until_complete(switch.process(telegram_off))
         self.assertEqual(switch.state, False)
 
     def test_process_reset_after(self):
@@ -163,6 +178,28 @@ class TestSwitch(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(0))
+        )
+
+    #
+    # TEST SET INVERT
+    #
+    def test_set_invert(self):
+        """Test switching on/off inverted switch."""
+        xknx = XKNX()
+        switch = Switch(xknx, "TestOutlet", group_address="1/2/3", invert=True)
+
+        self.loop.run_until_complete(switch.set_on())
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        telegram = xknx.telegrams.get_nowait()
+        self.assertEqual(
+            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(0))
+        )
+
+        self.loop.run_until_complete(switch.set_off())
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        telegram = xknx.telegrams.get_nowait()
+        self.assertEqual(
+            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(1))
         )
 
     #

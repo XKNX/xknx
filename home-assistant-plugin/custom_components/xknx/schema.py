@@ -15,6 +15,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    CONF_INVERT,
     CONF_RESET_AFTER,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
@@ -85,6 +86,7 @@ class BinarySensorSchema:
 
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_SYNC_STATE = CONF_SYNC_STATE
+    CONF_INVERT = CONF_INVERT
     CONF_IGNORE_INTERNAL_STATE = "ignore_internal_state"
     CONF_CONTEXT_TIMEOUT = "context_timeout"
     CONF_RESET_AFTER = CONF_RESET_AFTER
@@ -108,6 +110,7 @@ class BinarySensorSchema:
                     vol.Coerce(float), vol.Range(min=0, max=10)
                 ),
                 vol.Optional(CONF_DEVICE_CLASS): cv.string,
+                vol.Optional(CONF_INVERT): cv.boolean,
                 vol.Optional(CONF_RESET_AFTER): cv.positive_int,
             }
         ),
@@ -257,6 +260,7 @@ class ClimateSchema:
 class SwitchSchema:
     """Voluptuous schema for KNX switches."""
 
+    CONF_INVERT = CONF_INVERT
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_RESET_AFTER = CONF_RESET_AFTER
 
@@ -266,6 +270,7 @@ class SwitchSchema:
             vol.Required(CONF_ADDRESS): cv.string,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_INVERT): cv.boolean,
             vol.Optional(CONF_RESET_AFTER): vol.All(vol.Coerce(int), vol.Range(min=0)),
         }
     )

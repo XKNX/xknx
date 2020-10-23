@@ -71,25 +71,7 @@ Will disconnect from tunneling devices and stop the different queues.
 
 # [](#header-2)Using XKNX as an asynchronous context manager
 
-Except of writing:
-
-```python
-import asyncio
-
-async def main():
-    xknx = XKNX()
-    await xknx.start()
-    switch = Switch(xknx,
-                name='TestSwitch',
-                group_address='1/1/11')
-
-    await switch.set_on()
-    await xknx.stop()
-
-asyncio.run(main())
-```
-
-you can now use the following syntax:
+You can also use an asynchronous context manager instead of calling `xknx.start()` and `xknx.stop()`:
 
 ```python
 import asyncio
@@ -107,7 +89,7 @@ asyncio.run(main())
 
 # [](#header-2)Devices
 
-The XKNX may keep all devices in a local storage named `devices`. All devices may be accessed by their name: `xknx.devices['NameOfDevice']`. If XKNX receives an update via KNX GROUP WRITE the device is updated automatically.
+XKNX keeps all initialized devices in a local storage named `devices`. All devices may be accessed by their name: `xknx.devices['NameOfDevice']`. When an update via KNX GroupValueWrite or GroupValueResponse was received devices will be updated accordingly.
 
 Example:
 
@@ -123,7 +105,7 @@ await xknx.devices['TestSwitch'].set_off()
 
 # [](#header-2)Callbacks
 
-The `telegram_received_cb` will be called for each KNX telegram received by the XKNX daemon. Example:
+An awaitable `telegram_received_cb` will be called for each KNX telegram received by the XKNX daemon. Example:
 
 ```python
 import asyncio
@@ -133,14 +115,11 @@ async def telegram_received_cb(telegram):
     print("Telegram received: {0}".format(telegram))
 
 async def main():
-    xknx = XKNX(telegram_received_cb=telegram_received_cb)
-    await xknx.start(daemon_mode=True)
+    xknx = XKNX(telegram_received_cb=telegram_received_cb, daemon_mode=True)
+    await xknx.start()
     await xknx.stop()
 
-# pylint: disable=invalid-name
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
-loop.close()
+asyncio.run(main())
 ```
 
 For all devices stored in the `devices` storage (see [above](#devices)) a callback for each update may be defined:
@@ -156,19 +135,15 @@ async def device_updated_cb(device):
 
 
 async def main():
-    xknx = XKNX(device_updated_cb=device_updated_cb)
+    xknx = XKNX(device_updated_cb=device_updated_cb, daemon_mode=True)
     switch = Switch(xknx,
                     name='TestSwitch',
                     group_address='1/1/11')
 
-    await xknx.start(daemon_mode=True)
-
+    await xknx.start()
     await xknx.stop()
 
-# pylint: disable=invalid-name
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
-loop.close()
+asyncio.run(main())
 ```
 
 # [](#header-2)Dockerised xknx's app 

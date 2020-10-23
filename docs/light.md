@@ -11,56 +11,27 @@ nav_order: 4
 
 The Light object is either a representation of a binary or dimm actor, LED-controller or DALI-gateway.
 
-Expected datapoint types for light functions and their corresponding state addresses:
-- switch: DPT 1.001
-- brightness: DPT 5.001
-- color: DPT 232.600
-- rgbw: DPT 251.600
-- tunable_white: DPT 5.001
-- color_temperature: DPT 7.600
-
-## [](#header-2)Example
-
-```python
-light = Light(xknx,
-              name='TestLight',
-              group_address_switch='1/2/3',
-              group_address_brightness='1/2/5')
-
-# Accessing light
-await xknx.devices['TestLight'].set_on()
-await xknx.devices['TestLight'].set_brightness(23)
-```
-
-## [](#header-2)Configuration via **xknx.yaml**
-
-Lights are usually configured via [`xknx.yaml`](/configuration):
-
-```yaml
-groups:
-    light:
-
-        # Lights with dimming
-        Kitchen.Light_1:     {group_address_switch: '1/6/1', group_address_brightness: '1/6/3'}
-        Diningroom.Light_1:  {group_address_switch: '1/6/4', group_address_brightness: '1/6/6'}
-
-        # Light without dimming
-        Living-Room.Light_1: {group_address_switch: '1/6/7'}
-
-        # Light with extra addresses for states:
-        Office.Light_1:  {group_address_switch: '1/7/4', group_address_switch_state: '1/7/5', group_address_brightness: '1/7/6', group_address_brightness_state: '1/7/7'}
-
-        # Light with color temperature in Kelvin
-        Living-Room.Light_CT:  {group_address_switch: '1/6/11', group_address_switch_state: '1/6/10', group_address_brightness: '1/6/12', group_address_brightness_state: '1/6/13', group_address_color_temperature: '1/6/14',  group_address_color_temperature_state: '1/6/15'}
-
-        # Light with color temperature in percent
-        Living-Room.Light_TW:  {group_address_switch: '1/6/21', group_address_switch_state: '1/6/20', group_address_brightness: '1/6/22', group_address_brightness_state: '1/6/23', group_address_tunable_white: '1/6/24',  group_address_tunable_white_state: '1/6/25'}
-
-```
-
-
 ## [](#header-2)Interface
 
+- `xknx` XKNX object.
+- `name` name of the device.
+- `group_address_switch` KNX group address to switch the light. *DPT 1.001*
+- `group_address_switch_state` KNX group address for the state of the light. *DPT 1.001*
+- `group_address_brightness` KNX group address to set the brightness. *DPT 5.001*
+- `group_address_brightness_state` KNX group address for the current brightness state. *DPT 5.001*
+- `group_address_color` KNX group address to set the RGB color. *DPT 232.600*
+- `group_address_color_state` KNX group address for the current RGB color. *DPT 232.600*
+- `group_address_rgbw` KNX group address to set the RGBW color. *DPT 251.600*
+- `group_address_rgbw_state` KNX group address for the current RGBW color. *DPT 251.600*
+- `group_address_tunable_white` KNX group address to set relative color temperature. *DPT 5.001*
+- `group_address_tunable_white_state` KNX group address for the current relative color temperature. *DPT 5.001*
+- `group_address_color_temperature` KNX group address to set absolute color temperature. *DPT 7.600*
+- `group_address_color_temperature_state` KNX group address for the current absolute color temperature. *DPT 7.600*
+- `min_kelvin` lowest possible color temperature in Kelvin. Default: 2700
+- `max_kelvin` hightest possible color temperature in Kelvin. Default: 6000
+- `device_updated_cb` awaitable callback for each update.
+
+## [](#header-2)Example
 
 ```python
 light = Light(xknx,
@@ -122,4 +93,29 @@ print(light.current_color_temperature)
 await light.sync()
 ```
 
+## [](#header-2)Configuration via **xknx.yaml**
+
+Lights are usually configured via [`xknx.yaml`](/configuration):
+
+```yaml
+groups:
+    light:
+
+        # Lights with dimming
+        Kitchen.Light_1:     {group_address_switch: '1/6/1', group_address_brightness: '1/6/3'}
+        Diningroom.Light_1:  {group_address_switch: '1/6/4', group_address_brightness: '1/6/6'}
+
+        # Light without dimming
+        Living-Room.Light_1: {group_address_switch: '1/6/7'}
+
+        # Light with extra addresses for states:
+        Office.Light_1:  {group_address_switch: '1/7/4', group_address_switch_state: '1/7/5', group_address_brightness: '1/7/6', group_address_brightness_state: '1/7/7'}
+
+        # Light with color temperature in Kelvin
+        Living-Room.Light_CT:  {group_address_switch: '1/6/11', group_address_switch_state: '1/6/10', group_address_brightness: '1/6/12', group_address_brightness_state: '1/6/13', group_address_color_temperature: '1/6/14',  group_address_color_temperature_state: '1/6/15'}
+
+        # Light with color temperature in percent
+        Living-Room.Light_TW:  {group_address_switch: '1/6/21', group_address_switch_state: '1/6/20', group_address_brightness: '1/6/22', group_address_brightness_state: '1/6/23', group_address_tunable_white: '1/6/24',  group_address_tunable_white_state: '1/6/25'}
+
+```
 
