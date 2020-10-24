@@ -549,12 +549,6 @@ class TestConfig(unittest.TestCase):
         )
         self.assertFalse(TestConfig.xknx.devices.__contains__("Remote_wind_alarm"))
 
-    def test_config_file_not_found(self):
-        """Test error message when reading a non exisiting config file."""
-        with patch("logging.Logger.error") as mock_err:
-            XKNX(config="xknx_does_not_exist.yaml")
-            self.assertEqual(mock_err.call_count, 1)
-
     def test_config_file_error(self):
         """Test error message when reading an errornous config file."""
         with patch("logging.Logger.error") as mock_err, patch(
