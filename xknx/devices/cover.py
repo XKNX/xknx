@@ -270,13 +270,20 @@ class Cover(Device):
 
     async def process_group_write(self, telegram):
         """Process incoming and outgoing GROUP WRITE telegram."""
+        # call after_update to account for travelcalculator changes
         if await self.updown.process(telegram):
-            if self.updown.value == RemoteValueUpDown.Direction.UP:
+            if (
+                not self.is_opening()
+                and self.updown.value == RemoteValueUpDown.Direction.UP
+            ):
                 self.travelcalculator.start_travel_up()
-            else:
+                await self.after_update()
+            elif (
+                not self.is_closing()
+                and self.updown.value == RemoteValueUpDown.Direction.DOWN
+            ):
                 self.travelcalculator.start_travel_down()
-            # call after_update to account for travelcalculator changes
-            await self.after_update()
+                await self.after_update()
         # stop from bus
         if await self.stop_.process(telegram) or await self.step.process(telegram):
             if self.is_traveling():
