@@ -397,6 +397,10 @@ class TestCover(unittest.TestCase):
             telegram, Telegram(GroupAddress("1/2/1"), payload=DPTBinary(0))
         )
         self.assertEqual(cover.travelcalculator.travel_to_position, 50)
+        self.assertTrue(cover.is_opening())
+        # process the outgoing telegram to make sure it doesn't overwrite the target position
+        self.loop.run_until_complete(cover.process(telegram))
+        self.assertEqual(cover.travelcalculator.travel_to_position, 50)
 
     def test_position_without_position_address_down(self):
         """Test moving cover down - with no absolute positioning supported."""
@@ -415,6 +419,10 @@ class TestCover(unittest.TestCase):
         self.assertEqual(
             telegram, Telegram(GroupAddress("1/2/1"), payload=DPTBinary(1))
         )
+        self.assertEqual(cover.travelcalculator.travel_to_position, 80)
+        self.assertTrue(cover.is_closing())
+        # process the outgoing telegram to make sure it doesn't overwrite the target position
+        self.loop.run_until_complete(cover.process(telegram))
         self.assertEqual(cover.travelcalculator.travel_to_position, 80)
 
     def test_position_without_position_address_uninitialized_up(self):
