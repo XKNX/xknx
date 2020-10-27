@@ -155,7 +155,7 @@ class KNXIPInterface:
     async def start_routing(self, local_ip: str) -> None:
         """Start KNX/IP Routing."""
         validate_ip(local_ip, address_name="Local IP address")
-        logger.debug("Starting Routing from %s", local_ip)
+        logger.debug("Starting Routing from %s as %s", local_ip, self.xknx.own_address)
         self.interface = Routing(self.xknx, self.telegram_received, local_ip)
         await self.interface.start()
 
