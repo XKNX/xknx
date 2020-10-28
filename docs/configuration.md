@@ -125,7 +125,7 @@ groups:
         group_address_position_feedback: "1/4/11",
         travel_time_down: 50,
         travel_time_up: 60,
-        device_class="shutter",
+        device_class: "shutter",
       }
 
     # Central Shutters dont have short or position address
