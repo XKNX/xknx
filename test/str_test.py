@@ -166,7 +166,6 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_angle_state="1/2/8",
             travel_time_down=8,
             travel_time_up=10,
-            device_class="shutter",
         )
         self.assertEqual(
             str(cover),
