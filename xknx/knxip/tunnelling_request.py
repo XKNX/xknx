@@ -62,10 +62,10 @@ class TunnellingRequest(KNXIPBody):
         try:
             pos += self.cemi.from_knx(raw[pos:])
         except UnsupportedCEMIMessage as unsupported_cemi_err:
-            logger.warning("CEMI not supported: %s", unsupported_cemi_err)
+            logger.debug("CEMI not supported: %s", unsupported_cemi_err)
             # Set cemi to None - this is checked in Tunnel() to send Ack even for unsupported CEMI messages.
             self.cemi = None
-            pos += len(raw)
+            return len(raw)
         return pos
 
     def to_knx(self):

@@ -13,6 +13,7 @@
 
 - HA Switch entity: keep state without state_address
 - Cover: fix `set_position` without writable position / auto_stop_if_necessary
+- handle unsupported CEMI Messages without loosing tunnel connection
 
 ## 0.15.2 Winter is coming
 

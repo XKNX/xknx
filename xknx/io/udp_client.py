@@ -78,7 +78,7 @@ class UDPClient:
         self.transport = None
         self.callbacks = []
 
-    def data_received_callback(self, raw):
+    def data_received_callback(self, raw: bytes):
         """Parse and process KNXIP frame. Callback for having received an UDP packet."""
         if raw:
             try:

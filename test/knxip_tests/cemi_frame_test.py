@@ -11,20 +11,22 @@ from xknx.telegram import PhysicalAddress, Telegram
 
 
 def get_data(code, adil, flags, src, dst, mpdu_len, tpci_apci, payload):
-    return [
-        code,
-        adil,  # adil
-        (flags >> 8) & 255,  # flags
-        flags & 255,  # flags
-        (src >> 8) & 255,  # src
-        src & 255,  # src
-        (dst >> 8) & 255,  # dst
-        dst & 255,  # dst
-        mpdu_len,  # mpdu_len
-        (tpci_apci >> 8) & 255,  # tpci_apci
-        tpci_apci & 255,  # tpci_apci
-        *payload,  # payload
-    ]
+    return bytes(
+        [
+            code,
+            adil,  # adil
+            (flags >> 8) & 255,  # flags
+            flags & 255,  # flags
+            (src >> 8) & 255,  # src
+            src & 255,  # src
+            (dst >> 8) & 255,  # dst
+            dst & 255,  # dst
+            mpdu_len,  # mpdu_len
+            (tpci_apci >> 8) & 255,  # tpci_apci
+            tpci_apci & 255,  # tpci_apci
+            *payload,  # payload
+        ]
+    )
 
 
 @fixture(name="frame")
@@ -127,7 +129,9 @@ def test_from_knx_with_not_handleable_cemi(frame):
 def test_from_knx_with_not_implemented_cemi(frame):
     """Test for having not implemented CEMI set"""
     with raises(UnsupportedCEMIMessage, match=r".*Could not handle CEMIMessageCode:.*"):
-        frame.from_knx(get_data(CEMIMessageCode.L_BUSMON_IND, 0, 0, 0, 0, 2, 0, []))
+        frame.from_knx(
+            get_data(CEMIMessageCode.L_BUSMON_IND.value, 0, 0, 0, 0, 2, 0, [])
+        )
 
 
 def test_invalid_telegram(frame):

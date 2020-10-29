@@ -510,7 +510,7 @@ class TestStringRepresentations(unittest.TestCase):
             "<DIBDeviceInformation \n"
             '\tknx_medium="KNXMedium.TP1" \n'
             '\tprogramming_mode="False" \n'
-            '\tindividual_address="PhysicalAddress("1.1.0")" \n'
+            '\tindividual_address="1.1.0" \n'
             '\tinstallation_number="2" \n'
             '\tproject_number="564" \n'
             '\tserial_number="13:37:13:37:13:37" \n'

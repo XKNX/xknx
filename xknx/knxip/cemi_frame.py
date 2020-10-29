@@ -134,7 +134,9 @@ class CEMIFrame:
             self.code = CEMIMessageCode(raw[0])
         except ValueError:
             raise UnsupportedCEMIMessage(
-                "CEMIMessageCode not implemented: {} ".format(raw[0])
+                "CEMIMessageCode not implemented: {} in CEMI: {}".format(
+                    raw[0], raw.hex()
+                )
             )
 
         if self.code not in (
@@ -143,7 +145,9 @@ class CEMIFrame:
             CEMIMessageCode.L_DATA_CON,
         ):
             raise UnsupportedCEMIMessage(
-                "Could not handle CEMIMessageCode: {} / {}".format(self.code, raw[0])
+                "Could not handle CEMIMessageCode: {} / {} in CEMI: {}".format(
+                    self.code, raw[0], raw.hex()
+                )
             )
 
         return self.from_knx_data_link_layer(raw)
@@ -153,7 +157,7 @@ class CEMIFrame:
         if len(cemi) < 11:
             # eg. ETS Line-Scan issues L_DATA_IND with length 10
             raise UnsupportedCEMIMessage(
-                "CEMI too small. Length: {}; CEMI: {}".format(len(cemi), cemi)
+                "CEMI too small. Length: {}; CEMI: {}".format(len(cemi), cemi.hex())
             )
 
         # AddIL (Additional Info Length), as specified within
@@ -183,13 +187,17 @@ class CEMIFrame:
             self.cmd = APCICommand(tpci_apci & 0xFFC0)
         except ValueError:
             raise UnsupportedCEMIMessage(
-                "APCI not supported: {:#012b}".format(tpci_apci & 0xFFC0)
+                "APCI not supported: {:#012b} in CEMI: {}".format(
+                    tpci_apci & 0xFFC0, cemi.hex()
+                )
             )
 
         apdu = cemi[10 + addil :]
         if len(apdu) != self.mpdu_len:
             raise CouldNotParseKNXIP(
-                "APDU LEN should be {} but is {}".format(self.mpdu_len, len(apdu))
+                "APDU LEN should be {} but is {} in CEMI: {}".format(
+                    self.mpdu_len, len(apdu), cemi.hex()
+                )
             )
 
         if len(apdu) == 1:

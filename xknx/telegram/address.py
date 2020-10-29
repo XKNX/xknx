@@ -147,9 +147,13 @@ class PhysicalAddress(BaseAddress):
         """Return `True` if this address is a valid line address."""
         return not self.is_device
 
+    def __str__(self) -> str:
+        """Return object as in KNX notation (e.g. '1.2.3')."""
+        return f"{self.area}.{self.main}.{self.line}"
+
     def __repr__(self) -> str:
         """Return this object as parsable string."""
-        return 'PhysicalAddress("{0.area}.{0.main}.{0.line}")'.format(self)
+        return f'PhysicalAddress("{self}")'
 
 
 class GroupAddressType(Enum):
