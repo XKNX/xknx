@@ -275,10 +275,9 @@ class TestConfig(unittest.TestCase):
             Cover(
                 TestConfig.xknx,
                 "Livingroom.Shutter_3",
-                group_address_long="1/4/5",
-                group_address_short="1/4/6",
-                group_address_position_state="1/4/7",
-                group_address_position="1/4/8",
+                group_address_long="1/4/9",
+                group_address_short="1/4/10",
+                group_address_position_state="1/4/11",
                 travel_time_down=50,
                 travel_time_up=60,
                 device_class="shutter",
