@@ -268,6 +268,22 @@ class TestConfig(unittest.TestCase):
             ),
         )
 
+    def test_config_cover_device_class(self):
+        """Test reading cover with device_class from config file."""
+        self.assertEqual(
+            TestConfig.xknx.devices["Livingroom.Shutter_3"],
+            Cover(
+                TestConfig.xknx,
+                "Livingroom.Shutter_3",
+                group_address_long="1/4/9",
+                group_address_short="1/4/10",
+                group_address_position_state="1/4/11",
+                travel_time_down=50,
+                travel_time_up=60,
+                device_class="shutter",
+            ),
+        )
+
     def test_config_cover_venetian(self):
         """Test reading Cover with angle from config file."""
         self.assertEqual(

@@ -117,7 +117,7 @@ groups:
         travel_time_up: 60,
       }
 
-    # Covers without direct positioning:
+    # Covers without direct positioning and device class "shutter":
     Livingroom.Shutter_3:
       {
         group_address_long: "1/4/9",
@@ -125,6 +125,7 @@ groups:
         group_address_position_feedback: "1/4/11",
         travel_time_down: 50,
         travel_time_up: 60,
+        device_class: "shutter",
       }
 
     # Central Shutters dont have short or position address
