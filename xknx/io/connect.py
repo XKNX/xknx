@@ -24,7 +24,7 @@ class Connect(RequestResponse):
         """Create KNX/IP Frame object to be sent to device."""
         (local_addr, local_port) = self.udp_client.getsockname()
         # set control_endpoint and data_endpoint to the same udp_connection
-        if self.net_bind:
+        if self.net_bind and self.net_bind[0]:
             endpoint = HPAI(ip_addr=self.net_bind[0], port=self.net_bind[1])
         else:
             endpoint = HPAI(ip_addr=local_addr, port=local_port)
