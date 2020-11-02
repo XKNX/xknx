@@ -267,7 +267,7 @@ class TestConfig(unittest.TestCase):
                 travel_time_up=60,
             ),
         )
-        
+
     def test_config_cover_device_class(self):
         """Test reading cover with device_class from config file."""
         self.assertEqual(
