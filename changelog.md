@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### HA integration
+
+- return BinarySensor.ignore_internal_state or Sensor.always_callback for Entity.force_update instead of defaulting to `False`
+
 ## 0.15.3 Opposite day! 2020-10-29
 
 ### Devices
