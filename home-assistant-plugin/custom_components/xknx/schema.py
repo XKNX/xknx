@@ -105,7 +105,7 @@ class BinarySensorSchema:
                     cv.boolean,
                     cv.string,
                 ),
-                vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=True): cv.boolean,
+                vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=False): cv.boolean,
                 vol.Required(CONF_STATE_ADDRESS): cv.string,
                 vol.Optional(CONF_CONTEXT_TIMEOUT): vol.All(
                     vol.Coerce(float), vol.Range(min=0, max=10)
@@ -263,7 +263,6 @@ class SwitchSchema:
 
     CONF_INVERT = CONF_INVERT
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
-    CONF_RESET_AFTER = CONF_RESET_AFTER
 
     DEFAULT_NAME = "KNX Switch"
     SCHEMA = vol.Schema(
@@ -272,7 +271,6 @@ class SwitchSchema:
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_STATE_ADDRESS): cv.string,
             vol.Optional(CONF_INVERT): cv.boolean,
-            vol.Optional(CONF_RESET_AFTER): vol.All(vol.Coerce(int), vol.Range(min=0)),
         }
     )
 
