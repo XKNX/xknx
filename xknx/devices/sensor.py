@@ -23,7 +23,6 @@ class Sensor(Device):
         always_callback: bool = False,
         value_type: str = None,
         device_updated_cb=None,
-        icon=None,
     ):
         """Initialize Sensor class."""
         # pylint: disable=too-many-arguments
@@ -37,7 +36,6 @@ class Sensor(Device):
             device_name=self.name,
             after_update_cb=self.after_update,
         )
-        self.icon = icon
 
     def _iter_remote_values(self):
         """Iterate the devices RemoteValue classes."""
@@ -50,7 +48,6 @@ class Sensor(Device):
         sync_state = config.get("sync_state", True)
         always_callback = config.get("always_callback", False)
         value_type = config.get("value_type")
-        icon = config.get("icon")
 
         return cls(
             xknx,
@@ -59,7 +56,6 @@ class Sensor(Device):
             sync_state=sync_state,
             always_callback=always_callback,
             value_type=value_type,
-            icon=icon,
         )
 
     async def process_group_write(self, telegram):

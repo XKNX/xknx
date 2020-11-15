@@ -51,8 +51,3 @@ class KNXSensor(KnxEntity, Entity):
         updated, not just when the value changes.
         """
         return self._device.always_callback
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._device.icon()

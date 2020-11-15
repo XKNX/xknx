@@ -51,8 +51,3 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity):
         updated, not just when the value changes.
         """
         return self._device.ignore_internal_state
-        
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._device.icon()

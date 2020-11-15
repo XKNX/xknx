@@ -145,8 +145,3 @@ class KNXCover(KnxEntity, CoverEntity):
             self.stop_auto_updater()
 
         self.hass.add_job(self._device.auto_stop_if_necessary())
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._device.icon()
