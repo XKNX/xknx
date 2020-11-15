@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_TYPE,
+    CONF_ICON,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -55,6 +56,7 @@ class CoverSchema:
     CONF_TRAVELLING_TIME_UP = "travelling_time_up"
     CONF_INVERT_POSITION = "invert_position"
     CONF_INVERT_ANGLE = "invert_angle"
+    CONF_ICON = "icon"
 
     DEFAULT_TRAVEL_TIME = 25
     DEFAULT_NAME = "KNX Cover"
@@ -78,6 +80,7 @@ class CoverSchema:
             vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
             vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
             vol.Optional(CONF_DEVICE_CLASS): cv.string,
+            vol.Optional(CONF_ICON): cv.string,
         }
     )
 
@@ -91,6 +94,7 @@ class BinarySensorSchema:
     CONF_IGNORE_INTERNAL_STATE = "ignore_internal_state"
     CONF_CONTEXT_TIMEOUT = "context_timeout"
     CONF_RESET_AFTER = CONF_RESET_AFTER
+    CONF_ICON = "icon"
 
     DEFAULT_NAME = "KNX Binary Sensor"
 
@@ -113,6 +117,7 @@ class BinarySensorSchema:
                 vol.Optional(CONF_DEVICE_CLASS): cv.string,
                 vol.Optional(CONF_INVERT): cv.boolean,
                 vol.Optional(CONF_RESET_AFTER): cv.positive_int,
+                vol.Optional(CONF_ICON): cv.string,
             }
         ),
     )
@@ -314,6 +319,7 @@ class SensorSchema:
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_SYNC_STATE = CONF_SYNC_STATE
     DEFAULT_NAME = "KNX Sensor"
+    CONF_ICON = "icon"
 
     SCHEMA = vol.Schema(
         {
@@ -326,6 +332,7 @@ class SensorSchema:
             vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
             vol.Required(CONF_STATE_ADDRESS): cv.string,
             vol.Required(CONF_TYPE): vol.Any(int, float, str),
+            vol.Optional(CONF_ICON): cv.string,
         }
     )
 
