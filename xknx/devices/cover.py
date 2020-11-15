@@ -50,6 +50,7 @@ class Cover(Device):
         invert_angle=False,
         device_updated_cb=None,
         device_class=None,
+        icon=None,
     ):
         """Initialize Cover class."""
         # pylint: disable=too-many-arguments
@@ -112,6 +113,7 @@ class Cover(Device):
         self.travelcalculator = TravelCalculator(travel_time_down, travel_time_up)
 
         self.device_class = device_class
+        self.icon = icon
 
     def _iter_remote_values(self):
         """Iterate the devices RemoteValue classes."""
@@ -132,6 +134,7 @@ class Cover(Device):
         invert_position = config.get("invert_position", False)
         invert_angle = config.get("invert_angle", False)
         device_class = config.get("device_class")
+        icon = config.get("icon")
 
         return cls(
             xknx,
@@ -148,6 +151,7 @@ class Cover(Device):
             invert_position=invert_position,
             invert_angle=invert_angle,
             device_class=device_class,
+            icon=icon,
         )
 
     def __str__(self):

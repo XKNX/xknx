@@ -265,6 +265,7 @@ class TestConfig(unittest.TestCase):
                 group_address_position="1/4/8",
                 travel_time_down=50,
                 travel_time_up=60,
+                icon="mdi:window-shutter"
             ),
         )
 
@@ -475,6 +476,7 @@ class TestConfig(unittest.TestCase):
                 group_address_state="2/0/1",
                 value_type="percent",
                 sync_state=False,
+                icon: "mdi:valve"
             ),
         )
 
@@ -511,6 +513,18 @@ class TestConfig(unittest.TestCase):
                 "Kitchen.Motion.Sensor",
                 group_address_state="3/0/0",
                 device_class="motion",
+            ),
+        )
+        
+    def test_config_sensor_binary_icon(self):
+        """Test reading Sensor with icon from config file."""
+        self.assertEqual(
+            TestConfig.xknx.devices["Kitchen.ThermostatNightMode"],
+            BinarySensor(
+                TestConfig.xknx,
+                "Kitchen.ThermostatNightMode",
+                group_address_state="3/0/3",
+                icon="mdi:power-sleep",
             ),
         )
 

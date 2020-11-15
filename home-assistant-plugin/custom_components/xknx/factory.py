@@ -83,6 +83,7 @@ def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
         invert_position=config[CoverSchema.CONF_INVERT_POSITION],
         invert_angle=config[CoverSchema.CONF_INVERT_ANGLE],
         device_class=config.get(CONF_DEVICE_CLASS),
+        icon=config[CONF_ICON],
     )
 
 
@@ -217,6 +218,7 @@ def _create_sensor(knx_module: XKNX, config: ConfigType) -> XknxSensor:
         sync_state=config[SensorSchema.CONF_SYNC_STATE],
         always_callback=config[SensorSchema.CONF_ALWAYS_CALLBACK],
         value_type=config[CONF_TYPE],
+        icon=config[CONF_ICON],
     )
 
 
@@ -253,6 +255,7 @@ def _create_binary_sensor(knx_module: XKNX, config: ConfigType) -> XknxBinarySen
         ignore_internal_state=config[BinarySensorSchema.CONF_IGNORE_INTERNAL_STATE],
         context_timeout=config.get(BinarySensorSchema.CONF_CONTEXT_TIMEOUT),
         reset_after=config.get(BinarySensorSchema.CONF_RESET_AFTER),
+        icon=config[CONF_ICON],
     )
 
 
