@@ -238,7 +238,12 @@ class TestConfig(unittest.TestCase):
         """Test reading Switch from config file."""
         self.assertEqual(
             TestConfig.xknx.devices["Livingroom.Outlet_2"],
-            Switch(TestConfig.xknx, "Livingroom.Outlet_2", group_address="1/3/2", icon="mdi:power-socket-eu"),
+            Switch(
+                TestConfig.xknx,
+                "Livingroom.Outlet_2",
+                group_address="1/3/2",
+                icon="mdi:power-socket-eu",
+            ),
         )
 
     def test_config_fan(self):
@@ -477,7 +482,7 @@ class TestConfig(unittest.TestCase):
                 group_address_state="2/0/1",
                 value_type="percent",
                 sync_state=False,
-                icon="mdi:valve"
+                icon="mdi:valve",
             ),
         )
 
@@ -516,7 +521,7 @@ class TestConfig(unittest.TestCase):
                 device_class="motion",
             ),
         )
-        
+
     def test_config_sensor_binary_icon(self):
         """Test reading Sensor with icon from config file."""
         self.assertEqual(

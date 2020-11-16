@@ -104,7 +104,7 @@ groups:
 
         # Lights with dimming
         Kitchen.Light_1:     {group_address_switch: '1/6/1', group_address_brightness: '1/6/3'}
-        Diningroom.Light_1:  {group_address_switch: '1/6/4', group_address_brightness: '1/6/6', icon: "mdi:ceiling-light" }
+        Diningroom.Light_1:  {group_address_switch: '1/6/4', group_address_brightness: '1/6/6', icon: 'mdi:ceiling-light' }
 
         # Light without dimming
         Living-Room.Light_1: {group_address_switch: '1/6/7'}

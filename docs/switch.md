@@ -55,7 +55,7 @@ Switches are usually configured via [`xknx.yaml`](/configuration):
 groups:
     switch:
         Livingroom.Outlet_1: {group_address: '1/3/1'}
-        Livingroom.Outlet_2: {group_address: "1/3/2", icon: "mdi:power-socket-eu"}
+        Livingroom.Outlet_2: {group_address: '1/3/2', icon: 'mdi:power-socket-eu'}
 ```
 
 
