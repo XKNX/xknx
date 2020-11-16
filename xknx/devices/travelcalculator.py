@@ -11,6 +11,7 @@ E.g.:
 """
 from enum import Enum
 import time
+from typing import Optional
 
 
 class PositionType(Enum):
@@ -34,43 +35,44 @@ class TravelCalculator:
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, travel_time_down, travel_time_up):
+    def __init__(self, travel_time_down: int, travel_time_up: int) -> None:
         """Initialize TravelCalculator class."""
         self.position_type = PositionType.UNKNOWN
-        self.last_known_position = 0
+        self.last_known_position: int = 0
 
         self.travel_time_down = travel_time_down
         self.travel_time_up = travel_time_up
 
-        self.travel_to_position = None
-        self.travel_started_time = 0
+        self.travel_to_position: Optional[int] = None
+        self.travel_started_time: float = 0.0
         self.travel_direction = TravelStatus.STOPPED
 
         # 100 is closed, 0 is fully open
-        self.position_closed = 100
-        self.position_open = 0
+        self.position_closed: int = 100
+        self.position_open: int = 0
 
-    def set_position(self, position):
+    def set_position(self, position: int) -> None:
         """Set position and target of cover."""
         self.travel_to_position = position
         self.update_position(position)
 
-    def update_position(self, position):
+    def update_position(self, position: int) -> None:
         """Update known position of cover."""
         self.last_known_position = position
         if position == self.travel_to_position:
             self.position_type = PositionType.CONFIRMED
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop traveling."""
-        if self.position_type == PositionType.UNKNOWN:
+        stop_position = self.current_position()
+        if stop_position is None:
             return
-        self.last_known_position = self.current_position()
-        self.travel_to_position = self.last_known_position
+        self.last_known_position = stop_position
+        self.travel_to_position = stop_position
         self.position_type = PositionType.CALCULATED
         self.travel_direction = TravelStatus.STOPPED
 
-    def start_travel(self, travel_to_position):
+    def start_travel(self, travel_to_position: int) -> None:
         """Start traveling to position."""
         if self.position_type == PositionType.UNKNOWN:
             self.set_position(travel_to_position)
@@ -86,15 +88,15 @@ class TravelCalculator:
             else TravelStatus.DIRECTION_UP
         )
 
-    def start_travel_up(self):
+    def start_travel_up(self) -> None:
         """Start traveling up."""
         self.start_travel(self.position_open)
 
-    def start_travel_down(self):
+    def start_travel_down(self) -> None:
         """Start traveling down."""
         self.start_travel(self.position_closed)
 
-    def current_position(self):
+    def current_position(self) -> Optional[int]:
         """Return current (calculated or known) position."""
         if self.position_type == PositionType.CALCULATED:
             return self._calculate_position()
@@ -102,39 +104,41 @@ class TravelCalculator:
             return None
         return self.last_known_position
 
-    def is_traveling(self):
+    def is_traveling(self) -> bool:
         """Return if cover is traveling."""
         return self.current_position() != self.travel_to_position
 
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return if the cover is opening."""
         return (
             self.is_traveling() and self.travel_direction == TravelStatus.DIRECTION_UP
         )
 
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return if the cover is closing."""
         return (
             self.is_traveling() and self.travel_direction == TravelStatus.DIRECTION_DOWN
         )
 
-    def position_reached(self):
+    def position_reached(self) -> bool:
         """Return if cover has reached designated position."""
         return self.current_position() == self.travel_to_position
 
-    def is_open(self):
+    def is_open(self) -> bool:
         """Return if cover is (fully) open."""
         return self.current_position() == self.position_open
 
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if cover is (fully) closed."""
         return self.current_position() == self.position_closed
 
-    def _calculate_position(self):
+    def _calculate_position(self) -> int:
         """Return calculated position."""
+        if self.travel_to_position is None:
+            return self.last_known_position
         relative_position = self.travel_to_position - self.last_known_position
 
-        def position_reached_or_exceeded(relative_position):
+        def position_reached_or_exceeded(relative_position: int) -> bool:
             """Return if designated position was reached."""
             if (
                 relative_position <= 0
@@ -159,7 +163,7 @@ class TravelCalculator:
         position = self.last_known_position + relative_position * progress
         return int(position)
 
-    def _calculate_travel_time(self, relative_position):
+    def _calculate_travel_time(self, relative_position: int) -> float:
         """Calculate time to travel to relative position."""
         travel_direction = (
             TravelStatus.DIRECTION_UP
@@ -175,6 +179,6 @@ class TravelCalculator:
 
         return travel_time_full * abs(relative_position) / travel_range
 
-    def __eq__(self, other):
+    def __eq__(self, other: Optional[object]) -> bool:
         """Equal operator."""
         return self.__dict__ == other.__dict__
