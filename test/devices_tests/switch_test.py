@@ -58,37 +58,44 @@ class TestSwitch(unittest.TestCase):
     def test_process(self):
         """Test process / reading telegrams from telegram queue. Test if device was updated."""
         xknx = XKNX()
-        switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
-        self.assertEqual(switch.state, False)
+        switch1 = Switch(xknx, "TestOutlet", group_address="1/2/3")
+        switch2 = Switch(xknx, "TestOutlet", group_address="1/2/3")
+        self.assertEqual(switch1.state, None)
+        self.assertEqual(switch2.state, None)
 
         telegram_on = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
         )
-        self.loop.run_until_complete(switch.process(telegram_on))
-        self.assertEqual(switch.state, True)
-
         telegram_off = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
         )
-        self.loop.run_until_complete(switch.process(telegram_off))
-        self.assertEqual(switch.state, False)
+
+        self.loop.run_until_complete(switch1.process(telegram_on))
+        self.assertEqual(switch1.state, True)
+        self.loop.run_until_complete(switch1.process(telegram_off))
+        self.assertEqual(switch1.state, False)
+        # test setting switch2 to False with first telegram
+        self.loop.run_until_complete(switch2.process(telegram_off))
+        self.assertEqual(switch2.state, False)
+        self.loop.run_until_complete(switch2.process(telegram_on))
+        self.assertEqual(switch2.state, True)
 
     def test_process_invert(self):
         """Test process / reading telegrams from telegram queue with inverted switch."""
         xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3", invert=True)
-        self.assertEqual(switch.state, False)
+        self.assertEqual(switch.state, None)
 
-        telegram_on = Telegram(
+        telegram_inv_on = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
         )
-        self.loop.run_until_complete(switch.process(telegram_on))
-        self.assertEqual(switch.state, True)
-
-        telegram_off = Telegram(
+        telegram_inv_off = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
         )
-        self.loop.run_until_complete(switch.process(telegram_off))
+
+        self.loop.run_until_complete(switch.process(telegram_inv_on))
+        self.assertEqual(switch.state, True)
+        self.loop.run_until_complete(switch.process(telegram_inv_off))
         self.assertEqual(switch.state, False)
 
     def test_process_reset_after(self):

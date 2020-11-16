@@ -36,7 +36,7 @@ class Switch(Device):
 
         self.reset_after = reset_after
         self._reset_task = None
-        self.state = False
+        self.state = None
 
         self.switch = RemoteValueSwitch(
             xknx,

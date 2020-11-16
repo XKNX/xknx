@@ -128,7 +128,7 @@ class TestBinarySensor(unittest.TestCase):
         binary_sensor.actions.append(action_off)
 
         self.assertEqual(binary_sensor.state, None)
-        self.assertEqual(switch.state, False)
+        self.assertEqual(switch.state, None)
 
         telegram_on = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
@@ -161,7 +161,7 @@ class TestBinarySensor(unittest.TestCase):
         binary_sensor.actions.append(action_on)
 
         self.assertEqual(binary_sensor.state, None)
-        self.assertEqual(switch.state, False)
+        self.assertEqual(switch.state, None)
 
         telegram_on = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
