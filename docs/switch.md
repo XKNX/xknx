@@ -19,7 +19,6 @@ Switches are simple representations of binary actors. They mainly support switch
 - `group_address_state` is the KNX group address of the switch state. Used for updating and reading state.
 - `invert` inverts the payload so state "on" is represented by 0 on bus and "off" by 1. Defaults to `False`
 - `reset_after` may be used to reset the switch to `OFF` again after given time in sec. Defaults to `None`
-- `icon` for the switch (see [icon documentation](https://www.home-assistant.io/docs/configuration/customizing-devices/#icon) for details).
 - `device_updated_cb` awaitable callback for each update.
 
 
@@ -55,7 +54,7 @@ Switches are usually configured via [`xknx.yaml`](/configuration):
 groups:
     switch:
         Livingroom.Outlet_1: {group_address: '1/3/1'}
-        Livingroom.Outlet_2: {group_address: "1/3/2", icon: "mdi:power-socket-eu"}
+        Livingroom.Outlet_2: {group_address: '1/3/2'}
 ```
 
 

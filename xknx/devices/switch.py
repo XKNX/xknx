@@ -29,7 +29,6 @@ class Switch(Device):
         invert: Optional[bool] = False,
         reset_after: Optional[float] = None,
         device_updated_cb=None,
-        icon=None,
     ):
         """Initialize Switch class."""
         # pylint: disable=too-many-arguments
@@ -47,8 +46,6 @@ class Switch(Device):
             device_name=self.name,
         )
 
-        self.icon = icon
-
     def _iter_remote_values(self):
         """Iterate the devices RemoteValue classes."""
         yield self.switch
@@ -65,7 +62,6 @@ class Switch(Device):
         group_address_state = config.get("group_address_state")
         invert = config.get("invert")
         reset_after = config.get("reset_after")
-        icon = config.get("icon")
 
         return cls(
             xknx,
@@ -74,7 +70,6 @@ class Switch(Device):
             group_address_state=group_address_state,
             invert=invert,
             reset_after=reset_after,
-            icon=icon,
         )
 
     async def set_on(self):

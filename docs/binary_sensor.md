@@ -30,7 +30,7 @@ binarysensor = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3', devi
 - `context_timeout` time in seconds telegrams should be counted towards the current context to increment the counter. If set `ignore_internal_state` is set `True`. Defaults to `None`
 - `reset_after` may be used to reset the internal state to `OFF` again after given time in sec. Defaults to `None`
 - `device_class` may be used to store the type of the binary sensor, e.g. "motion" for motion detectors for Home-Assistant.
-- `icon` for the binary sensor,  overwrites any `device_class` icon (see [icon documentation](https://www.home-assistant.io/docs/configuration/customizing-devices/#icon) for details).
+- `icon` icon for the binary sensor,  overwrites any `device_class` icon (see [icon documentation](https://www.home-assistant.io/docs/configuration/customizing-devices/#icon) for details).
 - `device_updated_cb` awaitable callback for each update.
 
 ## [](#header-2)Example
@@ -88,7 +88,7 @@ groups:
 
   switch:
     Livingroom.Outlet_1: { group_address: "1/3/1" }
-    Livingroom.Outlet_2: { group_address: "1/3/2", icon: "mdi:power-socket-eu" }
+    Livingroom.Outlet_2: { group_address: "1/3/2" }
 
   cover:
     Livingroom.Shutter_1:

@@ -14,7 +14,7 @@ from xknx.devices import (
     Weather as XknxWeather,
 )
 
-from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, CONF_TYPE, CONF_ICON
+from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, CONF_TYPE
 from homeassistant.helpers.typing import ConfigType
 
 from .const import ColorTempModes, SupportedPlatforms
@@ -83,7 +83,7 @@ def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
         invert_position=config[CoverSchema.CONF_INVERT_POSITION],
         invert_angle=config[CoverSchema.CONF_INVERT_ANGLE],
         device_class=config.get(CONF_DEVICE_CLASS),
-        icon=config.get(CONF_ICON),
+        icon=config[CONF_ICON],
     )
 
 
@@ -123,7 +123,6 @@ def _create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
         group_address_color_temperature_state=group_address_color_temp_state,
         min_kelvin=config[LightSchema.CONF_MIN_KELVIN],
         max_kelvin=config[LightSchema.CONF_MAX_KELVIN],
-        icon=config.get(CONF_ICON),
     )
 
 
@@ -207,7 +206,6 @@ def _create_switch(knx_module: XKNX, config: ConfigType) -> XknxSwitch:
         group_address=config[CONF_ADDRESS],
         group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
         invert=config.get(SwitchSchema.CONF_INVERT),
-        icon=config.get(CONF_ICON),
     )
 
 
@@ -220,7 +218,7 @@ def _create_sensor(knx_module: XKNX, config: ConfigType) -> XknxSensor:
         sync_state=config[SensorSchema.CONF_SYNC_STATE],
         always_callback=config[SensorSchema.CONF_ALWAYS_CALLBACK],
         value_type=config[CONF_TYPE],
-        icon=config.get(CONF_ICON),
+        icon=config[CONF_ICON],
     )
 
 
@@ -257,7 +255,7 @@ def _create_binary_sensor(knx_module: XKNX, config: ConfigType) -> XknxBinarySen
         ignore_internal_state=config[BinarySensorSchema.CONF_IGNORE_INTERNAL_STATE],
         context_timeout=config.get(BinarySensorSchema.CONF_CONTEXT_TIMEOUT),
         reset_after=config.get(BinarySensorSchema.CONF_RESET_AFTER),
-        icon=config.get(CONF_ICON),
+        icon=config[CONF_ICON],
     )
 
 

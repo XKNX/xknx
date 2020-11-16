@@ -202,8 +202,3 @@ class KNXLight(KnxEntity, LightEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         await self._device.set_off()
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._device.icon

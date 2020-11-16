@@ -30,7 +30,6 @@ The Light object is either a representation of a binary or dimm actor, LED-contr
 - `min_kelvin` lowest possible color temperature in Kelvin. Default: 2700
 - `max_kelvin` hightest possible color temperature in Kelvin. Default: 6000
 - `device_updated_cb` awaitable callback for each update.
-- `icon` for the light (see [icon documentation](https://www.home-assistant.io/docs/configuration/customizing-devices/#icon) for details).
 
 ## [](#header-2)Example
 
@@ -104,7 +103,7 @@ groups:
 
         # Lights with dimming
         Kitchen.Light_1:     {group_address_switch: '1/6/1', group_address_brightness: '1/6/3'}
-        Diningroom.Light_1:  {group_address_switch: '1/6/4', group_address_brightness: '1/6/6', icon: "mdi:ceiling-light" }
+        Diningroom.Light_1:  {group_address_switch: '1/6/4', group_address_brightness: '1/6/6'}
 
         # Light without dimming
         Living-Room.Light_1: {group_address_switch: '1/6/7'}
