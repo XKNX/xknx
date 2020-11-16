@@ -149,4 +149,4 @@ class KNXCover(KnxEntity, CoverEntity):
     @property
     def icon(self):
         """Return the icon."""
-        return self._device.icon()
+        return self._device.icon
