@@ -14,7 +14,13 @@ from xknx.devices import (
     Weather as XknxWeather,
 )
 
-from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, CONF_TYPE, CONF_ICON
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_DEVICE_CLASS,
+    CONF_ICON,
+    CONF_NAME,
+    CONF_TYPE,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import ColorTempModes, SupportedPlatforms

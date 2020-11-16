@@ -84,7 +84,7 @@ groups:
     DiningRoom.Motion.Sensor:
       { group_address_state: "3/0/1", device_class: "motion" }
     Kitchen.Presence: { group_address_state: "3/0/2", device_class: "motion" }
-    
+
   binary_sensor_nightMode:
     Kitchen.ThermostatNightMode:
       { group_address_state: "3/0/3", icon: "mdi:power-sleep" }

@@ -8,10 +8,10 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_HOST,
+    CONF_ICON,
     CONF_NAME,
     CONF_PORT,
     CONF_TYPE,
-    CONF_ICON,
 )
 import homeassistant.helpers.config_validation as cv
 
