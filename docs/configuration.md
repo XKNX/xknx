@@ -84,12 +84,14 @@ groups:
     DiningRoom.Motion.Sensor:
       { group_address_state: "3/0/1", device_class: "motion" }
     Kitchen.Presence: { group_address_state: "3/0/2", device_class: "motion" }
+    
+  binary_sensor_nightMode:
     Kitchen.ThermostatNightMode:
-      { group_address_state: "3/0/2", device_class: "motion" }
+      { group_address_state: "3/0/3", icon: "mdi:power-sleep" }
 
   switch:
     Livingroom.Outlet_1: { group_address: "1/3/1" }
-    Livingroom.Outlet_2: { group_address: "1/3/2" }
+    Livingroom.Outlet_2: { group_address: "1/3/2", icon: "mdi:power-socket-eu" }
 
   switch 2:
     Kitchen.Outlet_1: { group_address: "1/3/7" }
@@ -115,6 +117,7 @@ groups:
         group_address_position: "1/4/8",
         travel_time_down: 50,
         travel_time_up: 60,
+        icon: "mdi:window-shutter",
       }
 
     # Covers without direct positioning and device class "shutter":
@@ -135,7 +138,7 @@ groups:
     Kitchen.Light_1:
       { group_address_switch: "1/6/1", group_address_brightness: "1/6/3" }
     Diningroom.Light_1:
-      { group_address_switch: "1/6/4", group_address_brightness: "1/6/6" }
+      { group_address_switch: "1/6/4", group_address_brightness: "1/6/6", icon: "mdi:ceiling-light" }
     Living-Room.Light_1: { group_address_switch: "1/6/7" }
     # Light with extra addresses for states:
     Office.Light_1:
@@ -157,6 +160,6 @@ groups:
 
   sensor:
     Heating.Valve1: { group_address_state: "2/0/0", value_type: "percent" }
-    Heating.Valve2: { group_address_state: "2/0/1", value_type: "percent" }
+    Heating.Valve2: { group_address_state: "2/0/1", value_type: "percent", icon: "mdi:valve" }
     Some.Other.Value: { group_address_state: "2/0/2" }
 ```

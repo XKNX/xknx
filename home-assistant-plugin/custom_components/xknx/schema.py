@@ -80,7 +80,7 @@ class CoverSchema:
             vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
             vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
             vol.Optional(CONF_DEVICE_CLASS): cv.string,
-            vol.Optional(CONF_ICON): cv.string,
+            vol.Optional(CONF_ICON): cv.icon,
         }
     )
 
@@ -117,7 +117,7 @@ class BinarySensorSchema:
                 vol.Optional(CONF_DEVICE_CLASS): cv.string,
                 vol.Optional(CONF_INVERT): cv.boolean,
                 vol.Optional(CONF_RESET_AFTER): cv.positive_int,
-                vol.Optional(CONF_ICON): cv.string,
+                vol.Optional(CONF_ICON): cv.icon,
             }
         ),
     )
@@ -144,6 +144,8 @@ class LightSchema:
     DEFAULT_MIN_KELVIN = 2700  # 370 mireds
     DEFAULT_MAX_KELVIN = 6000  # 166 mireds
 
+    CONF_ICON = "icon"
+
     SCHEMA = vol.Schema(
         {
             vol.Required(CONF_ADDRESS): cv.string,
@@ -166,6 +168,7 @@ class LightSchema:
             vol.Optional(CONF_MAX_KELVIN, default=DEFAULT_MAX_KELVIN): vol.All(
                 vol.Coerce(int), vol.Range(min=1)
             ),
+            vol.Optional(CONF_ICON): cv.icon,
         }
     )
 
@@ -268,6 +271,7 @@ class SwitchSchema:
 
     CONF_INVERT = CONF_INVERT
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
+    CONF_ICON = "icon"
 
     DEFAULT_NAME = "KNX Switch"
     SCHEMA = vol.Schema(
@@ -276,6 +280,7 @@ class SwitchSchema:
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_STATE_ADDRESS): cv.string,
             vol.Optional(CONF_INVERT): cv.boolean,
+            vol.Optional(CONF_ICON): cv.icon,
         }
     )
 
@@ -332,7 +337,7 @@ class SensorSchema:
             vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
             vol.Required(CONF_STATE_ADDRESS): cv.string,
             vol.Required(CONF_TYPE): vol.Any(int, float, str),
-            vol.Optional(CONF_ICON): cv.string,
+            vol.Optional(CONF_ICON): cv.icon,
         }
     )
 

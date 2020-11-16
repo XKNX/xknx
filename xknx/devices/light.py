@@ -60,6 +60,7 @@ class Light(Device):
         min_kelvin=None,
         max_kelvin=None,
         device_updated_cb=None,
+        icon=None,
     ):
         """Initialize Light class."""
         # pylint: disable=too-many-arguments
@@ -124,6 +125,8 @@ class Light(Device):
         self.min_kelvin = min_kelvin
         self.max_kelvin = max_kelvin
 
+        self.icon = icon
+
     def _iter_remote_values(self):
         """Iterate the devices RemoteValue classes."""
         yield from (
@@ -182,6 +185,8 @@ class Light(Device):
         min_kelvin = config.get("min_kelvin", Light.DEFAULT_MIN_KELVIN)
         max_kelvin = config.get("max_kelvin", Light.DEFAULT_MAX_KELVIN)
 
+        icon = config.get("icon")
+
         return cls(
             xknx,
             name,
@@ -199,6 +204,7 @@ class Light(Device):
             group_address_color_temperature_state=group_address_color_temperature_state,
             min_kelvin=min_kelvin,
             max_kelvin=max_kelvin,
+            icon=icon,
         )
 
     def __str__(self):

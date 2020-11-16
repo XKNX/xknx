@@ -194,6 +194,7 @@ class TestConfig(unittest.TestCase):
                 group_address_color_state="1/6/8",
                 min_kelvin=2700,
                 max_kelvin=6000,
+                icon="mdi:ceiling-light",
             ),
         )
 
@@ -237,7 +238,7 @@ class TestConfig(unittest.TestCase):
         """Test reading Switch from config file."""
         self.assertEqual(
             TestConfig.xknx.devices["Livingroom.Outlet_2"],
-            Switch(TestConfig.xknx, "Livingroom.Outlet_2", group_address="1/3/2"),
+            Switch(TestConfig.xknx, "Livingroom.Outlet_2", group_address="1/3/2", icon="mdi:power-socket-eu"),
         )
 
     def test_config_fan(self):
@@ -265,7 +266,7 @@ class TestConfig(unittest.TestCase):
                 group_address_position="1/4/8",
                 travel_time_down=50,
                 travel_time_up=60,
-                icon="mdi:window-shutter"
+                icon="mdi:window-shutter",
             ),
         )
 
@@ -476,7 +477,7 @@ class TestConfig(unittest.TestCase):
                 group_address_state="2/0/1",
                 value_type="percent",
                 sync_state=False,
-                icon: "mdi:valve"
+                icon="mdi:valve"
             ),
         )
 

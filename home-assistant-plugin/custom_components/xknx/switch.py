@@ -35,3 +35,8 @@ class KNXSwitch(KnxEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         await self._device.set_off()
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return self._device.icon
