@@ -12,6 +12,7 @@ It provides functionality for
 """
 from enum import Enum
 import logging
+from typing import Optional
 
 from xknx.remote_value import (
     RemoteValueColorRGB,
@@ -242,10 +243,9 @@ class Light(Device):
         )
 
     @property
-    def state(self):
+    def state(self) -> Optional[bool]:
         """Return the current switch state of the device."""
-        # None will return False
-        return bool(self.switch.value)
+        return self.switch.value
 
     async def set_on(self):
         """Switch light on."""

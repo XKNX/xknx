@@ -434,7 +434,7 @@ class TestLight(unittest.TestCase):
             group_address_switch="1/2/3",
             group_address_brightness="1/2/5",
         )
-        self.assertEqual(light.state, False)
+        self.assertEqual(light.state, None)
 
         telegram = Telegram(GroupAddress("1/2/3"), payload=DPTBinary(1))
         self.loop.run_until_complete(light.process(telegram))

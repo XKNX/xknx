@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Devices
+
+- Light, Switch: initialize state with `None` instead of `False` to account for unknown state.
+
 ## 0.15.3 Opposite day! 2020-10-29
 
 ### Devices

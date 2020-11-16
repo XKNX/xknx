@@ -44,7 +44,7 @@ class RemoteValueSwitch(RemoteValue):
         """Test if telegram payload may be parsed."""
         return isinstance(payload, DPTBinary)
 
-    def to_knx(self, value):
+    def to_knx(self, value: bool):
         """Convert value to payload."""
         if isinstance(value, bool):
             return DPTBinary(value ^ self.invert)
