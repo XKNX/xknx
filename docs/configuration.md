@@ -28,9 +28,6 @@ The configuration file can contain three sections.
     - `bind_port` (optional) sets the udp port sent into command telegrams by xknx (for dockerised app)
   - `routing` for a UDP multicast connection
     - `local_ip` (optional) sets the ip address that is used by xknx
-    - `local_port` (optional) sets the udp port that is used by xknx
-    - `bind_ip` (optional) sets the ip address sent into command telegrams by xknx (for dockerised app)
-    - `bind_port` (optional) sets the udp port sent into command telegrams by xknx (for dockerised app)
 - Within the `groups` sections all devices are defined. For each type of device more then one section might be specified. You need to append numbers or strings to differentiate the entries, as in the example below. The appended number or string must be unique.
 
 ## How to use
