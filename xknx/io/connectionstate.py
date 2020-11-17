@@ -7,7 +7,7 @@ from .request_response import RequestResponse
 class ConnectionState(RequestResponse):
     """Class to send ConnectonStateRequest and wait for ConnectionStateResponse."""
 
-    def __init__(self, xknx, udp_client, communication_channel_id, net_bind):
+    def __init__(self, xknx, udp_client, communication_channel_id, net_bind=None):
         """Initialize ConnectionState class."""
         self.udp_client = udp_client
         super().__init__(xknx, self.udp_client, ConnectionStateResponse, net_bind=net_bind)
