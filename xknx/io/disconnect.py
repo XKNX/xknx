@@ -16,11 +16,11 @@ class Disconnect(RequestResponse):
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
-        (local_addr, local_port) = self.udpclient.getsockname()
         if self.net_bind:
-            endpoint = HPAI(ip_addr=self.net_bind[0], port=self.net_bind[1])
+            (local_addr, local_port) = net_bind
         else:
-            endpoint = HPAI(ip_addr=local_addr, port=local_port)
+            (local_addr, local_port) = self.udpclient.getsockname()
+        endpoint = HPAI(ip_addr=local_addr, port=local_port)
         disconnect_request = DisconnectRequest(
             self.xknx,
             communication_channel_id=self.communication_channel_id,
