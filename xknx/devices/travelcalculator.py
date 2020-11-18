@@ -14,14 +14,6 @@ import time
 from typing import Optional
 
 
-class PositionType(Enum):
-    """Enum class for different type of calculated positions."""
-
-    UNKNOWN = 1
-    CALCULATED = 2
-    CONFIRMED = 3
-
-
 class TravelStatus(Enum):
     """Enum class for travel status."""
 
@@ -37,8 +29,8 @@ class TravelCalculator:
 
     def __init__(self, travel_time_down: int, travel_time_up: int) -> None:
         """Initialize TravelCalculator class."""
-        self.position_type = PositionType.UNKNOWN
-        self.last_known_position: int = 0
+        self.last_known_position: Optional[int] = None
+        self.position_confirmed: bool = False
 
         self.travel_time_down = travel_time_down
         self.travel_time_up = travel_time_up
@@ -60,7 +52,7 @@ class TravelCalculator:
         """Update known position of cover."""
         self.last_known_position = position
         if position == self.travel_to_position:
-            self.position_type = PositionType.CONFIRMED
+            self.position_confirmed = True
 
     def stop(self) -> None:
         """Stop traveling."""
@@ -69,18 +61,18 @@ class TravelCalculator:
             return
         self.last_known_position = stop_position
         self.travel_to_position = stop_position
-        self.position_type = PositionType.CALCULATED
+        self.position_confirmed = False
         self.travel_direction = TravelStatus.STOPPED
 
     def start_travel(self, travel_to_position: int) -> None:
         """Start traveling to position."""
-        if self.position_type == PositionType.UNKNOWN:
+        if self.last_known_position is None:
             self.set_position(travel_to_position)
             return
         self.stop()
         self.travel_started_time = time.time()
         self.travel_to_position = travel_to_position
-        self.position_type = PositionType.CALCULATED
+        self.position_confirmed = False
 
         self.travel_direction = (
             TravelStatus.DIRECTION_DOWN
@@ -98,10 +90,8 @@ class TravelCalculator:
 
     def current_position(self) -> Optional[int]:
         """Return current (calculated or known) position."""
-        if self.position_type == PositionType.CALCULATED:
+        if not self.position_confirmed:
             return self._calculate_position()
-        if self.position_type == PositionType.UNKNOWN:
-            return None
         return self.last_known_position
 
     def is_traveling(self) -> bool:
@@ -132,9 +122,9 @@ class TravelCalculator:
         """Return if cover is (fully) closed."""
         return self.current_position() == self.position_closed
 
-    def _calculate_position(self) -> int:
+    def _calculate_position(self) -> Optional[int]:
         """Return calculated position."""
-        if self.travel_to_position is None:
+        if self.travel_to_position is None or self.last_known_position is None:
             return self.last_known_position
         relative_position = self.travel_to_position - self.last_known_position
 
