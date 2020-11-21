@@ -29,8 +29,9 @@ class DPTControl(DPTBase):
     APCI_STEPCODEMASK = 0x07
     APCI_MAX_VALUE = APCI_CONTROLMASK | APCI_STEPCODEMASK
 
-    payload_length = 1
+    value_type = "control"
     unit = ""
+    payload_length = 1
 
     @classmethod
     def _encode(cls, control, step_code):
@@ -104,6 +105,9 @@ class DPTControl(DPTBase):
 class DPTControlStepwise(DPTControl):
     """Abstraction for KNX DPT 3.xxx in stepwise mode with conversion to an incement value."""
 
+    dpt_main_number = 3
+    dpt_sub_number = None
+    value_type = "stepwise"
     unit = "%"
 
     @staticmethod
@@ -158,9 +162,17 @@ class DPTControlStepwise(DPTControl):
 class DPTControlStepwiseDimming(DPTControlStepwise):
     """Abstraction for KNX DPT 3.007 / DPT_Control_Dimming in stepwise mode."""
 
+    dpt_main_number = 3
+    dpt_sub_number = 7
+    value_type = "stepwise_dimming"
+
 
 class DPTControlStepwiseBlinds(DPTControlStepwise):
     """Abstraction for KNX DPT 3.008 / DPT_Control_Blinds in stepwise mode."""
+
+    dpt_main_number = 3
+    dpt_sub_number = 8
+    value_type = "stepwise_blinds"
 
 
 class TitleEnum(Enum):
@@ -178,6 +190,7 @@ class TitleEnum(Enum):
 class DPTControlStartStop(DPTControl):
     """Abstraction for KNX DPT 3.xxx in start/stop mode."""
 
+    value_type = "startstop"
     unit = ""
 
     class Direction(TitleEnum):
@@ -221,6 +234,8 @@ class DPTControlStartStop(DPTControl):
 class DPTControlStartStopDimming(DPTControlStartStop):
     """Abstraction for KNX DPT 3.007 / DPT_Control_Dimming in start/stop mode."""
 
+    value_type = "startstop_dimming"
+
     # redefining Direction enum ensures proper typing, e.g.
     # DPTControlStartStop.Direction.INCREASE != DPTControlStartStopDimming.Direction.INCREASE
     class Direction(TitleEnum):
@@ -233,6 +248,8 @@ class DPTControlStartStopDimming(DPTControlStartStop):
 
 class DPTControlStartStopBlinds(DPTControlStartStop):
     """Abstraction for KNX DPT 3.008 / DPT_Control_Blinds in start/stop mode."""
+
+    value_type = "startstop_blinds"
 
     class Direction(TitleEnum):
         """Enum for indicating the direction."""

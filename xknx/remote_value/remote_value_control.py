@@ -4,16 +4,7 @@ Module for managing a control remote value.
 Examples are switching commands with priority control, relative dimming or blinds control commands.
 DPT 2.yyy and DPT 3.yyy
 """
-from xknx.dpt import (
-    DPTBinary,
-    DPTControl,
-    DPTControlStartStop,
-    DPTControlStartStopBlinds,
-    DPTControlStartStopDimming,
-    DPTControlStepwise,
-    DPTControlStepwiseBlinds,
-    DPTControlStepwiseDimming,
-)
+from xknx.dpt import DPTBase, DPTBinary
 from xknx.exceptions import ConversionError
 
 from .remote_value import RemoteValue
@@ -21,16 +12,6 @@ from .remote_value import RemoteValue
 
 class RemoteValueControl(RemoteValue):
     """Abstraction for remote value used for controling."""
-
-    DPTMAP = {
-        "control": DPTControl,
-        "startstop": DPTControlStartStop,
-        "startstop_dimming": DPTControlStartStopDimming,
-        "startstop_blinds": DPTControlStartStopBlinds,
-        "stepwise": DPTControlStepwise,
-        "stepwise_dimming": DPTControlStepwiseDimming,
-        "stepwise_blinds": DPTControlStepwiseBlinds,
-    }
 
     def __init__(
         self,
@@ -52,11 +33,13 @@ class RemoteValueControl(RemoteValue):
             after_update_cb=after_update_cb,
         )
         self.invert = invert
-        if value_type not in self.DPTMAP:
+        # pylint: disable=too-many-arguments
+        _dpt_class = DPTBase.parse_transcoder(value_type)
+        if _dpt_class is None:
             raise ConversionError(
                 "invalid value type", value_type=value_type, device_name=device_name
             )
-        self.value_type = value_type
+        self.dpt_class = _dpt_class
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
@@ -64,8 +47,8 @@ class RemoteValueControl(RemoteValue):
 
     def to_knx(self, value):
         """Convert value to payload."""
-        return DPTBinary(self.DPTMAP[self.value_type].to_knx(value, invert=self.invert))
+        return DPTBinary(self.dpt_class.to_knx(value, invert=self.invert))
 
     def from_knx(self, payload):
         """Convert current payload to value."""
-        return self.DPTMAP[self.value_type].from_knx(payload.value, invert=self.invert)
+        return self.dpt_class.from_knx(payload.value, invert=self.invert)
