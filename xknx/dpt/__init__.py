@@ -6,6 +6,15 @@ Module for encoding and decoding KNX datatypes.
 """
 # flake8: noqa
 from .dpt import DPTArray, DPTBase, DPTBinary, DPTComparator
+from .dpt_1byte_control import (
+    DPTControl,
+    DPTControlStartStop,
+    DPTControlStartStopBlinds,
+    DPTControlStartStopDimming,
+    DPTControlStepwise,
+    DPTControlStepwiseBlinds,
+    DPTControlStepwiseDimming,
+)
 from .dpt_1byte_signed import DPTPercentV8, DPTSignedRelativeValue, DPTValue1Count
 from .dpt_1byte_uint import (
     DPTDecimalFactor,
