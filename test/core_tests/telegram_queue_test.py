@@ -9,6 +9,14 @@ from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import AddressFilter, GroupAddress, Telegram, TelegramDirection
 
 
+class AsyncMock(MagicMock):
+    """Async Mock."""
+
+    # pylint: disable=invalid-overridden-method
+    async def __call__(self, *args, **kwargs):
+        return super().__call__(*args, **kwargs)
+
+
 class TestTelegramQueue(unittest.TestCase):
     """Test class for telegram queue."""
 
@@ -127,7 +135,7 @@ class TestTelegramQueue(unittest.TestCase):
         # pylint: disable=no-self-use
         xknx = XKNX()
 
-        telegram_received_callback = Mock()
+        telegram_received_callback = AsyncMock()
 
         async def async_telegram_received_cb(device):
             """Async callback."""
