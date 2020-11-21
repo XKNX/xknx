@@ -176,9 +176,9 @@ class TestTelegramQueue(unittest.TestCase):
         devices_by_ga_mock.assert_called_once_with(GroupAddress("1/2/3"))
         test_device.process.assert_called_once_with(telegram)
 
-    @patch("xknx.devices.Devices.devices_by_group_address")
-    def test_process_to_callback(self, devices_by_ga_mock):
-        """Test process_telegram_incoming for returning after processing callback."""
+    @patch("xknx.devices.Devices.process")
+    def test_process_to_callback(self, devices_process):
+        """Test process_telegram_incoming with callback."""
         # pylint: disable=no-self-use
         xknx = XKNX()
 
@@ -200,7 +200,7 @@ class TestTelegramQueue(unittest.TestCase):
             xknx.telegram_queue.process_telegram_incoming(telegram)
         )
         telegram_received_callback.assert_called_once_with(telegram)
-        devices_by_ga_mock.assert_not_called()
+        devices_process.assert_called_once_with(telegram)
 
     @patch("xknx.io.KNXIPInterface")
     @patch("logging.Logger.warning")

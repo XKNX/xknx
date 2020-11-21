@@ -6,6 +6,10 @@
 
 - Light, Switch: initialize state with `None` instead of `False` to account for unknown state.
 
+### Internals
+
+- process every incoming Telegram in all Devices, regardless if a callback for the GA is registered (eg. StateUpdater) or not.
+
 ## 0.15.3 Opposite day! 2020-10-29
 
 ### Devices

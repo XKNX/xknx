@@ -10,7 +10,6 @@ from xknx.telegram import AddressFilter
 async def telegram_received_cb(telegram):
     """Do something with the received telegram."""
     print(f"Telegram received: {telegram}")
-    return True
 
 
 def show_help():

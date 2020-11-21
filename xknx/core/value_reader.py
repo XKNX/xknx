@@ -53,17 +53,13 @@ class ValueReader:
 
     async def telegram_received(self, telegram):
         """Test if telegram has correct group address and trigger event."""
-        if telegram.telegramtype not in (
+        if telegram.group_address == self.group_address and telegram.telegramtype in (
             TelegramType.GROUP_RESPONSE,
             TelegramType.GROUP_WRITE,
         ):
-            return False
-        if self.group_address != telegram.group_address:
-            return False
-        self.success = True
-        self.received_telegram = telegram
-        self.response_received_or_timeout.set()
-        return True
+            self.success = True
+            self.received_telegram = telegram
+            self.response_received_or_timeout.set()
 
     def timeout(self):
         """Handle timeout for not having received expected group response."""
