@@ -134,15 +134,10 @@ class TestTelegramQueue(unittest.TestCase):
         """Test telegram_received_callback after state of switch was changed."""
         # pylint: disable=no-self-use
         xknx = XKNX()
-
-        telegram_received_callback = AsyncMock()
-
-        async def async_telegram_received_cb(device):
-            """Async callback."""
-            telegram_received_callback(device)
+        async_telegram_received_callback = AsyncMock()
 
         callback = xknx.telegram_queue.register_telegram_received_cb(
-            async_telegram_received_cb
+            async_telegram_received_callback
         )
         xknx.telegram_queue.unregister_telegram_received_cb(callback)
 
@@ -154,7 +149,7 @@ class TestTelegramQueue(unittest.TestCase):
         self.loop.run_until_complete(
             xknx.telegram_queue.process_telegram_incoming(telegram)
         )
-        telegram_received_callback.assert_not_called()
+        async_telegram_received_callback.assert_not_called()
 
     #
     # TEST PROCESS
@@ -184,20 +179,16 @@ class TestTelegramQueue(unittest.TestCase):
         devices_by_ga_mock.assert_called_once_with(GroupAddress("1/2/3"))
         test_device.process.assert_called_once_with(telegram)
 
-    @patch("xknx.devices.Devices.process")
+    @patch("xknx.devices.Devices.process", new_callable=AsyncMock)
     def test_process_to_callback(self, devices_process):
         """Test process_telegram_incoming with callback."""
         # pylint: disable=no-self-use
         xknx = XKNX()
+        async_telegram_received_callback = AsyncMock()
 
-        telegram_received_callback = Mock()
-
-        async def async_telegram_received_cb(device):
-            """Async callback. Returning 'True'."""
-            telegram_received_callback(device)
-            return True
-
-        xknx.telegram_queue.register_telegram_received_cb(async_telegram_received_cb)
+        xknx.telegram_queue.register_telegram_received_cb(
+            async_telegram_received_callback
+        )
 
         telegram = Telegram(
             direction=TelegramDirection.INCOMING,
@@ -207,7 +198,7 @@ class TestTelegramQueue(unittest.TestCase):
         self.loop.run_until_complete(
             xknx.telegram_queue.process_telegram_incoming(telegram)
         )
-        telegram_received_callback.assert_called_once_with(telegram)
+        async_telegram_received_callback.assert_called_once_with(telegram)
         devices_process.assert_called_once_with(telegram)
 
     @patch("xknx.io.KNXIPInterface")
