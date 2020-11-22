@@ -14,7 +14,7 @@ logger = logging.getLogger("xknx.state_updater")
 class StateUpdater:
     """Class for keeping the states of RemoteValues up to date."""
 
-    def __init__(self, xknx, parallel_reads: int = 3):
+    def __init__(self, xknx, parallel_reads: int = 2):
         """Initialize StateUpdater class."""
         self.xknx = xknx
         self.started = False

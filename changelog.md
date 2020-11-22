@@ -1,14 +1,17 @@
 # Changelog
 
-## Unreleased changes
+## 0.15.4 Bugfix for switch 2020-11-22
 
 ### Devices
 
 - Light, Switch: initialize state with `None` instead of `False` to account for unknown state.
+- Cover: `device_class` may be used to store the type of cover for Home-Assistant.
+- HA-Entity Light, Switch, Cover: initialize with `assumed_state = True` until we have received a state.
 
 ### Bugfixes
 
 - Switch.after_update was not called from RemoteValueSwitch.read_state (StateUpdater). Moved Switch.state to RemoteValue again.
+- StateUpdater: query less aggressive - 2 parallel reads with 2 seconds timeout (instead of 3 - 1).
 
 ## 0.15.3 Opposite day! 2020-10-29
 
