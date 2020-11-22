@@ -1,12 +1,20 @@
 """Unit test for Switch objects."""
 import asyncio
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Switch
 from xknx.dpt import DPTBinary
 from xknx.telegram import GroupAddress, Telegram, TelegramType
+
+
+class AsyncMock(MagicMock):
+    """Async Mock."""
+
+    # pylint: disable=invalid-overridden-method
+    async def __call__(self, *args, **kwargs):
+        return super().__call__(*args, **kwargs)
 
 
 class TestSwitch(unittest.TestCase):
@@ -58,10 +66,17 @@ class TestSwitch(unittest.TestCase):
     def test_process(self):
         """Test process / reading telegrams from telegram queue. Test if device was updated."""
         xknx = XKNX()
-        switch1 = Switch(xknx, "TestOutlet", group_address="1/2/3")
-        switch2 = Switch(xknx, "TestOutlet", group_address="1/2/3")
+        callback_mock = AsyncMock()
+
+        switch1 = Switch(
+            xknx, "TestOutlet", group_address="1/2/3", device_updated_cb=callback_mock
+        )
+        switch2 = Switch(
+            xknx, "TestOutlet", group_address="1/2/3", device_updated_cb=callback_mock
+        )
         self.assertEqual(switch1.state, None)
         self.assertEqual(switch2.state, None)
+        callback_mock.assert_not_called()
 
         telegram_on = Telegram(
             group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
@@ -72,13 +87,73 @@ class TestSwitch(unittest.TestCase):
 
         self.loop.run_until_complete(switch1.process(telegram_on))
         self.assertEqual(switch1.state, True)
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
         self.loop.run_until_complete(switch1.process(telegram_off))
         self.assertEqual(switch1.state, False)
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
         # test setting switch2 to False with first telegram
         self.loop.run_until_complete(switch2.process(telegram_off))
         self.assertEqual(switch2.state, False)
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
         self.loop.run_until_complete(switch2.process(telegram_on))
         self.assertEqual(switch2.state, True)
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
+
+    def test_process_state(self):
+        """Test process / reading telegrams from telegram queue. Test if device was updated."""
+        xknx = XKNX()
+        callback_mock = AsyncMock()
+
+        switch1 = Switch(
+            xknx,
+            "TestOutlet",
+            group_address="1/2/3",
+            group_address_state="1/2/4",
+            device_updated_cb=callback_mock,
+        )
+        switch2 = Switch(
+            xknx,
+            "TestOutlet",
+            group_address="1/2/3",
+            group_address_state="1/2/4",
+            device_updated_cb=callback_mock,
+        )
+        self.assertEqual(switch1.state, None)
+        self.assertEqual(switch2.state, None)
+        callback_mock.assert_not_called()
+
+        telegram_on = Telegram(
+            group_address=GroupAddress("1/2/4"),
+            payload=DPTBinary(1),
+            telegramtype=TelegramType.GROUP_RESPONSE,
+        )
+        telegram_off = Telegram(
+            group_address=GroupAddress("1/2/4"),
+            payload=DPTBinary(0),
+            telegramtype=TelegramType.GROUP_RESPONSE,
+        )
+
+        self.loop.run_until_complete(switch1.process(telegram_on))
+        self.assertEqual(switch1.state, True)
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
+        self.loop.run_until_complete(switch1.process(telegram_off))
+        self.assertEqual(switch1.state, False)
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
+        # test setting switch2 to False with first telegram
+        self.loop.run_until_complete(switch2.process(telegram_off))
+        self.assertEqual(switch2.state, False)
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
+        self.loop.run_until_complete(switch2.process(telegram_on))
+        self.assertEqual(switch2.state, True)
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
 
     def test_process_invert(self):
         """Test process / reading telegrams from telegram queue with inverted switch."""

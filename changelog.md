@@ -6,6 +6,10 @@
 
 - Light, Switch: initialize state with `None` instead of `False` to account for unknown state.
 
+### Bugfixes
+
+- Switch.after_update was not called from RemoteValueSwitch.read_state (StateUpdater). Moved Switch.state to RemoteValue again.
+
 ## 0.15.3 Opposite day! 2020-10-29
 
 ### Devices
