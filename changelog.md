@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Bugfixes
+
+- StateUpdater: always close the update task before starting a new in StateTracker
+
 ## 0.15.4 Bugfix for switch 2020-11-22
 
 ### Devices
