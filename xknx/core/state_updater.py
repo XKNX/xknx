@@ -156,16 +156,18 @@ class _StateTracker:
 
     def start(self):
         """Start StateTracker - read state on call."""
+        self.stop()
         self._task = asyncio.create_task(self._start_init())
 
     async def _start_init(self):
         """Initialize state, start update loop if appropriate."""
         await self._read_state()
         if self.tracker_type is not StateTrackerType.INIT:
-            self._start_waiting()
+            self.reset()
 
-    def _start_waiting(self):
-        """Start StateTracker - wait for value to expire."""
+    def reset(self):
+        """Start / Restart StateTracker timer - wait for value to expire."""
+        self.stop()
         self._task = asyncio.create_task(self._update_loop())
 
     def stop(self):
@@ -173,11 +175,6 @@ class _StateTracker:
         if self._task:
             self._task.cancel()
             self._task = None
-
-    def reset(self):
-        """Restart the timer."""
-        self.stop()
-        self._start_waiting()
 
     def update_received(self):
         """Reset the timer if a telegram was received for a "expire" typed StateUpdater."""
