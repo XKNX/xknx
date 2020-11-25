@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased changes
+## 0.15.5 A Telegram for everyone 2020-11-25
+
+### Internals
+
+- process every incoming Telegram in all Devices, regardless if a callback for the GA is registered (eg. StateUpdater) or not.
 
 ### Bugfixes
 
@@ -19,10 +23,6 @@
 
 - Switch.after_update was not called from RemoteValueSwitch.read_state (StateUpdater). Moved Switch.state to RemoteValue again.
 - StateUpdater: query less aggressive - 2 parallel reads with 2 seconds timeout (instead of 3 - 1).
-
-### Internals
-
-- process every incoming Telegram in all Devices, regardless if a callback for the GA is registered (eg. StateUpdater) or not.
 
 ## 0.15.3 Opposite day! 2020-10-29
 
