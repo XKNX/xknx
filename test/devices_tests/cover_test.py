@@ -401,6 +401,7 @@ class TestCover(unittest.TestCase):
         # process the outgoing telegram to make sure it doesn't overwrite the target position
         self.loop.run_until_complete(cover.process(telegram))
         self.assertEqual(cover.travelcalculator.travel_to_position, 50)
+        self.assertEqual(xknx.telegrams.qsize(), 0)
 
     def test_position_without_position_address_down(self):
         """Test moving cover down - with no absolute positioning supported."""

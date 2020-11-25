@@ -170,7 +170,8 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(cover),
             '<Cover name="Rolladen" updown="GroupAddress("1/2/2")/None/None/None" step="GroupAddress("1/2/3")/None/None/None" '
-            'stop="GroupAddress("1/2/4")/None/None/None" position="GroupAddress("1/2/5")/GroupAddress("1/2/6")/None/None" '
+            'stop="GroupAddress("1/2/4")/None/None/None" '
+            'position_current="None/GroupAddress("1/2/6")/None/None" position_target="GroupAddress("1/2/5")/None/None/None" '
             'angle="GroupAddress("1/2/7")/GroupAddress("1/2/8")/None/None" '
             'travel_time_down="8" travel_time_up="10" />',
         )
