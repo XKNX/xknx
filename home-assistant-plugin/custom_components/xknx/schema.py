@@ -139,6 +139,21 @@ class LightSchema:
     DEFAULT_MIN_KELVIN = 2700  # 370 mireds
     DEFAULT_MAX_KELVIN = 6000  # 166 mireds
 
+    CONF_SWITCH_ADDRESS_RED = "address_red"
+    CONF_STATE_ADDRESS_RED = "state_address_red"
+    CONF_BRIGHTNESS_ADDRESS_RED = "brightness_address_red"
+    CONF_BRIGHTNESS_STATE_ADDRESS_RED = "brightness_state_address_red"
+
+    CONF_SWITCH_ADDRESS_GREEN = "address_green"
+    CONF_STATE_ADDRESS_GREEN = "state_address_green"
+    CONF_BRIGHTNESS_ADDRESS_GREEN = "brightness_address_green"
+    CONF_BRIGHTNESS_STATE_ADDRESS_GREEN = "brightness_state_address_green"
+
+    CONF_SWITCH_ADDRESS_BLUE = "address_blue"
+    CONF_STATE_ADDRESS_BLUE = "state_address_blue"
+    CONF_BRIGHTNESS_ADDRESS_BLUE = "brightness_address_blue"
+    CONF_BRIGHTNESS_STATE_ADDRESS_BLUE = "brightness_state_address_blue"
+
     SCHEMA = vol.Schema(
         {
             vol.Required(CONF_ADDRESS): cv.string,
@@ -146,6 +161,18 @@ class LightSchema:
             vol.Optional(CONF_STATE_ADDRESS): cv.string,
             vol.Optional(CONF_BRIGHTNESS_ADDRESS): cv.string,
             vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_SWITCH_ADDRESS_RED): cv.string,
+            vol.Optional(CONF_STATE_ADDRESS_RED): cv.string,
+            vol.Optional(CONF_BRIGHTNESS_ADDRESS_RED): cv.string,
+            vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS_RED): cv.string,
+            vol.Optional(CONF_SWITCH_ADDRESS_GREEN): cv.string,
+            vol.Optional(CONF_STATE_ADDRESS_GREEN): cv.string,
+            vol.Optional(CONF_BRIGHTNESS_ADDRESS_GREEN): cv.string,
+            vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS_GREEN): cv.string,
+            vol.Optional(CONF_SWITCH_ADDRESS_BLUE): cv.string,
+            vol.Optional(CONF_STATE_ADDRESS_BLUE): cv.string,
+            vol.Optional(CONF_BRIGHTNESS_ADDRESS_BLUE): cv.string,
+            vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS_BLUE): cv.string,
             vol.Optional(CONF_COLOR_ADDRESS): cv.string,
             vol.Optional(CONF_COLOR_STATE_ADDRESS): cv.string,
             vol.Optional(CONF_COLOR_TEMP_ADDRESS): cv.string,
