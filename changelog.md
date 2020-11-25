@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Internals
+
+- Telegram: `group_address` renamed to `address`, to prepare support for other APCI services.
+
 ## 0.15.5 A Telegram for everyone 2020-11-25
 
 ### Internals
