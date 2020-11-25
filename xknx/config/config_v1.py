@@ -16,6 +16,7 @@ from xknx.devices import (
     Fan,
     Light,
     Notification,
+    RGBLight,
     Scene,
     Sensor,
     Switch,
@@ -167,7 +168,14 @@ class ConfigV1:
     def parse_group_light(self, entries):
         """Parse a light section of xknx.yaml."""
         for entry in entries:
-            Light.from_config(self.xknx, entry, entries[entry])
+            if (
+                "group_address_switch_red" in entries[entry]
+                or "group_address_switch_green" in entries[entry]
+                or "group_address_switch_blue" in entries[entry]
+            ):
+                RGBLight.from_config(self.xknx, entry, entries[entry])
+            else:
+                Light.from_config(self.xknx, entry, entries[entry])
 
     def parse_group_notification(self, entries):
         """Parse a sensor section of xknx.yaml."""

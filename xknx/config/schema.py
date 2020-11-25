@@ -152,6 +152,10 @@ class LightSchema:
     CONF_MIN_KELVIN = "min_kelvin"
     CONF_MAX_KELVIN = "max_kelvin"
 
+    CONF_RED = "red"
+    CONF_GREEN = "green"
+    CONF_BLUE = "blue"
+
     DEFAULT_COLOR_TEMP_MODE = "absolute"
     DEFAULT_MIN_KELVIN = 2700  # 370 mireds
     DEFAULT_MAX_KELVIN = 6000  # 166 mireds
@@ -185,6 +189,34 @@ class LightSchema:
                         vol.Coerce(int), vol.Range(min=1)
                     ),
                 }
+            ),
+            vol.Optional(CONF_SWITCH + "_" + CONF_RED): RemoteValueSchema.SCHEMA.extend(
+                {vol.Required(CONF_ADDRESS): ensure_group_address}
+            ),
+            vol.Optional(
+                CONF_BRIGHTNESS + "_" + CONF_RED
+            ): RemoteValueSchema.SCHEMA.extend(
+                {vol.Required(CONF_ADDRESS): ensure_group_address}
+            ),
+            vol.Optional(
+                CONF_SWITCH + "_" + CONF_GREEN
+            ): RemoteValueSchema.SCHEMA.extend(
+                {vol.Required(CONF_ADDRESS): ensure_group_address}
+            ),
+            vol.Optional(
+                CONF_BRIGHTNESS + "_" + CONF_GREEN
+            ): RemoteValueSchema.SCHEMA.extend(
+                {vol.Required(CONF_ADDRESS): ensure_group_address}
+            ),
+            vol.Optional(
+                CONF_SWITCH + "_" + CONF_BLUE
+            ): RemoteValueSchema.SCHEMA.extend(
+                {vol.Required(CONF_ADDRESS): ensure_group_address}
+            ),
+            vol.Optional(
+                CONF_BRIGHTNESS + "_" + CONF_BLUE
+            ): RemoteValueSchema.SCHEMA.extend(
+                {vol.Required(CONF_ADDRESS): ensure_group_address}
             ),
         }
     )
