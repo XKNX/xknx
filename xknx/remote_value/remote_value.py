@@ -109,7 +109,7 @@ class RemoteValue:
         logger.warning("'to_knx()' not implemented for %s", self.__class__.__name__)
 
     async def process(self, telegram, always_callback=False):
-        """Process incoming telegram."""
+        """Process incoming or outgoing telegram."""
         if not self.has_group_address(telegram.group_address):
             return False
         if not self.payload_valid(telegram.payload):

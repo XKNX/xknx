@@ -141,12 +141,7 @@ class TelegramQueue:
     async def process_telegram_incoming(self, telegram):
         """Process incoming telegram."""
         telegram_logger.debug(telegram)
-        processed = False
         for telegram_received_cb in self.telegram_received_cbs:
             if telegram_received_cb.is_within_filter(telegram):
-                ret = await telegram_received_cb.callback(telegram)
-                if ret:
-                    processed = True
-        # TODO: why don't we process every incoming telegram by device?
-        if not processed:
-            await self.xknx.devices.process(telegram)
+                await telegram_received_cb.callback(telegram)
+        await self.xknx.devices.process(telegram)

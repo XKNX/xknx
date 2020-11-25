@@ -135,12 +135,18 @@ class TestValueReader(unittest.TestCase):
                 value_reader.telegram_received(test_telegram)
             )
 
-        self.assertFalse(async_telegram_received(telegram_wrong_address))
-        self.assertFalse(async_telegram_received(telegram_wrong_type))
+        async_telegram_received(telegram_wrong_address)
         self.assertIsNone(value_reader.received_telegram)
+        self.assertFalse(value_reader.success)
 
-        self.assertTrue(async_telegram_received(expected_telegram_1))
+        async_telegram_received(telegram_wrong_type)
+        self.assertIsNone(value_reader.received_telegram)
+        self.assertFalse(value_reader.success)
+
+        async_telegram_received(expected_telegram_1)
         self.assertEqual(value_reader.received_telegram, expected_telegram_1)
+        self.assertTrue(value_reader.success)
 
-        self.assertTrue(async_telegram_received(expected_telegram_2))
+        async_telegram_received(expected_telegram_2)
         self.assertEqual(value_reader.received_telegram, expected_telegram_2)
+        self.assertTrue(value_reader.success)
