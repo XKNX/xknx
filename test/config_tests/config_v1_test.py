@@ -16,6 +16,7 @@ from xknx.devices import (
     Fan,
     Light,
     Notification,
+    RGBLight,
     Scene,
     Sensor,
     Switch,
@@ -195,6 +196,36 @@ class TestConfig(unittest.TestCase):
                 min_kelvin=2700,
                 max_kelvin=6000,
             ),
+        )
+
+    def test_config_individual_rgb(self):
+        """Test reading Light with with dimming and color address."""
+        expected = RGBLight(
+            TestConfig.xknx,
+            "Diningroom.Light_rgb",
+            group_address_switch_white="1/6/4",
+            group_address_switch_state_white="1/6/5",
+            group_address_brightness_white="1/6/6",
+            group_address_brightness_state_white="1/6/7",
+            group_address_switch_red="1/6/14",
+            group_address_switch_state_red="1/6/15",
+            group_address_brightness_red="1/6/16",
+            group_address_brightness_state_red="1/6/17",
+            group_address_switch_green="1/6/24",
+            group_address_switch_state_green="1/6/25",
+            group_address_brightness_green="1/6/26",
+            group_address_brightness_state_green="1/6/27",
+            group_address_switch_blue="1/6/34",
+            group_address_switch_state_blue="1/6/35",
+            group_address_brightness_blue="1/6/36",
+            group_address_brightness_state_blue="1/6/37",
+        )
+        result = TestConfig.xknx.devices["Diningroom.Light_rgb"]
+
+        print(f"result: {result} \nexpected: {expected}")
+        self.assertEqual(
+            result,
+            expected,
         )
 
     def test_config_color_temperature(self):

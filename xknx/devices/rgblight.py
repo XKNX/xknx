@@ -63,6 +63,10 @@ class _SwitchAndBrightness:
         if self.switch.initialized:
             await self.switch.off()
 
+    def __eq__(self, other):
+        """Compare for quality."""
+        return self.__dict__ == other.__dict__
+
 
 # pylint: disable=too-many-public-methods, too-many-instance-attributes
 class RGBLight(Device):

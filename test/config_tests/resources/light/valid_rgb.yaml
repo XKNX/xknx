@@ -1,0 +1,26 @@
+name: "office"
+friendly_name: "Office"
+switch:
+  address: "2/1/5"
+  state_address: "2/4/5"
+brightness:
+  address: "2/5/7"
+  state_address: "2/5/8"
+switch_red:
+  address: "2/1/5"
+  state_address: "2/4/5"
+brightness_red:
+  address: "2/5/7"
+  state_address: "2/5/8"
+switch_green:
+  address: "2/1/5"
+  state_address: "2/4/5"
+brightness_green:
+  address: "2/5/7"
+  state_address: "2/5/8"
+switch_blue:
+  address: "2/1/5"
+  state_address: "2/4/5"
+brightness_blue:
+  address: "2/5/7"
+  state_address: "2/5/8"
