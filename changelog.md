@@ -5,6 +5,7 @@
 ### Bugfixes
 
 - StateUpdater: always close the update task before starting a new in StateTracker
+- Cover: separate target and state position RemoteValue to fix position update from RemoteValue and call `after_update()`
 
 ## 0.15.4 Bugfix for switch 2020-11-22
 
