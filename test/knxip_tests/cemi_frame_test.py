@@ -183,3 +183,9 @@ def test_telegram_physical_address(frame):
 
     assert (frame.flags & CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS) == \
         CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
+
+
+def test_telegram_unsupported_address(frame):
+    """Test telegram conversion flags with an unsupported address"""
+    with raises(TypeError):
+        frame.telegram = Telegram(address=object())
