@@ -38,9 +38,9 @@ class TestTelegramQueue(unittest.TestCase):
         xknx = XKNX()
 
         telegram_in = Telegram(
+            destination_address=GroupAddress("1/2/3"),
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
-            address=GroupAddress("1/2/3"),
         )
 
         self.loop.run_until_complete(xknx.telegram_queue.start())
@@ -76,13 +76,13 @@ class TestTelegramQueue(unittest.TestCase):
         telegram_in = Telegram(
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
-            address=GroupAddress("1/2/3"),
+            destination_address=GroupAddress("1/2/3"),
         )
 
         telegram_out = Telegram(
             direction=TelegramDirection.OUTGOING,
             payload=DPTBinary(1),
-            address=GroupAddress("1/2/3"),
+            destination_address=GroupAddress("1/2/3"),
         )
 
         self.loop.run_until_complete(xknx.telegram_queue.start())
@@ -118,9 +118,9 @@ class TestTelegramQueue(unittest.TestCase):
         xknx.telegram_queue.register_telegram_received_cb(async_telegram_received_cb)
 
         telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
-            address=GroupAddress("1/2/3"),
         )
         self.loop.run_until_complete(
             xknx.telegram_queue.process_telegram_incoming(telegram)
@@ -142,9 +142,9 @@ class TestTelegramQueue(unittest.TestCase):
         xknx.telegram_queue.unregister_telegram_received_cb(callback)
 
         telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
-            address=GroupAddress("1/2/3"),
         )
         self.loop.run_until_complete(
             xknx.telegram_queue.process_telegram_incoming(telegram)
@@ -168,9 +168,9 @@ class TestTelegramQueue(unittest.TestCase):
         devices_by_ga_mock.return_value = [test_device]
 
         telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
-            address=GroupAddress("1/2/3"),
         )
         self.loop.run_until_complete(
             xknx.telegram_queue.process_telegram_incoming(telegram)
@@ -191,9 +191,9 @@ class TestTelegramQueue(unittest.TestCase):
         )
 
         telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
-            address=GroupAddress("1/2/3"),
         )
         self.loop.run_until_complete(
             xknx.telegram_queue.process_telegram_incoming(telegram)
@@ -213,9 +213,9 @@ class TestTelegramQueue(unittest.TestCase):
         if_mock.send_telegram.return_value = async_if_send_telegram
 
         telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
             direction=TelegramDirection.OUTGOING,
             payload=DPTBinary(1),
-            address=GroupAddress("1/2/3"),
         )
 
         # log a warning if there is no KNXIP interface instanciated
@@ -247,9 +247,9 @@ class TestTelegramQueue(unittest.TestCase):
         process_tg_in_mock.return_value = asyncio.ensure_future(process_exception())
 
         telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
-            address=GroupAddress("1/2/3"),
         )
 
         xknx.telegrams.put_nowait(telegram)
@@ -277,14 +277,14 @@ class TestTelegramQueue(unittest.TestCase):
         process_telegram_outgoing_mock.return_value = async_process_mock
 
         telegram_in = Telegram(
+            destination_address=GroupAddress("1/2/3"),
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
-            address=GroupAddress("1/2/3"),
         )
         telegram_out = Telegram(
+            destination_address=GroupAddress("1/2/3"),
             direction=TelegramDirection.OUTGOING,
             payload=DPTBinary(1),
-            address=GroupAddress("1/2/3"),
         )
 
         xknx.telegrams.put_nowait(telegram_in)
@@ -312,9 +312,9 @@ class TestTelegramQueue(unittest.TestCase):
         xknx.telegram_queue.register_telegram_received_cb(async_telegram_received_cb)
 
         telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
-            address=GroupAddress("1/2/3"),
         )
         xknx.telegrams.put_nowait(telegram)
         self.loop.run_until_complete(xknx.telegram_queue._process_all_telegrams())
@@ -341,9 +341,9 @@ class TestTelegramQueue(unittest.TestCase):
         )
 
         telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
-            address=GroupAddress("1/2/3"),
         )
         xknx.telegrams.put_nowait(telegram)
         self.loop.run_until_complete(xknx.telegram_queue._process_all_telegrams())
@@ -370,9 +370,9 @@ class TestTelegramQueue(unittest.TestCase):
         )
 
         telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
             direction=TelegramDirection.INCOMING,
             payload=DPTBinary(1),
-            address=GroupAddress("1/2/3"),
         )
         xknx.telegrams.put_nowait(telegram)
         self.loop.run_until_complete(xknx.telegram_queue._process_all_telegrams())

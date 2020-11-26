@@ -113,7 +113,7 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
         xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx, group_address=GroupAddress("1/2/3"))
         telegram = Telegram(
-            address=GroupAddress("1/2/3"),
+            destination_address=GroupAddress("1/2/3"),
             payload=DPTArray((0x64, 0x65, 0x66, 0x67, 0x00, 0x0F)),
         )
         self.loop.run_until_complete(remote_value.process(telegram))
@@ -125,18 +125,19 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
         remote_value = RemoteValueColorRGBW(xknx, group_address=GroupAddress("1/2/3"))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+                destination_address=GroupAddress("1/2/3"),
+                payload=DPTBinary(1)
             )
             self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                address=GroupAddress("1/2/3"),
+                destination_address=GroupAddress("1/2/3"),
                 payload=DPTArray((0x64, 0x65, 0x66)),
             )
             self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                address=GroupAddress("1/2/3"),
+                destination_address=GroupAddress("1/2/3"),
                 payload=DPTArray((0x00, 0x00, 0x0F, 0x64, 0x65, 0x66, 0x67)),
             )
             self.loop.run_until_complete(remote_value.process(telegram))

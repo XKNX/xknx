@@ -171,7 +171,7 @@ def test_from_knx_physical_address(frame):
 
 def test_telegram_group_address(frame):
     """Test telegram conversion flags with a group address"""
-    frame.telegram = Telegram(address=GroupAddress(0))
+    frame.telegram = Telegram(destination_address=GroupAddress(0))
 
     assert (frame.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS) == \
         CEMIFlags.DESTINATION_GROUP_ADDRESS
@@ -179,7 +179,7 @@ def test_telegram_group_address(frame):
 
 def test_telegram_physical_address(frame):
     """Test telegram conversion flags with a physical address"""
-    frame.telegram = Telegram(address=PhysicalAddress(0))
+    frame.telegram = Telegram(destination_address=PhysicalAddress(0))
 
     assert (frame.flags & CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS) == \
         CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
@@ -188,4 +188,4 @@ def test_telegram_physical_address(frame):
 def test_telegram_unsupported_address(frame):
     """Test telegram conversion flags with an unsupported address"""
     with raises(TypeError):
-        frame.telegram = Telegram(address=object())
+        frame.telegram = Telegram(destination_address=object())

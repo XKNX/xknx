@@ -53,7 +53,7 @@ class ValueReader:
 
     async def telegram_received(self, telegram):
         """Test if telegram has correct group address and trigger event."""
-        if telegram.address == self.group_address and telegram.telegramtype in (
+        if telegram.destination_address == self.group_address and telegram.telegramtype in (
             TelegramType.GROUP_RESPONSE,
             TelegramType.GROUP_WRITE,
         ):

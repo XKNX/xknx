@@ -35,7 +35,7 @@ class TelegramQueue:
             if self.address_filters is None:
                 return True
             for address_filter in self.address_filters:
-                if address_filter.match(telegram.address):
+                if address_filter.match(telegram.destination_address):
                     return True
             return False
 

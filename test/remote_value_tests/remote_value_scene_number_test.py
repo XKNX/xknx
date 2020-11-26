@@ -64,7 +64,8 @@ class TestRemoteValueSceneNumber(unittest.TestCase):
         xknx = XKNX()
         remote_value = RemoteValueSceneNumber(xknx, group_address=GroupAddress("1/2/3"))
         telegram = Telegram(
-            address=GroupAddress("1/2/3"), payload=DPTArray((0x0A,))
+            destination_address=GroupAddress("1/2/3"),
+            payload=DPTArray((0x0A,))
         )
         self.loop.run_until_complete(remote_value.process(telegram))
         self.assertEqual(remote_value.value, 11)
@@ -75,12 +76,13 @@ class TestRemoteValueSceneNumber(unittest.TestCase):
         remote_value = RemoteValueSceneNumber(xknx, group_address=GroupAddress("1/2/3"))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+                destination_address=GroupAddress("1/2/3"),
+                payload=DPTBinary(1)
             )
             self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                address=GroupAddress("1/2/3"),
+                destination_address=GroupAddress("1/2/3"),
                 payload=DPTArray(
                     (
                         0x64,
