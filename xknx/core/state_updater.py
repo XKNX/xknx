@@ -86,7 +86,9 @@ class StateUpdater:
                     remote_value.device_name,
                     remote_value.feature_name,
                 )
-                await remote_value.read_state(wait_for_result=True)
+                # shield from cancellation so update_received() don't cancel the
+                # ValueReader leaving the telegram_received_cb until next telegram
+                await asyncio.shield(remote_value.read_state(wait_for_result=True))
 
         tracker_type, update_interval = parse_tracker_options(tracker_options)
         tracker = _StateTracker(
