@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.15.6 Bugfix for StateUpater 2020-11-26
+
+### Bugfixes
+
+- StateUpdater: shield from cancellation so update_received() don't cancel ongoing RemoteValue.read_state()
+
 ## 0.15.5 A Telegram for everyone 2020-11-25
 
 ### Internals
