@@ -219,8 +219,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
             climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE,
         )
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"),
-            payload=DPTArray((0x00,))
+            destination_address=GroupAddress("1/2/3"), payload=DPTArray((0x00,))
         )
         self.loop.run_until_complete(remote_value.process(telegram))
         self.assertEqual(remote_value.value, HVACOperationMode.AUTO)
@@ -234,8 +233,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
             operation_mode=HVACOperationMode.FROST_PROTECTION,
         )
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"),
-            payload=DPTBinary(True)
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(True)
         )
         self.loop.run_until_complete(remote_value.process(telegram))
         self.assertEqual(remote_value.value, HVACOperationMode.FROST_PROTECTION)
@@ -250,8 +248,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         )
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=DPTBinary(1)
+                destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
             )
             self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):
@@ -276,8 +273,7 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         )
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=DPTArray((0x01,))
+                destination_address=GroupAddress("1/2/3"), payload=DPTArray((0x01,))
             )
             self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):

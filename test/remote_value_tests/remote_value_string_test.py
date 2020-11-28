@@ -141,8 +141,7 @@ class TestRemoteValueString(unittest.TestCase):
         remote_value = RemoteValueString(xknx, group_address=GroupAddress("1/2/3"))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=DPTBinary(1)
+                destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
             )
             self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):

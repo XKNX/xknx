@@ -230,8 +230,7 @@ class TestSwitch(unittest.TestCase):
         switch.register_device_updated_cb(async_after_update_callback)
 
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"),
-            payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
         )
         self.loop.run_until_complete(switch.process(telegram))
 

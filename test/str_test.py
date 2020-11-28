@@ -469,8 +469,7 @@ class TestStringRepresentations(unittest.TestCase):
     def test_telegram(self):
         """Test string representation of Telegram."""
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"),
-            payload=DPTBinary(7)
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(7)
         )
         self.assertEqual(
             str(telegram),
@@ -663,8 +662,7 @@ class TestStringRepresentations(unittest.TestCase):
         cemi_frame = CEMIFrame(xknx)
         cemi_frame.src_addr = GroupAddress("1/2/3")
         cemi_frame.telegram = Telegram(
-            destination_address=GroupAddress("1/2/5"),
-            payload=DPTBinary(7)
+            destination_address=GroupAddress("1/2/5"), payload=DPTBinary(7)
         )
         self.assertEqual(
             str(cemi_frame),

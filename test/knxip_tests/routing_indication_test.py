@@ -241,7 +241,7 @@ class Test_KNXIP(unittest.TestCase):
         """Test parsing and streaming CEMIFrame KNX/IP packet, testing maximum APCI."""
         telegram = Telegram(
             destination_address=GroupAddress(337),
-            payload=DPTBinary(DPTBinary.APCI_MAX_VALUE)
+            payload=DPTBinary(DPTBinary.APCI_MAX_VALUE),
         )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)

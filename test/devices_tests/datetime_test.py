@@ -112,7 +112,7 @@ class TestDateTime(unittest.TestCase):
 
         telegram_read = Telegram(
             destination_address=GroupAddress("1/2/3"),
-            telegramtype=TelegramType.GROUP_READ
+            telegramtype=TelegramType.GROUP_READ,
         )
         with patch("time.localtime") as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])

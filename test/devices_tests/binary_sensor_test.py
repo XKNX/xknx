@@ -243,8 +243,7 @@ class TestBinarySensor(unittest.TestCase):
         switch.register_device_updated_cb(async_after_update_callback)
 
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"),
-            payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
         )
         self.loop.run_until_complete(switch.process(telegram))
         # no _context_task started because ignore_internal_state is False
@@ -272,8 +271,7 @@ class TestBinarySensor(unittest.TestCase):
         switch.register_device_updated_cb(async_after_update_callback)
 
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"),
-            payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
         )
         self.assertEqual(switch.counter, 0)
 
@@ -315,8 +313,7 @@ class TestBinarySensor(unittest.TestCase):
         switch.register_device_updated_cb(async_after_update_callback)
 
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"),
-            payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
         )
         self.loop.run_until_complete(switch.process(telegram))
         # no _context_task started because context_timeout is False
@@ -343,8 +340,7 @@ class TestBinarySensor(unittest.TestCase):
         switch.register_device_updated_cb(async_after_update_callback)
 
         write_telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"),
-            payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
         )
         response_telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),

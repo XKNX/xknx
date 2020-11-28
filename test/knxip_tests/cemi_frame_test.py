@@ -6,8 +6,8 @@ from pytest import fixture, raises
 from xknx.dpt import DPTBinary, DPTComparator
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage
 from xknx.knxip.cemi_frame import CEMIFrame
-from xknx.knxip.knxip_enum import APCICommand, CEMIMessageCode, CEMIFlags
-from xknx.telegram import PhysicalAddress, Telegram, GroupAddress
+from xknx.knxip.knxip_enum import APCICommand, CEMIFlags, CEMIMessageCode
+from xknx.telegram import GroupAddress, PhysicalAddress, Telegram
 
 
 def get_data(code, adil, flags, src, dst, mpdu_len, tpci_apci, payload):
@@ -173,16 +173,18 @@ def test_telegram_group_address(frame):
     """Test telegram conversion flags with a group address"""
     frame.telegram = Telegram(destination_address=GroupAddress(0))
 
-    assert (frame.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS) == \
-        CEMIFlags.DESTINATION_GROUP_ADDRESS
+    assert (
+        frame.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS
+    ) == CEMIFlags.DESTINATION_GROUP_ADDRESS
 
 
 def test_telegram_physical_address(frame):
     """Test telegram conversion flags with a physical address"""
     frame.telegram = Telegram(destination_address=PhysicalAddress(0))
 
-    assert (frame.flags & CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS) == \
-        CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
+    assert (
+        frame.flags & CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
+    ) == CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
 
 
 def test_telegram_unsupported_address(frame):

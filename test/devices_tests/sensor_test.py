@@ -78,10 +78,7 @@ class TestSensor(unittest.TestCase):
         #  set initial payload of sensor
         sensor.sensor_value.payload = payload
 
-        telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"),
-            payload=payload
-        )
+        telegram = Telegram(destination_address=GroupAddress("1/2/3"), payload=payload)
         response_telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=payload,

@@ -326,7 +326,7 @@ class KNXModule:
             "knx_event",
             {
                 "address": str(telegram.destination_address),
-                "data": telegram.payload.value
+                "data": telegram.payload.value,
             },
         )
 
@@ -349,7 +349,7 @@ class KNXModule:
 
         telegram = Telegram(
             destination_address=GroupAddress(attr_address),
-            payload=calculate_payload(attr_payload)
+            payload=calculate_payload(attr_payload),
         )
         await self.xknx.telegrams.put(telegram)
 
