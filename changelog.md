@@ -4,7 +4,7 @@
 
 ### Internals
 
-- Telegram: `group_address` renamed to `address`, to prepare support for other APCI services.
+- Telegram: `group_address` renamed to `destination_address`, to prepare support for other APCI services.
 
 ## 0.15.6 Bugfix for StateUpater 2020-11-26
 
