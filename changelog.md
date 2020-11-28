@@ -5,6 +5,7 @@
 ### Internals
 
 - Telegram: `group_address` renamed to `destination_address`, to prepare support for other APCI services.
+- Farewell Travis CI; Welcome Github Actions!
 
 ## 0.15.6 Bugfix for StateUpater 2020-11-26
 

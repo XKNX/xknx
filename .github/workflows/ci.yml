@@ -35,6 +35,18 @@ jobs:
           ${{ runner.os }}-build-${{ env.cache-name }}-
           ${{ runner.os }}-build-
           ${{ runner.os }}-
+    - name: Cache pre-commit packages
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-pre-commit
+      with:
+        # pre-commit cache files are usually stored in `~/.cache/pre-commit` on Linux
+        path: ~/.cache/pre-commit
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('.pre-commit-config.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
     - name: Install dependencies
       run: |
         pip install -r requirements/testing.txt
