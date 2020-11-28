@@ -327,6 +327,7 @@ class KNXModule:
             {
                 "address": str(telegram.destination_address),
                 "data": telegram.payload.value,
+                "source": str(telegram.source_address),
             },
         )
 
