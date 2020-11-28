@@ -19,6 +19,7 @@ extension-pkg-whitelist=netifaces
 # inconsistent-return-statements - doesn't handle raise
 # too-many-ancestors - it's too strict.
 # wrong-import-order - isort guards this
+# unsubscriptable-object - https://github.com/PyCQA/pylint/issues/3882
 # fixme - TODO
 disable=
   format,
@@ -43,7 +44,8 @@ disable=
   too-many-statements,
   too-many-boolean-expressions,
   unused-argument,
-  wrong-import-order
+  wrong-import-order,
+  unsubscriptable-object
 # enable useless-suppression temporarily every now and then to clean them up
 enable=
   use-symbolic-message-instead
