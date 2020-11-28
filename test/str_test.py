@@ -473,7 +473,7 @@ class TestStringRepresentations(unittest.TestCase):
         )
         self.assertEqual(
             str(telegram),
-            '<Telegram destination_address="GroupAddress("1/2/3")", payload="<DPTBinary value="7" />" telegramtype="TelegramType.GROUP_WRITE" direction='
+            '<Telegram source_address="PhysicalAddress("0.0.0")", destination_address="GroupAddress("1/2/3")", payload="<DPTBinary value="7" />" telegramtype="TelegramType.GROUP_WRITE" direction='
             '"TelegramDirection.OUTGOING" />',
         )
 

@@ -107,7 +107,11 @@ class Test_KNXIP(unittest.TestCase):
         telegram = knxipframe.body.cemi.telegram
         self.assertEqual(
             telegram,
-            Telegram(destination_address=GroupAddress("329"), payload=DPTBinary(1)),
+            Telegram(
+                destination_address=GroupAddress("329"),
+                payload=DPTBinary(1),
+                source_address=PhysicalAddress("15.15.249"),
+            ),
         )
 
         knxipframe2 = KNXIPFrame(xknx)
@@ -131,7 +135,11 @@ class Test_KNXIP(unittest.TestCase):
         telegram = knxipframe.body.cemi.telegram
         self.assertEqual(
             telegram,
-            Telegram(destination_address=GroupAddress("329"), payload=DPTBinary(0)),
+            Telegram(
+                destination_address=GroupAddress("329"),
+                payload=DPTBinary(0),
+                source_address=PhysicalAddress("15.15.249"),
+            ),
         )
 
         knxipframe2 = KNXIPFrame(xknx)
@@ -155,7 +163,11 @@ class Test_KNXIP(unittest.TestCase):
         telegram = knxipframe.body.cemi.telegram
         self.assertEqual(
             telegram,
-            Telegram(destination_address=GroupAddress("331"), payload=DPTArray(0x65)),
+            Telegram(
+                destination_address=GroupAddress("331"),
+                payload=DPTArray(0x65),
+                source_address=PhysicalAddress("15.15.249"),
+            ),
         )
 
         knxipframe2 = KNXIPFrame(xknx)
@@ -182,6 +194,7 @@ class Test_KNXIP(unittest.TestCase):
             Telegram(
                 destination_address=GroupAddress("2049"),
                 payload=DPTArray(DPTTemperature().to_knx(19.85)),
+                source_address=PhysicalAddress("1.4.2"),
             ),
         )
 
@@ -209,6 +222,7 @@ class Test_KNXIP(unittest.TestCase):
             Telegram(
                 destination_address=GroupAddress("440"),
                 telegramtype=TelegramType.GROUP_READ,
+                source_address=PhysicalAddress("15.15.249"),
             ),
         )
 
@@ -237,6 +251,7 @@ class Test_KNXIP(unittest.TestCase):
                 destination_address=GroupAddress("392"),
                 telegramtype=TelegramType.GROUP_RESPONSE,
                 payload=DPTBinary(1),
+                source_address=PhysicalAddress("1.3.1"),
             ),
         )
 
@@ -256,6 +271,7 @@ class Test_KNXIP(unittest.TestCase):
         telegram = Telegram(
             destination_address=GroupAddress(337),
             payload=DPTBinary(DPTBinary.APCI_MAX_VALUE),
+            source_address=PhysicalAddress("1.3.1"),
         )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)

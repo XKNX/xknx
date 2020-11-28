@@ -46,18 +46,21 @@ class Telegram:
         telegramtype: TelegramType = TelegramType.GROUP_WRITE,
         direction: TelegramDirection = TelegramDirection.OUTGOING,
         payload: Any = None,
+        source_address: PhysicalAddress = PhysicalAddress(None),
     ) -> None:
         """Initialize Telegram class."""
-        self.direction = direction
-        self.telegramtype = telegramtype
         self.destination_address = destination_address
+        self.telegramtype = telegramtype
+        self.direction = direction
         self.payload = payload
+        self.source_address = source_address
 
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<Telegram destination_address="{}", payload="{}" '
+            '<Telegram source_address="{}", destination_address="{}", payload="{}" '
             'telegramtype="{}" direction="{}" />'.format(
+                self.source_address.__repr__(),
                 self.destination_address.__repr__(),
                 self.payload,
                 self.telegramtype,

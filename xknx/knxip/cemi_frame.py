@@ -75,8 +75,9 @@ class CEMIFrame:
 
         return Telegram(
             destination_address=self.dst_addr,
-            payload=self.payload,
             telegramtype=resolve_telegram_type(self.cmd),
+            payload=self.payload,
+            source_address=self.src_addr,
         )
 
     @telegram.setter
