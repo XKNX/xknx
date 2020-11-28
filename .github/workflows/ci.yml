@@ -3,13 +3,10 @@ name: CI
 on:
   push:
     branches:
-      - dev
-      - migrate-to-gh-actions
-      - master
+      - '**' # run on all branches
   pull_request:
     branches:
-      - dev
-      - master
+      - '**' # run on all branches
 
 jobs:
   build:
@@ -30,11 +27,9 @@ jobs:
       with:
         # pip cache files are stored in `~/.cache/pip` on Linux
         path: ~/.cache/pip
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('requirements/production.txt', 'requirements/test.txt') }}
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('requirements/production.txt', 'requirements/testing.txt') }}
         restore-keys: |
           ${{ runner.os }}-build-${{ env.cache-name }}-
-          ${{ runner.os }}-build-
-          ${{ runner.os }}-
     - name: Cache pre-commit packages
       uses: actions/cache@v2
       env:
@@ -45,8 +40,6 @@ jobs:
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('.pre-commit-config.yaml') }}
         restore-keys: |
           ${{ runner.os }}-build-${{ env.cache-name }}-
-          ${{ runner.os }}-build-
-          ${{ runner.os }}-
     - name: Install dependencies
       run: |
         pip install -r requirements/testing.txt
