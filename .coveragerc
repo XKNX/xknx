@@ -1,5 +1,6 @@
 [run]
 source = xknx
+relative_files = True
 
 omit =
 
