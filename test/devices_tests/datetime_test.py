@@ -42,7 +42,7 @@ class TestDateTime(unittest.TestCase):
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram.group_address, GroupAddress("1/2/3"))
+        self.assertEqual(telegram.destination_address, GroupAddress("1/2/3"))
         self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
         self.assertEqual(len(telegram.payload.value), 8)
         self.assertEqual(
@@ -68,7 +68,7 @@ class TestDateTime(unittest.TestCase):
         _throwaway_initial = xknx.telegrams.get_nowait()
 
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram.group_address, GroupAddress("1/2/3"))
+        self.assertEqual(telegram.destination_address, GroupAddress("1/2/3"))
         self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
         self.assertEqual(len(telegram.payload.value), 3)
         self.assertEqual(telegram.payload.value, (0x07, 0x01, 0x11))
@@ -92,7 +92,7 @@ class TestDateTime(unittest.TestCase):
         _throwaway_initial = xknx.telegrams.get_nowait()
 
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(telegram.group_address, GroupAddress("1/2/3"))
+        self.assertEqual(telegram.destination_address, GroupAddress("1/2/3"))
         self.assertEqual(telegram.telegramtype, TelegramType.GROUP_WRITE)
         self.assertEqual(len(telegram.payload.value), 3)
         self.assertEqual(telegram.payload.value, (0xE9, 0x0D, 0x0E))
@@ -111,7 +111,8 @@ class TestDateTime(unittest.TestCase):
         )
 
         telegram_read = Telegram(
-            group_address=GroupAddress("1/2/3"), telegramtype=TelegramType.GROUP_READ
+            destination_address=GroupAddress("1/2/3"),
+            telegramtype=TelegramType.GROUP_READ,
         )
         with patch("time.localtime") as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
@@ -125,7 +126,7 @@ class TestDateTime(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                group_address=GroupAddress("1/2/3"),
+                destination_address=GroupAddress("1/2/3"),
                 telegramtype=TelegramType.GROUP_RESPONSE,
                 payload=DPTArray((0xE9, 0xD, 0xE)),
             ),

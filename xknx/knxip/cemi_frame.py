@@ -74,7 +74,7 @@ class CEMIFrame:
             raise ConversionError(f"Telegram not implemented for {self.cmd}")
 
         return Telegram(
-            group_address=self.dst_addr,
+            destination_address=self.dst_addr,
             payload=self.payload,
             telegramtype=resolve_telegram_type(self.cmd),
         )
@@ -82,7 +82,7 @@ class CEMIFrame:
     @telegram.setter
     def telegram(self, telegram: Telegram):
         """Set telegram."""
-        self.dst_addr = telegram.group_address
+        self.dst_addr = telegram.destination_address
         self.payload = telegram.payload
 
         # TODO: Move to separate function, together with setting of
@@ -94,9 +94,15 @@ class CEMIFrame:
             | CEMIFlags.PRIORITY_LOW
             | CEMIFlags.NO_ACK_REQUESTED
             | CEMIFlags.CONFIRM_NO_ERROR
-            | CEMIFlags.DESTINATION_GROUP_ADDRESS
             | CEMIFlags.HOP_COUNT_1ST
         )
+
+        if isinstance(telegram.destination_address, GroupAddress):
+            self.flags |= CEMIFlags.DESTINATION_GROUP_ADDRESS
+        elif isinstance(telegram.destination_address, PhysicalAddress):
+            self.flags |= CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
+        else:
+            raise TypeError()
 
         # TODO: use telegram.direction
         def resolve_cmd(telegramtype: TelegramType) -> APCICommand:

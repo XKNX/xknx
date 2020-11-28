@@ -15,9 +15,9 @@ It contains
 
 """
 from enum import Enum
-from typing import Any
+from typing import Any, Union
 
-from .address import GroupAddress
+from .address import GroupAddress, PhysicalAddress
 
 
 class TelegramDirection(Enum):
@@ -42,7 +42,7 @@ class Telegram:
 
     def __init__(
         self,
-        group_address: GroupAddress = GroupAddress(None),
+        destination_address: Union[GroupAddress, PhysicalAddress] = GroupAddress(None),
         telegramtype: TelegramType = TelegramType.GROUP_WRITE,
         direction: TelegramDirection = TelegramDirection.OUTGOING,
         payload: Any = None,
@@ -50,15 +50,15 @@ class Telegram:
         """Initialize Telegram class."""
         self.direction = direction
         self.telegramtype = telegramtype
-        self.group_address = group_address
+        self.destination_address = destination_address
         self.payload = payload
 
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<Telegram group_address="{}", payload="{}" '
+            '<Telegram destination_address="{}", payload="{}" '
             'telegramtype="{}" direction="{}" />'.format(
-                self.group_address.__repr__(),
+                self.destination_address.__repr__(),
                 self.payload,
                 self.telegramtype,
                 self.direction,

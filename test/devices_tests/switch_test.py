@@ -79,10 +79,10 @@ class TestSwitch(unittest.TestCase):
         callback_mock.assert_not_called()
 
         telegram_on = Telegram(
-            group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
         )
         telegram_off = Telegram(
-            group_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
         )
 
         self.loop.run_until_complete(switch1.process(telegram_on))
@@ -127,12 +127,12 @@ class TestSwitch(unittest.TestCase):
         callback_mock.assert_not_called()
 
         telegram_on = Telegram(
-            group_address=GroupAddress("1/2/4"),
+            destination_address=GroupAddress("1/2/4"),
             payload=DPTBinary(1),
             telegramtype=TelegramType.GROUP_RESPONSE,
         )
         telegram_off = Telegram(
-            group_address=GroupAddress("1/2/4"),
+            destination_address=GroupAddress("1/2/4"),
             payload=DPTBinary(0),
             telegramtype=TelegramType.GROUP_RESPONSE,
         )
@@ -162,10 +162,10 @@ class TestSwitch(unittest.TestCase):
         self.assertEqual(switch.state, None)
 
         telegram_inv_on = Telegram(
-            group_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
         )
         telegram_inv_off = Telegram(
-            group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
         )
 
         self.loop.run_until_complete(switch.process(telegram_inv_on))
@@ -181,7 +181,7 @@ class TestSwitch(unittest.TestCase):
             xknx, "TestInput", group_address="1/2/3", reset_after=reset_after_sec
         )
         telegram_on = Telegram(
-            group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
         )
 
         self.loop.run_until_complete(switch.process(telegram_on))
@@ -200,7 +200,7 @@ class TestSwitch(unittest.TestCase):
             xknx, "TestInput", group_address="1/2/3", reset_after=reset_after_sec
         )
         telegram_on = Telegram(
-            group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
         )
 
         self.loop.run_until_complete(switch.process(telegram_on))
@@ -229,7 +229,9 @@ class TestSwitch(unittest.TestCase):
 
         switch.register_device_updated_cb(async_after_update_callback)
 
-        telegram = Telegram(group_address=GroupAddress("1/2/3"), payload=DPTBinary(1))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+        )
         self.loop.run_until_complete(switch.process(telegram))
 
         after_update_callback.assert_called_with(switch)

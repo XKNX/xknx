@@ -93,7 +93,9 @@ class TestRemoteValueUpDown(unittest.TestCase):
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx, group_address=GroupAddress("1/2/3"))
-        telegram = Telegram(group_address=GroupAddress("1/2/3"), payload=DPTBinary(1))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+        )
         self.assertEqual(remote_value.value, None)
         self.loop.run_until_complete(remote_value.process(telegram))
         self.assertEqual(remote_value.value, RemoteValueUpDown.Direction.DOWN)
@@ -104,12 +106,12 @@ class TestRemoteValueUpDown(unittest.TestCase):
         remote_value = RemoteValueUpDown(xknx, group_address=GroupAddress("1/2/3"))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                group_address=GroupAddress("1/2/3"), payload=DPTArray(0x01)
+                destination_address=GroupAddress("1/2/3"), payload=DPTArray(0x01)
             )
             self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                group_address=GroupAddress("1/2/3"), payload=DPTBinary(3)
+                destination_address=GroupAddress("1/2/3"), payload=DPTBinary(3)
             )
             self.loop.run_until_complete(remote_value.process(telegram))
             # pylint: disable=pointless-statement
