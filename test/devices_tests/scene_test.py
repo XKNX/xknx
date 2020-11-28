@@ -45,7 +45,8 @@ class TestScene(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/1"), payload=DPTArray(0x16))
+            telegram,
+            Telegram(destination_address=GroupAddress("1/2/1"), payload=DPTArray(0x16)),
         )
 
     def test_do(self):
@@ -56,7 +57,8 @@ class TestScene(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/1"), payload=DPTArray(0x16))
+            telegram,
+            Telegram(destination_address=GroupAddress("1/2/1"), payload=DPTArray(0x16)),
         )
 
     def test_wrong_do(self):

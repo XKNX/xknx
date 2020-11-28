@@ -155,12 +155,30 @@ class TestLight(unittest.TestCase):
             telegrams.append(xknx.telegrams.get_nowait())
 
         test_telegrams = [
-            Telegram(GroupAddress("1/2/3"), TelegramType.GROUP_READ),
-            Telegram(GroupAddress("1/2/5"), TelegramType.GROUP_READ),
-            Telegram(GroupAddress("1/2/6"), TelegramType.GROUP_READ),
-            Telegram(GroupAddress("1/2/7"), TelegramType.GROUP_READ),
-            Telegram(GroupAddress("1/2/8"), TelegramType.GROUP_READ),
-            Telegram(GroupAddress("1/2/9"), TelegramType.GROUP_READ),
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                telegramtype=TelegramType.GROUP_READ,
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/2/5"),
+                telegramtype=TelegramType.GROUP_READ,
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/2/6"),
+                telegramtype=TelegramType.GROUP_READ,
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/2/7"),
+                telegramtype=TelegramType.GROUP_READ,
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/2/8"),
+                telegramtype=TelegramType.GROUP_READ,
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/2/9"),
+                telegramtype=TelegramType.GROUP_READ,
+            ),
         ]
 
         self.assertEqual(len(set(telegrams)), 6)
@@ -197,12 +215,30 @@ class TestLight(unittest.TestCase):
             telegrams.append(xknx.telegrams.get_nowait())
 
         test_telegrams = [
-            Telegram(GroupAddress("1/2/4"), TelegramType.GROUP_READ),
-            Telegram(GroupAddress("1/2/6"), TelegramType.GROUP_READ),
-            Telegram(GroupAddress("1/2/8"), TelegramType.GROUP_READ),
-            Telegram(GroupAddress("1/2/10"), TelegramType.GROUP_READ),
-            Telegram(GroupAddress("1/2/12"), TelegramType.GROUP_READ),
-            Telegram(GroupAddress("1/2/14"), TelegramType.GROUP_READ),
+            Telegram(
+                destination_address=GroupAddress("1/2/4"),
+                telegramtype=TelegramType.GROUP_READ,
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/2/6"),
+                telegramtype=TelegramType.GROUP_READ,
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/2/8"),
+                telegramtype=TelegramType.GROUP_READ,
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/2/10"),
+                telegramtype=TelegramType.GROUP_READ,
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/2/12"),
+                telegramtype=TelegramType.GROUP_READ,
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/2/14"),
+                telegramtype=TelegramType.GROUP_READ,
+            ),
         ]
 
         self.assertEqual(len(set(telegrams)), 6)
@@ -224,7 +260,8 @@ class TestLight(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(1))
+            telegram,
+            Telegram(destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)),
         )
 
     #
@@ -243,7 +280,8 @@ class TestLight(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(0))
+            telegram,
+            Telegram(destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0)),
         )
 
     #
@@ -262,7 +300,8 @@ class TestLight(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/5"), payload=DPTArray(23))
+            telegram,
+            Telegram(destination_address=GroupAddress("1/2/5"), payload=DPTArray(23)),
         )
 
     def test_set_brightness_not_dimmable(self):
@@ -293,7 +332,11 @@ class TestLight(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/5"), payload=DPTArray((23, 24, 25)))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/5"),
+                payload=DPTArray((23, 24, 25)),
+            ),
         )
         self.loop.run_until_complete(xknx.devices.process(telegram))
         self.assertEqual(light.current_color, ((23, 24, 25), None))
@@ -328,7 +371,10 @@ class TestLight(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram,
-            Telegram(GroupAddress("1/2/5"), payload=DPTArray((23, 24, 25, 26, 0, 15))),
+            Telegram(
+                destination_address=GroupAddress("1/2/5"),
+                payload=DPTArray((23, 24, 25, 26, 0, 15)),
+            ),
         )
         self.loop.run_until_complete(xknx.devices.process(telegram))
         self.assertEqual(light.current_color, ([23, 24, 25], 26))
@@ -367,7 +413,8 @@ class TestLight(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/5"), payload=DPTArray(23))
+            telegram,
+            Telegram(destination_address=GroupAddress("1/2/5"), payload=DPTArray(23)),
         )
 
     def test_set_tw_unsupported(self):
@@ -400,7 +447,7 @@ class TestLight(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/5"),
+                destination_address=GroupAddress("1/2/5"),
                 payload=DPTArray(
                     (
                         0x0F,
@@ -436,11 +483,15 @@ class TestLight(unittest.TestCase):
         )
         self.assertEqual(light.state, None)
 
-        telegram = Telegram(GroupAddress("1/2/3"), payload=DPTBinary(1))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+        )
         self.loop.run_until_complete(light.process(telegram))
         self.assertEqual(light.state, True)
 
-        telegram = Telegram(GroupAddress("1/2/3"), payload=DPTBinary(0))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
+        )
         self.loop.run_until_complete(light.process(telegram))
         self.assertEqual(light.state, False)
 
@@ -463,7 +514,9 @@ class TestLight(unittest.TestCase):
 
         light.register_device_updated_cb(async_after_update_callback)
 
-        telegram = Telegram(GroupAddress("1/2/3"), payload=DPTBinary(1))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+        )
         self.loop.run_until_complete(light.process(telegram))
 
         after_update_callback.assert_called_with(light)
@@ -479,7 +532,9 @@ class TestLight(unittest.TestCase):
         )
         self.assertEqual(light.current_brightness, None)
 
-        telegram = Telegram(GroupAddress("1/2/5"), payload=DPTArray(23))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/5"), payload=DPTArray(23)
+        )
         self.loop.run_until_complete(light.process(telegram))
         self.assertEqual(light.current_brightness, 23)
 
@@ -492,7 +547,9 @@ class TestLight(unittest.TestCase):
             group_address_switch="1/2/3",
             group_address_brightness="1/2/5",
         )
-        telegram = Telegram(GroupAddress("1/2/5"), payload=DPTBinary(1))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/5"), payload=DPTBinary(1)
+        )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(light.process(telegram))
 
@@ -506,7 +563,9 @@ class TestLight(unittest.TestCase):
             group_address_switch="1/2/3",
             group_address_brightness="1/2/5",
         )
-        telegram = Telegram(GroupAddress("1/2/5"), payload=DPTArray((23, 24)))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/5"), payload=DPTArray((23, 24))
+        )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(light.process(telegram))
 
@@ -520,7 +579,9 @@ class TestLight(unittest.TestCase):
             group_address_color="1/2/5",
         )
         self.assertEqual(light.current_color, (None, None))
-        telegram = Telegram(GroupAddress("1/2/5"), payload=DPTArray((23, 24, 25)))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/5"), payload=DPTArray((23, 24, 25))
+        )
         self.loop.run_until_complete(light.process(telegram))
         self.assertEqual(light.current_color, ((23, 24, 25), None))
 
@@ -536,7 +597,8 @@ class TestLight(unittest.TestCase):
         )
         self.assertEqual(light.current_color, (None, None))
         telegram = Telegram(
-            GroupAddress("1/2/5"), payload=DPTArray((23, 24, 25, 26, 0, 15))
+            destination_address=GroupAddress("1/2/5"),
+            payload=DPTArray((23, 24, 25, 26, 0, 15)),
         )
         self.loop.run_until_complete(light.process(telegram))
         self.assertEqual(light.current_color, ([23, 24, 25], 26))
@@ -552,7 +614,9 @@ class TestLight(unittest.TestCase):
         )
         self.assertEqual(light.current_tunable_white, None)
 
-        telegram = Telegram(GroupAddress("1/2/5"), payload=DPTArray(23))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/5"), payload=DPTArray(23)
+        )
         self.loop.run_until_complete(light.process(telegram))
         self.assertEqual(light.current_tunable_white, 23)
 
@@ -565,7 +629,9 @@ class TestLight(unittest.TestCase):
             group_address_switch="1/2/3",
             group_address_tunable_white="1/2/5",
         )
-        telegram = Telegram(GroupAddress("1/2/5"), payload=DPTBinary(1))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/5"), payload=DPTBinary(1)
+        )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(light.process(telegram))
 
@@ -579,7 +645,9 @@ class TestLight(unittest.TestCase):
             group_address_switch="1/2/3",
             group_address_tunable_white="1/2/5",
         )
-        telegram = Telegram(GroupAddress("1/2/5"), payload=DPTArray((23, 24)))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/5"), payload=DPTArray((23, 24))
+        )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(light.process(telegram))
 
@@ -595,7 +663,7 @@ class TestLight(unittest.TestCase):
         self.assertEqual(light.current_color_temperature, None)
 
         telegram = Telegram(
-            GroupAddress("1/2/5"),
+            destination_address=GroupAddress("1/2/5"),
             payload=DPTArray(
                 (
                     0x0F,
@@ -615,7 +683,9 @@ class TestLight(unittest.TestCase):
             group_address_switch="1/2/3",
             group_address_color_temperature="1/2/5",
         )
-        telegram = Telegram(GroupAddress("1/2/5"), payload=DPTBinary(1))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/5"), payload=DPTBinary(1)
+        )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(light.process(telegram))
 
@@ -629,7 +699,9 @@ class TestLight(unittest.TestCase):
             group_address_switch="1/2/3",
             group_address_color_temperature="1/2/5",
         )
-        telegram = Telegram(GroupAddress("1/2/5"), payload=DPTArray(23))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/5"), payload=DPTArray(23)
+        )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(light.process(telegram))
 

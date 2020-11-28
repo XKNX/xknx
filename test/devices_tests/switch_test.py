@@ -42,7 +42,11 @@ class TestSwitch(unittest.TestCase):
 
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), TelegramType.GROUP_READ)
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                telegramtype=TelegramType.GROUP_READ,
+            ),
         )
 
     def test_sync_state_address(self):
@@ -57,7 +61,11 @@ class TestSwitch(unittest.TestCase):
 
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/4"), TelegramType.GROUP_READ)
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/4"),
+                telegramtype=TelegramType.GROUP_READ,
+            ),
         )
 
     #
@@ -247,7 +255,8 @@ class TestSwitch(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(1))
+            telegram,
+            Telegram(destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)),
         )
 
     #
@@ -261,7 +270,8 @@ class TestSwitch(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(0))
+            telegram,
+            Telegram(destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0)),
         )
 
     #
@@ -276,14 +286,16 @@ class TestSwitch(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(0))
+            telegram,
+            Telegram(destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0)),
         )
 
         self.loop.run_until_complete(switch.set_off())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(1))
+            telegram,
+            Telegram(destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)),
         )
 
     #

@@ -196,7 +196,9 @@ class TestBinarySensor(unittest.TestCase):
         """Test process wrong telegram (wrong payload type)."""
         xknx = XKNX()
         binary_sensor = BinarySensor(xknx, "Warning", group_address_state="1/2/3")
-        telegram = Telegram(GroupAddress("1/2/3"), payload=DPTArray((0x1, 0x2, 0x3)))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"), payload=DPTArray((0x1, 0x2, 0x3))
+        )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(binary_sensor.process(telegram))
 

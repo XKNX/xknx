@@ -2640,7 +2640,11 @@ class TestSensor(unittest.TestCase):
 
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), TelegramType.GROUP_READ)
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                telegramtype=TelegramType.GROUP_READ,
+            ),
         )
 
     #
@@ -2665,7 +2669,7 @@ class TestSensor(unittest.TestCase):
             xknx, "TestSensor", value_type="temperature", group_address_state="1/2/3"
         )
 
-        telegram = Telegram(GroupAddress("1/2/3"))
+        telegram = Telegram(destination_address=GroupAddress("1/2/3"))
         telegram.payload = DPTArray((0x06, 0xA0))
         self.loop.run_until_complete(sensor.process(telegram))
         self.assertEqual(sensor.sensor_value.payload, DPTArray((0x06, 0xA0)))
@@ -2687,7 +2691,7 @@ class TestSensor(unittest.TestCase):
 
         sensor.register_device_updated_cb(async_after_update_callback)
 
-        telegram = Telegram(GroupAddress("1/2/3"))
+        telegram = Telegram(destination_address=GroupAddress("1/2/3"))
         telegram.payload = DPTArray((0x01, 0x02))
         self.loop.run_until_complete(sensor.process(telegram))
         after_update_callback.assert_called_with(sensor)

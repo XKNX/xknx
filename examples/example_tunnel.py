@@ -37,9 +37,13 @@ async def main():
     await tunnel.connect_udp()
     await tunnel.connect()
 
-    await tunnel.send_telegram(Telegram(GroupAddress("1/0/15"), payload=DPTBinary(1)))
+    await tunnel.send_telegram(
+        Telegram(destination_address=GroupAddress("1/0/15"), payload=DPTBinary(1))
+    )
     await asyncio.sleep(2)
-    await tunnel.send_telegram(Telegram(GroupAddress("1/0/15"), payload=DPTBinary(0)))
+    await tunnel.send_telegram(
+        Telegram(destination_address=GroupAddress("1/0/15"), payload=DPTBinary(0))
+    )
     await asyncio.sleep(2)
 
     await tunnel.connectionstate()
