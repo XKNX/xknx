@@ -12,7 +12,6 @@ from .expose_sensor import ExposeSensor
 from .fan import Fan
 from .light import Light
 from .notification import Notification
-from .rgblight import RGBLight
 from .scene import Scene
 from .sensor import Sensor
 from .switch import Switch

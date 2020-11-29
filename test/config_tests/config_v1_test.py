@@ -16,7 +16,6 @@ from xknx.devices import (
     Fan,
     Light,
     Notification,
-    RGBLight,
     Scene,
     Sensor,
     Switch,
@@ -200,7 +199,7 @@ class TestConfig(unittest.TestCase):
 
     def test_config_individual_rgb(self):
         """Test reading Light with with dimming and color address."""
-        expected = RGBLight(
+        expected = Light(
             TestConfig.xknx,
             "Diningroom.Light_rgb",
             group_address_switch_white="1/6/4",
@@ -219,6 +218,8 @@ class TestConfig(unittest.TestCase):
             group_address_switch_state_blue="1/6/35",
             group_address_brightness_blue="1/6/36",
             group_address_brightness_state_blue="1/6/37",
+            min_kelvin=Light.DEFAULT_MIN_KELVIN,
+            max_kelvin=Light.DEFAULT_MAX_KELVIN,
         )
         result = TestConfig.xknx.devices["Diningroom.Light_rgb"]
 
