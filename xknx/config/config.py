@@ -7,9 +7,8 @@ Module for reading config files (xknx.yaml).
 from enum import Enum
 import logging
 
-import yaml
-
 from .config_v1 import ConfigV1
+from .yaml_loader import load_yaml
 
 logger = logging.getLogger("xknx.log")
 
@@ -31,12 +30,8 @@ class Config:
     def read(self, file="xknx.yaml"):
         """Read config."""
         logger.debug("Reading %s", file)
-        try:
-            with open(file) as filehandle:
-                doc = yaml.safe_load(filehandle)
-                self.parse(doc)
-        except FileNotFoundError as ex:
-            logger.error("Error while reading %s: %s", file, ex)
+        doc = load_yaml(file)
+        self.parse(doc)
 
     @staticmethod
     def parse_version(doc):
