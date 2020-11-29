@@ -14,7 +14,7 @@ from xknx.knxip import (
     TunnellingAck,
     TunnellingRequest,
 )
-from xknx.telegram import PhysicalAddress, TelegramDirection
+from xknx.telegram import IndividualAddress, TelegramDirection
 
 from .connect import Connect
 from .connectionstate import ConnectionState
@@ -139,7 +139,7 @@ class Tunnel:
         self._is_reconnecting = False
         self.communication_channel = connect.communication_channel
         # Use the individual address provided by the tunnelling server
-        self._src_address = PhysicalAddress(connect.identifier)
+        self._src_address = IndividualAddress(connect.identifier)
         self.sequence_number = 0
         await self.start_heartbeat()
 

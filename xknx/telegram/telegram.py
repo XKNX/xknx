@@ -17,7 +17,7 @@ It contains
 from enum import Enum
 from typing import Any, Union
 
-from .address import GroupAddress, PhysicalAddress
+from .address import GroupAddress, IndividualAddress
 
 
 class TelegramDirection(Enum):
@@ -42,11 +42,13 @@ class Telegram:
 
     def __init__(
         self,
-        destination_address: Union[GroupAddress, PhysicalAddress] = GroupAddress(None),
+        destination_address: Union[GroupAddress, IndividualAddress] = GroupAddress(
+            None
+        ),
         telegramtype: TelegramType = TelegramType.GROUP_WRITE,
         direction: TelegramDirection = TelegramDirection.OUTGOING,
         payload: Any = None,
-        source_address: PhysicalAddress = PhysicalAddress(None),
+        source_address: IndividualAddress = IndividualAddress(None),
     ) -> None:
         """Initialize Telegram class."""
         self.destination_address = destination_address

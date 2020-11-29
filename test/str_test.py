@@ -55,7 +55,7 @@ from xknx.knxip import (
     TunnellingRequest,
 )
 from xknx.remote_value import RemoteValue
-from xknx.telegram import GroupAddress, PhysicalAddress, Telegram, TelegramDirection
+from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramDirection
 
 
 # pylint: disable=too-many-public-methods,invalid-name
@@ -473,7 +473,7 @@ class TestStringRepresentations(unittest.TestCase):
         )
         self.assertEqual(
             str(telegram),
-            '<Telegram direction="Outgoing" telegramtype="GroupValueWrite" source_address="PhysicalAddress("0.0.0")" '
+            '<Telegram direction="Outgoing" telegramtype="GroupValueWrite" source_address="IndividualAddress("0.0.0")" '
             'destination_address="GroupAddress("1/2/3")" payload="<DPTBinary value="7" />" />',
         )
 
@@ -501,7 +501,7 @@ class TestStringRepresentations(unittest.TestCase):
         dib = DIBDeviceInformation()
         dib.knx_medium = KNXMedium.TP1
         dib.programming_mode = False
-        dib.individual_address = PhysicalAddress("1.1.0")
+        dib.individual_address = IndividualAddress("1.1.0")
         dib.name = "Gira KNX/IP-Router"
         dib.mac_address = "00:01:02:03:04:05"
         dib.multicast_address = "224.0.23.12"
@@ -641,7 +641,7 @@ class TestStringRepresentations(unittest.TestCase):
         tunnelling_request.sequence_counter = 42
         self.assertEqual(
             str(tunnelling_request),
-            '<TunnellingRequest communication_channel_id="23" sequence_counter="42" cemi="<CEMIFrame SourceAddress="PhysicalAddress("0.0.0")"'
+            '<TunnellingRequest communication_channel_id="23" sequence_counter="42" cemi="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")"'
             ' DestinationAddress="GroupAddress("0/0/0")" Flags="               0" Command="APCICommand.GROUP_READ" payload="None" />" />',
         )
 
@@ -710,5 +710,5 @@ class TestStringRepresentations(unittest.TestCase):
         ri = RoutingIndication(xknx)
         self.assertEqual(
             str(ri),
-            '<RoutingIndication cemi="<CEMIFrame SourceAddress="PhysicalAddress("0.0.0")" DestinationAddress="GroupAddress("0/0/0")" Flags="               0" Command="APCICommand.GROUP_READ" payload="None" />" />',
+            '<RoutingIndication cemi="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")" DestinationAddress="GroupAddress("0/0/0")" Flags="               0" Command="APCICommand.GROUP_READ" payload="None" />" />',
         )

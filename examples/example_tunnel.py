@@ -4,7 +4,7 @@ import asyncio
 from xknx import XKNX
 from xknx.dpt import DPTBinary
 from xknx.io import GatewayScanner, Tunnel
-from xknx.telegram import GroupAddress, PhysicalAddress, Telegram
+from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 
 
 async def main():
@@ -19,7 +19,7 @@ async def main():
 
     gateway = gateways[0]
     # an individual address will most likely be assigned by the tunnelling server
-    xknx.own_address = PhysicalAddress("15.15.249")
+    xknx.own_address = IndividualAddress("15.15.249")
 
     print(
         "Connecting to {}:{} from {}".format(

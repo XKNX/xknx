@@ -7,7 +7,7 @@ from xknx.dpt import DPTBinary, DPTComparator
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage
 from xknx.knxip.cemi_frame import CEMIFrame
 from xknx.knxip.knxip_enum import APCICommand, CEMIFlags, CEMIMessageCode
-from xknx.telegram import GroupAddress, PhysicalAddress, Telegram
+from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 
 
 def get_data(code, adil, flags, src, dst, mpdu_len, tpci_apci, payload):
@@ -44,8 +44,8 @@ def test_valid_command(frame):
     assert frame.flags == 0
     assert frame.mpdu_len == 1
     assert frame.payload == DPTBinary(0)
-    assert frame.src_addr == PhysicalAddress(0)
-    assert frame.dst_addr == PhysicalAddress(0)
+    assert frame.src_addr == IndividualAddress(0)
+    assert frame.dst_addr == IndividualAddress(0)
     assert packet_len == 11
 
 
@@ -69,7 +69,7 @@ def test_invalid_src_addr(frame):
     frame.mpdu_len = 1
     frame.payload = DPTBinary(0)
     frame.src_addr = None
-    frame.dst_addr = PhysicalAddress(0)
+    frame.dst_addr = IndividualAddress(0)
 
     with raises(ConversionError, match=r"src_addr not set"):
         frame.to_knx()
@@ -82,7 +82,7 @@ def test_invalid_dst_addr(frame):
     frame.flags = 0
     frame.mpdu_len = 1
     frame.payload = DPTBinary(0)
-    frame.src_addr = PhysicalAddress(0)
+    frame.src_addr = IndividualAddress(0)
     frame.dst_addr = None
 
     with raises(ConversionError, match=r"dst_addr not set"):
@@ -96,8 +96,8 @@ def test_no_payload(frame):
     frame.flags = 0
     frame.mpdu_len = 1
     frame.payload = None
-    frame.src_addr = PhysicalAddress(0)
-    frame.dst_addr = PhysicalAddress(0)
+    frame.src_addr = IndividualAddress(0)
+    frame.dst_addr = IndividualAddress(0)
 
     assert [41, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0] == frame.to_knx()
     assert 11 == frame.calculated_length()
@@ -110,8 +110,8 @@ def test_invalid_payload(frame):
     frame.flags = 0
     frame.mpdu_len = 1
     frame.payload = DPTComparator()
-    frame.src_addr = PhysicalAddress(0)
-    frame.dst_addr = PhysicalAddress(0)
+    frame.src_addr = IndividualAddress(0)
+    frame.dst_addr = IndividualAddress(0)
 
     with raises(TypeError):
         frame.calculated_length()
@@ -162,11 +162,11 @@ def test_from_knx_group_address(frame):
     assert frame.dst_addr == GroupAddress(0)
 
 
-def test_from_knx_physical_address(frame):
-    """Test conversion for a cemi with a physical address as destination"""
+def test_from_knx_individual_address(frame):
+    """Test conversion for a cemi with a individual address as destination"""
     frame.from_knx(get_data(0x29, 0, 0x00, 0, 0, 1, 0, []))
 
-    assert frame.dst_addr == PhysicalAddress(0)
+    assert frame.dst_addr == IndividualAddress(0)
 
 
 def test_telegram_group_address(frame):
@@ -178,9 +178,9 @@ def test_telegram_group_address(frame):
     ) == CEMIFlags.DESTINATION_GROUP_ADDRESS
 
 
-def test_telegram_physical_address(frame):
-    """Test telegram conversion flags with a physical address"""
-    frame.telegram = Telegram(destination_address=PhysicalAddress(0))
+def test_telegram_individual_address(frame):
+    """Test telegram conversion flags with a individual address"""
+    frame.telegram = Telegram(destination_address=IndividualAddress(0))
 
     assert (
         frame.flags & CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS

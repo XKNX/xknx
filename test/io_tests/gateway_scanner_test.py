@@ -16,7 +16,7 @@ from xknx.knxip import (
     KNXIPServiceType,
     SearchResponse,
 )
-from xknx.telegram import PhysicalAddress
+from xknx.telegram import IndividualAddress
 
 
 class TestGatewayScanner(unittest.TestCase):
@@ -198,7 +198,7 @@ def fake_router_search_response(xknx: XKNX) -> KNXIPFrame:
     _device_information = DIBDeviceInformation()
     _device_information.name = "Gira KNX/IP-Router"
     _device_information.serial_number = "11:22:33:44:55:66"
-    _device_information.individual_address = PhysicalAddress("1.1.0")
+    _device_information.individual_address = IndividualAddress("1.1.0")
     _device_information.mac_address = "01:02:03:04:05:06"
 
     _svc_families = DIBSuppSVCFamilies()

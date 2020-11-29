@@ -6,7 +6,7 @@ import unittest
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary, DPTTemperature, DPTTime
 from xknx.knxip import CEMIFrame, KNXIPFrame, KNXIPServiceType, RoutingIndication
-from xknx.telegram import GroupAddress, PhysicalAddress, Telegram, TelegramType
+from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramType
 
 
 class Test_KNXIP(unittest.TestCase):
@@ -33,7 +33,7 @@ class Test_KNXIP(unittest.TestCase):
         self.assertTrue(isinstance(knxipframe.body, RoutingIndication))
         self.assertTrue(isinstance(knxipframe.body.cemi, CEMIFrame))
 
-        self.assertEqual(knxipframe.body.cemi.src_addr, PhysicalAddress("1.2.2"))
+        self.assertEqual(knxipframe.body.cemi.src_addr, IndividualAddress("1.2.2"))
         self.assertEqual(knxipframe.body.cemi.dst_addr, GroupAddress(337))
 
         self.assertEqual(len(knxipframe.body.cemi.payload.value), 1)
@@ -57,7 +57,7 @@ class Test_KNXIP(unittest.TestCase):
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe.body.cemi.src_addr = PhysicalAddress("1.2.2")
+        knxipframe.body.cemi.src_addr = IndividualAddress("1.2.2")
 
         telegram = Telegram(
             destination_address=GroupAddress(337),
@@ -110,13 +110,13 @@ class Test_KNXIP(unittest.TestCase):
             Telegram(
                 destination_address=GroupAddress("329"),
                 payload=DPTBinary(1),
-                source_address=PhysicalAddress("15.15.249"),
+                source_address=IndividualAddress("15.15.249"),
             ),
         )
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.body.cemi.src_addr = PhysicalAddress("15.15.249")
+        knxipframe2.body.cemi.src_addr = IndividualAddress("15.15.249")
         knxipframe2.body.cemi.telegram = telegram
         knxipframe2.body.cemi.set_hops(5)
         knxipframe2.normalize()
@@ -138,13 +138,13 @@ class Test_KNXIP(unittest.TestCase):
             Telegram(
                 destination_address=GroupAddress("329"),
                 payload=DPTBinary(0),
-                source_address=PhysicalAddress("15.15.249"),
+                source_address=IndividualAddress("15.15.249"),
             ),
         )
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.body.cemi.src_addr = PhysicalAddress("15.15.249")
+        knxipframe2.body.cemi.src_addr = IndividualAddress("15.15.249")
         knxipframe2.body.cemi.telegram = telegram
         knxipframe2.body.cemi.set_hops(5)
         knxipframe2.normalize()
@@ -166,13 +166,13 @@ class Test_KNXIP(unittest.TestCase):
             Telegram(
                 destination_address=GroupAddress("331"),
                 payload=DPTArray(0x65),
-                source_address=PhysicalAddress("15.15.249"),
+                source_address=IndividualAddress("15.15.249"),
             ),
         )
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.body.cemi.src_addr = PhysicalAddress("15.15.249")
+        knxipframe2.body.cemi.src_addr = IndividualAddress("15.15.249")
         knxipframe2.body.cemi.telegram = telegram
         knxipframe2.body.cemi.set_hops(5)
         knxipframe2.normalize()
@@ -194,13 +194,13 @@ class Test_KNXIP(unittest.TestCase):
             Telegram(
                 destination_address=GroupAddress("2049"),
                 payload=DPTArray(DPTTemperature().to_knx(19.85)),
-                source_address=PhysicalAddress("1.4.2"),
+                source_address=IndividualAddress("1.4.2"),
             ),
         )
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.body.cemi.src_addr = PhysicalAddress("1.4.2")
+        knxipframe2.body.cemi.src_addr = IndividualAddress("1.4.2")
         knxipframe2.body.cemi.telegram = telegram
         knxipframe2.body.cemi.set_hops(5)
         knxipframe2.normalize()
@@ -222,13 +222,13 @@ class Test_KNXIP(unittest.TestCase):
             Telegram(
                 destination_address=GroupAddress("440"),
                 telegramtype=TelegramType.GROUP_READ,
-                source_address=PhysicalAddress("15.15.249"),
+                source_address=IndividualAddress("15.15.249"),
             ),
         )
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.body.cemi.src_addr = PhysicalAddress("15.15.249")
+        knxipframe2.body.cemi.src_addr = IndividualAddress("15.15.249")
         knxipframe2.body.cemi.telegram = telegram
         knxipframe2.body.cemi.set_hops(5)
         knxipframe2.normalize()
@@ -251,13 +251,13 @@ class Test_KNXIP(unittest.TestCase):
                 destination_address=GroupAddress("392"),
                 telegramtype=TelegramType.GROUP_RESPONSE,
                 payload=DPTBinary(1),
-                source_address=PhysicalAddress("1.3.1"),
+                source_address=IndividualAddress("1.3.1"),
             ),
         )
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.body.cemi.src_addr = PhysicalAddress("1.3.1")
+        knxipframe2.body.cemi.src_addr = IndividualAddress("1.3.1")
         knxipframe2.body.cemi.telegram = telegram
         knxipframe2.body.cemi.set_hops(5)
         knxipframe2.normalize()
@@ -271,12 +271,12 @@ class Test_KNXIP(unittest.TestCase):
         telegram = Telegram(
             destination_address=GroupAddress(337),
             payload=DPTBinary(DPTBinary.APCI_MAX_VALUE),
-            source_address=PhysicalAddress("1.3.1"),
+            source_address=IndividualAddress("1.3.1"),
         )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe.body.cemi.src_addr = PhysicalAddress("1.3.1")
+        knxipframe.body.cemi.src_addr = IndividualAddress("1.3.1")
         knxipframe.body.cemi.telegram = telegram
         knxipframe.body.cemi.set_hops(5)
         knxipframe.normalize()

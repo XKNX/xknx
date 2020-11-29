@@ -3,7 +3,7 @@ Module for serialization/deserialization and handling of KNX addresses.
 
 The module can handle:
 
-* physical addresses of devices.
+* individual addresses of devices.
 * (logical) group addresses.
 
 The module supports all different writings of group addresses:
@@ -70,8 +70,8 @@ class BaseAddress:  # pylint: disable=too-few-public-methods
         return self.raw
 
 
-class PhysicalAddress(BaseAddress):
-    """Class for handling KNX pyhsical addresses."""
+class IndividualAddress(BaseAddress):
+    """Class for handling KNX individual addresses."""
 
     MAX_AREA = 15
     MAX_MAIN = 15
@@ -83,7 +83,7 @@ class PhysicalAddress(BaseAddress):
     def __init__(self, address: Union[object, str, int, tuple]) -> None:
         """Initialize Address class."""
         super().__init__()
-        if isinstance(address, PhysicalAddress):
+        if isinstance(address, IndividualAddress):
             self.raw: int = address.raw
         elif isinstance(address, str):
             if address.isdigit():
@@ -124,17 +124,17 @@ class PhysicalAddress(BaseAddress):
 
     @property
     def area(self) -> int:
-        """Return area part of pyhsical address."""
+        """Return area part of individual address."""
         return (self.raw >> 12) & self.MAX_AREA
 
     @property
     def main(self) -> int:
-        """Return main part of pyhsical address."""
+        """Return main part of individual address."""
         return (self.raw >> 8) & self.MAX_MAIN
 
     @property
     def line(self) -> int:
-        """Return line part of pyhsical address."""
+        """Return line part of individual address."""
         return self.raw & self.MAX_LINE
 
     @property
@@ -153,7 +153,7 @@ class PhysicalAddress(BaseAddress):
 
     def __repr__(self) -> str:
         """Return this object as parsable string."""
-        return f'PhysicalAddress("{self}")'
+        return f'IndividualAddress("{self}")'
 
 
 class GroupAddressType(Enum):
