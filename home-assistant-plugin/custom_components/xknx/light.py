@@ -1,7 +1,5 @@
 """Support for KNX/IP lights."""
-from typing import Union
-
-from xknx.devices import Light as XknxLight, RGBLight as XknxRGBLight
+from xknx.devices import Light as XknxLight
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -28,7 +26,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up lights for KNX platform."""
     entities = []
     for device in hass.data[DOMAIN].xknx.devices:
-        if isinstance(device, XknxLight) or isinstance(device, XknxRGBLight):
+        if isinstance(device, XknxLight):
             entities.append(KNXLight(device))
     async_add_entities(entities)
 
@@ -36,19 +34,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class KNXLight(KnxEntity, LightEntity):
     """Representation of a KNX light."""
 
-    def __init__(self, device: Union[XknxLight, XknxRGBLight]):
+    def __init__(self, device: XknxLight):
         """Initialize of KNX light."""
         super().__init__(device)
 
-        if device.supports_color_temperature or device.supports_tunable_white:
-            self._min_kelvin = device.min_kelvin
-            self._max_kelvin = device.max_kelvin
-            self._min_mireds = color_util.color_temperature_kelvin_to_mired(
-                self._max_kelvin
-            )
-            self._max_mireds = color_util.color_temperature_kelvin_to_mired(
-                self._min_kelvin
-            )
+        self._min_kelvin = device.min_kelvin
+        self._max_kelvin = device.max_kelvin
+        self._min_mireds = color_util.color_temperature_kelvin_to_mired(
+            self._max_kelvin
+        )
+        self._max_mireds = color_util.color_temperature_kelvin_to_mired(
+            self._min_kelvin
+        )
 
     @property
     def brightness(self):
@@ -134,9 +131,7 @@ class KNXLight(KnxEntity, LightEntity):
         if self._device.supports_brightness:
             flags |= SUPPORT_BRIGHTNESS
         if self._device.supports_color:
-            flags |= SUPPORT_COLOR | (
-                SUPPORT_BRIGHTNESS if isinstance(self._device, XknxLight) else 0
-            )
+            flags |= SUPPORT_COLOR | SUPPORT_BRIGHTNESS
         if self._device.supports_rgbw:
             flags |= SUPPORT_COLOR | SUPPORT_WHITE_VALUE
         if (
