@@ -4,7 +4,7 @@
 
 ### HA integration
 
-- knx_event: add `source` attribute
+- knx_event: renamed `address` to `destination` and added `source`, `telegramtype`, `direction` attributes.
 
 ### Internals
 

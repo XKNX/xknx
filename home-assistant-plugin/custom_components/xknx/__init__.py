@@ -329,7 +329,7 @@ class KNXModule:
                 "destination": str(telegram.destination_address),
                 "direction": telegram.direction.value,
                 "source": str(telegram.source_address),
-                "type": telegram.telegramtype.value,
+                "telegramtype": telegram.telegramtype.value,
             },
         )
 
