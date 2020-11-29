@@ -191,58 +191,33 @@ class RGBLight(Device):
         return False
 
     @classmethod
+    def read_color(cls, xknx, name, color, config):
+        """Load color configuration from configuration structure."""
+        if color in config:
+            sub_config = config[color]
+            group_address_switch = sub_config.get("group_address_switch")
+            group_address_switch_state = sub_config.get("group_address_switch_state")
+            group_address_brightness = sub_config.get("group_address_brightness")
+            group_address_brightness_state = sub_config.get(
+                "group_address_brightness_state"
+            )
+            return (
+                group_address_switch,
+                group_address_switch_state,
+                group_address_brightness,
+                group_address_brightness_state,
+            )
+        return None, None, None, None
+
+    @classmethod
     def from_config(cls, xknx, name, config):
         """Initialize object from configuration structure."""
-        group_address_switch_red = config.get("group_address_switch_red")
-        group_address_switch_state_red = config.get("group_address_switch_state_red")
-        group_address_brightness_red = config.get("group_address_brightness_red")
-        group_address_brightness_state_red = config.get(
-            "group_address_brightness_state_red"
-        )
+        red = cls.read_color(xknx, name, "red", config)
+        green = cls.read_color(xknx, name, "green", config)
+        blue = cls.read_color(xknx, name, "blue", config)
+        white = cls.read_color(xknx, name, "white", config)
 
-        group_address_switch_green = config.get("group_address_switch_green")
-        group_address_switch_state_green = config.get(
-            "group_address_switch_state_green"
-        )
-        group_address_brightness_green = config.get("group_address_brightness_green")
-        group_address_brightness_state_green = config.get(
-            "group_address_brightness_state_green"
-        )
-
-        group_address_switch_blue = config.get("group_address_switch_blue")
-        group_address_switch_state_blue = config.get("group_address_switch_state_blue")
-        group_address_brightness_blue = config.get("group_address_brightness_blue")
-        group_address_brightness_state_blue = config.get(
-            "group_address_brightness_state_blue"
-        )
-
-        group_address_switch_white = config.get("group_address_switch")
-        group_address_switch_state_white = config.get("group_address_switch_state")
-        group_address_brightness_white = config.get("group_address_brightness")
-        group_address_brightness_state_white = config.get(
-            "group_address_brightness_state"
-        )
-
-        return cls(
-            xknx,
-            name,
-            group_address_switch_red=group_address_switch_red,
-            group_address_switch_state_red=group_address_switch_state_red,
-            group_address_brightness_red=group_address_brightness_red,
-            group_address_brightness_state_red=group_address_brightness_state_red,
-            group_address_switch_green=group_address_switch_green,
-            group_address_switch_state_green=group_address_switch_state_green,
-            group_address_brightness_green=group_address_brightness_green,
-            group_address_brightness_state_green=group_address_brightness_state_green,
-            group_address_switch_blue=group_address_switch_blue,
-            group_address_switch_state_blue=group_address_switch_state_blue,
-            group_address_brightness_blue=group_address_brightness_blue,
-            group_address_brightness_state_blue=group_address_brightness_state_blue,
-            group_address_switch_white=group_address_switch_white,
-            group_address_switch_state_white=group_address_switch_state_white,
-            group_address_brightness_white=group_address_brightness_white,
-            group_address_brightness_state_white=group_address_brightness_state_white,
-        )
+        return cls(xknx, name, *red, *green, *blue, *white)
 
     def __str__(self):
         """Return object as readable string."""
@@ -290,7 +265,7 @@ class RGBLight(Device):
             else f' white_brightness="{self.white.brightness.group_addr_str()}"'
         )
 
-        return '<Light name="{}" {}{}{}{}{}{}{}{} />'.format(
+        return '<RGBLight name="{}" {}{}{}{}{}{}{}{} />'.format(
             self.name,
             str_red_state,
             str_red_brightness,

@@ -155,17 +155,27 @@ class LightSchema:
     CONF_RED = "red"
     CONF_GREEN = "green"
     CONF_BLUE = "blue"
+    CONF_WHITE = "white"
 
     DEFAULT_COLOR_TEMP_MODE = "absolute"
     DEFAULT_MIN_KELVIN = 2700  # 370 mireds
     DEFAULT_MAX_KELVIN = 6000  # 166 mireds
 
+    COLOR_SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_SWITCH): RemoteValueSchema.SCHEMA.extend(
+                {vol.Required(CONF_ADDRESS): ensure_group_address}
+            ),
+            vol.Optional(CONF_BRIGHTNESS): RemoteValueSchema.SCHEMA.extend(
+                {vol.Required(CONF_ADDRESS): ensure_group_address}
+            ),
+        }
+    )
+
     SCHEMA = BaseDeviceSchema.SCHEMA.extend(
         {
             vol.Required(CONF_SWITCH): RemoteValueSchema.SCHEMA.extend(
-                {
-                    vol.Required(CONF_ADDRESS): ensure_group_address,
-                }
+                {vol.Required(CONF_ADDRESS): ensure_group_address}
             ),
             vol.Optional(CONF_BRIGHTNESS): RemoteValueSchema.SCHEMA.extend(
                 {vol.Required(CONF_ADDRESS): ensure_group_address}
@@ -190,34 +200,10 @@ class LightSchema:
                     ),
                 }
             ),
-            vol.Optional(CONF_SWITCH + "_" + CONF_RED): RemoteValueSchema.SCHEMA.extend(
-                {vol.Required(CONF_ADDRESS): ensure_group_address}
-            ),
-            vol.Optional(
-                CONF_BRIGHTNESS + "_" + CONF_RED
-            ): RemoteValueSchema.SCHEMA.extend(
-                {vol.Required(CONF_ADDRESS): ensure_group_address}
-            ),
-            vol.Optional(
-                CONF_SWITCH + "_" + CONF_GREEN
-            ): RemoteValueSchema.SCHEMA.extend(
-                {vol.Required(CONF_ADDRESS): ensure_group_address}
-            ),
-            vol.Optional(
-                CONF_BRIGHTNESS + "_" + CONF_GREEN
-            ): RemoteValueSchema.SCHEMA.extend(
-                {vol.Required(CONF_ADDRESS): ensure_group_address}
-            ),
-            vol.Optional(
-                CONF_SWITCH + "_" + CONF_BLUE
-            ): RemoteValueSchema.SCHEMA.extend(
-                {vol.Required(CONF_ADDRESS): ensure_group_address}
-            ),
-            vol.Optional(
-                CONF_BRIGHTNESS + "_" + CONF_BLUE
-            ): RemoteValueSchema.SCHEMA.extend(
-                {vol.Required(CONF_ADDRESS): ensure_group_address}
-            ),
+            vol.Optional(CONF_RED): COLOR_SCHEMA,
+            vol.Optional(CONF_GREEN): COLOR_SCHEMA,
+            vol.Optional(CONF_BLUE): COLOR_SCHEMA,
+            vol.Optional(CONF_WHITE): COLOR_SCHEMA,
         }
     )
 

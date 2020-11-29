@@ -169,9 +169,9 @@ class ConfigV1:
         """Parse a light section of xknx.yaml."""
         for entry in entries:
             if (
-                "group_address_switch_red" in entries[entry]
-                or "group_address_switch_green" in entries[entry]
-                or "group_address_switch_blue" in entries[entry]
+                "red" in entries[entry]
+                or "green" in entries[entry]
+                or "blue" in entries[entry]
             ):
                 RGBLight.from_config(self.xknx, entry, entries[entry])
             else:
