@@ -325,8 +325,11 @@ class KNXModule:
         self.hass.bus.async_fire(
             "knx_event",
             {
-                "address": str(telegram.destination_address),
                 "data": telegram.payload.value,
+                "destination": str(telegram.destination_address),
+                "direction": telegram.direction.value,
+                "source": str(telegram.source_address),
+                "telegramtype": telegram.telegramtype.value,
             },
         )
 

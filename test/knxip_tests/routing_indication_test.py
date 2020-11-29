@@ -105,7 +105,14 @@ class Test_KNXIP(unittest.TestCase):
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
         telegram = knxipframe.body.cemi.telegram
-        self.assertEqual(telegram, Telegram(GroupAddress("329"), payload=DPTBinary(1)))
+        self.assertEqual(
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("329"),
+                payload=DPTBinary(1),
+                source_address=PhysicalAddress("15.15.249"),
+            ),
+        )
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
@@ -126,7 +133,14 @@ class Test_KNXIP(unittest.TestCase):
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
         telegram = knxipframe.body.cemi.telegram
-        self.assertEqual(telegram, Telegram(GroupAddress("329"), payload=DPTBinary(0)))
+        self.assertEqual(
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("329"),
+                payload=DPTBinary(0),
+                source_address=PhysicalAddress("15.15.249"),
+            ),
+        )
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
@@ -148,7 +162,12 @@ class Test_KNXIP(unittest.TestCase):
         knxipframe.from_knx(raw)
         telegram = knxipframe.body.cemi.telegram
         self.assertEqual(
-            telegram, Telegram(GroupAddress("331"), payload=DPTArray(0x65))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("331"),
+                payload=DPTArray(0x65),
+                source_address=PhysicalAddress("15.15.249"),
+            ),
         )
 
         knxipframe2 = KNXIPFrame(xknx)
@@ -173,7 +192,9 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("2049"), payload=DPTArray(DPTTemperature().to_knx(19.85))
+                destination_address=GroupAddress("2049"),
+                payload=DPTArray(DPTTemperature().to_knx(19.85)),
+                source_address=PhysicalAddress("1.4.2"),
             ),
         )
 
@@ -197,7 +218,12 @@ class Test_KNXIP(unittest.TestCase):
         knxipframe.from_knx(raw)
         telegram = knxipframe.body.cemi.telegram
         self.assertEqual(
-            telegram, Telegram(GroupAddress("440"), TelegramType.GROUP_READ)
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("440"),
+                telegramtype=TelegramType.GROUP_READ,
+                source_address=PhysicalAddress("15.15.249"),
+            ),
         )
 
         knxipframe2 = KNXIPFrame(xknx)
@@ -222,7 +248,10 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("392"), TelegramType.GROUP_RESPONSE, payload=DPTBinary(1)
+                destination_address=GroupAddress("392"),
+                telegramtype=TelegramType.GROUP_RESPONSE,
+                payload=DPTBinary(1),
+                source_address=PhysicalAddress("1.3.1"),
             ),
         )
 
@@ -242,6 +271,7 @@ class Test_KNXIP(unittest.TestCase):
         telegram = Telegram(
             destination_address=GroupAddress(337),
             payload=DPTBinary(DPTBinary.APCI_MAX_VALUE),
+            source_address=PhysicalAddress("1.3.1"),
         )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)

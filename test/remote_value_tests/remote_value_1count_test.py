@@ -41,7 +41,10 @@ class TestRemoteValue1Count(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTArray((0x64,)))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/3"), payload=DPTArray((0x64,))
+            ),
         )
         self.loop.run_until_complete(
             remote_value.set(
@@ -51,7 +54,10 @@ class TestRemoteValue1Count(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTArray((0x65,)))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/3"), payload=DPTArray((0x65,))
+            ),
         )
 
     def test_process(self):

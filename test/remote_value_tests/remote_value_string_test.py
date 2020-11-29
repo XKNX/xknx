@@ -92,7 +92,7 @@ class TestRemoteValueString(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/3"),
+                destination_address=GroupAddress("1/2/3"),
                 payload=DPTArray((97, 115, 100, 102, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
             ),
         )
@@ -102,7 +102,7 @@ class TestRemoteValueString(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/3"),
+                destination_address=GroupAddress("1/2/3"),
                 payload=DPTArray((65, 83, 68, 70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
             ),
         )

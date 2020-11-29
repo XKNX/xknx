@@ -72,7 +72,9 @@ class TestExposeSensor(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/3"), TelegramType.GROUP_WRITE, payload=DPTBinary(0)
+                destination_address=GroupAddress("1/2/3"),
+                telegramtype=TelegramType.GROUP_WRITE,
+                payload=DPTBinary(0),
             ),
         )
 
@@ -89,8 +91,8 @@ class TestExposeSensor(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/3"),
-                TelegramType.GROUP_WRITE,
+                destination_address=GroupAddress("1/2/3"),
+                telegramtype=TelegramType.GROUP_WRITE,
                 payload=DPTArray((0xBF,)),
             ),
         )
@@ -107,8 +109,8 @@ class TestExposeSensor(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/3"),
-                TelegramType.GROUP_WRITE,
+                destination_address=GroupAddress("1/2/3"),
+                telegramtype=TelegramType.GROUP_WRITE,
                 payload=DPTArray((0x0C, 0x1A)),
             ),
         )
@@ -124,7 +126,7 @@ class TestExposeSensor(unittest.TestCase):
         )
         expose_sensor.sensor_value.payload = DPTBinary(1)
 
-        telegram = Telegram(GroupAddress("1/2/3"))
+        telegram = Telegram(destination_address=GroupAddress("1/2/3"))
         telegram.telegramtype = TelegramType.GROUP_READ
         self.loop.run_until_complete(expose_sensor.process(telegram))
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -132,8 +134,8 @@ class TestExposeSensor(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/3"),
-                TelegramType.GROUP_RESPONSE,
+                destination_address=GroupAddress("1/2/3"),
+                telegramtype=TelegramType.GROUP_RESPONSE,
                 payload=DPTBinary(True),
             ),
         )
@@ -146,7 +148,7 @@ class TestExposeSensor(unittest.TestCase):
         )
         expose_sensor.sensor_value.payload = DPTArray((0x40,))
 
-        telegram = Telegram(GroupAddress("1/2/3"))
+        telegram = Telegram(destination_address=GroupAddress("1/2/3"))
         telegram.telegramtype = TelegramType.GROUP_READ
         self.loop.run_until_complete(expose_sensor.process(telegram))
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -154,8 +156,8 @@ class TestExposeSensor(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/3"),
-                TelegramType.GROUP_RESPONSE,
+                destination_address=GroupAddress("1/2/3"),
+                telegramtype=TelegramType.GROUP_RESPONSE,
                 payload=DPTArray((0x40,)),
             ),
         )
@@ -168,7 +170,7 @@ class TestExposeSensor(unittest.TestCase):
         )
         expose_sensor.sensor_value.payload = DPTArray((0x0C, 0x1A))
 
-        telegram = Telegram(GroupAddress("1/2/3"))
+        telegram = Telegram(destination_address=GroupAddress("1/2/3"))
         telegram.telegramtype = TelegramType.GROUP_READ
         self.loop.run_until_complete(expose_sensor.process(telegram))
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -176,8 +178,8 @@ class TestExposeSensor(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/3"),
-                TelegramType.GROUP_RESPONSE,
+                destination_address=GroupAddress("1/2/3"),
+                telegramtype=TelegramType.GROUP_RESPONSE,
                 payload=DPTArray((0x0C, 0x1A)),
             ),
         )

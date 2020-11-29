@@ -93,7 +93,7 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/3"),
+                destination_address=GroupAddress("1/2/3"),
                 payload=DPTArray((0x64, 0x65, 0x66, 0x67, 0x00, 0x0F)),
             ),
         )
@@ -103,7 +103,7 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/3"),
+                destination_address=GroupAddress("1/2/3"),
                 payload=DPTArray((0x64, 0x65, 0x68, 0x69, 0x00, 0x0F)),
             ),
         )

@@ -2,9 +2,13 @@
 
 ## Unreleased changes
 
+### HA integration
+
+- knx_event: renamed `address` to `destination` and added `source`, `telegramtype`, `direction` attributes.
+
 ### Internals
 
-- Telegram: `group_address` renamed to `destination_address`, to prepare support for other APCI services.
+- Telegram: `group_address` renamed to `destination_address`, to prepare support for other APCI services and add `source_address`
 - Farewell Travis CI; Welcome Github Actions!
 
 ## 0.15.6 Bugfix for StateUpater 2020-11-26

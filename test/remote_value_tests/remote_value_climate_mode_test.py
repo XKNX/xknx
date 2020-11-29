@@ -176,7 +176,10 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTArray((0x03,)))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/3"), payload=DPTArray((0x03,))
+            ),
         )
         self.loop.run_until_complete(
             remote_value.set(HVACOperationMode.FROST_PROTECTION)
@@ -184,7 +187,10 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTArray((0x04,)))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/3"), payload=DPTArray((0x04,))
+            ),
         )
 
     def test_set_binary(self):
@@ -199,7 +205,10 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(True))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/3"), payload=DPTBinary(True)
+            ),
         )
         self.loop.run_until_complete(
             remote_value.set(HVACOperationMode.FROST_PROTECTION)
@@ -207,7 +216,10 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(False))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/3"), payload=DPTBinary(False)
+            ),
         )
 
     def test_process_operation_mode(self):

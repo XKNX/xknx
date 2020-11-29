@@ -1459,8 +1459,8 @@ class SensorExposeLoopTest(unittest.TestCase):
                 )
 
                 incoming_telegram = Telegram(
-                    GroupAddress("1/1/1"),
-                    TelegramType.GROUP_WRITE,
+                    destination_address=GroupAddress("1/1/1"),
+                    telegramtype=TelegramType.GROUP_WRITE,
                     direction=TelegramDirection.INCOMING,
                     payload=test_payload,
                 )
@@ -1481,8 +1481,8 @@ class SensorExposeLoopTest(unittest.TestCase):
                 self.assertEqual(
                     outgoing_telegram,
                     Telegram(
-                        GroupAddress("2/2/2"),
-                        TelegramType.GROUP_WRITE,
+                        destination_address=GroupAddress("2/2/2"),
+                        telegramtype=TelegramType.GROUP_WRITE,
                         direction=TelegramDirection.OUTGOING,
                         payload=test_payload,
                     ),
@@ -1509,8 +1509,8 @@ class SensorExposeLoopTest(unittest.TestCase):
                 )
 
                 incoming_telegram = Telegram(
-                    GroupAddress("1/1/1"),
-                    TelegramType.GROUP_WRITE,
+                    destination_address=GroupAddress("1/1/1"),
+                    telegramtype=TelegramType.GROUP_WRITE,
                     direction=TelegramDirection.INCOMING,
                     payload=test_payload,
                 )
@@ -1525,8 +1525,8 @@ class SensorExposeLoopTest(unittest.TestCase):
                 self.assertEqual(
                     outgoing_telegram,
                     Telegram(
-                        GroupAddress("2/2/2"),
-                        TelegramType.GROUP_WRITE,
+                        destination_address=GroupAddress("2/2/2"),
+                        telegramtype=TelegramType.GROUP_WRITE,
                         direction=TelegramDirection.OUTGOING,
                         payload=test_payload,
                     ),

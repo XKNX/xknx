@@ -64,14 +64,20 @@ class TestRemoteValueColorRGB(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram,
-            Telegram(GroupAddress("1/2/3"), payload=DPTArray((0x64, 0x65, 0x66))),
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=DPTArray((0x64, 0x65, 0x66)),
+            ),
         )
         self.loop.run_until_complete(remote_value.set((100, 101, 104)))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram,
-            Telegram(GroupAddress("1/2/3"), payload=DPTArray((0x64, 0x65, 0x68))),
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=DPTArray((0x64, 0x65, 0x68)),
+            ),
         )
 
     def test_process(self):

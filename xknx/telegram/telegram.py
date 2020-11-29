@@ -23,16 +23,16 @@ from .address import GroupAddress, PhysicalAddress
 class TelegramDirection(Enum):
     """Enum class for the communication direction of a telegram (from KNX bus or to KNX bus)."""
 
-    INCOMING = 1
-    OUTGOING = 2
+    INCOMING = "Incoming"
+    OUTGOING = "Outgoing"
 
 
 class TelegramType(Enum):
     """Enum class for type of telegram."""
 
-    GROUP_READ = 1
-    GROUP_WRITE = 2
-    GROUP_RESPONSE = 3
+    GROUP_READ = "GroupValueRead"
+    GROUP_WRITE = "GroupValueWrite"
+    GROUP_RESPONSE = "GroupValueResponse"
 
 
 class Telegram:
@@ -46,22 +46,25 @@ class Telegram:
         telegramtype: TelegramType = TelegramType.GROUP_WRITE,
         direction: TelegramDirection = TelegramDirection.OUTGOING,
         payload: Any = None,
+        source_address: PhysicalAddress = PhysicalAddress(None),
     ) -> None:
         """Initialize Telegram class."""
-        self.direction = direction
-        self.telegramtype = telegramtype
         self.destination_address = destination_address
+        self.telegramtype = telegramtype
+        self.direction = direction
         self.payload = payload
+        self.source_address = source_address
 
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<Telegram destination_address="{}", payload="{}" '
-            'telegramtype="{}" direction="{}" />'.format(
+            '<Telegram direction="{}" telegramtype="{}" source_address="{}" '
+            'destination_address="{}" payload="{}" />'.format(
+                self.direction.value,
+                self.telegramtype.value,
+                self.source_address.__repr__(),
                 self.destination_address.__repr__(),
                 self.payload,
-                self.telegramtype,
-                self.direction,
             )
         )
 

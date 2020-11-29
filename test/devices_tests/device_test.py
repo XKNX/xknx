@@ -102,7 +102,7 @@ class TestDevice(unittest.TestCase):
             fut.set_result(None)
             mock_group_read.return_value = fut
             telegram = Telegram(
-                GroupAddress("1/2/1"),
+                destination_address=GroupAddress("1/2/1"),
                 payload=DPTArray((0x01, 0x02)),
                 telegramtype=TelegramType.GROUP_READ,
             )
@@ -114,7 +114,7 @@ class TestDevice(unittest.TestCase):
             fut.set_result(None)
             mock_group_write.return_value = fut
             telegram = Telegram(
-                GroupAddress("1/2/1"),
+                destination_address=GroupAddress("1/2/1"),
                 payload=DPTArray((0x01, 0x02)),
                 telegramtype=TelegramType.GROUP_WRITE,
             )
@@ -126,7 +126,7 @@ class TestDevice(unittest.TestCase):
             fut.set_result(None)
             mock_group_response.return_value = fut
             telegram = Telegram(
-                GroupAddress("1/2/1"),
+                destination_address=GroupAddress("1/2/1"),
                 payload=DPTArray((0x01, 0x02)),
                 telegramtype=TelegramType.GROUP_RESPONSE,
             )
