@@ -67,7 +67,7 @@ class _SwitchAndBrightness:
 
     @property
     def is_on(self):
-        """Return if light supports color."""
+        """Return if light is on."""
         return self.switch.value
 
     async def set_on(self):
@@ -110,21 +110,21 @@ class Light(Device):
         group_address_color_temperature=None,
         group_address_color_temperature_state=None,
         group_address_switch_red=None,
-        group_address_switch_state_red=None,
+        group_address_switch_red_state=None,
         group_address_brightness_red=None,
-        group_address_brightness_state_red=None,
+        group_address_brightness_red_state=None,
         group_address_switch_green=None,
-        group_address_switch_state_green=None,
+        group_address_switch_green_state=None,
         group_address_brightness_green=None,
-        group_address_brightness_state_green=None,
+        group_address_brightness_green_state=None,
         group_address_switch_blue=None,
-        group_address_switch_state_blue=None,
+        group_address_switch_blue_state=None,
         group_address_brightness_blue=None,
-        group_address_brightness_state_blue=None,
+        group_address_brightness_blue_state=None,
         group_address_switch_white=None,
-        group_address_switch_state_white=None,
+        group_address_switch_white_state=None,
         group_address_brightness_white=None,
-        group_address_brightness_state_white=None,
+        group_address_brightness_white_state=None,
         min_kelvin=None,
         max_kelvin=None,
         device_updated_cb=None,
@@ -194,9 +194,9 @@ class Light(Device):
             self.name,
             "red",
             group_address_switch_red,
-            group_address_switch_state_red,
+            group_address_switch_red_state,
             group_address_brightness_red,
-            group_address_brightness_state_red,
+            group_address_brightness_red_state,
             self.after_update,
         )
 
@@ -205,9 +205,9 @@ class Light(Device):
             self.name,
             "green",
             group_address_switch_green,
-            group_address_switch_state_green,
+            group_address_switch_green_state,
             group_address_brightness_green,
-            group_address_brightness_state_green,
+            group_address_brightness_green_state,
             self.after_update,
         )
 
@@ -216,9 +216,9 @@ class Light(Device):
             self.name,
             "blue",
             group_address_switch_blue,
-            group_address_switch_state_blue,
+            group_address_switch_blue_state,
             group_address_brightness_blue,
-            group_address_brightness_state_blue,
+            group_address_brightness_blue_state,
             self.after_update,
         )
 
@@ -227,9 +227,9 @@ class Light(Device):
             self.name,
             "white",
             group_address_switch_white,
-            group_address_switch_state_white,
+            group_address_switch_white_state,
             group_address_brightness_white,
-            group_address_brightness_state_white,
+            group_address_brightness_white_state,
             self.after_update,
         )
 
@@ -366,21 +366,21 @@ class Light(Device):
             group_address_color_temperature=group_address_color_temperature,
             group_address_color_temperature_state=group_address_color_temperature_state,
             group_address_switch_red=red_switch,
-            group_address_switch_state_red=red_switch_state,
+            group_address_switch_red_state=red_switch_state,
             group_address_brightness_red=red_brightness,
-            group_address_brightness_state_red=red_brightness_state,
+            group_address_brightness_red_state=red_brightness_state,
             group_address_switch_green=green_switch,
-            group_address_switch_state_green=green_switch_state,
+            group_address_switch_green_state=green_switch_state,
             group_address_brightness_green=green_brightness,
-            group_address_brightness_state_green=green_brightness_state,
+            group_address_brightness_green_state=green_brightness_state,
             group_address_switch_blue=blue_switch,
-            group_address_switch_state_blue=blue_switch_state,
+            group_address_switch_blue_state=blue_switch_state,
             group_address_brightness_blue=blue_brightness,
-            group_address_brightness_state_blue=blue_brightness_state,
+            group_address_brightness_blue_state=blue_brightness_state,
             group_address_switch_white=white_switch,
-            group_address_switch_state_white=white_switch_state,
+            group_address_switch_white_state=white_switch_state,
             group_address_brightness_white=white_brightness,
-            group_address_brightness_state_white=white_brightness_state,
+            group_address_brightness_white_state=white_brightness_state,
             min_kelvin=min_kelvin,
             max_kelvin=max_kelvin,
         )

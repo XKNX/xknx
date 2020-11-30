@@ -29,21 +29,21 @@ The Light object is either a representation of a binary or dimm actor, LED-contr
 - `group_address_color_temperature_state` KNX group address for the current absolute color temperature. *DPT 7.600*
 
 - `group_address_switch_red` KNX group address to switch the red component. *DPT 1.001*
-- `group_address_switch_state_red` KNX group address for the state of the red component. *DPT 1.001*
+- `group_address_switch_red_state` KNX group address for the state of the red component. *DPT 1.001*
 - `group_address_brightness_red` KNX group address to set the brightness of the red component. *DPT 5.001*
-- `group_address_brightness_state_red` KNX group address for the current brightness of the red component. *DPT 5.001*
+- `group_address_brightness_red_state` KNX group address for the current brightness of the red component. *DPT 5.001*
 - `group_address_switch_green` KNX group address to switch the green component. *DPT 1.001*
-- `group_address_switch_state_green` KNX group address for the state of the green component. *DPT 1.001*
+- `group_address_switch_green_state` KNX group address for the state of the green component. *DPT 1.001*
 - `group_address_brightness_green` KNX group address to set the brightness of the green component. *DPT 5.001*
-- `group_address_brightness_state_green` KNX group address for the current brightness of the green component. *DPT 5.001*
+- `group_address_brightness_green_state` KNX group address for the current brightness of the green component. *DPT 5.001*
 - `group_address_switch_blue` KNX group address to switch the blue component. *DPT 1.001*
-- `group_address_switch_state_blue` KNX group address for the state of the blue component. *DPT 1.001*
+- `group_address_switch_blue_state` KNX group address for the state of the blue component. *DPT 1.001*
 - `group_address_brightness_blue` KNX group address to set the brightness of the blue component. *DPT 5.001*
-- `group_address_brightness_state_blue` KNX group address for the current brightness of the blue component. *DPT 5.001*
+- `group_address_brightness_blue_state` KNX group address for the current brightness of the blue component. *DPT 5.001*
 - `group_address_switch_white` KNX group address to switch the white component. *DPT 1.001*
-- `group_address_switch_state_white` KNX group address for the state of the white component. *DPT 1.001*
+- `group_address_switch_white_state` KNX group address for the state of the white component. *DPT 1.001*
 - `group_address_brightness_white` KNX group address to set the brightness of the white component. *DPT 5.001*
-- `group_address_brightness_state_white` KNX group address for the current brightness of the white component. *DPT 5.001*
+- `group_address_brightness_white_state` KNX group address for the current brightness of the white component. *DPT 5.001*
 
 - `min_kelvin` lowest possible color temperature in Kelvin. Default: 2700
 - `max_kelvin` hightest possible color temperature in Kelvin. Default: 6000
@@ -117,21 +117,21 @@ await light.sync()
 light = Light(xknx,
               name='TestRGBWLight',
               group_address_switch_red="1/1/1",
-              group_address_switch_state_red="1/1/2",
+              group_address_switch_red_state="1/1/2",
               group_address_brightness_red="1/1/3",
-              group_address_brightness_state_red="1/1/4",
+              group_address_brightness_red_state="1/1/4",
               group_address_switch_green="1/1/5",
-              group_address_switch_state_green="1/1/6",
+              group_address_switch_green_state="1/1/6",
               group_address_brightness_green="1/1/7",
-              group_address_brightness_state_green="1/1/8",
+              group_address_brightness_green_state="1/1/8",
               group_address_switch_blue="1/1/9",
-              group_address_switch_state_blue="1/1/10",
+              group_address_switch_blue_state="1/1/10",
               group_address_brightness_blue="1/1/11",
-              group_address_brightness_state_blue="1/1/12",
+              group_address_brightness_blue_state="1/1/12",
               group_address_switch_white="1/1/13",
-              group_address_switch_state_white="1/1/14",
+              group_address_switch_white_state="1/1/14",
               group_address_brightness_white="1/1/15",
-              group_address_brightness_state_white="1/1/16")
+              group_address_brightness_white_state="1/1/16")
 
 # Switching light on
 await light.set_on()
@@ -160,7 +160,7 @@ print(light.current_color)
 print(light.supports_tunable_white)
 print(light.supports_color_temperature)
 
-# Requesting current state via KNX GROUP WRITE
+# Requesting current state via KNX GroupValueRead for all _state addresses
 await light.sync()
 
 ## [](#header-2)Configuration via **xknx.yaml**
