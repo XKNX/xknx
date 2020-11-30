@@ -38,7 +38,7 @@ The constructor of the XKNX object takes several parameters:
 
 * `config` defines a path to the local [XKNX.yaml](/configuration).
 * `loop` points to the asyncio.loop object. Of not specified it uses `asyncio.get_event_loop()`.
-* `own_address` may be used to specify the individual KNX address of the XKNX daemon. If not speficied it uses `15.15.250`.
+* `own_address` may be used to specify the individual (physical) KNX address of the XKNX daemon. If not speficied it uses `15.15.250`.
 * `address_format` may be used to specify the type of group addresses to use. Possible values are:
 ** FREE: integer or hex representation
 ** SHORT: representation like '1/34' without middle groups
@@ -145,7 +145,6 @@ async def main():
 
 asyncio.run(main())
 ```
-
 
 
 
