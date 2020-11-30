@@ -7,7 +7,7 @@ from xknx import XKNX
 from xknx.dpt import DPTArray
 from xknx.io import Tunnelling, UDPClient
 from xknx.knxip import ErrorCode, KNXIPFrame, KNXIPServiceType, TunnellingAck
-from xknx.telegram import GroupAddress, PhysicalAddress, Telegram
+from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 
 
 class TestTunnelling(unittest.TestCase):
@@ -32,7 +32,7 @@ class TestTunnelling(unittest.TestCase):
             destination_address=GroupAddress("1/2/3"), payload=DPTArray((0x1, 0x2, 0x3))
         )
         sequence_counter = 42
-        src_address = PhysicalAddress("2.2.2")
+        src_address = IndividualAddress("2.2.2")
         tunnelling = Tunnelling(
             xknx,
             udp_client,

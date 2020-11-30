@@ -14,7 +14,7 @@ XKNX is controlled via a configuration file. Per default the configuration file 
 The configuration file can contain three sections.
 
 - The `general` section can contain:
-  - `own_address` the individual / physical address of the XKNX daemon
+  - `own_address` the individual (physical) address of the XKNX daemon
   - `rate_limit` a rate limit for telegrams sent to the bus
   - `multicast_group` to override the default multicast address (`224.0.23.12`)
   - `multicast_port` to override the default multicast port (`3671`)

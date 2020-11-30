@@ -2,11 +2,11 @@
 from unittest import TestCase
 
 from xknx.exceptions import CouldNotParseAddress
-from xknx.telegram import GroupAddress, GroupAddressType, PhysicalAddress
+from xknx.telegram import GroupAddress, GroupAddressType, IndividualAddress
 
 
-class TestPhysicalAddress(TestCase):
-    """Test class for PhysicalAddress."""
+class TestIndividualAddress(TestCase):
+    """Test class for IndividualAddress."""
 
     def test_with_valid(self):
         """Test with some valid addresses."""
@@ -20,7 +20,7 @@ class TestPhysicalAddress(TestCase):
             ("1.1.111", 4463),
             ("1.11.111", 7023),
             ("11.11.111", 47983),
-            (PhysicalAddress("11.11.111"), 47983),
+            (IndividualAddress("11.11.111"), 47983),
             ("15.15.255", 65535),
             ((0xFF, 0xFF), 65535),
             (0, 0),
@@ -28,7 +28,7 @@ class TestPhysicalAddress(TestCase):
         )
         for address in valid_addresses:
             with self.subTest(address=address):
-                self.assertEqual(PhysicalAddress(address[0]).raw, address[1])
+                self.assertEqual(IndividualAddress(address[0]).raw, address[1])
 
     def test_with_invalid(self):
         """Test with some invalid addresses."""
@@ -48,48 +48,48 @@ class TestPhysicalAddress(TestCase):
         for address in invalid_addresses:
             with self.subTest(address=address):
                 with self.assertRaises(CouldNotParseAddress):
-                    PhysicalAddress(address)
+                    IndividualAddress(address)
 
     def test_with_int(self):
         """Test initialization with free format address as integer."""
-        self.assertEqual(PhysicalAddress(49552).raw, 49552)
+        self.assertEqual(IndividualAddress(49552).raw, 49552)
 
     def test_with_bytes(self):
         """Test initialization with Bytes."""
-        self.assertEqual(PhysicalAddress((0x12, 0x34)).raw, 0x1234)
+        self.assertEqual(IndividualAddress((0x12, 0x34)).raw, 0x1234)
 
     def test_with_none(self):
         """Test initialization with None object."""
-        self.assertEqual(PhysicalAddress(None).raw, 0)
+        self.assertEqual(IndividualAddress(None).raw, 0)
 
     def test_is_line(self):
-        """Test if `PhysicalAddress.is_line` works like excepted."""
-        self.assertTrue(PhysicalAddress("1.0.0").is_line)
-        self.assertFalse(PhysicalAddress("1.0.1").is_line)
+        """Test if `IndividualAddress.is_line` works like excepted."""
+        self.assertTrue(IndividualAddress("1.0.0").is_line)
+        self.assertFalse(IndividualAddress("1.0.1").is_line)
 
     def test_is_device(self):
-        """Test if `PhysicalAddress.is_device` works like excepted."""
-        self.assertTrue(PhysicalAddress("1.0.1").is_device)
-        self.assertFalse(PhysicalAddress("1.0.0").is_device)
+        """Test if `IndividualAddress.is_device` works like excepted."""
+        self.assertTrue(IndividualAddress("1.0.1").is_device)
+        self.assertFalse(IndividualAddress("1.0.0").is_device)
 
     def test_to_knx(self):
-        """Test if `PhysicalAddress.to_knx()` generates valid byte tuples."""
-        self.assertEqual(PhysicalAddress("0.0.0").to_knx(), (0x0, 0x0))
-        self.assertEqual(PhysicalAddress("15.15.255").to_knx(), (0xFF, 0xFF))
+        """Test if `IndividualAddress.to_knx()` generates valid byte tuples."""
+        self.assertEqual(IndividualAddress("0.0.0").to_knx(), (0x0, 0x0))
+        self.assertEqual(IndividualAddress("15.15.255").to_knx(), (0xFF, 0xFF))
 
     def test_equal(self):
         """Test if the equal operator works in all cases."""
-        self.assertEqual(PhysicalAddress("1.0.0"), PhysicalAddress(4096))
-        self.assertNotEqual(PhysicalAddress("1.0.0"), PhysicalAddress("1.1.1"))
-        self.assertNotEqual(PhysicalAddress("1.0.0"), None)
+        self.assertEqual(IndividualAddress("1.0.0"), IndividualAddress(4096))
+        self.assertNotEqual(IndividualAddress("1.0.0"), IndividualAddress("1.1.1"))
+        self.assertNotEqual(IndividualAddress("1.0.0"), None)
         with self.assertRaises(TypeError):
-            PhysicalAddress(
+            IndividualAddress(
                 "1.0.0"
             ) == "example"  # pylint: disable=expression-not-assigned
 
     def test_representation(self):
         """Test string representation of address."""
-        self.assertEqual(repr(PhysicalAddress("2.3.4")), 'PhysicalAddress("2.3.4")')
+        self.assertEqual(repr(IndividualAddress("2.3.4")), 'IndividualAddress("2.3.4")')
 
 
 class TestGroupAddress(TestCase):

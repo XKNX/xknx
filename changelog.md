@@ -8,6 +8,7 @@
 
 ### Internals
 
+- renamed "PhysicalAddress" to "IndividualAddress"
 - Telegram: `group_address` renamed to `destination_address`, to prepare support for other APCI services and add `source_address`
 - Farewell Travis CI; Welcome Github Actions!
 

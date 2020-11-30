@@ -15,7 +15,7 @@ from typing import Union
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage
-from xknx.telegram import GroupAddress, PhysicalAddress, Telegram, TelegramType
+from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramType
 
 from .knxip_enum import APCICommand, CEMIFlags, CEMIMessageCode
 
@@ -31,8 +31,8 @@ class CEMIFrame:
         code: CEMIMessageCode = CEMIMessageCode.L_DATA_IND,
         flags: int = 0,
         cmd: APCICommand = APCICommand.GROUP_READ,
-        src_addr: PhysicalAddress = PhysicalAddress(None),
-        dst_addr: Union[GroupAddress, PhysicalAddress] = GroupAddress(None),
+        src_addr: IndividualAddress = IndividualAddress(None),
+        dst_addr: Union[GroupAddress, IndividualAddress] = GroupAddress(None),
         mpdu_len: int = 0,
         payload=None,
     ):
@@ -51,7 +51,7 @@ class CEMIFrame:
         xknx,
         telegram: Telegram,
         code: CEMIMessageCode = CEMIMessageCode.L_DATA_IND,
-        src_addr: PhysicalAddress = PhysicalAddress(None),
+        src_addr: IndividualAddress = IndividualAddress(None),
     ):
         """Return CEMIFrame from a Telegram."""
         cemi = CEMIFrame(xknx, code=code, src_addr=src_addr)
@@ -100,7 +100,7 @@ class CEMIFrame:
 
         if isinstance(telegram.destination_address, GroupAddress):
             self.flags |= CEMIFlags.DESTINATION_GROUP_ADDRESS
-        elif isinstance(telegram.destination_address, PhysicalAddress):
+        elif isinstance(telegram.destination_address, IndividualAddress):
             self.flags |= CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
         else:
             raise TypeError()
@@ -174,14 +174,14 @@ class CEMIFrame:
         # Control field 1 and Control field 2 - first 2 octets after Additional information
         self.flags = cemi[2 + addil] * 256 + cemi[3 + addil]
 
-        self.src_addr = PhysicalAddress((cemi[4 + addil], cemi[5 + addil]))
+        self.src_addr = IndividualAddress((cemi[4 + addil], cemi[5 + addil]))
 
         if self.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS:
             self.dst_addr = GroupAddress(
                 (cemi[6 + addil], cemi[7 + addil]), levels=self.xknx.address_format
             )
         else:
-            self.dst_addr = PhysicalAddress((cemi[6 + addil], cemi[7 + addil]))
+            self.dst_addr = IndividualAddress((cemi[6 + addil], cemi[7 + addil]))
 
         self.mpdu_len = cemi[8 + addil]
 
@@ -217,9 +217,9 @@ class CEMIFrame:
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
-        if not isinstance(self.src_addr, (GroupAddress, PhysicalAddress)):
+        if not isinstance(self.src_addr, (GroupAddress, IndividualAddress)):
             raise ConversionError("src_addr not set")
-        if not isinstance(self.dst_addr, (GroupAddress, PhysicalAddress)):
+        if not isinstance(self.dst_addr, (GroupAddress, IndividualAddress)):
             raise ConversionError("dst_addr not set")
 
         data = []
