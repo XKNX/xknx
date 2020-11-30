@@ -64,8 +64,8 @@ class Telegram:
             'destination_address="{}" payload="{}" />'.format(
                 self.direction.value,
                 self.telegramtype.value,
-                self.source_address.__repr__(),
-                self.destination_address.__repr__(),
+                self.source_address,
+                self.destination_address,
                 self.payload,
             )
         )
