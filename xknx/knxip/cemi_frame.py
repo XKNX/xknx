@@ -17,7 +17,7 @@ from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMI
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
 
-from .knxip_enum import APCICommand, CEMIFlags, CEMIMessageCode
+from .knxip_enum import CEMIFlags, CEMIMessageCode
 
 
 class CEMIFrame:
@@ -30,7 +30,6 @@ class CEMIFrame:
         xknx,
         code: CEMIMessageCode = CEMIMessageCode.L_DATA_IND,
         flags: int = 0,
-        cmd: APCICommand = APCICommand.GROUP_READ,
         src_addr: IndividualAddress = IndividualAddress(None),
         dst_addr: Union[GroupAddress, IndividualAddress] = GroupAddress(None),
         mpdu_len: int = 0,
@@ -40,7 +39,6 @@ class CEMIFrame:
         self.xknx = xknx
         self.code = code
         self.flags = flags
-        self.cmd = cmd
         self.src_addr = src_addr
         self.dst_addr = dst_addr
         self.mpdu_len = mpdu_len
@@ -160,17 +158,6 @@ class CEMIFrame:
         # TPCI (transport layer control information)   -> First 14 bit
         # APCI (application layer control information) -> Last  10 bit
 
-        tpci_apci = cemi[9 + addil] * 256 + cemi[10 + addil]
-
-        try:
-            self.cmd = APCICommand(tpci_apci & 0xFFC0)
-        except ValueError:
-            raise UnsupportedCEMIMessage(
-                "APCI not supported: {:#012b} in CEMI: {}".format(
-                    tpci_apci & 0xFFC0, cemi.hex()
-                )
-            )
-
         apdu = cemi[10 + addil :]
         if len(apdu) != self.mpdu_len:
             raise CouldNotParseKNXIP(
@@ -178,6 +165,8 @@ class CEMIFrame:
                     self.mpdu_len, len(apdu), cemi.hex()
                 )
             )
+
+        tpci_apci = cemi[9 + addil] * 256 + cemi[10 + addil]
 
         try:
             self.payload = APCI.resolve_class(tpci_apci & 0x03FF)()
@@ -215,11 +204,10 @@ class CEMIFrame:
         """Return object as readable string."""
         return (
             '<CEMIFrame SourceAddress="{}" DestinationAddress="{}" '
-            'Flags="{:16b}" Command="{}" payload="{}" />'.format(
+            'Flags="{:16b}" payload="{}" />'.format(
                 self.src_addr.__repr__(),
                 self.dst_addr.__repr__(),
                 self.flags,
-                self.cmd,
                 self.payload,
             )
         )
