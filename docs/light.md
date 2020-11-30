@@ -192,18 +192,25 @@ groups:
         # Light with RGBW color
         Kitchen.Light_rgbw:
             {
-                white: {group_address_switch: "1/6/4", group_address_switch_state: "1/6/5", group_address_brightness: "1/6/6", group_address_brightness_state: "1/6/7"},
-                red: {group_address_switch: "1/6/14", group_address_switch_state: "1/6/15", group_address_brightness: "1/6/16", group_address_brightness_state: "1/6/17"},
-                green: {group_address_switch: "1/6/24", group_address_switch_state: "1/6/25", group_address_brightness: "1/6/26", group_address_brightness_state: "1/6/27"},
-                blue: {group_address_switch: "1/6/34", group_address_switch_state: "1/6/35", group_address_brightness: "1/6/36", group_address_brightness_state: "1/6/37"}
+                individual_colors:
+                    {
+                        white: {group_address_switch: "1/6/4", group_address_switch_state: "1/6/5", group_address_brightness: "1/6/6", group_address_brightness_state: "1/6/7"},
+                        red: {group_address_switch: "1/6/14", group_address_switch_state: "1/6/15", group_address_brightness: "1/6/16", group_address_brightness_state: "1/6/17"},
+                        green: {group_address_switch: "1/6/24", group_address_switch_state: "1/6/25", group_address_brightness: "1/6/26", group_address_brightness_state: "1/6/27"},
+                        blue: {group_address_switch: "1/6/34", group_address_switch_state: "1/6/35", group_address_brightness: "1/6/36", group_address_brightness_state: "1/6/37"}
+                    }
             }
 
         # Light with RGB color and no white
         Kitchen.Light_rgb:
             {
-                red: {group_address_switch: "1/6/14", group_address_switch_state: "1/6/15", group_address_brightness: "1/6/16", group_address_brightness_state: "1/6/17"},
-                green: {group_address_switch: "1/6/24", group_address_switch_state: "1/6/25", group_address_brightness: "1/6/26", group_address_brightness_state: "1/6/27"},
-                blue: {group_address_switch: "1/6/34", group_address_switch_state: "1/6/35", group_address_brightness: "1/6/36", group_address_brightness_state: "1/6/37"}
+                individual_colors:
+                    {
+                        red: {group_address_switch: "1/6/14", group_address_switch_state: "1/6/15", group_address_brightness: "1/6/16", group_address_brightness_state: "1/6/17"},
+                        green: {group_address_switch: "1/6/24", group_address_switch_state: "1/6/25", group_address_brightness: "1/6/26", group_address_brightness_state: "1/6/27"},
+                        blue: {group_address_switch: "1/6/34", group_address_switch_state: "1/6/35", group_address_brightness: "1/6/36", group_address_brightness_state: "1/6/37"}
+                    }
+                r
             }
 ```
 

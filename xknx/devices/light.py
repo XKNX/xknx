@@ -287,19 +287,13 @@ class Light(Device):
         cls, color, config
     ) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
         """Load color configuration from configuration structure."""
-        if color in config:
-            sub_config = config[color]
-            group_address_switch = sub_config.get("group_address_switch")
-            group_address_switch_state = sub_config.get("group_address_switch_state")
-            group_address_brightness = sub_config.get("group_address_brightness")
-            group_address_brightness_state = sub_config.get(
-                "group_address_brightness_state"
-            )
+        if "individual_colors" in config and color in config["individual_colors"]:
+            sub_config = config["individual_colors"][color]
             return (
-                group_address_switch,
-                group_address_switch_state,
-                group_address_brightness,
-                group_address_brightness_state,
+                sub_config.get("group_address_switch"),
+                sub_config.get("group_address_switch_state"),
+                sub_config.get("group_address_brightness"),
+                sub_config.get("group_address_brightness_state"),
             )
         return None, None, None, None
 

@@ -139,16 +139,17 @@ class LightSchema:
     DEFAULT_MIN_KELVIN = 2700  # 370 mireds
     DEFAULT_MAX_KELVIN = 6000  # 166 mireds
 
-    RED = "red"
-    GREEN = "green"
-    BLUE = "blue"
-    WHITE = "white"
+    CONF_INDIVIDUAL_COLORS = "individual_colors"
+    CONF_RED = "red"
+    CONF_GREEN = "green"
+    CONF_BLUE = "blue"
+    CONF_WHITE = "white"
 
     COLOR_SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_ADDRESS): cv.string,
             vol.Optional(CONF_STATE_ADDRESS): cv.string,
-            vol.Optional(CONF_BRIGHTNESS_ADDRESS): cv.string,
+            vol.Required(CONF_BRIGHTNESS_ADDRESS): cv.string,
             vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): cv.string,
         }
     )
@@ -160,18 +161,20 @@ class LightSchema:
             vol.Optional(CONF_STATE_ADDRESS): cv.string,
             vol.Optional(CONF_BRIGHTNESS_ADDRESS): cv.string,
             vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): cv.string,
-            vol.Optional(RED): COLOR_SCHEMA,
-            vol.Optional(GREEN): COLOR_SCHEMA,
-            vol.Optional(BLUE): COLOR_SCHEMA,
-            vol.Optional(WHITE): COLOR_SCHEMA,
-            vol.Optional(CONF_COLOR_ADDRESS): cv.string,
+            vol.Exclusive(CONF_INDIVIDUAL_COLORS, "color"): {
+                vol.Inclusive(CONF_RED, "colors"): COLOR_SCHEMA,
+                vol.Inclusive(CONF_GREEN, "colors"): COLOR_SCHEMA,
+                vol.Inclusive(CONF_BLUE, "colors"): COLOR_SCHEMA,
+                vol.Optional(CONF_WHITE): COLOR_SCHEMA,
+            },
+            vol.Exclusive(CONF_COLOR_ADDRESS, "color"): cv.string,
             vol.Optional(CONF_COLOR_STATE_ADDRESS): cv.string,
             vol.Optional(CONF_COLOR_TEMP_ADDRESS): cv.string,
             vol.Optional(CONF_COLOR_TEMP_STATE_ADDRESS): cv.string,
             vol.Optional(
                 CONF_COLOR_TEMP_MODE, default=DEFAULT_COLOR_TEMP_MODE
             ): cv.enum(ColorTempModes),
-            vol.Optional(CONF_RGBW_ADDRESS): cv.string,
+            vol.Exclusive(CONF_RGBW_ADDRESS, "color"): cv.string,
             vol.Optional(CONF_RGBW_STATE_ADDRESS): cv.string,
             vol.Optional(CONF_MIN_KELVIN, default=DEFAULT_MIN_KELVIN): vol.All(
                 vol.Coerce(int), vol.Range(min=1)

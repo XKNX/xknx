@@ -147,6 +147,7 @@ class LightSchema:
     CONF_RGBW = "rgbw"
     CONF_COLOR_TEMPERATURE = "color_temperature"
     CONF_COLOR = "color"
+    CONF_INDIVIDUAL_COLORS = "individual_colors"
 
     CONF_COLOR_TEMP_MODE = "mode"
     CONF_MIN_KELVIN = "min_kelvin"
@@ -163,10 +164,8 @@ class LightSchema:
 
     COLOR_SCHEMA = vol.Schema(
         {
-            vol.Optional(CONF_SWITCH): RemoteValueSchema.SCHEMA.extend(
-                {vol.Required(CONF_ADDRESS): ensure_group_address}
-            ),
-            vol.Optional(CONF_BRIGHTNESS): RemoteValueSchema.SCHEMA.extend(
+            vol.Optional(CONF_SWITCH): RemoteValueSchema.SCHEMA,
+            vol.Required(CONF_BRIGHTNESS): RemoteValueSchema.SCHEMA.extend(
                 {vol.Required(CONF_ADDRESS): ensure_group_address}
             ),
         }
@@ -180,12 +179,18 @@ class LightSchema:
             vol.Optional(CONF_BRIGHTNESS): RemoteValueSchema.SCHEMA.extend(
                 {vol.Required(CONF_ADDRESS): ensure_group_address}
             ),
-            vol.Optional(CONF_RGBW): RemoteValueSchema.SCHEMA.extend(
+            vol.Exclusive(CONF_RGBW, "color"): RemoteValueSchema.SCHEMA.extend(
                 {vol.Required(CONF_ADDRESS): ensure_group_address}
             ),
-            vol.Optional(CONF_COLOR): RemoteValueSchema.SCHEMA.extend(
+            vol.Exclusive(CONF_COLOR, "color"): RemoteValueSchema.SCHEMA.extend(
                 {vol.Required(CONF_ADDRESS): ensure_group_address}
             ),
+            vol.Exclusive(CONF_INDIVIDUAL_COLORS, "color"): {
+                vol.Inclusive(CONF_RED, "colors"): COLOR_SCHEMA,
+                vol.Inclusive(CONF_GREEN, "colors"): COLOR_SCHEMA,
+                vol.Inclusive(CONF_BLUE, "colors"): COLOR_SCHEMA,
+                vol.Optional(CONF_WHITE): COLOR_SCHEMA,
+            },
             vol.Optional(CONF_COLOR_TEMPERATURE): RemoteValueSchema.SCHEMA.extend(
                 {
                     vol.Required(CONF_ADDRESS): ensure_group_address,
@@ -200,11 +205,7 @@ class LightSchema:
                     ),
                 }
             ),
-            vol.Optional(CONF_RED): COLOR_SCHEMA,
-            vol.Optional(CONF_GREEN): COLOR_SCHEMA,
-            vol.Optional(CONF_BLUE): COLOR_SCHEMA,
-            vol.Optional(CONF_WHITE): COLOR_SCHEMA,
-        }
+        },
     )
 
 

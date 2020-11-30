@@ -92,8 +92,8 @@ def _create_light_color(
     color: str, config: ConfigType
 ) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
     """Load color configuration from configuration structure."""
-    if color in config:
-        sub_config = config[color]
+    if "individual_colors" in config and color in config["individual_colors"]:
+        sub_config = config["individual_colors"][color]
         group_address_switch = sub_config.get(CONF_ADDRESS)
         group_address_switch_state = sub_config.get(LightSchema.CONF_STATE_ADDRESS)
         group_address_brightness = sub_config.get(LightSchema.CONF_BRIGHTNESS_ADDRESS)
@@ -132,25 +132,25 @@ def _create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
         red_switch_state,
         red_brightness,
         red_brightness_state,
-    ) = _create_light_color(LightSchema.RED, config)
+    ) = _create_light_color(LightSchema.CONF_RED, config)
     (
         green_switch,
         green_switch_state,
         green_brightness,
         green_brightness_state,
-    ) = _create_light_color(LightSchema.GREEN, config)
+    ) = _create_light_color(LightSchema.CONF_GREEN, config)
     (
         blue_switch,
         blue_switch_state,
         blue_brightness,
         blue_brightness_state,
-    ) = _create_light_color(LightSchema.BLUE, config)
+    ) = _create_light_color(LightSchema.CONF_BLUE, config)
     (
         white_switch,
         white_switch_state,
         white_brightness,
         white_brightness_state,
-    ) = _create_light_color(LightSchema.WHITE, config)
+    ) = _create_light_color(LightSchema.CONF_WHITE, config)
 
     return XknxLight(
         knx_module,

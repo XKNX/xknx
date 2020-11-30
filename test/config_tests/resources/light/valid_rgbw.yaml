@@ -4,6 +4,13 @@ friendly_name: "Office"
 switch:
   address: "2/1/5"
 individual_colors:
+  white:
+    switch:
+      address: "2/1/5"
+      state_address: "2/4/5"
+    brightness:
+      address: "2/5/7"
+      state_address: "2/5/8"
   red:
     switch:
       address: "2/1/5"
