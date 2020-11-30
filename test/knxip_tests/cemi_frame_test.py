@@ -6,7 +6,7 @@ from pytest import fixture, raises
 from xknx.dpt import DPTBinary, DPTComparator
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage
 from xknx.knxip.cemi_frame import CEMIFrame
-from xknx.knxip.knxip_enum import APCICommand, CEMIFlags, CEMIMessageCode
+from xknx.knxip.knxip_enum import CEMIFlags, CEMIMessageCode
 from xknx.telegram import GroupAddress, GroupValueRead, IndividualAddress, Telegram
 
 
@@ -50,7 +50,7 @@ def test_valid_command(frame):
 
 def test_invalid_tpci_apci(frame):
     """Test for invalid APCICommand"""
-    with raises(UnsupportedCEMIMessage, match=r".*APCI not supported: .*"):
+    with raises(CouldNotParseKNXIP, match=r".*APCI not supported: .*"):
         frame.from_knx_data_link_layer(get_data(0x29, 0, 0, 0, 0, 1, 0xFFC0, []))
 
 
@@ -63,7 +63,6 @@ def test_invalid_apdu_len(frame):
 def test_invalid_src_addr(frame):
     """Test for invalid src addr"""
     frame.code = CEMIMessageCode.L_DATA_IND
-    frame.cmd = APCICommand.GROUP_READ
     frame.flags = 0
     frame.mpdu_len = 1
     frame.payload = GroupValueRead()
@@ -77,7 +76,6 @@ def test_invalid_src_addr(frame):
 def test_invalid_dst_addr(frame):
     """Test for invalid dst addr"""
     frame.code = CEMIMessageCode.L_DATA_IND
-    frame.cmd = APCICommand.GROUP_READ
     frame.flags = 0
     frame.mpdu_len = 1
     frame.payload = GroupValueRead()
@@ -91,7 +89,6 @@ def test_invalid_dst_addr(frame):
 def test_invalid_payload(frame):
     """Test for having wrong payload set"""
     frame.code = CEMIMessageCode.L_DATA_IND
-    frame.cmd = APCICommand.GROUP_READ
     frame.flags = 0
     frame.mpdu_len = 1
     frame.payload = DPTComparator()
@@ -117,14 +114,6 @@ def test_from_knx_with_not_implemented_cemi(frame):
         frame.from_knx(
             get_data(CEMIMessageCode.L_BUSMON_IND.value, 0, 0, 0, 0, 2, 0, [])
         )
-
-
-def test_invalid_telegram(frame):
-    """Test for invalid telegram type"""
-    packet_len = frame.from_knx(get_data(0x29, 0, 0, 0, 0, 1, 0, []))
-    frame.cmd = None
-    with raises(ConversionError, match=r".*Telegram not implemented for.*"):
-        tg = frame.telegram
 
 
 def test_invalid_invalid_len(frame):

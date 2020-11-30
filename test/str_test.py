@@ -481,7 +481,7 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(telegram),
             '<Telegram direction="Outgoing" source_address="0.0.0" '
-            'destination_address="GroupAddress("1/2/3")" payload="<GroupValueWrite dpt="<DPTBinary value="7" />" />" />',
+            'destination_address="1/2/3" payload="<GroupValueWrite dpt="<DPTBinary value="7" />" />" />',
         )
 
     def test_dib_generic(self):
@@ -649,7 +649,7 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(tunnelling_request),
             '<TunnellingRequest communication_channel_id="23" sequence_counter="42" cemi="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")"'
-            ' DestinationAddress="GroupAddress("0/0/0")" Flags="               0" Command="APCICommand.GROUP_READ" payload="None" />" />',
+            ' DestinationAddress="GroupAddress("0/0/0")" Flags="               0" payload="None" />" />',
         )
 
     def test_tunnelling_ack(self):
@@ -675,7 +675,7 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(cemi_frame),
             '<CEMIFrame SourceAddress="GroupAddress("1/2/3")" DestinationAddress="GroupAddress("1/2/5")" Flags="1011110011100000" '
-            'Command="APCICommand.GROUP_WRITE" payload="<GroupValueWrite dpt="<DPTBinary value="7" />" />" />',
+            'payload="<GroupValueWrite dpt="<DPTBinary value="7" />" />" />',
         )
 
     def test_knxip_frame(self):
@@ -718,5 +718,5 @@ class TestStringRepresentations(unittest.TestCase):
         ri = RoutingIndication(xknx)
         self.assertEqual(
             str(ri),
-            '<RoutingIndication cemi="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")" DestinationAddress="GroupAddress("0/0/0")" Flags="               0" Command="APCICommand.GROUP_READ" payload="None" />" />',
+            '<RoutingIndication cemi="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")" DestinationAddress="GroupAddress("0/0/0")" Flags="               0" payload="None" />" />',
         )
