@@ -6,13 +6,8 @@ from unittest.mock import MagicMock, Mock, patch
 from xknx import XKNX
 from xknx.dpt import DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.telegram import (
-    AddressFilter,
-    GroupAddress,
-    GroupValueWrite,
-    Telegram,
-    TelegramDirection,
-)
+from xknx.telegram import AddressFilter, GroupAddress, Telegram, TelegramDirection
+from xknx.telegram.apci import GroupValueWrite
 
 
 class AsyncMock(MagicMock):

@@ -6,7 +6,8 @@ from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.remote_value import RemoteValueString
-from xknx.telegram import GroupAddress, GroupValueWrite, Telegram
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueWrite
 
 
 class TestRemoteValueString(unittest.TestCase):

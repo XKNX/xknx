@@ -7,7 +7,8 @@ from xknx import XKNX
 from xknx.devices import Action, BinarySensor, Switch
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.telegram import GroupAddress, GroupValueResponse, GroupValueWrite, Telegram
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 
 class AsyncMock(MagicMock):

@@ -6,13 +6,8 @@ from unittest.mock import MagicMock, Mock, patch
 from xknx import XKNX
 from xknx.devices import Switch
 from xknx.dpt import DPTBinary
-from xknx.telegram import (
-    GroupAddress,
-    GroupValueRead,
-    GroupValueResponse,
-    GroupValueWrite,
-    Telegram,
-)
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
 class AsyncMock(MagicMock):

@@ -55,13 +55,8 @@ from xknx.knxip import (
     TunnellingRequest,
 )
 from xknx.remote_value import RemoteValue
-from xknx.telegram import (
-    GroupAddress,
-    GroupValueWrite,
-    IndividualAddress,
-    Telegram,
-    TelegramDirection,
-)
+from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramDirection
+from xknx.telegram.apci import GroupValueWrite
 
 
 # pylint: disable=too-many-public-methods,invalid-name

@@ -7,7 +7,8 @@ from xknx import XKNX
 from xknx.dpt import DPTArray
 from xknx.io import Tunnelling, UDPClient
 from xknx.knxip import ErrorCode, KNXIPFrame, KNXIPServiceType, TunnellingAck
-from xknx.telegram import GroupAddress, GroupValueWrite, IndividualAddress, Telegram
+from xknx.telegram import GroupAddress, IndividualAddress, Telegram
+from xknx.telegram.apci import GroupValueWrite
 
 
 class TestTunnelling(unittest.TestCase):

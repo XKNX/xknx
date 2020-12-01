@@ -2,13 +2,8 @@
 import unittest
 
 from xknx.dpt import DPTBinary
-from xknx.telegram import (
-    GroupAddress,
-    GroupValueRead,
-    GroupValueWrite,
-    Telegram,
-    TelegramDirection,
-)
+from xknx.telegram import GroupAddress, Telegram, TelegramDirection
+from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
 
 class TestTelegram(unittest.TestCase):

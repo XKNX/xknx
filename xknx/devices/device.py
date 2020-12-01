@@ -5,7 +5,7 @@ It provides basis functionality for reading the state from the KNX bus.
 """
 import logging
 
-from xknx.telegram import GroupValueRead, GroupValueResponse, GroupValueWrite
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 logger = logging.getLogger("xknx.log")
 

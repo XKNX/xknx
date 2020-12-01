@@ -6,13 +6,8 @@ from unittest.mock import MagicMock, Mock, patch
 from xknx import XKNX
 from xknx.devices import Device, Sensor
 from xknx.dpt import DPTArray
-from xknx.telegram import (
-    GroupAddress,
-    GroupValueRead,
-    GroupValueResponse,
-    GroupValueWrite,
-    Telegram,
-)
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
 class TestDevice(unittest.TestCase):

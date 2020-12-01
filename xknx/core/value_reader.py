@@ -10,7 +10,8 @@ The module will
 import asyncio
 import logging
 
-from xknx.telegram import GroupValueRead, GroupValueResponse, GroupValueWrite, Telegram
+from xknx.telegram import Telegram
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 logger = logging.getLogger("xknx.log")
 

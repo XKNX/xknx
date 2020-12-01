@@ -7,13 +7,8 @@ from unittest.mock import patch
 from xknx import XKNX
 from xknx.devices import DateTime
 from xknx.dpt import DPTArray
-from xknx.telegram import (
-    GroupAddress,
-    GroupValueRead,
-    GroupValueResponse,
-    GroupValueWrite,
-    Telegram,
-)
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
 class TestDateTime(unittest.TestCase):

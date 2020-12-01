@@ -7,7 +7,8 @@ from unittest.mock import Mock, patch
 from xknx import XKNX
 from xknx.devices import Cover
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.telegram import GroupAddress, GroupValueRead, GroupValueWrite, Telegram
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
 
 class TestCover(unittest.TestCase):

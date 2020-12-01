@@ -7,7 +7,8 @@ from xknx.dpt import DPTBinary, DPTComparator
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage
 from xknx.knxip.cemi_frame import CEMIFrame
 from xknx.knxip.knxip_enum import CEMIFlags, CEMIMessageCode
-from xknx.telegram import GroupAddress, GroupValueRead, IndividualAddress, Telegram
+from xknx.telegram import GroupAddress, IndividualAddress, Telegram
+from xknx.telegram.apci import GroupValueRead
 
 
 def get_data(code, adil, flags, src, dst, mpdu_len, tpci_apci, payload):

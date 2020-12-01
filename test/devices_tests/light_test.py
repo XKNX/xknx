@@ -7,7 +7,8 @@ from xknx import XKNX
 from xknx.devices import Light
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.telegram import GroupAddress, GroupValueRead, GroupValueWrite, Telegram
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
 
 class TestLight(unittest.TestCase):

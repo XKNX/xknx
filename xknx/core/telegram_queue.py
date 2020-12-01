@@ -11,7 +11,8 @@ import asyncio
 import logging
 
 from xknx.exceptions import CommunicationError, XKNXException
-from xknx.telegram import GroupValueWrite, TelegramDirection
+from xknx.telegram import TelegramDirection
+from xknx.telegram.apci import GroupValueWrite
 
 logger = logging.getLogger("xknx.log")
 telegram_logger = logging.getLogger("xknx.telegram")

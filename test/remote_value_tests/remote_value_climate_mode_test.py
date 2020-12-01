@@ -12,7 +12,8 @@ from xknx.remote_value import (
     RemoteValueClimateMode,
 )
 from xknx.remote_value.remote_value_climate_mode import _RemoteValueBinaryClimateMode
-from xknx.telegram import GroupAddress, GroupValueWrite, Telegram
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueWrite
 
 
 class TestRemoteValueDptValue1Ucount(unittest.TestCase):

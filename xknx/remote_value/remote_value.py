@@ -10,7 +10,8 @@ import logging
 from typing import List
 
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.telegram import GroupAddress, GroupValueResponse, GroupValueWrite, Telegram
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 logger = logging.getLogger("xknx.log")
 

@@ -6,14 +6,8 @@ import unittest
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary, DPTTemperature, DPTTime
 from xknx.knxip import CEMIFrame, KNXIPFrame, KNXIPServiceType, RoutingIndication
-from xknx.telegram import (
-    GroupAddress,
-    GroupValueRead,
-    GroupValueResponse,
-    GroupValueWrite,
-    IndividualAddress,
-    Telegram,
-)
+from xknx.telegram import GroupAddress, IndividualAddress, Telegram
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
 class Test_KNXIP(unittest.TestCase):

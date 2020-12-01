@@ -6,7 +6,8 @@ from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.remote_value import RemoteValue1Count
-from xknx.telegram import GroupAddress, GroupValueWrite, Telegram
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueWrite
 
 
 class TestRemoteValue1Count(unittest.TestCase):

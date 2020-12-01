@@ -6,7 +6,8 @@ from xknx import XKNX
 from xknx.dpt import DPTBinary
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import CEMIFrame, KNXIPFrame, KNXIPServiceType, TunnellingRequest
-from xknx.telegram import GroupAddress, GroupValueWrite, Telegram
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueWrite
 
 
 class Test_KNXIP_TunnelingReq(unittest.TestCase):

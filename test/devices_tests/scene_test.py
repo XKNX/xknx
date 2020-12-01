@@ -7,7 +7,8 @@ from unittest.mock import patch
 from xknx import XKNX
 from xknx.devices import Scene
 from xknx.dpt import DPTArray
-from xknx.telegram import GroupAddress, GroupValueWrite, Telegram
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueWrite
 
 
 class TestScene(unittest.TestCase):
