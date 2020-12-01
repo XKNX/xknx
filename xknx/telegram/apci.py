@@ -93,7 +93,7 @@ class APCI:
 
         if extended:
             raise ConversionError(
-                f"Telegram not implemented for extended APCI {apci:#012b}."
+                f"Class not implemented for extended APCI {apci:#012b}."
             )
 
         apci = apci & 0x03C0
@@ -104,7 +104,7 @@ class APCI:
             return GroupValueWrite
         if apci == APCICommand.GROUP_RESPONSE.value:
             return GroupValueResponse
-        raise ConversionError(f"Telegram not implemented for APCI {apci:#012b}.")
+        raise ConversionError(f"Class not implemented for APCI {apci:#012b}.")
 
 
 class GroupValueRead(APCI):
@@ -119,6 +119,12 @@ class GroupValueRead(APCI):
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
         return 1
+
+    def from_knx(self, raw: bytes) -> None:
+        """Parse/deserialize from KNX/IP raw data."""
+
+        # Nothing to parse, but must be implemented explicitly.
+        return
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
