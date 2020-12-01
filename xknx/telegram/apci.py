@@ -163,7 +163,9 @@ class GroupValueWrite(APCI):
         if isinstance(self.dpt, DPTBinary):
             return encode_cmd_and_payload(self.code, encoded_payload=self.dpt.value)
         if isinstance(self.dpt, DPTArray):
-            return encode_cmd_and_payload(self.code, appended_payload=self.dpt.value)
+            return encode_cmd_and_payload(
+                self.code, appended_payload=bytes(self.dpt.value)
+            )
         raise TypeError()
 
     def __str__(self) -> str:
@@ -205,7 +207,9 @@ class GroupValueResponse(APCI):
         if isinstance(self.dpt, DPTBinary):
             return encode_cmd_and_payload(self.code, encoded_payload=self.dpt.value)
         if isinstance(self.dpt, DPTArray):
-            return encode_cmd_and_payload(self.code, appended_payload=self.dpt.value)
+            return encode_cmd_and_payload(
+                self.code, appended_payload=bytes(self.dpt.value)
+            )
         raise TypeError()
 
     def __str__(self) -> str:
