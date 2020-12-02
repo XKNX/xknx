@@ -4,7 +4,8 @@ import asyncio
 from xknx import XKNX
 from xknx.dpt import DPTBinary
 from xknx.io import GatewayScanner, Tunnel
-from xknx.telegram import GroupAddress, GroupValueWrite, IndividualAddress, Telegram
+from xknx.telegram import GroupAddress, IndividualAddress, Telegram
+from xknx.telegram.apci import GroupValueWrite
 
 
 async def main():
