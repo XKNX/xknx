@@ -14,6 +14,7 @@ from xknx.io import (
     ConnectionType,
 )
 from xknx.telegram import AddressFilter, GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -322,10 +323,16 @@ class KNXModule:
 
     async def telegram_received_cb(self, telegram):
         """Call invoked after a KNX telegram was received."""
+        data = None
+
+        # Not all telegrams have serializable data.
+        if isinstance(telegram, (GroupValueWrite, GroupValueResponse)):
+            data = telegram.dpt.value
+
         self.hass.bus.async_fire(
             "knx_event",
             {
-                "data": telegram.payload,
+                "data": data,
                 "destination": str(telegram.destination_address),
                 "direction": telegram.direction.value,
                 "source": str(telegram.source_address),
