@@ -27,7 +27,6 @@ def encode_cmd_and_payload(
 
     data = bytearray(
         [
-            1 + len(appended_payload),
             (cmd.value >> 8) & 0xFF,
             (cmd.value & 0xFF) | (encoded_payload & DPTBinary.APCI_BITMASK),
         ]
@@ -159,10 +158,10 @@ class GroupValueWrite(APCI):
 
     def from_knx(self, raw: bytes) -> None:
         """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) == 1:
-            self.dpt = DPTBinary(raw[0] & DPTBinary.APCI_BITMASK)
+        if len(raw) == 2:
+            self.dpt = DPTBinary(raw[1] & DPTBinary.APCI_BITMASK)
         else:
-            self.dpt = DPTArray(raw[1:])
+            self.dpt = DPTArray(raw[2:])
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
@@ -203,10 +202,10 @@ class GroupValueResponse(APCI):
 
     def from_knx(self, raw: bytes) -> None:
         """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) == 1:
-            self.dpt = DPTBinary(raw[0] & DPTBinary.APCI_BITMASK)
+        if len(raw) == 2:
+            self.dpt = DPTBinary(raw[1] & DPTBinary.APCI_BITMASK)
         else:
-            self.dpt = DPTArray(raw[1:])
+            self.dpt = DPTArray(raw[2:])
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""

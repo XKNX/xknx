@@ -158,15 +158,15 @@ class CEMIFrame:
         # TPCI (transport layer control information)   -> First 14 bit
         # APCI (application layer control information) -> Last  10 bit
 
-        apdu = cemi[10 + addil :]
-        if len(apdu) != self.mpdu_len:
+        apdu = cemi[9 + addil :]
+        if len(apdu) != (self.mpdu_len + 1):
             raise CouldNotParseKNXIP(
                 "APDU LEN should be {} but is {} in CEMI: {}".format(
                     self.mpdu_len, len(apdu), cemi.hex()
                 )
             )
 
-        tpci_apci = cemi[9 + addil] * 256 + cemi[10 + addil]
+        tpci_apci = (apdu[0] << 8) + apdu[1]
 
         try:
             self.payload = APCI.resolve_class(tpci_apci & 0x03FF)()
@@ -177,7 +177,7 @@ class CEMIFrame:
 
         self.payload.from_knx(apdu)
 
-        return 10 + addil + len(apdu)
+        return 10 + addil + self.mpdu_len
 
     def to_knx(self):
         """Serialize to KNX/IP raw data."""
@@ -196,6 +196,7 @@ class CEMIFrame:
         data.append(self.flags & 255)
         data.extend(self.src_addr.to_knx())
         data.extend(self.dst_addr.to_knx())
+        data.append(self.payload.calculated_length())
         data.extend(self.payload.to_knx())
 
         return data
