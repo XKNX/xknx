@@ -123,7 +123,8 @@ class RemoteValue:
             raise CouldNotParseTelegram(
                 "payload not a GroupValueWrite or GroupValueResponse",
                 payload=telegram.payload,
-                address=telegram.address,
+                destination_address=telegram.destination_address,
+                source_address=telegram.source_address,
                 device_name=self.device_name,
                 feature_name=self.feature_name,
             )
@@ -131,7 +132,8 @@ class RemoteValue:
             raise CouldNotParseTelegram(
                 "payload invalid",
                 payload=telegram.payload,
-                address=telegram.destination_address,
+                destination_address=telegram.destination_address,
+                source_address=telegram.source_address,
                 device_name=self.device_name,
                 feature_name=self.feature_name,
             )

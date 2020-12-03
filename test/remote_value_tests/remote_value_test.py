@@ -85,6 +85,26 @@ class TestRemoteValue(unittest.TestCase):
         remote_value = RemoteValue(xknx)
         self.assertEqual(remote_value.unit_of_measurement, None)
 
+    def test_process_unsupported_payload(self):
+        """Test if exception is raised when processing telegram with unsupported payload."""
+        xknx = XKNX()
+        remote_value = RemoteValue(xknx)
+        with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_valid, patch(
+            "xknx.remote_value.RemoteValue.has_group_address"
+        ) as patch_has_group_address:
+            patch_valid.return_value = False
+            patch_has_group_address.return_value = True
+
+            telegram = Telegram(
+                destination_address=GroupAddress("1/2/1"),
+                payload=object(),
+            )
+            with self.assertRaisesRegex(
+                CouldNotParseTelegram,
+                r".*payload not a GroupValueWrite or GroupValueResponse.*",
+            ):
+                self.loop.run_until_complete(remote_value.process(telegram))
+
     def test_process_invalid_payload(self):
         """Test if exception is raised when processing telegram with invalid payload."""
         xknx = XKNX()
@@ -99,7 +119,7 @@ class TestRemoteValue(unittest.TestCase):
                 destination_address=GroupAddress("1/2/1"),
                 payload=GroupValueWrite(DPTArray((0x01, 0x02))),
             )
-            with self.assertRaises(CouldNotParseTelegram):
+            with self.assertRaisesRegex(CouldNotParseTelegram, r".*payload invalid.*"):
                 self.loop.run_until_complete(remote_value.process(telegram))
 
     def test_read_state(self):
