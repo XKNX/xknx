@@ -8,6 +8,7 @@
 
 ### Internals
 
+- refactored timeout handling in ValueReader
 - renamed "PhysicalAddress" to "IndividualAddress"
 - Telegram: `group_address` renamed to `destination_address`, to prepare support for other APCI services and add `source_address`
 - Telegram: remove `Telegram.telegramtype` and replace with payload object derived from `xknx.telegram.apci.APCI`.
