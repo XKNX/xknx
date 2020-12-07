@@ -128,11 +128,13 @@ class TestGatewayScanner(unittest.TestCase):
         gateway_scanner = GatewayScanner(xknx)
         test_search_response = fake_router_search_response(xknx)
         udp_client_mock = unittest.mock.create_autospec(UDPClient)
-        udp_client_mock.local_addr = ("192.168.42.50", 0, "en1")
+        udp_client_mock.local_addr = ("192.168.42.50", 0)
         udp_client_mock.getsockname.return_value = ("192.168.42.50", 0)
 
         self.assertEqual(gateway_scanner.found_gateways, [])
-        gateway_scanner._response_rec_callback(test_search_response, udp_client_mock)
+        gateway_scanner._response_rec_callback(
+            test_search_response, udp_client_mock, interface="en1"
+        )
         self.assertEqual(
             str(gateway_scanner.found_gateways[0]), str(self.gateway_desc_both)
         )
