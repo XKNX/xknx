@@ -1,7 +1,7 @@
 """Unit test for KNX/IP gateway scanner."""
 import asyncio
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from xknx import XKNX
 from xknx.io import GatewayScanFilter, GatewayScanner, UDPClient
@@ -145,17 +145,11 @@ class TestGatewayScanner(unittest.TestCase):
         # No interface shall be found
         netifaces_mock.interfaces.return_value = []
 
-        gateway_scanner = GatewayScanner(xknx, timeout_in_seconds=0)
-
-        timed_out_scan = self.loop.run_until_complete(gateway_scanner.scan())
-
-        # Timeout handle was cancelled (cancelled method requires Python 3.7)
-        event_has_cancelled = getattr(
-            gateway_scanner._timeout_handle, "cancelled", None
+        gateway_scanner = GatewayScanner(xknx)
+        gateway_scanner._response_received_or_timeout.wait = MagicMock(
+            side_effect=asyncio.TimeoutError()
         )
-        if callable(event_has_cancelled):
-            self.assertTrue(gateway_scanner._timeout_handle.cancelled())
-        self.assertTrue(gateway_scanner._response_received_or_timeout.is_set())
+        timed_out_scan = self.loop.run_until_complete(gateway_scanner.scan())
         # Unsuccessfull scan() returns None
         self.assertEqual(timed_out_scan, [])
 

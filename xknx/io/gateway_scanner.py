@@ -111,7 +111,6 @@ class GatewayScanner:
         self.found_gateways = []  # type: List[GatewayDescriptor]
         self._udp_clients = []
         self._response_received_or_timeout = asyncio.Event()
-        self._timeout_handle = None
         self._count_upper_bound = 0
         """Clean value of self.stop_on_found, computed when ``scan`` is called."""
 
@@ -122,10 +121,15 @@ class GatewayScanner:
         else:
             self._count_upper_bound = max(0, self.stop_on_found)
         await self._send_search_requests()
-        await self._start_timeout()
-        await self._response_received_or_timeout.wait()
-        await self._stop()
-        await self._stop_timeout()
+        try:
+            await asyncio.wait_for(
+                self._response_received_or_timeout.wait(),
+                timeout=self.timeout_in_seconds,
+            )
+        except asyncio.TimeoutError:
+            pass
+        finally:
+            await self._stop()
         return self.found_gateways
 
     async def _stop(self):
@@ -198,16 +202,3 @@ class GatewayScanner:
             self.found_gateways.append(gateway)
             if 0 < self._count_upper_bound <= len(self.found_gateways):
                 self._response_received_or_timeout.set()
-
-    def _timeout(self):
-        """Handle timeout for not having received enough SearchResponse."""
-        self._response_received_or_timeout.set()
-
-    async def _start_timeout(self):
-        """Start time out."""
-        loop = asyncio.get_running_loop()
-        self._timeout_handle = loop.call_later(self.timeout_in_seconds, self._timeout)
-
-    async def _stop_timeout(self):
-        """Stop/cancel timeout."""
-        self._timeout_handle.cancel()
