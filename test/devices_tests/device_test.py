@@ -130,17 +130,6 @@ class TestDevice(unittest.TestCase):
             self.loop.run_until_complete(device.process(telegram))
             mock_group_response.assert_called_with(telegram)
 
-    def test_process_unsupported_payload(self):
-        """Test process_group_write with an unsupported telegram payload."""
-        xknx = XKNX()
-        device = Device(xknx, "TestDevice")
-
-        with self.assertRaisesRegex(ValueError, r".*Unsupported payload.*"):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/2/1"), payload=object()
-            )
-            self.loop.run_until_complete(device.process(telegram))
-
     def test_sync_with_wait(self):
         """Test sync with wait_for_result=True."""
         xknx = XKNX()

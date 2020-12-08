@@ -57,8 +57,6 @@ class Device:
             await self.process_group_response(telegram)
         elif isinstance(telegram.payload, GroupValueRead):
             await self.process_group_read(telegram)
-        else:
-            raise ValueError("Unsupported payload.")
 
     async def process_group_read(self, telegram):
         """Process incoming GroupValueRead telegrams."""
