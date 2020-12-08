@@ -33,33 +33,6 @@ class TestAPCI(unittest.TestCase):
         ):
             APCI.resolve_class(0x03C0)
 
-    def test_calculated_length(self):
-        """Test the test_calculated_length method."""
-        with patch("logging.Logger.warning") as mock_warn:
-            payload = APCI()
-
-            self.assertEqual(payload.calculated_length(), 0)
-            mock_warn.assert_called_with(
-                "'calculated_length()' not implemented for %s", "APCI"
-            )
-
-    def test_from_knx(self):
-        """Test the test_calculated_length method."""
-        with patch("logging.Logger.warning") as mock_warn:
-            payload = APCI()
-            payload.from_knx(bytes())
-
-            self.assertEqual(payload, APCI())
-            mock_warn.assert_called_with("'from_knx()' not implemented for %s", "APCI")
-
-    def test_to_knx(self):
-        """Test the test_calculated_length method."""
-        with patch("logging.Logger.warning") as mock_warn:
-            payload = APCI()
-
-            self.assertEqual(payload.to_knx(), bytes([]))
-            mock_warn.assert_called_with("'to_knx()' not implemented for %s", "APCI")
-
 
 class TestGroupValueRead(unittest.TestCase):
     """Test class for GroupValueRead objects."""

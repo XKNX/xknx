@@ -6,14 +6,12 @@ APCI stands for Application Layer Protocol Control Information.
 An APCI payload contains a service and payload. For example, a GroupValueWrite
 is a service that takes a DPT as a value.
 """
+from abc import ABC, abstractmethod
 from enum import Enum
-import logging
 from typing import Optional, Type, Union
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
-
-logger = logging.getLogger("xknx.log")
 
 
 def encode_cmd_and_payload(
@@ -49,7 +47,7 @@ class APCIExtendedCommand(Enum):
     """Enum class for extended APCI services."""
 
 
-class APCI:
+class APCI(ABC):
     """
     Base class for ACPI services.
 
@@ -58,28 +56,17 @@ class APCI:
 
     code: APCICommand = APCICommand.ESCAPE
 
-    def __init__(self) -> None:
-        """Initialize APCI class."""
-
+    @abstractmethod
     def calculated_length(self) -> int:
         """Get length of APCI payload - to be implemented in derived class."""
-        logger.warning(
-            "'calculated_length()' not implemented for %s", self.__class__.__name__
-        )
 
-        return 0
-
+    @abstractmethod
     def from_knx(self, raw: bytes) -> None:
         """Parse/deserialize from KNX/IP raw data - to be implemented in derived class."""
-        # pylint: disable=unused-argument
-        logger.warning("'from_knx()' not implemented for %s", self.__class__.__name__)
 
+    @abstractmethod
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data - to be implemented in derived class."""
-        # pylint: disable=unused-argument
-        logger.warning("'to_knx()' not implemented for %s", self.__class__.__name__)
-
-        return bytes()
 
     def __eq__(self, other: object) -> bool:
         """Equal operator."""
@@ -145,7 +132,6 @@ class GroupValueWrite(APCI):
 
     def __init__(self, dpt: Optional[Union[DPTBinary, DPTArray]] = None) -> None:
         """Initialize a new instance of GroupValueWrite."""
-        super().__init__()
         self.dpt = dpt
 
     def calculated_length(self) -> int:
@@ -189,7 +175,6 @@ class GroupValueResponse(APCI):
 
     def __init__(self, dpt: Optional[Union[DPTBinary, DPTArray]] = None) -> None:
         """Initialize a new instance of GroupValueResponse."""
-        super().__init__()
         self.dpt = dpt
 
     def calculated_length(self) -> int:
