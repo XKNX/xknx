@@ -44,9 +44,10 @@ class TestDateTime(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram.destination_address, GroupAddress("1/2/3"))
-        self.assertEqual(len(telegram.payload.dpt.value), 8)
+        self.assertEqual(len(telegram.payload.value.value), 8)
         self.assertEqual(
-            telegram.payload.dpt.value, (0x75, 0x01, 0x07, 0xE9, 0x0D, 0x0E, 0x20, 0x80)
+            telegram.payload.value.value,
+            (0x75, 0x01, 0x07, 0xE9, 0x0D, 0x0E, 0x20, 0x80),
         )
 
     #
@@ -69,8 +70,8 @@ class TestDateTime(unittest.TestCase):
 
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram.destination_address, GroupAddress("1/2/3"))
-        self.assertEqual(len(telegram.payload.dpt.value), 3)
-        self.assertEqual(telegram.payload.dpt.value, (0x07, 0x01, 0x11))
+        self.assertEqual(len(telegram.payload.value.value), 3)
+        self.assertEqual(telegram.payload.value.value, (0x07, 0x01, 0x11))
 
     #
     # SYNC Time
@@ -92,8 +93,8 @@ class TestDateTime(unittest.TestCase):
 
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(telegram.destination_address, GroupAddress("1/2/3"))
-        self.assertEqual(len(telegram.payload.dpt.value), 3)
-        self.assertEqual(telegram.payload.dpt.value, (0xE9, 0x0D, 0x0E))
+        self.assertEqual(len(telegram.payload.value.value), 3)
+        self.assertEqual(telegram.payload.value.value, (0xE9, 0x0D, 0x0E))
 
     #
     # PROCESS

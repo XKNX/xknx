@@ -125,83 +125,83 @@ class GroupValueWrite(APCI):
     """
     GroupValueRead service.
 
-    Takes a DPT as payload.
+    Takes a value (DPT) as payload.
     """
 
     code = APCICommand.GROUP_WRITE
 
-    def __init__(self, dpt: Optional[Union[DPTBinary, DPTArray]] = None) -> None:
+    def __init__(self, value: Optional[Union[DPTBinary, DPTArray]] = None) -> None:
         """Initialize a new instance of GroupValueWrite."""
-        self.dpt = dpt
+        self.value = value
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        if isinstance(self.dpt, DPTBinary):
+        if isinstance(self.value, DPTBinary):
             return 1
-        if isinstance(self.dpt, DPTArray):
-            return 1 + len(self.dpt.value)
+        if isinstance(self.value, DPTArray):
+            return 1 + len(self.value.value)
         raise TypeError()
 
     def from_knx(self, raw: bytes) -> None:
         """Parse/deserialize from KNX/IP raw data."""
         if len(raw) == 2:
-            self.dpt = DPTBinary(raw[1] & DPTBinary.APCI_BITMASK)
+            self.value = DPTBinary(raw[1] & DPTBinary.APCI_BITMASK)
         else:
-            self.dpt = DPTArray(raw[2:])
+            self.value = DPTArray(raw[2:])
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        if isinstance(self.dpt, DPTBinary):
-            return encode_cmd_and_payload(self.code, encoded_payload=self.dpt.value)
-        if isinstance(self.dpt, DPTArray):
+        if isinstance(self.value, DPTBinary):
+            return encode_cmd_and_payload(self.code, encoded_payload=self.value.value)
+        if isinstance(self.value, DPTArray):
             return encode_cmd_and_payload(
-                self.code, appended_payload=bytes(self.dpt.value)
+                self.code, appended_payload=bytes(self.value.value)
             )
         raise TypeError()
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return f'<GroupValueWrite dpt="{self.dpt}" />'
+        return f'<GroupValueWrite value="{self.value}" />'
 
 
 class GroupValueResponse(APCI):
     """
     GroupValueResponse service.
 
-    Takes a DPT as payload.
+    Takes a value (DPT) as payload.
     """
 
     code = APCICommand.GROUP_RESPONSE
 
-    def __init__(self, dpt: Optional[Union[DPTBinary, DPTArray]] = None) -> None:
+    def __init__(self, value: Optional[Union[DPTBinary, DPTArray]] = None) -> None:
         """Initialize a new instance of GroupValueResponse."""
-        self.dpt = dpt
+        self.value = value
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        if isinstance(self.dpt, DPTBinary):
+        if isinstance(self.value, DPTBinary):
             return 1
-        if isinstance(self.dpt, DPTArray):
-            return 1 + len(self.dpt.value)
+        if isinstance(self.value, DPTArray):
+            return 1 + len(self.value.value)
         raise TypeError()
 
     def from_knx(self, raw: bytes) -> None:
         """Parse/deserialize from KNX/IP raw data."""
         if len(raw) == 2:
-            self.dpt = DPTBinary(raw[1] & DPTBinary.APCI_BITMASK)
+            self.value = DPTBinary(raw[1] & DPTBinary.APCI_BITMASK)
         else:
-            self.dpt = DPTArray(raw[2:])
+            self.value = DPTArray(raw[2:])
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        if isinstance(self.dpt, DPTBinary):
-            return encode_cmd_and_payload(self.code, encoded_payload=self.dpt.value)
-        if isinstance(self.dpt, DPTArray):
+        if isinstance(self.value, DPTBinary):
+            return encode_cmd_and_payload(self.code, encoded_payload=self.value.value)
+        if isinstance(self.value, DPTArray):
             return encode_cmd_and_payload(
-                self.code, appended_payload=bytes(self.dpt.value)
+                self.code, appended_payload=bytes(self.value.value)
             )
         raise TypeError()
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return f'<GroupValueResponse dpt="{self.dpt}" />'
+        return f'<GroupValueResponse value="{self.value}" />'

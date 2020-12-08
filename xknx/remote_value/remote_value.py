@@ -128,7 +128,7 @@ class RemoteValue:
                 device_name=self.device_name,
                 feature_name=self.feature_name,
             )
-        if not self.payload_valid(telegram.payload.dpt):
+        if not self.payload_valid(telegram.payload.value):
             raise CouldNotParseTelegram(
                 "payload invalid",
                 payload=telegram.payload,
@@ -141,9 +141,9 @@ class RemoteValue:
         if (
             self.payload is None
             or always_callback
-            or self.payload != telegram.payload.dpt
+            or self.payload != telegram.payload.value
         ):
-            self.payload = telegram.payload.dpt
+            self.payload = telegram.payload.value
             if self.after_update_cb is not None:
                 await self.after_update_cb()
         return True

@@ -476,7 +476,7 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(telegram),
             '<Telegram direction="Outgoing" source_address="0.0.0" '
-            'destination_address="1/2/3" payload="<GroupValueWrite dpt="<DPTBinary value="7" />" />" />',
+            'destination_address="1/2/3" payload="<GroupValueWrite value="<DPTBinary value="7" />" />" />',
         )
 
     def test_dib_generic(self):
@@ -670,7 +670,7 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(cemi_frame),
             '<CEMIFrame SourceAddress="GroupAddress("1/2/3")" DestinationAddress="GroupAddress("1/2/5")" Flags="1011110011100000" '
-            'payload="<GroupValueWrite dpt="<DPTBinary value="7" />" />" />',
+            'payload="<GroupValueWrite value="<DPTBinary value="7" />" />" />',
         )
 
     def test_knxip_frame(self):

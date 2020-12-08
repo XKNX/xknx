@@ -37,8 +37,8 @@ class Test_KNXIP(unittest.TestCase):
         self.assertEqual(knxipframe.body.cemi.src_addr, IndividualAddress("1.2.2"))
         self.assertEqual(knxipframe.body.cemi.dst_addr, GroupAddress(337))
 
-        self.assertEqual(len(knxipframe.body.cemi.payload.dpt.value), 1)
-        self.assertEqual(knxipframe.body.cemi.payload.dpt.value[0], 0xF0)
+        self.assertEqual(len(knxipframe.body.cemi.payload.value.value), 1)
+        self.assertEqual(knxipframe.body.cemi.payload.value.value[0], 0xF0)
 
     def test_from_knx_to_knx(self):
         """Test parsing and streaming CEMIFrame KNX/IP."""
@@ -89,8 +89,8 @@ class Test_KNXIP(unittest.TestCase):
 
         self.assertEqual(telegram.destination_address, GroupAddress(337))
 
-        self.assertEqual(len(telegram.payload.dpt.value), 1)
-        self.assertEqual(telegram.payload.dpt.value[0], 0xF0)
+        self.assertEqual(len(telegram.payload.value.value), 1)
+        self.assertEqual(telegram.payload.value.value[0], 0xF0)
 
     #
     # End-tox-End tests:
