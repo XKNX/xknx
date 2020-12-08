@@ -1,4 +1,6 @@
 """Implementation of Basic KNX datatypes."""
+from typing import Union
+
 from xknx.exceptions import ConversionError
 
 
@@ -148,7 +150,7 @@ class DPTArray:
     """The DPTArray is a base class for all datatypes appended to the KNX telegram."""
 
     # pylint: disable=too-few-public-methods
-    def __init__(self, value) -> None:
+    def __init__(self, value: Union[int, list, bytes, tuple]) -> None:
         """Initialize DPTArray class."""
         if isinstance(value, int):
             self.value = (value,)
