@@ -1,91 +1,93 @@
-"""Unit test for DPTControl objects."""
+"""Unit test for DPTControlStepCode objects."""
 import unittest
 
 from xknx.dpt import (
-    DPTControl,
     DPTControlStartStop,
     DPTControlStartStopBlinds,
     DPTControlStartStopDimming,
+    DPTControlStepCode,
     DPTControlStepwise,
 )
 from xknx.exceptions import ConversionError
 
 
-class TestDPTControl(unittest.TestCase):
-    """Test class for DPTControl objects."""
+class TestDPTControlStepCode(unittest.TestCase):
+    """Test class for DPTControlStepCode objects."""
 
     def test_to_knx(self):
-        """Test serializing values to DPTControl."""
+        """Test serializing values to DPTControlStepCode."""
         for rawref in range(16):
             control = 1 if rawref >> 3 else 0
-            raw = DPTControl.to_knx({"control": control, "step_code": rawref & 0x07})
+            raw = DPTControlStepCode.to_knx(
+                {"control": control, "step_code": rawref & 0x07}
+            )
             self.assertEqual(raw, rawref)
 
     def test_to_knx_inverted(self):
-        """Test serializing values to DPTControl in inverted mode."""
+        """Test serializing values to DPTControlStepCode in inverted mode."""
         for rawref in range(16):
             control = 0 if rawref >> 3 else 1
-            raw = DPTControl.to_knx(
+            raw = DPTControlStepCode.to_knx(
                 {"control": control, "step_code": rawref & 0x07}, invert=True
             )
             self.assertEqual(raw, rawref)
 
     def test_to_knx_wrong_type(self):
-        """Test serializing wrong type to DPTControl."""
+        """Test serializing wrong type to DPTControlStepCode."""
         with self.assertRaises(ConversionError):
-            DPTControl.to_knx("")
+            DPTControlStepCode.to_knx("")
         with self.assertRaises(ConversionError):
-            DPTControl.to_knx(0)
+            DPTControlStepCode.to_knx(0)
 
     def test_to_knx_wrong_keys(self):
-        """Test serializing map with missing keys to DPTControl."""
+        """Test serializing map with missing keys to DPTControlStepCode."""
         with self.assertRaises(ConversionError):
-            DPTControl.to_knx({"control": 0})
+            DPTControlStepCode.to_knx({"control": 0})
         with self.assertRaises(ConversionError):
-            DPTControl.to_knx({"step_code": 0})
+            DPTControlStepCode.to_knx({"step_code": 0})
 
     def test_to_knx_wrong_value_types(self):
-        """Test serializing map with keys of invalid type to DPTControl."""
+        """Test serializing map with keys of invalid type to DPTControlStepCode."""
         with self.assertRaises(ConversionError):
-            DPTControl.to_knx({"control": ""})
+            DPTControlStepCode.to_knx({"control": ""})
         with self.assertRaises(ConversionError):
-            DPTControl.to_knx({"step_code": ""})
+            DPTControlStepCode.to_knx({"step_code": ""})
 
     def test_to_knx_wrong_values(self):
-        """Test serializing map with keys of invalid values to DPTControl."""
+        """Test serializing map with keys of invalid values to DPTControlStepCode."""
         with self.assertRaises(ConversionError):
-            DPTControl.to_knx({"control": -1, "step_code": 0})
+            DPTControlStepCode.to_knx({"control": -1, "step_code": 0})
         with self.assertRaises(ConversionError):
-            DPTControl.to_knx({"control": 2, "step_code": 0})
+            DPTControlStepCode.to_knx({"control": 2, "step_code": 0})
         with self.assertRaises(ConversionError):
-            DPTControl.to_knx({"control": 0, "step_code": -1})
+            DPTControlStepCode.to_knx({"control": 0, "step_code": -1})
         with self.assertRaises(ConversionError):
-            DPTControl.to_knx({"control": 0, "step_code": 0x8})
+            DPTControlStepCode.to_knx({"control": 0, "step_code": 0x8})
 
     def test_from_knx(self):
-        """Test parsing DPTControl types from KNX."""
+        """Test parsing DPTControlStepCode types from KNX."""
         for raw in range(16):
             control = 1 if raw >> 3 else 0
             valueref = {"control": control, "step_code": raw & 0x07}
-            value = DPTControl.from_knx(raw)
+            value = DPTControlStepCode.from_knx(raw)
             self.assertEqual(value, valueref)
 
     def test_from_knx_inverted(self):
-        """Test parsing DPTControl types from KNX."""
+        """Test parsing DPTControlStepCode types from KNX."""
         for raw in range(16):
             control = 0 if raw >> 3 else 1
             valueref = {"control": control, "step_code": raw & 0x07}
-            value = DPTControl.from_knx(raw, invert=True)
+            value = DPTControlStepCode.from_knx(raw, invert=True)
             self.assertEqual(value, valueref)
 
     def test_from_knx_wrong_value(self):
-        """Test parsing invalid DPTControl type from KNX."""
+        """Test parsing invalid DPTControlStepCode type from KNX."""
         with self.assertRaises(ConversionError):
-            DPTControl.from_knx(0x1F)
+            DPTControlStepCode.from_knx(0x1F)
 
     def test_unit(self):
         """Test unit_of_measurement function."""
-        self.assertEqual(DPTControl.unit, "")
+        self.assertEqual(DPTControlStepCode.unit, "")
 
 
 class TestDPTControlStepwise(unittest.TestCase):
