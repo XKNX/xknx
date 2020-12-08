@@ -8,7 +8,7 @@ is a service that takes a DPT as a value.
 """
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Optional, Type, Union
+from typing import ClassVar, Optional, Type, Union, cast
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
@@ -54,7 +54,7 @@ class APCI(ABC):
     This base class is only the interface for the derived classes.
     """
 
-    code: APCICommand = APCICommand.ESCAPE
+    code: ClassVar[APCICommand] = cast(APCICommand, None)
 
     @abstractmethod
     def calculated_length(self) -> int:
