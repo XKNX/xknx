@@ -15,7 +15,7 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 if TYPE_CHECKING:
-    import xknx.XKNX as XKNX
+    from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
 

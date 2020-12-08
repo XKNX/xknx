@@ -14,7 +14,7 @@ from xknx.exceptions import CouldNotParseKNXIP, XKNXException
 from xknx.knxip import KNXIPFrame
 
 if TYPE_CHECKING:
-    import xknx.XKNX as XKNX
+    from xknx.xknx import XKNX
 
 raw_socket_logger = logging.getLogger("xknx.raw_socket")
 logger = logging.getLogger("xknx.log")
