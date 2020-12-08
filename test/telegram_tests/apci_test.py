@@ -1,5 +1,6 @@
 """Unit test for APCI objects."""
 import unittest
+from unittest.mock import patch
 
 from pytest import raises
 from xknx.dpt import DPTArray, DPTBinary
@@ -32,6 +33,33 @@ class TestAPCI(unittest.TestCase):
         ):
             APCI.resolve_class(0x03C0)
 
+    def test_calculated_length(self):
+        """Test the test_calculated_length method."""
+        with patch("logging.Logger.warning") as mock_warn:
+            payload = APCI()
+
+            self.assertEqual(payload.calculated_length(), 0)
+            mock_warn.assert_called_with(
+                "'calculated_length()' not implemented for %s", "APCI"
+            )
+
+    def test_from_knx(self):
+        """Test the test_calculated_length method."""
+        with patch("logging.Logger.warning") as mock_warn:
+            payload = APCI()
+            payload.from_knx(bytes())
+
+            self.assertEqual(payload, APCI())
+            mock_warn.assert_called_with("'from_knx()' not implemented for %s", "APCI")
+
+    def test_to_knx(self):
+        """Test the test_calculated_length method."""
+        with patch("logging.Logger.warning") as mock_warn:
+            payload = APCI()
+
+            self.assertEqual(payload.to_knx(), bytes([]))
+            mock_warn.assert_called_with("'to_knx()' not implemented for %s", "APCI")
+
 
 class TestGroupValueRead(unittest.TestCase):
     """Test class for GroupValueRead objects."""
@@ -55,6 +83,12 @@ class TestGroupValueRead(unittest.TestCase):
 
         self.assertEqual(payload.to_knx(), bytes([0x00, 0x00]))
 
+    def test_str(self):
+        """Test the __str__ method."""
+        payload = GroupValueRead()
+
+        self.assertEqual(str(payload), "<GroupValueRead />")
+
 
 class TestGroupValueWrite(unittest.TestCase):
     """Test class for GroupValueWrite objects."""
@@ -66,6 +100,13 @@ class TestGroupValueWrite(unittest.TestCase):
 
         self.assertEqual(payload_a.calculated_length(), 4)
         self.assertEqual(payload_b.calculated_length(), 1)
+
+    def test_calculated_length_exception(self):
+        """Test the test_calculated_length method for unsupported dpt."""
+        payload = GroupValueWrite(dpt=object())
+
+        with self.assertRaises(TypeError):
+            payload.calculated_length()
 
     def test_from_knx(self):
         """Test the from_knx method."""
@@ -88,6 +129,21 @@ class TestGroupValueWrite(unittest.TestCase):
         self.assertEqual(payload_a.to_knx(), bytes([0x00, 0x80, 0x01, 0x02, 0x03]))
         self.assertEqual(payload_b.to_knx(), bytes([0x00, 0x81]))
 
+    def test_to_knx_exception(self):
+        """Test the to_knx method for unsupported dpt."""
+        payload = GroupValueWrite(dpt=object())
+
+        with self.assertRaises(TypeError):
+            payload.to_knx()
+
+    def test_str(self):
+        """Test the __str__ method."""
+        payload = GroupValueWrite(dpt=DPTBinary(1))
+
+        self.assertEqual(
+            str(payload), '<GroupValueWrite dpt="<DPTBinary value="1" />" />'
+        )
+
 
 class TestGroupValueResponse(unittest.TestCase):
     """Test class for TestGroupValueResponse objects."""
@@ -99,6 +155,13 @@ class TestGroupValueResponse(unittest.TestCase):
 
         self.assertEqual(payload_a.calculated_length(), 4)
         self.assertEqual(payload_b.calculated_length(), 1)
+
+    def test_calculated_length_exception(self):
+        """Test the test_calculated_length method for unsupported dpt."""
+        payload = GroupValueResponse(dpt=object())
+
+        with self.assertRaises(TypeError):
+            payload.calculated_length()
 
     def test_from_knx(self):
         """Test the from_knx method."""
@@ -120,3 +183,18 @@ class TestGroupValueResponse(unittest.TestCase):
 
         self.assertEqual(payload_a.to_knx(), bytes([0x00, 0x40, 0x01, 0x02, 0x03]))
         self.assertEqual(payload_b.to_knx(), bytes([0x00, 0x41]))
+
+    def test_to_knx_exception(self):
+        """Test the to_knx method for unsupported dpt."""
+        payload = GroupValueResponse(dpt=object())
+
+        with self.assertRaises(TypeError):
+            payload.to_knx()
+
+    def test_str(self):
+        """Test the __str__ method."""
+        payload = GroupValueResponse(dpt=DPTBinary(1))
+
+        self.assertEqual(
+            str(payload), '<GroupValueResponse dpt="<DPTBinary value="1" />" />'
+        )
