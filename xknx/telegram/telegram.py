@@ -33,6 +33,7 @@ class TelegramType(Enum):
     GROUP_READ = "GroupValueRead"
     GROUP_WRITE = "GroupValueWrite"
     GROUP_RESPONSE = "GroupValueResponse"
+    IA_WRITE = "IndividualAddressWrite"
 
 
 class Telegram:
