@@ -42,7 +42,8 @@ class TestRemoteValueControl(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(0xB))
+            telegram,
+            Telegram(destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0xB)),
         )
 
     def test_process(self):
@@ -51,7 +52,9 @@ class TestRemoteValueControl(unittest.TestCase):
         remote_value = RemoteValueControl(
             xknx, group_address=GroupAddress("1/2/3"), value_type="stepwise"
         )
-        telegram = Telegram(group_address=GroupAddress("1/2/3"), payload=DPTBinary(0xB))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0xB)
+        )
         self.assertEqual(remote_value.value, None)
         self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
         self.assertEqual(remote_value.value, 25)
@@ -64,12 +67,12 @@ class TestRemoteValueControl(unittest.TestCase):
         )
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                group_address=GroupAddress("1/2/3"), payload=DPTArray(0x01)
+                destination_address=GroupAddress("1/2/3"), payload=DPTArray(0x01)
             )
             self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
         with self.assertRaises(ConversionError):
             telegram = Telegram(
-                group_address=GroupAddress("1/2/3"), payload=DPTBinary(0x10)
+                destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0x10)
             )
             self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
             # pylint: disable=pointless-statement
