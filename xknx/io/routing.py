@@ -6,7 +6,6 @@ Routing uses UDP Multicast to broadcast and receive KNX/IP messages.
 import logging
 
 from xknx.knxip import (
-    APCICommand,
     CEMIFrame,
     CEMIMessageCode,
     KNXIPFrame,
@@ -49,12 +48,6 @@ class Routing:
             return
         elif knxipframe.body.cemi.src_addr == self.xknx.own_address:
             logger.debug("Ignoring own packet")
-        elif knxipframe.body.cemi.cmd not in (
-            APCICommand.GROUP_READ,
-            APCICommand.GROUP_WRITE,
-            APCICommand.GROUP_RESPONSE,
-        ):
-            logger.warning("APCI not implemented: %s", knxipframe)
         else:
             telegram = knxipframe.body.cemi.telegram
             telegram.direction = TelegramDirection.INCOMING

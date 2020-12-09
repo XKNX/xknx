@@ -7,7 +7,8 @@ from xknx import XKNX
 from xknx.devices import Action, BinarySensor, Switch
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.telegram import GroupAddress, Telegram, TelegramType
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 
 class AsyncMock(MagicMock):
@@ -38,14 +39,16 @@ class TestBinarySensor(unittest.TestCase):
         self.assertEqual(binaryinput.state, None)
 
         telegram_on = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
         self.loop.run_until_complete(binaryinput.process(telegram_on))
 
         self.assertEqual(binaryinput.state, True)
 
         telegram_off = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(0)),
         )
         self.loop.run_until_complete(binaryinput.process(telegram_off))
         self.assertEqual(binaryinput.state, False)
@@ -54,7 +57,8 @@ class TestBinarySensor(unittest.TestCase):
         self.assertEqual(binaryinput2.state, None)
 
         telegram_off2 = Telegram(
-            destination_address=GroupAddress("1/2/4"), payload=DPTBinary(0)
+            destination_address=GroupAddress("1/2/4"),
+            payload=GroupValueWrite(DPTBinary(0)),
         )
         self.loop.run_until_complete(binaryinput2.process(telegram_off2))
         self.assertEqual(binaryinput2.state, False)
@@ -67,14 +71,16 @@ class TestBinarySensor(unittest.TestCase):
         self.assertEqual(bs_invert.state, None)
 
         telegram_on = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(0)),
         )
         self.loop.run_until_complete(bs_invert.process(telegram_on))
 
         self.assertEqual(bs_invert.state, True)
 
         telegram_off = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
         self.loop.run_until_complete(bs_invert.process(telegram_off))
         self.assertEqual(bs_invert.state, False)
@@ -92,7 +98,8 @@ class TestBinarySensor(unittest.TestCase):
             device_updated_cb=async_after_update_callback,
         )
         telegram_on = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
 
         self.loop.run_until_complete(binaryinput.process(telegram_on))
@@ -131,7 +138,8 @@ class TestBinarySensor(unittest.TestCase):
         self.assertEqual(switch.state, None)
 
         telegram_on = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
         self.loop.run_until_complete(binary_sensor.process(telegram_on))
         # process outgoing telegram from queue
@@ -141,7 +149,8 @@ class TestBinarySensor(unittest.TestCase):
         self.assertEqual(switch.state, True)
 
         telegram_off = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(0)),
         )
         self.loop.run_until_complete(binary_sensor.process(telegram_off))
         self.loop.run_until_complete(switch.process(xknx.telegrams.get_nowait()))
@@ -164,7 +173,8 @@ class TestBinarySensor(unittest.TestCase):
         self.assertEqual(switch.state, None)
 
         telegram_on = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
 
         with patch("time.time") as mock_time, patch(
@@ -197,7 +207,8 @@ class TestBinarySensor(unittest.TestCase):
         xknx = XKNX()
         binary_sensor = BinarySensor(xknx, "Warning", group_address_state="1/2/3")
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTArray((0x1, 0x2, 0x3))
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray((0x1, 0x2, 0x3))),
         )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(binary_sensor.process(telegram))
@@ -245,7 +256,8 @@ class TestBinarySensor(unittest.TestCase):
         switch.register_device_updated_cb(async_after_update_callback)
 
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
         self.loop.run_until_complete(switch.process(telegram))
         # no _context_task started because ignore_internal_state is False
@@ -273,7 +285,8 @@ class TestBinarySensor(unittest.TestCase):
         switch.register_device_updated_cb(async_after_update_callback)
 
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
         self.assertEqual(switch.counter, 0)
 
@@ -315,7 +328,8 @@ class TestBinarySensor(unittest.TestCase):
         switch.register_device_updated_cb(async_after_update_callback)
 
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
         self.loop.run_until_complete(switch.process(telegram))
         # no _context_task started because context_timeout is False
@@ -342,12 +356,14 @@ class TestBinarySensor(unittest.TestCase):
         switch.register_device_updated_cb(async_after_update_callback)
 
         write_telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
         response_telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
-            payload=DPTBinary(1),
-            telegramtype=TelegramType.GROUP_RESPONSE,
+            payload=GroupValueResponse(
+                DPTBinary(1),
+            ),
         )
         self.assertIsNone(switch.state)
         # initial GroupValueResponse changes state and runs callback

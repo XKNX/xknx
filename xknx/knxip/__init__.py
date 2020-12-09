@@ -14,7 +14,6 @@ from .header import KNXIPHeader
 from .hpai import HPAI
 from .knxip import KNXIPFrame
 from .knxip_enum import (
-    APCICommand,
     CEMIFlags,
     CEMIMessageCode,
     ConnectRequestType,

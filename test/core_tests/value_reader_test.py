@@ -6,7 +6,8 @@ from unittest.mock import patch
 from xknx import XKNX
 from xknx.core import ValueReader
 from xknx.dpt import DPTBinary
-from xknx.telegram import GroupAddress, Telegram, TelegramDirection, TelegramType
+from xknx.telegram import GroupAddress, Telegram, TelegramDirection
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
 class TestValueReader(unittest.TestCase):
@@ -28,9 +29,8 @@ class TestValueReader(unittest.TestCase):
         test_group_address = GroupAddress("0/0/0")
         response_telegram = Telegram(
             destination_address=test_group_address,
-            telegramtype=TelegramType.GROUP_RESPONSE,
             direction=TelegramDirection.INCOMING,
-            payload=DPTBinary(1),
+            payload=GroupValueResponse(DPTBinary(1)),
         )
 
         value_reader = ValueReader(xknx, test_group_address)
@@ -94,8 +94,7 @@ class TestValueReader(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                destination_address=GroupAddress("0/0/0"),
-                telegramtype=TelegramType.GROUP_READ,
+                destination_address=GroupAddress("0/0/0"), payload=GroupValueRead()
             ),
         )
 
@@ -105,27 +104,23 @@ class TestValueReader(unittest.TestCase):
         test_group_address = GroupAddress("0/0/0")
         expected_telegram_1 = Telegram(
             destination_address=test_group_address,
-            telegramtype=TelegramType.GROUP_RESPONSE,
             direction=TelegramDirection.INCOMING,
-            payload=DPTBinary(1),
+            payload=GroupValueResponse(DPTBinary(1)),
         )
         expected_telegram_2 = Telegram(
             destination_address=test_group_address,
-            telegramtype=TelegramType.GROUP_WRITE,
             direction=TelegramDirection.INCOMING,
-            payload=DPTBinary(1),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
         telegram_wrong_address = Telegram(
             destination_address=GroupAddress("0/0/1"),
-            telegramtype=TelegramType.GROUP_RESPONSE,
             direction=TelegramDirection.INCOMING,
-            payload=DPTBinary(1),
+            payload=GroupValueResponse(DPTBinary(1)),
         )
         telegram_wrong_type = Telegram(
             destination_address=test_group_address,
-            telegramtype=TelegramType.GROUP_READ,
             direction=TelegramDirection.INCOMING,
-            payload=DPTBinary(1),
+            payload=GroupValueRead(),
         )
 
         value_reader = ValueReader(xknx, test_group_address)

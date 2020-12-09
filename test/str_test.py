@@ -56,6 +56,7 @@ from xknx.knxip import (
 )
 from xknx.remote_value import RemoteValue
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramDirection
+from xknx.telegram.apci import GroupValueWrite
 
 
 # pylint: disable=too-many-public-methods,invalid-name
@@ -283,7 +284,7 @@ class TestStringRepresentations(unittest.TestCase):
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             direction=TelegramDirection.INCOMING,
-            payload=DPTArray(0x40),
+            payload=GroupValueWrite(DPTArray(0x40)),
         )
         self.loop.run_until_complete(sensor.process_group_write(telegram))
         self.assertEqual(
@@ -352,7 +353,7 @@ class TestStringRepresentations(unittest.TestCase):
         telegram = Telegram(
             destination_address=GroupAddress("7/0/10"),
             direction=TelegramDirection.INCOMING,
-            payload=DPTBinary(1),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
         self.loop.run_until_complete(weather.process_group_write(telegram))
 
@@ -469,12 +470,13 @@ class TestStringRepresentations(unittest.TestCase):
     def test_telegram(self):
         """Test string representation of Telegram."""
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(7)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(7)),
         )
         self.assertEqual(
             str(telegram),
-            '<Telegram direction="Outgoing" telegramtype="GroupValueWrite" source_address="0.0.0" '
-            'destination_address="1/2/3" payload="<DPTBinary value="7" />" />',
+            '<Telegram direction="Outgoing" source_address="0.0.0" '
+            'destination_address="1/2/3" payload="<GroupValueWrite value="<DPTBinary value="7" />" />" />',
         )
 
     def test_dib_generic(self):
@@ -642,7 +644,7 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(tunnelling_request),
             '<TunnellingRequest communication_channel_id="23" sequence_counter="42" cemi="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")"'
-            ' DestinationAddress="GroupAddress("0/0/0")" Flags="               0" Command="APCICommand.GROUP_READ" payload="None" />" />',
+            ' DestinationAddress="GroupAddress("0/0/0")" Flags="               0" payload="None" />" />',
         )
 
     def test_tunnelling_ack(self):
@@ -662,12 +664,13 @@ class TestStringRepresentations(unittest.TestCase):
         cemi_frame = CEMIFrame(xknx)
         cemi_frame.src_addr = GroupAddress("1/2/3")
         cemi_frame.telegram = Telegram(
-            destination_address=GroupAddress("1/2/5"), payload=DPTBinary(7)
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTBinary(7)),
         )
         self.assertEqual(
             str(cemi_frame),
-            '<CEMIFrame SourceAddress="GroupAddress("1/2/3")" DestinationAddress="GroupAddress("1/2/5")" Flags="1011110011100000" Command="APCIC'
-            'ommand.GROUP_WRITE" payload="<DPTBinary value="7" />" />',
+            '<CEMIFrame SourceAddress="GroupAddress("1/2/3")" DestinationAddress="GroupAddress("1/2/5")" Flags="1011110011100000" '
+            'payload="<GroupValueWrite value="<DPTBinary value="7" />" />" />',
         )
 
     def test_knxip_frame(self):
@@ -710,5 +713,5 @@ class TestStringRepresentations(unittest.TestCase):
         ri = RoutingIndication(xknx)
         self.assertEqual(
             str(ri),
-            '<RoutingIndication cemi="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")" DestinationAddress="GroupAddress("0/0/0")" Flags="               0" Command="APCICommand.GROUP_READ" payload="None" />" />',
+            '<RoutingIndication cemi="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")" DestinationAddress="GroupAddress("0/0/0")" Flags="               0" payload="None" />" />',
         )

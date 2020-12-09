@@ -49,14 +49,6 @@ class CEMIMessageCode(Enum):
     L_RAW_CON = 0x2F
 
 
-class APCICommand(Enum):
-    """Enum class for KNX/IP APCI Commands."""
-
-    GROUP_READ = 0x00
-    GROUP_WRITE = 0x80
-    GROUP_RESPONSE = 0x40
-
-
 class CEMIFlags:
     """Enum class for KNX/IP CEMI Flags."""
 

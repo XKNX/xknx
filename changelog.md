@@ -10,6 +10,8 @@
 
 - renamed "PhysicalAddress" to "IndividualAddress"
 - Telegram: `group_address` renamed to `destination_address`, to prepare support for other APCI services and add `source_address`
+- Telegram: remove `Telegram.telegramtype` and replace with payload object derived from `xknx.telegram.apci.APCI`.
+- CEMIFrame: remove `CEMIFrame.cmd`, which can be derived from `CEMIFrame.payload`.
 - Farewell Travis CI; Welcome Github Actions!
 
 ## 0.15.6 Bugfix for StateUpater 2020-11-26

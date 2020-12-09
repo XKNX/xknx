@@ -5,7 +5,7 @@ It provides basis functionality for reading the state from the KNX bus.
 """
 import logging
 
-from xknx.telegram import TelegramType
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 logger = logging.getLogger("xknx.log")
 
@@ -51,11 +51,11 @@ class Device:
 
     async def process(self, telegram):
         """Process incoming telegram."""
-        if telegram.telegramtype == TelegramType.GROUP_WRITE:
+        if isinstance(telegram.payload, GroupValueWrite):
             await self.process_group_write(telegram)
-        elif telegram.telegramtype == TelegramType.GROUP_RESPONSE:
+        elif isinstance(telegram.payload, GroupValueResponse):
             await self.process_group_response(telegram)
-        elif telegram.telegramtype == TelegramType.GROUP_READ:
+        elif isinstance(telegram.payload, GroupValueRead):
             await self.process_group_read(telegram)
 
     async def process_group_read(self, telegram):
@@ -69,7 +69,7 @@ class Device:
 
     async def process_group_write(self, telegram):
         """Process incoming GroupValueWrite telegrams."""
-        # The dafault is, that devices dont process group writes
+        # The default is, that devices dont process group writes
 
     def get_name(self):
         """Return name of device."""

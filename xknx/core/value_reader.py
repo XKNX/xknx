@@ -10,7 +10,8 @@ The module will
 import asyncio
 import logging
 
-from xknx.telegram import Telegram, TelegramType
+from xknx.telegram import Telegram
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 logger = logging.getLogger("xknx.log")
 
@@ -49,19 +50,14 @@ class ValueReader:
     async def send_group_read(self):
         """Send group read."""
         telegram = Telegram(
-            destination_address=self.group_address, telegramtype=TelegramType.GROUP_READ
+            destination_address=self.group_address, payload=GroupValueRead()
         )
         await self.xknx.telegrams.put(telegram)
 
     async def telegram_received(self, telegram):
         """Test if telegram has correct group address and trigger event."""
-        if (
-            telegram.destination_address == self.group_address
-            and telegram.telegramtype
-            in (
-                TelegramType.GROUP_RESPONSE,
-                TelegramType.GROUP_WRITE,
-            )
+        if telegram.destination_address == self.group_address and isinstance(
+            telegram.payload, (GroupValueResponse, GroupValueWrite)
         ):
             self.success = True
             self.received_telegram = telegram

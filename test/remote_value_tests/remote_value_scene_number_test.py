@@ -7,6 +7,7 @@ from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.remote_value import RemoteValueSceneNumber
 from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueWrite
 
 
 class TestRemoteValueSceneNumber(unittest.TestCase):
@@ -52,7 +53,8 @@ class TestRemoteValueSceneNumber(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                destination_address=GroupAddress("1/2/3"), payload=DPTArray((0x0A,))
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray((0x0A,))),
             ),
         )
         self.loop.run_until_complete(remote_value.set(12))
@@ -61,7 +63,8 @@ class TestRemoteValueSceneNumber(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                destination_address=GroupAddress("1/2/3"), payload=DPTArray((0x0B,))
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray((0x0B,))),
             ),
         )
 
@@ -70,7 +73,8 @@ class TestRemoteValueSceneNumber(unittest.TestCase):
         xknx = XKNX()
         remote_value = RemoteValueSceneNumber(xknx, group_address=GroupAddress("1/2/3"))
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTArray((0x0A,))
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray((0x0A,))),
         )
         self.loop.run_until_complete(remote_value.process(telegram))
         self.assertEqual(remote_value.value, 11)
@@ -81,16 +85,19 @@ class TestRemoteValueSceneNumber(unittest.TestCase):
         remote_value = RemoteValueSceneNumber(xknx, group_address=GroupAddress("1/2/3"))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(1)),
             )
             self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/3"),
-                payload=DPTArray(
-                    (
-                        0x64,
-                        0x65,
+                payload=GroupValueWrite(
+                    DPTArray(
+                        (
+                            0x64,
+                            0x65,
+                        )
                     )
                 ),
             )

@@ -6,8 +6,9 @@ from pytest import fixture, raises
 from xknx.dpt import DPTBinary, DPTComparator
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage
 from xknx.knxip.cemi_frame import CEMIFrame
-from xknx.knxip.knxip_enum import APCICommand, CEMIFlags, CEMIMessageCode
+from xknx.knxip.knxip_enum import CEMIFlags, CEMIMessageCode
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
+from xknx.telegram.apci import GroupValueRead
 
 
 def get_data(code, adil, flags, src, dst, mpdu_len, tpci_apci, payload):
@@ -40,10 +41,9 @@ def test_valid_command(frame):
     """Test for valid frame parsing"""
     packet_len = frame.from_knx(get_data(0x29, 0, 0, 0, 0, 1, 0, []))
     assert frame.code == CEMIMessageCode.L_DATA_IND
-    assert frame.cmd == APCICommand.GROUP_READ
     assert frame.flags == 0
     assert frame.mpdu_len == 1
-    assert frame.payload == DPTBinary(0)
+    assert frame.payload == GroupValueRead()
     assert frame.src_addr == IndividualAddress(0)
     assert frame.dst_addr == IndividualAddress(0)
     assert packet_len == 11
@@ -64,10 +64,9 @@ def test_invalid_apdu_len(frame):
 def test_invalid_src_addr(frame):
     """Test for invalid src addr"""
     frame.code = CEMIMessageCode.L_DATA_IND
-    frame.cmd = APCICommand.GROUP_READ
     frame.flags = 0
     frame.mpdu_len = 1
-    frame.payload = DPTBinary(0)
+    frame.payload = GroupValueRead()
     frame.src_addr = None
     frame.dst_addr = IndividualAddress(0)
 
@@ -78,10 +77,9 @@ def test_invalid_src_addr(frame):
 def test_invalid_dst_addr(frame):
     """Test for invalid dst addr"""
     frame.code = CEMIMessageCode.L_DATA_IND
-    frame.cmd = APCICommand.GROUP_READ
     frame.flags = 0
     frame.mpdu_len = 1
-    frame.payload = DPTBinary(0)
+    frame.payload = GroupValueRead()
     frame.src_addr = IndividualAddress(0)
     frame.dst_addr = None
 
@@ -89,24 +87,9 @@ def test_invalid_dst_addr(frame):
         frame.to_knx()
 
 
-def test_no_payload(frame):
-    """Test for having no payload set"""
-    frame.code = CEMIMessageCode.L_DATA_IND
-    frame.cmd = APCICommand.GROUP_READ
-    frame.flags = 0
-    frame.mpdu_len = 1
-    frame.payload = None
-    frame.src_addr = IndividualAddress(0)
-    frame.dst_addr = IndividualAddress(0)
-
-    assert [41, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0] == frame.to_knx()
-    assert 11 == frame.calculated_length()
-
-
 def test_invalid_payload(frame):
     """Test for having wrong payload set"""
     frame.code = CEMIMessageCode.L_DATA_IND
-    frame.cmd = APCICommand.GROUP_READ
     frame.flags = 0
     frame.mpdu_len = 1
     frame.payload = DPTComparator()
@@ -132,21 +115,6 @@ def test_from_knx_with_not_implemented_cemi(frame):
         frame.from_knx(
             get_data(CEMIMessageCode.L_BUSMON_IND.value, 0, 0, 0, 0, 2, 0, [])
         )
-
-
-def test_invalid_telegram(frame):
-    """Test for invalid telegram type"""
-    packet_len = frame.from_knx(get_data(0x29, 0, 0, 0, 0, 1, 0, []))
-    frame.cmd = None
-    with raises(ConversionError, match=r".*Telegram not implemented for.*"):
-        tg = frame.telegram
-
-
-def test_set_invalid_telegram(frame):
-    """Test for setting invalid telegram type"""
-    tg = Telegram(telegramtype=None)
-    with raises(TypeError):
-        frame.telegram = tg
 
 
 def test_invalid_invalid_len(frame):
