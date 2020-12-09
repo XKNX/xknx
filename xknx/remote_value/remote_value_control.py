@@ -33,7 +33,6 @@ class RemoteValueControl(RemoteValue):
             after_update_cb=after_update_cb,
         )
         self.invert = invert
-        # pylint: disable=too-many-arguments
         _dpt_class = DPTBase.parse_transcoder(value_type)
         if _dpt_class is None:
             raise ConversionError(
