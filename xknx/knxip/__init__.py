@@ -45,7 +45,6 @@ __all__ = [
     "KNXIPHeader",
     "HPAI",
     "KNXIPFrame",
-    "APCICommand",
     "CEMIFlags",
     "CEMIMessageCode",
     "ConnectRequestType",
