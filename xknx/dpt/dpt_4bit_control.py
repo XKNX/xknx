@@ -12,6 +12,7 @@ There are two separate dimming modes sharing the same DPT class:
 As the same payload in these cases in interpreted completely different it is reasonable to make separate DPT classes.
 """
 from enum import Enum
+from typing import Tuple
 
 from xknx.exceptions import ConversionError
 
@@ -38,7 +39,7 @@ class DPTControlStepCode(DPTBase):
         return value
 
     @classmethod
-    def _decode(cls, value) -> tuple[bool, int]:
+    def _decode(cls, value) -> Tuple[bool, int]:
         """Decode value into control-bit and step-code."""
         control = 1 if (value & cls.APCI_CONTROLMASK) != 0 else 0
         step_code = value & cls.APCI_STEPCODEMASK
