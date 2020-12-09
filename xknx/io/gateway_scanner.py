@@ -7,8 +7,9 @@ GatewayScanner is an abstraction for searching for KNX/IP devices on the local n
 """
 
 import asyncio
+from functools import partial
 import logging
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 import netifaces
 from xknx.knxip import (
@@ -22,6 +23,9 @@ from xknx.knxip import (
 )
 
 from .udp_client import UDPClient
+
+if TYPE_CHECKING:
+    from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
 
@@ -40,7 +44,7 @@ class GatewayDescriptor:
         local_ip: str,
         supports_tunnelling: bool = False,
         supports_routing: bool = False,
-    ) -> None:
+    ):
         """Initialize GatewayDescriptor class."""
         # pylint: disable=too-many-arguments
         self.name = name
@@ -51,7 +55,7 @@ class GatewayDescriptor:
         self.supports_routing = supports_routing
         self.supports_tunnelling = supports_tunnelling
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return object as readable string."""
         return '<GatewayDescriptor name="{}" addr="{}:{}" local="{}@{}" routing="{}" tunnelling="{}" />'.format(
             self.name,
@@ -70,8 +74,11 @@ class GatewayScanFilter:
     # pylint: disable=too-few-public-methods
 
     def __init__(
-        self, name: str = None, tunnelling: bool = None, routing: bool = None
-    ) -> None:
+        self,
+        name: Optional[str] = None,
+        tunnelling: Optional[bool] = None,
+        routing: Optional[bool] = None,
+    ):
         """Initialize GatewayScanFilter class."""
         self.name = name
         self.tunnelling = tunnelling
@@ -98,20 +105,19 @@ class GatewayScanner:
     # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
-        xknx,
-        timeout_in_seconds: int = 4,
+        xknx: "XKNX",
+        timeout_in_seconds: float = 4.0,
         stop_on_found: Optional[int] = 1,
         scan_filter: GatewayScanFilter = GatewayScanFilter(),
-    ) -> None:
+    ):
         """Initialize GatewayScanner class."""
         self.xknx = xknx
         self.timeout_in_seconds = timeout_in_seconds
         self.stop_on_found = stop_on_found
         self.scan_filter = scan_filter
-        self.found_gateways = []  # type: List[GatewayDescriptor]
-        self._udp_clients = []
+        self.found_gateways: List[GatewayDescriptor] = []
+        self._udp_clients: List[UDPClient] = []
         self._response_received_or_timeout = asyncio.Event()
-        self._timeout_handle = None
         self._count_upper_bound = 0
         """Clean value of self.stop_on_found, computed when ``scan`` is called."""
 
@@ -122,18 +128,23 @@ class GatewayScanner:
         else:
             self._count_upper_bound = max(0, self.stop_on_found)
         await self._send_search_requests()
-        await self._start_timeout()
-        await self._response_received_or_timeout.wait()
-        await self._stop()
-        await self._stop_timeout()
+        try:
+            await asyncio.wait_for(
+                self._response_received_or_timeout.wait(),
+                timeout=self.timeout_in_seconds,
+            )
+        except asyncio.TimeoutError:
+            pass
+        finally:
+            await self._stop()
         return self.found_gateways
 
-    async def _stop(self):
+    async def _stop(self) -> None:
         """Stop tearing down udpclient."""
         for udp_client in self._udp_clients:
             await udp_client.stop()
 
-    async def _send_search_requests(self):
+    async def _send_search_requests(self) -> None:
         """Find all interfaces with active IPv4 connection to search for gateways."""
         # pylint: disable=no-member
         for interface in netifaces.interfaces():
@@ -145,19 +156,20 @@ class GatewayScanner:
                 logger.info("Could not connect to an KNX/IP device on %s", interface)
                 continue
 
-    async def _search_interface(self, interface, ip_addr):
+    async def _search_interface(self, interface: str, ip_addr: str) -> None:
         """Send a search request on a specific interface."""
         logger.debug("Searching on %s / %s", interface, ip_addr)
 
         udp_client = UDPClient(
             self.xknx,
-            (ip_addr, 0, interface),
+            (ip_addr, 0),
             (self.xknx.multicast_group, self.xknx.multicast_port),
             multicast=True,
         )
 
         udp_client.register_callback(
-            self._response_rec_callback, [KNXIPServiceType.SEARCH_RESPONSE]
+            partial(self._response_rec_callback, interface=interface),
+            [KNXIPServiceType.SEARCH_RESPONSE],
         )
         await udp_client.connect()
 
@@ -170,7 +182,7 @@ class GatewayScanner:
         udp_client.send(KNXIPFrame.init_from_body(search_request))
 
     def _response_rec_callback(
-        self, knx_ip_frame: KNXIPFrame, udp_client: UDPClient
+        self, knx_ip_frame: KNXIPFrame, udp_client: UDPClient, interface: str = ""
     ) -> None:
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knx_ip_frame.body, SearchResponse):
@@ -181,7 +193,7 @@ class GatewayScanner:
             name=knx_ip_frame.body.device_name,
             ip_addr=knx_ip_frame.body.control_endpoint.ip_addr,
             port=knx_ip_frame.body.control_endpoint.port,
-            local_interface=udp_client.local_addr[2],
+            local_interface=interface,
             local_ip=udp_client.local_addr[0],
         )
         try:
@@ -193,21 +205,8 @@ class GatewayScanner:
 
         self._add_found_gateway(gateway)
 
-    def _add_found_gateway(self, gateway):
+    def _add_found_gateway(self, gateway: GatewayDescriptor) -> None:
         if self.scan_filter.match(gateway):
             self.found_gateways.append(gateway)
             if 0 < self._count_upper_bound <= len(self.found_gateways):
                 self._response_received_or_timeout.set()
-
-    def _timeout(self):
-        """Handle timeout for not having received enough SearchResponse."""
-        self._response_received_or_timeout.set()
-
-    async def _start_timeout(self):
-        """Start time out."""
-        loop = asyncio.get_running_loop()
-        self._timeout_handle = loop.call_later(self.timeout_in_seconds, self._timeout)
-
-    async def _stop_timeout(self):
-        """Stop/cancel timeout."""
-        self._timeout_handle.cancel()

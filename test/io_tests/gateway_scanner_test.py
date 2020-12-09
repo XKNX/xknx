@@ -1,7 +1,7 @@
 """Unit test for KNX/IP gateway scanner."""
 import asyncio
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from xknx import XKNX
 from xknx.io import GatewayScanFilter, GatewayScanner, UDPClient
@@ -128,11 +128,13 @@ class TestGatewayScanner(unittest.TestCase):
         gateway_scanner = GatewayScanner(xknx)
         test_search_response = fake_router_search_response(xknx)
         udp_client_mock = unittest.mock.create_autospec(UDPClient)
-        udp_client_mock.local_addr = ("192.168.42.50", 0, "en1")
+        udp_client_mock.local_addr = ("192.168.42.50", 0)
         udp_client_mock.getsockname.return_value = ("192.168.42.50", 0)
 
         self.assertEqual(gateway_scanner.found_gateways, [])
-        gateway_scanner._response_rec_callback(test_search_response, udp_client_mock)
+        gateway_scanner._response_rec_callback(
+            test_search_response, udp_client_mock, interface="en1"
+        )
         self.assertEqual(
             str(gateway_scanner.found_gateways[0]), str(self.gateway_desc_both)
         )
@@ -145,17 +147,11 @@ class TestGatewayScanner(unittest.TestCase):
         # No interface shall be found
         netifaces_mock.interfaces.return_value = []
 
-        gateway_scanner = GatewayScanner(xknx, timeout_in_seconds=0)
-
-        timed_out_scan = self.loop.run_until_complete(gateway_scanner.scan())
-
-        # Timeout handle was cancelled (cancelled method requires Python 3.7)
-        event_has_cancelled = getattr(
-            gateway_scanner._timeout_handle, "cancelled", None
+        gateway_scanner = GatewayScanner(xknx)
+        gateway_scanner._response_received_or_timeout.wait = MagicMock(
+            side_effect=asyncio.TimeoutError()
         )
-        if callable(event_has_cancelled):
-            self.assertTrue(gateway_scanner._timeout_handle.cancelled())
-        self.assertTrue(gateway_scanner._response_received_or_timeout.is_set())
+        timed_out_scan = self.loop.run_until_complete(gateway_scanner.scan())
         # Unsuccessfull scan() returns None
         self.assertEqual(timed_out_scan, [])
 
