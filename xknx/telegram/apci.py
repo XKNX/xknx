@@ -8,7 +8,7 @@ is a service that takes a DPT as a value.
 """
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import ClassVar, Optional, Type, Union, cast
+from typing import ClassVar, Optional, Union, cast
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
@@ -73,8 +73,8 @@ class APCI(ABC):
         return self.__dict__ == other.__dict__
 
     @staticmethod
-    def resolve_class(apci: int) -> Type["APCI"]:
-        """Return telegram type from APCI Command."""
+    def resolve_apci(apci: int) -> "APCI":
+        """Return APCI instance from APCI command."""
         extended = (apci & APCICommand.ESCAPE.value) == APCICommand.ESCAPE.value
 
         if extended:
@@ -85,11 +85,11 @@ class APCI(ABC):
         apci = apci & 0x03C0
 
         if apci == APCICommand.GROUP_READ.value:
-            return GroupValueRead
+            return GroupValueRead()
         if apci == APCICommand.GROUP_WRITE.value:
-            return GroupValueWrite
+            return GroupValueWrite()
         if apci == APCICommand.GROUP_RESPONSE.value:
-            return GroupValueResponse
+            return GroupValueResponse()
         raise ConversionError(f"Class not implemented for APCI {apci:#012b}.")
 
 

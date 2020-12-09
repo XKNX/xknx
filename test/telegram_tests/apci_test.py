@@ -1,6 +1,5 @@
 """Unit test for APCI objects."""
 import unittest
-from unittest.mock import patch
 
 from pytest import raises
 from xknx.dpt import DPTArray, DPTBinary
@@ -11,8 +10,8 @@ from xknx.telegram.apci import APCI, GroupValueRead, GroupValueResponse, GroupVa
 class TestAPCI(unittest.TestCase):
     """Test class for APCI objects."""
 
-    def test_resolve_class(self):
-        """Test resolve_class for supported services."""
+    def test_resolve_apci(self):
+        """Test resolve_apci for supported services."""
         test_cases = [
             (GroupValueRead.code.value, GroupValueRead),
             (GroupValueWrite.code.value, GroupValueWrite),
@@ -20,18 +19,18 @@ class TestAPCI(unittest.TestCase):
         ]
 
         for code, clazz in test_cases:
-            self.assertEqual(APCI.resolve_class(code), clazz)
+            self.assertIsInstance(APCI.resolve_apci(code), clazz)
 
-    def test_resolve_class_unsupported(self):
-        """Test resolve_class for unsupported services."""
+    def test_resolve_apci_unsupported(self):
+        """Test resolve_apci for unsupported services."""
 
         with raises(ConversionError, match=r".*Class not implemented for APCI.*"):
-            APCI.resolve_class(0x0100)
+            APCI.resolve_apci(0x0100)
 
         with raises(
             ConversionError, match=r".*Class not implemented for extended APCI.*"
         ):
-            APCI.resolve_class(0x03C0)
+            APCI.resolve_apci(0x03C0)
 
 
 class TestGroupValueRead(unittest.TestCase):

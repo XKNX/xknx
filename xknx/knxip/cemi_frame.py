@@ -169,7 +169,7 @@ class CEMIFrame:
         tpci_apci = (apdu[0] << 8) + apdu[1]
 
         try:
-            self.payload = APCI.resolve_class(tpci_apci & 0x03FF)()
+            self.payload = APCI.resolve_apci(tpci_apci & 0x03FF)
         except ConversionError:
             raise UnsupportedCEMIMessage(
                 "APCI not supported: {:#012b}".format(tpci_apci & 0x03FF)
