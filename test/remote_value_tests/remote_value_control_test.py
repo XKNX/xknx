@@ -56,7 +56,7 @@ class TestRemoteValueControl(unittest.TestCase):
             destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0xB)
         )
         self.assertEqual(remote_value.value, None)
-        self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+        self.loop.run_until_complete(remote_value.process(telegram))
         self.assertEqual(remote_value.value, 25)
 
     def test_to_process_error(self):
@@ -69,11 +69,11 @@ class TestRemoteValueControl(unittest.TestCase):
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/3"), payload=DPTArray(0x01)
             )
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(ConversionError):
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0x10)
             )
-            self.loop.run_until_complete(asyncio.Task(remote_value.process(telegram)))
+            self.loop.run_until_complete(remote_value.process(telegram))
             # pylint: disable=pointless-statement
             remote_value.value
