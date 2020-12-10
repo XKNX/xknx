@@ -118,6 +118,7 @@ class Tunnel:
         # only send disconnect request if we ever were connected
         if self.communication_channel is not None:
             await self._disconnect_request(True)
+            self.communication_channel = None
         await self.udp_client.stop()
         await asyncio.sleep(self.auto_reconnect_wait)
         await self.udp_client.connect()
@@ -137,6 +138,7 @@ class Tunnel:
         self._stop_reconnect()
         if self.communication_channel is not None:
             await self._disconnect_request(False)
+            self.communication_channel = None
         await self.udp_client.stop()
 
     ####################
