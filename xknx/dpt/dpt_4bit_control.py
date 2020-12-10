@@ -27,7 +27,7 @@ class DPTControlStepCode(DPTBase):
     APCI_STEPCODEMASK = 0x07
     APCI_MAX_VALUE = APCI_CONTROLMASK | APCI_STEPCODEMASK
 
-    value_type = "control"
+    value_type = "control_stepcode"
     unit = ""
     payload_length = 1
 
