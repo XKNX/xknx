@@ -7,6 +7,7 @@ from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.remote_value import RemoteValueControl
 from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueWrite
 
 
 class TestRemoteValueControl(unittest.TestCase):
@@ -43,7 +44,10 @@ class TestRemoteValueControl(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram,
-            Telegram(destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0xB)),
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(0xB)),
+            ),
         )
 
     def test_process(self):
@@ -53,7 +57,8 @@ class TestRemoteValueControl(unittest.TestCase):
             xknx, group_address=GroupAddress("1/2/3"), value_type="stepwise"
         )
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0xB)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(0xB)),
         )
         self.assertEqual(remote_value.value, None)
         self.loop.run_until_complete(remote_value.process(telegram))
@@ -67,12 +72,14 @@ class TestRemoteValueControl(unittest.TestCase):
         )
         with self.assertRaises(CouldNotParseTelegram):
             telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"), payload=DPTArray(0x01)
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray(0x01)),
             )
             self.loop.run_until_complete(remote_value.process(telegram))
         with self.assertRaises(ConversionError):
             telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0x10)
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(0x10)),
             )
             self.loop.run_until_complete(remote_value.process(telegram))
             # pylint: disable=pointless-statement
