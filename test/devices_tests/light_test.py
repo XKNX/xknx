@@ -295,35 +295,35 @@ class TestLight(unittest.TestCase):
         test_telegrams = [
             Telegram(
                 destination_address=GroupAddress("1/1/2"),
-                telegramtype=TelegramType.GROUP_READ,
+                payload=GroupValueRead(),
             ),
             Telegram(
                 destination_address=GroupAddress("1/1/4"),
-                telegramtype=TelegramType.GROUP_READ,
+                payload=GroupValueRead(),
             ),
             Telegram(
                 destination_address=GroupAddress("1/1/6"),
-                telegramtype=TelegramType.GROUP_READ,
+                payload=GroupValueRead(),
             ),
             Telegram(
                 destination_address=GroupAddress("1/1/8"),
-                telegramtype=TelegramType.GROUP_READ,
+                payload=GroupValueRead(),
             ),
             Telegram(
                 destination_address=GroupAddress("1/1/10"),
-                telegramtype=TelegramType.GROUP_READ,
+                payload=GroupValueRead(),
             ),
             Telegram(
                 destination_address=GroupAddress("1/1/12"),
-                telegramtype=TelegramType.GROUP_READ,
+                payload=GroupValueRead(),
             ),
             Telegram(
                 destination_address=GroupAddress("1/1/14"),
-                telegramtype=TelegramType.GROUP_READ,
+                payload=GroupValueRead(),
             ),
             Telegram(
                 destination_address=GroupAddress("1/1/16"),
-                telegramtype=TelegramType.GROUP_READ,
+                payload=GroupValueRead(),
             ),
         ]
 
@@ -437,16 +437,20 @@ class TestLight(unittest.TestCase):
 
         test_telegrams = [
             Telegram(
-                destination_address=GroupAddress("1/1/1"), payload=DPTBinary(True)
+                destination_address=GroupAddress("1/1/1"),
+                payload=GroupValueWrite(DPTBinary(True)),
             ),
             Telegram(
-                destination_address=GroupAddress("1/1/5"), payload=DPTBinary(True)
+                destination_address=GroupAddress("1/1/5"),
+                payload=GroupValueWrite(DPTBinary(True)),
             ),
             Telegram(
-                destination_address=GroupAddress("1/1/9"), payload=DPTBinary(True)
+                destination_address=GroupAddress("1/1/9"),
+                payload=GroupValueWrite(DPTBinary(True)),
             ),
             Telegram(
-                destination_address=GroupAddress("1/1/13"), payload=DPTBinary(True)
+                destination_address=GroupAddress("1/1/13"),
+                payload=GroupValueWrite(DPTBinary(True)),
             ),
         ]
         self.assertEqual(len(set(telegrams)), 4)
@@ -505,16 +509,20 @@ class TestLight(unittest.TestCase):
 
         test_telegrams = [
             Telegram(
-                destination_address=GroupAddress("1/1/1"), payload=DPTBinary(False)
+                destination_address=GroupAddress("1/1/1"),
+                payload=GroupValueWrite(DPTBinary(False)),
             ),
             Telegram(
-                destination_address=GroupAddress("1/1/5"), payload=DPTBinary(False)
+                destination_address=GroupAddress("1/1/5"),
+                payload=GroupValueWrite(DPTBinary(False)),
             ),
             Telegram(
-                destination_address=GroupAddress("1/1/9"), payload=DPTBinary(False)
+                destination_address=GroupAddress("1/1/9"),
+                payload=GroupValueWrite(DPTBinary(False)),
             ),
             Telegram(
-                destination_address=GroupAddress("1/1/13"), payload=DPTBinary(False)
+                destination_address=GroupAddress("1/1/13"),
+                payload=GroupValueWrite(DPTBinary(False)),
             ),
         ]
         self.assertEqual(len(set(telegrams)), 4)
@@ -616,9 +624,18 @@ class TestLight(unittest.TestCase):
         telegrams = [xknx.telegrams.get_nowait() for _ in range(3)]
 
         test_telegrams = [
-            Telegram(destination_address=GroupAddress("1/1/3"), payload=DPTArray(23)),
-            Telegram(destination_address=GroupAddress("1/1/7"), payload=DPTArray(24)),
-            Telegram(destination_address=GroupAddress("1/1/11"), payload=DPTArray(25)),
+            Telegram(
+                destination_address=GroupAddress("1/1/3"),
+                payload=GroupValueWrite(DPTArray(23)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/7"),
+                payload=GroupValueWrite(DPTArray(24)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/11"),
+                payload=GroupValueWrite(DPTArray(25)),
+            ),
         ]
 
         self.assertEqual(len(set(telegrams)), 3)
@@ -627,21 +644,24 @@ class TestLight(unittest.TestCase):
         self.loop.run_until_complete(
             xknx.devices.process(
                 Telegram(
-                    destination_address=GroupAddress("1/1/4"), payload=DPTArray(23)
+                    destination_address=GroupAddress("1/1/4"),
+                    payload=GroupValueWrite(DPTArray(23)),
                 )
             )
         )
         self.loop.run_until_complete(
             xknx.devices.process(
                 Telegram(
-                    destination_address=GroupAddress("1/1/8"), payload=DPTArray(24)
+                    destination_address=GroupAddress("1/1/8"),
+                    payload=GroupValueWrite(DPTArray(24)),
                 )
             )
         )
         self.loop.run_until_complete(
             xknx.devices.process(
                 Telegram(
-                    destination_address=GroupAddress("1/1/12"), payload=DPTArray(25)
+                    destination_address=GroupAddress("1/1/12"),
+                    payload=GroupValueWrite(DPTArray(25)),
                 )
             )
         )
@@ -735,10 +755,22 @@ class TestLight(unittest.TestCase):
         telegrams = [xknx.telegrams.get_nowait() for _ in range(4)]
 
         test_telegrams = [
-            Telegram(destination_address=GroupAddress("1/1/3"), payload=DPTArray(23)),
-            Telegram(destination_address=GroupAddress("1/1/7"), payload=DPTArray(24)),
-            Telegram(destination_address=GroupAddress("1/1/11"), payload=DPTArray(25)),
-            Telegram(destination_address=GroupAddress("1/1/15"), payload=DPTArray(26)),
+            Telegram(
+                destination_address=GroupAddress("1/1/3"),
+                payload=GroupValueWrite(DPTArray(23)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/7"),
+                payload=GroupValueWrite(DPTArray(24)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/11"),
+                payload=GroupValueWrite(DPTArray(25)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/15"),
+                payload=GroupValueWrite(DPTArray(26)),
+            ),
         ]
 
         self.assertEqual(len(set(telegrams)), 4)
@@ -747,28 +779,32 @@ class TestLight(unittest.TestCase):
         self.loop.run_until_complete(
             xknx.devices.process(
                 Telegram(
-                    destination_address=GroupAddress("1/1/4"), payload=DPTArray(23)
+                    destination_address=GroupAddress("1/1/4"),
+                    payload=GroupValueWrite(DPTArray(23)),
                 )
             )
         )
         self.loop.run_until_complete(
             xknx.devices.process(
                 Telegram(
-                    destination_address=GroupAddress("1/1/8"), payload=DPTArray(24)
+                    destination_address=GroupAddress("1/1/8"),
+                    payload=GroupValueWrite(DPTArray(24)),
                 )
             )
         )
         self.loop.run_until_complete(
             xknx.devices.process(
                 Telegram(
-                    destination_address=GroupAddress("1/1/12"), payload=DPTArray(25)
+                    destination_address=GroupAddress("1/1/12"),
+                    payload=GroupValueWrite(DPTArray(25)),
                 )
             )
         )
         self.loop.run_until_complete(
             xknx.devices.process(
                 Telegram(
-                    destination_address=GroupAddress("1/1/16"), payload=DPTArray(26)
+                    destination_address=GroupAddress("1/1/16"),
+                    payload=GroupValueWrite(DPTArray(26)),
                 )
             )
         )
@@ -929,13 +965,15 @@ class TestLight(unittest.TestCase):
         self.assertEqual(light.state, None)
 
         telegram = Telegram(
-            destination_address=GroupAddress("1/1/2"), payload=DPTBinary(True)
+            destination_address=GroupAddress("1/1/2"),
+            payload=GroupValueWrite(DPTBinary(True)),
         )
         self.loop.run_until_complete(light.process(telegram))
         self.assertEqual(light.state, True)
 
         telegram = Telegram(
-            destination_address=GroupAddress("1/1/2"), payload=DPTBinary(False)
+            destination_address=GroupAddress("1/1/2"),
+            payload=GroupValueWrite(DPTBinary(False)),
         )
         self.loop.run_until_complete(light.process(telegram))
         self.assertEqual(light.state, False)
@@ -1057,9 +1095,18 @@ class TestLight(unittest.TestCase):
         self.assertEqual(light.current_color, (None, None))
 
         telegrams = [
-            Telegram(destination_address=GroupAddress("1/1/4"), payload=DPTArray(42)),
-            Telegram(destination_address=GroupAddress("1/1/8"), payload=DPTArray(43)),
-            Telegram(destination_address=GroupAddress("1/1/12"), payload=DPTArray(44)),
+            Telegram(
+                destination_address=GroupAddress("1/1/4"),
+                payload=GroupValueWrite(DPTArray(42)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/8"),
+                payload=GroupValueWrite(DPTArray(43)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/12"),
+                payload=GroupValueWrite(DPTArray(44)),
+            ),
         ]
 
         for telegram in telegrams:
@@ -1109,7 +1156,8 @@ class TestLight(unittest.TestCase):
         )
         self.assertEqual(light.current_color, (None, None))
         telegram = Telegram(
-            destination_address=GroupAddress("1/1/16"), payload=DPTArray(42)
+            destination_address=GroupAddress("1/1/16"),
+            payload=GroupValueWrite(DPTArray(42)),
         )
         self.loop.run_until_complete(light.process(telegram))
         self.assertEqual(light.current_color, (None, 42))
