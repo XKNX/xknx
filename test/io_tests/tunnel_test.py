@@ -32,7 +32,7 @@ class TestTunnelling(unittest.TestCase):
         """Tear down test class."""
         self.loop.close()
 
-    @patch("xknx.io.Tunnel.send_ack")
+    @patch("xknx.io.Tunnel._send_tunnelling_ack")
     def test_tunnel_request_received(self, send_ack_mock):
         """Test Tunnel for calling send_ack on normal frames."""
         # LDataInd GroupValueWrite from 1.1.22 to to 5/1/22 with DPT9 payload 0C 3F
@@ -47,7 +47,7 @@ class TestTunnelling(unittest.TestCase):
         self.tg_received_mock.assert_called_once_with(telegram)
         send_ack_mock.assert_called_once_with(0x02, 0x21)
 
-    @patch("xknx.io.Tunnel.send_ack")
+    @patch("xknx.io.Tunnel._send_tunnelling_ack")
     def test_tunnel_request_received_unsupported_frames(self, send_ack_mock):
         """Test Tunnel sending ACK for unsupported frames."""
         # LDataInd APciPhysAddrRead from 0.0.1 to 0/0/0 broadcast - ETS scan for devices in programming mode
