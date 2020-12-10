@@ -1,8 +1,5 @@
 name: "office"
 friendly_name: "Office"
-# dummy for now
-switch:
-  address: "2/1/5"
 individual_colors:
   white:
     switch:

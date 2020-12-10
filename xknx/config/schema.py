@@ -171,41 +171,75 @@ class LightSchema:
         }
     )
 
-    SCHEMA = BaseDeviceSchema.SCHEMA.extend(
-        {
-            vol.Required(CONF_SWITCH): RemoteValueSchema.SCHEMA.extend(
-                {vol.Required(CONF_ADDRESS): ensure_group_address}
-            ),
-            vol.Optional(CONF_BRIGHTNESS): RemoteValueSchema.SCHEMA.extend(
-                {vol.Required(CONF_ADDRESS): ensure_group_address}
-            ),
-            vol.Exclusive(CONF_RGBW, "color"): RemoteValueSchema.SCHEMA.extend(
-                {vol.Required(CONF_ADDRESS): ensure_group_address}
-            ),
-            vol.Exclusive(CONF_COLOR, "color"): RemoteValueSchema.SCHEMA.extend(
-                {vol.Required(CONF_ADDRESS): ensure_group_address}
-            ),
-            vol.Exclusive(CONF_INDIVIDUAL_COLORS, "color"): {
-                vol.Inclusive(CONF_RED, "colors"): COLOR_SCHEMA,
-                vol.Inclusive(CONF_GREEN, "colors"): COLOR_SCHEMA,
-                vol.Inclusive(CONF_BLUE, "colors"): COLOR_SCHEMA,
-                vol.Optional(CONF_WHITE): COLOR_SCHEMA,
+    SCHEMA = vol.All(
+        BaseDeviceSchema.SCHEMA.extend(
+            {
+                vol.Optional(CONF_SWITCH): RemoteValueSchema.SCHEMA.extend(
+                    {vol.Required(CONF_ADDRESS): ensure_group_address}
+                ),
+                vol.Optional(CONF_BRIGHTNESS): RemoteValueSchema.SCHEMA.extend(
+                    {vol.Required(CONF_ADDRESS): ensure_group_address}
+                ),
+                vol.Exclusive(CONF_RGBW, "color"): RemoteValueSchema.SCHEMA.extend(
+                    {vol.Required(CONF_ADDRESS): ensure_group_address}
+                ),
+                vol.Exclusive(CONF_COLOR, "color"): RemoteValueSchema.SCHEMA.extend(
+                    {vol.Required(CONF_ADDRESS): ensure_group_address}
+                ),
+                vol.Exclusive(CONF_INDIVIDUAL_COLORS, "color"): {
+                    vol.Inclusive(CONF_RED, "colors"): COLOR_SCHEMA,
+                    vol.Inclusive(CONF_GREEN, "colors"): COLOR_SCHEMA,
+                    vol.Inclusive(CONF_BLUE, "colors"): COLOR_SCHEMA,
+                    vol.Optional(CONF_WHITE): COLOR_SCHEMA,
+                },
+                vol.Optional(CONF_COLOR_TEMPERATURE): RemoteValueSchema.SCHEMA.extend(
+                    {
+                        vol.Required(CONF_ADDRESS): ensure_group_address,
+                        vol.Optional(
+                            CONF_COLOR_TEMP_MODE, default=DEFAULT_COLOR_TEMP_MODE
+                        ): enum(ColorTempModes),
+                        vol.Optional(
+                            CONF_MIN_KELVIN, default=DEFAULT_MIN_KELVIN
+                        ): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                        vol.Optional(
+                            CONF_MAX_KELVIN, default=DEFAULT_MAX_KELVIN
+                        ): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                    }
+                ),
             },
-            vol.Optional(CONF_COLOR_TEMPERATURE): RemoteValueSchema.SCHEMA.extend(
+        ),
+        vol.Any(
+            vol.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): ensure_group_address,
-                    vol.Optional(
-                        CONF_COLOR_TEMP_MODE, default=DEFAULT_COLOR_TEMP_MODE
-                    ): enum(ColorTempModes),
-                    vol.Optional(CONF_MIN_KELVIN, default=DEFAULT_MIN_KELVIN): vol.All(
-                        vol.Coerce(int), vol.Range(min=1)
-                    ),
-                    vol.Optional(CONF_MAX_KELVIN, default=DEFAULT_MAX_KELVIN): vol.All(
-                        vol.Coerce(int), vol.Range(min=1)
-                    ),
-                }
+                    vol.Required(CONF_SWITCH): RemoteValueSchema.SCHEMA.extend(
+                        {vol.Required(CONF_ADDRESS): object}
+                    )
+                },
+                extra=vol.ALLOW_EXTRA,
             ),
-        },
+            vol.Schema(
+                {
+                    vol.Required(CONF_INDIVIDUAL_COLORS): {
+                        vol.Required(CONF_RED): {
+                            vol.Required(CONF_SWITCH): {
+                                vol.Required(CONF_ADDRESS): object
+                            }
+                        },
+                        vol.Required(CONF_GREEN): {
+                            vol.Required(CONF_SWITCH): {
+                                vol.Required(CONF_ADDRESS): object
+                            }
+                        },
+                        vol.Required(CONF_BLUE): {
+                            vol.Required(CONF_SWITCH): {
+                                vol.Required(CONF_ADDRESS): object
+                            }
+                        },
+                    },
+                },
+                extra=vol.ALLOW_EXTRA,
+            ),
+        ),
     )
 
 

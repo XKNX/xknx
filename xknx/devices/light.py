@@ -489,13 +489,15 @@ class Light(Device):
 
     async def set_on(self):
         """Switch light on."""
-        await self.switch.on()
+        if self.switch.initialized:
+            await self.switch.on()
         for color in (self.red, self.green, self.blue, self.white):
             await color.set_on()
 
     async def set_off(self):
         """Switch light off."""
-        await self.switch.off()
+        if self.switch.initialized:
+            await self.switch.off()
         for color in (self.red, self.green, self.blue, self.white):
             await color.set_off()
 

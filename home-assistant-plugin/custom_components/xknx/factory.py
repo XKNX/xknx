@@ -155,7 +155,7 @@ def _create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
     return XknxLight(
         knx_module,
         name=config[CONF_NAME],
-        group_address_switch=config[CONF_ADDRESS],
+        group_address_switch=config.get(CONF_ADDRESS),
         group_address_switch_state=config.get(LightSchema.CONF_STATE_ADDRESS),
         group_address_brightness=config.get(LightSchema.CONF_BRIGHTNESS_ADDRESS),
         group_address_brightness_state=config.get(
