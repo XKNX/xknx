@@ -74,7 +74,7 @@ class Tunnel:
         )
 
         self.udp_client.register_callback(
-            self._reqest_received,
+            self._request_received,
             [KNXIPServiceType.TUNNELLING_REQUEST, KNXIPServiceType.DISCONNECT_REQUEST],
         )
 
@@ -243,7 +243,7 @@ class Tunnel:
     #
     ####################
 
-    def _reqest_received(self, knxipframe, _udp_client):
+    def _request_received(self, knxipframe, _udp_client):
         """Handle incoming requests."""
         # pylint: disable=unused-argument
         if knxipframe.header.service_type_ident is KNXIPServiceType.TUNNELLING_REQUEST:
@@ -323,4 +323,4 @@ class Tunnel:
                 return
         # 3 retries failed
         logger.warning("Heartbeat to KNX bus failed. Reconnecting.")
-        await self._tunnel_lost()
+        self._tunnel_lost()
