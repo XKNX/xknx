@@ -86,16 +86,24 @@ class Tunnel:
 
     async def start(self):
         """Start tunneling. Returns True on success."""
-        await self.udp_client.connect()
-        if not await self._connect_request():
+        try:
+            await self.udp_client.connect()
+            await self._connect_request()
+        except (OSError, CommunicationError) as ex:
+            logger.debug(
+                "Could not establish connection to KNX/IP interface. %s: %s",
+                type(ex).__name__,
+                ex,
+            )
             if self.auto_reconnect:
                 self._reconnect_task = asyncio.create_task(self._reconnect())
                 return False
             # close udp client to prevent open file descriptors
             await self.udp_client.stop()
-            raise CommunicationError("Could not establish connection")
-        self._tunnel_established()
-        return True
+            raise ex
+        else:
+            self._tunnel_established()
+            return True
 
     def _tunnel_established(self):
         """Set up interface when the tunnel is ready."""
@@ -121,7 +129,6 @@ class Tunnel:
             self.communication_channel = None
         await self.udp_client.stop()
         await asyncio.sleep(self.auto_reconnect_wait)
-        await self.udp_client.connect()
         if await self.start():
             logger.info("Successfully reconnected to KNX bus.")
 
@@ -161,7 +168,7 @@ class Tunnel:
                 connect.identifier,
             )
             return True
-        return False
+        raise CommunicationError("ConnectRequest failed")
 
     async def _connectionstate_request(self):
         """Return state of tunnel. True if tunnel is in good shape."""
