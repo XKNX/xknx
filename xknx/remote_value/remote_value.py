@@ -193,7 +193,7 @@ class RemoteValue:
         if self.payload is not None:
             await self._send(self.payload, response=True)
 
-    async def read_state(self, wait_for_result=False):
+    async def read_state(self, wait_for_result: bool = False) -> None:
         """Send GroupValueRead telegram for state address to KNX bus."""
         if self.readable:
             # pylint: disable=import-outside-toplevel
