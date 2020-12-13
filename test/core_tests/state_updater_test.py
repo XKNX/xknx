@@ -68,6 +68,20 @@ class TestStateUpdater(unittest.TestCase):
         )
         self.assertEqual(_get_only_tracker().tracker_type, StateTrackerType.INIT)
         remote_value_init.__del__()
+        # DEFAULT with int
+        remote_value_expire = RemoteValue(
+            xknx, sync_state=2, group_address_state=GroupAddress("1/1/1")
+        )
+        self.assertEqual(_get_only_tracker().tracker_type, StateTrackerType.EXPIRE)
+        self.assertEqual(_get_only_tracker().update_interval, 2 * 60)
+        remote_value_expire.__del__()
+        # DEFAULT with float
+        remote_value_expire = RemoteValue(
+            xknx, sync_state=6.9, group_address_state=GroupAddress("1/1/1")
+        )
+        self.assertEqual(_get_only_tracker().tracker_type, StateTrackerType.EXPIRE)
+        self.assertEqual(_get_only_tracker().update_interval, 6.9 * 60)
+        remote_value_expire.__del__()
         # EXPIRE with default time
         remote_value_expire = RemoteValue(
             xknx, sync_state="expire", group_address_state=GroupAddress("1/1/1")
@@ -126,22 +140,6 @@ class TestStateUpdater(unittest.TestCase):
         self.assertEqual(_get_only_tracker().tracker_type, StateTrackerType.EXPIRE)
         self.assertEqual(_get_only_tracker().update_interval, 60 * 60)
         remote_value_invalid.__del__()
-        logging_warning_mock.reset_mock()
-        # INVALID type
-        remote_value_float = RemoteValue(
-            xknx, sync_state=5.6, group_address_state=GroupAddress("1/1/1")
-        )
-        logging_warning_mock.assert_called_once_with(
-            'Could not parse StateUpdater tracker_options type %s "%s" for %s. Using default %s %s minutes.',
-            float,
-            5.6,
-            remote_value_float,
-            StateTrackerType.EXPIRE,
-            60,
-        )
-        self.assertEqual(_get_only_tracker().tracker_type, StateTrackerType.EXPIRE)
-        self.assertEqual(_get_only_tracker().update_interval, 60 * 60)
-        remote_value_float.__del__()
         logging_warning_mock.reset_mock()
         # intervall too long
         remote_value_long = RemoteValue(

@@ -22,3 +22,26 @@ from .remote_value_string import RemoteValueString
 from .remote_value_switch import RemoteValueSwitch
 from .remote_value_temp import RemoteValueTemp
 from .remote_value_updown import RemoteValueUpDown
+
+__all__ = [
+    "RemoteValue",
+    "RemoteValue1Count",
+    "RemoteValueBinaryHeatCool",
+    "RemoteValueBinaryOperationMode",
+    "RemoteValueClimateMode",
+    "RemoteValueColorRGB",
+    "RemoteValueColorRGBW",
+    "RemoteValueControl",
+    "RemoteValueDateTime",
+    "RemoteValueDpt2ByteUnsigned",
+    "RemoteValueDptValue1Ucount",
+    "RemoteValueScaling",
+    "RemoteValueSceneNumber",
+    "RemoteValueSensor",
+    "RemoteValueSetpointShift",
+    "RemoteValueStep",
+    "RemoteValueString",
+    "RemoteValueSwitch",
+    "RemoteValueTemp",
+    "RemoteValueUpDown",
+]

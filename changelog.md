@@ -18,6 +18,7 @@
 - Telegram: remove `Telegram.telegramtype` and replace with payload object derived from `xknx.telegram.apci.APCI`.
 - CEMIFrame: remove `CEMIFrame.cmd`, which can be derived from `CEMIFrame.payload`.
 - Farewell Travis CI; Welcome Github Actions!
+- StateUpdater allow float values for `register_remote_value(tracker_options)` attribute.
 
 ## 0.15.6 Bugfix for StateUpater 2020-11-26
 
