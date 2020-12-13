@@ -62,6 +62,15 @@ from .dpt_2byte_uint import (
     DPTTimePeriodSec,
     DPTUElCurrentmA,
 )
+from .dpt_4bit_control import (
+    DPTControlStartStop,
+    DPTControlStartStopBlinds,
+    DPTControlStartStopDimming,
+    DPTControlStepCode,
+    DPTControlStepwise,
+    DPTControlStepwiseBlinds,
+    DPTControlStepwiseDimming,
+)
 from .dpt_4byte_float import (
     DPT4ByteFloat,
     DPTAbsoluteTemperature,

@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Devices
+
+- Sensor: add DPT-3 datatypes "stepwise_dimming", "stepwise_blinds", "startstop_dimming", "startstop_blinds"
+
 ### HA integration
 
 - knx_event: renamed `address` to `destination` and added `source`, `telegramtype`, `direction` attributes.
