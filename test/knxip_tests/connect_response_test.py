@@ -133,9 +133,78 @@ class Test_KNXIP_ConnectResponse(unittest.TestCase):
         with self.assertRaises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
 
-    def test_connect_response_connection_error(self):
-        """Test parsing and streaming connection response KNX/IP packet with error."""
-        raw = (0x06, 0x10, 0x02, 0x06, 0x00, 0x08, 0x00, 0x24)
+    def test_connect_response_connection_error_gira(self):
+        """
+        Test parsing and streaming connection response KNX/IP packet with error e_no_more_connections.
+        HPAI and CRD normal. This was received from Gira devices (2020).
+        """
+        raw = (
+            0x06,
+            0x10,
+            0x02,
+            0x06,
+            0x00,
+            0x14,
+            0xC0,
+            0x24,
+            0x08,
+            0x01,
+            0x0A,
+            0x01,
+            0x00,
+            0x29,
+            0x0E,
+            0x57,
+            0x04,
+            0x04,
+            0x00,
+            0x00,
+        )
+        xknx = XKNX()
+        knxipframe = KNXIPFrame(xknx)
+        knxipframe.from_knx(raw)
+        self.assertTrue(isinstance(knxipframe.body, ConnectResponse))
+        self.assertEqual(knxipframe.body.status_code, ErrorCode.E_NO_MORE_CONNECTIONS)
+        self.assertEqual(knxipframe.body.communication_channel, 192)
+
+        knxipframe2 = KNXIPFrame(xknx)
+        knxipframe2.init(KNXIPServiceType.CONNECT_RESPONSE)
+        knxipframe2.body.status_code = ErrorCode.E_NO_MORE_CONNECTIONS
+        knxipframe2.body.communication_channel = 192
+        knxipframe2.body.request_type = ConnectRequestType.TUNNEL_CONNECTION
+        knxipframe2.body.control_endpoint = HPAI(ip_addr="10.1.0.41", port=3671)
+        knxipframe2.body.identifier = 0
+        knxipframe2.normalize()
+
+        self.assertEqual(knxipframe2.to_knx(), list(raw))
+
+    def test_connect_response_connection_error_lox(self):
+        """
+        Test parsing and streaming connection response KNX/IP packet with error e_no_more_connections.
+        HPAI given, CRD all zero. This was received from Loxone device (2020).
+        """
+        raw = (
+            0x06,
+            0x10,
+            0x02,
+            0x06,
+            0x00,
+            0x14,
+            0x00,
+            0x24,
+            0x08,
+            0x01,
+            0xC0,
+            0xA8,
+            0x01,
+            0x01,
+            0x0E,
+            0x57,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+        )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
@@ -143,9 +212,38 @@ class Test_KNXIP_ConnectResponse(unittest.TestCase):
         self.assertEqual(knxipframe.body.status_code, ErrorCode.E_NO_MORE_CONNECTIONS)
         self.assertEqual(knxipframe.body.communication_channel, 0)
 
-        knxipframe2 = KNXIPFrame(xknx)
-        knxipframe2.init(KNXIPServiceType.CONNECT_RESPONSE)
-        knxipframe2.body.status_code = ErrorCode.E_NO_MORE_CONNECTIONS
-        knxipframe2.normalize()
+        # no further tests: the current API can't (and shouldn't) create such odd packets
 
-        self.assertEqual(knxipframe2.to_knx(), list(raw))
+    def test_connect_response_connection_error_mdt(self):
+        """
+        Test parsing and streaming connection response KNX/IP packet with error e_no_more_connections.
+        HPAI and CRD all zero. This was received from MDT device (2020).
+        """
+        raw = (
+            0x06,
+            0x10,
+            0x02,
+            0x06,
+            0x00,
+            0x08,
+            0x00,
+            0x24,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+        )
+        xknx = XKNX()
+        knxipframe = KNXIPFrame(xknx)
+        knxipframe.from_knx(raw)
+        self.assertTrue(isinstance(knxipframe.body, ConnectResponse))
+        self.assertEqual(knxipframe.body.status_code, ErrorCode.E_NO_MORE_CONNECTIONS)
+        self.assertEqual(knxipframe.body.communication_channel, 0)
+
+        # no further tests: the current API can't (and shouldn't) create such odd packets
