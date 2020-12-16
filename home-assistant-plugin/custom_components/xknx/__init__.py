@@ -379,7 +379,7 @@ class KNXModule:
         group_address = GroupAddress(call.data.get(SERVICE_XKNX_ATTR_ADDRESS))
         if call.data.get(SERVICE_XKNX_ATTR_REMOVE):
             self._knx_event_callback.group_addresses.remove(group_address)
-        else:
+        elif group_address not in self._knx_event_callback.group_addresses:
             self._knx_event_callback.group_addresses.append(group_address)
 
     async def service_send_to_knx_bus(self, call):
