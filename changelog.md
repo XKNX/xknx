@@ -9,7 +9,9 @@
 
 ### HA integration
 
+- knx_event: renamed `fire_event_filter` to `event_filter` and deprecated `fire_event` config option. A callback is now always registered for HA to be able to modify its `group_addresses` filter from a service.
 - knx_event: renamed `address` to `destination` and added `source`, `telegramtype`, `direction` attributes.
+- added `knx.event_register` service allowing to add and remove group addresses to trigger knx_event without having to change configuration.
 
 ### Internals
 
@@ -26,6 +28,7 @@
 - Farewell Travis CI; Welcome Github Actions!
 - StateUpdater allow float values for `register_remote_value(tracker_options)` attribute.
 - Handle exceptions from received unsupported or not implemented KNXIP Service Type identifiers
+- TelegramQueue.Callback: add `group_addresses` attribute to store a list of GroupAddress triggering the callback (additionally to `address_filters`).
 
 ## 0.15.6 Bugfix for StateUpater 2020-11-26
 

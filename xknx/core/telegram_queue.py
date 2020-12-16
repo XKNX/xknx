@@ -36,20 +36,25 @@ class TelegramQueue:
             self,
             callback: "AsyncTelegramCallback",
             address_filters: Optional[List[AddressFilter]] = None,
+            group_addresses: Optional[List[GroupAddress]] = None,
         ):
             """Initialize Callback class."""
             self.callback = callback
-            self.address_filters = address_filters
+            self._match_all = address_filters is None and group_addresses is None
+            self.address_filters = [] if address_filters is None else address_filters
+            self.group_addresses = [] if group_addresses is None else group_addresses
 
         def is_within_filter(self, telegram: Telegram) -> bool:
             """Test if callback is filtering for group address."""
-            if self.address_filters is None:
+            if self._match_all:
                 return True
-            for address_filter in self.address_filters:
-                if isinstance(
-                    telegram.destination_address, GroupAddress
-                ) and address_filter.match(telegram.destination_address):
-                    return True
+            if isinstance(telegram.destination_address, GroupAddress):
+                for address_filter in self.address_filters:
+                    if address_filter.match(telegram.destination_address):
+                        return True
+                for group_address in self.group_addresses:
+                    if telegram.destination_address == group_address:
+                        return True
             return False
 
     def __init__(self, xknx: "XKNX"):
@@ -63,9 +68,14 @@ class TelegramQueue:
         self,
         telegram_received_cb: "AsyncTelegramCallback",
         address_filters: Optional[List[AddressFilter]] = None,
+        group_addresses: Optional[List[GroupAddress]] = None,
     ) -> Callback:
         """Register callback for a telegram beeing received from KNX bus."""
-        callback = TelegramQueue.Callback(telegram_received_cb, address_filters)
+        callback = TelegramQueue.Callback(
+            telegram_received_cb,
+            address_filters=address_filters,
+            group_addresses=group_addresses,
+        )
         self.telegram_received_cbs.append(callback)
         return callback
 
