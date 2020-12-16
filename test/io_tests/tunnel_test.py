@@ -50,10 +50,10 @@ class TestTunnelling(unittest.TestCase):
     @patch("xknx.io.Tunnel._send_tunnelling_ack")
     def test_tunnel_request_received_unsupported_frames(self, send_ack_mock):
         """Test Tunnel sending ACK for unsupported frames."""
-        # LDataInd APciPhysAddrRead from 0.0.1 to 0/0/0 broadcast - ETS scan for devices in programming mode
-        # <UnsupportedCEMIMessage description="APCI not supported: 0b0100000000 in CEMI: 2900b0d000010000010100" />
+        # LDataInd Unsupported Extended APCI from 0.0.1 to 0/0/0 broadcast
+        # <UnsupportedCEMIMessage description="APCI not supported: 0b1111111000 in CEMI: 2900b0d0000100000103f8" />
         # communication_channel_id: 0x02   sequence_counter: 0x4f
-        raw = bytes.fromhex("0610 0420 0015 04 02 4f 00 2900b0d000010000010100")
+        raw = bytes.fromhex("0610 0420 0015 04 02 4f 00 2900b0d0000100000103f8")
 
         self.tunnel.udp_client.data_received_callback(raw)
         self.tg_received_mock.assert_not_called()
