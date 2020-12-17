@@ -18,8 +18,14 @@ from typing import Optional, Tuple, Union
 
 from xknx.exceptions import CouldNotParseAddress
 
+# TODO: typing - remove need for Optional here
+GroupAddressableType = Optional[Union["GroupAddress", str, int, Tuple[int, int]]]
+IndividualAddressableType = Optional[
+    Union["IndividualAddress", str, int, Tuple[int, int]]
+]
 
-def address_tuple_to_int(address: Tuple) -> int:
+
+def address_tuple_to_int(address: Tuple[int, int]) -> int:
     """
     Convert the tuple `address` to an integer.
 
@@ -80,22 +86,22 @@ class IndividualAddress(BaseAddress):
         r"^(?P<area>\d{1,2})\.(?P<main>\d{1,2})\.(?P<line>\d{1,3})$"
     )
 
-    def __init__(self, address: Union[object, str, int, tuple]) -> None:
+    def __init__(self, address: IndividualAddressableType) -> None:
         """Initialize Address class."""
         super().__init__()
         if isinstance(address, IndividualAddress):
-            self.raw: int = address.raw
+            self.raw = address.raw
         elif isinstance(address, str):
             if address.isdigit():
-                self.raw: int = int(address)  # type: ignore
+                self.raw = int(address)
             else:
-                self.raw: int = self.__string_to_int(address)  # type: ignore
+                self.raw = self.__string_to_int(address)
         elif isinstance(address, tuple) and len(address) == 2:
-            self.raw: int = address_tuple_to_int(address)  # type: ignore
+            self.raw = address_tuple_to_int(address)
         elif isinstance(address, int):
-            self.raw: int = address  # type: ignore
+            self.raw = address
         elif address is None:
-            self.raw: int = 0  # type: ignore
+            self.raw = 0
         else:
             raise CouldNotParseAddress(address)
 
@@ -186,7 +192,7 @@ class GroupAddress(BaseAddress):
 
     def __init__(
         self,
-        address: Union[object, str, tuple, int],
+        address: GroupAddressableType,
         levels: GroupAddressType = GroupAddressType.LONG,
     ) -> None:
         """Initialize Address class."""

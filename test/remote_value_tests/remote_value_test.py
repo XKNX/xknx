@@ -11,6 +11,7 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
+@patch.multiple(RemoteValue, __abstractmethods__=set())
 class TestRemoteValue(unittest.TestCase):
     """Test class for RemoteValue objects."""
 
@@ -31,26 +32,6 @@ class TestRemoteValue(unittest.TestCase):
             remote_value.payload_valid(DPTBinary(0))
             mock_warn.assert_called_with(
                 "'payload_valid()' not implemented for %s", "RemoteValue"
-            )
-
-    def test_warn_to_knx(self):
-        """Test for warning if to_knx is not implemented."""
-        xknx = XKNX()
-        remote_value = RemoteValue(xknx)
-        with patch("logging.Logger.warning") as mock_warn:
-            remote_value.to_knx(23)
-            mock_warn.assert_called_with(
-                "'to_knx()' not implemented for %s", "RemoteValue"
-            )
-
-    def test_warn_from_knx(self):
-        """Test for warning if from_knx is not implemented."""
-        xknx = XKNX()
-        remote_value = RemoteValue(xknx)
-        with patch("logging.Logger.warning") as mock_warn:
-            remote_value.from_knx(DPTBinary(0))
-            mock_warn.assert_called_with(
-                "'from_knx()' not implemented for %s", "RemoteValue"
             )
 
     def test_info_set_uninitialized(self):

@@ -10,6 +10,7 @@ from xknx.remote_value import RemoteValue
 from xknx.telegram import GroupAddress
 
 
+@patch.multiple(RemoteValue, __abstractmethods__=set())
 class TestStateUpdater(unittest.TestCase):
     """Test class for state updater."""
 
@@ -19,6 +20,7 @@ class TestStateUpdater(unittest.TestCase):
         """Set up test class."""
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
+        patch.multiple(RemoteValue, __abstractmethods__=set())
 
     def tearDown(self):
         """Tear down test class."""

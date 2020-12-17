@@ -1,6 +1,7 @@
 """Unit test for String representations."""
 import asyncio
 import unittest
+from unittest.mock import patch
 
 from xknx import XKNX
 from xknx.devices import (
@@ -72,9 +73,11 @@ class TestStringRepresentations(unittest.TestCase):
         """Tear down test class."""
         self.loop.close()
 
+    @patch.multiple(RemoteValue, __abstractmethods__=set())
     def test_remote_value(self):
         """Test string representation of remote value."""
         xknx = XKNX()
+        # pylint: disable=abstract-class-instantiated
         remote_value = RemoteValue(
             xknx,
             group_address="1/2/3",
