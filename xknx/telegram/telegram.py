@@ -33,12 +33,10 @@ class Telegram:
 
     def __init__(
         self,
-        destination_address: Union[GroupAddress, IndividualAddress] = GroupAddress(
-            None
-        ),
+        destination_address: Union[GroupAddress, IndividualAddress] = GroupAddress(0),
         direction: TelegramDirection = TelegramDirection.OUTGOING,
         payload: Any = None,
-        source_address: IndividualAddress = IndividualAddress(None),
+        source_address: IndividualAddress = IndividualAddress(0),
     ) -> None:
         """Initialize Telegram class."""
         self.destination_address = destination_address
