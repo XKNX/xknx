@@ -325,7 +325,7 @@ class Cover(Device):
                 self.travelcalculator.stop()
                 await self.after_update()
 
-        await self.position_current.process(telegram)
+        await self.position_current.process(telegram, always_callback=True)
         await self.position_target.process(telegram)
         await self.angle.process(telegram)
 
