@@ -85,8 +85,6 @@ class ConnectResponse(KNXIPBody):
         data = []
         data.append(self.communication_channel)
         data.append(self.status_code.value)
-
-        # if self.status_code == ErrorCode.E_NO_ERROR:
         data.extend(self.control_endpoint.to_knx())
         data.extend(crd_to_knx())
 
