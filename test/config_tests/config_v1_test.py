@@ -23,6 +23,7 @@ from xknx.devices import (
 )
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
+from xknx.telegram import IndividualAddress
 import yaml
 
 
@@ -54,7 +55,7 @@ class TestConfig(unittest.TestCase):
     #
     def test_config_general(self):
         """Test reading general section from config file."""
-        self.assertEqual(TestConfig.xknx.own_address, "15.15.249")
+        self.assertEqual(TestConfig.xknx.own_address, IndividualAddress("15.15.249"))
         self.assertEqual(TestConfig.xknx.rate_limit, 18)
         self.assertEqual(TestConfig.xknx.multicast_group, "224.1.2.3")
         self.assertEqual(TestConfig.xknx.multicast_port, 1337)

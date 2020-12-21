@@ -23,6 +23,7 @@ from xknx.devices import (
 )
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
+from xknx.telegram import IndividualAddress
 
 logger = logging.getLogger("xknx.log")
 
@@ -51,7 +52,7 @@ class ConfigV1:
         """Parse the general section of xknx.yaml."""
         if "general" in doc:
             if "own_address" in doc["general"]:
-                self.xknx.own_address = doc["general"]["own_address"]
+                self.xknx.own_address = IndividualAddress(doc["general"]["own_address"])
             if "rate_limit" in doc["general"]:
                 self.xknx.rate_limit = doc["general"]["rate_limit"]
             if "multicast_group" in doc["general"]:
