@@ -258,7 +258,7 @@ class Cover(Device):
             self.travelcalculator.update_position(self.position_current.value)
         else:
             self.travelcalculator.set_position(self.position_current.value)
-        if not position_before_update == self.travelcalculator.current_position():
+        if position_before_update != self.travelcalculator.current_position():
             await self.after_update()
 
     async def set_angle(self, angle):
