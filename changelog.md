@@ -5,6 +5,7 @@
 ### Devices
 
 - Sensor: add DPT-3 datatypes "stepwise_dimming", "stepwise_blinds", "startstop_dimming", "startstop_blinds"
+- Light: It is now possible to control lights using individual group addresses for red, green, blue and white
 
 ### HA integration
 
