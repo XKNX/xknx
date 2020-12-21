@@ -35,7 +35,7 @@ async def main():
         gateway_port=gateway.port,
     )
 
-    await tunnel.start()
+    await tunnel.connect()
 
     await tunnel.send_telegram(
         Telegram(
@@ -52,7 +52,7 @@ async def main():
     )
     await asyncio.sleep(2)
 
-    await tunnel.stop()
+    await tunnel.disconnect()
 
 
 asyncio.run(main())

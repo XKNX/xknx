@@ -22,13 +22,14 @@ from .connect import Connect
 from .connectionstate import ConnectionState
 from .const import HEARTBEAT_RATE
 from .disconnect import Disconnect
+from .interface import Interface
 from .tunnelling import Tunnelling
 from .udp_client import UDPClient
 
 logger = logging.getLogger("xknx.log")
 
 
-class Tunnel:
+class Tunnel(Interface):
     """Class for handling KNX/IP tunnels."""
 
     # pylint: disable=too-many-instance-attributes
@@ -84,8 +85,8 @@ class Tunnel:
     #
     ####################
 
-    async def start(self):
-        """Start tunneling. Returns True on success."""
+    async def connect(self):
+        """Connect to a KNX tunneling interface. Returns True on success."""
         try:
             await self.udp_client.connect()
             await self._connect_request()
@@ -109,7 +110,7 @@ class Tunnel:
         """Set up interface when the tunnel is ready."""
         self.sequence_number = 0
         self.xknx.connected.set()
-        self._stop_reconnect()
+        # self._stop_reconnect()
         self.start_heartbeat()
 
     def _tunnel_lost(self):
@@ -129,7 +130,7 @@ class Tunnel:
             self.communication_channel = None
         await self.udp_client.stop()
         await asyncio.sleep(self.auto_reconnect_wait)
-        if await self.start():
+        if await self.connect():
             logger.info("Successfully reconnected to KNX bus.")
 
     def _stop_reconnect(self):
@@ -138,8 +139,8 @@ class Tunnel:
             self._reconnect_task.cancel()
             self._reconnect_task = None
 
-    async def stop(self):
-        """Stop tunneling."""
+    async def disconnect(self):
+        """Disconnect tunneling connection."""
         self.xknx.connected.clear()
         self.stop_heartbeat()
         self._stop_reconnect()
@@ -217,13 +218,13 @@ class Tunnel:
             if not success:
                 logger.debug("Resending telegram failed. Reconnecting to tunnel.")
                 # TODO: How to test this?
-                self._tunnel_lost()
-                if self._reconnect_task:
-                    await self._reconnect_task
+                if self._reconnect_task is None or self._reconnect_task.done():
+                    self._tunnel_lost()
+                await self.xknx.connected.wait()
                 success = await self._tunnelling_request(telegram)
                 if not success:
                     raise CommunicationError(
-                        "Resending the telegram repeatedly failed.", False
+                        "Resending the telegram repeatedly failed.", True
                     )
         self._increase_sequence_number()
 

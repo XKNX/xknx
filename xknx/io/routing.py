@@ -14,12 +14,13 @@ from xknx.knxip import (
 )
 from xknx.telegram import TelegramDirection
 
+from .interface import Interface
 from .udp_client import UDPClient
 
 logger = logging.getLogger("xknx.log")
 
 
-class Routing:
+class Routing(Interface):
     """Class for handling KNX/IP routing."""
 
     def __init__(self, xknx, telegram_received_callback, local_ip):
@@ -70,12 +71,23 @@ class Routing:
         """Send KNXIPFrame to connected routing device."""
         self.udpclient.send(knxipframe)
 
-    async def start(self):
+    async def connect(self) -> bool:
         """Start routing."""
-        await self.udpclient.connect()
+        try:
+            await self.udpclient.connect()
+        except OSError as ex:
+            logger.debug(
+                "Could not establish connection to KNX/IP network. %s: %s",
+                type(ex).__name__,
+                ex,
+            )
+            # close udp client to prevent open file descriptors
+            await self.udpclient.stop()
+            raise ex
         self.xknx.connected.set()
+        return True
 
-    async def stop(self):
+    async def disconnect(self):
         """Stop routing."""
         await self.udpclient.stop()
         self.xknx.connected.clear()
