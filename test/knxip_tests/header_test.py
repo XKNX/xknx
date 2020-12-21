@@ -72,3 +72,12 @@ class Test_KNXIP_Header(unittest.TestCase):
         header = KNXIPHeader(xknx)
         with self.assertRaises(CouldNotParseKNXIP):
             header.from_knx(raw)
+
+    def test_from_knx_wrong_header4(self):
+        """Test parsing and streaming wrong Header (unsupported service type)."""
+        # 0x0000 as service type
+        raw = (0x06, 0x10, 0x00, 0x00, 0x00, 0x0A)
+        xknx = XKNX()
+        header = KNXIPHeader(xknx)
+        with self.assertRaises(CouldNotParseKNXIP):
+            header.from_knx(raw)

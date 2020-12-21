@@ -92,10 +92,15 @@ class UDPClient:
             try:
                 knxipframe = KNXIPFrame(self.xknx)
                 knxipframe.from_knx(raw)
+            except CouldNotParseKNXIP as couldnotparseknxip:
+                knx_logger.debug(
+                    "Unsupported KNXIPFrame: %s in %s",
+                    couldnotparseknxip.description,
+                    raw.hex(),
+                )
+            else:
                 knx_logger.debug("Received: %s", knxipframe)
                 self.handle_knxipframe(knxipframe)
-            except CouldNotParseKNXIP as couldnotparseknxip:
-                logger.exception(couldnotparseknxip)
 
     def handle_knxipframe(self, knxipframe: KNXIPFrame) -> None:
         """Handle KNXIP Frame and call all callbacks which watch for the service type ident."""
@@ -105,7 +110,9 @@ class UDPClient:
                 callback.callback(knxipframe, self)
                 handled = True
         if not handled:
-            logger.debug("UNHANDLED: %s", knxipframe.header.service_type_ident)
+            knx_logger.debug(
+                "Unhandled %s: %s", knxipframe.header.service_type_ident, knxipframe
+            )
 
     def register_callback(self, callback, service_types=None) -> Callback:
         """Register callback."""
