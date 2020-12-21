@@ -536,7 +536,7 @@ class TestStringRepresentations(unittest.TestCase):
         header.total_length = 42
         self.assertEqual(
             str(header),
-            '<KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="KNXIPServiceType.ROUTING_INDICATION" Reserve="0" TotalLength="42" '
+            '<KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="ROUTING_INDICATION" Reserve="0" TotalLength="42" '
             "/>",
         )
 
@@ -680,7 +680,7 @@ class TestStringRepresentations(unittest.TestCase):
         knxipframe.init(KNXIPServiceType.SEARCH_REQUEST)
         self.assertEqual(
             str(knxipframe),
-            '<KNXIPFrame <KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="KNXIPServiceType.SEARCH_REQUEST" Reserve="0" TotalLeng'
+            '<KNXIPFrame <KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="SEARCH_REQUEST" Reserve="0" TotalLeng'
             'th="0" />\n'
             ' body="<SearchRequest discovery_endpoint="<HPAI 224.0.23.12:3671 />" />" />',
         )
