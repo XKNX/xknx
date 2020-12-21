@@ -150,19 +150,19 @@ class KNXIPInterface:
             auto_reconnect=auto_reconnect,
             auto_reconnect_wait=auto_reconnect_wait,
         )
-        await self.interface.start()
+        await self.interface.connect()
 
     async def start_routing(self, local_ip: str) -> None:
         """Start KNX/IP Routing."""
         validate_ip(local_ip, address_name="Local IP address")
         logger.debug("Starting Routing from %s as %s", local_ip, self.xknx.own_address)
         self.interface = Routing(self.xknx, self.telegram_received, local_ip)
-        await self.interface.start()
+        await self.interface.connect()
 
     async def stop(self) -> None:
         """Stop connected interfae (either Tunneling or Routing)."""
         if self.interface is not None:
-            await self.interface.stop()
+            await self.interface.disconnect()
             self.interface = None
 
     def telegram_received(self, telegram):

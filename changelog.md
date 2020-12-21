@@ -13,6 +13,10 @@
 
 ### Internals
 
+- Tunnel connections process DisconnectRequest now and closes/reconnects the tunnel when the other side closes gracefully
+- XKNX.connected Event can be used in future to await for a working connection or stop/relaunch tasks if the connection is lost
+- Lower heartbeat rate from every 15sec to every 70 sec and raise ConnectionstateRequest timeout from 1 to 10sec (3/8/1 KNXip Overview §5.8 Timeout Constants)
+- clean up Tunnel class
 - refactored timeout handling in GatewayScanner, RequestResponse and ValueReader.
 - renamed "PhysicalAddress" to "IndividualAddress"
 - Telegram: `group_address` renamed to `destination_address`, to prepare support for other APCI services and add `source_address`

@@ -60,13 +60,11 @@ class UDPClient:
 
         def error_received(self, exc):
             """Handle errors. Callback for error received."""
-            if hasattr(self, "xknx"):
-                logger.warning("Error received: %s", exc)
+            logger.warning("Error received: %s", exc)
 
         def connection_lost(self, exc):
             """Log error. Callback for connection lost."""
-            if hasattr(self, "xknx") and exc is not None:
-                logger.info("Closing transport.")
+            logger.debug("Closing transport.")
 
     def __init__(
         self,

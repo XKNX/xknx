@@ -54,6 +54,7 @@ class XKNX:
         self.state_updater = StateUpdater(self)
         self.knxip_interface = None
         self.started = asyncio.Event()
+        self.connected = asyncio.Event()
         self.address_format = address_format
         self.own_address = IndividualAddress(own_address)
         self.rate_limit = rate_limit
