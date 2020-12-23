@@ -6,12 +6,12 @@ With a Disconnect Response the receiving party acknowledges the valid processing
 """
 from xknx.exceptions import CouldNotParseKNXIP
 
-from .body import KNXIPBody
+from .body import KNXIPBodyResponse
 from .error_code import ErrorCode
 from .knxip_enum import KNXIPServiceType
 
 
-class DisconnectResponse(KNXIPBody):
+class DisconnectResponse(KNXIPBodyResponse):
     """Representation of a KNX Disconnect Response."""
 
     # pylint: disable=too-many-instance-attributes

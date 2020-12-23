@@ -7,13 +7,13 @@ assigns a communication channel and an individual address for the client.
 """
 from xknx.exceptions import CouldNotParseKNXIP
 
-from .body import KNXIPBody
+from .body import KNXIPBodyResponse
 from .error_code import ErrorCode
 from .hpai import HPAI
 from .knxip_enum import ConnectRequestType, KNXIPServiceType
 
 
-class ConnectResponse(KNXIPBody):
+class ConnectResponse(KNXIPBodyResponse):
     """Representation of a KNX Connect Response."""
 
     # pylint: disable=too-many-instance-attributes

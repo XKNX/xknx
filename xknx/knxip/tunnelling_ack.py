@@ -6,13 +6,13 @@ With a Tunnelling ACK the receiving party acknowledges the valid processing of t
 """
 from xknx.exceptions import CouldNotParseKNXIP
 
-from .body import KNXIPBody
+from .body import KNXIPBodyResponse
 from .error_code import ErrorCode
 from .knxip_enum import KNXIPServiceType
 
 
-class TunnellingAck(KNXIPBody):
-    """Representation of a KNX Tunnelling Request."""
+class TunnellingAck(KNXIPBodyResponse):
+    """Representation of a KNX Tunnelling Ack."""
 
     # pylint: disable=too-many-instance-attributes
 

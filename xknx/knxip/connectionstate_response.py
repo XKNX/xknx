@@ -6,12 +6,12 @@ With a connectionstate response the receiving party acknowledges the valid proce
 """
 from xknx.exceptions import CouldNotParseKNXIP
 
-from .body import KNXIPBody
+from .body import KNXIPBodyResponse
 from .error_code import ErrorCode
 from .knxip_enum import KNXIPServiceType
 
 
-class ConnectionStateResponse(KNXIPBody):
+class ConnectionStateResponse(KNXIPBodyResponse):
     """Representation of a KNX Connection State Response."""
 
     # pylint: disable=too-many-instance-attributes

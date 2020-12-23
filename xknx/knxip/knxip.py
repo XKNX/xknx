@@ -28,7 +28,7 @@ class KNXIPFrame:
     def __init__(self, xknx):
         """Initialize object."""
         self.xknx = xknx
-        self.header = KNXIPHeader(xknx)
+        self.header = KNXIPHeader()
         self.body = None
 
     def init(self, service_type_ident: KNXIPServiceType) -> None:

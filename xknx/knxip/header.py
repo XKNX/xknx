@@ -11,9 +11,8 @@ class KNXIPHeader:
     HEADERLENGTH = 0x06
     PROTOCOLVERSION = 0x10
 
-    def __init__(self, xknx):
+    def __init__(self):
         """Initialize KNXIPHeader class."""
-        self.xknx = xknx
         self.header_length = KNXIPHeader.HEADERLENGTH
         self.protocol_version = KNXIPHeader.PROTOCOLVERSION
         self.service_type_ident = KNXIPServiceType.ROUTING_INDICATION

@@ -534,8 +534,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_header(self):
         """Test string representation of KNX/IP-Header."""
-        xknx = XKNX()
-        header = KNXIPHeader(xknx)
+        header = KNXIPHeader()
         header.total_length = 42
         self.assertEqual(
             str(header),
