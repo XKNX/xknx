@@ -8,6 +8,7 @@ from xknx import XKNX
 from xknx.devices import Scene
 from xknx.dpt import DPTArray
 from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueWrite
 
 
 class TestScene(unittest.TestCase):
@@ -46,7 +47,10 @@ class TestScene(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram,
-            Telegram(destination_address=GroupAddress("1/2/1"), payload=DPTArray(0x16)),
+            Telegram(
+                destination_address=GroupAddress("1/2/1"),
+                payload=GroupValueWrite(DPTArray(0x16)),
+            ),
         )
 
     def test_do(self):
@@ -58,7 +62,10 @@ class TestScene(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram,
-            Telegram(destination_address=GroupAddress("1/2/1"), payload=DPTArray(0x16)),
+            Telegram(
+                destination_address=GroupAddress("1/2/1"),
+                payload=GroupValueWrite(DPTArray(0x16)),
+            ),
         )
 
     def test_wrong_do(self):

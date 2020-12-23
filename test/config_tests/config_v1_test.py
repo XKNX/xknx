@@ -23,6 +23,7 @@ from xknx.devices import (
 )
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
+from xknx.telegram import IndividualAddress
 import yaml
 
 
@@ -54,7 +55,7 @@ class TestConfig(unittest.TestCase):
     #
     def test_config_general(self):
         """Test reading general section from config file."""
-        self.assertEqual(TestConfig.xknx.own_address, "15.15.249")
+        self.assertEqual(TestConfig.xknx.own_address, IndividualAddress("15.15.249"))
         self.assertEqual(TestConfig.xknx.rate_limit, 18)
         self.assertEqual(TestConfig.xknx.multicast_group, "224.1.2.3")
         self.assertEqual(TestConfig.xknx.multicast_port, 1337)
@@ -195,6 +196,38 @@ class TestConfig(unittest.TestCase):
                 min_kelvin=2700,
                 max_kelvin=6000,
             ),
+        )
+
+    def test_config_individual_rgb(self):
+        """Test reading Light with with dimming and color address."""
+        expected = Light(
+            TestConfig.xknx,
+            "Diningroom.Light_rgb",
+            group_address_switch_white="1/6/4",
+            group_address_switch_white_state="1/6/5",
+            group_address_brightness_white="1/6/6",
+            group_address_brightness_white_state="1/6/7",
+            group_address_switch_red="1/6/14",
+            group_address_switch_red_state="1/6/15",
+            group_address_brightness_red="1/6/16",
+            group_address_brightness_red_state="1/6/17",
+            group_address_switch_green="1/6/24",
+            group_address_switch_green_state="1/6/25",
+            group_address_brightness_green="1/6/26",
+            group_address_brightness_green_state="1/6/27",
+            group_address_switch_blue="1/6/34",
+            group_address_switch_blue_state="1/6/35",
+            group_address_brightness_blue="1/6/36",
+            group_address_brightness_blue_state="1/6/37",
+            min_kelvin=Light.DEFAULT_MIN_KELVIN,
+            max_kelvin=Light.DEFAULT_MAX_KELVIN,
+        )
+        result = TestConfig.xknx.devices["Diningroom.Light_rgb"]
+
+        print(f"result: {result} \nexpected: {expected}")
+        self.assertEqual(
+            result,
+            expected,
         )
 
     def test_config_color_temperature(self):

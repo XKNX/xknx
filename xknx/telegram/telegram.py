@@ -8,10 +8,9 @@ The telegram class is the leightweight interaction object between
 
 It contains
 
-* the telegram type (e.g. GROUP_WRITE)
 * the direction (incoming or outgoing)
 * the group address (e.g. 1/2/3)
-* and the payload (e.g. "12%" or "23.23 C".
+* and the payload (e.g. GroupValueWrite("12%")).
 
 """
 from enum import Enum
@@ -26,16 +25,6 @@ class TelegramDirection(Enum):
     INCOMING = "Incoming"
     OUTGOING = "Outgoing"
 
-
-class TelegramType(Enum):
-    """Enum class for type of telegram."""
-
-    GROUP_READ = "GroupValueRead"
-    GROUP_WRITE = "GroupValueWrite"
-    GROUP_RESPONSE = "GroupValueResponse"
-    IA_WRITE = "IndividualAddressWrite"
-
-
 class Telegram:
     """Class for KNX telegrams."""
 
@@ -43,17 +32,13 @@ class Telegram:
 
     def __init__(
         self,
-        destination_address: Union[GroupAddress, IndividualAddress] = GroupAddress(
-            None
-        ),
-        telegramtype: TelegramType = TelegramType.GROUP_WRITE,
+        destination_address: Union[GroupAddress, IndividualAddress] = GroupAddress(0),
         direction: TelegramDirection = TelegramDirection.OUTGOING,
         payload: Any = None,
-        source_address: IndividualAddress = IndividualAddress(None),
+        source_address: IndividualAddress = IndividualAddress(0),
     ) -> None:
         """Initialize Telegram class."""
         self.destination_address = destination_address
-        self.telegramtype = telegramtype
         self.direction = direction
         self.payload = payload
         self.source_address = source_address
@@ -61,10 +46,9 @@ class Telegram:
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<Telegram direction="{}" telegramtype="{}" source_address="{}" '
+            '<Telegram direction="{}" source_address="{}" '
             'destination_address="{}" payload="{}" />'.format(
                 self.direction.value,
-                self.telegramtype.value,
                 self.source_address,
                 self.destination_address,
                 self.payload,

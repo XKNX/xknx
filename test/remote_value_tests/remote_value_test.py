@@ -8,8 +8,10 @@ from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.remote_value import RemoteValue, RemoteValueSwitch
 from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueWrite
 
 
+@patch.multiple(RemoteValue, __abstractmethods__=set())
 class TestRemoteValue(unittest.TestCase):
     """Test class for RemoteValue objects."""
 
@@ -30,26 +32,6 @@ class TestRemoteValue(unittest.TestCase):
             remote_value.payload_valid(DPTBinary(0))
             mock_warn.assert_called_with(
                 "'payload_valid()' not implemented for %s", "RemoteValue"
-            )
-
-    def test_warn_to_knx(self):
-        """Test for warning if to_knx is not implemented."""
-        xknx = XKNX()
-        remote_value = RemoteValue(xknx)
-        with patch("logging.Logger.warning") as mock_warn:
-            remote_value.to_knx(23)
-            mock_warn.assert_called_with(
-                "'to_knx()' not implemented for %s", "RemoteValue"
-            )
-
-    def test_warn_from_knx(self):
-        """Test for warning if from_knx is not implemented."""
-        xknx = XKNX()
-        remote_value = RemoteValue(xknx)
-        with patch("logging.Logger.warning") as mock_warn:
-            remote_value.from_knx(DPTBinary(0))
-            mock_warn.assert_called_with(
-                "'from_knx()' not implemented for %s", "RemoteValue"
             )
 
     def test_info_set_uninitialized(self):
@@ -84,6 +66,26 @@ class TestRemoteValue(unittest.TestCase):
         remote_value = RemoteValue(xknx)
         self.assertEqual(remote_value.unit_of_measurement, None)
 
+    def test_process_unsupported_payload(self):
+        """Test if exception is raised when processing telegram with unsupported payload."""
+        xknx = XKNX()
+        remote_value = RemoteValue(xknx)
+        with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_valid, patch(
+            "xknx.remote_value.RemoteValue.has_group_address"
+        ) as patch_has_group_address:
+            patch_valid.return_value = False
+            patch_has_group_address.return_value = True
+
+            telegram = Telegram(
+                destination_address=GroupAddress("1/2/1"),
+                payload=object(),
+            )
+            with self.assertRaisesRegex(
+                CouldNotParseTelegram,
+                r".*payload not a GroupValueWrite or GroupValueResponse.*",
+            ):
+                self.loop.run_until_complete(remote_value.process(telegram))
+
     def test_process_invalid_payload(self):
         """Test if exception is raised when processing telegram with invalid payload."""
         xknx = XKNX()
@@ -96,9 +98,9 @@ class TestRemoteValue(unittest.TestCase):
 
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/1"),
-                payload=DPTArray((0x01, 0x02)),
+                payload=GroupValueWrite(DPTArray((0x01, 0x02))),
             )
-            with self.assertRaises(CouldNotParseTelegram):
+            with self.assertRaisesRegex(CouldNotParseTelegram, r".*payload invalid.*"):
                 self.loop.run_until_complete(remote_value.process(telegram))
 
     def test_read_state(self):
@@ -113,7 +115,8 @@ class TestRemoteValue(unittest.TestCase):
 
             fut = asyncio.Future()
             telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(1)),
             )
             fut.set_result(telegram)
             patch_read.return_value = fut
@@ -158,7 +161,8 @@ class TestRemoteValue(unittest.TestCase):
             patch_valid.return_value = True
             test_payload = DPTArray((0x01, 0x02))
             telegram = Telegram(
-                destination_address=GroupAddress("1/1/1"), payload=test_payload
+                destination_address=GroupAddress("1/1/1"),
+                payload=GroupValueWrite(test_payload),
             )
             self.assertTrue(
                 self.loop.run_until_complete(

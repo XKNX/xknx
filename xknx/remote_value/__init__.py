@@ -9,6 +9,7 @@ from .remote_value_climate_mode import (
 )
 from .remote_value_color_rgb import RemoteValueColorRGB
 from .remote_value_color_rgbw import RemoteValueColorRGBW
+from .remote_value_control import RemoteValueControl
 from .remote_value_datetime import RemoteValueDateTime
 from .remote_value_dpt_2_byte_unsigned import RemoteValueDpt2ByteUnsigned
 from .remote_value_dpt_value_1_ucount import RemoteValueDptValue1Ucount
@@ -21,3 +22,26 @@ from .remote_value_string import RemoteValueString
 from .remote_value_switch import RemoteValueSwitch
 from .remote_value_temp import RemoteValueTemp
 from .remote_value_updown import RemoteValueUpDown
+
+__all__ = [
+    "RemoteValue",
+    "RemoteValue1Count",
+    "RemoteValueBinaryHeatCool",
+    "RemoteValueBinaryOperationMode",
+    "RemoteValueClimateMode",
+    "RemoteValueColorRGB",
+    "RemoteValueColorRGBW",
+    "RemoteValueControl",
+    "RemoteValueDateTime",
+    "RemoteValueDpt2ByteUnsigned",
+    "RemoteValueDptValue1Ucount",
+    "RemoteValueScaling",
+    "RemoteValueSceneNumber",
+    "RemoteValueSensor",
+    "RemoteValueSetpointShift",
+    "RemoteValueStep",
+    "RemoteValueString",
+    "RemoteValueSwitch",
+    "RemoteValueTemp",
+    "RemoteValueUpDown",
+]

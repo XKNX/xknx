@@ -7,7 +7,8 @@ from xknx import XKNX
 from xknx.devices import Fan
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.telegram import GroupAddress, Telegram, TelegramType
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
 
 class TestFan(unittest.TestCase):
@@ -39,8 +40,7 @@ class TestFan(unittest.TestCase):
         self.assertEqual(
             telegram1,
             Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                telegramtype=TelegramType.GROUP_READ,
+                destination_address=GroupAddress("1/2/3"), payload=GroupValueRead()
             ),
         )
 
@@ -64,8 +64,7 @@ class TestFan(unittest.TestCase):
         self.assertEqual(
             telegram1,
             Telegram(
-                destination_address=GroupAddress("1/2/4"),
-                telegramtype=TelegramType.GROUP_READ,
+                destination_address=GroupAddress("1/2/4"), payload=GroupValueRead()
             ),
         )
 
@@ -83,7 +82,10 @@ class TestFan(unittest.TestCase):
         # 140 is 55% as byte (0...255)
         self.assertEqual(
             telegram,
-            Telegram(destination_address=GroupAddress("1/2/3"), payload=DPTArray(140)),
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray(140)),
+            ),
         )
 
     #
@@ -97,7 +99,8 @@ class TestFan(unittest.TestCase):
 
         # 140 is 55% as byte (0...255)
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTArray(140)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(140)),
         )
         self.loop.run_until_complete(fan.process(telegram))
         self.assertEqual(fan.current_speed, 55)
@@ -107,7 +110,8 @@ class TestFan(unittest.TestCase):
         xknx = XKNX()
         fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(fan.process(telegram))
@@ -118,7 +122,8 @@ class TestFan(unittest.TestCase):
         xknx = XKNX()
         fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTArray((23, 24))
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray((23, 24))),
         )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(fan.process(telegram))

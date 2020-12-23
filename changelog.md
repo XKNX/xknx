@@ -2,15 +2,29 @@
 
 ## Unreleased changes
 
+### Devices
+
+- Sensor: add DPT-3 datatypes "stepwise_dimming", "stepwise_blinds", "startstop_dimming", "startstop_blinds"
+- Light: It is now possible to control lights using individual group addresses for red, green, blue and white
+
 ### HA integration
 
 - knx_event: renamed `address` to `destination` and added `source`, `telegramtype`, `direction` attributes.
 
 ### Internals
 
+- Tunnel connections process DisconnectRequest now and closes/reconnects the tunnel when the other side closes gracefully
+- XKNX.connected Event can be used in future to await for a working connection or stop/relaunch tasks if the connection is lost
+- Lower heartbeat rate from every 15sec to every 70 sec and raise ConnectionstateRequest timeout from 1 to 10sec (3/8/1 KNXip Overview §5.8 Timeout Constants)
+- clean up Tunnel class
+- refactored timeout handling in GatewayScanner, RequestResponse and ValueReader.
 - renamed "PhysicalAddress" to "IndividualAddress"
 - Telegram: `group_address` renamed to `destination_address`, to prepare support for other APCI services and add `source_address`
+- Telegram: remove `Telegram.telegramtype` and replace with payload object derived from `xknx.telegram.apci.APCI`.
+- CEMIFrame: remove `CEMIFrame.cmd`, which can be derived from `CEMIFrame.payload`.
 - Farewell Travis CI; Welcome Github Actions!
+- StateUpdater allow float values for `register_remote_value(tracker_options)` attribute.
+- Handle exceptions from received unsupported or not implemented KNXIP Service Type identifiers
 
 ## 0.15.6 Bugfix for StateUpater 2020-11-26
 

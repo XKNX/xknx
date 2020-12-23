@@ -31,7 +31,7 @@ class KNXIPFrame:
         self.header = KNXIPHeader(xknx)
         self.body = None
 
-    def init(self, service_type_ident):
+    def init(self, service_type_ident: KNXIPServiceType) -> None:
         """Init object by service_type_ident. Will instanciate a body object depending on service_type_ident."""
         self.header.service_type_ident = service_type_ident
 
@@ -58,7 +58,9 @@ class KNXIPFrame:
         elif service_type_ident == KNXIPServiceType.CONNECTIONSTATE_RESPONSE:
             self.body = ConnectionStateResponse(self.xknx)
         else:
-            raise TypeError(self.header.service_type_ident)
+            raise CouldNotParseKNXIP(
+                f"KNXIPServiceType not implemented: {service_type_ident.name}"
+            )
 
     @staticmethod
     def init_from_body(knxip_body: KNXIPBody):

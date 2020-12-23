@@ -1,4 +1,4 @@
-name: "value is not allowed .*operation_modes.*"
+name: "value must be one of .*operation_modes.*"
 friendly_name: "Bathroom"
 target_temperature:
   address: "4/0/0"

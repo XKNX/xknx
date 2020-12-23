@@ -7,3 +7,10 @@ omit =
 
 [report]
 precision = 2
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # Don't complain about type checking imports:
+    if TYPE_CHECKING:
+
+    # Don't complain if tests don't hit defensive assertion code:
+    raise NotImplementedError

@@ -6,7 +6,8 @@ from unittest.mock import Mock
 from xknx import XKNX
 from xknx.devices import Sensor
 from xknx.dpt import DPTArray
-from xknx.telegram import GroupAddress, Telegram, TelegramType
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
 class TestSensor(unittest.TestCase):
@@ -78,11 +79,12 @@ class TestSensor(unittest.TestCase):
         #  set initial payload of sensor
         sensor.sensor_value.payload = payload
 
-        telegram = Telegram(destination_address=GroupAddress("1/2/3"), payload=payload)
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"), payload=GroupValueWrite(payload)
+        )
         response_telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
-            payload=payload,
-            telegramtype=TelegramType.GROUP_RESPONSE,
+            payload=GroupValueResponse(payload),
         )
 
         # verify not called when always_callback is False
@@ -2642,8 +2644,7 @@ class TestSensor(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                telegramtype=TelegramType.GROUP_READ,
+                destination_address=GroupAddress("1/2/3"), payload=GroupValueRead()
             ),
         )
 
@@ -2669,8 +2670,10 @@ class TestSensor(unittest.TestCase):
             xknx, "TestSensor", value_type="temperature", group_address_state="1/2/3"
         )
 
-        telegram = Telegram(destination_address=GroupAddress("1/2/3"))
-        telegram.payload = DPTArray((0x06, 0xA0))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray((0x06, 0xA0))),
+        )
         self.loop.run_until_complete(sensor.process(telegram))
         self.assertEqual(sensor.sensor_value.payload, DPTArray((0x06, 0xA0)))
         self.assertEqual(sensor.resolve_state(), 16.96)
@@ -2691,7 +2694,9 @@ class TestSensor(unittest.TestCase):
 
         sensor.register_device_updated_cb(async_after_update_callback)
 
-        telegram = Telegram(destination_address=GroupAddress("1/2/3"))
-        telegram.payload = DPTArray((0x01, 0x02))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray((0x01, 0x02))),
+        )
         self.loop.run_until_complete(sensor.process(telegram))
         after_update_callback.assert_called_with(sensor)

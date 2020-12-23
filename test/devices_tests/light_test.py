@@ -7,7 +7,8 @@ from xknx import XKNX
 from xknx.devices import Light
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.telegram import GroupAddress, Telegram, TelegramType
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
 
 class TestLight(unittest.TestCase):
@@ -64,6 +65,44 @@ class TestLight(unittest.TestCase):
         light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
         self.assertFalse(light.supports_color)
 
+    def test_supports_individual_color_true(self):
+        """Test supports_color true."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Diningroom.Light_1",
+            group_address_switch_red="1/1/1",
+            group_address_switch_red_state="1/1/2",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_switch_green="1/1/5",
+            group_address_switch_green_state="1/1/6",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_switch_blue="1/1/9",
+            group_address_switch_blue_state="1/1/10",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
+        )
+        self.assertTrue(light.supports_color)
+
+    def test_supports_individual_color_false(self):
+        """Test supports_color false."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Diningroom.Light_1",
+            group_address_switch_red="1/1/1",
+            group_address_switch_red_state="1/1/2",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_switch_green="1/1/5",
+            group_address_switch_green_state="1/1/6",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+        )
+        self.assertFalse(light.supports_color)
+
     #
     # TEST SUPPORT COLOR RGBW
     #
@@ -87,6 +126,52 @@ class TestLight(unittest.TestCase):
             "Diningroom.Light_1",
             group_address_switch="1/6/4",
             group_address_color="1/6/6",
+        )
+        self.assertFalse(light.supports_rgbw)
+
+    def test_supports_individual_rgbw_true(self):
+        """Test supports_rgbw true."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Diningroom.Light_1",
+            group_address_switch_red="1/1/1",
+            group_address_switch_red_state="1/1/2",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_switch_green="1/1/5",
+            group_address_switch_green_state="1/1/6",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_switch_blue="1/1/9",
+            group_address_switch_blue_state="1/1/10",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
+            group_address_switch_white="1/1/13",
+            group_address_switch_white_state="1/1/14",
+            group_address_brightness_white="1/1/15",
+            group_address_brightness_white_state="1/1/16",
+        )
+        self.assertTrue(light.supports_rgbw)
+
+    def test_supports_individual_rgbw_false(self):
+        """Test supports_color false."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Diningroom.Light_1",
+            group_address_switch_red="1/1/1",
+            group_address_switch_red_state="1/1/2",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_switch_green="1/1/5",
+            group_address_switch_green_state="1/1/6",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_switch_blue="1/1/9",
+            group_address_switch_blue_state="1/1/10",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
         )
         self.assertFalse(light.supports_rgbw)
 
@@ -156,32 +241,93 @@ class TestLight(unittest.TestCase):
 
         test_telegrams = [
             Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                telegramtype=TelegramType.GROUP_READ,
+                destination_address=GroupAddress("1/2/3"), payload=GroupValueRead()
             ),
             Telegram(
-                destination_address=GroupAddress("1/2/5"),
-                telegramtype=TelegramType.GROUP_READ,
+                destination_address=GroupAddress("1/2/5"), payload=GroupValueRead()
             ),
             Telegram(
-                destination_address=GroupAddress("1/2/6"),
-                telegramtype=TelegramType.GROUP_READ,
+                destination_address=GroupAddress("1/2/6"), payload=GroupValueRead()
             ),
             Telegram(
-                destination_address=GroupAddress("1/2/7"),
-                telegramtype=TelegramType.GROUP_READ,
+                destination_address=GroupAddress("1/2/9"), payload=GroupValueRead()
             ),
             Telegram(
-                destination_address=GroupAddress("1/2/8"),
-                telegramtype=TelegramType.GROUP_READ,
+                destination_address=GroupAddress("1/2/7"), payload=GroupValueRead()
             ),
             Telegram(
-                destination_address=GroupAddress("1/2/9"),
-                telegramtype=TelegramType.GROUP_READ,
+                destination_address=GroupAddress("1/2/8"), payload=GroupValueRead()
             ),
         ]
 
-        self.assertEqual(len(set(telegrams)), 6)
+        self.assertEqual(len(telegrams), 6)
+        self.assertListEqual(telegrams, test_telegrams)
+
+    def test_sync_individual_color(self):
+        """Test sync function / sending group reads to KNX bus. Testing with a Light without dimm functionality."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Diningroom.Light_1",
+            group_address_switch_red="1/1/1",
+            group_address_switch_red_state="1/1/2",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_switch_green="1/1/5",
+            group_address_switch_green_state="1/1/6",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_switch_blue="1/1/9",
+            group_address_switch_blue_state="1/1/10",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
+            group_address_switch_white="1/1/13",
+            group_address_switch_white_state="1/1/14",
+            group_address_brightness_white="1/1/15",
+            group_address_brightness_white_state="1/1/16",
+        )
+        self.loop.run_until_complete(light.sync())
+
+        self.assertEqual(xknx.telegrams.qsize(), 8)
+
+        telegrams = [xknx.telegrams.get_nowait() for _ in range(8)]
+
+        test_telegrams = [
+            Telegram(
+                destination_address=GroupAddress("1/1/2"),
+                payload=GroupValueRead(),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/4"),
+                payload=GroupValueRead(),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/6"),
+                payload=GroupValueRead(),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/8"),
+                payload=GroupValueRead(),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/10"),
+                payload=GroupValueRead(),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/12"),
+                payload=GroupValueRead(),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/14"),
+                payload=GroupValueRead(),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/16"),
+                payload=GroupValueRead(),
+            ),
+        ]
+
+        self.assertEqual(len(set(telegrams)), 8)
         self.assertEqual(set(telegrams), set(test_telegrams))
 
     #
@@ -216,33 +362,27 @@ class TestLight(unittest.TestCase):
 
         test_telegrams = [
             Telegram(
-                destination_address=GroupAddress("1/2/4"),
-                telegramtype=TelegramType.GROUP_READ,
+                destination_address=GroupAddress("1/2/4"), payload=GroupValueRead()
             ),
             Telegram(
-                destination_address=GroupAddress("1/2/6"),
-                telegramtype=TelegramType.GROUP_READ,
+                destination_address=GroupAddress("1/2/6"), payload=GroupValueRead()
             ),
             Telegram(
-                destination_address=GroupAddress("1/2/8"),
-                telegramtype=TelegramType.GROUP_READ,
+                destination_address=GroupAddress("1/2/8"), payload=GroupValueRead()
             ),
             Telegram(
-                destination_address=GroupAddress("1/2/10"),
-                telegramtype=TelegramType.GROUP_READ,
+                destination_address=GroupAddress("1/2/14"), payload=GroupValueRead()
             ),
             Telegram(
-                destination_address=GroupAddress("1/2/12"),
-                telegramtype=TelegramType.GROUP_READ,
+                destination_address=GroupAddress("1/2/10"), payload=GroupValueRead()
             ),
             Telegram(
-                destination_address=GroupAddress("1/2/14"),
-                telegramtype=TelegramType.GROUP_READ,
+                destination_address=GroupAddress("1/2/12"), payload=GroupValueRead()
             ),
         ]
 
-        self.assertEqual(len(set(telegrams)), 6)
-        self.assertEqual(set(telegrams), set(test_telegrams))
+        self.assertEqual(len(telegrams), 6)
+        self.assertListEqual(telegrams, test_telegrams)
 
     #
     # TEST SET ON
@@ -261,8 +401,60 @@ class TestLight(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram,
-            Telegram(destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)),
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(1)),
+            ),
         )
+
+    def test_set_on_individual_color(self):
+        """Test switching on a Light."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Diningroom.Light_1",
+            group_address_switch_red="1/1/1",
+            group_address_switch_red_state="1/1/2",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_switch_green="1/1/5",
+            group_address_switch_green_state="1/1/6",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_switch_blue="1/1/9",
+            group_address_switch_blue_state="1/1/10",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
+            group_address_switch_white="1/1/13",
+            group_address_switch_white_state="1/1/14",
+            group_address_brightness_white="1/1/15",
+            group_address_brightness_white_state="1/1/16",
+        )
+        self.loop.run_until_complete(light.set_on())
+        self.assertEqual(xknx.telegrams.qsize(), 4)
+
+        telegrams = [xknx.telegrams.get_nowait() for _ in range(4)]
+
+        test_telegrams = [
+            Telegram(
+                destination_address=GroupAddress("1/1/1"),
+                payload=GroupValueWrite(DPTBinary(True)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/5"),
+                payload=GroupValueWrite(DPTBinary(True)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/9"),
+                payload=GroupValueWrite(DPTBinary(True)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/13"),
+                payload=GroupValueWrite(DPTBinary(True)),
+            ),
+        ]
+        self.assertEqual(len(set(telegrams)), 4)
+        self.assertEqual(set(telegrams), set(test_telegrams))
 
     #
     # TEST SET OFF
@@ -281,8 +473,60 @@ class TestLight(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram,
-            Telegram(destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0)),
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(0)),
+            ),
         )
+
+    def test_set_off_individual_color(self):
+        """Test switching off a Light."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Diningroom.Light_1",
+            group_address_switch_red="1/1/1",
+            group_address_switch_red_state="1/1/2",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_switch_green="1/1/5",
+            group_address_switch_green_state="1/1/6",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_switch_blue="1/1/9",
+            group_address_switch_blue_state="1/1/10",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
+            group_address_switch_white="1/1/13",
+            group_address_switch_white_state="1/1/14",
+            group_address_brightness_white="1/1/15",
+            group_address_brightness_white_state="1/1/16",
+        )
+        self.loop.run_until_complete(light.set_off())
+        self.assertEqual(xknx.telegrams.qsize(), 4)
+
+        telegrams = [xknx.telegrams.get_nowait() for _ in range(4)]
+
+        test_telegrams = [
+            Telegram(
+                destination_address=GroupAddress("1/1/1"),
+                payload=GroupValueWrite(DPTBinary(False)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/5"),
+                payload=GroupValueWrite(DPTBinary(False)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/9"),
+                payload=GroupValueWrite(DPTBinary(False)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/13"),
+                payload=GroupValueWrite(DPTBinary(False)),
+            ),
+        ]
+        self.assertEqual(len(set(telegrams)), 4)
+        self.assertEqual(set(telegrams), set(test_telegrams))
 
     #
     # TEST SET BRIGHTNESS
@@ -301,7 +545,10 @@ class TestLight(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram,
-            Telegram(destination_address=GroupAddress("1/2/5"), payload=DPTArray(23)),
+            Telegram(
+                destination_address=GroupAddress("1/2/5"),
+                payload=GroupValueWrite(DPTArray(23)),
+            ),
         )
 
     def test_set_brightness_not_dimmable(self):
@@ -335,7 +582,7 @@ class TestLight(unittest.TestCase):
             telegram,
             Telegram(
                 destination_address=GroupAddress("1/2/5"),
-                payload=DPTArray((23, 24, 25)),
+                payload=GroupValueWrite(DPTArray((23, 24, 25))),
             ),
         )
         self.loop.run_until_complete(xknx.devices.process(telegram))
@@ -346,6 +593,89 @@ class TestLight(unittest.TestCase):
         # pylint: disable=invalid-name
         xknx = XKNX()
         light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
+        with patch("logging.Logger.warning") as mock_warn:
+            self.loop.run_until_complete(light.set_color((23, 24, 25)))
+            self.assertEqual(xknx.telegrams.qsize(), 0)
+            mock_warn.assert_called_with(
+                "Colors not supported for device %s", "TestLight"
+            )
+
+    def test_set_individual_color(self):
+        """Test setting the color of a Light."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Diningroom.Light_1",
+            group_address_switch_red="1/1/1",
+            group_address_switch_red_state="1/1/2",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_switch_green="1/1/5",
+            group_address_switch_green_state="1/1/6",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_switch_blue="1/1/9",
+            group_address_switch_blue_state="1/1/10",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
+        )
+        self.loop.run_until_complete(light.set_color([23, 24, 25]))
+        self.assertEqual(xknx.telegrams.qsize(), 3)
+        telegrams = [xknx.telegrams.get_nowait() for _ in range(3)]
+
+        test_telegrams = [
+            Telegram(
+                destination_address=GroupAddress("1/1/3"),
+                payload=GroupValueWrite(DPTArray(23)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/7"),
+                payload=GroupValueWrite(DPTArray(24)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/11"),
+                payload=GroupValueWrite(DPTArray(25)),
+            ),
+        ]
+
+        self.assertEqual(len(set(telegrams)), 3)
+        self.assertEqual(set(telegrams), set(test_telegrams))
+
+        self.loop.run_until_complete(
+            xknx.devices.process(
+                Telegram(
+                    destination_address=GroupAddress("1/1/4"),
+                    payload=GroupValueWrite(DPTArray(23)),
+                )
+            )
+        )
+        self.loop.run_until_complete(
+            xknx.devices.process(
+                Telegram(
+                    destination_address=GroupAddress("1/1/8"),
+                    payload=GroupValueWrite(DPTArray(24)),
+                )
+            )
+        )
+        self.loop.run_until_complete(
+            xknx.devices.process(
+                Telegram(
+                    destination_address=GroupAddress("1/1/12"),
+                    payload=GroupValueWrite(DPTArray(25)),
+                )
+            )
+        )
+        self.assertEqual(light.current_color, ([23, 24, 25], None))
+
+    def test_set_individual_color_not_possible(self):
+        """Test setting the color of a non light without color."""
+        # pylint: disable=invalid-name
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "TestLight",
+            group_address_switch_red="1/1/1",
+        )
         with patch("logging.Logger.warning") as mock_warn:
             self.loop.run_until_complete(light.set_color((23, 24, 25)))
             self.assertEqual(xknx.telegrams.qsize(), 0)
@@ -373,7 +703,7 @@ class TestLight(unittest.TestCase):
             telegram,
             Telegram(
                 destination_address=GroupAddress("1/2/5"),
-                payload=DPTArray((23, 24, 25, 26, 0, 15)),
+                payload=GroupValueWrite(DPTArray((23, 24, 25, 26, 0, 15))),
             ),
         )
         self.loop.run_until_complete(xknx.devices.process(telegram))
@@ -388,6 +718,117 @@ class TestLight(unittest.TestCase):
             name="TestLight",
             group_address_switch="1/2/3",
             group_address_color="1/2/4",
+        )
+        with patch("logging.Logger.warning") as mock_warn:
+            self.loop.run_until_complete(light.set_color((23, 24, 25), 26))
+
+            self.assertEqual(xknx.telegrams.qsize(), 0)
+            mock_warn.assert_called_with(
+                "RGBW not supported for device %s", "TestLight"
+            )
+
+    def test_set_individual_color_rgbw(self):
+        """Test setting RGBW value of a Light."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Diningroom.Light_1",
+            group_address_switch_red="1/1/1",
+            group_address_switch_red_state="1/1/2",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_switch_green="1/1/5",
+            group_address_switch_green_state="1/1/6",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_switch_blue="1/1/9",
+            group_address_switch_blue_state="1/1/10",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
+            group_address_switch_white="1/1/13",
+            group_address_switch_white_state="1/1/14",
+            group_address_brightness_white="1/1/15",
+            group_address_brightness_white_state="1/1/16",
+        )
+        self.loop.run_until_complete(light.set_color([23, 24, 25], white=26))
+        self.assertEqual(xknx.telegrams.qsize(), 4)
+        telegrams = [xknx.telegrams.get_nowait() for _ in range(4)]
+
+        test_telegrams = [
+            Telegram(
+                destination_address=GroupAddress("1/1/3"),
+                payload=GroupValueWrite(DPTArray(23)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/7"),
+                payload=GroupValueWrite(DPTArray(24)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/11"),
+                payload=GroupValueWrite(DPTArray(25)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/15"),
+                payload=GroupValueWrite(DPTArray(26)),
+            ),
+        ]
+
+        self.assertEqual(len(set(telegrams)), 4)
+        self.assertEqual(set(telegrams), set(test_telegrams))
+
+        self.loop.run_until_complete(
+            xknx.devices.process(
+                Telegram(
+                    destination_address=GroupAddress("1/1/4"),
+                    payload=GroupValueWrite(DPTArray(23)),
+                )
+            )
+        )
+        self.loop.run_until_complete(
+            xknx.devices.process(
+                Telegram(
+                    destination_address=GroupAddress("1/1/8"),
+                    payload=GroupValueWrite(DPTArray(24)),
+                )
+            )
+        )
+        self.loop.run_until_complete(
+            xknx.devices.process(
+                Telegram(
+                    destination_address=GroupAddress("1/1/12"),
+                    payload=GroupValueWrite(DPTArray(25)),
+                )
+            )
+        )
+        self.loop.run_until_complete(
+            xknx.devices.process(
+                Telegram(
+                    destination_address=GroupAddress("1/1/16"),
+                    payload=GroupValueWrite(DPTArray(26)),
+                )
+            )
+        )
+        self.assertEqual(light.current_color, ([23, 24, 25], 26))
+
+    def test_set_individual_color_rgbw_not_possible(self):
+        """Test setting RGBW value of a non light without color."""
+        # pylint: disable=invalid-name
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "TestLight",
+            group_address_switch_red="1/1/1",
+            group_address_switch_red_state="1/1/2",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_switch_green="1/1/5",
+            group_address_switch_green_state="1/1/6",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_switch_blue="1/1/9",
+            group_address_switch_blue_state="1/1/10",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
         )
         with patch("logging.Logger.warning") as mock_warn:
             self.loop.run_until_complete(light.set_color((23, 24, 25), 26))
@@ -414,7 +855,10 @@ class TestLight(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram,
-            Telegram(destination_address=GroupAddress("1/2/5"), payload=DPTArray(23)),
+            Telegram(
+                destination_address=GroupAddress("1/2/5"),
+                payload=GroupValueWrite(DPTArray(23)),
+            ),
         )
 
     def test_set_tw_unsupported(self):
@@ -448,10 +892,12 @@ class TestLight(unittest.TestCase):
             telegram,
             Telegram(
                 destination_address=GroupAddress("1/2/5"),
-                payload=DPTArray(
-                    (
-                        0x0F,
-                        0xA0,
+                payload=GroupValueWrite(
+                    DPTArray(
+                        (
+                            0x0F,
+                            0xA0,
+                        )
                     )
                 ),
             ),
@@ -484,13 +930,50 @@ class TestLight(unittest.TestCase):
         self.assertEqual(light.state, None)
 
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
         self.loop.run_until_complete(light.process(telegram))
         self.assertEqual(light.state, True)
 
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(0)),
+        )
+        self.loop.run_until_complete(light.process(telegram))
+        self.assertEqual(light.state, False)
+
+    def test_process_color_switch(self):
+        """Test process / reading telegrams from telegram queue. Test if switch position is processed correctly."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "TestLight",
+            group_address_switch_red="1/1/1",
+            group_address_switch_red_state="1/1/2",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_switch_green="1/1/5",
+            group_address_switch_green_state="1/1/6",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_switch_blue="1/1/9",
+            group_address_switch_blue_state="1/1/10",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
+        )
+        self.assertEqual(light.state, None)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/1/2"),
+            payload=GroupValueWrite(DPTBinary(True)),
+        )
+        self.loop.run_until_complete(light.process(telegram))
+        self.assertEqual(light.state, True)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/1/2"),
+            payload=GroupValueWrite(DPTBinary(False)),
         )
         self.loop.run_until_complete(light.process(telegram))
         self.assertEqual(light.state, False)
@@ -515,7 +998,8 @@ class TestLight(unittest.TestCase):
         light.register_device_updated_cb(async_after_update_callback)
 
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
         self.loop.run_until_complete(light.process(telegram))
 
@@ -533,7 +1017,8 @@ class TestLight(unittest.TestCase):
         self.assertEqual(light.current_brightness, None)
 
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/5"), payload=DPTArray(23)
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTArray(23)),
         )
         self.loop.run_until_complete(light.process(telegram))
         self.assertEqual(light.current_brightness, 23)
@@ -548,7 +1033,8 @@ class TestLight(unittest.TestCase):
             group_address_brightness="1/2/5",
         )
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/5"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(light.process(telegram))
@@ -564,7 +1050,8 @@ class TestLight(unittest.TestCase):
             group_address_brightness="1/2/5",
         )
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/5"), payload=DPTArray((23, 24))
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTArray((23, 24))),
         )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(light.process(telegram))
@@ -580,10 +1067,51 @@ class TestLight(unittest.TestCase):
         )
         self.assertEqual(light.current_color, (None, None))
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/5"), payload=DPTArray((23, 24, 25))
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTArray((23, 24, 25))),
         )
         self.loop.run_until_complete(light.process(telegram))
         self.assertEqual(light.current_color, ((23, 24, 25), None))
+
+    def test_process_individual_color(self):
+        """Test process / reading telegrams from telegram queue. Test if color is processed."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "TestLight",
+            group_address_switch_red="1/1/1",
+            group_address_switch_red_state="1/1/2",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_switch_green="1/1/5",
+            group_address_switch_green_state="1/1/6",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_switch_blue="1/1/9",
+            group_address_switch_blue_state="1/1/10",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
+        )
+        self.assertEqual(light.current_color, (None, None))
+
+        telegrams = [
+            Telegram(
+                destination_address=GroupAddress("1/1/4"),
+                payload=GroupValueWrite(DPTArray(42)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/8"),
+                payload=GroupValueWrite(DPTArray(43)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/12"),
+                payload=GroupValueWrite(DPTArray(44)),
+            ),
+        ]
+
+        for telegram in telegrams:
+            self.loop.run_until_complete(light.process(telegram))
+        self.assertEqual(light.current_color, ([42, 43, 44], None))
 
     def test_process_color_rgbw(self):
         """Test process / reading telegrams from telegram queue. Test if RGBW is processed."""
@@ -598,10 +1126,41 @@ class TestLight(unittest.TestCase):
         self.assertEqual(light.current_color, (None, None))
         telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
-            payload=DPTArray((23, 24, 25, 26, 0, 15)),
+            payload=GroupValueWrite(DPTArray((23, 24, 25, 26, 0, 15))),
         )
         self.loop.run_until_complete(light.process(telegram))
         self.assertEqual(light.current_color, ([23, 24, 25], 26))
+
+    def test_process_individual_color_rgbw(self):
+        """Test process / reading telegrams from telegram queue. Test if RGBW is processed."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Diningroom.Light_1",
+            group_address_switch_red="1/1/1",
+            group_address_switch_red_state="1/1/2",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_switch_green="1/1/5",
+            group_address_switch_green_state="1/1/6",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_switch_blue="1/1/9",
+            group_address_switch_blue_state="1/1/10",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
+            group_address_switch_white="1/1/13",
+            group_address_switch_white_state="1/1/14",
+            group_address_brightness_white="1/1/15",
+            group_address_brightness_white_state="1/1/16",
+        )
+        self.assertEqual(light.current_color, (None, None))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/1/16"),
+            payload=GroupValueWrite(DPTArray(42)),
+        )
+        self.loop.run_until_complete(light.process(telegram))
+        self.assertEqual(light.current_color, (None, 42))
 
     def test_process_tunable_white(self):
         """Test process / reading telegrams from telegram queue. Test if tunable white is processed."""
@@ -615,7 +1174,8 @@ class TestLight(unittest.TestCase):
         self.assertEqual(light.current_tunable_white, None)
 
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/5"), payload=DPTArray(23)
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTArray(23)),
         )
         self.loop.run_until_complete(light.process(telegram))
         self.assertEqual(light.current_tunable_white, 23)
@@ -630,7 +1190,8 @@ class TestLight(unittest.TestCase):
             group_address_tunable_white="1/2/5",
         )
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/5"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(light.process(telegram))
@@ -646,7 +1207,8 @@ class TestLight(unittest.TestCase):
             group_address_tunable_white="1/2/5",
         )
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/5"), payload=DPTArray((23, 24))
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTArray((23, 24))),
         )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(light.process(telegram))
@@ -664,10 +1226,12 @@ class TestLight(unittest.TestCase):
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
-            payload=DPTArray(
-                (
-                    0x0F,
-                    0xA0,
+            payload=GroupValueWrite(
+                DPTArray(
+                    (
+                        0x0F,
+                        0xA0,
+                    )
                 )
             ),
         )
@@ -684,7 +1248,8 @@ class TestLight(unittest.TestCase):
             group_address_color_temperature="1/2/5",
         )
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/5"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(light.process(telegram))
@@ -700,7 +1265,8 @@ class TestLight(unittest.TestCase):
             group_address_color_temperature="1/2/5",
         )
         telegram = Telegram(
-            destination_address=GroupAddress("1/2/5"), payload=DPTArray(23)
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTArray(23)),
         )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(light.process(telegram))
@@ -769,6 +1335,22 @@ class TestLight(unittest.TestCase):
             group_address_color_temperature_state="1/7/10",
             group_address_rgbw="1/7/11",
             group_address_rgbw_state="1/7/12",
+            group_address_switch_red="1/1/1",
+            group_address_switch_red_state="1/1/2",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_switch_green="1/1/5",
+            group_address_switch_green_state="1/1/6",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_switch_blue="1/1/9",
+            group_address_switch_blue_state="1/1/10",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
+            group_address_switch_white="1/1/13",
+            group_address_switch_white_state="1/1/14",
+            group_address_brightness_white="1/1/15",
+            group_address_brightness_white_state="1/1/16",
         )
         self.assertTrue(light.has_group_address(GroupAddress("1/7/1")))
         self.assertTrue(light.has_group_address(GroupAddress("1/7/2")))
@@ -782,4 +1364,22 @@ class TestLight(unittest.TestCase):
         self.assertTrue(light.has_group_address(GroupAddress("1/7/10")))
         self.assertTrue(light.has_group_address(GroupAddress("1/7/11")))
         self.assertTrue(light.has_group_address(GroupAddress("1/7/12")))
+
+        self.assertTrue(light.has_group_address(GroupAddress("1/1/1")))
+        self.assertTrue(light.has_group_address(GroupAddress("1/1/2")))
+        self.assertTrue(light.has_group_address(GroupAddress("1/1/3")))
+        self.assertTrue(light.has_group_address(GroupAddress("1/1/4")))
+        self.assertTrue(light.has_group_address(GroupAddress("1/1/5")))
+        self.assertTrue(light.has_group_address(GroupAddress("1/1/6")))
+        self.assertTrue(light.has_group_address(GroupAddress("1/1/7")))
+        self.assertTrue(light.has_group_address(GroupAddress("1/1/8")))
+        self.assertTrue(light.has_group_address(GroupAddress("1/1/9")))
+        self.assertTrue(light.has_group_address(GroupAddress("1/1/10")))
+        self.assertTrue(light.has_group_address(GroupAddress("1/1/11")))
+        self.assertTrue(light.has_group_address(GroupAddress("1/1/12")))
+        self.assertTrue(light.has_group_address(GroupAddress("1/1/13")))
+        self.assertTrue(light.has_group_address(GroupAddress("1/1/14")))
+        self.assertTrue(light.has_group_address(GroupAddress("1/1/15")))
+        self.assertTrue(light.has_group_address(GroupAddress("1/1/16")))
+
         self.assertFalse(light.has_group_address(GroupAddress("1/7/13")))
