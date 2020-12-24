@@ -175,10 +175,13 @@ class GatewayScanner:
 
         self._udp_clients.append(udp_client)
 
-        (local_addr, local_port) = udp_client.getsockname()
-        search_request = SearchRequest(
-            self.xknx, discovery_endpoint=HPAI(ip_addr=local_addr, port=local_port)
-        )
+        _optional_udp_address_tuple = udp_client.getsockname()
+        if _optional_udp_address_tuple is not None:
+            (local_addr, local_port) = _optional_udp_address_tuple
+            discovery_endpoint = HPAI(ip_addr=local_addr, port=local_port)
+        else:
+            discovery_endpoint = HPAI()
+        search_request = SearchRequest(self.xknx, discovery_endpoint=discovery_endpoint)
         udp_client.send(KNXIPFrame.init_from_body(search_request))
 
     def _response_rec_callback(

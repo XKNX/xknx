@@ -5,7 +5,7 @@ Will report if the corresponding answer was not received.
 """
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Type
+from typing import TYPE_CHECKING, Type
 
 from xknx.knxip import ErrorCode, KNXIPBodyResponse, KNXIPFrame
 
@@ -65,7 +65,7 @@ class RequestResponse:
         """Build knxipframe (within derived class) and send via UDP."""
         self.udpclient.send(self.create_knxipframe())
 
-    def response_rec_callback(self, knxipframe: KNXIPFrame, _: Any) -> None:
+    def response_rec_callback(self, knxipframe: KNXIPFrame, _: UDPClient) -> None:
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knxipframe.body, self.awaited_response_class):
             logger.warning("Could not understand knxipframe")

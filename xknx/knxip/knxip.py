@@ -4,6 +4,8 @@ Module for serialization and deserialization of KNX/IP packets.
 It consists of a header and a body.
 Depending on the service_type_ident different types of body classes are instanciated.
 """
+from typing import TYPE_CHECKING, List, Optional
+
 from xknx.exceptions import CouldNotParseKNXIP
 
 from .body import KNXIPBody
@@ -21,15 +23,18 @@ from .search_response import SearchResponse
 from .tunnelling_ack import TunnellingAck
 from .tunnelling_request import TunnellingRequest
 
+if TYPE_CHECKING:
+    from xknx.xknx import XKNX
+
 
 class KNXIPFrame:
     """Class for KNX/IP Frames."""
 
-    def __init__(self, xknx):
+    def __init__(self, xknx: "XKNX"):
         """Initialize object."""
         self.xknx = xknx
         self.header = KNXIPHeader()
-        self.body = None
+        self.body: Optional[KNXIPBody] = None
 
     def init(self, service_type_ident: KNXIPServiceType) -> None:
         """Init object by service_type_ident. Will instanciate a body object depending on service_type_ident."""
@@ -63,7 +68,7 @@ class KNXIPFrame:
             )
 
     @staticmethod
-    def init_from_body(knxip_body: KNXIPBody):
+    def init_from_body(knxip_body: KNXIPBody) -> "KNXIPFrame":
         """Return KNXIPFrame from KNXIPBody."""
         knxipframe = KNXIPFrame(knxip_body.xknx)
         knxipframe.header.service_type_ident = knxip_body.__class__.service_type
@@ -71,7 +76,7 @@ class KNXIPFrame:
         knxipframe.normalize()
         return knxipframe
 
-    def from_knx(self, data):
+    def from_knx(self, data: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         pos = self.header.from_knx(data)
 
@@ -87,7 +92,7 @@ class KNXIPFrame:
         """Normalize internal data. Necessary step for serialization."""
         self.header.set_length(self.body)
 
-    def to_knx(self):
+    def to_knx(self) -> List[int]:
         """Serialize to KNX/IP raw data."""
         data = []
         data.extend(self.header.to_knx())
