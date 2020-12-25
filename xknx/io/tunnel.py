@@ -170,7 +170,9 @@ class Tunnel(Interface):
                 connect.identifier,
             )
             return True
-        raise CommunicationError("ConnectRequest failed")
+        raise CommunicationError(
+            f"ConnectRequest failed. Status code: {connect.response_status_code}"
+        )
 
     async def _connectionstate_request(self) -> bool:
         """Return state of tunnel. True if tunnel is in good shape."""

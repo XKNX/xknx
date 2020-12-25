@@ -5,7 +5,7 @@ Will report if the corresponding answer was not received.
 """
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING, Optional, Type
 
 from xknx.knxip import ErrorCode, KNXIPBodyResponse, KNXIPFrame
 
@@ -34,6 +34,8 @@ class RequestResponse:
         self.response_received_or_timeout = asyncio.Event()
         self.success = False
         self.timeout_in_seconds = timeout_in_seconds
+
+        self.response_status_code: Optional[ErrorCode] = None
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
@@ -70,6 +72,7 @@ class RequestResponse:
         if not isinstance(knxipframe.body, self.awaited_response_class):
             logger.warning("Could not understand knxipframe")
             return
+        self.response_status_code = knxipframe.body.status_code
         self.response_received_or_timeout.set()
         if knxipframe.body.status_code == ErrorCode.E_NO_ERROR:
             self.success = True
