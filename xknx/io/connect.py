@@ -1,4 +1,6 @@
 """Abstraction to send ConnectRequest and wait for ConnectResponse."""
+from typing import TYPE_CHECKING
+
 from xknx.knxip import (
     HPAI,
     ConnectRequest,
@@ -9,11 +11,16 @@ from xknx.knxip import (
 
 from .request_response import RequestResponse
 
+if TYPE_CHECKING:
+    from xknx.xknx import XKNX
+
+    from .udp_client import UDPClient
+
 
 class Connect(RequestResponse):
     """Class to send a ConnectRequest and wait for ConnectResponse.."""
 
-    def __init__(self, xknx, udp_client):
+    def __init__(self, xknx: "XKNX", udp_client: "UDPClient"):
         """Initialize Connect class."""
         self.udp_client = udp_client
         super().__init__(xknx, self.udp_client, ConnectResponse)
@@ -33,7 +40,8 @@ class Connect(RequestResponse):
         )
         return KNXIPFrame.init_from_body(connect_request)
 
-    def on_success_hook(self, knxipframe):
+    def on_success_hook(self, knxipframe: KNXIPFrame) -> None:
         """Set communication channel and identifier after having received a valid answer."""
+        assert isinstance(knxipframe.body, ConnectResponse)
         self.communication_channel = knxipframe.body.communication_channel
         self.identifier = knxipframe.body.identifier

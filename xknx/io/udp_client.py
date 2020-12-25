@@ -10,7 +10,7 @@ import socket
 from sys import platform
 from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, cast
 
-from xknx.exceptions import CouldNotParseKNXIP, XKNXException
+from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, XKNXException
 from xknx.knxip import KNXIPFrame, KNXIPServiceType
 
 if TYPE_CHECKING:
@@ -216,14 +216,13 @@ class UDPClient:
         else:
             self.transport.sendto(bytes(knxipframe.to_knx()))
 
-    # TODO: typing - remove Optonal - raise an Error when transport is None
-    def getsockname(self) -> Optional[Tuple[str, int]]:
+    def getsockname(self) -> Tuple[str, int]:
         """Return socket IP and port."""
-        return (
-            self.transport.get_extra_info("sockname")
-            if self.transport is not None
-            else None
-        )
+        if self.transport is None:
+            raise CommunicationError(
+                "No transport defined. Socket information not resolveable"
+            )
+        return cast(Tuple[str, int], self.transport.get_extra_info("sockname"))
 
     def getremote(self) -> Optional[str]:
         """Return peername."""

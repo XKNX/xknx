@@ -154,7 +154,7 @@ class TelegramQueue:
             if isinstance(telegram.payload, GroupValueWrite):
                 await self.xknx.devices.process(telegram)
         else:
-            logger.warning("No KNXIP interface defined")
+            raise CommunicationError("No KNXIP interface defined")
 
     async def process_telegram_incoming(self, telegram: Telegram) -> None:
         """Process incoming telegram."""

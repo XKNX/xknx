@@ -4,6 +4,7 @@ Module for Serialization and Deserialization of KNX Routing Indications.
 Routing indications are used to transport CEMI Messages.
 """
 import logging
+from typing import Optional
 
 from xknx.exceptions import UnsupportedCEMIMessage
 
@@ -24,7 +25,7 @@ class RoutingIndication(KNXIPBody):
     def __init__(self, xknx, cemi: CEMIFrame = None):
         """Initialize SearchRequest object."""
         super().__init__(xknx)
-        self.cemi = (
+        self.cemi: Optional[CEMIFrame] = (
             cemi
             if cemi is not None
             else CEMIFrame(xknx, code=CEMIMessageCode.L_DATA_IND)

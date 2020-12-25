@@ -1,4 +1,6 @@
 """Abstraction to send a TunnelingRequest and wait for TunnelingResponse."""
+from typing import TYPE_CHECKING
+
 from xknx.knxip import (
     CEMIFrame,
     CEMIMessageCode,
@@ -9,18 +11,24 @@ from xknx.knxip import (
 
 from .request_response import RequestResponse
 
+if TYPE_CHECKING:
+    from xknx.telegram import IndividualAddress, Telegram
+    from xknx.xknx import XKNX
+
+    from .udp_client import UDPClient
+
 
 class Tunnelling(RequestResponse):
     """Class to TunnelingRequest and wait for TunnelingResponse."""
 
     def __init__(
         self,
-        xknx,
-        udp_client,
-        telegram,
-        src_address,
-        sequence_counter,
-        communication_channel_id,
+        xknx: "XKNX",
+        udp_client: "UDPClient",
+        telegram: "Telegram",
+        src_address: "IndividualAddress",
+        sequence_counter: int,
+        communication_channel_id: int,
     ):
         """Initialize Tunnelling class."""
         # pylint: disable=too-many-arguments

@@ -4,6 +4,7 @@ Module for Serialization and Deserialization of a KNX Tunnelling Request informa
 Tunnelling requests are used to transmit a KNX telegram within an existing KNX tunnel connection.
 """
 import logging
+from typing import Optional
 
 from xknx.exceptions import CouldNotParseKNXIP, UnsupportedCEMIMessage
 
@@ -28,14 +29,14 @@ class TunnellingRequest(KNXIPBody):
         xknx,
         communication_channel_id: int = 1,
         sequence_counter: int = 0,
-        cemi: CEMIFrame = None,
+        cemi: Optional[CEMIFrame] = None,
     ):
         """Initialize TunnellingRequest object."""
         super().__init__(xknx)
 
         self.communication_channel_id = communication_channel_id
         self.sequence_counter = sequence_counter
-        self.cemi = (
+        self.cemi: Optional[CEMIFrame] = (
             cemi
             if cemi is not None
             else CEMIFrame(xknx, code=CEMIMessageCode.L_Data_REQ)
