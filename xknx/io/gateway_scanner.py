@@ -197,10 +197,14 @@ class GatewayScanner:
             local_ip=udp_client.local_addr[0],
         )
         try:
-            dib = knx_ip_frame.body[DIBSuppSVCFamilies]
+            dib = next(
+                dib
+                for dib in knx_ip_frame.body.dibs
+                if isinstance(dib, DIBSuppSVCFamilies)
+            )
             gateway.supports_routing = dib.supports(DIBServiceFamily.ROUTING)
             gateway.supports_tunnelling = dib.supports(DIBServiceFamily.TUNNELING)
-        except IndexError:
+        except StopIteration:
             pass
 
         self._add_found_gateway(gateway)

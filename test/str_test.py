@@ -632,8 +632,8 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(search_response),
             '<SearchResponse control_endpoint="<HPAI 192.168.42.1:33941 />" dibs="[\n'
-            '<DIB dtc="None" data="" />,\n'
-            '<DIB dtc="None" data="" />\n'
+            '<DIB dtc="0" data="" />,\n'
+            '<DIB dtc="0" data="" />\n'
             ']" />',
         )
 
