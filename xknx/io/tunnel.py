@@ -69,8 +69,8 @@ class Tunnel(Interface):
         self.auto_reconnect = auto_reconnect
         self.auto_reconnect_wait = auto_reconnect_wait
 
-        self._heartbeat_task: Optional[asyncio.Task] = None
-        self._reconnect_task: Optional[asyncio.Task] = None
+        self._heartbeat_task: Optional[asyncio.Task[None]] = None
+        self._reconnect_task: Optional[asyncio.Task[None]] = None
 
         self._is_reconnecting = False
 

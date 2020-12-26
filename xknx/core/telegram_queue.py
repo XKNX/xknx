@@ -9,7 +9,7 @@ You may register callbacks to be notified if a telegram was pushed to the queue.
 """
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Awaitable, Callable, List, Optional
+from typing import TYPE_CHECKING, Awaitable, Callable, List, Optional, Tuple
 
 from xknx.exceptions import CommunicationError, XKNXException
 from xknx.telegram import AddressFilter, GroupAddress, Telegram, TelegramDirection
@@ -57,7 +57,7 @@ class TelegramQueue:
         self.xknx = xknx
         self.telegram_received_cbs: List[TelegramQueue.Callback] = []
         self.outgoing_queue: asyncio.Queue[Optional[Telegram]] = asyncio.Queue()
-        self._consumer_task: Optional[Awaitable] = None
+        self._consumer_task: Optional[Awaitable[Tuple[None, None]]] = None
 
     def register_telegram_received_cb(
         self,
