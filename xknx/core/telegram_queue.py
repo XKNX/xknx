@@ -137,6 +137,8 @@ class TelegramQueue:
         while not self.xknx.telegrams.empty():
             try:
                 telegram = self.xknx.telegrams.get_nowait()
+                if telegram is None:
+                    return
                 if telegram.direction == TelegramDirection.INCOMING:
                     await self.process_telegram_incoming(telegram)
                 elif telegram.direction == TelegramDirection.OUTGOING:

@@ -3,18 +3,24 @@ Module for handling a vector/array of devices.
 
 More or less an array with devices. Adds some search functionality to find devices.
 """
+from typing import Awaitable, Callable
+
+from xknx.telegram import Telegram
+
 from .device import Device
 
 
 class Devices:
     """Class for handling a vector/array of devices."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize Devices class."""
         self.__devices = []
         self.device_updated_cbs = []
 
-    def register_device_updated_cb(self, device_updated_cb):
+    def register_device_updated_cb(
+        self, device_updated_cb: Callable[[Device], Awaitable[None]]
+    ) -> None:
         """Register callback for devices beeing updated."""
         self.device_updated_cbs.append(device_updated_cb)
 
@@ -64,7 +70,7 @@ class Devices:
         for device_updated_cb in self.device_updated_cbs:
             await device_updated_cb(device)
 
-    async def process(self, telegram):
+    async def process(self, telegram: Telegram) -> None:
         """Process telegram."""
         for device in self.devices_by_group_address(telegram.destination_address):
             await device.process(telegram)
