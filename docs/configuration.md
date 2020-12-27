@@ -24,7 +24,6 @@ The configuration file can contain three sections.
     - `gateway_ip` (required) sets the ip address of the KNX tunneling interface
     - `gateway_port` (optional) sets the port the KNX tunneling interface is listening on
     - `local_ip` (optional) sets the ip address that is used by xknx
-    - `local_port` (optional) sets the udp port that is used by xknx
     - `route_back` (optional) true to send empty local port (0.0.0.0:0) into command telegrams by xknx (for dockerised app)
   - `routing` for a UDP multicast connection
     - `local_ip` (optional) sets the ip address that is used by xknx

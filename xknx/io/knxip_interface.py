@@ -99,12 +99,12 @@ class KNXIPInterface:
             await self.start_routing(self.connection_config.local_ip)
         elif self.connection_config.connection_type == ConnectionType.TUNNELING:
             await self.start_tunnelling(
-                self.connection_config.local_ip,
-                self.connection_config.local_port,
-                self.connection_config.gateway_ip,
-                self.connection_config.gateway_port,
-                self.connection_config.auto_reconnect,
-                self.connection_config.auto_reconnect_wait,
+                local_ip=self.connection_config.local_ip,
+                local_port=self.connection_config.local_port,
+                gateway_ip=self.connection_config.gateway_ip,
+                gateway_port=self.connection_config.gateway_port,
+                auto_reconnect=self.connection_config.auto_reconnect,
+                auto_reconnect_wait=self.connection_config.auto_reconnect_wait,
                 route_back=self.connection_config.route_back
             )
         else:

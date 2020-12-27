@@ -112,8 +112,6 @@ class ConfigV1:
                     connection_config.gateway_port = value
                 elif pref == "local_ip":
                     connection_config.local_ip = value
-                elif pref == "local_port":
-                    connection_config.local_port = value
                 elif pref == "route_back":
                     connection_config.route_back = value
         self.xknx.connection_config = connection_config
@@ -128,9 +126,6 @@ class ConfigV1:
         if os.getenv('XKNX_CONNECTION_LOCAL_IP', default=None):
             logger.debug('XKNX_CONNECTION_LOCAL_IP overwrite from env')
             self.xknx.connection_config.local_ip = os.getenv('XKNX_CONNECTION_LOCAL_IP')
-        if os.getenv('XKNX_CONNECTION_LOCAL_PORT', default=None):
-            logger.debug('XKNX_CONNECTION_LOCAL_PORT overwrite from env')
-            self.xknx.connection_config.local_port = int(os.getenv('XKNX_CONNECTION_LOCAL_PORT'))
         if os.getenv('XKNX_CONNECTION_ROUTE_BACK', default=False):
             logger.debug('XKNX_CONNECTION_ROUTE_BACK overwrite from env')
             self.xknx.connection_config.route_back = bool(os.getenv('XKNX_CONNECTION_ROUTE_BACK'))

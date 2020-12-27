@@ -158,7 +158,6 @@ Available env variables are:
 - XKNX_CONNECTION_GATEWAY_IP: Your KNX Gateway IP address
 - XKNX_CONNECTION_GATEWAY_PORT: Your KNX Gateway UDP port
 - XKNX_CONNECTION_LOCAL_IP
-- XKNX_CONNECTION_LOCAL_PORT: Container internal UDP port, target of the forward from the host
 - XKNX_CONNECTION_ROUTE_BACK: Set 'true' to be able to work in a container
 
 Exanple of a `docker run` with an xknx based app:

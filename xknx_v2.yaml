@@ -9,7 +9,6 @@ multicast_port: 1337
 connection: # optional
   type: tunneling # or routing|auto
   local_ip: "192.168.111.201"
-  local_port: 42424
   route_back: false
   host: "192.168.0.202"
   port: 1337
