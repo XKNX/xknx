@@ -148,8 +148,7 @@ asyncio.run(main())
 
 # [](#header-2)Dockerised xknx's app 
 
-If you planned to run xknx into a container, you have to setup udp port binding from your host to the container.
-The host ip and port must be setup into the configuration file or env variables.
+If you planned to run xknx into a container, you have to setup 'route_back=true'.
 
 Available env variables are:
 - XKNX_GENERAL_OWN_ADDRESS
@@ -160,8 +159,7 @@ Available env variables are:
 - XKNX_CONNECTION_GATEWAY_PORT: Your KNX Gateway UDP port
 - XKNX_CONNECTION_LOCAL_IP
 - XKNX_CONNECTION_LOCAL_PORT: Container internal UDP port, target of the forward from the host
-- XKNX_CONNECTION_BIND_IP: IP address of the host machine
-- XKNX_CONNECTION_BIND_PORT: UDP port used in the host machine, must be forwarded to the container
+- XKNX_CONNECTION_ROUTE_BACK: Set 'true' to be able to work in a container
 
 Exanple of a `docker run` with an xknx based app:
 
@@ -169,7 +167,6 @@ Exanple of a `docker run` with an xknx based app:
 docker run --name myapp -d \
   -e XKNX_CONNECTION_GATEWAY_IP='192.168.0.123' \
   -e XKNX_CONNECTION_LOCAL_PORT=12399 \
-  -e XKNX_CONNECTION_BIND_IP='192.168.0.100' 
-  -e XKNX_CONNECTION_BIND_PORT=12300 \
+  -e XKNX_CONNECTION_ROUTE_BACK=true \
   -p 12300:12399/udp myapp:latest
 ```

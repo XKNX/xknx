@@ -37,8 +37,7 @@ class Tunnel:
         local_port,
         gateway_ip,
         gateway_port,
-        bind_ip=None,
-        bind_port=0,
+        route_back,
         telegram_received_callback=None,
         auto_reconnect=False,
         auto_reconnect_wait=3,
@@ -48,8 +47,7 @@ class Tunnel:
         self.xknx = xknx
         self.local_ip = local_ip
         self.local_port = local_port
-        self.bind_ip = bind_ip
-        self.bind_port = bind_port
+        self.route_back = route_back
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
         self.telegram_received_callback = telegram_received_callback
@@ -121,7 +119,7 @@ class Tunnel:
 
     async def connect(self):
         """Connect/build tunnel."""
-        connect = Connect(self.xknx, self.udp_client, net_bind=(self.bind_ip, self.bind_port))
+        connect = Connect(self.xknx, self.udp_client, route_back=self.route_back)
         await connect.start()
         if not connect.success:
             if self.auto_reconnect:
@@ -203,7 +201,7 @@ class Tunnel:
             self.xknx,
             self.udp_client,
             communication_channel_id=self.communication_channel,
-            net_bind=(self.bind_ip, self.bind_port)
+            route_back=self.route_back
         )
         await conn_state.start()
         return conn_state.success
@@ -219,7 +217,7 @@ class Tunnel:
             self.xknx,
             self.udp_client,
             communication_channel_id=self.communication_channel,
-            net_bind=(self.bind_ip, self.bind_port)
+            route_back=self.route_back
         )
         await disconnect.start()
         if not disconnect.success and not ignore_error:

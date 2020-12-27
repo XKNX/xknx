@@ -113,10 +113,8 @@ class ConfigV1:
                     connection_config.local_ip = value
                 elif pref == "local_port":
                     connection_config.local_port = value
-                elif pref == "bind_ip":
-                    connection_config.bind_ip = value
-                elif pref == "bind_port":
-                    connection_config.bind_port = value
+                elif pref == "route_back":
+                    connection_config.route_back = value
         self.xknx.connection_config = connection_config
 
     def env_connection(self):
@@ -132,12 +130,9 @@ class ConfigV1:
         if os.getenv('XKNX_CONNECTION_LOCAL_PORT', default=None):
             logger.debug('XKNX_CONNECTION_LOCAL_PORT overwrite from env')
             self.xknx.connection_config.local_port = int(os.getenv('XKNX_CONNECTION_LOCAL_PORT'))
-        if os.getenv('XKNX_CONNECTION_BIND_IP', default=None):
-            logger.debug('XKNX_CONNECTION_BIND_IP overwrite from env')
-            self.xknx.connection_config.bind_ip = os.getenv('XKNX_CONNECTION_BIND_IP')
-        if os.getenv('XKNX_CONNECTION_BIND_PORT', default=None):
-            logger.debug('XKNX_CONNECTION_BIND_PORT overwrite from env')
-            self.xknx.connection_config.bind_port = int(os.getenv('XKNX_CONNECTION_BIND_PORT'))
+        if os.getenv('XKNX_CONNECTION_ROUTE_BACK', default=False):
+            logger.debug('XKNX_CONNECTION_ROUTE_BACK overwrite from env')
+            self.xknx.connection_config.route_back = bool(os.getenv('XKNX_CONNECTION_ROUTE_BACK'))
 
     def parse_groups(self, doc):
         """Parse the group section of xknx.yaml."""

@@ -55,8 +55,7 @@ class ConnectionConfig:
         local_port: int = 0,
         gateway_ip: str = None,
         gateway_port: int = DEFAULT_MCAST_PORT,
-        bind_ip: str = None,
-        bind_port: int = 0,
+        route_back: bool = False,
         auto_reconnect: bool = False,
         auto_reconnect_wait: int = 3,
         scan_filter: GatewayScanFilter = GatewayScanFilter(),
@@ -68,8 +67,7 @@ class ConnectionConfig:
         self.local_port = local_port
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
-        self.bind_ip = bind_ip
-        self.bind_port = bind_port
+        self.route_back = route_back
         self.auto_reconnect = auto_reconnect
         self.auto_reconnect_wait = auto_reconnect_wait
         if connection_type == ConnectionType.TUNNELING:
@@ -107,8 +105,7 @@ class KNXIPInterface:
                 self.connection_config.gateway_port,
                 self.connection_config.auto_reconnect,
                 self.connection_config.auto_reconnect_wait,
-                bind_ip=self.connection_config.bind_ip,
-                bind_port=self.connection_config.bind_port,
+                route_back=self.connection_config.route_back
             )
         else:
             await self.start_automatic(self.connection_config.scan_filter)
@@ -135,16 +132,13 @@ class KNXIPInterface:
                 gateway.port,
                 self.connection_config.auto_reconnect,
                 self.connection_config.auto_reconnect_wait,
-                bind_ip=self.connection_config.bind_ip,
-                bind_port=self.connection_config.bind_port,
+                route_back=self.connection_config.route_back,
             )
         elif gateway.supports_routing:
             await self.start_routing(local_interface_ip)
 
-    async def start_tunnelling(
-        self, local_ip, local_port, gateway_ip, gateway_port, auto_reconnect, auto_reconnect_wait,
-            bind_ip=None, bind_port=0,
-    ):
+    async def start_tunnelling(self, local_ip, local_port, gateway_ip, gateway_port, auto_reconnect,
+                               auto_reconnect_wait, route_back: bool):
         """Start KNX/IP tunnel."""
         # pylint: disable=too-many-arguments
         validate_ip(gateway_ip, address_name="Gateway IP address")
@@ -160,8 +154,7 @@ class KNXIPInterface:
             local_port=local_port,
             gateway_ip=gateway_ip,
             gateway_port=gateway_port,
-            bind_ip=bind_ip,
-            bind_port=bind_port,
+            route_back=route_back,
             telegram_received_callback=self.telegram_received,
             auto_reconnect=auto_reconnect,
             auto_reconnect_wait=auto_reconnect_wait,
@@ -193,7 +186,7 @@ class KNXIPInterface:
     def find_local_ip(gateway_ip: str) -> str:
         """Find local IP address on same subnet as gateway."""
 
-        def _scan_interfaces(gateway: ipaddress.IPv4Address) -> str:
+        def _scan_interfaces(gateway: ipaddress.IPv4Address) -> str or None:
             """Return local IP address on same subnet as given gateway."""
             for interface in netifaces.interfaces():
                 try:

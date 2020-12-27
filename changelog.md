@@ -4,7 +4,7 @@
 
 ### New Features
 
-- Add new optional config `bind_ip` and `bind_port` for connections to be able to dockerise xknx's apps.
+- Add new optional config `route_back` for connections to be able to dockerise xknx's apps.
 - Add optional config `local_port` to be able to map a host udp port to a container udp port.
 - Read env vars after reading config file to allow dynamic config for dockerized apps.
 

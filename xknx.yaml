@@ -12,8 +12,7 @@ connection:
     tunneling:
         local_ip: "192.168.111.201"
         local_port: 42424
-        bind_ip: "192.168.0.201"
-        bind_port: 42424
+        route_back: false
         gateway_ip: "192.168.0.202"
         gateway_port: 3671
     routing:
