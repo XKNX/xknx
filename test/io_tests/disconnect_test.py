@@ -25,7 +25,7 @@ class TestDisconnect(unittest.TestCase):
         xknx = XKNX()
         communication_channel_id = 23
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
-        disconnect = Disconnect(xknx, udp_client, communication_channel_id)
+        disconnect = Disconnect(xknx, udp_client, communication_channel_id, route_back=False)
         disconnect.timeout_in_seconds = 0
 
         self.assertEqual(disconnect.awaited_response_class, DisconnectResponse)

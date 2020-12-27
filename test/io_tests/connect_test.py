@@ -31,7 +31,7 @@ class TestConnect(unittest.TestCase):
         """Test connecting from KNX bus."""
         xknx = XKNX()
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
-        connect = Connect(xknx, udp_client)
+        connect = Connect(xknx, udp_client, route_back=False)
         connect.timeout_in_seconds = 0
 
         self.assertEqual(connect.awaited_response_class, ConnectResponse)

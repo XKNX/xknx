@@ -69,7 +69,7 @@ class TestConfig(unittest.TestCase):
         # Default connection setting from xknx.yaml (auto:)
         self.assertEqual(
             TestConfig.xknx.connection_config,
-            ConnectionConfig(connection_type=ConnectionType.AUTOMATIC),
+            ConnectionConfig(connection_type=ConnectionType.ROUTING, local_ip="192.168.111.201"),
         )
         # Replaces setting from xknx.yaml
         test_configs = [

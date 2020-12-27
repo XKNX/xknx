@@ -31,7 +31,7 @@ class TestConnectionState(unittest.TestCase):
         xknx = XKNX()
         communication_channel_id = 23
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
-        connectionstate = ConnectionState(xknx, udp_client, communication_channel_id)
+        connectionstate = ConnectionState(xknx, udp_client, communication_channel_id, route_back=False)
         connectionstate.timeout_in_seconds = 0
 
         self.assertEqual(
