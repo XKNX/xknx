@@ -27,12 +27,18 @@ class TestConnectionState(unittest.TestCase):
         self.loop.close()
 
     def test_connectionstate(self):
+        self.__test_connectionstate()
+
+    def test_connectionstate_route_back_true(self):
+        self.__test_connectionstate(route_back=True)
+
+    def __test_connectionstate(self, route_back: bool = False):
         """Test connectionstateing from KNX bus."""
         xknx = XKNX()
         communication_channel_id = 23
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
         connectionstate = ConnectionState(
-            xknx, udp_client, communication_channel_id, route_back=False
+            xknx, udp_client, communication_channel_id, route_back=route_back
         )
         connectionstate.timeout_in_seconds = 0
 
@@ -47,7 +53,12 @@ class TestConnectionState(unittest.TestCase):
         exp_knxipframe = KNXIPFrame(xknx)
         exp_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_REQUEST)
         exp_knxipframe.body.communication_channel_id = communication_channel_id
-        exp_knxipframe.body.control_endpoint = HPAI(ip_addr="192.168.1.3", port=4321)
+        if route_back:
+            exp_knxipframe.body.control_endpoint = HPAI()
+        else:
+            exp_knxipframe.body.control_endpoint = HPAI(
+                ip_addr="192.168.1.3", port=4321
+            )
         exp_knxipframe.normalize()
         with patch("xknx.io.UDPClient.send") as mock_udp_send, patch(
             "xknx.io.UDPClient.getsockname"

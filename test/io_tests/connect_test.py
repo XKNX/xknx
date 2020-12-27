@@ -28,10 +28,16 @@ class TestConnect(unittest.TestCase):
         self.loop.close()
 
     def test_connect(self):
+        self.__test_connect()
+
+    def test_connect_route_back_true(self):
+        self.__test_connect(route_back=True)
+
+    def __test_connect(self, route_back: bool = False):
         """Test connecting from KNX bus."""
         xknx = XKNX()
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
-        connect = Connect(xknx, udp_client, route_back=False)
+        connect = Connect(xknx, udp_client, route_back=route_back)
         connect.timeout_in_seconds = 0
 
         self.assertEqual(connect.awaited_response_class, ConnectResponse)
@@ -39,8 +45,14 @@ class TestConnect(unittest.TestCase):
         # Expected KNX/IP-Frame:
         exp_knxipframe = KNXIPFrame(xknx)
         exp_knxipframe.init(KNXIPServiceType.CONNECT_REQUEST)
-        exp_knxipframe.body.control_endpoint = HPAI(ip_addr="192.168.1.3", port=4321)
-        exp_knxipframe.body.data_endpoint = HPAI(ip_addr="192.168.1.3", port=4321)
+        if route_back:
+            exp_knxipframe.body.control_endpoint = HPAI()
+            exp_knxipframe.body.data_endpoint = HPAI()
+        else:
+            exp_knxipframe.body.control_endpoint = HPAI(
+                ip_addr="192.168.1.3", port=4321
+            )
+            exp_knxipframe.body.data_endpoint = HPAI(ip_addr="192.168.1.3", port=4321)
         exp_knxipframe.body.request_type = ConnectRequestType.TUNNEL_CONNECTION
         exp_knxipframe.normalize()
         with patch("xknx.io.UDPClient.send") as mock_udp_send, patch(

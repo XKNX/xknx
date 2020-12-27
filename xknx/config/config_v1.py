@@ -65,18 +65,22 @@ class ConfigV1:
 
     def env_general(self):
         """Get Env Vars for the general section."""
-        if os.getenv("XKNX_GENERAL_OWN_ADDRESS", default=None):
+        own_address = os.getenv("XKNX_GENERAL_OWN_ADDRESS", default=None)
+        if own_address:
             logger.debug("XKNX_GENERAL_OWN_ADDRESS overwrite from env")
-            self.xknx.own_address = os.getenv("XKNX_GENERAL_OWN_ADDRESS")
-        if os.getenv("XKNX_GENERAL_RATE_LIMIT", default=None):
+            self.xknx.own_address = IndividualAddress(own_address)
+        rate_limit = os.getenv("XKNX_GENERAL_RATE_LIMIT", default=None)
+        if rate_limit:
             logger.debug("XKNX_GENERAL_RATE_LIMIT overwrite from env")
-            self.xknx.rate_limit = os.getenv("XKNX_GENERAL_RATE_LIMIT")
-        if os.getenv("XKNX_GENERAL_MULTICAST_GROUP", default=None):
+            self.xknx.rate_limit = int(rate_limit)
+        multicast_group = os.getenv("XKNX_GENERAL_MULTICAST_GROUP", default=None)
+        if multicast_group:
             logger.debug("XKNX_GENERAL_MULTICAST_GROUP overwrite from env")
-            self.xknx.multicast_group = os.getenv("XKNX_GENERAL_MULTICAST_GROUP")
-        if os.getenv("XKNX_GENERAL_MULTICAST_PORT", default=None):
+            self.xknx.multicast_group = multicast_group
+        multicast_port = os.getenv("XKNX_GENERAL_MULTICAST_PORT", default=None)
+        if multicast_port:
             logger.debug("XKNX_GENERAL_MULTICAST_PORT overwrite from env")
-            self.xknx.multicast_port = os.getenv("XKNX_GENERAL_MULTICAST_PORT")
+            self.xknx.multicast_port = int(multicast_port)
 
     def parse_connection(self, doc):
         """Parse the connection section of xknx.yaml."""

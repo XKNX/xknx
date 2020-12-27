@@ -21,12 +21,18 @@ class TestDisconnect(unittest.TestCase):
         self.loop.close()
 
     def test_disconnect(self):
+        self.__test_disconnect()
+
+    def test_disconnect_route_back_true(self):
+        self.__test_disconnect(route_back=True)
+
+    def __test_disconnect(self, route_back: bool = False):
         """Test disconnecting from KNX bus."""
         xknx = XKNX()
         communication_channel_id = 23
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
         disconnect = Disconnect(
-            xknx, udp_client, communication_channel_id, route_back=False
+            xknx, udp_client, communication_channel_id, route_back=route_back
         )
         disconnect.timeout_in_seconds = 0
 
@@ -37,7 +43,12 @@ class TestDisconnect(unittest.TestCase):
         exp_knxipframe = KNXIPFrame(xknx)
         exp_knxipframe.init(KNXIPServiceType.DISCONNECT_REQUEST)
         exp_knxipframe.body.communication_channel_id = communication_channel_id
-        exp_knxipframe.body.control_endpoint = HPAI(ip_addr="192.168.1.3", port=4321)
+        if route_back:
+            exp_knxipframe.body.control_endpoint = HPAI()
+        else:
+            exp_knxipframe.body.control_endpoint = HPAI(
+                ip_addr="192.168.1.3", port=4321
+            )
         exp_knxipframe.normalize()
         with patch("xknx.io.UDPClient.send") as mock_udp_send, patch(
             "xknx.io.UDPClient.getsockname"
