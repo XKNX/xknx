@@ -76,7 +76,7 @@ class KNXIPFrame:
         knxipframe = KNXIPFrame(knxip_body.xknx)
         knxipframe.header.service_type_ident = knxip_body.__class__.service_type
         knxipframe.body = knxip_body
-        knxipframe.normalize()
+        knxipframe.header.set_length(knxip_body)
         return knxipframe
 
     def from_knx(self, data: bytes) -> int:
@@ -89,11 +89,6 @@ class KNXIPFrame:
             raise CouldNotParseKNXIP("KNXIP data has wrong length")
 
         return pos
-
-    def normalize(self) -> None:
-        """Normalize internal data. Necessary step for serialization."""
-        assert self.body is not None
-        self.header.set_length(self.body)
 
     def to_knx(self) -> List[int]:
         """Serialize to KNX/IP raw data."""

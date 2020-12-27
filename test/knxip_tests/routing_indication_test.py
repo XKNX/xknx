@@ -44,10 +44,9 @@ class Test_KNXIP(unittest.TestCase):
         """Test parsing and streaming CEMIFrame KNX/IP."""
         raw = bytes.fromhex("0610053000122900BCD012020151020040F0")
         xknx = XKNX()
+
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
-
-        knxipframe.normalize()
 
         self.assertEqual(knxipframe.header.to_knx(), list(raw[0:6]))
         self.assertEqual(knxipframe.body.to_knx(), list(raw[6:]))
@@ -56,9 +55,6 @@ class Test_KNXIP(unittest.TestCase):
     def test_telegram_set(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet with DPTArray/DPTTime as payload."""
         xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
-        knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe.body.cemi.src_addr = IndividualAddress("1.2.2")
 
         telegram = Telegram(
             destination_address=GroupAddress(337),
@@ -66,11 +62,11 @@ class Test_KNXIP(unittest.TestCase):
                 DPTArray(DPTTime().to_knx(time.strptime("13:23:42", "%H:%M:%S")))
             ),
         )
-
-        knxipframe.body.cemi.telegram = telegram
-
-        knxipframe.body.cemi.set_hops(5)
-        knxipframe.normalize()
+        cemi = CEMIFrame(xknx, src_addr=IndividualAddress("1.2.2"))
+        cemi.telegram = telegram
+        cemi.set_hops(5)
+        routing_indication = RoutingIndication(xknx, cemi=cemi)
+        knxipframe = KNXIPFrame.init_from_body(routing_indication)
 
         raw = bytes.fromhex("0610053000142900BCD012020151040080 0d 17 2a")
 
@@ -117,12 +113,11 @@ class Test_KNXIP(unittest.TestCase):
             ),
         )
 
-        knxipframe2 = KNXIPFrame(xknx)
-        knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.body.cemi.src_addr = IndividualAddress("15.15.249")
-        knxipframe2.body.cemi.telegram = telegram
-        knxipframe2.body.cemi.set_hops(5)
-        knxipframe2.normalize()
+        cemi = CEMIFrame(xknx, src_addr=IndividualAddress("15.15.249"))
+        cemi.telegram = telegram
+        cemi.set_hops(5)
+        routing_indication = RoutingIndication(xknx, cemi=cemi)
+        knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
 
         self.assertEqual(knxipframe2.header.to_knx(), list(raw[0:6]))
         self.assertEqual(knxipframe2.body.to_knx(), list(raw[6:]))
@@ -145,12 +140,11 @@ class Test_KNXIP(unittest.TestCase):
             ),
         )
 
-        knxipframe2 = KNXIPFrame(xknx)
-        knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.body.cemi.src_addr = IndividualAddress("15.15.249")
-        knxipframe2.body.cemi.telegram = telegram
-        knxipframe2.body.cemi.set_hops(5)
-        knxipframe2.normalize()
+        cemi = CEMIFrame(xknx, src_addr=IndividualAddress("15.15.249"))
+        cemi.telegram = telegram
+        cemi.set_hops(5)
+        routing_indication = RoutingIndication(xknx, cemi=cemi)
+        knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
 
         self.assertEqual(knxipframe2.header.to_knx(), list(raw[0:6]))
         self.assertEqual(knxipframe2.body.to_knx(), list(raw[6:]))
@@ -173,12 +167,11 @@ class Test_KNXIP(unittest.TestCase):
             ),
         )
 
-        knxipframe2 = KNXIPFrame(xknx)
-        knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.body.cemi.src_addr = IndividualAddress("15.15.249")
-        knxipframe2.body.cemi.telegram = telegram
-        knxipframe2.body.cemi.set_hops(5)
-        knxipframe2.normalize()
+        cemi = CEMIFrame(xknx, src_addr=IndividualAddress("15.15.249"))
+        cemi.telegram = telegram
+        cemi.set_hops(5)
+        routing_indication = RoutingIndication(xknx, cemi=cemi)
+        knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
 
         self.assertEqual(knxipframe2.header.to_knx(), list(raw[0:6]))
         self.assertEqual(knxipframe2.body.to_knx(), list(raw[6:]))
@@ -201,12 +194,11 @@ class Test_KNXIP(unittest.TestCase):
             ),
         )
 
-        knxipframe2 = KNXIPFrame(xknx)
-        knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.body.cemi.src_addr = IndividualAddress("1.4.2")
-        knxipframe2.body.cemi.telegram = telegram
-        knxipframe2.body.cemi.set_hops(5)
-        knxipframe2.normalize()
+        cemi = CEMIFrame(xknx, src_addr=IndividualAddress("1.4.2"))
+        cemi.telegram = telegram
+        cemi.set_hops(5)
+        routing_indication = RoutingIndication(xknx, cemi=cemi)
+        knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
 
         self.assertEqual(knxipframe2.header.to_knx(), list(raw[0:6]))
         self.assertEqual(knxipframe2.body.to_knx(), list(raw[6:]))
@@ -229,12 +221,11 @@ class Test_KNXIP(unittest.TestCase):
             ),
         )
 
-        knxipframe2 = KNXIPFrame(xknx)
-        knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.body.cemi.src_addr = IndividualAddress("15.15.249")
-        knxipframe2.body.cemi.telegram = telegram
-        knxipframe2.body.cemi.set_hops(5)
-        knxipframe2.normalize()
+        cemi = CEMIFrame(xknx, src_addr=IndividualAddress("15.15.249"))
+        cemi.telegram = telegram
+        cemi.set_hops(5)
+        routing_indication = RoutingIndication(xknx, cemi=cemi)
+        knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
 
         self.assertEqual(knxipframe2.header.to_knx(), list(raw[0:6]))
         self.assertEqual(knxipframe2.body.to_knx(), list(raw[6:]))
@@ -257,12 +248,11 @@ class Test_KNXIP(unittest.TestCase):
             ),
         )
 
-        knxipframe2 = KNXIPFrame(xknx)
-        knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.body.cemi.src_addr = IndividualAddress("1.3.1")
-        knxipframe2.body.cemi.telegram = telegram
-        knxipframe2.body.cemi.set_hops(5)
-        knxipframe2.normalize()
+        cemi = CEMIFrame(xknx, src_addr=IndividualAddress("1.3.1"))
+        cemi.telegram = telegram
+        cemi.set_hops(5)
+        routing_indication = RoutingIndication(xknx, cemi=cemi)
+        knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
 
         self.assertEqual(knxipframe2.header.to_knx(), list(raw[0:6]))
         self.assertEqual(knxipframe2.body.to_knx(), list(raw[6:]))
@@ -276,12 +266,12 @@ class Test_KNXIP(unittest.TestCase):
             source_address=IndividualAddress("1.3.1"),
         )
         xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
-        knxipframe.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe.body.cemi.src_addr = IndividualAddress("1.3.1")
-        knxipframe.body.cemi.telegram = telegram
-        knxipframe.body.cemi.set_hops(5)
-        knxipframe.normalize()
+
+        cemi = CEMIFrame(xknx, src_addr=IndividualAddress("1.3.1"))
+        cemi.telegram = telegram
+        cemi.set_hops(5)
+        routing_indication = RoutingIndication(xknx, cemi=cemi)
+        knxipframe = KNXIPFrame.init_from_body(routing_indication)
 
         raw = bytes.fromhex("0610053000112900BCD0130101510100BF")
 

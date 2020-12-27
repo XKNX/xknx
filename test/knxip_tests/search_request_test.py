@@ -3,7 +3,7 @@ import asyncio
 import unittest
 
 from xknx import XKNX
-from xknx.knxip import HPAI, KNXIPFrame, KNXIPServiceType, SearchRequest
+from xknx.knxip import HPAI, KNXIPFrame, SearchRequest
 
 
 class Test_KNXIP_Discovery(unittest.TestCase):
@@ -47,9 +47,10 @@ class Test_KNXIP_Discovery(unittest.TestCase):
             knxipframe.body.discovery_endpoint, HPAI(ip_addr="224.0.23.12", port=3671)
         )
 
-        knxipframe2 = KNXIPFrame(xknx)
-        knxipframe2.init(KNXIPServiceType.SEARCH_REQUEST)
-        knxipframe2.body.discovery_endpoint = HPAI(ip_addr="224.0.23.12", port=3671)
-        knxipframe2.normalize()
+        knxipframe2 = KNXIPFrame.init_from_body(
+            SearchRequest(
+                xknx, discovery_endpoint=HPAI(ip_addr="224.0.23.12", port=3671)
+            )
+        )
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))

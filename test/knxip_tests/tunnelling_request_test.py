@@ -5,7 +5,7 @@ import unittest
 from xknx import XKNX
 from xknx.dpt import DPTBinary
 from xknx.exceptions import CouldNotParseKNXIP
-from xknx.knxip import CEMIFrame, KNXIPFrame, KNXIPServiceType, TunnellingRequest
+from xknx.knxip import CEMIFrame, CEMIMessageCode, KNXIPFrame, TunnellingRequest
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
@@ -66,14 +66,15 @@ class Test_KNXIP_TunnelingReq(unittest.TestCase):
             ),
         )
 
-        knxipframe2 = KNXIPFrame(xknx)
-        knxipframe2.init(KNXIPServiceType.TUNNELLING_REQUEST)
-        knxipframe2.body.cemi.telegram = Telegram(
+        cemi = CEMIFrame(xknx, code=CEMIMessageCode.L_Data_REQ)
+        cemi.telegram = Telegram(
             destination_address=GroupAddress("9/0/8"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        knxipframe2.body.sequence_counter = 23
-        knxipframe2.normalize()
+        tunnelling_request = TunnellingRequest(
+            xknx, communication_channel_id=1, sequence_counter=23, cemi=cemi
+        )
+        knxipframe2 = KNXIPFrame.init_from_body(tunnelling_request)
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 

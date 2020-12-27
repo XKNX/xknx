@@ -4,7 +4,7 @@ import unittest
 
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
-from xknx.knxip import DisconnectResponse, ErrorCode, KNXIPFrame, KNXIPServiceType
+from xknx.knxip import DisconnectResponse, ErrorCode, KNXIPFrame
 
 
 class Test_KNXIP_DisconnectResp(unittest.TestCase):
@@ -35,11 +35,12 @@ class Test_KNXIP_DisconnectResp(unittest.TestCase):
             knxipframe.body.status_code, ErrorCode.E_NO_MORE_UNIQUE_CONNECTIONS
         )
 
-        knxipframe2 = KNXIPFrame(xknx)
-        knxipframe2.init(KNXIPServiceType.DISCONNECT_RESPONSE)
-        knxipframe2.body.communication_channel_id = 21
-        knxipframe2.body.status_code = ErrorCode.E_NO_MORE_UNIQUE_CONNECTIONS
-        knxipframe2.normalize()
+        disconnect_response = DisconnectResponse(
+            xknx,
+            communication_channel_id=21,
+            status_code=ErrorCode.E_NO_MORE_UNIQUE_CONNECTIONS,
+        )
+        knxipframe2 = KNXIPFrame.init_from_body(disconnect_response)
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 

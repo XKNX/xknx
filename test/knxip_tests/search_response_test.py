@@ -9,7 +9,6 @@ from xknx.knxip import (
     DIBServiceFamily,
     DIBSuppSVCFamilies,
     KNXIPFrame,
-    KNXIPServiceType,
     SearchResponse,
 )
 
@@ -132,12 +131,13 @@ class Test_KNXIP_Discovery(unittest.TestCase):
             knxipframe.body.dibs[1].supports(DIBServiceFamily.OBJECT_SERVER)
         )
 
-        knxipframe2 = KNXIPFrame(xknx)
-        knxipframe2.init(KNXIPServiceType.SEARCH_RESPONSE)
-        knxipframe2.body.control_endpoint = HPAI(ip_addr="192.168.42.10", port=3671)
-        knxipframe2.body.dibs.append(knxipframe.body.dibs[0])
-        knxipframe2.body.dibs.append(knxipframe.body.dibs[1])
-        knxipframe2.normalize()
+        search_response = SearchResponse(
+            xknx, control_endpoint=HPAI(ip_addr="192.168.42.10", port=3671)
+        )
+        search_response.dibs.append(knxipframe.body.dibs[0])
+        search_response.dibs.append(knxipframe.body.dibs[1])
+        knxipframe2 = KNXIPFrame.init_from_body(search_response)
+
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
     def test_unknown_device_name(self):

@@ -42,7 +42,7 @@ class ConnectResponse(KNXIPBodyResponse):
         self.communication_channel = communication_channel
         self.status_code = status_code
         self.request_type = request_type
-        self.control_endpoint = HPAI()
+        self.control_endpoint = control_endpoint
         # identifier shall contain KNX Individual Address assigned to this KNXnet/IP Tunnelling connection
         self.identifier = identifier
 

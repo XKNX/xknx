@@ -4,7 +4,7 @@ import unittest
 
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
-from xknx.knxip import ConnectionStateResponse, ErrorCode, KNXIPFrame, KNXIPServiceType
+from xknx.knxip import ConnectionStateResponse, ErrorCode, KNXIPFrame
 
 
 class Test_KNXIP_ConnStateResp(unittest.TestCase):
@@ -33,11 +33,10 @@ class Test_KNXIP_ConnStateResp(unittest.TestCase):
         self.assertEqual(knxipframe.body.communication_channel_id, 21)
         self.assertEqual(knxipframe.body.status_code, ErrorCode.E_CONNECTION_ID)
 
-        knxipframe2 = KNXIPFrame(xknx)
-        knxipframe2.init(KNXIPServiceType.CONNECTIONSTATE_RESPONSE)
-        knxipframe2.body.communication_channel_id = 21
-        knxipframe2.body.status_code = ErrorCode.E_CONNECTION_ID
-        knxipframe2.normalize()
+        connectionstate_response = ConnectionStateResponse(
+            xknx, communication_channel_id=21, status_code=ErrorCode.E_CONNECTION_ID
+        )
+        knxipframe2 = KNXIPFrame.init_from_body(connectionstate_response)
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
