@@ -181,6 +181,7 @@ class Tunnel(Interface):
             self.xknx,
             self.udp_client,
             communication_channel_id=self.communication_channel,
+            route_back=self.route_back,
         )
         await conn_state.start()
         return conn_state.success
@@ -191,6 +192,7 @@ class Tunnel(Interface):
             self.xknx,
             self.udp_client,
             communication_channel_id=self.communication_channel,
+            route_back=self.route_back,
         )
         await disconnect.start()
         if not disconnect.success and not ignore_error:
@@ -292,7 +294,6 @@ class Tunnel(Interface):
             self.xknx,
             communication_channel_id=communication_channel_id,
             sequence_counter=sequence_counter,
-            route_back=self.route_back
         )
         self.udp_client.send(KNXIPFrame.init_from_body(ack))
 
@@ -302,7 +303,6 @@ class Tunnel(Interface):
         disconnect_response = DisconnectResponse(
             self.xknx,
             communication_channel_id=self.communication_channel,
-            route_back=self.route_back
         )
         self.udp_client.send(KNXIPFrame.init_from_body(disconnect_response))
         self.communication_channel = None
