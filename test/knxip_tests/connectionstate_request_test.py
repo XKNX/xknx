@@ -4,7 +4,7 @@ import unittest
 
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
-from xknx.knxip import HPAI, ConnectionStateRequest, KNXIPFrame, KNXIPServiceType
+from xknx.knxip import HPAI, ConnectionStateRequest, KNXIPFrame
 
 
 class Test_KNXIP_ConnStateReq(unittest.TestCase):
@@ -52,11 +52,12 @@ class Test_KNXIP_ConnStateReq(unittest.TestCase):
             knxipframe.body.control_endpoint, HPAI(ip_addr="192.168.200.12", port=50100)
         )
 
-        knxipframe2 = KNXIPFrame(xknx)
-        knxipframe2.init(KNXIPServiceType.CONNECTIONSTATE_REQUEST)
-        knxipframe2.body.communication_channel_id = 21
-        knxipframe2.body.control_endpoint = HPAI(ip_addr="192.168.200.12", port=50100)
-        knxipframe2.normalize()
+        connectionstate_request = ConnectionStateRequest(
+            xknx,
+            communication_channel_id=21,
+            control_endpoint=HPAI(ip_addr="192.168.200.12", port=50100),
+        )
+        knxipframe2 = KNXIPFrame.init_from_body(connectionstate_request)
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 

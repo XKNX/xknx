@@ -7,6 +7,7 @@ from xknx import XKNX
 from xknx.io import ConnectionState, UDPClient
 from xknx.knxip import (
     HPAI,
+    ConnectionStateRequest,
     ConnectionStateResponse,
     ErrorCode,
     KNXIPFrame,
@@ -42,11 +43,13 @@ class TestConnectionState(unittest.TestCase):
         )
 
         # Expected KNX/IP-Frame:
-        exp_knxipframe = KNXIPFrame(xknx)
-        exp_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_REQUEST)
-        exp_knxipframe.body.communication_channel_id = communication_channel_id
-        exp_knxipframe.body.control_endpoint = HPAI(ip_addr="192.168.1.3", port=4321)
-        exp_knxipframe.normalize()
+        exp_knxipframe = KNXIPFrame.init_from_body(
+            ConnectionStateRequest(
+                xknx,
+                communication_channel_id=communication_channel_id,
+                control_endpoint=HPAI(ip_addr="192.168.1.3", port=4321),
+            )
+        )
         with patch("xknx.io.UDPClient.send") as mock_udp_send, patch(
             "xknx.io.UDPClient.getsockname"
         ) as mock_udp_getsockname:

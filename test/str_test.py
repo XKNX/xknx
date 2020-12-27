@@ -534,8 +534,7 @@ class TestStringRepresentations(unittest.TestCase):
 
     def test_header(self):
         """Test string representation of KNX/IP-Header."""
-        xknx = XKNX()
-        header = KNXIPHeader(xknx)
+        header = KNXIPHeader()
         header.total_length = 42
         self.assertEqual(
             str(header),
@@ -633,8 +632,8 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(search_response),
             '<SearchResponse control_endpoint="<HPAI 192.168.42.1:33941 />" dibs="[\n'
-            '<DIB dtc="None" data="" />,\n'
-            '<DIB dtc="None" data="" />\n'
+            '<DIB dtc="0" data="" />,\n'
+            '<DIB dtc="0" data="" />\n'
             ']" />',
         )
 

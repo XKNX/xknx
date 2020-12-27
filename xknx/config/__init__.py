@@ -17,3 +17,22 @@ from .schema import (
     WeatherSchema,
     XKNXSchema,
 )
+
+__all__ = [
+    "Config",
+    "ConfigV1",
+    "BinarySensorSchema",
+    "ClimateSchema",
+    "ConnectionSchema",
+    "CoverSchema",
+    "DateTimeSchema",
+    "ExposeSchema",
+    "FanSchema",
+    "LightSchema",
+    "NotificationSchema",
+    "SceneSchema",
+    "SensorSchema",
+    "SwitchSchema",
+    "WeatherSchema",
+    "XKNXSchema",
+]

@@ -1,35 +1,44 @@
 """Basis class for all KNX/IP bodies."""
+from abc import ABC, abstractmethod
 import logging
+from typing import TYPE_CHECKING, ClassVar, List, cast
 
+from .error_code import ErrorCode
 from .knxip_enum import KNXIPServiceType
+
+if TYPE_CHECKING:
+    from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
 
 
-class KNXIPBody:
-    """Basis class for all KNX/IP bodies."""
+class KNXIPBody(ABC):
+    """Base class for all KNX/IP bodies."""
 
-    service_type: KNXIPServiceType = None
+    service_type: ClassVar[KNXIPServiceType] = cast(KNXIPServiceType, None)
 
-    def __init__(self, xknx):
+    def __init__(self, xknx: "XKNX"):
         """Initialize KNXIPBody object."""
         self.xknx = xknx
 
-    def calculated_length(self):
+    @abstractmethod
+    def calculated_length(self) -> int:
         """Get length of KNX/IP body."""
-        logger.warning(
-            "'calculated_length()' not implemented for %s", self.__class__.__name__
-        )
 
-    def from_knx(self, raw):
+    @abstractmethod
+    def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-        # pylint: disable=unused-argument
-        logger.warning("'from_knx()' not implemented for %s", self.__class__.__name__)
 
-    def to_knx(self):
+    @abstractmethod
+    def to_knx(self) -> List[int]:
         """Serialize to KNX/IP raw data."""
-        logger.warning("'to_knx()' not implemented for %s", self.__class__.__name__)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """Equal operator."""
         return self.__dict__ == other.__dict__
+
+
+class KNXIPBodyResponse(KNXIPBody):
+    """Base class for all KNX/IP response bodies."""
+
+    status_code: ErrorCode = cast(ErrorCode, None)

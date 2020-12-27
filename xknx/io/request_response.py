@@ -5,8 +5,14 @@ Will report if the corresponding answer was not received.
 """
 import asyncio
 import logging
+from typing import TYPE_CHECKING, Optional, Type
 
-from xknx.knxip import ErrorCode, KNXIPBody, KNXIPFrame
+from xknx.knxip import ErrorCode, KNXIPBodyResponse, KNXIPFrame
+
+from .udp_client import UDPClient
+
+if TYPE_CHECKING:
+    from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
 
@@ -16,18 +22,20 @@ class RequestResponse:
 
     def __init__(
         self,
-        xknx,
-        udp_client,
-        awaited_response_class: KNXIPBody,
+        xknx: "XKNX",
+        udp_client: UDPClient,
+        awaited_response_class: Type[KNXIPBodyResponse],
         timeout_in_seconds: float = 1.0,
     ):
         """Initialize RequstResponse class."""
         self.xknx = xknx
         self.udpclient = udp_client
-        self.awaited_response_class: KNXIPBody = awaited_response_class
+        self.awaited_response_class: Type[KNXIPBodyResponse] = awaited_response_class
         self.response_received_or_timeout = asyncio.Event()
         self.success = False
         self.timeout_in_seconds = timeout_in_seconds
+
+        self.response_status_code: Optional[ErrorCode] = None
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
@@ -59,11 +67,12 @@ class RequestResponse:
         """Build knxipframe (within derived class) and send via UDP."""
         self.udpclient.send(self.create_knxipframe())
 
-    def response_rec_callback(self, knxipframe: KNXIPFrame, _) -> None:
+    def response_rec_callback(self, knxipframe: KNXIPFrame, _: UDPClient) -> None:
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knxipframe.body, self.awaited_response_class):
             logger.warning("Could not understand knxipframe")
             return
+        self.response_status_code = knxipframe.body.status_code
         self.response_received_or_timeout.set()
         if knxipframe.body.status_code == ErrorCode.E_NO_ERROR:
             self.success = True
@@ -80,5 +89,5 @@ class RequestResponse:
             "Error: KNX bus responded to request of type '%s' with error in '%s': %s",
             self.__class__.__name__,
             self.awaited_response_class.__name__,
-            knxipframe.body.status_code,
+            knxipframe.body.status_code,  # type: ignore
         )

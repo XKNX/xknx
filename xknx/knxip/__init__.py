@@ -1,6 +1,6 @@
 """This package contains all methods for serialization and deserialization of KNX/IP packets."""
 # flake8: noqa
-from .body import KNXIPBody
+from .body import KNXIPBody, KNXIPBodyResponse
 from .cemi_frame import CEMIFrame
 from .connect_request import ConnectRequest
 from .connect_response import ConnectResponse
@@ -30,6 +30,7 @@ from .tunnelling_request import TunnellingRequest
 
 __all__ = [
     "KNXIPBody",
+    "KNXIPBodyResponse",
     "CEMIFrame",
     "ConnectRequest",
     "ConnectResponse",

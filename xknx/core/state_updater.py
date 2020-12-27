@@ -157,7 +157,7 @@ class _StateTracker:
         self.tracker_type = tracker_type
         self.update_interval = interval_min * 60
         self._read_state = read_state_awaitable
-        self._task: Optional[asyncio.Task] = None
+        self._task: Optional[asyncio.Task[None]] = None
 
     def start(self) -> None:
         """Start StateTracker - read state on call."""

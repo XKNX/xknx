@@ -3,11 +3,16 @@ Module for Serialization and Deserialization of a KNX Disconnect Request informa
 
 Disconnect requests are used to disconnect a tunnel from a KNX/IP device.
 """
+from typing import TYPE_CHECKING, List
+
 from xknx.exceptions import CouldNotParseKNXIP
 
 from .body import KNXIPBody
 from .hpai import HPAI
 from .knxip_enum import KNXIPServiceType
+
+if TYPE_CHECKING:
+    from xknx.xknx import XKNX
 
 
 class DisconnectRequest(KNXIPBody):
@@ -18,7 +23,10 @@ class DisconnectRequest(KNXIPBody):
     service_type = KNXIPServiceType.DISCONNECT_REQUEST
 
     def __init__(
-        self, xknx, communication_channel_id: int = 1, control_endpoint: HPAI = HPAI()
+        self,
+        xknx: "XKNX",
+        communication_channel_id: int = 1,
+        control_endpoint: HPAI = HPAI(),
     ):
         """Initialize DisconnectRequest object."""
         super().__init__(xknx)
@@ -26,14 +34,14 @@ class DisconnectRequest(KNXIPBody):
         self.communication_channel_id = communication_channel_id
         self.control_endpoint = control_endpoint
 
-    def calculated_length(self):
+    def calculated_length(self) -> int:
         """Get length of KNX/IP body."""
         return 2 + HPAI.LENGTH
 
-    def from_knx(self, raw):
+    def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
 
-        def info_from_knx(info):
+        def info_from_knx(info: bytes) -> int:
             """Parse info bytes."""
             if len(info) < 2:
                 raise CouldNotParseKNXIP("Disconnect info has wrong length")
@@ -45,10 +53,10 @@ class DisconnectRequest(KNXIPBody):
         pos += self.control_endpoint.from_knx(raw[pos:])
         return pos
 
-    def to_knx(self):
+    def to_knx(self) -> List[int]:
         """Serialize to KNX/IP raw data."""
 
-        def info_to_knx():
+        def info_to_knx() -> List[int]:
             """Serialize information bytes."""
             info = []
             info.append(self.communication_channel_id)
@@ -60,7 +68,7 @@ class DisconnectRequest(KNXIPBody):
         data.extend(self.control_endpoint.to_knx())
         return data
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return object as readable string."""
         return (
             '<DisconnectRequest CommunicationChannelID="{}" '
