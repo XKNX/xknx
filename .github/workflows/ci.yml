@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**' # run on all branches
+  pull_request:
+    branches:
+      - '**' # run on all branches
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Cache pip packages
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-pypi-modules
+      with:
+        # pip cache files are stored in `~/.cache/pip` on Linux
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('requirements/production.txt', 'requirements/testing.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+    - name: Cache pre-commit packages
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-pre-commit
+      with:
+        # pre-commit cache files are usually stored in `~/.cache/pre-commit` on Linux
+        path: ~/.cache/pre-commit
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('.pre-commit-config.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+    - name: Install dependencies
+      run: |
+        pip install -r requirements/testing.txt
+    - name: CI
+      run: |
+        tox
+    - name: Coveralls
+      uses: johanneswilm/coveralls-python-action@develop
+      with:
+        parallel: true
+        flag-name: Unit Test
+
+  coveralls_finish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coveralls Finished
+        uses: johanneswilm/coveralls-python-action@develop
+        with:
+          parallel-finished: true

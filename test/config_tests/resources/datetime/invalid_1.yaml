@@ -1,4 +1,4 @@
-name: "value is not allowed .*broadcast_type.*"
+name: "value must be one of .*broadcast_type.*"
 time:
   address: "8/4/4"
   broadcast_type: sdaf

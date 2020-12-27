@@ -15,7 +15,7 @@ from xknx.io import (
     ConnectionConfig,
     KNXIPInterface,
 )
-from xknx.telegram import GroupAddressType, PhysicalAddress
+from xknx.telegram import GroupAddressType, IndividualAddress
 
 from .__version__ import __version__ as VERSION
 
@@ -54,8 +54,9 @@ class XKNX:
         self.state_updater = StateUpdater(self)
         self.knxip_interface = None
         self.started = asyncio.Event()
+        self.connected = asyncio.Event()
         self.address_format = address_format
-        self.own_address = PhysicalAddress(own_address)
+        self.own_address = IndividualAddress(own_address)
         self.rate_limit = rate_limit
         self.multicast_group = multicast_group
         self.multicast_port = multicast_port

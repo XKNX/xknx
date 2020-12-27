@@ -7,7 +7,7 @@ from typing import Any, List, Type, TypeVar, Union
 
 import voluptuous as vol
 from xknx.dpt import DPTBase
-from xknx.telegram import GroupAddress, PhysicalAddress
+from xknx.telegram import GroupAddress, IndividualAddress
 
 # pylint: disable=invalid-name
 # typing typevar
@@ -63,11 +63,11 @@ def ensure_group_address(value: str) -> str:
     return value
 
 
-def ensure_physical_address(value: str) -> str:
-    """Ensure value is a valid physical address."""
+def ensure_individual_address(value: str) -> str:
+    """Ensure value is a valid individual address."""
     value = str(value)
-    if not PhysicalAddress.ADDRESS_RE.match(value):
-        raise vol.Invalid(f"{value} is not a valid physical address")
+    if not IndividualAddress.ADDRESS_RE.match(value):
+        raise vol.Invalid(f"{value} is not a valid individual address")
 
     return value
 

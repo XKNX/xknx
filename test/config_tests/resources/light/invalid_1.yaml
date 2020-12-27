@@ -1,4 +1,4 @@
-name: "value is not allowed .*mode.*"
+name: "value must be one of .*mode.*"
 friendly_name: "Office"
 switch:
   address: "2/1/5"

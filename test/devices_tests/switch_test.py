@@ -1,12 +1,21 @@
 """Unit test for Switch objects."""
 import asyncio
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Switch
 from xknx.dpt import DPTBinary
-from xknx.telegram import GroupAddress, Telegram, TelegramType
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
+
+
+class AsyncMock(MagicMock):
+    """Async Mock."""
+
+    # pylint: disable=invalid-overridden-method
+    async def __call__(self, *args, **kwargs):
+        return super().__call__(*args, **kwargs)
 
 
 class TestSwitch(unittest.TestCase):
@@ -34,7 +43,10 @@ class TestSwitch(unittest.TestCase):
 
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), TelegramType.GROUP_READ)
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/3"), payload=GroupValueRead()
+            ),
         )
 
     def test_sync_state_address(self):
@@ -49,7 +61,10 @@ class TestSwitch(unittest.TestCase):
 
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/4"), TelegramType.GROUP_READ)
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/4"), payload=GroupValueRead()
+            ),
         )
 
     #
@@ -58,37 +73,113 @@ class TestSwitch(unittest.TestCase):
     def test_process(self):
         """Test process / reading telegrams from telegram queue. Test if device was updated."""
         xknx = XKNX()
-        switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
-        self.assertEqual(switch.state, False)
+        callback_mock = AsyncMock()
+
+        switch1 = Switch(
+            xknx, "TestOutlet", group_address="1/2/3", device_updated_cb=callback_mock
+        )
+        switch2 = Switch(
+            xknx, "TestOutlet", group_address="1/2/3", device_updated_cb=callback_mock
+        )
+        self.assertEqual(switch1.state, None)
+        self.assertEqual(switch2.state, None)
+        callback_mock.assert_not_called()
 
         telegram_on = Telegram(
-            group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
-        self.loop.run_until_complete(switch.process(telegram_on))
-        self.assertEqual(switch.state, True)
-
         telegram_off = Telegram(
-            group_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(0)),
         )
-        self.loop.run_until_complete(switch.process(telegram_off))
-        self.assertEqual(switch.state, False)
+
+        self.loop.run_until_complete(switch1.process(telegram_on))
+        self.assertEqual(switch1.state, True)
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
+        self.loop.run_until_complete(switch1.process(telegram_off))
+        self.assertEqual(switch1.state, False)
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
+        # test setting switch2 to False with first telegram
+        self.loop.run_until_complete(switch2.process(telegram_off))
+        self.assertEqual(switch2.state, False)
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
+        self.loop.run_until_complete(switch2.process(telegram_on))
+        self.assertEqual(switch2.state, True)
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
+
+    def test_process_state(self):
+        """Test process / reading telegrams from telegram queue. Test if device was updated."""
+        xknx = XKNX()
+        callback_mock = AsyncMock()
+
+        switch1 = Switch(
+            xknx,
+            "TestOutlet",
+            group_address="1/2/3",
+            group_address_state="1/2/4",
+            device_updated_cb=callback_mock,
+        )
+        switch2 = Switch(
+            xknx,
+            "TestOutlet",
+            group_address="1/2/3",
+            group_address_state="1/2/4",
+            device_updated_cb=callback_mock,
+        )
+        self.assertEqual(switch1.state, None)
+        self.assertEqual(switch2.state, None)
+        callback_mock.assert_not_called()
+
+        telegram_on = Telegram(
+            destination_address=GroupAddress("1/2/4"),
+            payload=GroupValueResponse(DPTBinary(1)),
+        )
+        telegram_off = Telegram(
+            destination_address=GroupAddress("1/2/4"),
+            payload=GroupValueResponse(DPTBinary(0)),
+        )
+
+        self.loop.run_until_complete(switch1.process(telegram_on))
+        self.assertEqual(switch1.state, True)
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
+        self.loop.run_until_complete(switch1.process(telegram_off))
+        self.assertEqual(switch1.state, False)
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
+        # test setting switch2 to False with first telegram
+        self.loop.run_until_complete(switch2.process(telegram_off))
+        self.assertEqual(switch2.state, False)
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
+        self.loop.run_until_complete(switch2.process(telegram_on))
+        self.assertEqual(switch2.state, True)
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
 
     def test_process_invert(self):
         """Test process / reading telegrams from telegram queue with inverted switch."""
         xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3", invert=True)
-        self.assertEqual(switch.state, False)
+        self.assertEqual(switch.state, None)
 
-        telegram_on = Telegram(
-            group_address=GroupAddress("1/2/3"), payload=DPTBinary(0)
+        telegram_inv_on = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(0)),
         )
-        self.loop.run_until_complete(switch.process(telegram_on))
+        telegram_inv_off = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+
+        self.loop.run_until_complete(switch.process(telegram_inv_on))
         self.assertEqual(switch.state, True)
-
-        telegram_off = Telegram(
-            group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
-        )
-        self.loop.run_until_complete(switch.process(telegram_off))
+        self.loop.run_until_complete(switch.process(telegram_inv_off))
         self.assertEqual(switch.state, False)
 
     def test_process_reset_after(self):
@@ -99,7 +190,8 @@ class TestSwitch(unittest.TestCase):
             xknx, "TestInput", group_address="1/2/3", reset_after=reset_after_sec
         )
         telegram_on = Telegram(
-            group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
 
         self.loop.run_until_complete(switch.process(telegram_on))
@@ -118,7 +210,8 @@ class TestSwitch(unittest.TestCase):
             xknx, "TestInput", group_address="1/2/3", reset_after=reset_after_sec
         )
         telegram_on = Telegram(
-            group_address=GroupAddress("1/2/3"), payload=DPTBinary(1)
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueResponse(DPTBinary(1)),
         )
 
         self.loop.run_until_complete(switch.process(telegram_on))
@@ -147,7 +240,10 @@ class TestSwitch(unittest.TestCase):
 
         switch.register_device_updated_cb(async_after_update_callback)
 
-        telegram = Telegram(group_address=GroupAddress("1/2/3"), payload=DPTBinary(1))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
         self.loop.run_until_complete(switch.process(telegram))
 
         after_update_callback.assert_called_with(switch)
@@ -163,7 +259,11 @@ class TestSwitch(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(1))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(1)),
+            ),
         )
 
     #
@@ -177,7 +277,11 @@ class TestSwitch(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(0))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(0)),
+            ),
         )
 
     #
@@ -192,14 +296,22 @@ class TestSwitch(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(0))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(0)),
+            ),
         )
 
         self.loop.run_until_complete(switch.set_off())
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTBinary(1))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(1)),
+            ),
         )
 
     #

@@ -1,7 +1,8 @@
 ---
 layout: default
 title: Configuration
-nav_order: 12
+nav_order: 5
+has_children: true
 ---
 
 # Configuration
@@ -13,7 +14,7 @@ XKNX is controlled via a configuration file. Per default the configuration file 
 The configuration file can contain three sections.
 
 - The `general` section can contain:
-  - `own_address` the individual / physical address of the XKNX daemon
+  - `own_address` the individual (physical) address of the XKNX daemon
   - `rate_limit` a rate limit for telegrams sent to the bus
   - `multicast_group` to override the default multicast address (`224.0.23.12`)
   - `multicast_port` to override the default multicast port (`3671`)
@@ -119,7 +120,7 @@ groups:
         travel_time_up: 60,
       }
 
-    # Covers without direct positioning:
+    # Covers without direct positioning and device class "shutter":
     Livingroom.Shutter_3:
       {
         group_address_long: "1/4/9",
@@ -127,6 +128,7 @@ groups:
         group_address_position_feedback: "1/4/11",
         travel_time_down: 50,
         travel_time_up: 60,
+        device_class: "shutter",
       }
 
     # Central Shutters dont have short or position address

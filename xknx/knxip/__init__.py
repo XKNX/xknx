@@ -14,7 +14,6 @@ from .header import KNXIPHeader
 from .hpai import HPAI
 from .knxip import KNXIPFrame
 from .knxip_enum import (
-    APCICommand,
     CEMIFlags,
     CEMIMessageCode,
     ConnectRequestType,
@@ -28,3 +27,34 @@ from .search_request import SearchRequest
 from .search_response import SearchResponse
 from .tunnelling_ack import TunnellingAck
 from .tunnelling_request import TunnellingRequest
+
+__all__ = [
+    "KNXIPBody",
+    "CEMIFrame",
+    "ConnectRequest",
+    "ConnectResponse",
+    "ConnectionStateRequest",
+    "ConnectionStateResponse",
+    "DIB",
+    "DIBDeviceInformation",
+    "DIBGeneric",
+    "DIBSuppSVCFamilies",
+    "DisconnectRequest",
+    "DisconnectResponse",
+    "ErrorCode",
+    "KNXIPHeader",
+    "HPAI",
+    "KNXIPFrame",
+    "CEMIFlags",
+    "CEMIMessageCode",
+    "ConnectRequestType",
+    "DIBServiceFamily",
+    "DIBTypeCode",
+    "KNXIPServiceType",
+    "KNXMedium",
+    "RoutingIndication",
+    "SearchRequest",
+    "SearchResponse",
+    "TunnellingAck",
+    "TunnellingRequest",
+]

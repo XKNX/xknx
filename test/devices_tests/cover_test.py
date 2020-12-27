@@ -7,7 +7,8 @@ from unittest.mock import Mock, patch
 from xknx import XKNX
 from xknx.devices import Cover
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.telegram import GroupAddress, Telegram, TelegramType
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
 
 class TestCover(unittest.TestCase):
@@ -127,7 +128,10 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram1, Telegram(GroupAddress("1/2/3"), TelegramType.GROUP_READ)
+            telegram1,
+            Telegram(
+                destination_address=GroupAddress("1/2/3"), payload=GroupValueRead()
+            ),
         )
 
     def test_sync_state(self):
@@ -145,7 +149,10 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram1, Telegram(GroupAddress("1/2/4"), TelegramType.GROUP_READ)
+            telegram1,
+            Telegram(
+                destination_address=GroupAddress("1/2/4"), payload=GroupValueRead()
+            ),
         )
 
     def test_sync_angle(self):
@@ -163,11 +170,17 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 2)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram1, Telegram(GroupAddress("1/2/3"), TelegramType.GROUP_READ)
+            telegram1,
+            Telegram(
+                destination_address=GroupAddress("1/2/3"), payload=GroupValueRead()
+            ),
         )
         telegram2 = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram2, Telegram(GroupAddress("1/2/4"), TelegramType.GROUP_READ)
+            telegram2,
+            Telegram(
+                destination_address=GroupAddress("1/2/4"), payload=GroupValueRead()
+            ),
         )
 
     def test_sync_angle_state(self):
@@ -185,7 +198,10 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram1 = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram1, Telegram(GroupAddress("1/2/4"), TelegramType.GROUP_READ)
+            telegram1,
+            Telegram(
+                destination_address=GroupAddress("1/2/4"), payload=GroupValueRead()
+            ),
         )
 
     #
@@ -207,7 +223,11 @@ class TestCover(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         # DPT 1.008 - 0:up 1:down
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/1"), payload=DPTBinary(0))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/1"),
+                payload=GroupValueWrite(DPTBinary(0)),
+            ),
         )
 
     #
@@ -228,7 +248,11 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/1"), payload=DPTBinary(1))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/1"),
+                payload=GroupValueWrite(DPTBinary(1)),
+            ),
         )
 
     #
@@ -250,7 +274,11 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/1"), payload=DPTBinary(0))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/1"),
+                payload=GroupValueWrite(DPTBinary(0)),
+            ),
         )
 
     #
@@ -272,7 +300,11 @@ class TestCover(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         # DPT 1.008 - 0:up 1:down
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/2"), payload=DPTBinary(0))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/2"),
+                payload=GroupValueWrite(DPTBinary(0)),
+            ),
         )
 
     #
@@ -295,7 +327,11 @@ class TestCover(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         # DPT 1.008 - 0:up 1:down
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/2"), payload=DPTBinary(1))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/2"),
+                payload=GroupValueWrite(DPTBinary(1)),
+            ),
         )
 
     #
@@ -317,7 +353,11 @@ class TestCover(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         # DPT 1.008 - 0:up 1:down
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/2"), payload=DPTBinary(1))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/2"),
+                payload=GroupValueWrite(DPTBinary(1)),
+            ),
         )
 
     #
@@ -338,7 +378,11 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/2"), payload=DPTBinary(1))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/2"),
+                payload=GroupValueWrite(DPTBinary(1)),
+            ),
         )
 
         cover_manual_stop = Cover(
@@ -354,7 +398,11 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/0"), payload=DPTBinary(1))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/0"),
+                payload=GroupValueWrite(DPTBinary(1)),
+            ),
         )
 
     #
@@ -375,7 +423,11 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/3"), payload=DPTArray(0x80))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray(0x80)),
+            ),
         )
 
     def test_position_without_position_address_up(self):
@@ -394,9 +446,18 @@ class TestCover(unittest.TestCase):
         telegram = xknx.telegrams.get_nowait()
         # DPT 1.008 - 0:up 1:down
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/1"), payload=DPTBinary(0))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/1"),
+                payload=GroupValueWrite(DPTBinary(0)),
+            ),
         )
         self.assertEqual(cover.travelcalculator.travel_to_position, 50)
+        self.assertTrue(cover.is_opening())
+        # process the outgoing telegram to make sure it doesn't overwrite the target position
+        self.loop.run_until_complete(cover.process(telegram))
+        self.assertEqual(cover.travelcalculator.travel_to_position, 50)
+        self.assertEqual(xknx.telegrams.qsize(), 0)
 
     def test_position_without_position_address_down(self):
         """Test moving cover down - with no absolute positioning supported."""
@@ -413,8 +474,16 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/1"), payload=DPTBinary(1))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/1"),
+                payload=GroupValueWrite(DPTBinary(1)),
+            ),
         )
+        self.assertEqual(cover.travelcalculator.travel_to_position, 80)
+        self.assertTrue(cover.is_closing())
+        # process the outgoing telegram to make sure it doesn't overwrite the target position
+        self.loop.run_until_complete(cover.process(telegram))
         self.assertEqual(cover.travelcalculator.travel_to_position, 80)
 
     def test_position_without_position_address_uninitialized_up(self):
@@ -439,7 +508,11 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/1"), payload=DPTBinary(0))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/1"),
+                payload=GroupValueWrite(DPTBinary(0)),
+            ),
         )
 
     def test_position_without_position_address_uninitialized_down(self):
@@ -464,7 +537,11 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/1"), payload=DPTBinary(1))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/1"),
+                payload=GroupValueWrite(DPTBinary(1)),
+            ),
         )
 
     def test_angle(self):
@@ -484,7 +561,11 @@ class TestCover(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/4/18"), payload=DPTArray(0x80))
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/4/18"),
+                payload=GroupValueWrite(DPTArray(0x80)),
+            ),
         )
 
     def test_angle_not_supported(self):
@@ -518,24 +599,32 @@ class TestCover(unittest.TestCase):
             group_address_position_state="1/2/4",
         )
         # initial position process - position is unknown so this is the new state - not moving
-        telegram = Telegram(GroupAddress("1/2/3"), payload=DPTArray(213))
+        telegram = Telegram(
+            GroupAddress("1/2/3"), payload=GroupValueWrite(DPTArray(213))
+        )
         self.loop.run_until_complete(cover.process(telegram))
         self.assertEqual(cover.current_position(), 84)
         self.assertFalse(cover.is_traveling())
         # state telegram updates current position - we are not moving so this is new state - not moving
-        telegram = Telegram(GroupAddress("1/2/4"), payload=DPTArray(42))
+        telegram = Telegram(
+            GroupAddress("1/2/4"), payload=GroupValueWrite(DPTArray(42))
+        )
         self.loop.run_until_complete(cover.process(telegram))
         self.assertEqual(cover.current_position(), 16)
         self.assertFalse(cover.is_traveling())
         self.assertEqual(cover.travelcalculator.travel_to_position, 16)
         # new position - movement starts
-        telegram = Telegram(GroupAddress("1/2/3"), payload=DPTArray(255))
+        telegram = Telegram(
+            GroupAddress("1/2/3"), payload=GroupValueWrite(DPTArray(255))
+        )
         self.loop.run_until_complete(cover.process(telegram))
         self.assertEqual(cover.current_position(), 16)
         self.assertTrue(cover.is_closing())
         self.assertEqual(cover.travelcalculator.travel_to_position, 100)
         # new state while moving - movement goes on; travelcalculator updated
-        telegram = Telegram(GroupAddress("1/2/4"), payload=DPTArray(213))
+        telegram = Telegram(
+            GroupAddress("1/2/4"), payload=GroupValueWrite(DPTArray(213))
+        )
         self.loop.run_until_complete(cover.process(telegram))
         self.assertEqual(cover.current_position(), 84)
         self.assertTrue(cover.is_closing())
@@ -552,7 +641,9 @@ class TestCover(unittest.TestCase):
             group_address_angle="1/2/3",
             group_address_angle_state="1/2/4",
         )
-        telegram = Telegram(GroupAddress("1/2/4"), payload=DPTArray(42))
+        telegram = Telegram(
+            GroupAddress("1/2/4"), payload=GroupValueWrite(DPTArray(42))
+        )
         self.loop.run_until_complete(cover.process(telegram))
         self.assertEqual(cover.current_angle(), 16)
 
@@ -564,7 +655,9 @@ class TestCover(unittest.TestCase):
         )
         cover.travelcalculator.set_position(50)
         self.assertFalse(cover.is_traveling())
-        telegram = Telegram(GroupAddress("1/2/1"), payload=DPTBinary(0))
+        telegram = Telegram(
+            GroupAddress("1/2/1"), payload=GroupValueWrite(DPTBinary(0))
+        )
         self.loop.run_until_complete(cover.process(telegram))
         self.assertTrue(cover.is_opening())
 
@@ -576,7 +669,9 @@ class TestCover(unittest.TestCase):
         )
         cover.travelcalculator.set_position(50)
         self.assertFalse(cover.is_traveling())
-        telegram = Telegram(GroupAddress("1/2/1"), payload=DPTBinary(1))
+        telegram = Telegram(
+            GroupAddress("1/2/1"), payload=GroupValueWrite(DPTBinary(1))
+        )
         self.loop.run_until_complete(cover.process(telegram))
         self.assertTrue(cover.is_closing())
 
@@ -592,7 +687,9 @@ class TestCover(unittest.TestCase):
         cover.travelcalculator.set_position(50)
         self.loop.run_until_complete(cover.set_down())
         self.assertTrue(cover.is_traveling())
-        telegram = Telegram(GroupAddress("1/2/2"), payload=DPTBinary(1))
+        telegram = Telegram(
+            GroupAddress("1/2/2"), payload=GroupValueWrite(DPTBinary(1))
+        )
         self.loop.run_until_complete(cover.process(telegram))
         self.assertFalse(cover.is_traveling())
 
@@ -608,7 +705,9 @@ class TestCover(unittest.TestCase):
         cover.travelcalculator.set_position(50)
         self.loop.run_until_complete(cover.set_down())
         self.assertTrue(cover.is_traveling())
-        telegram = Telegram(GroupAddress("1/2/2"), payload=DPTBinary(1))
+        telegram = Telegram(
+            GroupAddress("1/2/2"), payload=GroupValueWrite(DPTBinary(1))
+        )
         self.loop.run_until_complete(cover.process(telegram))
         self.assertFalse(cover.is_traveling())
 
@@ -644,12 +743,17 @@ class TestCover(unittest.TestCase):
             ("1/2/7", DPTArray(51), "angle state"),
         ]:
             with self.subTest(address=address, feature=feature):
-                telegram = Telegram(GroupAddress(address), payload=payload)
+                telegram = Telegram(
+                    destination_address=GroupAddress(address),
+                    payload=GroupValueWrite(payload),
+                )
                 self.loop.run_until_complete(cover.process(telegram))
                 after_update_callback.assert_called_with(cover)
                 after_update_callback.reset_mock()
         # Stop only when cover is travelling
-        telegram = Telegram(GroupAddress("1/2/3"), payload=DPTBinary(1))
+        telegram = Telegram(
+            GroupAddress("1/2/3"), payload=GroupValueWrite(DPTBinary(1))
+        )
         self.loop.run_until_complete(cover.process(telegram))
         after_update_callback.assert_not_called()
         self.loop.run_until_complete(cover.set_down())

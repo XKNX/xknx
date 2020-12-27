@@ -4,7 +4,8 @@ import asyncio
 from xknx import XKNX
 from xknx.dpt import DPTBinary
 from xknx.io import GatewayScanner, Tunnel
-from xknx.telegram import GroupAddress, PhysicalAddress, Telegram
+from xknx.telegram import GroupAddress, IndividualAddress, Telegram
+from xknx.telegram.apci import GroupValueWrite
 
 
 async def main():
@@ -19,7 +20,7 @@ async def main():
 
     gateway = gateways[0]
     # an individual address will most likely be assigned by the tunnelling server
-    xknx.own_address = PhysicalAddress("15.15.249")
+    xknx.own_address = IndividualAddress("15.15.249")
 
     print(
         "Connecting to {}:{} from {}".format(
@@ -34,15 +35,23 @@ async def main():
         gateway_port=gateway.port,
     )
 
-    await tunnel.connect_udp()
     await tunnel.connect()
 
-    await tunnel.send_telegram(Telegram(GroupAddress("1/0/15"), payload=DPTBinary(1)))
+    await tunnel.send_telegram(
+        Telegram(
+            destination_address=GroupAddress("1/0/15"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+    )
     await asyncio.sleep(2)
-    await tunnel.send_telegram(Telegram(GroupAddress("1/0/15"), payload=DPTBinary(0)))
+    await tunnel.send_telegram(
+        Telegram(
+            destination_address=GroupAddress("1/0/15"),
+            payload=GroupValueWrite(DPTBinary(0)),
+        )
+    )
     await asyncio.sleep(2)
 
-    await tunnel.connectionstate()
     await tunnel.disconnect()
 
 

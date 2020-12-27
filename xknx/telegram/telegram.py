@@ -8,31 +8,22 @@ The telegram class is the leightweight interaction object between
 
 It contains
 
-* the telegram type (e.g. GROUP_WRITE)
 * the direction (incoming or outgoing)
 * the group address (e.g. 1/2/3)
-* and the payload (e.g. "12%" or "23.23 C".
+* and the payload (e.g. GroupValueWrite("12%")).
 
 """
 from enum import Enum
-from typing import Any
+from typing import Any, Union
 
-from .address import GroupAddress
+from .address import GroupAddress, IndividualAddress
 
 
 class TelegramDirection(Enum):
     """Enum class for the communication direction of a telegram (from KNX bus or to KNX bus)."""
 
-    INCOMING = 1
-    OUTGOING = 2
-
-
-class TelegramType(Enum):
-    """Enum class for type of telegram."""
-
-    GROUP_READ = 1
-    GROUP_WRITE = 2
-    GROUP_RESPONSE = 3
+    INCOMING = "Incoming"
+    OUTGOING = "Outgoing"
 
 
 class Telegram:
@@ -42,26 +33,26 @@ class Telegram:
 
     def __init__(
         self,
-        group_address: GroupAddress = GroupAddress(None),
-        telegramtype: TelegramType = TelegramType.GROUP_WRITE,
+        destination_address: Union[GroupAddress, IndividualAddress] = GroupAddress(0),
         direction: TelegramDirection = TelegramDirection.OUTGOING,
         payload: Any = None,
+        source_address: IndividualAddress = IndividualAddress(0),
     ) -> None:
         """Initialize Telegram class."""
+        self.destination_address = destination_address
         self.direction = direction
-        self.telegramtype = telegramtype
-        self.group_address = group_address
         self.payload = payload
+        self.source_address = source_address
 
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<Telegram group_address="{}", payload="{}" '
-            'telegramtype="{}" direction="{}" />'.format(
-                self.group_address.__repr__(),
+            '<Telegram direction="{}" source_address="{}" '
+            'destination_address="{}" payload="{}" />'.format(
+                self.direction.value,
+                self.source_address,
+                self.destination_address,
                 self.payload,
-                self.telegramtype,
-                self.direction,
             )
         )
 

@@ -1,6 +1,7 @@
 """Abstraction to send ConnectonStateRequest and wait for ConnectionStateResponse."""
 from xknx.knxip import HPAI, ConnectionStateRequest, ConnectionStateResponse, KNXIPFrame
 
+from .const import CONNECTIONSTATE_REQUEST_TIMEOUT
 from .request_response import RequestResponse
 
 
@@ -11,7 +12,12 @@ class ConnectionState(RequestResponse):
         """Initialize ConnectionState class."""
         self.udp_client = udp_client
         self.route_back = route_back
-        super().__init__(xknx, self.udp_client, ConnectionStateResponse)
+        super().__init__(
+            xknx, 
+            self.udp_client, 
+            ConnectionStateResponse,
+            timeout_in_seconds=CONNECTIONSTATE_REQUEST_TIMEOUT,
+        )
         self.communication_channel_id = communication_channel_id
 
     def create_knxipframe(self) -> KNXIPFrame:

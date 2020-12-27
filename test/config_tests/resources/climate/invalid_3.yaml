@@ -1,4 +1,4 @@
-name: "value is not allowed for .*mode.*"
+name: "value must be one of .*mode.*"
 friendly_name: "Bathroom"
 target_temperature:
   address: "4/0/0"

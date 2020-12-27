@@ -7,7 +7,8 @@ from xknx import XKNX
 from xknx.devices import Notification
 from xknx.dpt import DPTArray, DPTBinary, DPTString
 from xknx.exceptions import CouldNotParseTelegram
-from xknx.telegram import GroupAddress, Telegram, TelegramType
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
 
 class TestNotification(unittest.TestCase):
@@ -35,7 +36,10 @@ class TestNotification(unittest.TestCase):
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
-            telegram, Telegram(GroupAddress("1/2/4"), TelegramType.GROUP_READ)
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/4"), payload=GroupValueRead()
+            ),
         )
 
     #
@@ -46,13 +50,15 @@ class TestNotification(unittest.TestCase):
         xknx = XKNX()
         notification = Notification(xknx, "Warning", group_address="1/2/3")
         telegram_set = Telegram(
-            GroupAddress("1/2/3"), payload=DPTArray(DPTString().to_knx("Ein Prosit!"))
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(DPTString().to_knx("Ein Prosit!"))),
         )
         self.loop.run_until_complete(notification.process(telegram_set))
         self.assertEqual(notification.message, "Ein Prosit!")
 
         telegram_unset = Telegram(
-            GroupAddress("1/2/3"), payload=DPTArray(DPTString().to_knx(""))
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(DPTString().to_knx(""))),
         )
         self.loop.run_until_complete(notification.process(telegram_unset))
         self.assertEqual(notification.message, "")
@@ -70,7 +76,8 @@ class TestNotification(unittest.TestCase):
 
         notification.register_device_updated_cb(async_after_update_callback)
         telegram_set = Telegram(
-            GroupAddress("1/2/3"), payload=DPTArray(DPTString().to_knx("Ein Prosit!"))
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(DPTString().to_knx("Ein Prosit!"))),
         )
         self.loop.run_until_complete(notification.process(telegram_set))
         after_update_callback.assert_called_with(notification)
@@ -80,7 +87,10 @@ class TestNotification(unittest.TestCase):
         # pylint: disable=invalid-name
         xknx = XKNX()
         notification = Notification(xknx, "Warning", group_address="1/2/3")
-        telegram = Telegram(GroupAddress("1/2/3"), payload=DPTArray((23, 24)))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray((23, 24))),
+        )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(notification.process(telegram))
 
@@ -88,7 +98,10 @@ class TestNotification(unittest.TestCase):
         """Test process wrong telegram (wrong payload type)."""
         xknx = XKNX()
         notification = Notification(xknx, "Warning", group_address="1/2/3")
-        telegram = Telegram(GroupAddress("1/2/3"), payload=DPTBinary(1))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(notification.process(telegram))
 
@@ -105,8 +118,8 @@ class TestNotification(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/3"),
-                payload=DPTArray(DPTString().to_knx("Ein Prosit!")),
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray(DPTString().to_knx("Ein Prosit!"))),
             ),
         )
         # test if message longer than 14 chars gets cropped
@@ -117,8 +130,8 @@ class TestNotification(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/3"),
-                payload=DPTArray(DPTString().to_knx("This is too lo")),
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray(DPTString().to_knx("This is too lo"))),
             ),
         )
 

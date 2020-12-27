@@ -6,7 +6,8 @@ from unittest.mock import Mock
 from xknx import XKNX
 from xknx.devices import ExposeSensor
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.telegram import GroupAddress, Telegram, TelegramType
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
 class TestExposeSensor(unittest.TestCase):
@@ -72,7 +73,8 @@ class TestExposeSensor(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/3"), TelegramType.GROUP_WRITE, payload=DPTBinary(0)
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(0)),
             ),
         )
 
@@ -89,9 +91,8 @@ class TestExposeSensor(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/3"),
-                TelegramType.GROUP_WRITE,
-                payload=DPTArray((0xBF,)),
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray((0xBF,))),
             ),
         )
 
@@ -107,9 +108,8 @@ class TestExposeSensor(unittest.TestCase):
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/3"),
-                TelegramType.GROUP_WRITE,
-                payload=DPTArray((0x0C, 0x1A)),
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray((0x0C, 0x1A))),
             ),
         )
 
@@ -124,17 +124,15 @@ class TestExposeSensor(unittest.TestCase):
         )
         expose_sensor.sensor_value.payload = DPTBinary(1)
 
-        telegram = Telegram(GroupAddress("1/2/3"))
-        telegram.telegramtype = TelegramType.GROUP_READ
+        telegram = Telegram(GroupAddress("1/2/3"), payload=GroupValueRead())
         self.loop.run_until_complete(expose_sensor.process(telegram))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/3"),
-                TelegramType.GROUP_RESPONSE,
-                payload=DPTBinary(True),
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueResponse(DPTBinary(True)),
             ),
         )
 
@@ -146,17 +144,15 @@ class TestExposeSensor(unittest.TestCase):
         )
         expose_sensor.sensor_value.payload = DPTArray((0x40,))
 
-        telegram = Telegram(GroupAddress("1/2/3"))
-        telegram.telegramtype = TelegramType.GROUP_READ
+        telegram = Telegram(GroupAddress("1/2/3"), payload=GroupValueRead())
         self.loop.run_until_complete(expose_sensor.process(telegram))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/3"),
-                TelegramType.GROUP_RESPONSE,
-                payload=DPTArray((0x40,)),
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueResponse(DPTArray((0x40,))),
             ),
         )
 
@@ -168,17 +164,15 @@ class TestExposeSensor(unittest.TestCase):
         )
         expose_sensor.sensor_value.payload = DPTArray((0x0C, 0x1A))
 
-        telegram = Telegram(GroupAddress("1/2/3"))
-        telegram.telegramtype = TelegramType.GROUP_READ
+        telegram = Telegram(GroupAddress("1/2/3"), payload=GroupValueRead())
         self.loop.run_until_complete(expose_sensor.process(telegram))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram,
             Telegram(
-                GroupAddress("1/2/3"),
-                TelegramType.GROUP_RESPONSE,
-                payload=DPTArray((0x0C, 0x1A)),
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueResponse(DPTArray((0x0C, 0x1A))),
             ),
         )
 

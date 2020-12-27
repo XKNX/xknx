@@ -1,11 +1,15 @@
 """Basis class for all KNX/IP bodies."""
 import logging
 
+from .knxip_enum import KNXIPServiceType
+
 logger = logging.getLogger("xknx.log")
 
 
 class KNXIPBody:
     """Basis class for all KNX/IP bodies."""
+
+    service_type: KNXIPServiceType = None
 
     def __init__(self, xknx):
         """Initialize KNXIPBody object."""

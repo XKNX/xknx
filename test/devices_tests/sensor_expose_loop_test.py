@@ -5,7 +5,8 @@ import unittest
 from xknx import XKNX
 from xknx.devices import BinarySensor, ExposeSensor, Sensor
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.telegram import GroupAddress, Telegram, TelegramDirection, TelegramType
+from xknx.telegram import GroupAddress, Telegram, TelegramDirection
+from xknx.telegram.apci import GroupValueWrite
 
 
 class SensorExposeLoopTest(unittest.TestCase):
@@ -1459,10 +1460,9 @@ class SensorExposeLoopTest(unittest.TestCase):
                 )
 
                 incoming_telegram = Telegram(
-                    GroupAddress("1/1/1"),
-                    TelegramType.GROUP_WRITE,
+                    destination_address=GroupAddress("1/1/1"),
                     direction=TelegramDirection.INCOMING,
-                    payload=test_payload,
+                    payload=GroupValueWrite(test_payload),
                 )
                 self.loop.run_until_complete(sensor.process(incoming_telegram))
 
@@ -1481,10 +1481,9 @@ class SensorExposeLoopTest(unittest.TestCase):
                 self.assertEqual(
                     outgoing_telegram,
                     Telegram(
-                        GroupAddress("2/2/2"),
-                        TelegramType.GROUP_WRITE,
+                        destination_address=GroupAddress("2/2/2"),
                         direction=TelegramDirection.OUTGOING,
-                        payload=test_payload,
+                        payload=GroupValueWrite(test_payload),
                     ),
                 )
 
@@ -1509,10 +1508,9 @@ class SensorExposeLoopTest(unittest.TestCase):
                 )
 
                 incoming_telegram = Telegram(
-                    GroupAddress("1/1/1"),
-                    TelegramType.GROUP_WRITE,
+                    destination_address=GroupAddress("1/1/1"),
                     direction=TelegramDirection.INCOMING,
-                    payload=test_payload,
+                    payload=GroupValueWrite(test_payload),
                 )
                 self.loop.run_until_complete(sensor.process(incoming_telegram))
 
@@ -1525,9 +1523,8 @@ class SensorExposeLoopTest(unittest.TestCase):
                 self.assertEqual(
                     outgoing_telegram,
                     Telegram(
-                        GroupAddress("2/2/2"),
-                        TelegramType.GROUP_WRITE,
+                        destination_address=GroupAddress("2/2/2"),
                         direction=TelegramDirection.OUTGOING,
-                        payload=test_payload,
+                        payload=GroupValueWrite(test_payload),
                     ),
                 )

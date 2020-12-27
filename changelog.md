@@ -1,6 +1,62 @@
 # Changelog
 
-## Unreleased Changes
+## Unreleased changes
+
+### Devices
+
+- Sensor: add DPT-3 datatypes "stepwise_dimming", "stepwise_blinds", "startstop_dimming", "startstop_blinds"
+- Light: It is now possible to control lights using individual group addresses for red, green, blue and white
+
+### HA integration
+
+- knx_event: renamed `address` to `destination` and added `source`, `telegramtype`, `direction` attributes.
+
+### Internals
+
+- Tunnel connections process DisconnectRequest now and closes/reconnects the tunnel when the other side closes gracefully
+- XKNX.connected Event can be used in future to await for a working connection or stop/relaunch tasks if the connection is lost
+- Lower heartbeat rate from every 15sec to every 70 sec and raise ConnectionstateRequest timeout from 1 to 10sec (3/8/1 KNXip Overview §5.8 Timeout Constants)
+- clean up Tunnel class
+- refactored timeout handling in GatewayScanner, RequestResponse and ValueReader.
+- renamed "PhysicalAddress" to "IndividualAddress"
+- Telegram: `group_address` renamed to `destination_address`, to prepare support for other APCI services and add `source_address`
+- Telegram: remove `Telegram.telegramtype` and replace with payload object derived from `xknx.telegram.apci.APCI`.
+- CEMIFrame: remove `CEMIFrame.cmd`, which can be derived from `CEMIFrame.payload`.
+- Farewell Travis CI; Welcome Github Actions!
+- StateUpdater allow float values for `register_remote_value(tracker_options)` attribute.
+- Handle exceptions from received unsupported or not implemented KNXIP Service Type identifiers
+
+## 0.15.6 Bugfix for StateUpater 2020-11-26
+
+### Bugfixes
+
+- StateUpdater: shield from cancellation so update_received() don't cancel ongoing RemoteValue.read_state()
+
+## 0.15.5 A Telegram for everyone 2020-11-25
+
+### Internals
+
+- process every incoming Telegram in all Devices, regardless if a callback for the GA is registered (eg. StateUpdater) or not.
+
+### Bugfixes
+
+- StateUpdater: always close the update task before starting a new in StateTracker
+- Cover: separate target and state position RemoteValue to fix position update from RemoteValue and call `after_update()`
+
+## 0.15.4 Bugfix for switch 2020-11-22
+
+### Devices
+
+- Light, Switch: initialize state with `None` instead of `False` to account for unknown state.
+- Cover: `device_class` may be used to store the type of cover for Home-Assistant.
+- HA-Entity Light, Switch, Cover: initialize with `assumed_state = True` until we have received a state.
+
+### Bugfixes
+
+- Switch.after_update was not called from RemoteValueSwitch.read_state (StateUpdater). Moved Switch.state to RemoteValue again.
+- StateUpdater: query less aggressive - 2 parallel reads with 2 seconds timeout (instead of 3 - 1).
+
+## 0.15.3 Opposite day! 2020-10-29
 
 ### New Features
 
@@ -18,6 +74,8 @@
 ### Bugfixes
 
 - HA Switch entity: keep state without state_address
+- Cover: fix `set_position` without writable position / auto_stop_if_necessary
+- handle unsupported CEMI Messages without loosing tunnel connection
 
 ## 0.15.2 Winter is coming
 

@@ -23,6 +23,7 @@ from xknx.devices import (
 )
 from xknx.exceptions import XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
+from xknx.telegram import IndividualAddress
 import yaml
 
 
@@ -54,7 +55,7 @@ class TestConfig(unittest.TestCase):
     #
     def test_config_general(self):
         """Test reading general section from config file."""
-        self.assertEqual(TestConfig.xknx.own_address, "15.15.249")
+        self.assertEqual(TestConfig.xknx.own_address, IndividualAddress("15.15.249"))
         self.assertEqual(TestConfig.xknx.rate_limit, 18)
         self.assertEqual(TestConfig.xknx.multicast_group, "224.1.2.3")
         self.assertEqual(TestConfig.xknx.multicast_port, 1337)
@@ -197,6 +198,38 @@ class TestConfig(unittest.TestCase):
             ),
         )
 
+    def test_config_individual_rgb(self):
+        """Test reading Light with with dimming and color address."""
+        expected = Light(
+            TestConfig.xknx,
+            "Diningroom.Light_rgb",
+            group_address_switch_white="1/6/4",
+            group_address_switch_white_state="1/6/5",
+            group_address_brightness_white="1/6/6",
+            group_address_brightness_white_state="1/6/7",
+            group_address_switch_red="1/6/14",
+            group_address_switch_red_state="1/6/15",
+            group_address_brightness_red="1/6/16",
+            group_address_brightness_red_state="1/6/17",
+            group_address_switch_green="1/6/24",
+            group_address_switch_green_state="1/6/25",
+            group_address_brightness_green="1/6/26",
+            group_address_brightness_green_state="1/6/27",
+            group_address_switch_blue="1/6/34",
+            group_address_switch_blue_state="1/6/35",
+            group_address_brightness_blue="1/6/36",
+            group_address_brightness_blue_state="1/6/37",
+            min_kelvin=Light.DEFAULT_MIN_KELVIN,
+            max_kelvin=Light.DEFAULT_MAX_KELVIN,
+        )
+        result = TestConfig.xknx.devices["Diningroom.Light_rgb"]
+
+        print(f"result: {result} \nexpected: {expected}")
+        self.assertEqual(
+            result,
+            expected,
+        )
+
     def test_config_color_temperature(self):
         """Test reading Light with with dimming and color temperature address."""
         self.assertEqual(
@@ -265,6 +298,22 @@ class TestConfig(unittest.TestCase):
                 group_address_position="1/4/8",
                 travel_time_down=50,
                 travel_time_up=60,
+            ),
+        )
+
+    def test_config_cover_device_class(self):
+        """Test reading cover with device_class from config file."""
+        self.assertEqual(
+            TestConfig.xknx.devices["Livingroom.Shutter_3"],
+            Cover(
+                TestConfig.xknx,
+                "Livingroom.Shutter_3",
+                group_address_long="1/4/9",
+                group_address_short="1/4/10",
+                group_address_position_state="1/4/11",
+                travel_time_down=50,
+                travel_time_up=60,
+                device_class="shutter",
             ),
         )
 
@@ -548,12 +597,6 @@ class TestConfig(unittest.TestCase):
             isinstance(TestConfig.xknx.devices["Home_wind_alarm"], BinarySensor)
         )
         self.assertFalse(TestConfig.xknx.devices.__contains__("Remote_wind_alarm"))
-
-    def test_config_file_not_found(self):
-        """Test error message when reading a non exisiting config file."""
-        with patch("logging.Logger.error") as mock_err:
-            XKNX(config="xknx_does_not_exist.yaml")
-            self.assertEqual(mock_err.call_count, 1)
 
     def test_config_file_error(self):
         """Test error message when reading an errornous config file."""

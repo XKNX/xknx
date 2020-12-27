@@ -36,7 +36,6 @@ class Switch(Device):
 
         self.reset_after = reset_after
         self._reset_task = None
-        self.state = False
 
         self.switch = RemoteValueSwitch(
             xknx,
@@ -44,6 +43,7 @@ class Switch(Device):
             group_address_state,
             invert=invert,
             device_name=self.name,
+            after_update_cb=self.after_update,
         )
 
     def _iter_remote_values(self):
@@ -72,6 +72,11 @@ class Switch(Device):
             reset_after=reset_after,
         )
 
+    @property
+    def state(self) -> Optional[bool]:
+        """Return the current switch state of the device."""
+        return self.switch.value
+
     async def set_on(self):
         """Switch on switch."""
         await self.switch.on()
@@ -94,14 +99,12 @@ class Switch(Device):
     async def process_group_write(self, telegram):
         """Process incoming and outgoing GROUP WRITE telegram."""
         if await self.switch.process(telegram):
-            self.state = self.switch.value
-            if self.reset_after is not None and self.state:
+            if self.reset_after is not None and self.switch.value:
                 if self._reset_task:
                     self._reset_task.cancel()
                 self._reset_task = asyncio.create_task(
                     self._reset_state(self.reset_after)
                 )
-            await self.after_update()
 
     async def _reset_state(self, wait_seconds: float):
         await asyncio.sleep(wait_seconds)

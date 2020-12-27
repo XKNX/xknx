@@ -3,7 +3,7 @@ Module for serialization/deserialization and handling of KNX addresses.
 
 The module can handle:
 
-* physical addresses of devices.
+* individual addresses of devices.
 * (logical) group addresses.
 
 The module supports all different writings of group addresses:
@@ -18,8 +18,14 @@ from typing import Optional, Tuple, Union
 
 from xknx.exceptions import CouldNotParseAddress
 
+# TODO: typing - remove need for Optional here
+GroupAddressableType = Optional[Union["GroupAddress", str, int, Tuple[int, int]]]
+IndividualAddressableType = Optional[
+    Union["IndividualAddress", str, int, Tuple[int, int]]
+]
 
-def address_tuple_to_int(address: Tuple) -> int:
+
+def address_tuple_to_int(address: Tuple[int, int]) -> int:
     """
     Convert the tuple `address` to an integer.
 
@@ -70,8 +76,8 @@ class BaseAddress:  # pylint: disable=too-few-public-methods
         return self.raw
 
 
-class PhysicalAddress(BaseAddress):
-    """Class for handling KNX pyhsical addresses."""
+class IndividualAddress(BaseAddress):
+    """Class for handling KNX individual addresses."""
 
     MAX_AREA = 15
     MAX_MAIN = 15
@@ -80,22 +86,22 @@ class PhysicalAddress(BaseAddress):
         r"^(?P<area>\d{1,2})\.(?P<main>\d{1,2})\.(?P<line>\d{1,3})$"
     )
 
-    def __init__(self, address: Union[object, str, int, tuple]) -> None:
+    def __init__(self, address: IndividualAddressableType) -> None:
         """Initialize Address class."""
         super().__init__()
-        if isinstance(address, PhysicalAddress):
-            self.raw: int = address.raw
+        if isinstance(address, IndividualAddress):
+            self.raw = address.raw
         elif isinstance(address, str):
             if address.isdigit():
-                self.raw: int = int(address)  # type: ignore
+                self.raw = int(address)
             else:
-                self.raw: int = self.__string_to_int(address)  # type: ignore
+                self.raw = self.__string_to_int(address)
         elif isinstance(address, tuple) and len(address) == 2:
-            self.raw: int = address_tuple_to_int(address)  # type: ignore
+            self.raw = address_tuple_to_int(address)
         elif isinstance(address, int):
-            self.raw: int = address  # type: ignore
+            self.raw = address
         elif address is None:
-            self.raw: int = 0  # type: ignore
+            self.raw = 0
         else:
             raise CouldNotParseAddress(address)
 
@@ -124,17 +130,17 @@ class PhysicalAddress(BaseAddress):
 
     @property
     def area(self) -> int:
-        """Return area part of pyhsical address."""
+        """Return area part of individual address."""
         return (self.raw >> 12) & self.MAX_AREA
 
     @property
     def main(self) -> int:
-        """Return main part of pyhsical address."""
+        """Return main part of individual address."""
         return (self.raw >> 8) & self.MAX_MAIN
 
     @property
     def line(self) -> int:
-        """Return line part of pyhsical address."""
+        """Return line part of individual address."""
         return self.raw & self.MAX_LINE
 
     @property
@@ -147,9 +153,13 @@ class PhysicalAddress(BaseAddress):
         """Return `True` if this address is a valid line address."""
         return not self.is_device
 
+    def __str__(self) -> str:
+        """Return object as in KNX notation (e.g. '1.2.3')."""
+        return f"{self.area}.{self.main}.{self.line}"
+
     def __repr__(self) -> str:
         """Return this object as parsable string."""
-        return 'PhysicalAddress("{0.area}.{0.main}.{0.line}")'.format(self)
+        return f'IndividualAddress("{self}")'
 
 
 class GroupAddressType(Enum):
@@ -182,7 +192,7 @@ class GroupAddress(BaseAddress):
 
     def __init__(
         self,
-        address: Union[object, str, tuple, int],
+        address: GroupAddressableType,
         levels: GroupAddressType = GroupAddressType.LONG,
     ) -> None:
         """Initialize Address class."""

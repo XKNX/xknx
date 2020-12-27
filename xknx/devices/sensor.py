@@ -6,7 +6,7 @@ It provides functionality for
 * reading the current state from KNX bus.
 * watching for state updates from KNX bus.
 """
-from xknx.remote_value import RemoteValueSensor
+from xknx.remote_value import RemoteValueControl, RemoteValueSensor
 
 from .device import Device
 
@@ -28,14 +28,29 @@ class Sensor(Device):
         # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
         self.always_callback = always_callback
-        self.sensor_value = RemoteValueSensor(
-            xknx,
-            group_address_state=group_address_state,
-            sync_state=sync_state,
-            value_type=value_type,
-            device_name=self.name,
-            after_update_cb=self.after_update,
-        )
+        if value_type in [
+            "stepwise_dimming",
+            "stepwise_blinds",
+            "startstop_dimming",
+            "startstop_blinds",
+        ]:
+            self.sensor_value = RemoteValueControl(
+                xknx,
+                group_address_state=group_address_state,
+                sync_state=sync_state,
+                value_type=value_type,
+                device_name=self.name,
+                after_update_cb=self.after_update,
+            )
+        else:
+            self.sensor_value = RemoteValueSensor(
+                xknx,
+                group_address_state=group_address_state,
+                sync_state=sync_state,
+                value_type=value_type,
+                device_name=self.name,
+                after_update_cb=self.after_update,
+            )
 
     def _iter_remote_values(self):
         """Iterate the devices RemoteValue classes."""

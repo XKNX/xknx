@@ -8,9 +8,13 @@ import asyncio
 import logging
 import socket
 from sys import platform
+from typing import TYPE_CHECKING, Optional, Tuple
 
 from xknx.exceptions import CouldNotParseKNXIP, XKNXException
 from xknx.knxip import KNXIPFrame
+
+if TYPE_CHECKING:
+    from xknx.xknx import XKNX
 
 raw_socket_logger = logging.getLogger("xknx.raw_socket")
 logger = logging.getLogger("xknx.log")
@@ -56,15 +60,19 @@ class UDPClient:
 
         def error_received(self, exc):
             """Handle errors. Callback for error received."""
-            if hasattr(self, "xknx"):
-                logger.warning("Error received: %s", exc)
+            logger.warning("Error received: %s", exc)
 
         def connection_lost(self, exc):
             """Log error. Callback for connection lost."""
-            if hasattr(self, "xknx") and exc is not None:
-                logger.info("Closing transport.")
+            logger.debug("Closing transport.")
 
-    def __init__(self, xknx, local_addr, remote_addr, multicast=False):
+    def __init__(
+        self,
+        xknx: "XKNX",
+        local_addr: Tuple[str, int],
+        remote_addr: Tuple[str, int],
+        multicast: bool = False,
+    ):
         """Initialize UDPClient class."""
         # pylint: disable=too-many-arguments
         if not isinstance(local_addr, tuple):
@@ -78,16 +86,21 @@ class UDPClient:
         self.transport = None
         self.callbacks = []
 
-    def data_received_callback(self, raw):
+    def data_received_callback(self, raw: bytes):
         """Parse and process KNXIP frame. Callback for having received an UDP packet."""
         if raw:
             try:
                 knxipframe = KNXIPFrame(self.xknx)
                 knxipframe.from_knx(raw)
+            except CouldNotParseKNXIP as couldnotparseknxip:
+                knx_logger.debug(
+                    "Unsupported KNXIPFrame: %s in %s",
+                    couldnotparseknxip.description,
+                    raw.hex(),
+                )
+            else:
                 knx_logger.debug("Received: %s", knxipframe)
                 self.handle_knxipframe(knxipframe)
-            except CouldNotParseKNXIP as couldnotparseknxip:
-                logger.exception(couldnotparseknxip)
 
     def handle_knxipframe(self, knxipframe: KNXIPFrame) -> None:
         """Handle KNXIP Frame and call all callbacks which watch for the service type ident."""
@@ -97,9 +110,11 @@ class UDPClient:
                 callback.callback(knxipframe, self)
                 handled = True
         if not handled:
-            logger.debug("UNHANDLED: %s", knxipframe.header.service_type_ident)
+            knx_logger.debug(
+                "Unhandled %s: %s", knxipframe.header.service_type_ident, knxipframe
+            )
 
-    def register_callback(self, callback, service_types=None):
+    def register_callback(self, callback, service_types=None) -> Callback:
         """Register callback."""
         if service_types is None:
             service_types = []
@@ -108,7 +123,7 @@ class UDPClient:
         self.callbacks.append(callb)
         return callb
 
-    def unregister_callback(self, callb):
+    def unregister_callback(self, callb) -> None:
         """Unregister callback."""
         self.callbacks.remove(callb)
 
@@ -147,7 +162,7 @@ class UDPClient:
 
         return sock
 
-    async def connect(self):
+    async def connect(self) -> None:
         """Connect UDP socket. Open UDP port and build mulitcast socket if necessary."""
         udp_client_factory = UDPClient.UDPClientFactory(
             self.local_addr[0],
@@ -170,7 +185,7 @@ class UDPClient:
             )
             self.transport = transport
 
-    def send(self, knxipframe):
+    def send(self, knxipframe) -> None:
         """Send KNXIPFrame to socket."""
         knx_logger.debug("Sending: %s", knxipframe)
         if self.transport is None:
@@ -181,16 +196,16 @@ class UDPClient:
         else:
             self.transport.sendto(bytes(knxipframe.to_knx()))
 
-    def getsockname(self):
+    def getsockname(self) -> Tuple[str, int]:
         """Return sockname."""
         sock = self.transport.get_extra_info("sockname")
         return sock
 
-    def getremote(self):
+    def getremote(self) -> Optional[str]:
         """Return peername."""
         peer = self.transport.get_extra_info("peername")
         return peer
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Stop UDP socket."""
         self.transport.close()

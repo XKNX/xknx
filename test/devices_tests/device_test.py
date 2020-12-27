@@ -6,7 +6,8 @@ from unittest.mock import MagicMock, Mock, patch
 from xknx import XKNX
 from xknx.devices import Device, Sensor
 from xknx.dpt import DPTArray
-from xknx.telegram import GroupAddress, Telegram, TelegramType
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
 class TestDevice(unittest.TestCase):
@@ -102,9 +103,7 @@ class TestDevice(unittest.TestCase):
             fut.set_result(None)
             mock_group_read.return_value = fut
             telegram = Telegram(
-                GroupAddress("1/2/1"),
-                payload=DPTArray((0x01, 0x02)),
-                telegramtype=TelegramType.GROUP_READ,
+                destination_address=GroupAddress("1/2/1"), payload=GroupValueRead()
             )
             self.loop.run_until_complete(device.process(telegram))
             mock_group_read.assert_called_with(telegram)
@@ -114,9 +113,8 @@ class TestDevice(unittest.TestCase):
             fut.set_result(None)
             mock_group_write.return_value = fut
             telegram = Telegram(
-                GroupAddress("1/2/1"),
-                payload=DPTArray((0x01, 0x02)),
-                telegramtype=TelegramType.GROUP_WRITE,
+                destination_address=GroupAddress("1/2/1"),
+                payload=GroupValueWrite(DPTArray((0x01, 0x02))),
             )
             self.loop.run_until_complete(device.process(telegram))
             mock_group_write.assert_called_with(telegram)
@@ -126,9 +124,8 @@ class TestDevice(unittest.TestCase):
             fut.set_result(None)
             mock_group_response.return_value = fut
             telegram = Telegram(
-                GroupAddress("1/2/1"),
-                payload=DPTArray((0x01, 0x02)),
-                telegramtype=TelegramType.GROUP_RESPONSE,
+                destination_address=GroupAddress("1/2/1"),
+                payload=GroupValueResponse(DPTArray((0x01, 0x02))),
             )
             self.loop.run_until_complete(device.process(telegram))
             mock_group_response.assert_called_with(telegram)

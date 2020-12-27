@@ -11,7 +11,7 @@ from xknx.knxip import (
     DIBTypeCode,
     KNXMedium,
 )
-from xknx.telegram import PhysicalAddress
+from xknx.telegram import IndividualAddress
 
 
 class Test_KNXIP_DIB(unittest.TestCase):
@@ -98,7 +98,7 @@ class Test_KNXIP_DIB(unittest.TestCase):
         self.assertEqual(dib.from_knx(raw), DIBDeviceInformation.LENGTH)
         self.assertEqual(dib.knx_medium, KNXMedium.TP1)
         self.assertEqual(dib.programming_mode, False)
-        self.assertEqual(dib.individual_address, PhysicalAddress("1.1.0"))
+        self.assertEqual(dib.individual_address, IndividualAddress("1.1.0"))
         self.assertEqual(dib.name, "Gira KNX/IP-Router")
         self.assertEqual(dib.mac_address, "00:01:02:03:04:05")
         self.assertEqual(dib.multicast_address, "224.0.23.12")

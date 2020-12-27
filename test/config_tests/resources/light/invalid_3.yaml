@@ -1,0 +1,25 @@
+name: "two or more values in the same group of exclusion 'color' @ .*"
+friendly_name: "Office"
+switch:
+  address: "2/1/5"
+  state_address: "2/4/5"
+  state_update: "expire 60"
+  passive_state_addresses: ["8/8/8"]
+brightness:
+  address: "2/5/5"
+  state_address: "2/5/6"
+  state_update: "expire 60"
+  passive_state_addresses: ["8/8/8"]
+rgbw:
+  address: "2/4/5"
+  state_address: "2/4/6"
+color:
+  address: "2/4/5"
+  state_address: "2/4/6"
+color_temperature:
+  address: "2/5/7"
+  state_address: "2/5/8"
+  state_update: "expire 60"
+  mode: absolute
+  min_kelvin: 2550
+  max_kelvin: 6200
