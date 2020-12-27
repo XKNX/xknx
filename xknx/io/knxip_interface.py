@@ -105,7 +105,7 @@ class KNXIPInterface:
                 gateway_port=self.connection_config.gateway_port,
                 auto_reconnect=self.connection_config.auto_reconnect,
                 auto_reconnect_wait=self.connection_config.auto_reconnect_wait,
-                route_back=self.connection_config.route_back
+                route_back=self.connection_config.route_back,
             )
         else:
             await self.start_automatic(self.connection_config.scan_filter)
@@ -137,8 +137,16 @@ class KNXIPInterface:
         elif gateway.supports_routing:
             await self.start_routing(local_interface_ip)
 
-    async def start_tunnelling(self, local_ip, local_port, gateway_ip, gateway_port, auto_reconnect,
-                               auto_reconnect_wait, route_back: bool):
+    async def start_tunnelling(
+        self,
+        local_ip,
+        local_port,
+        gateway_ip,
+        gateway_port,
+        auto_reconnect,
+        auto_reconnect_wait,
+        route_back: bool,
+    ):
         """Start KNX/IP tunnel."""
         # pylint: disable=too-many-arguments
         validate_ip(gateway_ip, address_name="Gateway IP address")
@@ -146,7 +154,11 @@ class KNXIPInterface:
             local_ip = self.find_local_ip(gateway_ip=gateway_ip)
         validate_ip(local_ip, address_name="Local IP address")
         logger.debug(
-            "Starting tunnel from %s:%s to %s:%s", local_ip, local_port, gateway_ip, gateway_port
+            "Starting tunnel from %s:%s to %s:%s",
+            local_ip,
+            local_port,
+            gateway_ip,
+            gateway_port,
         )
         self.interface = Tunnel(
             self.xknx,

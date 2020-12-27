@@ -13,8 +13,8 @@ class ConnectionState(RequestResponse):
         self.udp_client = udp_client
         self.route_back = route_back
         super().__init__(
-            xknx, 
-            self.udp_client, 
+            xknx,
+            self.udp_client,
             ConnectionStateResponse,
             timeout_in_seconds=CONNECTIONSTATE_REQUEST_TIMEOUT,
         )

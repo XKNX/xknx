@@ -75,7 +75,9 @@ class Tunnel(Interface):
     def init_udp_client(self):
         """Initialize udp_client."""
         self.udp_client = UDPClient(
-            self.xknx, (self.local_ip, self.local_port), (self.gateway_ip, self.gateway_port)
+            self.xknx,
+            (self.local_ip, self.local_port),
+            (self.gateway_ip, self.gateway_port),
         )
 
         self.udp_client.register_callback(
