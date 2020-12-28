@@ -4,8 +4,16 @@ Device is the base class for all implemented devices (e.g. Lights/Switches/Senso
 It provides basis functionality for reading the state from the KNX bus.
 """
 import logging
+from typing import TYPE_CHECKING, Awaitable, Callable, Generator, List, Optional
 
+from xknx.remote_value import RemoteValue
+from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
+
+if TYPE_CHECKING:
+    from xknx.xknx import XKNX
+
+DeviceCallbackType = Callable[["Device"], Awaitable[None]]
 
 logger = logging.getLogger("xknx.log")
 
@@ -13,43 +21,50 @@ logger = logging.getLogger("xknx.log")
 class Device:
     """Base class for devices."""
 
-    def __init__(self, xknx, name: str, device_updated_cb=None):
+    def __init__(
+        self,
+        xknx: "XKNX",
+        name: str,
+        device_updated_cb: Optional[DeviceCallbackType] = None,
+    ):
         """Initialize Device class."""
         self.xknx = xknx
         self.name = name
-        self.device_updated_cbs = []
+        self.device_updated_cbs: List[DeviceCallbackType] = []
         if device_updated_cb is not None:
             self.register_device_updated_cb(device_updated_cb)
 
         self.xknx.devices.add(self)
 
-    def _iter_remote_values(self):
+    def _iter_remote_values(self) -> Generator[RemoteValue, None, None]:
         """Iterate the devices RemoteValue classes."""
         raise NotImplementedError("_iter_remote_values has to be implemented")
         # yield self.remote_value
         # or
         # yield from (<list all used RemoteValue instances>)
 
-    def register_device_updated_cb(self, device_updated_cb):
+    def register_device_updated_cb(self, device_updated_cb: DeviceCallbackType) -> None:
         """Register device updated callback."""
         self.device_updated_cbs.append(device_updated_cb)
 
-    def unregister_device_updated_cb(self, device_updated_cb):
+    def unregister_device_updated_cb(
+        self, device_updated_cb: DeviceCallbackType
+    ) -> None:
         """Unregister device updated callback."""
         self.device_updated_cbs.remove(device_updated_cb)
 
-    async def after_update(self):
+    async def after_update(self) -> None:
         """Execute callbacks after internal state has been changed."""
         for device_updated_cb in self.device_updated_cbs:
             # pylint: disable=not-callable
             await device_updated_cb(self)
 
-    async def sync(self, wait_for_result=False):
+    async def sync(self, wait_for_result: bool = False) -> None:
         """Read states of device from KNX bus."""
         for remote_value in self._iter_remote_values():
             await remote_value.read_state(wait_for_result=wait_for_result)
 
-    async def process(self, telegram):
+    async def process(self, telegram: Telegram) -> None:
         """Process incoming telegram."""
         if isinstance(telegram.payload, GroupValueWrite):
             await self.process_group_write(telegram)
@@ -58,31 +73,31 @@ class Device:
         elif isinstance(telegram.payload, GroupValueRead):
             await self.process_group_read(telegram)
 
-    async def process_group_read(self, telegram):
+    async def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GroupValueRead telegrams."""
         # The dafault is, that devices dont answer to group reads
 
-    async def process_group_response(self, telegram):
+    async def process_group_response(self, telegram: Telegram) -> None:
         """Process incoming GroupValueResponse telegrams."""
         # Per default mapped to group write.
         await self.process_group_write(telegram)
 
-    async def process_group_write(self, telegram):
+    async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming GroupValueWrite telegrams."""
         # The default is, that devices dont process group writes
 
-    def get_name(self):
+    def get_name(self) -> str:
         """Return name of device."""
         return self.name
 
-    def has_group_address(self, group_address):
+    def has_group_address(self, group_address: GroupAddress) -> bool:
         """Test if device has given group address."""
         for remote_value in self._iter_remote_values():
             if remote_value.has_group_address(group_address):
                 return True
         return False
 
-    async def do(self, action):
+    async def do(self, action: str) -> None:
         """Execute 'do' commands."""
         # pylint: disable=invalid-name
         logger.info(
@@ -91,6 +106,6 @@ class Device:
             self.__class__.__name__,
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """Compare for quality."""
         return self.__dict__ == other.__dict__
