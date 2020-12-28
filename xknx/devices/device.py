@@ -3,6 +3,7 @@ Device is the base class for all implemented devices (e.g. Lights/Switches/Senso
 
 It provides basis functionality for reading the state from the KNX bus.
 """
+from abc import ABC, abstractmethod
 import logging
 from typing import TYPE_CHECKING, Awaitable, Callable, Generator, List, Optional
 
@@ -18,7 +19,7 @@ DeviceCallbackType = Callable[["Device"], Awaitable[None]]
 logger = logging.getLogger("xknx.log")
 
 
-class Device:
+class Device(ABC):
     """Base class for devices."""
 
     def __init__(
@@ -36,9 +37,9 @@ class Device:
 
         self.xknx.devices.add(self)
 
+    @abstractmethod
     def _iter_remote_values(self) -> Generator[RemoteValue, None, None]:
         """Iterate the devices RemoteValue classes."""
-        raise NotImplementedError("_iter_remote_values has to be implemented")
         # yield self.remote_value
         # or
         # yield from (<list all used RemoteValue instances>)
