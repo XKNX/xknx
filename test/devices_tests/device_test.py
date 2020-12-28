@@ -10,6 +10,7 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
+@patch.multiple(Device, __abstractmethods__=set())
 class TestDevice(unittest.TestCase):
     """Test class for Switch object."""
 
@@ -38,13 +39,6 @@ class TestDevice(unittest.TestCase):
 
         self.loop.run_until_complete(device.after_update())
         after_update_callback.assert_called_with(device)
-
-    def test_iter_remote_value_raises_exception(self):
-        """Test _iter_remote_value raises NotImplementedError."""
-        xknx = XKNX()
-        device = Device(xknx, "TestDevice")
-
-        self.assertRaises(NotImplementedError, device._iter_remote_values)
 
     def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
