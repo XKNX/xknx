@@ -7,13 +7,13 @@ general:
 connection:
     # One of them: auto, tunneling or routing
     auto:
-    tunneling:
-        local_ip: "192.168.111.201"
-        route_back: false
-        gateway_ip: "192.168.0.202"
-        gateway_port: 3671
-    routing:
-        local_ip: "192.168.111.201"
+    #tunneling:
+    #    local_ip: "192.168.111.201"
+    #    route_back: false
+    #    gateway_ip: "192.168.0.202"
+    #    gateway_port: 3671
+    #routing:
+    #    local_ip: "192.168.111.201"
 
 groups:
     binary_sensor:
