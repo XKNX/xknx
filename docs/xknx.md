@@ -167,5 +167,6 @@ docker run --name myapp -d \
   -e XKNX_CONNECTION_GATEWAY_IP='192.168.0.123' \
   -e XKNX_CONNECTION_LOCAL_PORT=12399 \
   -e XKNX_CONNECTION_ROUTE_BACK=true \
-  -p 12300:12399/udp myapp:latest
+  -p 12300:12399/udp \
+  myapp:latest
 ```
