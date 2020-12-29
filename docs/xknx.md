@@ -148,7 +148,7 @@ asyncio.run(main())
 
 # [](#header-2)Dockerised xknx's app
 
-If you planned to run xknx into a container, you have to setup 'route_back=true'.
+To run xknx from a container, set 'route_back=true' or use host network mode.
 
 Available env variables are:
 - XKNX_GENERAL_OWN_ADDRESS
