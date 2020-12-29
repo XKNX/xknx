@@ -11,7 +11,7 @@ A KNX/IP Search Response may contain several DIBs of different types:
                         (fallback for unknown dib type codes)
 """
 from abc import ABC, abstractmethod
-from typing import Generator, List, Union
+from typing import Iterator, List, Union
 
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.telegram import IndividualAddress
@@ -233,17 +233,17 @@ class DIBDeviceInformation(DIB):
     def to_knx(self) -> List[int]:
         """Serialize to KNX/IP raw data."""
 
-        def hex_notation_to_knx(serial_number: str) -> Generator[int, None, None]:
+        def hex_notation_to_knx(serial_number: str) -> Iterator[int]:
             """Serialize hex notation."""
             for part in serial_number.split(":"):
                 yield int(part, 16)
 
-        def ip_to_knx(ip_addr: str) -> Generator[int, None, None]:
+        def ip_to_knx(ip_addr: str) -> Iterator[int]:
             """Serialize ip."""
             for part in ip_addr.split("."):
                 yield int(part)
 
-        def str_to_knx(string: str, length: int) -> Generator[int, None, None]:
+        def str_to_knx(string: str, length: int) -> Iterator[int]:
             """Serialize string."""
             if len(string) > length - 1:
                 string = string[: length - 1]

@@ -13,7 +13,7 @@ from typing import (
     Any,
     Awaitable,
     Callable,
-    Generator,
+    Iterator,
     List,
     Optional,
     Union,
@@ -103,7 +103,7 @@ class RemoteValue(ABC):
     def has_group_address(self, group_address: GroupAddress) -> bool:
         """Test if device has given group address."""
 
-        def _internal_addresses() -> Generator[Optional[GroupAddress], None, None]:
+        def _internal_addresses() -> Iterator[Optional[GroupAddress]]:
             """Yield all group_addresses."""
             yield self.group_address
             yield self.group_address_state
