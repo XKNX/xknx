@@ -5,7 +5,7 @@ It provides basis functionality for reading the state from the KNX bus.
 """
 from abc import ABC, abstractmethod
 import logging
-from typing import TYPE_CHECKING, Awaitable, Callable, Generator, List, Optional
+from typing import TYPE_CHECKING, Awaitable, Callable, Iterator, List, Optional
 
 from xknx.remote_value import RemoteValue
 from xknx.telegram import GroupAddress, Telegram
@@ -38,7 +38,7 @@ class Device(ABC):
         self.xknx.devices.add(self)
 
     @abstractmethod
-    def _iter_remote_values(self) -> Generator[RemoteValue, None, None]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue]:
         """Iterate the devices RemoteValue classes."""
         # yield self.remote_value
         # or

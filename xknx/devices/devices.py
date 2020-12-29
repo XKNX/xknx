@@ -3,7 +3,7 @@ Module for handling a vector/array of devices.
 
 More or less an array with devices. Adds some search functionality to find devices.
 """
-from typing import Awaitable, Callable, Generator, List, Union
+from typing import Awaitable, Callable, Iterator, List, Union
 
 from xknx.telegram import GroupAddress, Telegram
 
@@ -30,13 +30,11 @@ class Devices:
         """Unregister callback for devices beeing updated."""
         self.device_updated_cbs.remove(device_updated_cb)
 
-    def __iter__(self) -> Generator[Device, None, None]:
+    def __iter__(self) -> Iterator[Device]:
         """Iterate registered devices."""
         yield from self.__devices
 
-    def devices_by_group_address(
-        self, group_address: GroupAddress
-    ) -> Generator[Device, None, None]:
+    def devices_by_group_address(self, group_address: GroupAddress) -> Iterator[Device]:
         """Return device(s) by group address."""
         for device in self.__devices:
             if device.has_group_address(group_address):
