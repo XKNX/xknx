@@ -160,7 +160,7 @@ Available env variables are:
 - XKNX_CONNECTION_LOCAL_IP
 - XKNX_CONNECTION_ROUTE_BACK: Set 'true' to be able to work in a container
 
-Exanple of a `docker run` with an xknx based app:
+Example of a `docker run` with an xknx based app:
 
 ```bash
 docker run --name myapp -d \
@@ -169,4 +169,3 @@ docker run --name myapp -d \
   -e XKNX_CONNECTION_ROUTE_BACK=true \
   -p 12300:12399/udp myapp:latest
 ```
-
