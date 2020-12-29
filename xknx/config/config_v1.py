@@ -137,7 +137,9 @@ class ConfigV1:
         route_back = os.getenv("XKNX_CONNECTION_ROUTE_BACK", default=None)
         if route_back:
             logger.debug("XKNX_CONNECTION_ROUTE_BACK overwrite from env")
-            self.xknx.connection_config.route_back = bool(route_back)
+            self.xknx.connection_config.route_back = (
+                True if route_back.lower() in ["true", "1", "y", "yes", "on"] else False
+            )
 
     def parse_groups(self, doc):
         """Parse the group section of xknx.yaml."""

@@ -621,10 +621,10 @@ class TestConfig(unittest.TestCase):
         os.environ["XKNX_GENERAL_MULTICAST_GROUP"] = self.XKNX_GENERAL_MULTICAST_GROUP
         os.environ["XKNX_GENERAL_MULTICAST_PORT"] = self.XKNX_GENERAL_MULTICAST_PORT
         self.xknx = XKNX(config="xknx.yaml")
-        os.unsetenv("XKNX_GENERAL_OWN_ADDRESS")
-        os.unsetenv("XKNX_GENERAL_RATE_LIMIT")
-        os.unsetenv("XKNX_GENERAL_MULTICAST_GROUP")
-        os.unsetenv("XKNX_GENERAL_MULTICAST_PORT")
+        del os.environ["XKNX_GENERAL_OWN_ADDRESS"]
+        del os.environ["XKNX_GENERAL_RATE_LIMIT"]
+        del os.environ["XKNX_GENERAL_MULTICAST_GROUP"]
+        del os.environ["XKNX_GENERAL_MULTICAST_PORT"]
         self.assertEqual(str(self.xknx.own_address), self.XKNX_GENERAL_OWN_ADDRESS)
         self.assertEqual(self.xknx.rate_limit, int(self.XKNX_GENERAL_RATE_LIMIT))
         self.assertEqual(self.xknx.multicast_group, self.XKNX_GENERAL_MULTICAST_GROUP)
@@ -643,10 +643,10 @@ class TestConfig(unittest.TestCase):
         os.environ["XKNX_CONNECTION_LOCAL_IP"] = self.XKNX_CONNECTION_LOCAL_IP
         os.environ["XKNX_CONNECTION_ROUTE_BACK"] = self.XKNX_CONNECTION_ROUTE_BACK
         self.xknx = XKNX(config="xknx.yaml")
-        os.unsetenv("XKNX_CONNECTION_GATEWAY_IP")
-        os.unsetenv("XKNX_CONNECTION_GATEWAY_PORT")
-        os.unsetenv("XKNX_CONNECTION_LOCAL_IP")
-        os.unsetenv("XKNX_CONNECTION_ROUTE_BACK")
+        del os.environ["XKNX_CONNECTION_GATEWAY_IP"]
+        del os.environ["XKNX_CONNECTION_GATEWAY_PORT"]
+        del os.environ["XKNX_CONNECTION_LOCAL_IP"]
+        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
         self.assertEqual(
             self.xknx.connection_config.gateway_ip, self.XKNX_CONNECTION_GATEWAY_IP
         )
@@ -660,4 +660,62 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(
             self.xknx.connection_config.route_back,
             bool(self.XKNX_CONNECTION_ROUTE_BACK),
+        )
+
+    def test_config_cnx_route_back(self):
+        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "true"
+        self.xknx = XKNX(config="xknx.yaml")
+        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+        self.assertEqual(
+            self.xknx.connection_config.route_back,
+            True,
+        )
+        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "yes"
+        self.xknx = XKNX(config="xknx.yaml")
+        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+        self.assertEqual(
+            self.xknx.connection_config.route_back,
+            True,
+        )
+        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "1"
+        self.xknx = XKNX(config="xknx.yaml")
+        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+        self.assertEqual(
+            self.xknx.connection_config.route_back,
+            True,
+        )
+        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "on"
+        self.xknx = XKNX(config="xknx.yaml")
+        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+        self.assertEqual(
+            self.xknx.connection_config.route_back,
+            True,
+        )
+        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "y"
+        self.xknx = XKNX(config="xknx.yaml")
+        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+        self.assertEqual(
+            self.xknx.connection_config.route_back,
+            True,
+        )
+        if "XKNX_CONNECTION_ROUTE_BACK" in os.environ:
+            del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+        self.xknx = XKNX(config="xknx.yaml")
+        self.assertEqual(
+            self.xknx.connection_config.route_back,
+            False,
+        )
+        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "another_string"
+        self.xknx = XKNX(config="xknx.yaml")
+        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+        self.assertEqual(
+            self.xknx.connection_config.route_back,
+            False,
+        )
+        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = ""
+        self.xknx = XKNX(config="xknx.yaml")
+        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+        self.assertEqual(
+            self.xknx.connection_config.route_back,
+            False,
         )
