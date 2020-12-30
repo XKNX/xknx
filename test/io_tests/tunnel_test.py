@@ -48,7 +48,19 @@ class TestTunnelling(unittest.TestCase):
         send_ack_mock.assert_called_once_with(0x02, 0x21)
 
     @patch("xknx.io.Tunnel._send_tunnelling_ack")
-    def test_tunnel_request_received_unsupported_frames(self, send_ack_mock):
+    def test_tunnel_request_received_cemi_too_small(self, send_ack_mock):
+        """Test Tunnel sending ACK for unsupported frames."""
+        # LDataInd T_Connect from 1.0.250 to 1.0.255 (xknx tunnel endpoint) - ETS Line-Scan
+        # <UnsupportedCEMIMessage description="CEMI too small. Length: 10; CEMI: 2900b06010fa10ff0080" />
+        # communication_channel_id: 0x02   sequence_counter: 0x81
+        raw = bytes.fromhex("0610 0420 0014 04 02 81 00 2900b06010fa10ff0080")
+
+        self.tunnel.udp_client.data_received_callback(raw)
+        self.tg_received_mock.assert_not_called()
+        send_ack_mock.assert_called_once_with(0x02, 0x81)
+
+    @patch("xknx.io.Tunnel._send_tunnelling_ack")
+    def test_tunnel_request_received_apci_unsupported(self, send_ack_mock):
         """Test Tunnel sending ACK for unsupported frames."""
         # LDataInd Unsupported Extended APCI from 0.0.1 to 0/0/0 broadcast
         # <UnsupportedCEMIMessage description="APCI not supported: 0b1111111000 in CEMI: 2900b0d0000100000103f8" />
@@ -58,13 +70,3 @@ class TestTunnelling(unittest.TestCase):
         self.tunnel.udp_client.data_received_callback(raw)
         self.tg_received_mock.assert_not_called()
         send_ack_mock.assert_called_once_with(0x02, 0x4F)
-        send_ack_mock.reset_mock()
-
-        # LDataInd T_Connect from 1.0.250 to 1.0.255 (xknx tunnel endpoint) - ETS Line-Scan
-        # <UnsupportedCEMIMessage description="CEMI too small. Length: 10; CEMI: 2900b06010fa10ff0080" />
-        # communication_channel_id: 0x02   sequence_counter: 0x81
-        raw = bytes.fromhex("0610 0420 0014 04 02 81 00 2900b06010fa10ff0080")
-
-        self.tunnel.udp_client.data_received_callback(raw)
-        self.tg_received_mock.assert_not_called()
-        send_ack_mock.assert_called_once_with(0x02, 0x81)

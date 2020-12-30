@@ -131,13 +131,21 @@ class TestAPCI(unittest.TestCase):
         for code, clazz in test_cases:
             self.assertIsInstance(APCI.resolve_apci(code), clazz)
 
-    def test_resolve_apci_unsupported(self):
-        """Test resolve_apci for unsupported services."""
+    def test_resolve_apci_unsupported_extended(self):
+        """Test resolve_apci for unsupported extended services."""
 
         with raises(
             ConversionError, match=r".*Class not implemented for extended APCI.*"
         ):
             APCI.resolve_apci(0x03C0)
+
+    def test_resolve_apci_unsupported_user_message(self):
+        """Test resolve_apci for unsupported user message services."""
+
+        with raises(
+            ConversionError, match=r".*Class not implemented for user message APCI.*"
+        ):
+            APCI.resolve_apci(0x02C3)
 
 
 class TestGroupValueRead(unittest.TestCase):
