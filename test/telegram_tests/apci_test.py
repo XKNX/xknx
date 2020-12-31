@@ -451,6 +451,13 @@ class TestMemoryRead(unittest.TestCase):
 
         self.assertEqual(payload.to_knx(), bytes([0x02, 0x0B, 0x12, 0x34]))
 
+    def test_to_knx_conversion_error(self):
+        """Test the to_knx method for conversion errors."""
+        payload = MemoryRead(address=0xAABBCCDD, count=11)
+
+        with self.assertRaisesRegex(ConversionError, r".*Address.*"):
+            payload.to_knx()
+
     def test_str(self):
         """Test the __str__ method."""
         payload = MemoryRead(address=0x1234, count=11)
@@ -484,6 +491,15 @@ class TestMemoryWrite(unittest.TestCase):
         self.assertEqual(
             payload.to_knx(), bytes([0x02, 0x83, 0x12, 0x34, 0xAA, 0xBB, 0xCC])
         )
+
+    def test_to_knx_conversion_error(self):
+        """Test the to_knx method for conversion errors."""
+        payload = MemoryWrite(
+            address=0xAABBCCDD, count=3, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        with self.assertRaisesRegex(ConversionError, r".*Address.*"):
+            payload.to_knx()
 
     def test_str(self):
         """Test the __str__ method."""
@@ -527,6 +543,15 @@ class TestMemoryResponse(unittest.TestCase):
             payload.to_knx(), bytes([0x02, 0x43, 0x12, 0x34, 0xAA, 0xBB, 0xCC])
         )
 
+    def test_to_knx_conversion_error(self):
+        """Test the to_knx method for conversion errors."""
+        payload = MemoryResponse(
+            address=0xAABBCCDD, count=3, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        with self.assertRaisesRegex(ConversionError, r".*Address.*"):
+            payload.to_knx()
+
     def test_str(self):
         """Test the __str__ method."""
         payload = MemoryResponse(
@@ -560,6 +585,13 @@ class TestDeviceDescriptorRead(unittest.TestCase):
 
         self.assertEqual(payload.to_knx(), bytes([0x03, 0x0D]))
 
+    def test_to_knx_conversion_error(self):
+        """Test the to_knx method for conversion errors."""
+        payload = DeviceDescriptorRead(255)
+
+        with self.assertRaisesRegex(ConversionError, r".*Descriptor.*"):
+            payload.to_knx()
+
     def test_str(self):
         """Test the __str__ method."""
         payload = DeviceDescriptorRead(0)
@@ -588,6 +620,13 @@ class TestDeviceDescriptorResponse(unittest.TestCase):
         payload = DeviceDescriptorResponse(descriptor=13, value=123)
 
         self.assertEqual(payload.to_knx(), bytes([0x03, 0x4D, 0x00, 0x7B]))
+
+    def test_to_knx_conversion_error(self):
+        """Test the to_knx method for conversion errors."""
+        payload = DeviceDescriptorRead(255)
+
+        with self.assertRaisesRegex(ConversionError, r".*Descriptor.*"):
+            payload.to_knx()
 
     def test_str(self):
         """Test the __str__ method."""
@@ -906,6 +945,15 @@ class TestPropertyValueRead(unittest.TestCase):
 
         self.assertEqual(payload.to_knx(), bytes([0x03, 0xD5, 0x01, 0x04, 0x20, 0x08]))
 
+    def test_to_knx_conversion_error(self):
+        """Test the to_knx method for conversion errors."""
+        payload = PropertyValueRead(
+            object_index=1, property_id=4, count=32, start_index=8
+        )
+
+        with self.assertRaisesRegex(ConversionError, r".*Count.*"):
+            payload.to_knx()
+
     def test_str(self):
         """Test the __str__ method."""
         payload = PropertyValueRead(
@@ -951,6 +999,15 @@ class TestPropertyValueWrite(unittest.TestCase):
             payload.to_knx(), bytes([0x03, 0xD7, 0x01, 0x04, 0x20, 0x08, 0x12, 0x34])
         )
 
+    def test_to_knx_conversion_error(self):
+        """Test the to_knx method for conversion errors."""
+        payload = PropertyValueWrite(
+            object_index=1, property_id=4, count=32, start_index=8, data=b"\x12\x34"
+        )
+
+        with self.assertRaisesRegex(ConversionError, r".*Count.*"):
+            payload.to_knx()
+
     def test_str(self):
         """Test the __str__ method."""
         payload = PropertyValueWrite(
@@ -995,6 +1052,15 @@ class TestPropertyValueResponse(unittest.TestCase):
         self.assertEqual(
             payload.to_knx(), bytes([0x03, 0xD6, 0x01, 0x04, 0x20, 0x08, 0x12, 0x34])
         )
+
+    def test_to_knx_conversion_error(self):
+        """Test the to_knx method for conversion errors."""
+        payload = PropertyValueResponse(
+            object_index=1, property_id=4, count=32, start_index=8, data=b"\x12\x34"
+        )
+
+        with self.assertRaisesRegex(ConversionError, r".*Count.*"):
+            payload.to_knx()
 
     def test_str(self):
         """Test the __str__ method."""
@@ -1097,6 +1163,20 @@ class TestPropertyDescriptionResponse(unittest.TestCase):
             payload.to_knx(),
             bytes([0x03, 0xD9, 0x01, 0x04, 0x08, 0x03, 0x00, 0x05, 0x07]),
         )
+
+    def test_to_knx_conversion_error(self):
+        """Test the to_knx method for conversion errors."""
+        payload = PropertyDescriptionResponse(
+            object_index=1,
+            property_id=4,
+            property_index=8,
+            type_=3,
+            max_count=4096,
+            access=7,
+        )
+
+        with self.assertRaisesRegex(ConversionError, r".*Max count.*"):
+            payload.to_knx()
 
     def test_str(self):
         """Test the __str__ method."""
