@@ -77,7 +77,7 @@ class ExposeSensor(Device):
         """Return the current state of the sensor as a human readable string."""
         return self.sensor_value.value
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return object as readable string."""
         return '<ExposeSensor name="{}" ' 'sensor="{}" value="{}" unit="{}"/>'.format(
             self.name,

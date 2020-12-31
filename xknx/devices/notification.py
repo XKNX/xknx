@@ -72,7 +72,7 @@ class Notification(Device):
                 "Could not understand action %s for device %s", action, self.get_name()
             )
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return object as readable string."""
         return '<Notification name="{}" message="{}" />'.format(
             self.name, self._message.group_addr_str()

@@ -297,7 +297,7 @@ class Climate(Device):
         if self.mode is not None:
             await self.mode.sync(wait_for_result=wait_for_result)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return object as readable string."""
         return (
             '<Climate name="{}" '

@@ -379,7 +379,7 @@ class Light(Device):
             max_kelvin=max_kelvin,
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return object as readable string."""
         str_brightness = (
             ""

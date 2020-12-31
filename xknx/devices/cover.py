@@ -165,7 +165,7 @@ class Cover(Device):
             device_class=device_class,
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return object as readable string."""
         return (
             '<Cover name="{}" '

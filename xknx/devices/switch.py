@@ -110,7 +110,7 @@ class Switch(Device):
         await asyncio.sleep(wait_seconds)
         await self.set_off()
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return object as readable string."""
         return '<Switch name="{}" switch="{}" />'.format(
             self.name, self.switch.group_addr_str()

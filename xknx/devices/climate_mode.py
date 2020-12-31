@@ -345,7 +345,7 @@ class ClimateMode(Device):
                     await self._set_internal_controller_mode(rv.value)
                     return
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return object as readable string."""
         return (
             '<ClimateMode name="{}" '

@@ -92,7 +92,7 @@ class DateTime(Device):
         if self.localtime:
             await self.broadcast_localtime(response=False)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return object as readable string."""
         return '<DateTime name="{}" group_address="{}" broadcast_type="{}" />'.format(
             self.name, self._remote_value.group_addr_str(), self._broadcast_type

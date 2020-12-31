@@ -61,7 +61,7 @@ class Fan(Device):
             group_address_speed_state=group_address_speed_state,
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return object as readable string."""
         return '<Fan name="{}" ' 'speed="{}" />'.format(
             self.name, self.speed.group_addr_str()
