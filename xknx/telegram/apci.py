@@ -350,9 +350,9 @@ class IndividualAddressWrite(APCI):
 
     def from_knx(self, raw: bytes) -> None:
         """Parse/deserialize from KNX/IP raw data."""
-        address = struct.unpack("!BB", raw[2:])
+        address_high, address_low = struct.unpack("!BB", raw[2:])
 
-        self.address = IndividualAddress(address)
+        self.address = IndividualAddress((address_high, address_low))
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
