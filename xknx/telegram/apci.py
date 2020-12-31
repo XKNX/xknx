@@ -17,7 +17,7 @@ from xknx.telegram.address import IndividualAddress
 
 
 def encode_cmd_and_payload(
-    cmd: Union["APCICommand", "APCIUserCommand", "APCIExtendedCommand"],
+    cmd: Union["APCIService", "APCIUserService", "APCIExtendedService"],
     encoded_payload: int = 0,
     appended_payload: Optional[bytes] = None,
 ) -> bytes:
@@ -35,7 +35,7 @@ def encode_cmd_and_payload(
     return data
 
 
-class APCICommand(Enum):
+class APCIService(Enum):
     """Enum class for APCI services."""
 
     GROUP_READ = 0x0000
@@ -63,7 +63,7 @@ class APCICommand(Enum):
     ESCAPE = 0x03C0
 
 
-class APCIUserCommand(Enum):
+class APCIUserService(Enum):
     """Enum class for user message APCI services."""
 
     USER_MEMORY_READ = 0x02C0
@@ -78,7 +78,7 @@ class APCIUserCommand(Enum):
     FUNCTION_PROPERTY_STATE_RESPONSE = 0x02C9
 
 
-class APCIExtendedCommand(Enum):
+class APCIExtendedService(Enum):
     """Enum class for extended APCI services."""
 
     AUTHORIZE_REQUEST = 0x03D1
@@ -103,8 +103,8 @@ class APCI(ABC):
     This base class is only the interface for the derived classes.
     """
 
-    code: ClassVar[Union[APCICommand, APCIUserCommand, APCIExtendedCommand]] = cast(
-        APCICommand, None
+    code: ClassVar[Union[APCIService, APCIUserService, APCIExtendedService]] = cast(
+        APCIService, None
     )
 
     @abstractmethod
@@ -125,89 +125,82 @@ class APCI(ABC):
 
     @staticmethod
     def resolve_apci(apci: int) -> "APCI":
-        """Return APCI instance from APCI command."""
-        extended = (apci & APCICommand.ESCAPE.value) == APCICommand.ESCAPE.value
+        """
+        Return APCI instance from APCI command.
 
-        if extended:
-            if apci == APCIExtendedCommand.AUTHORIZE_REQUEST.value:
-                return AuthorizeRequest()
-            if apci == APCIExtendedCommand.AUTHORIZE_RESPONSE.value:
-                return AuthorizeResponse()
-            if apci == APCIExtendedCommand.PROPERTY_VALUE_READ.value:
-                return PropertyValueRead()
-            if apci == APCIExtendedCommand.PROPERTY_VALUE_WRITE.value:
-                return PropertyValueWrite()
-            if apci == APCIExtendedCommand.PROPERTY_VALUE_RESPONSE.value:
-                return PropertyValueResponse()
-            if apci == APCIExtendedCommand.PROPERTY_DESCRIPTION_READ.value:
-                return PropertyDescriptionRead()
-            if apci == APCIExtendedCommand.PROPERTY_DESCRIPTION_RESPONSE.value:
-                return PropertyDescriptionResponse()
-            if apci == APCIExtendedCommand.INDIVIDUAL_ADDRESS_SERIAL_READ.value:
-                return IndividualAddressSerialRead()
-            if apci == APCIExtendedCommand.INDIVIDUAL_ADDRESS_SERIAL_RESPONSE.value:
-                return IndividualAddressSerialResponse()
-            if apci == APCIExtendedCommand.INDIVIDUAL_ADDRESS_SERIAL_WRITE.value:
-                return IndividualAddressSerialWrite()
-            raise ConversionError(
-                f"Class not implemented for extended APCI {apci:#012b}."
-            )
+        There are only 16 possible APCI services. The
+        `APCIService.USER_MESSAGE` and `APCIService.ESCAPE` service have
+        several sub-services.
+        """
+        service = apci & 0x03C0
 
-        user_message = (
-            apci & APCICommand.USER_MESSAGE.value
-        ) == APCICommand.USER_MESSAGE.value
-
-        if user_message:
-            if apci == APCIUserCommand.USER_MEMORY_READ.value:
-                return UserMemoryRead()
-            if apci == APCIUserCommand.USER_MEMORY_RESPONSE.value:
-                return UserMemoryResponse()
-            if apci == APCIUserCommand.USER_MEMORY_WRITE.value:
-                return UserMemoryWrite()
-            if apci == APCIUserCommand.USER_MANUFACTURER_INFO_READ.value:
-                return UserManufacturerInfoRead()
-            if apci == APCIUserCommand.USER_MANUFACTURER_INFO_RESPONSE.value:
-                return UserManufacturerInfoResponse()
-            if apci == APCIUserCommand.FUNCTION_PROPERTY_COMMAND.value:
-                return FunctionPropertyCommand()
-            if apci == APCIUserCommand.FUNCTION_PROPERTY_STATE_READ.value:
-                return FunctionPropertyStateRead()
-            if apci == APCIUserCommand.FUNCTION_PROPERTY_STATE_RESPONSE.value:
-                return FunctionPropertyStateResponse()
-            raise ConversionError(
-                f"Class not implemented for user message APCI {apci:#012b}."
-            )
-
-        apci = apci & 0x03C0
-
-        if apci == APCICommand.GROUP_READ.value:
+        if service == APCIService.GROUP_READ.value:
             return GroupValueRead()
-        if apci == APCICommand.GROUP_WRITE.value:
+        if service == APCIService.GROUP_WRITE.value:
             return GroupValueWrite()
-        if apci == APCICommand.GROUP_RESPONSE.value:
+        if service == APCIService.GROUP_RESPONSE.value:
             return GroupValueResponse()
-        if apci == APCICommand.INDIVIDUAL_ADDRESS_WRITE.value:
+        if service == APCIService.INDIVIDUAL_ADDRESS_WRITE.value:
             return IndividualAddressWrite()
-        if apci == APCICommand.INDIVIDUAL_ADDRESS_READ.value:
+        if service == APCIService.INDIVIDUAL_ADDRESS_READ.value:
             return IndividualAddressRead()
-        if apci == APCICommand.INDIVIDUAL_ADDRESS_RESPONSE.value:
+        if service == APCIService.INDIVIDUAL_ADDRESS_RESPONSE.value:
             return IndividualAddressResponse()
-        if apci == APCICommand.ADC_READ.value:
+        if service == APCIService.ADC_READ.value:
             return ADCRead()
-        if apci == APCICommand.ADC_RESPONSE.value:
+        if service == APCIService.ADC_RESPONSE.value:
             return ADCResponse()
-        if apci == APCICommand.MEMORY_READ.value:
+        if service == APCIService.MEMORY_READ.value:
             return MemoryRead()
-        if apci == APCICommand.MEMORY_WRITE.value:
+        if service == APCIService.MEMORY_WRITE.value:
             return MemoryWrite()
-        if apci == APCICommand.MEMORY_RESPONSE.value:
+        if service == APCIService.MEMORY_RESPONSE.value:
             return MemoryResponse()
-        if apci == APCICommand.DEVICE_DESCRIPTOR_READ.value:
+        if service == APCIService.USER_MESSAGE.value:
+            if apci == APCIUserService.USER_MEMORY_READ.value:
+                return UserMemoryRead()
+            if apci == APCIUserService.USER_MEMORY_RESPONSE.value:
+                return UserMemoryResponse()
+            if apci == APCIUserService.USER_MEMORY_WRITE.value:
+                return UserMemoryWrite()
+            if apci == APCIUserService.USER_MANUFACTURER_INFO_READ.value:
+                return UserManufacturerInfoRead()
+            if apci == APCIUserService.USER_MANUFACTURER_INFO_RESPONSE.value:
+                return UserManufacturerInfoResponse()
+            if apci == APCIUserService.FUNCTION_PROPERTY_COMMAND.value:
+                return FunctionPropertyCommand()
+            if apci == APCIUserService.FUNCTION_PROPERTY_STATE_READ.value:
+                return FunctionPropertyStateRead()
+            if apci == APCIUserService.FUNCTION_PROPERTY_STATE_RESPONSE.value:
+                return FunctionPropertyStateResponse()
+        if service == APCIService.DEVICE_DESCRIPTOR_READ.value:
             return DeviceDescriptorRead()
-        if apci == APCICommand.DEVICE_DESCRIPTOR_RESPONSE.value:
+        if service == APCIService.DEVICE_DESCRIPTOR_RESPONSE.value:
             return DeviceDescriptorResponse()
-        if apci == APCICommand.RESTART.value:
+        if service == APCIService.RESTART.value:
             return Restart()
+        if service == APCIService.ESCAPE.value:
+            if apci == APCIExtendedService.AUTHORIZE_REQUEST.value:
+                return AuthorizeRequest()
+            if apci == APCIExtendedService.AUTHORIZE_RESPONSE.value:
+                return AuthorizeResponse()
+            if apci == APCIExtendedService.PROPERTY_VALUE_READ.value:
+                return PropertyValueRead()
+            if apci == APCIExtendedService.PROPERTY_VALUE_WRITE.value:
+                return PropertyValueWrite()
+            if apci == APCIExtendedService.PROPERTY_VALUE_RESPONSE.value:
+                return PropertyValueResponse()
+            if apci == APCIExtendedService.PROPERTY_DESCRIPTION_READ.value:
+                return PropertyDescriptionRead()
+            if apci == APCIExtendedService.PROPERTY_DESCRIPTION_RESPONSE.value:
+                return PropertyDescriptionResponse()
+            if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_READ.value:
+                return IndividualAddressSerialRead()
+            if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_RESPONSE.value:
+                return IndividualAddressSerialResponse()
+            if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_WRITE.value:
+                return IndividualAddressSerialWrite()
+
         raise ConversionError(f"Class not implemented for APCI {apci:#012b}.")
 
 
@@ -218,7 +211,7 @@ class GroupValueRead(APCI):
     Does not have any payload.
     """
 
-    code = APCICommand.GROUP_READ
+    code = APCIService.GROUP_READ
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -246,7 +239,7 @@ class GroupValueWrite(APCI):
     Takes a value (DPT) as payload.
     """
 
-    code = APCICommand.GROUP_WRITE
+    code = APCIService.GROUP_WRITE
 
     def __init__(self, value: Optional[Union[DPTBinary, DPTArray]] = None) -> None:
         """Initialize a new instance of GroupValueWrite."""
@@ -289,7 +282,7 @@ class GroupValueResponse(APCI):
     Takes a value (DPT) as payload.
     """
 
-    code = APCICommand.GROUP_RESPONSE
+    code = APCIService.GROUP_RESPONSE
 
     def __init__(self, value: Optional[Union[DPTBinary, DPTArray]] = None) -> None:
         """Initialize a new instance of GroupValueResponse."""
@@ -332,7 +325,7 @@ class IndividualAddressWrite(APCI):
     Payload contains the serial number and (new) address of the device.
     """
 
-    code = APCICommand.INDIVIDUAL_ADDRESS_WRITE
+    code = APCIService.INDIVIDUAL_ADDRESS_WRITE
 
     def __init__(
         self,
@@ -368,7 +361,7 @@ class IndividualAddressWrite(APCI):
 class IndividualAddressRead(APCI):
     """IndividualAddressRead service."""
 
-    code = APCICommand.INDIVIDUAL_ADDRESS_READ
+    code = APCIService.INDIVIDUAL_ADDRESS_READ
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -397,7 +390,7 @@ class IndividualAddressResponse(APCI):
     response address.
     """
 
-    code = APCICommand.INDIVIDUAL_ADDRESS_RESPONSE
+    code = APCIService.INDIVIDUAL_ADDRESS_RESPONSE
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -425,7 +418,7 @@ class ADCRead(APCI):
     Payload contains the channel and number of samples to take.
     """
 
-    code = APCICommand.ADC_READ
+    code = APCIService.ADC_READ
 
     def __init__(self, channel: int = 0, count: int = 0) -> None:
         """Initialize a new instance of ADCRead."""
@@ -462,7 +455,7 @@ class ADCResponse(APCI):
     Payload contains the channel, number of samples and value.
     """
 
-    code = APCICommand.ADC_RESPONSE
+    code = APCIService.ADC_RESPONSE
 
     def __init__(self, channel: int = 0, count: int = 0, value: int = 0) -> None:
         """Initialize a new instance of ADCResponse."""
@@ -500,7 +493,7 @@ class MemoryRead(APCI):
     Payload indicates address and count.
     """
 
-    code = APCICommand.MEMORY_READ
+    code = APCIService.MEMORY_READ
 
     def __init__(self, address: int = 0, count: int = 0) -> None:
         """Initialize a new instance of MemoryRead."""
@@ -537,7 +530,7 @@ class MemoryWrite(APCI):
     Payload indicates address, count and data.
     """
 
-    code = APCICommand.MEMORY_WRITE
+    code = APCIService.MEMORY_WRITE
 
     def __init__(
         self, address: int = 0, count: int = 0, data: Optional[bytes] = None
@@ -584,7 +577,7 @@ class MemoryResponse(APCI):
     Payload indicates address, count and data.
     """
 
-    code = APCICommand.MEMORY_RESPONSE
+    code = APCIService.MEMORY_RESPONSE
 
     def __init__(
         self, address: int = 0, count: int = 0, data: Optional[bytes] = None
@@ -631,7 +624,7 @@ class DeviceDescriptorRead(APCI):
     Payload contains the descriptor.
     """
 
-    code = APCICommand.DEVICE_DESCRIPTOR_READ
+    code = APCIService.DEVICE_DESCRIPTOR_READ
 
     def __init__(self, descriptor: int = 0) -> None:
         """Initialize a new instance of DeviceDescriptorRead."""
@@ -661,7 +654,7 @@ class DeviceDescriptorResponse(APCI):
     Payload contains the descriptor and value.
     """
 
-    code = APCICommand.DEVICE_DESCRIPTOR_RESPONSE
+    code = APCIService.DEVICE_DESCRIPTOR_RESPONSE
 
     def __init__(self, descriptor: int = 0, value: int = 0) -> None:
         """Initialize a new instance of DeviceDescriptorResponse."""
@@ -700,7 +693,7 @@ class Restart(APCI):
     Does not take any payload.
     """
 
-    code = APCICommand.RESTART
+    code = APCIService.RESTART
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -728,7 +721,7 @@ class UserMemoryRead(APCI):
     Payload indicates address and count.
     """
 
-    code = APCIUserCommand.USER_MEMORY_READ
+    code = APCIUserService.USER_MEMORY_READ
 
     def __init__(self, address: int = 0, count: int = 0) -> None:
         """Initialize a new instance of UserMemoryRead."""
@@ -767,7 +760,7 @@ class UserMemoryWrite(APCI):
     Payload indicates address, count and data.
     """
 
-    code = APCIUserCommand.USER_MEMORY_WRITE
+    code = APCIUserService.USER_MEMORY_WRITE
 
     def __init__(
         self, address: int = 0, count: int = 0, data: Optional[bytes] = None
@@ -816,7 +809,7 @@ class UserMemoryResponse(APCI):
     Payload indicates address, count and data.
     """
 
-    code = APCIUserCommand.USER_MEMORY_RESPONSE
+    code = APCIUserService.USER_MEMORY_RESPONSE
 
     def __init__(
         self, address: int = 0, count: int = 0, data: Optional[bytes] = None
@@ -861,7 +854,7 @@ class UserMemoryResponse(APCI):
 class UserManufacturerInfoRead(APCI):
     """UserManufacturerInfoRead service."""
 
-    code = APCIUserCommand.USER_MANUFACTURER_INFO_READ
+    code = APCIUserService.USER_MANUFACTURER_INFO_READ
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -886,7 +879,7 @@ class UserManufacturerInfoRead(APCI):
 class UserManufacturerInfoResponse(APCI):
     """UserManufacturerInfoResponse service."""
 
-    code = APCIUserCommand.USER_MANUFACTURER_INFO_RESPONSE
+    code = APCIUserService.USER_MANUFACTURER_INFO_RESPONSE
 
     def __init__(self, manufacturer_id: int = 0, data: Optional[bytes] = None) -> None:
         """Initialize a new instance of UserManufacturerInfoResponse."""
@@ -918,7 +911,7 @@ class UserManufacturerInfoResponse(APCI):
 class FunctionPropertyCommand(APCI):
     """FunctionPropertyCommand service."""
 
-    code = APCIUserCommand.FUNCTION_PROPERTY_COMMAND
+    code = APCIUserService.FUNCTION_PROPERTY_COMMAND
 
     def __init__(
         self, object_index: int = 0, property_id: int = 0, data: Optional[bytes] = None
@@ -960,7 +953,7 @@ class FunctionPropertyCommand(APCI):
 class FunctionPropertyStateRead(APCI):
     """FunctionPropertyStateRead service."""
 
-    code = APCIUserCommand.FUNCTION_PROPERTY_STATE_READ
+    code = APCIUserService.FUNCTION_PROPERTY_STATE_READ
 
     def __init__(
         self, object_index: int = 0, property_id: int = 0, data: Optional[bytes] = None
@@ -1002,7 +995,7 @@ class FunctionPropertyStateRead(APCI):
 class FunctionPropertyStateResponse(APCI):
     """FunctionPropertyStateResponse service."""
 
-    code = APCIUserCommand.FUNCTION_PROPERTY_STATE_READ
+    code = APCIUserService.FUNCTION_PROPERTY_STATE_READ
 
     def __init__(
         self,
@@ -1056,7 +1049,7 @@ class FunctionPropertyStateResponse(APCI):
 class AuthorizeRequest(APCI):
     """AuthorizeRequest service."""
 
-    code = APCIExtendedCommand.AUTHORIZE_REQUEST
+    code = APCIExtendedService.AUTHORIZE_REQUEST
 
     def __init__(self, key: int = 0) -> None:
         """Initialize a new instance of AuthorizeRequest."""
@@ -1084,7 +1077,7 @@ class AuthorizeRequest(APCI):
 class AuthorizeResponse(APCI):
     """AuthorizeResponse service."""
 
-    code = APCIExtendedCommand.AUTHORIZE_RESPONSE
+    code = APCIExtendedService.AUTHORIZE_RESPONSE
 
     def __init__(self, level: int = 0) -> None:
         """Initialize a new instance of AuthorizeResponse."""
@@ -1116,7 +1109,7 @@ class PropertyValueRead(APCI):
     Payload indicates object, property, count and start.
     """
 
-    code = APCIExtendedCommand.PROPERTY_VALUE_READ
+    code = APCIExtendedService.PROPERTY_VALUE_READ
 
     def __init__(
         self,
@@ -1175,7 +1168,7 @@ class PropertyValueWrite(APCI):
     Payload indicates object, property, count, start and data itself.
     """
 
-    code = APCIExtendedCommand.PROPERTY_VALUE_WRITE
+    code = APCIExtendedService.PROPERTY_VALUE_WRITE
 
     def __init__(
         self,
@@ -1252,7 +1245,7 @@ class PropertyValueResponse(APCI):
     the payload depends on the data.
     """
 
-    code = APCIExtendedCommand.PROPERTY_VALUE_RESPONSE
+    code = APCIExtendedService.PROPERTY_VALUE_RESPONSE
 
     def __init__(
         self,
@@ -1324,7 +1317,7 @@ class PropertyValueResponse(APCI):
 class PropertyDescriptionRead(APCI):
     """PropertyDescriptionRead service."""
 
-    code = APCIExtendedCommand.PROPERTY_DESCRIPTION_READ
+    code = APCIExtendedService.PROPERTY_DESCRIPTION_READ
 
     def __init__(
         self, object_index: int = 0, property_id: int = 0, property_index: int = 0
@@ -1360,7 +1353,7 @@ class PropertyDescriptionRead(APCI):
 class PropertyDescriptionResponse(APCI):
     """PropertyDescriptionResponse service."""
 
-    code = APCIExtendedCommand.PROPERTY_DESCRIPTION_RESPONSE
+    code = APCIExtendedService.PROPERTY_DESCRIPTION_RESPONSE
 
     def __init__(
         self,
@@ -1418,7 +1411,7 @@ class PropertyDescriptionResponse(APCI):
 class IndividualAddressSerialRead(APCI):
     """IndividualAddressSerialRead service."""
 
-    code = APCIExtendedCommand.INDIVIDUAL_ADDRESS_SERIAL_READ
+    code = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_READ
 
     def __init__(self, serial: Optional[bytes] = None) -> None:
         """Initialize a new instance of PropertyDescriptionRead."""
@@ -1449,7 +1442,7 @@ class IndividualAddressSerialRead(APCI):
 class IndividualAddressSerialResponse(APCI):
     """IndividualAddressSerialResponse service."""
 
-    code = APCIExtendedCommand.INDIVIDUAL_ADDRESS_SERIAL_RESPONSE
+    code = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_RESPONSE
 
     def __init__(
         self,
@@ -1490,7 +1483,7 @@ class IndividualAddressSerialResponse(APCI):
 class IndividualAddressSerialWrite(APCI):
     """IndividualAddressSerialWrite service."""
 
-    code = APCIExtendedCommand.INDIVIDUAL_ADDRESS_SERIAL_WRITE
+    code = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_WRITE
 
     def __init__(
         self,

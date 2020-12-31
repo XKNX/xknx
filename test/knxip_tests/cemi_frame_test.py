@@ -50,7 +50,7 @@ def test_valid_command(frame):
 
 
 def test_invalid_tpci_apci(frame):
-    """Test for invalid APCICommand"""
+    """Test for invalid APCIService"""
     with raises(UnsupportedCEMIMessage, match=r".*APCI not supported: .*"):
         frame.from_knx_data_link_layer(get_data(0x29, 0, 0, 0, 0, 1, 0xFFC0, []))
 

@@ -9,9 +9,9 @@ from xknx.telegram.apci import (
     APCI,
     ADCRead,
     ADCResponse,
-    APCICommand,
-    APCIExtendedCommand,
-    APCIUserCommand,
+    APCIExtendedService,
+    APCIService,
+    APCIUserService,
     AuthorizeRequest,
     AuthorizeResponse,
     DeviceDescriptorRead,
@@ -51,20 +51,20 @@ class TestAPCI(unittest.TestCase):
     def test_resolve_apci(self):
         """Test resolve_apci for supported APCI services."""
         test_cases = [
-            (APCICommand.GROUP_READ.value, GroupValueRead),
-            (APCICommand.GROUP_WRITE.value, GroupValueWrite),
-            (APCICommand.GROUP_RESPONSE.value, GroupValueResponse),
-            (APCICommand.INDIVIDUAL_ADDRESS_WRITE.value, IndividualAddressWrite),
-            (APCICommand.INDIVIDUAL_ADDRESS_READ.value, IndividualAddressRead),
-            (APCICommand.INDIVIDUAL_ADDRESS_RESPONSE.value, IndividualAddressResponse),
-            (APCICommand.ADC_READ.value, ADCRead),
-            (APCICommand.ADC_RESPONSE.value, ADCResponse),
-            (APCICommand.MEMORY_READ.value, MemoryRead),
-            (APCICommand.MEMORY_WRITE.value, MemoryWrite),
-            (APCICommand.MEMORY_RESPONSE.value, MemoryResponse),
-            (APCICommand.DEVICE_DESCRIPTOR_READ.value, DeviceDescriptorRead),
-            (APCICommand.DEVICE_DESCRIPTOR_RESPONSE.value, DeviceDescriptorResponse),
-            (APCICommand.RESTART.value, Restart),
+            (APCIService.GROUP_READ.value, GroupValueRead),
+            (APCIService.GROUP_WRITE.value, GroupValueWrite),
+            (APCIService.GROUP_RESPONSE.value, GroupValueResponse),
+            (APCIService.INDIVIDUAL_ADDRESS_WRITE.value, IndividualAddressWrite),
+            (APCIService.INDIVIDUAL_ADDRESS_READ.value, IndividualAddressRead),
+            (APCIService.INDIVIDUAL_ADDRESS_RESPONSE.value, IndividualAddressResponse),
+            (APCIService.ADC_READ.value, ADCRead),
+            (APCIService.ADC_RESPONSE.value, ADCResponse),
+            (APCIService.MEMORY_READ.value, MemoryRead),
+            (APCIService.MEMORY_WRITE.value, MemoryWrite),
+            (APCIService.MEMORY_RESPONSE.value, MemoryResponse),
+            (APCIService.DEVICE_DESCRIPTOR_READ.value, DeviceDescriptorRead),
+            (APCIService.DEVICE_DESCRIPTOR_RESPONSE.value, DeviceDescriptorResponse),
+            (APCIService.RESTART.value, Restart),
         ]
 
         for code, clazz in test_cases:
@@ -73,24 +73,24 @@ class TestAPCI(unittest.TestCase):
     def test_resolve_class_user(self):
         """Test resolve_class for supported user APCI services."""
         test_cases = [
-            (APCIUserCommand.USER_MEMORY_READ.value, UserMemoryRead),
-            (APCIUserCommand.USER_MEMORY_RESPONSE.value, UserMemoryResponse),
-            (APCIUserCommand.USER_MEMORY_WRITE.value, UserMemoryWrite),
+            (APCIUserService.USER_MEMORY_READ.value, UserMemoryRead),
+            (APCIUserService.USER_MEMORY_RESPONSE.value, UserMemoryResponse),
+            (APCIUserService.USER_MEMORY_WRITE.value, UserMemoryWrite),
             (
-                APCIUserCommand.USER_MANUFACTURER_INFO_READ.value,
+                APCIUserService.USER_MANUFACTURER_INFO_READ.value,
                 UserManufacturerInfoRead,
             ),
             (
-                APCIUserCommand.USER_MANUFACTURER_INFO_RESPONSE.value,
+                APCIUserService.USER_MANUFACTURER_INFO_RESPONSE.value,
                 UserManufacturerInfoResponse,
             ),
-            (APCIUserCommand.FUNCTION_PROPERTY_COMMAND.value, FunctionPropertyCommand),
+            (APCIUserService.FUNCTION_PROPERTY_COMMAND.value, FunctionPropertyCommand),
             (
-                APCIUserCommand.FUNCTION_PROPERTY_STATE_READ.value,
+                APCIUserService.FUNCTION_PROPERTY_STATE_READ.value,
                 FunctionPropertyStateRead,
             ),
             (
-                APCIUserCommand.FUNCTION_PROPERTY_STATE_RESPONSE.value,
+                APCIUserService.FUNCTION_PROPERTY_STATE_RESPONSE.value,
                 FunctionPropertyStateResponse,
             ),
         ]
@@ -101,29 +101,29 @@ class TestAPCI(unittest.TestCase):
     def test_resolve_class_extended(self):
         """Test resolve_class for supported extended APCI services."""
         test_cases = [
-            (APCIExtendedCommand.AUTHORIZE_REQUEST.value, AuthorizeRequest),
-            (APCIExtendedCommand.AUTHORIZE_RESPONSE.value, AuthorizeResponse),
-            (APCIExtendedCommand.PROPERTY_VALUE_READ.value, PropertyValueRead),
-            (APCIExtendedCommand.PROPERTY_VALUE_WRITE.value, PropertyValueWrite),
-            (APCIExtendedCommand.PROPERTY_VALUE_RESPONSE.value, PropertyValueResponse),
+            (APCIExtendedService.AUTHORIZE_REQUEST.value, AuthorizeRequest),
+            (APCIExtendedService.AUTHORIZE_RESPONSE.value, AuthorizeResponse),
+            (APCIExtendedService.PROPERTY_VALUE_READ.value, PropertyValueRead),
+            (APCIExtendedService.PROPERTY_VALUE_WRITE.value, PropertyValueWrite),
+            (APCIExtendedService.PROPERTY_VALUE_RESPONSE.value, PropertyValueResponse),
             (
-                APCIExtendedCommand.PROPERTY_DESCRIPTION_READ.value,
+                APCIExtendedService.PROPERTY_DESCRIPTION_READ.value,
                 PropertyDescriptionRead,
             ),
             (
-                APCIExtendedCommand.PROPERTY_DESCRIPTION_RESPONSE.value,
+                APCIExtendedService.PROPERTY_DESCRIPTION_RESPONSE.value,
                 PropertyDescriptionResponse,
             ),
             (
-                APCIExtendedCommand.INDIVIDUAL_ADDRESS_SERIAL_READ.value,
+                APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_READ.value,
                 IndividualAddressSerialRead,
             ),
             (
-                APCIExtendedCommand.INDIVIDUAL_ADDRESS_SERIAL_RESPONSE.value,
+                APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_RESPONSE.value,
                 IndividualAddressSerialResponse,
             ),
             (
-                APCIExtendedCommand.INDIVIDUAL_ADDRESS_SERIAL_WRITE.value,
+                APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_WRITE.value,
                 IndividualAddressSerialWrite,
             ),
         ]
@@ -131,21 +131,16 @@ class TestAPCI(unittest.TestCase):
         for code, clazz in test_cases:
             self.assertIsInstance(APCI.resolve_apci(code), clazz)
 
-    def test_resolve_apci_unsupported_extended(self):
-        """Test resolve_apci for unsupported extended services."""
+    def test_resolve_apci_unsupported(self):
+        """Test resolve_apci for unsupported services."""
 
-        with raises(
-            ConversionError, match=r".*Class not implemented for extended APCI.*"
-        ):
-            APCI.resolve_apci(0x03C0)
-
-    def test_resolve_apci_unsupported_user_message(self):
-        """Test resolve_apci for unsupported user message services."""
-
-        with raises(
-            ConversionError, match=r".*Class not implemented for user message APCI.*"
-        ):
+        with raises(ConversionError, match=r".*Class not implemented for APCI.*"):
+            # Unsupported user service.
             APCI.resolve_apci(0x02C3)
+
+        with raises(ConversionError, match=r".*Class not implemented for APCI.*"):
+            # Unsupported extended service.
+            APCI.resolve_apci(0x03C0)
 
 
 class TestGroupValueRead(unittest.TestCase):
