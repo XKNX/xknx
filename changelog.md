@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased changes
+## 0.16.0 APCI possibilities considerably increased 2021-01-01
 
 ### Devices
 
