@@ -440,7 +440,7 @@ class TestMemoryRead(unittest.TestCase):
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = MemoryRead(address=0x1234, count=11)
+        payload = MemoryRead()
         payload.from_knx(bytes([0x02, 0x0B, 0x12, 0x34]))
 
         self.assertEqual(payload, MemoryRead(address=0x1234, count=11))
@@ -456,6 +456,11 @@ class TestMemoryRead(unittest.TestCase):
         payload = MemoryRead(address=0xAABBCCDD, count=11)
 
         with self.assertRaisesRegex(ConversionError, r".*Address.*"):
+            payload.to_knx()
+
+        payload = MemoryRead(address=0x1234, count=255)
+
+        with self.assertRaisesRegex(ConversionError, r".*Count.*"):
             payload.to_knx()
 
     def test_str(self):
@@ -476,7 +481,7 @@ class TestMemoryWrite(unittest.TestCase):
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = MemoryWrite(address=0x1234, count=3, data=bytes([0xAA, 0xBB, 0xCC]))
+        payload = MemoryWrite()
         payload.from_knx(bytes([0x02, 0x83, 0x12, 0x34, 0xAA, 0xBB, 0xCC]))
 
         self.assertEqual(
@@ -501,6 +506,11 @@ class TestMemoryWrite(unittest.TestCase):
         with self.assertRaisesRegex(ConversionError, r".*Address.*"):
             payload.to_knx()
 
+        payload = MemoryWrite(address=0x1234, count=255, data=bytes([0xAA, 0xBB, 0xCC]))
+
+        with self.assertRaisesRegex(ConversionError, r".*Count.*"):
+            payload.to_knx()
+
     def test_str(self):
         """Test the __str__ method."""
         payload = MemoryWrite(address=0x1234, count=3, data=bytes([0xAA, 0xBB, 0xCC]))
@@ -523,9 +533,7 @@ class TestMemoryResponse(unittest.TestCase):
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = MemoryResponse(
-            address=0x1234, count=3, data=bytes([0xAA, 0xBB, 0xCC])
-        )
+        payload = MemoryResponse()
         payload.from_knx(bytes([0x02, 0x43, 0x12, 0x34, 0xAA, 0xBB, 0xCC]))
 
         self.assertEqual(
@@ -552,6 +560,13 @@ class TestMemoryResponse(unittest.TestCase):
         with self.assertRaisesRegex(ConversionError, r".*Address.*"):
             payload.to_knx()
 
+        payload = MemoryResponse(
+            address=0x1234, count=255, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        with self.assertRaisesRegex(ConversionError, r".*Count.*"):
+            payload.to_knx()
+
     def test_str(self):
         """Test the __str__ method."""
         payload = MemoryResponse(
@@ -574,7 +589,7 @@ class TestDeviceDescriptorRead(unittest.TestCase):
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = DeviceDescriptorRead(13)
+        payload = DeviceDescriptorRead()
         payload.from_knx(bytes([0x03, 0x0D]))
 
         self.assertEqual(payload, DeviceDescriptorRead(13))
@@ -610,7 +625,7 @@ class TestDeviceDescriptorResponse(unittest.TestCase):
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = DeviceDescriptorResponse(descriptor=13, value=123)
+        payload = DeviceDescriptorResponse()
         payload.from_knx(bytes([0x03, 0x4D, 0x00, 0x7B]))
 
         self.assertEqual(payload, DeviceDescriptorResponse(descriptor=13, value=123))
@@ -634,6 +649,169 @@ class TestDeviceDescriptorResponse(unittest.TestCase):
 
         self.assertEqual(
             str(payload), '<DeviceDescriptorResponse descriptor="0" value="123" />'
+        )
+
+
+class TestUserMemoryRead(unittest.TestCase):
+    """Test class for UserMemoryRead objects."""
+
+    def test_calculated_length(self):
+        """Test the test_calculated_length method."""
+        payload = UserMemoryRead()
+
+        self.assertEqual(payload.calculated_length(), 4)
+
+    def test_from_knx(self):
+        """Test the from_knx method."""
+        payload = UserMemoryRead()
+        payload.from_knx(bytes([0x02, 0xC0, 0x1B, 0x23, 0x45]))
+
+        self.assertEqual(payload, UserMemoryRead(address=0x12345, count=11))
+
+    def test_to_knx(self):
+        """Test the to_knx method."""
+        payload = UserMemoryRead(address=0x12345, count=11)
+
+        self.assertEqual(payload.to_knx(), bytes([0x02, 0xC0, 0x1B, 0x23, 0x45]))
+
+    def test_to_knx_conversion_error(self):
+        """Test the to_knx method for conversion errors."""
+        payload = UserMemoryRead(address=0xAABBCCDD, count=11)
+
+        with self.assertRaisesRegex(ConversionError, r".*Address.*"):
+            payload.to_knx()
+
+        payload = UserMemoryRead(address=0x12345, count=255)
+
+        with self.assertRaisesRegex(ConversionError, r".*Count.*"):
+            payload.to_knx()
+
+    def test_str(self):
+        """Test the __str__ method."""
+        payload = UserMemoryRead(address=0x12345, count=11)
+
+        self.assertEqual(
+            str(payload), '<UserMemoryRead address="0x12345" count="11" />'
+        )
+
+
+class TestUserMemoryWrite(unittest.TestCase):
+    """Test class for UserMemoryWrite objects."""
+
+    def test_calculated_length(self):
+        """Test the test_calculated_length method."""
+        payload = UserMemoryWrite(
+            address=0x12345, count=3, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        self.assertEqual(payload.calculated_length(), 7)
+
+    def test_from_knx(self):
+        """Test the from_knx method."""
+        payload = UserMemoryWrite()
+        payload.from_knx(bytes([0x02, 0xC2, 0x13, 0x23, 0x45, 0xAA, 0xBB, 0xCC]))
+
+        self.assertEqual(
+            payload,
+            UserMemoryWrite(address=0x12345, count=3, data=bytes([0xAA, 0xBB, 0xCC])),
+        )
+
+    def test_to_knx(self):
+        """Test the to_knx method."""
+        payload = UserMemoryWrite(
+            address=0x12345, count=3, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        self.assertEqual(
+            payload.to_knx(), bytes([0x02, 0xC2, 0x13, 0x23, 0x45, 0xAA, 0xBB, 0xCC])
+        )
+
+    def test_to_knx_conversion_error(self):
+        """Test the to_knx method for conversion errors."""
+        payload = UserMemoryWrite(
+            address=0xAABBCCDD, count=3, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        with self.assertRaisesRegex(ConversionError, r".*Address.*"):
+            payload.to_knx()
+
+        payload = UserMemoryWrite(
+            address=0x12345, count=255, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        with self.assertRaisesRegex(ConversionError, r".*Count.*"):
+            payload.to_knx()
+
+    def test_str(self):
+        """Test the __str__ method."""
+        payload = UserMemoryWrite(
+            address=0x12345, count=3, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        self.assertEqual(
+            str(payload),
+            '<UserMemoryWrite address="0x12345" count="3" data="aabbcc" />',
+        )
+
+
+class TestUserMemoryResponse(unittest.TestCase):
+    """Test class for UserMemoryResponse objects."""
+
+    def test_calculated_length(self):
+        """Test the test_calculated_length method."""
+        payload = UserMemoryResponse(
+            address=0x12345, count=3, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        self.assertEqual(payload.calculated_length(), 7)
+
+    def test_from_knx(self):
+        """Test the from_knx method."""
+        payload = UserMemoryResponse()
+        payload.from_knx(bytes([0x02, 0xC1, 0x13, 0x23, 0x45, 0xAA, 0xBB, 0xCC]))
+
+        self.assertEqual(
+            payload,
+            UserMemoryResponse(
+                address=0x12345, count=3, data=bytes([0xAA, 0xBB, 0xCC])
+            ),
+        )
+
+    def test_to_knx(self):
+        """Test the to_knx method."""
+        payload = UserMemoryResponse(
+            address=0x12345, count=3, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        self.assertEqual(
+            payload.to_knx(), bytes([0x02, 0xC1, 0x13, 0x23, 0x45, 0xAA, 0xBB, 0xCC])
+        )
+
+    def test_to_knx_conversion_error(self):
+        """Test the to_knx method for conversion errors."""
+        payload = UserMemoryResponse(
+            address=0xAABBCCDD, count=3, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        with self.assertRaisesRegex(ConversionError, r".*Address.*"):
+            payload.to_knx()
+
+        payload = UserMemoryResponse(
+            address=0x12345, count=255, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        with self.assertRaisesRegex(ConversionError, r".*Count.*"):
+            payload.to_knx()
+
+    def test_str(self):
+        """Test the __str__ method."""
+        payload = UserMemoryResponse(
+            address=0x12345, count=3, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        self.assertEqual(
+            str(payload),
+            '<UserMemoryResponse address="0x12345" count="3" data="aabbcc" />',
         )
 
 

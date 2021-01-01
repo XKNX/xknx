@@ -490,7 +490,7 @@ class MemoryRead(APCI):
     """
     MemoryRead service.
 
-    Payload indicates address and count.
+    Payload indicates address (64 KiB) and count (1-63 bytes).
     """
 
     code = APCIService.MEMORY_READ
@@ -514,6 +514,8 @@ class MemoryRead(APCI):
         """Serialize to KNX/IP raw data."""
         if self.address < 0 or self.address >= 2 ** 16:
             raise ConversionError("Address out of range.")
+        if self.count < 0 or self.count >= 2 ** 6:
+            raise ConversionError("Count out of range.")
 
         payload = struct.pack("!BH", self.count, self.address)
 
@@ -530,7 +532,7 @@ class MemoryWrite(APCI):
     """
     MemoryWrite service.
 
-    Payload indicates address, count and data.
+    Payload indicates address (64 KiB), count (1-63 bytes) and data.
     """
 
     code = APCIService.MEMORY_WRITE
@@ -563,6 +565,8 @@ class MemoryWrite(APCI):
         """Serialize to KNX/IP raw data."""
         if self.address < 0 or self.address >= 2 ** 16:
             raise ConversionError("Address out of range.")
+        if self.count < 0 or self.count >= 2 ** 6:
+            raise ConversionError("Count out of range.")
 
         size = len(self.data)
         payload = struct.pack(f"!BH{size}s", self.count, self.address, self.data)
@@ -580,7 +584,7 @@ class MemoryResponse(APCI):
     """
     MemoryResponse service.
 
-    Payload indicates address, count and data.
+    Payload indicates address (64 KiB), count (1-63 bytes) and data.
     """
 
     code = APCIService.MEMORY_RESPONSE
@@ -613,6 +617,8 @@ class MemoryResponse(APCI):
         """Serialize to KNX/IP raw data."""
         if self.address < 0 or self.address >= 2 ** 16:
             raise ConversionError("Address out of range.")
+        if self.count < 0 or self.count >= 2 ** 6:
+            raise ConversionError("Count out of range.")
 
         size = len(self.data)
         payload = struct.pack(f"!BH{size}s", self.count, self.address, self.data)
@@ -733,7 +739,7 @@ class UserMemoryRead(APCI):
     """
     UserMemoryRead service.
 
-    Payload indicates address and count.
+    Payload indicates address (1 MiB) and count (1-15 bytes).
     """
 
     code = APCIUserService.USER_MEMORY_READ
@@ -752,14 +758,16 @@ class UserMemoryRead(APCI):
         byte0, address = struct.unpack("!BH", raw[2:])
 
         self.count = byte0 & 0x0F
-        self.address = ((byte0 & 0xF0) << 16) + address
+        self.address = (((byte0 & 0xF0) >> 4) << 16) + address
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
         if self.address < 0 or self.address >= 2 ** 20:
             raise ConversionError("Address out of range.")
+        if self.count < 0 or self.count >= 2 ** 4:
+            raise ConversionError("Count out of range.")
 
-        byte0 = (self.address & 0x0F0000 >> 12) | (self.count & 0x0F)
+        byte0 = (((self.address & 0x0F0000) >> 16) << 4) | (self.count & 0x0F)
         address = self.address & 0xFFFF
 
         payload = struct.pack("!BH", byte0, address)
@@ -775,7 +783,7 @@ class UserMemoryWrite(APCI):
     """
     UserMemoryWrite service.
 
-    Payload indicates address, count and data.
+    Payload indicates address (1 MiB), count and data.
     """
 
     code = APCIUserService.USER_MEMORY_WRITE
@@ -803,20 +811,22 @@ class UserMemoryWrite(APCI):
         byte0, address, self.data = struct.unpack(f"!BH{size}s", raw[2:])
 
         self.count = byte0 & 0x0F
-        self.address = ((byte0 & 0xF0) << 16) + address
+        self.address = (((byte0 & 0xF0) >> 4) << 16) + address
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
         if self.address < 0 or self.address >= 2 ** 20:
             raise ConversionError("Address out of range.")
+        if self.count < 0 or self.count >= 2 ** 4:
+            raise ConversionError("Count out of range.")
 
-        byte0 = (self.address & 0x0F0000 >> 12) | (self.count & 0x0F)
+        byte0 = (((self.address & 0x0F0000) >> 16) << 4) | (self.count & 0x0F)
         address = self.address & 0xFFFF
 
         size = len(self.data)
         payload = struct.pack(f"!BH{size}s", byte0, address, self.data)
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload[1:])
+        return encode_cmd_and_payload(self.code, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -827,7 +837,7 @@ class UserMemoryResponse(APCI):
     """
     UserMemoryResponse service.
 
-    Payload indicates address, count and data.
+    Payload indicates address (1 MiB), count and data.
     """
 
     code = APCIUserService.USER_MEMORY_RESPONSE
@@ -855,20 +865,22 @@ class UserMemoryResponse(APCI):
         byte0, address, self.data = struct.unpack(f"!BH{size}s", raw[2:])
 
         self.count = byte0 & 0x0F
-        self.address = ((byte0 & 0xF0) << 16) + address
+        self.address = (((byte0 & 0xF0) >> 4) << 16) + address
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
         if self.address < 0 or self.address >= 2 ** 20:
             raise ConversionError("Address out of range.")
+        if self.count < 0 or self.count >= 2 ** 4:
+            raise ConversionError("Count out of range.")
 
-        byte0 = (self.address & 0x0F0000 >> 12) | (self.count & 0x0F)
+        byte0 = (((self.address & 0x0F0000) >> 16) << 4) | (self.count & 0x0F)
         address = self.address & 0xFFFF
 
         size = len(self.data)
         payload = struct.pack(f"!BH{size}s", byte0, address, self.data)
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload[1:])
+        return encode_cmd_and_payload(self.code, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -1139,7 +1151,7 @@ class PropertyValueRead(APCI):
         self,
         object_index: int = 0,
         property_id: int = 0,
-        count: int = 1,
+        count: int = 0,
         start_index: int = 1,
     ) -> None:
         """Initialize a new instance of PropertyValueRead."""
