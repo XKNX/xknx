@@ -22,6 +22,7 @@
 - Telegram: `group_address` renamed to `destination_address`, to prepare support for other APCI services and add `source_address`
 - Telegram: remove `Telegram.telegramtype` and replace with payload object derived from `xknx.telegram.apci.APCI`.
 - CEMIFrame: remove `CEMIFrame.cmd`, which can be derived from `CEMIFrame.payload`.
+- APCI: extend APCI services (e.g. `MemoryRead/Write/Response`, `PropertyRead/Write/Response`, etc).
 - Farewell Travis CI; Welcome Github Actions!
 - StateUpdater allow float values for `register_remote_value(tracker_options)` attribute.
 - Handle exceptions from received unsupported or not implemented KNXIP Service Type identifiers
