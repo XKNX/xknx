@@ -36,7 +36,6 @@ class TestPayloadReader(unittest.TestCase):
 
     def test_payload_reader_send_success(self):
         """Test payload reader: successful send."""
-
         xknx = XKNX()
 
         destination_address = IndividualAddress("1.2.3")
@@ -63,13 +62,12 @@ class TestPayloadReader(unittest.TestCase):
     @patch("logging.Logger.warning")
     def test_payload_reader_send_timeout(self, logger_warning_mock):
         """Test payload reader: timeout while waiting for response."""
-
         xknx = XKNX()
 
         destination_address = IndividualAddress("1.2.3")
         request_payload = MemoryRead(0xAABB, 3)
 
-        payload_reader = PayloadReader(xknx, destination_address)
+        payload_reader = PayloadReader(xknx, destination_address, timeout_in_seconds=0)
 
         payload = self.loop.run_until_complete(
             payload_reader.send(request_payload, response_class=MemoryResponse)
@@ -80,6 +78,6 @@ class TestPayloadReader(unittest.TestCase):
         # Warning was logged.
         logger_warning_mock.assert_called_once_with(
             "Error: KNX bus did not respond in time (%s secs) to payload request for: %s",
-            2.0,
+            0.0,
             IndividualAddress("1.2.3"),
         )
