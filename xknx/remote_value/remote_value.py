@@ -111,15 +111,11 @@ class RemoteValue(ABC):
 
         return group_address in _internal_addresses()
 
+    @staticmethod
     @abstractmethod
     # TODO: typing - remove Optional
-    def payload_valid(self, payload: Optional["DPTPayload"]) -> bool:
+    def payload_valid(payload: Optional["DPTPayload"]) -> bool:
         """Test if telegram payload may be parsed - to be implemented in derived class.."""
-        # pylint: disable=unused-argument
-        logger.warning(
-            "'payload_valid()' not implemented for %s", self.__class__.__name__
-        )
-        return True
 
     @abstractmethod
     def from_knx(self, payload: "DPTPayload") -> Any:
@@ -144,7 +140,7 @@ class RemoteValue(ABC):
         ):
             raise CouldNotParseTelegram(
                 "payload not a GroupValueWrite or GroupValueResponse",
-                payload=telegram.payload,
+                payload=str(telegram.payload),
                 destination_address=str(telegram.destination_address),
                 source_address=str(telegram.source_address),
                 device_name=self.device_name,

@@ -68,11 +68,11 @@ class RemoteValueSwitch(RemoteValue):
             feature_name=self.feature_name,
         )
 
-    async def off(self):
+    async def off(self) -> None:
         """Set value to OFF."""
         await self.set(False)
 
-    async def on(self):
+    async def on(self) -> None:
         """Set value to ON."""
         # pylint: disable=invalid-name
         await self.set(True)
