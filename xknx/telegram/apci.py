@@ -61,6 +61,8 @@ class APCIService(Enum):
     RESTART = 0x0380
 
     ESCAPE = 0x03C0
+    
+    CONNECT = 0x8066
 
 
 class APCIUserService(Enum):
@@ -230,6 +232,34 @@ class GroupValueRead(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return "<GroupValueRead />"
+
+
+class Connect(APCI):
+    """
+    GroupValueRead service.
+
+    Does not have any payload.
+    """
+
+    code = APCIService.CONNECT
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 1 # mit 0 funktioniert es derzeit noch nicht.
+
+    def from_knx(self, raw: bytes) -> None:
+        """Parse/deserialize from KNX/IP raw data."""
+
+        # Nothing to parse, but must be implemented explicitly.
+        return
+
+    def to_knx(self) -> bytes:
+        """Serialize to KNX/IP raw data."""
+        return encode_cmd_and_payload(self.code)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<Connect />"
 
 
 class GroupValueWrite(APCI):
