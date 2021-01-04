@@ -66,14 +66,15 @@ class Test_KNXIP_ConnectResponse(unittest.TestCase):
         )
         self.assertEqual(knxipframe.body.identifier, 4607)
 
-        knxipframe2 = KNXIPFrame(xknx)
-        knxipframe2.init(KNXIPServiceType.CONNECT_RESPONSE)
-        knxipframe2.status_code = ErrorCode.E_NO_ERROR
-        knxipframe2.body.communication_channel = 1
-        knxipframe2.body.request_type = ConnectRequestType.TUNNEL_CONNECTION
-        knxipframe2.body.control_endpoint = HPAI(ip_addr="192.168.42.10", port=3671)
-        knxipframe2.body.identifier = 4607
-        knxipframe2.normalize()
+        connect_response = ConnectResponse(
+            xknx,
+            communication_channel=1,
+            status_code=ErrorCode.E_NO_ERROR,
+            request_type=ConnectRequestType.TUNNEL_CONNECTION,
+            control_endpoint=HPAI(ip_addr="192.168.42.10", port=3671),
+            identifier=4607,
+        )
+        knxipframe2 = KNXIPFrame.init_from_body(connect_response)
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 
@@ -167,14 +168,15 @@ class Test_KNXIP_ConnectResponse(unittest.TestCase):
         self.assertEqual(knxipframe.body.status_code, ErrorCode.E_NO_MORE_CONNECTIONS)
         self.assertEqual(knxipframe.body.communication_channel, 192)
 
-        knxipframe2 = KNXIPFrame(xknx)
-        knxipframe2.init(KNXIPServiceType.CONNECT_RESPONSE)
-        knxipframe2.body.status_code = ErrorCode.E_NO_MORE_CONNECTIONS
-        knxipframe2.body.communication_channel = 192
-        knxipframe2.body.request_type = ConnectRequestType.TUNNEL_CONNECTION
-        knxipframe2.body.control_endpoint = HPAI(ip_addr="10.1.0.41", port=3671)
-        knxipframe2.body.identifier = 0
-        knxipframe2.normalize()
+        connect_response = ConnectResponse(
+            xknx,
+            communication_channel=192,
+            status_code=ErrorCode.E_NO_MORE_CONNECTIONS,
+            request_type=ConnectRequestType.TUNNEL_CONNECTION,
+            control_endpoint=HPAI(ip_addr="10.1.0.41", port=3671),
+            identifier=0,
+        )
+        knxipframe2 = KNXIPFrame.init_from_body(connect_response)
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 

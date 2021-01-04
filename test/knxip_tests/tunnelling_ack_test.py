@@ -4,7 +4,7 @@ import unittest
 
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
-from xknx.knxip import ErrorCode, KNXIPFrame, KNXIPServiceType, TunnellingAck
+from xknx.knxip import ErrorCode, KNXIPFrame, TunnellingAck
 
 
 class Test_KNXIP_TunnelingReq(unittest.TestCase):
@@ -33,11 +33,10 @@ class Test_KNXIP_TunnelingReq(unittest.TestCase):
         self.assertEqual(knxipframe.body.sequence_counter, 23)
         self.assertEqual(knxipframe.body.status_code, ErrorCode.E_NO_ERROR)
 
-        knxipframe2 = KNXIPFrame(xknx)
-        knxipframe2.init(KNXIPServiceType.TUNNELLING_ACK)
-        knxipframe2.body.communication_channel_id = 42
-        knxipframe2.body.sequence_counter = 23
-        knxipframe2.normalize()
+        tunnelling_ack = TunnellingAck(
+            xknx, communication_channel_id=42, sequence_counter=23
+        )
+        knxipframe2 = KNXIPFrame.init_from_body(tunnelling_ack)
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 

@@ -5,17 +5,19 @@ from logging.handlers import TimedRotatingFileHandler
 import os
 import signal
 from sys import platform
+from types import TracebackType
+from typing import Awaitable, Callable, Optional, Type, Union
 
 from xknx.config import Config
 from xknx.core import StateUpdater, TelegramQueue
-from xknx.devices import Devices
+from xknx.devices import Device, Devices
 from xknx.io import (
     DEFAULT_MCAST_GRP,
     DEFAULT_MCAST_PORT,
     ConnectionConfig,
     KNXIPInterface,
 )
-from xknx.telegram import GroupAddressType, IndividualAddress
+from xknx.telegram import GroupAddressType, IndividualAddress, Telegram
 
 from .__version__ import __version__ as VERSION
 
@@ -32,27 +34,27 @@ class XKNX:
 
     def __init__(
         self,
-        config=None,
-        own_address=DEFAULT_ADDRESS,
-        address_format=GroupAddressType.LONG,
-        telegram_received_cb=None,
-        device_updated_cb=None,
-        rate_limit=DEFAULT_RATE_LIMIT,
-        multicast_group=DEFAULT_MCAST_GRP,
-        multicast_port=DEFAULT_MCAST_PORT,
-        log_directory=None,
-        state_updater=False,
-        daemon_mode=False,
-        connection_config=ConnectionConfig(),
-    ):
+        config: Optional[str] = None,
+        own_address: Union[str, IndividualAddress] = DEFAULT_ADDRESS,
+        address_format: GroupAddressType = GroupAddressType.LONG,
+        telegram_received_cb: Optional[Callable[[Telegram], Awaitable[None]]] = None,
+        device_updated_cb: Optional[Callable[[Device], Awaitable[None]]] = None,
+        rate_limit: int = DEFAULT_RATE_LIMIT,
+        multicast_group: str = DEFAULT_MCAST_GRP,
+        multicast_port: int = DEFAULT_MCAST_PORT,
+        log_directory: Optional[str] = None,
+        state_updater: bool = False,
+        daemon_mode: bool = False,
+        connection_config: ConnectionConfig = ConnectionConfig(),
+    ) -> None:
         """Initialize XKNX class."""
         # pylint: disable=too-many-arguments
         self.devices = Devices()
-        self.telegrams = asyncio.Queue()
+        self.telegrams: asyncio.Queue[Optional[Telegram]] = asyncio.Queue()
         self.sigint_received = asyncio.Event()
         self.telegram_queue = TelegramQueue(self)
         self.state_updater = StateUpdater(self)
-        self.knxip_interface = None
+        self.knxip_interface: Optional[KNXIPInterface] = None
         self.started = asyncio.Event()
         self.connected = asyncio.Event()
         self.address_format = address_format
@@ -77,7 +79,7 @@ class XKNX:
         if device_updated_cb is not None:
             self.devices.register_device_updated_cb(device_updated_cb)
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Destructor. Cleaning up if this was not done before."""
         if self.started.is_set():
             try:
@@ -86,16 +88,21 @@ class XKNX:
             except RuntimeError as exp:
                 logger.warning("Could not close loop, reason: %s", exp)
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "XKNX":
         """Start XKNX from context manager."""
         await self.start()
         return self
 
-    async def __aexit__(self, exc_type, exc, traceback):
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
         """Stop XKNX from context manager."""
         await self.stop()
 
-    async def start(self):
+    async def start(self) -> None:
         """Start XKNX module. Connect to KNX/IP devices and start state updater."""
         self.knxip_interface = KNXIPInterface(
             self, connection_config=self.connection_config
@@ -113,17 +120,17 @@ class XKNX:
         if self.daemon_mode:
             await self.loop_until_sigint()
 
-    async def join(self):
+    async def join(self) -> None:
         """Wait until all telegrams were processed."""
         await self.telegrams.join()
 
-    async def _stop_knxip_interface_if_exists(self):
+    async def _stop_knxip_interface_if_exists(self) -> None:
         """Stop KNXIPInterface if initialized."""
         if self.knxip_interface is not None:
             await self.knxip_interface.stop()
             self.knxip_interface = None
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Stop XKNX module."""
         self.state_updater.stop()
         await self.join()
@@ -131,10 +138,10 @@ class XKNX:
         await self._stop_knxip_interface_if_exists()
         self.started.clear()
 
-    async def loop_until_sigint(self):
+    async def loop_until_sigint(self) -> None:
         """Loop until Crtl-C was pressed."""
 
-        def sigint_handler():
+        def sigint_handler() -> None:
             """End loop."""
             self.sigint_received.set()
 
@@ -147,7 +154,7 @@ class XKNX:
         await self.sigint_received.wait()
 
     @staticmethod
-    def setup_logging(log_directory: str):
+    def setup_logging(log_directory: str) -> None:
         """Configure logging to file."""
         if not os.path.isdir(log_directory):
             logger.warning("The provided log directory does not exist.")

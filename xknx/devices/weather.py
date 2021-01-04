@@ -13,7 +13,7 @@ It provides functionality for
 """
 from datetime import date, datetime
 from enum import Enum
-from typing import Callable, Generator, Optional
+from typing import Callable, Iterator, Optional
 
 from xknx.remote_value import RemoteValue, RemoteValueSensor, RemoteValueSwitch
 
@@ -208,7 +208,7 @@ class Weather(Device):
         if expose_sensors:
             self.expose_sensors()
 
-    def _iter_remote_values(self) -> Generator[RemoteValue, None, None]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue]:
         """Iterate the devices remote values."""
         yield from [
             self._temperature,

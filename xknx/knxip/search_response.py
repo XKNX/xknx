@@ -6,10 +6,15 @@ A search response contains all information of a found device (Name, serial numbe
 It supports an array-style access to the DIBs (use classname as index). Every KNXnet/ip server shall send
 a search response and one device supporting multiple KNX connections may send multiple search responses.
 """
+from typing import TYPE_CHECKING, List
+
 from .body import KNXIPBody
 from .dib import DIB, DIBDeviceInformation
 from .hpai import HPAI
 from .knxip_enum import KNXIPServiceType
+
+if TYPE_CHECKING:
+    from xknx.xknx import XKNX
 
 
 class SearchResponse(KNXIPBody):
@@ -19,17 +24,17 @@ class SearchResponse(KNXIPBody):
 
     service_type = KNXIPServiceType.SEARCH_RESPONSE
 
-    def __init__(self, xknx, control_endpoint: HPAI = HPAI()):
+    def __init__(self, xknx: "XKNX", control_endpoint: HPAI = HPAI()):
         """Initialize SearchResponse object."""
         super().__init__(xknx)
         self.control_endpoint = control_endpoint
-        self.dibs = []
+        self.dibs: List[DIB] = []
 
-    def calculated_length(self):
+    def calculated_length(self) -> int:
         """Get length of KNX/IP body."""
         return HPAI.LENGTH + sum([dib.calculated_length() for dib in self.dibs])
 
-    def from_knx(self, raw):
+    def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         pos = self.control_endpoint.from_knx(raw)
         while raw[pos:]:
@@ -39,14 +44,14 @@ class SearchResponse(KNXIPBody):
         return pos
 
     @property
-    def device_name(self):
+    def device_name(self) -> str:
         """Return name of device."""
         for dib in self.dibs:
             if isinstance(dib, DIBDeviceInformation):
                 return dib.name
         return "UNKNOWN"
 
-    def to_knx(self):
+    def to_knx(self) -> List[int]:
         """Serialize to KNX/IP raw data."""
         data = []
         data.extend(self.control_endpoint.to_knx())
@@ -54,15 +59,8 @@ class SearchResponse(KNXIPBody):
             data.extend(dib.to_knx())
         return data
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return object as readable string."""
         return '<SearchResponse control_endpoint="{}" dibs="[\n{}\n]" />'.format(
             self.control_endpoint, ",\n".join(dib.__str__() for dib in self.dibs)
         )
-
-    def __getitem__(self, clazz):
-        """Return the first DIB of given class."""
-        for dib in self.dibs:
-            if isinstance(dib, clazz):
-                return dib
-        raise IndexError

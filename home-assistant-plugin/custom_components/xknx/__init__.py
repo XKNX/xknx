@@ -132,14 +132,23 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_XKNX_SEND_SCHEMA = vol.Schema(
-    {
-        vol.Required(SERVICE_XKNX_ATTR_ADDRESS): cv.string,
-        vol.Required(SERVICE_XKNX_ATTR_PAYLOAD): vol.Any(
-            cv.positive_int, [cv.positive_int]
-        ),
-        vol.Optional(SERVICE_XKNX_ATTR_TYPE): vol.Any(int, float, str),
-    }
+SERVICE_XKNX_SEND_SCHEMA = vol.Any(
+    vol.Schema(
+        {
+            vol.Required(SERVICE_XKNX_ATTR_ADDRESS): cv.string,
+            vol.Required(SERVICE_XKNX_ATTR_PAYLOAD): cv.match_all,
+            vol.Required(SERVICE_XKNX_ATTR_TYPE): vol.Any(int, float, str),
+        }
+    ),
+    vol.Schema(
+        # without type given payload is treated as raw bytes
+        {
+            vol.Required(SERVICE_XKNX_ATTR_ADDRESS): cv.string,
+            vol.Required(SERVICE_XKNX_ATTR_PAYLOAD): vol.Any(
+                cv.positive_int, [cv.positive_int]
+            ),
+        }
+    ),
 )
 
 
@@ -326,8 +335,8 @@ class KNXModule:
         data = None
 
         # Not all telegrams have serializable data.
-        if isinstance(telegram, (GroupValueWrite, GroupValueResponse)):
-            data = telegram.dpt.value
+        if isinstance(telegram.payload, (GroupValueWrite, GroupValueResponse)):
+            data = telegram.payload.value.value
 
         self.hass.bus.async_fire(
             "knx_event",
@@ -359,7 +368,7 @@ class KNXModule:
 
         telegram = Telegram(
             destination_address=GroupAddress(attr_address),
-            payload=calculate_payload(attr_payload),
+            payload=GroupValueWrite(calculate_payload(attr_payload)),
         )
         await self.xknx.telegrams.put(telegram)
 

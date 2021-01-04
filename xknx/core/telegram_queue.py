@@ -9,7 +9,7 @@ You may register callbacks to be notified if a telegram was pushed to the queue.
 """
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Awaitable, Callable, List, Optional
+from typing import TYPE_CHECKING, Awaitable, Callable, List, Optional, Tuple
 
 from xknx.exceptions import CommunicationError, XKNXException
 from xknx.telegram import AddressFilter, GroupAddress, Telegram, TelegramDirection
@@ -57,7 +57,7 @@ class TelegramQueue:
         self.xknx = xknx
         self.telegram_received_cbs: List[TelegramQueue.Callback] = []
         self.outgoing_queue: asyncio.Queue[Optional[Telegram]] = asyncio.Queue()
-        self._consumer_task: Optional[Awaitable] = None
+        self._consumer_task: Optional[Awaitable[Tuple[None, None]]] = None
 
     def register_telegram_received_cb(
         self,
@@ -137,6 +137,8 @@ class TelegramQueue:
         while not self.xknx.telegrams.empty():
             try:
                 telegram = self.xknx.telegrams.get_nowait()
+                if telegram is None:
+                    return
                 if telegram.direction == TelegramDirection.INCOMING:
                     await self.process_telegram_incoming(telegram)
                 elif telegram.direction == TelegramDirection.OUTGOING:
@@ -154,7 +156,7 @@ class TelegramQueue:
             if isinstance(telegram.payload, GroupValueWrite):
                 await self.xknx.devices.process(telegram)
         else:
-            logger.warning("No KNXIP interface defined")
+            raise CommunicationError("No KNXIP interface defined")
 
     async def process_telegram_incoming(self, telegram: Telegram) -> None:
         """Process incoming telegram."""

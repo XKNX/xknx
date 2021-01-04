@@ -6,7 +6,13 @@ from unittest.mock import patch
 from xknx import XKNX
 from xknx.dpt import DPTArray
 from xknx.io import Tunnelling, UDPClient
-from xknx.knxip import ErrorCode, KNXIPFrame, KNXIPServiceType, TunnellingAck
+from xknx.knxip import (
+    ErrorCode,
+    KNXIPFrame,
+    KNXIPServiceType,
+    TunnellingAck,
+    TunnellingRequest,
+)
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
@@ -49,13 +55,14 @@ class TestTunnelling(unittest.TestCase):
         self.assertEqual(tunnelling.communication_channel_id, communication_channel_id)
 
         # Expected KNX/IP-Frame:
-        exp_knxipframe = KNXIPFrame(xknx)
-        exp_knxipframe.init(KNXIPServiceType.TUNNELLING_REQUEST)
-        exp_knxipframe.body.cemi.telegram = telegram
-        exp_knxipframe.body.cemi.src_addr = src_address
-        exp_knxipframe.body.communication_channel_id = communication_channel_id
-        exp_knxipframe.body.sequence_counter = sequence_counter
-        exp_knxipframe.normalize()
+        tunnelling_request = TunnellingRequest(
+            xknx,
+            communication_channel_id=communication_channel_id,
+            sequence_counter=sequence_counter,
+        )
+        tunnelling_request.cemi.telegram = telegram
+        tunnelling_request.cemi.src_addr = src_address
+        exp_knxipframe = KNXIPFrame.init_from_body(tunnelling_request)
         with patch("xknx.io.UDPClient.send") as mock_udp_send, patch(
             "xknx.io.UDPClient.getsockname"
         ) as mock_udp_getsockname:

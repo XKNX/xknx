@@ -11,13 +11,16 @@ Documentation within:
     KNX IP Communication Medium
     File: AN117 v02.01 KNX IP Communication Medium DV.pdf
 """
-from typing import Union
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
 
 from .knxip_enum import CEMIFlags, CEMIMessageCode
+
+if TYPE_CHECKING:
+    from xknx.xknx import XKNX
 
 
 class CEMIFrame:
@@ -27,13 +30,13 @@ class CEMIFrame:
 
     def __init__(
         self,
-        xknx,
+        xknx: "XKNX",
         code: CEMIMessageCode = CEMIMessageCode.L_DATA_IND,
         flags: int = 0,
         src_addr: IndividualAddress = IndividualAddress(None),
         dst_addr: Union[GroupAddress, IndividualAddress] = GroupAddress(None),
         mpdu_len: int = 0,
-        payload=None,
+        payload: Optional[APCI] = None,
     ):
         """Initialize CEMIFrame object."""
         self.xknx = xknx
@@ -46,11 +49,11 @@ class CEMIFrame:
 
     @staticmethod
     def init_from_telegram(
-        xknx,
+        xknx: "XKNX",
         telegram: Telegram,
         code: CEMIMessageCode = CEMIMessageCode.L_DATA_IND,
         src_addr: IndividualAddress = IndividualAddress(None),
-    ):
+    ) -> "CEMIFrame":
         """Return CEMIFrame from a Telegram."""
         cemi = CEMIFrame(xknx, code=code, src_addr=src_addr)
         # dst_addr, payload and cmd are set by telegram.setter - mpdu_len not needed for outgoing telegram
@@ -68,7 +71,7 @@ class CEMIFrame:
         )
 
     @telegram.setter
-    def telegram(self, telegram: Telegram):
+    def telegram(self, telegram: Telegram) -> None:
         """Set telegram."""
         self.dst_addr = telegram.destination_address
         self.payload = telegram.payload
@@ -92,7 +95,7 @@ class CEMIFrame:
         else:
             raise TypeError()
 
-    def set_hops(self, hops: int):
+    def set_hops(self, hops: int) -> None:
         """Set hops."""
         # Resetting hops
         self.flags &= 0xFFFF ^ 0x0070
@@ -105,7 +108,7 @@ class CEMIFrame:
             raise TypeError()
         return 10 + self.payload.calculated_length()
 
-    def from_knx(self, raw) -> int:
+    def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         try:
             self.code = CEMIMessageCode(raw[0])
@@ -129,7 +132,7 @@ class CEMIFrame:
 
         return self.from_knx_data_link_layer(raw)
 
-    def from_knx_data_link_layer(self, cemi) -> int:
+    def from_knx_data_link_layer(self, cemi: bytes) -> int:
         """Parse L_DATA_IND, CEMIMessageCode.L_Data_REQ, CEMIMessageCode.L_DATA_CON."""
         if len(cemi) < 11:
             # eg. ETS Line-Scan issues L_DATA_IND with length 10
@@ -179,7 +182,7 @@ class CEMIFrame:
 
         return 10 + addil + self.mpdu_len
 
-    def to_knx(self):
+    def to_knx(self) -> List[int]:
         """Serialize to KNX/IP raw data."""
         if not isinstance(self.payload, APCI):
             raise TypeError()
@@ -201,7 +204,7 @@ class CEMIFrame:
 
         return data
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return object as readable string."""
         return (
             '<CEMIFrame SourceAddress="{}" DestinationAddress="{}" '
@@ -213,6 +216,6 @@ class CEMIFrame:
             )
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """Equal operator."""
         return self.__dict__ == other.__dict__

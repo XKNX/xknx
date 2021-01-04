@@ -48,7 +48,7 @@ class BaseAddress:  # pylint: disable=too-few-public-methods
         """Initialize instance variables needed by all subclasses."""
         self.raw: int = 0
 
-    def to_knx(self) -> Tuple:
+    def to_knx(self) -> Tuple[int, int]:
         """
         Serialize to KNX/IP raw data.
 

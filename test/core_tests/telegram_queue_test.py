@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from xknx import XKNX
 from xknx.dpt import DPTBinary
-from xknx.exceptions import CouldNotParseTelegram
+from xknx.exceptions import CommunicationError, CouldNotParseTelegram
 from xknx.telegram import AddressFilter, GroupAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueWrite
 
@@ -201,10 +201,8 @@ class TestTelegramQueue(unittest.TestCase):
         devices_process.assert_called_once_with(telegram)
 
     @patch("xknx.io.KNXIPInterface")
-    @patch("logging.Logger.warning")
-    def test_outgoing(self, logger_warning_mock, if_mock):
+    def test_outgoing(self, if_mock):
         """Test outgoing telegrams in telegram queue."""
-        # pylint: disable=no-self-use
         xknx = XKNX()
 
         async_if_send_telegram = asyncio.Future()
@@ -218,10 +216,10 @@ class TestTelegramQueue(unittest.TestCase):
         )
 
         # log a warning if there is no KNXIP interface instanciated
-        self.loop.run_until_complete(
-            xknx.telegram_queue.process_telegram_outgoing(telegram)
-        )
-        logger_warning_mock.assert_called_once_with("No KNXIP interface defined")
+        with self.assertRaises(CommunicationError):
+            self.loop.run_until_complete(
+                xknx.telegram_queue.process_telegram_outgoing(telegram)
+            )
         if_mock.send_telegram.assert_not_called()
 
         # if we have an interface send the telegram
