@@ -7,10 +7,16 @@ by StateUpdate.
 """
 import asyncio
 import time
+from typing import TYPE_CHECKING, Any, Iterator, Optional
 
 from xknx.remote_value import RemoteValueDateTime
 
-from .device import Device
+from .device import Device, DeviceCallbackType
+
+if TYPE_CHECKING:
+    from xknx.telegram import Telegram
+    from xknx.telegram.address import GroupAddressableType
+    from xknx.xknx import XKNX
 
 
 class DateTime(Device):
@@ -19,12 +25,12 @@ class DateTime(Device):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        xknx,
+        xknx: "XKNX",
         name: str,
         broadcast_type: str = "TIME",
         localtime: bool = True,
-        group_address=None,
-        device_updated_cb=None,
+        group_address: Optional["GroupAddressableType"] = None,
+        device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize DateTime class."""
         super().__init__(xknx, name, device_updated_cb)
@@ -40,17 +46,17 @@ class DateTime(Device):
         )
         self._broadcast_task = self._create_broadcast_task(minutes=60)
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Destructor. Cleaning up if this was not done before."""
         if self._broadcast_task:
             self._broadcast_task.cancel()
 
-    def _iter_remote_values(self):
+    def _iter_remote_values(self) -> Iterator[RemoteValueDateTime]:
         """Iterate the devices RemoteValue classes."""
         yield self._remote_value
 
     @classmethod
-    def from_config(cls, xknx, name, config):
+    def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "DateTime":
         """Initialize object from configuration structure."""
         broadcast_type = config.get("broadcast_type", "time").upper()
         group_address = config.get("group_address")
@@ -58,10 +64,10 @@ class DateTime(Device):
             xknx, name, broadcast_type=broadcast_type, group_address=group_address
         )
 
-    def _create_broadcast_task(self, minutes: int = 60):
+    def _create_broadcast_task(self, minutes: int = 60) -> Optional[asyncio.Task[None]]:
         """Create an asyncio.Task for broadcasting local time periodically if `localtime` is set."""
 
-        async def broadcast_loop(self, minutes: int):
+        async def broadcast_loop(self: "DateTime", minutes: int) -> None:
             """Endless loop for broadcasting local time."""
             while True:
                 await self.broadcast_localtime()
@@ -72,22 +78,22 @@ class DateTime(Device):
             return loop.create_task(broadcast_loop(self, minutes=minutes))
         return None
 
-    async def broadcast_localtime(self, response=False):
+    async def broadcast_localtime(self, response: bool = False) -> None:
         """Broadcast the local time to KNX bus."""
         await self._remote_value.set(time.localtime(), response=response)
 
-    async def set(self, struct_time: time.struct_time):
+    async def set(self, struct_time: time.struct_time) -> None:
         """Set time and send to KNX bus."""
         await self._remote_value.set(struct_time)
 
-    async def process_group_read(self, telegram):
+    async def process_group_read(self, telegram: "Telegram") -> None:
         """Process incoming GROUP READ telegram."""
         if self.localtime:
             await self.broadcast_localtime(True)
         else:
             await self._remote_value.respond()
 
-    async def sync(self, wait_for_result=False):
+    async def sync(self, wait_for_result: bool = False) -> None:
         """Read state of device from KNX bus. Used here to broadcast time to KNX bus."""
         if self.localtime:
             await self.broadcast_localtime(response=False)
