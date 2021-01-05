@@ -12,7 +12,16 @@ It provides functionality for
 """
 from enum import Enum
 import logging
-from typing import Optional, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Awaitable,
+    Callable,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+)
 
 from xknx.remote_value import (
     RemoteValueColorRGB,
@@ -22,7 +31,15 @@ from xknx.remote_value import (
     RemoteValueSwitch,
 )
 
-from .device import Device
+from .device import Device, DeviceCallbackType
+
+if TYPE_CHECKING:
+    from xknx.remote_value import RemoteValue
+    from xknx.telegram import Telegram
+    from xknx.telegram.address import GroupAddressableType
+    from xknx.xknx import XKNX
+
+AsyncCallback = Callable[[], Awaitable[None]]
 
 logger = logging.getLogger("xknx.log")
 
@@ -37,14 +54,14 @@ class ColorTempModes(Enum):
 class _SwitchAndBrightness:
     def __init__(
         self,
-        xknx,
-        name,
+        xknx: "XKNX",
+        name: str,
         feature_name: str,
-        group_address_switch=None,
-        group_address_switch_state=None,
-        group_address_brightness=None,
-        group_address_brightness_state=None,
-        after_update_cb=None,
+        group_address_switch: Optional["GroupAddressableType"] = None,
+        group_address_switch_state: Optional["GroupAddressableType"] = None,
+        group_address_brightness: Optional["GroupAddressableType"] = None,
+        group_address_brightness_state: Optional["GroupAddressableType"] = None,
+        after_update_cb: Optional[AsyncCallback] = None,
     ):
         self.switch = RemoteValueSwitch(
             xknx,
@@ -66,21 +83,21 @@ class _SwitchAndBrightness:
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> Optional[bool]:
         """Return if light is on."""
-        return self.switch.value
+        return self.switch.value  # type: ignore
 
-    async def set_on(self):
+    async def set_on(self) -> None:
         """Switch light on."""
         if self.switch.initialized:
             await self.switch.on()
 
-    async def set_off(self):
+    async def set_off(self) -> None:
         """Switch light off."""
         if self.switch.initialized:
             await self.switch.off()
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """Compare for quality."""
         return self.__dict__ == other.__dict__
 
@@ -95,39 +112,39 @@ class Light(Device):
 
     def __init__(
         self,
-        xknx,
-        name,
-        group_address_switch=None,
-        group_address_switch_state=None,
-        group_address_brightness=None,
-        group_address_brightness_state=None,
-        group_address_color=None,
-        group_address_color_state=None,
-        group_address_rgbw=None,
-        group_address_rgbw_state=None,
-        group_address_tunable_white=None,
-        group_address_tunable_white_state=None,
-        group_address_color_temperature=None,
-        group_address_color_temperature_state=None,
-        group_address_switch_red=None,
-        group_address_switch_red_state=None,
-        group_address_brightness_red=None,
-        group_address_brightness_red_state=None,
-        group_address_switch_green=None,
-        group_address_switch_green_state=None,
-        group_address_brightness_green=None,
-        group_address_brightness_green_state=None,
-        group_address_switch_blue=None,
-        group_address_switch_blue_state=None,
-        group_address_brightness_blue=None,
-        group_address_brightness_blue_state=None,
-        group_address_switch_white=None,
-        group_address_switch_white_state=None,
-        group_address_brightness_white=None,
-        group_address_brightness_white_state=None,
-        min_kelvin=None,
-        max_kelvin=None,
-        device_updated_cb=None,
+        xknx: "XKNX",
+        name: str,
+        group_address_switch: Optional["GroupAddressableType"] = None,
+        group_address_switch_state: Optional["GroupAddressableType"] = None,
+        group_address_brightness: Optional["GroupAddressableType"] = None,
+        group_address_brightness_state: Optional["GroupAddressableType"] = None,
+        group_address_color: Optional["GroupAddressableType"] = None,
+        group_address_color_state: Optional["GroupAddressableType"] = None,
+        group_address_rgbw: Optional["GroupAddressableType"] = None,
+        group_address_rgbw_state: Optional["GroupAddressableType"] = None,
+        group_address_tunable_white: Optional["GroupAddressableType"] = None,
+        group_address_tunable_white_state: Optional["GroupAddressableType"] = None,
+        group_address_color_temperature: Optional["GroupAddressableType"] = None,
+        group_address_color_temperature_state: Optional["GroupAddressableType"] = None,
+        group_address_switch_red: Optional["GroupAddressableType"] = None,
+        group_address_switch_red_state: Optional["GroupAddressableType"] = None,
+        group_address_brightness_red: Optional["GroupAddressableType"] = None,
+        group_address_brightness_red_state: Optional["GroupAddressableType"] = None,
+        group_address_switch_green: Optional["GroupAddressableType"] = None,
+        group_address_switch_green_state: Optional["GroupAddressableType"] = None,
+        group_address_brightness_green: Optional["GroupAddressableType"] = None,
+        group_address_brightness_green_state: Optional["GroupAddressableType"] = None,
+        group_address_switch_blue: Optional["GroupAddressableType"] = None,
+        group_address_switch_blue_state: Optional["GroupAddressableType"] = None,
+        group_address_brightness_blue: Optional["GroupAddressableType"] = None,
+        group_address_brightness_blue_state: Optional["GroupAddressableType"] = None,
+        group_address_switch_white: Optional["GroupAddressableType"] = None,
+        group_address_switch_white_state: Optional["GroupAddressableType"] = None,
+        group_address_brightness_white: Optional["GroupAddressableType"] = None,
+        group_address_brightness_white_state: Optional["GroupAddressableType"] = None,
+        min_kelvin: Optional[int] = None,
+        max_kelvin: Optional[int] = None,
+        device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize Light class."""
         # pylint: disable=too-many-arguments
@@ -236,7 +253,7 @@ class Light(Device):
         self.min_kelvin = min_kelvin
         self.max_kelvin = max_kelvin
 
-    def _iter_remote_values(self):
+    def _iter_remote_values(self) -> Iterator["RemoteValue"]:
         """Iterate the devices RemoteValue classes."""
         yield from (
             self.switch,
@@ -251,19 +268,19 @@ class Light(Device):
             yield color.brightness
 
     @property
-    def supports_brightness(self):
+    def supports_brightness(self) -> bool:
         """Return if light supports brightness."""
         return self.brightness.initialized
 
     @property
-    def supports_color(self):
+    def supports_color(self) -> bool:
         """Return if light supports color."""
         return self.color.initialized or all(
             [c.brightness.initialized for c in (self.red, self.green, self.blue)]
         )
 
     @property
-    def supports_rgbw(self):
+    def supports_rgbw(self) -> bool:
         """Return if light supports RGBW."""
         return self.rgbw.initialized or all(
             [
@@ -273,19 +290,24 @@ class Light(Device):
         )
 
     @property
-    def supports_tunable_white(self):
+    def supports_tunable_white(self) -> bool:
         """Return if light supports tunable white / relative color temperature."""
         return self.tunable_white.initialized
 
     @property
-    def supports_color_temperature(self):
+    def supports_color_temperature(self) -> bool:
         """Return if light supports absolute color temperature."""
         return self.color_temperature.initialized
 
     @classmethod
     def read_color_from_config(
-        cls, color, config
-    ) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
+        cls, color: str, config: Any
+    ) -> Tuple[
+        Optional["GroupAddressableType"],
+        Optional["GroupAddressableType"],
+        Optional["GroupAddressableType"],
+        Optional["GroupAddressableType"],
+    ]:
         """Load color configuration from configuration structure."""
         if "individual_colors" in config and color in config["individual_colors"]:
             sub_config = config["individual_colors"][color]
@@ -298,7 +320,7 @@ class Light(Device):
         return None, None, None, None
 
     @classmethod
-    def from_config(cls, xknx, name, config):
+    def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "Light":
         """Initialize object from configuration structure."""
         group_address_switch = config.get("group_address_switch")
         group_address_switch_state = config.get("group_address_switch_state")
@@ -475,7 +497,7 @@ class Light(Device):
     def state(self) -> Optional[bool]:
         """Return the current switch state of the device."""
         if self.switch.value is not None:
-            return self.switch.value
+            return self.switch.value  # type: ignore
         if any(
             [
                 c.switch.value is not None
@@ -487,14 +509,14 @@ class Light(Device):
             )
         return None
 
-    async def set_on(self):
+    async def set_on(self) -> None:
         """Switch light on."""
         if self.switch.initialized:
             await self.switch.on()
         for color in (self.red, self.green, self.blue, self.white):
             await color.set_on()
 
-    async def set_off(self):
+    async def set_off(self) -> None:
         """Switch light off."""
         if self.switch.initialized:
             await self.switch.off()
@@ -502,11 +524,11 @@ class Light(Device):
             await color.set_off()
 
     @property
-    def current_brightness(self):
+    def current_brightness(self) -> Optional[int]:
         """Return current brightness of light."""
-        return self.brightness.value
+        return self.brightness.value  # type: ignore
 
-    async def set_brightness(self, brightness):
+    async def set_brightness(self, brightness: int) -> None:
         """Set brightness of light."""
         if not self.supports_brightness:
             logger.warning("Dimming not supported for device %s", self.get_name())
@@ -514,7 +536,7 @@ class Light(Device):
         await self.brightness.set(brightness)
 
     @property
-    def current_color(self):
+    def current_color(self) -> Tuple[Optional[List[int]], Optional[int]]:
         """
         Return current color of light.
 
@@ -537,7 +559,7 @@ class Light(Device):
             return None, self.white.brightness.value
         return colors, self.white.brightness.value
 
-    async def set_color(self, color, white=None):
+    async def set_color(self, color: List[int], white: Optional[int] = None) -> None:
         """
         Set color of a light device.
 
@@ -579,11 +601,11 @@ class Light(Device):
             logger.warning("Colors not supported for device %s", self.get_name())
 
     @property
-    def current_tunable_white(self):
+    def current_tunable_white(self) -> Optional[int]:
         """Return current relative color temperature of light."""
-        return self.tunable_white.value
+        return self.tunable_white.value  # type: ignore
 
-    async def set_tunable_white(self, tunable_white):
+    async def set_tunable_white(self, tunable_white: int) -> None:
         """Set relative color temperature of light."""
         if not self.supports_tunable_white:
             logger.warning("Tunable white not supported for device %s", self.get_name())
@@ -591,11 +613,11 @@ class Light(Device):
         await self.tunable_white.set(tunable_white)
 
     @property
-    def current_color_temperature(self):
+    def current_color_temperature(self) -> Optional[int]:
         """Return current absolute color temperature of light."""
-        return self.color_temperature.value
+        return self.color_temperature.value  # type: ignore
 
-    async def set_color_temperature(self, color_temperature):
+    async def set_color_temperature(self, color_temperature: int) -> None:
         """Set absolute color temperature of light."""
         if not self.supports_color_temperature:
             logger.warning(
@@ -605,7 +627,7 @@ class Light(Device):
             return
         await self.color_temperature.set(color_temperature)
 
-    async def do(self, action):
+    async def do(self, action: str) -> None:
         """Execute 'do' commands."""
         if action == "on":
             await self.set_on()
@@ -622,7 +644,7 @@ class Light(Device):
                 "Could not understand action %s for device %s", action, self.get_name()
             )
 
-    async def process_group_write(self, telegram):
+    async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         for remote_value in self._iter_remote_values():
             await remote_value.process(telegram)
