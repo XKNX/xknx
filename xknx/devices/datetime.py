@@ -64,7 +64,9 @@ class DateTime(Device):
             xknx, name, broadcast_type=broadcast_type, group_address=group_address
         )
 
-    def _create_broadcast_task(self, minutes: int = 60) -> Optional[asyncio.Task[None]]:
+    def _create_broadcast_task(
+        self, minutes: int = 60
+    ) -> Optional["asyncio.Task[None]"]:
         """Create an asyncio.Task for broadcasting local time periodically if `localtime` is set."""
 
         async def broadcast_loop(self: "DateTime", minutes: int) -> None:
