@@ -4,7 +4,7 @@ Module for managing a remote value typically used within a sensor.
 The module maps a given value_type to a DPT class and uses this class
 for serialization and deserialization of the KNX value.
 """
-from typing import List
+from typing import List, Optional
 
 from xknx.dpt import DPTArray, DPTBase
 from xknx.exceptions import ConversionError
@@ -62,11 +62,11 @@ class RemoteValueSensor(RemoteValue):
         return self.dpt_class.from_knx(payload.value)
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> Optional[str]:
         """Return the unit of measurement."""
         return self.dpt_class.unit
 
     @property
-    def ha_device_class(self):
+    def ha_device_class(self) -> Optional[str]:
         """Return a string representing the home assistant device class."""
         return getattr(self.dpt_class, "ha_device_class", None)
