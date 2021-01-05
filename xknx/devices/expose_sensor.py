@@ -11,22 +11,35 @@ read from an internet service (e.g. Yahoo weather) and exposed to
 ths KNX bus. KNX sensors may show this outside temperature within their
 LCD display.
 """
+from typing import TYPE_CHECKING, Any, Iterator, Optional
+
 from xknx.remote_value import RemoteValueSensor, RemoteValueSwitch
 
-from .device import Device
+from .device import Device, DeviceCallbackType
+
+if TYPE_CHECKING:
+    from xknx.remote_value import RemoteValue
+    from xknx.telegram import Telegram
+    from xknx.telegram.address import GroupAddressableType
+    from xknx.xknx import XKNX
 
 
 class ExposeSensor(Device):
     """Class for managing a sensor."""
 
     def __init__(
-        self, xknx, name, group_address=None, value_type=None, device_updated_cb=None
+        self,
+        xknx: "XKNX",
+        name: str,
+        group_address: Optional["GroupAddressableType"] = None,
+        value_type: Optional[str] = None,
+        device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize Sensor class."""
         # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
 
-        self.sensor_value = None
+        self.sensor_value: "RemoteValue"
         if value_type == "binary":
             self.sensor_value = RemoteValueSwitch(
                 xknx,
@@ -45,35 +58,35 @@ class ExposeSensor(Device):
                 value_type=value_type,
             )
 
-    def _iter_remote_values(self):
+    def _iter_remote_values(self) -> Iterator["RemoteValue"]:
         """Iterate the devices RemoteValue classes."""
         yield self.sensor_value
 
     @classmethod
-    def from_config(cls, xknx, name, config):
+    def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "ExposeSensor":
         """Initialize object from configuration structure."""
         group_address = config.get("group_address")
         value_type = config.get("value_type")
 
         return cls(xknx, name, group_address=group_address, value_type=value_type)
 
-    async def process_group_write(self, telegram):
+    async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         await self.sensor_value.process(telegram)
 
-    async def process_group_read(self, telegram):
+    async def process_group_read(self, telegram: "Telegram") -> None:
         """Process incoming GROUP READ telegram."""
         await self.sensor_value.respond()
 
-    async def set(self, value):
+    async def set(self, value: Any) -> None:
         """Set new value."""
         await self.sensor_value.set(value)
 
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> Optional[str]:
         """Return the unit of measurement."""
         return self.sensor_value.unit_of_measurement
 
-    def resolve_state(self):
+    def resolve_state(self) -> Any:
         """Return the current state of the sensor as a human readable string."""
         return self.sensor_value.value
 
