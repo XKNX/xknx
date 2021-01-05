@@ -55,7 +55,7 @@ class RemoteValueSwitch(RemoteValue):
             feature_name=self.feature_name,
         )
 
-    def from_knx(self, payload):
+    def from_knx(self, payload: DPTBinary) -> bool:
         """Convert current payload to value."""
         if payload == DPTBinary(0):
             return self.invert
