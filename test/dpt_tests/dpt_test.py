@@ -1,7 +1,7 @@
 """Unit test for KNX binary/integer objects."""
 import unittest
 
-from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTComparator
+from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import ConversionError
 
 
@@ -13,6 +13,8 @@ class TestDPT(unittest.TestCase):
     def test_compare_binary(self):
         """Test comparison of DPTBinary objects."""
         self.assertEqual(DPTBinary(0), DPTBinary(0))
+        self.assertEqual(DPTBinary(0), DPTBinary(False))
+        self.assertEqual(DPTBinary(1), DPTBinary(True))
         self.assertEqual(DPTBinary(2), DPTBinary(2))
         self.assertNotEqual(DPTBinary(1), DPTBinary(4))
         self.assertNotEqual(DPTBinary(2), DPTBinary(0))
@@ -30,11 +32,11 @@ class TestDPT(unittest.TestCase):
         self.assertNotEqual(DPTArray((1, 2, 3)), DPTArray([1, 2, 4]))
 
     def test_compare_none(self):
-        """Test comparison of empty DPTArray objects with None."""
-        self.assertEqual(DPTArray(()), None)
-        self.assertEqual(None, DPTArray(()))
-        self.assertEqual(DPTBinary(0), None)
-        self.assertEqual(None, DPTBinary(0))
+        """Test comparison DPTArray objects with None."""
+        self.assertNotEqual(DPTArray(()), None)
+        self.assertNotEqual(None, DPTArray(()))
+        self.assertNotEqual(DPTBinary(0), None)
+        self.assertNotEqual(None, DPTBinary(0))
         self.assertNotEqual(DPTArray((1, 2, 3)), None)
         self.assertNotEqual(None, DPTArray((1, 2, 3)))
         self.assertNotEqual(DPTBinary(1), None)
@@ -42,8 +44,10 @@ class TestDPT(unittest.TestCase):
 
     def test_compare_array_binary(self):
         """Test comparison of empty DPTArray objects with DPTBinary objects."""
-        self.assertEqual(DPTArray(()), DPTBinary(0))
-        self.assertEqual(DPTBinary(0), DPTArray(()))
+        self.assertNotEqual(DPTArray(()), DPTBinary(0))
+        self.assertNotEqual(DPTBinary(0), DPTArray(()))
+        self.assertNotEqual(DPTBinary(0), DPTArray(0))
+        self.assertNotEqual(DPTBinary(1), DPTArray(1))
         self.assertNotEqual(DPTArray((1, 2, 3)), DPTBinary(2))
         self.assertNotEqual(DPTBinary(2), DPTArray((1, 2, 3)))
         self.assertNotEqual(DPTArray((2,)), DPTBinary(2))
@@ -67,17 +71,6 @@ class TestDPT(unittest.TestCase):
         """Test initialization of DPTArray object with wrong value (wrong type)."""
         with self.assertRaises(TypeError):
             DPTArray("bla")
-
-    def test_dpt_comparator_none_with_none(self):
-        """Test comperator for DPTBinary and DPTBinary - missing cases."""
-        self.assertTrue(DPTComparator.compare(None, None))
-        self.assertTrue(DPTComparator.compare(None, DPTBinary(0)))
-        self.assertTrue(DPTComparator.compare(None, DPTArray(())))
-
-    def test_dpt_comparator_none_with_wrong_parameter(self):
-        """Test comperator for DPTBinary and DPTBinary - wrong parameter."""
-        with self.assertRaises(TypeError):
-            DPTComparator.compare("bla", DPTBinary(0))
 
 
 class TestDPTBase(unittest.TestCase):
