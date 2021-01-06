@@ -27,7 +27,7 @@ class TravelCalculator:
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, travel_time_down: int, travel_time_up: int) -> None:
+    def __init__(self, travel_time_down: float, travel_time_up: float) -> None:
         """Initialize TravelCalculator class."""
         self.last_known_position: Optional[int] = None
         self.position_confirmed: bool = False

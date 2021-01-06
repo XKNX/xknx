@@ -141,7 +141,7 @@ class DPTBinary:
         """Equal operator."""
         return DPTComparator.compare(self, other)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return object as readable string."""
         return f'<DPTBinary value="{self.value}" />'
 
@@ -167,7 +167,7 @@ class DPTArray:
         """Equal operator."""
         return DPTComparator.compare(self, other)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return object as readable string."""
         return '<DPTArray value="[{}]" />'.format(",".join(hex(b) for b in self.value))
 

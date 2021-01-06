@@ -4,16 +4,9 @@ import time
 import unittest
 
 from xknx import XKNX
-from xknx.dpt import DPTArray, DPTBinary, HVACOperationMode
-from xknx.exceptions import ConversionError, CouldNotParseTelegram
-from xknx.remote_value import (
-    RemoteValueBinaryHeatCool,
-    RemoteValueBinaryOperationMode,
-    RemoteValueClimateMode,
-    RemoteValueDateTime,
-)
-from xknx.remote_value.remote_value_climate_mode import _RemoteValueBinaryClimateMode
-from xknx.telegram import GroupAddress, Telegram
+from xknx.dpt import DPTArray
+from xknx.exceptions import ConversionError
+from xknx.remote_value import RemoteValueDateTime
 
 
 class TestRemoteValueDateTime(unittest.TestCase):
