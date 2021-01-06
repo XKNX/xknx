@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Internals
+
+- remove DPTComparator: DPTBinary and DPTArray are not equal, even if their .value is, and are never equal to `None`.
+
 ## 0.16.0 APCI possibilities considerably increased 2021-01-01
 
 ### Devices
