@@ -128,7 +128,7 @@ class DPTBinary:
     APCI_BITMASK = 0x3F
     APCI_MAX_VALUE = APCI_BITMASK
 
-    def __init__(self, value) -> None:
+    def __init__(self, value: int) -> None:
         """Initialize DPTBinary class."""
         if not isinstance(value, int):
             raise TypeError()
@@ -137,9 +137,11 @@ class DPTBinary:
 
         self.value = value
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """Equal operator."""
-        return DPTComparator.compare(self, other)
+        if isinstance(other, DPTBinary):
+            return self.value == other.value
+        return False
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -163,49 +165,12 @@ class DPTArray:
         else:
             raise TypeError()
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """Equal operator."""
-        return DPTComparator.compare(self, other)
+        if isinstance(other, DPTArray):
+            return self.value == other.value
+        return False
 
     def __str__(self) -> str:
         """Return object as readable string."""
         return '<DPTArray value="[{}]" />'.format(",".join(hex(b) for b in self.value))
-
-
-class DPTComparator:
-    """Helper class to compare different types of DPT objects."""
-
-    # pylint: disable=too-few-public-methods
-
-    @staticmethod
-    def compare(a, b):
-        """Test if 'a' and 'b' are the same."""
-        # pylint: disable=invalid-name,too-many-return-statements,len-as-condition
-        if a is None and b is None:
-            return True
-
-        if a is None:
-            if isinstance(b, DPTBinary):
-                return b.value == 0
-            if isinstance(b, DPTArray):
-                return len(b.value) == 0
-
-        if b is None:
-            if isinstance(a, DPTBinary):
-                return a.value == 0
-            if isinstance(a, DPTArray):
-                return len(a.value) == 0
-
-        if isinstance(a, DPTArray) and isinstance(b, DPTArray):
-            return a.value == b.value
-
-        if isinstance(a, DPTBinary) and isinstance(b, DPTBinary):
-            return a.value == b.value
-
-        if isinstance(a, DPTBinary) and isinstance(b, DPTArray):
-            return a.value == 0 and len(b.value) == 0
-
-        if isinstance(a, DPTArray) and isinstance(b, DPTBinary):
-            return len(a.value) == 0 and b.value == 0
-
-        raise TypeError()

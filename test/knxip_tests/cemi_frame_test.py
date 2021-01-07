@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock
 
 from pytest import fixture, raises
-from xknx.dpt import DPTBinary, DPTComparator
+from xknx.dpt import DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage
 from xknx.knxip.cemi_frame import CEMIFrame
 from xknx.knxip.knxip_enum import CEMIFlags, CEMIMessageCode
@@ -92,7 +92,7 @@ def test_invalid_payload(frame):
     frame.code = CEMIMessageCode.L_DATA_IND
     frame.flags = 0
     frame.mpdu_len = 1
-    frame.payload = DPTComparator()
+    frame.payload = DPTBinary(1)
     frame.src_addr = IndividualAddress(0)
     frame.dst_addr = IndividualAddress(0)
 
