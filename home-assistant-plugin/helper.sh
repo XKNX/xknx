@@ -17,7 +17,7 @@ if [[ ! -d ${HA_UPSTREAM}/homeassistant ]]; then
     exit 1
 fi
 
-export RELEASE=`curl --silent "https://api.github.com/repos/XKNX/xknx/releases/latest" | grep -Po '"tag_name": "\K.*?(?=")'`
+export RELEASE=`curl --silent "https://api.github.com/repos/XKNX/xknx/releases/latest" | python -c 'import json, sys; print(json.loads(sys.stdin.read())["tag_name"]);'`
 
 currentKernel="$(uname -s)"
 case "${currentKernel}" in
