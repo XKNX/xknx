@@ -37,7 +37,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
     ],
-    packages=find_packages(),
+    packages=find_packages(exclude=['test','test.*']),
     install_requires=REQUIRES,
     keywords="knx ip knxip eib home automation",
     zip_safe=False,
