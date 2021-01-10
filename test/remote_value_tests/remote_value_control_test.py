@@ -28,11 +28,6 @@ class TestRemoteValueControl(unittest.TestCase):
         with self.assertRaises(ConversionError):
             RemoteValueControl(xknx, value_type="wrong_value_type")
 
-    def test_valid_payload(self):
-        """Test valid_payload method."""
-        self.assertTrue(DPTBinary(0))
-        self.assertTrue(DPTArray([0]))
-
     def test_set(self):
         """Test setting value."""
         xknx = XKNX()
