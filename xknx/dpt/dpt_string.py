@@ -38,7 +38,7 @@ class DPTString(DPTBase):
             for character in knx_value:
                 raw.append(ord(character))
             raw.extend([0] * (cls.payload_length - len(raw)))
-            return raw
+            return bytes(raw)
         except ValueError:
             raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
 

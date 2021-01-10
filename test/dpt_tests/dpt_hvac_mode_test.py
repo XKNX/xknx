@@ -28,12 +28,12 @@ class TestDPTControllerStatus(unittest.TestCase):
 
     def test_mode_from_knx(self):
         """Test parsing DPTHVACMode from KNX."""
-        self.assertEqual(DPTHVACMode.from_knx((0x00,)), HVACOperationMode.AUTO)
-        self.assertEqual(DPTHVACMode.from_knx((0x01,)), HVACOperationMode.COMFORT)
-        self.assertEqual(DPTHVACMode.from_knx((0x02,)), HVACOperationMode.STANDBY)
-        self.assertEqual(DPTHVACMode.from_knx((0x03,)), HVACOperationMode.NIGHT)
+        self.assertEqual(DPTHVACMode.from_knx(bytes([0x00])), HVACOperationMode.AUTO)
+        self.assertEqual(DPTHVACMode.from_knx(bytes([0x01])), HVACOperationMode.COMFORT)
+        self.assertEqual(DPTHVACMode.from_knx(bytes([0x02])), HVACOperationMode.STANDBY)
+        self.assertEqual(DPTHVACMode.from_knx(bytes([0x03])), HVACOperationMode.NIGHT)
         self.assertEqual(
-            DPTHVACMode.from_knx((0x04,)), HVACOperationMode.FROST_PROTECTION
+            DPTHVACMode.from_knx(bytes([0x04])), HVACOperationMode.FROST_PROTECTION
         )
 
     def test_controller_status_to_knx(self):
@@ -55,45 +55,51 @@ class TestDPTControllerStatus(unittest.TestCase):
     def test_controller_status_from_knx(self):
         """Test parsing DPTControllerStatus from KNX."""
         self.assertEqual(
-            DPTControllerStatus.from_knx((0x21,)), HVACOperationMode.COMFORT
+            DPTControllerStatus.from_knx(bytes([0x21])), HVACOperationMode.COMFORT
         )
         self.assertEqual(
-            DPTControllerStatus.from_knx((0x22,)), HVACOperationMode.STANDBY
+            DPTControllerStatus.from_knx(bytes([0x22])), HVACOperationMode.STANDBY
         )
-        self.assertEqual(DPTControllerStatus.from_knx((0x24,)), HVACOperationMode.NIGHT)
         self.assertEqual(
-            DPTControllerStatus.from_knx((0x28,)), HVACOperationMode.FROST_PROTECTION
+            DPTControllerStatus.from_knx(bytes([0x24])), HVACOperationMode.NIGHT
+        )
+        self.assertEqual(
+            DPTControllerStatus.from_knx(bytes([0x28])),
+            HVACOperationMode.FROST_PROTECTION,
         )
 
     def test_controller_status_from_knx_other_bits_set(self):
         """Test parsing DPTControllerStatus from KNX."""
         self.assertEqual(
-            DPTControllerStatus.from_knx((0x21,)), HVACOperationMode.COMFORT
+            DPTControllerStatus.from_knx(bytes([0x21])), HVACOperationMode.COMFORT
         )
         self.assertEqual(
-            DPTControllerStatus.from_knx((0x23,)), HVACOperationMode.STANDBY
+            DPTControllerStatus.from_knx(bytes([0x23])), HVACOperationMode.STANDBY
         )
-        self.assertEqual(DPTControllerStatus.from_knx((0x27,)), HVACOperationMode.NIGHT)
         self.assertEqual(
-            DPTControllerStatus.from_knx((0x2F,)), HVACOperationMode.FROST_PROTECTION
+            DPTControllerStatus.from_knx(bytes([0x27])), HVACOperationMode.NIGHT
+        )
+        self.assertEqual(
+            DPTControllerStatus.from_knx(bytes([0x2F])),
+            HVACOperationMode.FROST_PROTECTION,
         )
 
     def test_mode_from_knx_wrong_value(self):
         """Test parsing of DPTControllerStatus with wrong value)."""
         with self.assertRaises(ConversionError):
-            DPTHVACMode.from_knx((1, 2))
+            DPTHVACMode.from_knx(bytes([1, 2]))
 
     def test_mode_from_knx_wrong_code(self):
         """Test parsing of DPTHVACMode with wrong code."""
         with self.assertRaises(CouldNotParseKNXIP):
-            DPTHVACMode.from_knx((0x05,))
+            DPTHVACMode.from_knx(bytes([0x05]))
 
     def test_controller_status_from_knx_wrong_value(self):
         """Test parsing of DPTControllerStatus with wrong value)."""
         with self.assertRaises(ConversionError):
-            DPTControllerStatus.from_knx((1, 2))
+            DPTControllerStatus.from_knx(bytes([1, 2]))
 
     def test_controller_status_from_knx_wrong_code(self):
         """Test parsing of DPTControllerStatus with wrong code."""
         with self.assertRaises(CouldNotParseKNXIP):
-            DPTControllerStatus.from_knx((0x00,))
+            DPTControllerStatus.from_knx(bytes([0x00]))

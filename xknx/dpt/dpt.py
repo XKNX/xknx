@@ -1,10 +1,11 @@
 """Implementation of Basic KNX datatypes."""
-from typing import Union
+from abc import ABC, abstractmethod
+from typing import Any, ClassVar, Iterator, List, Optional, Tuple, Type, Union, cast
 
 from xknx.exceptions import ConversionError
 
 
-class DPTBase:
+class DPTBase(ABC):
     """
     Base class for KNX data point type transcoder.
 
@@ -41,41 +42,53 @@ class DPTBase:
 
     """
 
-    payload_length = None
+    payload_length: ClassVar[int] = cast(int, None)
+    dpt_main_number: ClassVar[Optional[int]] = None
+    dpt_sub_number: ClassVar[Optional[int]] = None
+    value_type: ClassVar[Optional[str]] = None
 
     @classmethod
-    def test_bytesarray(cls, raw):
+    @abstractmethod
+    def from_knx(cls, raw: bytes) -> Any:
+        """Parse/deserialize from KNX/IP raw data (big endian)."""
+
+    @classmethod
+    @abstractmethod
+    def to_knx(cls, value: Any) -> List[int]:
+        """Serialize to KNX/IP raw data."""
+
+    @classmethod
+    def test_bytesarray(cls, raw: bytes) -> None:
         """Test if array of raw bytes has the correct length and values of correct type."""
         if cls.payload_length is None:
             raise NotImplementedError("payload_length has to be defined for: %s" % cls)
-        if (
-            not isinstance(raw, (tuple, list))
-            or len(raw) != cls.payload_length
-            or any(not isinstance(byte, int) for byte in raw)
-            or any(byte < 0 for byte in raw)
-            or any(byte > 255 for byte in raw)
-        ):
-            raise ConversionError("Invalid raw bytes", raw=raw)
+        if len(raw) != cls.payload_length:
+            raise ConversionError(
+                f"Invalid raw bytes. Expected length: {cls.payload_length}",
+                raw=raw.hex(),
+            )
 
     @classmethod
-    def __recursive_subclasses__(cls):
+    def __recursive_subclasses__(cls) -> Iterator[Type["DPTBase"]]:
         """Yield all subclasses and their subclasses."""
         for subclass in cls.__subclasses__():
             yield from subclass.__recursive_subclasses__()
             yield subclass
 
     @classmethod
-    def has_distinct_dpt_numbers(cls):
+    def has_distinct_dpt_numbers(cls) -> bool:
         """Return True if dpt numbers are defined (not inherited)."""
         return "dpt_main_number" in cls.__dict__ and "dpt_sub_number" in cls.__dict__
 
     @classmethod
-    def has_distinct_value_type(cls):
+    def has_distinct_value_type(cls) -> bool:
         """Return True if value_type is defined (not inherited)."""
         return "value_type" in cls.__dict__
 
     @staticmethod
-    def transcoder_by_dpt(dpt_main, dpt_sub=None):
+    def transcoder_by_dpt(
+        dpt_main: int, dpt_sub: Optional[int] = None
+    ) -> Optional[Type["DPTBase"]]:
         """Return Class reference of DPTBase subclass with matching DPT number."""
         for dpt in DPTBase.__recursive_subclasses__():
             if dpt.has_distinct_dpt_numbers():
@@ -84,7 +97,7 @@ class DPTBase:
         return None
 
     @staticmethod
-    def transcoder_by_value_type(value_type):
+    def transcoder_by_value_type(value_type: str) -> Optional[Type["DPTBase"]]:
         """Return Class reference of DPTBase subclass with matching value_type."""
         for dpt in DPTBase.__recursive_subclasses__():
             if dpt.has_distinct_value_type():
@@ -93,7 +106,9 @@ class DPTBase:
         return None
 
     @staticmethod
-    def parse_transcoder(value_type):
+    def parse_transcoder(
+        value_type: Union[int, float, str]
+    ) -> Optional[Type["DPTBase"]]:
         """Return Class reference of DPTBase subclass from value_type or DPT number."""
         if isinstance(value_type, int):
             return DPTBase.transcoder_by_dpt(value_type)
@@ -116,7 +131,6 @@ class DPTBase:
                     except ValueError:
                         pass
             return transcoder
-        return None
 
 
 class DPTBinary:
@@ -133,7 +147,7 @@ class DPTBinary:
         if not isinstance(value, int):
             raise TypeError()
         if value > DPTBinary.APCI_BITMASK:
-            raise ConversionError("Could not init DPTBinary", value=value)
+            raise ConversionError("Could not init DPTBinary", value=str(value))
 
         self.value = value
 
@@ -152,8 +166,9 @@ class DPTArray:
     """The DPTArray is a base class for all datatypes appended to the KNX telegram."""
 
     # pylint: disable=too-few-public-methods
-    def __init__(self, value: Union[int, list, bytes, tuple]) -> None:
+    def __init__(self, value: Union[int, bytes, Tuple[int, ...], List[int]]) -> None:
         """Initialize DPTArray class."""
+        self.value: Tuple[int, ...]
         if isinstance(value, int):
             self.value = (value,)
         elif isinstance(value, (list, bytes)):
