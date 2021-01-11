@@ -78,7 +78,7 @@ SERVICE_XKNX_EVENT_REGISTER = "event_register"
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.deprecated(CONF_XKNX_FIRE_EVENT, invalidation_version="2021.12"),
+            cv.deprecated(CONF_XKNX_FIRE_EVENT),
             cv.deprecated("fire_event_filter", replacement_key=CONF_XKNX_EVENT_FILTER),
             vol.Schema(
                 {
