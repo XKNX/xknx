@@ -1,6 +1,7 @@
 """Support KNX devices."""
 import asyncio
 import logging
+from typing import Dict, Optional, Type
 
 import voluptuous as vol
 from xknx import XKNX
@@ -166,6 +167,11 @@ SERVICE_XKNX_EVENT_REGISTER_SCHEMA = vol.Schema(
     {
         vol.Required(SERVICE_XKNX_ATTR_ADDRESS): cv.string,
         vol.Optional(SERVICE_XKNX_ATTR_REMOVE, default=False): cv.boolean,
+        vol.Optional(SERVICE_XKNX_ATTR_TYPE): vol.Any(
+            vol.ExactSequence([cv.positive_int, cv.positive_int]),
+            cv.positive_int,
+            cv.string,
+        ),
     }
 )
 
@@ -251,6 +257,7 @@ class KNXModule:
 
         self.init_xknx()
         self._knx_event_callback: TelegramQueue.Callback = self.register_callback()
+        self._knx_event_dpt_map: Dict[str, DPTBase] = {}
 
     def init_xknx(self):
         """Initialize of KNX object."""
@@ -347,19 +354,24 @@ class KNXModule:
     async def telegram_received_cb(self, telegram):
         """Call invoked after a KNX telegram was received."""
         data = None
+        value = None
+        destination = str(telegram.destination_address)
 
         # Not all telegrams have serializable data.
         if isinstance(telegram.payload, (GroupValueWrite, GroupValueResponse)):
             data = telegram.payload.value.value
+            if destination in self._knx_event_dpt_map:
+                value = self._knx_event_dpt_map[destination].from_knx(data)
 
         self.hass.bus.async_fire(
             "knx_event",
             {
                 "data": data,
-                "destination": str(telegram.destination_address),
+                "destination": destination,
                 "direction": telegram.direction.value,
                 "source": str(telegram.source_address),
                 "telegramtype": telegram.payload.__class__.__name__,
+                "value": value,
             },
         )
 
@@ -377,10 +389,21 @@ class KNXModule:
     async def service_event_register_modify(self, call):
         """Service for adding or removing a GroupAddress to the knx_event filter."""
         group_address = GroupAddress(call.data.get(SERVICE_XKNX_ATTR_ADDRESS))
+        value_type = call.data.get(SERVICE_XKNX_ATTR_TYPE)
         if call.data.get(SERVICE_XKNX_ATTR_REMOVE):
             self._knx_event_callback.group_addresses.remove(group_address)
         elif group_address not in self._knx_event_callback.group_addresses:
             self._knx_event_callback.group_addresses.append(group_address)
+            if value_type is not None:
+                dpt: Optional[Type[DPTBase]]
+                if isinstance(value_type, (int, str)):
+                    dpt = DPTBase.parse_transcoder(value_type)
+                else:
+                    dpt = DPTBase.transcoder_by_dpt(
+                        dpt_main=value_type[0], dpt_sub=value_type[1]
+                    )
+                if dpt is not None:
+                    self._knx_event_dpt_map[str(group_address)] = dpt
 
     async def service_send_to_knx_bus(self, call):
         """Service for sending an arbitrary KNX message to the KNX bus."""

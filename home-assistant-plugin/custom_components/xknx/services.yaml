@@ -18,3 +18,6 @@ event_register:
       example: "1/1/0"
     remove:
       description: "Optional. If `True` the group address will be removed. Defaults to `False`."
+    type:
+      description: "Experimental feature. Optional. Value type for decoding the telegram data. Integers (eg. 9 for DPT 9), List of 2 ints ('[9, 1]' for DPT 9.001) or strings with Knx sensor types are valid values (see https://www.home-assistant.io/integrations/sensor.knx)."
+      example: "temperature"

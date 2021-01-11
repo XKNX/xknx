@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### HA integration
+
+- decode knx_event payloads that are registered via service `event_register` with given type.
+
 ### Internals
 
 - remove DPTComparator: DPTBinary and DPTArray are not equal, even if their .value is, and are never equal to `None`.
