@@ -4,7 +4,7 @@
 
 ### HA integration
 
-- decode knx_event payloads that are registered via service `event_register` with given type.
+- decode knx_event payloads with given type.
 
 ### Internals
 

@@ -1,7 +1,7 @@
 """Support KNX devices."""
 import asyncio
 import logging
-from typing import Dict, Optional, Type
+from typing import Dict, Iterable, Optional, Type, Union
 
 import voluptuous as vol
 from xknx import XKNX
@@ -62,6 +62,7 @@ CONF_XKNX_ROUTING = "routing"
 CONF_XKNX_TUNNELING = "tunneling"
 CONF_XKNX_FIRE_EVENT = "fire_event"
 CONF_XKNX_EVENT_FILTER = "event_filter"
+CONF_XKNX_EVENT_DPT_MAP = "event_dpt_map"
 CONF_XKNX_INDIVIDUAL_ADDRESS = "individual_address"
 CONF_XKNX_MCAST_GRP = "multicast_group"
 CONF_XKNX_MCAST_PORT = "multicast_port"
@@ -93,6 +94,15 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_XKNX_FIRE_EVENT): cv.boolean,
                     vol.Optional(CONF_XKNX_EVENT_FILTER, default=[]): vol.All(
                         cv.ensure_list, [cv.string]
+                    ),
+                    vol.Optional(CONF_XKNX_EVENT_DPT_MAP, default={}): vol.Schema(
+                        {
+                            str: vol.Any(
+                                vol.ExactSequence([cv.positive_int, cv.positive_int]),
+                                cv.positive_int,
+                                cv.string,
+                            ),
+                        }
                     ),
                     vol.Optional(
                         CONF_XKNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS
@@ -258,6 +268,7 @@ class KNXModule:
         self.init_xknx()
         self._knx_event_callback: TelegramQueue.Callback = self.register_callback()
         self._knx_event_dpt_map: Dict[str, DPTBase] = {}
+        self._init_knx_event_map()
 
     def init_xknx(self):
         """Initialize of KNX object."""
@@ -270,6 +281,25 @@ class KNXModule:
             connection_config=self.connection_config(),
             state_updater=self.config[DOMAIN][CONF_XKNX_STATE_UPDATER],
         )
+
+    def _init_knx_event_map(self) -> None:
+        """Initialize _knx_event_dpt_map from config."""
+        for address, value_type in self.config[DOMAIN][CONF_XKNX_EVENT_DPT_MAP].items():
+            self._add_to_knx_event_map(address=address, value_type=value_type)
+
+    def _add_to_knx_event_map(
+        self, address: str, value_type: Union[int, str, Iterable[int]]
+    ) -> None:
+        """Add item to _knx_event_dpt_map if value_type can be parsed."""
+        dpt: Optional[Type[DPTBase]]
+        if isinstance(value_type, (int, str)):
+            dpt = DPTBase.parse_transcoder(value_type)
+        else:
+            dpt = DPTBase.transcoder_by_dpt(
+                dpt_main=value_type[0], dpt_sub=value_type[1]
+            )
+        if dpt is not None:
+            self._knx_event_dpt_map[address] = dpt
 
     async def start(self):
         """Start KNX object. Connect to tunneling or Routing device."""
@@ -395,15 +425,9 @@ class KNXModule:
         elif group_address not in self._knx_event_callback.group_addresses:
             self._knx_event_callback.group_addresses.append(group_address)
             if value_type is not None:
-                dpt: Optional[Type[DPTBase]]
-                if isinstance(value_type, (int, str)):
-                    dpt = DPTBase.parse_transcoder(value_type)
-                else:
-                    dpt = DPTBase.transcoder_by_dpt(
-                        dpt_main=value_type[0], dpt_sub=value_type[1]
-                    )
-                if dpt is not None:
-                    self._knx_event_dpt_map[str(group_address)] = dpt
+                self._add_to_knx_event_map(
+                    address=str(group_address), value_type=value_type
+                )
 
     async def service_send_to_knx_bus(self, call):
         """Service for sending an arbitrary KNX message to the KNX bus."""
