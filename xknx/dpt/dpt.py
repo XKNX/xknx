@@ -1,6 +1,6 @@
 """Implementation of Basic KNX datatypes."""
 from abc import ABC, abstractmethod
-from typing import Any, ClassVar, Iterator, List, Optional, Tuple, Type, Union, cast
+from typing import Any, Iterator, List, Optional, Tuple, Type, Union, cast
 
 from xknx.exceptions import ConversionError
 
@@ -42,10 +42,10 @@ class DPTBase(ABC):
 
     """
 
-    payload_length: ClassVar[int] = cast(int, None)
-    dpt_main_number: ClassVar[Optional[int]] = None
-    dpt_sub_number: ClassVar[Optional[int]] = None
-    value_type: ClassVar[Optional[str]] = None
+    payload_length: int = cast(int, None)
+    dpt_main_number: Optional[int] = None
+    dpt_sub_number: Optional[int] = None
+    value_type: Optional[str] = None
 
     @classmethod
     @abstractmethod
@@ -54,7 +54,7 @@ class DPTBase(ABC):
 
     @classmethod
     @abstractmethod
-    def to_knx(cls, value: Any) -> List[int]:
+    def to_knx(cls, value: Any) -> Union[bytes, Tuple[int, ...]]:
         """Serialize to KNX/IP raw data."""
 
     @classmethod

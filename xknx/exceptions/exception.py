@@ -31,7 +31,7 @@ class CommunicationError(XKNXException):
 class CouldNotParseTelegram(XKNXException):
     """Could not parse telegram error."""
 
-    def __init__(self, description: str, **kwargs: str) -> None:
+    def __init__(self, description: str, **kwargs: Any) -> None:
         """Initialize CouldNotParseTelegram class."""
         super().__init__()
         self.description = description
@@ -78,7 +78,7 @@ class UnsupportedCEMIMessage(XKNXException):
 class ConversionError(XKNXException):
     """Exception class for error while converting one type to another."""
 
-    def __init__(self, description: str, **kwargs: str) -> None:
+    def __init__(self, description: str, **kwargs: Any) -> None:
         """Initialize ConversionError class."""
         super().__init__()
         self.description = description

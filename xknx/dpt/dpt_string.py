@@ -18,7 +18,7 @@ class DPTString(DPTBase):
     unit = ""
 
     @classmethod
-    def from_knx(cls, raw):
+    def from_knx(cls, raw: bytes) -> str:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
         value = ""
@@ -28,7 +28,7 @@ class DPTString(DPTBase):
         return value
 
     @classmethod
-    def to_knx(cls, value):
+    def to_knx(cls, value: str) -> bytes:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = str(value)
@@ -43,6 +43,6 @@ class DPTString(DPTBase):
             raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
 
     @classmethod
-    def _test_boundaries(cls, value):
+    def _test_boundaries(cls, value: str) -> bool:
         """Test if value is within defined range for this object."""
         return len(value) <= cls.payload_length

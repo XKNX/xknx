@@ -1,4 +1,6 @@
 """Implementation of Basic KNX DPT_1_Ucount Values."""
+from typing import Optional, Tuple
+
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
@@ -14,14 +16,14 @@ class DPTValue1ByteUnsigned(DPTBase):
     value_min = 0
     value_max = 255
     dpt_main_number = 5
-    dpt_sub_number = None
+    dpt_sub_number: Optional[int] = None
     value_type = "1byte_unsigned"
     unit = ""
     resolution = 1
     payload_length = 1
 
     @classmethod
-    def from_knx(cls, raw):
+    def from_knx(cls, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
 
@@ -35,7 +37,7 @@ class DPTValue1ByteUnsigned(DPTBase):
         return value
 
     @classmethod
-    def to_knx(cls, value):
+    def to_knx(cls, value: int) -> Tuple[int]:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = int(value)
@@ -46,7 +48,7 @@ class DPTValue1ByteUnsigned(DPTBase):
             raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
 
     @classmethod
-    def _test_boundaries(cls, value):
+    def _test_boundaries(cls, value: int) -> bool:
         """Test if value is within defined range for this object."""
         return cls.value_min <= value <= cls.value_max
 
@@ -117,7 +119,7 @@ class DPTSceneNumber(DPTValue1ByteUnsigned):
     unit = ""
 
     @classmethod
-    def from_knx(cls, raw):
+    def from_knx(cls, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
 
@@ -131,7 +133,7 @@ class DPTSceneNumber(DPTValue1ByteUnsigned):
         return value
 
     @classmethod
-    def to_knx(cls, value):
+    def to_knx(cls, value: int) -> Tuple[int]:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = int(value) - 1
