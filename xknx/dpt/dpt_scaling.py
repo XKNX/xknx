@@ -1,4 +1,6 @@
 """Implementation of scaled KNX DPT_1_Ucount Values."""
+from typing import Tuple
+
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
@@ -21,7 +23,7 @@ class DPTScaling(DPTBase):
     payload_length = 1
 
     @classmethod
-    def from_knx(cls, raw):
+    def from_knx(cls, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
 
@@ -37,7 +39,7 @@ class DPTScaling(DPTBase):
         return value
 
     @classmethod
-    def to_knx(cls, value):
+    def to_knx(cls, value: float) -> Tuple[int]:
         """Serialize to KNX/IP raw data."""
         try:
             percent_value = float(value)
@@ -51,7 +53,7 @@ class DPTScaling(DPTBase):
             raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
 
     @classmethod
-    def _test_boundaries(cls, value):
+    def _test_boundaries(cls, value: float) -> bool:
         """Test if value is within defined range for this object."""
         return cls.value_min <= value <= cls.value_max
 

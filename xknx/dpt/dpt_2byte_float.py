@@ -3,6 +3,7 @@ Implementation of KNX 2 byte Float-values.
 
 They correspond to the the following KDN DPT 9 class.
 """
+from typing import Optional, Tuple
 
 from xknx.exceptions import ConversionError
 
@@ -19,14 +20,14 @@ class DPT2ByteFloat(DPTBase):
     value_min = -671088.64
     value_max = 670760.96
     dpt_main_number = 9
-    dpt_sub_number = None
+    dpt_sub_number: Optional[int] = None
     value_type = "2byte_float"
     unit = ""
     resolution = 1
     payload_length = 2
 
     @classmethod
-    def from_knx(cls, raw):
+    def from_knx(cls, raw: bytes) -> float:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
         data = (raw[0] * 256) + raw[1]
@@ -45,10 +46,10 @@ class DPT2ByteFloat(DPTBase):
         return value
 
     @classmethod
-    def to_knx(cls, value):
+    def to_knx(cls, value: float) -> Tuple[int, int]:
         """Serialize to KNX/IP raw data."""
 
-        def calc_exponent(float_value, sign):
+        def calc_exponent(float_value: float, sign: bool) -> Tuple[int, int]:
             """Return float exponent."""
             exponent = 0
             significand = abs(int(float_value * 100))
@@ -68,7 +69,7 @@ class DPT2ByteFloat(DPTBase):
             if not cls._test_boundaries(knx_value):
                 raise ValueError
 
-            sign = 1 if knx_value < 0 else 0
+            sign = knx_value < 0
             exponent, significand = calc_exponent(knx_value, sign)
 
             return (sign << 7) | (exponent << 3) | (
@@ -78,7 +79,7 @@ class DPT2ByteFloat(DPTBase):
             raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
 
     @classmethod
-    def _test_boundaries(cls, value):
+    def _test_boundaries(cls, value: float) -> bool:
         """Test if value is within defined range for this object."""
         return cls.value_min <= value <= cls.value_max
 

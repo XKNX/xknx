@@ -1,6 +1,6 @@
 """Implementation of the KNX datetime data point."""
-
 import time
+from typing import Tuple
 
 from xknx.exceptions import ConversionError
 
@@ -13,7 +13,7 @@ class DPTDateTime(DPTBase):
     payload_length = 8
 
     @classmethod
-    def from_knx(cls, raw) -> time.struct_time:
+    def from_knx(cls, raw: bytes) -> time.struct_time:
         """Parse/deserialize from KNX/IP raw data."""
         # pylint: disable=too-many-locals
         cls.test_bytesarray(raw)
@@ -68,7 +68,7 @@ class DPTDateTime(DPTBase):
             raise ConversionError("Could not parse DPTDateTime", raw=raw)
 
     @classmethod
-    def to_knx(cls, value: time.struct_time):
+    def to_knx(cls, value: time.struct_time) -> Tuple[int, ...]:
         """Serialize to KNX/IP raw data from time.struct_time."""
         if not isinstance(value, time.struct_time):
             raise ConversionError("Could not serialize DPTDateTime", value=value)

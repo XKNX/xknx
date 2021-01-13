@@ -1,6 +1,6 @@
 """Implementation of Basic KNX Time."""
-
 import time
+from typing import Tuple
 
 from xknx.exceptions import ConversionError
 
@@ -17,7 +17,7 @@ class DPTTime(DPTBase):
     payload_length = 3
 
     @classmethod
-    def from_knx(cls, raw) -> time.struct_time:
+    def from_knx(cls, raw: bytes) -> time.struct_time:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
 
@@ -44,7 +44,7 @@ class DPTTime(DPTBase):
             raise ConversionError("Could not parse DPTTime", raw=raw)
 
     @classmethod
-    def to_knx(cls, value: time.struct_time):
+    def to_knx(cls, value: time.struct_time) -> Tuple[int, int, int]:
         """Serialize to KNX/IP raw data from dict with elements weekday,hours,minutes,seconds."""
         if not isinstance(value, time.struct_time):
             raise ConversionError(
@@ -62,7 +62,7 @@ class DPTTime(DPTBase):
         return (weekday << 5 | value.tm_hour, value.tm_min, value.tm_sec)
 
     @staticmethod
-    def _test_range(weekday, hours, minutes, seconds):
+    def _test_range(weekday: int, hours: int, minutes: int, seconds: int) -> bool:
         """Test if values are in the correct value range."""
         if weekday < 0 or weekday > 7:
             return False
