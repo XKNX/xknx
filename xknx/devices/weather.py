@@ -13,12 +13,17 @@ It provides functionality for
 """
 from datetime import date, datetime
 from enum import Enum
-from typing import Callable, Iterator, Optional
+from typing import TYPE_CHECKING, Any, Callable, Iterator, Optional, Tuple
 
 from xknx.remote_value import RemoteValue, RemoteValueSensor, RemoteValueSwitch
 
 from . import BinarySensor, Sensor
-from .device import Device
+from .device import Device, DeviceCallbackType
+
+if TYPE_CHECKING:
+    from xknx.telegram import Telegram
+    from xknx.telegram.address import GroupAddressableType
+    from xknx.xknx import XKNX
 
 
 class WeatherCondition(Enum):
@@ -56,7 +61,9 @@ SEASONS = [
 ]
 
 # Define current condition
-ILLUMINANCE_MAPPING = (
+ILLUMINANCE_MAPPING: Tuple[
+    Tuple[Season, Callable[[float], bool], WeatherCondition], ...
+] = (
     (Season.summer, lambda lx: 2000 <= lx <= 20000, WeatherCondition.cloudy),
     (Season.summer, lambda lx: lx > 20000, WeatherCondition.sunny),
     (Season.winter, lambda lx: 999 <= lx <= 4500, WeatherCondition.cloudy),
@@ -71,23 +78,23 @@ class Weather(Device):
     # pylint: disable=too-many-locals
     def __init__(
         self,
-        xknx,
+        xknx: "XKNX",
         name: str,
-        group_address_temperature: str = None,
-        group_address_brightness_south: Optional[str] = None,
-        group_address_brightness_north: Optional[str] = None,
-        group_address_brightness_west: Optional[str] = None,
-        group_address_brightness_east: Optional[str] = None,
-        group_address_wind_speed: Optional[str] = None,
-        group_address_rain_alarm: Optional[str] = None,
-        group_address_frost_alarm: Optional[str] = None,
-        group_address_wind_alarm: Optional[str] = None,
-        group_address_day_night: Optional[str] = None,
-        group_address_air_pressure: Optional[str] = None,
-        group_address_humidity: Optional[str] = None,
+        group_address_temperature: Optional["GroupAddressableType"] = None,
+        group_address_brightness_south: Optional["GroupAddressableType"] = None,
+        group_address_brightness_north: Optional["GroupAddressableType"] = None,
+        group_address_brightness_west: Optional["GroupAddressableType"] = None,
+        group_address_brightness_east: Optional["GroupAddressableType"] = None,
+        group_address_wind_speed: Optional["GroupAddressableType"] = None,
+        group_address_rain_alarm: Optional["GroupAddressableType"] = None,
+        group_address_frost_alarm: Optional["GroupAddressableType"] = None,
+        group_address_wind_alarm: Optional["GroupAddressableType"] = None,
+        group_address_day_night: Optional["GroupAddressableType"] = None,
+        group_address_air_pressure: Optional["GroupAddressableType"] = None,
+        group_address_humidity: Optional["GroupAddressableType"] = None,
         expose_sensors: bool = False,
         sync_state: bool = True,
-        device_updated_cb=None,
+        device_updated_cb: Optional[DeviceCallbackType] = None,
     ) -> None:
         """Initialize Weather class."""
         # pylint: disable=too-many-arguments
@@ -225,20 +232,20 @@ class Weather(Device):
             self._humidity,
         ]
 
-    async def process_group_write(self, telegram):
+    async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         for remote_value in self._iter_remote_values():
             await remote_value.process(telegram)
 
     @property
-    def temperature(self) -> float:
+    def temperature(self) -> Optional[float]:
         """Return current temperature."""
-        return self._temperature.value
+        return self._temperature.value  # type: ignore
 
     @property
     def brightness_south(self) -> float:
         """Return brightness south."""
-        return (
+        return (  # type: ignore
             0.0
             if self._brightness_south.value is None
             else self._brightness_south.value
@@ -247,7 +254,7 @@ class Weather(Device):
     @property
     def brightness_north(self) -> float:
         """Return brightness north."""
-        return (
+        return (  # type: ignore
             0.0
             if self._brightness_north.value is None
             else self._brightness_north.value
@@ -256,51 +263,51 @@ class Weather(Device):
     @property
     def brightness_east(self) -> float:
         """Return brightness east."""
-        return (
+        return (  # type: ignore
             0.0 if self._brightness_east.value is None else self._brightness_east.value
         )
 
     @property
     def brightness_west(self) -> float:
         """Return brightness west."""
-        return (
+        return (  # type: ignore
             0.0 if self._brightness_west.value is None else self._brightness_west.value
         )
 
     @property
     def wind_speed(self) -> Optional[float]:
         """Return wind speed in m/s."""
-        return self._wind_speed.value
+        return self._wind_speed.value  # type: ignore
 
     @property
     def rain_alarm(self) -> Optional[bool]:
         """Return True if rain alarm False if not."""
-        return self._rain_alarm.value
+        return self._rain_alarm.value  # type: ignore
 
     @property
     def wind_alarm(self) -> Optional[bool]:
         """Return True if wind alarm False if not."""
-        return self._wind_alarm.value
+        return self._wind_alarm.value  # type: ignore
 
     @property
     def frost_alarm(self) -> Optional[bool]:
         """Return True if frost alarm False if not."""
-        return self._frost_alarm.value
+        return self._frost_alarm.value  # type: ignore
 
     @property
     def day_night(self) -> Optional[bool]:
         """Return day or night."""
-        return self._day_night.value
+        return self._day_night.value  # type: ignore
 
     @property
-    def air_pressure(self):
+    def air_pressure(self) -> Optional[float]:
         """Return pressure in Pa."""
-        return self._air_pressure.value
+        return self._air_pressure.value  # type: ignore
 
     @property
     def humidity(self) -> Optional[float]:
         """Return humidity in %."""
-        return self._humidity.value
+        return self._humidity.value  # type: ignore
 
     @property
     def max_brightness(self) -> float:
@@ -312,33 +319,13 @@ class Weather(Device):
             self.brightness_east,
         )
 
-    def expose_sensors(self):
+    def expose_sensors(self) -> None:
         """Expose sensors to xknx."""
         for suffix, group_address in (
-            (
-                "_rain_alarm",
-                None
-                if not self._rain_alarm.initialized
-                else self._rain_alarm.group_address_state.raw,
-            ),
-            (
-                "_wind_alarm",
-                None
-                if not self._wind_alarm.initialized
-                else self._wind_alarm.group_address_state.raw,
-            ),
-            (
-                "_frost_alarm",
-                None
-                if not self._frost_alarm.initialized
-                else self._frost_alarm.group_address_state.raw,
-            ),
-            (
-                "_day_night",
-                None
-                if not self._day_night.initialized
-                else self._day_night.group_address_state.raw,
-            ),
+            ("_rain_alarm", self._rain_alarm.group_address_state),
+            ("_wind_alarm", self._wind_alarm.group_address_state),
+            ("_frost_alarm", self._frost_alarm.group_address_state),
+            ("_day_night", self._day_night.group_address_state),
         ):
             if group_address is not None:
                 BinarySensor(
@@ -350,58 +337,42 @@ class Weather(Device):
         for suffix, group_address, value_type in (
             (
                 "_temperature",
-                None
-                if not self._temperature.initialized
-                else self._temperature.group_address_state.raw,
+                self._temperature.group_address_state,
                 "temperature",
             ),
             (
                 "_brightness_south",
-                None
-                if not self._brightness_south.initialized
-                else self._brightness_south.group_address_state.raw,
+                self._brightness_south.group_address_state,
                 "illuminance",
             ),
             (
                 "_brightness_north",
-                None
-                if not self._brightness_north.initialized
-                else self._brightness_north.group_address_state.raw,
+                self._brightness_north.group_address_state,
                 "illuminance",
             ),
             (
                 "_brightness_west",
-                None
-                if not self._brightness_west.initialized
-                else self._brightness_west.group_address_state.raw,
+                self._brightness_west.group_address_state,
                 "illuminance",
             ),
             (
                 "_brightness_east",
-                None
-                if not self._brightness_east.initialized
-                else self._brightness_east.group_address_state.raw,
+                self._brightness_east.group_address_state,
                 "illuminance",
             ),
             (
                 "_wind_speed",
-                None
-                if not self._wind_speed.initialized
-                else self._wind_speed.group_address_state.raw,
+                self._wind_speed.group_address_state,
                 "wind_speed_ms",
             ),
             (
                 "_air_pressure",
-                None
-                if not self._air_pressure.initialized
-                else self._air_pressure.group_address_state.raw,
+                self._air_pressure.group_address_state,
                 "pressure",
             ),
             (
                 "_humidity",
-                None
-                if not self._humidity.initialized
-                else self._humidity.group_address_state.raw,
+                self._humidity.group_address_state,
                 "humidity",
             ),
         ):
@@ -414,10 +385,10 @@ class Weather(Device):
                 )
 
     # pylint: disable=too-many-return-statements
-    def ha_current_state(self, current_date=date.today()) -> WeatherCondition:
+    def ha_current_state(self, current_date: date = date.today()) -> WeatherCondition:
         """Return the current state for home assistant."""
 
-        def _get_season(now):
+        def _get_season(now: date) -> Season:
             """Return winter or summer."""
             if isinstance(now, datetime):
                 now = now.date()
@@ -452,7 +423,7 @@ class Weather(Device):
         return WeatherCondition.exceptional
 
     @classmethod
-    def from_config(cls, xknx, name, config):
+    def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "Weather":
         """Initialize object from configuration structure."""
         group_address_temperature = config.get("group_address_temperature")
         group_address_brightness_south = config.get("group_address_brightness_south")

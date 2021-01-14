@@ -24,16 +24,6 @@ class TestRemoteValue(unittest.TestCase):
         """Tear down test class."""
         self.loop.close()
 
-    def test_warn_payload_valid(self):
-        """Test for warning if payload_valid is not implemented."""
-        xknx = XKNX()
-        remote_value = RemoteValue(xknx)
-        with patch("logging.Logger.warning") as mock_warn:
-            remote_value.payload_valid(DPTBinary(0))
-            mock_warn.assert_called_with(
-                "'payload_valid()' not implemented for %s", "RemoteValue"
-            )
-
     def test_info_set_uninitialized(self):
         """Test for info if RemoteValue is not initialized."""
         xknx = XKNX()
