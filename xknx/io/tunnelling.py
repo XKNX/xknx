@@ -10,6 +10,9 @@ from xknx.knxip import (
 )
 
 from .request_response import RequestResponse
+from xknx.telegram import Telegram
+from xknx.knxip.tpdu import TPDUTelegram
+from xknx.knxip.tpdu import TPDU
 
 if TYPE_CHECKING:
     from xknx.telegram import IndividualAddress, Telegram
@@ -43,13 +46,20 @@ class Tunnelling(RequestResponse):
         self.communication_channel_id = communication_channel_id
 
     def create_knxipframe(self) -> KNXIPFrame:
-        """Create KNX/IP Frame object to be sent to device."""
-        cemi = CEMIFrame.init_from_telegram(
-            self.xknx,
-            telegram=self.telegram,
-            code=CEMIMessageCode.L_Data_REQ,
-            src_addr=self.src_address,
-        )
+        """Create KNX/IP Frame object to be sent on bus."""
+        if isinstance(self.telegram, TPDUTelegram):
+            cemi = TPDU.init_from_telegram(
+                self.xknx,
+                telegram=self.telegram,
+                src_addr=self.src_address,)
+        else:
+            cemi = CEMIFrame.init_from_telegram(
+                self.xknx,
+                telegram=self.telegram,
+                code=CEMIMessageCode.L_Data_REQ,
+                src_addr=self.src_address,
+            )
+
         tunnelling_request = TunnellingRequest(
             self.xknx,
             communication_channel_id=self.communication_channel_id,
