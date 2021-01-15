@@ -2,9 +2,14 @@
 
 ## Unreleased changes
 
+### HA integration
+
+- added `knx.exposure_register` service allowing to add and remove ExposeSensor at runtime
+
 ### Internals
 
 - remove DPTComparator: DPTBinary and DPTArray are not equal, even if their .value is, and are never equal to `None`.
+- add Device.shutdown() method (used eg. when removing ExposeSensor)
 
 ## 0.16.0 APCI possibilities considerably increased 2021-01-01
 
