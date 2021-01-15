@@ -67,6 +67,10 @@ class Devices:
         device.register_device_updated_cb(self.device_updated)
         self.__devices.append(device)
 
+    def remove(self, device: Device) -> None:
+        """Remove device from devices vector."""
+        self.__devices.remove(device)
+
     async def device_updated(self, device: Device) -> None:
         """Call all registered device updated callbacks of device."""
         for device_updated_cb in self.device_updated_cbs:

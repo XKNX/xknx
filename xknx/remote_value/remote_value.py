@@ -78,7 +78,9 @@ class RemoteValue(ABC):
         """Destructor. Removing self from StateUpdater if was registered."""
         try:
             self.xknx.state_updater.unregister_remote_value(self)
-        except KeyError:
+        except (KeyError, AttributeError):
+            # KeyError if it was never added to StateUpdater
+            # AttributeError if instantiation failed (tests mostly)
             pass
 
     @property

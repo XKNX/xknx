@@ -37,12 +37,26 @@ class Device(ABC):
 
         self.xknx.devices.add(self)
 
+    def __del__(self) -> None:
+        """Remove Device form Devices."""
+        try:
+            self.shutdown()
+        except ValueError:
+            pass
+
+    def shutdown(self) -> None:
+        """Prepare for deletion. Remove callbacks and device form Devices vector."""
+        self.xknx.devices.remove(self)
+        self.device_updated_cbs = []
+        for remote_value in self._iter_remote_values():
+            remote_value.__del__()
+
     @abstractmethod
     def _iter_remote_values(self) -> Iterator[RemoteValue]:
         """Iterate the devices RemoteValue classes."""
         # yield self.remote_value
-        # or
         # yield from (<list all used RemoteValue instances>)
+        yield from ()
 
     def register_device_updated_cb(self, device_updated_cb: DeviceCallbackType) -> None:
         """Register device updated callback."""
