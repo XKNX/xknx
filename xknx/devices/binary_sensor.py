@@ -76,11 +76,14 @@ class BinarySensor(Device):
 
     def __del__(self) -> None:
         """Destructor. Cleaning up if this was not done before."""
-        if self._reset_task:
-            self._reset_task.cancel()
-
-        if self._context_task:
-            self._context_task.cancel()
+        try:
+            if self._reset_task:
+                self._reset_task.cancel()
+            if self._context_task:
+                self._context_task.cancel()
+        except RuntimeError:
+            pass
+        super().__del__()
 
     @classmethod
     def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "BinarySensor":

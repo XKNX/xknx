@@ -49,7 +49,11 @@ class DateTime(Device):
     def __del__(self) -> None:
         """Destructor. Cleaning up if this was not done before."""
         if self._broadcast_task:
-            self._broadcast_task.cancel()
+            try:
+                self._broadcast_task.cancel()
+            except RuntimeError:
+                pass
+        super().__del__()
 
     def _iter_remote_values(self) -> Iterator[RemoteValueDateTime]:
         """Iterate the devices RemoteValue classes."""
