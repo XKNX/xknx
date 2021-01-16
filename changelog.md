@@ -1,15 +1,19 @@
 # Changelog
 
-## Unreleased changes
+## 0.16.1 HA register services 2021-01-16
 
 ### HA integration
 
-- added `knx.exposure_register` service allowing to add and remove ExposeSensor at runtime
+- knx_event: renamed `fire_event_filter` to `event_filter` and deprecated `fire_event` config option. A callback is now always registered for HA to be able to modify its `group_addresses` filter from a service.
+- added `knx.event_register` service allowing to add and remove group addresses to trigger knx_event without having to change configuration.
+- added `knx.exposure_register` service allowing to add and remove ExposeSensor instances at runtime
 
 ### Internals
 
 - remove DPTComparator: DPTBinary and DPTArray are not equal, even if their .value is, and are never equal to `None`.
 - add Device.shutdown() method (used eg. when removing ExposeSensor)
+- TelegramQueue.Callback: add `group_addresses` attribute to store a list of GroupAddress triggering the callback (additionally to `address_filters`).
+- add a lot of type annotations
 
 ## 0.16.0 APCI possibilities considerably increased 2021-01-01
 
@@ -20,9 +24,7 @@
 
 ### HA integration
 
-- knx_event: renamed `fire_event_filter` to `event_filter` and deprecated `fire_event` config option. A callback is now always registered for HA to be able to modify its `group_addresses` filter from a service.
 - knx_event: renamed `address` to `destination` and added `source`, `telegramtype`, `direction` attributes.
-- added `knx.event_register` service allowing to add and remove group addresses to trigger knx_event without having to change configuration.
 
 ### Internals
 
@@ -39,7 +41,6 @@
 - Farewell Travis CI; Welcome Github Actions!
 - StateUpdater allow float values for `register_remote_value(tracker_options)` attribute.
 - Handle exceptions from received unsupported or not implemented KNXIP Service Type identifiers
-- TelegramQueue.Callback: add `group_addresses` attribute to store a list of GroupAddress triggering the callback (additionally to `address_filters`).
 
 ## 0.15.6 Bugfix for StateUpater 2020-11-26
 
