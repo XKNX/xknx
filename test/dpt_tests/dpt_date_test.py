@@ -12,21 +12,21 @@ class TestDPTDate(unittest.TestCase):
     def test_from_knx(self):
         """Test parsing of DPTDate object from binary values. Example 1."""
         self.assertEqual(
-            DPTDate().from_knx(bytes([0x04, 0x01, 0x02])),
+            DPTDate().from_knx((0x04, 0x01, 0x02)),
             time.strptime("2002-01-04", "%Y-%m-%d"),
         )
 
     def test_from_knx_old_date(self):
         """Test parsing of DPTDate object from binary values. Example 2."""
         self.assertEqual(
-            DPTDate().from_knx(bytes([0x1F, 0x01, 0x5A])),
+            DPTDate().from_knx((0x1F, 0x01, 0x5A)),
             time.strptime("1990-01-31", "%Y-%m-%d"),
         )
 
     def test_from_knx_future_date(self):
         """Test parsing of DPTDate object from binary values. Example 3."""
         self.assertEqual(
-            DPTDate().from_knx(bytes([0x04, 0x0C, 0x59])),
+            DPTDate().from_knx((0x04, 0x0C, 0x59)),
             time.strptime("2089-12-4", "%Y-%m-%d"),
         )
 
@@ -48,7 +48,7 @@ class TestDPTDate(unittest.TestCase):
     def test_from_knx_wrong_parameter(self):
         """Test parsing from DPTDate object from wrong binary values."""
         with self.assertRaises(ConversionError):
-            DPTDate().from_knx(bytes([0xF8, 0x23]))
+            DPTDate().from_knx((0xF8, 0x23))
 
     def test_to_knx_wrong_parameter(self):
         """Test parsing from DPTDate object from wrong string value."""
@@ -58,9 +58,9 @@ class TestDPTDate(unittest.TestCase):
     def test_from_knx_wrong_range_month(self):
         """Test Exception when parsing DPTDAte from KNX with wrong month."""
         with self.assertRaises(ConversionError):
-            DPTDate().from_knx(bytes([0x04, 0x00, 0x59]))
+            DPTDate().from_knx((0x04, 0x00, 0x59))
 
     def test_from_knx_wrong_range_year(self):
         """Test Exception when parsing DPTDate from KNX with wrong year."""
         with self.assertRaises(ConversionError):
-            DPTDate().from_knx(bytes([0x04, 0x01, 0x64]))
+            DPTDate().from_knx((0x04, 0x01, 0x64))

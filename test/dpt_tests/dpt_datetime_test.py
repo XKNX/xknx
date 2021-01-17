@@ -15,9 +15,7 @@ class TestDPTDateTime(unittest.TestCase):
     def test_from_knx(self):
         """Test parsing of DPTDateTime object from binary values. Example 1."""
         self.assertEqual(
-            DPTDateTime().from_knx(
-                bytes([0x75, 0x0B, 0x1C, 0x17, 0x07, 0x18, 0x20, 0x80])
-            ),
+            DPTDateTime().from_knx((0x75, 0x0B, 0x1C, 0x17, 0x07, 0x18, 0x20, 0x80)),
             time.strptime("2017-11-28 23:7:24", "%Y-%m-%d %H:%M:%S"),
         )
 
@@ -34,9 +32,7 @@ class TestDPTDateTime(unittest.TestCase):
     def test_from_knx_date_in_past(self):
         """Test parsing of DPTDateTime object from binary values. Example 1."""
         self.assertEqual(
-            DPTDateTime().from_knx(
-                bytes([0x00, 0x1, 0x1, 0x20, 0x00, 0x00, 0x00, 0x00])
-            ),
+            DPTDateTime().from_knx((0x00, 0x1, 0x1, 0x20, 0x00, 0x00, 0x00, 0x00)),
             time.strptime("1900 1 1 0 0 0", "%Y %m %d %H %M %S"),
         )
 
@@ -53,9 +49,7 @@ class TestDPTDateTime(unittest.TestCase):
     def test_from_knx_date_in_future(self):
         """Test parsing of DPTDateTime object from binary values. Example 1."""
         self.assertEqual(
-            DPTDateTime().from_knx(
-                bytes([0xFF, 0x0C, 0x1F, 0xF7, 0x3B, 0x3B, 0x20, 0x80])
-            ),
+            DPTDateTime().from_knx((0xFF, 0x0C, 0x1F, 0xF7, 0x3B, 0x3B, 0x20, 0x80)),
             time.strptime("2155-12-31 0 23:59:59", "%Y-%m-%d %w %H:%M:%S"),
         )
 
@@ -72,15 +66,13 @@ class TestDPTDateTime(unittest.TestCase):
     def test_from_knx_wrong_size(self):
         """Test parsing DPTDateTime from KNX with wrong binary values (wrong size)."""
         with self.assertRaises(ConversionError):
-            DPTDateTime().from_knx(bytes([0xF8, 0x23]))
+            DPTDateTime().from_knx((0xF8, 0x23))
 
     def test_from_knx_wrong_bytes(self):
         """Test parsing DPTDateTime from KNX with wrong binary values (wrong bytes)."""
         with self.assertRaises(ConversionError):
             # (second byte exceeds value...)
-            DPTDateTime().from_knx(
-                bytes([0xFF, 0x0D, 0x1F, 0xF7, 0x3B, 0x3B, 0x00, 0x00])
-            )
+            DPTDateTime().from_knx((0xFF, 0x0D, 0x1F, 0xF7, 0x3B, 0x3B, 0x00, 0x00))
 
     #
     # TEST WRONG PARAMETER

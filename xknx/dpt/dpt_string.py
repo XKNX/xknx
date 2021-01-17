@@ -1,4 +1,6 @@
 """Implementation of 3.17 Datapoint Types String."""
+from typing import Tuple
+
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
@@ -28,7 +30,7 @@ class DPTString(DPTBase):
         return value
 
     @classmethod
-    def to_knx(cls, value: str) -> bytes:
+    def to_knx(cls, value: str) -> Tuple[int, ...]:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = str(value)
@@ -38,7 +40,7 @@ class DPTString(DPTBase):
             for character in knx_value:
                 raw.append(ord(character))
             raw.extend([0] * (cls.payload_length - len(raw)))
-            return bytes(raw)
+            return tuple(raw)
         except ValueError:
             raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
 
