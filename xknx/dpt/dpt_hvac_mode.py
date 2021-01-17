@@ -46,7 +46,7 @@ class _DPTClimateMode(DPTBase, Generic[HVACModeType]):
     payload_length = 1
 
     @classmethod
-    def from_knx(cls, raw: bytes) -> HVACModeType:
+    def from_knx(cls, raw: Tuple[int, ...]) -> HVACModeType:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
         if raw[0] in cls.SUPPORTED_MODES:
@@ -122,7 +122,7 @@ class DPTControllerStatus(_DPTClimateMode[HVACOperationMode]):
     }
 
     @classmethod
-    def from_knx(cls, raw: bytes) -> HVACOperationMode:
+    def from_knx(cls, raw: Tuple[int, ...]) -> HVACOperationMode:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
         if raw[0] & 8 > 0:

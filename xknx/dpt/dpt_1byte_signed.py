@@ -22,7 +22,7 @@ class DPTSignedRelativeValue(DPTBase):
     payload_length = 1
 
     @classmethod
-    def from_knx(cls, raw: bytes) -> int:
+    def from_knx(cls, raw: Tuple[int, ...]) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
         if raw[0] > cls.value_max:

@@ -20,7 +20,7 @@ class DPTString(DPTBase):
     unit = ""
 
     @classmethod
-    def from_knx(cls, raw: bytes) -> str:
+    def from_knx(cls, raw: Tuple[int, ...]) -> str:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
         value = ""

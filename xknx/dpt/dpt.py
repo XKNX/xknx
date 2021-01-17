@@ -49,7 +49,7 @@ class DPTBase(ABC):
 
     @classmethod
     @abstractmethod
-    def from_knx(cls, raw: bytes) -> Any:
+    def from_knx(cls, raw: Tuple[int, ...]) -> Any:
         """Parse/deserialize from KNX/IP raw data (big endian)."""
 
     @classmethod
@@ -58,15 +58,18 @@ class DPTBase(ABC):
         """Serialize to KNX/IP raw data."""
 
     @classmethod
-    def test_bytesarray(cls, raw: bytes) -> None:
+    def test_bytesarray(cls, raw: Tuple[int, ...]) -> None:
         """Test if array of raw bytes has the correct length and values of correct type."""
         if cls.payload_length is None:
             raise NotImplementedError("payload_length has to be defined for: %s" % cls)
-        if len(raw) != cls.payload_length:
-            raise ConversionError(
-                f"Invalid raw bytes. Expected length: {cls.payload_length}",
-                raw=raw.hex(),
-            )
+        if (
+            not isinstance(raw, (tuple, list))
+            or len(raw) != cls.payload_length
+            or any(not isinstance(byte, int) for byte in raw)
+            or any(byte < 0 for byte in raw)
+            or any(byte > 255 for byte in raw)
+        ):
+            raise ConversionError("Invalid raw bytes", raw=raw)
 
     @classmethod
     def __recursive_subclasses__(cls) -> Iterator[Type["DPTBase"]]:

@@ -27,7 +27,7 @@ class DPT2ByteFloat(DPTBase):
     payload_length = 2
 
     @classmethod
-    def from_knx(cls, raw: bytes) -> float:
+    def from_knx(cls, raw: Tuple[int, ...]) -> float:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
         data = (raw[0] * 256) + raw[1]

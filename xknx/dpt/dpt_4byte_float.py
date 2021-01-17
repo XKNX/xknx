@@ -30,7 +30,7 @@ class DPT4ByteFloat(DPTBase):
     payload_length = 4
 
     @classmethod
-    def from_knx(cls, raw: bytes) -> float:
+    def from_knx(cls, raw: Tuple[int, ...]) -> float:
         """Parse/deserialize from KNX/IP raw data (big endian)."""
         cls.test_bytesarray(raw)
         try:

@@ -13,7 +13,7 @@ class DPTDate(DPTBase):
     payload_length = 3
 
     @classmethod
-    def from_knx(cls, raw: bytes) -> time.struct_time:
+    def from_knx(cls, raw: Tuple[int, ...]) -> time.struct_time:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
 

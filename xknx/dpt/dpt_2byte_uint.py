@@ -25,7 +25,7 @@ class DPT2ByteUnsigned(DPTBase):
     payload_length = 2
 
     @classmethod
-    def from_knx(cls, raw: bytes) -> int:
+    def from_knx(cls, raw: Tuple[int, ...]) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
         return (raw[0] * 256) + raw[1]

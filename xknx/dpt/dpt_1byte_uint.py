@@ -23,7 +23,7 @@ class DPTValue1ByteUnsigned(DPTBase):
     payload_length = 1
 
     @classmethod
-    def from_knx(cls, raw: bytes) -> int:
+    def from_knx(cls, raw: Tuple[int, ...]) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
 
@@ -119,7 +119,7 @@ class DPTSceneNumber(DPTValue1ByteUnsigned):
     unit = ""
 
     @classmethod
-    def from_knx(cls, raw: bytes) -> int:
+    def from_knx(cls, raw: Tuple[int, ...]) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
 
