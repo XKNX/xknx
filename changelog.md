@@ -1,5 +1,11 @@
 # Changelog
 
+# Unreleased changes
+
+## Internals
+
+- split RemoteValueClimateMode into RemoteValueControllerMode and RemoteValueOperationMode
+
 ## 0.16.1 HA register services 2021-01-16
 
 ### HA integration
