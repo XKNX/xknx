@@ -1,10 +1,14 @@
 # Changelog
 
-## 0.xx
+## Unreleased changes
 
 ### Devices
 
 - Fan: Add "mode" parameter to control fans by steps instead of percentage.
+
+### Internals
+
+- split RemoteValueClimateMode into RemoteValueControllerMode and RemoteValueOperationMode
 
 ## 0.16.2 Bugfix for yaml loader 2021-01-24
 
