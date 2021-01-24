@@ -108,9 +108,9 @@ def _env_var_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> str:
     raise XKNXException(node.value)
 
 
-yaml.SafeLoader.add_constructor("!include", _include_yaml)
-yaml.SafeLoader.add_constructor(
+SafeLineLoader.add_constructor("!include", _include_yaml)
+SafeLineLoader.add_constructor(
     yaml.resolver.BaseResolver.DEFAULT_SEQUENCE_TAG, _construct_seq
 )
-yaml.SafeLoader.add_constructor("!env_var", _env_var_yaml)
-yaml.SafeLoader.add_constructor("!include_dir_list", _include_dir_list_yaml)
+SafeLineLoader.add_constructor("!env_var", _env_var_yaml)
+SafeLineLoader.add_constructor("!include_dir_list", _include_dir_list_yaml)
