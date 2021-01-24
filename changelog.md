@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### HA integration
+
+- knx_event: fire also for outgoing telegrams
+
 ## 0.16.1 HA register services 2021-01-16
 
 ### HA integration
