@@ -6,23 +6,22 @@ It provides functionality for
 * setting fan to specific speed / step
 * reading the current speed from KNX bus.
 """
-import logging
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Iterator, Optional
+import logging
+from typing import TYPE_CHECKING, Any, Iterator, Optional, Union
 
-from xknx.remote_value import (
-    RemoteValueScaling, 
-    RemoteValueDptValue1Ucount
-)
+from xknx.remote_value import RemoteValueDptValue1Ucount, RemoteValueScaling
 
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
+    from xknx.remote_value import RemoteValue
     from xknx.telegram import Telegram
     from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
+
 
 class FanSpeedMode(Enum):
     """Enum for setting the fan speed mode."""
@@ -53,6 +52,7 @@ class Fan(Device):
         # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
 
+        self.speed: Union[RemoteValueDptValue1Ucount, RemoteValueScaling]
         if mode == FanSpeedMode.Step:
             self.speed = RemoteValueDptValue1Ucount(
                 xknx,
@@ -60,7 +60,7 @@ class Fan(Device):
                 group_address_speed_state,
                 device_name=self.name,
                 feature_name="Speed",
-                after_update_cb=self.after_update
+                after_update_cb=self.after_update,
             )
         else:
             self.speed = RemoteValueScaling(
@@ -74,7 +74,7 @@ class Fan(Device):
                 range_to=100,
             )
 
-    def _iter_remote_values(self) -> Iterator[RemoteValueScaling]:
+    def _iter_remote_values(self) -> Iterator["RemoteValue"]:
         """Iterate the devices RemoteValue classes."""
         yield self.speed
 
@@ -90,7 +90,7 @@ class Fan(Device):
             name,
             group_address_speed=group_address_speed,
             group_address_speed_state=group_address_speed_state,
-            mode=mode
+            mode=mode,
         )
 
     def __str__(self) -> str:
