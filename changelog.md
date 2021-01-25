@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.xx 
+## 0.xx
 
 ### Devices
 
