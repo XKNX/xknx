@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from xknx import XKNX
 from xknx.devices import Fan
+from xknx.devices.fan import FanSpeedMode
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
@@ -32,6 +33,22 @@ class TestFan(unittest.TestCase):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         fan = Fan(xknx, name="TestFan", group_address_speed_state="1/2/3")
+        self.loop.run_until_complete(fan.sync())
+
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+
+        telegram1 = xknx.telegrams.get_nowait()
+        self.assertEqual(
+            telegram1,
+            Telegram(
+                destination_address=GroupAddress("1/2/3"), payload=GroupValueRead()
+            ),
+        )
+
+    def test_sync_step(self):
+        """Test sync function / sending group reads to KNX bus."""
+        xknx = XKNX()
+        fan = Fan(xknx, name="TestFan", group_address_speed_state="1/2/3", mode=FanSpeedMode.Step)
         self.loop.run_until_complete(fan.sync())
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -89,6 +106,25 @@ class TestFan(unittest.TestCase):
         )
 
     #
+    #
+    # TEST SET SPEED STEP 
+    #
+    def test_set_speed_step(self):
+        """Test setting the speed of a Fan."""
+        xknx = XKNX()
+        fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3", mode=FanSpeedMode.Step)
+        self.loop.run_until_complete(fan.set_speed(2))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        telegram = xknx.telegrams.get_nowait()
+        self.assertEqual(
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray(2)),
+            ),
+        )
+
+    #
     # TEST PROCESS
     #
     def test_process_speed(self):
@@ -127,6 +163,22 @@ class TestFan(unittest.TestCase):
         )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(fan.process(telegram))
+
+    #
+    # TEST PROCESS STEP MODE
+    #
+    def test_process_speed_step(self):
+        """Test process / reading telegrams from telegram queue. Test if speed is processed."""
+        xknx = XKNX()
+        fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3", mode=FanSpeedMode.Step)
+        self.assertEqual(fan.current_speed, None)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(2)),
+        )
+        self.loop.run_until_complete(fan.process(telegram))
+        self.assertEqual(fan.current_speed, 2)
 
     #
     # TEST DO
