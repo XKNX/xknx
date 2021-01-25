@@ -6,6 +6,12 @@
 
 - Fan: Add "mode" parameter to control fans by steps instead of percentage.
 
+## 0.16.2 Bugfix for yaml loader 2021-01-24
+
+### Internals
+
+- fix conflict with HA Yaml loader
+
 ## 0.16.1 HA register services 2021-01-16
 
 ### HA integration
