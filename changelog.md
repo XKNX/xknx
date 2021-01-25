@@ -68,6 +68,10 @@
 
 ## 0.16.3 Fan contributions 2021-02-06
 
+### HA integration
+
+- Add experimental (opt-in) support for unique ids
+
 ### Devices
 
 - Fan: Add `max_step` attribute which defines the maximum amount of steps. If set, the fan is controlled by steps instead of percentage.
