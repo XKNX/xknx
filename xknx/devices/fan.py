@@ -26,11 +26,11 @@ logger = logging.getLogger("xknx.log")
 class FanSpeedMode(Enum):
     """Enum for setting the fan speed mode."""
 
-    Percentage = 1
+    Percent = 1
     Step = 2
 
 
-DEFAULT_MODE = FanSpeedMode.Percentage
+DEFAULT_MODE = FanSpeedMode.Percent
 
 
 class Fan(Device):
@@ -46,7 +46,7 @@ class Fan(Device):
         group_address_speed: Optional["GroupAddressableType"] = None,
         group_address_speed_state: Optional["GroupAddressableType"] = None,
         device_updated_cb: Optional[DeviceCallbackType] = None,
-        mode: Optional[FanSpeedMode] = DEFAULT_MODE,
+        mode: FanSpeedMode = DEFAULT_MODE,
     ):
         """Initialize fan class."""
         # pylint: disable=too-many-arguments
