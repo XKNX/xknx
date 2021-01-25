@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.xx 
+
+### Devices
+
+- Fan: Add "mode" parameter to control fans by steps instead of percentage.
+
 ## 0.16.1 HA register services 2021-01-16
 
 ### HA integration
