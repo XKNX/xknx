@@ -2,7 +2,7 @@
 layout: default
 title: Fan
 parent: Devices
-nav_order: 9
+nav_order: 4
 ---
 
 # [](#header-1)Fans
