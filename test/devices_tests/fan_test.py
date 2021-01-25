@@ -48,7 +48,12 @@ class TestFan(unittest.TestCase):
     def test_sync_step(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
-        fan = Fan(xknx, name="TestFan", group_address_speed_state="1/2/3", mode=FanSpeedMode.Step)
+        fan = Fan(
+            xknx,
+            name="TestFan",
+            group_address_speed_state="1/2/3",
+            mode=FanSpeedMode.Step,
+        )
         self.loop.run_until_complete(fan.sync())
 
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -107,12 +112,14 @@ class TestFan(unittest.TestCase):
 
     #
     #
-    # TEST SET SPEED STEP 
+    # TEST SET SPEED STEP
     #
     def test_set_speed_step(self):
         """Test setting the speed of a Fan."""
         xknx = XKNX()
-        fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3", mode=FanSpeedMode.Step)
+        fan = Fan(
+            xknx, name="TestFan", group_address_speed="1/2/3", mode=FanSpeedMode.Step
+        )
         self.loop.run_until_complete(fan.set_speed(2))
         self.assertEqual(xknx.telegrams.qsize(), 1)
         telegram = xknx.telegrams.get_nowait()
@@ -170,7 +177,9 @@ class TestFan(unittest.TestCase):
     def test_process_speed_step(self):
         """Test process / reading telegrams from telegram queue. Test if speed is processed."""
         xknx = XKNX()
-        fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3", mode=FanSpeedMode.Step)
+        fan = Fan(
+            xknx, name="TestFan", group_address_speed="1/2/3", mode=FanSpeedMode.Step
+        )
         self.assertEqual(fan.current_speed, None)
 
         telegram = Telegram(
