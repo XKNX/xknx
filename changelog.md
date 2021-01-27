@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.xx
+
+### Devices
+
+- Fan: Add "mode" parameter to control fans by steps instead of percentage.
+
 ## 0.16.2 Bugfix for yaml loader 2021-01-24
 
 ### Internals
