@@ -5,7 +5,13 @@ from unittest.mock import patch
 
 from xknx import XKNX
 from xknx.devices import Fan
-from xknx.devices.fan import FanSpeedMode
+from xknx.devices.fan import (
+    FAN_LEVEL_HIGH,
+    FAN_LEVEL_LOW,
+    FAN_LEVEL_MEDIUM,
+    FAN_LEVEL_OFF,
+    FanSpeedMode,
+)
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
@@ -203,6 +209,11 @@ class TestFan(unittest.TestCase):
         self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
         self.assertEqual(fan.current_speed, 25)
 
+        self.loop.run_until_complete(fan.do("level:medium"))
+        self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
+        self.assertEqual(fan.current_speed, 66)
+        self.assertEqual(fan.current_speed_level, FAN_LEVEL_MEDIUM)
+
     def test_wrong_do(self):
         """Test wrong do command."""
         xknx = XKNX()
@@ -226,3 +237,129 @@ class TestFan(unittest.TestCase):
         self.assertTrue(fan.has_group_address(GroupAddress("1/7/1")))
         self.assertTrue(fan.has_group_address(GroupAddress("1/7/2")))
         self.assertFalse(fan.has_group_address(GroupAddress("1/7/3")))
+
+    #
+    # TEST SET SPEED LEVEL
+    #
+    def test_set_speed_level(self):
+        """Test setting the speed level of a Fan."""
+
+        param_list = [
+            (FAN_LEVEL_OFF, 0),
+            (FAN_LEVEL_LOW, 84),
+            (FAN_LEVEL_MEDIUM, 168),
+            (FAN_LEVEL_HIGH, 255),
+        ]
+
+        for actual, expected in param_list:
+            with self.subTest():
+                xknx = XKNX()
+                fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
+                self.loop.run_until_complete(fan.set_speed_level(actual))
+                self.assertEqual(xknx.telegrams.qsize(), 1)
+                telegram = xknx.telegrams.get_nowait()
+                self.assertEqual(
+                    telegram,
+                    Telegram(
+                        destination_address=GroupAddress("1/2/3"),
+                        payload=GroupValueWrite(DPTArray(expected)),
+                    ),
+                )
+
+    #
+    # TEST SET SPEED LEVEL STEP MODE
+    #
+    def test_set_speed_level_step(self):
+        """Test setting the speed level of a Fan in step mode."""
+
+        param_list = [
+            (FAN_LEVEL_OFF, 0),
+            (FAN_LEVEL_LOW, 1),
+            (FAN_LEVEL_MEDIUM, 2),
+            (FAN_LEVEL_HIGH, 3),
+        ]
+
+        for actual, expected in param_list:
+            with self.subTest():
+                xknx = XKNX()
+                fan = Fan(
+                    xknx,
+                    name="TestFan",
+                    group_address_speed="1/2/3",
+                    mode=FanSpeedMode.Step,
+                    fan_value_off=0,
+                    fan_value_low=1,
+                    fan_value_medium=2,
+                    fan_value_high=3,
+                )
+                self.loop.run_until_complete(fan.set_speed_level(actual))
+                self.assertEqual(xknx.telegrams.qsize(), 1)
+                telegram = xknx.telegrams.get_nowait()
+                self.assertEqual(
+                    telegram,
+                    Telegram(
+                        destination_address=GroupAddress("1/2/3"),
+                        payload=GroupValueWrite(DPTArray(expected)),
+                    ),
+                )
+
+    #
+    # TEST PROCESS LEVEL PERCENT IN BETWEEN
+    #
+    def test_process_speed_level(self):
+        """Test process / reading telegrams from telegram queue. Test if speed_level is processed."""
+
+        param_list = [
+            (FAN_LEVEL_OFF, 0),
+            (FAN_LEVEL_LOW, 127),
+            (FAN_LEVEL_MEDIUM, 180),
+            (FAN_LEVEL_HIGH, 255),
+        ]
+
+        for expected, actual in param_list:
+            with self.subTest():
+                xknx = XKNX()
+                fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
+                self.assertEqual(fan.current_speed_level, None)
+
+                telegram = Telegram(
+                    destination_address=GroupAddress("1/2/3"),
+                    payload=GroupValueWrite(DPTArray(actual)),
+                )
+                self.loop.run_until_complete(fan.process(telegram))
+                self.assertEqual(fan.current_speed_level, expected)
+
+    #
+    # TEST PROCESS LEVEL STEP
+    #
+    def test_process_speed_level_step(self):
+        """Test process / reading telegrams from telegram queue. Test if speed_level is processed."""
+
+        param_list = [
+            (FAN_LEVEL_OFF, 0),
+            (FAN_LEVEL_LOW, 1),
+            (FAN_LEVEL_MEDIUM, 2),
+            (FAN_LEVEL_HIGH, 3),
+        ]
+
+        for expected, actual in param_list:
+            with self.subTest():
+                xknx = XKNX()
+                fan = Fan(
+                    xknx,
+                    name="TestFan",
+                    group_address_speed="1/2/3",
+                    mode=FanSpeedMode.Step,
+                    fan_value_off=0,
+                    fan_value_low=1,
+                    fan_value_medium=2,
+                    fan_value_high=3,
+                )
+                self.assertEqual(fan.current_speed_level, None)
+
+                telegram = Telegram(
+                    destination_address=GroupAddress("1/2/3"),
+                    payload=GroupValueWrite(DPTArray(actual)),
+                )
+                self.loop.run_until_complete(fan.process(telegram))
+                self.assertEqual(fan.current_speed_level, expected)

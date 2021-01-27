@@ -4,7 +4,8 @@
 
 ### Devices
 
-- Fan: Add "mode" parameter to control fans by steps instead of percentage.
+- Fan: Added "mode" parameter to control fans by steps instead of percentage.
+- Fan: Added 4 fixed levels ("off", "low", "medium", "high") with configurable speeds for each level.
 
 ## 0.16.2 Bugfix for yaml loader 2021-01-24
 

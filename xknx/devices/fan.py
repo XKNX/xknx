@@ -32,6 +32,16 @@ class FanSpeedMode(Enum):
 
 DEFAULT_MODE = FanSpeedMode.Percent
 
+DEFAULT_FAN_VALUE_OFF = 0
+DEFAULT_FAN_VALUE_LOW = 33
+DEFAULT_FAN_VALUE_MEDIUM = 66
+DEFAULT_FAN_VALUE_HIGH = 100
+
+FAN_LEVEL_OFF = "off"
+FAN_LEVEL_LOW = "low"
+FAN_LEVEL_MEDIUM = "medium"
+FAN_LEVEL_HIGH = "high"
+
 
 class Fan(Device):
     """Class for managing a fan."""
@@ -47,6 +57,10 @@ class Fan(Device):
         group_address_speed_state: Optional["GroupAddressableType"] = None,
         device_updated_cb: Optional[DeviceCallbackType] = None,
         mode: FanSpeedMode = DEFAULT_MODE,
+        fan_value_off: int = DEFAULT_FAN_VALUE_OFF,
+        fan_value_low: int = DEFAULT_FAN_VALUE_LOW,
+        fan_value_medium: int = DEFAULT_FAN_VALUE_MEDIUM,
+        fan_value_high: int = DEFAULT_FAN_VALUE_HIGH,
     ):
         """Initialize fan class."""
         # pylint: disable=too-many-arguments
@@ -73,6 +87,11 @@ class Fan(Device):
                 range_from=0,
                 range_to=100,
             )
+
+        self.fan_value_off = fan_value_off
+        self.fan_value_low = fan_value_low
+        self.fan_value_medium = fan_value_medium
+        self.fan_value_high = fan_value_high
 
     def _iter_remote_values(self) -> Iterator["RemoteValue"]:
         """Iterate the devices RemoteValue classes."""
@@ -103,10 +122,23 @@ class Fan(Device):
         """Set the fan to a desginated speed."""
         await self.speed.set(speed)
 
+    async def set_speed_level(self, level: str) -> None:
+        """Set the fan to a predefined level."""
+        if level == FAN_LEVEL_OFF:
+            await self.speed.set(self.fan_value_off)
+        elif level == FAN_LEVEL_LOW:
+            await self.speed.set(self.fan_value_low)
+        elif level == FAN_LEVEL_MEDIUM:
+            await self.speed.set(self.fan_value_medium)
+        elif level == FAN_LEVEL_HIGH:
+            await self.speed.set(self.fan_value_high)
+
     async def do(self, action: str) -> None:
         """Execute 'do' commands."""
         if action.startswith("speed:"):
             await self.set_speed(int(action[6:]))
+        elif action.startswith("level:"):
+            await self.set_speed_level(action[6:])
         else:
             logger.warning(
                 "Could not understand action %s for device %s", action, self.get_name()
@@ -120,3 +152,18 @@ class Fan(Device):
     def current_speed(self) -> Optional[int]:
         """Return current speed of fan."""
         return self.speed.value  # type: ignore
+
+    @property
+    def current_speed_level(self) -> Optional[str]:
+        """Return current speed level of fan."""
+        value = self.speed.value
+        if value is not None:
+            if value >= self.fan_value_high:
+                return FAN_LEVEL_HIGH
+            if value >= self.fan_value_medium:
+                return FAN_LEVEL_MEDIUM
+            if value >= self.fan_value_low or value > self.fan_value_off:
+                return FAN_LEVEL_LOW
+            if value == self.fan_value_off:
+                return FAN_LEVEL_OFF
+        return None
