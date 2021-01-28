@@ -142,6 +142,19 @@ class TestDevices(unittest.TestCase):
         self.assertTrue("Living-Room.Light_2" in xknx.devices)
         self.assertFalse("Living-Room.Light_3" in xknx.devices)
 
+    @patch.multiple(Device, __abstractmethods__=set())
+    def test_add_remove(self):
+        """Tesst add and remove functions."""
+        xknx = XKNX()
+        device1 = Device(xknx, "TestDevice1")
+        device2 = Device(xknx, "TestDevice2")
+        self.assertEqual(len(xknx.devices), 2)
+        device1.shutdown()
+        self.assertEqual(len(xknx.devices), 1)
+        self.assertFalse("TestDevice1" in xknx.devices)
+        device2.shutdown()
+        self.assertEqual(len(xknx.devices), 0)
+
     def test_modification_of_device(self):
         """Test if devices object does store references and not copies of objects."""
         xknx = XKNX()

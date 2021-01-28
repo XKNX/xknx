@@ -5,7 +5,6 @@ import logging
 import voluptuous as vol
 from xknx import XKNX
 from xknx.core.telegram_queue import TelegramQueue
-from xknx.devices import DateTime, ExposeSensor
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import XKNXException
 from xknx.io import (
@@ -18,26 +17,20 @@ from xknx.telegram import AddressFilter, GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from homeassistant.const import (
-    CONF_ENTITY_ID,
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
-from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import async_get_platforms
-from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ServiceCallType
 
 from .const import DOMAIN, SupportedPlatforms
+from .expose import create_knx_exposure
 from .factory import create_knx_device
 from .schema import (
     BinarySensorSchema,
@@ -74,6 +67,7 @@ SERVICE_XKNX_ATTR_PAYLOAD = "payload"
 SERVICE_XKNX_ATTR_TYPE = "type"
 SERVICE_XKNX_ATTR_REMOVE = "remove"
 SERVICE_XKNX_EVENT_REGISTER = "event_register"
+SERVICE_XKNX_EXPOSURE_REGISTER = "exposure_register"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -169,18 +163,39 @@ SERVICE_XKNX_EVENT_REGISTER_SCHEMA = vol.Schema(
     }
 )
 
+SERVICE_XKNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
+    ExposeSchema.SCHEMA.extend(
+        {
+            vol.Optional(SERVICE_XKNX_ATTR_REMOVE, default=False): cv.boolean,
+        }
+    ),
+    vol.Schema(
+        # for removing only `address` is required
+        {
+            vol.Required(SERVICE_XKNX_ATTR_ADDRESS): cv.string,
+            vol.Required(SERVICE_XKNX_ATTR_REMOVE): vol.All(cv.boolean, True),
+        },
+        extra=vol.ALLOW_EXTRA,
+    ),
+)
+
 
 async def async_setup(hass, config):
     """Set up the KNX component."""
     try:
         hass.data[DOMAIN] = KNXModule(hass, config)
-        hass.data[DOMAIN].async_create_exposures()
         await hass.data[DOMAIN].start()
     except XKNXException as ex:
         _LOGGER.warning("Could not connect to KNX interface: %s", ex)
         hass.components.persistent_notification.async_create(
             f"Could not connect to KNX interface: <br><b>{ex}</b>", title="KNX"
         )
+
+    if CONF_XKNX_EXPOSE in config[DOMAIN]:
+        for expose_config in config[DOMAIN][CONF_XKNX_EXPOSE]:
+            hass.data[DOMAIN].exposures.append(
+                create_knx_exposure(hass, hass.data[DOMAIN].xknx, expose_config)
+            )
 
     for platform in SupportedPlatforms:
         if platform.value in config[DOMAIN]:
@@ -212,6 +227,14 @@ async def async_setup(hass, config):
         SERVICE_XKNX_EVENT_REGISTER,
         hass.data[DOMAIN].service_event_register_modify,
         schema=SERVICE_XKNX_EVENT_REGISTER_SCHEMA,
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_XKNX_EXPOSURE_REGISTER,
+        hass.data[DOMAIN].service_exposure_register_modify,
+        schema=SERVICE_XKNX_EXPOSURE_REGISTER_SCHEMA,
     )
 
     async def reload_service_handler(service_call: ServiceCallType) -> None:
@@ -248,6 +271,7 @@ class KNXModule:
         self.config = config
         self.connected = False
         self.exposures = []
+        self.service_exposures = {}
 
         self.init_xknx()
         self._knx_event_callback: TelegramQueue.Callback = self.register_callback()
@@ -316,34 +340,6 @@ class KNXModule:
             auto_reconnect=True,
         )
 
-    @callback
-    def async_create_exposures(self):
-        """Create exposures."""
-        if CONF_XKNX_EXPOSE not in self.config[DOMAIN]:
-            return
-        for to_expose in self.config[DOMAIN][CONF_XKNX_EXPOSE]:
-            expose_type = to_expose.get(ExposeSchema.CONF_XKNX_EXPOSE_TYPE)
-            entity_id = to_expose.get(CONF_ENTITY_ID)
-            attribute = to_expose.get(ExposeSchema.CONF_XKNX_EXPOSE_ATTRIBUTE)
-            default = to_expose.get(ExposeSchema.CONF_XKNX_EXPOSE_DEFAULT)
-            address = to_expose.get(ExposeSchema.CONF_XKNX_EXPOSE_ADDRESS)
-            if expose_type.lower() in ["time", "date", "datetime"]:
-                exposure = KNXExposeTime(self.xknx, expose_type, address)
-                exposure.async_register()
-                self.exposures.append(exposure)
-            else:
-                exposure = KNXExposeSensor(
-                    self.hass,
-                    self.xknx,
-                    expose_type,
-                    entity_id,
-                    attribute,
-                    default,
-                    address,
-                )
-                exposure.async_register()
-                self.exposures.append(exposure)
-
     async def telegram_received_cb(self, telegram):
         """Call invoked after a KNX telegram was received."""
         data = None
@@ -378,9 +374,51 @@ class KNXModule:
         """Service for adding or removing a GroupAddress to the knx_event filter."""
         group_address = GroupAddress(call.data.get(SERVICE_XKNX_ATTR_ADDRESS))
         if call.data.get(SERVICE_XKNX_ATTR_REMOVE):
-            self._knx_event_callback.group_addresses.remove(group_address)
+            try:
+                self._knx_event_callback.group_addresses.remove(group_address)
+            except ValueError:
+                _LOGGER.warning(
+                    "Service event_register could not remove event for '%s'",
+                    group_address,
+                )
         elif group_address not in self._knx_event_callback.group_addresses:
             self._knx_event_callback.group_addresses.append(group_address)
+            _LOGGER.debug(
+                "Service event_register registered event for '%s'",
+                group_address,
+            )
+
+    async def service_exposure_register_modify(self, call):
+        """Service for adding or removing an exposure to KNX bus."""
+        group_address = call.data.get(SERVICE_XKNX_ATTR_ADDRESS)
+
+        if call.data.get(SERVICE_XKNX_ATTR_REMOVE):
+            try:
+                removed_exposure = self.service_exposures.pop(group_address)
+            except KeyError:
+                _LOGGER.warning(
+                    "Service exposure_register could not remove exposure for '%s'",
+                    group_address,
+                )
+            else:
+                removed_exposure.shutdown()
+            return
+
+        if group_address in self.service_exposures:
+            replaced_exposure = self.service_exposures.pop(group_address)
+            _LOGGER.warning(
+                "Service exposure_register replacing already registered exposure for '%s' - %s",
+                group_address,
+                replaced_exposure.device.name,
+            )
+            replaced_exposure.shutdown()
+        exposure = create_knx_exposure(self.hass, self.xknx, call.data)
+        self.service_exposures[group_address] = exposure
+        _LOGGER.debug(
+            "Service exposure_register registered exposure for '%s' - %s",
+            group_address,
+            exposure.device.name,
+        )
 
     async def service_send_to_knx_bus(self, call):
         """Service for sending an arbitrary KNX message to the KNX bus."""
@@ -404,93 +442,3 @@ class KNXModule:
             payload=GroupValueWrite(calculate_payload(attr_payload)),
         )
         await self.xknx.telegrams.put(telegram)
-
-
-class KNXExposeTime:
-    """Object to Expose Time/Date object to KNX bus."""
-
-    def __init__(self, xknx: XKNX, expose_type: str, address: str):
-        """Initialize of Expose class."""
-        self.xknx = xknx
-        self.expose_type = expose_type
-        self.address = address
-        self.device = None
-
-    @callback
-    def async_register(self):
-        """Register listener."""
-        self.device = DateTime(
-            self.xknx,
-            name=self.expose_type.capitalize(),
-            broadcast_type=self.expose_type.upper(),
-            localtime=True,
-            group_address=self.address,
-        )
-
-
-class KNXExposeSensor:
-    """Object to Expose Home Assistant entity to KNX bus."""
-
-    def __init__(self, hass, xknx, expose_type, entity_id, attribute, default, address):
-        """Initialize of Expose class."""
-        self.hass = hass
-        self.xknx = xknx
-        self.type = expose_type
-        self.entity_id = entity_id
-        self.expose_attribute = attribute
-        self.expose_default = default
-        self.address = address
-        self.device = None
-
-    @callback
-    def async_register(self):
-        """Register listener."""
-        if self.expose_attribute is not None:
-            _name = self.entity_id + "__" + self.expose_attribute
-        else:
-            _name = self.entity_id
-        self.device = ExposeSensor(
-            self.xknx,
-            name=_name,
-            group_address=self.address,
-            value_type=self.type,
-        )
-        async_track_state_change_event(
-            self.hass, [self.entity_id], self._async_entity_changed
-        )
-
-    async def _async_entity_changed(self, event):
-        """Handle entity change."""
-        new_state = event.data.get("new_state")
-        if new_state is None:
-            return
-        if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            return
-
-        if self.expose_attribute is not None:
-            new_attribute = new_state.attributes.get(self.expose_attribute)
-            old_state = event.data.get("old_state")
-
-            if old_state is not None:
-                old_attribute = old_state.attributes.get(self.expose_attribute)
-                if old_attribute == new_attribute:
-                    # don't send same value sequentially
-                    return
-            await self._async_set_knx_value(new_attribute)
-        else:
-            await self._async_set_knx_value(new_state.state)
-
-    async def _async_set_knx_value(self, value):
-        """Set new value on xknx ExposeSensor."""
-        if value is None:
-            if self.expose_default is None:
-                return
-            value = self.expose_default
-
-        if self.type == "binary":
-            if value == STATE_ON:
-                value = True
-            elif value == STATE_OFF:
-                value = False
-
-        await self.device.set(value)
