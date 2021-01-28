@@ -233,7 +233,7 @@ class GroupValueRead(APCI):
         """Return object as readable string."""
         return "<GroupValueRead />"
 
-
+'''
 class Connect(APCI):
     """
     GroupValueRead service.
@@ -260,7 +260,7 @@ class Connect(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return "<Connect />"
-
+'''
 
 class GroupValueWrite(APCI):
     """

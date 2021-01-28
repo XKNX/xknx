@@ -15,9 +15,14 @@ It contains
 """
 from enum import Enum
 from typing import Optional, Union
+#from xknx.knxip.knxip_enum import TPDUType
 
 from .address import GroupAddress, IndividualAddress
 from .apci import APCI
+
+class TPDUType(Enum):
+        T_DATA = 0
+        T_Connect = 1
 
 
 class TelegramDirection(Enum):
@@ -37,12 +42,14 @@ class Telegram:
         direction: TelegramDirection = TelegramDirection.OUTGOING,
         payload: Optional[APCI] = None,
         source_address: IndividualAddress = IndividualAddress(0),
+        tpdu_type: TPDUType = TPDUType.T_DATA,
     ) -> None:
         """Initialize Telegram class."""
         self.destination_address = destination_address
         self.direction = direction
         self.payload = payload
         self.source_address = source_address
+        self.tpdu_type = tpdu_type
 
     def __str__(self) -> str:
         """Return object as readable string."""

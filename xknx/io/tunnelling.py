@@ -10,12 +10,11 @@ from xknx.knxip import (
 )
 
 from .request_response import RequestResponse
-from xknx.telegram import Telegram
-from xknx.knxip.tpdu import TPDUTelegram
+from xknx.telegram.telegram import TPDUType
 from xknx.knxip.tpdu import TPDU
+#from xknx.knxip import TPDUType
 
 if TYPE_CHECKING:
-    from xknx.telegram import IndividualAddress, Telegram
     from xknx.xknx import XKNX
 
     from .udp_client import UDPClient
@@ -47,23 +46,24 @@ class Tunnelling(RequestResponse):
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent on bus."""
-        if isinstance(self.telegram, TPDUTelegram):
-            cemi = TPDU.init_from_telegram(
+        if self.telegram.tpdu_type == TPDUType.T_Connect:
+            pdu = TPDU.init_from_telegram(
                 self.xknx,
                 telegram=self.telegram,
                 src_addr=self.src_address,)
-        else:
-            cemi = CEMIFrame.init_from_telegram(
+        elif self.telegram.tpdu_type == TPDUType.T_DATA:
+            pdu = CEMIFrame.init_from_telegram(
                 self.xknx,
                 telegram=self.telegram,
                 code=CEMIMessageCode.L_Data_REQ,
                 src_addr=self.src_address,
             )
-
+        else:
+            raise RuntimeError("Unknown TelegramType:" + self.telegram.tpdu_type)
         tunnelling_request = TunnellingRequest(
             self.xknx,
             communication_channel_id=self.communication_channel_id,
             sequence_counter=self.sequence_counter,
-            cemi=cemi,
+            cemi=pdu,
         )
         return KNXIPFrame.init_from_body(tunnelling_request)
