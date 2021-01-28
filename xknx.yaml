@@ -307,3 +307,5 @@ groups:
             expose_sensors: False,
             sync_state: True,
           }
+
+
