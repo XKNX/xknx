@@ -11,7 +11,7 @@ from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from .remote_value import RemoteValue
 
 
-class RemoteValueSwitch(RemoteValue):
+class RemoteValueSwitch(RemoteValue[DPTBinary]):
     """Abstraction for remote value of KNX DPT 1.001 / DPT_Switch."""
 
     def __init__(
@@ -42,7 +42,7 @@ class RemoteValueSwitch(RemoteValue):
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
-        return isinstance(payload, DPTBinary)
+        return payload if isinstance(payload, DPTBinary) else None
 
     def to_knx(self, value: bool):
         """Convert value to payload."""

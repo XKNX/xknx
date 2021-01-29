@@ -12,7 +12,7 @@ from xknx.exceptions import ConversionError
 from .remote_value import RemoteValue
 
 
-class RemoteValueControl(RemoteValue):
+class RemoteValueControl(RemoteValue[DPTBinary]):
     """Abstraction for remote value used for controling."""
 
     def __init__(
@@ -50,7 +50,7 @@ class RemoteValueControl(RemoteValue):
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
-        return isinstance(payload, DPTBinary)
+        return payload if isinstance(payload, DPTBinary) else None
 
     def to_knx(self, value):
         """Convert value to payload."""

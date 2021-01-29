@@ -228,7 +228,7 @@ class ClimateMode(Device):
 
     def _iter_remote_values(
         self,
-    ) -> Iterator["RemoteValue"]:
+    ) -> Iterator["RemoteValue[Any]"]:
         """Iterate climate mode RemoteValue classes."""
         return chain(
             self._iter_byte_operation_modes(),
@@ -238,7 +238,7 @@ class ClimateMode(Device):
 
     def _iter_byte_operation_modes(
         self,
-    ) -> Iterator[RemoteValueOperationMode]:
+    ) -> Iterator[RemoteValueClimateModeBase[Any, HVACOperationMode]]:
         """Iterate normal DPT 20.102 operation mode remote values."""
         yield from (
             self.remote_value_operation_mode,
@@ -247,14 +247,14 @@ class ClimateMode(Device):
 
     def _iter_controller_remote_values(
         self,
-    ) -> Iterator[RemoteValueClimateModeBase[HVACControllerMode]]:
+    ) -> Iterator[RemoteValueClimateModeBase[Any, HVACControllerMode]]:
         """Iterate DPT 20.105 controller remote values."""
-        yield from (
-            self.remote_value_controller_mode,
-            self.remote_value_heat_cool,
-        )
+        yield self.remote_value_controller_mode
+        yield self.remote_value_heat_cool
 
-    def _iter_binary_operation_modes(self) -> Iterator[RemoteValueBinaryOperationMode]:
+    def _iter_binary_operation_modes(
+        self,
+    ) -> Iterator[RemoteValueClimateModeBase[Any, HVACOperationMode]]:
         """Iterate DPT 1 binary operation modes."""
         yield from (
             self.remote_value_operation_mode_comfort,
@@ -289,7 +289,7 @@ class ClimateMode(Device):
                 "operation (preset) mode not supported", str(operation_mode)
             )
 
-        rv: RemoteValueClimateModeBase[HVACOperationMode]
+        rv: RemoteValueClimateModeBase[Any, HVACOperationMode]
         for rv in chain(
             self._iter_byte_operation_modes(), self._iter_binary_operation_modes()
         ):
@@ -308,7 +308,7 @@ class ClimateMode(Device):
                 "controller (HVAC) mode not supported", str(controller_mode)
             )
 
-        rv: RemoteValueClimateModeBase[HVACControllerMode]
+        rv: RemoteValueClimateModeBase[Any, HVACControllerMode]
         for rv in self._iter_controller_remote_values():
             if rv.writable and controller_mode in rv.supported_operation_modes():
                 await rv.set(controller_mode)

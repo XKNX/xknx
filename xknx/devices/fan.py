@@ -74,7 +74,7 @@ class Fan(Device):
                 range_to=100,
             )
 
-    def _iter_remote_values(self) -> Iterator["RemoteValue"]:
+    def _iter_remote_values(self) -> Iterator["RemoteValue[Any]"]:
         """Iterate the devices RemoteValue classes."""
         yield self.speed
 

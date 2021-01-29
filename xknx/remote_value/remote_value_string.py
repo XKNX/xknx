@@ -8,14 +8,16 @@ from xknx.dpt import DPTArray, DPTString
 from .remote_value import RemoteValue
 
 
-class RemoteValueString(RemoteValue):
+class RemoteValueString(RemoteValue[DPTArray]):
     """Abstraction for remote value of KNX 16.000 (DPT_String_ASCII)."""
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
         return (
-            isinstance(payload, DPTArray)
+            payload
+            if isinstance(payload, DPTArray)
             and len(payload.value) == DPTString.payload_length
+            else None
         )
 
     def to_knx(self, value):

@@ -21,7 +21,7 @@ class DateTimeType(Enum):
     TIME = DPTTime
 
 
-class RemoteValueDateTime(RemoteValue):
+class RemoteValueDateTime(RemoteValue[DPTArray]):
     """Abstraction for remote value of KNX 10.001, 11.001 and 19.001 time and date objects."""
 
     def __init__(
@@ -61,8 +61,10 @@ class RemoteValueDateTime(RemoteValue):
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
         return (
-            isinstance(payload, DPTArray)
+            payload
+            if isinstance(payload, DPTArray)
             and len(payload.value) == self.dpt_class.payload_length
+            else None
         )
 
     def to_knx(self, value: time.struct_time):

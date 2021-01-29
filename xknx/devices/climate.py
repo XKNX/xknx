@@ -125,7 +125,7 @@ class Climate(Device):
 
         self.mode = mode
 
-    def _iter_remote_values(self) -> Iterator["RemoteValue"]:
+    def _iter_remote_values(self) -> Iterator["RemoteValue[Any]"]:
         """Iterate the devices RemoteValue classes."""
         yield from (
             self.temperature,

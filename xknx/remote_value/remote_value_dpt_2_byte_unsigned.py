@@ -10,7 +10,7 @@ from xknx.dpt import DPT2ByteUnsigned, DPTArray
 from .remote_value import RemoteValue
 
 
-class RemoteValueDpt2ByteUnsigned(RemoteValue):
+class RemoteValueDpt2ByteUnsigned(RemoteValue[DPTArray]):
     """Abstraction for remote value of KNX DPT 7.001."""
 
     def __init__(
@@ -37,7 +37,11 @@ class RemoteValueDpt2ByteUnsigned(RemoteValue):
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
-        return isinstance(payload, DPTArray) and len(payload.value) == 2
+        return (
+            payload
+            if isinstance(payload, DPTArray) and len(payload.value) == 2
+            else None
+        )
 
     def to_knx(self, value):
         """Convert value to payload."""

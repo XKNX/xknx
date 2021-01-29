@@ -1,8 +1,10 @@
 """Implementation of Basic KNX datatypes."""
 from abc import ABC, abstractmethod
-from typing import Any, Iterator, List, Optional, Tuple, Type, Union, cast
+from typing import Any, Iterator, List, Optional, Tuple, Type, TypeVar, Union, cast
 
 from xknx.exceptions import ConversionError
+
+DPTPayloadType = TypeVar("DPTPayloadType", "DPTArray", "DPTBinary")
 
 
 class DPTBase(ABC):

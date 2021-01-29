@@ -11,7 +11,7 @@ from xknx.exceptions import ConversionError
 from .remote_value import RemoteValue
 
 
-class RemoteValueColorRGBW(RemoteValue):
+class RemoteValueColorRGBW(RemoteValue[DPTArray]):
     """Abstraction for remote value of KNX DPT 251.600 (DPT_Color_RGBW)."""
 
     def __init__(
@@ -39,7 +39,11 @@ class RemoteValueColorRGBW(RemoteValue):
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
-        return isinstance(payload, DPTArray) and len(payload.value) == 6
+        return (
+            payload
+            if isinstance(payload, DPTArray) and len(payload.value) == 6
+            else None
+        )
 
     def to_knx(self, value):
         """

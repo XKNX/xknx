@@ -12,7 +12,7 @@ from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from .remote_value import RemoteValue
 
 
-class RemoteValueUpDown(RemoteValue):
+class RemoteValueUpDown(RemoteValue[DPTBinary]):
     """Abstraction for remote value of KNX DPT 1.008 / DPT_UpDown."""
 
     class Direction(Enum):
@@ -48,7 +48,7 @@ class RemoteValueUpDown(RemoteValue):
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
-        return isinstance(payload, DPTBinary)
+        return payload if isinstance(payload, DPTBinary) else None
 
     def to_knx(self, value):
         """Convert value to payload."""
