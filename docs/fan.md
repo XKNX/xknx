@@ -18,8 +18,7 @@ Fans are simple representations of KNX controlled fans. They support setting the
 - `group_address` is the KNX group address of the fan device. Used for sending.
 - `group_address_state` is the KNX group address of the fan state. Used for updating and reading state.
 - `device_updated_cb` awaitable callback for each update.
-- `mode` Enum for the type of the fan control. Can be *Percent* or *Step*. Default: FanSpeedMode.Percent
-- `max_step` Maximum step amount for fans using *FanSpeedMode.Step*. Default: 255
+- `max_step` Maximum step amount for fans which are controlled with steps and not percentage. If set, the percentage will be converted to steps before  to knx.
 
 ## [](#header-2)Example
 

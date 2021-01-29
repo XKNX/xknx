@@ -4,7 +4,7 @@
 
 ### Devices
 
-- Fan: Add `mode` and `max_step` to control fans by step instead of percentage. The `max_step` parameter is used to limit the amount of steps. Percentage speed is converted to steps before sending to KNX.
+- Fan: Add `max_step` attribute which defines the maximum amount of steps. If set, the fan is controlled by steps instead of percentage. Percentage speed is converted to steps before it's sent to KNX.
 
 ## 0.16.2 Bugfix for yaml loader 2021-01-24
 
