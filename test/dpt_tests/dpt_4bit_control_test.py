@@ -23,15 +23,6 @@ class TestDPTControlStepCode(unittest.TestCase):
             )
             self.assertEqual(raw, rawref)
 
-    def test_to_knx_inverted(self):
-        """Test serializing values to DPTControlStepCode in inverted mode."""
-        for rawref in range(16):
-            control = 0 if rawref >> 3 else 1
-            raw = DPTControlStepCode.to_knx(
-                {"control": control, "step_code": rawref & 0x07}, invert=True
-            )
-            self.assertEqual(raw, rawref)
-
     def test_to_knx_wrong_type(self):
         """Test serializing wrong type to DPTControlStepCode."""
         with self.assertRaises(ConversionError):
@@ -70,14 +61,6 @@ class TestDPTControlStepCode(unittest.TestCase):
             control = 1 if raw >> 3 else 0
             valueref = {"control": control, "step_code": raw & 0x07}
             value = DPTControlStepCode.from_knx(raw)
-            self.assertEqual(value, valueref)
-
-    def test_from_knx_inverted(self):
-        """Test parsing DPTControlStepCode types from KNX."""
-        for raw in range(16):
-            control = 0 if raw >> 3 else 1
-            valueref = {"control": control, "step_code": raw & 0x07}
-            value = DPTControlStepCode.from_knx(raw, invert=True)
             self.assertEqual(value, valueref)
 
     def test_from_knx_wrong_value(self):

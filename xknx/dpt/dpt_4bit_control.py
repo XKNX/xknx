@@ -61,7 +61,7 @@ class DPTControlStepCode(DPTBase):
         return False
 
     @classmethod
-    def to_knx(cls, value, invert: bool = False):
+    def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
         if not isinstance(value, dict):
             raise ConversionError(
@@ -81,21 +81,15 @@ class DPTControlStepCode(DPTBase):
                 "Cant serialize %s; invalid values" % cls.__name__, value=value
             )
 
-        if invert:
-            control = 0 if control > 0 else 1
-
         return cls._encode(control, step_code)
 
     @classmethod
-    def from_knx(cls, raw, invert: bool = False):
+    def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
         if not cls._test_boundaries(raw):
             raise ConversionError("Cant parse %s" % cls.__name__, raw=raw)
 
         control, step_code = cls._decode(raw)
-
-        if invert:
-            control = 0 if control > 0 else 1
 
         return {"control": control, "step_code": step_code}
 
@@ -144,17 +138,17 @@ class DPTControlStepwise(DPTControlStepCode):
         return inc if value["control"] == 1 else -inc
 
     @classmethod
-    def to_knx(cls, value, invert: bool = False):
+    def to_knx(cls, value):
         """Serialize to KNX/IP raw data."""
         if not isinstance(value, int):
             raise ConversionError("Cant serialize %s" % cls.__name__, value=value)
 
-        return super().to_knx(cls._from_increment(value), invert)
+        return super().to_knx(cls._from_increment(value))
 
     @classmethod
-    def from_knx(cls, raw, invert: bool = False):
+    def from_knx(cls, raw):
         """Parse/deserialize from KNX/IP raw data."""
-        return cls._to_increment(super().from_knx(raw, invert))
+        return cls._to_increment(super().from_knx(raw))
 
 
 class DPTControlStepwiseDimming(DPTControlStepwise):
@@ -199,7 +193,7 @@ class DPTControlStartStop(DPTControlStepCode):
         STOP = 2
 
     @classmethod
-    def to_knx(cls, value, invert: bool = False):
+    def to_knx(cls, value):
         """Convert value to payload."""
         control = 0
         step_code = 0
@@ -216,12 +210,12 @@ class DPTControlStartStop(DPTControlStepCode):
             raise ConversionError("Cant serialize %s" % cls.__name__, value=value)
 
         values = {"control": control, "step_code": step_code}
-        return super().to_knx(values, invert)
+        return super().to_knx(values)
 
     @classmethod
-    def from_knx(cls, raw, invert: bool = False):
+    def from_knx(cls, raw):
         """Convert current payload to value."""
-        values = super().from_knx(raw, invert)
+        values = super().from_knx(raw)
         if values["step_code"] == 0:
             return cls.Direction(2)  # STOP
         if values["control"] == 0:

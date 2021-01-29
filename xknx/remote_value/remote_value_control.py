@@ -25,12 +25,10 @@ class RemoteValueControl(RemoteValue[DPTBinary]):
         device_name=None,
         feature_name="Control",
         after_update_cb=None,
-        invert=False,
         passive_group_addresses: List[str] = None,
     ):
         """Initialize control remote value."""
         # pylint: disable=too-many-arguments
-        self.invert = invert
         _dpt_class = DPTBase.parse_transcoder(value_type)
         if _dpt_class is None:
             raise ConversionError(
@@ -54,11 +52,11 @@ class RemoteValueControl(RemoteValue[DPTBinary]):
 
     def to_knx(self, value):
         """Convert value to payload."""
-        return DPTBinary(self.dpt_class.to_knx(value, invert=self.invert))
+        return DPTBinary(self.dpt_class.to_knx(value))
 
     def from_knx(self, payload):
         """Convert current payload to value."""
-        return self.dpt_class.from_knx(payload.value, invert=self.invert)
+        return self.dpt_class.from_knx(payload.value)
 
     @property
     def unit_of_measurement(self) -> Optional[str]:
