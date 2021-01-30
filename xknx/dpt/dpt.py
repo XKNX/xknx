@@ -147,8 +147,10 @@ class DPTBinary:
     APCI_BITMASK = 0x3F
     APCI_MAX_VALUE = APCI_BITMASK
 
-    def __init__(self, value: int) -> None:
+    def __init__(self, value: Union[int, Tuple[int]]) -> None:
         """Initialize DPTBinary class."""
+        if isinstance(value, tuple):
+            value = value[0]
         if not isinstance(value, int):
             raise TypeError()
         if value > DPTBinary.APCI_BITMASK:

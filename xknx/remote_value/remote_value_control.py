@@ -48,6 +48,7 @@ class RemoteValueControl(RemoteValue[DPTBinary]):
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
+        # pylint: disable=no-self-use
         return payload if isinstance(payload, DPTBinary) else None
 
     def to_knx(self, value):
@@ -56,7 +57,8 @@ class RemoteValueControl(RemoteValue[DPTBinary]):
 
     def from_knx(self, payload):
         """Convert current payload to value."""
-        return self.dpt_class.from_knx(payload.value)
+        # TODO: DPTBinary.value is int - DPTBase.from_knx requires Tuple[int, ...] - maybe use bytes
+        return self.dpt_class.from_knx((payload.value,))
 
     @property
     def unit_of_measurement(self) -> Optional[str]:
