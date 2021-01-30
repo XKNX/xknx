@@ -41,6 +41,7 @@ class RemoteValueScaling(RemoteValue[DPTArray]):
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
+        # pylint: disable=no-self-use
         return (
             payload
             if isinstance(payload, DPTArray) and len(payload.value) == 1

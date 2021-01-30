@@ -42,6 +42,7 @@ class RemoteValueSwitch(RemoteValue[DPTBinary]):
 
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
+        # pylint: disable=no-self-use
         return payload if isinstance(payload, DPTBinary) else None
 
     def to_knx(self, value: bool):

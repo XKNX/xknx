@@ -11,6 +11,8 @@ from .remote_value import RemoteValue
 class RemoteValueSceneNumber(RemoteValue[DPTArray]):
     """Abstraction for remote value of KNX DPT 17.001 (DPT_Scene_Number)."""
 
+    # pylint: disable=no-self-use
+
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
         return (

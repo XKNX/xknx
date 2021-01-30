@@ -13,6 +13,8 @@ from .remote_value import RemoteValue
 class RemoteValueDpt2ByteUnsigned(RemoteValue[DPTArray]):
     """Abstraction for remote value of KNX DPT 7.001."""
 
+    # pylint: disable=no-self-use
+
     def __init__(
         self,
         xknx,
