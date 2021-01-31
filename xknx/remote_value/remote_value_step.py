@@ -4,12 +4,16 @@ Module for managing an DPT Step remote value.
 DPT 1.007.
 """
 from enum import Enum
-from typing import List
+from typing import TYPE_CHECKING, List, Optional, Union
 
-from xknx.dpt import DPTBinary
+from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
-from .remote_value import RemoteValue
+from .remote_value import AsyncCallbackType, RemoteValue
+
+if TYPE_CHECKING:
+    from xknx.telegram.address import GroupAddressableType
+    from xknx.xknx import XKNX
 
 
 class RemoteValueStep(RemoteValue[DPTBinary]):
@@ -23,14 +27,14 @@ class RemoteValueStep(RemoteValue[DPTBinary]):
 
     def __init__(
         self,
-        xknx,
-        group_address=None,
-        group_address_state=None,
-        device_name=None,
-        feature_name="Step",
-        after_update_cb=None,
-        invert=False,
-        passive_group_addresses: List[str] = None,
+        xknx: "XKNX",
+        group_address: Optional["GroupAddressableType"] = None,
+        group_address_state: Optional["GroupAddressableType"] = None,
+        device_name: Optional[str] = None,
+        feature_name: str = "Step",
+        after_update_cb: Optional[AsyncCallbackType] = None,
+        invert: bool = False,
+        passive_group_addresses: Optional[List["GroupAddressableType"]] = None,
     ):
         """Initialize remote value of KNX DPT 1.007."""
         # pylint: disable=too-many-arguments
@@ -45,7 +49,9 @@ class RemoteValueStep(RemoteValue[DPTBinary]):
         )
         self.invert = invert
 
-    def payload_valid(self, payload):
+    def payload_valid(
+        self, payload: Optional[Union[DPTArray, DPTBinary]]
+    ) -> Optional[DPTBinary]:
         """Test if telegram payload may be parsed."""
         # pylint: disable=no-self-use
         return payload if isinstance(payload, DPTBinary) else None
@@ -54,7 +60,7 @@ class RemoteValueStep(RemoteValue[DPTBinary]):
     # 1.007 DPT_Step   0 = Decrease 1 = Increase
     # 1.008 DPT_UpDown 0 = Up       1 = Down
 
-    def to_knx(self, value):
+    def to_knx(self, value: "RemoteValueStep.Direction") -> DPTBinary:
         """Convert value to payload."""
         if value == self.Direction.INCREASE:
             return DPTBinary(0) if self.invert else DPTBinary(1)
@@ -67,7 +73,7 @@ class RemoteValueStep(RemoteValue[DPTBinary]):
             feature_name=self.feature_name,
         )
 
-    def from_knx(self, payload):
+    def from_knx(self, payload: DPTBinary) -> "RemoteValueStep.Direction":
         """Convert current payload to value."""
         if payload == DPTBinary(1):
             return self.Direction.DECREASE if self.invert else self.Direction.INCREASE

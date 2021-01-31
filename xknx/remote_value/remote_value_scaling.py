@@ -3,11 +3,15 @@ Module for managing a Scaling remote value.
 
 DPT 5.001.
 """
-from typing import List
+from typing import TYPE_CHECKING, List, Optional, Union
 
-from xknx.dpt import DPTArray
+from xknx.dpt import DPTArray, DPTBinary
 
-from .remote_value import RemoteValue
+from .remote_value import AsyncCallbackType, RemoteValue
+
+if TYPE_CHECKING:
+    from xknx.telegram.address import GroupAddressableType
+    from xknx.xknx import XKNX
 
 
 class RemoteValueScaling(RemoteValue[DPTArray]):
@@ -15,15 +19,15 @@ class RemoteValueScaling(RemoteValue[DPTArray]):
 
     def __init__(
         self,
-        xknx,
-        group_address=None,
-        group_address_state=None,
-        device_name=None,
-        feature_name="Value",
-        after_update_cb=None,
-        range_from=0,
-        range_to=100,
-        passive_group_addresses: List[str] = None,
+        xknx: "XKNX",
+        group_address: Optional["GroupAddressableType"] = None,
+        group_address_state: Optional["GroupAddressableType"] = None,
+        device_name: Optional[str] = None,
+        feature_name: str = "Value",
+        after_update_cb: Optional[AsyncCallbackType] = None,
+        range_from: int = 0,
+        range_to: int = 100,
+        passive_group_addresses: Optional[List["GroupAddressableType"]] = None,
     ):
         """Initialize remote value of KNX DPT 5.001 (DPT_Scaling)."""
         # pylint: disable=too-many-arguments
@@ -39,7 +43,9 @@ class RemoteValueScaling(RemoteValue[DPTArray]):
         self.range_from = range_from
         self.range_to = range_to
 
-    def payload_valid(self, payload):
+    def payload_valid(
+        self, payload: Optional[Union[DPTArray, DPTBinary]]
+    ) -> Optional[DPTArray]:
         """Test if telegram payload may be parsed."""
         # pylint: disable=no-self-use
         return (
@@ -48,26 +54,26 @@ class RemoteValueScaling(RemoteValue[DPTArray]):
             else None
         )
 
-    def to_knx(self, value):
+    def to_knx(self, value: float) -> DPTArray:
         """Convert value to payload."""
         knx_value = self._calc_to_knx(self.range_from, self.range_to, value)
         return DPTArray(knx_value)
 
-    def from_knx(self, payload):
+    def from_knx(self, payload: DPTArray) -> int:
         """Convert current payload to value."""
         return self._calc_from_knx(self.range_from, self.range_to, payload.value[0])
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> Optional[str]:
         """Return the unit of measurement."""
         return "%"
 
     @staticmethod
-    def _calc_from_knx(range_from, range_to, raw):
+    def _calc_from_knx(range_from: int, range_to: int, raw: int) -> int:
         delta = range_to - range_from
         return round((raw / 255) * delta) + range_from
 
     @staticmethod
-    def _calc_to_knx(range_from, range_to, value):
+    def _calc_to_knx(range_from: int, range_to: int, value: float) -> int:
         delta = range_to - range_from
         return round((value - range_from) / delta * 255)

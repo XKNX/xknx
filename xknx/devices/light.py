@@ -534,7 +534,7 @@ class Light(Device):
         await self.brightness.set(brightness)
 
     @property
-    def current_color(self) -> Tuple[Optional[List[int]], Optional[int]]:
+    def current_color(self) -> Tuple[Optional[Tuple[int, int, int]], Optional[int]]:
         """
         Return current color of light.
 
@@ -548,11 +548,11 @@ class Light(Device):
         if self.color.initialized:
             return self.color.value, None
         # individual RGB addresses - white will return None when it is not initialized
-        colors = [
+        colors = (
             self.red.brightness.value,
             self.green.brightness.value,
             self.blue.brightness.value,
-        ]
+        )
         if None in colors:
             return None, self.white.brightness.value
         return colors, self.white.brightness.value

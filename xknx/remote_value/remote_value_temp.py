@@ -3,7 +3,9 @@ Module for managing a remote temperature value.
 
 DPT 9.001.
 """
-from xknx.dpt import DPTArray, DPTTemperature
+from typing import Optional, Union
+
+from xknx.dpt import DPTArray, DPTBinary, DPTTemperature
 
 from .remote_value import RemoteValue
 
@@ -13,7 +15,9 @@ class RemoteValueTemp(RemoteValue[DPTArray]):
 
     # pylint: disable=no-self-use
 
-    def payload_valid(self, payload):
+    def payload_valid(
+        self, payload: Optional[Union[DPTArray, DPTBinary]]
+    ) -> Optional[DPTArray]:
         """Test if telegram payload may be parsed."""
         return (
             payload
@@ -21,10 +25,10 @@ class RemoteValueTemp(RemoteValue[DPTArray]):
             else None
         )
 
-    def to_knx(self, value):
+    def to_knx(self, value: float) -> DPTArray:
         """Convert value to payload."""
         return DPTArray(DPTTemperature.to_knx(value))
 
-    def from_knx(self, payload):
+    def from_knx(self, payload: DPTArray) -> float:
         """Convert current payload to value."""
         return DPTTemperature.from_knx(payload.value)

@@ -5,12 +5,16 @@ DPT 10.001, 11.001 and 19.001
 """
 from enum import Enum
 import time
-from typing import List
+from typing import TYPE_CHECKING, List, Optional, Type, Union
 
-from xknx.dpt import DPTArray, DPTDate, DPTDateTime, DPTTime
+from xknx.dpt import DPTArray, DPTBinary, DPTDate, DPTDateTime, DPTTime
 from xknx.exceptions import ConversionError
 
-from .remote_value import RemoteValue
+from .remote_value import AsyncCallbackType, RemoteValue
+
+if TYPE_CHECKING:
+    from xknx.telegram.address import GroupAddressableType
+    from xknx.xknx import XKNX
 
 
 class DateTimeType(Enum):
@@ -26,20 +30,22 @@ class RemoteValueDateTime(RemoteValue[DPTArray]):
 
     def __init__(
         self,
-        xknx,
-        group_address=None,
-        group_address_state=None,
-        sync_state=True,
-        value_type="time",
-        device_name=None,
-        feature_name="DateTime",
-        after_update_cb=None,
-        passive_group_addresses: List[str] = None,
+        xknx: "XKNX",
+        group_address: Optional["GroupAddressableType"] = None,
+        group_address_state: Optional["GroupAddressableType"] = None,
+        sync_state: bool = True,
+        value_type: str = "time",
+        device_name: Optional[str] = None,
+        feature_name: str = "DateTime",
+        after_update_cb: Optional[AsyncCallbackType] = None,
+        passive_group_addresses: Optional[List["GroupAddressableType"]] = None,
     ):
         """Initialize RemoteValueSensor class."""
         # pylint: disable=too-many-arguments
         try:
-            self.dpt_class = DateTimeType[value_type.upper()].value
+            self.dpt_class: Type[Union[DPTDate, DPTDateTime, DPTTime]] = DateTimeType[
+                value_type.upper()
+            ].value
         except KeyError:
             raise ConversionError(
                 "invalid datetime value type",
@@ -58,7 +64,9 @@ class RemoteValueDateTime(RemoteValue[DPTArray]):
             passive_group_addresses=passive_group_addresses,
         )
 
-    def payload_valid(self, payload):
+    def payload_valid(
+        self, payload: Optional[Union[DPTArray, DPTBinary]]
+    ) -> Optional[DPTArray]:
         """Test if telegram payload may be parsed."""
         return (
             payload
@@ -67,10 +75,10 @@ class RemoteValueDateTime(RemoteValue[DPTArray]):
             else None
         )
 
-    def to_knx(self, value: time.struct_time):
+    def to_knx(self, value: time.struct_time) -> DPTArray:
         """Convert value to payload."""
         return DPTArray(self.dpt_class.to_knx(value))
 
-    def from_knx(self, payload) -> time.struct_time:
+    def from_knx(self, payload: DPTArray) -> time.struct_time:
         """Convert current payload to value."""
         return self.dpt_class.from_knx(payload.value)

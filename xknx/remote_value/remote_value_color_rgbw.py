@@ -3,12 +3,16 @@ Module for managing an RGBW remote value.
 
 DPT 251.600.
 """
-from typing import List
+from typing import TYPE_CHECKING, List, Optional, Sequence, Tuple, Union
 
-from xknx.dpt import DPTArray
+from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
 
-from .remote_value import RemoteValue
+from .remote_value import AsyncCallbackType, RemoteValue
+
+if TYPE_CHECKING:
+    from xknx.telegram.address import GroupAddressableType
+    from xknx.xknx import XKNX
 
 
 class RemoteValueColorRGBW(RemoteValue[DPTArray]):
@@ -16,13 +20,13 @@ class RemoteValueColorRGBW(RemoteValue[DPTArray]):
 
     def __init__(
         self,
-        xknx,
-        group_address=None,
-        group_address_state=None,
-        device_name=None,
-        feature_name="Color RGBW",
-        after_update_cb=None,
-        passive_group_addresses: List[str] = None,
+        xknx: "XKNX",
+        group_address: Optional["GroupAddressableType"] = None,
+        group_address_state: Optional["GroupAddressableType"] = None,
+        device_name: Optional[str] = None,
+        feature_name: str = "Color RGBW",
+        after_update_cb: Optional[AsyncCallbackType] = None,
+        passive_group_addresses: Optional[List["GroupAddressableType"]] = None,
     ):
         """Initialize remote value of KNX DPT 251.600 (DPT_Color_RGBW)."""
         # pylint: disable=too-many-arguments
@@ -35,9 +39,11 @@ class RemoteValueColorRGBW(RemoteValue[DPTArray]):
             after_update_cb=after_update_cb,
             passive_group_addresses=passive_group_addresses,
         )
-        self.previous_value = (0, 0, 0, 0)
+        self.previous_value: Tuple[int, ...] = (0, 0, 0, 0)
 
-    def payload_valid(self, payload):
+    def payload_valid(
+        self, payload: Optional[Union[DPTArray, DPTBinary]]
+    ) -> Optional[DPTArray]:
         """Test if telegram payload may be parsed."""
         # pylint: disable=no-self-use
         return (
@@ -46,7 +52,7 @@ class RemoteValueColorRGBW(RemoteValue[DPTArray]):
             else None
         )
 
-    def to_knx(self, value):
+    def to_knx(self, value: Sequence[int]) -> DPTArray:
         """
         Convert value (4-6 bytes) to payload (6 bytes).
 
@@ -98,16 +104,17 @@ class RemoteValueColorRGBW(RemoteValue[DPTArray]):
             return DPTArray(list(rgbw) + [0x00] + list(value[4:]))
         return DPTArray(value)
 
-    def from_knx(self, payload):
+    def from_knx(self, payload: DPTArray) -> Tuple[int, ...]:
         """
         Convert current payload to value. Always 4 byte (RGBW).
 
         If one element is invalid, use the previous value. All previous element
         values are initialized to 0.
         """
-        result = []
+        _result = []
         for i in range(0, len(payload.value) - 2):
             valid = (payload.value[5] & (0x08 >> i)) != 0  # R,G,B,W value valid?
-            result.append(payload.value[i] if valid else self.previous_value[i])
+            _result.append(payload.value[i] if valid else self.previous_value[i])
+        result = tuple(_result)
         self.previous_value = result
         return result

@@ -3,7 +3,9 @@ Module for managing a DTP Scene Number remote value.
 
 DPT 17.001.
 """
-from xknx.dpt import DPTArray, DPTSceneNumber
+from typing import Optional, Union
+
+from xknx.dpt import DPTArray, DPTBinary, DPTSceneNumber
 
 from .remote_value import RemoteValue
 
@@ -13,7 +15,9 @@ class RemoteValueSceneNumber(RemoteValue[DPTArray]):
 
     # pylint: disable=no-self-use
 
-    def payload_valid(self, payload):
+    def payload_valid(
+        self, payload: Optional[Union[DPTArray, DPTBinary]]
+    ) -> Optional[DPTArray]:
         """Test if telegram payload may be parsed."""
         return (
             payload
@@ -21,10 +25,10 @@ class RemoteValueSceneNumber(RemoteValue[DPTArray]):
             else None
         )
 
-    def to_knx(self, value):
+    def to_knx(self, value: int) -> DPTArray:
         """Convert value to payload."""
         return DPTArray(DPTSceneNumber.to_knx(value))
 
-    def from_knx(self, payload):
+    def from_knx(self, payload: DPTArray) -> int:
         """Convert current payload to value."""
         return DPTSceneNumber.from_knx(payload.value)

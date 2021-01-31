@@ -32,7 +32,7 @@ class BinarySensor(Device):
         xknx: "XKNX",
         name: str,
         group_address_state: "GroupAddressableType" = None,
-        invert: Optional[bool] = False,
+        invert: bool = False,
         sync_state: bool = True,
         ignore_internal_state: bool = False,
         device_class: Optional[str] = None,

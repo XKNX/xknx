@@ -29,9 +29,9 @@ if TYPE_CHECKING:
     from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
-    AsyncCallback = Callable[[], Awaitable[None]]
-
 logger = logging.getLogger("xknx.log")
+
+AsyncCallbackType = Callable[[], Awaitable[None]]
 
 
 class RemoteValue(ABC, Generic[DPTPayloadType]):
@@ -46,7 +46,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType]):
         sync_state: bool = True,
         device_name: Optional[str] = None,
         feature_name: Optional[str] = None,
-        after_update_cb: Optional["AsyncCallback"] = None,
+        after_update_cb: Optional[AsyncCallbackType] = None,
         passive_group_addresses: Optional[List["GroupAddressableType"]] = None,
     ):
         """Initialize RemoteValue class."""
@@ -66,7 +66,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType]):
 
         self.device_name: str = "Unknown" if device_name is None else device_name
         self.feature_name: str = "Unknown" if feature_name is None else feature_name
-        self.after_update_cb: Optional["AsyncCallback"] = after_update_cb
+        self.after_update_cb: Optional[AsyncCallbackType] = after_update_cb
         self.payload: Optional[DPTPayloadType] = None
 
         if sync_state and self.group_address_state:

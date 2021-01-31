@@ -5,16 +5,7 @@ DPT .
 """
 from abc import abstractmethod
 from enum import Enum
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Awaitable,
-    Callable,
-    Generic,
-    List,
-    Optional,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Generic, List, Optional, Union
 
 from xknx.dpt import (
     DPTArray,
@@ -27,13 +18,11 @@ from xknx.dpt.dpt import DPTPayloadType
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACModeType, HVACOperationMode
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
-from .remote_value import RemoteValue
+from .remote_value import AsyncCallbackType, RemoteValue
 
 if TYPE_CHECKING:
     from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
-
-    AsyncCallback = Callable[[], Awaitable[None]]
 
 
 class RemoteValueClimateModeBase(
@@ -66,7 +55,7 @@ class RemoteValueOperationMode(RemoteValueClimateModeBase[DPTArray, HVACOperatio
         device_name: Optional[str] = None,
         feature_name: str = "Climate Mode",
         climate_mode_type: Optional[ClimateModeType] = None,
-        after_update_cb: Optional["AsyncCallback"] = None,
+        after_update_cb: Optional[AsyncCallbackType] = None,
         passive_group_addresses: Optional[List["GroupAddressableType"]] = None,
     ):
         """Initialize remote value of KNX climate mode."""
@@ -131,7 +120,7 @@ class RemoteValueControllerMode(
         sync_state: bool = True,
         device_name: Optional[str] = None,
         feature_name: str = "Controller Mode",
-        after_update_cb: Optional["AsyncCallback"] = None,
+        after_update_cb: Optional[AsyncCallbackType] = None,
         passive_group_addresses: Optional[List["GroupAddressableType"]] = None,
     ):
         """Initialize remote value of KNX climate mode."""
@@ -186,7 +175,7 @@ class RemoteValueBinaryOperationMode(
         sync_state: bool = True,
         device_name: Optional[str] = None,
         feature_name: str = "Climate Mode Binary",
-        after_update_cb: Optional["AsyncCallback"] = None,
+        after_update_cb: Optional[AsyncCallbackType] = None,
         operation_mode: Optional[HVACOperationMode] = None,
     ):
         """Initialize remote value of KNX DPT 1 representing a climate operation mode."""
@@ -272,7 +261,7 @@ class RemoteValueBinaryHeatCool(
         sync_state: bool = True,
         device_name: Optional[str] = None,
         feature_name: str = "Controller Mode Heat/Cool",
-        after_update_cb: Optional["AsyncCallback"] = None,
+        after_update_cb: Optional[AsyncCallbackType] = None,
         controller_mode: Optional[HVACControllerMode] = None,
     ):
         """Initialize remote value of KNX DPT 1 representing a climate controller mode."""

@@ -48,6 +48,8 @@ class DPTBase(ABC):
     dpt_main_number: Optional[int] = None
     dpt_sub_number: Optional[int] = None
     value_type: Optional[str] = None
+    unit: Optional[str] = None
+    ha_device_class: Optional[str] = None
 
     @classmethod
     @abstractmethod
@@ -110,6 +112,7 @@ class DPTBase(ABC):
                     return dpt
         return None
 
+    # TODO: convert to classmethod to allow parsing only subclasses (eg. for Numeric, Control etc.)
     @staticmethod
     def parse_transcoder(
         value_type: Union[int, float, str]
