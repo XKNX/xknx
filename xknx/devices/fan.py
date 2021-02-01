@@ -8,11 +8,9 @@ It provides functionality for
 """
 from enum import Enum
 import logging
-import math
 from typing import TYPE_CHECKING, Any, Iterator, Optional, Union
 
 from xknx.remote_value import RemoteValueDptValue1Ucount, RemoteValueScaling
-from xknx.util.percentage import percentage_to_ranged_value, ranged_value_to_percentage
 
 from .device import Device, DeviceCallbackType
 
@@ -53,6 +51,7 @@ class Fan(Device):
 
         self.speed: Union[RemoteValueDptValue1Ucount, RemoteValueScaling]
         self.mode = FanSpeedMode.Step if max_step is not None else FanSpeedMode.Percent
+        self.max_step = max_step
 
         if self.mode == FanSpeedMode.Step:
             self.speed = RemoteValueDptValue1Ucount(
@@ -63,7 +62,6 @@ class Fan(Device):
                 feature_name="Speed",
                 after_update_cb=self.after_update,
             )
-            self._step_range = (1, max_step)
         else:
             self.speed = RemoteValueScaling(
                 xknx,
@@ -103,9 +101,6 @@ class Fan(Device):
 
     async def set_speed(self, speed: int) -> None:
         """Set the fan to a desginated speed."""
-
-        if self.mode == FanSpeedMode.Step and speed > 0:
-            speed = math.ceil(percentage_to_ranged_value(self._step_range, speed))
         await self.speed.set(speed)
 
     async def do(self, action: str) -> None:
@@ -124,11 +119,4 @@ class Fan(Device):
     @property
     def current_speed(self) -> Optional[int]:
         """Return current speed of fan."""
-        if (
-            self.mode == FanSpeedMode.Step
-            and self.speed.value is not None
-            and self.speed.value > 0
-        ):
-            return ranged_value_to_percentage(self._step_range, self.speed.value)  # type: ignore
-
         return self.speed.value  # type: ignore
