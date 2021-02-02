@@ -4,7 +4,7 @@
 
 ### Devices
 
-- Fan: Add "mode" parameter to control fans by steps instead of percentage.
+- Fan: Add `max_step` attribute which defines the maximum amount of steps. If set, the fan is controlled by steps instead of percentage.
 
 ## 0.16.2 Bugfix for yaml loader 2021-01-24
 
