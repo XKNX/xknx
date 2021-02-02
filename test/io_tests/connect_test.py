@@ -94,12 +94,9 @@ class TestConnect(unittest.TestCase):
         self.assertEqual(connect.awaited_response_class, ConnectResponse)
 
         # Expected KNX/IP-Frame:
-        exp_knxipframe = KNXIPFrame(xknx)
-        exp_knxipframe.init(KNXIPServiceType.CONNECT_REQUEST)
-        exp_knxipframe.body.control_endpoint = HPAI()
-        exp_knxipframe.body.data_endpoint = HPAI()
-        exp_knxipframe.body.request_type = ConnectRequestType.TUNNEL_CONNECTION
-        exp_knxipframe.normalize()
+        exp_knxipframe = KNXIPFrame.init_from_body(
+            ConnectRequest(xknx, request_type=ConnectRequestType.TUNNEL_CONNECTION)
+        )
         with patch("xknx.io.UDPClient.send") as mock_udp_send, patch(
             "xknx.io.UDPClient.getsockname"
         ) as mock_udp_getsockname:

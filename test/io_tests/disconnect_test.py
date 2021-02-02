@@ -95,11 +95,12 @@ class TestDisconnect(unittest.TestCase):
         self.assertEqual(disconnect.communication_channel_id, communication_channel_id)
 
         # Expected KNX/IP-Frame:
-        exp_knxipframe = KNXIPFrame(xknx)
-        exp_knxipframe.init(KNXIPServiceType.DISCONNECT_REQUEST)
-        exp_knxipframe.body.communication_channel_id = communication_channel_id
-        exp_knxipframe.body.control_endpoint = HPAI()
-        exp_knxipframe.normalize()
+        exp_knxipframe = KNXIPFrame.init_from_body(
+            DisconnectRequest(
+                xknx,
+                communication_channel_id=communication_channel_id,
+            )
+        )
         with patch("xknx.io.UDPClient.send") as mock_udp_send, patch(
             "xknx.io.UDPClient.getsockname"
         ) as mock_udp_getsockname:
