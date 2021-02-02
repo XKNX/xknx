@@ -140,7 +140,10 @@ CONFIG_SCHEMA = vol.Schema(
 SERVICE_XKNX_SEND_SCHEMA = vol.Any(
     vol.Schema(
         {
-            vol.Required(SERVICE_XKNX_ATTR_ADDRESS): cv.string,
+            vol.Required(SERVICE_XKNX_ATTR_ADDRESS): vol.All(
+                cv.ensure_list,
+                [cv.string],
+            ),
             vol.Required(SERVICE_XKNX_ATTR_PAYLOAD): cv.match_all,
             vol.Required(SERVICE_XKNX_ATTR_TYPE): vol.Any(int, float, str),
         }
@@ -148,7 +151,10 @@ SERVICE_XKNX_SEND_SCHEMA = vol.Any(
     vol.Schema(
         # without type given payload is treated as raw bytes
         {
-            vol.Required(SERVICE_XKNX_ATTR_ADDRESS): cv.string,
+            vol.Required(SERVICE_XKNX_ATTR_ADDRESS): vol.All(
+                cv.ensure_list,
+                [cv.string],
+            ),
             vol.Required(SERVICE_XKNX_ATTR_PAYLOAD): vol.Any(
                 cv.positive_int, [cv.positive_int]
             ),
@@ -158,7 +164,10 @@ SERVICE_XKNX_SEND_SCHEMA = vol.Any(
 
 SERVICE_XKNX_EVENT_REGISTER_SCHEMA = vol.Schema(
     {
-        vol.Required(SERVICE_XKNX_ATTR_ADDRESS): cv.string,
+        vol.Required(SERVICE_XKNX_ATTR_ADDRESS): vol.All(
+            cv.ensure_list,
+            [cv.string],
+        ),
         vol.Optional(SERVICE_XKNX_ATTR_REMOVE, default=False): cv.boolean,
     }
 )
@@ -372,21 +381,28 @@ class KNXModule:
 
     async def service_event_register_modify(self, call):
         """Service for adding or removing a GroupAddress to the knx_event filter."""
-        group_address = GroupAddress(call.data.get(SERVICE_XKNX_ATTR_ADDRESS))
+        attr_address = call.data.get(SERVICE_XKNX_ATTR_ADDRESS)
+        group_addresses = map(lambda ga: GroupAddress(ga), attr_address)
+
         if call.data.get(SERVICE_XKNX_ATTR_REMOVE):
-            try:
-                self._knx_event_callback.group_addresses.remove(group_address)
-            except ValueError:
-                _LOGGER.warning(
-                    "Service event_register could not remove event for '%s'",
-                    group_address,
-                )
-        elif group_address not in self._knx_event_callback.group_addresses:
-            self._knx_event_callback.group_addresses.append(group_address)
-            _LOGGER.debug(
-                "Service event_register registered event for '%s'",
-                group_address,
-            )
+            for group_address in group_addresses:
+                try:
+                    self._knx_event_callback.group_addresses.remove(
+                        GroupAddress(group_address)
+                    )
+                except ValueError:
+                    _LOGGER.warning(
+                        "Service event_register could not remove event for '%s'",
+                        group_address,
+                    )
+        else:
+            for group_address in group_addresses:
+                if group_address not in self._knx_event_callback.group_addresses:
+                    self._knx_event_callback.group_addresses.append(group_address)
+                    _LOGGER.debug(
+                        "Service event_register registered event for '%s'",
+                        group_address,
+                    )
 
     async def service_exposure_register_modify(self, call):
         """Service for adding or removing an exposure to KNX bus."""
@@ -426,7 +442,7 @@ class KNXModule:
         attr_address = call.data.get(SERVICE_XKNX_ATTR_ADDRESS)
         attr_type = call.data.get(SERVICE_XKNX_ATTR_TYPE)
 
-        def calculate_payload(attr_payload):
+        def _calculate_payload():
             """Calculate payload depending on type of attribute."""
             if attr_type is not None:
                 transcoder = DPTBase.parse_transcoder(attr_type)
@@ -437,8 +453,11 @@ class KNXModule:
                 return DPTBinary(attr_payload)
             return DPTArray(attr_payload)
 
-        telegram = Telegram(
-            destination_address=GroupAddress(attr_address),
-            payload=GroupValueWrite(calculate_payload(attr_payload)),
-        )
-        await self.xknx.telegrams.put(telegram)
+        payload = _calculate_payload()
+
+        for address in attr_address:
+            telegram = Telegram(
+                destination_address=GroupAddress(address),
+                payload=GroupValueWrite(payload),
+            )
+            await self.xknx.telegrams.put(telegram)

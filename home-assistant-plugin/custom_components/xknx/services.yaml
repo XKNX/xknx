@@ -2,7 +2,7 @@ send:
   description: "Send arbitrary data directly to the KNX bus."
   fields:
     address:
-      description: "Group address(es) to write to."
+      description: "Group address(es) to write to. Lists will send to multiple group addresses successively."
       example: "1/1/0"
     payload:
       description: "Payload to send to the bus. Integers are treated as DPT 1/2/3 payloads. For DPTs > 6 bits send a list. Each value represents 1 octet (0-255). Pad with 0 to DPT byte length."
@@ -14,10 +14,10 @@ event_register:
   description: "Add or remove single group address to knx_event filter for triggering `knx_event`s. Only addresses added with this service can be removed."
   fields:
     address:
-      description: "Group address that shall be added or removed."
+      description: "Group address(es) that shall be added or removed. Lists are allowed."
       example: "1/1/0"
     remove:
-      description: "Optional. If `True` the group address will be removed. Defaults to `False`."
+      description: "Optional. If `True` the group address(es) will be removed. Defaults to `False`."
 exposure_register:
   description: "Add or remove exposures to KNX bus. Only exposures added with this service can be removed."
   fields:
