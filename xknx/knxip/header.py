@@ -1,4 +1,6 @@
 """Module for serialization and deserialization of KNX/IP Header."""
+from typing import ClassVar, List
+
 from xknx.exceptions import CouldNotParseKNXIP
 
 from .body import KNXIPBody
@@ -8,19 +10,18 @@ from .knxip_enum import KNXIPServiceType
 class KNXIPHeader:
     """Class for serialization and deserialization of KNX/IP Header."""
 
-    HEADERLENGTH = 0x06
-    PROTOCOLVERSION = 0x10
+    HEADERLENGTH: ClassVar[int] = 0x06
+    PROTOCOLVERSION: ClassVar[int] = 0x10
 
-    def __init__(self, xknx):
+    def __init__(self) -> None:
         """Initialize KNXIPHeader class."""
-        self.xknx = xknx
         self.header_length = KNXIPHeader.HEADERLENGTH
         self.protocol_version = KNXIPHeader.PROTOCOLVERSION
         self.service_type_ident = KNXIPServiceType.ROUTING_INDICATION
         self.b4_reserve = 0
         self.total_length = 0  # to be set later
 
-    def from_knx(self, data):
+    def from_knx(self, data: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         if len(data) < KNXIPHeader.HEADERLENGTH:
             raise CouldNotParseKNXIP("wrong connection header length")
@@ -41,13 +42,13 @@ class KNXIPHeader:
         self.total_length = data[5]
         return KNXIPHeader.HEADERLENGTH
 
-    def set_length(self, body):
+    def set_length(self, body: KNXIPBody) -> None:
         """Set length of full KNX/IP packet from body + fixed header length."""
         if not isinstance(body, KNXIPBody):
             raise TypeError()
         self.total_length = KNXIPHeader.HEADERLENGTH + body.calculated_length()
 
-    def to_knx(self):
+    def to_knx(self) -> List[int]:
         """Serialize to KNX/IP raw data."""
         data = []
         data.append(self.header_length)
@@ -58,7 +59,7 @@ class KNXIPHeader:
         data.append(self.total_length & 255)
         return data
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return object as readable string."""
         return (
             '<KNXIPHeader HeaderLength="{}" ProtocolVersion="{}" '
@@ -71,6 +72,6 @@ class KNXIPHeader:
             )
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """Equal operator."""
         return self.__dict__ == other.__dict__

@@ -3,15 +3,14 @@ import asyncio
 import unittest
 
 from xknx import XKNX
-from xknx.dpt import DPTArray, DPTBinary, HVACOperationMode
-from xknx.dpt.dpt_hvac_mode import HVACControllerMode
+from xknx.dpt import DPTArray, DPTBinary
+from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.remote_value import (
     RemoteValueBinaryHeatCool,
     RemoteValueBinaryOperationMode,
     RemoteValueClimateMode,
 )
-from xknx.remote_value.remote_value_climate_mode import _RemoteValueBinaryClimateMode
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
@@ -136,12 +135,6 @@ class TestRemoteValueDptValue1Ucount(unittest.TestCase):
         xknx = XKNX()
         with self.assertRaises(ConversionError):
             RemoteValueBinaryHeatCool(xknx, controller_mode=None)
-
-    def test_supported_operation_modes_not_implemented(self):
-        """Test from_knx function with unsupported operation."""
-        xknx = XKNX()
-        with self.assertRaises(NotImplementedError):
-            _RemoteValueBinaryClimateMode.supported_operation_modes()
 
     def test_to_knx_error_operation_mode(self):
         """Test to_knx function with wrong parameter."""

@@ -383,7 +383,9 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(
             TestConfig.xknx.devices["Office.Climate"].mode,
             ClimateMode(
-                TestConfig.xknx, name=None, group_address_operation_mode="1/7/6"
+                TestConfig.xknx,
+                name="Office.Climate_mode",
+                group_address_operation_mode="1/7/6",
             ),
         )
 
@@ -393,7 +395,7 @@ class TestConfig(unittest.TestCase):
             TestConfig.xknx.devices["Attic.Climate"].mode,
             ClimateMode(
                 TestConfig.xknx,
-                name=None,
+                name="Attic.Climate_mode",
                 group_address_operation_mode_protection="1/7/8",
                 group_address_operation_mode_night="1/7/9",
                 group_address_operation_mode_comfort="1/7/10",
@@ -406,7 +408,7 @@ class TestConfig(unittest.TestCase):
             TestConfig.xknx.devices["Bath.Climate"].mode,
             ClimateMode(
                 TestConfig.xknx,
-                name=None,
+                name="Bath.Climate_mode",
                 group_address_operation_mode="1/7/6",
                 group_address_operation_mode_state="1/7/7",
             ),
@@ -418,7 +420,7 @@ class TestConfig(unittest.TestCase):
             TestConfig.xknx.devices["Cellar.Climate"].mode,
             ClimateMode(
                 TestConfig.xknx,
-                name=None,
+                name="Cellar.Climate_mode",
                 group_address_controller_status="1/7/12",
                 group_address_controller_status_state="1/7/13",
             ),

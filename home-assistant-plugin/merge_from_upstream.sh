@@ -16,10 +16,8 @@ then
     sed -i "s/_KNX_/_XKNX_/g" ${XKNX_REPO}/home-assistant-plugin/custom_components/xknx/*.py
     sed -i "s/DATA_KNX/DATA_XKNX/g" ${XKNX_REPO}/home-assistant-plugin/custom_components/xknx/*.py
     sed -i "s/DOMAIN = \"knx\"/DOMAIN = \"xknx\"/g" ${XKNX_REPO}/home-assistant-plugin/custom_components/xknx/*.py
-
-    rm -f ${XKNX_REPO}/home-assistant-plugin/custom_components/xknx/*.bak
 else
-    rm -f ${XKNX_REPO}/home-assistant-plugin/custom_components/xknx/*
+    rm -rf ${XKNX_REPO}/home-assistant-plugin/custom_components/xknx/*
     cp ${HA_UPSTREAM}/homeassistant/components/knx/* ${XKNX_REPO}/home-assistant-plugin/custom_components/xknx/
     sed -i '.bak' 's/homeassistant.components.knx/custom_components.xknx/g' ${XKNX_REPO}/home-assistant-plugin/custom_components/xknx/*.py
     sed -i '.bak' 's/"domain": "knx"/"domain": "xknx"/g' ${XKNX_REPO}/home-assistant-plugin/custom_components/xknx/manifest.json
@@ -30,7 +28,6 @@ else
     sed -i '.bak' "s/_KNX_/_XKNX_/g" ${XKNX_REPO}/home-assistant-plugin/custom_components/xknx/*.py
     sed -i '.bak' "s/DATA_KNX/DATA_XKNX/g" ${XKNX_REPO}/home-assistant-plugin/custom_components/xknx/*.py
     sed -i '.bak' "s/DOMAIN = \"knx\"/DOMAIN = \"xknx\"/g" ${XKNX_REPO}/home-assistant-plugin/custom_components/xknx/*.py
-
-    rm -f ${XKNX_REPO}/home-assistant-plugin/custom_components/xknx/*.bak
+    rm ${XKNX_REPO}/home-assistant-plugin/custom_components/xknx/*.bak
 fi
 

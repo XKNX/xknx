@@ -4,7 +4,7 @@ Module for managing a control remote value.
 Examples are switching commands with priority control, relative dimming or blinds control commands.
 DPT 2.yyy and DPT 3.yyy
 """
-from typing import List
+from typing import List, Optional
 
 from xknx.dpt import DPTBase, DPTBinary
 from xknx.exceptions import ConversionError
@@ -61,11 +61,11 @@ class RemoteValueControl(RemoteValue):
         return self.dpt_class.from_knx(payload.value, invert=self.invert)
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> Optional[str]:
         """Return the unit of measurement."""
         return self.dpt_class.unit
 
     @property
-    def ha_device_class(self):
+    def ha_device_class(self) -> Optional[str]:
         """Return a string representing the home assistant device class."""
         return getattr(self.dpt_class, "ha_device_class", None)

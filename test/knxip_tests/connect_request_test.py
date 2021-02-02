@@ -72,12 +72,13 @@ class Test_KNXIP_ConnectRequest(unittest.TestCase):
             knxipframe.body.data_endpoint, HPAI(ip_addr="192.168.42.1", port=52393)
         )
 
-        knxipframe2 = KNXIPFrame(xknx)
-        knxipframe2.init(KNXIPServiceType.CONNECT_REQUEST)
-        knxipframe2.body.request_type = ConnectRequestType.TUNNEL_CONNECTION
-        knxipframe2.body.control_endpoint = HPAI(ip_addr="192.168.42.1", port=33941)
-        knxipframe2.body.data_endpoint = HPAI(ip_addr="192.168.42.1", port=52393)
-        knxipframe2.normalize()
+        connect_request = ConnectRequest(
+            xknx,
+            request_type=ConnectRequestType.TUNNEL_CONNECTION,
+            control_endpoint=HPAI(ip_addr="192.168.42.1", port=33941),
+            data_endpoint=HPAI(ip_addr="192.168.42.1", port=52393),
+        )
+        knxipframe2 = KNXIPFrame.init_from_body(connect_request)
 
         self.assertEqual(knxipframe2.to_knx(), list(raw))
 

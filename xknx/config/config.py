@@ -6,9 +6,13 @@ Module for reading config files (xknx.yaml).
 """
 from enum import Enum
 import logging
+from typing import TYPE_CHECKING
 
 from .config_v1 import ConfigV1
 from .yaml_loader import load_yaml
+
+if TYPE_CHECKING:
+    from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
 
@@ -23,24 +27,24 @@ class Version(Enum):
 class Config:
     """Class for parsing xknx.yaml."""
 
-    def __init__(self, xknx):
+    def __init__(self, xknx: "XKNX") -> None:
         """Initialize Config class."""
         self.xknx = xknx
 
-    def read(self, file="xknx.yaml"):
+    def read(self, file: str = "xknx.yaml") -> None:
         """Read config."""
         logger.debug("Reading %s", file)
         doc = load_yaml(file)
         self.parse(doc)
 
     @staticmethod
-    def parse_version(doc):
+    def parse_version(doc) -> Version:
         """Parse the version of the xknx.yaml."""
         if "version" in doc:
             return Version(doc["version"])
         return Version.VERSION_1
 
-    def parse(self, doc):
+    def parse(self, doc) -> None:
         """Parse the config from the YAML."""
         version = Config.parse_version(doc)
         if version is Version.VERSION_1:

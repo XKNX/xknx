@@ -179,7 +179,7 @@ class TitleEnum(Enum):
     Ensures values are rendered nicely, e.g. in home assistant.
     """
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return string representation."""
         # pylint: disable=no-member
         return self.name.title()

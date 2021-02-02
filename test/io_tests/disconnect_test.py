@@ -5,7 +5,14 @@ from unittest.mock import patch
 
 from xknx import XKNX
 from xknx.io import Disconnect, UDPClient
-from xknx.knxip import HPAI, DisconnectResponse, ErrorCode, KNXIPFrame, KNXIPServiceType
+from xknx.knxip import (
+    HPAI,
+    DisconnectRequest,
+    DisconnectResponse,
+    ErrorCode,
+    KNXIPFrame,
+    KNXIPServiceType,
+)
 
 
 class TestDisconnect(unittest.TestCase):
@@ -34,11 +41,13 @@ class TestDisconnect(unittest.TestCase):
         self.assertEqual(disconnect.communication_channel_id, communication_channel_id)
 
         # Expected KNX/IP-Frame:
-        exp_knxipframe = KNXIPFrame(xknx)
-        exp_knxipframe.init(KNXIPServiceType.DISCONNECT_REQUEST)
-        exp_knxipframe.body.communication_channel_id = communication_channel_id
-        exp_knxipframe.body.control_endpoint = HPAI(ip_addr="192.168.1.3", port=4321)
-        exp_knxipframe.normalize()
+        exp_knxipframe = KNXIPFrame.init_from_body(
+            DisconnectRequest(
+                xknx,
+                communication_channel_id=communication_channel_id,
+                control_endpoint=HPAI(ip_addr="192.168.1.3", port=4321),
+            )
+        )
         with patch("xknx.io.UDPClient.send") as mock_udp_send, patch(
             "xknx.io.UDPClient.getsockname"
         ) as mock_udp_getsockname:

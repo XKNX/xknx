@@ -35,7 +35,7 @@ class AddressFilter:
 
     def __init__(self, pattern: str) -> None:
         """Initialize AddressFilter class."""
-        self.level_filters: List = []
+        self.level_filters: List["AddressFilter.LevelFilter"] = []
         self._parse_pattern(pattern)
 
     def _parse_pattern(self, pattern: str) -> None:
@@ -55,6 +55,10 @@ class AddressFilter:
         return self._match_free(address)
 
     def _match_level3(self, address: GroupAddress) -> bool:
+        if address.main is None or address.middle is None:
+            raise ConnectionError(
+                f"Match level 3 incompatible with address level {address.levels}"
+            )
         return bool(
             self.level_filters[0].match(address.main)
             and self.level_filters[1].match(address.middle)
@@ -62,6 +66,10 @@ class AddressFilter:
         )
 
     def _match_level2(self, address: GroupAddress) -> bool:
+        if address.main is None:
+            raise ConnectionError(
+                f"Match level 2 incompatible with address level {address.levels}"
+            )
         return bool(
             self.level_filters[0].match(address.main)
             and self.level_filters[1].match(address.sub)
@@ -130,7 +138,7 @@ class AddressFilter:
         # pylint: disable=too-few-public-methods
         def __init__(self, pattern: str) -> None:
             """Initialize LevelFilter."""
-            self.ranges: List = []
+            self.ranges: List["AddressFilter.Range"] = []
             self._parse_pattern(pattern)
 
         def _parse_pattern(self, pattern: str) -> None:

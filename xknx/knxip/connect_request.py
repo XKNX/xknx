@@ -3,11 +3,16 @@ Module for Serialization and Deserialization of a KNX Connect Request informatio
 
 Connect requests are used to start a new tunnel connection on a KNX/IP device.
 """
+from typing import TYPE_CHECKING, List
+
 from xknx.exceptions import CouldNotParseKNXIP
 
 from .body import KNXIPBody
 from .hpai import HPAI
 from .knxip_enum import ConnectRequestType, KNXIPServiceType
+
+if TYPE_CHECKING:
+    from xknx.xknx import XKNX
 
 
 class ConnectRequest(KNXIPBody):
@@ -21,8 +26,8 @@ class ConnectRequest(KNXIPBody):
 
     def __init__(
         self,
-        xknx,
-        request_type: ConnectRequestType = None,
+        xknx: "XKNX",
+        request_type: ConnectRequestType = ConnectRequestType.TUNNEL_CONNECTION,
         control_endpoint: HPAI = HPAI(),
         data_endpoint: HPAI = HPAI(),
     ):
@@ -34,14 +39,14 @@ class ConnectRequest(KNXIPBody):
         # KNX layer, 0x02 = TUNNEL_LINKLAYER
         self.flags = 0x02
 
-    def calculated_length(self):
+    def calculated_length(self) -> int:
         """Get length of KNX/IP body."""
         return HPAI.LENGTH + HPAI.LENGTH + ConnectRequest.CRI_LENGTH
 
-    def from_knx(self, raw):
+    def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
 
-        def cri_from_knx(cri):
+        def cri_from_knx(cri: bytes) -> int:
             """Parse CRI (Connection Request Information)."""
             if cri[0] != ConnectRequest.CRI_LENGTH:
                 raise CouldNotParseKNXIP("CRI has wrong length")
@@ -56,10 +61,10 @@ class ConnectRequest(KNXIPBody):
         pos += cri_from_knx(raw[pos:])
         return pos
 
-    def to_knx(self):
+    def to_knx(self) -> List[int]:
         """Serialize to KNX/IP raw data."""
 
-        def cri_to_knx():
+        def cri_to_knx() -> List[int]:
             """Serialize CRI (Connect Request Information)."""
             cri = []
             cri.append(ConnectRequest.CRI_LENGTH)
@@ -74,7 +79,7 @@ class ConnectRequest(KNXIPBody):
         data.extend(cri_to_knx())
         return data
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return object as readable string."""
         return (
             '<ConnectRequest control_endpoint="{}" data_endpoint="{}" '

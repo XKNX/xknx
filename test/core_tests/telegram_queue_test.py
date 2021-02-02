@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from xknx import XKNX
 from xknx.dpt import DPTBinary
-from xknx.exceptions import CouldNotParseTelegram
+from xknx.exceptions import CommunicationError, CouldNotParseTelegram
 from xknx.telegram import AddressFilter, GroupAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueWrite
 
@@ -107,12 +107,7 @@ class TestTelegramQueue(unittest.TestCase):
         """Test telegram_received_callback after state of switch was changed."""
         # pylint: disable=no-self-use
         xknx = XKNX()
-
-        telegram_received_callback = Mock()
-
-        async def async_telegram_received_cb(device):
-            """Async callback."""
-            telegram_received_callback(device)
+        async_telegram_received_cb = AsyncMock()
 
         xknx.telegram_queue.register_telegram_received_cb(async_telegram_received_cb)
 
@@ -124,7 +119,7 @@ class TestTelegramQueue(unittest.TestCase):
         self.loop.run_until_complete(
             xknx.telegram_queue.process_telegram_incoming(telegram)
         )
-        telegram_received_callback.assert_called_once_with(telegram)
+        async_telegram_received_cb.assert_called_once_with(telegram)
 
     #
     # TEST UNREGISTER
@@ -201,10 +196,8 @@ class TestTelegramQueue(unittest.TestCase):
         devices_process.assert_called_once_with(telegram)
 
     @patch("xknx.io.KNXIPInterface")
-    @patch("logging.Logger.warning")
-    def test_outgoing(self, logger_warning_mock, if_mock):
+    def test_outgoing(self, if_mock):
         """Test outgoing telegrams in telegram queue."""
-        # pylint: disable=no-self-use
         xknx = XKNX()
 
         async_if_send_telegram = asyncio.Future()
@@ -218,10 +211,10 @@ class TestTelegramQueue(unittest.TestCase):
         )
 
         # log a warning if there is no KNXIP interface instanciated
-        self.loop.run_until_complete(
-            xknx.telegram_queue.process_telegram_outgoing(telegram)
-        )
-        logger_warning_mock.assert_called_once_with("No KNXIP interface defined")
+        with self.assertRaises(CommunicationError):
+            self.loop.run_until_complete(
+                xknx.telegram_queue.process_telegram_outgoing(telegram)
+            )
         if_mock.send_telegram.assert_not_called()
 
         # if we have an interface send the telegram
@@ -261,19 +254,13 @@ class TestTelegramQueue(unittest.TestCase):
             ),
         )
 
-    @patch("xknx.core.TelegramQueue.process_telegram_outgoing")
-    @patch("xknx.core.TelegramQueue.process_telegram_incoming")
+    @patch("xknx.core.TelegramQueue.process_telegram_outgoing", new_callable=AsyncMock)
+    @patch("xknx.core.TelegramQueue.process_telegram_incoming", new_callable=AsyncMock)
     def test_process_all_telegrams(
         self, process_telegram_incoming_mock, process_telegram_outgoing_mock
     ):
         """Test _process_all_telegrams for clearing the queue."""
-        # pylint: disable=no-self-use
         xknx = XKNX()
-
-        async_process_mock = asyncio.Future()
-        async_process_mock.set_result(None)
-        process_telegram_incoming_mock.return_value = async_process_mock
-        process_telegram_outgoing_mock.return_value = async_process_mock
 
         telegram_in = Telegram(
             destination_address=GroupAddress("1/2/3"),
@@ -291,24 +278,20 @@ class TestTelegramQueue(unittest.TestCase):
         res = self.loop.run_until_complete(xknx.telegram_queue._process_all_telegrams())
 
         self.assertIsNone(res)
-        self.assertEqual(process_telegram_incoming_mock.call_count, 1)
-        self.assertEqual(process_telegram_outgoing_mock.call_count, 1)
+        process_telegram_incoming_mock.assert_called_once()
+        process_telegram_outgoing_mock.assert_called_once()
 
     #
     # TEST NO FILTERS
     #
-    def test_no_filters(self):
+    def test_callback_no_filters(self):
         """Test telegram_received_callback after state of switch was changed."""
-        # pylint: disable=no-self-use
         xknx = XKNX()
+        async_telegram_received_callback = AsyncMock()
 
-        telegram_received_callback = Mock()
-
-        async def async_telegram_received_cb(device):
-            """Async callback."""
-            telegram_received_callback(device)
-
-        xknx.telegram_queue.register_telegram_received_cb(async_telegram_received_cb)
+        xknx.telegram_queue.register_telegram_received_cb(
+            async_telegram_received_callback
+        )
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
@@ -318,25 +301,19 @@ class TestTelegramQueue(unittest.TestCase):
         xknx.telegrams.put_nowait(telegram)
         self.loop.run_until_complete(xknx.telegram_queue._process_all_telegrams())
 
-        telegram_received_callback.assert_called_with(telegram)
+        async_telegram_received_callback.assert_called_with(telegram)
 
     #
     # TEST POSITIVE FILTERS
     #
-    def test_positive_filters(self):
+    def test_callback_positive_address_filters(self):
         """Test telegram_received_callback after state of switch was changed."""
-        # pylint: disable=no-self-use
         xknx = XKNX()
-
-        telegram_received_callback = Mock()
-
-        async def async_telegram_received_cb(device):
-            """Async callback."""
-            telegram_received_callback(device)
+        async_telegram_received_callback = AsyncMock()
 
         xknx.telegram_queue.register_telegram_received_cb(
-            async_telegram_received_cb,
-            [AddressFilter("2/4-8/*"), AddressFilter("1/2/-8")],
+            async_telegram_received_callback,
+            address_filters=[AddressFilter("2/4-8/*"), AddressFilter("1/2/-8")],
         )
 
         telegram = Telegram(
@@ -347,25 +324,19 @@ class TestTelegramQueue(unittest.TestCase):
         xknx.telegrams.put_nowait(telegram)
         self.loop.run_until_complete(xknx.telegram_queue._process_all_telegrams())
 
-        telegram_received_callback.assert_called_with(telegram)
+        async_telegram_received_callback.assert_called_with(telegram)
 
     #
     # TEST NEGATIVE FILTERS
     #
-    def test_negative_filters(self):
+    def test_callback_negative_address_filters(self):
         """Test telegram_received_callback after state of switch was changed."""
-        # pylint: disable=no-self-use
         xknx = XKNX()
-
-        telegram_received_callback = Mock()
-
-        async def async_telegram_received_cb(device):
-            """Async callback."""
-            telegram_received_callback(device)
+        async_telegram_received_callback = AsyncMock()
 
         xknx.telegram_queue.register_telegram_received_cb(
-            async_telegram_received_cb,
-            [AddressFilter("2/4-8/*"), AddressFilter("1/2/8-")],
+            async_telegram_received_callback,
+            address_filters=[AddressFilter("2/4-8/*"), AddressFilter("1/2/8-")],
         )
 
         telegram = Telegram(
@@ -376,4 +347,40 @@ class TestTelegramQueue(unittest.TestCase):
         xknx.telegrams.put_nowait(telegram)
         self.loop.run_until_complete(xknx.telegram_queue._process_all_telegrams())
 
-        telegram_received_callback.assert_not_called()
+        async_telegram_received_callback.assert_not_called()
+
+    def test_callback_group_addresses(self):
+        """Test telegram_received_callback after state of switch was changed."""
+        xknx = XKNX()
+        async_telegram_received_cb_one = AsyncMock()
+        async_telegram_received_cb_two = AsyncMock()
+
+        callback_one = xknx.telegram_queue.register_telegram_received_cb(
+            async_telegram_received_cb_one,
+            address_filters=[],
+            group_addresses=[GroupAddress("1/2/3")],
+        )
+        callback_two = xknx.telegram_queue.register_telegram_received_cb(
+            async_telegram_received_cb_two, address_filters=[], group_addresses=[]
+        )
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            direction=TelegramDirection.INCOMING,
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        self.loop.run_until_complete(
+            xknx.telegram_queue.process_telegram_incoming(telegram)
+        )
+        async_telegram_received_cb_one.assert_called_once_with(telegram)
+        async_telegram_received_cb_two.assert_not_called()
+
+        async_telegram_received_cb_one.reset_mock()
+        # modify the filters - add/remove a GroupAddress
+        callback_one.group_addresses.remove(GroupAddress("1/2/3"))
+        callback_two.group_addresses.append(GroupAddress("1/2/3"))
+        self.loop.run_until_complete(
+            xknx.telegram_queue.process_telegram_incoming(telegram)
+        )
+        async_telegram_received_cb_one.assert_not_called()
+        async_telegram_received_cb_two.assert_called_once_with(telegram)

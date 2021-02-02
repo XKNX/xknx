@@ -14,9 +14,10 @@ It contains
 
 """
 from enum import Enum
-from typing import Any, Union
+from typing import Optional, Union
 
 from .address import GroupAddress, IndividualAddress
+from .apci import APCI
 
 
 class TelegramDirection(Enum):
@@ -35,7 +36,7 @@ class Telegram:
         self,
         destination_address: Union[GroupAddress, IndividualAddress] = GroupAddress(0),
         direction: TelegramDirection = TelegramDirection.OUTGOING,
-        payload: Any = None,
+        payload: Optional[APCI] = None,
         source_address: IndividualAddress = IndividualAddress(0),
     ) -> None:
         """Initialize Telegram class."""

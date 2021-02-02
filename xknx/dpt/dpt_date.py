@@ -52,7 +52,7 @@ class DPTDate(DPTBase):
         return (value.tm_mday, value.tm_mon, _knx_year(value.tm_year))
 
     @staticmethod
-    def _test_range(day, month, year):
+    def _test_range(day: int, month: int, year: int) -> bool:
         """Test if the values are in the correct range."""
         if day < 1 or day > 31:
             return False

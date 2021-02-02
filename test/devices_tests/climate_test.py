@@ -15,9 +15,8 @@ from xknx.dpt import (
     DPTHVACMode,
     DPTTemperature,
     DPTValue1Count,
-    HVACOperationMode,
 )
-from xknx.dpt.dpt_hvac_mode import HVACControllerMode
+from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
 from xknx.exceptions import CouldNotParseTelegram, DeviceIllegalValue
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite

@@ -176,9 +176,9 @@ class GatewayScanner:
         self._udp_clients.append(udp_client)
 
         (local_addr, local_port) = udp_client.getsockname()
-        search_request = SearchRequest(
-            self.xknx, discovery_endpoint=HPAI(ip_addr=local_addr, port=local_port)
-        )
+        discovery_endpoint = HPAI(ip_addr=local_addr, port=local_port)
+
+        search_request = SearchRequest(self.xknx, discovery_endpoint=discovery_endpoint)
         udp_client.send(KNXIPFrame.init_from_body(search_request))
 
     def _response_rec_callback(
@@ -197,10 +197,14 @@ class GatewayScanner:
             local_ip=udp_client.local_addr[0],
         )
         try:
-            dib = knx_ip_frame.body[DIBSuppSVCFamilies]
+            dib = next(
+                dib
+                for dib in knx_ip_frame.body.dibs
+                if isinstance(dib, DIBSuppSVCFamilies)
+            )
             gateway.supports_routing = dib.supports(DIBServiceFamily.ROUTING)
             gateway.supports_tunnelling = dib.supports(DIBServiceFamily.TUNNELING)
-        except IndexError:
+        except StopIteration:
             pass
 
         self._add_found_gateway(gateway)
