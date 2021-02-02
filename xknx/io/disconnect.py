@@ -19,7 +19,7 @@ class Disconnect(RequestResponse):
         xknx: "XKNX",
         udp_client: "UDPClient",
         communication_channel_id: int,
-        route_back: bool,
+        route_back: bool = False,
     ):
         """Initialize Disconnect class."""
         self.xknx = xknx

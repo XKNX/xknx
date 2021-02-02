@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 class Connect(RequestResponse):
     """Class to send a ConnectRequest and wait for ConnectResponse.."""
 
-    def __init__(self, xknx: "XKNX", udp_client: "UDPClient", route_back: bool):
+    def __init__(self, xknx: "XKNX", udp_client: "UDPClient", route_back: bool = False):
         """Initialize Connect class."""
         self.udp_client = udp_client
         self.route_back = route_back

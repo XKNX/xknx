@@ -2,6 +2,11 @@
 
 ## 0.xx
 
+### New Features
+
+- Add new optional config `route_back` for connections to be able to dockerise xknx's apps.
+- Read env vars after reading config file to allow dynamic config for dockerized apps.
+
 ### Devices
 
 - Fan: Add `max_step` attribute which defines the maximum amount of steps. If set, the fan is controlled by steps instead of percentage.
@@ -85,11 +90,6 @@
 - StateUpdater: query less aggressive - 2 parallel reads with 2 seconds timeout (instead of 3 - 1).
 
 ## 0.15.3 Opposite day! 2020-10-29
-
-### New Features
-
-- Add new optional config `route_back` for connections to be able to dockerise xknx's apps.
-- Read env vars after reading config file to allow dynamic config for dockerized apps.
 
 ### Devices
 
