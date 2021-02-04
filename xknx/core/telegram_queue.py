@@ -9,6 +9,8 @@ You may register callbacks to be notified if a telegram was pushed to the queue.
 """
 import anyio
 from contextlib import contextmanager
+from distkv.util import create_queue  # XXX vendorize it myself?
+
 try:
     from contextlib import asynccontextmanager
 except ImportError:
@@ -46,7 +48,7 @@ class _TelegramQueue():
     def __init__(self, xknx, rate_limit=0):
         """Initialize TelegramQueue class."""
         self.xknx = xknx
-        self.q = anyio.create_queue(10)
+        self.q = create_queue(10)
         self.callbacks = set()
         self.queue_stopped = anyio.create_event()
         self.rate_limit = rate_limit

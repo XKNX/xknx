@@ -5,8 +5,10 @@ The module is built upon anyio udp functions.
 Due to nonexisting support of UDP multicast within anyio some special treatment for multicast is necessary.
 """
 import anyio
+from anyio.abc import SocketAttribute
 import socket
 from contextlib import contextmanager
+from distkv.util import create_queue
 
 from xknx.exceptions import CouldNotParseKNXIP, XKNXException
 from xknx.knxip import KNXIPFrame
@@ -45,11 +47,12 @@ class UDPClient:
         self.socket = None
         self.callbacks = []
         self._read_task = None
+        self.lock = anyio.create_lock()
 
-    async def data_received_callback(self, raw, addr):
+    async def data_received_callback(self, raw):
         """Parse and process KNXIP frame. Callback for having received an UDP packet."""
         if raw:
-            self.xknx.raw_socket_logger.debug("Received from %s:%s", addr, raw.hex())
+            self.xknx.raw_socket_logger.debug("Received %s", raw.hex())
             try:
                 knxipframe = KNXIPFrame(self.xknx)
                 knxipframe.from_knx(raw)
@@ -80,7 +83,7 @@ class UDPClient:
     @contextmanager
     def receiver(self, *service_types):
         """Context manager returning an iterator for incoming packets."""
-        q = anyio.create_queue(10)
+        q = create_queue(10)
 
         async def _receiver(knxipframe, _):
             await q.put(knxipframe)
@@ -123,16 +126,17 @@ class UDPClient:
             self.socket = await self.create_multicast_sock(self.local_addr[0], self.remote_addr)
 
         else:
-            self.socket = await anyio.create_udp_socket(interface=self.local_addr[0],
-                                                        port=self.local_addr[1],
-                                                        target_host=self.remote_addr[0],
-                                                        target_port=self.remote_addr[1])
+            self.socket = await anyio.create_connected_udp_socket(local_host=self.local_addr[0],
+                                                        local_port=self.local_addr[1],
+                                                        remote_host=self.remote_addr[0],
+                                                        remote_port=self.remote_addr[1])
 
         self._read_task = await self.xknx.spawn(self._reader)
 
     async def _reader(self):
-        async for raw, addr in self.socket.receive_packets(999):
-            await self.data_received_callback(raw, addr)
+        while True:
+            raw = await self.socket.receive()
+            await self.data_received_callback(raw)
 
     async def send(self, knxipframe):
         """Send KNXIPFrame to socket."""
@@ -140,17 +144,19 @@ class UDPClient:
         if self.socket is None:
             raise XKNXException("Transport not connected")
 
-        if self.multicast:
-            await self.socket.send(bytes(knxipframe.to_knx()), *self.remote_addr)
-        else:
-            await self.socket.send(bytes(knxipframe.to_knx()))
+        async with self.lock:
+            if self.multicast:
+                await self.socket.send(bytes(knxipframe.to_knx()), *self.remote_addr)
+            else:
+                await self.socket.send(bytes(knxipframe.to_knx()))
 
     def getsockname(self):
         """Return sockname."""
-        return self.socket.address
+        return self.socket.extra(SocketAttribute.raw_socket).getsockname()
 
     def getremote(self):
         """Return peername."""
+        return self.socket.extra(SocketAttribute.raw_socket).getpeername()
         return self.socket.peer_address
 
     async def stop(self):
@@ -158,4 +164,4 @@ class UDPClient:
         if self._read_task is not None:
             await self._read_task.cancel()
         if self.socket is not None:
-            await self.socket.close()
+            await self.socket.aclose()
