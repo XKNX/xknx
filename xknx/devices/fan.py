@@ -95,7 +95,7 @@ class Fan(Device):
 
     @property
     def supports_oscillation(self) -> bool:
-        """Return if light supports brightness."""
+        """Return if fan supports oscillation."""
         return self.oscillation.initialized
 
     @classmethod
