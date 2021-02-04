@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 from xknx import XKNX
 from xknx.devices import Fan
-from xknx.devices.fan import FanSpeedMode
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
@@ -52,7 +51,6 @@ class TestFan(unittest.TestCase):
             xknx,
             name="TestFan",
             group_address_speed_state="1/2/3",
-            mode=FanSpeedMode.Step,
         )
         self.loop.run_until_complete(fan.sync())
 
@@ -115,10 +113,14 @@ class TestFan(unittest.TestCase):
     # TEST SET SPEED STEP
     #
     def test_set_speed_step(self):
-        """Test setting the speed of a Fan."""
+        """Test setting the speed of a Fan in step mode."""
+
         xknx = XKNX()
         fan = Fan(
-            xknx, name="TestFan", group_address_speed="1/2/3", mode=FanSpeedMode.Step
+            xknx,
+            name="TestFan",
+            group_address_speed="1/2/3",
+            max_step=3,
         )
         self.loop.run_until_complete(fan.set_speed(2))
         self.assertEqual(xknx.telegrams.qsize(), 1)
@@ -176,9 +178,13 @@ class TestFan(unittest.TestCase):
     #
     def test_process_speed_step(self):
         """Test process / reading telegrams from telegram queue. Test if speed is processed."""
+
         xknx = XKNX()
         fan = Fan(
-            xknx, name="TestFan", group_address_speed="1/2/3", mode=FanSpeedMode.Step
+            xknx,
+            name="TestFan",
+            group_address_speed="1/2/3",
+            max_step=3,
         )
         self.assertEqual(fan.current_speed, None)
 

@@ -30,9 +30,6 @@ class FanSpeedMode(Enum):
     Step = 2
 
 
-DEFAULT_MODE = FanSpeedMode.Percent
-
-
 class Fan(Device):
     """Class for managing a fan."""
 
@@ -46,14 +43,17 @@ class Fan(Device):
         group_address_speed: Optional["GroupAddressableType"] = None,
         group_address_speed_state: Optional["GroupAddressableType"] = None,
         device_updated_cb: Optional[DeviceCallbackType] = None,
-        mode: FanSpeedMode = DEFAULT_MODE,
+        max_step: Optional[int] = None,
     ):
         """Initialize fan class."""
         # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
 
         self.speed: Union[RemoteValueDptValue1Ucount, RemoteValueScaling]
-        if mode == FanSpeedMode.Step:
+        self.mode = FanSpeedMode.Step if max_step is not None else FanSpeedMode.Percent
+        self.max_step = max_step
+
+        if self.mode == FanSpeedMode.Step:
             self.speed = RemoteValueDptValue1Ucount(
                 xknx,
                 group_address_speed,
@@ -83,14 +83,14 @@ class Fan(Device):
         """Initialize object from configuration structure."""
         group_address_speed = config.get("group_address_speed")
         group_address_speed_state = config.get("group_address_speed_state")
-        mode = config.get("mode", DEFAULT_MODE)
+        max_step = config.get("max_step")
 
         return cls(
             xknx,
             name,
             group_address_speed=group_address_speed,
             group_address_speed_state=group_address_speed_state,
-            mode=mode,
+            max_step=max_step,
         )
 
     def __str__(self) -> str:
