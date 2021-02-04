@@ -163,5 +163,5 @@ class Fan(Device):
 
     @property
     def current_oscillation(self) -> Optional[bool]:
-        """Return current oscillation state."""
+        """Return true if the fan is oscillating."""
         return self.oscillation.value  # type: ignore
