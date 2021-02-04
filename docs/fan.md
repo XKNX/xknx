@@ -15,8 +15,8 @@ Fans are simple representations of KNX controlled fans. They support setting the
 
 - `xknx` XKNX object.
 - `name` name of the device.
-- `group_address` is the KNX group address of the fan device. Used for sending.
-- `group_address_state` is the KNX group address of the fan state. Used for updating and reading state.
+- `group_address` is the KNX group address of the fan speed. Used for sending.
+- `group_address_state` is the KNX group address of the fan speed state. Used for updating and reading state.
 - `device_updated_cb` awaitable callback for each update.
 - `max_step` Maximum step amount for fans which are controlled with steps and not percentage.
 
