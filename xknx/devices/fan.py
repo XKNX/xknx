@@ -103,6 +103,8 @@ class Fan(Device):
         """Initialize object from configuration structure."""
         group_address_speed = config.get("group_address_speed")
         group_address_speed_state = config.get("group_address_speed_state")
+        group_address_oscillation = config.get("group_address_oscillation")
+        group_address_oscillation_state = config.get("group_address_oscillation_state")
         max_step = config.get("max_step")
 
         return cls(
@@ -110,20 +112,22 @@ class Fan(Device):
             name,
             group_address_speed=group_address_speed,
             group_address_speed_state=group_address_speed_state,
+            group_address_oscillation=group_address_oscillation,
+            group_address_oscillation_state=group_address_oscillation_state,
             max_step=max_step,
         )
 
     def __str__(self) -> str:
         """Return object as readable string."""
 
-        # str_oscillation = (
-        #     ""
-        #     if not self.supports_oscillation
-        #     else f' oscillation="{self.oscillation.group_addr_str()}"'
-        # )
+        str_oscillation = (
+            ""
+            if not self.supports_oscillation
+            else f' oscillation="{self.oscillation.group_addr_str()}"'
+        )
 
-        return '<Fan name="{}" ' 'speed="{}" />'.format(
-            self.name, self.speed.group_addr_str()
+        return '<Fan name="{}" ' 'speed="{}"{} />'.format(
+            self.name, self.speed.group_addr_str(), str_oscillation
         )
 
     async def set_speed(self, speed: int) -> None:
@@ -138,8 +142,10 @@ class Fan(Device):
         """Execute 'do' commands."""
         if action.startswith("speed:"):
             await self.set_speed(int(action[6:]))
-        elif action.startswith("oscillation:"):
-            await self.set_oscillation(bool(action[12:]))
+        elif action == "oscillation:True":
+            await self.set_oscillation(True)
+        elif action == "oscillation:False":
+            await self.set_oscillation(False)
         else:
             logger.warning(
                 "Could not understand action %s for device %s", action, self.get_name()
