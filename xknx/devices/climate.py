@@ -80,7 +80,7 @@ class Climate(Device):
             xknx,
             group_address_state=group_address_temperature,
             device_name=self.name,
-            feature_name="Current Temperature",
+            feature_name="Current temperature",
             after_update_cb=self.after_update,
         )
 
@@ -143,12 +143,12 @@ class Climate(Device):
         """Expose temperature sensors to xknx."""
         for suffix, group_address, value_type in (
             (
-                "_temperature",
+                "temperature",
                 self.temperature.group_address_state,
                 "temperature",
             ),
             (
-                "_target_temperature",
+                "target temperature",
                 self.target_temperature.group_address_state,
                 "temperature",
             ),
@@ -156,7 +156,7 @@ class Climate(Device):
             if group_address is not None:
                 Sensor(
                     self.xknx,
-                    name=self.name + suffix,
+                    name=self.name + " " + suffix,
                     group_address_state=group_address,
                     value_type=value_type,
                 )

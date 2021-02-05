@@ -195,7 +195,6 @@ def _create_climate(knx_module: XKNX, config: ConfigType) -> XknxClimate:
     climate_mode = XknxClimateMode(
         knx_module,
         name=f"{config[CONF_NAME]} Mode",
-        expose_temperature_sensors=config[ClimateSchema.CONF_EXPOSE_TEMPERATURE_SENSORS],
         group_address_operation_mode=config.get(
             ClimateSchema.CONF_OPERATION_MODE_ADDRESS
         ),
@@ -260,6 +259,9 @@ def _create_climate(knx_module: XKNX, config: ConfigType) -> XknxClimate:
         max_temp=config.get(ClimateSchema.CONF_MAX_TEMP),
         mode=climate_mode,
         on_off_invert=config[ClimateSchema.CONF_ON_OFF_INVERT],
+        expose_temperature_sensors=config.get(
+            ClimateSchema.CONF_EXPOSE_TEMPERATURE_SENSORS
+        ),
     )
 
 

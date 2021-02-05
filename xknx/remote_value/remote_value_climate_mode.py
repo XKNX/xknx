@@ -67,7 +67,7 @@ class RemoteValueClimateMode(RemoteValueClimateModeBase[HVACModeType]):
         group_address_state: Optional["GroupAddressableType"] = None,
         sync_state: bool = True,
         device_name: Optional[str] = None,
-        feature_name: str = "Climate Mode",
+        feature_name: str = "Climate mode",
         climate_mode_type: Optional[ClimateModeType] = None,
         after_update_cb: Optional["AsyncCallback"] = None,
         passive_group_addresses: Optional[List["GroupAddressableType"]] = None,
@@ -125,7 +125,7 @@ class RemoteValueBinaryOperationMode(RemoteValueClimateModeBase[HVACOperationMod
         group_address_state: Optional["GroupAddressableType"] = None,
         sync_state: bool = True,
         device_name: Optional[str] = None,
-        feature_name: str = "Climate Mode Binary",
+        feature_name: str = "Climate mode binary",
         after_update_cb: Optional["AsyncCallback"] = None,
         operation_mode: Optional[HVACOperationMode] = None,
     ):
@@ -207,7 +207,7 @@ class RemoteValueBinaryHeatCool(RemoteValueClimateModeBase[HVACControllerMode]):
         group_address_state: Optional["GroupAddressableType"] = None,
         sync_state: bool = True,
         device_name: Optional[str] = None,
-        feature_name: str = "Controller Mode Heat/Cool",
+        feature_name: str = "Controller mode Heat/Cool",
         after_update_cb: Optional["AsyncCallback"] = None,
         controller_mode: Optional[HVACControllerMode] = None,
     ):

@@ -240,6 +240,7 @@ class ClimateSchema:
     CONF_ON_OFF_INVERT = "on_off_invert"
     CONF_MIN_TEMP = "min_temp"
     CONF_MAX_TEMP = "max_temp"
+    CONF_EXPOSE_TEMPERATURE_SENSORS = "expose_temperature_sensors"
 
     DEFAULT_NAME = "KNX Climate"
     DEFAULT_SETPOINT_SHIFT_MODE = "DPT6010"
@@ -295,6 +296,9 @@ class ClimateSchema:
                 ),
                 vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
                 vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
+                vol.Optional(
+                    CONF_EXPOSE_TEMPERATURE_SENSORS, default=False
+                ): cv.boolean,
             }
         ),
     )
