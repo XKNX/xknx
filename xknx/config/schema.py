@@ -417,7 +417,7 @@ class ClimateSchema:
             vol.Optional(CONF_OPERATION_MODES): vol.All(
                 ensure_list, [vol.In({**OPERATION_MODES, **PRESET_MODES})]
             ),
-            vol.Optional(CONF_EXPOSE_SENSORS, default=False): boolean,
+            vol.Optional(CONF_EXPOSE_TEMPERATURE_SENSORS, default=False): boolean,
         }
     )
 
