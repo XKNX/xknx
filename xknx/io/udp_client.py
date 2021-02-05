@@ -8,10 +8,10 @@ import anyio
 from anyio.abc import SocketAttribute
 import socket
 from contextlib import contextmanager
-from distkv.util import create_queue
 
 from xknx.exceptions import CouldNotParseKNXIP, XKNXException
 from xknx.knxip import KNXIPFrame
+from xknx.util import create_queue
 
 
 class UDPClient:

@@ -9,7 +9,8 @@ You may register callbacks to be notified if a telegram was pushed to the queue.
 """
 import anyio
 from contextlib import contextmanager
-from distkv.util import create_queue  # XXX vendorize it myself?
+
+from xknx.util import create_queue
 
 try:
     from contextlib import asynccontextmanager

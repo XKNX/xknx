@@ -1,0 +1,3 @@
+[submodule "xknx/util"]
+	path = xknx/util
+	url = https://github.com/smurfix/util-py.git
