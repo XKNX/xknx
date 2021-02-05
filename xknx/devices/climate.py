@@ -62,6 +62,7 @@ class Climate(Device):
         min_temp: Optional[float] = None,
         max_temp: Optional[float] = None,
         mode: Optional[ClimateMode] = None,
+        expose_temperature_sensors: bool = False,
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize Climate class."""
@@ -125,6 +126,9 @@ class Climate(Device):
 
         self.mode = mode
 
+        if expose_temperature_sensors:
+            self.expose_temperature_sensors()
+
     def _iter_remote_values(self) -> Iterator["RemoteValue"]:
         """Iterate the devices RemoteValue classes."""
         yield from (
@@ -133,6 +137,28 @@ class Climate(Device):
             self._setpoint_shift,
             self.on,
         )
+
+    def expose_temperature_sensors(self) -> None:
+        """Expose temperature sensors to xknx."""
+        for suffix, group_address, value_type in (
+            (
+                "_temperature",
+                self.group_address_temperature,
+                "temperature",
+            ),
+            (
+                "_target_temperature",
+                self.group_address_target_temperature,
+                "temperature",
+            ),
+        ):
+            if group_address is not None:
+                Sensor(
+                    self.xknx,
+                    name=self.name + suffix,
+                    group_address_state=group_address,
+                    value_type=value_type,
+                )    
 
     @classmethod
     def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "Climate":

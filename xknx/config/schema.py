@@ -323,6 +323,7 @@ class ClimateSchema:
     CONF_HEAT_COOL = "heat_cool"
     CONF_OPERATION_MODES = "operation_modes"
     CONF_ON_OFF = "on_off"
+    CONF_EXPOSE_TEMPERATURE_SENSORS = "expose_temperature_sensors"
 
     CONF_FROST_PROTECTION_ADDRESS = "frost_protection_address"
     CONF_NIGHT_ADDRESS = "night_address"
@@ -416,6 +417,7 @@ class ClimateSchema:
             vol.Optional(CONF_OPERATION_MODES): vol.All(
                 ensure_list, [vol.In({**OPERATION_MODES, **PRESET_MODES})]
             ),
+            vol.Optional(CONF_EXPOSE_SENSORS, default=False): boolean,
         }
     )
 
