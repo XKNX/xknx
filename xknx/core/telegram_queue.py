@@ -66,7 +66,7 @@ class _TelegramQueue():
     @contextmanager
     def receiver(self, *address_filters):
         """Context manager returning an iterator for queued telegrams."""
-        q = anyio.create_queue(10)
+        q = create_queue(10)
 
         async def _receiver(telegram, _=None):
             await q.put(telegram)
