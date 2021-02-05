@@ -14,6 +14,7 @@ from xknx.remote_value import (
     RemoteValueTemp,
 )
 
+from . import Sensor
 from .climate_mode import ClimateMode
 from .device import Device, DeviceCallbackType
 
@@ -143,12 +144,12 @@ class Climate(Device):
         for suffix, group_address, value_type in (
             (
                 "_temperature",
-                self.group_address_temperature,
+                self.temperature.group_address_state,
                 "temperature",
             ),
             (
                 "_target_temperature",
-                self.group_address_target_temperature,
+                self.target_temperature.group_address_state,
                 "temperature",
             ),
         ):
@@ -158,7 +159,7 @@ class Climate(Device):
                     name=self.name + suffix,
                     group_address_state=group_address,
                     value_type=value_type,
-                )    
+                )
 
     @classmethod
     def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "Climate":
