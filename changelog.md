@@ -5,12 +5,13 @@
 ### Devices
 
 - Fan: Add `max_step` attribute which defines the maximum amount of steps. If set, the fan is controlled by steps instead of percentage.
+- Climate: Add option to create dedicated sensors for current and target temperature.
 
-## 0.16.2 Bugfix for yaml loader 2021-01-24
+## 0.16.2 Bugfix for YAML loader 2021-01-24
 
 ### Internals
 
-- fix conflict with HA Yaml loader
+- fix conflict with HA YAML loader
 
 ## 0.16.1 HA register services 2021-01-16
 
@@ -162,7 +163,7 @@
 - Reset binary sensor counters after the context has been timed out in order to be able to use state change events within HA
 - Code cleanups
 
-## 0.14.0 New sensor types and refacoring of binary sensor automations
+## 0.14.0 New sensor types and refactoring of binary sensor automations
 
 ### Breaking changes
 

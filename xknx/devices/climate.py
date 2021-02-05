@@ -14,7 +14,7 @@ from xknx.remote_value import (
     RemoteValueTemp,
 )
 
-from . import Sensor
+from .sensor import Sensor
 from .climate_mode import ClimateMode
 from .device import Device, DeviceCallbackType
 
