@@ -14,9 +14,9 @@ from xknx.remote_value import (
     RemoteValueTemp,
 )
 
-from .sensor import Sensor
 from .climate_mode import ClimateMode
 from .device import Device, DeviceCallbackType
+from .sensor import Sensor
 
 if TYPE_CHECKING:
     from xknx.remote_value import RemoteValue
@@ -63,7 +63,7 @@ class Climate(Device):
         min_temp: Optional[float] = None,
         max_temp: Optional[float] = None,
         mode: Optional[ClimateMode] = None,
-        expose_temperature_sensors: bool = False,
+        create_temperature_sensors: bool = False,
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize Climate class."""
@@ -127,8 +127,8 @@ class Climate(Device):
 
         self.mode = mode
 
-        if expose_temperature_sensors:
-            self.expose_temperature_sensors()
+        if create_temperature_sensors:
+            self.create_temperature_sensors()
 
     def _iter_remote_values(self) -> Iterator["RemoteValue"]:
         """Iterate the devices RemoteValue classes."""
@@ -139,8 +139,8 @@ class Climate(Device):
             self.on,
         )
 
-    def expose_temperature_sensors(self) -> None:
-        """Expose temperature sensors to xknx."""
+    def create_temperature_sensors(self) -> None:
+        """Create temperature sensors."""
         for suffix, group_address, value_type in (
             (
                 "temperature",

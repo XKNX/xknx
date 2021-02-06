@@ -1458,9 +1458,9 @@ class TestClimate(unittest.TestCase):
         )
 
     #
-    # Expose temperature sensor tests
+    # Create temperature sensor tests
     #
-    def test_expose_sensor(self):
+    def test_create_sensor(self):
         """Test default state mapping."""
         xknx = XKNX()
         Climate(
@@ -1477,7 +1477,7 @@ class TestClimate(unittest.TestCase):
             xknx=xknx,
             group_address_temperature="5/1/1",
             group_address_target_temperature="5/1/4",
-            expose_temperature_sensors=True,
+            create_temperature_sensors=True,
         )
 
         self.assertEqual(len(xknx.devices), 3)

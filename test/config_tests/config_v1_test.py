@@ -587,12 +587,12 @@ class TestConfig(unittest.TestCase):
                 group_address_day_night="7/0/8",
                 group_address_air_pressure="7/0/9",
                 group_address_humidity="7/0/10",
-                expose_sensors=False,
+                create_sensors=False,
                 sync_state=True,
             ),
         )
 
-    def test_config_weather_expose_sensor(self):
+    def test_config_weather_create_sensor(self):
         """Test reading weather from config file."""
         self.assertTrue(isinstance(TestConfig.xknx.devices["Home_temperature"], Sensor))
         self.assertTrue(

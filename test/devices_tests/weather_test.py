@@ -291,9 +291,9 @@ class TestWeather(unittest.TestCase):
         self.assertEqual(weather.ha_current_state(), WeatherCondition.exceptional)
 
     #
-    # Expose Sensor tests
+    # Create sensor tests
     #
-    def test_expose_sensor(self):
+    def test_create_sensor(self):
         """Test default state mapping."""
         xknx = XKNX()
         Weather(
@@ -313,7 +313,7 @@ class TestWeather(unittest.TestCase):
             group_address_brightness_south="1/3/6",
             group_address_brightness_west="1/3/7",
             group_address_wind_alarm="1/5/4",
-            expose_sensors=True,
+            create_sensors=True,
         )
 
         self.assertEqual(len(xknx.devices), 6)

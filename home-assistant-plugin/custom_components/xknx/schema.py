@@ -240,7 +240,7 @@ class ClimateSchema:
     CONF_ON_OFF_INVERT = "on_off_invert"
     CONF_MIN_TEMP = "min_temp"
     CONF_MAX_TEMP = "max_temp"
-    CONF_EXPOSE_TEMPERATURE_SENSORS = "expose_temperature_sensors"
+    CONF_CREATE_TEMPERATURE_SENSORS = "create_temperature_sensors"
 
     DEFAULT_NAME = "KNX Climate"
     DEFAULT_SETPOINT_SHIFT_MODE = "DPT6010"
@@ -297,7 +297,7 @@ class ClimateSchema:
                 vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
                 vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
                 vol.Optional(
-                    CONF_EXPOSE_TEMPERATURE_SENSORS, default=False
+                    CONF_CREATE_TEMPERATURE_SENSORS, default=False
                 ): cv.boolean,
             }
         ),
@@ -407,7 +407,7 @@ class WeatherSchema:
     CONF_XKNX_DAY_NIGHT_ADDRESS = "address_day_night"
     CONF_XKNX_AIR_PRESSURE_ADDRESS = "address_air_pressure"
     CONF_XKNX_HUMIDITY_ADDRESS = "address_humidity"
-    CONF_XKNX_EXPOSE_SENSORS = "expose_sensors"
+    CONF_XKNX_CREATE_SENSORS = "create_sensors"
 
     DEFAULT_NAME = "KNX Weather Station"
 
@@ -419,7 +419,7 @@ class WeatherSchema:
                 cv.boolean,
                 cv.string,
             ),
-            vol.Optional(CONF_XKNX_EXPOSE_SENSORS, default=False): cv.boolean,
+            vol.Optional(CONF_XKNX_CREATE_SENSORS, default=False): cv.boolean,
             vol.Required(CONF_XKNX_TEMPERATURE_ADDRESS): cv.string,
             vol.Optional(CONF_XKNX_BRIGHTNESS_SOUTH_ADDRESS): cv.string,
             vol.Optional(CONF_XKNX_BRIGHTNESS_EAST_ADDRESS): cv.string,
