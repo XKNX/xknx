@@ -93,7 +93,7 @@ class DPTTemperature(DPT2ByteFloat):
     value_type = "temperature"
     unit = "°C"
     ha_device_class = "temperature"
-    resolution = 1
+    resolution = 0.01
 
 
 class DPTTemperatureDifference2Byte(DPT2ByteFloat):
@@ -106,7 +106,7 @@ class DPTTemperatureDifference2Byte(DPT2ByteFloat):
     value_type = "temperature_difference_2byte"
     unit = "K"
     ha_device_class = "temperature"
-    resolution = 1
+    resolution = 0.01
 
 
 class DPTTemperatureA(DPT2ByteFloat):
@@ -118,7 +118,7 @@ class DPTTemperatureA(DPT2ByteFloat):
     dpt_sub_number = 3
     value_type = "temperature_a"
     unit = "K/h"
-    resolution = 1
+    resolution = 0.01
 
 
 class DPTLux(DPT2ByteFloat):
@@ -131,7 +131,7 @@ class DPTLux(DPT2ByteFloat):
     value_type = "illuminance"
     unit = "lx"
     ha_device_class = "illuminance"
-    resolution = 1
+    resolution = 0.01
 
 
 class DPTWsp(DPT2ByteFloat):
@@ -143,7 +143,7 @@ class DPTWsp(DPT2ByteFloat):
     dpt_sub_number = 5
     value_type = "wind_speed_ms"
     unit = "m/s"
-    resolution = 1
+    resolution = 0.01
 
 
 class DPTPressure2Byte(DPT2ByteFloat):
@@ -156,7 +156,7 @@ class DPTPressure2Byte(DPT2ByteFloat):
     value_type = "pressure_2byte"
     unit = "Pa"
     ha_device_class = "pressure"
-    resolution = 1
+    resolution = 0.01
 
 
 class DPTHumidity(DPT2ByteFloat):
@@ -169,7 +169,7 @@ class DPTHumidity(DPT2ByteFloat):
     value_type = "humidity"
     unit = "%"
     ha_device_class = "humidity"
-    resolution = 1
+    resolution = 0.01
 
 
 class DPTPartsPerMillion(DPT2ByteFloat):
@@ -179,6 +179,7 @@ class DPTPartsPerMillion(DPT2ByteFloat):
     dpt_sub_number = 8
     value_type = "ppm"
     unit = "ppm"
+    resolution = 0.01
 
 
 class DPTTime1(DPT2ByteFloat):
@@ -190,7 +191,7 @@ class DPTTime1(DPT2ByteFloat):
     dpt_sub_number = 10
     value_type = "time_1"
     unit = "s"
-    resolution = 1
+    resolution = 0.01
 
 
 class DPTTime2(DPT2ByteFloat):
@@ -202,7 +203,7 @@ class DPTTime2(DPT2ByteFloat):
     dpt_sub_number = 11
     value_type = "time_2"
     unit = "ms"
-    resolution = 1
+    resolution = 0.01
 
 
 class DPTVoltage(DPT2ByteFloat):
@@ -212,6 +213,7 @@ class DPTVoltage(DPT2ByteFloat):
     dpt_sub_number = 20
     value_type = "voltage"
     unit = "mV"
+    resolution = 0.01
 
 
 class DPTCurrent(DPT2ByteFloat):
@@ -221,6 +223,7 @@ class DPTCurrent(DPT2ByteFloat):
     dpt_sub_number = 21
     value_type = "curr"
     unit = "mA"
+    resolution = 0.01
 
 
 class DPTPowerDensity(DPT2ByteFloat):
@@ -230,6 +233,7 @@ class DPTPowerDensity(DPT2ByteFloat):
     dpt_sub_number = 22
     value_type = "power_density"
     unit = "W/m²"
+    resolution = 0.01
 
 
 class DPTKelvinPerPercent(DPT2ByteFloat):
@@ -239,6 +243,7 @@ class DPTKelvinPerPercent(DPT2ByteFloat):
     dpt_sub_number = 23
     value_type = "kelvin_per_percent"
     unit = "K/%"
+    resolution = 0.01
 
 
 class DPTPower2Byte(DPT2ByteFloat):
@@ -249,6 +254,7 @@ class DPTPower2Byte(DPT2ByteFloat):
     value_type = "power_2byte"
     unit = "kW"
     ha_device_class = "power"
+    resolution = 0.01
 
 
 class DPTVolumeFlow(DPT2ByteFloat):
@@ -258,6 +264,7 @@ class DPTVolumeFlow(DPT2ByteFloat):
     dpt_sub_number = 25
     value_type = "volume_flow"
     unit = "l/h"
+    resolution = 0.01
 
 
 class DPTRainAmount(DPT2ByteFloat):
@@ -269,6 +276,7 @@ class DPTRainAmount(DPT2ByteFloat):
     dpt_sub_number = 26
     value_type = "rain_amount"
     unit = "l/m²"
+    resolution = 0.01
 
 
 class DPTTemperatureF(DPT2ByteFloat):
@@ -281,7 +289,7 @@ class DPTTemperatureF(DPT2ByteFloat):
     value_type = "temperature_f"
     unit = "°F"
     ha_device_class = "temperature"
-    resolution = 1
+    resolution = 0.01
 
 
 class DPTWspKmh(DPT2ByteFloat):
@@ -293,7 +301,7 @@ class DPTWspKmh(DPT2ByteFloat):
     dpt_sub_number = 28
     value_type = "wind_speed_kmh"
     unit = "km/h"
-    resolution = 1
+    resolution = 0.01
 
 
 class DPTEnthalpy(DPT2ByteFloat):
@@ -304,3 +312,4 @@ class DPTEnthalpy(DPT2ByteFloat):
     dpt_sub_number = 999
     value_type = "enthalpy"
     unit = "H"
+    resolution = 0.01
