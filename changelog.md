@@ -4,7 +4,8 @@
 
 ### Devices
 
-- Climate: Add option to create dedicated sensors for current and target temperature.
+- Climate: Add `create_temperature_sensors` option to create dedicated sensors for current and target temperature.
+- Weather (breaking change!): Renamed `expose_sensors` to `create_sensors` to prevent confusion with the XKNX `expose_sensor` device type.
 
 ## 0.16.3 Fan contributions 2021-02-06
 
