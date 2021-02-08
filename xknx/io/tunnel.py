@@ -47,7 +47,7 @@ class Tunnel(Interface):
         gateway_ip: str,
         gateway_port: int,
         telegram_received_callback: Optional["TelegramCallbackType"] = None,
-        auto_reconnect: bool = False,
+        auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
     ):
         """Initialize Tunnel class."""
