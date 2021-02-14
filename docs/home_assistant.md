@@ -44,7 +44,7 @@ Delete the automatically installed version:
 rm [hass-directory]/lib/python[python-version]/site-packages/xknx*
 ```
 
-Note: `[hass-directory]` is platform dependend (e.g. `~/.homeassistant` for MacOS or `/srv/homeassistant` for LINUX).
+Note: `[hass-directory]` is platform dependend (e.g. `.homeassistant/deps` for MacOS or `/srv/homeassistant` for LINUX).
 
 Ideally start HA from command line. Export the environment variable PYTHONPATH to your local `xknx` checkout:
 
