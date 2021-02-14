@@ -2,8 +2,9 @@
 from xknx.devices import Sensor as XknxSensor
 
 from homeassistant.components.sensor import DEVICE_CLASSES
-from homeassistant.helpers.entity import Entity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
+
 from .const import DOMAIN
 from .knx_entity import KnxEntity
 
@@ -23,16 +24,15 @@ class KNXSensor(KnxEntity, Entity):
     def __init__(self, device: XknxSensor, hass: HomeAssistant):
         """Initialize of a KNX sensor."""
         if device.value_template is not None:
-          device.value_template.hass = hass 
+            device.value_template.hass = hass
         super().__init__(device)
-       
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        state = self._device.resolve_state() 
-        template = self._device.value_template 
-        if template  is not None and state is not None:
+        state = self._device.resolve_state()
+        template = self._device.value_template
+        if template is not None and state is not None:
             state = template.async_render_with_possible_json_value(state)
         return state
 

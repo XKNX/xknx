@@ -20,6 +20,7 @@ Sensors are monitoring temperature, air humidity, pressure etc. from KNX bus.
 * `always_callback` defines if a callback/update should always be triggered no matter if the previous and the new state are identical.
 * `value_type` controls how the value should be rendered in a human readable representation. The attribut may have may have the values `percent`, `temperature`, `illuminance`, `speed_ms` or `current`.
 * `device_updated_cb` awaitable callback for each update.
+* `value_template` may be used to modify the state of the sensor in Home-Assistant (see [template documentation](https://www.home-assistant.io/docs/configuration/templating) for details).
 
 ## [](#header-2)Example
 
