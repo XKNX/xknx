@@ -572,6 +572,7 @@ class DPTPowerFactor(DPT4ByteFloat):
     dpt_sub_number = 57
     value_type = "powerfactor"
     unit = "cosΦ"
+    ha_device_class = "power_factor"
 
 
 class DPTPressure(DPT4ByteFloat):

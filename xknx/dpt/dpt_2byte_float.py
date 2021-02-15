@@ -23,7 +23,7 @@ class DPT2ByteFloat(DPTBase):
     dpt_sub_number: Optional[int] = None
     value_type = "2byte_float"
     unit = ""
-    resolution = 1
+    resolution = 0.01
     payload_length = 2
 
     @classmethod
@@ -94,7 +94,6 @@ class DPTTemperature(DPT2ByteFloat):
     value_type = "temperature"
     unit = "°C"
     ha_device_class = "temperature"
-    resolution = 1
 
 
 class DPTTemperatureDifference2Byte(DPT2ByteFloat):
@@ -107,7 +106,6 @@ class DPTTemperatureDifference2Byte(DPT2ByteFloat):
     value_type = "temperature_difference_2byte"
     unit = "K"
     ha_device_class = "temperature"
-    resolution = 1
 
 
 class DPTTemperatureA(DPT2ByteFloat):
@@ -119,7 +117,6 @@ class DPTTemperatureA(DPT2ByteFloat):
     dpt_sub_number = 3
     value_type = "temperature_a"
     unit = "K/h"
-    resolution = 1
 
 
 class DPTLux(DPT2ByteFloat):
@@ -132,7 +129,6 @@ class DPTLux(DPT2ByteFloat):
     value_type = "illuminance"
     unit = "lx"
     ha_device_class = "illuminance"
-    resolution = 1
 
 
 class DPTWsp(DPT2ByteFloat):
@@ -144,7 +140,6 @@ class DPTWsp(DPT2ByteFloat):
     dpt_sub_number = 5
     value_type = "wind_speed_ms"
     unit = "m/s"
-    resolution = 1
 
 
 class DPTPressure2Byte(DPT2ByteFloat):
@@ -157,7 +152,6 @@ class DPTPressure2Byte(DPT2ByteFloat):
     value_type = "pressure_2byte"
     unit = "Pa"
     ha_device_class = "pressure"
-    resolution = 1
 
 
 class DPTHumidity(DPT2ByteFloat):
@@ -170,7 +164,6 @@ class DPTHumidity(DPT2ByteFloat):
     value_type = "humidity"
     unit = "%"
     ha_device_class = "humidity"
-    resolution = 1
 
 
 class DPTPartsPerMillion(DPT2ByteFloat):
@@ -191,7 +184,6 @@ class DPTTime1(DPT2ByteFloat):
     dpt_sub_number = 10
     value_type = "time_1"
     unit = "s"
-    resolution = 1
 
 
 class DPTTime2(DPT2ByteFloat):
@@ -203,7 +195,6 @@ class DPTTime2(DPT2ByteFloat):
     dpt_sub_number = 11
     value_type = "time_2"
     unit = "ms"
-    resolution = 1
 
 
 class DPTVoltage(DPT2ByteFloat):
@@ -282,7 +273,6 @@ class DPTTemperatureF(DPT2ByteFloat):
     value_type = "temperature_f"
     unit = "°F"
     ha_device_class = "temperature"
-    resolution = 1
 
 
 class DPTWspKmh(DPT2ByteFloat):
@@ -294,7 +284,6 @@ class DPTWspKmh(DPT2ByteFloat):
     dpt_sub_number = 28
     value_type = "wind_speed_kmh"
     unit = "km/h"
-    resolution = 1
 
 
 class DPTEnthalpy(DPT2ByteFloat):
