@@ -36,15 +36,15 @@ Run HA as usual either via service or by directly typing in `hass`.
 Running HA with local XKNX library
 ------------------------------------
 
-Even when running HA with the XKNX custom component, HA will automatically install a `xknx` library version within `[hass-directory]/lib/python[python-version]/site-packages` via pip. This very often causes the problem, that the manually checked out `xknx` library is not in sync with the `xknx` library version HA already contains and uses by default. But getting both in sync is easy:
+When running HA with the KNX integrated component once, HA will automatically install a `xknx` library version within `[hass-dependency-directory]/lib/python[python-version]/site-packages` via pip. This very often causes the problem, that the manually checked out `xknx` library is not in sync with the `xknx` library version HA already contains and uses by default. But getting both in sync is easy:
 
 Delete the automatically installed version:
 
 ```bash
-rm [hass-directory]/lib/python[python-version]/site-packages/xknx*
+rm [hass-dependency-directory]/lib/python[python-version]/site-packages/xknx*
 ```
 
-Note: `[hass-directory]` is platform dependend (e.g. `/usr/local/` for MacOS or `/srv/homeassistant` for LINUX).
+Note: `[hass-dependency-directory]` is platform dependend (e.g. `/usr/local` for Docker image, `~/.homeassistant/deps` for macOS or `/srv/homeassistant` for Debian).
 
 Ideally start HA from command line. Export the environment variable PYTHONPATH to your local `xknx` checkout:
 
@@ -81,5 +81,4 @@ Help
 ----
 
 If you have problems, join the [XKNX chat on Discord](https://discord.gg/EuAQDXU). We are happy to help :-)
-
 
