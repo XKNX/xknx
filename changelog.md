@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Devices
+
+- BinarySensor: return `None` for `BinarySensor.counter` when context timeout is not used (and don't calculate it)
+
 ### Internals
 
 - RemoteValue is Generic now accepting DPTArray or DPTBinary
