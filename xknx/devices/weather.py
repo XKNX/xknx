@@ -215,22 +215,20 @@ class Weather(Device):
         if expose_sensors:
             self.expose_sensors()
 
-    def _iter_remote_values(self) -> Iterator[RemoteValue]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices remote values."""
-        yield from [
-            self._temperature,
-            self._brightness_south,
-            self._brightness_north,
-            self._brightness_east,
-            self._brightness_west,
-            self._wind_speed,
-            self._rain_alarm,
-            self._wind_alarm,
-            self._frost_alarm,
-            self._day_night,
-            self._air_pressure,
-            self._humidity,
-        ]
+        yield self._temperature
+        yield self._brightness_south
+        yield self._brightness_north
+        yield self._brightness_east
+        yield self._brightness_west
+        yield self._wind_speed
+        yield self._rain_alarm
+        yield self._wind_alarm
+        yield self._frost_alarm
+        yield self._day_night
+        yield self._air_pressure
+        yield self._humidity
 
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""

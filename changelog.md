@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased changes
+
+### Internals
+
+- RemoteValue is Generic now accepting DPTArray or DPTBinary
+- split RemoteValueClimateMode into RemoteValueControllerMode and RemoteValueOperationMode
+- return the payload (or None) in RemoteValue.payload_valid(payload) instead of bool
+- Light colors are represented as `Tuple[Tuple[int,int,int], int]` instead of `Tuple[List[int], int]` now
+- DPT 3 payloads/values are not invertable anymore.
+
 ## 0.16.3 Fan contributions 2021-02-06
 
 ### Devices

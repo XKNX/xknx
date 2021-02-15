@@ -83,7 +83,7 @@ class TestRemoteValue(unittest.TestCase):
         with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_valid, patch(
             "xknx.remote_value.RemoteValue.has_group_address"
         ) as patch_has_group_address:
-            patch_valid.return_value = False
+            patch_valid.return_value = None
             patch_has_group_address.return_value = True
 
             telegram = Telegram(
@@ -147,8 +147,8 @@ class TestRemoteValue(unittest.TestCase):
         self.assertFalse(remote_value.readable)
         # RemoteValue is initialized with only passive group address
         self.assertTrue(remote_value.initialized)
-        with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_valid:
-            patch_valid.return_value = True
+        with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_always_valid:
+            patch_always_valid.side_effect = lambda payload: payload
             test_payload = DPTArray((0x01, 0x02))
             telegram = Telegram(
                 destination_address=GroupAddress("1/1/1"),
