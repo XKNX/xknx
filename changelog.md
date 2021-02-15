@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Devices
+
+- BinarySensor: return `None` for `BinarySensor.counter` when context timeout is not used (and don't calculate it)
+
 ### Internals
 
 - RemoteValue is Generic now accepting DPTArray or DPTBinary
@@ -14,7 +18,6 @@
 
 ### Devices
 
-- BinarySensor: return `None` for `BinarySensor.counter` when context timeout is not used (and don't calculate it)
 - Fan: Add `max_step` attribute which defines the maximum amount of steps. If set, the fan is controlled by steps instead of percentage.
 - Fan: Add `group_address_oscillation` and `group_address_oscillation_state` attributes to control the oscillation of a fan.
 
