@@ -18,3 +18,8 @@ venv
 .python-version
 *.iml
 *.log
+xknx/devices/sensor_old.py
+home-assistant-plugin/custom_components/xknx/schema.py_old
+home-assistant-plugin/custom_components/xknx/factory.py_bak
+home-assistant-plugin/custom_components/xknx/__init__.py_bak
+home-assistant-plugin/custom_components/xknx/sensor.py_bak

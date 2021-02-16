@@ -522,6 +522,7 @@ class TestConfig(unittest.TestCase):
                 "Kitchen.Temperature",
                 group_address_state="2/0/2",
                 value_type="temperature",
+                value_template="{{  value | round(0) }}",
             ),
         )
 
