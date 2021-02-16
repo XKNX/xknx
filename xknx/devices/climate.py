@@ -16,6 +16,7 @@ from xknx.remote_value import (
 
 from .climate_mode import ClimateMode
 from .device import Device, DeviceCallbackType
+from .sensor import Sensor
 
 if TYPE_CHECKING:
     from xknx.remote_value import RemoteValue
@@ -62,6 +63,7 @@ class Climate(Device):
         min_temp: Optional[float] = None,
         max_temp: Optional[float] = None,
         mode: Optional[ClimateMode] = None,
+        create_temperature_sensors: bool = False,
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize Climate class."""
@@ -78,7 +80,7 @@ class Climate(Device):
             xknx,
             group_address_state=group_address_temperature,
             device_name=self.name,
-            feature_name="Current Temperature",
+            feature_name="Current temperature",
             after_update_cb=self.after_update,
         )
 
@@ -125,6 +127,9 @@ class Climate(Device):
 
         self.mode = mode
 
+        if create_temperature_sensors:
+            self.create_temperature_sensors()
+
     def _iter_remote_values(self) -> Iterator["RemoteValue[Any]"]:
         """Iterate the devices RemoteValue classes."""
         yield from (
@@ -133,6 +138,28 @@ class Climate(Device):
             self._setpoint_shift,
             self.on,
         )
+
+    def create_temperature_sensors(self) -> None:
+        """Create temperature sensors."""
+        for suffix, group_address, value_type in (
+            (
+                "temperature",
+                self.temperature.group_address_state,
+                "temperature",
+            ),
+            (
+                "target temperature",
+                self.target_temperature.group_address_state,
+                "temperature",
+            ),
+        ):
+            if group_address is not None:
+                Sensor(
+                    self.xknx,
+                    name=self.name + " " + suffix,
+                    group_address_state=group_address,
+                    value_type=value_type,
+                )
 
     @classmethod
     def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "Climate":

@@ -92,7 +92,7 @@ class Weather(Device):
         group_address_day_night: Optional["GroupAddressableType"] = None,
         group_address_air_pressure: Optional["GroupAddressableType"] = None,
         group_address_humidity: Optional["GroupAddressableType"] = None,
-        expose_sensors: bool = False,
+        create_sensors: bool = False,
         sync_state: bool = True,
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ) -> None:
@@ -212,8 +212,8 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
-        if expose_sensors:
-            self.expose_sensors()
+        if create_sensors:
+            self.create_sensors()
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices remote values."""
@@ -317,7 +317,7 @@ class Weather(Device):
             self.brightness_east,
         )
 
-    def expose_sensors(self) -> None:
+    def create_sensors(self) -> None:
         """Expose sensors to xknx."""
         for suffix, group_address in (
             ("_rain_alarm", self._rain_alarm.group_address_state),
@@ -435,7 +435,7 @@ class Weather(Device):
         group_address_day_night = config.get("group_address_day_night")
         group_address_air_pressure = config.get("group_address_air_pressure")
         group_address_humidity = config.get("group_address_humidity")
-        expose_sensors = config.get("expose_sensors", False)
+        create_sensors = config.get("create_sensors", False)
         sync_state = config.get("sync_state", True)
 
         return cls(
@@ -453,7 +453,7 @@ class Weather(Device):
             group_address_day_night=group_address_day_night,
             group_address_air_pressure=group_address_air_pressure,
             group_address_humidity=group_address_humidity,
-            expose_sensors=expose_sensors,
+            create_sensors=create_sensors,
             sync_state=sync_state,
         )
 
