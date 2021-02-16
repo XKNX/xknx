@@ -1,11 +1,20 @@
 # Changelog
 
-## 0.xx
+## Unreleased changes
 
 ### Devices
 
+- BinarySensor: return `None` for `BinarySensor.counter` when context timeout is not used (and don't calculate it)
 - Climate: Add `create_temperature_sensors` option to create dedicated sensors for current and target temperature.
 - Weather (breaking change!): Renamed `expose_sensors` to `create_sensors` to prevent confusion with the XKNX `expose_sensor` device type.
+
+### Internals
+
+- RemoteValue is Generic now accepting DPTArray or DPTBinary
+- split RemoteValueClimateMode into RemoteValueControllerMode and RemoteValueOperationMode
+- return the payload (or None) in RemoteValue.payload_valid(payload) instead of bool
+- Light colors are represented as `Tuple[Tuple[int,int,int], int]` instead of `Tuple[List[int], int]` now
+- DPT 3 payloads/values are not invertable anymore.
 
 ## 0.16.3 Fan contributions 2021-02-06
 

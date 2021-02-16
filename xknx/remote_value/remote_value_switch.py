@@ -3,28 +3,32 @@ Module for managing an DPT Switch remote value.
 
 DPT 1.001.
 """
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional, Union
 
-from xknx.dpt import DPTBinary
+from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
-from .remote_value import RemoteValue
+from .remote_value import AsyncCallbackType, RemoteValue
+
+if TYPE_CHECKING:
+    from xknx.telegram.address import GroupAddressableType
+    from xknx.xknx import XKNX
 
 
-class RemoteValueSwitch(RemoteValue):
+class RemoteValueSwitch(RemoteValue[DPTBinary]):
     """Abstraction for remote value of KNX DPT 1.001 / DPT_Switch."""
 
     def __init__(
         self,
-        xknx,
-        group_address=None,
-        group_address_state=None,
+        xknx: "XKNX",
+        group_address: Optional["GroupAddressableType"] = None,
+        group_address_state: Optional["GroupAddressableType"] = None,
         sync_state: bool = True,
-        device_name: str = None,
+        device_name: Optional[str] = None,
         feature_name: str = "State",
-        after_update_cb=None,
-        invert: Optional[bool] = False,
-        passive_group_addresses: List[str] = None,
+        after_update_cb: Optional[AsyncCallbackType] = None,
+        invert: bool = False,
+        passive_group_addresses: Optional[List["GroupAddressableType"]] = None,
     ):
         """Initialize remote value of KNX DPT 1.001."""
         # pylint: disable=too-many-arguments
@@ -40,11 +44,14 @@ class RemoteValueSwitch(RemoteValue):
         )
         self.invert = bool(invert)
 
-    def payload_valid(self, payload):
+    def payload_valid(
+        self, payload: Optional[Union[DPTArray, DPTBinary]]
+    ) -> Optional[DPTBinary]:
         """Test if telegram payload may be parsed."""
-        return isinstance(payload, DPTBinary)
+        # pylint: disable=no-self-use
+        return payload if isinstance(payload, DPTBinary) else None
 
-    def to_knx(self, value: bool):
+    def to_knx(self, value: bool) -> DPTBinary:
         """Convert value to payload."""
         if isinstance(value, bool):
             return DPTBinary(value ^ self.invert)

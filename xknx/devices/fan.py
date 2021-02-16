@@ -89,7 +89,7 @@ class Fan(Device):
             after_update_cb=self.after_update,
         )
 
-    def _iter_remote_values(self) -> Iterator["RemoteValue"]:
+    def _iter_remote_values(self) -> Iterator["RemoteValue[Any]"]:
         """Iterate the devices RemoteValue classes."""
         yield from (self.speed, self.oscillation)
 

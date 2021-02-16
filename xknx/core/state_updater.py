@@ -2,7 +2,7 @@
 import asyncio
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Awaitable, Callable, Dict, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Optional, Tuple, Union
 
 from xknx.remote_value import RemoteValue
 
@@ -28,7 +28,7 @@ class StateUpdater:
 
     def register_remote_value(
         self,
-        remote_value: RemoteValue,
+        remote_value: RemoteValue[Any],
         tracker_options: Union[bool, int, float, str] = True,
     ) -> None:
         """Register a RemoteValue to initialize its state and/or track for expiration."""
@@ -110,11 +110,11 @@ class StateUpdater:
         if self.started:
             tracker.start()
 
-    def unregister_remote_value(self, remote_value: RemoteValue) -> None:
+    def unregister_remote_value(self, remote_value: RemoteValue[Any]) -> None:
         """Unregister a RemoteValue from StateUpdater."""
         self._workers.pop(id(remote_value)).stop()
 
-    def update_received(self, remote_value: RemoteValue) -> None:
+    def update_received(self, remote_value: RemoteValue[Any]) -> None:
         """Reset the timer when a state update was received."""
         if self.started and id(remote_value) in self._workers:
             self._workers[id(remote_value)].update_received()
