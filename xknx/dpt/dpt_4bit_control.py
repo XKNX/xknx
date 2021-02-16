@@ -11,15 +11,16 @@ There are two separate dimming modes sharing the same DPT class:
 
 As the same payload in these cases in interpreted completely different it is reasonable to make separate DPT classes.
 """
+from abc import ABC
 from enum import Enum
-from typing import Tuple
+from typing import Any, Dict, Optional, Tuple, Union
 
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
 
 
-class DPTControlStepCode(DPTBase):
+class DPTControlStepCode(DPTBase, ABC):
     """Abstraction for KNX B1U3 values (DPT 3.007/3.008)."""
 
     # APCI (application layer control information)
@@ -27,49 +28,48 @@ class DPTControlStepCode(DPTBase):
     APCI_STEPCODEMASK = 0x07
     APCI_MAX_VALUE = APCI_CONTROLMASK | APCI_STEPCODEMASK
 
-    value_type = "control_stepcode"
     unit = ""
     payload_length = 1
 
     @classmethod
-    def _encode(cls, control: bool, step_code: int):
+    def _encode(cls, control: bool, step_code: int) -> int:
         """Encode control-bit with step-code."""
         value = 1 if control > 0 else 0
         value = (value << 3) | (step_code & cls.APCI_STEPCODEMASK)
         return value
 
     @classmethod
-    def _decode(cls, value) -> Tuple[bool, int]:
+    def _decode(cls, value: int) -> Tuple[bool, int]:
         """Decode value into control-bit and step-code."""
-        control = 1 if (value & cls.APCI_CONTROLMASK) != 0 else 0
+        control = bool(value & cls.APCI_CONTROLMASK)
         step_code = value & cls.APCI_STEPCODEMASK
         return control, step_code
 
     @classmethod
-    def _test_boundaries(cls, raw):
+    def _test_boundaries(cls, raw: int) -> bool:
         """Test if raw KNX data is within defined range for this object."""
         if isinstance(raw, int):
             return 0 <= raw <= cls.APCI_MAX_VALUE
-        return False
 
     @classmethod
-    def _test_values(cls, control: bool, step_code: int):
+    def _test_values(cls, control: bool, step_code: int) -> bool:
         """Test if input values are valid."""
-        if isinstance(control, int) and isinstance(step_code, int):
-            if control in (0, 1) and 0 <= step_code <= cls.APCI_STEPCODEMASK:
+        if isinstance(control, bool) and isinstance(step_code, int):
+            if 0 <= step_code <= cls.APCI_STEPCODEMASK:
                 return True
         return False
 
     @classmethod
-    def to_knx(cls, value, invert: bool = False):
+    def to_knx(cls, value: Any) -> Tuple[int]:
         """Serialize to KNX/IP raw data."""
+        # TODO: use Tuple or Named Tuple instead of Dict[str, int] to account for bool control
         if not isinstance(value, dict):
             raise ConversionError(
                 "Cant serialize %s; invalid value type" % cls.__name__, value=value
             )
 
         try:
-            control = value["control"]
+            control = bool(value["control"])
             step_code = value["step_code"]
         except KeyError:
             raise ConversionError(
@@ -81,21 +81,15 @@ class DPTControlStepCode(DPTBase):
                 "Cant serialize %s; invalid values" % cls.__name__, value=value
             )
 
-        if invert:
-            control = 0 if control > 0 else 1
-
-        return cls._encode(control, step_code)
+        return (cls._encode(control, step_code),)
 
     @classmethod
-    def from_knx(cls, raw, invert: bool = False):
+    def from_knx(cls, raw: Tuple[int, ...]) -> Any:
         """Parse/deserialize from KNX/IP raw data."""
-        if not cls._test_boundaries(raw):
+        if not isinstance(raw, tuple) or not cls._test_boundaries(raw[0]):
             raise ConversionError("Cant parse %s" % cls.__name__, raw=raw)
 
-        control, step_code = cls._decode(raw)
-
-        if invert:
-            control = 0 if control > 0 else 1
+        control, step_code = cls._decode(raw[0])
 
         return {"control": control, "step_code": step_code}
 
@@ -104,12 +98,12 @@ class DPTControlStepwise(DPTControlStepCode):
     """Abstraction for KNX DPT 3.xxx in stepwise mode with conversion to an incement value."""
 
     dpt_main_number = 3
-    dpt_sub_number = None
+    dpt_sub_number: Optional[int] = None
     value_type = "stepwise"
     unit = "%"
 
     @staticmethod
-    def _from_increment(value):
+    def _from_increment(value: int) -> Dict[str, int]:
         """Calculate control bit and stepcode as defined in the KNX standard section 3.3.1 from an increment value."""
         # control bit in KNX standard
         #   0: - = decrease/move up
@@ -137,24 +131,24 @@ class DPTControlStepwise(DPTControlStepCode):
         return {"control": control, "step_code": stepcode}
 
     @staticmethod
-    def _to_increment(value):
+    def _to_increment(value: Dict[str, int]) -> int:
         """Calculate the increment value from the stepcode and control bit as defined in the KNX standard section 3.3.1."""
         # calculated using floor(100/2^((value&0x07)-1))
         inc = [0, 100, 50, 25, 12, 6, 3, 1][value["step_code"] & 0x07]
         return inc if value["control"] == 1 else -inc
 
     @classmethod
-    def to_knx(cls, value, invert: bool = False):
+    def to_knx(cls, value: Union[int, Dict[str, int]]) -> Tuple[int]:
         """Serialize to KNX/IP raw data."""
         if not isinstance(value, int):
             raise ConversionError("Cant serialize %s" % cls.__name__, value=value)
 
-        return super().to_knx(cls._from_increment(value), invert)
+        return super().to_knx(cls._from_increment(value))
 
     @classmethod
-    def from_knx(cls, raw, invert: bool = False):
+    def from_knx(cls, raw: Tuple[int, ...]) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-        return cls._to_increment(super().from_knx(raw, invert))
+        return cls._to_increment(super().from_knx(raw))
 
 
 class DPTControlStepwiseDimming(DPTControlStepwise):
@@ -199,7 +193,7 @@ class DPTControlStartStop(DPTControlStepCode):
         STOP = 2
 
     @classmethod
-    def to_knx(cls, value, invert: bool = False):
+    def to_knx(cls, value: Direction) -> Tuple[int]:
         """Convert value to payload."""
         control = 0
         step_code = 0
@@ -216,12 +210,12 @@ class DPTControlStartStop(DPTControlStepCode):
             raise ConversionError("Cant serialize %s" % cls.__name__, value=value)
 
         values = {"control": control, "step_code": step_code}
-        return super().to_knx(values, invert)
+        return super().to_knx(values)
 
     @classmethod
-    def from_knx(cls, raw, invert: bool = False):
+    def from_knx(cls, raw: Tuple[int, ...]) -> Direction:
         """Convert current payload to value."""
-        values = super().from_knx(raw, invert)
+        values = super().from_knx(raw)
         if values["step_code"] == 0:
             return cls.Direction(2)  # STOP
         if values["control"] == 0:

@@ -224,7 +224,7 @@ class TestSensor(unittest.TestCase):
 
         self.assertEqual(sensor.resolve_state(), 641157503)
         self.assertEqual(sensor.unit_of_measurement(), "Wh")
-        self.assertEqual(sensor.ha_device_class(), None)
+        self.assertEqual(sensor.ha_device_class(), "energy")
 
     def test_str_active_energy_kwh(self):
         """Test resolve state with active_energy_kwh sensor."""
@@ -246,7 +246,7 @@ class TestSensor(unittest.TestCase):
 
         self.assertEqual(sensor.resolve_state(), 923076074)
         self.assertEqual(sensor.unit_of_measurement(), "kWh")
-        self.assertEqual(sensor.ha_device_class(), None)
+        self.assertEqual(sensor.ha_device_class(), "energy")
 
     def test_str_activity(self):
         """Test resolve state with activity sensor."""
@@ -422,7 +422,7 @@ class TestSensor(unittest.TestCase):
 
         self.assertEqual(sensor.resolve_state(), -742580571)
         self.assertEqual(sensor.unit_of_measurement(), "VAh")
-        self.assertEqual(sensor.ha_device_class(), None)
+        self.assertEqual(sensor.ha_device_class(), "energy")
 
     def test_str_apparant_energy_kvah(self):
         """Test resolve state with apparant_energy_kvah sensor."""
@@ -444,7 +444,7 @@ class TestSensor(unittest.TestCase):
 
         self.assertEqual(sensor.resolve_state(), 1228982537)
         self.assertEqual(sensor.unit_of_measurement(), "kVAh")
-        self.assertEqual(sensor.ha_device_class(), None)
+        self.assertEqual(sensor.ha_device_class(), "energy")
 
     def test_str_area(self):
         """Test resolve state with area sensor."""
@@ -1794,7 +1794,7 @@ class TestSensor(unittest.TestCase):
 
         self.assertEqual(sensor.resolve_state(), -2898.508056640625)
         self.assertEqual(sensor.unit_of_measurement(), "cosΦ")
-        self.assertEqual(sensor.ha_device_class(), None)
+        self.assertEqual(sensor.ha_device_class(), "power_factor")
 
     def test_str_ppm(self):
         """Test resolve state with ppm sensor."""
@@ -1917,7 +1917,7 @@ class TestSensor(unittest.TestCase):
 
         self.assertEqual(sensor.resolve_state(), 441019815)
         self.assertEqual(sensor.unit_of_measurement(), "VARh")
-        self.assertEqual(sensor.ha_device_class(), None)
+        self.assertEqual(sensor.ha_device_class(), "energy")
 
     def test_str_reactive_energy_kvarh(self):
         """Test resolve state with reactive_energy_kvarh sensor."""
@@ -1939,7 +1939,7 @@ class TestSensor(unittest.TestCase):
 
         self.assertEqual(sensor.resolve_state(), -865991375)
         self.assertEqual(sensor.unit_of_measurement(), "kVARh")
-        self.assertEqual(sensor.ha_device_class(), None)
+        self.assertEqual(sensor.ha_device_class(), "energy")
 
     def test_str_resistance(self):
         """Test resolve state with resistance sensor."""

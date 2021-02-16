@@ -2,7 +2,7 @@
 layout: default
 title: Lights / Dimmer
 parent: Devices
-nav_order: 4
+nav_order: 5
 ---
 
 # [](#header-1)Light & Dimmer

@@ -2,7 +2,7 @@
 layout: default
 title: Weather
 parent: Devices
-nav_order: 8
+nav_order: 9
 ---
 
 # [](#header-1)Weather device
@@ -51,7 +51,7 @@ groups:
             group_address_day_night: "7/0/8",
             group_address_air_pressure: "7/0/9",
             group_address_humidity: "7/0/10",
-            expose_sensors: True,
+            create_sensors: True,
             sync_state: True,
           }
 ```
@@ -71,7 +71,7 @@ groups:
 - **group_address_day_night** KNX address for reading a day/night object.
 - **group_address_air_pressure** KNX address reading current air pressure. **DPT 9.006**
 - **group_address_humidity** KNX address for reading current humidity. **DPT 9.007**
-- **expose_sensors** If true, also exposes all values as sensors to the xknx device list (useful for home assistant). Default: False
+- **create_sensors** If true, also adds sensors for all values to the xknx device list (useful for Home Assistant). Default: False
 - **sync_state** Periodically sync the state.
 - **device_updated_cb** awaitable callback for each update.
 

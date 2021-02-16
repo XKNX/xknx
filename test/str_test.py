@@ -188,10 +188,12 @@ class TestStringRepresentations(unittest.TestCase):
             name="Dunstabzug",
             group_address_speed="1/2/3",
             group_address_speed_state="1/2/4",
+            group_address_oscillation="1/2/5",
+            group_address_oscillation_state="1/2/6",
         )
         self.assertEqual(
             str(fan),
-            '<Fan name="Dunstabzug" speed="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" />',
+            '<Fan name="Dunstabzug" speed="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" oscillation="GroupAddress("1/2/5")/GroupAddress("1/2/6")/None/None" />',
         )
 
     def test_light(self):
@@ -337,7 +339,7 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_day_night="7/0/7",
             group_address_rain_alarm="7/0/0",
             group_address_frost_alarm="7/0/8",
-            expose_sensors=True,
+            create_sensors=True,
             group_address_air_pressure="7/0/9",
             group_address_humidity="7/0/9",
             group_address_wind_alarm="7/0/10",

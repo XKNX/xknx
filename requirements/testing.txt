@@ -1,5 +1,5 @@
 -r production.txt
-pre-commit==2.9.3
+pre-commit==2.10.1
 isort==5.7.0
 coveralls==3.0.0
 flake8==3.8.4
@@ -7,9 +7,9 @@ flake8-isort==4.0.0
 pydocstyle==5.1.1
 pylint==2.6.0
 pylint-strict-informational==0.1
-pytest==6.2.1
+pytest==6.2.2
 pytest-cov==2.11.1
 pytest-timeout==1.4.2
-setuptools==51.3.3
-tox==3.21.2
-mypy==0.790
+setuptools==53.0.0
+tox==3.21.4
+mypy==0.800
