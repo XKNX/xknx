@@ -31,6 +31,8 @@
 
 ### Internals
 
+- fix conflict with HA YAML loader
+
 ## 0.16.1 HA register services 2021-01-16
 
 ### HA integration
