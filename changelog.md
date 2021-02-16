@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### HA integration
+
+- knx_event: fire also for outgoing telegrams
+
 ### Devices
 
 - BinarySensor: return `None` for `BinarySensor.counter` when context timeout is not used (and don't calculate it)
