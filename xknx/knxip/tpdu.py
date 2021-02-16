@@ -40,5 +40,13 @@ class TPDU:
         data += [ 0x00, 0x80, 0x66]
         return data
     
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        res = '<TPDUFrame DestinationAddress="{}" '.format(
+                self.telegram.destination_address.__repr__())
+        data = self.to_knx()
+        for i in data:
+            res += hex(i) + " "
+        return res 
 
        
