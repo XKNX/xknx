@@ -31,7 +31,7 @@ class Switch(Device):
         name: str,
         group_address: Optional["GroupAddressableType"] = None,
         group_address_state: Optional["GroupAddressableType"] = None,
-        invert: Optional[bool] = False,
+        invert: bool = False,
         reset_after: Optional[float] = None,
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):

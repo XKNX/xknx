@@ -131,7 +131,7 @@ class TestDPTFloat(unittest.TestCase):
         self.assertEqual(DPTTemperature().value_min, -273)
         self.assertEqual(DPTTemperature().value_max, 670760)
         self.assertEqual(DPTTemperature().unit, "°C")
-        self.assertEqual(DPTTemperature().resolution, 1)
+        self.assertEqual(DPTTemperature().resolution, 0.01)
 
     def test_temperature_assert_min_exceeded(self):
         """Testing parsing of DPTTemperature with wrong value."""
@@ -151,7 +151,7 @@ class TestDPTFloat(unittest.TestCase):
         self.assertEqual(DPTLux().value_min, 0)
         self.assertEqual(DPTLux().value_max, 670760)
         self.assertEqual(DPTLux().unit, "lx")
-        self.assertEqual(DPTLux().resolution, 1)
+        self.assertEqual(DPTLux().resolution, 0.01)
 
     def test_lux_assert_min_exceeded(self):
         """Test parsing of DPTLux with wrong value."""
@@ -166,7 +166,7 @@ class TestDPTFloat(unittest.TestCase):
         self.assertEqual(DPTHumidity().value_min, 0)
         self.assertEqual(DPTHumidity().value_max, 670760)
         self.assertEqual(DPTHumidity().unit, "%")
-        self.assertEqual(DPTHumidity().resolution, 1)
+        self.assertEqual(DPTHumidity().resolution, 0.01)
 
     def test_humidity_assert_min_exceeded(self):
         """Test parsing of DPTHumidity with wrong value."""

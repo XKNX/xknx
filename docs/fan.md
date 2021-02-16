@@ -9,16 +9,18 @@ nav_order: 4
 
 ## [](#header-2)Overview
 
-Fans are simple representations of KNX controlled fans. They support setting the speed.
+Fans are simple representations of KNX controlled fans. They support setting the speed and the oscillation.
 
 ## [](#header-2)Interface
 
 - `xknx` XKNX object.
 - `name` name of the device.
-- `group_address` is the KNX group address of the fan device. Used for sending.
-- `group_address_state` is the KNX group address of the fan state. Used for updating and reading state.
+- `group_address` is the KNX group address of the fan speed. Used for sending. *DPT 5.001 / 5.010*
+- `group_address_state` is the KNX group address of the fan speed state. Used for updating and reading state. *DPT 5.001 / 5.010*
+- `group_address_oscillation` is the KNX group address of the oscillation. Used for sending. *DPT 1.001*
+- `group_address_oscillation_state` is the KNX group address of the fan oscillation state. Used for updating and reading state. *DPT 1.001*
 - `device_updated_cb` awaitable callback for each update.
-- `mode` Enum for the type of the fan control. Can be *Percent* or *Step*. Default: FanSpeedMode.Percent
+- `max_step` Maximum step amount for fans which are controlled with steps and not percentage. If this attribute is set, the fan is controlled by sending the step value in the range `0` and `max_step`. In that case, the group address DPT changes from *DPT 5.001* to *DPT 5.010*. Default: None
 
 ## [](#header-2)Example
 
@@ -26,13 +28,21 @@ Fans are simple representations of KNX controlled fans. They support setting the
 fan = Fan(xknx,
               'TestFan',
               group_address='1/2/1',
-              group_address_state='1/2/2')
+              group_address_state='1/2/2',
+              group_address_oscillation='1/2/3',
+              group_address_oscillation_state='1/2/4')
 
 # Set the fan speed
 await fan.set_speed(50)
 
 # Accessing speed
 print(fan.current_speed)
+
+# Set the oscillation
+await fan.set_oscillation(True)
+
+# Accessing speed
+print(fan.current_oscillation)
 
 # Requesting state via KNX GroupValueRead
 await fan.sync()
@@ -45,5 +55,5 @@ Fans are usually configured via [`xknx.yaml`](/configuration):
 ```yaml
 groups:
     fan:
-        Livingroom.Fan_1: {group_address: '1/4/1', group_address_state: '1/4/2' }
+        Livingroom.Fan_1: { group_address: '1/4/1', group_address_state: '1/4/2', group_address_oscillation: '1/4/3', group_address_oscillation_state: '1/4/4' }
 ```

@@ -3,6 +3,7 @@ Implementation of KNX 2 byte Float-values.
 
 They correspond to the the following KDN DPT 9 class.
 """
+from typing import Optional, Tuple
 
 from xknx.exceptions import ConversionError
 
@@ -19,14 +20,14 @@ class DPT2ByteFloat(DPTBase):
     value_min = -671088.64
     value_max = 670760.96
     dpt_main_number = 9
-    dpt_sub_number = None
+    dpt_sub_number: Optional[int] = None
     value_type = "2byte_float"
     unit = ""
-    resolution = 1
+    resolution = 0.01
     payload_length = 2
 
     @classmethod
-    def from_knx(cls, raw):
+    def from_knx(cls, raw: Tuple[int, ...]) -> float:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
         data = (raw[0] * 256) + raw[1]
@@ -45,10 +46,10 @@ class DPT2ByteFloat(DPTBase):
         return value
 
     @classmethod
-    def to_knx(cls, value):
+    def to_knx(cls, value: float) -> Tuple[int, int]:
         """Serialize to KNX/IP raw data."""
 
-        def calc_exponent(float_value, sign):
+        def calc_exponent(float_value: float, sign: bool) -> Tuple[int, int]:
             """Return float exponent."""
             exponent = 0
             significand = abs(int(float_value * 100))
@@ -68,7 +69,7 @@ class DPT2ByteFloat(DPTBase):
             if not cls._test_boundaries(knx_value):
                 raise ValueError
 
-            sign = 1 if knx_value < 0 else 0
+            sign = knx_value < 0
             exponent, significand = calc_exponent(knx_value, sign)
 
             return (sign << 7) | (exponent << 3) | (
@@ -78,7 +79,7 @@ class DPT2ByteFloat(DPTBase):
             raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
 
     @classmethod
-    def _test_boundaries(cls, value):
+    def _test_boundaries(cls, value: float) -> bool:
         """Test if value is within defined range for this object."""
         return cls.value_min <= value <= cls.value_max
 
@@ -93,7 +94,6 @@ class DPTTemperature(DPT2ByteFloat):
     value_type = "temperature"
     unit = "°C"
     ha_device_class = "temperature"
-    resolution = 1
 
 
 class DPTTemperatureDifference2Byte(DPT2ByteFloat):
@@ -106,7 +106,6 @@ class DPTTemperatureDifference2Byte(DPT2ByteFloat):
     value_type = "temperature_difference_2byte"
     unit = "K"
     ha_device_class = "temperature"
-    resolution = 1
 
 
 class DPTTemperatureA(DPT2ByteFloat):
@@ -118,7 +117,6 @@ class DPTTemperatureA(DPT2ByteFloat):
     dpt_sub_number = 3
     value_type = "temperature_a"
     unit = "K/h"
-    resolution = 1
 
 
 class DPTLux(DPT2ByteFloat):
@@ -131,7 +129,6 @@ class DPTLux(DPT2ByteFloat):
     value_type = "illuminance"
     unit = "lx"
     ha_device_class = "illuminance"
-    resolution = 1
 
 
 class DPTWsp(DPT2ByteFloat):
@@ -143,7 +140,6 @@ class DPTWsp(DPT2ByteFloat):
     dpt_sub_number = 5
     value_type = "wind_speed_ms"
     unit = "m/s"
-    resolution = 1
 
 
 class DPTPressure2Byte(DPT2ByteFloat):
@@ -156,7 +152,6 @@ class DPTPressure2Byte(DPT2ByteFloat):
     value_type = "pressure_2byte"
     unit = "Pa"
     ha_device_class = "pressure"
-    resolution = 1
 
 
 class DPTHumidity(DPT2ByteFloat):
@@ -169,7 +164,6 @@ class DPTHumidity(DPT2ByteFloat):
     value_type = "humidity"
     unit = "%"
     ha_device_class = "humidity"
-    resolution = 1
 
 
 class DPTPartsPerMillion(DPT2ByteFloat):
@@ -190,7 +184,6 @@ class DPTTime1(DPT2ByteFloat):
     dpt_sub_number = 10
     value_type = "time_1"
     unit = "s"
-    resolution = 1
 
 
 class DPTTime2(DPT2ByteFloat):
@@ -202,7 +195,6 @@ class DPTTime2(DPT2ByteFloat):
     dpt_sub_number = 11
     value_type = "time_2"
     unit = "ms"
-    resolution = 1
 
 
 class DPTVoltage(DPT2ByteFloat):
@@ -281,7 +273,6 @@ class DPTTemperatureF(DPT2ByteFloat):
     value_type = "temperature_f"
     unit = "°F"
     ha_device_class = "temperature"
-    resolution = 1
 
 
 class DPTWspKmh(DPT2ByteFloat):
@@ -293,7 +284,6 @@ class DPTWspKmh(DPT2ByteFloat):
     dpt_sub_number = 28
     value_type = "wind_speed_kmh"
     unit = "km/h"
-    resolution = 1
 
 
 class DPTEnthalpy(DPT2ByteFloat):

@@ -1,10 +1,25 @@
 # Changelog
 
-## 0.xx
+## Unreleased changes
 
 ### Devices
 
-- Fan: Add "mode" parameter to control fans by steps instead of percentage.
+- BinarySensor: return `None` for `BinarySensor.counter` when context timeout is not used (and don't calculate it)
+
+### Internals
+
+- RemoteValue is Generic now accepting DPTArray or DPTBinary
+- split RemoteValueClimateMode into RemoteValueControllerMode and RemoteValueOperationMode
+- return the payload (or None) in RemoteValue.payload_valid(payload) instead of bool
+- Light colors are represented as `Tuple[Tuple[int,int,int], int]` instead of `Tuple[List[int], int]` now
+- DPT 3 payloads/values are not invertable anymore.
+
+## 0.16.3 Fan contributions 2021-02-06
+
+### Devices
+
+- Fan: Add `max_step` attribute which defines the maximum amount of steps. If set, the fan is controlled by steps instead of percentage.
+- Fan: Add `group_address_oscillation` and `group_address_oscillation_state` attributes to control the oscillation of a fan.
 
 ## 0.16.2 Bugfix for yaml loader 2021-01-24
 

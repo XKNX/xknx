@@ -11,7 +11,7 @@ read from an internet service (e.g. Yahoo weather) and exposed to
 ths KNX bus. KNX sensors may show this outside temperature within their
 LCD display.
 """
-from typing import TYPE_CHECKING, Any, Iterator, Optional
+from typing import TYPE_CHECKING, Any, Iterator, Optional, Union
 
 from xknx.remote_value import RemoteValueSensor, RemoteValueSwitch
 
@@ -39,7 +39,7 @@ class ExposeSensor(Device):
         # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
 
-        self.sensor_value: "RemoteValue"
+        self.sensor_value: Union[RemoteValueSensor, RemoteValueSwitch]
         if value_type == "binary":
             self.sensor_value = RemoteValueSwitch(
                 xknx,
@@ -58,7 +58,7 @@ class ExposeSensor(Device):
                 value_type=value_type,
             )
 
-    def _iter_remote_values(self) -> Iterator["RemoteValue"]:
+    def _iter_remote_values(self) -> Iterator["RemoteValue[Any]"]:
         """Iterate the devices RemoteValue classes."""
         yield self.sensor_value
 
