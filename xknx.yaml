@@ -296,7 +296,7 @@ groups:
             group_address_day_night: "7/0/8",
             group_address_air_pressure: "7/0/9",
             group_address_humidity: "7/0/10",
-            expose_sensors: True,
+            create_sensors: True,
             sync_state: True,
           }
         Remote:
@@ -312,6 +312,6 @@ groups:
             group_address_day_night: "7/0/8",
             group_address_air_pressure: "7/0/9",
             group_address_humidity: "7/0/10",
-            expose_sensors: False,
+            create_sensors: False,
             sync_state: True,
           }

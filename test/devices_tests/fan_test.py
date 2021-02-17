@@ -134,6 +134,30 @@ class TestFan(unittest.TestCase):
         )
 
     #
+    #
+    # TEST SET OSCILLATION
+    #
+    def test_set_oscillation(self):
+        """Test setting the oscillation of a Fan."""
+        xknx = XKNX()
+        fan = Fan(
+            xknx,
+            name="TestFan",
+            group_address_speed="1/2/3",
+            group_address_oscillation="1/2/5",
+        )
+        self.loop.run_until_complete(fan.set_oscillation(False))
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        telegram = xknx.telegrams.get_nowait()
+        self.assertEqual(
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/5"),
+                payload=GroupValueWrite(DPTBinary(0)),
+            ),
+        )
+
+    #
     # TEST PROCESS
     #
     def test_process_speed(self):
@@ -160,6 +184,27 @@ class TestFan(unittest.TestCase):
         )
         with self.assertRaises(CouldNotParseTelegram):
             self.loop.run_until_complete(fan.process(telegram))
+
+    #
+    # TEST PROCESS OSCILLATION
+    #
+    def test_process_oscillation(self):
+        """Test process / reading telegrams from telegram queue. Test if oscillation is processed."""
+        xknx = XKNX()
+        fan = Fan(
+            xknx,
+            name="TestFan",
+            group_address_speed="1/2/3",
+            group_address_oscillation="1/2/5",
+        )
+        self.assertEqual(fan.current_oscillation, None)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        self.loop.run_until_complete(fan.process(telegram))
+        self.assertTrue(fan.current_oscillation)
 
     def test_process_fan_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
@@ -196,9 +241,9 @@ class TestFan(unittest.TestCase):
         self.assertEqual(fan.current_speed, 2)
 
     #
-    # TEST DO
+    # TEST DO SPEED
     #
-    def test_do(self):
+    def test_do_speed(self):
         """Test 'do' functionality."""
         xknx = XKNX()
         fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
@@ -208,6 +253,25 @@ class TestFan(unittest.TestCase):
         self.loop.run_until_complete(fan.do("speed:25"))
         self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
         self.assertEqual(fan.current_speed, 25)
+
+    #
+    # TEST DO OSCILLATION
+    #
+    def test_do_oscillation(self):
+        """Test 'do' functionality."""
+        xknx = XKNX()
+        fan = Fan(
+            xknx,
+            name="TestFan",
+            group_address_speed="1/2/3",
+            group_address_oscillation="1/2/4",
+        )
+        self.loop.run_until_complete(fan.do("oscillation:True"))
+        self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
+        self.assertTrue(fan.current_oscillation)
+        self.loop.run_until_complete(fan.do("oscillation:False"))
+        self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
+        self.assertFalse(fan.current_oscillation)
 
     def test_wrong_do(self):
         """Test wrong do command."""
@@ -228,7 +292,11 @@ class TestFan(unittest.TestCase):
             "TestFan",
             group_address_speed="1/7/1",
             group_address_speed_state="1/7/2",
+            group_address_oscillation="1/6/1",
+            group_address_oscillation_state="1/6/2",
         )
         self.assertTrue(fan.has_group_address(GroupAddress("1/7/1")))
         self.assertTrue(fan.has_group_address(GroupAddress("1/7/2")))
         self.assertFalse(fan.has_group_address(GroupAddress("1/7/3")))
+        self.assertTrue(fan.has_group_address(GroupAddress("1/6/1")))
+        self.assertTrue(fan.has_group_address(GroupAddress("1/6/2")))

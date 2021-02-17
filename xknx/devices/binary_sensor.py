@@ -32,7 +32,7 @@ class BinarySensor(Device):
         xknx: "XKNX",
         name: str,
         group_address_state: "GroupAddressableType" = None,
-        invert: Optional[bool] = False,
+        invert: bool = False,
         sync_state: bool = True,
         ignore_internal_state: bool = False,
         device_class: Optional[str] = None,
@@ -122,9 +122,9 @@ class BinarySensor(Device):
         """Set the internal state of the device. If state was changed after_update hooks and connected Actions are executed."""
         if state != self.state or self.ignore_internal_state:
             self.state = state
-            self.bump_and_get_counter(state)
 
             if self.ignore_internal_state and self._context_timeout:
+                self.bump_and_get_counter(state)
                 if self._context_task:
                     self._context_task.cancel()
                 self._context_task = asyncio.create_task(
@@ -152,9 +152,11 @@ class BinarySensor(Device):
                 await action.execute()
 
     @property
-    def counter(self) -> int:
+    def counter(self) -> Optional[int]:
         """Return current counter for sensor."""
-        return self._count_set_on if self.state else self._count_set_off
+        if self._context_timeout:
+            return self._count_set_on if self.state else self._count_set_off
+        return None
 
     def bump_and_get_counter(self, state: bool) -> int:
         """Bump counter and return the number of times a state was set to the same value within CONTEXT_TIMEOUT."""
@@ -169,7 +171,7 @@ class BinarySensor(Device):
             self._last_set = new_set_time
             return time_diff < cast(float, self._context_timeout)
 
-        if self._context_timeout and within_same_context():
+        if within_same_context():
             if state:
                 self._count_set_on = self._count_set_on + 1
                 return self._count_set_on

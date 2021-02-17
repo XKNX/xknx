@@ -3,23 +3,29 @@ Module for managing setpoint shifting.
 
 DPT 6.010.
 """
-from typing import List
+from typing import TYPE_CHECKING, List, Optional, Union
 
-from xknx.remote_value import RemoteValue1Count
+from xknx.dpt import DPTArray, DPTBinary, DPTValue1Count
+
+from .remote_value import AsyncCallbackType, RemoteValue
+
+if TYPE_CHECKING:
+    from xknx.telegram.address import GroupAddressableType
+    from xknx.xknx import XKNX
 
 
-class RemoteValueSetpointShift(RemoteValue1Count):
+class RemoteValueSetpointShift(RemoteValue[DPTArray]):
     """Abstraction for remote value of KNX DPT 6.010."""
 
     def __init__(
         self,
-        xknx,
-        group_address=None,
-        group_address_state=None,
-        device_name=None,
-        after_update_cb=None,
-        setpoint_shift_step=0.1,
-        passive_group_addresses: List[str] = None,
+        xknx: "XKNX",
+        group_address: Optional["GroupAddressableType"] = None,
+        group_address_state: Optional["GroupAddressableType"] = None,
+        device_name: Optional[str] = None,
+        after_update_cb: Optional[AsyncCallbackType] = None,
+        setpoint_shift_step: float = 0.1,
+        passive_group_addresses: Optional[List["GroupAddressableType"]] = None,
     ):
         """Initialize RemoteValueSetpointShift class."""
         # pylint: disable=too-many-arguments
@@ -35,12 +41,23 @@ class RemoteValueSetpointShift(RemoteValue1Count):
 
         self.setpoint_shift_step = setpoint_shift_step
 
-    def to_knx(self, value):
+    def payload_valid(
+        self, payload: Optional[Union[DPTArray, DPTBinary]]
+    ) -> Optional[DPTArray]:
+        """Test if telegram payload may be parsed."""
+        # pylint: disable=no-self-use
+        return (
+            payload
+            if isinstance(payload, DPTArray) and len(payload.value) == 1
+            else None
+        )
+
+    def to_knx(self, value: float) -> DPTArray:
         """Convert value to payload."""
         converted_value = int(value / self.setpoint_shift_step)
-        return super().to_knx(converted_value)
+        return DPTArray(DPTValue1Count.to_knx(converted_value))
 
-    def from_knx(self, payload):
+    def from_knx(self, payload: DPTArray) -> float:
         """Convert current payload to value."""
-        converted_payload = super().from_knx(payload)
+        converted_payload = DPTValue1Count.from_knx(payload.value)
         return converted_payload * self.setpoint_shift_step

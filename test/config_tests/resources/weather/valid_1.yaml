@@ -36,4 +36,4 @@ air_pressure:
 humidity:
   state_address: "7/0/10"
   state_update: "expire 60"
-expose_sensors: True
+create_sensors: True

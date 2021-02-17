@@ -1456,3 +1456,28 @@ class TestClimate(unittest.TestCase):
                 payload=GroupValueWrite(DPTBinary(True)),
             ),
         )
+
+    #
+    # Create temperature sensor tests
+    #
+    def test_create_sensor(self):
+        """Test default state mapping."""
+        xknx = XKNX()
+        Climate(
+            name="climate",
+            xknx=xknx,
+            group_address_temperature="5/1/1",
+            group_address_target_temperature="5/1/4",
+        )
+
+        self.assertEqual(len(xknx.devices), 1)
+
+        Climate(
+            name="climate",
+            xknx=xknx,
+            group_address_temperature="5/1/1",
+            group_address_target_temperature="5/1/4",
+            create_temperature_sensors=True,
+        )
+
+        self.assertEqual(len(xknx.devices), 3)

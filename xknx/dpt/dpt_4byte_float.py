@@ -3,8 +3,8 @@ Implementation of KNX 4 byte Float-values.
 
 They correspond to the the following KDN DPT 14 class.
 """
-
 import struct
+from typing import Optional, Tuple
 
 from xknx.exceptions import ConversionError
 
@@ -24,22 +24,22 @@ class DPT4ByteFloat(DPTBase):
     """
 
     dpt_main_number = 14
-    dpt_sub_number = None
+    dpt_sub_number: Optional[int] = None
     value_type = "4byte_float"
     unit = ""
     payload_length = 4
 
     @classmethod
-    def from_knx(cls, raw):
+    def from_knx(cls, raw: Tuple[int, ...]) -> float:
         """Parse/deserialize from KNX/IP raw data (big endian)."""
         cls.test_bytesarray(raw)
         try:
-            return struct.unpack(">f", bytes(raw))[0]
+            return struct.unpack(">f", bytes(raw))[0]  # type: ignore
         except struct.error:
             raise ConversionError("Could not parse %s" % cls.__name__, raw=raw)
 
     @classmethod
-    def to_knx(cls, value):
+    def to_knx(cls, value: float) -> Tuple[int, ...]:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = float(value)
@@ -572,6 +572,7 @@ class DPTPowerFactor(DPT4ByteFloat):
     dpt_sub_number = 57
     value_type = "powerfactor"
     unit = "cosΦ"
+    ha_device_class = "power_factor"
 
 
 class DPTPressure(DPT4ByteFloat):

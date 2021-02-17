@@ -5,8 +5,8 @@ They correspond the following KNX DPTs:
     12.yyy 4-byte/octet unsigned value, i.e. pulse counter
     13.yyy 4-byte/octet signed (2's complement), i.e. flow, energy
 """
-
 import struct
+from typing import Optional, Tuple
 
 from xknx.exceptions import ConversionError
 
@@ -23,26 +23,26 @@ class DPT4ByteUnsigned(DPTBase):
     value_min = 0
     value_max = 4294967295
     dpt_main_number = 12
-    dpt_sub_number = None
+    dpt_sub_number: Optional[int] = None
     value_type = "4byte_unsigned"
     unit = ""
-    resolution = 1
+    resolution: float = 1
     payload_length = 4
 
     _struct_format = ">I"
 
     @classmethod
-    def from_knx(cls, raw):
+    def from_knx(cls, raw: Tuple[int, ...]) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
 
         try:
-            return struct.unpack(cls._struct_format, bytes(raw))[0]
+            return struct.unpack(cls._struct_format, bytes(raw))[0]  # type: ignore
         except struct.error:
             raise ConversionError("Could not parse %s" % cls.__name__, raw=raw)
 
     @classmethod
-    def to_knx(cls, value):
+    def to_knx(cls, value: int) -> Tuple[int, ...]:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = int(value)
@@ -53,7 +53,7 @@ class DPT4ByteUnsigned(DPTBase):
             raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
 
     @classmethod
-    def _test_boundaries(cls, value):
+    def _test_boundaries(cls, value: int) -> bool:
         """Test if value is within defined range for this object."""
         return cls.value_min <= value <= cls.value_max
 
@@ -68,10 +68,10 @@ class DPT4ByteSigned(DPT4ByteUnsigned):
     value_min = -2147483648
     value_max = 2147483647
     dpt_main_number = 13
-    dpt_sub_number = None
+    dpt_sub_number: Optional[int] = None
     value_type = "4byte_signed"
     unit = ""
-    resolution = 1
+    resolution: float = 1
 
     _struct_format = ">i"
 
@@ -120,6 +120,7 @@ class DPTActiveEnergy(DPT4ByteSigned):
     dpt_sub_number = 10
     value_type = "active_energy"
     unit = "Wh"
+    ha_device_class = "energy"
 
 
 class DPTApparantEnergy(DPT4ByteSigned):
@@ -129,6 +130,7 @@ class DPTApparantEnergy(DPT4ByteSigned):
     dpt_sub_number = 11
     value_type = "apparant_energy"
     unit = "VAh"
+    ha_device_class = "energy"
 
 
 class DPTReactiveEnergy(DPT4ByteSigned):
@@ -138,6 +140,7 @@ class DPTReactiveEnergy(DPT4ByteSigned):
     dpt_sub_number = 12
     value_type = "reactive_energy"
     unit = "VARh"
+    ha_device_class = "energy"
 
 
 class DPTActiveEnergykWh(DPT4ByteSigned):
@@ -147,6 +150,7 @@ class DPTActiveEnergykWh(DPT4ByteSigned):
     dpt_sub_number = 13
     value_type = "active_energy_kwh"
     unit = "kWh"
+    ha_device_class = "energy"
 
 
 class DPTApparantEnergykVAh(DPT4ByteSigned):
@@ -156,6 +160,7 @@ class DPTApparantEnergykVAh(DPT4ByteSigned):
     dpt_sub_number = 14
     value_type = "apparant_energy_kvah"
     unit = "kVAh"
+    ha_device_class = "energy"
 
 
 class DPTReactiveEnergykVARh(DPT4ByteSigned):
@@ -165,6 +170,7 @@ class DPTReactiveEnergykVARh(DPT4ByteSigned):
     dpt_sub_number = 15
     value_type = "reactive_energy_kvarh"
     unit = "kVARh"
+    ha_device_class = "energy"
 
 
 class DPTLongDeltaTimeSec(DPT4ByteSigned):

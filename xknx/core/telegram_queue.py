@@ -37,15 +37,22 @@ class TelegramQueue:
             callback: "AsyncTelegramCallback",
             address_filters: Optional[List[AddressFilter]] = None,
             group_addresses: Optional[List[GroupAddress]] = None,
+            match_for_outgoing_telegrams: bool = False,
         ):
             """Initialize Callback class."""
             self.callback = callback
             self._match_all = address_filters is None and group_addresses is None
+            self._match_outgoing = match_for_outgoing_telegrams
             self.address_filters = [] if address_filters is None else address_filters
             self.group_addresses = [] if group_addresses is None else group_addresses
 
         def is_within_filter(self, telegram: Telegram) -> bool:
             """Test if callback is filtering for group address."""
+            if (
+                not self._match_outgoing
+                and telegram.direction == TelegramDirection.OUTGOING
+            ):
+                return False
             if self._match_all:
                 return True
             if isinstance(telegram.destination_address, GroupAddress):
@@ -69,12 +76,14 @@ class TelegramQueue:
         telegram_received_cb: "AsyncTelegramCallback",
         address_filters: Optional[List[AddressFilter]] = None,
         group_addresses: Optional[List[GroupAddress]] = None,
+        match_for_outgoing: bool = False,
     ) -> Callback:
-        """Register callback for a telegram beeing received from KNX bus."""
+        """Register callback for a telegram being received from KNX bus."""
         callback = TelegramQueue.Callback(
             telegram_received_cb,
             address_filters=address_filters,
             group_addresses=group_addresses,
+            match_for_outgoing_telegrams=match_for_outgoing,
         )
         self.telegram_received_cbs.append(callback)
         return callback
@@ -165,6 +174,10 @@ class TelegramQueue:
             await self.xknx.knxip_interface.send_telegram(telegram)
             if isinstance(telegram.payload, GroupValueWrite):
                 await self.xknx.devices.process(telegram)
+
+            for telegram_received_cb in self.telegram_received_cbs:
+                if telegram_received_cb.is_within_filter(telegram):
+                    await telegram_received_cb.callback(telegram)
         else:
             raise CommunicationError("No KNXIP interface defined")
 
