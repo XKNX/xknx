@@ -5,7 +5,15 @@ general:
     multicast_port: 1337
 
 connection:
+    # One of them: auto, tunneling or routing
     auto:
+    #tunneling:
+    #    local_ip: "192.168.111.201"
+    #    route_back: false
+    #    gateway_ip: "192.168.0.202"
+    #    gateway_port: 3671
+    #routing:
+    #    local_ip: "192.168.111.201"
 
 groups:
     binary_sensor:
@@ -288,7 +296,7 @@ groups:
             group_address_day_night: "7/0/8",
             group_address_air_pressure: "7/0/9",
             group_address_humidity: "7/0/10",
-            expose_sensors: True,
+            create_sensors: True,
             sync_state: True,
           }
         Remote:
@@ -304,6 +312,6 @@ groups:
             group_address_day_night: "7/0/8",
             group_address_air_pressure: "7/0/9",
             group_address_humidity: "7/0/10",
-            expose_sensors: False,
+            create_sensors: False,
             sync_state: True,
           }

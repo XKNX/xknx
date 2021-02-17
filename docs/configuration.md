@@ -24,6 +24,7 @@ The configuration file can contain three sections.
     - `gateway_ip` (required) sets the ip address of the KNX tunneling interface
     - `gateway_port` (optional) sets the port the KNX tunneling interface is listening on
     - `local_ip` (optional) sets the ip address that is used by xknx
+    - `route_back` (optional) When True the KNXnet/IP Server shall use the IP address and the port number from the IP package received as the target IP address or port number for the response to the KNXnet/IP Client (for NAT / Docker). Defalut: `False`
   - `routing` for a UDP multicast connection
     - `local_ip` (optional) sets the ip address that is used by xknx
 - Within the `groups` sections all devices are defined. For each type of device more then one section might be specified. You need to append numbers or strings to differentiate the entries, as in the example below. The appended number or string must be unique.

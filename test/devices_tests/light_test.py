@@ -665,7 +665,7 @@ class TestLight(unittest.TestCase):
                 )
             )
         )
-        self.assertEqual(light.current_color, ([23, 24, 25], None))
+        self.assertEqual(light.current_color, ((23, 24, 25), None))
 
     def test_set_individual_color_not_possible(self):
         """Test setting the color of a non light without color."""
@@ -707,7 +707,7 @@ class TestLight(unittest.TestCase):
             ),
         )
         self.loop.run_until_complete(xknx.devices.process(telegram))
-        self.assertEqual(light.current_color, ([23, 24, 25], 26))
+        self.assertEqual(light.current_color, ((23, 24, 25), 26))
 
     def test_set_color_rgbw_not_possible(self):
         """Test setting RGBW value of a non light without color."""
@@ -808,7 +808,7 @@ class TestLight(unittest.TestCase):
                 )
             )
         )
-        self.assertEqual(light.current_color, ([23, 24, 25], 26))
+        self.assertEqual(light.current_color, ((23, 24, 25), 26))
 
     def test_set_individual_color_rgbw_not_possible(self):
         """Test setting RGBW value of a non light without color."""
@@ -1111,7 +1111,7 @@ class TestLight(unittest.TestCase):
 
         for telegram in telegrams:
             self.loop.run_until_complete(light.process(telegram))
-        self.assertEqual(light.current_color, ([42, 43, 44], None))
+        self.assertEqual(light.current_color, ((42, 43, 44), None))
 
     def test_process_color_rgbw(self):
         """Test process / reading telegrams from telegram queue. Test if RGBW is processed."""
@@ -1129,7 +1129,7 @@ class TestLight(unittest.TestCase):
             payload=GroupValueWrite(DPTArray((23, 24, 25, 26, 0, 15))),
         )
         self.loop.run_until_complete(light.process(telegram))
-        self.assertEqual(light.current_color, ([23, 24, 25], 26))
+        self.assertEqual(light.current_color, ((23, 24, 25), 26))
 
     def test_process_individual_color_rgbw(self):
         """Test process / reading telegrams from telegram queue. Test if RGBW is processed."""

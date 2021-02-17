@@ -253,16 +253,14 @@ class Light(Device):
         self.min_kelvin = min_kelvin
         self.max_kelvin = max_kelvin
 
-    def _iter_remote_values(self) -> Iterator["RemoteValue"]:
+    def _iter_remote_values(self) -> Iterator["RemoteValue[Any]"]:
         """Iterate the devices RemoteValue classes."""
-        yield from (
-            self.switch,
-            self.brightness,
-            self.color,
-            self.rgbw,
-            self.tunable_white,
-            self.color_temperature,
-        )
+        yield self.switch
+        yield self.brightness
+        yield self.color
+        yield self.rgbw
+        yield self.tunable_white
+        yield self.color_temperature
         for color in (self.red, self.green, self.blue, self.white):
             yield color.switch
             yield color.brightness
@@ -536,7 +534,7 @@ class Light(Device):
         await self.brightness.set(brightness)
 
     @property
-    def current_color(self) -> Tuple[Optional[List[int]], Optional[int]]:
+    def current_color(self) -> Tuple[Optional[Tuple[int, int, int]], Optional[int]]:
         """
         Return current color of light.
 
@@ -550,11 +548,11 @@ class Light(Device):
         if self.color.initialized:
             return self.color.value, None
         # individual RGB addresses - white will return None when it is not initialized
-        colors = [
+        colors = (
             self.red.brightness.value,
             self.green.brightness.value,
             self.blue.brightness.value,
-        ]
+        )
         if None in colors:
             return None, self.white.brightness.value
         return colors, self.white.brightness.value

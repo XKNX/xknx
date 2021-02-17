@@ -42,23 +42,23 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
         remote_value = RemoteValueColorRGBW(xknx)
         self.assertEqual(
             remote_value.from_knx(DPTArray((0x64, 0x65, 0x66, 0x7F, 0x00, 0x00))),
-            [0, 0, 0, 0],
+            (0, 0, 0, 0),
         )
         self.assertEqual(
             remote_value.from_knx(DPTArray((0x64, 0x65, 0x66, 0x7F, 0x00, 0x0F))),
-            [100, 101, 102, 127],
+            (100, 101, 102, 127),
         )
         self.assertEqual(
             remote_value.from_knx(DPTArray((0x64, 0x65, 0x66, 0x7F, 0x00, 0x00))),
-            [100, 101, 102, 127],
+            (100, 101, 102, 127),
         )
         self.assertEqual(
             remote_value.from_knx(DPTArray((0xFF, 0x65, 0x66, 0xFF, 0x00, 0x09))),
-            [255, 101, 102, 255],
+            (255, 101, 102, 255),
         )
         self.assertEqual(
             remote_value.from_knx(DPTArray((0x64, 0x65, 0x66, 0x7F, 0x00, 0x01))),
-            [255, 101, 102, 127],
+            (255, 101, 102, 127),
         )
 
     def test_to_knx_error(self):
@@ -118,7 +118,7 @@ class TestRemoteValueColorRGBW(unittest.TestCase):
             payload=GroupValueWrite(DPTArray((0x64, 0x65, 0x66, 0x67, 0x00, 0x0F))),
         )
         self.loop.run_until_complete(remote_value.process(telegram))
-        self.assertEqual(remote_value.value, [100, 101, 102, 103])
+        self.assertEqual(remote_value.value, (100, 101, 102, 103))
 
     def test_to_process_error(self):
         """Test process errornous telegram."""

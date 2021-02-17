@@ -79,44 +79,38 @@ class TestDPTBase(unittest.TestCase):
     def test_dpt_subclasses_definition_types(self):
         """Test value_type and dpt_*_number values for correct type in subclasses of DPTBase."""
         for dpt in DPTBase.__recursive_subclasses__():
-            if hasattr(dpt, "value_type"):
+            if dpt.value_type is not None:
                 self.assertTrue(
                     isinstance(dpt.value_type, str),
-                    msg="Wrong type for value_type in %s - str expected" % dpt,
+                    msg="Wrong type for value_type in %s : %s - str `None` expected"
+                    % (dpt, type(dpt.value_type)),
                 )
-            if hasattr(dpt, "dpt_main_number"):
+            if dpt.dpt_main_number is not None:
                 self.assertTrue(
                     isinstance(dpt.dpt_main_number, int),
-                    msg="Wrong type for dpt_main_number in %s - int expected" % dpt,
+                    msg="Wrong type for dpt_main_number in %s : %s - int or `None` expected"
+                    % (dpt, type(dpt.dpt_main_number)),
                 )
-            if hasattr(dpt, "dpt_sub_number"):
+            if dpt.dpt_sub_number is not None:
                 self.assertTrue(
-                    isinstance(dpt.dpt_sub_number, (int, type(None))),
-                    msg="Wrong type for dpt_sub_number in %s - int or `None` expected"
-                    % dpt,
+                    isinstance(dpt.dpt_sub_number, int),
+                    msg="Wrong type for dpt_sub_number in %s : %s - int or `None` expected"
+                    % (dpt, type(dpt.dpt_sub_number)),
                 )
 
     def test_dpt_subclasses_no_duplicate_value_types(self):
         """Test for duplicate value_type values in subclasses of DPTBase."""
         value_types = []
         for dpt in DPTBase.__recursive_subclasses__():
-            if hasattr(dpt, "value_type"):
+            if dpt.value_type is not None:
                 value_types.append(dpt.value_type)
         self.assertCountEqual(value_types, set(value_types))
-
-    def test_dpt_subclasses_have_both_dpt_number_attributes(self):
-        """Test DPTBase subclasses for having both dpt number attributes set."""
-        for dpt in DPTBase.__recursive_subclasses__():
-            if hasattr(dpt, "dpt_main_number"):
-                self.assertTrue(
-                    hasattr(dpt, "dpt_sub_number"), "No dpt_sub_number in %s" % dpt
-                )
 
     def test_dpt_subclasses_no_duplicate_dpt_number(self):
         """Test for duplicate value_type values in subclasses of DPTBase."""
         dpt_tuples = []
         for dpt in DPTBase.__recursive_subclasses__():
-            if hasattr(dpt, "dpt_main_number") and hasattr(dpt, "dpt_sub_number"):
+            if dpt.dpt_main_number is not None and dpt.dpt_sub_number is not None:
                 dpt_tuples.append((dpt.dpt_main_number, dpt.dpt_sub_number))
         self.assertCountEqual(dpt_tuples, set(dpt_tuples))
 

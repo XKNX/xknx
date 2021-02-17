@@ -1,5 +1,6 @@
 """Unit test for Configuration logic."""
 import asyncio
+import os
 import unittest
 from unittest.mock import patch
 
@@ -587,12 +588,12 @@ class TestConfig(unittest.TestCase):
                 group_address_day_night="7/0/8",
                 group_address_air_pressure="7/0/9",
                 group_address_humidity="7/0/10",
-                expose_sensors=False,
+                create_sensors=False,
                 sync_state=True,
             ),
         )
 
-    def test_config_weather_expose_sensor(self):
+    def test_config_weather_create_sensor(self):
         """Test reading weather from config file."""
         self.assertTrue(isinstance(TestConfig.xknx.devices["Home_temperature"], Sensor))
         self.assertTrue(
@@ -608,3 +609,113 @@ class TestConfig(unittest.TestCase):
             mock_parse.side_effect = XKNXException()
             XKNX(config="xknx.yaml")
             self.assertEqual(mock_err.call_count, 1)
+
+    XKNX_GENERAL_OWN_ADDRESS = "1.2.3"
+    XKNX_GENERAL_RATE_LIMIT = "20"
+    XKNX_GENERAL_MULTICAST_GROUP = "1.2.3.4"
+    XKNX_GENERAL_MULTICAST_PORT = "1111"
+
+    def test_config_general_from_env(self):
+        os.environ["XKNX_GENERAL_OWN_ADDRESS"] = self.XKNX_GENERAL_OWN_ADDRESS
+        os.environ["XKNX_GENERAL_RATE_LIMIT"] = self.XKNX_GENERAL_RATE_LIMIT
+        os.environ["XKNX_GENERAL_MULTICAST_GROUP"] = self.XKNX_GENERAL_MULTICAST_GROUP
+        os.environ["XKNX_GENERAL_MULTICAST_PORT"] = self.XKNX_GENERAL_MULTICAST_PORT
+        self.xknx = XKNX(config="xknx.yaml")
+        del os.environ["XKNX_GENERAL_OWN_ADDRESS"]
+        del os.environ["XKNX_GENERAL_RATE_LIMIT"]
+        del os.environ["XKNX_GENERAL_MULTICAST_GROUP"]
+        del os.environ["XKNX_GENERAL_MULTICAST_PORT"]
+        self.assertEqual(str(self.xknx.own_address), self.XKNX_GENERAL_OWN_ADDRESS)
+        self.assertEqual(self.xknx.rate_limit, int(self.XKNX_GENERAL_RATE_LIMIT))
+        self.assertEqual(self.xknx.multicast_group, self.XKNX_GENERAL_MULTICAST_GROUP)
+        self.assertEqual(
+            self.xknx.multicast_port, int(self.XKNX_GENERAL_MULTICAST_PORT)
+        )
+
+    XKNX_CONNECTION_GATEWAY_IP = "192.168.12.34"
+    XKNX_CONNECTION_GATEWAY_PORT = "1234"
+    XKNX_CONNECTION_LOCAL_IP = "192.168.11.11"
+    XKNX_CONNECTION_ROUTE_BACK = "true"
+
+    def test_config_cnx_from_env(self):
+        os.environ["XKNX_CONNECTION_GATEWAY_IP"] = self.XKNX_CONNECTION_GATEWAY_IP
+        os.environ["XKNX_CONNECTION_GATEWAY_PORT"] = self.XKNX_CONNECTION_GATEWAY_PORT
+        os.environ["XKNX_CONNECTION_LOCAL_IP"] = self.XKNX_CONNECTION_LOCAL_IP
+        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = self.XKNX_CONNECTION_ROUTE_BACK
+        self.xknx = XKNX(config="xknx.yaml")
+        del os.environ["XKNX_CONNECTION_GATEWAY_IP"]
+        del os.environ["XKNX_CONNECTION_GATEWAY_PORT"]
+        del os.environ["XKNX_CONNECTION_LOCAL_IP"]
+        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+        self.assertEqual(
+            self.xknx.connection_config.gateway_ip, self.XKNX_CONNECTION_GATEWAY_IP
+        )
+        self.assertEqual(
+            self.xknx.connection_config.gateway_port,
+            int(self.XKNX_CONNECTION_GATEWAY_PORT),
+        )
+        self.assertEqual(
+            self.xknx.connection_config.local_ip, self.XKNX_CONNECTION_LOCAL_IP
+        )
+        self.assertEqual(
+            self.xknx.connection_config.route_back,
+            bool(self.XKNX_CONNECTION_ROUTE_BACK),
+        )
+
+    def test_config_cnx_route_back(self):
+        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "true"
+        self.xknx = XKNX(config="xknx.yaml")
+        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+        self.assertEqual(
+            self.xknx.connection_config.route_back,
+            True,
+        )
+        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "yes"
+        self.xknx = XKNX(config="xknx.yaml")
+        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+        self.assertEqual(
+            self.xknx.connection_config.route_back,
+            True,
+        )
+        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "1"
+        self.xknx = XKNX(config="xknx.yaml")
+        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+        self.assertEqual(
+            self.xknx.connection_config.route_back,
+            True,
+        )
+        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "on"
+        self.xknx = XKNX(config="xknx.yaml")
+        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+        self.assertEqual(
+            self.xknx.connection_config.route_back,
+            True,
+        )
+        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "y"
+        self.xknx = XKNX(config="xknx.yaml")
+        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+        self.assertEqual(
+            self.xknx.connection_config.route_back,
+            True,
+        )
+        if "XKNX_CONNECTION_ROUTE_BACK" in os.environ:
+            del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+        self.xknx = XKNX(config="xknx.yaml")
+        self.assertEqual(
+            self.xknx.connection_config.route_back,
+            False,
+        )
+        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "another_string"
+        self.xknx = XKNX(config="xknx.yaml")
+        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+        self.assertEqual(
+            self.xknx.connection_config.route_back,
+            False,
+        )
+        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = ""
+        self.xknx = XKNX(config="xknx.yaml")
+        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+        self.assertEqual(
+            self.xknx.connection_config.route_back,
+            False,
+        )
