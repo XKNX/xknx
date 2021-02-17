@@ -43,9 +43,11 @@ class Tunnel(Interface):
     def __init__(
         self,
         xknx: "XKNX",
-        local_ip: str,
         gateway_ip: str,
         gateway_port: int,
+        local_ip: str,
+        local_port: int = 0,
+        route_back: bool = False,
         telegram_received_callback: Optional["TelegramCallbackType"] = None,
         auto_reconnect: bool = False,
         auto_reconnect_wait: int = 3,
@@ -53,9 +55,11 @@ class Tunnel(Interface):
         """Initialize Tunnel class."""
         # pylint: disable=too-many-arguments
         self.xknx = xknx
-        self.local_ip = local_ip
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
+        self.local_ip = local_ip
+        self.local_port = local_port
+        self.route_back = route_back
         self.telegram_received_callback = telegram_received_callback
 
         self.udp_client: UDPClient
@@ -77,7 +81,9 @@ class Tunnel(Interface):
     def init_udp_client(self) -> None:
         """Initialize udp_client."""
         self.udp_client = UDPClient(
-            self.xknx, (self.local_ip, 0), (self.gateway_ip, self.gateway_port)
+            self.xknx,
+            (self.local_ip, self.local_port),
+            (self.gateway_ip, self.gateway_port),
         )
 
         self.udp_client.register_callback(
@@ -158,7 +164,7 @@ class Tunnel(Interface):
 
     async def _connect_request(self) -> bool:
         """Connect to tunnelling server. Set communication_channel and src_address."""
-        connect = Connect(self.xknx, self.udp_client)
+        connect = Connect(self.xknx, self.udp_client, route_back=self.route_back)
         await connect.start()
         if connect.success:
             self.communication_channel = connect.communication_channel
@@ -182,6 +188,7 @@ class Tunnel(Interface):
             self.xknx,
             self.udp_client,
             communication_channel_id=self.communication_channel,
+            route_back=self.route_back,
         )
         await conn_state.start()
         return conn_state.success
@@ -193,6 +200,7 @@ class Tunnel(Interface):
                 self.xknx,
                 self.udp_client,
                 communication_channel_id=self.communication_channel,
+                route_back=self.route_back,
             )
             await disconnect.start()
             if not disconnect.success and not ignore_error:

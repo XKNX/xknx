@@ -6,6 +6,7 @@ Module for reading config files (xknx.yaml).
 """
 from enum import Enum
 import logging
+import os
 
 from xknx.devices import (
     BinarySensor,
@@ -43,10 +44,12 @@ class ConfigV1:
         self.xknx = xknx
 
     def parse(self, doc):
-        """Parse the config."""
+        """Parse the config and read ENV vars."""
         self.parse_general(doc)
         self.parse_connection(doc)
         self.parse_groups(doc)
+        self.env_general()
+        self.env_connection()
 
     def parse_general(self, doc):
         """Parse the general section of xknx.yaml."""
@@ -59,6 +62,25 @@ class ConfigV1:
                 self.xknx.multicast_group = doc["general"]["multicast_group"]
             if "multicast_port" in doc["general"]:
                 self.xknx.multicast_port = doc["general"]["multicast_port"]
+
+    def env_general(self):
+        """Get Env Vars for the general section."""
+        own_address = os.getenv("XKNX_GENERAL_OWN_ADDRESS", default=None)
+        if own_address:
+            logger.debug("XKNX_GENERAL_OWN_ADDRESS overwrite from env")
+            self.xknx.own_address = IndividualAddress(own_address)
+        rate_limit = os.getenv("XKNX_GENERAL_RATE_LIMIT", default=None)
+        if rate_limit:
+            logger.debug("XKNX_GENERAL_RATE_LIMIT overwrite from env")
+            self.xknx.rate_limit = int(rate_limit)
+        multicast_group = os.getenv("XKNX_GENERAL_MULTICAST_GROUP", default=None)
+        if multicast_group:
+            logger.debug("XKNX_GENERAL_MULTICAST_GROUP overwrite from env")
+            self.xknx.multicast_group = multicast_group
+        multicast_port = os.getenv("XKNX_GENERAL_MULTICAST_PORT", default=None)
+        if multicast_port:
+            logger.debug("XKNX_GENERAL_MULTICAST_PORT overwrite from env")
+            self.xknx.multicast_port = int(multicast_port)
 
     def parse_connection(self, doc):
         """Parse the connection section of xknx.yaml."""
@@ -94,7 +116,34 @@ class ConfigV1:
                     connection_config.gateway_port = value
                 elif pref == "local_ip":
                     connection_config.local_ip = value
+                elif pref == "route_back":
+                    connection_config.route_back = value
         self.xknx.connection_config = connection_config
+
+    def env_connection(self):
+        """Read config from env vars."""
+        gateway_ip = os.getenv("XKNX_CONNECTION_GATEWAY_IP", default=None)
+        if gateway_ip:
+            logger.debug("XKNX_CONNECTION_GATEWAY_IP overwrite from env")
+            self.xknx.connection_config.gateway_ip = gateway_ip
+        gateway_port = os.getenv("XKNX_CONNECTION_GATEWAY_PORT", default=None)
+        if gateway_port:
+            logger.debug("XKNX_CONNECTION_GATEWAY_PORT overwrite from env")
+            self.xknx.connection_config.gateway_port = int(gateway_port)
+        local_ip = os.getenv("XKNX_CONNECTION_LOCAL_IP", default=None)
+        if local_ip:
+            logger.debug("XKNX_CONNECTION_LOCAL_IP overwrite from env")
+            self.xknx.connection_config.local_ip = local_ip
+        route_back = os.getenv("XKNX_CONNECTION_ROUTE_BACK", default=None)
+        if route_back:
+            logger.debug("XKNX_CONNECTION_ROUTE_BACK overwrite from env")
+            self.xknx.connection_config.route_back = route_back.lower() in [
+                "true",
+                "1",
+                "y",
+                "yes",
+                "on",
+            ]
 
     def parse_groups(self, doc):
         """Parse the group section of xknx.yaml."""
