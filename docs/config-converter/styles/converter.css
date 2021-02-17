@@ -21,6 +21,10 @@ body {
   width: 100%;
 }
 
+.inline-block-child {
+  display: inline-block;
+}
+
 .control {
   height: 20%;
 }
