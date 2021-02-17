@@ -43,17 +43,22 @@ function parse() {
     oldObj = jsyaml.load(oldStr);
 
     newObj = parseOldConfig(oldObj);
+    if (Object.keys(newObj).length === 0) {
+      result.setOption('mode', 'yaml');
+      result.setValue("");
+      return;
+    }
+
     if (wrap_knx_checked) {
-      newObj = {knx: newObj};
+      newObj = { knx: newObj };
     }
 
     newYaml = jsyaml.dump(newObj, {
-        'styles': {
-          '!!null': 'canonical' // dump null as ~
-        },
-        'sortKeys': sort_keys_checked // sort object keys
-      });
-    console.log(newYaml);
+      'styles': {
+        '!!null': 'canonical' // dump null as ~
+      },
+      'sortKeys': sort_keys_checked // sort object keys
+    });
 
     result.setOption('mode', 'yaml');
     result.setValue(newYaml);
@@ -68,6 +73,11 @@ function parseOldConfig(oldConfig) {
   var newConfig = {}
   var invalid = []
   let info_text = document.getElementById('info_text')
+
+  if (typeof oldConfig === 'string') {
+    info_text.value = "No key found in source.";
+    return {};
+  }
 
   for (let key in oldConfig) {
     switch (key) {
@@ -125,45 +135,45 @@ function parseGeneral(generalConfig, newConfig, invalid) {
 
 function parseConnection(connectionConfig, newConfig, invalid) {
   for (var connection_key in connectionConfig) {
-      switch (connection_key) {
-        case "tunneling":
-          newConfig.tunneling = {};
-          for (let tunneling_key in connectionConfig.tunneling) {
-            switch (tunneling_key) {
-              case "gateway_ip":
-                newConfig.tunneling.host = connectionConfig.tunneling.gateway_ip;
-                break;
-              case "gateway_port":
-                newConfig.tunneling.port = connectionConfig.tunneling.gateway_port;
-                break;
-              case "local_ip":
-                newConfig.tunneling.local_ip = connectionConfig.tunneling.local_ip;
-                break;
-              default:
-                invalid.push("connection: tunneling: " + tunneling_key);
-            }
+    switch (connection_key) {
+      case "tunneling":
+        newConfig.tunneling = {};
+        for (let tunneling_key in connectionConfig.tunneling) {
+          switch (tunneling_key) {
+            case "gateway_ip":
+              newConfig.tunneling.host = connectionConfig.tunneling.gateway_ip;
+              break;
+            case "gateway_port":
+              newConfig.tunneling.port = connectionConfig.tunneling.gateway_port;
+              break;
+            case "local_ip":
+              newConfig.tunneling.local_ip = connectionConfig.tunneling.local_ip;
+              break;
+            default:
+              invalid.push("connection: tunneling: " + tunneling_key);
           }
-          break;
-        case "routing":
-          newConfig.routing = null;
-          for (let routing_key in connectionConfig.routing) {
-            switch (routing_key) {
-              case "local_ip":
-                newConfig.routing = {};
-                newConfig.routing.local_ip = connectionConfig.routing.local_ip;
-                break;
-              default:
-                invalid.push("connection: routing: " + routing_key)
-            }
+        }
+        break;
+      case "routing":
+        newConfig.routing = null;
+        for (let routing_key in connectionConfig.routing) {
+          switch (routing_key) {
+            case "local_ip":
+              newConfig.routing = {};
+              newConfig.routing.local_ip = connectionConfig.routing.local_ip;
+              break;
+            default:
+              invalid.push("connection: routing: " + routing_key)
           }
-          break;
-        case "auto":
-          // ignore auto
-          break;
-        default:
-          invalid.push("connection: " + connection_key);
-      }
+        }
+        break;
+      case "auto":
+        // ignore auto
+        break;
+      default:
+        invalid.push("connection: " + connection_key);
     }
+  }
 }
 
 function parseGroups(groups, newConfig, invalid) {
@@ -243,7 +253,7 @@ function parseGroups(groups, newConfig, invalid) {
 ////////////
 
 function parseBinarySensor(name, device, invalid, groupname) {
-  let entity = {name: name}
+  let entity = { name: name }
 
   for (let conf in device) {
     switch (conf) {
@@ -276,7 +286,7 @@ function parseBinarySensor(name, device, invalid, groupname) {
 }
 
 function parseClimate(name, device, invalid, groupname) {
-  let entity = {name: name}
+  let entity = { name: name }
 
   for (let conf in device) {
     switch (conf) {
@@ -374,7 +384,7 @@ function parseClimate(name, device, invalid, groupname) {
 }
 
 function parseCover(name, device, invalid, groupname) {
-  let entity = {name: name}
+  let entity = { name: name }
 
   for (let conf in device) {
     switch (conf) {
@@ -422,7 +432,7 @@ function parseCover(name, device, invalid, groupname) {
 }
 
 function parseDateTime(name, device, invalid, groupname) {
-  let entity = {type: "time"}
+  let entity = { type: "time" }
 
   for (let conf in device) {
     switch (conf) {
@@ -440,7 +450,7 @@ function parseDateTime(name, device, invalid, groupname) {
 }
 
 function parseFan(name, device, invalid, groupname) {
-  let entity = {name: name}
+  let entity = { name: name }
 
   for (let conf in device) {
     switch (conf) {
@@ -467,7 +477,7 @@ function parseFan(name, device, invalid, groupname) {
 }
 
 function parseLight(name, device, invalid, groupname) {
-  let entity = {name: name}
+  let entity = { name: name }
 
   for (let conf in device) {
     switch (conf) {
@@ -545,7 +555,7 @@ function parseLight(name, device, invalid, groupname) {
 }
 
 function parseNotify(name, device, invalid, groupname) {
-  let entity = {name: name}
+  let entity = { name: name }
 
   for (let conf in device) {
     switch (conf) {
@@ -560,7 +570,7 @@ function parseNotify(name, device, invalid, groupname) {
 }
 
 function parseScene(name, device, invalid, groupname) {
-  let entity = {name: name}
+  let entity = { name: name }
 
   for (let conf in device) {
     switch (conf) {
@@ -578,7 +588,7 @@ function parseScene(name, device, invalid, groupname) {
 }
 
 function parseSensor(name, device, invalid, groupname) {
-  let entity = {name: name}
+  let entity = { name: name }
 
   for (let conf in device) {
     switch (conf) {
@@ -602,7 +612,7 @@ function parseSensor(name, device, invalid, groupname) {
 }
 
 function parseSwitch(name, device, invalid, groupname) {
-  let entity = {name: name}
+  let entity = { name: name }
 
   for (let conf in device) {
     switch (conf) {
@@ -623,7 +633,7 @@ function parseSwitch(name, device, invalid, groupname) {
 }
 
 function parseWeather(name, device, invalid, groupname) {
-  let entity = {name: name}
+  let entity = { name: name }
 
   for (let conf in device) {
     switch (conf) {
