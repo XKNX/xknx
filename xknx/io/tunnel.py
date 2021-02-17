@@ -49,7 +49,7 @@ class Tunnel(Interface):
         local_port: int = 0,
         route_back: bool = False,
         telegram_received_callback: Optional["TelegramCallbackType"] = None,
-        auto_reconnect: bool = False,
+        auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
     ):
         """Initialize Tunnel class."""

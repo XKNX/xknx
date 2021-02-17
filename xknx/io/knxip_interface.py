@@ -65,7 +65,7 @@ class ConnectionConfig:
         gateway_ip: Optional[str] = None,
         gateway_port: int = DEFAULT_MCAST_PORT,
         route_back: bool = False,
-        auto_reconnect: bool = False,
+        auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
         scan_filter: GatewayScanFilter = GatewayScanFilter(),
     ):
