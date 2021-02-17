@@ -68,7 +68,7 @@ SERVICE_XKNX_ATTR_TYPE = "type"
 SERVICE_XKNX_ATTR_REMOVE = "remove"
 SERVICE_XKNX_EVENT_REGISTER = "event_register"
 SERVICE_XKNX_EXPOSURE_REGISTER = "exposure_register"
-SERVICE_XKNX_READ = "read_request"
+SERVICE_XKNX_READ = "read"
 
 CONFIG_SCHEMA = vol.Schema(
     {

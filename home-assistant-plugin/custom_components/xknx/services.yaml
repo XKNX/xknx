@@ -10,8 +10,8 @@ send:
     type:
       description: "Optional. If set, the payload will not be sent as raw bytes, but encoded as given DPT. Knx sensor types are valid values (see https://www.home-assistant.io/integrations/sensor.knx)."
       example: "temperature"
-read_request:
-  description: "Send GroupValueRead requests to the KNX bus. Response can be used with `knx.event` and will be processed in KNX entities."
+read:
+  description: "Send GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities."
   fields:
     address:
       description: "Group address(es) to send read request to. Lists will read multiple group addresses."
