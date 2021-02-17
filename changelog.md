@@ -2,6 +2,11 @@
 
 ## Unreleased changes
 
+### New Features
+
+- Add new optional config `route_back` for connections to be able to work behind NAT.
+- Read env vars after reading config file to allow dynamic config.
+
 ### HA integration
 
 - knx_event: fire also for outgoing telegrams
@@ -19,13 +24,9 @@
 - return the payload (or None) in RemoteValue.payload_valid(payload) instead of bool
 - Light colors are represented as `Tuple[Tuple[int,int,int], int]` instead of `Tuple[List[int], int]` now
 - DPT 3 payloads/values are not invertable anymore.
+- Tunnel: Interface changed - gateway_ip, gateway_port before local_ip, local_port added with default `0`.
 
 ## 0.16.3 Fan contributions 2021-02-06
-
-### New Features
-
-- Add new optional config `route_back` for connections to be able to dockerise xknx's apps.
-- Read env vars after reading config file to allow dynamic config for dockerized apps.
 
 ### Devices
 

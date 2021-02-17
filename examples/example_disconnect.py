@@ -27,17 +27,13 @@ async def main():
 
     for i in range(0, 255):
 
-        conn_state = ConnectionState(
-            xknx, udp_client, communication_channel_id=i, route_back=False
-        )
+        conn_state = ConnectionState(xknx, udp_client, communication_channel_id=i)
 
         await conn_state.start()
 
         if conn_state.success:
             print("Disconnecting ", i)
-            disconnect = Disconnect(
-                xknx, udp_client, communication_channel_id=i, route_back=False
-            )
+            disconnect = Disconnect(xknx, udp_client, communication_channel_id=i)
 
             await disconnect.start()
 

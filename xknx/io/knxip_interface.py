@@ -48,6 +48,8 @@ class ConnectionConfig:
     * local_ip: Local ip of the interface though which KNXIPInterface should connect.
     * gateway_ip: IP of KNX/IP tunneling device.
     * gateway_port: Port of KNX/IP tunneling device.
+    * route_back: the KNXnet/IP Server shall use the IP address and the port number in the IP package
+        received as the target IP address or port number for the response to the KNXnet/IP Client.
     * auto_reconnect: Auto reconnect to KNX/IP tunneling device if connection cannot be established.
     * auto_reconnect_wait: Wait n seconds before trying to reconnect to KNX/IP tunneling device.
     * scan_filter: For AUTOMATIC connection, limit scan with the given filter
@@ -176,10 +178,10 @@ class KNXIPInterface:
         )
         self.interface = Tunnel(
             self.xknx,
-            local_ip=local_ip,
-            local_port=local_port,
             gateway_ip=gateway_ip,
             gateway_port=gateway_port,
+            local_ip=local_ip,
+            local_port=local_port,
             route_back=route_back,
             telegram_received_callback=self.telegram_received,
             auto_reconnect=auto_reconnect,

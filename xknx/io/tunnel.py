@@ -43,10 +43,10 @@ class Tunnel(Interface):
     def __init__(
         self,
         xknx: "XKNX",
-        local_ip: str,
-        local_port: int,
         gateway_ip: str,
         gateway_port: int,
+        local_ip: str,
+        local_port: int = 0,
         route_back: bool = False,
         telegram_received_callback: Optional["TelegramCallbackType"] = None,
         auto_reconnect: bool = False,
@@ -55,11 +55,11 @@ class Tunnel(Interface):
         """Initialize Tunnel class."""
         # pylint: disable=too-many-arguments
         self.xknx = xknx
+        self.gateway_ip = gateway_ip
+        self.gateway_port = gateway_port
         self.local_ip = local_ip
         self.local_port = local_port
         self.route_back = route_back
-        self.gateway_ip = gateway_ip
-        self.gateway_port = gateway_port
         self.telegram_received_callback = telegram_received_callback
 
         self.udp_client: UDPClient

@@ -20,10 +20,10 @@ class TestTunnelling(unittest.TestCase):
         self.tg_received_mock = Mock()
         self.tunnel = Tunnel(
             self.xknx,
-            local_ip="192.168.1.1",
-            local_port=0,
             gateway_ip="192.168.1.2",
             gateway_port=3671,
+            local_ip="192.168.1.1",
+            local_port=0,
             telegram_received_callback=self.tg_received_mock,
             auto_reconnect=False,
             auto_reconnect_wait=3,
