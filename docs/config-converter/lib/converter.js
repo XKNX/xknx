@@ -97,7 +97,7 @@ function parseOldConfig(oldConfig) {
   console.log(newConfig);
   console.log(invalid);
   if (invalid.length) {
-    invalid.unshift("Invalid keys found. They are removed form converted config.")
+    invalid.unshift("Invalid keys found. They are removed form converted config.\nInvalid config keys have been ignored by xknx so your new config should work just like before.")
     for (let item of invalid) {
       if (item.endsWith("actions")) {
         invalid[0] += "\nNOTE: Actions in BinarySensors are not supported anymore. Use a HomeAssistant Automation instead.";
