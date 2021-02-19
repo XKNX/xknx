@@ -1,0 +1,102 @@
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0 30px;
+  padding-bottom: 125px;
+  overflow-x: hidden;
+}
+
+a {
+  color: #23a7e2;
+}
+
+.header {
+  padding: 1px 0 30px;
+  white-space: nowrap;
+  overflow: hidden;
+  color: #2f2e31;
+}
+
+.subheader {
+  position: absolute;
+  top: -35px;
+  width: 100%;
+  color: #2f2e31;
+}
+
+.inline-block-child {
+  display: inline-block;
+}
+
+.control {
+  height: 20%;
+}
+
+.content {
+  height: 80%;
+}
+
+.src,
+.dst {
+  width: 49%;
+  position: relative;
+  float: left;
+  height: 100%;
+}
+
+.info,
+.options {
+  width: 49%;
+  position: relative;
+  float: left;
+  height: 100%;
+  padding: 5px;
+}
+
+#info_text {
+  resize: none;
+  height: 100%;
+  width: 100%;
+}
+
+.dst .options {
+  float: right;
+}
+
+.src .info .CodeMirror {
+  background-color: #fffffb;
+  border: 1px solid #888;
+  border-radius: 3px;
+  box-shadow: 0 0 3px #ccc inset;
+}
+
+.dst .options .CodeMirror {
+  background-color: #f8f8f8;
+  border: 1px solid #eee;
+  border-radius: 3px;
+}
+
+/*.CodeMirror-scroll {
+  height: 500px;
+  line-height: 1.2;
+}*/
+
+.CodeMirror {
+  height: 100%;
+  font-size: 13px;
+}
+
+.CodeMirror .cm-comment {
+  color: #4c4a4f;
+}
+
+.CodeMirror .cm-number {
+  color: #c63b00;
+}
+
+.CodeMirror .cm-string {
+  color: #106f1b;
+}
