@@ -118,6 +118,19 @@ class TestWeather(unittest.TestCase):
         self.assertEqual(weather._wind_speed.unit_of_measurement, "m/s")
         self.assertEqual(weather._wind_speed.ha_device_class, None)
 
+    def test_wind_bearing(self):
+        """Test wind bearing received."""
+        xknx = XKNX()
+        weather: Weather = Weather(
+            name="weather", xknx=xknx, group_address_brightness_east="1/3/8"
+        )
+
+        weather._wind_bearing.payload = DPTArray((0xBF,))
+
+        self.assertEqual(weather.wind_bearing, 270)
+        self.assertEqual(weather._wind_bearing.unit_of_measurement, "°")
+        self.assertEqual(weather._wind_bearing.ha_device_class, None)
+
     def test_state_lightning(self):
         """Test current_state returns lightning if wind alarm and rain alarm are true."""
         xknx = XKNX()

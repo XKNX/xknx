@@ -7,6 +7,7 @@ It provides functionality for
 * reading current brightness in 3 directions (DPT 9.004)
 * reading current alarms (DPTBinary)
 * reading current wind speed in m/s (DPT 9.005)
+* reading current wind bearing in degrees (DPT 5.003)
 * reading current air pressure (DPT 9.006)
 * reading current humidity (DPT 9.007)
 
@@ -86,6 +87,7 @@ class Weather(Device):
         group_address_brightness_west: Optional["GroupAddressableType"] = None,
         group_address_brightness_east: Optional["GroupAddressableType"] = None,
         group_address_wind_speed: Optional["GroupAddressableType"] = None,
+        group_address_wind_bearing: Optional["GroupAddressableType"] = None,
         group_address_rain_alarm: Optional["GroupAddressableType"] = None,
         group_address_frost_alarm: Optional["GroupAddressableType"] = None,
         group_address_wind_alarm: Optional["GroupAddressableType"] = None,
@@ -160,6 +162,16 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
+        self._wind_bearing = RemoteValueSensor(
+            xknx,
+            group_address_state=group_address_wind_bearing,
+            sync_state=sync_state,
+            value_type="angle",
+            device_name=self.name,
+            feature_name="Wind bearing",
+            after_update_cb=self.after_update,
+        )
+
         self._rain_alarm = RemoteValueSwitch(
             xknx,
             group_address_state=group_address_rain_alarm,
@@ -223,6 +235,7 @@ class Weather(Device):
         yield self._brightness_east
         yield self._brightness_west
         yield self._wind_speed
+        yield self._wind_bearing
         yield self._rain_alarm
         yield self._wind_alarm
         yield self._frost_alarm
@@ -276,6 +289,11 @@ class Weather(Device):
     def wind_speed(self) -> Optional[float]:
         """Return wind speed in m/s."""
         return self._wind_speed.value  # type: ignore
+
+    @property
+    def wind_bearing(self) -> Optional[int]:
+        """Return wind bearing in °."""
+        return self._wind_bearing.value  # type: ignore
 
     @property
     def rain_alarm(self) -> Optional[bool]:
@@ -364,6 +382,11 @@ class Weather(Device):
                 "wind_speed_ms",
             ),
             (
+                "_wind_bearing",
+                self._wind_bearing.group_address_state,
+                "angle",
+            ),
+            (
                 "_air_pressure",
                 self._air_pressure.group_address_state,
                 "pressure",
@@ -429,6 +452,7 @@ class Weather(Device):
         group_address_brightness_west = config.get("group_address_brightness_west")
         group_address_brightness_east = config.get("group_address_brightness_east")
         group_address_wind_speed = config.get("group_address_wind_speed")
+        group_address_wind_bearing = config.get("group_address_wind_bearing")
         group_address_rain_alarm = config.get("group_address_rain_alarm")
         group_address_frost_alarm = config.get("group_address_frost_alarm")
         group_address_wind_alarm = config.get("group_address_wind_alarm")
@@ -447,6 +471,7 @@ class Weather(Device):
             group_address_brightness_west=group_address_brightness_west,
             group_address_brightness_east=group_address_brightness_east,
             group_address_wind_speed=group_address_wind_speed,
+            group_address_wind_bearing=group_address_wind_bearing,
             group_address_rain_alarm=group_address_rain_alarm,
             group_address_frost_alarm=group_address_frost_alarm,
             group_address_wind_alarm=group_address_wind_alarm,
@@ -462,7 +487,7 @@ class Weather(Device):
         return (
             '<Weather name="{}" '
             'temperature="{}" brightness_south="{}" brightness_north="{}" brightness_west="{}" '
-            'brightness_east="{}" wind_speed="{}" rain_alarm="{}" '
+            'brightness_east="{}" wind_speed="{}" wind_bearing="{}" rain_alarm="{}" '
             'wind_alarm="{}" frost_alarm="{}" day_night="{}" '
             'air_pressure="{}" humidity="{}" />'.format(
                 self.name,
@@ -472,6 +497,7 @@ class Weather(Device):
                 self._brightness_west.group_addr_str(),
                 self._brightness_east.group_addr_str(),
                 self._wind_speed.group_addr_str(),
+                self._wind_bearing.group_addr_str(),
                 self._rain_alarm.group_addr_str(),
                 self._wind_alarm.group_addr_str(),
                 self._frost_alarm.group_addr_str(),
