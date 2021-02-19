@@ -674,7 +674,7 @@ function parseWeather(name, device, invalid, groupname) {
         entity.address_humidity = device[conf]
         break;
       case "expose_sensors":
-        entity[conf] = device[conf]
+        entity.create_sensors = device[conf]
         break;
       case "sync_state":
         entity[conf] = device[conf]
