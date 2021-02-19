@@ -655,6 +655,9 @@ function parseWeather(name, device, invalid, groupname) {
       case "group_address_wind_speed":
         entity.address_wind_speed = device[conf]
         break;
+      case "group_address_wind_bearing":
+        entity.address_wind_bearing = device[conf]
+        break;
       case "group_address_rain_alarm":
         entity.address_rain_alarm = device[conf]
         break;

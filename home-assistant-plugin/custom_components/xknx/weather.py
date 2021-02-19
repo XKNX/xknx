@@ -71,17 +71,3 @@ class KNXWeather(KnxEntity, WeatherEntity):
         return (
             self._device.wind_bearing if self._device.wind_bearing is not None else None
         )
-
-    @property
-    def wind_bearing(self):
-        """Return current wind bearing in degrees."""
-        return (
-            self._device.wind_bearing if self._device.wind_bearing is not None else None
-        )
-
-    @property
-    def wind_bearing(self):
-        """Return current wind bearing in degrees."""
-        return (
-            self._device.wind_bearing if self._device.wind_bearing is not None else None
-        )

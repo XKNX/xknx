@@ -66,6 +66,7 @@ groups:
 - **group_address_brightness_west** KNX address for the brightness to west **DPT 9.004**.
 - **group_address_brightness_east** KNX address for the brightness to east **DPT 9.004**.
 - **group_address_wind_speed** KNX address for current wind speed. **DPT 9.005**
+- **group_address_wind_bearing** KNX address for current wind bearing. **DPT 5.003**
 - **group_address_rain_alarm** KNX address for reading if rain alarm is on/off.
 - **group_address_wind_alarm** KNX address for reading if wind alarm is on/off.
 - **group_address_frost_alarm** KNX address for reading if frost alarm is on/off.
