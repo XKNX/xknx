@@ -25,6 +25,9 @@ wind_alarm:
 wind_speed:
   state_address: "7/0/6"
   state_update: "expire 60"
+wind_bearing:
+  state_address: "7/0/7"
+  state_update: "expire 60"
 day_night:
   state_address: "7/0/8"
   state_update: "expire 60"

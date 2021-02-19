@@ -345,6 +345,9 @@ def _create_weather(knx_module: XKNX, config: ConfigType) -> XknxWeather:
             WeatherSchema.CONF_XKNX_BRIGHTNESS_NORTH_ADDRESS
         ),
         group_address_wind_speed=config.get(WeatherSchema.CONF_XKNX_WIND_SPEED_ADDRESS),
+        group_address_wind_bearing=config.get(
+            WeatherSchema.CONF_XKNX_WIND_BEARING_ADDRESS
+        ),
         group_address_rain_alarm=config.get(WeatherSchema.CONF_XKNX_RAIN_ALARM_ADDRESS),
         group_address_frost_alarm=config.get(
             WeatherSchema.CONF_XKNX_FROST_ALARM_ADDRESS

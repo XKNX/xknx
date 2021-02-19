@@ -401,6 +401,7 @@ class WeatherSchema:
     CONF_XKNX_BRIGHTNESS_WEST_ADDRESS = "address_brightness_west"
     CONF_XKNX_BRIGHTNESS_NORTH_ADDRESS = "address_brightness_north"
     CONF_XKNX_WIND_SPEED_ADDRESS = "address_wind_speed"
+    CONF_XKNX_WIND_BEARING_ADDRESS = "address_wind_bearing"
     CONF_XKNX_RAIN_ALARM_ADDRESS = "address_rain_alarm"
     CONF_XKNX_FROST_ALARM_ADDRESS = "address_frost_alarm"
     CONF_XKNX_WIND_ALARM_ADDRESS = "address_wind_alarm"
@@ -426,6 +427,7 @@ class WeatherSchema:
             vol.Optional(CONF_XKNX_BRIGHTNESS_WEST_ADDRESS): cv.string,
             vol.Optional(CONF_XKNX_BRIGHTNESS_NORTH_ADDRESS): cv.string,
             vol.Optional(CONF_XKNX_WIND_SPEED_ADDRESS): cv.string,
+            vol.Optional(CONF_XKNX_WIND_BEARING_ADDRESS): cv.string,
             vol.Optional(CONF_XKNX_RAIN_ALARM_ADDRESS): cv.string,
             vol.Optional(CONF_XKNX_FROST_ALARM_ADDRESS): cv.string,
             vol.Optional(CONF_XKNX_WIND_ALARM_ADDRESS): cv.string,

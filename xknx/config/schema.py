@@ -434,6 +434,7 @@ class WeatherSchema:
     CONF_WIND_ALARM = "wind_alarm"
     CONF_FROST_ALARM = "frost_alarm"
     CONF_WIND_SPEED = "wind_speed"
+    CONF_WIND_BEARING = "wind_bearing"
     CONF_DAY_NIGHT = "day_night"
     CONF_AIR_PRESSURE = "air_pressure"
     CONF_HUMIDITY = "humidity"
@@ -490,6 +491,12 @@ class WeatherSchema:
                 }
             ),
             vol.Optional(CONF_WIND_SPEED): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Remove(CONF_ADDRESS): ensure_group_address,
+                    vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
+                }
+            ),
+            vol.Optional(CONF_WIND_BEARING): RemoteValueSchema.SCHEMA.extend(
                 {
                     vol.Remove(CONF_ADDRESS): ensure_group_address,
                     vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
