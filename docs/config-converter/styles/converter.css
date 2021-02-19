@@ -9,16 +9,22 @@ body {
   overflow-x: hidden;
 }
 
+a {
+  color: #23a7e2;
+}
+
 .header {
   padding: 1px 0 30px;
   white-space: nowrap;
   overflow: hidden;
+  color: #2f2e31;
 }
 
 .subheader {
   position: absolute;
   top: -35px;
   width: 100%;
+  color: #2f2e31;
 }
 
 .inline-block-child {
@@ -84,5 +90,13 @@ body {
 }
 
 .CodeMirror .cm-comment {
-  color: #baa;
+  color: #4c4a4f;
+}
+
+.CodeMirror .cm-number {
+  color: #c63b00;
+}
+
+.CodeMirror .cm-string {
+  color: #106f1b;
 }
