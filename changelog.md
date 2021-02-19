@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased changes
+## 0.17.0 Route back 2021-02-19
 
 ### New Features
 
@@ -26,6 +26,7 @@
 - Light colors are represented as `Tuple[Tuple[int,int,int], int]` instead of `Tuple[List[int], int]` now
 - DPT 3 payloads/values are not invertable anymore.
 - Tunnel: Interface changed - gateway_ip, gateway_port before local_ip, local_port added with default `0`.
+- Tunnel: default `auto_reconnect`to True
 
 ## 0.16.3 Fan contributions 2021-02-06
 
