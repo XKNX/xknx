@@ -16,6 +16,7 @@
 - BinarySensor: return `None` for `BinarySensor.counter` when context timeout is not used (and don't calculate it)
 - Climate: Add `create_temperature_sensors` option to create dedicated sensors for current and target temperature.
 - Weather (breaking change!): Renamed `expose_sensors` to `create_sensors` to prevent confusion with the XKNX `expose_sensor` device type.
+- Weather: Added wind bearing attribute that accepts a value in degrees (0-360) for determining wind direction 
 
 ### Internals
 
