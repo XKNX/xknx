@@ -318,9 +318,12 @@ class KNXModule:
 
     def connection_config_routing(self):
         """Return the connection_config if routing is configured."""
-        local_ip = self.config[DOMAIN][CONF_XKNX_ROUTING].get(
-            ConnectionSchema.CONF_XKNX_LOCAL_IP
-        )
+        local_ip = None
+        # all configuration variables for routing are optional
+        if self.config[DOMAIN][CONF_XKNX_ROUTING] is not None:
+            local_ip = self.config[DOMAIN][CONF_XKNX_ROUTING].get(
+                ConnectionSchema.CONF_XKNX_LOCAL_IP
+            )
         return ConnectionConfig(
             connection_type=ConnectionType.ROUTING, local_ip=local_ip
         )
