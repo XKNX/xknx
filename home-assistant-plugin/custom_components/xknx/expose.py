@@ -18,6 +18,7 @@ from homeassistant.helpers.typing import ConfigType
 from .schema import ExposeSchema
 
 
+@callback
 def create_knx_exposure(
     hass: HomeAssistant, xknx: XKNX, config: ConfigType
 ) -> Union["KNXExposeSensor", "KNXExposeTime"]:
@@ -27,9 +28,10 @@ def create_knx_exposure(
     attribute = config.get(ExposeSchema.CONF_XKNX_EXPOSE_ATTRIBUTE)
     default = config.get(ExposeSchema.CONF_XKNX_EXPOSE_DEFAULT)
     address = config.get(ExposeSchema.CONF_XKNX_EXPOSE_ADDRESS)
+
+    exposure: Union["KNXExposeSensor", "KNXExposeTime"]
     if expose_type.lower() in ["time", "date", "datetime"]:
         exposure = KNXExposeTime(xknx, expose_type, address)
-        exposure.async_register()
     else:
         exposure = KNXExposeSensor(
             hass,
@@ -40,7 +42,7 @@ def create_knx_exposure(
             default,
             address,
         )
-        exposure.async_register()
+    exposure.async_register()
     return exposure
 
 
@@ -76,6 +78,7 @@ class KNXExposeSensor:
             self.hass, [self.entity_id], self._async_entity_changed
         )
 
+    @callback
     def shutdown(self) -> None:
         """Prepare for deletion."""
         if self._remove_listener is not None:
@@ -91,18 +94,19 @@ class KNXExposeSensor:
         if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             return
 
-        if self.expose_attribute is not None:
-            new_attribute = new_state.attributes.get(self.expose_attribute)
-            old_state = event.data.get("old_state")
-
-            if old_state is not None:
-                old_attribute = old_state.attributes.get(self.expose_attribute)
-                if old_attribute == new_attribute:
-                    # don't send same value sequentially
-                    return
-            await self._async_set_knx_value(new_attribute)
-        else:
+        if self.expose_attribute is None:
             await self._async_set_knx_value(new_state.state)
+            return
+
+        new_attribute = new_state.attributes.get(self.expose_attribute)
+        old_state = event.data.get("old_state")
+
+        if old_state is not None:
+            old_attribute = old_state.attributes.get(self.expose_attribute)
+            if old_attribute == new_attribute:
+                # don't send same value sequentially
+                return
+        await self._async_set_knx_value(new_attribute)
 
     async def _async_set_knx_value(self, value):
         """Set new value on xknx ExposeSensor."""
@@ -141,6 +145,7 @@ class KNXExposeTime:
             group_address=self.address,
         )
 
+    @callback
     def shutdown(self):
         """Prepare for deletion."""
         if self.device is not None:
