@@ -128,16 +128,14 @@ class Cover(Device):
 
         self.device_class = device_class
 
-    def _iter_remote_values(self) -> Iterator["RemoteValue"]:
+    def _iter_remote_values(self) -> Iterator["RemoteValue[Any]"]:
         """Iterate the devices RemoteValue classes."""
-        yield from (
-            self.updown,
-            self.step,
-            self.stop_,
-            self.position_current,
-            self.position_target,
-            self.angle,
-        )
+        yield self.updown
+        yield self.step
+        yield self.stop_
+        yield self.position_current
+        yield self.position_target
+        yield self.angle
 
     @classmethod
     def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "Cover":

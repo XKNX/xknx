@@ -117,9 +117,61 @@ class TestTelegramQueue(unittest.TestCase):
             payload=GroupValueWrite(DPTBinary(1)),
         )
         self.loop.run_until_complete(
-            xknx.telegram_queue.process_telegram_incoming(telegram)
+            xknx.telegram_queue.process_telegram_incoming(telegram),
         )
         async_telegram_received_cb.assert_called_once_with(telegram)
+
+    @patch("xknx.io.KNXIPInterface")
+    def test_register_with_outgoing_telegrams(self, if_mock):
+        """Test telegram_received_callback with outgoing telegrams."""
+        # pylint: disable=no-self-use
+        xknx = XKNX()
+        async_telegram_received_cb = AsyncMock()
+
+        async_if_send_telegram = asyncio.Future()
+        async_if_send_telegram.set_result(None)
+        if_mock.send_telegram.return_value = async_if_send_telegram
+
+        xknx.telegram_queue.register_telegram_received_cb(
+            async_telegram_received_cb, None, None, True
+        )
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            direction=TelegramDirection.OUTGOING,
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+
+        xknx.knxip_interface = if_mock
+        self.loop.run_until_complete(
+            xknx.telegram_queue.process_telegram_outgoing(telegram)
+        )
+        async_telegram_received_cb.assert_called_once_with(telegram)
+
+    @patch("xknx.io.KNXIPInterface")
+    def test_register_with_outgoing_telegrams_does_not_trigger(self, if_mock):
+        """Test telegram_received_callback with outgoing telegrams."""
+        # pylint: disable=no-self-use
+        xknx = XKNX()
+        async_telegram_received_cb = AsyncMock()
+
+        async_if_send_telegram = asyncio.Future()
+        async_if_send_telegram.set_result(None)
+        if_mock.send_telegram.return_value = async_if_send_telegram
+
+        xknx.telegram_queue.register_telegram_received_cb(async_telegram_received_cb)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            direction=TelegramDirection.OUTGOING,
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+
+        xknx.knxip_interface = if_mock
+        self.loop.run_until_complete(
+            xknx.telegram_queue.process_telegram_outgoing(telegram)
+        )
+        async_telegram_received_cb.assert_not_called()
 
     #
     # TEST UNREGISTER

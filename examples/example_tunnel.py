@@ -30,9 +30,11 @@ async def main():
 
     tunnel = Tunnel(
         xknx,
-        local_ip=gateway.local_ip,
         gateway_ip=gateway.ip_addr,
         gateway_port=gateway.port,
+        local_ip=gateway.local_ip,
+        local_port=0,
+        route_back=False,
     )
 
     await tunnel.connect()

@@ -323,6 +323,7 @@ class ClimateSchema:
     CONF_HEAT_COOL = "heat_cool"
     CONF_OPERATION_MODES = "operation_modes"
     CONF_ON_OFF = "on_off"
+    CONF_CREATE_TEMPERATURE_SENSORS = "create_temperature_sensors"
 
     CONF_FROST_PROTECTION_ADDRESS = "frost_protection_address"
     CONF_NIGHT_ADDRESS = "night_address"
@@ -416,6 +417,7 @@ class ClimateSchema:
             vol.Optional(CONF_OPERATION_MODES): vol.All(
                 ensure_list, [vol.In({**OPERATION_MODES, **PRESET_MODES})]
             ),
+            vol.Optional(CONF_CREATE_TEMPERATURE_SENSORS, default=False): boolean,
         }
     )
 
@@ -432,10 +434,11 @@ class WeatherSchema:
     CONF_WIND_ALARM = "wind_alarm"
     CONF_FROST_ALARM = "frost_alarm"
     CONF_WIND_SPEED = "wind_speed"
+    CONF_WIND_BEARING = "wind_bearing"
     CONF_DAY_NIGHT = "day_night"
     CONF_AIR_PRESSURE = "air_pressure"
     CONF_HUMIDITY = "humidity"
-    CONF_EXPOSE_SENSORS = "expose_sensors"
+    CONF_CREATE_SENSORS = "create_sensors"
 
     SCHEMA = BaseDeviceSchema.SCHEMA.extend(
         {
@@ -493,6 +496,12 @@ class WeatherSchema:
                     vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
                 }
             ),
+            vol.Optional(CONF_WIND_BEARING): RemoteValueSchema.SCHEMA.extend(
+                {
+                    vol.Remove(CONF_ADDRESS): ensure_group_address,
+                    vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
+                }
+            ),
             vol.Optional(CONF_DAY_NIGHT): RemoteValueSchema.SCHEMA.extend(
                 {
                     vol.Remove(CONF_ADDRESS): ensure_group_address,
@@ -511,7 +520,7 @@ class WeatherSchema:
                     vol.Required(CONF_STATE_ADDRESS): ensure_group_address,
                 }
             ),
-            vol.Optional(CONF_EXPOSE_SENSORS, default=False): boolean,
+            vol.Optional(CONF_CREATE_SENSORS, default=False): boolean,
         }
     )
 

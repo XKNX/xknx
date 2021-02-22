@@ -8,7 +8,8 @@ multicast_group: '224.1.2.3'
 multicast_port: 1337
 connection: # optional
   type: tunneling # or routing|auto
-  local_ip: "192.168.0.201"
+  local_ip: "192.168.111.201"
+  route_back: false
   host: "192.168.0.202"
   port: 1337
 binary_sensor:
@@ -154,6 +155,9 @@ climate:
     wind_speed:
       state_address: "7/0/6"
       state_update: "expire 60"
+    wind_bearing:
+      state_address: "7/0/7"
+      state_update: "expire 60"
     day_night:
       state_address: "7/0/8"
       state_update: "expire 60"
@@ -163,7 +167,7 @@ climate:
     humidity:
       state_address: "7/0/10"
       state_update: "expire 60"
-    expose_sensors: True
+    create_sensors: True
 datetime:
   - name: "Generaltime"
     time:
