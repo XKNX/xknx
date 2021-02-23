@@ -33,7 +33,7 @@ class KNXSensor(KnxEntity, Entity):
         state = self._device.resolve_state()
         template = self._device.value_template
         if template is not None and state is not None:
-            state = template.async_render_with_possible_json_value(state)
+            state = template.async_render({"value": state})
         return state
 
     @property
