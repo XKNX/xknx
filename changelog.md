@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.17.1 Cover up 2021-02-23
+
+### Devices
+
+- Cover: Use correct step direction when stopping
+
+### Internals
+
+- Convert all Enums to upper case to satisfy pylint
+
 ## 0.17.0 Route back 2021-02-19
 
 ### New Features
