@@ -18,7 +18,7 @@ from xknx.remote_value import (
 )
 
 from .device import Device, DeviceCallbackType
-from .travelcalculator import TravelCalculator
+from .travelcalculator import TravelCalculator, TravelStatus
 
 if TYPE_CHECKING:
     from xknx.remote_value import RemoteValue
@@ -217,9 +217,15 @@ class Cover(Device):
     async def stop(self) -> None:
         """Stop cover."""
         if self.stop_.writable:
-            await self.stop_.on()
+            if self.travelcalculator.travel_direction == TravelStatus.DIRECTION_UP:
+                await self.stop_.off()
+            elif self.travelcalculator.travel_direction == TravelStatus.DIRECTION_DOWN:
+                await self.stop_.on()
         elif self.step.writable:
-            await self.step.increase()
+            if self.travelcalculator.travel_direction == TravelStatus.DIRECTION_UP:
+                await self.step.decrease()
+            elif self.travelcalculator.travel_direction == TravelStatus.DIRECTION_DOWN:
+                await self.step.increase()
         else:
             logger.warning("Stop not supported for device %s", self.get_name())
             return
@@ -271,6 +277,13 @@ class Cover(Device):
         if not self.supports_angle:
             logger.warning("Angle not supported for device %s", self.get_name())
             return
+
+        self.travelcalculator.travel_direction = (
+            TravelStatus.DIRECTION_DOWN
+            if angle > self.current_angle()
+            else TravelStatus.DIRECTION_UP
+        )
+
         await self.angle.set(angle)
 
     async def auto_stop_if_necessary(self) -> None:
