@@ -261,9 +261,13 @@ class Light(Device):
         yield self.rgbw
         yield self.tunable_white
         yield self.color_temperature
-        for color in (self.red, self.green, self.blue, self.white):
+        for color in self._iter_individual_colors():
             yield color.switch
             yield color.brightness
+
+    def _iter_individual_colors(self) -> Iterator[_SwitchAndBrightness]:
+        """Iterate the devices individual colors."""
+        yield from (self.red, self.green, self.blue, self.white)
 
     @property
     def supports_brightness(self) -> bool:
@@ -274,17 +278,14 @@ class Light(Device):
     def supports_color(self) -> bool:
         """Return if light supports color."""
         return self.color.initialized or all(
-            [c.brightness.initialized for c in (self.red, self.green, self.blue)]
+            c.brightness.initialized for c in (self.red, self.green, self.blue)
         )
 
     @property
     def supports_rgbw(self) -> bool:
         """Return if light supports RGBW."""
         return self.rgbw.initialized or all(
-            [
-                c.brightness.initialized
-                for c in (self.red, self.green, self.blue, self.white)
-            ]
+            c.brightness.initialized for c in self._iter_individual_colors()
         )
 
     @property
@@ -496,29 +497,22 @@ class Light(Device):
         """Return the current switch state of the device."""
         if self.switch.value is not None:
             return self.switch.value  # type: ignore
-        if any(
-            [
-                c.switch.value is not None
-                for c in (self.red, self.green, self.blue, self.white)
-            ]
-        ):
-            return any(
-                [c.switch.value for c in (self.red, self.green, self.blue, self.white)]
-            )
+        if any(c.switch.value is not None for c in self._iter_individual_colors()):
+            return any(c.switch.value for c in self._iter_individual_colors())
         return None
 
     async def set_on(self) -> None:
         """Switch light on."""
         if self.switch.initialized:
             await self.switch.on()
-        for color in (self.red, self.green, self.blue, self.white):
+        for color in self._iter_individual_colors():
             await color.set_on()
 
     async def set_off(self) -> None:
         """Switch light off."""
         if self.switch.initialized:
             await self.switch.off()
-        for color in (self.red, self.green, self.blue, self.white):
+        for color in self._iter_individual_colors():
             await color.set_off()
 
     @property
@@ -570,10 +564,7 @@ class Light(Device):
                     await self.rgbw.set(list(color) + [white])
                     return
                 if all(
-                    [
-                        c.brightness.initialized
-                        for c in (self.red, self.green, self.blue, self.white)
-                    ]
+                    c.brightness.initialized for c in self._iter_individual_colors()
                 ):
                     await self.red.brightness.set(color[0])
                     await self.green.brightness.set(color[1])
@@ -587,10 +578,7 @@ class Light(Device):
                     await self.color.set(color)
                     return
                 if all(
-                    [
-                        c.brightness.initialized
-                        for c in (self.red, self.green, self.blue)
-                    ]
+                    c.brightness.initialized for c in (self.red, self.green, self.blue)
                 ):
                     await self.red.brightness.set(color[0])
                     await self.green.brightness.set(color[1])
