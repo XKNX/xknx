@@ -217,10 +217,7 @@ class Cover(Device):
     async def stop(self) -> None:
         """Stop cover."""
         if self.stop_.writable:
-            if self.travelcalculator.travel_direction == TravelStatus.DIRECTION_UP:
-                await self.stop_.off()
-            elif self.travelcalculator.travel_direction == TravelStatus.DIRECTION_DOWN:
-                await self.stop_.on()
+            await self.stop_.on()
         elif self.step.writable:
             if self.travelcalculator.travel_direction == TravelStatus.DIRECTION_UP:
                 await self.step.decrease()
