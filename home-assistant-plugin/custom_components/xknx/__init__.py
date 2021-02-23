@@ -22,6 +22,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import async_get_platforms
@@ -38,6 +39,7 @@ from .schema import (
     ConnectionSchema,
     CoverSchema,
     ExposeSchema,
+    FanSchema,
     LightSchema,
     NotifySchema,
     SceneSchema,
@@ -130,6 +132,9 @@ CONFIG_SCHEMA = vol.Schema(
                     ),
                     vol.Optional(SupportedPlatforms.WEATHER.value): vol.All(
                         cv.ensure_list, [WeatherSchema.SCHEMA]
+                    ),
+                    vol.Optional(SupportedPlatforms.fan.value): vol.All(
+                        cv.ensure_list, [FanSchema.SCHEMA]
                     ),
                 }
             ),
@@ -331,12 +336,12 @@ class KNXModule:
         if CONF_XKNX_ROUTING in self.config[DOMAIN]:
             return self.connection_config_routing()
         # config from xknx.yaml always has priority later on
-        return ConnectionConfig()
+        return ConnectionConfig(auto_reconnect=True)
 
     def connection_config_routing(self):
         """Return the connection_config if routing is configured."""
         local_ip = None
-        # all configuration variables for routing are optional
+        # all configuration values are optional
         if self.config[DOMAIN][CONF_XKNX_ROUTING] is not None:
             local_ip = self.config[DOMAIN][CONF_XKNX_ROUTING].get(
                 ConnectionSchema.CONF_XKNX_LOCAL_IP
@@ -416,11 +421,10 @@ class KNXModule:
         if call.data.get(SERVICE_XKNX_ATTR_REMOVE):
             try:
                 removed_exposure = self.service_exposures.pop(group_address)
-            except KeyError:
-                _LOGGER.warning(
-                    "Service exposure_register could not remove exposure for '%s'",
-                    group_address,
-                )
+            except KeyError as err:
+                raise HomeAssistantError(
+                    f"Could not find exposure for '{group_address}' to remove."
+                ) from err
             else:
                 removed_exposure.shutdown()
             return

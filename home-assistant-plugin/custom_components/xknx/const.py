@@ -33,14 +33,15 @@ class ColorTempModes(Enum):
 class SupportedPlatforms(Enum):
     """Supported platforms."""
 
-    COVER = "cover"
-    LIGHT = "light"
-    BINARY_sensor = "binary_sensor"
+    BINARY_SENSOR = "binary_sensor"
     CLIMATE = "climate"
-    SWITCH = "switch"
+    COVER = "cover"
+    FAN = "fan"
+    LIGHT = "light"
     NOTIFY = "notify"
     SCENE = "scene"
     SENSOR = "sensor"
+    SWITCH = "switch"
     WEATHER = "weather"
 
 
