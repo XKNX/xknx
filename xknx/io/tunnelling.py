@@ -47,7 +47,7 @@ class Tunnelling(RequestResponse):
         cemi = CEMIFrame.init_from_telegram(
             self.xknx,
             telegram=self.telegram,
-            code=CEMIMessageCode.L_Data_REQ,
+            code=CEMIMessageCode.L_DATA_REQ,
             src_addr=self.src_address,
         )
         tunnelling_request = TunnellingRequest(
