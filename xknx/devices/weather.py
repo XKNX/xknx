@@ -30,45 +30,45 @@ if TYPE_CHECKING:
 class WeatherCondition(Enum):
     """Home assistant weather conditions (partially)."""
 
-    clear_night = "clear-night"
-    cloudy = "cloudy"
-    lightning = "lightning"
-    lightning_rainy = "lightning-rainy"
-    partly_cloudy = "partly-cloudy"
-    pouring = "pouring"
-    rainy = "rainy"
-    snowy = "snowy"
-    snowy_rainy = "snowy-rainy"
-    sunny = "sunny"
-    windy = "windy"
-    windy_variant = "windy_variant"
-    exceptional = "exceptional"
+    CLEAR_NIGHT = "clear-night"
+    CLOUDY = "cloudy"
+    LIGHTNING = "lightning"
+    LIGHTNING_RAINY = "lightning-rainy"
+    PARTLY_CLOUDY = "partly-cloudy"
+    POURING = "pouring"
+    RAINY = "rainy"
+    SNOWY = "snowy"
+    SNOWY_RAINY = "snowy-rainy"
+    SUNNY = "sunny"
+    WINDY = "windy"
+    WINDY_VARIANT = "windy_variant"
+    EXCEPTIONAL = "exceptional"
 
 
 class Season(Enum):
     """Seasonal mapping for illuminance."""
 
-    winter = 0
-    summer = 1
+    WINTER = 0
+    SUMMER = 1
 
 
 YEAR = 2000  # dummy leap year to allow input X-02-29 (leap day)
 # Map year to winter and summer in order to be able to have seasonal illuminance checks
 # Sun during summer is stronger than in winter
 SEASONS = [
-    (Season.winter, (date(YEAR, 1, 1), date(YEAR, 4, 20))),
-    (Season.summer, (date(YEAR, 4, 21), date(YEAR, 10, 1))),
-    (Season.winter, (date(YEAR, 10, 2), date(YEAR, 12, 31))),
+    (Season.WINTER, (date(YEAR, 1, 1), date(YEAR, 4, 20))),
+    (Season.SUMMER, (date(YEAR, 4, 21), date(YEAR, 10, 1))),
+    (Season.WINTER, (date(YEAR, 10, 2), date(YEAR, 12, 31))),
 ]
 
 # Define current condition
 ILLUMINANCE_MAPPING: Tuple[
     Tuple[Season, Callable[[float], bool], WeatherCondition], ...
 ] = (
-    (Season.summer, lambda lx: 2000 <= lx <= 20000, WeatherCondition.cloudy),
-    (Season.summer, lambda lx: lx > 20000, WeatherCondition.sunny),
-    (Season.winter, lambda lx: 999 <= lx <= 4500, WeatherCondition.cloudy),
-    (Season.winter, lambda lx: lx > 4500, WeatherCondition.sunny),
+    (Season.SUMMER, lambda lx: 2000 <= lx <= 20000, WeatherCondition.CLOUDY),
+    (Season.SUMMER, lambda lx: lx > 20000, WeatherCondition.SUNNY),
+    (Season.WINTER, lambda lx: 999 <= lx <= 4500, WeatherCondition.CLOUDY),
+    (Season.WINTER, lambda lx: lx > 4500, WeatherCondition.SUNNY),
 )
 
 
@@ -419,16 +419,16 @@ class Weather(Device):
             )
 
         if self.wind_alarm and self.rain_alarm:
-            return WeatherCondition.lightning_rainy
+            return WeatherCondition.LIGHTNING_RAINY
 
         if self.frost_alarm and self.rain_alarm:
-            return WeatherCondition.snowy_rainy
+            return WeatherCondition.SNOWY_RAINY
 
         if self.rain_alarm:
-            return WeatherCondition.rainy
+            return WeatherCondition.RAINY
 
         if self.wind_alarm:
-            return WeatherCondition.windy
+            return WeatherCondition.WINDY
 
         current_season: Season = _get_season(current_date)
         _season: Season
@@ -439,9 +439,9 @@ class Weather(Device):
                 return result
 
         if self.day_night is False:
-            return WeatherCondition.clear_night
+            return WeatherCondition.CLEAR_NIGHT
 
-        return WeatherCondition.exceptional
+        return WeatherCondition.EXCEPTIONAL
 
     @classmethod
     def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "Weather":

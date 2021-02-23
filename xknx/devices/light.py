@@ -47,8 +47,8 @@ logger = logging.getLogger("xknx.log")
 class ColorTempModes(Enum):
     """Color temperature modes for config validation."""
 
-    absolute = "DPT-7.600"
-    relative = "DPT-5.001"
+    ABSOLUTE = "DPT-7.600"
+    RELATIVE = "DPT-5.001"
 
 
 class _SwitchAndBrightness:
