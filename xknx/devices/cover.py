@@ -125,7 +125,7 @@ class Cover(Device):
         self.travel_time_up = travel_time_up
 
         self.travelcalculator = TravelCalculator(travel_time_down, travel_time_up)
-        self.travel_direction_tilt = None
+        self.travel_direction_tilt = Optional[TravelStatus]
 
         self.device_class = device_class
 
@@ -222,11 +222,15 @@ class Cover(Device):
         if self.stop_.writable:
             await self.stop_.on()
         elif self.step.writable:
-            if (self.travel_direction_tilt == TravelStatus.DIRECTION_UP or 
-                self.travelcalculator.travel_direction == TravelStatus.DIRECTION_UP):
+            if (
+                self.travel_direction_tilt == TravelStatus.DIRECTION_UP
+                or self.travelcalculator.travel_direction == TravelStatus.DIRECTION_UP
+            ):
                 await self.step.decrease()
-            elif (self.travel_direction_tilt == TravelStatus.DIRECTION_DOWN or 
-                self.travelcalculator.travel_direction == TravelStatus.DIRECTION_DOWN):
+            elif (
+                self.travel_direction_tilt == TravelStatus.DIRECTION_DOWN
+                or self.travelcalculator.travel_direction == TravelStatus.DIRECTION_DOWN
+            ):
                 await self.step.increase()
         else:
             logger.warning("Stop not supported for device %s", self.get_name())
@@ -283,7 +287,7 @@ class Cover(Device):
 
         self.travel_direction_tilt = (
             TravelStatus.DIRECTION_DOWN
-            if angle > self.current_angle()
+            if self.current_angle() is not None and angle > int(self.angle.value)
             else TravelStatus.DIRECTION_UP
         )
 

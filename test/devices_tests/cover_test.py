@@ -374,14 +374,51 @@ class TestCover(unittest.TestCase):
             group_address_position="1/2/3",
             group_address_position_state="1/2/4",
         )
+        # Attempt stopping while not actually moving
         self.loop.run_until_complete(cover_short_stop.stop())
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        self.assertEqual(xknx.telegrams.qsize(), 0)
+
+        # Attempt stopping while moving down
+        cover_short_stop.travelcalculator.set_position(0)
+        self.loop.run_until_complete(cover_short_stop.set_down())
+        self.loop.run_until_complete(cover_short_stop.stop())
+        self.assertEqual(xknx.telegrams.qsize(), 2)
+        telegram = xknx.telegrams.get_nowait()
+        self.assertEqual(
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/1"),
+                payload=GroupValueWrite(DPTBinary(1)),
+            ),
+        )
         telegram = xknx.telegrams.get_nowait()
         self.assertEqual(
             telegram,
             Telegram(
                 destination_address=GroupAddress("1/2/2"),
                 payload=GroupValueWrite(DPTBinary(1)),
+            ),
+        )
+
+        # Attempt stopping while moving up
+        cover_short_stop.travelcalculator.set_position(100)
+        self.loop.run_until_complete(cover_short_stop.set_up())
+        self.loop.run_until_complete(cover_short_stop.stop())
+        self.assertEqual(xknx.telegrams.qsize(), 2)
+        telegram = xknx.telegrams.get_nowait()
+        self.assertEqual(
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/1"),
+                payload=GroupValueWrite(DPTBinary(0)),
+            ),
+        )
+        telegram = xknx.telegrams.get_nowait()
+        self.assertEqual(
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/2"),
+                payload=GroupValueWrite(DPTBinary(0)),
             ),
         )
 
@@ -402,6 +439,79 @@ class TestCover(unittest.TestCase):
             Telegram(
                 destination_address=GroupAddress("1/2/0"),
                 payload=GroupValueWrite(DPTBinary(1)),
+            ),
+        )
+
+    def test_stop_angle(self):
+        """Test stopping cover during angle move / tilting."""
+        xknx = XKNX()
+        cover_short_stop = Cover(
+            xknx,
+            "TestCover",
+            group_address_long="1/2/1",
+            group_address_short="1/2/2",
+            group_address_angle="1/2/5",
+            group_address_angle_state="1/2/6",
+        )
+        # Attempt stopping while not actually tilting
+        self.loop.run_until_complete(cover_short_stop.stop())
+        self.assertEqual(xknx.telegrams.qsize(), 0)
+
+        # Set cover tilt to a dummy start value, since otherwise we cannot
+        # determine later on a tilt direction and without it, stopping the
+        # til process has no effect.
+        self.loop.run_until_complete(
+            cover_short_stop.angle.process(
+                Telegram(
+                    destination_address=GroupAddress("1/2/5"),
+                    payload=GroupValueWrite(DPTArray(0xAA)),
+                )
+            )
+        )
+
+        # Attempt stopping while tilting down
+        self.loop.run_until_complete(cover_short_stop.set_angle(100))
+        self.loop.run_until_complete(cover_short_stop.stop())
+        self.assertEqual(xknx.telegrams.qsize(), 2)
+        telegram = xknx.telegrams.get_nowait()
+        print(telegram)
+        self.assertEqual(
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/5"),
+                payload=GroupValueWrite(DPTArray(0xFF)),
+            ),
+        )
+        telegram = xknx.telegrams.get_nowait()
+        print(telegram)
+        self.assertEqual(
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/2"),
+                payload=GroupValueWrite(DPTBinary(1)),
+            ),
+        )
+
+        # Attempt stopping while tilting up
+        self.loop.run_until_complete(cover_short_stop.set_angle(0))
+        self.loop.run_until_complete(cover_short_stop.stop())
+        self.assertEqual(xknx.telegrams.qsize(), 2)
+        telegram = xknx.telegrams.get_nowait()
+        print(telegram)
+        self.assertEqual(
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/5"),
+                payload=GroupValueWrite(DPTArray(0x00)),
+            ),
+        )
+        telegram = xknx.telegrams.get_nowait()
+        print(telegram)
+        self.assertEqual(
+            telegram,
+            Telegram(
+                destination_address=GroupAddress("1/2/2"),
+                payload=GroupValueWrite(DPTBinary(0)),
             ),
         )
 
@@ -569,7 +679,7 @@ class TestCover(unittest.TestCase):
         )
 
     def test_angle_not_supported(self):
-        """Test changing angle on cover wich does not support angle."""
+        """Test changing angle on cover which does not support angle."""
         xknx = XKNX()
         cover = Cover(
             xknx,
