@@ -287,7 +287,7 @@ class Cover(Device):
 
         self.travel_direction_tilt = (
             TravelStatus.DIRECTION_DOWN
-            if self.current_angle() is not None and angle > int(self.angle.value)
+            if self.current_angle() and angle > int(self.angle.value)
             else TravelStatus.DIRECTION_UP
         )
 
