@@ -125,7 +125,7 @@ class Cover(Device):
         self.travel_time_up = travel_time_up
 
         self.travelcalculator = TravelCalculator(travel_time_down, travel_time_up)
-        self.travel_direction_tilt = Optional[TravelStatus]
+        self.travel_direction_tilt: Optional[TravelStatus] = None
 
         self.device_class = device_class
 
@@ -288,7 +288,7 @@ class Cover(Device):
         current_angle = self.current_angle()
         self.travel_direction_tilt = (
             TravelStatus.DIRECTION_DOWN
-            if current_angle and angle >= current_angle
+            if current_angle is not None and angle >= current_angle
             else TravelStatus.DIRECTION_UP
         )
 
