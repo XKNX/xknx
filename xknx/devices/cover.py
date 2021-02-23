@@ -285,9 +285,10 @@ class Cover(Device):
             logger.warning("Angle not supported for device %s", self.get_name())
             return
 
+        current_angle = self.current_angle()
         self.travel_direction_tilt = (
             TravelStatus.DIRECTION_DOWN
-            if self.current_angle() and angle > int(self.angle.value)
+            if current_angle and angle > current_angle
             else TravelStatus.DIRECTION_UP
         )
 
