@@ -67,7 +67,7 @@ def create_knx_device(
     if platform is SupportedPlatforms.WEATHER:
         return _create_weather(knx_module, config)
 
-    if platform is SupportedPlatforms.fan:
+    if platform is SupportedPlatforms.FAN:
         return _create_fan(knx_module, config)
 
 
