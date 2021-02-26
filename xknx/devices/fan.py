@@ -30,8 +30,8 @@ logger = logging.getLogger("xknx.log")
 class FanSpeedMode(Enum):
     """Enum for setting the fan speed mode."""
 
-    Percent = 1
-    Step = 2
+    PERCENT = 1
+    STEP = 2
 
 
 class Fan(Device):
@@ -56,10 +56,10 @@ class Fan(Device):
         super().__init__(xknx, name, device_updated_cb)
 
         self.speed: Union[RemoteValueDptValue1Ucount, RemoteValueScaling]
-        self.mode = FanSpeedMode.Step if max_step is not None else FanSpeedMode.Percent
+        self.mode = FanSpeedMode.STEP if max_step is not None else FanSpeedMode.PERCENT
         self.max_step = max_step
 
-        if self.mode == FanSpeedMode.Step:
+        if self.mode == FanSpeedMode.STEP:
             self.speed = RemoteValueDptValue1Ucount(
                 xknx,
                 group_address_speed,

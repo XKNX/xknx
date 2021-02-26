@@ -57,7 +57,7 @@ class CEMIMessageCode(Enum):
 
     # FROM NETWORK LAYER TO DATA LINK LAYER
     L_RAW_REQ = 0x10
-    L_Data_REQ = 0x11  # Data Service.
+    L_DATA_REQ = 0x11  # Data Service.
     # Primitive used for transmitting a data frame
     L_POLL_DATA_REQ = 0x13  # Poll Data Service
 

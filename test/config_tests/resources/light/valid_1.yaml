@@ -17,6 +17,6 @@ color_temperature:
   address: "2/5/7"
   state_address: "2/5/8"
   state_update: "expire 60"
-  mode: absolute
+  mode: ABSOLUTE
   min_kelvin: 2550
   max_kelvin: 6200

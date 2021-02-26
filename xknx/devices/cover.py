@@ -18,7 +18,7 @@ from xknx.remote_value import (
 )
 
 from .device import Device, DeviceCallbackType
-from .travelcalculator import TravelCalculator
+from .travelcalculator import TravelCalculator, TravelStatus
 
 if TYPE_CHECKING:
     from xknx.remote_value import RemoteValue
@@ -125,6 +125,7 @@ class Cover(Device):
         self.travel_time_up = travel_time_up
 
         self.travelcalculator = TravelCalculator(travel_time_down, travel_time_up)
+        self.travel_direction_tilt: Optional[TravelStatus] = None
 
         self.device_class = device_class
 
@@ -198,12 +199,14 @@ class Cover(Device):
         """Move cover down."""
         await self.updown.down()
         self.travelcalculator.start_travel_down()
+        self.travel_direction_tilt = None
         await self.after_update()
 
     async def set_up(self) -> None:
         """Move cover up."""
         await self.updown.up()
         self.travelcalculator.start_travel_up()
+        self.travel_direction_tilt = None
         await self.after_update()
 
     async def set_short_down(self) -> None:
@@ -219,11 +222,21 @@ class Cover(Device):
         if self.stop_.writable:
             await self.stop_.on()
         elif self.step.writable:
-            await self.step.increase()
+            if (
+                self.travel_direction_tilt == TravelStatus.DIRECTION_UP
+                or self.travelcalculator.travel_direction == TravelStatus.DIRECTION_UP
+            ):
+                await self.step.decrease()
+            elif (
+                self.travel_direction_tilt == TravelStatus.DIRECTION_DOWN
+                or self.travelcalculator.travel_direction == TravelStatus.DIRECTION_DOWN
+            ):
+                await self.step.increase()
         else:
             logger.warning("Stop not supported for device %s", self.get_name())
             return
         self.travelcalculator.stop()
+        self.travel_direction_tilt = None
         await self.after_update()
 
     async def set_position(self, position: int) -> None:
@@ -271,14 +284,22 @@ class Cover(Device):
         if not self.supports_angle:
             logger.warning("Angle not supported for device %s", self.get_name())
             return
+
+        current_angle = self.current_angle()
+        self.travel_direction_tilt = (
+            TravelStatus.DIRECTION_DOWN
+            if current_angle is not None and angle >= current_angle
+            else TravelStatus.DIRECTION_UP
+        )
+
         await self.angle.set(angle)
 
     async def auto_stop_if_necessary(self) -> None:
         """Do auto stop if necessary."""
         # If device does not support auto_positioning,
-        # we have to stop the device when position is reached.
+        # we have to stop the device when position is reached,
         # unless device was traveling to fully open
-        # or fully closed state
+        # or fully closed state.
         if (
             self.supports_stop
             and not self.position_target.writable

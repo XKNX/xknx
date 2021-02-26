@@ -55,11 +55,12 @@ class Tunnelling(RequestResponse):
             pdu = CEMIFrame.init_from_telegram(
                 self.xknx,
                 telegram=self.telegram,
-                code=CEMIMessageCode.L_Data_REQ,
+                code=CEMIMessageCode.L_DATA_REQ,
                 src_addr=self.src_address,
             )
         else:
             raise RuntimeError("Unknown TelegramType:" + self.telegram.tpdu_type)
+
         tunnelling_request = TunnellingRequest(
             self.xknx,
             communication_channel_id=self.communication_channel_id,

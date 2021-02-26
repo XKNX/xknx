@@ -14,7 +14,7 @@ from xknx.io import (
     ConnectionType,
 )
 from xknx.telegram import AddressFilter, GroupAddress, Telegram
-from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 from homeassistant.const import (
     CONF_HOST,
@@ -22,6 +22,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import async_get_platforms
@@ -38,6 +39,7 @@ from .schema import (
     ConnectionSchema,
     CoverSchema,
     ExposeSchema,
+    FanSchema,
     LightSchema,
     NotifySchema,
     SceneSchema,
@@ -68,6 +70,7 @@ SERVICE_XKNX_ATTR_TYPE = "type"
 SERVICE_XKNX_ATTR_REMOVE = "remove"
 SERVICE_XKNX_EVENT_REGISTER = "event_register"
 SERVICE_XKNX_EXPOSURE_REGISTER = "exposure_register"
+SERVICE_XKNX_READ = "read"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -103,32 +106,35 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_XKNX_EXPOSE): vol.All(
                         cv.ensure_list, [ExposeSchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.cover.value): vol.All(
+                    vol.Optional(SupportedPlatforms.COVER.value): vol.All(
                         cv.ensure_list, [CoverSchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.binary_sensor.value): vol.All(
+                    vol.Optional(SupportedPlatforms.BINARY_sensor.value): vol.All(
                         cv.ensure_list, [BinarySensorSchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.light.value): vol.All(
+                    vol.Optional(SupportedPlatforms.LIGHT.value): vol.All(
                         cv.ensure_list, [LightSchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.climate.value): vol.All(
+                    vol.Optional(SupportedPlatforms.CLIMATE.value): vol.All(
                         cv.ensure_list, [ClimateSchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.notify.value): vol.All(
+                    vol.Optional(SupportedPlatforms.NOTIFY.value): vol.All(
                         cv.ensure_list, [NotifySchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.switch.value): vol.All(
+                    vol.Optional(SupportedPlatforms.SWITCH.value): vol.All(
                         cv.ensure_list, [SwitchSchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.sensor.value): vol.All(
+                    vol.Optional(SupportedPlatforms.SENSOR.value): vol.All(
                         cv.ensure_list, [SensorSchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.scene.value): vol.All(
+                    vol.Optional(SupportedPlatforms.SCENE.value): vol.All(
                         cv.ensure_list, [SceneSchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.weather.value): vol.All(
+                    vol.Optional(SupportedPlatforms.WEATHER.value): vol.All(
                         cv.ensure_list, [WeatherSchema.SCHEMA]
+                    ),
+                    vol.Optional(SupportedPlatforms.fan.value): vol.All(
+                        cv.ensure_list, [FanSchema.SCHEMA]
                     ),
                 }
             ),
@@ -154,6 +160,15 @@ SERVICE_XKNX_SEND_SCHEMA = vol.Any(
             ),
         }
     ),
+)
+
+SERVICE_XKNX_READ_SCHEMA = vol.Schema(
+    {
+        vol.Required(SERVICE_XKNX_ATTR_ADDRESS): vol.All(
+            cv.ensure_list,
+            [cv.string],
+        )
+    }
 )
 
 SERVICE_XKNX_EVENT_REGISTER_SCHEMA = vol.Schema(
@@ -219,6 +234,13 @@ async def async_setup(hass, config):
         SERVICE_XKNX_SEND,
         hass.data[DOMAIN].service_send_to_knx_bus,
         schema=SERVICE_XKNX_SEND_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_XKNX_READ,
+        hass.data[DOMAIN].service_read_to_knx_bus,
+        schema=SERVICE_XKNX_READ_SCHEMA,
     )
 
     async_register_admin_service(
@@ -314,13 +336,16 @@ class KNXModule:
         if CONF_XKNX_ROUTING in self.config[DOMAIN]:
             return self.connection_config_routing()
         # config from xknx.yaml always has priority later on
-        return ConnectionConfig()
+        return ConnectionConfig(auto_reconnect=True)
 
     def connection_config_routing(self):
         """Return the connection_config if routing is configured."""
-        local_ip = self.config[DOMAIN][CONF_XKNX_ROUTING].get(
-            ConnectionSchema.CONF_XKNX_LOCAL_IP
-        )
+        local_ip = None
+        # all configuration values are optional
+        if self.config[DOMAIN][CONF_XKNX_ROUTING] is not None:
+            local_ip = self.config[DOMAIN][CONF_XKNX_ROUTING].get(
+                ConnectionSchema.CONF_XKNX_LOCAL_IP
+            )
         return ConnectionConfig(
             connection_type=ConnectionType.ROUTING, local_ip=local_ip
         )
@@ -368,6 +393,7 @@ class KNXModule:
             self.telegram_received_cb,
             address_filters=address_filters,
             group_addresses=[],
+            match_for_outgoing=True,
         )
 
     async def service_event_register_modify(self, call):
@@ -395,11 +421,10 @@ class KNXModule:
         if call.data.get(SERVICE_XKNX_ATTR_REMOVE):
             try:
                 removed_exposure = self.service_exposures.pop(group_address)
-            except KeyError:
-                _LOGGER.warning(
-                    "Service exposure_register could not remove exposure for '%s'",
-                    group_address,
-                )
+            except KeyError as err:
+                raise HomeAssistantError(
+                    f"Could not find exposure for '{group_address}' to remove."
+                ) from err
             else:
                 removed_exposure.shutdown()
             return
@@ -442,3 +467,12 @@ class KNXModule:
             payload=GroupValueWrite(calculate_payload(attr_payload)),
         )
         await self.xknx.telegrams.put(telegram)
+
+    async def service_read_to_knx_bus(self, call):
+        """Service for sending a GroupValueRead telegram to the KNX bus."""
+        for address in call.data.get(SERVICE_XKNX_ATTR_ADDRESS):
+            telegram = Telegram(
+                destination_address=GroupAddress(address),
+                payload=GroupValueRead(),
+            )
+            await self.xknx.telegrams.put(telegram)

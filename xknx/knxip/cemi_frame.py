@@ -121,7 +121,7 @@ class CEMIFrame:
 
         if self.code not in (
             CEMIMessageCode.L_DATA_IND,
-            CEMIMessageCode.L_Data_REQ,
+            CEMIMessageCode.L_DATA_REQ,
             CEMIMessageCode.L_DATA_CON,
         ):
             raise UnsupportedCEMIMessage(
@@ -133,7 +133,7 @@ class CEMIFrame:
         return self.from_knx_data_link_layer(raw)
 
     def from_knx_data_link_layer(self, cemi: bytes) -> int:
-        """Parse L_DATA_IND, CEMIMessageCode.L_Data_REQ, CEMIMessageCode.L_DATA_CON."""
+        """Parse L_DATA_IND, CEMIMessageCode.L_DATA_REQ, CEMIMessageCode.L_DATA_CON."""
         if len(cemi) < 11:
             # eg. ETS Line-Scan issues L_DATA_IND with length 10
             raise UnsupportedCEMIMessage(
