@@ -8,7 +8,7 @@ It provides functionality for
 * Cover will also predict the current position.
 """
 import logging
-from typing import TYPE_CHECKING, Any, Iterator, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional
 
 from xknx.remote_value import (
     RemoteValueScaling,
@@ -139,7 +139,7 @@ class Cover(Device):
         yield self.angle
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "Cover":
+    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Cover":
         """Initialize object from configuration structure."""
         group_address_long = config.get("group_address_long")
         group_address_short = config.get("group_address_short")

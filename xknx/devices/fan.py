@@ -8,7 +8,7 @@ It provides functionality for
 """
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Union
 
 from xknx.remote_value import (
     RemoteValueDptValue1Ucount,
@@ -99,7 +99,7 @@ class Fan(Device):
         return self.oscillation.initialized
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "Fan":
+    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Fan":
         """Initialize object from configuration structure."""
         group_address_speed = config.get("group_address_speed")
         group_address_speed_state = config.get("group_address_speed_state")

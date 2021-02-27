@@ -5,7 +5,7 @@ Operation modes can be 'auto', 'comfort', 'standby', 'economy', 'protection' and
 Controller modes use DPT 20.105.
 """
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Iterator, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
 
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
 from xknx.exceptions import DeviceIllegalValue
@@ -179,7 +179,9 @@ class ClimateMode(Device):
         )
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "ClimateMode":
+    def from_config(
+        cls, xknx: "XKNX", name: str, config: Dict[str, Any]
+    ) -> "ClimateMode":
         """Initialize object from configuration structure."""
         # pylint: disable=too-many-locals
         group_address_operation_mode = config.get("group_address_operation_mode")
