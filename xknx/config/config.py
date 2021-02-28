@@ -6,7 +6,7 @@ Module for reading config files (xknx.yaml).
 """
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict
 
 from .config_v1 import ConfigV1
 from .yaml_loader import load_yaml
@@ -35,16 +35,17 @@ class Config:
         """Read config."""
         logger.debug("Reading %s", file)
         doc = load_yaml(file)
+        assert isinstance(doc, dict)
         self.parse(doc)
 
     @staticmethod
-    def parse_version(doc) -> Version:
+    def parse_version(doc: Dict[str, Any]) -> Version:
         """Parse the version of the xknx.yaml."""
         if "version" in doc:
             return Version(doc["version"])
         return Version.VERSION_1
 
-    def parse(self, doc) -> None:
+    def parse(self, doc: Dict[str, Any]) -> None:
         """Parse the config from the YAML."""
         version = Config.parse_version(doc)
         if version is Version.VERSION_1:

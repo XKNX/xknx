@@ -6,7 +6,7 @@ Module for managing the climate within a room.
 """
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, Iterator, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Union, cast
 
 from xknx.remote_value import (
     RemoteValueSetpointShift,
@@ -162,7 +162,7 @@ class Climate(Device):
                 )
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "Climate":
+    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Climate":
         """Initialize object from configuration structure."""
         # pylint: disable=too-many-locals
         group_address_temperature = config.get("group_address_temperature")

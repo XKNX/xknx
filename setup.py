@@ -38,6 +38,8 @@ setup(
         "Programming Language :: Python :: 3.9",
     ],
     packages=find_packages(include=["xknx", "xknx.*"]),
+    package_data={"xknx": ["py.typed"]},
+    include_package_data=True,
     install_requires=REQUIRES,
     keywords="knx ip knxip eib home automation",
     zip_safe=False,
