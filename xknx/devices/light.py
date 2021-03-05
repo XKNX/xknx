@@ -17,6 +17,7 @@ from typing import (
     Any,
     Awaitable,
     Callable,
+    Dict,
     Iterator,
     List,
     Optional,
@@ -319,7 +320,7 @@ class Light(Device):
         return None, None, None, None
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "Light":
+    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Light":
         """Initialize object from configuration structure."""
         group_address_switch = config.get("group_address_switch")
         group_address_switch_state = config.get("group_address_switch_state")

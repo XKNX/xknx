@@ -11,7 +11,7 @@ read from an internet service (e.g. Yahoo weather) and exposed to
 ths KNX bus. KNX sensors may show this outside temperature within their
 LCD display.
 """
-from typing import TYPE_CHECKING, Any, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Union
 
 from xknx.remote_value import RemoteValueSensor, RemoteValueSwitch
 
@@ -63,7 +63,9 @@ class ExposeSensor(Device):
         yield self.sensor_value
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "ExposeSensor":
+    def from_config(
+        cls, xknx: "XKNX", name: str, config: Dict[str, Any]
+    ) -> "ExposeSensor":
         """Initialize object from configuration structure."""
         group_address = config.get("group_address")
         value_type = config.get("value_type")

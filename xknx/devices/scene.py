@@ -1,6 +1,6 @@
 """Module for managing a KNX scene."""
 import logging
-from typing import TYPE_CHECKING, Any, Iterator, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional
 
 from xknx.remote_value import RemoteValueSceneNumber
 
@@ -43,10 +43,10 @@ class Scene(Device):
         yield self.scene_value
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "Scene":
+    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Scene":
         """Initialize object from configuration structure."""
         group_address = config.get("group_address")
-        scene_number = int(config.get("scene_number"))
+        scene_number = int(config.get("scene_number"))  # type: ignore
         return cls(
             xknx, name=name, group_address=group_address, scene_number=scene_number
         )

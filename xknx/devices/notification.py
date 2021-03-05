@@ -1,6 +1,6 @@
 """Module for managing a notification via KNX."""
 import logging
-from typing import TYPE_CHECKING, Any, Iterator, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional
 
 from xknx.remote_value import RemoteValueString
 
@@ -43,7 +43,9 @@ class Notification(Device):
         yield self._message
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "Notification":
+    def from_config(
+        cls, xknx: "XKNX", name: str, config: Dict[str, Any]
+    ) -> "Notification":
         """Initialize object from configuration structure."""
         group_address = config.get("group_address")
         group_address_state = config.get("group_address_state")
