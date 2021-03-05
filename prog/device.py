@@ -6,6 +6,8 @@ Created on 08.12.2020
 from xknx.telegram import Telegram, TelegramDirection, IndividualAddress,TPDUType
 from xknx.io import Connect
 from xknx.knxip import ConnectRequestType
+from xknx.io.tunnelling import Tunnelling
+from xknx.telegram.apci import DataConnected
 #from xknx.knxip import TPDUType
 
 class Device:
@@ -19,12 +21,13 @@ class Device:
     
     async def check_existence(self):
         
-        
+        '''        
         # get UDP client
         udp_client = self.xknx.knxip_interface.interface.udp_client
         connect = Connect(
             self.xknx, 
             udp_client,
+            False,
             ConnectRequestType.DEVICE_MGMT_CONNECTION,
             self.ia)
         await connect.start()
@@ -33,12 +36,18 @@ class Device:
         
         '''
         #telegram = Telegram(self.ia, TelegramDirection.OUTGOING, Connect())
-        telegram = Telegram(
+        telegram1 = Telegram(
             self.ia, 
             TelegramDirection.OUTGOING,
             None,
             None,
             TPDUType.T_Connect)
-        #await asyncio.wait(self.xknx.telegrams.put(telegram), 1.0)
-        await self.xknx.telegrams.put(telegram)
-        '''
+        await self.xknx.telegrams.put(telegram1)
+
+        telegram2 = Telegram(
+            self.ia, 
+            TelegramDirection.OUTGOING,
+            DataConnected()
+            )
+        await self.xknx.telegrams.put(telegram2)
+        

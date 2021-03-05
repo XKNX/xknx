@@ -101,7 +101,11 @@ class KNXIPFrame:
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return f'<KNXIPFrame {self.header}\n body="{self.body}" />'
+        s = f'<KNXIPFrame {self.header}\n body="{self.body}" />\n'
+        data = self.to_knx()
+        for i in data:
+            s += format(i,"02x")+ " "
+        return s
 
     def __eq__(self, other: object) -> bool:
         """Equal operator."""
