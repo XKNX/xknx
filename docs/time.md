@@ -21,7 +21,7 @@ time_device = DateTime(
     localtime=True
 )
 
-# Sending time to knx bus
+# `sync()` doesn't send a GroupValueRead when localtime is True but sends the current time to KNX bus
 await xknx.devices['TimeTest'].sync()
 ```
 

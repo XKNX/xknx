@@ -90,7 +90,7 @@ await cover.do('short_up')
 await cover.do('down')
 await cover.do('short_down')
 
-# Requesting state via KNX GROUP WRITE
+# Requesting state via KNX GroupValueRead
 await cover.sync()
 ```
 
