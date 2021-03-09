@@ -5,15 +5,16 @@ Operation modes can be 'auto', 'comfort', 'standby', 'economy', 'protection' and
 Controller modes use DPT 20.105.
 """
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Iterator, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
 
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
 from xknx.exceptions import DeviceIllegalValue
 from xknx.remote_value.remote_value_climate_mode import (
     RemoteValueBinaryHeatCool,
     RemoteValueBinaryOperationMode,
-    RemoteValueClimateMode,
     RemoteValueClimateModeBase,
+    RemoteValueControllerMode,
+    RemoteValueOperationMode,
 )
 
 from .device import Device, DeviceCallbackType
@@ -56,40 +57,33 @@ class ClimateMode(Device):
         # pylint: disable=too-many-arguments, too-many-locals, too-many-branches, too-many-statements
         super().__init__(xknx, name, device_updated_cb)
 
-        self.remote_value_operation_mode: RemoteValueClimateMode[
-            HVACOperationMode
-        ] = RemoteValueClimateMode(
+        self.remote_value_operation_mode = RemoteValueOperationMode(
             xknx,
             group_address=group_address_operation_mode,
             group_address_state=group_address_operation_mode_state,
             sync_state=True,
             device_name=name,
             feature_name="Operation mode",
-            climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_MODE,
+            climate_mode_type=RemoteValueOperationMode.ClimateModeType.HVAC_MODE,
             after_update_cb=None,
         )
-        self.remote_value_controller_mode: RemoteValueClimateMode[
-            HVACControllerMode
-        ] = RemoteValueClimateMode(
+        self.remote_value_controller_mode = RemoteValueControllerMode(
             xknx,
             group_address=group_address_controller_mode,
             group_address_state=group_address_controller_mode_state,
             sync_state=True,
             device_name=name,
             feature_name="Controller mode",
-            climate_mode_type=RemoteValueClimateMode.ClimateModeType.HVAC_CONTR_MODE,
             after_update_cb=None,
         )
-        self.remote_value_controller_status: RemoteValueClimateMode[
-            HVACOperationMode
-        ] = RemoteValueClimateMode(
+        self.remote_value_controller_status = RemoteValueOperationMode(
             xknx,
             group_address=group_address_controller_status,
             group_address_state=group_address_controller_status_state,
             sync_state=True,
             device_name=name,
             feature_name="Controller status",
-            climate_mode_type=RemoteValueClimateMode.ClimateModeType.CONTROLLER_STATUS,
+            climate_mode_type=RemoteValueOperationMode.ClimateModeType.CONTROLLER_STATUS,
             after_update_cb=None,
         )
 
@@ -185,7 +179,9 @@ class ClimateMode(Device):
         )
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "ClimateMode":
+    def from_config(
+        cls, xknx: "XKNX", name: str, config: Dict[str, Any]
+    ) -> "ClimateMode":
         """Initialize object from configuration structure."""
         # pylint: disable=too-many-locals
         group_address_operation_mode = config.get("group_address_operation_mode")
@@ -234,7 +230,7 @@ class ClimateMode(Device):
 
     def _iter_remote_values(
         self,
-    ) -> Iterator["RemoteValue"]:
+    ) -> Iterator["RemoteValue[Any]"]:
         """Iterate climate mode RemoteValue classes."""
         return chain(
             self._iter_byte_operation_modes(),
@@ -244,7 +240,7 @@ class ClimateMode(Device):
 
     def _iter_byte_operation_modes(
         self,
-    ) -> Iterator[RemoteValueClimateMode[HVACOperationMode]]:
+    ) -> Iterator[RemoteValueClimateModeBase[Any, HVACOperationMode]]:
         """Iterate normal DPT 20.102 operation mode remote values."""
         yield from (
             self.remote_value_operation_mode,
@@ -253,14 +249,14 @@ class ClimateMode(Device):
 
     def _iter_controller_remote_values(
         self,
-    ) -> Iterator[RemoteValueClimateModeBase[HVACControllerMode]]:
+    ) -> Iterator[RemoteValueClimateModeBase[Any, HVACControllerMode]]:
         """Iterate DPT 20.105 controller remote values."""
-        yield from (
-            self.remote_value_controller_mode,
-            self.remote_value_heat_cool,
-        )
+        yield self.remote_value_controller_mode
+        yield self.remote_value_heat_cool
 
-    def _iter_binary_operation_modes(self) -> Iterator[RemoteValueBinaryOperationMode]:
+    def _iter_binary_operation_modes(
+        self,
+    ) -> Iterator[RemoteValueClimateModeBase[Any, HVACOperationMode]]:
         """Iterate DPT 1 binary operation modes."""
         yield from (
             self.remote_value_operation_mode_comfort,
@@ -295,7 +291,7 @@ class ClimateMode(Device):
                 "operation (preset) mode not supported", str(operation_mode)
             )
 
-        rv: RemoteValueClimateModeBase[HVACOperationMode]
+        rv: RemoteValueClimateModeBase[Any, HVACOperationMode]
         for rv in chain(
             self._iter_byte_operation_modes(), self._iter_binary_operation_modes()
         ):
@@ -314,7 +310,7 @@ class ClimateMode(Device):
                 "controller (HVAC) mode not supported", str(controller_mode)
             )
 
-        rv: RemoteValueClimateModeBase[HVACControllerMode]
+        rv: RemoteValueClimateModeBase[Any, HVACControllerMode]
         for rv in self._iter_controller_remote_values():
             if rv.writable and controller_mode in rv.supported_operation_modes():
                 await rv.set(controller_mode)

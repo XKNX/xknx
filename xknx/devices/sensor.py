@@ -6,7 +6,7 @@ It provides functionality for
 * reading the current state from KNX bus.
 * watching for state updates from KNX bus.
 """
-from typing import TYPE_CHECKING, Any, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Union
 
 from xknx.remote_value import RemoteValueControl, RemoteValueSensor
 
@@ -64,12 +64,12 @@ class Sensor(Device):
         self.always_callback = always_callback
         self.value_template = value_template
 
-    def _iter_remote_values(self) -> Iterator["RemoteValue"]:
+    def _iter_remote_values(self) -> Iterator["RemoteValue[Any]"]:
         """Iterate the devices RemoteValue classes."""
         yield self.sensor_value
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "Sensor":
+    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Sensor":
         """Initialize object from configuration structure."""
         group_address_state = config.get("group_address_state")
         sync_state = config.get("sync_state", True)

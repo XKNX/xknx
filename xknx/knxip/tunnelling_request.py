@@ -42,7 +42,7 @@ class TunnellingRequest(KNXIPBody):
         self.cemi: Optional[CEMIFrame] = (
             cemi
             if cemi is not None
-            else CEMIFrame(xknx, code=CEMIMessageCode.L_Data_REQ)
+            else CEMIFrame(xknx, code=CEMIMessageCode.L_DATA_REQ)
         )
 
     def calculated_length(self) -> int:

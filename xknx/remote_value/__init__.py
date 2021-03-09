@@ -5,7 +5,8 @@ from .remote_value_1count import RemoteValue1Count
 from .remote_value_climate_mode import (
     RemoteValueBinaryHeatCool,
     RemoteValueBinaryOperationMode,
-    RemoteValueClimateMode,
+    RemoteValueControllerMode,
+    RemoteValueOperationMode,
 )
 from .remote_value_color_rgb import RemoteValueColorRGB
 from .remote_value_color_rgbw import RemoteValueColorRGBW
@@ -28,13 +29,14 @@ __all__ = [
     "RemoteValue1Count",
     "RemoteValueBinaryHeatCool",
     "RemoteValueBinaryOperationMode",
-    "RemoteValueClimateMode",
     "RemoteValueColorRGB",
     "RemoteValueColorRGBW",
     "RemoteValueControl",
+    "RemoteValueControllerMode",
     "RemoteValueDateTime",
     "RemoteValueDpt2ByteUnsigned",
     "RemoteValueDptValue1Ucount",
+    "RemoteValueOperationMode",
     "RemoteValueScaling",
     "RemoteValueSceneNumber",
     "RemoteValueSensor",

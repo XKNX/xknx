@@ -16,10 +16,15 @@ class ConnectionState(RequestResponse):
     """Class to send ConnectonStateRequest and wait for ConnectionStateResponse."""
 
     def __init__(
-        self, xknx: "XKNX", udp_client: "UDPClient", communication_channel_id: int
+        self,
+        xknx: "XKNX",
+        udp_client: "UDPClient",
+        communication_channel_id: int,
+        route_back: bool = False,
     ):
         """Initialize ConnectionState class."""
         self.udp_client = udp_client
+        self.route_back = route_back
         super().__init__(
             xknx,
             self.udp_client,
@@ -30,10 +35,14 @@ class ConnectionState(RequestResponse):
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
-        (local_addr, local_port) = self.udpclient.getsockname()
+        if self.route_back:
+            endpoint = HPAI()
+        else:
+            (local_addr, local_port) = self.udpclient.getsockname()
+            endpoint = HPAI(ip_addr=local_addr, port=local_port)
         connectionstate_request = ConnectionStateRequest(
             self.xknx,
             communication_channel_id=self.communication_channel_id,
-            control_endpoint=HPAI(ip_addr=local_addr, port=local_port),
+            control_endpoint=endpoint,
         )
         return KNXIPFrame.init_from_body(connectionstate_request)

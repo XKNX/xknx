@@ -89,7 +89,7 @@ await climate.set_target_temperature(23)
 # Set new setpoint shift value.
 await climate.set_setpoint_shift(1)
 # Reading climate device
-await climate.sync()
+await climate.sync(wait_for_result=True)
 print("Current temperature: ", climate.temperature)
 ```
 

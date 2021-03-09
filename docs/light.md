@@ -95,6 +95,9 @@ await light.do('brightness:80')
 await light.do('tunable_white:75')
 await light.do('color_temperature:5000')
 
+# Update current state via KNX GroupValueRead
+await light.sync(wait_for_result=True)
+
 # Accessing state
 print(light.state)
 print(light.supports_brightness)
@@ -106,9 +109,6 @@ print(light.supports_tunable_white)
 print(light.current_tunable_white)
 print(light.supports_color_temperature)
 print(light.current_color_temperature)
-
-# Requesting current state via KNX GROUP WRITE
-await light.sync()
 ```
 
 ## [](#header-2)Example: RGBW light with individual group addresses for red, green, blue and white

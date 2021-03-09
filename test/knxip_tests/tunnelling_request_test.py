@@ -66,7 +66,7 @@ class Test_KNXIP_TunnelingReq(unittest.TestCase):
             ),
         )
 
-        cemi = CEMIFrame(xknx, code=CEMIMessageCode.L_Data_REQ)
+        cemi = CEMIFrame(xknx, code=CEMIMessageCode.L_DATA_REQ)
         cemi.telegram = Telegram(
             destination_address=GroupAddress("9/0/8"),
             payload=GroupValueWrite(DPTBinary(1)),

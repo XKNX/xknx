@@ -1,6 +1,7 @@
 """Module for managing xknx config parsing and validation."""
 # flake8: noqa
-from .config import Config, ConfigV1
+from .config import Config
+from .config_v1 import ConfigV1
 from .schema import (
     BinarySensorSchema,
     ClimateSchema,

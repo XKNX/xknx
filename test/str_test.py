@@ -336,10 +336,11 @@ class TestStringRepresentations(unittest.TestCase):
             group_address_brightness_east="7/0/4",
             group_address_brightness_west="7/0/3",
             group_address_wind_speed="7/0/2",
+            group_address_wind_bearing="7/0/6",
             group_address_day_night="7/0/7",
             group_address_rain_alarm="7/0/0",
             group_address_frost_alarm="7/0/8",
-            expose_sensors=True,
+            create_sensors=True,
             group_address_air_pressure="7/0/9",
             group_address_humidity="7/0/9",
             group_address_wind_alarm="7/0/10",
@@ -347,12 +348,13 @@ class TestStringRepresentations(unittest.TestCase):
         self.assertEqual(
             str(weather),
             '<Weather name="Home" temperature="None/GroupAddress("7/0/1")/None/None" '
-            'brightness_south="None/GroupAddress("7/0/5")/None/None" brightness_north="None/None/None/None"'
-            ' brightness_west="None/GroupAddress("7/0/3")/None/None" '
-            'brightness_east="None/GroupAddress("7/0/4")/None/None" wind_speed="None/GroupAddress("7/0/2")/None/None"'
-            ' rain_alarm="None/GroupAddress("7/0/0")/None/None" wind_alarm="None/GroupAddress("7/0/10")/None/None" '
-            'frost_alarm="None/GroupAddress("7/0/8")/None/None" day_night="None/GroupAddress("7/0/7")/None/None" '
-            'air_pressure="None/GroupAddress("7/0/9")/None/None" humidity="None/GroupAddress("7/0/9")/None/None" />',
+            'brightness_south="None/GroupAddress("7/0/5")/None/None" brightness_north="None/None/None/None" '
+            'brightness_west="None/GroupAddress("7/0/3")/None/None" '
+            'brightness_east="None/GroupAddress("7/0/4")/None/None" wind_speed="None/GroupAddress("7/0/2")/None/None" '
+            'wind_bearing="None/GroupAddress("7/0/6")/None/None" rain_alarm="None/GroupAddress("7/0/0")/None/None" '
+            'wind_alarm="None/GroupAddress("7/0/10")/None/None" frost_alarm="None/GroupAddress("7/0/8")/None/None" '
+            'day_night="None/GroupAddress("7/0/7")/None/None" air_pressure="None/GroupAddress("7/0/9")/None/None" '
+            'humidity="None/GroupAddress("7/0/9")/None/None" />',
         )
 
         telegram = Telegram(
@@ -368,7 +370,7 @@ class TestStringRepresentations(unittest.TestCase):
             'brightness_south="None/GroupAddress("7/0/5")/None/None" brightness_north="None/None/None/None" '
             'brightness_west="None/GroupAddress("7/0/3")/None/None" '
             'brightness_east="None/GroupAddress("7/0/4")/None/None" wind_speed="None/GroupAddress("7/0/2")/None/None" '
-            'rain_alarm="None/GroupAddress("7/0/0")/None/None" '
+            'wind_bearing="None/GroupAddress("7/0/6")/None/None" rain_alarm="None/GroupAddress("7/0/0")/None/None" '
             'wind_alarm="None/GroupAddress("7/0/10")/<DPTBinary value="1" />/True" '
             'frost_alarm="None/GroupAddress("7/0/8")/None/None" day_night="None/GroupAddress("7/0/7")/None/None" '
             'air_pressure="None/GroupAddress("7/0/9")/None/None" humidity="None/GroupAddress("7/0/9")/None/None" />',

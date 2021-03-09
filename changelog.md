@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.17.1 Cover up 2021-02-23
+
+### Devices
+
+- Cover: Use correct step direction when stopping
+
+### Internals
+
+- Convert all Enums to upper case to satisfy pylint
+
+## 0.17.0 Route back 2021-02-19
+
+### New Features
+
+- Add new optional config `route_back` for connections to be able to work behind NAT.
+- Read env vars after reading config file to allow dynamic config.
+
+### HA integration
+
+- knx_event: fire also for outgoing telegrams
+
+### Devices
+
+- BinarySensor: return `None` for `BinarySensor.counter` when context timeout is not used (and don't calculate it)
+- Climate: Add `create_temperature_sensors` option to create dedicated sensors for current and target temperature.
+- Weather (breaking change!): Renamed `expose_sensors` to `create_sensors` to prevent confusion with the XKNX `expose_sensor` device type.
+- Weather: Added wind bearing attribute that accepts a value in degrees (0-360) for determining wind direction.
+
+### Internals
+
+- RemoteValue is Generic now accepting DPTArray or DPTBinary
+- split RemoteValueClimateMode into RemoteValueControllerMode and RemoteValueOperationMode
+- return the payload (or None) in RemoteValue.payload_valid(payload) instead of bool
+- Light colors are represented as `Tuple[Tuple[int,int,int], int]` instead of `Tuple[List[int], int]` now
+- DPT 3 payloads/values are not invertable anymore.
+- Tunnel: Interface changed - gateway_ip, gateway_port before local_ip, local_port added with default `0`.
+- Tunnel: default `auto_reconnect`to True
+
 ## 0.16.3 Fan contributions 2021-02-06
 
 ### Devices
@@ -7,11 +45,11 @@
 - Fan: Add `max_step` attribute which defines the maximum amount of steps. If set, the fan is controlled by steps instead of percentage.
 - Fan: Add `group_address_oscillation` and `group_address_oscillation_state` attributes to control the oscillation of a fan.
 
-## 0.16.2 Bugfix for yaml loader 2021-01-24
+## 0.16.2 Bugfix for YAML loader 2021-01-24
 
 ### Internals
 
-- fix conflict with HA Yaml loader
+- fix conflict with HA YAML loader
 
 ## 0.16.1 HA register services 2021-01-16
 
@@ -163,7 +201,7 @@
 - Reset binary sensor counters after the context has been timed out in order to be able to use state change events within HA
 - Code cleanups
 
-## 0.14.0 New sensor types and refacoring of binary sensor automations
+## 0.14.0 New sensor types and refactoring of binary sensor automations
 
 ### Breaking changes
 

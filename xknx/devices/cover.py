@@ -8,7 +8,7 @@ It provides functionality for
 * Cover will also predict the current position.
 """
 import logging
-from typing import TYPE_CHECKING, Any, Iterator, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional
 
 from xknx.remote_value import (
     RemoteValueScaling,
@@ -18,7 +18,7 @@ from xknx.remote_value import (
 )
 
 from .device import Device, DeviceCallbackType
-from .travelcalculator import TravelCalculator
+from .travelcalculator import TravelCalculator, TravelStatus
 
 if TYPE_CHECKING:
     from xknx.remote_value import RemoteValue
@@ -125,22 +125,21 @@ class Cover(Device):
         self.travel_time_up = travel_time_up
 
         self.travelcalculator = TravelCalculator(travel_time_down, travel_time_up)
+        self.travel_direction_tilt: Optional[TravelStatus] = None
 
         self.device_class = device_class
 
-    def _iter_remote_values(self) -> Iterator["RemoteValue"]:
+    def _iter_remote_values(self) -> Iterator["RemoteValue[Any]"]:
         """Iterate the devices RemoteValue classes."""
-        yield from (
-            self.updown,
-            self.step,
-            self.stop_,
-            self.position_current,
-            self.position_target,
-            self.angle,
-        )
+        yield self.updown
+        yield self.step
+        yield self.stop_
+        yield self.position_current
+        yield self.position_target
+        yield self.angle
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "Cover":
+    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Cover":
         """Initialize object from configuration structure."""
         group_address_long = config.get("group_address_long")
         group_address_short = config.get("group_address_short")
@@ -200,12 +199,14 @@ class Cover(Device):
         """Move cover down."""
         await self.updown.down()
         self.travelcalculator.start_travel_down()
+        self.travel_direction_tilt = None
         await self.after_update()
 
     async def set_up(self) -> None:
         """Move cover up."""
         await self.updown.up()
         self.travelcalculator.start_travel_up()
+        self.travel_direction_tilt = None
         await self.after_update()
 
     async def set_short_down(self) -> None:
@@ -221,11 +222,21 @@ class Cover(Device):
         if self.stop_.writable:
             await self.stop_.on()
         elif self.step.writable:
-            await self.step.increase()
+            if (
+                self.travel_direction_tilt == TravelStatus.DIRECTION_UP
+                or self.travelcalculator.travel_direction == TravelStatus.DIRECTION_UP
+            ):
+                await self.step.decrease()
+            elif (
+                self.travel_direction_tilt == TravelStatus.DIRECTION_DOWN
+                or self.travelcalculator.travel_direction == TravelStatus.DIRECTION_DOWN
+            ):
+                await self.step.increase()
         else:
             logger.warning("Stop not supported for device %s", self.get_name())
             return
         self.travelcalculator.stop()
+        self.travel_direction_tilt = None
         await self.after_update()
 
     async def set_position(self, position: int) -> None:
@@ -273,14 +284,22 @@ class Cover(Device):
         if not self.supports_angle:
             logger.warning("Angle not supported for device %s", self.get_name())
             return
+
+        current_angle = self.current_angle()
+        self.travel_direction_tilt = (
+            TravelStatus.DIRECTION_DOWN
+            if current_angle is not None and angle >= current_angle
+            else TravelStatus.DIRECTION_UP
+        )
+
         await self.angle.set(angle)
 
     async def auto_stop_if_necessary(self) -> None:
         """Do auto stop if necessary."""
         # If device does not support auto_positioning,
-        # we have to stop the device when position is reached.
+        # we have to stop the device when position is reached,
         # unless device was traveling to fully open
-        # or fully closed state
+        # or fully closed state.
         if (
             self.supports_stop
             and not self.position_target.writable

@@ -37,7 +37,7 @@ class KNXSensor(KnxEntity, Entity):
         return state
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         return self._device.unit_of_measurement()
 
