@@ -273,7 +273,6 @@ groups:
                 group_address_state: "2/0/2",
                 value_type: "temperature",
                 sync_state: True,
-                value_template: "{{  value | round(0) }}",
             }
 
     expose_sensor:

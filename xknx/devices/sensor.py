@@ -30,7 +30,7 @@ class Sensor(Device):
         sync_state: bool = True,
         always_callback: bool = False,
         value_type: Optional[str] = None,
-        value_template: Optional[str] = None,
+        value_template: Any = None,
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize Sensor class."""
@@ -75,7 +75,6 @@ class Sensor(Device):
         sync_state = config.get("sync_state", True)
         always_callback = config.get("always_callback", False)
         value_type = config.get("value_type")
-        value_template = config.get("value_template")
 
         return cls(
             xknx,
@@ -84,7 +83,6 @@ class Sensor(Device):
             sync_state=sync_state,
             always_callback=always_callback,
             value_type=value_type,
-            value_template=value_template,
         )
 
     async def process_group_write(self, telegram: "Telegram") -> None:
