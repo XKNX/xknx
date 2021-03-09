@@ -1,12 +1,17 @@
 """Support for KNX/IP sensors."""
+import logging
+
 from xknx.devices import Sensor as XknxSensor
 
 from homeassistant.components.sensor import DEVICE_CLASSES
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from .knx_entity import KnxEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -33,7 +38,13 @@ class KNXSensor(KnxEntity, Entity):
         state = self._device.resolve_state()
         template = self._device.value_template
         if template is not None and state is not None:
-            state = template.async_render({"value": state})
+            try:
+                return template.async_render({"value": state})
+            except TemplateError as ex:
+                _LOGGER.error(
+                    "Error while rendering template for '%s'. %s", self.name, ex
+                )
+                return None
         return state
 
     @property
