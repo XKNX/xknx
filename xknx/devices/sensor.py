@@ -30,7 +30,7 @@ class Sensor(Device):
         sync_state: bool = True,
         always_callback: bool = False,
         value_type: Optional[str] = None,
-        value_template: Any = None,
+        ha_value_template: Any = None,
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize Sensor class."""
@@ -62,7 +62,7 @@ class Sensor(Device):
                 after_update_cb=self.after_update,
             )
         self.always_callback = always_callback
-        self.value_template = value_template
+        self.ha_value_template = ha_value_template
 
     def _iter_remote_values(self) -> Iterator["RemoteValue[Any]"]:
         """Iterate the devices RemoteValue classes."""
