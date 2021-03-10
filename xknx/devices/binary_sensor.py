@@ -39,6 +39,7 @@ class BinarySensor(Device):
         reset_after: Optional[float] = None,
         actions: Optional[List[Action]] = None,
         context_timeout: Optional[float] = None,
+        ha_value_template: Any = None,
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize BinarySensor class."""
@@ -49,6 +50,7 @@ class BinarySensor(Device):
 
         self.actions = actions
         self.device_class = device_class
+        self.ha_value_template = ha_value_template
         self.ignore_internal_state = ignore_internal_state or bool(context_timeout)
         self.reset_after = reset_after
         self.state: Optional[bool] = None
