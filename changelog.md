@@ -1,10 +1,14 @@
 # Changelog
 
-## Unreleased changes
+## 0.17.2 Value templates 2021-03-10
 
 ### Devices
 
 - BinarySensor, Sensor: add `ha_value_template` attribute to store HomeAssistant value templates
+
+### Internals
+
+- Distribute type annotations
 
 ## 0.17.1 Cover up 2021-02-23
 
