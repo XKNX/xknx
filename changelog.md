@@ -476,7 +476,7 @@ E.g. to switch on a light you have to do:
 await light.set_on()
 ```
 
-See updated [examples](https://github.com/XKNX/xknx/tree/master/examples) for details.
+See updated [examples](https://github.com/XKNX/xknx/tree/main/examples) for details.
 
 ### Renaming of several objects:
 

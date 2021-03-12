@@ -4,9 +4,6 @@ title: Changelog
 nav_order: 2
 ---
 
-Changelog
-=========
+# Changelog
 
-Changelog moved [here](https://github.com/XKNX/xknx/blob/master/changelog.md).
-
-
+Changelog moved [here](https://github.com/XKNX/xknx/blob/main/changelog.md).
