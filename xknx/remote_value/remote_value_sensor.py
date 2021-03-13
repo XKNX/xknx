@@ -25,7 +25,7 @@ class RemoteValueSensor(RemoteValue[DPTArray]):
         group_address: Optional["GroupAddressableType"] = None,
         group_address_state: Optional["GroupAddressableType"] = None,
         sync_state: bool = True,
-        value_type: Optional[str] = None,
+        value_type: Optional[Union[float, int, str]] = None,
         device_name: Optional[str] = None,
         feature_name: str = "Value",
         after_update_cb: Optional[AsyncCallbackType] = None,

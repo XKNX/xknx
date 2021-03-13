@@ -19,7 +19,6 @@ from typing import (
     Callable,
     Dict,
     Iterator,
-    List,
     Optional,
     Tuple,
 )
@@ -552,7 +551,9 @@ class Light(Device):
             return None, self.white.brightness.value
         return colors, self.white.brightness.value
 
-    async def set_color(self, color: List[int], white: Optional[int] = None) -> None:
+    async def set_color(
+        self, color: Tuple[int, int, int], white: Optional[int] = None
+    ) -> None:
         """
         Set color of a light device.
 
