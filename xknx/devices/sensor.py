@@ -29,7 +29,7 @@ class Sensor(Device):
         group_address_state: Optional["GroupAddressableType"] = None,
         sync_state: bool = True,
         always_callback: bool = False,
-        value_type: Optional[str] = None,
+        value_type: Optional[Union[int, str]] = None,
         ha_value_template: Any = None,
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
@@ -38,7 +38,7 @@ class Sensor(Device):
         super().__init__(xknx, name, device_updated_cb)
 
         self.sensor_value: Union[RemoteValueControl, RemoteValueSensor]
-        if value_type in [
+        if isinstance(value_type, str) and value_type in [
             "stepwise_dimming",
             "stepwise_blinds",
             "startstop_dimming",
