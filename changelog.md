@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Internals
+
+- Don't allow floats in DPTBase value_type parser
+
 ## 0.17.2 Value templates 2021-03-10
 
 ### Devices

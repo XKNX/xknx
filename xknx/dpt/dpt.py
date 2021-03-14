@@ -114,29 +114,26 @@ class DPTBase(ABC):
 
     # TODO: convert to classmethod to allow parsing only subclasses (eg. for Numeric, Control etc.)
     @staticmethod
-    def parse_transcoder(
-        value_type: Union[int, float, str]
-    ) -> Optional[Type["DPTBase"]]:
+    def parse_transcoder(value_type: Union[int, str]) -> Optional[Type["DPTBase"]]:
         """Return Class reference of DPTBase subclass from value_type or DPT number."""
         if isinstance(value_type, int):
             return DPTBase.transcoder_by_dpt(value_type)
-        if isinstance(value_type, float):
-            # avoid modulo for floating point rounding errors
-            main, sub = map(int, f"{value_type:.3f}".split("."))
-            return DPTBase.transcoder_by_dpt(main, sub)
         if isinstance(value_type, str):
-            _string_type = value_type.strip()
-            transcoder = DPTBase.transcoder_by_value_type(_string_type)
+            string_type = value_type.strip()
+            transcoder = DPTBase.transcoder_by_value_type(string_type)
             if transcoder is None:
                 # Try to parse the value_type if it is a string but not found by DPTBase.transcoder_by_value_type()
                 # for backwards compatibility (eg. "DPT-5") and strings representing numbers (eg. "7", "9.001")
-                _string_type = _string_type.upper().strip(" DPT-")
-                if _string_type.isdigit():
-                    transcoder = DPTBase.parse_transcoder(int(_string_type))
+                string_type = string_type.upper().strip(" DPT-")
+                if string_type.isdigit():
+                    transcoder = DPTBase.transcoder_by_dpt(int(string_type))
                 else:
                     try:
-                        transcoder = DPTBase.parse_transcoder(float(_string_type))
-                    except ValueError:
+                        main, sub = map(int, string_type.split("."))
+                        transcoder = DPTBase.transcoder_by_dpt(
+                            dpt_main=main, dpt_sub=sub
+                        )
+                    except (ValueError, IndexError):
                         pass
             return transcoder
 
