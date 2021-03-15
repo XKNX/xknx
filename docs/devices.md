@@ -31,8 +31,8 @@ An instantiated device is automatically added to `xknx.devices`.
 >>> light_s = Light(
 ...     xknx,
 ...     name="light with state address",
-...     group_address_switch="0/2/2"
-...     group_address_switch_state="0/3/3"
+...     group_address_switch="0/2/2",
+...     group_address_switch_state="0/3/3",
 ...     )
 >>> light_s.switch.group_address # this is used to send payloads to the bus
 GroupAddress("0/2/2")
@@ -44,8 +44,8 @@ GroupAddress("0/3/3")
 >>> light_p = Light(
 ...     xknx,
 ...     name="light with state and passive addresses",
-...     group_address_switch=["1/2/2", "4/2/10", "4/2/20"]
-...     group_address_switch_state=["1/3/3", "4/3/10", "4/3/20"]
+...     group_address_switch=["1/2/2", "4/2/10", "4/2/20"],
+...     group_address_switch_state=["1/3/3", "4/3/10", "4/3/20"],
 ...     )
 >>> light_p.switch.group_address # this is used to send payloads to the bus
 GroupAddress("1/2/2")
