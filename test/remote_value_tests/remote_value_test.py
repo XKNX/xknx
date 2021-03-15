@@ -137,8 +137,54 @@ class TestRemoteValue(unittest.TestCase):
                 "State",
             )
 
-    def test_process_listening_address(self):
-        """Test if listening group addresses are processed."""
+    def test_unpacking_passive_address(self):
+        """Test if passive group addresses are properly unpacked."""
+        xknx = XKNX()
+
+        remote_value_1 = RemoteValue(xknx, group_address=["1/2/3", "1/1/1"])
+        self.assertEqual(remote_value_1.group_address, GroupAddress("1/2/3"))
+        self.assertIsNone(remote_value_1.group_address_state)
+        self.assertEqual(
+            remote_value_1.passive_group_addresses, [GroupAddress("1/1/1")]
+        )
+        self.assertTrue(remote_value_1.has_group_address(GroupAddress("1/2/3")))
+        self.assertTrue(remote_value_1.has_group_address(GroupAddress("1/1/1")))
+
+        remote_value_2 = RemoteValue(xknx, group_address_state=["1/2/3", "1/1/1"])
+        self.assertIsNone(remote_value_2.group_address)
+        self.assertEqual(remote_value_2.group_address_state, GroupAddress("1/2/3"))
+        self.assertEqual(
+            remote_value_2.passive_group_addresses, [GroupAddress("1/1/1")]
+        )
+        self.assertTrue(remote_value_2.has_group_address(GroupAddress("1/2/3")))
+        self.assertTrue(remote_value_2.has_group_address(GroupAddress("1/1/1")))
+
+        remote_value_3 = RemoteValue(
+            xknx,
+            group_address=["1/2/3", "1/1/1", "1/1/10"],
+            group_address_state=["2/3/4", "2/2/2", "2/2/20"],
+        )
+        self.assertEqual(remote_value_3.group_address, GroupAddress("1/2/3"))
+        self.assertEqual(remote_value_3.group_address_state, GroupAddress("2/3/4"))
+        self.assertEqual(
+            remote_value_3.passive_group_addresses,
+            [
+                GroupAddress("1/1/1"),
+                GroupAddress("1/1/10"),
+                GroupAddress("2/2/2"),
+                GroupAddress("2/2/20"),
+            ],
+        )
+        self.assertTrue(remote_value_3.has_group_address(GroupAddress("1/2/3")))
+        self.assertTrue(remote_value_3.has_group_address(GroupAddress("1/1/1")))
+        self.assertTrue(remote_value_3.has_group_address(GroupAddress("1/1/10")))
+        self.assertTrue(remote_value_3.has_group_address(GroupAddress("2/3/4")))
+        self.assertTrue(remote_value_3.has_group_address(GroupAddress("2/2/2")))
+        self.assertTrue(remote_value_3.has_group_address(GroupAddress("2/2/20")))
+        self.assertFalse(remote_value_3.has_group_address(GroupAddress("0/0/0")))
+
+    def test_process_passive_address(self):
+        """Test if passive group addresses are processed."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx, group_address=["1/2/3", "1/1/1"])
         self.assertTrue(remote_value.writable)
