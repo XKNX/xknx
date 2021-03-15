@@ -28,17 +28,30 @@ An instantiated device is automatically added to `xknx.devices`.
 ## [](#header-2)Example
 
 ```python
->>> light = Light(
+>>> light_s = Light(
 ...     xknx,
-...     name="light with passive address",
+...     name="light with state address",
+...     group_address_switch="0/2/2"
+...     group_address_switch_state="0/3/3"
+...     )
+>>> light_s.switch.group_address # this is used to send payloads to the bus
+GroupAddress("0/2/2")
+>>> light_s.switch.group_address_state # group_address_*_state is used to send GroupValueRead requests to (from `sync()` or StateUpdater)
+GroupAddress("0/3/3")
+>>> light_s.switch.passive_group_addresses # none configured
+[]
+>>>
+>>> light_p = Light(
+...     xknx,
+...     name="light with state and passive addresses",
 ...     group_address_switch=["1/2/2", "4/2/10", "4/2/20"]
 ...     group_address_switch_state=["1/3/3", "4/3/10", "4/3/20"]
 ...     )
->>> light.switch.group_address # this is used to send payloads
+>>> light_p.switch.group_address # this is used to send payloads to the bus
 GroupAddress("1/2/2")
->>> light.switch.group_address_state # group_address_*_state is used to send GroupValueRead requests (from `sync()` or StateUpdater)
+>>> light_p.switch.group_address_state # group_address_*_state is used for reading state from the bus
 GroupAddress("1/3/3")
->>> light.switch.passive_group_addresses # these are only listening
+>>> light_p.switch.passive_group_addresses # these are only listening
 [GroupAddress("4/2/10"), GroupAddress("4/2/20"), GroupAddress("4/3/10"), GroupAddress("4/3/20")]
 ```
 
