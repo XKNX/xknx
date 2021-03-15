@@ -2,9 +2,10 @@
 
 ## Unreleased changes
 
-### Internals
+### Devices
 
-- Don't allow floats in DPTBase value_type parser
+- Accept lists of group addresses using the heads for group_address / group_address_state and the tails for passive_group_addresses in every Device (and RemoteValue)
+- Sensor: Don't allow floats in DPTBase value_type parser
 
 ## 0.17.2 Value templates 2021-03-10
 

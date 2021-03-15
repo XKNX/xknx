@@ -13,14 +13,17 @@ LCD display.
 """
 from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Union
 
-from xknx.remote_value import RemoteValueSensor, RemoteValueSwitch
+from xknx.remote_value import (
+    GroupAddressesType,
+    RemoteValue,
+    RemoteValueSensor,
+    RemoteValueSwitch,
+)
 
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
-    from xknx.remote_value import RemoteValue
     from xknx.telegram import Telegram
-    from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
 
@@ -31,7 +34,7 @@ class ExposeSensor(Device):
         self,
         xknx: "XKNX",
         name: str,
-        group_address: Optional["GroupAddressableType"] = None,
+        group_address: Optional[GroupAddressesType] = None,
         value_type: Optional[Union[int, str]] = None,
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
@@ -58,7 +61,7 @@ class ExposeSensor(Device):
                 value_type=value_type,
             )
 
-    def _iter_remote_values(self) -> Iterator["RemoteValue[Any]"]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes."""
         yield self.sensor_value
 

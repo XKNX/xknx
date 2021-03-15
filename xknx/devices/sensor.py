@@ -8,14 +8,17 @@ It provides functionality for
 """
 from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Union
 
-from xknx.remote_value import RemoteValueControl, RemoteValueSensor
+from xknx.remote_value import (
+    GroupAddressesType,
+    RemoteValue,
+    RemoteValueControl,
+    RemoteValueSensor,
+)
 
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
-    from xknx.remote_value import RemoteValue
     from xknx.telegram import Telegram
-    from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
 
@@ -26,7 +29,7 @@ class Sensor(Device):
         self,
         xknx: "XKNX",
         name: str,
-        group_address_state: Optional["GroupAddressableType"] = None,
+        group_address_state: Optional[GroupAddressesType] = None,
         sync_state: bool = True,
         always_callback: bool = False,
         value_type: Optional[Union[int, str]] = None,
@@ -64,7 +67,7 @@ class Sensor(Device):
         self.always_callback = always_callback
         self.ha_value_template = ha_value_template
 
-    def _iter_remote_values(self) -> Iterator["RemoteValue[Any]"]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes."""
         yield self.sensor_value
 

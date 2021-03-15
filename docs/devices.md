@@ -17,6 +17,7 @@ An instantiated device is automatically added to `xknx.devices`.
 * `xknx` is the XKNX object.
 * `name` is the name of the object.
 * `device_updated_cb` List of awaitable callbacks for each update.
+* `group_address*` Group address for a specific function. If a list is passed the first element is used for sending / reading,  the rest are passively updating state (listening group address).
 
 * `has_group_address(group_address)` Test if device has given group address.
 * `sync(wait_for_result)` Read states of device from KNX bus via GroupValueRead requests.

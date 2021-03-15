@@ -32,6 +32,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger("xknx.log")
 
 AsyncCallbackType = Callable[[], Awaitable[None]]
+GroupAddressesType = Union["GroupAddressableType", List["GroupAddressableType"]]
 
 
 class RemoteValue(ABC, Generic[DPTPayloadType]):
@@ -41,28 +42,32 @@ class RemoteValue(ABC, Generic[DPTPayloadType]):
     def __init__(
         self,
         xknx: "XKNX",
-        group_address: Optional["GroupAddressableType"] = None,
-        group_address_state: Optional["GroupAddressableType"] = None,
+        group_address: Optional[GroupAddressesType] = None,
+        group_address_state: Optional[GroupAddressesType] = None,
         sync_state: bool = True,
         device_name: Optional[str] = None,
         feature_name: Optional[str] = None,
         after_update_cb: Optional[AsyncCallbackType] = None,
-        passive_group_addresses: Optional[List["GroupAddressableType"]] = None,
     ):
         """Initialize RemoteValue class."""
         # pylint: disable=too-many-arguments
         self.xknx: "XKNX" = xknx
+        self.passive_group_addresses: List[GroupAddress] = []
 
-        if group_address is not None:
-            group_address = GroupAddress(group_address)
-        if group_address_state is not None:
-            group_address_state = GroupAddress(group_address_state)
-        self.group_address: Optional[GroupAddress] = group_address
-        self.group_address_state: Optional[GroupAddress] = group_address_state
+        def unpack_group_addresses(
+            addresses: Optional[GroupAddressesType],
+        ) -> Optional[GroupAddress]:
+            """Parse group addresses and assign passive addresses when given."""
+            if addresses is None:
+                return None
+            if not isinstance(addresses, list):
+                return GroupAddress(addresses)
+            active, *passive = map(GroupAddress, addresses)
+            self.passive_group_addresses.extend(passive)  # type: ignore
+            return active
 
-        self.passive_group_addresses: List[
-            GroupAddress
-        ] = RemoteValue.get_passive_group_addresses(passive_group_addresses)
+        self.group_address = unpack_group_addresses(group_address)
+        self.group_address_state = unpack_group_addresses(group_address_state)
 
         self.device_name: str = "Unknown" if device_name is None else device_name
         self.feature_name: str = "Unknown" if feature_name is None else feature_name
@@ -275,12 +280,3 @@ class RemoteValue(ABC, Generic[DPTPayloadType]):
             if key not in self.__dict__:
                 return False
         return True
-
-    @staticmethod
-    def get_passive_group_addresses(
-        passive_group_addresses: Optional[List["GroupAddressableType"]],
-    ) -> List[GroupAddress]:
-        """Obtain passive state group addresses."""
-        if passive_group_addresses is None:
-            return []
-        return [GroupAddress(ga) for ga in passive_group_addresses]

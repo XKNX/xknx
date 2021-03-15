@@ -2,12 +2,11 @@
 import logging
 from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional
 
-from xknx.remote_value import RemoteValueSceneNumber
+from xknx.remote_value import GroupAddressesType, RemoteValueSceneNumber
 
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
-    from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
@@ -20,7 +19,7 @@ class Scene(Device):
         self,
         xknx: "XKNX",
         name: str,
-        group_address: Optional["GroupAddressableType"] = None,
+        group_address: Optional[GroupAddressesType] = None,
         scene_number: int = 1,
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
