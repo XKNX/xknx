@@ -25,6 +25,23 @@ An instantiated device is automatically added to `xknx.devices`.
 * `unregister_device_updated_cb(device_updated_cb)` Unregister device updated callback.
 * `shutdown()` Remove callbacks and device form Devices vector.
 
+## [](#header-2)Example
+
+```python
+>>> light = Light(
+...     xknx,
+...     name="light with passive address",
+...     group_address_switch=["1/2/2", "4/2/10", "4/2/20"]
+...     group_address_switch_state=["1/3/3", "4/3/10", "4/3/20"]
+...     )
+>>> light.switch.group_address # this is used to send payloads
+GroupAddress("1/2/2")
+>>> light.switch.group_address_state # group_address_*_state is used to send GroupValueRead requests (from `sync()` or StateUpdater)
+GroupAddress("1/3/3")
+>>> light.switch.passive_group_addresses # these are only listening
+[GroupAddress("4/2/10"), GroupAddress("4/2/20"), GroupAddress("4/3/10"), GroupAddress("4/3/20")]
+```
+
 ## [](#header-2)Device classes
 
 The following pages will give you an overview over the available devices within XKNX.
