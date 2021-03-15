@@ -622,6 +622,15 @@ function parseSwitch(name, device, invalid, groupname) {
       case "group_address_state":
         entity.state_address = device[conf]
         break;
+      case "group_address_current_power":
+        entity.address_current_power = device[conf]
+        break;
+      case "group_address_total_energy":
+        entity.address_total_energy = device[conf]
+        break;
+      case "group_address_standby":
+        entity.address_standby = device[conf]
+        break;
       case "invert":
         entity[conf] = device[conf]
         break;

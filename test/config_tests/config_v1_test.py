@@ -274,6 +274,31 @@ class TestConfig(unittest.TestCase):
             Switch(TestConfig.xknx, "Livingroom.Outlet_2", group_address="1/3/2"),
         )
 
+    def test_config_switch_metered(self):
+        """Test reading Switch from config file."""
+        self.assertEqual(
+            TestConfig.xknx.devices["Livingroom.Outlet_3"],
+            Switch(
+                TestConfig.xknx,
+                "Livingroom.Outlet_3",
+                group_address="1/3/3",
+                group_address_current_power="1/3/4",
+                group_address_total_energy="1/3/5",
+            ),
+        )
+
+    def test_config_switch_metered(self):
+        """Test reading Switch from config file."""
+        self.assertEqual(
+            TestConfig.xknx.devices["Livingroom.Outlet_4"],
+            Switch(
+                TestConfig.xknx,
+                "Livingroom.Outlet_4",
+                group_address="1/3/6",
+                group_address_standby="1/3/7",
+            ),
+        )
+
     def test_config_fan(self):
         """Test reading Fan from config file."""
         self.assertEqual(

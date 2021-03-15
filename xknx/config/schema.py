@@ -102,14 +102,28 @@ class ConnectionSchema:
 class SwitchSchema:
     """Schema validation for switches."""
 
+    CONF_CURRENT_POWER = "current_power"
+    CONF_TOTAL_ENERGY = "total_energy"
+    CONF_STANDBY = "standby"
     CONF_RESET_AFTER = "reset_after"
+    CONF_CREATE_SENSORS = "create_sensors"
 
     SCHEMA = BaseDeviceSchema.SCHEMA.extend(
         {
             vol.Required(CONF_SWITCH): RemoteValueSchema.SCHEMA.extend(
                 {vol.Required(CONF_ADDRESS): ensure_group_address}
             ),
+            vol.Optional(CONF_CURRENT_POWER): RemoteValueSchema.SCHEMA.extend(
+                {vol.Required(CONF_ADDRESS): ensure_group_address}
+            ),
+            vol.Optional(CONF_TOTAL_ENERGY): RemoteValueSchema.SCHEMA.extend(
+                {vol.Required(CONF_ADDRESS): ensure_group_address}
+            ),
+            vol.Optional(CONF_STANDBY): RemoteValueSchema.SCHEMA.extend(
+                {vol.Required(CONF_ADDRESS): ensure_group_address}
+            ),
             vol.Optional(CONF_RESET_AFTER): float,
+            vol.Optional(CONF_CREATE_SENSORS, default=False): boolean,
         }
     )
 

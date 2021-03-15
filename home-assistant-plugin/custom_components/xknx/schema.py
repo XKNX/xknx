@@ -309,8 +309,13 @@ class ClimateSchema:
 class SwitchSchema:
     """Voluptuous schema for KNX switches."""
 
+    CONF_SYNC_STATE = CONF_SYNC_STATE
     CONF_INVERT = CONF_INVERT
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
+    CONF_CURRENT_POWER = "address_current_power"
+    CONF_TOTAL_ENERGY = "address_total_energy"
+    CONF_STANDBY = "address_standby"
+    CONF_CREATE_SENSORS = "create_sensors"
 
     DEFAULT_NAME = "KNX Switch"
     SCHEMA = vol.Schema(
@@ -318,7 +323,16 @@ class SwitchSchema:
             vol.Required(CONF_ADDRESS): cv.string,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_CURRENT_POWER): cv.string,
+            vol.Optional(CONF_TOTAL_ENERGY): cv.string,
+            vol.Optional(CONF_STANDBY): cv.string,
+            vol.Optional(CONF_SYNC_STATE, default=True): vol.Any(
+                vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)),
+                cv.boolean,
+                cv.string,
+            ),
             vol.Optional(CONF_INVERT): cv.boolean,
+            vol.Optional(CONF_CREATE_SENSORS, default=False): cv.boolean,
         }
     )
 

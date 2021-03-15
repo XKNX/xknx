@@ -5,8 +5,9 @@ It provides functionality for
 
 * switching 'on' and 'off'.
 * reading the current state from KNX bus.
-* reading current power consumption form KNX bus. (DPT TODO)
-* reading total energy used from KNX bux. (DPT TODO)
+* reading current power consumption form KNX bus. (DPT 14.056 DPT_Value_Power (W).)
+* reading total energy used from KNX bux. (DPT 13.013 DPT_ActiveEnergy_kWh (kWh).)
+* reading standby indication of device connected to the switch.
 """
 import asyncio
 import logging
@@ -36,7 +37,7 @@ class Switch(Device):
         group_address_state: Optional["GroupAddressableType"] = None,
         group_address_current_power: Optional["GroupAddressableType"] = None,
         group_address_total_energy: Optional["GroupAddressableType"] = None,
-        group_address_is_standby: Optional["GroupAddressableType"] = None,
+        group_address_standby: Optional["GroupAddressableType"] = None,
         invert: bool = False,
         create_sensors: bool = False,
         sync_state: bool = True,
@@ -59,7 +60,7 @@ class Switch(Device):
             after_update_cb=self.after_update,
         )
 
-        self._power = RemoteValueSensor(
+        self._current_power = RemoteValueSensor(
             xknx,
             group_address_state=group_address_current_power,
             sync_state=sync_state,
@@ -79,9 +80,9 @@ class Switch(Device):
             after_update_cb=self.after_update,
         )
 
-        self._is_standby = RemoteValueSwitch(
+        self._standby = RemoteValueSwitch(
             xknx,
-            group_address_state=group_address_is_standby,
+            group_address_state=group_address_standby,
             device_name=self.name,
             feature_name="Standby",
             after_update_cb=self.after_update,
@@ -93,38 +94,23 @@ class Switch(Device):
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes."""
         yield self.switch
-        yield self._power
+        yield self._current_power
         yield self._total_energy
-        yield self._is_standby
-
-    @property
-    def current_power_w(self) -> Optional["float"]:
-        """Return current power in W."""
-        return self._power.value  # type: ignore
-
-    @property
-    def today_energy_kwh(self) -> Optional["float"]:
-        """Return total energy usage in kWh."""
-        return self._total_energy.value  # type: ignore
-
-    @property
-    def is_standby(self) -> Optional[bool]:
-        """Indicate if device connected to the switch is currently in standby."""
-        return self._is_standby.value  # type: ignore
+        yield self._standby
 
     def create_sensors(self) -> None:
         """Expose sensors to xknx."""
-        if self._is_standby.group_address_state is not None:
+        if self._standby.group_address_state is not None:
             BinarySensor(
                 self.xknx,
-                name=self.name + "_is_standby",
-                group_address_state=self._is_standby.group_address_state,
+                name=self.name + "_standby",
+                group_address_state=self._standby.group_address_state,
             )
 
         for suffix, group_address, value_type in (
             (
-                "_power",
-                self._power.group_address_state,
+                "_current_power",
+                self._current_power.group_address_state,
                 "power",
             ),
             (
@@ -157,7 +143,7 @@ class Switch(Device):
         group_address_state = config.get("group_address_state")
         group_address_current_power = config.get("group_address_current_power")
         group_address_total_energy = config.get("group_address_total_energy")
-        group_address_is_standby = config.get("group_address_is_standby")
+        group_address_standby = config.get("group_address_standby")
         invert = config.get("invert")
         reset_after = config.get("reset_after")
 
@@ -168,7 +154,7 @@ class Switch(Device):
             group_address_state=group_address_state,
             group_address_current_power=group_address_current_power,
             group_address_total_energy=group_address_total_energy,
-            group_address_is_standby=group_address_is_standby,
+            group_address_standby=group_address_standby,
             invert=invert,
             reset_after=reset_after,
         )
@@ -189,12 +175,17 @@ class Switch(Device):
     @property
     def current_power(self) -> Optional[float]:
         """Return current power usage in W."""
-        return self._power.value  # type: ignore
+        return self._current_power.value  # type: ignore
 
     @property
     def total_energy(self) -> Optional[float]:
         """Return total energy usage in kWh."""
         return self._total_energy.value  # type: ignore
+
+    @property
+    def standby(self) -> Optional[bool]:
+        """Indicate if device connected to the switch is currently in standby."""
+        return self._standby.value  # type: ignore
 
     async def do(self, action: str) -> None:
         """Execute 'do' commands."""
@@ -223,6 +214,10 @@ class Switch(Device):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<Switch name="{}" switch="{}" />'.format(
-            self.name, self.switch.group_addr_str()
+        return '<Switch name="{}" switch="{}" current_power="{}" total_energy="{}" standby="{}"/>'.format(
+            self.name,
+            self.switch.group_addr_str(),
+            self._current_power.group_addr_str(),
+            self._total_energy.group_addr_str(),
+            self._standby.group_addr_str(),
         )

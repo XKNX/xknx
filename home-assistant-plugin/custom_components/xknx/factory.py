@@ -270,8 +270,12 @@ def _create_switch(knx_module: XKNX, config: ConfigType) -> XknxSwitch:
     return XknxSwitch(
         knx_module,
         name=config[CONF_NAME],
+        sync_state=config[SwitchSchema.CONF_SYNC_STATE],
         group_address=config[CONF_ADDRESS],
         group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
+        group_address_current_power=config.get(SwitchSchema.CONF_CURRENT_POWER),
+        group_address_total_energy=config.get(SwitchSchema.CONF_TOTAL_ENERGY),
+        group_address_standby=config.get(SwitchSchema.CONF_STANDBY),
         invert=config.get(SwitchSchema.CONF_INVERT),
     )
 

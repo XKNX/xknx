@@ -322,7 +322,43 @@ class TestStringRepresentations(unittest.TestCase):
         )
         self.assertEqual(
             str(switch),
-            '<Switch name="Schalter" switch="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" />',
+            '<Switch name="Schalter" switch="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" '
+            'current_power="None/None/None/None" total_energy="None/None/None/None" standby="None/None/None/None"/>',
+        )
+
+    def test_switch_metered(self):
+        """Test string representation of switch object with current monitoring."""
+        xknx = XKNX()
+        switch = Switch(
+            xknx,
+            name="Schalter",
+            group_address="1/2/3",
+            group_address_state="1/2/4",
+            group_address_current_power="1/2/5",
+            group_address_total_energy="1/2/6",
+        )
+        self.assertEqual(
+            str(switch),
+            '<Switch name="Schalter" switch="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" '
+            'current_power="None/GroupAddress("1/2/5")/None/None" total_energy="None/GroupAddress("1/2/6")/None/None" '
+            'standby="None/None/None/None"/>',
+        )
+
+    def test_switch_standby(self):
+        """Test string representation of switch object with standby indication."""
+        xknx = XKNX()
+        switch = Switch(
+            xknx,
+            name="Schalter",
+            group_address="1/2/3",
+            group_address_state="1/2/4",
+            group_address_standby="1/2/5",
+        )
+        self.assertEqual(
+            str(switch),
+            '<Switch name="Schalter" switch="GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None" '
+            'current_power="None/None/None/None" total_energy="None/None/None/None" '
+            'standby="None/GroupAddress("1/2/5")/None/None"/>',
         )
 
     def test_weather(self):

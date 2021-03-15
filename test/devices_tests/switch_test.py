@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Switch
-from xknx.dpt import DPTBinary
+from xknx.dpt import DPTArray, DPTBinary
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
@@ -348,3 +348,27 @@ class TestSwitch(unittest.TestCase):
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
         self.assertTrue(switch.has_group_address(GroupAddress("1/2/3")))
         self.assertFalse(switch.has_group_address(GroupAddress("2/2/2")))
+
+    def test_current_power(self):
+        """Test resolve state with current power."""
+        xknx = XKNX()
+        switch = Switch(
+            name="TestMeteredOutlet", xknx=xknx, group_address_current_power="1/3/4"
+        )
+        switch._current_power.payload = DPTArray((0x43, 0xE1, 0x40, 0x00))
+
+        self.assertEqual(switch.current_power, 450.5)
+        self.assertEqual(switch._current_power.unit_of_measurement, "W")
+        self.assertEqual(switch._current_power.ha_device_class, "power")
+
+    def test_total_energy(self):
+        """Test resolve state with current power."""
+        xknx = XKNX()
+        switch = Switch(
+            name="TestMeteredOutlet", xknx=xknx, group_address_total_energy="1/3/5"
+        )
+        switch._total_energy.payload = DPTArray((0x00, 0x00, 0x07, 0xD3))
+
+        self.assertEqual(switch.total_energy, 2003)
+        self.assertEqual(switch._total_energy.unit_of_measurement, "kWh")
+        self.assertEqual(switch._total_energy.ha_device_class, "energy")

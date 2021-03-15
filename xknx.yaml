@@ -76,6 +76,9 @@ groups:
     switch:
         Livingroom.Outlet_1: { group_address: "1/3/1" }
         Livingroom.Outlet_2: { group_address: "1/3/2" }
+        Livingroom.Outlet_3: { group_address: "1/3/3", group_address_current_power: "1/3/4",
+                               group_address_total_energy: "1/3/5" }
+        Livingroom.Outlet_4: { group_address: "1/3/6", group_address_standby: "1/3/7" }
 
     switch 2:
         Kitchen.Outlet_1: { group_address: "1/3/7" }
