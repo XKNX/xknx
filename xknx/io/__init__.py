@@ -18,3 +18,16 @@ from .routing import Routing
 from .tunnel import Tunnel
 from .tunnelling import Tunnelling
 from .udp_client import UDPClient
+
+__all__ = [
+    "DEFAULT_MCAST_GRP",
+    "DEFAULT_MCAST_PORT",
+    "GatewayScanFilter",
+    "GatewayScanner",
+    "ConnectionConfig",
+    "ConnectionType",
+    "KNXIPInterface",
+    "Tunnel",
+    "Routing",
+    "UDPClient",
+]

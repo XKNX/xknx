@@ -18,8 +18,8 @@ async def main():
     )
     await light.set_brightness(128)
 
-    # Will do a group read of both addresses
-    await light.sync()
+    # Will do a GroupValueRead for both addresses and block until a result is received
+    await light.sync(wait_for_result=True)
 
     print(light)
 

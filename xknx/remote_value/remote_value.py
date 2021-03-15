@@ -218,7 +218,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType]):
         """Send GroupValueRead telegram for state address to KNX bus."""
         if self.group_address_state is not None:
             # pylint: disable=import-outside-toplevel
-            # TODO: send a ReadRequset and start a timeout from here instead of ValueReader
+            # TODO: send a ReadRequest and start a timeout from here instead of ValueReader
             #       cancel timeout form process(); delete ValueReader
             from xknx.core import ValueReader
 

@@ -11,7 +11,7 @@ It provides functionality for
 """
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Iterator, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional
 
 from xknx.remote_value import RemoteValue, RemoteValueSensor, RemoteValueSwitch
 
@@ -137,14 +137,14 @@ class Switch(Device):
         super().__del__()
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "Switch":
+    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Switch":
         """Initialize object from configuration structure."""
         group_address = config.get("group_address")
         group_address_state = config.get("group_address_state")
         group_address_current_power = config.get("group_address_current_power")
         group_address_total_energy = config.get("group_address_total_energy")
         group_address_standby = config.get("group_address_standby")
-        invert = config.get("invert")
+        invert = config.get("invert", False)
         reset_after = config.get("reset_after")
 
         return cls(

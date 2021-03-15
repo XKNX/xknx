@@ -1,5 +1,31 @@
 # Changelog
 
+## Unreleased changes
+
+### Internals
+
+- Don't allow floats in DPTBase value_type parser
+
+## 0.17.2 Value templates 2021-03-10
+
+### Devices
+
+- BinarySensor, Sensor: add `ha_value_template` attribute to store HomeAssistant value templates
+
+### Internals
+
+- Distribute type annotations
+
+## 0.17.1 Cover up 2021-02-23
+
+### Devices
+
+- Cover: Use correct step direction when stopping
+
+### Internals
+
+- Convert all Enums to upper case to satisfy pylint
+
 ## 0.17.0 Route back 2021-02-19
 
 ### New Features
@@ -456,7 +482,7 @@ E.g. to switch on a light you have to do:
 await light.set_on()
 ```
 
-See updated [examples](https://github.com/XKNX/xknx/tree/master/examples) for details.
+See updated [examples](https://github.com/XKNX/xknx/tree/main/examples) for details.
 
 ### Renaming of several objects:
 

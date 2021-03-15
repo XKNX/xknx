@@ -1,24 +1,18 @@
-XKNX - An Asynchronous KNX Library Written in Python
-====================================================
+# XKNX - An Asynchronous KNX Library Written in Python
 
-[![Build Status](https://travis-ci.org/XKNX/xknx.svg?branch=master)](https://travis-ci.org/XKNX/xknx)
-[![Coverage Status](https://coveralls.io/repos/github/XKNX/xknx/badge.svg?branch=master)](https://coveralls.io/github/XKNX/xknx?branch=master)
+[![Build Status](https://travis-ci.org/XKNX/xknx.svg?branch=main)](https://travis-ci.org/XKNX/xknx)
+[![Coverage Status](https://coveralls.io/repos/github/XKNX/xknx/badge.svg?branch=main)](https://coveralls.io/github/XKNX/xknx?branch=main)
 [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
-Documentation
--------------
-
+## Documentation
 
 See documentation at: [https://xknx.io/](https://xknx.io/)
 
-Help
-----
+## Help
 
 We need your help for testing and improving XKNX. For questions, feature requests, bug reports either join the [XKNX chat on Discord](https://discord.gg/EuAQDXU) or write an [email](mailto:xknx@xknx.io).
 
-
-Development
------------
+## Development
 
 You will need at least Python 3.7 in order to use XKNX.
 
@@ -27,14 +21,11 @@ Setting up your local environment:
 1. Install requirements: `pip install -r requirements/testing.txt`
 2. Install pre-commit hook: `pre-commit install`
 
-Home-Assistant Plugin
----------------------
+## Home-Assistant Plugin
 
 XKNX contains a [plugin](https://xknx.io/home_assistant) for the [Home Assistant](https://home-assistant.io/) automation platform
 
-
-Example
--------
+## Example
 
 ```python
 """Example for switching a light on and off."""

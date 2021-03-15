@@ -10,7 +10,7 @@ A BinarySensor may also have Actions attached which are executed after state was
 """
 import asyncio
 import time
-from typing import TYPE_CHECKING, Any, Iterator, List, Optional, cast
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, cast
 
 from xknx.remote_value import RemoteValueSwitch
 
@@ -39,6 +39,7 @@ class BinarySensor(Device):
         reset_after: Optional[float] = None,
         actions: Optional[List[Action]] = None,
         context_timeout: Optional[float] = None,
+        ha_value_template: Any = None,
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize BinarySensor class."""
@@ -49,6 +50,7 @@ class BinarySensor(Device):
 
         self.actions = actions
         self.device_class = device_class
+        self.ha_value_template = ha_value_template
         self.ignore_internal_state = ignore_internal_state or bool(context_timeout)
         self.reset_after = reset_after
         self.state: Optional[bool] = None
@@ -86,10 +88,12 @@ class BinarySensor(Device):
         super().__del__()
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "BinarySensor":
+    def from_config(
+        cls, xknx: "XKNX", name: str, config: Dict[str, Any]
+    ) -> "BinarySensor":
         """Initialize object from configuration structure."""
         group_address_state = config.get("group_address_state")
-        invert = config.get("invert")
+        invert = config.get("invert", False)
         context_timeout = config.get("context_timeout")
         reset_after = config.get("reset_after")
         sync_state = config.get("sync_state", True)

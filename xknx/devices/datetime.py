@@ -7,7 +7,7 @@ by StateUpdate.
 """
 import asyncio
 import time
-from typing import TYPE_CHECKING, Any, Iterator, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional
 
 from xknx.remote_value import RemoteValueDateTime
 
@@ -60,7 +60,7 @@ class DateTime(Device):
         yield self._remote_value
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Any) -> "DateTime":
+    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "DateTime":
         """Initialize object from configuration structure."""
         broadcast_type = config.get("broadcast_type", "time").upper()
         group_address = config.get("group_address")

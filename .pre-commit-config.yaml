@@ -33,7 +33,7 @@ repos:
       - id: check-json
       - id: no-commit-to-branch
         args:
-          - --branch=master
+          - --branch=main
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.1.0
     hooks:
