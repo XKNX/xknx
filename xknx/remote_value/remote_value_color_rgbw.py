@@ -3,15 +3,14 @@ Module for managing an RGBW remote value.
 
 DPT 251.600.
 """
-from typing import TYPE_CHECKING, List, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Union
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
 
-from .remote_value import AsyncCallbackType, RemoteValue
+from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
 if TYPE_CHECKING:
-    from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
 
@@ -21,12 +20,11 @@ class RemoteValueColorRGBW(RemoteValue[DPTArray]):
     def __init__(
         self,
         xknx: "XKNX",
-        group_address: Optional["GroupAddressableType"] = None,
-        group_address_state: Optional["GroupAddressableType"] = None,
+        group_address: Optional[GroupAddressesType] = None,
+        group_address_state: Optional[GroupAddressesType] = None,
         device_name: Optional[str] = None,
         feature_name: str = "Color RGBW",
         after_update_cb: Optional[AsyncCallbackType] = None,
-        passive_group_addresses: Optional[List["GroupAddressableType"]] = None,
     ):
         """Initialize remote value of KNX DPT 251.600 (DPT_Color_RGBW)."""
         # pylint: disable=too-many-arguments
@@ -37,7 +35,6 @@ class RemoteValueColorRGBW(RemoteValue[DPTArray]):
             device_name=device_name,
             feature_name=feature_name,
             after_update_cb=after_update_cb,
-            passive_group_addresses=passive_group_addresses,
         )
         self.previous_value: Tuple[int, ...] = (0, 0, 0, 0)
 

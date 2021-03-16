@@ -9,13 +9,12 @@ import asyncio
 import time
 from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional
 
-from xknx.remote_value import RemoteValueDateTime
+from xknx.remote_value import GroupAddressesType, RemoteValueDateTime
 
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
     from xknx.telegram import Telegram
-    from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
 
@@ -29,7 +28,7 @@ class DateTime(Device):
         name: str,
         broadcast_type: str = "TIME",
         localtime: bool = True,
-        group_address: Optional["GroupAddressableType"] = None,
+        group_address: Optional[GroupAddressesType] = None,
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize DateTime class."""

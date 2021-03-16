@@ -17,12 +17,43 @@ An instantiated device is automatically added to `xknx.devices`.
 * `xknx` is the XKNX object.
 * `name` is the name of the object.
 * `device_updated_cb` List of awaitable callbacks for each update.
+* `group_address*` Group address for a specific function. If a list is passed the first element is used for sending / reading,  the rest are passively updating state (listening group address).
 
 * `has_group_address(group_address)` Test if device has given group address.
 * `sync(wait_for_result)` Read states of device from KNX bus via GroupValueRead requests.
 * `register_device_updated_cb(device_updated_cb)` Register device updated callback.
 * `unregister_device_updated_cb(device_updated_cb)` Unregister device updated callback.
 * `shutdown()` Remove callbacks and device form Devices vector.
+
+## [](#header-2)Example
+
+```python
+>>> light_s = Light(
+...     xknx,
+...     name="light with state address",
+...     group_address_switch="0/2/2",
+...     group_address_switch_state="0/3/3",
+...     )
+>>> light_s.switch.group_address # this is used to send payloads to the bus
+GroupAddress("0/2/2")
+>>> light_s.switch.group_address_state # group_address_*_state is used to send GroupValueRead requests to (from `sync()` or StateUpdater)
+GroupAddress("0/3/3")
+>>> light_s.switch.passive_group_addresses # none configured
+[]
+>>>
+>>> light_p = Light(
+...     xknx,
+...     name="light with state and passive addresses",
+...     group_address_switch=["1/2/2", "4/2/10", "4/2/20"],
+...     group_address_switch_state=["1/3/3", "4/3/10", "4/3/20"],
+...     )
+>>> light_p.switch.group_address # this is used to send payloads to the bus
+GroupAddress("1/2/2")
+>>> light_p.switch.group_address_state # group_address_*_state is used for reading state from the bus
+GroupAddress("1/3/3")
+>>> light_p.switch.passive_group_addresses # these are only listening
+[GroupAddress("4/2/10"), GroupAddress("4/2/20"), GroupAddress("4/3/10"), GroupAddress("4/3/20")]
+```
 
 ## [](#header-2)Device classes
 

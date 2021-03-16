@@ -349,6 +349,50 @@ class TestSwitch(unittest.TestCase):
         self.assertTrue(switch.has_group_address(GroupAddress("1/2/3")))
         self.assertFalse(switch.has_group_address(GroupAddress("2/2/2")))
 
+    #
+    # TEST passive group addresses
+    #
+    def test_has_group_address_passive(self):
+        """Test has_group_address with passive group address."""
+        xknx = XKNX()
+        switch = Switch(xknx, "TestOutlet", group_address=["1/2/3", "4/4/4"])
+        self.assertTrue(switch.has_group_address(GroupAddress("1/2/3")))
+        self.assertTrue(switch.has_group_address(GroupAddress("4/4/4")))
+        self.assertFalse(switch.has_group_address(GroupAddress("2/2/2")))
+
+    def test_process_passive(self):
+        """Test process / reading telegrams from telegram queue. Test if device was updated."""
+        xknx = XKNX()
+        callback_mock = AsyncMock()
+
+        switch1 = Switch(
+            xknx,
+            "TestOutlet",
+            group_address=["1/2/3", "4/4/4"],
+            group_address_state=["1/2/30", "5/5/5"],
+            device_updated_cb=callback_mock,
+        )
+        self.assertEqual(switch1.state, None)
+        callback_mock.assert_not_called()
+
+        telegram_on_passive = Telegram(
+            destination_address=GroupAddress("4/4/4"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        telegram_off_passive = Telegram(
+            destination_address=GroupAddress("5/5/5"),
+            payload=GroupValueWrite(DPTBinary(0)),
+        )
+
+        self.loop.run_until_complete(switch1.process(telegram_on_passive))
+        self.assertEqual(switch1.state, True)
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
+        self.loop.run_until_complete(switch1.process(telegram_off_passive))
+        self.assertEqual(switch1.state, False)
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
+
     def test_current_power(self):
         """Test resolve state with current power."""
         xknx = XKNX()

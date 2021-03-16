@@ -77,7 +77,7 @@ SERVICE_XKNX_READ = "read"
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            # deprecated since 2021.3
+            # deprecated since 2021.4
             cv.deprecated(CONF_XKNX_CONFIG),
             # deprecated since 2021.2
             cv.deprecated(CONF_XKNX_FIRE_EVENT),

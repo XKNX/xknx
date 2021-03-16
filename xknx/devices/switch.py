@@ -13,14 +13,18 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional
 
-from xknx.remote_value import RemoteValue, RemoteValueSensor, RemoteValueSwitch
+from xknx.remote_value import (
+    GroupAddressesType,
+    RemoteValue,
+    RemoteValueSensor,
+    RemoteValueSwitch,
+)
 
 from . import BinarySensor, Sensor
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
     from xknx.telegram import Telegram
-    from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
@@ -33,11 +37,11 @@ class Switch(Device):
         self,
         xknx: "XKNX",
         name: str,
-        group_address: Optional["GroupAddressableType"] = None,
-        group_address_state: Optional["GroupAddressableType"] = None,
-        group_address_current_power: Optional["GroupAddressableType"] = None,
-        group_address_total_energy: Optional["GroupAddressableType"] = None,
-        group_address_standby: Optional["GroupAddressableType"] = None,
+        group_address: Optional[GroupAddressesType] = None,
+        group_address_state: Optional[GroupAddressesType] = None,
+        group_address_current_power: Optional[GroupAddressesType] = None,
+        group_address_total_energy: Optional[GroupAddressesType] = None,
+        group_address_standby: Optional[GroupAddressesType] = None,
         invert: bool = False,
         create_sensors: bool = False,
         sync_state: bool = True,

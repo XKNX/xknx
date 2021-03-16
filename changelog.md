@@ -5,9 +5,12 @@
 ### Devices
 - Switch: added current_power, total_energy and standby attributes
 
-### Internals
+## 0.17.3 Passive addresses 2021-03-16
 
-- Don't allow floats in DPTBase value_type parser
+### Devices
+
+- Accept lists of group addresses using the heads for group_address / group_address_state and the tails for passive_group_addresses in every Device (and RemoteValue)
+- Sensor: Don't allow floats in DPTBase value_type parser
 
 ## 0.17.2 Value templates 2021-03-10
 

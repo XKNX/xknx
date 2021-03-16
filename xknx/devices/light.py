@@ -24,6 +24,8 @@ from typing import (
 )
 
 from xknx.remote_value import (
+    GroupAddressesType,
+    RemoteValue,
     RemoteValueColorRGB,
     RemoteValueColorRGBW,
     RemoteValueDpt2ByteUnsigned,
@@ -34,9 +36,7 @@ from xknx.remote_value import (
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
-    from xknx.remote_value import RemoteValue
     from xknx.telegram import Telegram
-    from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
 AsyncCallback = Callable[[], Awaitable[None]]
@@ -57,10 +57,10 @@ class _SwitchAndBrightness:
         xknx: "XKNX",
         name: str,
         feature_name: str,
-        group_address_switch: Optional["GroupAddressableType"] = None,
-        group_address_switch_state: Optional["GroupAddressableType"] = None,
-        group_address_brightness: Optional["GroupAddressableType"] = None,
-        group_address_brightness_state: Optional["GroupAddressableType"] = None,
+        group_address_switch: Optional[GroupAddressesType] = None,
+        group_address_switch_state: Optional[GroupAddressesType] = None,
+        group_address_brightness: Optional[GroupAddressesType] = None,
+        group_address_brightness_state: Optional[GroupAddressesType] = None,
         after_update_cb: Optional[AsyncCallback] = None,
     ):
         self.switch = RemoteValueSwitch(
@@ -114,34 +114,34 @@ class Light(Device):
         self,
         xknx: "XKNX",
         name: str,
-        group_address_switch: Optional["GroupAddressableType"] = None,
-        group_address_switch_state: Optional["GroupAddressableType"] = None,
-        group_address_brightness: Optional["GroupAddressableType"] = None,
-        group_address_brightness_state: Optional["GroupAddressableType"] = None,
-        group_address_color: Optional["GroupAddressableType"] = None,
-        group_address_color_state: Optional["GroupAddressableType"] = None,
-        group_address_rgbw: Optional["GroupAddressableType"] = None,
-        group_address_rgbw_state: Optional["GroupAddressableType"] = None,
-        group_address_tunable_white: Optional["GroupAddressableType"] = None,
-        group_address_tunable_white_state: Optional["GroupAddressableType"] = None,
-        group_address_color_temperature: Optional["GroupAddressableType"] = None,
-        group_address_color_temperature_state: Optional["GroupAddressableType"] = None,
-        group_address_switch_red: Optional["GroupAddressableType"] = None,
-        group_address_switch_red_state: Optional["GroupAddressableType"] = None,
-        group_address_brightness_red: Optional["GroupAddressableType"] = None,
-        group_address_brightness_red_state: Optional["GroupAddressableType"] = None,
-        group_address_switch_green: Optional["GroupAddressableType"] = None,
-        group_address_switch_green_state: Optional["GroupAddressableType"] = None,
-        group_address_brightness_green: Optional["GroupAddressableType"] = None,
-        group_address_brightness_green_state: Optional["GroupAddressableType"] = None,
-        group_address_switch_blue: Optional["GroupAddressableType"] = None,
-        group_address_switch_blue_state: Optional["GroupAddressableType"] = None,
-        group_address_brightness_blue: Optional["GroupAddressableType"] = None,
-        group_address_brightness_blue_state: Optional["GroupAddressableType"] = None,
-        group_address_switch_white: Optional["GroupAddressableType"] = None,
-        group_address_switch_white_state: Optional["GroupAddressableType"] = None,
-        group_address_brightness_white: Optional["GroupAddressableType"] = None,
-        group_address_brightness_white_state: Optional["GroupAddressableType"] = None,
+        group_address_switch: Optional[GroupAddressesType] = None,
+        group_address_switch_state: Optional[GroupAddressesType] = None,
+        group_address_brightness: Optional[GroupAddressesType] = None,
+        group_address_brightness_state: Optional[GroupAddressesType] = None,
+        group_address_color: Optional[GroupAddressesType] = None,
+        group_address_color_state: Optional[GroupAddressesType] = None,
+        group_address_rgbw: Optional[GroupAddressesType] = None,
+        group_address_rgbw_state: Optional[GroupAddressesType] = None,
+        group_address_tunable_white: Optional[GroupAddressesType] = None,
+        group_address_tunable_white_state: Optional[GroupAddressesType] = None,
+        group_address_color_temperature: Optional[GroupAddressesType] = None,
+        group_address_color_temperature_state: Optional[GroupAddressesType] = None,
+        group_address_switch_red: Optional[GroupAddressesType] = None,
+        group_address_switch_red_state: Optional[GroupAddressesType] = None,
+        group_address_brightness_red: Optional[GroupAddressesType] = None,
+        group_address_brightness_red_state: Optional[GroupAddressesType] = None,
+        group_address_switch_green: Optional[GroupAddressesType] = None,
+        group_address_switch_green_state: Optional[GroupAddressesType] = None,
+        group_address_brightness_green: Optional[GroupAddressesType] = None,
+        group_address_brightness_green_state: Optional[GroupAddressesType] = None,
+        group_address_switch_blue: Optional[GroupAddressesType] = None,
+        group_address_switch_blue_state: Optional[GroupAddressesType] = None,
+        group_address_brightness_blue: Optional[GroupAddressesType] = None,
+        group_address_brightness_blue_state: Optional[GroupAddressesType] = None,
+        group_address_switch_white: Optional[GroupAddressesType] = None,
+        group_address_switch_white_state: Optional[GroupAddressesType] = None,
+        group_address_brightness_white: Optional[GroupAddressesType] = None,
+        group_address_brightness_white_state: Optional[GroupAddressesType] = None,
         min_kelvin: Optional[int] = None,
         max_kelvin: Optional[int] = None,
         device_updated_cb: Optional[DeviceCallbackType] = None,
@@ -253,7 +253,7 @@ class Light(Device):
         self.min_kelvin = min_kelvin
         self.max_kelvin = max_kelvin
 
-    def _iter_remote_values(self) -> Iterator["RemoteValue[Any]"]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes."""
         yield self.switch
         yield self.brightness
@@ -302,10 +302,10 @@ class Light(Device):
     def read_color_from_config(
         cls, color: str, config: Any
     ) -> Tuple[
-        Optional["GroupAddressableType"],
-        Optional["GroupAddressableType"],
-        Optional["GroupAddressableType"],
-        Optional["GroupAddressableType"],
+        Optional[GroupAddressesType],
+        Optional[GroupAddressesType],
+        Optional[GroupAddressesType],
+        Optional[GroupAddressesType],
     ]:
         """Load color configuration from configuration structure."""
         if "individual_colors" in config and color in config["individual_colors"]:

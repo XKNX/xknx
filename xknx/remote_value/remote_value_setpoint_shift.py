@@ -3,14 +3,13 @@ Module for managing setpoint shifting.
 
 DPT 6.010.
 """
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from xknx.dpt import DPTArray, DPTBinary, DPTValue1Count
 
-from .remote_value import AsyncCallbackType, RemoteValue
+from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
 if TYPE_CHECKING:
-    from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
 
@@ -20,12 +19,11 @@ class RemoteValueSetpointShift(RemoteValue[DPTArray]):
     def __init__(
         self,
         xknx: "XKNX",
-        group_address: Optional["GroupAddressableType"] = None,
-        group_address_state: Optional["GroupAddressableType"] = None,
+        group_address: Optional[GroupAddressesType] = None,
+        group_address_state: Optional[GroupAddressesType] = None,
         device_name: Optional[str] = None,
         after_update_cb: Optional[AsyncCallbackType] = None,
         setpoint_shift_step: float = 0.1,
-        passive_group_addresses: Optional[List["GroupAddressableType"]] = None,
     ):
         """Initialize RemoteValueSetpointShift class."""
         # pylint: disable=too-many-arguments
@@ -36,7 +34,6 @@ class RemoteValueSetpointShift(RemoteValue[DPTArray]):
             device_name=device_name,
             feature_name="Setpoint shift value",
             after_update_cb=after_update_cb,
-            passive_group_addresses=passive_group_addresses,
         )
 
         self.setpoint_shift_step = setpoint_shift_step
