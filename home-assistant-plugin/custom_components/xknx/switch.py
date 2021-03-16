@@ -34,7 +34,7 @@ class KNXSwitch(KnxEntity, SwitchEntity):
 
     @property
     def today_energy_kwh(self):
-        """Return total energy consumed in KWh."""
+        """Return total energy consumed in kWh."""
         return (
             self._device.total_energy if self._device.total_energy is not None else None
         )
