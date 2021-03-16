@@ -78,15 +78,25 @@ class CEMIFrame:
 
         # TODO: Move to separate function, together with setting of
         # CEMIMessageCode
-        self.flags = (
-            CEMIFlags.FRAME_TYPE_STANDARD
-            | CEMIFlags.DO_NOT_REPEAT
-            | CEMIFlags.BROADCAST
-            | CEMIFlags.PRIORITY_LOW
-            | CEMIFlags.NO_ACK_REQUESTED
-            | CEMIFlags.CONFIRM_NO_ERROR
-            | CEMIFlags.HOP_COUNT_1ST
-        )
+        if telegram.prio_system:
+            self.flags = (
+                CEMIFlags.FRAME_TYPE_STANDARD
+                | CEMIFlags.DO_NOT_REPEAT
+                | CEMIFlags.BROADCAST
+                | CEMIFlags.NO_ACK_REQUESTED
+                | CEMIFlags.CONFIRM_NO_ERROR
+                | CEMIFlags.HOP_COUNT_1ST
+            )
+        else:
+            self.flags = (
+                CEMIFlags.FRAME_TYPE_STANDARD
+                | CEMIFlags.DO_NOT_REPEAT
+                | CEMIFlags.BROADCAST
+                | CEMIFlags.PRIORITY_LOW
+                | CEMIFlags.NO_ACK_REQUESTED
+                | CEMIFlags.CONFIRM_NO_ERROR
+                | CEMIFlags.HOP_COUNT_1ST
+            )
 
         if isinstance(telegram.destination_address, GroupAddress):
             self.flags |= CEMIFlags.DESTINATION_GROUP_ADDRESS

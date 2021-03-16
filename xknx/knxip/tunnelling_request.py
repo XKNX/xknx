@@ -11,6 +11,7 @@ from xknx.exceptions import CouldNotParseKNXIP, UnsupportedCEMIMessage
 from .body import KNXIPBody
 from .cemi_frame import CEMIFrame, CEMIMessageCode
 from .knxip_enum import KNXIPServiceType
+from xknx.knxip.tpdu import TPDU
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -65,6 +66,9 @@ class TunnellingRequest(KNXIPBody):
             return TunnellingRequest.HEADER_LENGTH
 
         pos = header_from_knx(raw)
+        if len(raw[pos:]) == 10:
+            # TPDU
+            self.cemi = TPDU(self.xknx)
         try:
             pos += self.cemi.from_knx(raw[pos:])
         except UnsupportedCEMIMessage as unsupported_cemi_err:
@@ -72,6 +76,7 @@ class TunnellingRequest(KNXIPBody):
             # Set cemi to None - this is checked in Tunnel() to send Ack even for unsupported CEMI messages.
             self.cemi = None
             return len(raw)
+
         return pos
 
     def to_knx(self) -> List[int]:

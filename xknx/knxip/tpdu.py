@@ -4,8 +4,13 @@ Created on 14.01.2021
 @author: bonzius
 '''
 #from enum import Enum
+from _curses import raw
 ''' alternative class to CEMIFrame for non T_DATA requests '''
 from xknx.telegram import IndividualAddress, Telegram, TPDUType
+from xknx.exceptions import UnsupportedCEMIMessage
+from .knxip_enum import CEMIMessageCode
+
+
 #from xknx.telegram.telegram import TPDUTelegram
 #from typing import Optional, Union
 
@@ -14,11 +19,12 @@ class TPDU:
     
     def __init__(
         self,
-        xknx,
-        src_addr: IndividualAddress,
+        xknx = "XKNX",
+        src_addr: IndividualAddress = IndividualAddress(None),
     ):
         self.xknx = xknx
         self.src_addr = src_addr
+        self.destination_address = IndividualAddress(None)
         
     @staticmethod
     def init_from_telegram(
@@ -30,20 +36,44 @@ class TPDU:
         tpdu = TPDU(xknx, src_addr)
         tpdu.telegram = telegram
         return tpdu
+    
+    def telegram(self, telegram):
+        self.destination_address = telegram.destination_address
+
+    def from_knx(self, raw: bytes) -> int:
+        """Parse/deserialize from KNX/IP raw data."""
+        '''
+        if raw[0] != 0x11:
+            raise UnsupportedCEMIMessage(
+                "Invalid TPDU message code: {} in TPDU: {}".format(
+                    raw[0], raw.hex()
+                ))
+        '''
+        try:
+            self.code = CEMIMessageCode(raw[0])
+        except ValueError:
+            raise UnsupportedCEMIMessage(
+                "CEMIMessageCode not implemented: {} in CEMI: {}".format(
+                    raw[0], raw.hex()
+                )
+            )
+        self.destination_address = IndividualAddress((raw[6],raw[7]))
+        self.data = raw
+        return 10
 
     def calculated_length(self):
-        return 11
+        return 10
     
     def to_knx(self):
         data = [0x11, 0x00, 0xb0, 0x60, 0x00, 0x00]
-        data += self.telegram.destination_address.to_knx()
-        data += [ 0x00, 0x80, 0x66]
+        data += self.destination_address.to_knx()
+        data += [ 0x00, 0x80]
         return data
     
     def __str__(self) -> str:
         """Return object as readable string."""
         res = '<TPDUFrame DestinationAddress="{}" '.format(
-                self.telegram.destination_address.__repr__())
+                self.destination_address.__repr__())
         data = self.to_knx()
         for i in data:
             res += hex(i) + " "

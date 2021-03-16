@@ -3,12 +3,19 @@ Created on 08.12.2020
 
 @author: mint18
 '''
+from enum import Enum
+
 from xknx.telegram import Telegram, TelegramDirection, IndividualAddress,TPDUType
-from xknx.io import Connect
-from xknx.knxip import ConnectRequestType
-from xknx.io.tunnelling import Tunnelling
-from xknx.telegram.apci import DataConnected
+#from xknx.io import Connect
+#from xknx.knxip import ConnectRequestType
+#from xknx.io.tunnelling import Tunnelling
+from xknx.telegram.apci import DeviceDescriptorRead
 #from xknx.knxip import TPDUType
+
+class ConnectionState(Enum):
+    NOT_CONNECTED = 0
+    A_CONNECTED   = 1
+    
 
 class Device:
     '''
@@ -18,8 +25,9 @@ class Device:
 #    def __init__(self, xknx, ia):
         self.xknx = xknx
         self.ia = ia
+        self.state = ConnectionState.NOT_CONNECTED
     
-    async def check_existence(self):
+    async def connect(self):
         
         '''        
         # get UDP client
@@ -43,11 +51,11 @@ class Device:
             None,
             TPDUType.T_Connect)
         await self.xknx.telegrams.put(telegram1)
-
+        
         telegram2 = Telegram(
             self.ia, 
             TelegramDirection.OUTGOING,
-            DataConnected()
+            DeviceDescriptorRead(is_numbered = True),
+            prio_system = True,
             )
         await self.xknx.telegrams.put(telegram2)
-        

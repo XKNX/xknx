@@ -20,15 +20,20 @@ def encode_cmd_and_payload(
     cmd: Union["APCIService", "APCIUserService", "APCIExtendedService"],
     encoded_payload: int = 0,
     appended_payload: Optional[bytes] = None,
+    additional_flags = None,
 ) -> bytes:
     """Encode cmd and payload."""
     if appended_payload is None:
         appended_payload = bytes()
+        
+    command_and_flag = cmd.value
+    if additional_flags:
+        command_and_flag |= additional_flags.value
 
     data = bytearray(
         [
-            (cmd.value >> 8) & 0xFF,
-            (cmd.value & 0xFF) | (encoded_payload & DPTBinary.APCI_BITMASK),
+            (command_and_flag >> 8) & 0xFF,
+            (command_and_flag & 0xFF) | (encoded_payload & DPTBinary.APCI_BITMASK),
         ]
     )
     data.extend(appended_payload)
@@ -62,8 +67,6 @@ class APCIService(Enum):
 
     ESCAPE = 0x03C0
     
-    CONNECT = 0x8066
-
 
 class APCIUserService(Enum):
     """Enum class for user message APCI services."""
@@ -96,6 +99,9 @@ class APCIExtendedService(Enum):
     INDIVIDUAL_ADDRESS_SERIAL_READ = 0x03DC
     INDIVIDUAL_ADDRESS_SERIAL_RESPONSE = 0x03DD
     INDIVIDUAL_ADDRESS_SERIAL_WRITE = 0x03DE
+
+class APCIAdditionalFlags(Enum):
+    NUMBERED_DATA_PACKET = 0x4000
 
 
 class APCI(ABC):
@@ -232,35 +238,6 @@ class GroupValueRead(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return "<GroupValueRead />"
-
-'''
-class Connect(APCI):
-    """
-    GroupValueRead service.
-
-    Does not have any payload.
-    """
-
-    code = APCIService.CONNECT
-
-    def calculated_length(self) -> int:
-        """Get length of APCI payload."""
-        return 1 # mit 0 funktioniert es derzeit noch nicht.
-
-    def from_knx(self, raw: bytes) -> None:
-        """Parse/deserialize from KNX/IP raw data."""
-
-        # Nothing to parse, but must be implemented explicitly.
-        return
-
-    def to_knx(self) -> bytes:
-        """Serialize to KNX/IP raw data."""
-        return encode_cmd_and_payload(self.code)
-
-    def __str__(self) -> str:
-        """Return object as readable string."""
-        return "<Connect />"
-'''
 
 class GroupValueWrite(APCI):
     """
@@ -671,9 +648,10 @@ class DeviceDescriptorRead(APCI):
 
     code = APCIService.DEVICE_DESCRIPTOR_READ
 
-    def __init__(self, descriptor: int = 0) -> None:
+    def __init__(self, descriptor: int = 0, is_numbered = False) -> None:
         """Initialize a new instance of DeviceDescriptorRead."""
         self.descriptor = descriptor
+        self.is_numbered = is_numbered
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -687,8 +665,15 @@ class DeviceDescriptorRead(APCI):
         """Serialize to KNX/IP raw data."""
         if self.descriptor < 0 or self.descriptor >= 2 ** 6:
             raise ConversionError("Descriptor out of range.")
+        
+        additional_flags = None
+        if self.is_numbered:
+            additional_flags= APCIAdditionalFlags.NUMBERED_DATA_PACKET 
 
-        return encode_cmd_and_payload(self.code, encoded_payload=self.descriptor)
+        return encode_cmd_and_payload(
+            self.code, 
+            encoded_payload=self.descriptor,
+            additional_flags = additional_flags)
 
     def __str__(self) -> str:
         """Return object as readable string."""

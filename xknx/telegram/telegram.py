@@ -43,6 +43,7 @@ class Telegram:
         payload: Optional[APCI] = None,
         source_address: IndividualAddress = IndividualAddress(0),
         tpdu_type: TPDUType = TPDUType.T_DATA,
+        prio_system = False,
     ) -> None:
         """Initialize Telegram class."""
         self.destination_address = destination_address
@@ -50,6 +51,7 @@ class Telegram:
         self.payload = payload
         self.source_address = source_address
         self.tpdu_type = tpdu_type
+        self.prio_system = prio_system
 
     def __str__(self) -> str:
         """Return object as readable string."""
