@@ -4,15 +4,14 @@ Module for managing a control remote value.
 Examples are switching commands with priority control, relative dimming or blinds control commands.
 DPT 2.yyy and DPT 3.yyy
 """
-from typing import TYPE_CHECKING, Any, List, Optional, Type, Union
+from typing import TYPE_CHECKING, Any, Optional, Type, Union
 
 from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTControlStepCode
 from xknx.exceptions import ConversionError
 
-from .remote_value import AsyncCallbackType, RemoteValue
+from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
 if TYPE_CHECKING:
-    from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
 
@@ -22,14 +21,13 @@ class RemoteValueControl(RemoteValue[DPTBinary]):
     def __init__(
         self,
         xknx: "XKNX",
-        group_address: Optional["GroupAddressableType"] = None,
-        group_address_state: Optional["GroupAddressableType"] = None,
+        group_address: Optional[GroupAddressesType] = None,
+        group_address_state: Optional[GroupAddressesType] = None,
         sync_state: bool = True,
         value_type: Optional[str] = None,
         device_name: Optional[str] = None,
         feature_name: str = "Control",
         after_update_cb: Optional[AsyncCallbackType] = None,
-        passive_group_addresses: Optional[List["GroupAddressableType"]] = None,
     ):
         """Initialize control remote value."""
         # pylint: disable=too-many-arguments
@@ -50,7 +48,6 @@ class RemoteValueControl(RemoteValue[DPTBinary]):
             device_name=device_name,
             feature_name=feature_name,
             after_update_cb=after_update_cb,
-            passive_group_addresses=passive_group_addresses,
         )
 
     def payload_valid(

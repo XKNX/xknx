@@ -9,6 +9,8 @@ import logging
 from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Union, cast
 
 from xknx.remote_value import (
+    GroupAddressesType,
+    RemoteValue,
     RemoteValueSetpointShift,
     RemoteValueSwitch,
     RemoteValueTemp,
@@ -19,9 +21,8 @@ from .device import Device, DeviceCallbackType
 from .sensor import Sensor
 
 if TYPE_CHECKING:
-    from xknx.remote_value import RemoteValue
     from xknx.telegram import Telegram
-    from xknx.telegram.address import GroupAddress, GroupAddressableType
+    from xknx.telegram.address import GroupAddress
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
@@ -48,17 +49,17 @@ class Climate(Device):
         self,
         xknx: "XKNX",
         name: str,
-        group_address_temperature: Optional["GroupAddressableType"] = None,
-        group_address_target_temperature: Optional["GroupAddressableType"] = None,
-        group_address_target_temperature_state: Optional["GroupAddressableType"] = None,
-        group_address_setpoint_shift: Optional["GroupAddressableType"] = None,
-        group_address_setpoint_shift_state: Optional["GroupAddressableType"] = None,
+        group_address_temperature: Optional[GroupAddressesType] = None,
+        group_address_target_temperature: Optional[GroupAddressesType] = None,
+        group_address_target_temperature_state: Optional[GroupAddressesType] = None,
+        group_address_setpoint_shift: Optional[GroupAddressesType] = None,
+        group_address_setpoint_shift_state: Optional[GroupAddressesType] = None,
         setpoint_shift_mode: SetpointShiftMode = DEFAULT_SETPOINT_SHIFT_MODE,
         setpoint_shift_max: float = DEFAULT_SETPOINT_SHIFT_MAX,
         setpoint_shift_min: float = DEFAULT_SETPOINT_SHIFT_MIN,
         temperature_step: float = DEFAULT_TEMPERATURE_STEP,
-        group_address_on_off: Optional["GroupAddressableType"] = None,
-        group_address_on_off_state: Optional["GroupAddressableType"] = None,
+        group_address_on_off: Optional[GroupAddressesType] = None,
+        group_address_on_off_state: Optional[GroupAddressesType] = None,
         on_off_invert: bool = False,
         min_temp: Optional[float] = None,
         max_temp: Optional[float] = None,
@@ -130,7 +131,7 @@ class Climate(Device):
         if create_temperature_sensors:
             self.create_temperature_sensors()
 
-    def _iter_remote_values(self) -> Iterator["RemoteValue[Any]"]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes."""
         yield from (
             self.temperature,

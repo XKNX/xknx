@@ -10,13 +10,12 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional
 
-from xknx.remote_value import RemoteValueSwitch
+from xknx.remote_value import GroupAddressesType, RemoteValueSwitch
 
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
     from xknx.telegram import Telegram
-    from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
@@ -29,8 +28,8 @@ class Switch(Device):
         self,
         xknx: "XKNX",
         name: str,
-        group_address: Optional["GroupAddressableType"] = None,
-        group_address_state: Optional["GroupAddressableType"] = None,
+        group_address: Optional[GroupAddressesType] = None,
+        group_address_state: Optional[GroupAddressesType] = None,
         invert: bool = False,
         reset_after: Optional[float] = None,
         device_updated_cb: Optional[DeviceCallbackType] = None,

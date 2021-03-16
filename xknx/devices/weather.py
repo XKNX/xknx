@@ -16,14 +16,18 @@ from datetime import date, datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Callable, Dict, Iterator, Optional, Tuple
 
-from xknx.remote_value import RemoteValue, RemoteValueSensor, RemoteValueSwitch
+from xknx.remote_value import (
+    GroupAddressesType,
+    RemoteValue,
+    RemoteValueSensor,
+    RemoteValueSwitch,
+)
 
 from . import BinarySensor, Sensor
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
     from xknx.telegram import Telegram
-    from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
 
@@ -81,19 +85,19 @@ class Weather(Device):
         self,
         xknx: "XKNX",
         name: str,
-        group_address_temperature: Optional["GroupAddressableType"] = None,
-        group_address_brightness_south: Optional["GroupAddressableType"] = None,
-        group_address_brightness_north: Optional["GroupAddressableType"] = None,
-        group_address_brightness_west: Optional["GroupAddressableType"] = None,
-        group_address_brightness_east: Optional["GroupAddressableType"] = None,
-        group_address_wind_speed: Optional["GroupAddressableType"] = None,
-        group_address_wind_bearing: Optional["GroupAddressableType"] = None,
-        group_address_rain_alarm: Optional["GroupAddressableType"] = None,
-        group_address_frost_alarm: Optional["GroupAddressableType"] = None,
-        group_address_wind_alarm: Optional["GroupAddressableType"] = None,
-        group_address_day_night: Optional["GroupAddressableType"] = None,
-        group_address_air_pressure: Optional["GroupAddressableType"] = None,
-        group_address_humidity: Optional["GroupAddressableType"] = None,
+        group_address_temperature: Optional[GroupAddressesType] = None,
+        group_address_brightness_south: Optional[GroupAddressesType] = None,
+        group_address_brightness_north: Optional[GroupAddressesType] = None,
+        group_address_brightness_west: Optional[GroupAddressesType] = None,
+        group_address_brightness_east: Optional[GroupAddressesType] = None,
+        group_address_wind_speed: Optional[GroupAddressesType] = None,
+        group_address_wind_bearing: Optional[GroupAddressesType] = None,
+        group_address_rain_alarm: Optional[GroupAddressesType] = None,
+        group_address_frost_alarm: Optional[GroupAddressesType] = None,
+        group_address_wind_alarm: Optional[GroupAddressesType] = None,
+        group_address_day_night: Optional[GroupAddressesType] = None,
+        group_address_air_pressure: Optional[GroupAddressesType] = None,
+        group_address_humidity: Optional[GroupAddressesType] = None,
         create_sensors: bool = False,
         sync_state: bool = True,
         device_updated_cb: Optional[DeviceCallbackType] = None,
