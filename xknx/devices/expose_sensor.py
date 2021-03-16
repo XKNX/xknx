@@ -32,7 +32,7 @@ class ExposeSensor(Device):
         xknx: "XKNX",
         name: str,
         group_address: Optional["GroupAddressableType"] = None,
-        value_type: Optional[str] = None,
+        value_type: Optional[Union[int, str]] = None,
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize Sensor class."""

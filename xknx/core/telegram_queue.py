@@ -77,7 +77,7 @@ class TelegramQueue:
         address_filters: Optional[List[AddressFilter]] = None,
         group_addresses: Optional[List[GroupAddress]] = None,
         match_for_outgoing: bool = False,
-    ) -> Callback:
+    ) -> "TelegramQueue.Callback":
         """Register callback for a telegram being received from KNX bus."""
         callback = TelegramQueue.Callback(
             telegram_received_cb,
@@ -88,7 +88,9 @@ class TelegramQueue:
         self.telegram_received_cbs.append(callback)
         return callback
 
-    def unregister_telegram_received_cb(self, telegram_received_cb: Callback) -> None:
+    def unregister_telegram_received_cb(
+        self, telegram_received_cb: "TelegramQueue.Callback"
+    ) -> None:
         """Unregister callback for a telegram beeing received from KNX bus."""
         self.telegram_received_cbs.remove(telegram_received_cb)
 

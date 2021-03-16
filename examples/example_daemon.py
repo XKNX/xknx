@@ -15,9 +15,8 @@ async def main():
     xknx = XKNX(device_updated_cb=device_updated_cb, daemon_mode=True)
     Switch(xknx, name="TestOutlet", group_address="1/1/11")
 
-    # Wait until Ctrl-C was pressed
     await xknx.start()
-
+    # Wait until Ctrl-C was pressed
     await xknx.stop()
 
 
