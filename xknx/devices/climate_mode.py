@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
 
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
 from xknx.exceptions import DeviceIllegalValue
+from xknx.remote_value import GroupAddressesType, RemoteValue
 from xknx.remote_value.remote_value_climate_mode import (
     RemoteValueBinaryHeatCool,
     RemoteValueBinaryOperationMode,
@@ -20,9 +21,7 @@ from xknx.remote_value.remote_value_climate_mode import (
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
-    from xknx.remote_value import RemoteValue
     from xknx.telegram import Telegram
-    from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
 
@@ -35,20 +34,18 @@ class ClimateMode(Device):
         self,
         xknx: "XKNX",
         name: str,
-        group_address_operation_mode: Optional["GroupAddressableType"] = None,
-        group_address_operation_mode_state: Optional["GroupAddressableType"] = None,
-        group_address_operation_mode_protection: Optional[
-            "GroupAddressableType"
-        ] = None,
-        group_address_operation_mode_night: Optional["GroupAddressableType"] = None,
-        group_address_operation_mode_comfort: Optional["GroupAddressableType"] = None,
-        group_address_operation_mode_standby: Optional["GroupAddressableType"] = None,
-        group_address_controller_status: Optional["GroupAddressableType"] = None,
-        group_address_controller_status_state: Optional["GroupAddressableType"] = None,
-        group_address_controller_mode: Optional["GroupAddressableType"] = None,
-        group_address_controller_mode_state: Optional["GroupAddressableType"] = None,
-        group_address_heat_cool: Optional["GroupAddressableType"] = None,
-        group_address_heat_cool_state: Optional["GroupAddressableType"] = None,
+        group_address_operation_mode: Optional[GroupAddressesType] = None,
+        group_address_operation_mode_state: Optional[GroupAddressesType] = None,
+        group_address_operation_mode_protection: Optional[GroupAddressesType] = None,
+        group_address_operation_mode_night: Optional[GroupAddressesType] = None,
+        group_address_operation_mode_comfort: Optional[GroupAddressesType] = None,
+        group_address_operation_mode_standby: Optional[GroupAddressesType] = None,
+        group_address_controller_status: Optional[GroupAddressesType] = None,
+        group_address_controller_status_state: Optional[GroupAddressesType] = None,
+        group_address_controller_mode: Optional[GroupAddressesType] = None,
+        group_address_controller_mode_state: Optional[GroupAddressesType] = None,
+        group_address_heat_cool: Optional[GroupAddressesType] = None,
+        group_address_heat_cool_state: Optional[GroupAddressesType] = None,
         operation_modes: Optional[List[Union[str, HVACOperationMode]]] = None,
         controller_modes: Optional[List[Union[str, HVACControllerMode]]] = None,
         device_updated_cb: Optional[DeviceCallbackType] = None,
@@ -230,7 +227,7 @@ class ClimateMode(Device):
 
     def _iter_remote_values(
         self,
-    ) -> Iterator["RemoteValue[Any]"]:
+    ) -> Iterator[RemoteValue[Any]]:
         """Iterate climate mode RemoteValue classes."""
         return chain(
             self._iter_byte_operation_modes(),

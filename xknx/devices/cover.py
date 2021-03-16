@@ -11,6 +11,8 @@ import logging
 from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional
 
 from xknx.remote_value import (
+    GroupAddressesType,
+    RemoteValue,
     RemoteValueScaling,
     RemoteValueStep,
     RemoteValueSwitch,
@@ -21,9 +23,7 @@ from .device import Device, DeviceCallbackType
 from .travelcalculator import TravelCalculator, TravelStatus
 
 if TYPE_CHECKING:
-    from xknx.remote_value import RemoteValue
     from xknx.telegram import Telegram
-    from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
@@ -44,13 +44,13 @@ class Cover(Device):
         self,
         xknx: "XKNX",
         name: str,
-        group_address_long: Optional["GroupAddressableType"] = None,
-        group_address_short: Optional["GroupAddressableType"] = None,
-        group_address_stop: Optional["GroupAddressableType"] = None,
-        group_address_position: Optional["GroupAddressableType"] = None,
-        group_address_position_state: Optional["GroupAddressableType"] = None,
-        group_address_angle: Optional["GroupAddressableType"] = None,
-        group_address_angle_state: Optional["GroupAddressableType"] = None,
+        group_address_long: Optional[GroupAddressesType] = None,
+        group_address_short: Optional[GroupAddressesType] = None,
+        group_address_stop: Optional[GroupAddressesType] = None,
+        group_address_position: Optional[GroupAddressesType] = None,
+        group_address_position_state: Optional[GroupAddressesType] = None,
+        group_address_angle: Optional[GroupAddressesType] = None,
+        group_address_angle_state: Optional[GroupAddressesType] = None,
         travel_time_down: float = DEFAULT_TRAVEL_TIME_DOWN,
         travel_time_up: float = DEFAULT_TRAVEL_TIME_UP,
         invert_position: bool = False,
@@ -129,7 +129,7 @@ class Cover(Device):
 
         self.device_class = device_class
 
-    def _iter_remote_values(self) -> Iterator["RemoteValue[Any]"]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes."""
         yield self.updown
         yield self.step

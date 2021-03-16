@@ -18,10 +18,9 @@ from xknx.dpt.dpt import DPTPayloadType
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACModeType, HVACOperationMode
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
-from .remote_value import AsyncCallbackType, RemoteValue
+from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
 if TYPE_CHECKING:
-    from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
 
@@ -49,14 +48,13 @@ class RemoteValueOperationMode(RemoteValueClimateModeBase[DPTArray, HVACOperatio
     def __init__(
         self,
         xknx: "XKNX",
-        group_address: Optional["GroupAddressableType"] = None,
-        group_address_state: Optional["GroupAddressableType"] = None,
+        group_address: Optional[GroupAddressesType] = None,
+        group_address_state: Optional[GroupAddressesType] = None,
         sync_state: bool = True,
         device_name: Optional[str] = None,
         feature_name: str = "Climate mode",
         climate_mode_type: Optional[ClimateModeType] = None,
         after_update_cb: Optional[AsyncCallbackType] = None,
-        passive_group_addresses: Optional[List["GroupAddressableType"]] = None,
     ):
         """Initialize remote value of KNX climate mode."""
         # pylint: disable=too-many-arguments
@@ -68,7 +66,6 @@ class RemoteValueOperationMode(RemoteValueClimateModeBase[DPTArray, HVACOperatio
             device_name=device_name,
             feature_name=feature_name,
             after_update_cb=after_update_cb,
-            passive_group_addresses=passive_group_addresses,
         )
         if not isinstance(climate_mode_type, self.ClimateModeType):
             raise ConversionError(
@@ -115,13 +112,12 @@ class RemoteValueControllerMode(
     def __init__(
         self,
         xknx: "XKNX",
-        group_address: Optional["GroupAddressableType"] = None,
-        group_address_state: Optional["GroupAddressableType"] = None,
+        group_address: Optional[GroupAddressesType] = None,
+        group_address_state: Optional[GroupAddressesType] = None,
         sync_state: bool = True,
         device_name: Optional[str] = None,
         feature_name: str = "Controller Mode",
         after_update_cb: Optional[AsyncCallbackType] = None,
-        passive_group_addresses: Optional[List["GroupAddressableType"]] = None,
     ):
         """Initialize remote value of KNX climate mode."""
         # pylint: disable=too-many-arguments
@@ -133,7 +129,6 @@ class RemoteValueControllerMode(
             device_name=device_name,
             feature_name=feature_name,
             after_update_cb=after_update_cb,
-            passive_group_addresses=passive_group_addresses,
         )
 
     @staticmethod
@@ -170,8 +165,8 @@ class RemoteValueBinaryOperationMode(
     def __init__(
         self,
         xknx: "XKNX",
-        group_address: Optional["GroupAddressableType"] = None,
-        group_address_state: Optional["GroupAddressableType"] = None,
+        group_address: Optional[GroupAddressesType] = None,
+        group_address_state: Optional[GroupAddressesType] = None,
         sync_state: bool = True,
         device_name: Optional[str] = None,
         feature_name: str = "Climate mode binary",
@@ -256,8 +251,8 @@ class RemoteValueBinaryHeatCool(
     def __init__(
         self,
         xknx: "XKNX",
-        group_address: Optional["GroupAddressableType"] = None,
-        group_address_state: Optional["GroupAddressableType"] = None,
+        group_address: Optional[GroupAddressesType] = None,
+        group_address_state: Optional[GroupAddressesType] = None,
         sync_state: bool = True,
         device_name: Optional[str] = None,
         feature_name: str = "Controller mode Heat/Cool",

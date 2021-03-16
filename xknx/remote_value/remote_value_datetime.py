@@ -5,15 +5,14 @@ DPT 10.001, 11.001 and 19.001
 """
 from enum import Enum
 import time
-from typing import TYPE_CHECKING, List, Optional, Type, Union
+from typing import TYPE_CHECKING, Optional, Type, Union
 
 from xknx.dpt import DPTArray, DPTBinary, DPTDate, DPTDateTime, DPTTime
 from xknx.exceptions import ConversionError
 
-from .remote_value import AsyncCallbackType, RemoteValue
+from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
 if TYPE_CHECKING:
-    from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
 
@@ -31,14 +30,13 @@ class RemoteValueDateTime(RemoteValue[DPTArray]):
     def __init__(
         self,
         xknx: "XKNX",
-        group_address: Optional["GroupAddressableType"] = None,
-        group_address_state: Optional["GroupAddressableType"] = None,
+        group_address: Optional[GroupAddressesType] = None,
+        group_address_state: Optional[GroupAddressesType] = None,
         sync_state: bool = True,
         value_type: str = "time",
         device_name: Optional[str] = None,
         feature_name: str = "DateTime",
         after_update_cb: Optional[AsyncCallbackType] = None,
-        passive_group_addresses: Optional[List["GroupAddressableType"]] = None,
     ):
         """Initialize RemoteValueSensor class."""
         # pylint: disable=too-many-arguments
@@ -61,7 +59,6 @@ class RemoteValueDateTime(RemoteValue[DPTArray]):
             device_name=device_name,
             feature_name=feature_name,
             after_update_cb=after_update_cb,
-            passive_group_addresses=passive_group_addresses,
         )
 
     def payload_valid(

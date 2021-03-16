@@ -11,6 +11,8 @@ import logging
 from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Union
 
 from xknx.remote_value import (
+    GroupAddressesType,
+    RemoteValue,
     RemoteValueDptValue1Ucount,
     RemoteValueScaling,
     RemoteValueSwitch,
@@ -19,9 +21,7 @@ from xknx.remote_value import (
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
-    from xknx.remote_value import RemoteValue
     from xknx.telegram import Telegram
-    from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
@@ -44,10 +44,10 @@ class Fan(Device):
         self,
         xknx: "XKNX",
         name: str,
-        group_address_speed: Optional["GroupAddressableType"] = None,
-        group_address_speed_state: Optional["GroupAddressableType"] = None,
-        group_address_oscillation: Optional["GroupAddressableType"] = None,
-        group_address_oscillation_state: Optional["GroupAddressableType"] = None,
+        group_address_speed: Optional[GroupAddressesType] = None,
+        group_address_speed_state: Optional[GroupAddressesType] = None,
+        group_address_oscillation: Optional[GroupAddressesType] = None,
+        group_address_oscillation_state: Optional[GroupAddressesType] = None,
         device_updated_cb: Optional[DeviceCallbackType] = None,
         max_step: Optional[int] = None,
     ):
@@ -89,7 +89,7 @@ class Fan(Device):
             after_update_cb=self.after_update,
         )
 
-    def _iter_remote_values(self) -> Iterator["RemoteValue[Any]"]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes."""
         yield from (self.speed, self.oscillation)
 

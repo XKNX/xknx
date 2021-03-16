@@ -12,14 +12,13 @@ import asyncio
 import time
 from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, cast
 
-from xknx.remote_value import RemoteValueSwitch
+from xknx.remote_value import GroupAddressesType, RemoteValueSwitch
 
 from .action import Action
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
     from xknx.telegram import Telegram
-    from xknx.telegram.address import GroupAddressableType
     from xknx.xknx import XKNX
 
 
@@ -31,7 +30,7 @@ class BinarySensor(Device):
         self,
         xknx: "XKNX",
         name: str,
-        group_address_state: "GroupAddressableType" = None,
+        group_address_state: GroupAddressesType = None,
         invert: bool = False,
         sync_state: bool = True,
         ignore_internal_state: bool = False,
