@@ -2,6 +2,9 @@
 
 ## Unreleased changes
 
+### Devices
+- Switch: added current_power, total_energy and standby attributes
+
 ### Internals
 
 - Don't allow floats in DPTBase value_type parser
