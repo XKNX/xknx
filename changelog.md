@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased changes
+## 0.17.3 Passive addresses 2021-03-16
 
 ### Devices
 
