@@ -372,3 +372,36 @@ class TestSwitch(unittest.TestCase):
         self.assertEqual(switch.total_energy, 2003)
         self.assertEqual(switch._total_energy.unit_of_measurement, "kWh")
         self.assertEqual(switch._total_energy.ha_device_class, "energy")
+
+    def test_stanby(self):
+        """Test resolve state with current power."""
+        xknx = XKNX()
+        switch = Switch(
+            name="TestMeteredOutlet", xknx=xknx, group_address_standby="1/3/6"
+        )
+        switch._standby.payload = DPTBinary(1)
+
+        self.assertEqual(switch.standby, True)
+
+    def test_create_sensors(self):
+        """Test default state mapping."""
+        xknx = XKNX()
+        Switch(
+            name="switch",
+            xknx=xknx,
+            group_address_current_power="1/3/5",
+            group_address_total_energy="1/3/6",
+        )
+
+        self.assertEqual(len(xknx.devices), 1)
+
+        Switch(
+            name="switch",
+            xknx=xknx,
+            group_address_current_power="1/3/5",
+            group_address_total_energy="1/3/6",
+            group_address_standby="1/3/7",
+            create_sensors=True,
+        )
+
+        self.assertEqual(len(xknx.devices), 5)
