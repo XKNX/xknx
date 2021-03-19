@@ -119,15 +119,16 @@ class TelegramQueue:
                 self.xknx.telegrams.task_done()
                 break
 
-            try:
-                if telegram.direction == TelegramDirection.INCOMING:
+            if telegram.direction == TelegramDirection.INCOMING:
+                try:
                     await self.process_telegram_incoming(telegram)
+                except XKNXException as ex:
+                    logger.error("Error while processing incoming telegram %s", ex)
+                finally:
                     self.xknx.telegrams.task_done()
-                elif telegram.direction == TelegramDirection.OUTGOING:
-                    self.outgoing_queue.put_nowait(telegram)
-                    # self.xknx.telegrams.task_done() for outgoing is called in _outgoing_rate_limiter.
-            except XKNXException as ex:
-                logger.error("Error while processing telegram %s", ex)
+            elif telegram.direction == TelegramDirection.OUTGOING:
+                self.outgoing_queue.put_nowait(telegram)
+                # self.xknx.telegrams.task_done() for outgoing is called in _outgoing_rate_limiter.
 
     async def _outgoing_rate_limiter(self) -> None:
         """Endless loop for processing outgoing telegrams."""

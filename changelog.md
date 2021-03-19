@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Internals
+
+- Comparing GroupAddress or IndividualAddress to other types don't raise TypeError anymore.
+
 ## 0.17.3 Passive addresses 2021-03-16
 
 ### Devices

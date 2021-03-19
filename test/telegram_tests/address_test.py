@@ -82,10 +82,10 @@ class TestIndividualAddress(TestCase):
         self.assertEqual(IndividualAddress("1.0.0"), IndividualAddress(4096))
         self.assertNotEqual(IndividualAddress("1.0.0"), IndividualAddress("1.1.1"))
         self.assertNotEqual(IndividualAddress("1.0.0"), None)
-        with self.assertRaises(TypeError):
-            IndividualAddress(
-                "1.0.0"
-            ) == "example"  # pylint: disable=expression-not-assigned
+        self.assertNotEqual(IndividualAddress("1.0.0"), "example")
+        self.assertNotEqual(IndividualAddress("1.1.1"), GroupAddress("1/1/1"))
+        self.assertNotEqual(IndividualAddress(250), GroupAddress(250))
+        self.assertNotEqual(IndividualAddress(250), 250)
 
     def test_representation(self):
         """Test string representation of address."""
@@ -217,8 +217,9 @@ class TestGroupAddress(TestCase):
         self.assertEqual(GroupAddress("1/0"), GroupAddress(2048))
         self.assertNotEqual(GroupAddress("1/1"), GroupAddress("1/1/0"))
         self.assertNotEqual(GroupAddress("1/0"), None)
-        with self.assertRaises(TypeError):
-            GroupAddress("1/0") == "example"  # pylint: disable=expression-not-assigned
+        self.assertNotEqual(GroupAddress("1/0"), "example")
+        self.assertNotEqual(GroupAddress(1), IndividualAddress(1))
+        self.assertNotEqual(GroupAddress(1), 1)
 
     def test_representation(self):
         """Test string representation of address."""

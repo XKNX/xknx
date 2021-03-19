@@ -37,7 +37,8 @@ class ValueReader:
     async def read(self) -> Optional[Telegram]:
         """Send group read and wait for response."""
         cb_obj = self.xknx.telegram_queue.register_telegram_received_cb(
-            self.telegram_received
+            self.telegram_received,
+            group_addresses=[self.group_address],
         )
         await self.send_group_read()
 

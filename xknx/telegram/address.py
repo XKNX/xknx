@@ -12,6 +12,7 @@ The module supports all different writings of group addresses:
 * 2nd level: "1/2"
 * Free format: "123"
 """
+from abc import ABC
 from enum import Enum
 from re import compile as re_compile
 from typing import Optional, Tuple, Union
@@ -41,7 +42,7 @@ def address_tuple_to_int(address: Tuple[int, int]) -> int:
     return int(address[0] * 256 + address[1])
 
 
-class BaseAddress:  # pylint: disable=too-few-public-methods
+class BaseAddress(ABC):
     """Base class for all knx address types."""
 
     def __init__(self) -> None:
@@ -65,11 +66,9 @@ class BaseAddress:  # pylint: disable=too-few-public-methods
 
         Returns `False` if we check against `None`.
         """
-        if other is None:
-            return False
-        if type(self) is not type(other):
-            raise TypeError()
-        return self.__hash__() == other.__hash__()
+        if isinstance(self, type(other)):
+            return self.__hash__() == other.__hash__()
+        return False
 
     def __hash__(self) -> int:
         """Hash Address so it can be used as dict key."""
