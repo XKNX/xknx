@@ -73,10 +73,14 @@ class DPTRow(Row):
         if hasattr(dpt_class, "value_min") and hasattr(dpt_class, "value_max"):
             dpt_range = f"{dpt_class.value_min} ... {dpt_class.value_max}"
 
+        dpt_number_str = self._get_dpt_number_from_docstring(dpt_class)
+        self.dpt_number_sort = self._dpt_number_sort(dpt_number_str)
+        dpt_number = self._dpt_number_str_repr(dpt_number_str)
+
         super().__init__(
             value_type=dpt_class.value_type,
             unit=dpt_class.unit,
-            dpt_number=self._get_dpt_number_from_docstring(dpt_class),
+            dpt_number=dpt_number,
             dpt_size=str(dpt_class.payload_length),
             dpt_range=dpt_range,
         )
@@ -91,17 +95,28 @@ class DPTRow(Row):
                     return text.split()[1]
         except IndexError:
             print("Error: Could not read docstring for: %s" % dpt_class)
-        return None
+        print("Error: Could not find DPT in docstring for: %s" % dpt_class)
+        raise ValueError
 
-    def dpt_number_int(self):
+    def _dpt_number_sort(self, dpt_str: str) -> int:
         """Return dpt number as integer (for sorting). "xxx" is treated as 0."""
         try:
-            dpt_major, dpt_minor = self.dpt_number.split(".")
+            dpt_major, dpt_minor = dpt_str.split(".")
             if dpt_minor in ("x", "xxx", "*", "***"):
-                dpt_minor = 0
-            return (int(dpt_major) * 1000) + int(dpt_minor)
+                dpt_minor = -1
+            elif dpt_minor in ("?", "???"):
+                dpt_minor = 99999
+            return (int(dpt_major) * 100000) + int(dpt_minor)
         except ValueError:
-            print("Error: Could not parse dpt_number: %s" % self.dpt_number)
+            print(
+                f"Error: Could not parse dpt_number: '{self.dpt_number}' in  '{self.value_type}'"
+            )
+
+    def _dpt_number_str_repr(self, dpt_str: str) -> str:
+        dpt_major, dpt_minor = dpt_str.split(".")
+        if dpt_minor in ("x", "xxx", "*", "***"):
+            return dpt_major
+        return dpt_str
 
 
 def table_delimiter():
@@ -134,9 +149,14 @@ def print_table():
     rows = []
     for dpt in DPTBase.__recursive_subclasses__():
         if dpt.has_distinct_value_type():
-            rows.append(DPTRow(dpt_class=dpt))
+            try:
+                row = DPTRow(dpt_class=dpt)
+            except ValueError:
+                continue
+            else:
+                rows.append(row)
 
-    rows.sort(key=lambda row: row.dpt_number_int())
+    rows.sort(key=lambda row: row.dpt_number_sort)
 
     table_header = Row()
     rows.insert(0, table_header)
