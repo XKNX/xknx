@@ -21,6 +21,7 @@ from typing import (
     Iterator,
     Optional,
     Tuple,
+    cast,
 )
 
 from xknx.remote_value import (
@@ -549,7 +550,7 @@ class Light(Device):
         )
         if None in colors:
             return None, self.white.brightness.value
-        return colors, self.white.brightness.value
+        return cast(Tuple[int, int, int], colors), self.white.brightness.value
 
     async def set_color(
         self, color: Tuple[int, int, int], white: Optional[int] = None
