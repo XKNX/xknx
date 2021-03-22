@@ -26,23 +26,17 @@ class KNXSwitch(KnxEntity, SwitchEntity):
     @property
     def current_power_w(self):
         """Return current power consumption in W."""
-        return (
-            self._device.current_power
-            if self._device.current_power is not None
-            else None
-        )
+        return self._device.current_power
 
     @property
     def today_energy_kwh(self):
         """Return total energy consumed in kWh."""
-        return (
-            self._device.total_energy if self._device.total_energy is not None else None
-        )
+        return self._device.total_energy
 
     @property
     def is_standby(self):
         """Indicate if the device connected to the switch is currently in standby."""
-        return self._device.standby if self._device.standby is not None else None
+        return self._device.standby
 
     @property
     def is_on(self):

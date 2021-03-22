@@ -103,7 +103,7 @@ class Switch(Device):
         yield self._standby
 
     def create_sensors(self) -> None:
-        """Expose sensors to xknx."""
+        """Create additional sensor devices in xknx."""
         if self._standby.group_address_state is not None:
             BinarySensor(
                 self.xknx,

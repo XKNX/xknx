@@ -452,11 +452,7 @@ class SwitchSchema:
             vol.Optional(CONF_CURRENT_POWER): ga_or_list_validator,
             vol.Optional(CONF_TOTAL_ENERGY): ga_or_list_validator,
             vol.Optional(CONF_STANDBY): ga_or_list_validator,
-            vol.Optional(CONF_SYNC_STATE, default=True): vol.Any(
-                vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)),
-                cv.boolean,
-                cv.string,
-            ),
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
             vol.Optional(CONF_INVERT): cv.boolean,
             vol.Optional(CONF_CREATE_SENSORS, default=False): cv.boolean,
         }

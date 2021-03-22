@@ -17,9 +17,11 @@ Switches are simple representations of binary actors. They mainly support switch
 - `name` is the name of the object.
 - `group_address` is the KNX group address of the switch device. Used for sending.
 - `group_address_state` is the KNX group address of the switch state. Used for updating and reading state.
-- `group_address_current_power` is the KNX group address of the current power usage.
-- `group_address_total_energy` is the KNX group address of the total energy consumed.
-- `group_address_standby` is the KNX group address to indicate if the device connected to the switch is currently in standby.
+- `group_address_current_power` is the KNX group address of the current power usage in W. *DPT 14.056*
+- `group_address_total_energy` is the KNX group address of the total energy consumed in kWh. *DPT 13.013*
+- `group_address_standby` is the KNX group address to indicate if the device connected to the switch is currently in standby. *DPT 1.001*
+- `create_sensors` If true, also adds sensors for all values to the xknx device list (useful for Home Assistant). Default: False
+- `sync_state` Periodically sync the state.
 - `invert` inverts the payload so state "on" is represented by 0 on bus and "off" by 1. Defaults to `False`
 - `reset_after` may be used to reset the switch to `OFF` again after given time in sec. Defaults to `None`
 - `device_updated_cb` awaitable callback for each update.
