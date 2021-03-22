@@ -56,7 +56,7 @@ class Fan(Device):
         super().__init__(xknx, name, device_updated_cb)
 
         self.speed: Union[RemoteValueDptValue1Ucount, RemoteValueScaling]
-        self.mode = FanSpeedMode.STEP if max_step is not None else FanSpeedMode.PERCENT
+        self.mode = FanSpeedMode.STEP if max_step else FanSpeedMode.PERCENT
         self.max_step = max_step
 
         if self.mode == FanSpeedMode.STEP:

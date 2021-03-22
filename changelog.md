@@ -2,7 +2,12 @@
 
 ## Unreleased changes
 
+### Internals
+
+- Comparing GroupAddress or IndividualAddress to other types don't raise TypeError anymore.
+
 ### Devices
+
 - Switch: added current_power, total_energy and standby attributes
 
 ## 0.17.3 Passive addresses 2021-03-16

@@ -287,7 +287,7 @@ class DPTWspKmh(DPT2ByteFloat):
 
 
 class DPTEnthalpy(DPT2ByteFloat):
-    """DPT 9.* 2-byte float value (with unit)."""
+    """DPT 9.? 2-byte float value (with unit)."""
 
     dpt_main_number = 9
     # this is here for backwards compatibility
