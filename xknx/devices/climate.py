@@ -6,7 +6,7 @@ Module for managing the climate within a room.
 """
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Union
 
 from xknx.remote_value import (
     GroupAddressesType,
@@ -242,15 +242,14 @@ class Climate(Device):
     @property
     def initialized_for_setpoint_shift_calculations(self) -> bool:
         """Test if object is initialized for setpoint shift calculations."""
-        if not self._setpoint_shift.initialized:
-            return False
-        if self._setpoint_shift.value is None:
-            return False
-        if not self.target_temperature.initialized:
-            return False
-        if self.target_temperature.value is None:
-            return False
-        return True
+        if (
+            self._setpoint_shift.initialized
+            and self._setpoint_shift.value is not None
+            and self.target_temperature.initialized
+            and self.target_temperature.value is not None
+        ):
+            return True
+        return False
 
     async def set_target_temperature(self, target_temperature: float) -> None:
         """Send new target temperature or setpoint_shift to KNX bus."""
@@ -273,8 +272,12 @@ class Climate(Device):
         As this value is usually not available via KNX, we have to derive this from the current
         target temperature and the current set point shift.
         """
-        if self.initialized_for_setpoint_shift_calculations:
-            return cast(float, self.target_temperature.value - self.setpoint_shift)
+        # implies self.initialized_for_setpoint_shift_calculations in a mypy compatible way:
+        if (
+            self.target_temperature.value is not None
+            and self._setpoint_shift.value is not None
+        ):
+            return self.target_temperature.value - self._setpoint_shift.value  # type: ignore
         return None
 
     @property
