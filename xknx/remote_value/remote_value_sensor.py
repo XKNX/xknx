@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueSensor(RemoteValue[DPTArray]):
+class RemoteValueSensor(RemoteValue[DPTArray, Union[int, float, str]]):
     """Abstraction for many different sensor DPT types."""
 
     def __init__(

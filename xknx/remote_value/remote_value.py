@@ -17,6 +17,7 @@ from typing import (
     Iterator,
     List,
     Optional,
+    TypeVar,
     Union,
 )
 
@@ -33,9 +34,10 @@ logger = logging.getLogger("xknx.log")
 
 AsyncCallbackType = Callable[[], Awaitable[None]]
 GroupAddressesType = Union["GroupAddressableType", List["GroupAddressableType"]]
+ValueType = TypeVar("ValueType")
 
 
-class RemoteValue(ABC, Generic[DPTPayloadType]):
+class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
     """Class for managing remote knx value."""
 
     # pylint: disable=too-many-instance-attributes
@@ -126,7 +128,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType]):
         """Return payload if telegram payload may be parsed - to be implemented in derived class."""
 
     @abstractmethod
-    def from_knx(self, payload: DPTPayloadType) -> Any:
+    def from_knx(self, payload: DPTPayloadType) -> ValueType:
         """Convert current payload to value - to be implemented in derived class."""
 
     @abstractmethod
@@ -172,7 +174,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType]):
         return True
 
     @property
-    def value(self) -> Any:
+    def value(self) -> Optional[ValueType]:
         """Return current value."""
         if self.payload is None:
             return None

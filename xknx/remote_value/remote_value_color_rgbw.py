@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueColorRGBW(RemoteValue[DPTArray]):
+class RemoteValueColorRGBW(RemoteValue[DPTArray, Tuple[int, int, int, int]]):
     """Abstraction for remote value of KNX DPT 251.600 (DPT_Color_RGBW)."""
 
     def __init__(

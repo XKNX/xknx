@@ -5,7 +5,7 @@ DPT .
 """
 from abc import abstractmethod
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Generic, List, Optional, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Union
 
 from xknx.dpt import (
     DPTArray,
@@ -24,9 +24,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueClimateModeBase(
-    RemoteValue[DPTPayloadType], Generic[DPTPayloadType, HVACModeType]
-):
+class RemoteValueClimateModeBase(RemoteValue[DPTPayloadType, Optional[HVACModeType]]):
     """Base class for binary climate mode remote values."""
 
     @abstractmethod

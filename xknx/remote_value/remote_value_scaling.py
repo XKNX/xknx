@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueScaling(RemoteValue[DPTArray]):
+class RemoteValueScaling(RemoteValue[DPTArray, int]):
     """Abstraction for remote value of KNX DPT 5.001 (DPT_Scaling)."""
 
     def __init__(
