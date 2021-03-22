@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueSwitch(RemoteValue[DPTBinary]):
+class RemoteValueSwitch(RemoteValue[DPTBinary, bool]):
     """Abstraction for remote value of KNX DPT 1.001 / DPT_Switch."""
 
     def __init__(

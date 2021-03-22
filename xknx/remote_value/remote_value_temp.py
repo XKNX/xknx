@@ -10,7 +10,7 @@ from xknx.dpt import DPTArray, DPTBinary, DPTTemperature
 from .remote_value import RemoteValue
 
 
-class RemoteValueTemp(RemoteValue[DPTArray]):
+class RemoteValueTemp(RemoteValue[DPTArray, float]):
     """Abstraction for remote value of KNX 9.001 (DPT_Value_Temp)."""
 
     # pylint: disable=no-self-use

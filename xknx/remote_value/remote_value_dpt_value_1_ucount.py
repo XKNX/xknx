@@ -10,7 +10,7 @@ from xknx.dpt import DPTArray, DPTBinary, DPTValue1Ucount
 from .remote_value import RemoteValue
 
 
-class RemoteValueDptValue1Ucount(RemoteValue[DPTArray]):
+class RemoteValueDptValue1Ucount(RemoteValue[DPTArray, int]):
     """Abstraction for remote value of KNX DPT 5.010."""
 
     # pylint: disable=no-self-use

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueStep(RemoteValue[DPTBinary]):
+class RemoteValueStep(RemoteValue[DPTBinary, "RemoteValueStep.Direction"]):
     """Abstraction for remote value of KNX DPT 1.007 / DPT_Step."""
 
     class Direction(Enum):

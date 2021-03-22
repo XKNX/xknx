@@ -24,7 +24,7 @@ class DateTimeType(Enum):
     TIME = DPTTime
 
 
-class RemoteValueDateTime(RemoteValue[DPTArray]):
+class RemoteValueDateTime(RemoteValue[DPTArray, time.struct_time]):
     """Abstraction for remote value of KNX 10.001, 11.001 and 19.001 time and date objects."""
 
     def __init__(
