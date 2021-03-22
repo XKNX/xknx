@@ -1067,6 +1067,21 @@ class TestClimate(unittest.TestCase):
             telegram1, Telegram(GroupAddress("1/2/15"), payload=GroupValueRead())
         )
 
+    def test_sync_mode_from_climate(self):
+        """Test sync function / propagating to mode."""
+        xknx = XKNX()
+        climate_mode = ClimateMode(
+            xknx, "TestClimateMode", group_address_operation_mode_state="1/2/4"
+        )
+        climate = Climate(xknx, "TestClimate", mode=climate_mode)
+
+        self.loop.run_until_complete(climate.sync())
+        self.assertEqual(xknx.telegrams.qsize(), 1)
+        telegram1 = xknx.telegrams.get_nowait()
+        self.assertEqual(
+            telegram1, Telegram(GroupAddress("1/2/4"), payload=GroupValueRead())
+        )
+
     #
     # TEST PROCESS
     #
