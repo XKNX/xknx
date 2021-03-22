@@ -119,7 +119,8 @@ class BinarySensor(Device):
 
     async def _state_from_remote_value(self) -> None:
         """Update the internal state from RemoteValue (Callback)."""
-        await self._set_internal_state(self.remote_value.value)
+        if self.remote_value.value is not None:
+            await self._set_internal_state(self.remote_value.value)
 
     async def _set_internal_state(self, state: bool) -> None:
         """Set the internal state of the device. If state was changed after_update hooks and connected Actions are executed."""

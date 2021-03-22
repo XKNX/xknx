@@ -266,18 +266,22 @@ class Cover(Device):
 
     async def _target_position_from_rv(self) -> None:
         """Update the target postion from RemoteValue (Callback)."""
-        self.travelcalculator.start_travel(self.position_target.value)
-        await self.after_update()
+        new_target = self.position_target.value
+        if new_target is not None:
+            self.travelcalculator.start_travel(new_target)
+            await self.after_update()
 
     async def _current_position_from_rv(self) -> None:
         """Update the current postion from RemoteValue (Callback)."""
         position_before_update = self.travelcalculator.current_position()
-        if self.is_traveling():
-            self.travelcalculator.update_position(self.position_current.value)
-        else:
-            self.travelcalculator.set_position(self.position_current.value)
-        if position_before_update != self.travelcalculator.current_position():
-            await self.after_update()
+        new_position = self.position_current.value
+        if new_position is not None:
+            if self.is_traveling():
+                self.travelcalculator.update_position(new_position)
+            else:
+                self.travelcalculator.set_position(new_position)
+            if position_before_update != self.travelcalculator.current_position():
+                await self.after_update()
 
     async def set_angle(self, angle: int) -> None:
         """Move cover to designated angle."""
