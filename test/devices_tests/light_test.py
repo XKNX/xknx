@@ -430,6 +430,10 @@ class TestLight(unittest.TestCase):
             group_address_brightness_white="1/1/15",
             group_address_brightness_white_state="1/1/16",
         )
+        self.assertEqual(light.state, None)
+        for color in light._iter_individual_colors():
+            self.assertEqual(color.is_on, None)
+
         self.loop.run_until_complete(light.set_on())
         self.assertEqual(xknx.telegrams.qsize(), 4)
 
@@ -455,6 +459,13 @@ class TestLight(unittest.TestCase):
         ]
         self.assertEqual(len(set(telegrams)), 4)
         self.assertEqual(set(telegrams), set(test_telegrams))
+
+        for telegram in telegrams:
+            self.loop.run_until_complete(light.process(telegram))
+
+        self.assertEqual(light.state, True)
+        for color in light._iter_individual_colors():
+            self.assertEqual(color.is_on, True)
 
     #
     # TEST SET OFF
