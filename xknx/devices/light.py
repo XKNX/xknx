@@ -86,7 +86,7 @@ class _SwitchAndBrightness:
     @property
     def is_on(self) -> Optional[bool]:
         """Return if light is on."""
-        return self.switch.value  # type: ignore
+        return self.switch.value
 
     async def set_on(self) -> None:
         """Switch light on."""
@@ -254,7 +254,7 @@ class Light(Device):
         self.min_kelvin = min_kelvin
         self.max_kelvin = max_kelvin
 
-    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
         yield self.switch
         yield self.brightness
@@ -497,7 +497,7 @@ class Light(Device):
     def state(self) -> Optional[bool]:
         """Return the current switch state of the device."""
         if self.switch.value is not None:
-            return self.switch.value  # type: ignore
+            return self.switch.value
         if any(c.switch.value is not None for c in self._iter_individual_colors()):
             return any(c.switch.value for c in self._iter_individual_colors())
         return None
@@ -519,7 +519,7 @@ class Light(Device):
     @property
     def current_brightness(self) -> Optional[int]:
         """Return current brightness of light."""
-        return self.brightness.value  # type: ignore
+        return self.brightness.value
 
     async def set_brightness(self, brightness: int) -> None:
         """Set brightness of light."""
@@ -592,7 +592,7 @@ class Light(Device):
     @property
     def current_tunable_white(self) -> Optional[int]:
         """Return current relative color temperature of light."""
-        return self.tunable_white.value  # type: ignore
+        return self.tunable_white.value
 
     async def set_tunable_white(self, tunable_white: int) -> None:
         """Set relative color temperature of light."""
@@ -604,7 +604,7 @@ class Light(Device):
     @property
     def current_color_temperature(self) -> Optional[int]:
         """Return current absolute color temperature of light."""
-        return self.color_temperature.value  # type: ignore
+        return self.color_temperature.value
 
     async def set_color_temperature(self, color_temperature: int) -> None:
         """Set absolute color temperature of light."""

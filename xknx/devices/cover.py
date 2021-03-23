@@ -129,7 +129,7 @@ class Cover(Device):
 
         self.device_class = device_class
 
-    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
         yield self.updown
         yield self.step
@@ -367,7 +367,7 @@ class Cover(Device):
 
     def current_angle(self) -> Optional[int]:
         """Return current tilt angle of cover."""
-        return self.angle.value  # type: ignore
+        return self.angle.value
 
     def is_traveling(self) -> bool:
         """Return if cover is traveling at the moment."""

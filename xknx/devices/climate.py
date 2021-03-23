@@ -131,7 +131,7 @@ class Climate(Device):
         if create_temperature_sensors:
             self.create_temperature_sensors()
 
-    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
         yield from (
             self.temperature,
@@ -277,13 +277,13 @@ class Climate(Device):
             self.target_temperature.value is not None
             and self._setpoint_shift.value is not None
         ):
-            return self.target_temperature.value - self._setpoint_shift.value  # type: ignore
+            return self.target_temperature.value - self._setpoint_shift.value
         return None
 
     @property
     def setpoint_shift(self) -> Optional[float]:
         """Return current offset from base temperature in Kelvin."""
-        return self._setpoint_shift.value  # type: ignore
+        return self._setpoint_shift.value
 
     def validate_value(
         self, value: float, min_value: Optional[float], max_value: Optional[float]

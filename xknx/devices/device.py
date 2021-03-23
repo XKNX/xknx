@@ -52,7 +52,7 @@ class Device(ABC):
             remote_value.__del__()
 
     @abstractmethod
-    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
         # yield self.remote_value
         # yield from (<list all used RemoteValue instances>)
