@@ -227,7 +227,7 @@ class ClimateMode(Device):
 
     def _iter_remote_values(
         self,
-    ) -> Iterator[RemoteValue[Any]]:
+    ) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate climate mode RemoteValue classes."""
         return chain(
             self._iter_byte_operation_modes(),

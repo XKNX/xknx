@@ -83,7 +83,7 @@ class Switch(Device):
     @property
     def state(self) -> Optional[bool]:
         """Return the current switch state of the device."""
-        return self.switch.value  # type: ignore
+        return self.switch.value
 
     async def set_on(self) -> None:
         """Switch on switch."""

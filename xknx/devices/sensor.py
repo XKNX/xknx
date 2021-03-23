@@ -67,7 +67,7 @@ class Sensor(Device):
         self.always_callback = always_callback
         self.ha_value_template = ha_value_template
 
-    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
         yield self.sensor_value
 

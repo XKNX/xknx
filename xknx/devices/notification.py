@@ -59,7 +59,7 @@ class Notification(Device):
     @property
     def message(self) -> Optional[str]:
         """Return the current message."""
-        return self._message.value  # type: ignore
+        return self._message.value
 
     async def set(self, message: str) -> None:
         """Set message."""
