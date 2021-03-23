@@ -42,6 +42,7 @@ class TestWeather(unittest.TestCase):
             group_address_brightness_east="1/3/5",
             group_address_brightness_south="1/3/6",
             group_address_brightness_west="1/3/7",
+            group_address_brightness_north="1/3/8",
         )
 
         weather._brightness_east.payload = DPTArray(
@@ -62,6 +63,12 @@ class TestWeather(unittest.TestCase):
                 0x5A,
             )
         )
+        weather._brightness_north.payload = DPTArray(
+            (
+                0x7C,
+                0x5A,
+            )
+        )
 
         self.assertEqual(weather.brightness_east, 366346.24)
         self.assertEqual(weather._brightness_east.unit_of_measurement, "lx")
@@ -74,6 +81,10 @@ class TestWeather(unittest.TestCase):
         self.assertEqual(weather.brightness_south, 365035.52)
         self.assertEqual(weather._brightness_south.unit_of_measurement, "lx")
         self.assertEqual(weather._brightness_south.ha_device_class, "illuminance")
+
+        self.assertEqual(weather.brightness_north, 365035.52)
+        self.assertEqual(weather._brightness_north.unit_of_measurement, "lx")
+        self.assertEqual(weather._brightness_north.ha_device_class, "illuminance")
 
     def test_pressure(self):
         """Test resolve state with pressure."""
