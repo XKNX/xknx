@@ -1,10 +1,11 @@
 # Changelog
 
-## Unreleased changes
+## 0.17.4 Bugfix for ValueReader 2021-03-26
 
 ### Internals
 
-- Comparing GroupAddress or IndividualAddress to other types don't raise TypeError anymore.
+- Comparing GroupAddress or IndividualAddress to other types don't raise TypeError anymore
+- Specify some type annotations
 
 ## 0.17.3 Passive addresses 2021-03-16
 
