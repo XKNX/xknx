@@ -4,7 +4,8 @@ import unittest
 from unittest.mock import patch
 
 from xknx import XKNX
-from xknx.io import ConnectionState, UDPClient
+from xknx.io import UDPClient
+from xknx.io.request_response import ConnectionState
 from xknx.knxip import (
     HPAI,
     ConnectionStateRequest,

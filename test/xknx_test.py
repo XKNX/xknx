@@ -5,11 +5,10 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from xknx import XKNX
-
-# pylint: disable=too-many-public-methods,invalid-name,useless-super-delegation,protected-access
 from xknx.io import ConnectionConfig, ConnectionType
 
 
+# pylint: disable=too-many-public-methods,invalid-name,useless-super-delegation,protected-access
 class AsyncMock(MagicMock):
     """Async Mock."""
 
