@@ -6,6 +6,11 @@
 
 - Add experimental (opt-in) support for unique ids
 
+### Internals
+
+- Move RequestResponse and subclasses to xknx.io.request_response.*
+- Move ConnectionConfig to xknx.io.connection
+
 ## 0.17.4 Bugfix for ValueReader 2021-03-26
 
 ### Internals
