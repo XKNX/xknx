@@ -7,9 +7,10 @@ This package contains all objects managing Tunneling and Routing Connections..
 - Tunnel uses UDP packets and builds a static tunnel with KNX/IP device.
 """
 # flake8: noqa
+from .connection import ConnectionConfig, ConnectionType
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .gateway_scanner import GatewayScanFilter, GatewayScanner
-from .knxip_interface import ConnectionConfig, ConnectionType, KNXIPInterface
+from .knxip_interface import KNXIPInterface
 from .routing import Routing
 from .tunnel import Tunnel
 from .udp_client import UDPClient
