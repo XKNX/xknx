@@ -1,5 +1,0 @@
-name: ".*is not a valid group address.*"
-friendly_name: ""
-address:
-  state_address: "2/2/2/2"
-  state_update: "expire 60"
