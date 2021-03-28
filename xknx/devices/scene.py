@@ -44,7 +44,7 @@ class Scene(Device):
     @property
     def unique_id(self) -> Optional[str]:
         """Return unique id for this device."""
-        return f"{self.scene_value.group_address}"
+        return f"{self.scene_value.group_address}_{self.scene_number}"
 
     @classmethod
     def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Scene":

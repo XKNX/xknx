@@ -93,4 +93,4 @@ class TestScene(unittest.TestCase):
         """Test unique id functionality."""
         xknx = XKNX()
         scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
-        self.assertEqual(scene.unique_id, "1/2/1")
+        self.assertEqual(scene.unique_id, "1/2/1_23")
