@@ -1,4 +1,0 @@
-name: "value should be a string for dictionary value .*friendly_name.*"
-friendly_name: ["teer"]
-address:
-  state_update: "expire 60"

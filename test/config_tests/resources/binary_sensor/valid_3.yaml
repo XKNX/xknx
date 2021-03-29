@@ -1,5 +1,0 @@
-name: "test_minimal"
-friendly_name: ""
-address:
-  state_address: "1/2/7"
-ignore_internal_state: "on"
