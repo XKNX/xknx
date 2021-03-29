@@ -2,7 +2,9 @@
 
 ## Unreleased changes
 
--
+### HA integration
+
+- Add experimental (opt-in) support for unique ids
 
 ## 0.17.4 Bugfix for ValueReader 2021-03-26
 
@@ -67,10 +69,6 @@
 - Tunnel: default `auto_reconnect`to True
 
 ## 0.16.3 Fan contributions 2021-02-06
-
-### HA integration
-
-- Add experimental (opt-in) support for unique ids
 
 ### Devices
 
