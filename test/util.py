@@ -1,5 +1,6 @@
 """Utility functions for testing."""
 try:
+    # pylint: disable=unused-import
     from unittest.mock import AsyncMock
 except ImportError:
     from unittest.mock import MagicMock
