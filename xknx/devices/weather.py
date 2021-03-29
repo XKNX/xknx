@@ -247,6 +247,11 @@ class Weather(Device):
         yield self._air_pressure
         yield self._humidity
 
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return unique id for this device."""
+        return f"{self._temperature.group_address_state}"
+
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         for remote_value in self._iter_remote_values():

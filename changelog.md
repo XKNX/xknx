@@ -4,6 +4,10 @@
 
 - Drop support for python 3.7
 
+### HA integration
+
+- Add experimental (opt-in) support for unique ids
+
 ## 0.17.4 Bugfix for ValueReader 2021-03-26
 
 ### Internals

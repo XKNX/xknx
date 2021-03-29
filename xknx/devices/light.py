@@ -271,6 +271,17 @@ class Light(Device):
         yield from (self.red, self.green, self.blue, self.white)
 
     @property
+    def unique_id(self) -> Optional[str]:
+        """Return unique id for this device."""
+        if self.switch.group_address is not None:
+            return f"{self.switch.group_address}"
+
+        return (
+            f"{self.red.switch.group_address}_{self.green.switch.group_address}_"
+            f"{self.blue.switch.group_address}_{self.white.switch.group_address}"
+        )
+
+    @property
     def supports_brightness(self) -> bool:
         """Return if light supports brightness."""
         return self.brightness.initialized

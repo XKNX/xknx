@@ -71,6 +71,11 @@ class Sensor(Device):
         """Iterate the devices RemoteValue classes."""
         yield self.sensor_value
 
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return unique id for this device."""
+        return f"{self.sensor_value.group_address_state}"
+
     @classmethod
     def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Sensor":
         """Initialize object from configuration structure."""
