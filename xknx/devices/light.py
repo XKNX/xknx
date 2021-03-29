@@ -275,11 +275,11 @@ class Light(Device):
         """Return unique id for this device."""
         if self.switch.group_address is not None:
             return f"{self.switch.group_address}"
-        else:
-            return (
-                f"{self.red.switch.group_address}_{self.green.switch.group_address}_"
-                f"{self.blue.switch.group_address}_{self.white.switch.group_address}"
-            )
+
+        return (
+            f"{self.red.switch.group_address}_{self.green.switch.group_address}_"
+            f"{self.blue.switch.group_address}_{self.white.switch.group_address}"
+        )
 
     @property
     def supports_brightness(self) -> bool:
