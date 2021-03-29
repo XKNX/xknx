@@ -1,7 +1,6 @@
 """Unit test for Configuration logic."""
-import asyncio
 import os
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 from xknx import XKNX
@@ -513,6 +512,7 @@ class TestConfig:
     XKNX_GENERAL_MULTICAST_PORT = "1111"
 
     def test_config_general_from_env(self):
+        """Test reading general from environment variables."""
         os.environ["XKNX_GENERAL_OWN_ADDRESS"] = self.XKNX_GENERAL_OWN_ADDRESS
         os.environ["XKNX_GENERAL_RATE_LIMIT"] = self.XKNX_GENERAL_RATE_LIMIT
         os.environ["XKNX_GENERAL_MULTICAST_GROUP"] = self.XKNX_GENERAL_MULTICAST_GROUP
@@ -532,7 +532,8 @@ class TestConfig:
     XKNX_CONNECTION_LOCAL_IP = "192.168.11.11"
     XKNX_CONNECTION_ROUTE_BACK = "true"
 
-    def test_config_cnx_from_env(self):
+    def test_config_knx_from_env(self):
+        """Test reading connection from environment variables."""
         os.environ["XKNX_CONNECTION_GATEWAY_IP"] = self.XKNX_CONNECTION_GATEWAY_IP
         os.environ["XKNX_CONNECTION_GATEWAY_PORT"] = self.XKNX_CONNECTION_GATEWAY_PORT
         os.environ["XKNX_CONNECTION_LOCAL_IP"] = self.XKNX_CONNECTION_LOCAL_IP
@@ -551,36 +552,48 @@ class TestConfig:
             self.XKNX_CONNECTION_ROUTE_BACK
         )
 
-    def test_config_cnx_route_back(self):
-        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "true"
-        self.xknx = XKNX(config="xknx.yaml")
-        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
-        assert self.xknx.connection_config.route_back is True
-        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "yes"
-        self.xknx = XKNX(config="xknx.yaml")
-        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
-        assert self.xknx.connection_config.route_back is True
-        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "1"
-        self.xknx = XKNX(config="xknx.yaml")
-        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
-        assert self.xknx.connection_config.route_back is True
-        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "on"
-        self.xknx = XKNX(config="xknx.yaml")
-        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
-        assert self.xknx.connection_config.route_back is True
-        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "y"
-        self.xknx = XKNX(config="xknx.yaml")
-        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
-        assert self.xknx.connection_config.route_back is True
-        if "XKNX_CONNECTION_ROUTE_BACK" in os.environ:
+    def test_config_knx_route_back(self):
+        """Test reading route_back from environment variables."""
+        xknx = XKNX()
+
+        with open("xknx.yaml") as filehandle:
+            doc = yaml.safe_load(filehandle)
+
+            os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "true"
+            ConfigV1(xknx=xknx).parse(doc)
             del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
-        self.xknx = XKNX(config="xknx.yaml")
-        assert self.xknx.connection_config.route_back is False
-        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "another_string"
-        self.xknx = XKNX(config="xknx.yaml")
-        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
-        assert self.xknx.connection_config.route_back is False
-        os.environ["XKNX_CONNECTION_ROUTE_BACK"] = ""
-        self.xknx = XKNX(config="xknx.yaml")
-        del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
-        assert self.xknx.connection_config.route_back is False
+            assert xknx.connection_config.route_back is True
+
+            os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "yes"
+            ConfigV1(xknx=xknx).parse(doc)
+            del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+            assert xknx.connection_config.route_back is True
+
+            os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "1"
+            ConfigV1(xknx=xknx).parse(doc)
+            del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+            assert xknx.connection_config.route_back is True
+
+            os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "on"
+            ConfigV1(xknx=xknx).parse(doc)
+            del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+            assert xknx.connection_config.route_back is True
+
+            os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "y"
+            ConfigV1(xknx=xknx).parse(doc)
+            del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+            assert xknx.connection_config.route_back is True
+            if "XKNX_CONNECTION_ROUTE_BACK" in os.environ:
+                del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+            ConfigV1(xknx=xknx).parse(doc)
+            assert xknx.connection_config.route_back is False
+
+            os.environ["XKNX_CONNECTION_ROUTE_BACK"] = "another_string"
+            ConfigV1(xknx=xknx).parse(doc)
+            del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+            assert xknx.connection_config.route_back is False
+
+            os.environ["XKNX_CONNECTION_ROUTE_BACK"] = ""
+            ConfigV1(xknx=xknx).parse(doc)
+            del os.environ["XKNX_CONNECTION_ROUTE_BACK"]
+            assert xknx.connection_config.route_back is False
