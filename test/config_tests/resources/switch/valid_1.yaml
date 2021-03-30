@@ -1,7 +1,0 @@
-name: "valid"
-friendly_name: "Kitchen Switch"
-switch:
-  address: 23
-  state_address: "2/4"
-  state_update: "expire 60"
-  passive_state_addresses: ["8/8/8"]

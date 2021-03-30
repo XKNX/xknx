@@ -56,7 +56,7 @@ class Fan(Device):
         super().__init__(xknx, name, device_updated_cb)
 
         self.speed: Union[RemoteValueDptValue1Ucount, RemoteValueScaling]
-        self.mode = FanSpeedMode.STEP if max_step is not None else FanSpeedMode.PERCENT
+        self.mode = FanSpeedMode.STEP if max_step else FanSpeedMode.PERCENT
         self.max_step = max_step
 
         if self.mode == FanSpeedMode.STEP:
@@ -89,7 +89,7 @@ class Fan(Device):
             after_update_cb=self.after_update,
         )
 
-    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
         yield from (self.speed, self.oscillation)
 
@@ -159,9 +159,9 @@ class Fan(Device):
     @property
     def current_speed(self) -> Optional[int]:
         """Return current speed of fan."""
-        return self.speed.value  # type: ignore
+        return self.speed.value
 
     @property
     def current_oscillation(self) -> Optional[bool]:
         """Return true if the fan is oscillating."""
-        return self.oscillation.value  # type: ignore
+        return self.oscillation.value

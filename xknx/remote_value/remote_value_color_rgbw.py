@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueColorRGBW(RemoteValue[DPTArray]):
+class RemoteValueColorRGBW(RemoteValue[DPTArray, Tuple[int, int, int, int]]):
     """Abstraction for remote value of KNX DPT 251.600 (DPT_Color_RGBW)."""
 
     def __init__(
@@ -36,7 +36,7 @@ class RemoteValueColorRGBW(RemoteValue[DPTArray]):
             feature_name=feature_name,
             after_update_cb=after_update_cb,
         )
-        self.previous_value: Tuple[int, ...] = (0, 0, 0, 0)
+        self.previous_value: Tuple[int, int, int, int] = (0, 0, 0, 0)
 
     def payload_valid(
         self, payload: Optional[Union[DPTArray, DPTBinary]]
@@ -101,17 +101,17 @@ class RemoteValueColorRGBW(RemoteValue[DPTArray]):
             return DPTArray(list(rgbw) + [0x00] + list(value[4:]))
         return DPTArray(value)
 
-    def from_knx(self, payload: DPTArray) -> Tuple[int, ...]:
+    def from_knx(self, payload: DPTArray) -> Tuple[int, int, int, int]:
         """
         Convert current payload to value. Always 4 byte (RGBW).
 
         If one element is invalid, use the previous value. All previous element
         values are initialized to 0.
         """
-        _result = []
+        _result = list(self.previous_value)
         for i in range(0, len(payload.value) - 2):
-            valid = (payload.value[5] & (0x08 >> i)) != 0  # R,G,B,W value valid?
-            _result.append(payload.value[i] if valid else self.previous_value[i])
-        result = tuple(_result)
+            if payload.value[5] & (0x08 >> i):  # R,G,B,W value valid?
+                _result[i] = payload.value[i]
+        result = (_result[0], _result[1], _result[2], _result[3])
         self.previous_value = result
         return result

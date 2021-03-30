@@ -231,7 +231,7 @@ class Weather(Device):
         if create_sensors:
             self.create_sensors()
 
-    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices remote values."""
         yield self._temperature
         yield self._brightness_south
@@ -247,6 +247,11 @@ class Weather(Device):
         yield self._air_pressure
         yield self._humidity
 
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return unique id for this device."""
+        return f"{self._temperature.group_address_state}"
+
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         for remote_value in self._iter_remote_values():
@@ -260,34 +265,30 @@ class Weather(Device):
     @property
     def brightness_south(self) -> float:
         """Return brightness south."""
-        return (  # type: ignore
-            0.0
-            if self._brightness_south.value is None
-            else self._brightness_south.value
-        )
+        if self._brightness_south.value is not None:
+            return self._brightness_south.value  # type: ignore
+        return 0.0
 
     @property
     def brightness_north(self) -> float:
         """Return brightness north."""
-        return (  # type: ignore
-            0.0
-            if self._brightness_north.value is None
-            else self._brightness_north.value
-        )
+        if self._brightness_north.value is not None:
+            return self._brightness_north.value  # type: ignore
+        return 0.0
 
     @property
     def brightness_east(self) -> float:
         """Return brightness east."""
-        return (  # type: ignore
-            0.0 if self._brightness_east.value is None else self._brightness_east.value
-        )
+        if self._brightness_east.value is not None:
+            return self._brightness_east.value  # type: ignore
+        return 0.0
 
     @property
     def brightness_west(self) -> float:
         """Return brightness west."""
-        return (  # type: ignore
-            0.0 if self._brightness_west.value is None else self._brightness_west.value
-        )
+        if self._brightness_west.value is not None:
+            return self._brightness_west.value  # type: ignore
+        return 0.0
 
     @property
     def wind_speed(self) -> Optional[float]:
@@ -302,22 +303,22 @@ class Weather(Device):
     @property
     def rain_alarm(self) -> Optional[bool]:
         """Return True if rain alarm False if not."""
-        return self._rain_alarm.value  # type: ignore
+        return self._rain_alarm.value
 
     @property
     def wind_alarm(self) -> Optional[bool]:
         """Return True if wind alarm False if not."""
-        return self._wind_alarm.value  # type: ignore
+        return self._wind_alarm.value
 
     @property
     def frost_alarm(self) -> Optional[bool]:
         """Return True if frost alarm False if not."""
-        return self._frost_alarm.value  # type: ignore
+        return self._frost_alarm.value
 
     @property
     def day_night(self) -> Optional[bool]:
         """Return day or night."""
-        return self._day_night.value  # type: ignore
+        return self._day_night.value
 
     @property
     def air_pressure(self) -> Optional[float]:

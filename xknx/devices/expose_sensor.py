@@ -61,7 +61,7 @@ class ExposeSensor(Device):
                 value_type=value_type,
             )
 
-    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
         yield self.sensor_value
 

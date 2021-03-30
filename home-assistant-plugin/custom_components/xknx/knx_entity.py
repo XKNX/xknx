@@ -24,6 +24,14 @@ class KnxEntity(Entity):
         return self.hass.data[DOMAIN].connected
 
     @property
+    def unique_id(self):
+        """Return the unique id of the device if enabled."""
+        if self.hass.data[DOMAIN].use_unique_id:
+            return self._device.unique_id
+
+        return None
+
+    @property
     def should_poll(self):
         """No polling needed within KNX."""
         return False

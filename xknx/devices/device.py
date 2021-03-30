@@ -52,11 +52,16 @@ class Device(ABC):
             remote_value.__del__()
 
     @abstractmethod
-    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
         # yield self.remote_value
         # yield from (<list all used RemoteValue instances>)
         yield from ()
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return local unique id of this device."""
+        return None
 
     def register_device_updated_cb(self, device_updated_cb: DeviceCallbackType) -> None:
         """Register device updated callback."""

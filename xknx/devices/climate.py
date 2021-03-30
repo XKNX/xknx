@@ -6,7 +6,7 @@ Module for managing the climate within a room.
 """
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Union
 
 from xknx.remote_value import (
     GroupAddressesType,
@@ -131,7 +131,7 @@ class Climate(Device):
         if create_temperature_sensors:
             self.create_temperature_sensors()
 
-    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
         yield from (
             self.temperature,
@@ -161,6 +161,11 @@ class Climate(Device):
                     group_address_state=group_address,
                     value_type=value_type,
                 )
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return unique id for this device."""
+        return f"{self.temperature.group_address_state}"
 
     @classmethod
     def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Climate":
@@ -242,15 +247,14 @@ class Climate(Device):
     @property
     def initialized_for_setpoint_shift_calculations(self) -> bool:
         """Test if object is initialized for setpoint shift calculations."""
-        if not self._setpoint_shift.initialized:
-            return False
-        if self._setpoint_shift.value is None:
-            return False
-        if not self.target_temperature.initialized:
-            return False
-        if self.target_temperature.value is None:
-            return False
-        return True
+        if (
+            self._setpoint_shift.initialized
+            and self._setpoint_shift.value is not None
+            and self.target_temperature.initialized
+            and self.target_temperature.value is not None
+        ):
+            return True
+        return False
 
     async def set_target_temperature(self, target_temperature: float) -> None:
         """Send new target temperature or setpoint_shift to KNX bus."""
@@ -273,14 +277,18 @@ class Climate(Device):
         As this value is usually not available via KNX, we have to derive this from the current
         target temperature and the current set point shift.
         """
-        if self.initialized_for_setpoint_shift_calculations:
-            return cast(float, self.target_temperature.value - self.setpoint_shift)
+        # implies self.initialized_for_setpoint_shift_calculations in a mypy compatible way:
+        if (
+            self.target_temperature.value is not None
+            and self._setpoint_shift.value is not None
+        ):
+            return self.target_temperature.value - self._setpoint_shift.value
         return None
 
     @property
     def setpoint_shift(self) -> Optional[float]:
         """Return current offset from base temperature in Kelvin."""
-        return self._setpoint_shift.value  # type: ignore
+        return self._setpoint_shift.value
 
     def validate_value(
         self, value: float, min_value: Optional[float], max_value: Optional[float]

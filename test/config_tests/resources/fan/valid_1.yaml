@@ -1,6 +1,0 @@
-name: "office"
-friendly_name: "Fan office"
-speed:
-  address: "2/7/4"
-  state_address: "2/8/5"
-  state_update: "expire 60"

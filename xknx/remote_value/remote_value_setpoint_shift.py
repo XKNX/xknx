@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueSetpointShift(RemoteValue[DPTArray]):
+class RemoteValueSetpointShift(RemoteValue[DPTArray, float]):
     """Abstraction for remote value of KNX DPT 6.010."""
 
     def __init__(

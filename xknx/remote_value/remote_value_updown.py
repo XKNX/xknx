@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueUpDown(RemoteValue[DPTBinary]):
+class RemoteValueUpDown(RemoteValue[DPTBinary, "RemoteValueUpDown.Direction"]):
     """Abstraction for remote value of KNX DPT 1.008 / DPT_UpDown."""
 
     class Direction(Enum):

@@ -129,7 +129,7 @@ class Cover(Device):
 
         self.device_class = device_class
 
-    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
         yield self.updown
         yield self.step
@@ -137,6 +137,11 @@ class Cover(Device):
         yield self.position_current
         yield self.position_target
         yield self.angle
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return unique id for this device."""
+        return f"{self.updown.group_address}"
 
     @classmethod
     def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Cover":
@@ -266,18 +271,22 @@ class Cover(Device):
 
     async def _target_position_from_rv(self) -> None:
         """Update the target postion from RemoteValue (Callback)."""
-        self.travelcalculator.start_travel(self.position_target.value)
-        await self.after_update()
+        new_target = self.position_target.value
+        if new_target is not None:
+            self.travelcalculator.start_travel(new_target)
+            await self.after_update()
 
     async def _current_position_from_rv(self) -> None:
         """Update the current postion from RemoteValue (Callback)."""
         position_before_update = self.travelcalculator.current_position()
-        if self.is_traveling():
-            self.travelcalculator.update_position(self.position_current.value)
-        else:
-            self.travelcalculator.set_position(self.position_current.value)
-        if position_before_update != self.travelcalculator.current_position():
-            await self.after_update()
+        new_position = self.position_current.value
+        if new_position is not None:
+            if self.is_traveling():
+                self.travelcalculator.update_position(new_position)
+            else:
+                self.travelcalculator.set_position(new_position)
+            if position_before_update != self.travelcalculator.current_position():
+                await self.after_update()
 
     async def set_angle(self, angle: int) -> None:
         """Move cover to designated angle."""
@@ -363,7 +372,7 @@ class Cover(Device):
 
     def current_angle(self) -> Optional[int]:
         """Return current tilt angle of cover."""
-        return self.angle.value  # type: ignore
+        return self.angle.value
 
     def is_traveling(self) -> bool:
         """Return if cover is traveling at the moment."""

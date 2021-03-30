@@ -1,5 +1,0 @@
-name: "required key.*"
-friendly_name: "Fan office"
-speed:
-  state_address: "2/8/5"
-  state_update: "expire 60"

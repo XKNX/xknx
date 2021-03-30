@@ -224,6 +224,7 @@ class TestLight(unittest.TestCase):
         light = Light(
             xknx,
             name="TestLight",
+            group_address_switch="1/3/5",
             group_address_switch_state="1/2/3",
             group_address_brightness_state="1/2/5",
             group_address_color_state="1/2/6",
@@ -430,6 +431,10 @@ class TestLight(unittest.TestCase):
             group_address_brightness_white="1/1/15",
             group_address_brightness_white_state="1/1/16",
         )
+        self.assertEqual(light.state, None)
+        for color in light._iter_individual_colors():
+            self.assertEqual(color.is_on, None)
+
         self.loop.run_until_complete(light.set_on())
         self.assertEqual(xknx.telegrams.qsize(), 4)
 
@@ -455,6 +460,13 @@ class TestLight(unittest.TestCase):
         ]
         self.assertEqual(len(set(telegrams)), 4)
         self.assertEqual(set(telegrams), set(test_telegrams))
+
+        for telegram in telegrams:
+            self.loop.run_until_complete(light.process(telegram))
+
+        self.assertEqual(light.state, True)
+        for color in light._iter_individual_colors():
+            self.assertEqual(color.is_on, True)
 
     #
     # TEST SET OFF
@@ -1383,3 +1395,32 @@ class TestLight(unittest.TestCase):
         self.assertTrue(light.has_group_address(GroupAddress("1/1/16")))
 
         self.assertFalse(light.has_group_address(GroupAddress("1/7/13")))
+
+    def test_unique_id(self):
+        """Test unique id functionality."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_brightness="1/2/5",
+            group_address_tunable_white="1/2/9",
+            group_address_color_temperature="1/2/11",
+        )
+        self.assertEqual(light.unique_id, "1/2/3")
+
+    def test_unique_id_colors(self):
+        """Test unique id for colors functionality."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch_green="1/2/3",
+            group_address_switch_blue="1/2/4",
+            group_address_switch_red="1/2/5",
+            group_address_switch_white="1/2/6",
+            group_address_brightness="1/2/5",
+            group_address_tunable_white="1/2/9",
+            group_address_color_temperature="1/2/11",
+        )
+        self.assertEqual(light.unique_id, "1/2/5_1/2/3_1/2/4_1/2/6")

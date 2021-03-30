@@ -63,6 +63,11 @@ class Switch(Device):
                 pass
         super().__del__()
 
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return unique id for this device."""
+        return f"{self.switch.group_address}"
+
     @classmethod
     def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Switch":
         """Initialize object from configuration structure."""
@@ -83,7 +88,7 @@ class Switch(Device):
     @property
     def state(self) -> Optional[bool]:
         """Return the current switch state of the device."""
-        return self.switch.value  # type: ignore
+        return self.switch.value
 
     async def set_on(self) -> None:
         """Switch on switch."""

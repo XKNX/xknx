@@ -52,9 +52,9 @@ class DPTControlStepCode(DPTBase, ABC):
             return 0 <= raw <= cls.APCI_MAX_VALUE
 
     @classmethod
-    def _test_values(cls, control: bool, step_code: int) -> bool:
+    def _test_values(cls, step_code: int) -> bool:
         """Test if input values are valid."""
-        if isinstance(control, bool) and isinstance(step_code, int):
+        if isinstance(step_code, int):
             if 0 <= step_code <= cls.APCI_STEPCODEMASK:
                 return True
         return False
@@ -76,7 +76,7 @@ class DPTControlStepCode(DPTBase, ABC):
                 "Cant serialize %s; invalid keys" % cls.__name__, value=value
             )
 
-        if not cls._test_values(control, step_code):
+        if not cls._test_values(step_code):
             raise ConversionError(
                 "Cant serialize %s; invalid values" % cls.__name__, value=value
             )

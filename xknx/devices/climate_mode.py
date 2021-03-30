@@ -227,7 +227,7 @@ class ClimateMode(Device):
 
     def _iter_remote_values(
         self,
-    ) -> Iterator[RemoteValue[Any]]:
+    ) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate climate mode RemoteValue classes."""
         return chain(
             self._iter_byte_operation_modes(),
@@ -361,7 +361,8 @@ class ClimateMode(Device):
         if self.supports_controller_mode:
             for rv in self._iter_controller_remote_values():
                 if await rv.process(telegram):
-                    await self._set_internal_controller_mode(rv.value)
+                    if rv.value is not None:
+                        await self._set_internal_controller_mode(rv.value)
                     return
 
     def __str__(self) -> str:

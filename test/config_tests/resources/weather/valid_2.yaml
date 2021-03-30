@@ -1,6 +1,0 @@
-name: home
-friendly_name: "Home"
-temperature:
-  state_address: "7/0/0"
-  state_update: "expire 60"
-create_sensors: "off"

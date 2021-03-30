@@ -75,6 +75,11 @@ class BinarySensor(Device):
         """Iterate the devices RemoteValue classes."""
         yield self.remote_value
 
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return unique id for this device."""
+        return f"{self.remote_value.group_address_state}"
+
     def __del__(self) -> None:
         """Destructor. Cleaning up if this was not done before."""
         try:
@@ -119,7 +124,8 @@ class BinarySensor(Device):
 
     async def _state_from_remote_value(self) -> None:
         """Update the internal state from RemoteValue (Callback)."""
-        await self._set_internal_state(self.remote_value.value)
+        if self.remote_value.value is not None:
+            await self._set_internal_state(self.remote_value.value)
 
     async def _set_internal_state(self, state: bool) -> None:
         """Set the internal state of the device. If state was changed after_update hooks and connected Actions are executed."""

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueControl(RemoteValue[DPTBinary]):
+class RemoteValueControl(RemoteValue[DPTBinary, Any]):
     """Abstraction for remote value used for controling."""
 
     def __init__(

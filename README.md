@@ -1,7 +1,7 @@
 # XKNX - An Asynchronous KNX Library Written in Python
 
-[![Build Status](https://travis-ci.org/XKNX/xknx.svg?branch=main)](https://travis-ci.org/XKNX/xknx)
 [![Coverage Status](https://coveralls.io/repos/github/XKNX/xknx/badge.svg?branch=main)](https://coveralls.io/github/XKNX/xknx?branch=main)
+[![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
 ## Documentation

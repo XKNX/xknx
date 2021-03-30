@@ -7,6 +7,9 @@ has_children: true
 
 # Configuration
 
+NOTE: Using `xknx.yaml` is no longer supported and the functionality will be removed in a future version. Instead, please
+use standard python code or (if you are using Home Assistant) simply use the Home Assistant configuration to configure your KNX devices.
+
 ## Overview
 
 XKNX is controlled via a configuration file. Per default the configuration file is named `xknx.yaml`.
