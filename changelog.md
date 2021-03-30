@@ -1,10 +1,14 @@
 # Changelog
 
-## Unreleased changes
+## 0.17.5 Add support for unique ids 2021-03-30
 
 ### HA integration
 
 - Add experimental (opt-in) support for unique ids
+
+### Internals
+
+- Remove unfinished config v2
 
 ## 0.17.4 Bugfix for ValueReader 2021-03-26
 
