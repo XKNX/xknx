@@ -20,8 +20,7 @@ class ConnectionStateResponse(KNXIPBodyResponse):
     """Representation of a KNX Connection State Response."""
 
     # pylint: disable=too-many-instance-attributes
-
-    service_type = KNXIPServiceType.CONNECTIONSTATE_RESPONSE
+    SERVICE_TYPE = KNXIPServiceType.CONNECTIONSTATE_RESPONSE
 
     def __init__(
         self,

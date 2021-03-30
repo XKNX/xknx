@@ -20,9 +20,7 @@ class TunnellingAck(KNXIPBodyResponse):
     """Representation of a KNX Tunnelling Ack."""
 
     # pylint: disable=too-many-instance-attributes
-
-    service_type = KNXIPServiceType.TUNNELLING_ACK
-
+    SERVICE_TYPE = KNXIPServiceType.TUNNELLING_ACK
     BODY_LENGTH = 4
 
     def __init__(
