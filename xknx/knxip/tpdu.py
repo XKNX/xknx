@@ -36,8 +36,15 @@ class TPDU:
         tpdu = TPDU(xknx, src_addr)
         tpdu.telegram = telegram
         return tpdu
-    
-    def telegram(self, telegram):
+    @property
+    def telegram(self) -> Telegram:
+        """Return telegram."""
+        raise()
+        return Telegram()
+
+    @telegram.setter
+    def telegram(self, telegram: Telegram) -> None:
+        """Set telegram."""
         self.destination_address = telegram.destination_address
 
     def from_knx(self, raw: bytes) -> int:
