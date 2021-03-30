@@ -20,8 +20,7 @@ class DisconnectResponse(KNXIPBodyResponse):
     """Representation of a KNX Disconnect Response."""
 
     # pylint: disable=too-many-instance-attributes
-
-    service_type = KNXIPServiceType.DISCONNECT_RESPONSE
+    SERVICE_TYPE = KNXIPServiceType.DISCONNECT_RESPONSE
 
     def __init__(
         self,

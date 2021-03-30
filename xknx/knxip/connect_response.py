@@ -23,8 +23,7 @@ class ConnectResponse(KNXIPBodyResponse):
 
     # pylint: disable=too-many-instance-attributes
 
-    service_type = KNXIPServiceType.CONNECT_RESPONSE
-
+    SERVICE_TYPE = KNXIPServiceType.CONNECT_RESPONSE
     CRD_LENGTH = 4
 
     def __init__(

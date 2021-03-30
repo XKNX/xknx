@@ -17,8 +17,7 @@ class SearchRequest(KNXIPBody):
     """Representation of a KNX Connect Request."""
 
     # pylint: disable=too-many-instance-attributes
-
-    service_type = KNXIPServiceType.SEARCH_REQUEST
+    SERVICE_TYPE = KNXIPServiceType.SEARCH_REQUEST
 
     def __init__(self, xknx: "XKNX", discovery_endpoint: Optional[HPAI] = None):
         """Initialize SearchRequest object."""

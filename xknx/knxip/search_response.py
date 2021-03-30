@@ -21,8 +21,7 @@ class SearchResponse(KNXIPBody):
     """Representation of a KNX Search Response."""
 
     # pylint: disable=too-many-instance-attributes
-
-    service_type = KNXIPServiceType.SEARCH_RESPONSE
+    SERVICE_TYPE = KNXIPServiceType.SEARCH_RESPONSE
 
     def __init__(self, xknx: "XKNX", control_endpoint: HPAI = HPAI()):
         """Initialize SearchResponse object."""

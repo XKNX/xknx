@@ -74,7 +74,7 @@ class KNXIPFrame:
     def init_from_body(knxip_body: KNXIPBody) -> "KNXIPFrame":
         """Return KNXIPFrame from KNXIPBody."""
         knxipframe = KNXIPFrame(knxip_body.xknx)
-        knxipframe.header.service_type_ident = knxip_body.__class__.service_type
+        knxipframe.header.service_type_ident = knxip_body.__class__.SERVICE_TYPE
         knxipframe.body = knxip_body
         knxipframe.header.set_length(knxip_body)
         return knxipframe

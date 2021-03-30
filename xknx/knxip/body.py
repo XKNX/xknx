@@ -15,7 +15,7 @@ logger = logging.getLogger("xknx.log")
 class KNXIPBody(ABC):
     """Base class for all KNX/IP bodies."""
 
-    service_type: ClassVar[KNXIPServiceType] = cast(KNXIPServiceType, None)
+    SERVICE_TYPE: ClassVar[KNXIPServiceType] = cast(KNXIPServiceType, None)
 
     def __init__(self, xknx: "XKNX"):
         """Initialize KNXIPBody object."""

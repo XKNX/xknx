@@ -17,11 +17,11 @@ class Test_KNXIPBody(unittest.TestCase):
     def test_body_attributes(self):
         """Test attributes of KNXIPBody base class."""
         body = KNXIPBody(self.xknx)
-        self.assertTrue(hasattr(body, "service_type"))
+        self.assertTrue(hasattr(body, "SERVICE_TYPE"))
 
     @patch.multiple(KNXIPBodyResponse, __abstractmethods__=set())
     def test_response_attributes(self):
         """Test attributes of KNXIPBodyResponse base class."""
         response = KNXIPBodyResponse(self.xknx)
-        self.assertTrue(hasattr(response, "service_type"))
+        self.assertTrue(hasattr(response, "SERVICE_TYPE"))
         self.assertTrue(hasattr(response, "status_code"))

@@ -19,8 +19,7 @@ class ConnectionStateRequest(KNXIPBody):
     """Representation of a KNX Connection State Request."""
 
     # pylint: disable=too-many-instance-attributes
-
-    service_type = KNXIPServiceType.CONNECTIONSTATE_REQUEST
+    SERVICE_TYPE = KNXIPServiceType.CONNECTIONSTATE_REQUEST
 
     def __init__(
         self,
