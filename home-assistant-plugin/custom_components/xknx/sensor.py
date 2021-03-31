@@ -1,59 +1,53 @@
 """Support for KNX/IP sensors."""
-import logging
+from __future__ import annotations
+
+from typing import Callable, Iterable
 
 from xknx.devices import Sensor as XknxSensor
 
-from homeassistant.components.sensor import DEVICE_CLASSES
+from homeassistant.components.sensor import DEVICE_CLASSES, SensorEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from .const import DOMAIN
 from .knx_entity import KnxEntity
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: Callable[[Iterable[Entity]], None],
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up sensor(s) for KNX platform."""
     entities = []
     for device in hass.data[DOMAIN].xknx.devices:
         if isinstance(device, XknxSensor):
-            entities.append(KNXSensor(hass, device))
+            entities.append(KNXSensor(device))
     async_add_entities(entities)
 
 
-class KNXSensor(KnxEntity, Entity):
+class KNXSensor(KnxEntity, SensorEntity):
     """Representation of a KNX sensor."""
 
-    def __init__(self, hass: HomeAssistant, device: XknxSensor):
+    def __init__(self, device: XknxSensor) -> None:
         """Initialize of a KNX sensor."""
-        if device.ha_value_template is not None:
-            device.ha_value_template.hass = hass
+        self._device: XknxSensor
         super().__init__(device)
 
     @property
-    def state(self):
+    def state(self) -> StateType:
         """Return the state of the sensor."""
-        state = self._device.resolve_state()
-        template = self._device.ha_value_template
-        if template is not None and state is not None:
-            try:
-                return template.async_render({"value": state})
-            except TemplateError as ex:
-                _LOGGER.error(
-                    "Error while rendering template for '%s'. %s", self.name, ex
-                )
-                return None
-        return state
+        return self._device.resolve_state()
 
     @property
-    def unit_of_measurement(self) -> str:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
         return self._device.unit_of_measurement()
 
     @property
-    def device_class(self):
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         device_class = self._device.ha_device_class()
         if device_class in DEVICE_CLASSES:
