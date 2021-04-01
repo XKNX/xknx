@@ -1,6 +1,4 @@
 """Unit test for KNX/IP Tunnelling Request/Response."""
-import asyncio
-import unittest
 from unittest.mock import Mock, patch
 
 from xknx import XKNX
@@ -9,13 +7,11 @@ from xknx.knxip import CEMIFrame
 from xknx.telegram import TelegramDirection
 
 
-class TestTunnelling(unittest.TestCase):
+class TestTunnelling:
     """Test class for xknx/io/Tunnelling objects."""
 
-    def setUp(self):
+    def setup_method(self):
         """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
         self.xknx = XKNX()
         self.tg_received_mock = Mock()
         self.tunnel = Tunnel(
@@ -29,10 +25,6 @@ class TestTunnelling(unittest.TestCase):
             auto_reconnect_wait=3,
             route_back=False,
         )
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
 
     @patch("xknx.io.Tunnel._send_tunnelling_ack")
     def test_tunnel_request_received(self, send_ack_mock):
