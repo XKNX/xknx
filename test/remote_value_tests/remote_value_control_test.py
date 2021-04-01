@@ -1,7 +1,5 @@
 """Unit test for RemoteValueControl objects."""
-import asyncio
-import unittest
-
+import pytest
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -10,42 +8,31 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-class TestRemoteValueControl(unittest.TestCase):
+@pytest.mark.asyncio
+class TestRemoteValueControl:
     """Test class for RemoteValueControl objects."""
-
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
 
     def test_wrong_value_type(self):
         """Test initializing with wrong value_type."""
         xknx = XKNX()
-        with self.assertRaises(ConversionError):
+        with pytest.raises(ConversionError):
             RemoteValueControl(xknx, value_type="wrong_value_type")
 
-    def test_set(self):
+    async def test_set(self):
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValueControl(
             xknx, group_address=GroupAddress("1/2/3"), value_type="stepwise"
         )
-        self.loop.run_until_complete(asyncio.Task(remote_value.set(25)))
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        await remote_value.set(25)
+        assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTBinary(0xB)),
-            ),
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(0xB)),
         )
 
-    def test_process(self):
+    async def test_process(self):
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueControl(
@@ -55,27 +42,27 @@ class TestRemoteValueControl(unittest.TestCase):
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(0xB)),
         )
-        self.assertEqual(remote_value.value, None)
-        self.loop.run_until_complete(remote_value.process(telegram))
-        self.assertEqual(remote_value.value, 25)
+        assert remote_value.value is None
+        await remote_value.process(telegram)
+        assert remote_value.value == 25
 
-    def test_to_process_error(self):
+    async def test_to_process_error(self):
         """Test process errornous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueControl(
             xknx, group_address=GroupAddress("1/2/3"), value_type="stepwise"
         )
-        with self.assertRaises(CouldNotParseTelegram):
+        with pytest.raises(CouldNotParseTelegram):
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/3"),
                 payload=GroupValueWrite(DPTArray(0x01)),
             )
-            self.loop.run_until_complete(remote_value.process(telegram))
-        with self.assertRaises(ConversionError):
+            await remote_value.process(telegram)
+        with pytest.raises(ConversionError):
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/3"),
                 payload=GroupValueWrite(DPTBinary(0x10)),
             )
-            self.loop.run_until_complete(remote_value.process(telegram))
+            await remote_value.process(telegram)
             # pylint: disable=pointless-statement
             remote_value.value
