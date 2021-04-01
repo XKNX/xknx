@@ -1,5 +1,4 @@
 """Tests for the CEMIFrame object"""
-
 from unittest.mock import MagicMock
 
 from pytest import fixture, raises

@@ -1,35 +1,22 @@
 """Unit test for KNX/IP base class."""
-import asyncio
-import unittest
-
+import pytest
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import KNXIPFrame
 from xknx.knxip.knxip_enum import KNXIPServiceType
 
 
-class Test_KNXIP(unittest.TestCase):
+class Test_KNXIP:
     """Test class for KNX/IP base class."""
-
-    # pylint: disable=too-many-public-methods,invalid-name
-
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
 
     def test_wrong_init(self):
         """Testing init method with wrong service_type_ident."""
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
-        with self.assertRaises(AttributeError):
+        with pytest.raises(AttributeError):
             knxipframe.init(23)
 
-        with self.assertRaises(CouldNotParseKNXIP):
+        with pytest.raises(CouldNotParseKNXIP):
             # this is not yet implemented in xknx
             knxipframe.init(KNXIPServiceType.SEARCH_REQUEST_EXTENDED)
 
@@ -56,5 +43,5 @@ class Test_KNXIP(unittest.TestCase):
         )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
-        with self.assertRaises(CouldNotParseKNXIP):
+        with pytest.raises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)

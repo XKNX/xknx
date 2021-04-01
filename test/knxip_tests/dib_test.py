@@ -1,6 +1,5 @@
 """Unit test for KNX/IP DIB objects."""
-import unittest
-
+import pytest
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import (
     DIB,
@@ -14,7 +13,7 @@ from xknx.knxip import (
 from xknx.telegram import IndividualAddress
 
 
-class Test_KNXIP_DIB(unittest.TestCase):
+class Test_KNXIP_DIB:
     """Test class for KNX/IP DIB objects."""
 
     # pylint: disable=too-many-public-methods,invalid-name
@@ -23,15 +22,15 @@ class Test_KNXIP_DIB(unittest.TestCase):
         """Test parsing and streaming KNX/IP DIB packet."""
         raw = (0x0C, 0x02, 0x02, 0x01, 0x03, 0x02, 0x04, 0x01, 0x05, 0x01, 0x07, 0x01)
         dib = DIBGeneric()
-        self.assertEqual(dib.from_knx(raw), 12)
-        self.assertEqual(dib.dtc, DIBTypeCode.SUPP_SVC_FAMILIES)
-        self.assertEqual(dib.to_knx(), list(raw))
-        self.assertEqual(dib.calculated_length(), 12)
+        assert dib.from_knx(raw) == 12
+        assert dib.dtc == DIBTypeCode.SUPP_SVC_FAMILIES
+        assert dib.to_knx() == list(raw)
+        assert dib.calculated_length() == 12
 
     def test_dib_wrong_input(self):
         """Test parsing of wrong KNX/IP DIB packet."""
         raw = (0x08, 0x01, 0xC0, 0xA8, 0x2A)
-        with self.assertRaises(CouldNotParseKNXIP):
+        with pytest.raises(CouldNotParseKNXIP):
             DIBGeneric().from_knx(raw)
 
     def test_device_info(self):
@@ -94,38 +93,35 @@ class Test_KNXIP_DIB(unittest.TestCase):
         )
 
         dib = DIB.determine_dib(raw)
-        self.assertTrue(isinstance(dib, DIBDeviceInformation))
-        self.assertEqual(dib.from_knx(raw), DIBDeviceInformation.LENGTH)
-        self.assertEqual(dib.knx_medium, KNXMedium.TP1)
-        self.assertEqual(dib.programming_mode, False)
-        self.assertEqual(dib.individual_address, IndividualAddress("1.1.0"))
-        self.assertEqual(dib.name, "Gira KNX/IP-Router")
-        self.assertEqual(dib.mac_address, "00:01:02:03:04:05")
-        self.assertEqual(dib.multicast_address, "224.0.23.12")
-        self.assertEqual(dib.serial_number, "13:37:13:37:13:37")
-        self.assertEqual(dib.project_number, 564)
-        self.assertEqual(dib.installation_number, 2)
-        self.assertEqual(dib.to_knx(), list(raw))
+        assert isinstance(dib, DIBDeviceInformation)
+        assert dib.from_knx(raw) == DIBDeviceInformation.LENGTH
+        assert dib.knx_medium == KNXMedium.TP1
+        assert dib.programming_mode is False
+        assert dib.individual_address == IndividualAddress("1.1.0")
+        assert dib.name == "Gira KNX/IP-Router"
+        assert dib.mac_address == "00:01:02:03:04:05"
+        assert dib.multicast_address == "224.0.23.12"
+        assert dib.serial_number == "13:37:13:37:13:37"
+        assert dib.project_number == 564
+        assert dib.installation_number == 2
+        assert dib.to_knx() == list(raw)
 
     def test_dib_sup_svc_families(self):
         """Test parsing of svc families."""
         raw = (0x0C, 0x02, 0x02, 0x01, 0x03, 0x02, 0x04, 0x01, 0x05, 0x01, 0x07, 0x01)
 
         dib = DIB.determine_dib(raw)
-        self.assertTrue(isinstance(dib, DIBSuppSVCFamilies))
-        self.assertEqual(dib.from_knx(raw), 12)
+        assert isinstance(dib, DIBSuppSVCFamilies)
+        assert dib.from_knx(raw) == 12
 
-        self.assertEqual(
-            dib.families,
-            [
-                DIBSuppSVCFamilies.Family(DIBServiceFamily.CORE, 1),
-                DIBSuppSVCFamilies.Family(DIBServiceFamily.DEVICE_MANAGEMENT, 2),
-                DIBSuppSVCFamilies.Family(DIBServiceFamily.TUNNELING, 1),
-                DIBSuppSVCFamilies.Family(DIBServiceFamily.ROUTING, 1),
-                DIBSuppSVCFamilies.Family(
-                    DIBServiceFamily.REMOTE_CONFIGURATION_DIAGNOSIS, 1
-                ),
-            ],
-        )
+        assert dib.families == [
+            DIBSuppSVCFamilies.Family(DIBServiceFamily.CORE, 1),
+            DIBSuppSVCFamilies.Family(DIBServiceFamily.DEVICE_MANAGEMENT, 2),
+            DIBSuppSVCFamilies.Family(DIBServiceFamily.TUNNELING, 1),
+            DIBSuppSVCFamilies.Family(DIBServiceFamily.ROUTING, 1),
+            DIBSuppSVCFamilies.Family(
+                DIBServiceFamily.REMOTE_CONFIGURATION_DIAGNOSIS, 1
+            ),
+        ]
 
-        self.assertEqual(dib.to_knx(), list(raw))
+        assert dib.to_knx() == list(raw)
