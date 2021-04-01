@@ -93,7 +93,7 @@ class TestBinarySensor:
 
         await binaryinput.process(telegram_on)
         assert binaryinput.state
-        await asyncio.sleep(reset_after_sec * 1.1)
+        await asyncio.sleep(reset_after_sec * 1.2)
         assert not binaryinput.state
         # once for 'on' and once for 'off'
         assert async_after_update_callback.call_count == 2
@@ -107,7 +107,7 @@ class TestBinarySensor:
         # second and third telegram resets timer but doesn't run callback
         async_after_update_callback.assert_called_once()
         assert binaryinput.state
-        await asyncio.sleep(reset_after_sec * 1.1)
+        await asyncio.sleep(reset_after_sec * 1.2)
         assert not binaryinput.state
         # once for 'on' and once for 'off'
         assert async_after_update_callback.call_count == 2
