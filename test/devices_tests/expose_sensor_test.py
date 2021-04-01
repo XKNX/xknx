@@ -1,26 +1,18 @@
 """Unit test for Sensor objects."""
-import asyncio
-import unittest
-from unittest.mock import Mock
-
+import pytest
 from xknx import XKNX
 from xknx.devices import ExposeSensor
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
+from test.util import AsyncMock
 
-class TestExposeSensor(unittest.TestCase):
+
+# pylint: disable=no-self-use
+@pytest.mark.asyncio
+class TestExposeSensor:
     """Test class for Sensor objects."""
-
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
 
     #
     # STR FUNCTIONS
@@ -33,8 +25,8 @@ class TestExposeSensor(unittest.TestCase):
         )
         expose_sensor.sensor_value.payload = DPTBinary(1)
 
-        self.assertEqual(expose_sensor.resolve_state(), True)
-        self.assertEqual(expose_sensor.unit_of_measurement(), None)
+        assert expose_sensor.resolve_state() is True
+        assert expose_sensor.unit_of_measurement() is None
 
     def test_str_percent(self):
         """Test resolve state with percent sensor."""
@@ -44,8 +36,8 @@ class TestExposeSensor(unittest.TestCase):
         )
         expose_sensor.sensor_value.payload = DPTArray((0x40,))
 
-        self.assertEqual(expose_sensor.resolve_state(), 25)
-        self.assertEqual(expose_sensor.unit_of_measurement(), "%")
+        assert expose_sensor.resolve_state() == 25
+        assert expose_sensor.unit_of_measurement() == "%"
 
     def test_str_temperature(self):
         """Test resolve state with temperature sensor."""
@@ -55,68 +47,59 @@ class TestExposeSensor(unittest.TestCase):
         )
         expose_sensor.sensor_value.payload = DPTArray((0x0C, 0x1A))
 
-        self.assertEqual(expose_sensor.resolve_state(), 21.0)
-        self.assertEqual(expose_sensor.unit_of_measurement(), "°C")
+        assert expose_sensor.resolve_state() == 21.0
+        assert expose_sensor.unit_of_measurement() == "°C"
 
     #
     # TEST SET
     #
-    def test_set_binary(self):
+    async def test_set_binary(self):
         """Test set with binary sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx, "TestSensor", group_address="1/2/3", value_type="binary"
         )
-        self.loop.run_until_complete(expose_sensor.set(False))
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        await expose_sensor.set(False)
+        assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTBinary(0)),
-            ),
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(0)),
         )
 
-    def test_set_percent(self):
+    async def test_set_percent(self):
         """Test set with percent sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx, "TestSensor", group_address="1/2/3", value_type="percent"
         )
-        self.loop.run_until_complete(expose_sensor.set(75))
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        await expose_sensor.set(75)
+        assert xknx.telegrams.qsize() == 1
 
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTArray((0xBF,))),
-            ),
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray((0xBF,))),
         )
 
-    def test_set_temperature(self):
+    async def test_set_temperature(self):
         """Test set with temperature sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx, "TestSensor", group_address="1/2/3", value_type="temperature"
         )
-        self.loop.run_until_complete(expose_sensor.set(21.0))
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        await expose_sensor.set(21.0)
+        assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTArray((0x0C, 0x1A))),
-            ),
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray((0x0C, 0x1A))),
         )
 
     #
     # TEST PROCESS (GROUP READ)
     #
-    def test_process_binary(self):
+    async def test_process_binary(self):
         """Test reading binary expose sensor from bus."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -125,18 +108,15 @@ class TestExposeSensor(unittest.TestCase):
         expose_sensor.sensor_value.payload = DPTBinary(1)
 
         telegram = Telegram(GroupAddress("1/2/3"), payload=GroupValueRead())
-        self.loop.run_until_complete(expose_sensor.process(telegram))
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        await expose_sensor.process(telegram)
+        assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueResponse(DPTBinary(True)),
-            ),
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueResponse(DPTBinary(True)),
         )
 
-    def test_process_percent(self):
+    async def test_process_percent(self):
         """Test reading percent expose sensor from bus."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -145,18 +125,15 @@ class TestExposeSensor(unittest.TestCase):
         expose_sensor.sensor_value.payload = DPTArray((0x40,))
 
         telegram = Telegram(GroupAddress("1/2/3"), payload=GroupValueRead())
-        self.loop.run_until_complete(expose_sensor.process(telegram))
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        await expose_sensor.process(telegram)
+        assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueResponse(DPTArray((0x40,))),
-            ),
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueResponse(DPTArray((0x40,))),
         )
 
-    def test_process_temperature(self):
+    async def test_process_temperature(self):
         """Test reading temperature expose sensor from bus."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -165,15 +142,12 @@ class TestExposeSensor(unittest.TestCase):
         expose_sensor.sensor_value.payload = DPTArray((0x0C, 0x1A))
 
         telegram = Telegram(GroupAddress("1/2/3"), payload=GroupValueRead())
-        self.loop.run_until_complete(expose_sensor.process(telegram))
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        await expose_sensor.process(telegram)
+        assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueResponse(DPTArray((0x0C, 0x1A))),
-            ),
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueResponse(DPTArray((0x0C, 0x1A))),
         )
 
     #
@@ -185,28 +159,22 @@ class TestExposeSensor(unittest.TestCase):
         expose_sensor = ExposeSensor(
             xknx, "TestSensor", value_type="temperature", group_address="1/2/3"
         )
-        self.assertTrue(expose_sensor.has_group_address(GroupAddress("1/2/3")))
-        self.assertFalse(expose_sensor.has_group_address(GroupAddress("1/2/4")))
+        assert expose_sensor.has_group_address(GroupAddress("1/2/3"))
+        assert not expose_sensor.has_group_address(GroupAddress("1/2/4"))
 
     #
     # PROCESS CALLBACK
     #
-    def test_process_callback(self):
+    async def test_process_callback(self):
         """Test setting value. Test if callback is called."""
         # pylint: disable=no-self-use
         xknx = XKNX()
+        after_update_callback = AsyncMock()
         expose_sensor = ExposeSensor(
             xknx, "TestSensor", group_address="1/2/3", value_type="temperature"
         )
+        expose_sensor.register_device_updated_cb(after_update_callback)
 
-        after_update_callback = Mock()
-
-        async def async_after_update_callback(device):
-            """Async callback."""
-            after_update_callback(device)
-
-        expose_sensor.register_device_updated_cb(async_after_update_callback)
-
-        self.loop.run_until_complete(expose_sensor.set(21.0))
-        self.loop.run_until_complete(xknx.devices.process(xknx.telegrams.get_nowait()))
+        await expose_sensor.set(21.0)
+        await xknx.devices.process(xknx.telegrams.get_nowait())
         after_update_callback.assert_called_with(expose_sensor)
