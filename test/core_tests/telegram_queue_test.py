@@ -1,6 +1,6 @@
 """Unit test for telegram received callback."""
 import asyncio
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from xknx import XKNX
@@ -8,8 +8,6 @@ from xknx.dpt import DPTBinary
 from xknx.exceptions import CommunicationError, CouldNotParseTelegram
 from xknx.telegram import AddressFilter, GroupAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueWrite
-
-from test.util import AsyncMock
 
 
 # pylint: disable=no-self-use

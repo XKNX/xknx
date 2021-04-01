@@ -1,12 +1,12 @@
 """Unit test for Sensor objects."""
+from unittest.mock import AsyncMock
+
 import pytest
 from xknx import XKNX
 from xknx.devices import ExposeSensor
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
-
-from test.util import AsyncMock
 
 
 # pylint: disable=no-self-use

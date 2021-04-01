@@ -1,11 +1,9 @@
 """Unit test for Action objects."""
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from xknx import XKNX
 from xknx.devices import Action, ActionBase, ActionCallback, Light
-
-from test.util import AsyncMock
 
 
 # pylint: disable=no-self-use

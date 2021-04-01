@@ -1,5 +1,5 @@
 """Unit test for Switch objects."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from xknx import XKNX
@@ -7,8 +7,6 @@ from xknx.devices import Device, Sensor
 from xknx.dpt import DPTArray
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
-
-from test.util import AsyncMock
 
 
 # pylint: disable=no-self-use

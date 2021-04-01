@@ -1,5 +1,5 @@
 """Unit test for Cover objects."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from xknx import XKNX
@@ -7,8 +7,6 @@ from xknx.devices import Cover
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
-
-from test.util import AsyncMock
 
 
 # pylint: disable=too-many-public-methods,invalid-name,no-self-use

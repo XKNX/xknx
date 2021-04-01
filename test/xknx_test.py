@@ -1,12 +1,10 @@
 """Unit test for XKNX Module."""
 import os
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from xknx import XKNX
 from xknx.io import ConnectionConfig, ConnectionType
-
-from test.util import AsyncMock
 
 
 # pylint: disable=too-many-public-methods,invalid-name,no-self-use,protected-access

@@ -1,5 +1,5 @@
 """Unit test for Light objects."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from xknx import XKNX
@@ -8,8 +8,6 @@ from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
-
-from test.util import AsyncMock
 
 
 # pylint: disable=no-self-use
