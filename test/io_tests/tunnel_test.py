@@ -12,6 +12,7 @@ class TestTunnelling:
 
     def setup_method(self):
         """Set up test class."""
+        # pylint: disable=attribute-defined-outside-init
         self.xknx = XKNX()
         self.tg_received_mock = Mock()
         self.tunnel = Tunnel(

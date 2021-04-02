@@ -10,7 +10,6 @@ from xknx.telegram import AddressFilter, GroupAddress, Telegram, TelegramDirecti
 from xknx.telegram.apci import GroupValueWrite
 
 
-# pylint: disable=no-self-use
 @pytest.mark.asyncio
 class TestTelegramQueue:
     """Test class for telegram queue."""

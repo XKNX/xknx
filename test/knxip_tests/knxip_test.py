@@ -6,7 +6,7 @@ from xknx.knxip import KNXIPFrame
 from xknx.knxip.knxip_enum import KNXIPServiceType
 
 
-class Test_KNXIP:
+class TestKNXIPFrame:
     """Test class for KNX/IP base class."""
 
     def test_wrong_init(self):

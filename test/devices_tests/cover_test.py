@@ -9,7 +9,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
 
-# pylint: disable=too-many-public-methods,invalid-name,no-self-use
 @pytest.mark.asyncio
 class TestCover:
     """Test class for Cover objects."""
@@ -732,7 +731,7 @@ class TestCover:
 
     async def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback is executed."""
-        # pylint: disable=no-self-use
+
         xknx = XKNX()
         cover = Cover(
             xknx,
@@ -883,10 +882,6 @@ class TestCover:
     #
     async def test_do(self):
         """Test 'do' functionality."""
-
-        async def async_none():
-            return None
-
         xknx = XKNX()
         cover = Cover(xknx, "TestCover", group_address_long="2/4/5")
         with patch("xknx.devices.Cover.set_up", new_callable=AsyncMock) as mock:

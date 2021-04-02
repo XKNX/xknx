@@ -13,10 +13,8 @@ from xknx.knxip import (
 from xknx.telegram import IndividualAddress
 
 
-class Test_KNXIP_DIB:
+class TestKNXIPDIB:
     """Test class for KNX/IP DIB objects."""
-
-    # pylint: disable=too-many-public-methods,invalid-name
 
     def test_dib_base(self):
         """Test parsing and streaming KNX/IP DIB packet."""

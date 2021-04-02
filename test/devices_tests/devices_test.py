@@ -7,7 +7,6 @@ from xknx.devices import BinarySensor, Device, Devices, Light, Switch
 from xknx.telegram import GroupAddress
 
 
-# pylint: disable=too-many-public-methods,invalid-name,no-self-use
 @pytest.mark.asyncio
 class TestDevices:
     """Test class for devices container within XKNX."""
@@ -105,7 +104,7 @@ class TestDevices:
 
         assert "Living-Room.Light_1" in xknx.devices
         assert "Living-Room.Light_2" in xknx.devices
-        assert not ("Living-Room.Light_3" in xknx.devices)
+        assert "Living-Room.Light_3" not in xknx.devices
 
     @patch.multiple(Device, __abstractmethods__=set())
     def test_add_remove(self):
@@ -116,7 +115,7 @@ class TestDevices:
         assert len(xknx.devices) == 2
         device1.shutdown()
         assert len(xknx.devices) == 1
-        assert not ("TestDevice1" in xknx.devices)
+        assert "TestDevice1" not in xknx.devices
         device2.shutdown()
         assert len(xknx.devices) == 0
 

@@ -11,6 +11,7 @@ from xknx.telegram.apci import GroupValueRead
 
 
 def get_data(code, adil, flags, src, dst, mpdu_len, tpci_apci, payload):
+    """Encode to cemi data raw bytes."""
     return bytes(
         [
             code,

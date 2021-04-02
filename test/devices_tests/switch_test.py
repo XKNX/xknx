@@ -10,7 +10,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
-# pylint: disable=no-self-use
 @pytest.mark.asyncio
 class TestSwitch:
     """Test class for Switch object."""
@@ -204,7 +203,6 @@ class TestSwitch:
 
     async def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
-        # pylint: disable=no-self-use
 
         xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")

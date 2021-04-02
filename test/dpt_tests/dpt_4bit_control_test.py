@@ -10,6 +10,7 @@ from xknx.dpt import (
 from xknx.exceptions import ConversionError
 
 
+# pylint: disable=no-member
 class TestDPTControlStepCode:
     """Test class for DPTControlStepCode objects."""
 
@@ -181,7 +182,6 @@ class TestDPTControlStartStopDimming:
 
     def test_direction_values(self):
         """Test values of Direction Enum."""
-        # pylint: disable=no-member
         assert (
             DPTControlStartStopDimming.Direction.DECREASE.value
             == DPTControlStartStop.Direction.DECREASE.value
@@ -207,7 +207,6 @@ class TestDPTControlStartStopBlinds:
 
     def test_direction_values(self):
         """Test values of Direction Enum."""
-        # pylint: disable=no-member
         assert (
             DPTControlStartStopBlinds.Direction.UP.value
             == DPTControlStartStop.Direction.DECREASE.value

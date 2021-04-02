@@ -9,7 +9,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
-# pylint: disable=no-self-use
 @pytest.mark.asyncio
 class TestSensor:
     """Test class for Sensor objects."""
@@ -1842,7 +1841,7 @@ class TestSensor:
 
     async def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
-        # pylint: disable=no-self-use
+
         xknx = XKNX()
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="temperature"

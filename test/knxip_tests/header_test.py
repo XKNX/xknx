@@ -5,8 +5,8 @@ from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import DisconnectRequest, KNXIPHeader, KNXIPServiceType
 
 
-class Test_KNXIP_Header:
-    """Test class for KNX/IP TunnellingAck objects."""
+class TestKNXIPHeader:
+    """Test class for KNX/IP Header objects."""
 
     def test_from_knx(self):
         """Test parsing and streaming wrong Header (wrong length byte)."""

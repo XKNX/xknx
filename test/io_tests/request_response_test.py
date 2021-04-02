@@ -8,7 +8,6 @@ from xknx.io import RequestResponse, UDPClient
 from xknx.knxip import DisconnectResponse, KNXIPBody
 
 
-# pylint: disable=no-self-use
 @pytest.mark.asyncio
 class TestConnectResponse:
     """Test class for xknx/io/Disconnect objects."""

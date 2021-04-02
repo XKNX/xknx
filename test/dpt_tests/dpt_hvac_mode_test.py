@@ -8,8 +8,6 @@ from xknx.exceptions import ConversionError, CouldNotParseKNXIP
 class TestDPTControllerStatus:
     """Test class for KNX DPT HVAC Operation modes."""
 
-    # pylint: disable=too-many-public-methods,invalid-name
-
     def test_mode_to_knx(self):
         """Test parsing DPTHVACMode to KNX."""
         assert DPTHVACMode.to_knx(HVACOperationMode.AUTO) == (0x00,)

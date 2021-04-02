@@ -5,7 +5,7 @@ from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import ConnectionStateResponse, ErrorCode, KNXIPFrame
 
 
-class Test_KNXIP_ConnStateResp:
+class TestKNXIPConnectionStateResponse:
     """Test class for KNX/IP ConnectionStateResponses."""
 
     def test_disconnect_response(self):

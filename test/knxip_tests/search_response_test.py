@@ -10,7 +10,7 @@ from xknx.knxip import (
 )
 
 
-class Test_KNXIP_Discovery:
+class TestKNXIPSearchResponse:
     """Test class for KNX/IP SearchResponse objects."""
 
     def test_search_response(self):

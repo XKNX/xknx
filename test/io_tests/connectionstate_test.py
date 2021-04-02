@@ -14,7 +14,6 @@ from xknx.knxip import (
 )
 
 
-# pylint: disable=no-self-use
 @pytest.mark.asyncio
 class TestConnectionState:
     """Test class for xknx/io/ConnectionState objects."""

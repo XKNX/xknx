@@ -7,8 +7,6 @@ from xknx.exceptions import ConversionError
 class TestDPTScaling:
     """Test class for KNX scaling value."""
 
-    # pylint: disable=too-many-public-methods,invalid-name
-
     def test_value_30_pct(self):
         """Test parsing and streaming of DPTScaling 30%."""
         assert DPTScaling().to_knx(30) == (0x4C,)
@@ -62,8 +60,6 @@ class TestDPTScaling:
 
 class TestDPTAngle:
     """Test class for KNX scaling value."""
-
-    # pylint: disable=too-many-public-methods,invalid-name
 
     def test_value_30_deg(self):
         """Test parsing and streaming of DPTAngle 30°."""

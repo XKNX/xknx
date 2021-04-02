@@ -10,7 +10,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
 
-# pylint: disable=no-self-use
 @pytest.mark.asyncio
 class TestLight:
     """Class for testing Light objects."""
@@ -546,7 +545,6 @@ class TestLight:
 
     async def test_set_brightness_not_dimmable(self):
         """Test setting the brightness of a non dimmable Light."""
-        # pylint: disable=invalid-name
         xknx = XKNX()
         light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
         with patch("logging.Logger.warning") as mock_warn:
@@ -580,7 +578,6 @@ class TestLight:
 
     async def test_set_color_not_possible(self):
         """Test setting the color of a non light without color."""
-        # pylint: disable=invalid-name
         xknx = XKNX()
         light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
         with patch("logging.Logger.warning") as mock_warn:
@@ -653,7 +650,6 @@ class TestLight:
 
     async def test_set_individual_color_not_possible(self):
         """Test setting the color of a non light without color."""
-        # pylint: disable=invalid-name
         xknx = XKNX()
         light = Light(
             xknx,
@@ -692,7 +688,6 @@ class TestLight:
 
     async def test_set_color_rgbw_not_possible(self):
         """Test setting RGBW value of a non light without color."""
-        # pylint: disable=invalid-name
         xknx = XKNX()
         light = Light(
             xknx,
@@ -785,7 +780,6 @@ class TestLight:
 
     async def test_set_individual_color_rgbw_not_possible(self):
         """Test setting RGBW value of a non light without color."""
-        # pylint: disable=invalid-name
         xknx = XKNX()
         light = Light(
             xknx,
@@ -833,7 +827,6 @@ class TestLight:
 
     async def test_set_tw_unsupported(self):
         """Test setting the tunable white value of a non tw Light."""
-        # pylint: disable=invalid-name
         xknx = XKNX()
         light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
         with patch("logging.Logger.warning") as mock_warn:
@@ -872,7 +865,6 @@ class TestLight:
 
     async def test_set_color_temp_unsupported(self):
         """Test setting the color temperature value of an unsupported Light."""
-        # pylint: disable=invalid-name
         xknx = XKNX()
         light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
         with patch("logging.Logger.warning") as mock_warn:
@@ -947,7 +939,7 @@ class TestLight:
 
     async def test_process_switch_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
-        # pylint: disable=no-self-use
+
         xknx = XKNX()
         light = Light(
             xknx,
@@ -1001,7 +993,6 @@ class TestLight:
 
     async def test_process_dimm_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
-        # pylint: disable=invalid-name
         xknx = XKNX()
         light = Light(
             xknx,
@@ -1158,7 +1149,6 @@ class TestLight:
 
     async def test_process_tunable_white_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
-        # pylint: disable=invalid-name
         xknx = XKNX()
         light = Light(
             xknx,
@@ -1216,7 +1206,6 @@ class TestLight:
 
     async def test_process_color_temperature_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
-        # pylint: disable=invalid-name
         xknx = XKNX()
         light = Light(
             xknx,

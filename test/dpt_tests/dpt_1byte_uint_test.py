@@ -7,8 +7,6 @@ from xknx.exceptions import ConversionError
 class TestDPTValue1Ucount:
     """Test class for KNX 8-bit unsigned value."""
 
-    # pylint: disable=too-many-public-methods,invalid-name
-
     def test_value_50(self):
         """Test parsing and streaming of DPTValue1Ucount 50."""
         assert DPTValue1Ucount().to_knx(50) == (0x32,)

@@ -6,7 +6,6 @@ from xknx import XKNX
 from xknx.devices import Action, ActionBase, ActionCallback, Light
 
 
-# pylint: disable=no-self-use
 @pytest.mark.asyncio
 class TestAction:
     """Class for testing Action objects."""

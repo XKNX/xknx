@@ -17,7 +17,6 @@ from xknx.knxip import (
 from xknx.telegram import IndividualAddress
 
 
-# pylint: disable=no-self-use
 @pytest.mark.asyncio
 class TestGatewayScanner:
     """Test class for xknx/io/GatewayScanner objects."""
@@ -90,7 +89,6 @@ class TestGatewayScanner:
 
     def test_gateway_scan_filter_match(self):
         """Test match function of gateway filter."""
-        # pylint: disable=too-many-locals
         filter_tunnel = GatewayScanFilter(tunnelling=True)
         filter_router = GatewayScanFilter(routing=True)
         filter_name = GatewayScanFilter(name="KNX-Router")
@@ -114,7 +112,6 @@ class TestGatewayScanner:
 
     def test_search_response_reception(self):
         """Test function of gateway scanner."""
-        # pylint: disable=protected-access
         xknx = XKNX()
         gateway_scanner = GatewayScanner(xknx)
         test_search_response = fake_router_search_response(xknx)
@@ -131,7 +128,6 @@ class TestGatewayScanner:
     @patch("xknx.io.gateway_scanner.netifaces", autospec=True)
     async def test_scan_timeout(self, netifaces_mock):
         """Test gateway scanner timeout."""
-        # pylint: disable=protected-access
         xknx = XKNX()
         # No interface shall be found
         netifaces_mock.interfaces.return_value = []
@@ -148,7 +144,6 @@ class TestGatewayScanner:
     @patch("xknx.io.GatewayScanner._search_interface", autospec=True)
     async def test_send_search_requests(self, _search_interface_mock, netifaces_mock):
         """Test finding all valid interfaces to send search requests to. No requests are sent."""
-        # pylint: disable=protected-access
         xknx = XKNX()
 
         netifaces_mock.interfaces.return_value = self.fake_interfaces

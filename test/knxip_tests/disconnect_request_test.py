@@ -1,12 +1,12 @@
-"""Unit test for KNX/IP Disconnect objects."""
+"""Unit test for KNX/IP DisconnectRequest objects."""
 import pytest
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import HPAI, DisconnectRequest, KNXIPFrame
 
 
-class Test_KNXIP_DisconnectReq:
-    """Test class for KNX/IP Disconnect objects."""
+class TestKNXIPDisconnectRequest:
+    """Test class for KNX/IP DisconnectRequest objects."""
 
     def test_disconnect_request(self):
         """Test parsing and streaming DisconnectRequest KNX/IP packet."""

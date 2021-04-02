@@ -10,13 +10,13 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse
 
 
-# pylint: disable=no-self-use
 @pytest.mark.asyncio
 class TestDateTime:
     """Test class for DateTime object."""
 
+    # pylint: disable=attribute-defined-outside-init
     def teardown_method(self):
-        # cancel broadcast_task
+        """Cancel broadcast_task"""
         self.datetime.__del__()
 
     #

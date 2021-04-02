@@ -27,7 +27,6 @@ from xknx.telegram import IndividualAddress
 import yaml
 
 
-# pylint: disable=too-many-public-methods,invalid-name
 class TestConfig:
     """Test class for Configuration logic."""
 
@@ -131,7 +130,7 @@ class TestConfig:
                 "`gateway_ip` is required for tunneling connection.",
             )
         ]
-        for yaml_string, expected_exception, exception_message in test_configs:
+        for yaml_string, expected_exception, _exception_message in test_configs:
             with pytest.raises(expected_exception):
                 config = yaml.safe_load(yaml_string)
                 ConfigV1(TestConfig.xknx).parse_connection(config)

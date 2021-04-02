@@ -10,7 +10,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
 
-# pylint: disable=no-self-use
 @pytest.mark.asyncio
 class TestNotification:
     """Test class for Notification object."""
@@ -54,7 +53,7 @@ class TestNotification:
 
     async def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
-        # pylint: disable=no-self-use
+
         xknx = XKNX()
         notification = Notification(xknx, "Warning", group_address="1/2/3")
         after_update_callback = AsyncMock()
@@ -69,7 +68,6 @@ class TestNotification:
 
     async def test_process_payload_invalid_length(self):
         """Test process wrong telegram (wrong payload length)."""
-        # pylint: disable=invalid-name
         xknx = XKNX()
         notification = Notification(xknx, "Warning", group_address="1/2/3")
         telegram = Telegram(

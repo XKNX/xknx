@@ -20,22 +20,22 @@ class TestAddressFilter:
 
     def test_range_test(self):
         """Test matching within AddressFilter.Range."""
-        rf = AddressFilter.Range("2-16")
-        assert rf.match(10)
-        assert rf.match(2)
-        assert rf.match(16)
-        assert not rf.match(1)
-        assert not rf.match(17)
+        range_filter = AddressFilter.Range("2-16")
+        assert range_filter.match(10)
+        assert range_filter.match(2)
+        assert range_filter.match(16)
+        assert not range_filter.match(1)
+        assert not range_filter.match(17)
 
     def test_level_filter_test(self):
         """Test matching within AddressFilter.LevelFilter."""
-        lf = AddressFilter.LevelFilter("2,4,8-10,13")
-        assert not lf.match(1)
-        assert lf.match(2)
-        assert not lf.match(3)
-        assert lf.match(4)
-        assert not lf.match(5)
-        assert lf.match(9)
+        level_filter = AddressFilter.LevelFilter("2,4,8-10,13")
+        assert not level_filter.match(1)
+        assert level_filter.match(2)
+        assert not level_filter.match(3)
+        assert level_filter.match(4)
+        assert not level_filter.match(5)
+        assert level_filter.match(9)
 
     def test_address_filter_level3_3(self):
         """Test AddressFilter 3rd part of level3 addresses."""
@@ -143,7 +143,6 @@ class TestAddressFilter:
 
     def test_adjust_range(self):
         """Test helper function _adjust_range."""
-        # pylint: disable=protected-access
         assert (
             AddressFilter.Range._adjust_range(GroupAddress.MAX_FREE + 1)
             == GroupAddress.MAX_FREE

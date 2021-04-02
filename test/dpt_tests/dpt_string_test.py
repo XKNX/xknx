@@ -7,8 +7,6 @@ from xknx.exceptions import ConversionError
 class TestDPTString:
     """Test class for KNX float object."""
 
-    # pylint: disable=too-many-public-methods,invalid-name
-
     def test_value_from_documentation(self):
         """Test parsing and streaming Example from documentation."""
         raw = (

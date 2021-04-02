@@ -7,8 +7,6 @@ from xknx.exceptions import ConversionError
 class TestDPTRelativeValue:
     """Test class for KNX DPT Relative Value."""
 
-    # pylint: disable=too-many-public-methods,invalid-name
-
     def test_from_knx_positive(self):
         """Test positive value from KNX."""
         assert DPTSignedRelativeValue.from_knx((0x00,)) == 0

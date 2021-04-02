@@ -7,7 +7,6 @@ from xknx.remote_value import RemoteValue
 from xknx.telegram import GroupAddress
 
 
-# pylint: disable=no-self-use,protected-access
 @patch.multiple(RemoteValue, __abstractmethods__=set())
 class TestStateUpdater:
     """Test class for state updater."""

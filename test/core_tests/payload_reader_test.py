@@ -9,7 +9,6 @@ from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import MemoryRead, MemoryResponse
 
 
-# pylint: disable=no-self-use
 @pytest.mark.asyncio
 class TestPayloadReader:
     """Test class for payload reader."""

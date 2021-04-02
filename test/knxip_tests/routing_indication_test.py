@@ -8,7 +8,7 @@ from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
-class Test_KNXIP:
+class TestKNXIPRountingIndication:
     """Class for KNX/IP RoutingIndication test."""
 
     def test_from_knx(self):
@@ -76,14 +76,14 @@ class Test_KNXIP:
         assert telegram.payload.value.value[0] == 0xF0
 
     #
-    # End-tox-End tests:
+    # end-to-end tests:
     #
     #   - parsing KNX telegram and check the result
     #   - reassembling scond KNXIPFrame
     #   - comparing both
     #
 
-    def test_EndTOEnd_group_write_binary_on(self):
+    def test_end_to_end_group_write_binary_on(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, switch on light in my kitchen."""
         # Switch on Kitchen-L1
         raw = bytes.fromhex("0610053000112900BCD0FFF90149010081")
@@ -107,7 +107,7 @@ class Test_KNXIP:
         assert knxipframe2.body.to_knx() == list(raw[6:])
         assert knxipframe2.to_knx() == list(raw)
 
-    def test_EndTOEnd_group_write_binary_off(self):
+    def test_end_to_end_group_write_binary_off(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, switch off light in my kitchen."""
         # Switch off Kitchen-L1
         raw = bytes.fromhex("0610053000112900BCD0FFF90149010080")
@@ -131,7 +131,7 @@ class Test_KNXIP:
         assert knxipframe2.body.to_knx() == list(raw[6:])
         assert knxipframe2.to_knx() == list(raw)
 
-    def test_EndTOEnd_group_write_1byte(self):
+    def test_end_to_end_group_write_1byte(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, dimm light in my kitchen."""
         # Dimm Kitchen L1 to 0x65
         raw = bytes.fromhex("0610053000122900BCD0FFF9014B02008065")
@@ -155,7 +155,7 @@ class Test_KNXIP:
         assert knxipframe2.body.to_knx() == list(raw[6:])
         assert knxipframe2.to_knx() == list(raw)
 
-    def test_EndTOEnd_group_write_2bytes(self):
+    def test_end_to_end_group_write_2bytes(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, setting value of thermostat."""
         # Incoming Temperature from thermostat
         raw = bytes.fromhex("0610053000132900BCD01402080103008007C1")
@@ -179,7 +179,7 @@ class Test_KNXIP:
         assert knxipframe2.body.to_knx() == list(raw[6:])
         assert knxipframe2.to_knx() == list(raw)
 
-    def test_EndTOEnd_group_read(self):
+    def test_end_to_end_group_read(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, group read."""
         # State request
         raw = bytes.fromhex("0610053000112900BCD0FFF901B8010000")
@@ -203,7 +203,7 @@ class Test_KNXIP:
         assert knxipframe2.body.to_knx() == list(raw[6:])
         assert knxipframe2.to_knx() == list(raw)
 
-    def test_EndTOEnd_group_response(self):
+    def test_end_to_end_group_response(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, group response."""
         # Incoming state
         raw = bytes.fromhex("0610053000112900BCD013010188010041")
@@ -254,6 +254,6 @@ class Test_KNXIP:
     def test_from_knx_invalid_cemi(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet with unsupported CEMICode."""
         xknx = XKNX()
-        ri = RoutingIndication(xknx)
+        routing_indication = RoutingIndication(xknx)
         raw = bytes([43, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0])
-        assert 11 == ri.from_knx(raw)
+        assert routing_indication.from_knx(raw) == 11

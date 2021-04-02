@@ -11,7 +11,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 
-# pylint: disable=no-self-use
 @pytest.mark.asyncio
 class TestBinarySensor:
     """Test class for BinarySensor objects."""
@@ -206,7 +205,6 @@ class TestBinarySensor:
         binaryinput = BinarySensor(xknx, "TestInput", "1/2/3")
         assert not binaryinput.is_on()
         assert binaryinput.is_off()
-        # pylint: disable=protected-access
         await binaryinput._set_internal_state(True)
 
         assert binaryinput.is_on()
@@ -219,7 +217,6 @@ class TestBinarySensor:
         """Test is_on() and is_off() of a BinarySensor with state 'off'."""
         xknx = XKNX()
         binaryinput = BinarySensor(xknx, "TestInput", "1/2/3")
-        # pylint: disable=protected-access
         await binaryinput._set_internal_state(False)
 
         assert not binaryinput.is_on()
@@ -230,7 +227,6 @@ class TestBinarySensor:
     #
     async def test_process_callback(self):
         """Test after_update_callback after state of switch was changed."""
-        # pylint: disable=protected-access
         xknx = XKNX()
         switch = BinarySensor(
             xknx, "TestInput", group_address_state="1/2/3", ignore_internal_state=False
@@ -255,7 +251,6 @@ class TestBinarySensor:
 
     async def test_process_callback_ignore_internal_state(self):
         """Test after_update_callback after state of switch was changed."""
-        # pylint: disable=protected-access
         xknx = XKNX()
         switch = BinarySensor(
             xknx,
@@ -298,7 +293,6 @@ class TestBinarySensor:
 
     async def test_process_callback_ignore_internal_state_no_counter(self):
         """Test after_update_callback after state of switch was changed."""
-        # pylint: disable=protected-access
         xknx = XKNX()
         switch = BinarySensor(
             xknx,
@@ -327,7 +321,6 @@ class TestBinarySensor:
 
     async def test_process_group_value_response(self):
         """Test precess of GroupValueResponse telegrams."""
-        # pylint: disable=protected-access
         xknx = XKNX()
         switch = BinarySensor(
             xknx,

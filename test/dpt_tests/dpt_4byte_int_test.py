@@ -10,8 +10,6 @@ from xknx.exceptions import ConversionError
 class TestDPT4Byte:
     """Test class for KNX 4 byte objects."""
 
-    # pylint: disable=too-many-public-methods,invalid-name
-
     # ####################################################################
     # DPT4ByteUnsigned
     #
@@ -90,14 +88,14 @@ class TestDPT4Byte:
 
     def test_from_knx_unpack_error(self):
         """Test DPT4ByteSigned parsing with unpack error."""
-        with patch("struct.unpack") as unpackMock:
-            unpackMock.side_effect = struct.error()
+        with patch("struct.unpack") as unpack_mock:
+            unpack_mock.side_effect = struct.error()
             with pytest.raises(ConversionError):
                 DPT4ByteSigned().from_knx((0x01, 0x23, 0x45, 0x67))
 
     def test_to_knx_pack_error(self):
         """Test serializing DPT4ByteSigned with pack error."""
-        with patch("struct.pack") as packMock:
-            packMock.side_effect = struct.error()
+        with patch("struct.pack") as pack_mock:
+            pack_mock.side_effect = struct.error()
             with pytest.raises(ConversionError):
                 DPT4ByteSigned().to_knx(19088743)

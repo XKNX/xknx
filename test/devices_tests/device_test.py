@@ -9,7 +9,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
-# pylint: disable=no-self-use
 @pytest.mark.asyncio
 @patch.multiple(Device, __abstractmethods__=set())
 class TestDevice:

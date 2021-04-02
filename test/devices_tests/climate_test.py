@@ -29,7 +29,6 @@ DPT_20102_MODES = [
 ]
 
 
-# pylint: disable=no-self-use,invalid-name,too-many-public-methods
 @pytest.mark.asyncio
 class TestClimate:
     """Test class for Climate objects."""
@@ -137,7 +136,7 @@ class TestClimate:
     #
     async def test_process_callback(self):
         """Test if after_update_callback is called after update of Climate object was changed."""
-        # pylint: disable=no-self-use
+
         xknx = XKNX()
         climate = Climate(
             xknx,
@@ -167,7 +166,7 @@ class TestClimate:
 
     async def test_process_callback_mode(self):
         """Test if after_update_callback is called after update of Climate object was changed."""
-        # pylint: disable=no-self-use
+
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx, "TestClimate", group_address_operation_mode="1/2/5"
@@ -195,7 +194,7 @@ class TestClimate:
 
     async def test_process_callback_updated_via_telegram(self):
         """Test if after_update_callback is called after update of Climate object."""
-        # pylint: disable=no-self-use
+
         xknx = XKNX()
         climate = Climate(
             xknx,
@@ -239,7 +238,7 @@ class TestClimate:
 
     async def test_climate_mode_process_callback_updated_via_telegram(self):
         """Test if after_update_callback is called after update of ClimateMode object."""
-        # pylint: disable=no-self-use
+
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx, "TestClimateMode", group_address_operation_mode="1/2/4"
@@ -479,7 +478,7 @@ class TestClimate:
     #
     async def test_target_temperature_up(self):
         """Test increase target temperature."""
-        # pylint: disable=no-self-use
+
         xknx = XKNX()
         climate = Climate(
             xknx,
@@ -556,7 +555,7 @@ class TestClimate:
 
     async def test_target_temperature_down(self):
         """Test decrease target temperature."""
-        # pylint: disable=no-self-use
+
         xknx = XKNX()
         climate = Climate(
             xknx,
@@ -633,7 +632,7 @@ class TestClimate:
 
     async def test_target_temperature_modified_step(self):
         """Test increase target temperature with modified step size."""
-        # pylint: disable=no-self-use
+
         xknx = XKNX()
         climate = Climate(
             xknx,
@@ -690,7 +689,7 @@ class TestClimate:
 
     async def test_base_temperature(self):
         """Test base temperature."""
-        # pylint: disable=no-self-use
+
         xknx = XKNX()
         climate = Climate(
             xknx,
@@ -743,7 +742,7 @@ class TestClimate:
 
     async def test_target_temperature_step_mode_9002(self):
         """Test increase target temperature with modified step size."""
-        # pylint: disable=no-self-use
+
         xknx = XKNX()
         climate = Climate(
             xknx,
@@ -803,7 +802,7 @@ class TestClimate:
     #
     async def test_temperature_step(self):
         """Test base temperature step."""
-        # pylint: disable=no-self-use
+
         xknx = XKNX()
         climate = Climate(
             xknx,
@@ -1067,7 +1066,7 @@ class TestClimate:
 
     async def test_process_callback_temp(self):
         """Test process / reading telegrams from telegram queue. Test if callback is executed when receiving temperature."""
-        # pylint: disable=no-self-use
+
         xknx = XKNX()
         climate = Climate(xknx, "TestClimate", group_address_temperature="1/2/3")
 

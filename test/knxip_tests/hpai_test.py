@@ -4,7 +4,7 @@ from xknx.exceptions import ConversionError, CouldNotParseKNXIP
 from xknx.knxip import HPAI
 
 
-class Test_KNXIP_HPAI:
+class TestKNXIPHPAI:
     """Test class for KNX/IP HPAI objects."""
 
     def test_hpai(self):

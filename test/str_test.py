@@ -59,7 +59,6 @@ from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramDir
 from xknx.telegram.apci import GroupValueWrite
 
 
-# pylint: disable=too-many-public-methods,invalid-name,no-self-use
 @pytest.mark.asyncio
 class TestStringRepresentations:
     """Test class for Configuration logic."""
@@ -68,7 +67,6 @@ class TestStringRepresentations:
     def test_remote_value(self):
         """Test string representation of remote value."""
         xknx = XKNX()
-        # pylint: disable=abstract-class-instantiated
         remote_value = RemoteValue(
             xknx,
             group_address="1/2/3",
@@ -368,9 +366,9 @@ class TestStringRepresentations:
     def test_datetime(self):
         """Test string representation of datetime object."""
         xknx = XKNX()
-        dateTime = DateTime(xknx, name="Zeit", group_address="1/2/3", localtime=False)
+        date_time = DateTime(xknx, name="Zeit", group_address="1/2/3", localtime=False)
         assert (
-            str(dateTime)
+            str(date_time)
             == '<DateTime name="Zeit" group_address="GroupAddress("1/2/3")/None/None/None" broadcast_type="TIME" />'
         )
 
@@ -393,13 +391,13 @@ class TestStringRepresentations:
         """Test string representation of action callback."""
         xknx = XKNX()
 
-        def cb(self):  # noqa: D401
+        def callback(self):  # noqa: D401
             """Callback."""
 
-        action = ActionCallback(xknx, callback=cb, hook="on", counter=2)
+        action = ActionCallback(xknx, callback=callback, hook="on", counter=2)
         assert (
             str(action)
-            == '<ActionCallback callback="cb" <ActionBase hook="on" counter="2"/>/>'
+            == '<ActionCallback callback="callback" <ActionBase hook="on" counter="2"/>/>'
         )
 
     def test_could_not_parse_telegramn_exception(self):
@@ -702,8 +700,8 @@ class TestStringRepresentations:
     def test_routing_indication_str(self):
         """Test string representation of GatewayDescriptor."""
         xknx = XKNX()
-        ri = RoutingIndication(xknx)
+        routing_indication = RoutingIndication(xknx)
         assert (
-            str(ri)
+            str(routing_indication)
             == '<RoutingIndication cemi="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")" DestinationAddress="GroupAddress("0/0/0")" Flags="               0" payload="None" />" />'
         )

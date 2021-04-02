@@ -7,8 +7,6 @@ from xknx.exceptions import ConversionError
 class TestDPT:
     """Test class for KNX binary/integer objects."""
 
-    # pylint: disable=too-many-public-methods,invalid-name
-
     def test_compare_binary(self):
         """Test comparison of DPTBinary objects."""
         assert DPTBinary(0) == DPTBinary(0)

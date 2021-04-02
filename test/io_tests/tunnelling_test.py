@@ -16,14 +16,12 @@ from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-# pylint: disable=no-self-use
 @pytest.mark.asyncio
 class TestTunnelling:
     """Test class for xknx/io/Tunnelling objects."""
 
     async def test_tunnelling(self):
         """Test tunnelling from KNX bus."""
-        # pylint: disable=too-many-locals
         xknx = XKNX()
         communication_channel_id = 23
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))

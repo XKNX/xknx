@@ -24,8 +24,6 @@ from xknx.exceptions import ConversionError
 class TestDPTFloat:
     """Test class for KNX 2 & 4 byte/octet float object."""
 
-    # pylint: disable=too-many-public-methods,invalid-name
-
     # ####################################################################
     # DPT2ByteFloat
     #
@@ -243,8 +241,8 @@ class TestDPTFloat:
 
     def test_4byte_flaot_from_knx_unpack_error(self):
         """Test DPT4ByteFloat parsing with unpack error."""
-        with patch("struct.unpack") as unpackMock:
-            unpackMock.side_effect = struct.error()
+        with patch("struct.unpack") as unpack_mock:
+            unpack_mock.side_effect = struct.error()
             with pytest.raises(ConversionError):
                 DPT4ByteFloat().from_knx((0x01, 0x23, 0x02, 0x02))
 

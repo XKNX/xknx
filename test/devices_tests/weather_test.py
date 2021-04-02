@@ -8,7 +8,6 @@ from xknx.dpt import DPTArray, DPTBinary
 from xknx.telegram import GroupAddress
 
 
-# pylint: disable=no-self-use
 class TestWeather:
     """Test class for Weather objects."""
 

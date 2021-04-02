@@ -9,7 +9,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-# pylint: disable=no-self-use
 @pytest.mark.asyncio
 class TestScene:
     """Test class for Scene objects."""
@@ -55,9 +54,9 @@ class TestScene:
         """Test wrong do command."""
         xknx = XKNX()
         scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
-        with patch("logging.Logger.warning") as mockWarn:
+        with patch("logging.Logger.warning") as mock_warn:
             await scene.do("execute")
-            mockWarn.assert_called_with(
+            mock_warn.assert_called_with(
                 "Could not understand action %s for device %s", "execute", "TestScene"
             )
         assert xknx.telegrams.qsize() == 0

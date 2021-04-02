@@ -7,7 +7,6 @@ from xknx import XKNX
 from xknx.io import ConnectionConfig, ConnectionType
 
 
-# pylint: disable=too-many-public-methods,invalid-name,no-self-use,protected-access
 @pytest.mark.asyncio
 class TestXknxModule:
     """Test class for XKNX."""

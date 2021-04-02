@@ -10,7 +10,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
 
-# pylint: disable=no-self-use
 @pytest.mark.asyncio
 class TestFan:
     """Class for testing Fan objects."""
@@ -140,7 +139,7 @@ class TestFan:
         await fan.process(telegram)
         assert fan.current_speed == 55
 
-    async def test_process_speed_wrong_payload(self):  # pylint: disable=invalid-name
+    async def test_process_speed_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
         fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
@@ -174,7 +173,6 @@ class TestFan:
 
     async def test_process_fan_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
-        # pylint: disable=invalid-name
         xknx = XKNX()
         fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
         telegram = Telegram(

@@ -3,7 +3,7 @@ from xknx import XKNX
 from xknx.knxip import HPAI, KNXIPFrame, SearchRequest
 
 
-class Test_KNXIP_Discovery:
+class TestKNXIPSearchRequest:
     """Test class for KNX/IP SearchRequest objects."""
 
     def test_search_request(self):

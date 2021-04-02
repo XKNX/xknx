@@ -5,7 +5,7 @@ from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import HPAI, ConnectRequest, ConnectRequestType, KNXIPFrame
 
 
-class Test_KNXIP_ConnectRequest:
+class TestKNXIPConnectRequest:
     """Test class for KNX/IP ConnectRequests."""
 
     def test_connect_request(self):
