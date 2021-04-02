@@ -2,7 +2,8 @@
 import asyncio
 
 from xknx import XKNX
-from xknx.io import ConnectionState, Disconnect, GatewayScanner, UDPClient
+from xknx.io import GatewayScanner, UDPClient
+from xknx.io.request_response import ConnectionState, Disconnect
 
 
 async def main():

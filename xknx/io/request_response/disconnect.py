@@ -6,9 +6,8 @@ from xknx.knxip import HPAI, DisconnectRequest, DisconnectResponse, KNXIPFrame
 from .request_response import RequestResponse
 
 if TYPE_CHECKING:
+    from xknx.io.udp_client import UDPClient
     from xknx.xknx import XKNX
-
-    from .udp_client import UDPClient
 
 
 class Disconnect(RequestResponse):

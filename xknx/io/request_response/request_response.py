@@ -7,9 +7,8 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Optional, Type
 
+from xknx.io.udp_client import UDPClient
 from xknx.knxip import ErrorCode, KNXIPBodyResponse, KNXIPFrame
-
-from .udp_client import UDPClient
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX

@@ -12,9 +12,8 @@ from xknx.knxip import (
 from .request_response import RequestResponse
 
 if TYPE_CHECKING:
+    from xknx.io.udp_client import UDPClient
     from xknx.xknx import XKNX
-
-    from .udp_client import UDPClient
 
 
 class Connect(RequestResponse):

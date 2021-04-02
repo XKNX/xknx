@@ -19,12 +19,9 @@ from xknx.knxip import (
 )
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 
-from .connect import Connect
-from .connectionstate import ConnectionState
 from .const import HEARTBEAT_RATE
-from .disconnect import Disconnect
 from .interface import Interface
-from .tunnelling import Tunnelling
+from .request_response import Connect, ConnectionState, Disconnect, Tunnelling
 from .udp_client import UDPClient
 
 if TYPE_CHECKING:

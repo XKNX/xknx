@@ -3,7 +3,8 @@ from unittest.mock import patch
 
 import pytest
 from xknx import XKNX
-from xknx.io import Disconnect, UDPClient
+from xknx.io import UDPClient
+from xknx.io.request_response import Disconnect
 from xknx.knxip import (
     HPAI,
     DisconnectRequest,

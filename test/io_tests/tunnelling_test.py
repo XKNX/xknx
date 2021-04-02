@@ -4,7 +4,8 @@ from unittest.mock import patch
 import pytest
 from xknx import XKNX
 from xknx.dpt import DPTArray
-from xknx.io import Tunnelling, UDPClient
+from xknx.io import UDPClient
+from xknx.io.request_response import Tunnelling
 from xknx.knxip import (
     ErrorCode,
     KNXIPFrame,

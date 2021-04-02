@@ -7,6 +7,8 @@
 ### Internals
 
 - use pytest tests instead of unittest TestCase
+- Move RequestResponse and subclasses to xknx.io.request_response.*
+- Move ConnectionConfig to xknx.io.connection
 
 ## 0.17.5 Add support for unique ids 2021-03-30
 

@@ -4,7 +4,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from xknx import XKNX
-from xknx.io import RequestResponse, UDPClient
+from xknx.io import UDPClient
+from xknx.io.request_response import RequestResponse
 from xknx.knxip import DisconnectResponse, KNXIPBody
 
 
@@ -23,7 +24,9 @@ class TestConnectResponse:
             await request_response.start()
 
     @patch("logging.Logger.debug")
-    @patch("xknx.io.RequestResponse.send_request", new_callable=AsyncMock)
+    @patch(
+        "xknx.io.request_response.RequestResponse.send_request", new_callable=AsyncMock
+    )
     async def test_request_response_timeout(
         self, _send_request_mock, logger_debug_mock
     ):
@@ -44,7 +47,9 @@ class TestConnectResponse:
         # Callback was removed again
         assert udp_client.callbacks == []
 
-    @patch("xknx.io.RequestResponse.send_request", new_callable=AsyncMock)
+    @patch(
+        "xknx.io.request_response.RequestResponse.send_request", new_callable=AsyncMock
+    )
     async def test_request_response_cancelled(self, _send_request_mock):
         """Test RequestResponse: task cancelled. No callback shall be left."""
         xknx = XKNX()
