@@ -46,6 +46,10 @@ disable=
   unused-argument,
   wrong-import-order,
   unsubscriptable-object
+# disabled for tests via command line options in Makefile:
+#   - no-self-use
+#   - protected-access
+#   - abstract-class-instantiated
 # enable useless-suppression temporarily every now and then to clean them up
 enable=
   use-symbolic-message-instead
