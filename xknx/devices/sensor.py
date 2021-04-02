@@ -37,7 +37,6 @@ class Sensor(Device):
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize Sensor class."""
-        # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
 
         self.sensor_value: Union[RemoteValueControl, RemoteValueSensor]

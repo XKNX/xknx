@@ -59,7 +59,6 @@ class Action(ActionBase):
         counter: int = 1,
     ):
         """Initialize Action class."""
-        # pylint: disable=too-many-arguments
         super().__init__(xknx, hook, counter)
         self.target = target
         self.method = method
@@ -99,7 +98,6 @@ class ActionCallback(ActionBase):
         counter: int = 1,
     ):
         """Initialize Action class."""
-        # pylint: disable=too-many-arguments
         super().__init__(xknx, hook, counter)
         self.callback = callback
 

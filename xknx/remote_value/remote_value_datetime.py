@@ -39,7 +39,6 @@ class RemoteValueDateTime(RemoteValue[DPTArray, time.struct_time]):
         after_update_cb: Optional[AsyncCallbackType] = None,
     ):
         """Initialize RemoteValueSensor class."""
-        # pylint: disable=too-many-arguments
         try:
             self.dpt_class: Type[Union[DPTDate, DPTDateTime, DPTTime]] = DateTimeType[
                 value_type.upper()

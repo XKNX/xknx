@@ -44,7 +44,6 @@ DEFAULT_SETPOINT_SHIFT_MODE = SetpointShiftMode.DPT6010
 class Climate(Device):
     """Class for managing the climate."""
 
-    # pylint: disable=too-many-instance-attributes,invalid-name
     def __init__(
         self,
         xknx: "XKNX",
@@ -68,7 +67,6 @@ class Climate(Device):
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize Climate class."""
-        # pylint: disable=too-many-arguments, too-many-locals, too-many-branches, too-many-statements
         super().__init__(xknx, name, device_updated_cb)
 
         self.min_temp = min_temp
@@ -117,7 +115,7 @@ class Climate(Device):
             group_address_on_off is not None or group_address_on_off_state is not None
         )
 
-        self.on = RemoteValueSwitch(
+        self.on = RemoteValueSwitch(  # pylint: disable=invalid-name
             xknx,
             group_address_on_off,
             group_address_on_off_state,
@@ -170,7 +168,6 @@ class Climate(Device):
     @classmethod
     def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Climate":
         """Initialize object from configuration structure."""
-        # pylint: disable=too-many-locals
         group_address_temperature = config.get("group_address_temperature")
         group_address_target_temperature = config.get(
             "group_address_target_temperature"

@@ -25,8 +25,6 @@ class TravelStatus(Enum):
 class TravelCalculator:
     """Class for calculating the current position of a cover."""
 
-    # pylint: disable=too-many-instance-attributes
-
     def __init__(self, travel_time_down: float, travel_time_up: float) -> None:
         """Initialize TravelCalculator class."""
         self.last_known_position: Optional[int] = None

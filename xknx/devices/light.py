@@ -103,11 +103,9 @@ class _SwitchAndBrightness:
         return self.__dict__ == other.__dict__
 
 
-# pylint: disable=too-many-public-methods, too-many-instance-attributes
 class Light(Device):
     """Class for managing a light."""
 
-    # pylint: disable=too-many-locals
     DEFAULT_MIN_KELVIN = 2700  # 370 mireds
     DEFAULT_MAX_KELVIN = 6000  # 166 mireds
 
@@ -148,7 +146,6 @@ class Light(Device):
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize Light class."""
-        # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
 
         self.switch = RemoteValueSwitch(

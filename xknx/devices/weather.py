@@ -76,11 +76,9 @@ ILLUMINANCE_MAPPING: Tuple[
 )
 
 
-# pylint: disable=too-many-public-methods, too-many-instance-attributes
 class Weather(Device):
     """Class for managing a weather device."""
 
-    # pylint: disable=too-many-locals
     def __init__(
         self,
         xknx: "XKNX",
@@ -103,7 +101,6 @@ class Weather(Device):
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ) -> None:
         """Initialize Weather class."""
-        # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
 
         self._temperature = RemoteValueSensor(
@@ -410,7 +407,6 @@ class Weather(Device):
                     value_type=value_type,
                 )
 
-    # pylint: disable=too-many-return-statements
     def ha_current_state(self, current_date: date = date.today()) -> WeatherCondition:
         """Return the current state for home assistant."""
 

@@ -25,7 +25,6 @@ class Notification(Device):
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize notification class."""
-        # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
 
         self._message = RemoteValueString(

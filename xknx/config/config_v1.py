@@ -157,7 +157,6 @@ class ConfigV1:
             for group in doc["groups"]:
                 self.parse_group(doc, group)
 
-    # pylint: disable=too-many-branches
     def parse_group(self, doc: Dict[str, Any], group: str) -> None:
         """Parse a group entry of xknx.yaml."""
         try:

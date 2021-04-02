@@ -30,7 +30,6 @@ class RemoteValueSensor(RemoteValue[DPTArray, Union[int, float, str]]):
         after_update_cb: Optional[AsyncCallbackType] = None,
     ):
         """Initialize RemoteValueSensor class."""
-        # pylint: disable=too-many-arguments
         if value_type is None:
             raise ConversionError("no value type given", device_name=device_name)
         _dpt_class = DPTBase.parse_transcoder(value_type)

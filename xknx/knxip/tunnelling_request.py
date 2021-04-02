@@ -21,7 +21,6 @@ logger = logging.getLogger("xknx.log")
 class TunnellingRequest(KNXIPBody):
     """Representation of a KNX Tunnelling Request."""
 
-    # pylint: disable=too-many-instance-attributes
     SERVICE_TYPE = KNXIPServiceType.TUNNELLING_REQUEST
     HEADER_LENGTH = 4
 

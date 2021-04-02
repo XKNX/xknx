@@ -26,8 +26,6 @@ if TYPE_CHECKING:
 class CEMIFrame:
     """Representation of a CEMI Frame."""
 
-    # pylint: disable=too-many-instance-attributes
-
     def __init__(
         self,
         xknx: "XKNX",

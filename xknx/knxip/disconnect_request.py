@@ -18,7 +18,6 @@ if TYPE_CHECKING:
 class DisconnectRequest(KNXIPBody):
     """Representation of a KNX Disconnect Request."""
 
-    # pylint: disable=too-many-instance-attributes
     SERVICE_TYPE = KNXIPServiceType.DISCONNECT_REQUEST
 
     def __init__(

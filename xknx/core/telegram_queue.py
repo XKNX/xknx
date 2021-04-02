@@ -30,8 +30,6 @@ class TelegramQueue:
     class Callback:
         """Callback class for handling telegram received callbacks."""
 
-        # pylint: disable=too-few-public-methods
-
         def __init__(
             self,
             callback: "AsyncTelegramCallback",

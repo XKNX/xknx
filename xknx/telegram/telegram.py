@@ -30,8 +30,6 @@ class TelegramDirection(Enum):
 class Telegram:
     """Class for KNX telegrams."""
 
-    # pylint: disable=too-few-public-methods
-
     def __init__(
         self,
         destination_address: Union[GroupAddress, IndividualAddress] = GroupAddress(0),

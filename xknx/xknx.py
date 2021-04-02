@@ -27,8 +27,6 @@ logger = logging.getLogger("xknx.log")
 class XKNX:
     """Class for reading and writing KNX/IP packets."""
 
-    # pylint: disable=too-many-instance-attributes
-
     DEFAULT_ADDRESS = "15.15.250"
     DEFAULT_RATE_LIMIT = 20
 
@@ -48,7 +46,6 @@ class XKNX:
         connection_config: ConnectionConfig = ConnectionConfig(),
     ) -> None:
         """Initialize XKNX class."""
-        # pylint: disable=too-many-arguments
         self.devices = Devices()
         self.telegrams: asyncio.Queue[Optional[Telegram]] = asyncio.Queue()
         self.sigint_received = asyncio.Event()
