@@ -2,6 +2,8 @@
 
 ## Unreleased changes
 
+- Drop support for python 3.7
+
 ### Internals
 
 - use pytest tests instead of unittest TestCase
