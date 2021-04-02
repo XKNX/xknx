@@ -32,11 +32,6 @@ logger = logging.getLogger("xknx.log")
 class Cover(Device):
     """Class for managing a cover."""
 
-    # pylint: disable=too-many-instance-attributes
-    # pylint: disable=too-many-public-methods
-    # pylint: disable=too-many-locals
-
-    # Average typical travel time of a cover
     DEFAULT_TRAVEL_TIME_DOWN = 22
     DEFAULT_TRAVEL_TIME_UP = 22
 
@@ -59,7 +54,6 @@ class Cover(Device):
         device_class: Optional[str] = None,
     ):
         """Initialize Cover class."""
-        # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
         # self.after_update for position changes is called after updating the
         # travelcalculator (in process_group_write and set_*) - angle changes

@@ -115,8 +115,6 @@ class DIBGeneric(DIB):
 class DIBSuppSVCFamilies(DIB):
     """Class for serialization and deserialization of KNX DIB Supported Services."""
 
-    # pylint: disable=too-few-public-methods
-
     class Family:
         """Class for storing a supported device family."""
 
@@ -186,8 +184,6 @@ class DIBSuppSVCFamilies(DIB):
 
 class DIBDeviceInformation(DIB):
     """Class for serialization and deserialization of KNX DIB Device Information Block."""
-
-    # pylint: disable=too-many-instance-attributes
 
     LENGTH = 54
 

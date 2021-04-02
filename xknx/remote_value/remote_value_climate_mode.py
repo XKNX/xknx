@@ -55,7 +55,6 @@ class RemoteValueOperationMode(RemoteValueClimateModeBase[DPTArray, HVACOperatio
         after_update_cb: Optional[AsyncCallbackType] = None,
     ):
         """Initialize remote value of KNX climate mode."""
-        # pylint: disable=too-many-arguments
         super().__init__(
             xknx,
             group_address=group_address,
@@ -118,7 +117,6 @@ class RemoteValueControllerMode(
         after_update_cb: Optional[AsyncCallbackType] = None,
     ):
         """Initialize remote value of KNX climate mode."""
-        # pylint: disable=too-many-arguments
         super().__init__(
             xknx,
             group_address=group_address,
@@ -172,7 +170,6 @@ class RemoteValueBinaryOperationMode(
         operation_mode: Optional[HVACOperationMode] = None,
     ):
         """Initialize remote value of KNX DPT 1 representing a climate operation mode."""
-        # pylint: disable=too-many-arguments
         if not isinstance(operation_mode, HVACOperationMode):
             raise ConversionError(
                 "Invalid operation mode type",
@@ -258,7 +255,6 @@ class RemoteValueBinaryHeatCool(
         controller_mode: Optional[HVACControllerMode] = None,
     ):
         """Initialize remote value of KNX DPT 1 representing a climate controller mode."""
-        # pylint: disable=too-many-arguments
         if not isinstance(controller_mode, HVACControllerMode):
             raise ConversionError(
                 "Invalid controller mode type",

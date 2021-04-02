@@ -55,8 +55,6 @@ class ConnectionConfig:
     * scan_filter: For AUTOMATIC connection, limit scan with the given filter
     """
 
-    # pylint: disable=too-few-public-methods,too-many-instance-attributes
-
     def __init__(
         self,
         connection_type: ConnectionType = ConnectionType.AUTOMATIC,
@@ -70,7 +68,6 @@ class ConnectionConfig:
         scan_filter: GatewayScanFilter = GatewayScanFilter(),
     ):
         """Initialize ConnectionConfig class."""
-        # pylint: disable=too-many-arguments
         self.connection_type = connection_type
         self.local_ip = local_ip
         self.local_port = local_port
@@ -164,7 +161,6 @@ class KNXIPInterface:
         route_back: bool,
     ) -> None:
         """Start KNX/IP tunnel."""
-        # pylint: disable=too-many-arguments
         validate_ip(gateway_ip, address_name="Gateway IP address")
         if local_ip is None:
             local_ip = self.find_local_ip(gateway_ip=gateway_ip)

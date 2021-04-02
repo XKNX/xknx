@@ -25,7 +25,6 @@ if TYPE_CHECKING:
 class BinarySensor(Device):
     """Class for binary sensor."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         xknx: "XKNX",
@@ -42,7 +41,6 @@ class BinarySensor(Device):
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize BinarySensor class."""
-        # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
         if actions is None:
             actions = []

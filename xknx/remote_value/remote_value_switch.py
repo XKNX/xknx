@@ -29,7 +29,6 @@ class RemoteValueSwitch(RemoteValue[DPTBinary, bool]):
         invert: bool = False,
     ):
         """Initialize remote value of KNX DPT 1.001."""
-        # pylint: disable=too-many-arguments
         super().__init__(
             xknx,
             group_address,

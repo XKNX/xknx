@@ -145,7 +145,6 @@ class StateTrackerType(Enum):
 class _StateTracker:
     """Keeps track of the age of the state from one RemoteValue."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         read_state_awaitable: Callable[[], Awaitable[None]],
@@ -153,7 +152,6 @@ class _StateTracker:
         interval_min: float = 60,
     ):
         """Initialize StateTracker class."""
-        # pylint: disable=too-many-arguments
         self.tracker_type = tracker_type
         self.update_interval = interval_min * 60
         self._read_state = read_state_awaitable

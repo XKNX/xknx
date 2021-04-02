@@ -40,7 +40,6 @@ ValueType = TypeVar("ValueType")
 class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
     """Class for managing remote knx value."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         xknx: "XKNX",
@@ -52,7 +51,6 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
         after_update_cb: Optional[AsyncCallbackType] = None,
     ):
         """Initialize RemoteValue class."""
-        # pylint: disable=too-many-arguments
         self.xknx: "XKNX" = xknx
         self.passive_group_addresses: List[GroupAddress] = []
 
@@ -212,7 +210,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
             )
             return
 
-        payload = self.to_knx(value)  # pylint: disable=assignment-from-no-return
+        payload = self.to_knx(value)
         await self._send(payload, response)
         # self.payload is set and after_update_cb() called when the outgoing telegram is processed.
 

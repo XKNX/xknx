@@ -16,7 +16,6 @@ if TYPE_CHECKING:
 class SearchRequest(KNXIPBody):
     """Representation of a KNX Connect Request."""
 
-    # pylint: disable=too-many-instance-attributes
     SERVICE_TYPE = KNXIPServiceType.SEARCH_REQUEST
 
     def __init__(self, xknx: "XKNX", discovery_endpoint: Optional[HPAI] = None):

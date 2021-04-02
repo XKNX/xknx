@@ -76,7 +76,6 @@ class Device(ABC):
     async def after_update(self) -> None:
         """Execute callbacks after internal state has been changed."""
         for device_updated_cb in self.device_updated_cbs:
-            # pylint: disable=not-callable
             await device_updated_cb(self)
 
     async def sync(self, wait_for_result: bool = False) -> None:
@@ -117,9 +116,8 @@ class Device(ABC):
                 return True
         return False
 
-    async def do(self, action: str) -> None:
+    async def do(self, action: str) -> None:  # pylint: disable=invalid-name
         """Execute 'do' commands."""
-        # pylint: disable=invalid-name
         logger.info(
             "'do()' not implemented for action '%s' of %s",
             action,

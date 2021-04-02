@@ -18,8 +18,6 @@ if TYPE_CHECKING:
 class ConnectRequest(KNXIPBody):
     """Representation of a KNX Connect Request."""
 
-    # pylint: disable=too-many-instance-attributes
-
     SERVICE_TYPE = KNXIPServiceType.CONNECT_REQUEST
     CRI_LENGTH = 4
 

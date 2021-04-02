@@ -26,7 +26,6 @@ class RemoteValueSetpointShift(RemoteValue[DPTArray, float]):
         setpoint_shift_step: float = 0.1,
     ):
         """Initialize RemoteValueSetpointShift class."""
-        # pylint: disable=too-many-arguments
         super().__init__(
             xknx,
             group_address,

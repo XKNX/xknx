@@ -30,7 +30,6 @@ class RemoteValueControl(RemoteValue[DPTBinary, Any]):
         after_update_cb: Optional[AsyncCallbackType] = None,
     ):
         """Initialize control remote value."""
-        # pylint: disable=too-many-arguments
         if value_type is None:
             raise ConversionError("no value type given", device_name=device_name)
         # TODO: typing - parse from DPTControlStepCode when parse_transcoder is a classmethod

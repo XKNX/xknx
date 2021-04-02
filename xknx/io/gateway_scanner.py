@@ -33,8 +33,6 @@ logger = logging.getLogger("xknx.log")
 class GatewayDescriptor:
     """Used to return information about the discovered gateways."""
 
-    # pylint: disable=too-few-public-methods
-
     def __init__(
         self,
         name: str,
@@ -46,7 +44,6 @@ class GatewayDescriptor:
         supports_routing: bool = False,
     ):
         """Initialize GatewayDescriptor class."""
-        # pylint: disable=too-many-arguments
         self.name = name
         self.ip_addr = ip_addr
         self.port = port
@@ -70,8 +67,6 @@ class GatewayDescriptor:
 
 class GatewayScanFilter:
     """Filter to limit gateway scan attempts."""
-
-    # pylint: disable=too-few-public-methods
 
     def __init__(
         self,
@@ -101,8 +96,6 @@ class GatewayScanFilter:
 class GatewayScanner:
     """Class for searching KNX/IP devices."""
 
-    # pylint: disable=too-few-public-methods
-    # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         xknx: "XKNX",
@@ -146,7 +139,6 @@ class GatewayScanner:
 
     async def _send_search_requests(self) -> None:
         """Find all interfaces with active IPv4 connection to search for gateways."""
-        # pylint: disable=no-member
         for interface in netifaces.interfaces():
             try:
                 af_inet = netifaces.ifaddresses(interface)[netifaces.AF_INET]

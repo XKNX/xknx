@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 class SearchResponse(KNXIPBody):
     """Representation of a KNX Search Response."""
 
-    # pylint: disable=too-many-instance-attributes
     SERVICE_TYPE = KNXIPServiceType.SEARCH_RESPONSE
 
     def __init__(self, xknx: "XKNX", control_endpoint: HPAI = HPAI()):
