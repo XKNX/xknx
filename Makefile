@@ -29,10 +29,11 @@ pypi:
 	@twine upload dist/*
 
 pylint:
-	@pylint -j 8 --rcfile=.pylintrc xknx test/*.py *.py examples/*.py
+	@pylint -j 0 --rcfile=.pylintrc xknx *.py examples/*.py
+	@pylint -j 0 --rcfile=test/.pylintrc test/*.py test/*/*.py
 
 pydocstyle:
-	 @pydocstyle xknx test/*.py test/*.py *.py examples/*.py
+	@pydocstyle xknx test/*.py test/*.py *.py examples/*.py
 
 coverage:
 	pytest --cov-report html --cov xknx --verbose

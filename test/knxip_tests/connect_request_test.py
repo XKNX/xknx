@@ -1,31 +1,12 @@
 """Unit test for KNX/IP ConnectRequests."""
-import asyncio
-import unittest
-
+import pytest
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
-from xknx.knxip import (
-    HPAI,
-    ConnectRequest,
-    ConnectRequestType,
-    KNXIPFrame,
-    KNXIPServiceType,
-)
+from xknx.knxip import HPAI, ConnectRequest, ConnectRequestType, KNXIPFrame
 
 
-class Test_KNXIP_ConnectRequest(unittest.TestCase):
+class TestKNXIPConnectRequest:
     """Test class for KNX/IP ConnectRequests."""
-
-    # pylint: disable=too-many-public-methods,invalid-name
-
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
 
     def test_connect_request(self):
         """Test parsing and streaming connection request KNX/IP packet."""
@@ -61,16 +42,12 @@ class Test_KNXIP_ConnectRequest(unittest.TestCase):
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 
-        self.assertTrue(isinstance(knxipframe.body, ConnectRequest))
-        self.assertEqual(
-            knxipframe.body.request_type, ConnectRequestType.TUNNEL_CONNECTION
+        assert isinstance(knxipframe.body, ConnectRequest)
+        assert knxipframe.body.request_type == ConnectRequestType.TUNNEL_CONNECTION
+        assert knxipframe.body.control_endpoint == HPAI(
+            ip_addr="192.168.42.1", port=33941
         )
-        self.assertEqual(
-            knxipframe.body.control_endpoint, HPAI(ip_addr="192.168.42.1", port=33941)
-        )
-        self.assertEqual(
-            knxipframe.body.data_endpoint, HPAI(ip_addr="192.168.42.1", port=52393)
-        )
+        assert knxipframe.body.data_endpoint == HPAI(ip_addr="192.168.42.1", port=52393)
 
         connect_request = ConnectRequest(
             xknx,
@@ -80,7 +57,7 @@ class Test_KNXIP_ConnectRequest(unittest.TestCase):
         )
         knxipframe2 = KNXIPFrame.init_from_body(connect_request)
 
-        self.assertEqual(knxipframe2.to_knx(), list(raw))
+        assert knxipframe2.to_knx() == list(raw)
 
     def test_from_knx_wrong_length_of_cri(self):
         """Test parsing and streaming wrong ConnectRequest."""
@@ -114,7 +91,7 @@ class Test_KNXIP_ConnectRequest(unittest.TestCase):
         )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
-        with self.assertRaises(CouldNotParseKNXIP):
+        with pytest.raises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
 
     def test_from_knx_wrong_cri(self):
@@ -148,5 +125,5 @@ class Test_KNXIP_ConnectRequest(unittest.TestCase):
         )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
-        with self.assertRaises(CouldNotParseKNXIP):
+        with pytest.raises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
