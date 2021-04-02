@@ -26,8 +26,6 @@ knx_logger = logging.getLogger("xknx.knx")
 class UDPClient:
     """Class for handling (sending and receiving) UDP packets."""
 
-    # pylint: disable=too-few-public-methods
-
     class Callback:
         """Callback class for handling callbacks for different 'KNX service types' of received packets."""
 
@@ -85,7 +83,6 @@ class UDPClient:
         multicast: bool = False,
     ):
         """Initialize UDPClient class."""
-        # pylint: disable=too-many-arguments
         if not isinstance(local_addr, tuple):
             raise TypeError()
         if not isinstance(remote_addr, tuple):

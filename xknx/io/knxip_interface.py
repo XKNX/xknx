@@ -101,7 +101,6 @@ class KNXIPInterface:
         route_back: bool,
     ) -> None:
         """Start KNX/IP tunnel."""
-        # pylint: disable=too-many-arguments
         validate_ip(gateway_ip, address_name="Gateway IP address")
         if local_ip is None:
             local_ip = self.find_local_ip(gateway_ip=gateway_ip)

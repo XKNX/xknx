@@ -24,7 +24,6 @@ class Scene(Device):
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize Sceneclass."""
-        # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
 
         # TODO: state_updater: disable for scene number per default?

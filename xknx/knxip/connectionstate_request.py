@@ -18,7 +18,6 @@ if TYPE_CHECKING:
 class ConnectionStateRequest(KNXIPBody):
     """Representation of a KNX Connection State Request."""
 
-    # pylint: disable=too-many-instance-attributes
     SERVICE_TYPE = KNXIPServiceType.CONNECTIONSTATE_REQUEST
 
     def __init__(

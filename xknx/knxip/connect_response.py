@@ -21,8 +21,6 @@ if TYPE_CHECKING:
 class ConnectResponse(KNXIPBodyResponse):
     """Representation of a KNX Connect Response."""
 
-    # pylint: disable=too-many-instance-attributes
-
     SERVICE_TYPE = KNXIPServiceType.CONNECT_RESPONSE
     CRD_LENGTH = 4
 

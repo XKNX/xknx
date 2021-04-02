@@ -21,7 +21,6 @@ class RemoteValueUpDown(RemoteValue[DPTBinary, "RemoteValueUpDown.Direction"]):
     class Direction(Enum):
         """Enum for indicating the direction."""
 
-        # pylint: disable=invalid-name
         UP = 0
         DOWN = 1
 
@@ -36,7 +35,6 @@ class RemoteValueUpDown(RemoteValue[DPTBinary, "RemoteValueUpDown.Direction"]):
         invert: bool = False,
     ):
         """Initialize remote value of KNX DPT 1.008."""
-        # pylint: disable=too-many-arguments
         super().__init__(
             xknx,
             group_address,

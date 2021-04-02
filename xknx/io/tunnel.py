@@ -35,8 +35,6 @@ logger = logging.getLogger("xknx.log")
 class Tunnel(Interface):
     """Class for handling KNX/IP tunnels."""
 
-    # pylint: disable=too-many-instance-attributes
-
     def __init__(
         self,
         xknx: "XKNX",
@@ -50,7 +48,6 @@ class Tunnel(Interface):
         auto_reconnect_wait: int = 3,
     ):
         """Initialize Tunnel class."""
-        # pylint: disable=too-many-arguments
         self.xknx = xknx
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port

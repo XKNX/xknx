@@ -77,8 +77,6 @@ class CEMIMessageCode(Enum):
 class CEMIFlags:
     """Enum class for KNX/IP CEMI Flags."""
 
-    # pylint: disable=too-few-public-methods
-
     # Bit 1/7
     FRAME_TYPE_EXTENDED = 0x0000
     FRAME_TYPE_STANDARD = 0x8000
@@ -171,7 +169,6 @@ class KNXMedium(Enum):
 
     TP1 = 0x02
     PL110 = 0x04
-    # pylint: disable=invalid-name
     RF = 0x10
     KNX_IP = 0x20
 

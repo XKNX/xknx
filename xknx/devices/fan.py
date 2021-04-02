@@ -37,9 +37,6 @@ class FanSpeedMode(Enum):
 class Fan(Device):
     """Class for managing a fan."""
 
-    # pylint: disable=too-many-instance-attributes
-    # pylint: disable=too-many-public-methods
-
     def __init__(
         self,
         xknx: "XKNX",
@@ -52,7 +49,6 @@ class Fan(Device):
         max_step: Optional[int] = None,
     ):
         """Initialize fan class."""
-        # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
 
         self.speed: Union[RemoteValueDptValue1Ucount, RemoteValueScaling]

@@ -19,7 +19,6 @@ if TYPE_CHECKING:
 class TunnellingAck(KNXIPBodyResponse):
     """Representation of a KNX Tunnelling Ack."""
 
-    # pylint: disable=too-many-instance-attributes
     SERVICE_TYPE = KNXIPServiceType.TUNNELLING_ACK
     BODY_LENGTH = 4
 

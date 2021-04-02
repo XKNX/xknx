@@ -27,7 +27,6 @@ class RemoteValueColorRGBW(RemoteValue[DPTArray, Tuple[int, int, int, int]]):
         after_update_cb: Optional[AsyncCallbackType] = None,
     ):
         """Initialize remote value of KNX DPT 251.600 (DPT_Color_RGBW)."""
-        # pylint: disable=too-many-arguments
         super().__init__(
             xknx,
             group_address,

@@ -35,7 +35,6 @@ class RemoteValueStep(RemoteValue[DPTBinary, "RemoteValueStep.Direction"]):
         invert: bool = False,
     ):
         """Initialize remote value of KNX DPT 1.007."""
-        # pylint: disable=too-many-arguments
         super().__init__(
             xknx,
             group_address,

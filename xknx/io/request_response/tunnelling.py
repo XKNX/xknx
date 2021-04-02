@@ -30,7 +30,6 @@ class Tunnelling(RequestResponse):
         communication_channel_id: int,
     ):
         """Initialize Tunnelling class."""
-        # pylint: disable=too-many-arguments
         self.xknx = xknx
         self.udp_client = udp_client
         self.src_address = src_address

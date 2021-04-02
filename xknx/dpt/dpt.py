@@ -141,8 +141,6 @@ class DPTBase(ABC):
 class DPTBinary:
     """The DPTBinary is a base class for all datatypes encoded directly into the last 6 bit of the APCI (mostly integer)."""
 
-    # pylint: disable=too-few-public-methods
-
     # APCI (application layer control information)
     APCI_BITMASK = 0x3F
     APCI_MAX_VALUE = APCI_BITMASK
@@ -172,7 +170,6 @@ class DPTBinary:
 class DPTArray:
     """The DPTArray is a base class for all datatypes appended to the KNX telegram."""
 
-    # pylint: disable=too-few-public-methods
     def __init__(self, value: Union[int, bytes, Tuple[int, ...], List[int]]) -> None:
         """Initialize DPTArray class."""
         self.value: Tuple[int, ...]

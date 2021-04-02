@@ -31,8 +31,6 @@ from .address import GroupAddress
 class AddressFilter:
     """Class for filtering Addresses according to patterns."""
 
-    # pylint: disable=too-few-public-methods
-
     def __init__(self, pattern: str) -> None:
         """Initialize AddressFilter class."""
         self.level_filters: List["AddressFilter.LevelFilter"] = []
@@ -135,7 +133,6 @@ class AddressFilter:
     class LevelFilter:
         """Class for filtering patterns like "8,11-14,20"."""
 
-        # pylint: disable=too-few-public-methods
         def __init__(self, pattern: str) -> None:
             """Initialize LevelFilter."""
             self.ranges: List["AddressFilter.Range"] = []

@@ -21,7 +21,6 @@ if TYPE_CHECKING:
 class DateTime(Device):
     """Class for virtual date/time device."""
 
-    # pylint: disable=too-many-arguments
     def __init__(
         self,
         xknx: "XKNX",
