@@ -1,7 +1,5 @@
 """Unit test for RemoteValueUpDown objects."""
-import asyncio
-import unittest
-
+import pytest
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -10,95 +8,65 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-class TestRemoteValueUpDown(unittest.TestCase):
+@pytest.mark.asyncio
+class TestRemoteValueUpDown:
     """Test class for RemoteValueUpDown objects."""
-
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
 
     def test_to_knx(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx)
-        self.assertEqual(
-            remote_value.to_knx(RemoteValueUpDown.Direction.UP), DPTBinary(0)
-        )
-        self.assertEqual(
-            remote_value.to_knx(RemoteValueUpDown.Direction.DOWN), DPTBinary(1)
-        )
+        assert remote_value.to_knx(RemoteValueUpDown.Direction.UP) == DPTBinary(0)
+        assert remote_value.to_knx(RemoteValueUpDown.Direction.DOWN) == DPTBinary(1)
 
     def test_from_knx(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx)
-        self.assertEqual(
-            remote_value.from_knx(DPTBinary(0)), RemoteValueUpDown.Direction.UP
-        )
-        self.assertEqual(
-            remote_value.from_knx(DPTBinary(1)), RemoteValueUpDown.Direction.DOWN
-        )
+        assert remote_value.from_knx(DPTBinary(0)) == RemoteValueUpDown.Direction.UP
+        assert remote_value.from_knx(DPTBinary(1)) == RemoteValueUpDown.Direction.DOWN
 
     def test_to_knx_invert(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx, invert=True)
-        self.assertEqual(
-            remote_value.to_knx(RemoteValueUpDown.Direction.UP), DPTBinary(1)
-        )
-        self.assertEqual(
-            remote_value.to_knx(RemoteValueUpDown.Direction.DOWN), DPTBinary(0)
-        )
+        assert remote_value.to_knx(RemoteValueUpDown.Direction.UP) == DPTBinary(1)
+        assert remote_value.to_knx(RemoteValueUpDown.Direction.DOWN) == DPTBinary(0)
 
     def test_from_knx_invert(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx, invert=True)
-        self.assertEqual(
-            remote_value.from_knx(DPTBinary(0)), RemoteValueUpDown.Direction.DOWN
-        )
-        self.assertEqual(
-            remote_value.from_knx(DPTBinary(1)), RemoteValueUpDown.Direction.UP
-        )
+        assert remote_value.from_knx(DPTBinary(0)) == RemoteValueUpDown.Direction.DOWN
+        assert remote_value.from_knx(DPTBinary(1)) == RemoteValueUpDown.Direction.UP
 
     def test_to_knx_error(self):
         """Test to_knx function with wrong parametern."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx)
-        with self.assertRaises(ConversionError):
+        with pytest.raises(ConversionError):
             remote_value.to_knx(1)
 
-    def test_set(self):
+    async def test_set(self):
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx, group_address=GroupAddress("1/2/3"))
-        self.loop.run_until_complete(remote_value.down())
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        await remote_value.down()
+        assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTBinary(1)),
-            ),
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
         )
-        self.loop.run_until_complete(remote_value.up())
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        await remote_value.up()
+        assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTBinary(0)),
-            ),
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(0)),
         )
 
-    def test_process(self):
+    async def test_process(self):
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx, group_address=GroupAddress("1/2/3"))
@@ -106,25 +74,25 @@ class TestRemoteValueUpDown(unittest.TestCase):
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        self.assertEqual(remote_value.value, None)
-        self.loop.run_until_complete(remote_value.process(telegram))
-        self.assertEqual(remote_value.value, RemoteValueUpDown.Direction.DOWN)
+        assert remote_value.value is None
+        await remote_value.process(telegram)
+        assert remote_value.value == RemoteValueUpDown.Direction.DOWN
 
-    def test_to_process_error(self):
+    async def test_to_process_error(self):
         """Test process errornous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx, group_address=GroupAddress("1/2/3"))
-        with self.assertRaises(CouldNotParseTelegram):
+        with pytest.raises(CouldNotParseTelegram):
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/3"),
                 payload=GroupValueWrite(DPTArray(0x01)),
             )
-            self.loop.run_until_complete(remote_value.process(telegram))
-        with self.assertRaises(CouldNotParseTelegram):
+            await remote_value.process(telegram)
+        with pytest.raises(CouldNotParseTelegram):
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/3"),
                 payload=GroupValueWrite(DPTBinary(3)),
             )
-            self.loop.run_until_complete(remote_value.process(telegram))
+            await remote_value.process(telegram)
             # pylint: disable=pointless-statement
             remote_value.value

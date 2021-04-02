@@ -44,7 +44,7 @@ class RequestResponse:
     async def start(self) -> None:
         """Start. Send request and wait for an answer."""
         callb = self.udpclient.register_callback(
-            self.response_rec_callback, [self.awaited_response_class.service_type]
+            self.response_rec_callback, [self.awaited_response_class.SERVICE_TYPE]
         )
         await self.send_request()
 

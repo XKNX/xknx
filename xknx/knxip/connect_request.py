@@ -20,8 +20,7 @@ class ConnectRequest(KNXIPBody):
 
     # pylint: disable=too-many-instance-attributes
 
-    service_type = KNXIPServiceType.CONNECT_REQUEST
-
+    SERVICE_TYPE = KNXIPServiceType.CONNECT_REQUEST
     CRI_LENGTH = 4
 
     def __init__(

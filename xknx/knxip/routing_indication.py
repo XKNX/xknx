@@ -21,8 +21,7 @@ class RoutingIndication(KNXIPBody):
     """Representation of a KNX Routing Indication."""
 
     # pylint: disable=too-many-instance-attributes
-
-    service_type = KNXIPServiceType.ROUTING_INDICATION
+    SERVICE_TYPE = KNXIPServiceType.ROUTING_INDICATION
 
     def __init__(self, xknx: "XKNX", cemi: Optional[CEMIFrame] = None):
         """Initialize SearchRequest object."""
