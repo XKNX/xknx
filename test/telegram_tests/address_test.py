@@ -1,101 +1,145 @@
 """Unit test for Address class."""
-from unittest import TestCase
-
+import pytest
 from xknx.exceptions import CouldNotParseAddress
 from xknx.telegram import GroupAddress, GroupAddressType, IndividualAddress
 
 
-class TestIndividualAddress(TestCase):
+class TestIndividualAddress:
     """Test class for IndividualAddress."""
 
-    def test_with_valid(self):
-        """Test with some valid addresses."""
-        valid_addresses = (
-            ("0.0.0", 0),
-            ("123", 123),
-            ("1.0.0", 4096),
-            ("1.1.0", 4352),
-            ("1.1.1", 4353),
-            ("1.1.11", 4363),
-            ("1.1.111", 4463),
-            ("1.11.111", 7023),
-            ("11.11.111", 47983),
-            (IndividualAddress("11.11.111"), 47983),
-            ("15.15.255", 65535),
-            ((0xFF, 0xFF), 65535),
-            (0, 0),
-            (65535, 65535),
-        )
-        for address in valid_addresses:
-            with self.subTest(address=address):
-                self.assertEqual(IndividualAddress(address[0]).raw, address[1])
+    valid_addresses = [
+        ("0.0.0", 0),
+        ("123", 123),
+        ("1.0.0", 4096),
+        ("1.1.0", 4352),
+        ("1.1.1", 4353),
+        ("1.1.11", 4363),
+        ("1.1.111", 4463),
+        ("1.11.111", 7023),
+        ("11.11.111", 47983),
+        (IndividualAddress("11.11.111"), 47983),
+        ("15.15.255", 65535),
+        ((0xFF, 0xFF), 65535),
+        (0, 0),
+        (65535, 65535),
+    ]
+    invalid_addresses = [
+        "15.15.256",
+        "16.0.0",
+        "0.16.0",
+        "15.15.255a",
+        "a15.15.255",
+        "abc",
+        65536,
+        (0xFF, 0xFFF),
+        (0xFFF, 0xFF),
+        (-1, -1),
+        [],
+    ]
 
-    def test_with_invalid(self):
+    @pytest.mark.parametrize("address_test,address_raw", valid_addresses)
+    def test_with_valid(self, address_test, address_raw):
+        """Test with some valid addresses."""
+
+        assert IndividualAddress(address_test).raw == address_raw
+
+    @pytest.mark.parametrize("address_test", invalid_addresses)
+    def test_with_invalid(self, address_test):
         """Test with some invalid addresses."""
-        invalid_addresses = (
-            "15.15.256",
-            "16.0.0",
-            "0.16.0",
-            "15.15.255a",
-            "a15.15.255",
-            "abc",
-            65536,
-            (0xFF, 0xFFF),
-            (0xFFF, 0xFF),
-            (-1, -1),
-            [],
-        )
-        for address in invalid_addresses:
-            with self.subTest(address=address):
-                with self.assertRaises(CouldNotParseAddress):
-                    IndividualAddress(address)
+
+        with pytest.raises(CouldNotParseAddress):
+            IndividualAddress(address_test)
 
     def test_with_int(self):
         """Test initialization with free format address as integer."""
-        self.assertEqual(IndividualAddress(49552).raw, 49552)
+        assert IndividualAddress(49552).raw == 49552
 
     def test_with_bytes(self):
         """Test initialization with Bytes."""
-        self.assertEqual(IndividualAddress((0x12, 0x34)).raw, 0x1234)
+        assert IndividualAddress((0x12, 0x34)).raw == 0x1234
 
     def test_with_none(self):
         """Test initialization with None object."""
-        self.assertEqual(IndividualAddress(None).raw, 0)
+        assert IndividualAddress(None).raw == 0
 
     def test_is_line(self):
         """Test if `IndividualAddress.is_line` works like excepted."""
-        self.assertTrue(IndividualAddress("1.0.0").is_line)
-        self.assertFalse(IndividualAddress("1.0.1").is_line)
+        assert IndividualAddress("1.0.0").is_line
+        assert not IndividualAddress("1.0.1").is_line
 
     def test_is_device(self):
         """Test if `IndividualAddress.is_device` works like excepted."""
-        self.assertTrue(IndividualAddress("1.0.1").is_device)
-        self.assertFalse(IndividualAddress("1.0.0").is_device)
+        assert IndividualAddress("1.0.1").is_device
+        assert not IndividualAddress("1.0.0").is_device
 
     def test_to_knx(self):
         """Test if `IndividualAddress.to_knx()` generates valid byte tuples."""
-        self.assertEqual(IndividualAddress("0.0.0").to_knx(), (0x0, 0x0))
-        self.assertEqual(IndividualAddress("15.15.255").to_knx(), (0xFF, 0xFF))
+        assert IndividualAddress("0.0.0").to_knx() == (0x0, 0x0)
+        assert IndividualAddress("15.15.255").to_knx() == (0xFF, 0xFF)
 
     def test_equal(self):
         """Test if the equal operator works in all cases."""
-        self.assertEqual(IndividualAddress("1.0.0"), IndividualAddress(4096))
-        self.assertNotEqual(IndividualAddress("1.0.0"), IndividualAddress("1.1.1"))
-        self.assertNotEqual(IndividualAddress("1.0.0"), None)
-        self.assertNotEqual(IndividualAddress("1.0.0"), "example")
-        self.assertNotEqual(IndividualAddress("1.1.1"), GroupAddress("1/1/1"))
-        self.assertNotEqual(IndividualAddress(250), GroupAddress(250))
-        self.assertNotEqual(IndividualAddress(250), 250)
+        assert IndividualAddress("1.0.0") == IndividualAddress(4096)
+        assert IndividualAddress("1.0.0") != IndividualAddress("1.1.1")
+        assert IndividualAddress("1.0.0") is not None
+        assert IndividualAddress("1.0.0") != "example"
+        assert IndividualAddress("1.1.1") != GroupAddress("1/1/1")
+        assert IndividualAddress(250) != GroupAddress(250)
+        assert IndividualAddress(250) != 250
 
     def test_representation(self):
         """Test string representation of address."""
-        self.assertEqual(repr(IndividualAddress("2.3.4")), 'IndividualAddress("2.3.4")')
+        assert repr(IndividualAddress("2.3.4")) == 'IndividualAddress("2.3.4")'
 
 
-class TestGroupAddress(TestCase):
+class TestGroupAddress:
     """Test class for GroupAddress."""
 
-    def test_with_valid(self):
+    valid_addresses = [
+        ("0/0", 0),
+        ("0/1", 1),
+        ("0/11", 11),
+        ("0/111", 111),
+        ("0/1111", 1111),
+        ("0/2047", 2047),
+        ("0/0/0", 0),
+        ("0/0/1", 1),
+        ("0/0/11", 11),
+        ("0/0/111", 111),
+        ("0/0/255", 255),
+        ("0/1/11", 267),
+        ("0/1/111", 367),
+        ("0/7/255", 2047),
+        ("1/0", 2048),
+        ("1/0/0", 2048),
+        ("1/1/111", 2415),
+        ("1/7/255", 4095),
+        ("31/7/255", 65535),
+        ("1", 1),
+        (0, 0),
+        (65535, 65535),
+        ((0xFF, 0xFF), 65535),
+        (GroupAddress("1/1/111"), 2415),
+        (None, 0),
+    ]
+
+    invalid_addresses = [
+        "0/2049",
+        "0/8/0",
+        "0/0/256",
+        "32/0",
+        "0/0a",
+        "a0/0",
+        "abc",
+        65536,
+        (0xFF, 0xFFF),
+        (0xFFF, 0xFF),
+        (-1, -1),
+        [],
+    ]
+
+    @pytest.mark.parametrize("address_test,address_raw", valid_addresses)
+    def test_with_valid(self, address_test, address_raw):
         """
         Test if the class constructor generates valid raw values.
 
@@ -104,38 +148,11 @@ class TestGroupAddress(TestCase):
         * for conversation errors
         * for upper/lower limits still working, to avoid off-by-one errors
         """
-        valid_addresses = (
-            ("0/0", 0),
-            ("0/1", 1),
-            ("0/11", 11),
-            ("0/111", 111),
-            ("0/1111", 1111),
-            ("0/2047", 2047),
-            ("0/0/0", 0),
-            ("0/0/1", 1),
-            ("0/0/11", 11),
-            ("0/0/111", 111),
-            ("0/0/255", 255),
-            ("0/1/11", 267),
-            ("0/1/111", 367),
-            ("0/7/255", 2047),
-            ("1/0", 2048),
-            ("1/0/0", 2048),
-            ("1/1/111", 2415),
-            ("1/7/255", 4095),
-            ("31/7/255", 65535),
-            ("1", 1),
-            (0, 0),
-            (65535, 65535),
-            ((0xFF, 0xFF), 65535),
-            (GroupAddress("1/1/111"), 2415),
-            (None, 0),
-        )
-        for address in valid_addresses:
-            with self.subTest(address=address):
-                self.assertEqual(GroupAddress(address[0]).raw, address[1])
 
-    def test_with_invalid(self):
+        assert GroupAddress(address_test).raw == address_raw
+
+    @pytest.mark.parametrize("address_test", invalid_addresses)
+    def test_with_invalid(self, address_test):
         """
         Test if constructor raises an exception for all known invalid cases.
 
@@ -144,24 +161,9 @@ class TestGroupAddress(TestCase):
         * invalid input variants (lists instead of tuples)
         * invalid strings
         """
-        invalid_addresses = (
-            "0/2049",
-            "0/8/0",
-            "0/0/256",
-            "32/0",
-            "0/0a",
-            "a0/0",
-            "abc",
-            65536,
-            (0xFF, 0xFFF),
-            (0xFFF, 0xFF),
-            (-1, -1),
-            [],
-        )
-        for address in invalid_addresses:
-            with self.subTest(address=address):
-                with self.assertRaises(CouldNotParseAddress):
-                    GroupAddress(address)
+
+        with pytest.raises(CouldNotParseAddress):
+            GroupAddress(address_test)
 
     def test_main(self):
         """
@@ -171,10 +173,10 @@ class TestGroupAddress(TestCase):
         * Main group part of a strings returns the right value
         * Return `None` on `GroupAddressType.FREE`
         """
-        self.assertEqual(GroupAddress("1/0").main, 1)
-        self.assertEqual(GroupAddress("15/0").main, 15)
-        self.assertEqual(GroupAddress("31/0/0").main, 31)
-        self.assertIsNone(GroupAddress("1/0", GroupAddressType.FREE).main)
+        assert GroupAddress("1/0").main == 1
+        assert GroupAddress("15/0").main == 15
+        assert GroupAddress("31/0/0").main == 31
+        assert GroupAddress("1/0", GroupAddressType.FREE).main is None
 
     def test_middle(self):
         """
@@ -184,10 +186,10 @@ class TestGroupAddress(TestCase):
         * Middle group part of a strings returns the right value
         * Return `None` if not `GroupAddressType.LONG`
         """
-        self.assertEqual(GroupAddress("1/0/1", GroupAddressType.LONG).middle, 0)
-        self.assertEqual(GroupAddress("1/7/1", GroupAddressType.LONG).middle, 7)
-        self.assertIsNone(GroupAddress("1/0", GroupAddressType.SHORT).middle)
-        self.assertIsNone(GroupAddress("1/0", GroupAddressType.FREE).middle)
+        assert GroupAddress("1/0/1", GroupAddressType.LONG).middle == 0
+        assert GroupAddress("1/7/1", GroupAddressType.LONG).middle == 7
+        assert GroupAddress("1/0", GroupAddressType.SHORT).middle is None
+        assert GroupAddress("1/0", GroupAddressType.FREE).middle is None
 
     def test_sub(self):
         """
@@ -197,38 +199,32 @@ class TestGroupAddress(TestCase):
         * Sub group part of a strings returns the right value
         * Return never `None`
         """
-        self.assertEqual(GroupAddress("1/0", GroupAddressType.SHORT).sub, 0)
-        self.assertEqual(GroupAddress("31/0", GroupAddressType.SHORT).sub, 0)
-        self.assertEqual(GroupAddress("1/2047", GroupAddressType.SHORT).sub, 2047)
-        self.assertEqual(GroupAddress("31/2047", GroupAddressType.SHORT).sub, 2047)
-        self.assertEqual(GroupAddress("1/0/0", GroupAddressType.LONG).sub, 0)
-        self.assertEqual(GroupAddress("1/0/255", GroupAddressType.LONG).sub, 255)
-        self.assertEqual(GroupAddress("0/0", GroupAddressType.FREE).sub, 0)
-        self.assertEqual(GroupAddress("1/0", GroupAddressType.FREE).sub, 2048)
-        self.assertEqual(GroupAddress("31/2047", GroupAddressType.FREE).sub, 65535)
+        assert GroupAddress("1/0", GroupAddressType.SHORT).sub == 0
+        assert GroupAddress("31/0", GroupAddressType.SHORT).sub == 0
+        assert GroupAddress("1/2047", GroupAddressType.SHORT).sub == 2047
+        assert GroupAddress("31/2047", GroupAddressType.SHORT).sub == 2047
+        assert GroupAddress("1/0/0", GroupAddressType.LONG).sub == 0
+        assert GroupAddress("1/0/255", GroupAddressType.LONG).sub == 255
+        assert GroupAddress("0/0", GroupAddressType.FREE).sub == 0
+        assert GroupAddress("1/0", GroupAddressType.FREE).sub == 2048
+        assert GroupAddress("31/2047", GroupAddressType.FREE).sub == 65535
 
     def test_to_knx(self):
         """Test if `GroupAddress.to_knx()` generates valid byte tuples."""
-        self.assertEqual(GroupAddress("0/0").to_knx(), (0x0, 0x0))
-        self.assertEqual(GroupAddress("31/2047").to_knx(), (0xFF, 0xFF))
+        assert GroupAddress("0/0").to_knx() == (0x0, 0x0)
+        assert GroupAddress("31/2047").to_knx() == (0xFF, 0xFF)
 
     def test_equal(self):
         """Test if the equal operator works in all cases."""
-        self.assertEqual(GroupAddress("1/0"), GroupAddress(2048))
-        self.assertNotEqual(GroupAddress("1/1"), GroupAddress("1/1/0"))
-        self.assertNotEqual(GroupAddress("1/0"), None)
-        self.assertNotEqual(GroupAddress("1/0"), "example")
-        self.assertNotEqual(GroupAddress(1), IndividualAddress(1))
-        self.assertNotEqual(GroupAddress(1), 1)
+        assert GroupAddress("1/0") == GroupAddress(2048)
+        assert GroupAddress("1/1") != GroupAddress("1/1/0")
+        assert GroupAddress("1/0") is not None
+        assert GroupAddress("1/0") != "example"
+        assert GroupAddress(1) != IndividualAddress(1)
+        assert GroupAddress(1) != 1
 
     def test_representation(self):
         """Test string representation of address."""
-        self.assertEqual(
-            repr(GroupAddress("0", GroupAddressType.FREE)), 'GroupAddress("0")'
-        )
-        self.assertEqual(
-            repr(GroupAddress("0", GroupAddressType.SHORT)), 'GroupAddress("0/0")'
-        )
-        self.assertEqual(
-            repr(GroupAddress("0", GroupAddressType.LONG)), 'GroupAddress("0/0/0")'
-        )
+        assert repr(GroupAddress("0", GroupAddressType.FREE)) == 'GroupAddress("0")'
+        assert repr(GroupAddress("0", GroupAddressType.SHORT)) == 'GroupAddress("0/0")'
+        assert repr(GroupAddress("0", GroupAddressType.LONG)) == 'GroupAddress("0/0/0")'

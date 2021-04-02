@@ -1,23 +1,14 @@
 """Unit test for Action objects."""
-import asyncio
-import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
 from xknx import XKNX
 from xknx.devices import Action, ActionBase, ActionCallback, Light
 
 
-class TestAction(unittest.TestCase):
+@pytest.mark.asyncio
+class TestAction:
     """Class for testing Action objects."""
-
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
 
     #
     # TEST COUNTER
@@ -26,19 +17,19 @@ class TestAction(unittest.TestCase):
         """Test counter method."""
         xknx = XKNX()
         action = ActionBase(xknx, counter=2)
-        self.assertTrue(action.test_counter(None))
-        self.assertFalse(action.test_counter(1))
-        self.assertTrue(action.test_counter(2))
-        self.assertFalse(action.test_counter(3))
+        assert action.test_counter(None)
+        assert not action.test_counter(1)
+        assert action.test_counter(2)
+        assert not action.test_counter(3)
 
     def test_no_counter(self):
         """Test counter method with no counter set."""
         xknx = XKNX()
         action = ActionBase(xknx, counter=None)
-        self.assertTrue(action.test_counter(None))
-        self.assertTrue(action.test_counter(1))
-        self.assertTrue(action.test_counter(2))
-        self.assertTrue(action.test_counter(3))
+        assert action.test_counter(None)
+        assert action.test_counter(1)
+        assert action.test_counter(2)
+        assert action.test_counter(3)
 
     #
     # TEST APPLICABLE
@@ -47,42 +38,40 @@ class TestAction(unittest.TestCase):
         """Test test_if_applicable method with hook set to 'on'."""
         xknx = XKNX()
         action = ActionBase(xknx, counter=2, hook="on")
-        self.assertTrue(action.test_if_applicable(True, 2))
-        self.assertFalse(action.test_if_applicable(True, 3))
-        self.assertFalse(action.test_if_applicable(False, 2))
+        assert action.test_if_applicable(True, 2)
+        assert not action.test_if_applicable(True, 3)
+        assert not action.test_if_applicable(False, 2)
 
     def test_if_applicable_hook_off(self):
         """Test test_if_applicable method with hook set to 'off'."""
         xknx = XKNX()
         action = ActionBase(xknx, counter=2, hook="off")
-        self.assertTrue(action.test_if_applicable(False, 2))
-        self.assertFalse(action.test_if_applicable(False, 3))
-        self.assertFalse(action.test_if_applicable(True, 2))
+        assert action.test_if_applicable(False, 2)
+        assert not action.test_if_applicable(False, 3)
+        assert not action.test_if_applicable(True, 2)
 
     #
     # TEST EXECUTE
     #
-    def test_execute_base_action(self):
+    async def test_execute_base_action(self):
         """Test if execute method of BaseAction shows correct info message."""
         xknx = XKNX()
         action = ActionBase(xknx)
         with patch("logging.Logger.info") as mock_info:
-            self.loop.run_until_complete(action.execute())
+            await action.execute()
             mock_info.assert_called_with("Execute not implemented for %s", "ActionBase")
 
-    def test_execute_action(self):
+    @patch("xknx.devices.Light.do", new_callable=AsyncMock)
+    async def test_execute_action(self, mock_do):
         """Test if execute method of Action calls correct do method of device."""
         xknx = XKNX()
         light = Light(xknx, "Light1", group_address_switch="1/6/4")
         action = Action(xknx, target=light.name, method="on")
-        with patch("xknx.devices.Light.do") as mock_do:
-            fut = asyncio.Future()
-            fut.set_result(None)
-            mock_do.return_value = fut
-            self.loop.run_until_complete(action.execute())
-            mock_do.assert_called_with("on")
 
-    def test_execute_action_callback(self):
+        await action.execute()
+        mock_do.assert_called_with("on")
+
+    async def test_execute_action_callback(self):
         """Test if execute method of ActionCallback calls correct callback method."""
         xknx = XKNX()
         callback = Mock()
@@ -92,16 +81,16 @@ class TestAction(unittest.TestCase):
             callback()
 
         action = ActionCallback(xknx, async_callback)
-        self.loop.run_until_complete(action.execute())
+        await action.execute()
         callback.assert_called_with()
 
-    def test_execute_unknown_device(self):
+    async def test_execute_unknown_device(self):
         """Test if execute method of Action calls correct do method of device."""
         xknx = XKNX()
 
         action = Action(xknx, target="Light1", method="on")
         with patch("logging.Logger.warning") as logger_warning_mock:
-            self.loop.run_until_complete(action.execute())
+            await action.execute()
             logger_warning_mock.assert_called_once_with(
                 "Unknown device %s witin action %s.", action.target, action
             )

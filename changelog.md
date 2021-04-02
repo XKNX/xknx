@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Internals
+
+- use pytest tests instead of unittest TestCase
+
 ## 0.17.5 Add support for unique ids 2021-03-30
 
 ### HA integration
