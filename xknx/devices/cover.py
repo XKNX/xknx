@@ -382,7 +382,7 @@ class Cover(Device):
         return self.angle.value
 
     def is_locked(self) -> Optional[bool]:
-        """Return if the cover is currently blocked for manual movement."""
+        """Return if the cover is currently locked for manual movement."""
         return self.locked.value
 
     def is_traveling(self) -> bool:
@@ -416,7 +416,7 @@ class Cover(Device):
 
     @property
     def supports_locked(self) -> bool:
-        """Return if cover supports blocking."""
+        """Return if cover supports locking."""
         return self.locked.initialized
 
     @property

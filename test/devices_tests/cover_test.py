@@ -100,17 +100,17 @@ class TestCover:
         assert not cover.supports_angle
 
     #
-    # SUPPORTS BLOCKED
+    # SUPPORTS LOCKED
     #
-    def test_support_blocked(self):
+    def test_support_locked(self):
         """Test support_position_true."""
         xknx = XKNX()
-        cover_blocked = Cover(
+        cover_locked = Cover(
             xknx,
             "Children.Venetian",
             group_address_locked_state="1/4/14",
         )
-        assert cover_blocked.supports_locked
+        assert cover_locked.supports_locked
         cover_manual_stop = Cover(
             xknx,
             "Children.Venetian",
@@ -685,7 +685,7 @@ class TestCover:
         await cover.process(telegram)
         assert cover.current_angle() == 16
 
-    async def test_process_blocked(self):
+    async def test_process_locked(self):
         """Test process / reading telegrams from telegram queue. Test if position is processed correctly."""
         xknx = XKNX()
         cover = Cover(
