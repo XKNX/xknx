@@ -2,6 +2,7 @@
 
 ## Unreleased changes
 
+- Add support for cover block
 - Drop support for python 3.7
 
 ### Internals
