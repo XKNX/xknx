@@ -4,6 +4,8 @@ Module for reading config files (xknx.yaml).
 * it will parse the given file
 * and add the found devices to the devies vector of XKNX.
 """
+from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
 
@@ -20,7 +22,7 @@ logger = logging.getLogger("xknx.log")
 class Config:
     """Class for parsing xknx.yaml."""
 
-    def __init__(self, xknx: "XKNX") -> None:
+    def __init__(self, xknx: XKNX) -> None:
         """Initialize Config class."""
         self.xknx = xknx
 

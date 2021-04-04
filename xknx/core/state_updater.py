@@ -1,8 +1,10 @@
 """Module for keeping the value of a RemoteValue from KNX bus up to date."""
+from __future__ import annotations
+
 import asyncio
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
 from xknx.remote_value import RemoteValue
 
@@ -19,26 +21,26 @@ MAX_UPDATE_INTERVAL = 1440
 class StateUpdater:
     """Class for keeping the states of RemoteValues up to date."""
 
-    def __init__(self, xknx: "XKNX", parallel_reads: int = 2):
+    def __init__(self, xknx: XKNX, parallel_reads: int = 2):
         """Initialize StateUpdater class."""
         self.xknx = xknx
         self.started = False
-        self._workers: Dict[int, _StateTracker] = {}
+        self._workers: dict[int, _StateTracker] = {}
         self._semaphore = asyncio.Semaphore(value=parallel_reads)
 
     def register_remote_value(
         self,
         remote_value: RemoteValue[Any, Any],
-        tracker_options: Union[bool, int, float, str] = True,
+        tracker_options: bool | int | float | str = True,
     ) -> None:
         """Register a RemoteValue to initialize its state and/or track for expiration."""
 
         def parse_tracker_options(
-            tracker_options: Union[bool, int, float, str]
-        ) -> Tuple[StateTrackerType, Union[int, float]]:
+            tracker_options: bool | int | float | str,
+        ) -> tuple[StateTrackerType, int | float]:
             """Parse tracker type and expiration time."""
             tracker_type = StateTrackerType.EXPIRE
-            update_interval: Union[int, float] = DEFAULT_UPDATE_INTERVAL
+            update_interval: int | float = DEFAULT_UPDATE_INTERVAL
 
             if isinstance(tracker_options, bool):
                 # `True` would be overwritten by the check for `int`
@@ -155,7 +157,7 @@ class _StateTracker:
         self.tracker_type = tracker_type
         self.update_interval = interval_min * 60
         self._read_state = read_state_awaitable
-        self._task: Optional[asyncio.Task[None]] = None
+        self._task: asyncio.Task[None] | None = None
 
     def start(self) -> None:
         """Start StateTracker - read state on call."""

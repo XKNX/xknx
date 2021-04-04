@@ -4,8 +4,10 @@ Module for managing operation and controller modes.
 Operation modes can be 'auto', 'comfort', 'standby', 'economy', 'protection' and use either a binary DPT or DPT 20.102.
 Controller modes use DPT 20.105.
 """
+from __future__ import annotations
+
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Iterator
 
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
 from xknx.exceptions import DeviceIllegalValue
@@ -30,23 +32,23 @@ class ClimateMode(Device):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         name: str,
-        group_address_operation_mode: Optional[GroupAddressesType] = None,
-        group_address_operation_mode_state: Optional[GroupAddressesType] = None,
-        group_address_operation_mode_protection: Optional[GroupAddressesType] = None,
-        group_address_operation_mode_night: Optional[GroupAddressesType] = None,
-        group_address_operation_mode_comfort: Optional[GroupAddressesType] = None,
-        group_address_operation_mode_standby: Optional[GroupAddressesType] = None,
-        group_address_controller_status: Optional[GroupAddressesType] = None,
-        group_address_controller_status_state: Optional[GroupAddressesType] = None,
-        group_address_controller_mode: Optional[GroupAddressesType] = None,
-        group_address_controller_mode_state: Optional[GroupAddressesType] = None,
-        group_address_heat_cool: Optional[GroupAddressesType] = None,
-        group_address_heat_cool_state: Optional[GroupAddressesType] = None,
-        operation_modes: Optional[List[Union[str, HVACOperationMode]]] = None,
-        controller_modes: Optional[List[Union[str, HVACControllerMode]]] = None,
-        device_updated_cb: Optional[DeviceCallbackType] = None,
+        group_address_operation_mode: GroupAddressesType | None = None,
+        group_address_operation_mode_state: GroupAddressesType | None = None,
+        group_address_operation_mode_protection: GroupAddressesType | None = None,
+        group_address_operation_mode_night: GroupAddressesType | None = None,
+        group_address_operation_mode_comfort: GroupAddressesType | None = None,
+        group_address_operation_mode_standby: GroupAddressesType | None = None,
+        group_address_controller_status: GroupAddressesType | None = None,
+        group_address_controller_status_state: GroupAddressesType | None = None,
+        group_address_controller_mode: GroupAddressesType | None = None,
+        group_address_controller_mode_state: GroupAddressesType | None = None,
+        group_address_heat_cool: GroupAddressesType | None = None,
+        group_address_heat_cool_state: GroupAddressesType | None = None,
+        operation_modes: list[str | HVACOperationMode] | None = None,
+        controller_modes: list[str | HVACControllerMode] | None = None,
+        device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize ClimateMode class."""
         super().__init__(xknx, name, device_updated_cb)
@@ -135,7 +137,7 @@ class ClimateMode(Device):
         self.operation_mode = HVACOperationMode.STANDBY
         self.controller_mode = HVACControllerMode.HEAT
 
-        self._operation_modes: List[HVACOperationMode] = []
+        self._operation_modes: list[HVACOperationMode] = []
         if operation_modes is None:
             self._operation_modes = self.gather_operation_modes()
         else:
@@ -145,7 +147,7 @@ class ClimateMode(Device):
                 elif isinstance(op_mode, HVACOperationMode):
                     self._operation_modes.append(op_mode)
 
-        self._controller_modes: List[HVACControllerMode] = []
+        self._controller_modes: list[HVACControllerMode] = []
         if controller_modes is None:
             self._controller_modes = self.gather_controller_modes()
         else:
@@ -173,9 +175,7 @@ class ClimateMode(Device):
         )
 
     @classmethod
-    def from_config(
-        cls, xknx: "XKNX", name: str, config: Dict[str, Any]
-    ) -> "ClimateMode":
+    def from_config(cls, xknx: XKNX, name: str, config: dict[str, Any]) -> ClimateMode:
         """Initialize object from configuration structure."""
         group_address_operation_mode = config.get("group_address_operation_mode")
         group_address_operation_mode_state = config.get(
@@ -317,22 +317,22 @@ class ClimateMode(Device):
         await self._set_internal_controller_mode(controller_mode)
 
     @property
-    def operation_modes(self) -> List[HVACOperationMode]:
+    def operation_modes(self) -> list[HVACOperationMode]:
         """Return all configured operation modes."""
         if not self.supports_operation_mode:
             return []
         return self._operation_modes
 
     @property
-    def controller_modes(self) -> List[HVACControllerMode]:
+    def controller_modes(self) -> list[HVACControllerMode]:
         """Return all configured controller modes."""
         if not self.supports_controller_mode:
             return []
         return self._controller_modes
 
-    def gather_operation_modes(self) -> List[HVACOperationMode]:
+    def gather_operation_modes(self) -> list[HVACOperationMode]:
         """Gather operation modes from RemoteValues."""
-        operation_modes: List[HVACOperationMode] = []
+        operation_modes: list[HVACOperationMode] = []
         for rv_operation in chain(
             self._iter_binary_operation_modes(), self._iter_byte_operation_modes()
         ):
@@ -341,9 +341,9 @@ class ClimateMode(Device):
         # remove duplicates
         return list(set(operation_modes))
 
-    def gather_controller_modes(self) -> List[HVACControllerMode]:
+    def gather_controller_modes(self) -> list[HVACControllerMode]:
         """Gather controller modes from RemoteValues."""
-        controller_modes: List[HVACControllerMode] = []
+        controller_modes: list[HVACControllerMode] = []
         for rv_controller in self._iter_controller_remote_values():
             if rv_controller.writable:
                 controller_modes.extend(rv_controller.supported_operation_modes())

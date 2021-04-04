@@ -12,6 +12,8 @@ The module supports all different writings of group addresses:
 * 2nd level: "1/2"
 * Free format: "123"
 """
+from __future__ import annotations
+
 from abc import ABC
 from enum import Enum
 from re import compile as re_compile
@@ -26,7 +28,7 @@ IndividualAddressableType = Optional[
 ]
 
 
-def address_tuple_to_int(address: Tuple[int, int]) -> int:
+def address_tuple_to_int(address: tuple[int, int]) -> int:
     """
     Convert the tuple `address` to an integer.
 
@@ -49,7 +51,7 @@ class BaseAddress(ABC):
         """Initialize instance variables needed by all subclasses."""
         self.raw: int = 0
 
-    def to_knx(self) -> Tuple[int, int]:
+    def to_knx(self) -> tuple[int, int]:
         """
         Serialize to KNX/IP raw data.
 
@@ -57,7 +59,7 @@ class BaseAddress(ABC):
         """
         return (self.raw >> 8) & 255, self.raw & 255
 
-    def __eq__(self, other: Optional[object]) -> bool:
+    def __eq__(self, other: object | None) -> bool:
         """
         Implement the equal operator.
 
@@ -252,7 +254,7 @@ class GroupAddress(BaseAddress):
         )
 
     @property
-    def main(self) -> Optional[int]:
+    def main(self) -> int | None:
         """
         Return the main group part as an integer.
 
@@ -266,7 +268,7 @@ class GroupAddress(BaseAddress):
         )
 
     @property
-    def middle(self) -> Optional[int]:
+    def middle(self) -> int | None:
         """
         Return the middle group part as an integer.
 

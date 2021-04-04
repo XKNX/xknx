@@ -1,7 +1,9 @@
 """Basis class for all KNX/IP bodies."""
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 import logging
-from typing import TYPE_CHECKING, ClassVar, List, cast
+from typing import TYPE_CHECKING, ClassVar, cast
 
 from .error_code import ErrorCode
 from .knxip_enum import KNXIPServiceType
@@ -17,7 +19,7 @@ class KNXIPBody(ABC):
 
     SERVICE_TYPE: ClassVar[KNXIPServiceType] = cast(KNXIPServiceType, None)
 
-    def __init__(self, xknx: "XKNX"):
+    def __init__(self, xknx: XKNX):
         """Initialize KNXIPBody object."""
         self.xknx = xknx
 
@@ -30,7 +32,7 @@ class KNXIPBody(ABC):
         """Parse/deserialize from KNX/IP raw data."""
 
     @abstractmethod
-    def to_knx(self) -> List[int]:
+    def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
 
     def __eq__(self, other: object) -> bool:

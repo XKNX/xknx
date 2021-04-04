@@ -1,6 +1,8 @@
 """Module for handling commands which may be attached to BinarySensor class."""
+from __future__ import annotations
+
 import logging
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Optional
+from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -11,13 +13,13 @@ logger = logging.getLogger("xknx.log")
 class ActionBase:
     """Base Class for handling commands."""
 
-    def __init__(self, xknx: "XKNX", hook: str = "on", counter: Optional[int] = 1):
+    def __init__(self, xknx: XKNX, hook: str = "on", counter: int | None = 1):
         """Initialize Action_Base class."""
         self.xknx = xknx
         self.hook = hook
         self.counter = counter
 
-    def test_counter(self, counter: Optional[int]) -> bool:
+    def test_counter(self, counter: int | None) -> bool:
         """Test if action filters for specific counter."""
         if self.counter is None:
             # no specific counter_filter -> always true
@@ -26,7 +28,7 @@ class ActionBase:
             return True
         return counter == self.counter
 
-    def test_if_applicable(self, state: bool, counter: Optional[int] = None) -> bool:
+    def test_if_applicable(self, state: bool, counter: int | None = None) -> bool:
         """Test if should be executed for this state and this counter number."""
         if state and (self.hook == "on"):
             return self.test_counter(counter)
@@ -52,10 +54,10 @@ class Action(ActionBase):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         hook: str = "on",
-        target: Optional[str] = None,
-        method: Optional[str] = None,
+        target: str | None = None,
+        method: str | None = None,
         counter: int = 1,
     ):
         """Initialize Action class."""
@@ -64,7 +66,7 @@ class Action(ActionBase):
         self.method = method
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", config: Any) -> "Action":
+    def from_config(cls, xknx: XKNX, config: Any) -> Action:
         """Initialize object from configuration structure."""
         hook = config.get("hook", "on")
         target = config.get("target")
@@ -92,7 +94,7 @@ class ActionCallback(ActionBase):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         callback: Callable[[], Awaitable[None]],
         hook: str = "on",
         counter: int = 1,

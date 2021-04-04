@@ -7,9 +7,11 @@ The underlaying KNXIPInterface will poll the queue and send the packets to the c
 
 You may register callbacks to be notified if a telegram was pushed to the queue.
 """
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Awaitable, Callable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Awaitable, Callable
 
 from xknx.exceptions import CommunicationError, XKNXException
 from xknx.telegram import AddressFilter, GroupAddress, Telegram, TelegramDirection
@@ -32,9 +34,9 @@ class TelegramQueue:
 
         def __init__(
             self,
-            callback: "AsyncTelegramCallback",
-            address_filters: Optional[List[AddressFilter]] = None,
-            group_addresses: Optional[List[GroupAddress]] = None,
+            callback: AsyncTelegramCallback,
+            address_filters: list[AddressFilter] | None = None,
+            group_addresses: list[GroupAddress] | None = None,
             match_for_outgoing_telegrams: bool = False,
         ):
             """Initialize Callback class."""
@@ -62,20 +64,20 @@ class TelegramQueue:
                         return True
             return False
 
-    def __init__(self, xknx: "XKNX"):
+    def __init__(self, xknx: XKNX):
         """Initialize TelegramQueue class."""
         self.xknx = xknx
-        self.telegram_received_cbs: List[TelegramQueue.Callback] = []
-        self.outgoing_queue: asyncio.Queue[Optional[Telegram]] = asyncio.Queue()
-        self._consumer_task: Optional[Awaitable[Tuple[None, None]]] = None
+        self.telegram_received_cbs: list[TelegramQueue.Callback] = []
+        self.outgoing_queue: asyncio.Queue[Telegram | None] = asyncio.Queue()
+        self._consumer_task: Awaitable[tuple[None, None]] | None = None
 
     def register_telegram_received_cb(
         self,
-        telegram_received_cb: "AsyncTelegramCallback",
-        address_filters: Optional[List[AddressFilter]] = None,
-        group_addresses: Optional[List[GroupAddress]] = None,
+        telegram_received_cb: AsyncTelegramCallback,
+        address_filters: list[AddressFilter] | None = None,
+        group_addresses: list[GroupAddress] | None = None,
         match_for_outgoing: bool = False,
-    ) -> "TelegramQueue.Callback":
+    ) -> TelegramQueue.Callback:
         """Register callback for a telegram being received from KNX bus."""
         callback = TelegramQueue.Callback(
             telegram_received_cb,
@@ -87,7 +89,7 @@ class TelegramQueue:
         return callback
 
     def unregister_telegram_received_cb(
-        self, telegram_received_cb: "TelegramQueue.Callback"
+        self, telegram_received_cb: TelegramQueue.Callback
     ) -> None:
         """Unregister callback for a telegram beeing received from KNX bus."""
         self.telegram_received_cbs.remove(telegram_received_cb)

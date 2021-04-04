@@ -3,7 +3,9 @@ Module for Serialization and Deserialization of KNX Search Requests.
 
 Search Requests are used to search for KNX/IP devices within the network.
 """
-from typing import TYPE_CHECKING, List, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from .body import KNXIPBody
 from .hpai import HPAI
@@ -18,7 +20,7 @@ class SearchRequest(KNXIPBody):
 
     SERVICE_TYPE = KNXIPServiceType.SEARCH_REQUEST
 
-    def __init__(self, xknx: "XKNX", discovery_endpoint: Optional[HPAI] = None):
+    def __init__(self, xknx: XKNX, discovery_endpoint: HPAI | None = None):
         """Initialize SearchRequest object."""
         super().__init__(xknx)
         self.discovery_endpoint = (
@@ -36,7 +38,7 @@ class SearchRequest(KNXIPBody):
         pos = self.discovery_endpoint.from_knx(raw)
         return pos
 
-    def to_knx(self) -> List[int]:
+    def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
         data = []
         data.extend(self.discovery_endpoint.to_knx())

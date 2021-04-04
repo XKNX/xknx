@@ -7,9 +7,11 @@ The module will
 * ... check if received telegrams have the correct group address.
 * ... store the received telegram for further processing.
 """
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
@@ -24,7 +26,7 @@ class ValueReader:
     """Class for reading the value of a specific KNX group address from KNX bus."""
 
     def __init__(
-        self, xknx: "XKNX", group_address: GroupAddress, timeout_in_seconds: float = 2.0
+        self, xknx: XKNX, group_address: GroupAddress, timeout_in_seconds: float = 2.0
     ):
         """Initialize ValueReader class."""
         self.xknx = xknx
@@ -32,9 +34,9 @@ class ValueReader:
         self.response_received_or_timeout = asyncio.Event()
         self.success: bool = False
         self.timeout_in_seconds: float = timeout_in_seconds
-        self.received_telegram: Optional[Telegram] = None
+        self.received_telegram: Telegram | None = None
 
-    async def read(self) -> Optional[Telegram]:
+    async def read(self) -> Telegram | None:
         """Send group read and wait for response."""
         cb_obj = self.xknx.telegram_queue.register_telegram_received_cb(
             self.telegram_received,

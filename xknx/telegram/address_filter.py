@@ -21,7 +21,7 @@ Patterns can be
         AddressFilter("1-3,4,5")
         AddressFilter("-10")
 """
-from typing import List, Tuple, Union
+from __future__ import annotations
 
 from xknx.exceptions import ConversionError
 
@@ -33,7 +33,7 @@ class AddressFilter:
 
     def __init__(self, pattern: str) -> None:
         """Initialize AddressFilter class."""
-        self.level_filters: List["AddressFilter.LevelFilter"] = []
+        self.level_filters: list[AddressFilter.LevelFilter] = []
         self._parse_pattern(pattern)
 
     def _parse_pattern(self, pattern: str) -> None:
@@ -42,7 +42,7 @@ class AddressFilter:
         if len(self.level_filters) > 3:
             raise ConversionError("Too many parts within pattern.", pattern=pattern)
 
-    def match(self, address: Union[str, GroupAddress]) -> bool:
+    def match(self, address: str | GroupAddress) -> bool:
         """Test if provided address matches Addressfilter."""
         if isinstance(address, str):
             address = GroupAddress(address)
@@ -122,7 +122,7 @@ class AddressFilter:
             if self.range_from > self.range_to:
                 self.range_to, self.range_from = self.range_from, self.range_to
 
-        def get_range(self) -> Tuple[int, int]:
+        def get_range(self) -> tuple[int, int]:
             """Return the range (from,to) of this pattern."""
             return self.range_from, self.range_to
 
@@ -135,7 +135,7 @@ class AddressFilter:
 
         def __init__(self, pattern: str) -> None:
             """Initialize LevelFilter."""
-            self.ranges: List["AddressFilter.Range"] = []
+            self.ranges: list[AddressFilter.Range] = []
             self._parse_pattern(pattern)
 
         def _parse_pattern(self, pattern: str) -> None:

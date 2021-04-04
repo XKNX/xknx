@@ -1,6 +1,8 @@
 """Module for managing a KNX scene."""
+from __future__ import annotations
+
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional
+from typing import TYPE_CHECKING, Any, Iterator
 
 from xknx.remote_value import GroupAddressesType, RemoteValueSceneNumber
 
@@ -17,11 +19,11 @@ class Scene(Device):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         name: str,
-        group_address: Optional[GroupAddressesType] = None,
+        group_address: GroupAddressesType | None = None,
         scene_number: int = 1,
-        device_updated_cb: Optional[DeviceCallbackType] = None,
+        device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Sceneclass."""
         super().__init__(xknx, name, device_updated_cb)
@@ -41,12 +43,12 @@ class Scene(Device):
         yield self.scene_value
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return unique id for this device."""
         return f"{self.scene_value.group_address}_{self.scene_number}"
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Scene":
+    def from_config(cls, xknx: XKNX, name: str, config: dict[str, Any]) -> Scene:
         """Initialize object from configuration structure."""
         group_address = config.get("group_address")
         scene_number = int(config.get("scene_number"))  # type: ignore

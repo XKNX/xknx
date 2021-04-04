@@ -1,5 +1,7 @@
 """Module for serialization and deserialization of KNX/IP Header."""
-from typing import ClassVar, List
+from __future__ import annotations
+
+from typing import ClassVar
 
 from xknx.exceptions import CouldNotParseKNXIP
 
@@ -48,7 +50,7 @@ class KNXIPHeader:
             raise TypeError()
         self.total_length = KNXIPHeader.HEADERLENGTH + body.calculated_length()
 
-    def to_knx(self) -> List[int]:
+    def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
         data = []
         data.append(self.header_length)

@@ -1,4 +1,6 @@
 """Abstraction to send a TunnelingRequest and wait for TunnelingResponse."""
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from xknx.knxip import (
@@ -22,10 +24,10 @@ class Tunnelling(RequestResponse):
 
     def __init__(
         self,
-        xknx: "XKNX",
-        udp_client: "UDPClient",
-        telegram: "Telegram",
-        src_address: "IndividualAddress",
+        xknx: XKNX,
+        udp_client: UDPClient,
+        telegram: Telegram,
+        src_address: IndividualAddress,
         sequence_counter: int,
         communication_channel_id: int,
     ):

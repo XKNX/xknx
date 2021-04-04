@@ -5,8 +5,9 @@ They correspond the following KNX DPTs:
     12.yyy 4-byte/octet unsigned value, i.e. pulse counter
     13.yyy 4-byte/octet signed (2's complement), i.e. flow, energy
 """
+from __future__ import annotations
+
 import struct
-from typing import Optional, Tuple
 
 from xknx.exceptions import ConversionError
 
@@ -23,7 +24,7 @@ class DPT4ByteUnsigned(DPTBase):
     value_min = 0
     value_max = 4294967295
     dpt_main_number = 12
-    dpt_sub_number: Optional[int] = None
+    dpt_sub_number: int | None = None
     value_type = "4byte_unsigned"
     unit = ""
     resolution: float = 1
@@ -32,7 +33,7 @@ class DPT4ByteUnsigned(DPTBase):
     _struct_format = ">I"
 
     @classmethod
-    def from_knx(cls, raw: Tuple[int, ...]) -> int:
+    def from_knx(cls, raw: tuple[int, ...]) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
 
@@ -42,7 +43,7 @@ class DPT4ByteUnsigned(DPTBase):
             raise ConversionError("Could not parse %s" % cls.__name__, raw=raw)
 
     @classmethod
-    def to_knx(cls, value: int) -> Tuple[int, ...]:
+    def to_knx(cls, value: int) -> tuple[int, ...]:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = int(value)
@@ -68,7 +69,7 @@ class DPT4ByteSigned(DPT4ByteUnsigned):
     value_min = -2147483648
     value_max = 2147483647
     dpt_main_number = 13
-    dpt_sub_number: Optional[int] = None
+    dpt_sub_number: int | None = None
     value_type = "4byte_signed"
     unit = ""
     resolution: float = 1
