@@ -3,6 +3,7 @@
 ## Unreleased changes
 
 - Add support for cover lock
+- Add more information to sensors and binary sensors in the HA integration
 - Drop support for python 3.7
 
 ### Internals
