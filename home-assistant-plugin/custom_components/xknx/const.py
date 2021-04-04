@@ -26,6 +26,8 @@ CONF_SYNC_STATE = "sync_state"
 CONF_RESET_AFTER = "reset_after"
 
 ATTR_COUNTER = "counter"
+ATTR_LAST_TELEGRAM_IA = "last_telegram_IA"
+ATTR_LAST_KNX_UPDATE = "last_knx_update"
 
 
 class ColorTempModes(Enum):

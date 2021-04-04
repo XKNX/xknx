@@ -100,6 +100,7 @@ class TestRemoteValue:
 
             await remote_value.read_state(wait_for_result=True)
 
+            assert remote_value.telegram == telegram
             assert remote_value.value
 
     async def test_read_state_none(self):

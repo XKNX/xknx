@@ -73,6 +73,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
         self.feature_name: str = "Unknown" if feature_name is None else feature_name
         self.after_update_cb: Optional[AsyncCallbackType] = after_update_cb
         self.payload: Optional[DPTPayloadType] = None
+        self.last_telegram: Optional[Telegram] = None
 
         if sync_state and self.group_address_state:
             self.xknx.state_updater.register_remote_value(
@@ -167,6 +168,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
         self.xknx.state_updater.update_received(self)
         if self.payload is None or always_callback or self.payload != _new_payload:
             self.payload = _new_payload
+            self.last_telegram = telegram
             if self.after_update_cb is not None:
                 await self.after_update_cb()
         return True
@@ -177,6 +179,11 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
         if self.payload is None:
             return None
         return self.from_knx(self.payload)
+
+    @property
+    def telegram(self) -> Optional[Telegram]:
+        """Return current telegram."""
+        return self.last_telegram
 
     async def _send(self, payload: DPTPayloadType, response: bool = False) -> None:
         """Send payload as telegram to KNX bus."""

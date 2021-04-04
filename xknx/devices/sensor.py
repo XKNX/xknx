@@ -75,6 +75,11 @@ class Sensor(Device):
         """Return unique id for this device."""
         return f"{self.sensor_value.group_address_state}"
 
+    @property
+    def last_telegram(self) -> Optional["Telegram"]:
+        """Return the last telegram received from the RemoteValue."""
+        return self.sensor_value.telegram
+
     @classmethod
     def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Sensor":
         """Initialize object from configuration structure."""

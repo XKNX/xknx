@@ -13,6 +13,7 @@ It contains
 * and the payload (e.g. GroupValueWrite("12%")).
 
 """
+from datetime import datetime
 from enum import Enum
 from typing import Optional, Union
 
@@ -42,6 +43,7 @@ class Telegram:
         self.direction = direction
         self.payload = payload
         self.source_address = source_address
+        self.reception_time = datetime.now()
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -57,7 +59,17 @@ class Telegram:
 
     def __eq__(self, other: object) -> bool:
         """Equal operator."""
-        return bool(self.__dict__ == other.__dict__)
+        for key, value in self.__dict__.items():
+            if key == "reception_time":
+                continue
+            if key not in other.__dict__:
+                return False
+            if other.__dict__[key] != value:
+                return False
+        for key, value in other.__dict__.items():
+            if key not in self.__dict__:
+                return False
+        return True
 
     def __hash__(self) -> int:
         """Hash function."""

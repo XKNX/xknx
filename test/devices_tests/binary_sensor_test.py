@@ -47,6 +47,7 @@ class TestBinarySensor:
             payload=GroupValueWrite(DPTBinary(0)),
         )
         await binaryinput2.process(telegram_off2)
+        assert binaryinput2.last_telegram == telegram_off2
         assert binaryinput2.state is False
 
     async def test_process_invert(self):

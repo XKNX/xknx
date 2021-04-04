@@ -1855,6 +1855,7 @@ class TestSensor:
         )
         await sensor.process(telegram)
         after_update_callback.assert_called_with(sensor)
+        assert sensor.last_telegram == telegram
 
     def test_unique_id(self):
         """Test unique id functionality."""
