@@ -72,7 +72,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
         self.device_name: str = "Unknown" if device_name is None else device_name
         self.feature_name: str = "Unknown" if feature_name is None else feature_name
         self.after_update_cb: Optional[AsyncCallbackType] = after_update_cb
-        self.payload: Optional[DPTPayloadType] = None
+        self.value: Optional[DPTPayloadType] = None
         self.last_telegram: Optional[Telegram] = None
 
         if sync_state and self.group_address_state:
@@ -165,20 +165,14 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
                 device_name=self.device_name,
                 feature_name=self.feature_name,
             )
+        _new_payload = self.from_knx(_new_payload)
         self.xknx.state_updater.update_received(self)
-        if self.payload is None or always_callback or self.payload != _new_payload:
-            self.payload = _new_payload
+        if self.value is None or always_callback or self.value != _new_payload:
+            self.value = _new_payload
             self.last_telegram = telegram
             if self.after_update_cb is not None:
                 await self.after_update_cb()
         return True
-
-    @property
-    def value(self) -> Optional[ValueType]:
-        """Return current value."""
-        if self.payload is None:
-            return None
-        return self.from_knx(self.payload)
 
     @property
     def telegram(self) -> Optional[Telegram]:
@@ -223,8 +217,8 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
 
     async def respond(self) -> None:
         """Send current payload as GroupValueResponse telegram to KNX bus."""
-        if self.payload is not None:
-            await self._send(self.payload, response=True)
+        if self.telegram is not None:
+            await self._send(self._payload(), response=True)
 
     async def read_state(self, wait_for_result: bool = False) -> None:
         """Send GroupValueRead telegram for state address to KNX bus."""
@@ -249,6 +243,14 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
             else:
                 await value_reader.send_group_read()
 
+    def _payload(self) -> Optional[DPTPayloadType]:
+        """Obtain payload from Telegram."""
+        if self.last_telegram is not None and isinstance(
+            self.last_telegram.payload, (GroupValueWrite, GroupValueResponse)
+        ):
+            return self.last_telegram.payload.value
+        return None
+
     @property
     def unit_of_measurement(self) -> Optional[str]:
         """Return the unit of measurement."""
@@ -259,8 +261,8 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
         return "{}/{}/{}/{}".format(
             self.group_address.__repr__(),
             self.group_address_state.__repr__(),
-            self.payload,
             self.value,
+            self._payload(),
         )
 
     def __str__(self) -> str:

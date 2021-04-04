@@ -78,7 +78,7 @@ class TestStringRepresentations:
             == '<RemoteValue device_name="MyDevice" feature_name="Unknown" GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None/>'
         )
 
-        remote_value.payload = DPTArray([0x01, 0x02])
+        remote_value.value = DPTArray([0x01, 0x02])
         assert (
             str(remote_value)
             == '<RemoteValue device_name="MyDevice" feature_name="Unknown" '

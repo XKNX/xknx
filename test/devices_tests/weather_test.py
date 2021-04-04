@@ -15,7 +15,7 @@ class TestWeather:
         """Test resolve state with temperature."""
         xknx = XKNX()
         weather = Weather(name="weather", xknx=xknx, group_address_temperature="1/3/4")
-        weather._temperature.payload = DPTArray((0x19, 0xA))
+        weather._temperature.value = DPTArray((0x19, 0xA))
 
         assert weather.has_group_address(GroupAddress("1/3/4"))
         assert weather.temperature == 21.28
@@ -35,10 +35,10 @@ class TestWeather:
             group_address_temperature="1/4/4",
         )
 
-        weather._brightness_east.payload = DPTArray((0x7C, 0x5E))
-        weather._brightness_west.payload = DPTArray((0x7C, 0x5C))
-        weather._brightness_south.payload = DPTArray((0x7C, 0x5A))
-        weather._brightness_north.payload = DPTArray((0x7C, 0x5A))
+        weather._brightness_east.value = DPTArray((0x7C, 0x5E))
+        weather._brightness_west.value = DPTArray((0x7C, 0x5C))
+        weather._brightness_south.value = DPTArray((0x7C, 0x5A))
+        weather._brightness_north.value = DPTArray((0x7C, 0x5A))
 
         assert weather.brightness_east == 366346.24
         assert weather._brightness_east.unit_of_measurement == "lx"
@@ -60,7 +60,7 @@ class TestWeather:
         """Test resolve state with pressure."""
         xknx = XKNX()
         weather = Weather(name="weather", xknx=xknx, group_address_air_pressure="1/3/4")
-        weather._air_pressure.payload = DPTArray((0x6C, 0xAD))
+        weather._air_pressure.value = DPTArray((0x6C, 0xAD))
 
         assert weather.air_pressure == 98058.24
         assert weather._air_pressure.unit_of_measurement == "Pa"
@@ -70,7 +70,7 @@ class TestWeather:
         """Test humidity."""
         xknx = XKNX()
         weather = Weather(name="weather", xknx=xknx, group_address_humidity="1/2/4")
-        weather._humidity.payload = DPTArray((0x7E, 0xE1))
+        weather._humidity.value = DPTArray((0x7E, 0xE1))
 
         assert weather.humidity == 577044.48
         assert weather._humidity.unit_of_measurement == "%"
@@ -83,7 +83,7 @@ class TestWeather:
             name="weather", xknx=xknx, group_address_brightness_east="1/3/8"
         )
 
-        weather._wind_speed.payload = DPTArray((0x7D, 0x98))
+        weather._wind_speed.value = DPTArray((0x7D, 0x98))
 
         assert weather.wind_speed == 469237.76
         assert weather._wind_speed.unit_of_measurement == "m/s"
@@ -96,7 +96,7 @@ class TestWeather:
             name="weather", xknx=xknx, group_address_brightness_east="1/3/8"
         )
 
-        weather._wind_bearing.payload = DPTArray((0xBF,))
+        weather._wind_bearing.value = DPTArray((0xBF,))
 
         assert weather.wind_bearing == 270
         assert weather._wind_bearing.unit_of_measurement == "°"
@@ -112,8 +112,8 @@ class TestWeather:
             group_address_wind_alarm="1/3/9",
         )
 
-        weather._rain_alarm.payload = DPTBinary(1)
-        weather._wind_alarm.payload = DPTBinary(1)
+        weather._rain_alarm.value = DPTBinary(1)
+        weather._wind_alarm.value = DPTBinary(1)
 
         assert weather.ha_current_state() == WeatherCondition.LIGHTNING_RAINY
 
@@ -127,8 +127,8 @@ class TestWeather:
             group_address_frost_alarm="1/3/10",
         )
 
-        weather._rain_alarm.payload = DPTBinary(1)
-        weather._frost_alarm.payload = DPTBinary(1)
+        weather._rain_alarm.value = DPTBinary(1)
+        weather._frost_alarm.value = DPTBinary(1)
 
         assert weather.ha_current_state() == WeatherCondition.SNOWY_RAINY
 
@@ -143,7 +143,7 @@ class TestWeather:
             group_address_frost_alarm="1/3/10",
         )
 
-        weather._wind_alarm.payload = DPTBinary(1)
+        weather._wind_alarm.value = DPTBinary(1)
 
         assert weather.ha_current_state() == WeatherCondition.WINDY
 
@@ -158,7 +158,7 @@ class TestWeather:
             group_address_frost_alarm="1/3/10",
         )
 
-        weather._rain_alarm.payload = DPTBinary(1)
+        weather._rain_alarm.value = DPTBinary(1)
 
         assert weather.ha_current_state() == WeatherCondition.RAINY
 
@@ -172,7 +172,7 @@ class TestWeather:
             group_address_brightness_south="1/3/6",
         )
 
-        weather._brightness_south.payload = DPTArray((0x46, 0x45))
+        weather._brightness_south.value = DPTArray((0x46, 0x45))
 
         summer_date = datetime.datetime(2020, 10, 5, 18, 00)
 
@@ -192,7 +192,7 @@ class TestWeather:
             group_address_brightness_west="1/3/7",
         )
 
-        weather._brightness_south.payload = DPTArray((0x7C, 0x5C))
+        weather._brightness_south.value = DPTArray((0x7C, 0x5C))
 
         summer_date = datetime.datetime(2020, 10, 5, 18, 00)
 
@@ -210,7 +210,7 @@ class TestWeather:
             group_address_brightness_west="1/3/7",
         )
 
-        weather._brightness_south.payload = DPTArray((0x7C, 0x5C))
+        weather._brightness_south.value = DPTArray((0x7C, 0x5C))
 
         winter_date = datetime.datetime(2020, 12, 5, 18, 00)
 
@@ -229,7 +229,7 @@ class TestWeather:
             group_address_brightness_west="1/3/7",
         )
 
-        weather._brightness_south.payload = DPTArray((0x46, 0x45))
+        weather._brightness_south.value = DPTArray((0x46, 0x45))
 
         winter_date = datetime.datetime(2020, 12, 31, 18, 00)
 
@@ -245,7 +245,7 @@ class TestWeather:
             name="weather", xknx=xknx, group_address_day_night="1/3/20"
         )
 
-        weather._day_night.payload = DPTBinary(0)
+        weather._day_night.value = DPTBinary(0)
 
         assert weather.ha_current_state() == WeatherCondition.CLEAR_NIGHT
 

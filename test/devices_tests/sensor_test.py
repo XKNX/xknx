@@ -13,23 +13,44 @@ from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWri
 class TestSensor:
     """Test class for Sensor objects."""
 
-    #
-    # STR FUNCTIONS
-    #
-    def test_str_absolute_temperature(self):
-        """Test resolve state with absolute_temperature sensor."""
+    @pytest.mark.parametrize(
+        "value_type,raw_payload,expected_state,expected_measurement_unit,expected_device_class",
+        [
+            (
+                "absolute_temperature",
+                DPTArray((0x44, 0xD7, 0xD2, 0x8B)),
+                1726.5794677734375,
+                "K",
+                None,
+            ),
+        ],
+    )
+    async def test_sensor_value_types(
+        self,
+        value_type,
+        raw_payload,
+        expected_state,
+        expected_measurement_unit,
+        expected_device_class,
+    ):
+        """Test sensor value types."""
         xknx = XKNX()
         sensor = Sensor(
             xknx,
             "TestSensor",
             group_address_state="1/2/3",
-            value_type="absolute_temperature",
+            value_type=value_type,
         )
-        sensor.sensor_value.payload = DPTArray((0x44, 0xD7, 0xD2, 0x8B))
+        await sensor.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(value=raw_payload),
+            )
+        )
 
-        assert sensor.resolve_state() == 1726.5794677734375
-        assert sensor.unit_of_measurement() == "K"
-        assert sensor.ha_device_class() is None
+        assert sensor.resolve_state() == expected_state
+        assert sensor.unit_of_measurement() == expected_measurement_unit
+        assert sensor.ha_device_class() == expected_device_class
 
     async def test_always_callback_sensor(self):
         """Test always callback sensor."""
@@ -45,7 +66,7 @@ class TestSensor:
         sensor.register_device_updated_cb(after_update_callback)
         payload = DPTArray((0x00, 0x00, 0x01, 0x00))
         #  set initial payload of sensor
-        sensor.sensor_value.payload = payload
+        sensor.sensor_value.value = 256
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"), payload=GroupValueWrite(payload)
         )
@@ -74,7 +95,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="acceleration"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x94, 0xD8, 0x5D))
+        sensor.sensor_value.value = DPTArray((0x45, 0x94, 0xD8, 0x5D))
 
         assert sensor.resolve_state() == 4763.04541015625
         assert sensor.unit_of_measurement() == "m/s²"
@@ -89,7 +110,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="volume_liquid_litre",
         )
-        sensor.sensor_value.payload = DPTArray((0x00, 0x00, 0x01, 0x00))
+        sensor.sensor_value.value = DPTArray((0x00, 0x00, 0x01, 0x00))
 
         assert sensor.resolve_state() == 256
         assert sensor.unit_of_measurement() == "l"
@@ -101,7 +122,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="volume_m3"
         )
-        sensor.sensor_value.payload = DPTArray((0x00, 0x00, 0x01, 0x00))
+        sensor.sensor_value.value = DPTArray((0x00, 0x00, 0x01, 0x00))
 
         assert sensor.resolve_state() == 256
         assert sensor.unit_of_measurement() == "m³"
@@ -116,7 +137,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="acceleration_angular",
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0xEA, 0x62, 0x34))
+        sensor.sensor_value.value = DPTArray((0x45, 0xEA, 0x62, 0x34))
 
         assert sensor.resolve_state() == 7500.275390625
         assert sensor.unit_of_measurement() == "rad/s²"
@@ -131,7 +152,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="activation_energy",
         )
-        sensor.sensor_value.payload = DPTArray((0x46, 0x0, 0x3E, 0xEE))
+        sensor.sensor_value.value = DPTArray((0x46, 0x0, 0x3E, 0xEE))
 
         assert sensor.resolve_state() == 8207.732421875
         assert sensor.unit_of_measurement() == "J/mol"
@@ -143,7 +164,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="active_energy"
         )
-        sensor.sensor_value.payload = DPTArray((0x26, 0x37, 0x49, 0x7F))
+        sensor.sensor_value.value = DPTArray((0x26, 0x37, 0x49, 0x7F))
 
         assert sensor.resolve_state() == 641157503
         assert sensor.unit_of_measurement() == "Wh"
@@ -158,7 +179,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="active_energy_kwh",
         )
-        sensor.sensor_value.payload = DPTArray((0x37, 0x5, 0x5, 0xEA))
+        sensor.sensor_value.value = DPTArray((0x37, 0x5, 0x5, 0xEA))
 
         assert sensor.resolve_state() == 923076074
         assert sensor.unit_of_measurement() == "kWh"
@@ -170,7 +191,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="activity"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x76, 0x0, 0xA3))
+        sensor.sensor_value.value = DPTArray((0x45, 0x76, 0x0, 0xA3))
 
         assert sensor.resolve_state() == 3936.039794921875
         assert sensor.unit_of_measurement() == "s⁻¹"
@@ -182,7 +203,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="amplitude"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x9A, 0xED, 0x8))
+        sensor.sensor_value.value = DPTArray((0x45, 0x9A, 0xED, 0x8))
 
         assert sensor.resolve_state() == 4957.62890625
         assert sensor.unit_of_measurement() == ""
@@ -194,7 +215,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="angle"
         )
-        sensor.sensor_value.payload = DPTArray((0xE4,))
+        sensor.sensor_value.value = DPTArray((0xE4,))
 
         assert sensor.resolve_state() == 322
         assert sensor.unit_of_measurement() == "°"
@@ -206,7 +227,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="angle_deg"
         )
-        sensor.sensor_value.payload = DPTArray((0x44, 0x5C, 0x20, 0x2B))
+        sensor.sensor_value.value = DPTArray((0x44, 0x5C, 0x20, 0x2B))
 
         assert sensor.resolve_state() == 880.5026245117188
         assert sensor.unit_of_measurement() == "°"
@@ -218,7 +239,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="angle_rad"
         )
-        sensor.sensor_value.payload = DPTArray((0x44, 0x36, 0x75, 0x1))
+        sensor.sensor_value.value = DPTArray((0x44, 0x36, 0x75, 0x1))
 
         assert sensor.resolve_state() == 729.8281860351562
         assert sensor.unit_of_measurement() == "rad"
@@ -233,7 +254,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="angular_frequency",
         )
-        sensor.sensor_value.payload = DPTArray((0x43, 0xBC, 0x20, 0x8D))
+        sensor.sensor_value.value = DPTArray((0x43, 0xBC, 0x20, 0x8D))
 
         assert sensor.resolve_state() == 376.2543029785156
         assert sensor.unit_of_measurement() == "rad/s"
@@ -248,7 +269,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="angular_momentum",
         )
-        sensor.sensor_value.payload = DPTArray((0xC2, 0x75, 0xB7, 0xB5))
+        sensor.sensor_value.value = DPTArray((0xC2, 0x75, 0xB7, 0xB5))
 
         assert sensor.resolve_state() == -61.42940139770508
         assert sensor.unit_of_measurement() == "J s"
@@ -263,7 +284,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="angular_velocity",
         )
-        sensor.sensor_value.payload = DPTArray((0xC4, 0xD9, 0x10, 0xB3))
+        sensor.sensor_value.value = DPTArray((0xC4, 0xD9, 0x10, 0xB3))
 
         assert sensor.resolve_state() == -1736.5218505859375
         assert sensor.unit_of_measurement() == "rad/s"
@@ -278,7 +299,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="apparant_energy",
         )
-        sensor.sensor_value.payload = DPTArray((0xD3, 0xBD, 0x1E, 0xA5))
+        sensor.sensor_value.value = DPTArray((0xD3, 0xBD, 0x1E, 0xA5))
 
         assert sensor.resolve_state() == -742580571
         assert sensor.unit_of_measurement() == "VAh"
@@ -293,7 +314,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="apparant_energy_kvah",
         )
-        sensor.sensor_value.payload = DPTArray((0x49, 0x40, 0xC9, 0x9))
+        sensor.sensor_value.value = DPTArray((0x49, 0x40, 0xC9, 0x9))
 
         assert sensor.resolve_state() == 1228982537
         assert sensor.unit_of_measurement() == "kVAh"
@@ -305,7 +326,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="area"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x63, 0x1E, 0xCD))
+        sensor.sensor_value.value = DPTArray((0x45, 0x63, 0x1E, 0xCD))
 
         assert sensor.resolve_state() == 3633.925048828125
         assert sensor.unit_of_measurement() == "m²"
@@ -317,7 +338,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="brightness"
         )
-        sensor.sensor_value.payload = DPTArray((0xC3, 0x56))
+        sensor.sensor_value.value = DPTArray((0xC3, 0x56))
 
         assert sensor.resolve_state() == 50006
         assert sensor.unit_of_measurement() == "lx"
@@ -329,7 +350,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="capacitance"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0xC9, 0x1D, 0x9D))
+        sensor.sensor_value.value = DPTArray((0x45, 0xC9, 0x1D, 0x9D))
 
         assert sensor.resolve_state() == 6435.70166015625
         assert sensor.unit_of_measurement() == "F"
@@ -344,7 +365,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="charge_density_surface",
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0xDB, 0x66, 0x99))
+        sensor.sensor_value.value = DPTArray((0x45, 0xDB, 0x66, 0x99))
 
         assert sensor.resolve_state() == 7020.82470703125
         assert sensor.unit_of_measurement() == "C/m²"
@@ -359,7 +380,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="charge_density_volume",
         )
-        sensor.sensor_value.payload = DPTArray((0xC4, 0x8C, 0x33, 0xD7))
+        sensor.sensor_value.value = DPTArray((0xC4, 0x8C, 0x33, 0xD7))
 
         assert sensor.resolve_state() == -1121.6199951171875
         assert sensor.unit_of_measurement() == "C/m³"
@@ -374,7 +395,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="color_temperature",
         )
-        sensor.sensor_value.payload = DPTArray((0x6C, 0x95))
+        sensor.sensor_value.value = DPTArray((0x6C, 0x95))
 
         assert sensor.resolve_state() == 27797
         assert sensor.unit_of_measurement() == "K"
@@ -389,7 +410,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="common_temperature",
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0xD9, 0xC6, 0x3F))
+        sensor.sensor_value.value = DPTArray((0x45, 0xD9, 0xC6, 0x3F))
 
         assert sensor.resolve_state() == 6968.78076171875
         assert sensor.unit_of_measurement() == "°C"
@@ -404,7 +425,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="compressibility",
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x89, 0x94, 0xAB))
+        sensor.sensor_value.value = DPTArray((0x45, 0x89, 0x94, 0xAB))
 
         assert sensor.resolve_state() == 4402.58349609375
         assert sensor.unit_of_measurement() == "m²/N"
@@ -416,7 +437,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="conductance"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0xA6, 0x28, 0xF9))
+        sensor.sensor_value.value = DPTArray((0x45, 0xA6, 0x28, 0xF9))
 
         assert sensor.resolve_state() == 5317.12158203125
         assert sensor.unit_of_measurement() == "S"
@@ -428,7 +449,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="counter_pulses"
         )
-        sensor.sensor_value.payload = DPTArray((0x9D,))
+        sensor.sensor_value.value = DPTArray((0x9D,))
 
         assert sensor.resolve_state() == -99
         assert sensor.unit_of_measurement() == "counter pulses"
@@ -440,7 +461,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="current"
         )
-        sensor.sensor_value.payload = DPTArray((0xCA, 0xCC))
+        sensor.sensor_value.value = DPTArray((0xCA, 0xCC))
 
         assert sensor.resolve_state() == 51916
         assert sensor.unit_of_measurement() == "mA"
@@ -452,7 +473,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="delta_time_hrs"
         )
-        sensor.sensor_value.payload = DPTArray((0x47, 0x80))
+        sensor.sensor_value.value = DPTArray((0x47, 0x80))
 
         assert sensor.resolve_state() == 18304
         assert sensor.unit_of_measurement() == "h"
@@ -464,7 +485,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="delta_time_min"
         )
-        sensor.sensor_value.payload = DPTArray((0xB9, 0x7B))
+        sensor.sensor_value.value = DPTArray((0xB9, 0x7B))
 
         assert sensor.resolve_state() == -18053
         assert sensor.unit_of_measurement() == "min"
@@ -476,7 +497,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="delta_time_ms"
         )
-        sensor.sensor_value.payload = DPTArray((0x58, 0x77))
+        sensor.sensor_value.value = DPTArray((0x58, 0x77))
 
         assert sensor.resolve_state() == 22647
         assert sensor.unit_of_measurement() == "ms"
@@ -488,7 +509,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="delta_time_sec"
         )
-        sensor.sensor_value.payload = DPTArray((0xA3, 0x6A))
+        sensor.sensor_value.value = DPTArray((0xA3, 0x6A))
 
         assert sensor.resolve_state() == -23702
         assert sensor.unit_of_measurement() == "s"
@@ -500,7 +521,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="density"
         )
-        sensor.sensor_value.payload = DPTArray((0x44, 0xA5, 0xCB, 0x27))
+        sensor.sensor_value.value = DPTArray((0x44, 0xA5, 0xCB, 0x27))
 
         assert sensor.resolve_state() == 1326.3485107421875
         assert sensor.unit_of_measurement() == "kg/m³"
@@ -515,7 +536,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="electrical_conductivity",
         )
-        sensor.sensor_value.payload = DPTArray((0xC4, 0xC6, 0xF5, 0x6E))
+        sensor.sensor_value.value = DPTArray((0xC4, 0xC6, 0xF5, 0x6E))
 
         assert sensor.resolve_state() == -1591.669677734375
         assert sensor.unit_of_measurement() == "S/m"
@@ -530,7 +551,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="electric_charge",
         )
-        sensor.sensor_value.payload = DPTArray((0x46, 0x14, 0xF6, 0xA0))
+        sensor.sensor_value.value = DPTArray((0x46, 0x14, 0xF6, 0xA0))
 
         assert sensor.resolve_state() == 9533.65625
         assert sensor.unit_of_measurement() == "C"
@@ -545,7 +566,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="electric_current",
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0xAD, 0x45, 0x90))
+        sensor.sensor_value.value = DPTArray((0x45, 0xAD, 0x45, 0x90))
 
         assert sensor.resolve_state() == 5544.6953125
         assert sensor.unit_of_measurement() == "A"
@@ -560,7 +581,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="electric_current_density",
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x7C, 0x57, 0xF6))
+        sensor.sensor_value.value = DPTArray((0x45, 0x7C, 0x57, 0xF6))
 
         assert sensor.resolve_state() == 4037.49755859375
         assert sensor.unit_of_measurement() == "A/m²"
@@ -575,7 +596,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="electric_dipole_moment",
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x58, 0xF1, 0x73))
+        sensor.sensor_value.value = DPTArray((0x45, 0x58, 0xF1, 0x73))
 
         assert sensor.resolve_state() == 3471.090576171875
         assert sensor.unit_of_measurement() == "C m"
@@ -590,7 +611,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="electric_displacement",
         )
-        sensor.sensor_value.payload = DPTArray((0xC5, 0x34, 0x8B, 0x0))
+        sensor.sensor_value.value = DPTArray((0xC5, 0x34, 0x8B, 0x0))
 
         assert sensor.resolve_state() == -2888.6875
         assert sensor.unit_of_measurement() == "C/m²"
@@ -605,7 +626,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="electric_field_strength",
         )
-        sensor.sensor_value.payload = DPTArray((0xC6, 0x17, 0x1C, 0x39))
+        sensor.sensor_value.value = DPTArray((0xC6, 0x17, 0x1C, 0x39))
 
         assert sensor.resolve_state() == -9671.0556640625
         assert sensor.unit_of_measurement() == "V/m"
@@ -617,7 +638,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="electric_flux"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x8F, 0x6C, 0xFD))
+        sensor.sensor_value.value = DPTArray((0x45, 0x8F, 0x6C, 0xFD))
 
         assert sensor.resolve_state() == 4589.62353515625
         assert sensor.unit_of_measurement() == "c"
@@ -632,7 +653,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="electric_flux_density",
         )
-        sensor.sensor_value.payload = DPTArray((0xC6, 0x0, 0x50, 0xA8))
+        sensor.sensor_value.value = DPTArray((0xC6, 0x0, 0x50, 0xA8))
 
         assert sensor.resolve_state() == -8212.1640625
         assert sensor.unit_of_measurement() == "C/m²"
@@ -647,7 +668,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="electric_polarization",
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0xF8, 0x89, 0xC6))
+        sensor.sensor_value.value = DPTArray((0x45, 0xF8, 0x89, 0xC6))
 
         assert sensor.resolve_state() == 7953.2216796875
         assert sensor.unit_of_measurement() == "C/m²"
@@ -662,7 +683,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="electric_potential",
         )
-        sensor.sensor_value.payload = DPTArray((0xC6, 0x18, 0xA4, 0xAF))
+        sensor.sensor_value.value = DPTArray((0xC6, 0x18, 0xA4, 0xAF))
 
         assert sensor.resolve_state() == -9769.1708984375
         assert sensor.unit_of_measurement() == "V"
@@ -677,7 +698,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="electric_potential_difference",
         )
-        sensor.sensor_value.payload = DPTArray((0xC6, 0xF, 0x1D, 0x6))
+        sensor.sensor_value.value = DPTArray((0xC6, 0xF, 0x1D, 0x6))
 
         assert sensor.resolve_state() == -9159.255859375
         assert sensor.unit_of_measurement() == "V"
@@ -692,7 +713,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="electromagnetic_moment",
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x82, 0x48, 0xAE))
+        sensor.sensor_value.value = DPTArray((0x45, 0x82, 0x48, 0xAE))
 
         assert sensor.resolve_state() == 4169.0849609375
         assert sensor.unit_of_measurement() == "A m²"
@@ -707,7 +728,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="electromotive_force",
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0xBC, 0xEF, 0xEB))
+        sensor.sensor_value.value = DPTArray((0x45, 0xBC, 0xEF, 0xEB))
 
         assert sensor.resolve_state() == 6045.98974609375
         assert sensor.unit_of_measurement() == "V"
@@ -719,7 +740,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="energy"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x4B, 0xB3, 0xF8))
+        sensor.sensor_value.value = DPTArray((0x45, 0x4B, 0xB3, 0xF8))
 
         assert sensor.resolve_state() == 3259.248046875
         assert sensor.unit_of_measurement() == "J"
@@ -731,7 +752,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="enthalpy"
         )
-        sensor.sensor_value.payload = DPTArray((0x76, 0xDD))
+        sensor.sensor_value.value = DPTArray((0x76, 0xDD))
 
         assert sensor.resolve_state() == 287866.88
         assert sensor.unit_of_measurement() == "H"
@@ -743,7 +764,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="flow_rate_m3h"
         )
-        sensor.sensor_value.payload = DPTArray((0x99, 0xEA, 0xC0, 0x55))
+        sensor.sensor_value.value = DPTArray((0x99, 0xEA, 0xC0, 0x55))
 
         assert sensor.resolve_state() == -1712668587
         assert sensor.unit_of_measurement() == "m³/h"
@@ -755,7 +776,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="force"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x9E, 0x2C, 0xE1))
+        sensor.sensor_value.value = DPTArray((0x45, 0x9E, 0x2C, 0xE1))
 
         assert sensor.resolve_state() == 5061.60986328125
         assert sensor.unit_of_measurement() == "N"
@@ -767,7 +788,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="frequency"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0xC2, 0x3C, 0x44))
+        sensor.sensor_value.value = DPTArray((0x45, 0xC2, 0x3C, 0x44))
 
         assert sensor.resolve_state() == 6215.533203125
         assert sensor.unit_of_measurement() == "Hz"
@@ -779,7 +800,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="heatcapacity"
         )
-        sensor.sensor_value.payload = DPTArray((0xC5, 0xB3, 0x56, 0x7E))
+        sensor.sensor_value.value = DPTArray((0xC5, 0xB3, 0x56, 0x7E))
 
         assert sensor.resolve_state() == -5738.8115234375
         assert sensor.unit_of_measurement() == "J/K"
@@ -791,7 +812,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="heatflowrate"
         )
-        sensor.sensor_value.payload = DPTArray((0x44, 0xEC, 0x80, 0x7A))
+        sensor.sensor_value.value = DPTArray((0x44, 0xEC, 0x80, 0x7A))
 
         assert sensor.resolve_state() == 1892.014892578125
         assert sensor.unit_of_measurement() == "W"
@@ -803,7 +824,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="heat_quantity"
         )
-        sensor.sensor_value.payload = DPTArray((0xC5, 0xA6, 0xB6, 0xD5))
+        sensor.sensor_value.value = DPTArray((0xC5, 0xA6, 0xB6, 0xD5))
 
         assert sensor.resolve_state() == -5334.85400390625
         assert sensor.unit_of_measurement() == "J"
@@ -815,7 +836,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="humidity"
         )
-        sensor.sensor_value.payload = DPTArray((0x7E, 0xE1))
+        sensor.sensor_value.value = DPTArray((0x7E, 0xE1))
 
         assert sensor.resolve_state() == 577044.48
         assert sensor.unit_of_measurement() == "%"
@@ -827,7 +848,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="impedance"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0xDD, 0x79, 0x6D))
+        sensor.sensor_value.value = DPTArray((0x45, 0xDD, 0x79, 0x6D))
 
         assert sensor.resolve_state() == 7087.17822265625
         assert sensor.unit_of_measurement() == "Ω"
@@ -839,7 +860,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="illuminance"
         )
-        sensor.sensor_value.payload = DPTArray((0x7C, 0x5E))
+        sensor.sensor_value.value = DPTArray((0x7C, 0x5E))
 
         assert sensor.resolve_state() == 366346.24
         assert sensor.unit_of_measurement() == "lx"
@@ -854,7 +875,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="kelvin_per_percent",
         )
-        sensor.sensor_value.payload = DPTArray((0xFA, 0xBD))
+        sensor.sensor_value.value = DPTArray((0xFA, 0xBD))
 
         assert sensor.resolve_state() == -441384.96
         assert sensor.unit_of_measurement() == "K/%"
@@ -866,7 +887,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="length"
         )
-        sensor.sensor_value.payload = DPTArray((0xC5, 0x9D, 0xAE, 0xC5))
+        sensor.sensor_value.value = DPTArray((0xC5, 0x9D, 0xAE, 0xC5))
 
         assert sensor.resolve_state() == -5045.84619140625
         assert sensor.unit_of_measurement() == "m"
@@ -878,7 +899,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="length_mm"
         )
-        sensor.sensor_value.payload = DPTArray((0x56, 0xB9))
+        sensor.sensor_value.value = DPTArray((0x56, 0xB9))
 
         assert sensor.resolve_state() == 22201
         assert sensor.unit_of_measurement() == "mm"
@@ -890,7 +911,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="light_quantity"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x4A, 0xF5, 0x68))
+        sensor.sensor_value.value = DPTArray((0x45, 0x4A, 0xF5, 0x68))
 
         assert sensor.resolve_state() == 3247.337890625
         assert sensor.unit_of_measurement() == "lm s"
@@ -905,7 +926,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="long_delta_timesec",
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0xB2, 0x17, 0x54))
+        sensor.sensor_value.value = DPTArray((0x45, 0xB2, 0x17, 0x54))
 
         assert sensor.resolve_state() == 1169299284
         assert sensor.unit_of_measurement() == "s"
@@ -917,7 +938,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="luminance"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x18, 0xD9, 0x76))
+        sensor.sensor_value.value = DPTArray((0x45, 0x18, 0xD9, 0x76))
 
         assert sensor.resolve_state() == 2445.59130859375
         assert sensor.unit_of_measurement() == "cd/m²"
@@ -929,7 +950,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="luminous_flux"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0xBD, 0x16, 0x9))
+        sensor.sensor_value.value = DPTArray((0x45, 0xBD, 0x16, 0x9))
 
         assert sensor.resolve_state() == 6050.75439453125
         assert sensor.unit_of_measurement() == "lm"
@@ -944,7 +965,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="luminous_intensity",
         )
-        sensor.sensor_value.payload = DPTArray((0x46, 0xB, 0xBE, 0x7E))
+        sensor.sensor_value.value = DPTArray((0x46, 0xB, 0xBE, 0x7E))
 
         assert sensor.resolve_state() == 8943.623046875
         assert sensor.unit_of_measurement() == "cd"
@@ -959,7 +980,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="magnetic_field_strength",
         )
-        sensor.sensor_value.payload = DPTArray((0x44, 0x15, 0xF1, 0xAD))
+        sensor.sensor_value.value = DPTArray((0x44, 0x15, 0xF1, 0xAD))
 
         assert sensor.resolve_state() == 599.7761840820312
         assert sensor.unit_of_measurement() == "A/m"
@@ -971,7 +992,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="magnetic_flux"
         )
-        sensor.sensor_value.payload = DPTArray((0xC5, 0xCB, 0x3C, 0x98))
+        sensor.sensor_value.value = DPTArray((0xC5, 0xCB, 0x3C, 0x98))
 
         assert sensor.resolve_state() == -6503.57421875
         assert sensor.unit_of_measurement() == "Wb"
@@ -986,7 +1007,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="magnetic_flux_density",
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0xB6, 0xBD, 0x42))
+        sensor.sensor_value.value = DPTArray((0x45, 0xB6, 0xBD, 0x42))
 
         assert sensor.resolve_state() == 5847.6572265625
         assert sensor.unit_of_measurement() == "T"
@@ -1001,7 +1022,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="magnetic_moment",
         )
-        sensor.sensor_value.payload = DPTArray((0xC3, 0x8E, 0x7F, 0x73))
+        sensor.sensor_value.value = DPTArray((0xC3, 0x8E, 0x7F, 0x73))
 
         assert sensor.resolve_state() == -284.9956970214844
         assert sensor.unit_of_measurement() == "A m²"
@@ -1016,7 +1037,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="magnetic_polarization",
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x8C, 0xFA, 0xCB))
+        sensor.sensor_value.value = DPTArray((0x45, 0x8C, 0xFA, 0xCB))
 
         assert sensor.resolve_state() == 4511.34912109375
         assert sensor.unit_of_measurement() == "T"
@@ -1028,7 +1049,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="magnetization"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0xF7, 0x9D, 0xA2))
+        sensor.sensor_value.value = DPTArray((0x45, 0xF7, 0x9D, 0xA2))
 
         assert sensor.resolve_state() == 7923.7041015625
         assert sensor.unit_of_measurement() == "A/m"
@@ -1043,7 +1064,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="magnetomotive_force",
         )
-        sensor.sensor_value.payload = DPTArray((0xC6, 0x4, 0xC2, 0xDA))
+        sensor.sensor_value.value = DPTArray((0xC6, 0x4, 0xC2, 0xDA))
 
         assert sensor.resolve_state() == -8496.712890625
         assert sensor.unit_of_measurement() == "A"
@@ -1055,7 +1076,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="mass"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x8F, 0x70, 0xA4))
+        sensor.sensor_value.value = DPTArray((0x45, 0x8F, 0x70, 0xA4))
 
         assert sensor.resolve_state() == 4590.080078125
         assert sensor.unit_of_measurement() == "kg"
@@ -1067,7 +1088,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="mass_flux"
         )
-        sensor.sensor_value.payload = DPTArray((0xC6, 0x7, 0x34, 0xFF))
+        sensor.sensor_value.value = DPTArray((0xC6, 0x7, 0x34, 0xFF))
 
         assert sensor.resolve_state() == -8653.2490234375
         assert sensor.unit_of_measurement() == "kg/s"
@@ -1079,7 +1100,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="mol"
         )
-        sensor.sensor_value.payload = DPTArray((0xC4, 0xA0, 0xF4, 0x68))
+        sensor.sensor_value.value = DPTArray((0xC4, 0xA0, 0xF4, 0x68))
 
         assert sensor.resolve_state() == -1287.6376953125
         assert sensor.unit_of_measurement() == "mol"
@@ -1091,7 +1112,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="momentum"
         )
-        sensor.sensor_value.payload = DPTArray((0xC5, 0x27, 0xAA, 0x5B))
+        sensor.sensor_value.value = DPTArray((0xC5, 0x27, 0xAA, 0x5B))
 
         assert sensor.resolve_state() == -2682.647216796875
         assert sensor.unit_of_measurement() == "N/s"
@@ -1103,7 +1124,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="percent"
         )
-        sensor.sensor_value.payload = DPTArray((0xE3,))
+        sensor.sensor_value.value = DPTArray((0xE3,))
 
         assert sensor.resolve_state() == 89
         assert sensor.unit_of_measurement() == "%"
@@ -1115,7 +1136,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="percentU8"
         )
-        sensor.sensor_value.payload = DPTArray((0x6B,))
+        sensor.sensor_value.value = DPTArray((0x6B,))
 
         assert sensor.resolve_state() == 107
         assert sensor.unit_of_measurement() == "%"
@@ -1127,7 +1148,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="percentV8"
         )
-        sensor.sensor_value.payload = DPTArray((0x20,))
+        sensor.sensor_value.value = DPTArray((0x20,))
 
         assert sensor.resolve_state() == 32
         assert sensor.unit_of_measurement() == "%"
@@ -1139,7 +1160,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="percentV16"
         )
-        sensor.sensor_value.payload = DPTArray((0x8A, 0x2F))
+        sensor.sensor_value.value = DPTArray((0x8A, 0x2F))
 
         assert sensor.resolve_state() == -30161
         assert sensor.unit_of_measurement() == "%"
@@ -1151,7 +1172,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="phaseanglerad"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x54, 0xAC, 0x2E))
+        sensor.sensor_value.value = DPTArray((0x45, 0x54, 0xAC, 0x2E))
 
         assert sensor.resolve_state() == 3402.76123046875
         assert sensor.unit_of_measurement() == "rad"
@@ -1163,7 +1184,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="phaseangledeg"
         )
-        sensor.sensor_value.payload = DPTArray((0xC5, 0x25, 0x13, 0x38))
+        sensor.sensor_value.value = DPTArray((0xC5, 0x25, 0x13, 0x38))
 
         assert sensor.resolve_state() == -2641.201171875
         assert sensor.unit_of_measurement() == "°"
@@ -1175,7 +1196,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="power"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0xCB, 0xE2, 0x5C))
+        sensor.sensor_value.value = DPTArray((0x45, 0xCB, 0xE2, 0x5C))
 
         assert sensor.resolve_state() == 6524.294921875
         assert sensor.unit_of_measurement() == "W"
@@ -1187,7 +1208,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="power_2byte"
         )
-        sensor.sensor_value.payload = DPTArray((0x6D, 0x91))
+        sensor.sensor_value.value = DPTArray((0x6D, 0x91))
 
         assert sensor.resolve_state() == 116736.0
         assert sensor.unit_of_measurement() == "kW"
@@ -1199,7 +1220,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="power_density"
         )
-        sensor.sensor_value.payload = DPTArray((0x65, 0x3E))
+        sensor.sensor_value.value = DPTArray((0x65, 0x3E))
 
         assert sensor.resolve_state() == 54968.32
         assert sensor.unit_of_measurement() == "W/m²"
@@ -1211,7 +1232,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="powerfactor"
         )
-        sensor.sensor_value.payload = DPTArray((0xC5, 0x35, 0x28, 0x21))
+        sensor.sensor_value.value = DPTArray((0xC5, 0x35, 0x28, 0x21))
 
         assert sensor.resolve_state() == -2898.508056640625
         assert sensor.unit_of_measurement() == "cosΦ"
@@ -1223,7 +1244,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="ppm"
         )
-        sensor.sensor_value.payload = DPTArray((0x7F, 0x74))
+        sensor.sensor_value.value = DPTArray((0x7F, 0x74))
 
         assert sensor.resolve_state() == 625213.44
         assert sensor.unit_of_measurement() == "ppm"
@@ -1235,7 +1256,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="pressure"
         )
-        sensor.sensor_value.payload = DPTArray((0xC5, 0xE6, 0xE6, 0x63))
+        sensor.sensor_value.value = DPTArray((0xC5, 0xE6, 0xE6, 0x63))
 
         assert sensor.resolve_state() == -7388.79833984375
         assert sensor.unit_of_measurement() == "Pa"
@@ -1247,7 +1268,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="pressure_2byte"
         )
-        sensor.sensor_value.payload = DPTArray((0x7C, 0xF4))
+        sensor.sensor_value.value = DPTArray((0x7C, 0xF4))
 
         assert sensor.resolve_state() == 415498.24
         assert sensor.unit_of_measurement() == "Pa"
@@ -1259,7 +1280,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="pulse"
         )
-        sensor.sensor_value.payload = DPTArray((0xFC,))
+        sensor.sensor_value.value = DPTArray((0xFC,))
 
         assert sensor.resolve_state() == 252
         assert sensor.unit_of_measurement() == "counter pulses"
@@ -1271,7 +1292,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="rain_amount"
         )
-        sensor.sensor_value.payload = DPTArray((0xE0, 0xD0))
+        sensor.sensor_value.value = DPTArray((0xE0, 0xD0))
 
         assert sensor.resolve_state() == -75366.4
         assert sensor.unit_of_measurement() == "l/m²"
@@ -1283,7 +1304,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="reactance"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0xB0, 0x50, 0x91))
+        sensor.sensor_value.value = DPTArray((0x45, 0xB0, 0x50, 0x91))
 
         assert sensor.resolve_state() == 5642.07080078125
         assert sensor.unit_of_measurement() == "Ω"
@@ -1298,7 +1319,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="reactive_energy",
         )
-        sensor.sensor_value.payload = DPTArray((0x1A, 0x49, 0x6D, 0xA7))
+        sensor.sensor_value.value = DPTArray((0x1A, 0x49, 0x6D, 0xA7))
 
         assert sensor.resolve_state() == 441019815
         assert sensor.unit_of_measurement() == "VARh"
@@ -1313,7 +1334,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="reactive_energy_kvarh",
         )
-        sensor.sensor_value.payload = DPTArray((0xCC, 0x62, 0x5, 0x31))
+        sensor.sensor_value.value = DPTArray((0xCC, 0x62, 0x5, 0x31))
 
         assert sensor.resolve_state() == -865991375
         assert sensor.unit_of_measurement() == "kVARh"
@@ -1325,7 +1346,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="resistance"
         )
-        sensor.sensor_value.payload = DPTArray((0xC5, 0xFC, 0x5F, 0xC2))
+        sensor.sensor_value.value = DPTArray((0xC5, 0xFC, 0x5F, 0xC2))
 
         assert sensor.resolve_state() == -8075.9697265625
         assert sensor.unit_of_measurement() == "Ω"
@@ -1337,7 +1358,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="resistivity"
         )
-        sensor.sensor_value.payload = DPTArray((0xC5, 0x57, 0x76, 0xC3))
+        sensor.sensor_value.value = DPTArray((0xC5, 0x57, 0x76, 0xC3))
 
         assert sensor.resolve_state() == -3447.422607421875
         assert sensor.unit_of_measurement() == "Ω m"
@@ -1349,7 +1370,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="rotation_angle"
         )
-        sensor.sensor_value.payload = DPTArray((0x2D, 0xDC))
+        sensor.sensor_value.value = DPTArray((0x2D, 0xDC))
 
         assert sensor.resolve_state() == 11740
         assert sensor.unit_of_measurement() == "°"
@@ -1361,7 +1382,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="scene_number"
         )
-        sensor.sensor_value.payload = DPTArray((0x1,))
+        sensor.sensor_value.value = DPTArray((0x1,))
 
         assert sensor.resolve_state() == 2
         assert sensor.unit_of_measurement() == ""
@@ -1376,7 +1397,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="self_inductance",
         )
-        sensor.sensor_value.payload = DPTArray((0xC4, 0xA1, 0xB0, 0x6))
+        sensor.sensor_value.value = DPTArray((0xC4, 0xA1, 0xB0, 0x6))
 
         assert sensor.resolve_state() == -1293.500732421875
         assert sensor.unit_of_measurement() == "H"
@@ -1388,7 +1409,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="solid_angle"
         )
-        sensor.sensor_value.payload = DPTArray((0xC5, 0xC6, 0xE5, 0x47))
+        sensor.sensor_value.value = DPTArray((0xC5, 0xC6, 0xE5, 0x47))
 
         assert sensor.resolve_state() == -6364.65966796875
         assert sensor.unit_of_measurement() == "sr"
@@ -1403,7 +1424,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="sound_intensity",
         )
-        sensor.sensor_value.payload = DPTArray((0xC4, 0xF2, 0x56, 0xE6))
+        sensor.sensor_value.value = DPTArray((0xC4, 0xF2, 0x56, 0xE6))
 
         assert sensor.resolve_state() == -1938.715576171875
         assert sensor.unit_of_measurement() == "W/m²"
@@ -1415,7 +1436,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="speed"
         )
-        sensor.sensor_value.payload = DPTArray((0xC5, 0xCD, 0x1C, 0x6A))
+        sensor.sensor_value.value = DPTArray((0xC5, 0xCD, 0x1C, 0x6A))
 
         assert sensor.resolve_state() == -6563.5517578125
         assert sensor.unit_of_measurement() == "m/s"
@@ -1427,7 +1448,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="stress"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0xDC, 0xA8, 0xF2))
+        sensor.sensor_value.value = DPTArray((0x45, 0xDC, 0xA8, 0xF2))
 
         assert sensor.resolve_state() == 7061.1181640625
         assert sensor.unit_of_measurement() == "Pa"
@@ -1442,7 +1463,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="surface_tension",
         )
-        sensor.sensor_value.payload = DPTArray((0x46, 0xB, 0xAC, 0x11))
+        sensor.sensor_value.value = DPTArray((0x46, 0xB, 0xAC, 0x11))
 
         assert sensor.resolve_state() == 8939.0166015625
         assert sensor.unit_of_measurement() == "N/m"
@@ -1454,7 +1475,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="temperature"
         )
-        sensor.sensor_value.payload = DPTArray((0x77, 0x88))
+        sensor.sensor_value.value = DPTArray((0x77, 0x88))
 
         assert sensor.resolve_state() == 315883.52
         assert sensor.unit_of_measurement() == "°C"
@@ -1466,7 +1487,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="temperature_a"
         )
-        sensor.sensor_value.payload = DPTArray((0xF1, 0xDB))
+        sensor.sensor_value.value = DPTArray((0xF1, 0xDB))
 
         assert sensor.resolve_state() == -257720.32
         assert sensor.unit_of_measurement() == "K/h"
@@ -1481,7 +1502,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="temperature_difference",
         )
-        sensor.sensor_value.payload = DPTArray((0xC6, 0xC, 0x50, 0xBC))
+        sensor.sensor_value.value = DPTArray((0xC6, 0xC, 0x50, 0xBC))
 
         assert sensor.resolve_state() == -8980.18359375
         assert sensor.unit_of_measurement() == "K"
@@ -1496,7 +1517,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="temperature_difference_2byte",
         )
-        sensor.sensor_value.payload = DPTArray((0xA9, 0xF4))
+        sensor.sensor_value.value = DPTArray((0xA9, 0xF4))
 
         assert sensor.resolve_state() == -495.36
         assert sensor.unit_of_measurement() == "K"
@@ -1508,7 +1529,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="temperature_f"
         )
-        sensor.sensor_value.payload = DPTArray((0x67, 0xA9))
+        sensor.sensor_value.value = DPTArray((0x67, 0xA9))
 
         assert sensor.resolve_state() == 80322.56
         assert sensor.unit_of_measurement() == "°F"
@@ -1523,7 +1544,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="thermal_capacity",
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x83, 0xEA, 0xB3))
+        sensor.sensor_value.value = DPTArray((0x45, 0x83, 0xEA, 0xB3))
 
         assert sensor.resolve_state() == 4221.33740234375
         assert sensor.unit_of_measurement() == "J/K"
@@ -1538,7 +1559,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="thermal_conductivity",
         )
-        sensor.sensor_value.payload = DPTArray((0xC5, 0x9C, 0x4D, 0x22))
+        sensor.sensor_value.value = DPTArray((0xC5, 0x9C, 0x4D, 0x22))
 
         assert sensor.resolve_state() == -5001.6416015625
         assert sensor.unit_of_measurement() == "W/mK"
@@ -1553,7 +1574,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="thermoelectric_power",
         )
-        sensor.sensor_value.payload = DPTArray((0x41, 0xCF, 0x9E, 0x4F))
+        sensor.sensor_value.value = DPTArray((0x41, 0xCF, 0x9E, 0x4F))
 
         assert sensor.resolve_state() == 25.952299118041992
         assert sensor.unit_of_measurement() == "V/K"
@@ -1565,7 +1586,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="time_1"
         )
-        sensor.sensor_value.payload = DPTArray((0x5E, 0x1E))
+        sensor.sensor_value.value = DPTArray((0x5E, 0x1E))
 
         assert sensor.resolve_state() == 32071.68
         assert sensor.unit_of_measurement() == "s"
@@ -1577,7 +1598,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="time_2"
         )
-        sensor.sensor_value.payload = DPTArray((0xFB, 0x29))
+        sensor.sensor_value.value = DPTArray((0xFB, 0x29))
 
         assert sensor.resolve_state() == -405995.52
         assert sensor.unit_of_measurement() == "ms"
@@ -1592,7 +1613,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="time_period_100msec",
         )
-        sensor.sensor_value.payload = DPTArray((0x6A, 0x35))
+        sensor.sensor_value.value = DPTArray((0x6A, 0x35))
 
         assert sensor.resolve_state() == 27189
         assert sensor.unit_of_measurement() == "ms"
@@ -1607,7 +1628,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="time_period_10msec",
         )
-        sensor.sensor_value.payload = DPTArray((0x32, 0x3))
+        sensor.sensor_value.value = DPTArray((0x32, 0x3))
 
         assert sensor.resolve_state() == 12803
         assert sensor.unit_of_measurement() == "ms"
@@ -1622,7 +1643,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="time_period_hrs",
         )
-        sensor.sensor_value.payload = DPTArray((0x29, 0xDE))
+        sensor.sensor_value.value = DPTArray((0x29, 0xDE))
 
         assert sensor.resolve_state() == 10718
         assert sensor.unit_of_measurement() == "h"
@@ -1637,7 +1658,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="time_period_min",
         )
-        sensor.sensor_value.payload = DPTArray((0x0, 0x54))
+        sensor.sensor_value.value = DPTArray((0x0, 0x54))
 
         assert sensor.resolve_state() == 84
         assert sensor.unit_of_measurement() == "min"
@@ -1652,7 +1673,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="time_period_msec",
         )
-        sensor.sensor_value.payload = DPTArray((0x93, 0xC7))
+        sensor.sensor_value.value = DPTArray((0x93, 0xC7))
 
         assert sensor.resolve_state() == 37831
         assert sensor.unit_of_measurement() == "ms"
@@ -1667,7 +1688,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type="time_period_sec",
         )
-        sensor.sensor_value.payload = DPTArray((0xE0, 0xF5))
+        sensor.sensor_value.value = DPTArray((0xE0, 0xF5))
 
         assert sensor.resolve_state() == 57589
         assert sensor.unit_of_measurement() == "s"
@@ -1679,7 +1700,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="time_seconds"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0xEC, 0x91, 0x7C))
+        sensor.sensor_value.value = DPTArray((0x45, 0xEC, 0x91, 0x7C))
 
         assert sensor.resolve_state() == 7570.185546875
         assert sensor.unit_of_measurement() == "s"
@@ -1691,7 +1712,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="torque"
         )
-        sensor.sensor_value.payload = DPTArray((0xC5, 0x9, 0x23, 0x5F))
+        sensor.sensor_value.value = DPTArray((0xC5, 0x9, 0x23, 0x5F))
 
         assert sensor.resolve_state() == -2194.210693359375
         assert sensor.unit_of_measurement() == "N m"
@@ -1703,7 +1724,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="voltage"
         )
-        sensor.sensor_value.payload = DPTArray((0x6D, 0xBF))
+        sensor.sensor_value.value = DPTArray((0x6D, 0xBF))
 
         assert sensor.resolve_state() == 120504.32
         assert sensor.unit_of_measurement() == "mV"
@@ -1715,7 +1736,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="volume"
         )
-        sensor.sensor_value.payload = DPTArray((0x46, 0x16, 0x98, 0x43))
+        sensor.sensor_value.value = DPTArray((0x46, 0x16, 0x98, 0x43))
 
         assert sensor.resolve_state() == 9638.0654296875
         assert sensor.unit_of_measurement() == "m³"
@@ -1727,7 +1748,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="volume_flow"
         )
-        sensor.sensor_value.payload = DPTArray((0x7C, 0xF5))
+        sensor.sensor_value.value = DPTArray((0x7C, 0xF5))
 
         assert sensor.resolve_state() == 415825.92
         assert sensor.unit_of_measurement() == "l/h"
@@ -1739,7 +1760,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="volume_flux"
         )
-        sensor.sensor_value.payload = DPTArray((0xC5, 0x4, 0x2D, 0x72))
+        sensor.sensor_value.value = DPTArray((0xC5, 0x4, 0x2D, 0x72))
 
         assert sensor.resolve_state() == -2114.84033203125
         assert sensor.unit_of_measurement() == "m³/s"
@@ -1751,7 +1772,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="weight"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x20, 0x10, 0xE8))
+        sensor.sensor_value.value = DPTArray((0x45, 0x20, 0x10, 0xE8))
 
         assert sensor.resolve_state() == 2561.056640625
         assert sensor.unit_of_measurement() == "N"
@@ -1763,7 +1784,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="work"
         )
-        sensor.sensor_value.payload = DPTArray((0x45, 0x64, 0x5D, 0xBE))
+        sensor.sensor_value.value = DPTArray((0x45, 0x64, 0x5D, 0xBE))
 
         assert sensor.resolve_state() == 3653.85888671875
         assert sensor.unit_of_measurement() == "J"
@@ -1775,7 +1796,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="wind_speed_ms"
         )
-        sensor.sensor_value.payload = DPTArray((0x7D, 0x98))
+        sensor.sensor_value.value = DPTArray((0x7D, 0x98))
 
         assert sensor.resolve_state() == 469237.76
         assert sensor.unit_of_measurement() == "m/s"
@@ -1787,7 +1808,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="wind_speed_kmh"
         )
-        sensor.sensor_value.payload = DPTArray((0x68, 0x0))
+        sensor.sensor_value.value = DPTArray((0x68, 0x0))
 
         assert sensor.resolve_state() == 0.0
         assert sensor.unit_of_measurement() == "km/h"
@@ -1836,7 +1857,7 @@ class TestSensor:
             payload=GroupValueWrite(DPTArray((0x06, 0xA0))),
         )
         await sensor.process(telegram)
-        assert sensor.sensor_value.payload == DPTArray((0x06, 0xA0))
+        assert sensor.sensor_value.value == DPTArray((0x06, 0xA0))
         assert sensor.resolve_state() == 16.96
 
     async def test_process_callback(self):
