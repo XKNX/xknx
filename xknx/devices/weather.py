@@ -14,7 +14,7 @@ It provides functionality for
 """
 from datetime import date, datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterator, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Iterator, Optional, Tuple
 
 from xknx.remote_value import (
     GroupAddressesType,
@@ -443,45 +443,6 @@ class Weather(Device):
             return WeatherCondition.CLEAR_NIGHT
 
         return WeatherCondition.EXCEPTIONAL
-
-    @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Weather":
-        """Initialize object from configuration structure."""
-        group_address_temperature = config.get("group_address_temperature")
-        group_address_brightness_south = config.get("group_address_brightness_south")
-        group_address_brightness_north = config.get("group_address_brightness_north")
-        group_address_brightness_west = config.get("group_address_brightness_west")
-        group_address_brightness_east = config.get("group_address_brightness_east")
-        group_address_wind_speed = config.get("group_address_wind_speed")
-        group_address_wind_bearing = config.get("group_address_wind_bearing")
-        group_address_rain_alarm = config.get("group_address_rain_alarm")
-        group_address_frost_alarm = config.get("group_address_frost_alarm")
-        group_address_wind_alarm = config.get("group_address_wind_alarm")
-        group_address_day_night = config.get("group_address_day_night")
-        group_address_air_pressure = config.get("group_address_air_pressure")
-        group_address_humidity = config.get("group_address_humidity")
-        create_sensors = config.get("create_sensors", False)
-        sync_state = config.get("sync_state", True)
-
-        return cls(
-            xknx,
-            name,
-            group_address_temperature=group_address_temperature,
-            group_address_brightness_south=group_address_brightness_south,
-            group_address_brightness_north=group_address_brightness_north,
-            group_address_brightness_west=group_address_brightness_west,
-            group_address_brightness_east=group_address_brightness_east,
-            group_address_wind_speed=group_address_wind_speed,
-            group_address_wind_bearing=group_address_wind_bearing,
-            group_address_rain_alarm=group_address_rain_alarm,
-            group_address_frost_alarm=group_address_frost_alarm,
-            group_address_wind_alarm=group_address_wind_alarm,
-            group_address_day_night=group_address_day_night,
-            group_address_air_pressure=group_address_air_pressure,
-            group_address_humidity=group_address_humidity,
-            create_sensors=create_sensors,
-            sync_state=sync_state,
-        )
 
     def __str__(self) -> str:
         """Return object as readable string."""

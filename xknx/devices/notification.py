@@ -1,6 +1,6 @@
 """Module for managing a notification via KNX."""
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional
+from typing import TYPE_CHECKING, Iterator, Optional
 
 from xknx.remote_value import GroupAddressesType, RemoteValueString
 
@@ -40,21 +40,6 @@ class Notification(Device):
         """Iterate the devices RemoteValue classes."""
         yield self._message
 
-    @classmethod
-    def from_config(
-        cls, xknx: "XKNX", name: str, config: Dict[str, Any]
-    ) -> "Notification":
-        """Initialize object from configuration structure."""
-        group_address = config.get("group_address")
-        group_address_state = config.get("group_address_state")
-
-        return cls(
-            xknx,
-            name,
-            group_address=group_address,
-            group_address_state=group_address_state,
-        )
-
     @property
     def message(self) -> Optional[str]:
         """Return the current message."""
@@ -68,15 +53,6 @@ class Notification(Device):
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         await self._message.process(telegram)
-
-    async def do(self, action: str) -> None:
-        """Execute 'do' commands."""
-        if action.startswith("message:"):
-            await self.set(action[8:])
-        else:
-            logger.warning(
-                "Could not understand action %s for device %s", action, self.get_name()
-            )
 
     def __str__(self) -> str:
         """Return object as readable string."""

@@ -17,7 +17,6 @@ from typing import (
     Any,
     Awaitable,
     Callable,
-    Dict,
     Iterator,
     Optional,
     Tuple,
@@ -307,108 +306,6 @@ class Light(Device):
         """Return if light supports absolute color temperature."""
         return self.color_temperature.initialized
 
-    @classmethod
-    def read_color_from_config(
-        cls, color: str, config: Any
-    ) -> Tuple[
-        Optional[GroupAddressesType],
-        Optional[GroupAddressesType],
-        Optional[GroupAddressesType],
-        Optional[GroupAddressesType],
-    ]:
-        """Load color configuration from configuration structure."""
-        if "individual_colors" in config and color in config["individual_colors"]:
-            sub_config = config["individual_colors"][color]
-            return (
-                sub_config.get("group_address_switch"),
-                sub_config.get("group_address_switch_state"),
-                sub_config.get("group_address_brightness"),
-                sub_config.get("group_address_brightness_state"),
-            )
-        return None, None, None, None
-
-    @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Light":
-        """Initialize object from configuration structure."""
-        group_address_switch = config.get("group_address_switch")
-        group_address_switch_state = config.get("group_address_switch_state")
-        group_address_brightness = config.get("group_address_brightness")
-        group_address_brightness_state = config.get("group_address_brightness_state")
-        group_address_color = config.get("group_address_color")
-        group_address_color_state = config.get("group_address_color_state")
-        group_address_rgbw = config.get("group_address_rgbw")
-        group_address_rgbw_state = config.get("group_address_rgbw_state")
-        group_address_tunable_white = config.get("group_address_tunable_white")
-        group_address_tunable_white_state = config.get(
-            "group_address_tunable_white_state"
-        )
-        group_address_color_temperature = config.get("group_address_color_temperature")
-        group_address_color_temperature_state = config.get(
-            "group_address_color_temperature_state"
-        )
-        min_kelvin = config.get("min_kelvin", Light.DEFAULT_MIN_KELVIN)
-        max_kelvin = config.get("max_kelvin", Light.DEFAULT_MAX_KELVIN)
-
-        (
-            red_switch,
-            red_switch_state,
-            red_brightness,
-            red_brightness_state,
-        ) = cls.read_color_from_config("red", config)
-        (
-            green_switch,
-            green_switch_state,
-            green_brightness,
-            green_brightness_state,
-        ) = cls.read_color_from_config("green", config)
-        (
-            blue_switch,
-            blue_switch_state,
-            blue_brightness,
-            blue_brightness_state,
-        ) = cls.read_color_from_config("blue", config)
-        (
-            white_switch,
-            white_switch_state,
-            white_brightness,
-            white_brightness_state,
-        ) = cls.read_color_from_config("white", config)
-
-        return cls(
-            xknx,
-            name,
-            group_address_switch=group_address_switch,
-            group_address_switch_state=group_address_switch_state,
-            group_address_brightness=group_address_brightness,
-            group_address_brightness_state=group_address_brightness_state,
-            group_address_color=group_address_color,
-            group_address_color_state=group_address_color_state,
-            group_address_rgbw=group_address_rgbw,
-            group_address_rgbw_state=group_address_rgbw_state,
-            group_address_tunable_white=group_address_tunable_white,
-            group_address_tunable_white_state=group_address_tunable_white_state,
-            group_address_color_temperature=group_address_color_temperature,
-            group_address_color_temperature_state=group_address_color_temperature_state,
-            group_address_switch_red=red_switch,
-            group_address_switch_red_state=red_switch_state,
-            group_address_brightness_red=red_brightness,
-            group_address_brightness_red_state=red_brightness_state,
-            group_address_switch_green=green_switch,
-            group_address_switch_green_state=green_switch_state,
-            group_address_brightness_green=green_brightness,
-            group_address_brightness_green_state=green_brightness_state,
-            group_address_switch_blue=blue_switch,
-            group_address_switch_blue_state=blue_switch_state,
-            group_address_brightness_blue=blue_brightness,
-            group_address_brightness_blue_state=blue_brightness_state,
-            group_address_switch_white=white_switch,
-            group_address_switch_white_state=white_switch_state,
-            group_address_brightness_white=white_brightness,
-            group_address_brightness_white_state=white_brightness_state,
-            min_kelvin=min_kelvin,
-            max_kelvin=max_kelvin,
-        )
-
     def __str__(self) -> str:
         """Return object as readable string."""
         str_brightness = (
@@ -623,23 +520,6 @@ class Light(Device):
             )
             return
         await self.color_temperature.set(color_temperature)
-
-    async def do(self, action: str) -> None:
-        """Execute 'do' commands."""
-        if action == "on":
-            await self.set_on()
-        elif action == "off":
-            await self.set_off()
-        elif action.startswith("brightness:"):
-            await self.set_brightness(int(action[11:]))
-        elif action.startswith("tunable_white:"):
-            await self.set_tunable_white(int(action[14:]))
-        elif action.startswith("color_temperature:"):
-            await self.set_color_temperature(int(action[18:]))
-        else:
-            logger.warning(
-                "Could not understand action %s for device %s", action, self.get_name()
-            )
 
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""

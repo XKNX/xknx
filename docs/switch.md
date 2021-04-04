@@ -46,17 +46,5 @@ print(switch.state)
 await switch.sync(wait_for_result=True)
 ```
 
-## [](#header-2)Configuration via **xknx.yaml**
-
-Switches are usually configured via [`xknx.yaml`](/configuration):
-
-```yaml
-groups:
-    switch:
-        Livingroom.Outlet_1: {group_address: '1/3/1'}
-        Livingroom.Outlet_2: {group_address: '1/3/2'}
-```
-
-
 
 

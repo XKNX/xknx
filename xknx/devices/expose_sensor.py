@@ -11,7 +11,7 @@ read from an internet service (e.g. Yahoo weather) and exposed to
 ths KNX bus. KNX sensors may show this outside temperature within their
 LCD display.
 """
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Any, Iterator, Optional, Union
 
 from xknx.remote_value import (
     GroupAddressesType,
@@ -63,16 +63,6 @@ class ExposeSensor(Device):
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
         yield self.sensor_value
-
-    @classmethod
-    def from_config(
-        cls, xknx: "XKNX", name: str, config: Dict[str, Any]
-    ) -> "ExposeSensor":
-        """Initialize object from configuration structure."""
-        group_address = config.get("group_address")
-        value_type = config.get("value_type")
-
-        return cls(xknx, name, group_address=group_address, value_type=value_type)
 
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""

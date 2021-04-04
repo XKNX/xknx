@@ -8,7 +8,6 @@ from sys import platform
 from types import TracebackType
 from typing import Awaitable, Callable, Optional, Type, Union
 
-from xknx.config import Config
 from xknx.core import StateUpdater, TelegramQueue
 from xknx.devices import Device, Devices
 from xknx.io import (
@@ -32,7 +31,6 @@ class XKNX:
 
     def __init__(
         self,
-        config: Optional[str] = None,
         own_address: Union[str, IndividualAddress] = DEFAULT_ADDRESS,
         address_format: GroupAddressType = GroupAddressType.LONG,
         telegram_received_cb: Optional[Callable[[Telegram], Awaitable[None]]] = None,
@@ -66,9 +64,6 @@ class XKNX:
 
         if log_directory is not None:
             self.setup_logging(log_directory)
-
-        if config is not None:
-            Config(self).read(config)
 
         if telegram_received_cb is not None:
             self.telegram_queue.register_telegram_received_cb(telegram_received_cb)

@@ -38,29 +38,6 @@ class TestScene:
             payload=GroupValueWrite(DPTArray(0x16)),
         )
 
-    async def test_do(self):
-        """Test running scene with do command."""
-        xknx = XKNX()
-        scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
-        await scene.do("run")
-        assert xknx.telegrams.qsize() == 1
-        telegram = xknx.telegrams.get_nowait()
-        assert telegram == Telegram(
-            destination_address=GroupAddress("1/2/1"),
-            payload=GroupValueWrite(DPTArray(0x16)),
-        )
-
-    async def test_wrong_do(self):
-        """Test wrong do command."""
-        xknx = XKNX()
-        scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
-        with patch("logging.Logger.warning") as mock_warn:
-            await scene.do("execute")
-            mock_warn.assert_called_with(
-                "Could not understand action %s for device %s", "execute", "TestScene"
-            )
-        assert xknx.telegrams.qsize() == 0
-
     #
     # TEST has_group_address
     #

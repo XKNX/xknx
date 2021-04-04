@@ -47,13 +47,3 @@ print(fan.current_oscillation)
 # Requesting state via KNX GroupValueRead
 await fan.sync()
 ```
-
-## [](#header-2)Configuration via **xknx.yaml**
-
-Fans are usually configured via [`xknx.yaml`](/configuration):
-
-```yaml
-groups:
-    fan:
-        Livingroom.Fan_1: { group_address: '1/4/1', group_address_state: '1/4/2', group_address_oscillation: '1/4/3', group_address_oscillation_state: '1/4/4' }
-```

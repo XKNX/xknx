@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from xknx import XKNX
-from xknx.devices import Action, BinarySensor, Switch
+from xknx.devices import BinarySensor, Switch
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
@@ -108,82 +108,6 @@ class TestBinarySensor:
         assert not binaryinput.state
         # once for 'on' and once for 'off'
         assert async_after_update_callback.call_count == 2
-
-    async def test_process_action(self):
-        """Test process / reading telegrams from telegram queue. Test if action is executed."""
-        xknx = XKNX()
-        switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
-
-        binary_sensor = BinarySensor(xknx, "TestInput", group_address_state="1/2/3")
-        action_on = Action(xknx, hook="on", target="TestOutlet", method="on")
-        binary_sensor.actions.append(action_on)
-        action_off = Action(xknx, hook="off", target="TestOutlet", method="off")
-        binary_sensor.actions.append(action_off)
-
-        assert binary_sensor.state is None
-        assert switch.state is None
-
-        telegram_on = Telegram(
-            destination_address=GroupAddress("1/2/3"),
-            payload=GroupValueWrite(DPTBinary(1)),
-        )
-        await binary_sensor.process(telegram_on)
-        # process outgoing telegram from queue
-        await switch.process(xknx.telegrams.get_nowait())
-
-        assert binary_sensor.state is True
-        assert switch.state is True
-
-        telegram_off = Telegram(
-            destination_address=GroupAddress("1/2/3"),
-            payload=GroupValueWrite(DPTBinary(0)),
-        )
-        await binary_sensor.process(telegram_off)
-        await switch.process(xknx.telegrams.get_nowait())
-
-        assert binary_sensor.state is False
-        assert switch.state is False
-
-    async def test_process_action_ignore_internal_state(self):
-        """Test process / reading telegrams from telegram queue. Test if action is executed."""
-        xknx = XKNX()
-        switch = Switch(xknx, "TestOutlet", group_address="5/5/5")
-
-        binary_sensor = BinarySensor(
-            xknx, "TestInput", group_address_state="1/2/3", ignore_internal_state=True
-        )
-        action_on = Action(xknx, hook="on", target="TestOutlet", method="on")
-        binary_sensor.actions.append(action_on)
-
-        assert binary_sensor.state is None
-        assert switch.state is None
-
-        telegram_on = Telegram(
-            destination_address=GroupAddress("1/2/3"),
-            payload=GroupValueWrite(DPTBinary(1)),
-        )
-
-        with patch("time.time") as mock_time, patch(
-            "asyncio.sleep", new_callable=AsyncMock
-        ):
-            mock_time.return_value = 1599076123.0
-            await binary_sensor.process(telegram_on)
-            await xknx.devices.process(xknx.telegrams.get_nowait())
-
-            assert binary_sensor.state is True
-            assert switch.state is True
-
-            await switch.set_off()
-            await xknx.devices.process(xknx.telegrams.get_nowait())
-
-            assert switch.state is False
-            assert binary_sensor.state is True
-
-            await binary_sensor.process(telegram_on)
-            await xknx.devices.process(xknx.telegrams.get_nowait())
-
-            assert binary_sensor.state is True
-            assert switch.state is True
 
     async def test_process_wrong_payload(self):
         """Test process wrong telegram (wrong payload type)."""

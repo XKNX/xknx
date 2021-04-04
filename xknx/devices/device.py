@@ -116,14 +116,6 @@ class Device(ABC):
                 return True
         return False
 
-    async def do(self, action: str) -> None:  # pylint: disable=invalid-name
-        """Execute 'do' commands."""
-        logger.info(
-            "'do()' not implemented for action '%s' of %s",
-            action,
-            self.__class__.__name__,
-        )
-
     def __eq__(self, other: object) -> bool:
         """Compare for quality."""
         return self.__dict__ == other.__dict__

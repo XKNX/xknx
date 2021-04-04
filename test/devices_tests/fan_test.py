@@ -204,50 +204,6 @@ class TestFan:
         await fan.process(telegram)
         assert fan.current_speed == 2
 
-    #
-    # TEST DO SPEED
-    #
-    async def test_do_speed(self):
-        """Test 'do' functionality."""
-        xknx = XKNX()
-        fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
-        await fan.do("speed:50")
-        await xknx.devices.process(xknx.telegrams.get_nowait())
-        assert fan.current_speed == 50
-        await fan.do("speed:25")
-        await xknx.devices.process(xknx.telegrams.get_nowait())
-        assert fan.current_speed == 25
-
-    #
-    # TEST DO OSCILLATION
-    #
-    async def test_do_oscillation(self):
-        """Test 'do' functionality."""
-        xknx = XKNX()
-        fan = Fan(
-            xknx,
-            name="TestFan",
-            group_address_speed="1/2/3",
-            group_address_oscillation="1/2/4",
-        )
-        await fan.do("oscillation:True")
-        await xknx.devices.process(xknx.telegrams.get_nowait())
-        assert fan.current_oscillation
-        await fan.do("oscillation:False")
-        await xknx.devices.process(xknx.telegrams.get_nowait())
-        assert not fan.current_oscillation
-
-    async def test_wrong_do(self):
-        """Test wrong do command."""
-        xknx = XKNX()
-        fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
-        with patch("logging.Logger.warning") as mock_warn:
-            await fan.do("execute")
-            assert xknx.telegrams.qsize() == 0
-            mock_warn.assert_called_with(
-                "Could not understand action %s for device %s", "execute", "TestFan"
-            )
-
     def test_has_group_address(self):
         """Test has_group_address."""
         xknx = XKNX()

@@ -10,11 +10,10 @@ A BinarySensor may also have Actions attached which are executed after state was
 """
 import asyncio
 import time
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, cast
+from typing import TYPE_CHECKING, Any, Iterator, Optional, cast
 
 from xknx.remote_value import GroupAddressesType, RemoteValueSwitch
 
-from .action import Action
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
@@ -35,17 +34,13 @@ class BinarySensor(Device):
         ignore_internal_state: bool = False,
         device_class: Optional[str] = None,
         reset_after: Optional[float] = None,
-        actions: Optional[List[Action]] = None,
         context_timeout: Optional[float] = None,
         ha_value_template: Any = None,
         device_updated_cb: Optional[DeviceCallbackType] = None,
     ):
         """Initialize BinarySensor class."""
         super().__init__(xknx, name, device_updated_cb)
-        if actions is None:
-            actions = []
 
-        self.actions = actions
         self.device_class = device_class
         self.ha_value_template = ha_value_template
         self.ignore_internal_state = ignore_internal_state or bool(context_timeout)
@@ -89,37 +84,6 @@ class BinarySensor(Device):
             pass
         super().__del__()
 
-    @classmethod
-    def from_config(
-        cls, xknx: "XKNX", name: str, config: Dict[str, Any]
-    ) -> "BinarySensor":
-        """Initialize object from configuration structure."""
-        group_address_state = config.get("group_address_state")
-        invert = config.get("invert", False)
-        context_timeout = config.get("context_timeout")
-        reset_after = config.get("reset_after")
-        sync_state = config.get("sync_state", True)
-        device_class = config.get("device_class")
-        ignore_internal_state = config.get("ignore_internal_state", False)
-        actions = []
-        if "actions" in config:
-            for action in config["actions"]:
-                action = Action.from_config(xknx, action)
-                actions.append(action)
-
-        return cls(
-            xknx,
-            name,
-            group_address_state=group_address_state,
-            invert=invert,
-            sync_state=sync_state,
-            ignore_internal_state=ignore_internal_state,
-            context_timeout=context_timeout,
-            reset_after=reset_after,
-            device_class=device_class,
-            actions=actions,
-        )
-
     async def _state_from_remote_value(self) -> None:
         """Update the internal state from RemoteValue (Callback)."""
         if self.remote_value.value is not None:
@@ -151,12 +115,8 @@ class BinarySensor(Device):
         await self.after_update()
 
     async def _trigger_callbacks(self) -> None:
-        """Trigger callbacks for device and execute actions if any."""
+        """Trigger callbacks for device if any."""
         await self.after_update()
-
-        for action in self.actions:
-            if action.test_if_applicable(cast(bool, self.state), self.counter):
-                await action.execute()
 
     @property
     def counter(self) -> Optional[int]:
