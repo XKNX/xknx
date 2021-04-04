@@ -6,7 +6,9 @@ A search response contains all information of a found device (Name, serial numbe
 It supports an array-style access to the DIBs (use classname as index). Every KNXnet/ip server shall send
 a search response and one device supporting multiple KNX connections may send multiple search responses.
 """
-from typing import TYPE_CHECKING, List
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from .body import KNXIPBody
 from .dib import DIB, DIBDeviceInformation
@@ -22,11 +24,11 @@ class SearchResponse(KNXIPBody):
 
     SERVICE_TYPE = KNXIPServiceType.SEARCH_RESPONSE
 
-    def __init__(self, xknx: "XKNX", control_endpoint: HPAI = HPAI()):
+    def __init__(self, xknx: XKNX, control_endpoint: HPAI = HPAI()):
         """Initialize SearchResponse object."""
         super().__init__(xknx)
         self.control_endpoint = control_endpoint
-        self.dibs: List[DIB] = []
+        self.dibs: list[DIB] = []
 
     def calculated_length(self) -> int:
         """Get length of KNX/IP body."""
@@ -49,7 +51,7 @@ class SearchResponse(KNXIPBody):
                 return dib.name
         return "UNKNOWN"
 
-    def to_knx(self) -> List[int]:
+    def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
         data = []
         data.extend(self.control_endpoint.to_knx())

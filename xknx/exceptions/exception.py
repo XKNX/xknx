@@ -1,11 +1,13 @@
 """Module for XKXN Exceptions."""
-from typing import Any, Optional, Tuple, Union
+from __future__ import annotations
+
+from typing import Any
 
 
 class XKNXException(Exception):
     """Default XKNX Exception."""
 
-    def __eq__(self, other: Optional[object]) -> bool:
+    def __eq__(self, other: object | None) -> bool:
         """Equal operator."""
         return repr(self) == repr(other)
 
@@ -98,7 +100,7 @@ class CouldNotParseAddress(XKNXException):
     """Exception class for wrong address format."""
 
     def __init__(
-        self, address: Union[object, str, Tuple[Any, ...], int, None] = None
+        self, address: object | str | tuple[Any, ...] | int | None = None
     ) -> None:
         """Initialize CouldNotParseAddress class."""
         super().__init__()

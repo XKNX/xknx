@@ -7,8 +7,10 @@ It provides functionality for
 * reading the current state from KNX bus.
 * Cover will also predict the current position.
 """
+from __future__ import annotations
+
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional
+from typing import TYPE_CHECKING, Any, Iterator
 
 from xknx.remote_value import (
     GroupAddressesType,
@@ -37,21 +39,21 @@ class Cover(Device):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         name: str,
-        group_address_long: Optional[GroupAddressesType] = None,
-        group_address_short: Optional[GroupAddressesType] = None,
-        group_address_stop: Optional[GroupAddressesType] = None,
-        group_address_position: Optional[GroupAddressesType] = None,
-        group_address_position_state: Optional[GroupAddressesType] = None,
-        group_address_angle: Optional[GroupAddressesType] = None,
-        group_address_angle_state: Optional[GroupAddressesType] = None,
+        group_address_long: GroupAddressesType | None = None,
+        group_address_short: GroupAddressesType | None = None,
+        group_address_stop: GroupAddressesType | None = None,
+        group_address_position: GroupAddressesType | None = None,
+        group_address_position_state: GroupAddressesType | None = None,
+        group_address_angle: GroupAddressesType | None = None,
+        group_address_angle_state: GroupAddressesType | None = None,
         travel_time_down: float = DEFAULT_TRAVEL_TIME_DOWN,
         travel_time_up: float = DEFAULT_TRAVEL_TIME_UP,
         invert_position: bool = False,
         invert_angle: bool = False,
-        device_updated_cb: Optional[DeviceCallbackType] = None,
-        device_class: Optional[str] = None,
+        device_updated_cb: DeviceCallbackType | None = None,
+        device_class: str | None = None,
     ):
         """Initialize Cover class."""
         super().__init__(xknx, name, device_updated_cb)
@@ -119,7 +121,7 @@ class Cover(Device):
         self.travel_time_up = travel_time_up
 
         self.travelcalculator = TravelCalculator(travel_time_down, travel_time_up)
-        self.travel_direction_tilt: Optional[TravelStatus] = None
+        self.travel_direction_tilt: TravelStatus | None = None
 
         self.device_class = device_class
 
@@ -133,12 +135,12 @@ class Cover(Device):
         yield self.angle
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return unique id for this device."""
         return f"{self.updown.group_address}"
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Cover":
+    def from_config(cls, xknx: XKNX, name: str, config: dict[str, Any]) -> Cover:
         """Initialize object from configuration structure."""
         group_address_long = config.get("group_address_long")
         group_address_short = config.get("group_address_short")
@@ -360,11 +362,11 @@ class Cover(Device):
         await self.position_target.process(telegram)
         await self.angle.process(telegram)
 
-    def current_position(self) -> Optional[int]:
+    def current_position(self) -> int | None:
         """Return current position of cover."""
         return self.travelcalculator.current_position()
 
-    def current_angle(self) -> Optional[int]:
+    def current_angle(self) -> int | None:
         """Return current tilt angle of cover."""
         return self.angle.value
 

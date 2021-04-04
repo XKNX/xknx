@@ -3,7 +3,9 @@ Module for Serialization and Deserialization of a KNX Connetionstate Request inf
 
 Connectionstate requests are used to determine if a tunnel connection is still active and valid.
 """
-from typing import TYPE_CHECKING, List
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from xknx.exceptions import CouldNotParseKNXIP
 
@@ -22,7 +24,7 @@ class ConnectionStateRequest(KNXIPBody):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         communication_channel_id: int = 1,
         control_endpoint: HPAI = HPAI(),
     ):
@@ -50,10 +52,10 @@ class ConnectionStateRequest(KNXIPBody):
         pos += self.control_endpoint.from_knx(raw[pos:])
         return pos
 
-    def to_knx(self) -> List[int]:
+    def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
 
-        def info_to_knx() -> List[int]:
+        def info_to_knx() -> list[int]:
             """Serialize information bytes."""
             info = []
             info.append(self.communication_channel_id)

@@ -3,6 +3,8 @@ Abstraction for handling KNX/IP routing.
 
 Routing uses UDP Multicast to broadcast and receive KNX/IP messages.
 """
+from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING, Callable
 
@@ -32,8 +34,8 @@ class Routing(Interface):
 
     def __init__(
         self,
-        xknx: "XKNX",
-        telegram_received_callback: "TelegramCallbackType",
+        xknx: XKNX,
+        telegram_received_callback: TelegramCallbackType,
         local_ip: str,
     ):
         """Initialize Routing class."""

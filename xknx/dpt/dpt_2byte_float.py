@@ -3,7 +3,7 @@ Implementation of KNX 2 byte Float-values.
 
 They correspond to the the following KDN DPT 9 class.
 """
-from typing import Optional, Tuple
+from __future__ import annotations
 
 from xknx.exceptions import ConversionError
 
@@ -20,14 +20,14 @@ class DPT2ByteFloat(DPTBase):
     value_min = -671088.64
     value_max = 670760.96
     dpt_main_number = 9
-    dpt_sub_number: Optional[int] = None
+    dpt_sub_number: int | None = None
     value_type = "2byte_float"
     unit = ""
     resolution = 0.01
     payload_length = 2
 
     @classmethod
-    def from_knx(cls, raw: Tuple[int, ...]) -> float:
+    def from_knx(cls, raw: tuple[int, ...]) -> float:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
         data = (raw[0] * 256) + raw[1]
@@ -46,10 +46,10 @@ class DPT2ByteFloat(DPTBase):
         return value
 
     @classmethod
-    def to_knx(cls, value: float) -> Tuple[int, int]:
+    def to_knx(cls, value: float) -> tuple[int, int]:
         """Serialize to KNX/IP raw data."""
 
-        def calc_exponent(float_value: float, sign: bool) -> Tuple[int, int]:
+        def calc_exponent(float_value: float, sign: bool) -> tuple[int, int]:
             """Return float exponent."""
             exponent = 0
             significand = abs(int(float_value * 100))

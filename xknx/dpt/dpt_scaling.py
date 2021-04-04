@@ -1,5 +1,5 @@
 """Implementation of scaled KNX DPT_1_Ucount Values."""
-from typing import Tuple
+from __future__ import annotations
 
 from xknx.exceptions import ConversionError
 
@@ -23,7 +23,7 @@ class DPTScaling(DPTBase):
     payload_length = 1
 
     @classmethod
-    def from_knx(cls, raw: Tuple[int, ...]) -> int:
+    def from_knx(cls, raw: tuple[int, ...]) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
 
@@ -39,7 +39,7 @@ class DPTScaling(DPTBase):
         return value
 
     @classmethod
-    def to_knx(cls, value: float) -> Tuple[int]:
+    def to_knx(cls, value: float) -> tuple[int]:
         """Serialize to KNX/IP raw data."""
         try:
             percent_value = float(value)

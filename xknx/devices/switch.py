@@ -6,9 +6,11 @@ It provides functionality for
 * switching 'on' and 'off'.
 * reading the current state from KNX bus.
 """
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional
+from typing import TYPE_CHECKING, Any, Iterator
 
 from xknx.remote_value import GroupAddressesType, RemoteValueSwitch
 
@@ -26,19 +28,19 @@ class Switch(Device):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         name: str,
-        group_address: Optional[GroupAddressesType] = None,
-        group_address_state: Optional[GroupAddressesType] = None,
+        group_address: GroupAddressesType | None = None,
+        group_address_state: GroupAddressesType | None = None,
         invert: bool = False,
-        reset_after: Optional[float] = None,
-        device_updated_cb: Optional[DeviceCallbackType] = None,
+        reset_after: float | None = None,
+        device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Switch class."""
         super().__init__(xknx, name, device_updated_cb)
 
         self.reset_after = reset_after
-        self._reset_task: Optional[asyncio.Task[None]] = None
+        self._reset_task: asyncio.Task[None] | None = None
 
         self.switch = RemoteValueSwitch(
             xknx,
@@ -63,12 +65,12 @@ class Switch(Device):
         super().__del__()
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return unique id for this device."""
         return f"{self.switch.group_address}"
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Switch":
+    def from_config(cls, xknx: XKNX, name: str, config: dict[str, Any]) -> Switch:
         """Initialize object from configuration structure."""
         group_address = config.get("group_address")
         group_address_state = config.get("group_address_state")
@@ -85,7 +87,7 @@ class Switch(Device):
         )
 
     @property
-    def state(self) -> Optional[bool]:
+    def state(self) -> bool | None:
         """Return the current switch state of the device."""
         return self.switch.value
 

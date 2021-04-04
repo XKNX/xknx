@@ -6,10 +6,12 @@ APCI stands for Application Layer Protocol Control Information.
 An APCI payload contains a service and payload. For example, a GroupValueWrite
 is a service that takes a DPT as a value.
 """
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from enum import Enum
 import struct
-from typing import ClassVar, Optional, Union, cast
+from typing import ClassVar, cast
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
@@ -17,9 +19,9 @@ from xknx.telegram.address import IndividualAddress
 
 
 def encode_cmd_and_payload(
-    cmd: Union["APCIService", "APCIUserService", "APCIExtendedService"],
+    cmd: APCIService | APCIUserService | APCIExtendedService,
     encoded_payload: int = 0,
-    appended_payload: Optional[bytes] = None,
+    appended_payload: bytes | None = None,
 ) -> bytes:
     """Encode cmd and payload."""
     if appended_payload is None:
@@ -103,7 +105,7 @@ class APCI(ABC):
     This base class is only the interface for the derived classes.
     """
 
-    CODE: ClassVar[Union[APCIService, APCIUserService, APCIExtendedService]] = cast(
+    CODE: ClassVar[APCIService | APCIUserService | APCIExtendedService] = cast(
         APCIService, None
     )
 
@@ -124,7 +126,7 @@ class APCI(ABC):
         return self.__dict__ == other.__dict__
 
     @staticmethod
-    def resolve_apci(apci: int) -> "APCI":
+    def resolve_apci(apci: int) -> APCI:
         """
         Return APCI instance from APCI command.
 
@@ -241,7 +243,7 @@ class GroupValueWrite(APCI):
 
     CODE = APCIService.GROUP_WRITE
 
-    def __init__(self, value: Optional[Union[DPTBinary, DPTArray]] = None) -> None:
+    def __init__(self, value: DPTBinary | DPTArray | None = None) -> None:
         """Initialize a new instance of GroupValueWrite."""
         self.value = value
 
@@ -284,7 +286,7 @@ class GroupValueResponse(APCI):
 
     CODE = APCIService.GROUP_RESPONSE
 
-    def __init__(self, value: Optional[Union[DPTBinary, DPTArray]] = None) -> None:
+    def __init__(self, value: DPTBinary | DPTArray | None = None) -> None:
         """Initialize a new instance of GroupValueResponse."""
         self.value = value
 
@@ -329,7 +331,7 @@ class IndividualAddressWrite(APCI):
 
     def __init__(
         self,
-        address: Optional[IndividualAddress] = None,
+        address: IndividualAddress | None = None,
     ) -> None:
         """Initialize a new instance of IndividualAddressWrite."""
         if address is None:
@@ -538,7 +540,7 @@ class MemoryWrite(APCI):
     CODE = APCIService.MEMORY_WRITE
 
     def __init__(
-        self, address: int = 0, count: int = 0, data: Optional[bytes] = None
+        self, address: int = 0, count: int = 0, data: bytes | None = None
     ) -> None:
         """Initialize a new instance of MemoryWrite."""
 
@@ -590,7 +592,7 @@ class MemoryResponse(APCI):
     CODE = APCIService.MEMORY_RESPONSE
 
     def __init__(
-        self, address: int = 0, count: int = 0, data: Optional[bytes] = None
+        self, address: int = 0, count: int = 0, data: bytes | None = None
     ) -> None:
         """Initialize a new instance of MemoryResponse."""
 
@@ -789,7 +791,7 @@ class UserMemoryWrite(APCI):
     CODE = APCIUserService.USER_MEMORY_WRITE
 
     def __init__(
-        self, address: int = 0, count: int = 0, data: Optional[bytes] = None
+        self, address: int = 0, count: int = 0, data: bytes | None = None
     ) -> None:
         """Initialize a new instance of UserMemoryWrite."""
 
@@ -843,7 +845,7 @@ class UserMemoryResponse(APCI):
     CODE = APCIUserService.USER_MEMORY_RESPONSE
 
     def __init__(
-        self, address: int = 0, count: int = 0, data: Optional[bytes] = None
+        self, address: int = 0, count: int = 0, data: bytes | None = None
     ) -> None:
         """Initialize a new instance of UserMemoryResponse."""
 
@@ -917,7 +919,7 @@ class UserManufacturerInfoResponse(APCI):
 
     CODE = APCIUserService.USER_MANUFACTURER_INFO_RESPONSE
 
-    def __init__(self, manufacturer_id: int = 0, data: Optional[bytes] = None) -> None:
+    def __init__(self, manufacturer_id: int = 0, data: bytes | None = None) -> None:
         """Initialize a new instance of UserManufacturerInfoResponse."""
         if data is None:
             data = bytes([0x00, 0x00])
@@ -950,7 +952,7 @@ class FunctionPropertyCommand(APCI):
     CODE = APCIUserService.FUNCTION_PROPERTY_COMMAND
 
     def __init__(
-        self, object_index: int = 0, property_id: int = 0, data: Optional[bytes] = None
+        self, object_index: int = 0, property_id: int = 0, data: bytes | None = None
     ) -> None:
         """Initialize a new instance of FunctionPropertyCommand."""
         if data is None:
@@ -992,7 +994,7 @@ class FunctionPropertyStateRead(APCI):
     CODE = APCIUserService.FUNCTION_PROPERTY_STATE_READ
 
     def __init__(
-        self, object_index: int = 0, property_id: int = 0, data: Optional[bytes] = None
+        self, object_index: int = 0, property_id: int = 0, data: bytes | None = None
     ) -> None:
         """Initialize a new instance of FunctionPropertyStateRead."""
         if data is None:
@@ -1038,7 +1040,7 @@ class FunctionPropertyStateResponse(APCI):
         object_index: int = 0,
         property_id: int = 0,
         return_code: int = 0,
-        data: Optional[bytes] = None,
+        data: bytes | None = None,
     ) -> None:
         """Initialize a new instance of FunctionPropertyStateResponse."""
         if data is None:
@@ -1215,7 +1217,7 @@ class PropertyValueWrite(APCI):
         property_id: int = 0,
         count: int = 0,
         start_index: int = 0,
-        data: Optional[bytes] = None,
+        data: bytes | None = None,
     ) -> None:
         """Initialize a new instance of PropertyValueWrite."""
 
@@ -1295,7 +1297,7 @@ class PropertyValueResponse(APCI):
         property_id: int = 0,
         count: int = 0,
         start_index: int = 0,
-        data: Optional[bytes] = None,
+        data: bytes | None = None,
     ) -> None:
         """Initialize a new instance of PropertyValueResponse."""
 
@@ -1461,7 +1463,7 @@ class IndividualAddressSerialRead(APCI):
 
     CODE = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_READ
 
-    def __init__(self, serial: Optional[bytes] = None) -> None:
+    def __init__(self, serial: bytes | None = None) -> None:
         """Initialize a new instance of PropertyDescriptionRead."""
         if serial is None:
             serial = bytes([0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
@@ -1497,8 +1499,8 @@ class IndividualAddressSerialResponse(APCI):
 
     def __init__(
         self,
-        serial: Optional[bytes] = None,
-        address: Optional[IndividualAddress] = None,
+        serial: bytes | None = None,
+        address: IndividualAddress | None = None,
     ) -> None:
         """Initialize a new instance of IndividualAddressSerialResponse."""
         if serial is None:
@@ -1541,8 +1543,8 @@ class IndividualAddressSerialWrite(APCI):
 
     def __init__(
         self,
-        serial: Optional[bytes] = None,
-        address: Optional[IndividualAddress] = None,
+        serial: bytes | None = None,
+        address: IndividualAddress | None = None,
     ) -> None:
         """Initialize a new instance of IndividualAddressSerialWrite."""
         if serial is None:

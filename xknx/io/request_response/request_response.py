@@ -3,9 +3,11 @@ Base class for sending a specific type of KNX/IP Packet to a KNX/IP device and w
 
 Will report if the corresponding answer was not received.
 """
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Optional, Type
+from typing import TYPE_CHECKING
 
 from xknx.io.udp_client import UDPClient
 from xknx.knxip import ErrorCode, KNXIPBodyResponse, KNXIPFrame
@@ -21,20 +23,20 @@ class RequestResponse:
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         udp_client: UDPClient,
-        awaited_response_class: Type[KNXIPBodyResponse],
+        awaited_response_class: type[KNXIPBodyResponse],
         timeout_in_seconds: float = 1.0,
     ):
         """Initialize RequstResponse class."""
         self.xknx = xknx
         self.udpclient = udp_client
-        self.awaited_response_class: Type[KNXIPBodyResponse] = awaited_response_class
+        self.awaited_response_class: type[KNXIPBodyResponse] = awaited_response_class
         self.response_received_or_timeout = asyncio.Event()
         self.success = False
         self.timeout_in_seconds = timeout_in_seconds
 
-        self.response_status_code: Optional[ErrorCode] = None
+        self.response_status_code: ErrorCode | None = None
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""

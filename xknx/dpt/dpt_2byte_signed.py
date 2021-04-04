@@ -4,8 +4,9 @@ Implementation of Basic KNX 2-Byte Signed Values.
 They correspond the following KNX DPTs:
     8.*** 2-byte/octet signed (2's complement), i.e. percentV16, delta time
 """
+from __future__ import annotations
+
 import struct
-from typing import Optional, Tuple
 
 from xknx.exceptions import ConversionError
 
@@ -22,7 +23,7 @@ class DPT2ByteSigned(DPTBase):
     value_min = -32768
     value_max = 32767
     dpt_main_number = 8
-    dpt_sub_number: Optional[int] = None
+    dpt_sub_number: int | None = None
     value_type = "2byte_signed"
     unit = ""
     resolution: float = 1
@@ -31,7 +32,7 @@ class DPT2ByteSigned(DPTBase):
     _struct_format = ">h"
 
     @classmethod
-    def from_knx(cls, raw: Tuple[int, ...]) -> int:
+    def from_knx(cls, raw: tuple[int, ...]) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
 
@@ -41,7 +42,7 @@ class DPT2ByteSigned(DPTBase):
             raise ConversionError("Could not parse %s" % cls.__name__, raw=raw)
 
     @classmethod
-    def to_knx(cls, value: int) -> Tuple[int, ...]:
+    def to_knx(cls, value: int) -> tuple[int, ...]:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = int(value)

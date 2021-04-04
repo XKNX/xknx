@@ -1,5 +1,5 @@
 """Implementation of Basic KNX DPT_1_Ucount Values."""
-from typing import Optional, Tuple
+from __future__ import annotations
 
 from xknx.exceptions import ConversionError
 
@@ -16,14 +16,14 @@ class DPTValue1ByteUnsigned(DPTBase):
     value_min = 0
     value_max = 255
     dpt_main_number = 5
-    dpt_sub_number: Optional[int] = None
+    dpt_sub_number: int | None = None
     value_type = "1byte_unsigned"
     unit = ""
     resolution = 1
     payload_length = 1
 
     @classmethod
-    def from_knx(cls, raw: Tuple[int, ...]) -> int:
+    def from_knx(cls, raw: tuple[int, ...]) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
 
@@ -37,7 +37,7 @@ class DPTValue1ByteUnsigned(DPTBase):
         return value
 
     @classmethod
-    def to_knx(cls, value: int) -> Tuple[int]:
+    def to_knx(cls, value: int) -> tuple[int]:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = int(value)
@@ -119,7 +119,7 @@ class DPTSceneNumber(DPTValue1ByteUnsigned):
     unit = ""
 
     @classmethod
-    def from_knx(cls, raw: Tuple[int, ...]) -> int:
+    def from_knx(cls, raw: tuple[int, ...]) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
 
@@ -133,7 +133,7 @@ class DPTSceneNumber(DPTValue1ByteUnsigned):
         return value
 
     @classmethod
-    def to_knx(cls, value: int) -> Tuple[int]:
+    def to_knx(cls, value: int) -> tuple[int]:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = int(value) - 1
