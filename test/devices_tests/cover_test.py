@@ -100,6 +100,26 @@ class TestCover:
         assert not cover.supports_angle
 
     #
+    # SUPPORTS LOCKED
+    #
+    def test_support_locked(self):
+        """Test support_position_true."""
+        xknx = XKNX()
+        cover_locked = Cover(
+            xknx,
+            "Children.Venetian",
+            group_address_locked_state="1/4/14",
+        )
+        assert cover_locked.supports_locked
+        cover_manual_stop = Cover(
+            xknx,
+            "Children.Venetian",
+            group_address_long="1/4/14",
+            group_address_stop="1/4/15",
+        )
+        assert cover_manual_stop.supports_locked is False
+
+    #
     # SYNC
     #
     async def test_sync(self):
@@ -664,6 +684,21 @@ class TestCover:
         )
         await cover.process(telegram)
         assert cover.current_angle() == 16
+
+    async def test_process_locked(self):
+        """Test process / reading telegrams from telegram queue. Test if position is processed correctly."""
+        xknx = XKNX()
+        cover = Cover(
+            xknx,
+            "TestCover",
+            group_address_long="1/2/1",
+            group_address_locked_state="1/2/4",
+        )
+        telegram = Telegram(
+            GroupAddress("1/2/4"), payload=GroupValueWrite(DPTBinary(1))
+        )
+        await cover.process(telegram)
+        assert cover.is_locked() is True
 
     async def test_process_up(self):
         """Test process / reading telegrams from telegram queue. Test if up/down is processed correctly."""

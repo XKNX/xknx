@@ -26,6 +26,7 @@ CONF_SYNC_STATE = "sync_state"
 CONF_RESET_AFTER = "reset_after"
 
 ATTR_COUNTER = "counter"
+ATTR_MOVEMENT_LOCKED = "movement_locked"
 
 
 class ColorTempModes(Enum):
