@@ -48,6 +48,7 @@ class Cover(Device):
         group_address_position_state: GroupAddressesType | None = None,
         group_address_angle: GroupAddressesType | None = None,
         group_address_angle_state: GroupAddressesType | None = None,
+        group_address_locked_state: GroupAddressesType | None = None,
         travel_time_down: float = DEFAULT_TRAVEL_TIME_DOWN,
         travel_time_up: float = DEFAULT_TRAVEL_TIME_UP,
         invert_position: bool = False,
@@ -117,6 +118,14 @@ class Cover(Device):
             range_to=angle_range_to,
         )
 
+        self.locked = RemoteValueSwitch(
+            xknx,
+            group_address_state=group_address_locked_state,
+            device_name=self.name,
+            feature_name="Locked",
+            after_update_cb=self.after_update,
+        )
+
         self.travel_time_down = travel_time_down
         self.travel_time_up = travel_time_up
 
@@ -133,6 +142,7 @@ class Cover(Device):
         yield self.position_current
         yield self.position_target
         yield self.angle
+        yield self.locked
 
     @property
     def unique_id(self) -> str | None:
@@ -182,6 +192,7 @@ class Cover(Device):
             'position_current="{}" '
             'position_target="{}" '
             'angle="{}" '
+            'locked="{}" '
             'travel_time_down="{}" '
             'travel_time_up="{}" />'.format(
                 self.name,
@@ -191,6 +202,7 @@ class Cover(Device):
                 self.position_current.group_addr_str(),
                 self.position_target.group_addr_str(),
                 self.angle.group_addr_str(),
+                self.locked.group_addr_str(),
                 self.travel_time_down,
                 self.travel_time_up,
             )
@@ -361,6 +373,7 @@ class Cover(Device):
         await self.position_current.process(telegram, always_callback=True)
         await self.position_target.process(telegram)
         await self.angle.process(telegram)
+        await self.locked.process(telegram)
 
     def current_position(self) -> int | None:
         """Return current position of cover."""
@@ -369,6 +382,10 @@ class Cover(Device):
     def current_angle(self) -> int | None:
         """Return current tilt angle of cover."""
         return self.angle.value
+
+    def is_locked(self) -> bool | None:
+        """Return if the cover is currently locked for manual movement."""
+        return self.locked.value
 
     def is_traveling(self) -> bool:
         """Return if cover is traveling at the moment."""
@@ -398,6 +415,11 @@ class Cover(Device):
     def supports_stop(self) -> bool:
         """Return if cover supports manual stopping."""
         return self.stop_.writable or self.step.writable
+
+    @property
+    def supports_locked(self) -> bool:
+        """Return if cover supports locking."""
+        return self.locked.initialized
 
     @property
     def supports_position(self) -> bool:
