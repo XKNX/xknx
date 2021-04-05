@@ -1,6 +1,4 @@
 """Unit test for Fan objects."""
-from unittest.mock import patch
-
 import pytest
 from xknx import XKNX
 from xknx.devices import Fan

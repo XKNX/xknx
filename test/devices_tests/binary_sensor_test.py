@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from xknx import XKNX
-from xknx.devices import BinarySensor, Switch
+from xknx.devices import BinarySensor
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram

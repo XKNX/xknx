@@ -1,5 +1,5 @@
 """Unit test for Notification objects."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from xknx import XKNX
