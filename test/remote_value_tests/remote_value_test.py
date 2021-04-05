@@ -177,7 +177,7 @@ class TestRemoteValue:
                 payload=GroupValueWrite(test_payload),
             )
             assert await remote_value.process(telegram)
-            assert remote_value.telegram.payload == test_payload
+            assert remote_value.telegram.payload.value == test_payload
 
     def test_eq(self):
         """Test __eq__ operator."""

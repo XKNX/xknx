@@ -249,9 +249,9 @@ class TestStringRepresentations:
         assert (
             str(notification) == '<Notification name="Alarm" '
             'message="GroupAddress("1/2/3")/'
-            'GroupAddress("1/2/4")/'
-            '<DPTArray value="[0x45,0x69,0x6e,0x62,0x72,0x65,0x63,0x68,0x65,0x72,0x20,0x69,0x6d,0x20]" />/'
-            'Einbrecher im " />'
+            'GroupAddress("1/2/4")/Einbrecher im /'
+            '<DPTArray value="[0x45,0x69,0x6e,0x62,0x72,0x65,0x63,0x68,0x65,0x72,0x20,0x69,0x6d,0x20]" />'
+            '" />'
         )
 
     def test_scene(self):
@@ -282,7 +282,7 @@ class TestStringRepresentations:
         await sensor.process_group_write(telegram)
         assert (
             str(sensor)
-            == '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/<DPTArray value="[0x40]" />/25" value="25" unit="%"/>'
+            == '<Sensor name="MeinSensor" sensor="None/GroupAddress("1/2/3")/25/<DPTArray value="[0x40]" />" value="25" unit="%"/>'
         )
 
     async def test_expose_sensor(self):
@@ -299,7 +299,7 @@ class TestStringRepresentations:
         await sensor.process(xknx.telegrams.get_nowait())
         assert (
             str(sensor)
-            == '<ExposeSensor name="MeinSensor" sensor="GroupAddress("1/2/3")/None/<DPTArray value="[0x40]" />/25" value="25" unit="%"/>'
+            == '<ExposeSensor name="MeinSensor" sensor="GroupAddress("1/2/3")/None/25/<DPTArray value="[0x40]" />" value="25" unit="%"/>'
         )
 
     def test_switch(self):
@@ -359,7 +359,7 @@ class TestStringRepresentations:
             'brightness_west="None/GroupAddress("7/0/3")/None/None" '
             'brightness_east="None/GroupAddress("7/0/4")/None/None" wind_speed="None/GroupAddress("7/0/2")/None/None" '
             'wind_bearing="None/GroupAddress("7/0/6")/None/None" rain_alarm="None/GroupAddress("7/0/0")/None/None" '
-            'wind_alarm="None/GroupAddress("7/0/10")/<DPTBinary value="1" />/True" '
+            'wind_alarm="None/GroupAddress("7/0/10")/True/<DPTBinary value="1" />" '
             'frost_alarm="None/GroupAddress("7/0/8")/None/None" day_night="None/GroupAddress("7/0/7")/None/None" '
             'air_pressure="None/GroupAddress("7/0/9")/None/None" humidity="None/GroupAddress("7/0/9")/None/None" />'
         )
