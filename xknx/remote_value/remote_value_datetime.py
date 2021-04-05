@@ -3,9 +3,11 @@ Module for managing a remote date and time values.
 
 DPT 10.001, 11.001 and 19.001
 """
+from __future__ import annotations
+
 from enum import Enum
 import time
-from typing import TYPE_CHECKING, Optional, Type, Union
+from typing import TYPE_CHECKING
 
 from xknx.dpt import DPTArray, DPTBinary, DPTDate, DPTDateTime, DPTTime
 from xknx.exceptions import ConversionError
@@ -29,18 +31,18 @@ class RemoteValueDateTime(RemoteValue[DPTArray, time.struct_time]):
 
     def __init__(
         self,
-        xknx: "XKNX",
-        group_address: Optional[GroupAddressesType] = None,
-        group_address_state: Optional[GroupAddressesType] = None,
+        xknx: XKNX,
+        group_address: GroupAddressesType | None = None,
+        group_address_state: GroupAddressesType | None = None,
         sync_state: bool = True,
         value_type: str = "time",
-        device_name: Optional[str] = None,
+        device_name: str | None = None,
         feature_name: str = "DateTime",
-        after_update_cb: Optional[AsyncCallbackType] = None,
+        after_update_cb: AsyncCallbackType | None = None,
     ):
         """Initialize RemoteValueSensor class."""
         try:
-            self.dpt_class: Type[Union[DPTDate, DPTDateTime, DPTTime]] = DateTimeType[
+            self.dpt_class: type[DPTDate | DPTDateTime | DPTTime] = DateTimeType[
                 value_type.upper()
             ].value
         except KeyError:
@@ -60,9 +62,7 @@ class RemoteValueDateTime(RemoteValue[DPTArray, time.struct_time]):
             after_update_cb=after_update_cb,
         )
 
-    def payload_valid(
-        self, payload: Optional[Union[DPTArray, DPTBinary]]
-    ) -> Optional[DPTArray]:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray | None:
         """Test if telegram payload may be parsed."""
         return (
             payload

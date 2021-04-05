@@ -1,6 +1,7 @@
 """Implementation of Basic KNX Time."""
+from __future__ import annotations
+
 import time
-from typing import Tuple
 
 from xknx.exceptions import ConversionError
 
@@ -17,7 +18,7 @@ class DPTTime(DPTBase):
     payload_length = 3
 
     @classmethod
-    def from_knx(cls, raw: Tuple[int, ...]) -> time.struct_time:
+    def from_knx(cls, raw: tuple[int, ...]) -> time.struct_time:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
 
@@ -44,7 +45,7 @@ class DPTTime(DPTBase):
             raise ConversionError("Could not parse DPTTime", raw=raw)
 
     @classmethod
-    def to_knx(cls, value: time.struct_time) -> Tuple[int, int, int]:
+    def to_knx(cls, value: time.struct_time) -> tuple[int, int, int]:
         """Serialize to KNX/IP raw data from dict with elements weekday,hours,minutes,seconds."""
         if not isinstance(value, time.struct_time):
             raise ConversionError(

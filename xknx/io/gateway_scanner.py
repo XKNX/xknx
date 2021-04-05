@@ -5,11 +5,12 @@ GatewayScanner is an abstraction for searching for KNX/IP devices on the local n
 * and sends UDP multicast search requests
 * it returns the first found device
 """
+from __future__ import annotations
 
 import asyncio
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 import netifaces
 from xknx.knxip import (
@@ -70,9 +71,9 @@ class GatewayScanFilter:
 
     def __init__(
         self,
-        name: Optional[str] = None,
-        tunnelling: Optional[bool] = None,
-        routing: Optional[bool] = None,
+        name: str | None = None,
+        tunnelling: bool | None = None,
+        routing: bool | None = None,
     ):
         """Initialize GatewayScanFilter class."""
         self.name = name
@@ -98,9 +99,9 @@ class GatewayScanner:
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         timeout_in_seconds: float = 4.0,
-        stop_on_found: Optional[int] = 1,
+        stop_on_found: int | None = 1,
         scan_filter: GatewayScanFilter = GatewayScanFilter(),
     ):
         """Initialize GatewayScanner class."""
@@ -108,13 +109,13 @@ class GatewayScanner:
         self.timeout_in_seconds = timeout_in_seconds
         self.stop_on_found = stop_on_found
         self.scan_filter = scan_filter
-        self.found_gateways: List[GatewayDescriptor] = []
-        self._udp_clients: List[UDPClient] = []
+        self.found_gateways: list[GatewayDescriptor] = []
+        self._udp_clients: list[UDPClient] = []
         self._response_received_or_timeout = asyncio.Event()
         self._count_upper_bound = 0
         """Clean value of self.stop_on_found, computed when ``scan`` is called."""
 
-    async def scan(self) -> List[GatewayDescriptor]:
+    async def scan(self) -> list[GatewayDescriptor]:
         """Scan and return a list of GatewayDescriptors on success."""
         if self.stop_on_found is None:
             self._count_upper_bound = 0

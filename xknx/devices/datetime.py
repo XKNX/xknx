@@ -5,9 +5,11 @@ DateTime is a virtual/pseudo device, using the infrastructure for
 beeing configured via xknx.yaml and synchronized periodically
 by StateUpdate.
 """
+from __future__ import annotations
+
 import asyncio
 import time
-from typing import TYPE_CHECKING, Iterator, Optional
+from typing import TYPE_CHECKING, Iterator
 
 from xknx.remote_value import GroupAddressesType, RemoteValueDateTime
 
@@ -23,12 +25,12 @@ class DateTime(Device):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         name: str,
         broadcast_type: str = "TIME",
         localtime: bool = True,
-        group_address: Optional[GroupAddressesType] = None,
-        device_updated_cb: Optional[DeviceCallbackType] = None,
+        group_address: GroupAddressesType | None = None,
+        device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize DateTime class."""
         super().__init__(xknx, name, device_updated_cb)
@@ -57,9 +59,7 @@ class DateTime(Device):
         """Iterate the devices RemoteValue classes."""
         yield self._remote_value
 
-    def _create_broadcast_task(
-        self, minutes: int = 60
-    ) -> Optional["asyncio.Task[None]"]:
+    def _create_broadcast_task(self, minutes: int = 60) -> asyncio.Task[None] | None:
         """Create an asyncio.Task for broadcasting local time periodically if `localtime` is set."""
 
         async def broadcast_loop(self: "DateTime", minutes: int) -> None:

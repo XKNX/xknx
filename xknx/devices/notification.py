@@ -1,6 +1,8 @@
 """Module for managing a notification via KNX."""
+from __future__ import annotations
+
 import logging
-from typing import TYPE_CHECKING, Iterator, Optional
+from typing import TYPE_CHECKING, Iterator
 
 from xknx.remote_value import GroupAddressesType, RemoteValueString
 
@@ -18,11 +20,11 @@ class Notification(Device):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         name: str,
-        group_address: Optional[GroupAddressesType] = None,
-        group_address_state: Optional[GroupAddressesType] = None,
-        device_updated_cb: Optional[DeviceCallbackType] = None,
+        group_address: GroupAddressesType | None = None,
+        group_address_state: GroupAddressesType | None = None,
+        device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize notification class."""
         super().__init__(xknx, name, device_updated_cb)
@@ -41,7 +43,7 @@ class Notification(Device):
         yield self._message
 
     @property
-    def message(self) -> Optional[str]:
+    def message(self) -> str | None:
         """Return the current message."""
         return self._message.value
 

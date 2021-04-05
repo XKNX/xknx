@@ -3,7 +3,9 @@ Module for managing setpoint shifting.
 
 DPT 6.010.
 """
-from typing import TYPE_CHECKING, Optional, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from xknx.dpt import DPTArray, DPTBinary, DPTValue1Count
 
@@ -18,11 +20,11 @@ class RemoteValueSetpointShift(RemoteValue[DPTArray, float]):
 
     def __init__(
         self,
-        xknx: "XKNX",
-        group_address: Optional[GroupAddressesType] = None,
-        group_address_state: Optional[GroupAddressesType] = None,
-        device_name: Optional[str] = None,
-        after_update_cb: Optional[AsyncCallbackType] = None,
+        xknx: XKNX,
+        group_address: GroupAddressesType | None = None,
+        group_address_state: GroupAddressesType | None = None,
+        device_name: str | None = None,
+        after_update_cb: AsyncCallbackType | None = None,
         setpoint_shift_step: float = 0.1,
     ):
         """Initialize RemoteValueSetpointShift class."""
@@ -37,9 +39,7 @@ class RemoteValueSetpointShift(RemoteValue[DPTArray, float]):
 
         self.setpoint_shift_step = setpoint_shift_step
 
-    def payload_valid(
-        self, payload: Optional[Union[DPTArray, DPTBinary]]
-    ) -> Optional[DPTArray]:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray | None:
         """Test if telegram payload may be parsed."""
         # pylint: disable=no-self-use
         return (

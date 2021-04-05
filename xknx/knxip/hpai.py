@@ -3,7 +3,9 @@ Module for serialization and deserialization of KNX HPAI (Host Protocol Address 
 
 A HPAI contains an IP address and a port.
 """
-from typing import Iterator, List
+from __future__ import annotations
+
+from typing import Iterator
 
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP
 
@@ -31,7 +33,7 @@ class HPAI:
         self.port = raw[6] * 256 + raw[7]
         return HPAI.LENGTH
 
-    def to_knx(self) -> List[int]:
+    def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
 
         def ip_addr_to_bytes(ip_addr: str) -> Iterator[int]:

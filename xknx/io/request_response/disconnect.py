@@ -1,4 +1,6 @@
 """Abstraction to send DisconnectRequest and wait for DisconnectResponse."""
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from xknx.knxip import HPAI, DisconnectRequest, DisconnectResponse, KNXIPFrame
@@ -15,8 +17,8 @@ class Disconnect(RequestResponse):
 
     def __init__(
         self,
-        xknx: "XKNX",
-        udp_client: "UDPClient",
+        xknx: XKNX,
+        udp_client: UDPClient,
         communication_channel_id: int,
         route_back: bool = False,
     ):

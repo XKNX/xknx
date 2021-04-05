@@ -4,9 +4,11 @@ Module for managing the climate within a room.
 * It reads/listens to a temperature address from KNX bus.
 * Manages and sends the desired setpoint to KNX bus.
 """
+from __future__ import annotations
+
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Any, Iterator
 
 from xknx.remote_value import (
     GroupAddressesType,
@@ -46,25 +48,25 @@ class Climate(Device):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         name: str,
-        group_address_temperature: Optional[GroupAddressesType] = None,
-        group_address_target_temperature: Optional[GroupAddressesType] = None,
-        group_address_target_temperature_state: Optional[GroupAddressesType] = None,
-        group_address_setpoint_shift: Optional[GroupAddressesType] = None,
-        group_address_setpoint_shift_state: Optional[GroupAddressesType] = None,
+        group_address_temperature: GroupAddressesType | None = None,
+        group_address_target_temperature: GroupAddressesType | None = None,
+        group_address_target_temperature_state: GroupAddressesType | None = None,
+        group_address_setpoint_shift: GroupAddressesType | None = None,
+        group_address_setpoint_shift_state: GroupAddressesType | None = None,
         setpoint_shift_mode: SetpointShiftMode = DEFAULT_SETPOINT_SHIFT_MODE,
         setpoint_shift_max: float = DEFAULT_SETPOINT_SHIFT_MAX,
         setpoint_shift_min: float = DEFAULT_SETPOINT_SHIFT_MIN,
         temperature_step: float = DEFAULT_TEMPERATURE_STEP,
-        group_address_on_off: Optional[GroupAddressesType] = None,
-        group_address_on_off_state: Optional[GroupAddressesType] = None,
+        group_address_on_off: GroupAddressesType | None = None,
+        group_address_on_off_state: GroupAddressesType | None = None,
         on_off_invert: bool = False,
-        min_temp: Optional[float] = None,
-        max_temp: Optional[float] = None,
-        mode: Optional[ClimateMode] = None,
+        min_temp: float | None = None,
+        max_temp: float | None = None,
+        mode: ClimateMode | None = None,
         create_temperature_sensors: bool = False,
-        device_updated_cb: Optional[DeviceCallbackType] = None,
+        device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Climate class."""
         super().__init__(xknx, name, device_updated_cb)
@@ -92,7 +94,7 @@ class Climate(Device):
             after_update_cb=self.after_update,
         )
 
-        self._setpoint_shift: Union[RemoteValueTemp, RemoteValueSetpointShift]
+        self._setpoint_shift: RemoteValueTemp | RemoteValueSetpointShift
         if setpoint_shift_mode == SetpointShiftMode.DPT9002:
             self._setpoint_shift = RemoteValueTemp(
                 xknx,
@@ -161,11 +163,11 @@ class Climate(Device):
                 )
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return unique id for this device."""
         return f"{self.temperature.group_address_state}"
 
-    def has_group_address(self, group_address: "GroupAddress") -> bool:
+    def has_group_address(self, group_address: GroupAddress) -> bool:
         """Test if device has given group address."""
         if self.mode is not None and self.mode.has_group_address(group_address):
             return True
@@ -210,7 +212,7 @@ class Climate(Device):
             await self.target_temperature.set(validated_temp)
 
     @property
-    def base_temperature(self) -> Optional[float]:
+    def base_temperature(self) -> float | None:
         """
         Return the base temperature when setpoint_shift is initialized.
 
@@ -227,12 +229,12 @@ class Climate(Device):
         return None
 
     @property
-    def setpoint_shift(self) -> Optional[float]:
+    def setpoint_shift(self) -> float | None:
         """Return current offset from base temperature in Kelvin."""
         return self._setpoint_shift.value
 
     def validate_value(
-        self, value: float, min_value: Optional[float], max_value: Optional[float]
+        self, value: float, min_value: float | None, max_value: float | None
     ) -> float:
         """Check boundaries of temperature and return valid temperature value."""
         if (min_value is not None) and (value < min_value):
@@ -255,7 +257,7 @@ class Climate(Device):
             await self.target_temperature.set(base_temperature + validated_offset)
 
     @property
-    def target_temperature_max(self) -> Optional[float]:
+    def target_temperature_max(self) -> float | None:
         """Return the highest possible target temperature."""
         if self.max_temp is not None:
             return self.max_temp
@@ -265,7 +267,7 @@ class Climate(Device):
         return None
 
     @property
-    def target_temperature_min(self) -> Optional[float]:
+    def target_temperature_min(self) -> float | None:
         """Return the lowest possible target temperature."""
         if self.min_temp is not None:
             return self.min_temp

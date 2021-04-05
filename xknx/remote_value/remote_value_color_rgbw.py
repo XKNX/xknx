@@ -3,7 +3,9 @@ Module for managing an RGBW remote value.
 
 DPT 251.600.
 """
-from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Sequence, Tuple
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
@@ -19,12 +21,12 @@ class RemoteValueColorRGBW(RemoteValue[DPTArray, Tuple[int, int, int, int]]):
 
     def __init__(
         self,
-        xknx: "XKNX",
-        group_address: Optional[GroupAddressesType] = None,
-        group_address_state: Optional[GroupAddressesType] = None,
-        device_name: Optional[str] = None,
+        xknx: XKNX,
+        group_address: GroupAddressesType | None = None,
+        group_address_state: GroupAddressesType | None = None,
+        device_name: str | None = None,
         feature_name: str = "Color RGBW",
-        after_update_cb: Optional[AsyncCallbackType] = None,
+        after_update_cb: AsyncCallbackType | None = None,
     ):
         """Initialize remote value of KNX DPT 251.600 (DPT_Color_RGBW)."""
         super().__init__(
@@ -35,11 +37,9 @@ class RemoteValueColorRGBW(RemoteValue[DPTArray, Tuple[int, int, int, int]]):
             feature_name=feature_name,
             after_update_cb=after_update_cb,
         )
-        self.previous_value: Tuple[int, int, int, int] = (0, 0, 0, 0)
+        self.previous_value: tuple[int, int, int, int] = (0, 0, 0, 0)
 
-    def payload_valid(
-        self, payload: Optional[Union[DPTArray, DPTBinary]]
-    ) -> Optional[DPTArray]:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray | None:
         """Test if telegram payload may be parsed."""
         # pylint: disable=no-self-use
         return (
@@ -100,7 +100,7 @@ class RemoteValueColorRGBW(RemoteValue[DPTArray, Tuple[int, int, int, int]]):
             return DPTArray(list(rgbw) + [0x00] + list(value[4:]))
         return DPTArray(value)
 
-    def from_knx(self, payload: DPTArray) -> Tuple[int, int, int, int]:
+    def from_knx(self, payload: DPTArray) -> tuple[int, int, int, int]:
         """
         Convert current payload to value. Always 4 byte (RGBW).
 

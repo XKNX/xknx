@@ -4,7 +4,9 @@ Module for managing a remote value typically used within a sensor.
 The module maps a given value_type to a DPT class and uses this class
 for serialization and deserialization of the KNX value.
 """
-from typing import TYPE_CHECKING, Optional, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Union
 
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import ConversionError
@@ -20,14 +22,14 @@ class RemoteValueSensor(RemoteValue[DPTArray, Union[int, float, str]]):
 
     def __init__(
         self,
-        xknx: "XKNX",
-        group_address: Optional[GroupAddressesType] = None,
-        group_address_state: Optional[GroupAddressesType] = None,
+        xknx: XKNX,
+        group_address: GroupAddressesType | None = None,
+        group_address_state: GroupAddressesType | None = None,
         sync_state: bool = True,
-        value_type: Optional[Union[int, str]] = None,
-        device_name: Optional[str] = None,
+        value_type: int | str | None = None,
+        device_name: str | None = None,
         feature_name: str = "Value",
-        after_update_cb: Optional[AsyncCallbackType] = None,
+        after_update_cb: AsyncCallbackType | None = None,
     ):
         """Initialize RemoteValueSensor class."""
         if value_type is None:
@@ -48,9 +50,7 @@ class RemoteValueSensor(RemoteValue[DPTArray, Union[int, float, str]]):
             after_update_cb=after_update_cb,
         )
 
-    def payload_valid(
-        self, payload: Optional[Union[DPTArray, DPTBinary]]
-    ) -> Optional[DPTArray]:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray | None:
         """Test if telegram payload may be parsed."""
         return (
             payload
@@ -59,20 +59,20 @@ class RemoteValueSensor(RemoteValue[DPTArray, Union[int, float, str]]):
             else None
         )
 
-    def to_knx(self, value: Union[int, float, str]) -> DPTArray:
+    def to_knx(self, value: int | float | str) -> DPTArray:
         """Convert value to payload."""
         return DPTArray(self.dpt_class.to_knx(value))
 
-    def from_knx(self, payload: DPTArray) -> Union[int, float, str]:
+    def from_knx(self, payload: DPTArray) -> int | float | str:
         """Convert current payload to value."""
         return self.dpt_class.from_knx(payload.value)  # type: ignore
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return self.dpt_class.unit
 
     @property
-    def ha_device_class(self) -> Optional[str]:
+    def ha_device_class(self) -> str | None:
         """Return a string representing the home assistant device class."""
         return getattr(self.dpt_class, "ha_device_class", None)  # type: ignore

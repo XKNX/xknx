@@ -3,8 +3,9 @@ Implementation of KNX 4 byte Float-values.
 
 They correspond to the the following KDN DPT 14 class.
 """
+from __future__ import annotations
+
 import struct
-from typing import Optional, Tuple
 
 from xknx.exceptions import ConversionError
 
@@ -24,13 +25,13 @@ class DPT4ByteFloat(DPTBase):
     """
 
     dpt_main_number = 14
-    dpt_sub_number: Optional[int] = None
+    dpt_sub_number: int | None = None
     value_type = "4byte_float"
     unit = ""
     payload_length = 4
 
     @classmethod
-    def from_knx(cls, raw: Tuple[int, ...]) -> float:
+    def from_knx(cls, raw: tuple[int, ...]) -> float:
         """Parse/deserialize from KNX/IP raw data (big endian)."""
         cls.test_bytesarray(raw)
         try:
@@ -39,7 +40,7 @@ class DPT4ByteFloat(DPTBase):
             raise ConversionError("Could not parse %s" % cls.__name__, raw=raw)
 
     @classmethod
-    def to_knx(cls, value: float) -> Tuple[int, ...]:
+    def to_knx(cls, value: float) -> tuple[int, ...]:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = float(value)

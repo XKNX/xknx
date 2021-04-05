@@ -11,7 +11,9 @@ Documentation within:
     KNX IP Communication Medium
     File: AN117 v02.01 KNX IP Communication Medium DV.pdf
 """
-from typing import TYPE_CHECKING, List, Optional, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
@@ -28,13 +30,13 @@ class CEMIFrame:
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         code: CEMIMessageCode = CEMIMessageCode.L_DATA_IND,
         flags: int = 0,
         src_addr: IndividualAddress = IndividualAddress(None),
-        dst_addr: Union[GroupAddress, IndividualAddress] = GroupAddress(None),
+        dst_addr: GroupAddress | IndividualAddress = GroupAddress(None),
         mpdu_len: int = 0,
-        payload: Optional[APCI] = None,
+        payload: APCI | None = None,
     ):
         """Initialize CEMIFrame object."""
         self.xknx = xknx
@@ -47,11 +49,11 @@ class CEMIFrame:
 
     @staticmethod
     def init_from_telegram(
-        xknx: "XKNX",
+        xknx: XKNX,
         telegram: Telegram,
         code: CEMIMessageCode = CEMIMessageCode.L_DATA_IND,
         src_addr: IndividualAddress = IndividualAddress(None),
-    ) -> "CEMIFrame":
+    ) -> CEMIFrame:
         """Return CEMIFrame from a Telegram."""
         cemi = CEMIFrame(xknx, code=code, src_addr=src_addr)
         # dst_addr, payload and cmd are set by telegram.setter - mpdu_len not needed for outgoing telegram
@@ -180,7 +182,7 @@ class CEMIFrame:
 
         return 10 + addil + self.mpdu_len
 
-    def to_knx(self) -> List[int]:
+    def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
         if not isinstance(self.payload, APCI):
             raise TypeError()

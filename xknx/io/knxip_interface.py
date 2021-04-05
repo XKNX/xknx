@@ -6,9 +6,11 @@ KNXIPInterface manages KNX/IP Tunneling or Routing connections.
 * provides callbacks after having received a telegram from the network.
 
 """
+from __future__ import annotations
+
 import ipaddress
 import logging
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, cast
 
 import netifaces
 from xknx.exceptions import CommunicationError, XKNXException
@@ -32,12 +34,12 @@ class KNXIPInterface:
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         connection_config: ConnectionConfig = ConnectionConfig(),
     ):
         """Initialize KNXIPInterface class."""
         self.xknx = xknx
-        self.interface: Optional["Interface"] = None
+        self.interface: Interface | None = None
         self.connection_config = connection_config
 
     async def start(self) -> None:
@@ -92,7 +94,7 @@ class KNXIPInterface:
 
     async def start_tunnelling(
         self,
-        local_ip: Optional[str],
+        local_ip: str | None,
         local_port: int,
         gateway_ip: str,
         gateway_port: int,
@@ -138,7 +140,7 @@ class KNXIPInterface:
             await self.interface.disconnect()
             self.interface = None
 
-    def telegram_received(self, telegram: "Telegram") -> None:
+    def telegram_received(self, telegram: Telegram) -> None:
         """Put received telegram into queue. Callback for having received telegram."""
         self.xknx.telegrams.put_nowait(telegram)
 
@@ -153,7 +155,7 @@ class KNXIPInterface:
     def find_local_ip(gateway_ip: str) -> str:
         """Find local IP address on same subnet as gateway."""
 
-        def _scan_interfaces(gateway: ipaddress.IPv4Address) -> Optional[str]:
+        def _scan_interfaces(gateway: ipaddress.IPv4Address) -> str | None:
             """Return local IP address on same subnet as given gateway."""
             for interface in netifaces.interfaces():
                 try:

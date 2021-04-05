@@ -13,8 +13,9 @@ It contains
 * and the payload (e.g. GroupValueWrite("12%")).
 
 """
+from __future__ import annotations
+
 from enum import Enum
-from typing import Optional, Union
 
 from .address import GroupAddress, IndividualAddress
 from .apci import APCI
@@ -32,9 +33,9 @@ class Telegram:
 
     def __init__(
         self,
-        destination_address: Union[GroupAddress, IndividualAddress] = GroupAddress(0),
+        destination_address: GroupAddress | IndividualAddress = GroupAddress(0),
         direction: TelegramDirection = TelegramDirection.OUTGOING,
-        payload: Optional[APCI] = None,
+        payload: APCI | None = None,
         source_address: IndividualAddress = IndividualAddress(0),
     ) -> None:
         """Initialize Telegram class."""

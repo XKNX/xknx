@@ -3,9 +3,11 @@ Device is the base class for all implemented devices (e.g. Lights/Switches/Senso
 
 It provides basis functionality for reading the state from the KNX bus.
 """
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 import logging
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterator, List, Optional
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterator
 
 from xknx.remote_value import RemoteValue
 from xknx.telegram import GroupAddress, Telegram
@@ -24,14 +26,14 @@ class Device(ABC):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         name: str,
-        device_updated_cb: Optional[DeviceCallbackType] = None,
+        device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Device class."""
         self.xknx = xknx
         self.name = name
-        self.device_updated_cbs: List[DeviceCallbackType] = []
+        self.device_updated_cbs: list[DeviceCallbackType] = []
         if device_updated_cb is not None:
             self.register_device_updated_cb(device_updated_cb)
 
@@ -59,7 +61,7 @@ class Device(ABC):
         yield from ()
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return local unique id of this device."""
         return None
 

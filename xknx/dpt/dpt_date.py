@@ -1,6 +1,7 @@
 """Implementation of the KNX date data point."""
+from __future__ import annotations
+
 import time
-from typing import Tuple
 
 from xknx.exceptions import ConversionError
 
@@ -13,7 +14,7 @@ class DPTDate(DPTBase):
     payload_length = 3
 
     @classmethod
-    def from_knx(cls, raw: Tuple[int, ...]) -> time.struct_time:
+    def from_knx(cls, raw: tuple[int, ...]) -> time.struct_time:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
 
@@ -36,7 +37,7 @@ class DPTDate(DPTBase):
             raise ConversionError("Could not parse DPTDate", raw=raw)
 
     @classmethod
-    def to_knx(cls, value: time.struct_time) -> Tuple[int, int, int]:
+    def to_knx(cls, value: time.struct_time) -> tuple[int, int, int]:
         """Serialize to KNX/IP raw data from time.struct_time."""
 
         def _knx_year(year: int) -> int:

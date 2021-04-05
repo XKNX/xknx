@@ -1,5 +1,5 @@
 """Implementation of Basic KNX 1-Byte signed integer values."""
-from typing import Optional, Tuple
+from __future__ import annotations
 
 from xknx.exceptions import ConversionError
 
@@ -16,13 +16,13 @@ class DPTSignedRelativeValue(DPTBase):
     value_min = -128
     value_max = 127
     dpt_main_number = 6
-    dpt_sub_number: Optional[int] = None
+    dpt_sub_number: int | None = None
     value_type = "1byte_signed"
     unit = ""
     payload_length = 1
 
     @classmethod
-    def from_knx(cls, raw: Tuple[int, ...]) -> int:
+    def from_knx(cls, raw: tuple[int, ...]) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
         if raw[0] > cls.value_max:
@@ -30,7 +30,7 @@ class DPTSignedRelativeValue(DPTBase):
         return raw[0]
 
     @classmethod
-    def to_knx(cls, value: int) -> Tuple[int]:
+    def to_knx(cls, value: int) -> tuple[int]:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = int(value)
