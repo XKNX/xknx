@@ -1,5 +1,5 @@
 """Implementation of Basic KNX 2-Byte/octet values."""
-from typing import Optional, Tuple
+from __future__ import annotations
 
 from xknx.exceptions import ConversionError
 
@@ -18,20 +18,20 @@ class DPT2ByteUnsigned(DPTBase):
     value_min = 0
     value_max = 65535
     dpt_main_number = 7
-    dpt_sub_number: Optional[int] = None
+    dpt_sub_number: int | None = None
     value_type = "2byte_unsigned"
     unit = ""
     resolution = 1
     payload_length = 2
 
     @classmethod
-    def from_knx(cls, raw: Tuple[int, ...]) -> int:
+    def from_knx(cls, raw: tuple[int, ...]) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
         return (raw[0] * 256) + raw[1]
 
     @classmethod
-    def to_knx(cls, value: int) -> Tuple[int, int]:
+    def to_knx(cls, value: int) -> tuple[int, int]:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = int(value)

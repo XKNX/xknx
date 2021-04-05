@@ -11,9 +11,11 @@ There are two separate dimming modes sharing the same DPT class:
 
 As the same payload in these cases in interpreted completely different it is reasonable to make separate DPT classes.
 """
+from __future__ import annotations
+
 from abc import ABC
 from enum import Enum
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any
 
 from xknx.exceptions import ConversionError
 
@@ -39,7 +41,7 @@ class DPTControlStepCode(DPTBase, ABC):
         return value
 
     @classmethod
-    def _decode(cls, value: int) -> Tuple[bool, int]:
+    def _decode(cls, value: int) -> tuple[bool, int]:
         """Decode value into control-bit and step-code."""
         control = bool(value & cls.APCI_CONTROLMASK)
         step_code = value & cls.APCI_STEPCODEMASK
@@ -60,7 +62,7 @@ class DPTControlStepCode(DPTBase, ABC):
         return False
 
     @classmethod
-    def to_knx(cls, value: Any) -> Tuple[int]:
+    def to_knx(cls, value: Any) -> tuple[int]:
         """Serialize to KNX/IP raw data."""
         # TODO: use Tuple or Named Tuple instead of Dict[str, int] to account for bool control
         if not isinstance(value, dict):
@@ -84,7 +86,7 @@ class DPTControlStepCode(DPTBase, ABC):
         return (cls._encode(control, step_code),)
 
     @classmethod
-    def from_knx(cls, raw: Tuple[int, ...]) -> Any:
+    def from_knx(cls, raw: tuple[int, ...]) -> Any:
         """Parse/deserialize from KNX/IP raw data."""
         if not isinstance(raw, tuple) or not cls._test_boundaries(raw[0]):
             raise ConversionError("Cant parse %s" % cls.__name__, raw=raw)
@@ -98,12 +100,12 @@ class DPTControlStepwise(DPTControlStepCode):
     """Abstraction for KNX DPT 3.xxx in stepwise mode with conversion to an incement value."""
 
     dpt_main_number = 3
-    dpt_sub_number: Optional[int] = None
+    dpt_sub_number: int | None = None
     value_type = "stepwise"
     unit = "%"
 
     @staticmethod
-    def _from_increment(value: int) -> Dict[str, int]:
+    def _from_increment(value: int) -> dict[str, int]:
         """Calculate control bit and stepcode as defined in the KNX standard section 3.3.1 from an increment value."""
         # control bit in KNX standard
         #   0: - = decrease/move up
@@ -131,14 +133,14 @@ class DPTControlStepwise(DPTControlStepCode):
         return {"control": control, "step_code": stepcode}
 
     @staticmethod
-    def _to_increment(value: Dict[str, int]) -> int:
+    def _to_increment(value: dict[str, int]) -> int:
         """Calculate the increment value from the stepcode and control bit as defined in the KNX standard section 3.3.1."""
         # calculated using floor(100/2^((value&0x07)-1))
         inc = [0, 100, 50, 25, 12, 6, 3, 1][value["step_code"] & 0x07]
         return inc if value["control"] == 1 else -inc
 
     @classmethod
-    def to_knx(cls, value: Union[int, Dict[str, int]]) -> Tuple[int]:
+    def to_knx(cls, value: int | dict[str, int]) -> tuple[int]:
         """Serialize to KNX/IP raw data."""
         if not isinstance(value, int):
             raise ConversionError("Cant serialize %s" % cls.__name__, value=value)
@@ -146,7 +148,7 @@ class DPTControlStepwise(DPTControlStepCode):
         return super().to_knx(cls._from_increment(value))
 
     @classmethod
-    def from_knx(cls, raw: Tuple[int, ...]) -> int:
+    def from_knx(cls, raw: tuple[int, ...]) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         return cls._to_increment(super().from_knx(raw))
 
@@ -193,7 +195,7 @@ class DPTControlStartStop(DPTControlStepCode):
         STOP = 2
 
     @classmethod
-    def to_knx(cls, value: Direction) -> Tuple[int]:
+    def to_knx(cls, value: Direction) -> tuple[int]:
         """Convert value to payload."""
         control = 0
         step_code = 0
@@ -213,7 +215,7 @@ class DPTControlStartStop(DPTControlStepCode):
         return super().to_knx(values)
 
     @classmethod
-    def from_knx(cls, raw: Tuple[int, ...]) -> Direction:
+    def from_knx(cls, raw: tuple[int, ...]) -> Direction:
         """Convert current payload to value."""
         values = super().from_knx(raw)
         if values["step_code"] == 0:

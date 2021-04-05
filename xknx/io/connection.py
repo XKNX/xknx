@@ -1,6 +1,7 @@
 """Manages a connection to the KNX bus."""
+from __future__ import annotations
+
 from enum import Enum
-from typing import Optional
 
 from .const import DEFAULT_MCAST_PORT
 from .gateway_scanner import GatewayScanFilter
@@ -36,9 +37,9 @@ class ConnectionConfig:
     def __init__(
         self,
         connection_type: ConnectionType = ConnectionType.AUTOMATIC,
-        local_ip: Optional[str] = None,
+        local_ip: str | None = None,
         local_port: int = 0,
-        gateway_ip: Optional[str] = None,
+        gateway_ip: str | None = None,
         gateway_port: int = DEFAULT_MCAST_PORT,
         route_back: bool = False,
         auto_reconnect: bool = True,

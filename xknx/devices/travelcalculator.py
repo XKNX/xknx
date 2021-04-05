@@ -9,9 +9,10 @@ E.g.:
 * At time 20 TravelCalculator will return position 70 (final position not reached).
 * At time 30 TravelCalculator will return position 60 (final position reached).
 """
+from __future__ import annotations
+
 from enum import Enum
 import time
-from typing import Optional
 
 
 class TravelStatus(Enum):
@@ -27,13 +28,13 @@ class TravelCalculator:
 
     def __init__(self, travel_time_down: float, travel_time_up: float) -> None:
         """Initialize TravelCalculator class."""
-        self.last_known_position: Optional[int] = None
+        self.last_known_position: int | None = None
         self.position_confirmed: bool = False
 
         self.travel_time_down = travel_time_down
         self.travel_time_up = travel_time_up
 
-        self.travel_to_position: Optional[int] = None
+        self.travel_to_position: int | None = None
         self.travel_started_time: float = 0.0
         self.travel_direction = TravelStatus.STOPPED
 
@@ -86,7 +87,7 @@ class TravelCalculator:
         """Start traveling down."""
         self.start_travel(self.position_closed)
 
-    def current_position(self) -> Optional[int]:
+    def current_position(self) -> int | None:
         """Return current (calculated or known) position."""
         if not self.position_confirmed:
             return self._calculate_position()
@@ -120,7 +121,7 @@ class TravelCalculator:
         """Return if cover is (fully) closed."""
         return self.current_position() == self.position_closed
 
-    def _calculate_position(self) -> Optional[int]:
+    def _calculate_position(self) -> int | None:
         """Return calculated position."""
         if self.travel_to_position is None or self.last_known_position is None:
             return self.last_known_position
@@ -167,6 +168,6 @@ class TravelCalculator:
 
         return travel_time_full * abs(relative_position) / travel_range
 
-    def __eq__(self, other: Optional[object]) -> bool:
+    def __eq__(self, other: object | None) -> bool:
         """Equal operator."""
         return self.__dict__ == other.__dict__

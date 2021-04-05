@@ -6,9 +6,11 @@ It provides functionality for
 * setting fan to specific speed / step
 * reading the current speed from KNX bus.
 """
+from __future__ import annotations
+
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Any, Iterator
 
 from xknx.remote_value import (
     GroupAddressesType,
@@ -39,19 +41,19 @@ class Fan(Device):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         name: str,
-        group_address_speed: Optional[GroupAddressesType] = None,
-        group_address_speed_state: Optional[GroupAddressesType] = None,
-        group_address_oscillation: Optional[GroupAddressesType] = None,
-        group_address_oscillation_state: Optional[GroupAddressesType] = None,
-        device_updated_cb: Optional[DeviceCallbackType] = None,
-        max_step: Optional[int] = None,
+        group_address_speed: GroupAddressesType | None = None,
+        group_address_speed_state: GroupAddressesType | None = None,
+        group_address_oscillation: GroupAddressesType | None = None,
+        group_address_oscillation_state: GroupAddressesType | None = None,
+        device_updated_cb: DeviceCallbackType | None = None,
+        max_step: int | None = None,
     ):
         """Initialize fan class."""
         super().__init__(xknx, name, device_updated_cb)
 
-        self.speed: Union[RemoteValueDptValue1Ucount, RemoteValueScaling]
+        self.speed: RemoteValueDptValue1Ucount | RemoteValueScaling
         self.mode = FanSpeedMode.STEP if max_step else FanSpeedMode.PERCENT
         self.max_step = max_step
 
@@ -95,7 +97,7 @@ class Fan(Device):
         return self.oscillation.initialized
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Fan":
+    def from_config(cls, xknx: XKNX, name: str, config: dict[str, Any]) -> Fan:
         """Initialize object from configuration structure."""
         group_address_speed = config.get("group_address_speed")
         group_address_speed_state = config.get("group_address_speed_state")
@@ -153,11 +155,11 @@ class Fan(Device):
         await self.oscillation.process(telegram)
 
     @property
-    def current_speed(self) -> Optional[int]:
+    def current_speed(self) -> int | None:
         """Return current speed of fan."""
         return self.speed.value
 
     @property
-    def current_oscillation(self) -> Optional[bool]:
+    def current_oscillation(self) -> bool | None:
         """Return true if the fan is oscillating."""
         return self.oscillation.value

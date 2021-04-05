@@ -6,7 +6,9 @@ It provides functionality for
 * reading the current state from KNX bus.
 * watching for state updates from KNX bus.
 """
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Iterator
 
 from xknx.remote_value import (
     GroupAddressesType,
@@ -27,19 +29,19 @@ class Sensor(Device):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         name: str,
-        group_address_state: Optional[GroupAddressesType] = None,
+        group_address_state: GroupAddressesType | None = None,
         sync_state: bool = True,
         always_callback: bool = False,
-        value_type: Optional[Union[int, str]] = None,
+        value_type: int | str | None = None,
         ha_value_template: Any = None,
-        device_updated_cb: Optional[DeviceCallbackType] = None,
+        device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Sensor class."""
         super().__init__(xknx, name, device_updated_cb)
 
-        self.sensor_value: Union[RemoteValueControl, RemoteValueSensor]
+        self.sensor_value: RemoteValueControl | RemoteValueSensor
         if isinstance(value_type, str) and value_type in [
             "stepwise_dimming",
             "stepwise_blinds",
@@ -71,7 +73,7 @@ class Sensor(Device):
         yield self.sensor_value
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return unique id for this device."""
         return f"{self.sensor_value.group_address_state}"
 
@@ -81,7 +83,7 @@ class Sensor(Device):
         return self.sensor_value.telegram
 
     @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Sensor":
+    def from_config(cls, xknx: XKNX, name: str, config: dict[str, Any]) -> Sensor:
         """Initialize object from configuration structure."""
         group_address_state = config.get("group_address_state")
         sync_state = config.get("sync_state", True)
@@ -105,15 +107,15 @@ class Sensor(Device):
         """Process incoming GroupValueResponse telegrams."""
         await self.sensor_value.process(telegram)
 
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return self.sensor_value.unit_of_measurement
 
-    def ha_device_class(self) -> Optional[str]:
+    def ha_device_class(self) -> str | None:
         """Return the home assistant device class as string."""
         return self.sensor_value.ha_device_class
 
-    def resolve_state(self) -> Optional[Any]:
+    def resolve_state(self) -> Any | None:
         """Return the current state of the sensor as a human readable string."""
         return self.sensor_value.value
 

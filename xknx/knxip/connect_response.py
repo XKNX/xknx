@@ -5,7 +5,9 @@ Connect requests are used to start a new tunnel connection on a KNX/IP device.
 With a Connect Response the receiving party acknowledges the valid processing of the request,
 assigns a communication channel and an individual address for the client.
 """
-from typing import TYPE_CHECKING, List, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from xknx.exceptions import CouldNotParseKNXIP
 
@@ -26,12 +28,12 @@ class ConnectResponse(KNXIPBodyResponse):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         communication_channel: int = 0,
         status_code: ErrorCode = ErrorCode.E_NO_ERROR,
         request_type: ConnectRequestType = ConnectRequestType.TUNNEL_CONNECTION,
         control_endpoint: HPAI = HPAI(),
-        identifier: Optional[int] = None,
+        identifier: int | None = None,
     ):
         """Initialize ConnectResponse class."""
         super().__init__(xknx)
@@ -72,10 +74,10 @@ class ConnectResponse(KNXIPBodyResponse):
             pos += len(raw[pos:])
         return pos
 
-    def to_knx(self) -> List[int]:
+    def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
 
-        def crd_to_knx() -> List[int]:
+        def crd_to_knx() -> list[int]:
             """Serialize CRD (Connect Response Data Block)."""
             assert self.identifier is not None
 

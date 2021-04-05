@@ -3,8 +3,10 @@ Module for Serialization and Deserialization of a KNX Tunnelling Request informa
 
 Tunnelling requests are used to transmit a KNX telegram within an existing KNX tunnel connection.
 """
+from __future__ import annotations
+
 import logging
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 from xknx.exceptions import CouldNotParseKNXIP, UnsupportedCEMIMessage
 
@@ -26,17 +28,17 @@ class TunnellingRequest(KNXIPBody):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         communication_channel_id: int = 1,
         sequence_counter: int = 0,
-        cemi: Optional[CEMIFrame] = None,
+        cemi: CEMIFrame | None = None,
     ):
         """Initialize TunnellingRequest object."""
         super().__init__(xknx)
 
         self.communication_channel_id = communication_channel_id
         self.sequence_counter = sequence_counter
-        self.cemi: Optional[CEMIFrame] = (
+        self.cemi: CEMIFrame | None = (
             cemi
             if cemi is not None
             else CEMIFrame(xknx, code=CEMIMessageCode.L_DATA_REQ)
@@ -71,12 +73,12 @@ class TunnellingRequest(KNXIPBody):
             return len(raw)
         return pos
 
-    def to_knx(self) -> List[int]:
+    def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
         if self.cemi is None:
             raise CouldNotParseKNXIP("No CEMIFrame defined.")
 
-        def header_to_knx() -> List[int]:
+        def header_to_knx() -> list[int]:
             """Serialize header."""
             cri = []
             cri.append(TunnellingRequest.HEADER_LENGTH)

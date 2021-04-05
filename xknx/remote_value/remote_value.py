@@ -6,6 +6,8 @@ Remote value can be :
 - a group address for reading a KNX value,
 - or a group of both representing the same value.
 """
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 import logging
 from typing import (
@@ -16,7 +18,6 @@ from typing import (
     Generic,
     Iterator,
     List,
-    Optional,
     TypeVar,
     Union,
 )
@@ -42,21 +43,21 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
 
     def __init__(
         self,
-        xknx: "XKNX",
-        group_address: Optional[GroupAddressesType] = None,
-        group_address_state: Optional[GroupAddressesType] = None,
+        xknx: XKNX,
+        group_address: GroupAddressesType | None = None,
+        group_address_state: GroupAddressesType | None = None,
         sync_state: bool = True,
-        device_name: Optional[str] = None,
-        feature_name: Optional[str] = None,
-        after_update_cb: Optional[AsyncCallbackType] = None,
+        device_name: str | None = None,
+        feature_name: str | None = None,
+        after_update_cb: AsyncCallbackType | None = None,
     ):
         """Initialize RemoteValue class."""
-        self.xknx: "XKNX" = xknx
-        self.passive_group_addresses: List[GroupAddress] = []
+        self.xknx: XKNX = xknx
+        self.passive_group_addresses: list[GroupAddress] = []
 
         def unpack_group_addresses(
-            addresses: Optional[GroupAddressesType],
-        ) -> Optional[GroupAddress]:
+            addresses: GroupAddressesType | None,
+        ) -> GroupAddress | None:
             """Parse group addresses and assign passive addresses when given."""
             if addresses is None:
                 return None
@@ -71,9 +72,9 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
 
         self.device_name: str = "Unknown" if device_name is None else device_name
         self.feature_name: str = "Unknown" if feature_name is None else feature_name
-        self.after_update_cb: Optional[AsyncCallbackType] = after_update_cb
         self.value: Optional[ValueType] = None
         self.telegram: Optional[Telegram] = None
+        self.after_update_cb: AsyncCallbackType | None = after_update_cb
 
         if sync_state and self.group_address_state:
             self.xknx.state_updater.register_remote_value(
@@ -111,7 +112,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
     def has_group_address(self, group_address: GroupAddress) -> bool:
         """Test if device has given group address."""
 
-        def _internal_addresses() -> Iterator[Optional[GroupAddress]]:
+        def _internal_addresses() -> Iterator[GroupAddress | None]:
             """Yield all group_addresses."""
             yield self.group_address
             yield self.group_address_state
@@ -122,8 +123,8 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
     @abstractmethod
     # TODO: typing - remove Optional
     def payload_valid(
-        self, payload: Optional[Union[DPTArray, DPTBinary]]
-    ) -> Optional[DPTPayloadType]:
+        self, payload: DPTArray | DPTBinary | None
+    ) -> DPTPayloadType | None:
         """Return payload if telegram payload may be parsed - to be implemented in derived class."""
 
     @abstractmethod
@@ -250,7 +251,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
         return None
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return None
 

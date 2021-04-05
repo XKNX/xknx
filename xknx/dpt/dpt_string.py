@@ -1,5 +1,5 @@
 """Implementation of 3.17 Datapoint Types String."""
-from typing import Tuple
+from __future__ import annotations
 
 from xknx.exceptions import ConversionError
 
@@ -20,7 +20,7 @@ class DPTString(DPTBase):
     unit = ""
 
     @classmethod
-    def from_knx(cls, raw: Tuple[int, ...]) -> str:
+    def from_knx(cls, raw: tuple[int, ...]) -> str:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
         value = ""
@@ -30,7 +30,7 @@ class DPTString(DPTBase):
         return value
 
     @classmethod
-    def to_knx(cls, value: str) -> Tuple[int, ...]:
+    def to_knx(cls, value: str) -> tuple[int, ...]:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = str(value)

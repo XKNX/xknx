@@ -3,8 +3,10 @@ Module for Serialization and Deserialization of KNX Routing Indications.
 
 Routing indications are used to transport CEMI Messages.
 """
+from __future__ import annotations
+
 import logging
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 from xknx.exceptions import CouldNotParseKNXIP, UnsupportedCEMIMessage
 
@@ -22,10 +24,10 @@ class RoutingIndication(KNXIPBody):
 
     SERVICE_TYPE = KNXIPServiceType.ROUTING_INDICATION
 
-    def __init__(self, xknx: "XKNX", cemi: Optional[CEMIFrame] = None):
+    def __init__(self, xknx: XKNX, cemi: CEMIFrame | None = None):
         """Initialize SearchRequest object."""
         super().__init__(xknx)
-        self.cemi: Optional[CEMIFrame] = (
+        self.cemi: CEMIFrame | None = (
             cemi
             if cemi is not None
             else CEMIFrame(xknx, code=CEMIMessageCode.L_DATA_IND)
@@ -47,7 +49,7 @@ class RoutingIndication(KNXIPBody):
             self.cemi = None
             return len(raw)
 
-    def to_knx(self) -> List[int]:
+    def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
         if self.cemi is None:
             raise CouldNotParseKNXIP("No CEMIFrame defined.")

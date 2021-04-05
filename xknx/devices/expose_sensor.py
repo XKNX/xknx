@@ -11,7 +11,9 @@ read from an internet service (e.g. Yahoo weather) and exposed to
 ths KNX bus. KNX sensors may show this outside temperature within their
 LCD display.
 """
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Iterator
 
 from xknx.remote_value import (
     GroupAddressesType,
@@ -32,16 +34,16 @@ class ExposeSensor(Device):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         name: str,
-        group_address: Optional[GroupAddressesType] = None,
-        value_type: Optional[Union[int, str]] = None,
-        device_updated_cb: Optional[DeviceCallbackType] = None,
+        group_address: GroupAddressesType | None = None,
+        value_type: int | str | None = None,
+        device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Sensor class."""
         super().__init__(xknx, name, device_updated_cb)
 
-        self.sensor_value: Union[RemoteValueSensor, RemoteValueSwitch]
+        self.sensor_value: RemoteValueSensor | RemoteValueSwitch
         if value_type == "binary":
             self.sensor_value = RemoteValueSwitch(
                 xknx,
@@ -65,9 +67,7 @@ class ExposeSensor(Device):
         yield self.sensor_value
 
     @classmethod
-    def from_config(
-        cls, xknx: "XKNX", name: str, config: Dict[str, Any]
-    ) -> "ExposeSensor":
+    def from_config(cls, xknx: XKNX, name: str, config: dict[str, Any]) -> ExposeSensor:
         """Initialize object from configuration structure."""
         group_address = config.get("group_address")
         value_type = config.get("value_type")
@@ -86,7 +86,7 @@ class ExposeSensor(Device):
         """Set new value."""
         await self.sensor_value.set(value)
 
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return self.sensor_value.unit_of_measurement
 
