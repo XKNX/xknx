@@ -96,13 +96,3 @@ await cover.do('short_down')
 # Requesting state via KNX GroupValueRead
 await cover.sync()
 ```
-
-## [](#header-2)Configuration via **xknx.yaml**
-
-Covers are usually configured via [`xknx.yaml`](/configuration):
-
-```yaml
-groups:
-    cover:
-        Livingroom.Shutter_1: {group_address_long: '1/4/1', group_address_short: '1/4/2', group_address_position_feedback: '1/4/3', group_address_position: '1/4/4', travel_time_down: 50, travel_time_up: 60 }
-```

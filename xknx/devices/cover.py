@@ -149,39 +149,6 @@ class Cover(Device):
         """Return unique id for this device."""
         return f"{self.updown.group_address}"
 
-    @classmethod
-    def from_config(cls, xknx: XKNX, name: str, config: dict[str, Any]) -> Cover:
-        """Initialize object from configuration structure."""
-        group_address_long = config.get("group_address_long")
-        group_address_short = config.get("group_address_short")
-        group_address_stop = config.get("group_address_stop")
-        group_address_position = config.get("group_address_position")
-        group_address_position_state = config.get("group_address_position_state")
-        group_address_angle = config.get("group_address_angle")
-        group_address_angle_state = config.get("group_address_angle_state")
-        travel_time_down = config.get("travel_time_down", cls.DEFAULT_TRAVEL_TIME_DOWN)
-        travel_time_up = config.get("travel_time_up", cls.DEFAULT_TRAVEL_TIME_UP)
-        invert_position = config.get("invert_position", False)
-        invert_angle = config.get("invert_angle", False)
-        device_class = config.get("device_class")
-
-        return cls(
-            xknx,
-            name,
-            group_address_long=group_address_long,
-            group_address_short=group_address_short,
-            group_address_stop=group_address_stop,
-            group_address_position=group_address_position,
-            group_address_position_state=group_address_position_state,
-            group_address_angle=group_address_angle,
-            group_address_angle_state=group_address_angle_state,
-            travel_time_down=travel_time_down,
-            travel_time_up=travel_time_up,
-            invert_position=invert_position,
-            invert_angle=invert_angle,
-            device_class=device_class,
-        )
-
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
@@ -325,23 +292,6 @@ class Cover(Device):
             and not self.is_closed()
         ):
             await self.stop()
-
-    async def do(self, action: str) -> None:
-        """Execute 'do' commands."""
-        if action == "up":
-            await self.set_up()
-        elif action == "short_up":
-            await self.set_short_up()
-        elif action == "down":
-            await self.set_down()
-        elif action == "short_down":
-            await self.set_short_down()
-        elif action == "stop":
-            await self.stop()
-        else:
-            logger.warning(
-                "Could not understand action %s for device %s", action, self.get_name()
-            )
 
     async def sync(self, wait_for_result: bool = False) -> None:
         """Read states of device from KNX bus."""

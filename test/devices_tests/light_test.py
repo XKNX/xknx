@@ -1220,52 +1220,6 @@ class TestLight:
         with pytest.raises(CouldNotParseTelegram):
             await light.process(telegram)
 
-    #
-    # TEST DO
-    #
-    async def test_do(self):
-        """Test 'do' functionality."""
-        xknx = XKNX()
-        light = Light(
-            xknx,
-            name="TestLight",
-            group_address_switch="1/2/3",
-            group_address_brightness="1/2/5",
-            group_address_tunable_white="1/2/9",
-            group_address_color_temperature="1/2/11",
-        )
-        await light.do("on")
-        await xknx.devices.process(xknx.telegrams.get_nowait())
-        assert light.state
-        await light.do("brightness:80")
-        await xknx.devices.process(xknx.telegrams.get_nowait())
-        assert light.current_brightness == 80
-        await light.do("tunable_white:80")
-        await xknx.devices.process(xknx.telegrams.get_nowait())
-        assert light.current_tunable_white == 80
-        await light.do("color_temperature:3750")
-        await xknx.devices.process(xknx.telegrams.get_nowait())
-        assert light.current_color_temperature == 3750
-        await light.do("off")
-        await xknx.devices.process(xknx.telegrams.get_nowait())
-        assert not light.state
-
-    async def test_wrong_do(self):
-        """Test wrong do command."""
-        xknx = XKNX()
-        light = Light(
-            xknx,
-            name="TestLight",
-            group_address_switch="1/2/3",
-            group_address_brightness="1/2/5",
-        )
-        with patch("logging.Logger.warning") as mock_warn:
-            await light.do("execute")
-            assert xknx.telegrams.qsize() == 0
-            mock_warn.assert_called_with(
-                "Could not understand action %s for device %s", "execute", "TestLight"
-            )
-
     def test_has_group_address(self):
         """Test has_group_address."""
         xknx = XKNX()

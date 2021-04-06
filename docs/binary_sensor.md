@@ -9,9 +9,7 @@ nav_order: 1
 
 Binary sensors which have either the state "on" or "off". Binary sensors could be e.g. a switch in the wall (the thing you press on when switching on the light) or a motion detector.
 
-Switches are mainly intended to act on input, which means to execute so called `Actions`. An action can be toggling a switch or a light or the moving of a cover.
-
-The logic within switches can further handle if a button is pressed once or twice - and trigger different actions. Use the attribute `counter` for this purpose.
+The logic within switches can further handle if a button is pressed once or twice - and trigger different actions in HA. Use the attribute `counter` for this purpose.
 
 ## [](#header-2)Overview
 
@@ -39,53 +37,4 @@ binarysensor = BinarySensor(xknx, 'TestInput', group_address_state='2/3/4')
 
 # Returns the last received Telegram or None
 binarysensor.last_telegram
-```
-
-## [](#header-2)Configuration via **xknx.yaml**
-
-Binary sensor objects are usually configured via [`xknx.yaml`](/configuration):
-
-```yaml
-groups:
-  binary_sensor:
-    Livingroom.Switch_1:
-      group_address_state: "1/2/7"
-      actions:
-        - { target: Livingroom.Outlet_1, method: "on" }
-        - { target: Livingroom.Outlet_2, method: "on" }
-
-    Livingroom.Switch_2:
-      group_address_state: "1/2/8"
-      actions:
-        - { target: Livingroom.Outlet_1, method: "off" }
-        - { target: Livingroom.Outlet_2, method: "off" }
-
-    Livingroom.Switch_3:
-      group_address_state: "1/2/5"
-      actions:
-        - { target: Livingroom.Shutter_1, method: up }
-        # Only executed if the button was switched twice:
-        - { counter: 2, target: Livingroom.Shutter_1, method: short_up }
-
-    Livingroom.Switch_4:
-      group_address_state: "1/2/6"
-      actions:
-        - { target: Livingroom.Shutter_1, method: down }
-        # Only executed if the button was switched twice:
-        - { counter: 2, target: Livingroom.Shutter_1, method: short_down }
-
-  switch:
-    Livingroom.Outlet_1: { group_address: "1/3/1" }
-    Livingroom.Outlet_2: { group_address: "1/3/2" }
-
-  cover:
-    Livingroom.Shutter_1:
-      {
-        group_address_long: 3171,
-        group_address_short: 3172,
-        group_address_position_state: 3173,
-        group_address_position: 3174,
-        travelling_time_down: 51,
-        travelling_time_up: 61,
-      }
 ```

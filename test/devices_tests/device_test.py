@@ -129,16 +129,6 @@ class TestDevice:
         device = Device(xknx, "TestDevice")
         await device.process_group_read(Telegram())
 
-    async def test_do(self):
-        """Testing empty do."""
-        xknx = XKNX()
-        device = Device(xknx, "TestDevice")
-        with patch("logging.Logger.info") as mock_info:
-            await device.do("xx")
-            mock_info.assert_called_with(
-                "'do()' not implemented for action '%s' of %s", "xx", "Device"
-            )
-
     def test_unique_id(self):
         """Test unique id functionality."""
         xknx = XKNX()
