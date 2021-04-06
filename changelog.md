@@ -20,6 +20,7 @@
 - Move RequestResponse and subclasses to xknx.io.request_response.*
 - Move ConnectionConfig to xknx.io.connection
 - Store last Telegram and decoded value in RemoteValue
+- Improve CI to use Codecov instead of Coveralls for code coverage reports
 
 ## 0.17.5 Add support for unique ids 2021-03-30
 
