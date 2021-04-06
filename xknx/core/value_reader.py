@@ -31,7 +31,7 @@ class ValueReader:
         """Initialize ValueReader class."""
         self.xknx = xknx
         self.group_address: GroupAddress = group_address
-        self.response_received_or_timeout = asyncio.Event()
+        self.response_received_event = asyncio.Event()
         self.success: bool = False
         self.timeout_in_seconds: float = timeout_in_seconds
         self.received_telegram: Telegram | None = None
@@ -46,7 +46,7 @@ class ValueReader:
 
         try:
             await asyncio.wait_for(
-                self.response_received_or_timeout.wait(),
+                self.response_received_event.wait(),
                 timeout=self.timeout_in_seconds,
             )
         except asyncio.TimeoutError:
@@ -77,4 +77,4 @@ class ValueReader:
         ):
             self.success = True
             self.received_telegram = telegram
-            self.response_received_or_timeout.set()
+            self.response_received_event.set()

@@ -34,14 +34,14 @@ class PayloadReader:
         """Initialize PayloadReader class."""
         self.xknx = xknx
         self.address = address
-        self.response_received_or_timeout = asyncio.Event()
+        self.response_received_event = asyncio.Event()
         self.success: bool = False
         self.timeout_in_seconds = timeout_in_seconds
         self.received_payload: APCI | None = None
 
     def reset(self) -> None:
         """Reset reader for next send."""
-        self.response_received_or_timeout = asyncio.Event()
+        self.response_received_event = asyncio.Event()
         self.success = False
         self.received_payload = None
 
@@ -63,7 +63,7 @@ class PayloadReader:
 
         try:
             await asyncio.wait_for(
-                self.response_received_or_timeout.wait(),
+                self.response_received_event.wait(),
                 timeout=self.timeout_in_seconds,
             )
         except asyncio.TimeoutError:
@@ -101,4 +101,4 @@ class PayloadReader:
                 return
         self.success = True
         self.received_payload = telegram.payload
-        self.response_received_or_timeout.set()
+        self.response_received_event.set()
