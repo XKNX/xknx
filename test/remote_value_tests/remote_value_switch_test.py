@@ -76,7 +76,7 @@ class TestRemoteValueSwitch:
         )
         assert remote_value.value is None
         await remote_value.process(telegram)
-        assert remote_value.value is not None
+        assert remote_value.telegram is not None
         assert remote_value.value is True
 
     async def test_process_off(self):
@@ -89,7 +89,7 @@ class TestRemoteValueSwitch:
         )
         assert remote_value.value is None
         await remote_value.process(telegram)
-        assert remote_value.value is not None
+        assert remote_value.telegram is not None
         assert remote_value.value is False
 
     async def test_to_process_error(self):

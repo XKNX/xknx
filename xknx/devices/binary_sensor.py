@@ -81,7 +81,7 @@ class BinarySensor(Device):
         return f"{self.remote_value.group_address_state}"
 
     @property
-    def last_telegram(self) -> Optional["Telegram"]:
+    def last_telegram(self) -> Telegram | None:
         """Return the last telegram received from the RemoteValue."""
         return self.remote_value.telegram
 

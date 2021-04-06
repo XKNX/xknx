@@ -78,7 +78,7 @@ class Sensor(Device):
         return f"{self.sensor_value.group_address_state}"
 
     @property
-    def last_telegram(self) -> Optional["Telegram"]:
+    def last_telegram(self) -> Telegram | None:
         """Return the last telegram received from the RemoteValue."""
         return self.sensor_value.telegram
 
