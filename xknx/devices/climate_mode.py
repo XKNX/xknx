@@ -174,53 +174,6 @@ class ClimateMode(Device):
             for operation_mode in self._iter_binary_operation_modes()
         )
 
-    @classmethod
-    def from_config(cls, xknx: XKNX, name: str, config: dict[str, Any]) -> ClimateMode:
-        """Initialize object from configuration structure."""
-        group_address_operation_mode = config.get("group_address_operation_mode")
-        group_address_operation_mode_state = config.get(
-            "group_address_operation_mode_state"
-        )
-        group_address_operation_mode_protection = config.get(
-            "group_address_operation_mode_protection"
-        )
-        group_address_operation_mode_night = config.get(
-            "group_address_operation_mode_night"
-        )
-        group_address_operation_mode_comfort = config.get(
-            "group_address_operation_mode_comfort"
-        )
-        group_address_operation_mode_standby = config.get(
-            "group_address_operation_mode_standby"
-        )
-        group_address_controller_status = config.get("group_address_controller_status")
-        group_address_controller_status_state = config.get(
-            "group_address_controller_status_state"
-        )
-        group_address_controller_mode = config.get("group_address_controller_mode")
-        group_address_controller_mode_state = config.get(
-            "group_address_controller_mode_state"
-        )
-        group_address_heat_cool = config.get("group_address_heat_cool")
-        group_address_heat_cool_state = config.get("group_address_heat_cool_state")
-
-        return cls(
-            xknx,
-            name,
-            group_address_operation_mode=group_address_operation_mode,
-            group_address_operation_mode_state=group_address_operation_mode_state,
-            group_address_operation_mode_protection=group_address_operation_mode_protection,
-            group_address_operation_mode_night=group_address_operation_mode_night,
-            group_address_operation_mode_comfort=group_address_operation_mode_comfort,
-            group_address_operation_mode_standby=group_address_operation_mode_standby,
-            group_address_controller_status=group_address_controller_status,
-            group_address_controller_status_state=group_address_controller_status_state,
-            group_address_controller_mode=group_address_controller_mode,
-            group_address_controller_mode_state=group_address_controller_mode_state,
-            group_address_heat_cool=group_address_heat_cool,
-            group_address_heat_cool_state=group_address_heat_cool_state,
-        )
-
     def _iter_remote_values(
         self,
     ) -> Iterator[RemoteValue[Any, Any]]:

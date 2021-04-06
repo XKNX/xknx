@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING, Iterator
 
 from xknx.remote_value import GroupAddressesType, RemoteValueSwitch
 
@@ -69,23 +69,6 @@ class Switch(Device):
         """Return unique id for this device."""
         return f"{self.switch.group_address}"
 
-    @classmethod
-    def from_config(cls, xknx: XKNX, name: str, config: dict[str, Any]) -> Switch:
-        """Initialize object from configuration structure."""
-        group_address = config.get("group_address")
-        group_address_state = config.get("group_address_state")
-        invert = config.get("invert", False)
-        reset_after = config.get("reset_after")
-
-        return cls(
-            xknx,
-            name,
-            group_address=group_address,
-            group_address_state=group_address_state,
-            invert=invert,
-            reset_after=reset_after,
-        )
-
     @property
     def state(self) -> bool | None:
         """Return the current switch state of the device."""
@@ -98,17 +81,6 @@ class Switch(Device):
     async def set_off(self) -> None:
         """Switch off switch."""
         await self.switch.off()
-
-    async def do(self, action: str) -> None:
-        """Execute 'do' commands."""
-        if action == "on":
-            await self.set_on()
-        elif action == "off":
-            await self.set_off()
-        else:
-            logger.warning(
-                "Could not understand action %s for device %s", action, self.get_name()
-            )
 
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""

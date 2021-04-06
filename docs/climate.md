@@ -113,30 +113,3 @@ climate_target_temp = Climate(
     group_address_target_temperature_state='2/2/4'
 )
 ```
-
-## [](#header-2)Configuration via **xknx.yaml**
-
-Climate devices are usually configured via [`xknx.yaml`](/configuration):
-
-```yaml
-groups:
-  climate:
-    Children.Climate:
-      {
-        group_address_temperature: "1/7/2",
-        group_address_setpoint_shift: "1/7/3",
-        group_address_target_temperature_state: "1/7/4",
-      }
-    Office.Climate:
-      {
-        group_address_temperature: "1/7/5",
-        group_address_operation_mode: "1/7/6",
-      }
-    Attic.Climate:
-      {
-        group_address_temperature: "1/7/7",
-        group_address_operation_mode_protection: "1/7/8",
-        group_address_operation_mode_night: "1/7/9",
-        group_address_operation_mode_comfort: "1/7/10",
-      }
-```

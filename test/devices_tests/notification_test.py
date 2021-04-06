@@ -1,5 +1,5 @@
 """Unit test for Notification objects."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from xknx import XKNX
@@ -111,28 +111,6 @@ class TestNotification:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray(DPTString().to_knx("This is too lo"))),
         )
-
-    #
-    # TEST DO
-    #
-    async def test_do(self):
-        """Test 'do' functionality."""
-        xknx = XKNX()
-        notification = Notification(xknx, "Warning", group_address="1/2/3")
-        await notification.do("message:Ein Prosit!")
-        await xknx.devices.process(xknx.telegrams.get_nowait())
-        assert notification.message == "Ein Prosit!"
-
-    async def test_wrong_do(self):
-        """Test wrong do command."""
-        xknx = XKNX()
-        notification = Notification(xknx, "Warning", group_address="1/2/3")
-        with patch("logging.Logger.warning") as mock_warn:
-            await notification.do("execute")
-            mock_warn.assert_called_with(
-                "Could not understand action %s for device %s", "execute", "Warning"
-            )
-        assert xknx.telegrams.qsize() == 0
 
     #
     # TEST has_group_address

@@ -1,6 +1,5 @@
 """Module for handling devices like Lights, Switches or Covers."""
 # flake8: noqa
-from .action import Action, ActionBase, ActionCallback
 from .binary_sensor import BinarySensor
 from .climate import Climate
 from .climate_mode import ClimateMode
@@ -19,9 +18,6 @@ from .travelcalculator import TravelCalculator, TravelStatus
 from .weather import Weather
 
 __all__ = [
-    "Action",
-    "ActionBase",
-    "ActionCallback",
     "BinarySensor",
     "Climate",
     "ClimateMode",

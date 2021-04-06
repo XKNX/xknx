@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING, Iterator
 
 from xknx.remote_value import GroupAddressesType, RemoteValueDateTime
 
@@ -58,15 +58,6 @@ class DateTime(Device):
     def _iter_remote_values(self) -> Iterator[RemoteValueDateTime]:
         """Iterate the devices RemoteValue classes."""
         yield self._remote_value
-
-    @classmethod
-    def from_config(cls, xknx: XKNX, name: str, config: dict[str, Any]) -> DateTime:
-        """Initialize object from configuration structure."""
-        broadcast_type = config.get("broadcast_type", "time").upper()
-        group_address = config.get("group_address")
-        return cls(
-            xknx, name, broadcast_type=broadcast_type, group_address=group_address
-        )
 
     def _create_broadcast_task(self, minutes: int = 60) -> asyncio.Task[None] | None:
         """Create an asyncio.Task for broadcasting local time periodically if `localtime` is set."""
