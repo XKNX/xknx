@@ -100,6 +100,7 @@ class TestRemoteValue:
 
             await remote_value.read_state(wait_for_result=True)
 
+            assert remote_value.telegram == telegram
             assert remote_value.value
 
     async def test_read_state_none(self):
@@ -176,7 +177,7 @@ class TestRemoteValue:
                 payload=GroupValueWrite(test_payload),
             )
             assert await remote_value.process(telegram)
-            assert remote_value.payload == test_payload
+            assert remote_value.telegram.payload.value == test_payload
 
     def test_eq(self):
         """Test __eq__ operator."""

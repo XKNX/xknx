@@ -41,6 +41,9 @@ sensor.resolve_state()
 
 # Returns the unit of the value as string
 sensor.unit_of_measurement()
+
+# Returns the last received telegram or None
+sensor.last_telegram
 ```
 
 

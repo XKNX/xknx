@@ -33,19 +33,8 @@ binarysensor = BinarySensor(xknx, 'TestInput', group_address_state='1/2/3', devi
 ## [](#header-2)Example
 
 ```python
-outlet = Switch(xknx, 'TestOutlet', group_address='1/2/3')
-
 binarysensor = BinarySensor(xknx, 'TestInput', group_address_state='2/3/4')
-action_on = Action(
-    xknx,
-    hook='on',
-    target='TestOutlet',
-    method='on')
-binarysensor.actions.append(action_on)
-action_off = Action(
-    xknx,
-    hook='off',
-    target='TestOutlet',
-    method='off')
-binarysensor.actions.append(action_off)
+
+# Returns the last received Telegram or None
+binarysensor.last_telegram
 ```

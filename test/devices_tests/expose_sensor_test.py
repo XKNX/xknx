@@ -16,35 +16,52 @@ class TestExposeSensor:
     #
     # STR FUNCTIONS
     #
-    def test_str_binary(self):
+    async def test_str_binary(self):
         """Test resolve state with binary sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx, "TestSensor", group_address="1/2/3", value_type="binary"
         )
-        expose_sensor.sensor_value.payload = DPTBinary(1)
+        await expose_sensor.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(value=DPTBinary(1)),
+            )
+        )
 
         assert expose_sensor.resolve_state() is True
         assert expose_sensor.unit_of_measurement() is None
 
-    def test_str_percent(self):
+    async def test_str_percent(self):
         """Test resolve state with percent sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx, "TestSensor", group_address="1/2/3", value_type="percent"
         )
-        expose_sensor.sensor_value.payload = DPTArray((0x40,))
+
+        await expose_sensor.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray((0x40,))),
+            )
+        )
 
         assert expose_sensor.resolve_state() == 25
         assert expose_sensor.unit_of_measurement() == "%"
 
-    def test_str_temperature(self):
+    async def test_str_temperature(self):
         """Test resolve state with temperature sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx, "TestSensor", group_address="1/2/3", value_type="temperature"
         )
-        expose_sensor.sensor_value.payload = DPTArray((0x0C, 0x1A))
+
+        await expose_sensor.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray((0x0C, 0x1A))),
+            )
+        )
 
         assert expose_sensor.resolve_state() == 21.0
         assert expose_sensor.unit_of_measurement() == "°C"
@@ -104,7 +121,13 @@ class TestExposeSensor:
         expose_sensor = ExposeSensor(
             xknx, "TestSensor", value_type="binary", group_address="1/2/3"
         )
-        expose_sensor.sensor_value.payload = DPTBinary(1)
+
+        await expose_sensor.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(True)),
+            )
+        )
 
         telegram = Telegram(GroupAddress("1/2/3"), payload=GroupValueRead())
         await expose_sensor.process(telegram)
@@ -121,7 +144,13 @@ class TestExposeSensor:
         expose_sensor = ExposeSensor(
             xknx, "TestSensor", value_type="percent", group_address="1/2/3"
         )
-        expose_sensor.sensor_value.payload = DPTArray((0x40,))
+
+        await expose_sensor.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray((0x40,))),
+            )
+        )
 
         telegram = Telegram(GroupAddress("1/2/3"), payload=GroupValueRead())
         await expose_sensor.process(telegram)
@@ -138,7 +167,13 @@ class TestExposeSensor:
         expose_sensor = ExposeSensor(
             xknx, "TestSensor", value_type="temperature", group_address="1/2/3"
         )
-        expose_sensor.sensor_value.payload = DPTArray((0x0C, 0x1A))
+
+        await expose_sensor.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray((0x0C, 0x1A))),
+            )
+        )
 
         telegram = Telegram(GroupAddress("1/2/3"), payload=GroupValueRead())
         await expose_sensor.process(telegram)

@@ -75,6 +75,11 @@ class BinarySensor(Device):
         """Return unique id for this device."""
         return f"{self.remote_value.group_address_state}"
 
+    @property
+    def last_telegram(self) -> Telegram | None:
+        """Return the last telegram received from the RemoteValue."""
+        return self.remote_value.telegram
+
     def __del__(self) -> None:
         """Destructor. Cleaning up if this was not done before."""
         try:
