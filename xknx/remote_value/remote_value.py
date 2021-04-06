@@ -72,8 +72,9 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
 
         self.device_name: str = "Unknown" if device_name is None else device_name
         self.feature_name: str = "Unknown" if feature_name is None else feature_name
+        self.value: ValueType | None = None
+        self.telegram: Telegram | None = None
         self.after_update_cb: AsyncCallbackType | None = after_update_cb
-        self.payload: DPTPayloadType | None = None
 
         if sync_state and self.group_address_state:
             self.xknx.state_updater.register_remote_value(
@@ -165,21 +166,18 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
                 device_name=self.device_name,
                 feature_name=self.feature_name,
             )
+        decoded_payload = self.from_knx(_new_payload)
         self.xknx.state_updater.update_received(self)
-        if self.payload is None or always_callback or self.payload != _new_payload:
-            self.payload = _new_payload
+        if self.value is None or always_callback or self.value != decoded_payload:
+            self.value = decoded_payload
+            self.telegram = telegram
             if self.after_update_cb is not None:
                 await self.after_update_cb()
         return True
 
-    @property
-    def value(self) -> ValueType | None:
-        """Return current value."""
-        if self.payload is None:
-            return None
-        return self.from_knx(self.payload)
-
-    async def _send(self, payload: DPTPayloadType, response: bool = False) -> None:
+    async def _send(
+        self, payload: DPTArray | DPTBinary, response: bool = False
+    ) -> None:
         """Send payload as telegram to KNX bus."""
         if self.group_address is not None:
             telegram = Telegram(
@@ -217,8 +215,9 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
 
     async def respond(self) -> None:
         """Send current payload as GroupValueResponse telegram to KNX bus."""
-        if self.payload is not None:
-            await self._send(self.payload, response=True)
+        payload = self._payload()
+        if payload is not None:
+            await self._send(payload, response=True)
 
     async def read_state(self, wait_for_result: bool = False) -> None:
         """Send GroupValueRead telegram for state address to KNX bus."""
@@ -243,6 +242,14 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
             else:
                 await value_reader.send_group_read()
 
+    def _payload(self) -> DPTArray | DPTBinary | None:
+        """Obtain payload from Telegram."""
+        if self.telegram is not None and isinstance(
+            self.telegram.payload, (GroupValueWrite, GroupValueResponse)
+        ):
+            return self.telegram.payload.value
+        return None
+
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
@@ -253,8 +260,8 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
         return "{}/{}/{}/{}".format(
             self.group_address.__repr__(),
             self.group_address_state.__repr__(),
-            self.payload,
             self.value,
+            self._payload(),
         )
 
     def __str__(self) -> str:
