@@ -176,7 +176,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
         return True
 
     async def _send(
-        self, payload: DPTPayloadType, response: bool = False
+        self, payload: DPTArray | DPTBinary, response: bool = False
     ) -> None:
         """Send payload as telegram to KNX bus."""
         if self.group_address is not None:
@@ -242,7 +242,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
             else:
                 await value_reader.send_group_read()
 
-    def _payload(self) -> DPTPayloadType | None:
+    def _payload(self) -> DPTArray | DPTBinary | None:
         """Obtain payload from Telegram."""
         if self.telegram is not None and isinstance(
             self.telegram.payload, (GroupValueWrite, GroupValueResponse)
