@@ -46,17 +46,9 @@ jobs:
     - name: CI
       run: |
         tox
-    - name: Coveralls
-      uses: johanneswilm/coveralls-python-action@develop
-      with:
-        parallel: true
-        flag-name: Unit Test
-
-  coveralls_finish:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Coveralls Finished
-        uses: johanneswilm/coveralls-python-action@develop
-        with:
-          parallel-finished: true
+    - name: Create coverage report
+      run: |
+        coverage report --fail-under=94
+        coverage xml
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1.3.2
