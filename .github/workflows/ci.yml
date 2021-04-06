@@ -46,7 +46,7 @@ jobs:
     - name: CI
       run: |
         tox
-    - name: Combine coverage results
+    - name: Create coverage report
       run: |
         coverage report --fail-under=94
         coverage xml

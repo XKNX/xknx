@@ -8,7 +8,6 @@
 - ExposeSensor values can now be read from other xknx devices that share a group address
 - Add more information to sensors and binary sensors in the HA integration
 
-
 ### Breaking Changes
 
 - Remove configuration handling from core library (use https://xknx.io/config-converter)
