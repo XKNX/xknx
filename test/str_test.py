@@ -75,11 +75,11 @@ class TestStringRepresentations:
             == '<RemoteValue device_name="MyDevice" feature_name="Unknown" GroupAddress("1/2/3")/GroupAddress("1/2/4")/None/None/>'
         )
 
-        remote_value.value = DPTArray([0x01, 0x02])
+        remote_value.value = 34
         assert (
             str(remote_value)
             == '<RemoteValue device_name="MyDevice" feature_name="Unknown" '
-            'GroupAddress("1/2/3")/GroupAddress("1/2/4")/<DPTArray value="[0x1,0x2]" />/None/>'
+            'GroupAddress("1/2/3")/GroupAddress("1/2/4")/34/None/>'
         )
 
     def test_binary_sensor(self):
