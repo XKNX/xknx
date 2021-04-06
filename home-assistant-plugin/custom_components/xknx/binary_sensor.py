@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import ATTR_COUNTER, ATTR_LAST_KNX_UPDATE, ATTR_LAST_TELEGRAM_IA, DOMAIN
+from .const import ATTR_COUNTER, ATTR_LAST_KNX_UPDATE, ATTR_SOURCE, DOMAIN
 from .knx_entity import KnxEntity
 
 
@@ -56,8 +56,8 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity):
         if self._device.counter is not None:
             attr[ATTR_COUNTER] = self._device.counter
         if self._device.last_telegram is not None:
-            attr[ATTR_LAST_TELEGRAM_IA] = str(self._device.last_telegram.source_address)
-            attr[ATTR_LAST_KNX_UPDATE] = str(self._device.last_telegram.reception_time)
+            attr[ATTR_SOURCE] = str(self._device.last_telegram.source_address)
+            attr[ATTR_LAST_KNX_UPDATE] = str(self._device.last_telegram.timestamp)
         return attr
 
     @property

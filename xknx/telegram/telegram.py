@@ -16,7 +16,6 @@ It contains
 from __future__ import annotations
 
 from datetime import datetime
-
 from enum import Enum
 
 from .address import GroupAddress, IndividualAddress
@@ -45,7 +44,7 @@ class Telegram:
         self.direction = direction
         self.payload = payload
         self.source_address = source_address
-        self.reception_time = datetime.now()
+        self.timestamp = datetime.now()
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -62,7 +61,7 @@ class Telegram:
     def __eq__(self, other: object) -> bool:
         """Equal operator."""
         for key, value in self.__dict__.items():
-            if key == "reception_time":
+            if key == "timestamp":
                 continue
             if key not in other.__dict__:
                 return False

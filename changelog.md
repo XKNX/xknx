@@ -5,6 +5,10 @@
 - Add support for cover lock
 - Add more information to sensors and binary sensors in the HA integration
 - Store last Telegram and decoded value in RemoteValue
+
+### Breaking Changes
+
+- Remove configuration handling from core library (use https://xknx.io/config-converter)
 - Drop support for python 3.7
 
 ### Internals

@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-from .const import ATTR_LAST_KNX_UPDATE, ATTR_LAST_TELEGRAM_IA, DOMAIN
+from .const import ATTR_LAST_KNX_UPDATE, ATTR_SOURCE, DOMAIN
 from .knx_entity import KnxEntity
 
 
@@ -60,8 +60,8 @@ class KNXSensor(KnxEntity, SensorEntity):
         attr = {}
 
         if self._device.last_telegram is not None:
-            attr[ATTR_LAST_TELEGRAM_IA] = str(self._device.last_telegram.source_address)
-            attr[ATTR_LAST_KNX_UPDATE] = str(self._device.last_telegram.reception_time)
+            attr[ATTR_SOURCE] = str(self._device.last_telegram.source_address)
+            attr[ATTR_LAST_KNX_UPDATE] = str(self._device.last_telegram.timestamp)
         return attr
 
     @property
