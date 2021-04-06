@@ -1,6 +1,6 @@
 """Unit test for Switch objects."""
 import asyncio
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from xknx import XKNX
@@ -276,31 +276,6 @@ class TestSwitch:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-
-    #
-    # TEST DO
-    #
-    async def test_do(self):
-        """Test 'do' functionality."""
-        xknx = XKNX()
-        switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
-        await switch.do("on")
-        await xknx.devices.process(xknx.telegrams.get_nowait())
-        assert switch.state is True
-        await switch.do("off")
-        await xknx.devices.process(xknx.telegrams.get_nowait())
-        assert switch.state is False
-
-    async def test_wrong_do(self):
-        """Test wrong do command."""
-        xknx = XKNX()
-        switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
-        with patch("logging.Logger.warning") as mock_warn:
-            await switch.do("execute")
-            mock_warn.assert_called_with(
-                "Could not understand action %s for device %s", "execute", "TestOutlet"
-            )
-        assert xknx.telegrams.qsize() == 0
 
     #
     # TEST has_group_address

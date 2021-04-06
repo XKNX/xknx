@@ -4,9 +4,6 @@ from unittest.mock import patch
 import pytest
 from xknx import XKNX
 from xknx.devices import (
-    Action,
-    ActionBase,
-    ActionCallback,
     BinarySensor,
     Climate,
     ClimateMode,
@@ -371,34 +368,6 @@ class TestStringRepresentations:
         assert (
             str(date_time)
             == '<DateTime name="Zeit" group_address="GroupAddress("1/2/3")/None/None/None" broadcast_type="TIME" />'
-        )
-
-    def test_action_base(self):
-        """Test string representation of action base."""
-        xknx = XKNX()
-        action_base = ActionBase(xknx, hook="off", counter="2")
-        assert str(action_base) == '<ActionBase hook="off" counter="2"/>'
-
-    def test_action(self):
-        """Test string representation of action."""
-        xknx = XKNX()
-        action = Action(xknx, hook="on", target="Licht1", method="off", counter=2)
-        assert (
-            str(action)
-            == '<Action target="Licht1" method="off" <ActionBase hook="on" counter="2"/>/>'
-        )
-
-    def test_action_callback(self):
-        """Test string representation of action callback."""
-        xknx = XKNX()
-
-        def callback(self):  # noqa: D401
-            """Callback."""
-
-        action = ActionCallback(xknx, callback=callback, hook="on", counter=2)
-        assert (
-            str(action)
-            == '<ActionCallback callback="callback" <ActionBase hook="on" counter="2"/>/>'
         )
 
     def test_could_not_parse_telegramn_exception(self):

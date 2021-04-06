@@ -19,8 +19,7 @@ The `XKNX()` object is the core element of any XKNX installation. It should be o
 # [](#header-2)Initialization
 
 ```python
-xknx = XKNX(config='xknx.yaml',
-            loop=loop,
+xknx = XKNX(loop=loop,
             own_address=Address,
             address_format=GroupAddressType.LONG
             telegram_received_cb=None,
@@ -36,7 +35,6 @@ xknx = XKNX(config='xknx.yaml',
 
 The constructor of the XKNX object takes several parameters:
 
-* `config` defines a path to the local [XKNX.yaml](/configuration).
 * `loop` points to the asyncio.loop object. Of not specified it uses `asyncio.get_event_loop()`.
 * `own_address` may be used to specify the individual (physical) KNX address of the XKNX daemon. If not speficied it uses `15.15.250`.
 * `address_format` may be used to specify the type of group addresses to use. Possible values are:

@@ -96,25 +96,6 @@ class Fan(Device):
         """Return if fan supports oscillation."""
         return self.oscillation.initialized
 
-    @classmethod
-    def from_config(cls, xknx: XKNX, name: str, config: dict[str, Any]) -> Fan:
-        """Initialize object from configuration structure."""
-        group_address_speed = config.get("group_address_speed")
-        group_address_speed_state = config.get("group_address_speed_state")
-        group_address_oscillation = config.get("group_address_oscillation")
-        group_address_oscillation_state = config.get("group_address_oscillation_state")
-        max_step = config.get("max_step")
-
-        return cls(
-            xknx,
-            name,
-            group_address_speed=group_address_speed,
-            group_address_speed_state=group_address_speed_state,
-            group_address_oscillation=group_address_oscillation,
-            group_address_oscillation_state=group_address_oscillation_state,
-            max_step=max_step,
-        )
-
     def __str__(self) -> str:
         """Return object as readable string."""
 
@@ -135,19 +116,6 @@ class Fan(Device):
     async def set_oscillation(self, oscillation: bool) -> None:
         """Set the fan oscillation mode on or off."""
         await self.oscillation.set(oscillation)
-
-    async def do(self, action: str) -> None:
-        """Execute 'do' commands."""
-        if action.startswith("speed:"):
-            await self.set_speed(int(action[6:]))
-        elif action == "oscillation:True":
-            await self.set_oscillation(True)
-        elif action == "oscillation:False":
-            await self.set_oscillation(False)
-        else:
-            logger.warning(
-                "Could not understand action %s for device %s", action, self.get_name()
-            )
 
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""

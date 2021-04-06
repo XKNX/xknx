@@ -913,40 +913,6 @@ class TestCover:
             mock_stop.reset_mock()
 
     #
-    # TEST DO
-    #
-    async def test_do(self):
-        """Test 'do' functionality."""
-        xknx = XKNX()
-        cover = Cover(xknx, "TestCover", group_address_long="2/4/5")
-        with patch("xknx.devices.Cover.set_up", new_callable=AsyncMock) as mock:
-            await cover.do("up")
-            mock.assert_called_once_with()
-        with patch("xknx.devices.Cover.set_short_up", new_callable=AsyncMock) as mock:
-            await cover.do("short_up")
-            mock.assert_called_once_with()
-        with patch("xknx.devices.Cover.set_down", new_callable=AsyncMock) as mock:
-            await cover.do("down")
-            mock.assert_called_once_with()
-        with patch("xknx.devices.Cover.set_short_down", new_callable=AsyncMock) as mock:
-            await cover.do("short_down")
-            mock.assert_called_once_with()
-        with patch("xknx.devices.Cover.stop", new_callable=AsyncMock) as mock:
-            await cover.do("stop")
-            mock.assert_called_once_with()
-
-    async def test_wrong_do(self):
-        """Test wrong do command."""
-        xknx = XKNX()
-        cover = Cover(xknx, "TestCover", group_address_long="2/3/4")
-        with patch("logging.Logger.warning") as mock_warn:
-            await cover.do("execute")
-            assert xknx.telegrams.qsize() == 0
-            mock_warn.assert_called_with(
-                "Could not understand action %s for device %s", "execute", "TestCover"
-            )
-
-    #
     # HAS GROUP ADDRESS
     #
     def test_has_group_address(self):

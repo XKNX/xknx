@@ -77,23 +77,6 @@ class Sensor(Device):
         """Return unique id for this device."""
         return f"{self.sensor_value.group_address_state}"
 
-    @classmethod
-    def from_config(cls, xknx: XKNX, name: str, config: dict[str, Any]) -> Sensor:
-        """Initialize object from configuration structure."""
-        group_address_state = config.get("group_address_state")
-        sync_state = config.get("sync_state", True)
-        always_callback = config.get("always_callback", False)
-        value_type = config.get("value_type")
-
-        return cls(
-            xknx,
-            name,
-            group_address_state=group_address_state,
-            sync_state=sync_state,
-            always_callback=always_callback,
-            value_type=value_type,
-        )
-
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         await self.sensor_value.process(telegram, always_callback=self.always_callback)
