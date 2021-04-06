@@ -51,26 +51,10 @@ jobs:
       with:
         name: coverage-${{ matrix.python-version }}
         path: .coverage
-
-  coverage:
-    name: Process test coverage
-    runs-on: ubuntu-latest
-    needs: ["build"]
-    strategy:
-      matrix:
-        python-version: [3.8]
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Download all coverage artifacts
-        uses: actions/download-artifact@v2
-      - name: Combine coverage results
-        run: |
-          coverage combine coverage*/.coverage*
-          coverage report --fail-under=94
-          coverage xml
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1.3.2
+    - name: Combine coverage results
+      run: |
+        coverage combine coverage*/.coverage*
+        coverage report --fail-under=94
+        coverage xml
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1.3.2
