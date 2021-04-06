@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING, Awaitable, Callable
 
 from xknx.exceptions import CommunicationError, XKNXException
 from xknx.telegram import AddressFilter, GroupAddress, Telegram, TelegramDirection
-from xknx.telegram.apci import GroupValueWrite
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -175,8 +174,7 @@ class TelegramQueue:
         telegram_logger.debug(telegram)
         if self.xknx.knxip_interface is not None:
             await self.xknx.knxip_interface.send_telegram(telegram)
-            if isinstance(telegram.payload, GroupValueWrite):
-                await self.xknx.devices.process(telegram)
+            await self.xknx.devices.process(telegram)
 
             for telegram_received_cb in self.telegram_received_cbs:
                 if telegram_received_cb.is_within_filter(telegram):

@@ -41,6 +41,7 @@ class ValueReader:
         cb_obj = self.xknx.telegram_queue.register_telegram_received_cb(
             self.telegram_received,
             group_addresses=[self.group_address],
+            match_for_outgoing=True,
         )
         await self.send_group_read()
 

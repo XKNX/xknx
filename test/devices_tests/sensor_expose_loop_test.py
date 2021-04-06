@@ -1,10 +1,12 @@
 """Unit test for Sensor and ExposeSensor objects."""
+from unittest.mock import AsyncMock, call
+
 import pytest
 from xknx import XKNX
 from xknx.devices import BinarySensor, ExposeSensor, Sensor
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.telegram import GroupAddress, Telegram, TelegramDirection
-from xknx.telegram.apci import GroupValueWrite
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
 @pytest.mark.asyncio
@@ -178,45 +180,69 @@ class TestSensorExposeLoop:
     @pytest.mark.parametrize("value_type,test_payload,test_value", test_cases)
     async def test_array_sensor_loop(self, value_type, test_payload, test_value):
         """Test sensor and expose_sensor with different values."""
-
         xknx = XKNX()
+        xknx.knxip_interface = AsyncMock()
+        xknx.rate_limit = False
+        await xknx.telegram_queue.start()
+
+        expose = ExposeSensor(
+            xknx,
+            "TestExpose",
+            group_address="1/1/1",
+            value_type=value_type,
+        )
+        assert expose.resolve_state() is None
+        # set a value from expose - HA sends strings for new values
+        stringified_value = str(test_value)
+        await expose.set(stringified_value)
+
+        outgoing_telegram = Telegram(
+            destination_address=GroupAddress("1/1/1"),
+            direction=TelegramDirection.OUTGOING,
+            payload=GroupValueWrite(test_payload),
+        )
+        await xknx.telegrams.join()
+        xknx.knxip_interface.send_telegram.assert_called_with(outgoing_telegram)
+        if isinstance(test_value, float):
+            assert round(expose.resolve_state(), 4) == test_value
+        else:
+            assert expose.resolve_state() == test_value
+
+        # init sensor after expose is set - with same group address
         sensor = Sensor(
             xknx,
             "TestSensor",
             group_address_state="1/1/1",
             value_type=value_type,
         )
-        expose = ExposeSensor(
-            xknx,
-            "TestExpose",
-            group_address="2/2/2",
-            value_type=value_type,
-        )
+        assert sensor.resolve_state() is None
 
-        incoming_telegram = Telegram(
+        # read sensor state (from expose as it has the same GA)
+        # wait_for_result so we don't have to await self.xknx.telegrams.join()
+        await sensor.sync(wait_for_result=True)
+        read_telegram = Telegram(
             destination_address=GroupAddress("1/1/1"),
-            direction=TelegramDirection.INCOMING,
-            payload=GroupValueWrite(test_payload),
-        )
-        await sensor.process(incoming_telegram)
-
-        incoming_value = sensor.resolve_state()
-        if isinstance(test_value, float):
-            assert round(incoming_value, 4) == test_value
-        else:
-            assert incoming_value == test_value
-
-        # HA sends strings for new values
-        stringified_value = str(test_value)
-        await expose.set(stringified_value)
-
-        assert xknx.telegrams.qsize() == 1
-        outgoing_telegram = xknx.telegrams.get_nowait()
-        assert outgoing_telegram == Telegram(
-            destination_address=GroupAddress("2/2/2"),
             direction=TelegramDirection.OUTGOING,
-            payload=GroupValueWrite(test_payload),
+            payload=GroupValueRead(),
         )
+        response_telegram = Telegram(
+            destination_address=GroupAddress("1/1/1"),
+            direction=TelegramDirection.OUTGOING,
+            payload=GroupValueResponse(test_payload),
+        )
+        xknx.knxip_interface.send_telegram.assert_has_calls(
+            [
+                call(read_telegram),
+                call(response_telegram),
+            ]
+        )
+        # test if Sensor has successfully read from ExposeSensor
+        if isinstance(test_value, float):
+            assert round(sensor.resolve_state(), 4) == test_value
+        else:
+            assert sensor.resolve_state() == test_value
+        assert expose.resolve_state() == sensor.resolve_state()
+        await xknx.telegram_queue.stop()
 
 
 @pytest.mark.asyncio
@@ -232,31 +258,65 @@ class TestBinarySensorExposeLoop:
     )
     async def test_binary_sensor_loop(self, value_type, test_payload, test_value):
         """Test binary_sensor and expose_sensor with binary values."""
-
         xknx = XKNX()
-        sensor = BinarySensor(xknx, "TestSensor", group_address_state="1/1/1")
+        xknx.knxip_interface = AsyncMock()
+        xknx.rate_limit = False
+        await xknx.telegram_queue.start()
+
         expose = ExposeSensor(
             xknx,
             "TestExpose",
-            group_address="2/2/2",
+            group_address="1/1/1",
             value_type=value_type,
         )
-
-        incoming_telegram = Telegram(
-            destination_address=GroupAddress("1/1/1"),
-            direction=TelegramDirection.INCOMING,
-            payload=GroupValueWrite(test_payload),
-        )
-        await sensor.process(incoming_telegram)
-
-        incoming_value = sensor.is_on()
-        assert incoming_value == test_value
+        assert expose.resolve_state() is None
 
         await expose.set(test_value)
-        assert xknx.telegrams.qsize() == 1
-        outgoing_telegram = xknx.telegrams.get_nowait()
-        assert outgoing_telegram == Telegram(
-            destination_address=GroupAddress("2/2/2"),
+        await xknx.telegrams.join()
+        outgoing_telegram = Telegram(
+            destination_address=GroupAddress("1/1/1"),
             direction=TelegramDirection.OUTGOING,
             payload=GroupValueWrite(test_payload),
         )
+        xknx.knxip_interface.send_telegram.assert_called_with(outgoing_telegram)
+        assert expose.resolve_state() == test_value
+
+        bin_sensor = BinarySensor(xknx, "TestSensor", group_address_state="1/1/1")
+        assert bin_sensor.state is None
+
+        # read sensor state (from expose as it has the same GA)
+        # wait_for_result so we don't have to await self.xknx.telegrams.join()
+        await bin_sensor.sync(wait_for_result=True)
+        read_telegram = Telegram(
+            destination_address=GroupAddress("1/1/1"),
+            direction=TelegramDirection.OUTGOING,
+            payload=GroupValueRead(),
+        )
+        response_telegram = Telegram(
+            destination_address=GroupAddress("1/1/1"),
+            direction=TelegramDirection.OUTGOING,
+            payload=GroupValueResponse(test_payload),
+        )
+        xknx.knxip_interface.send_telegram.assert_has_calls(
+            [
+                call(read_telegram),
+                call(response_telegram),
+            ]
+        )
+        # test if Sensor has successfully read from ExposeSensor
+        assert bin_sensor.state == test_value
+        assert expose.resolve_state() == bin_sensor.state
+        await xknx.telegram_queue.stop()
+
+        # incoming_telegram = Telegram(
+        #     destination_address=GroupAddress("1/1/1"),
+        #     direction=TelegramDirection.INCOMING,
+        #     payload=GroupValueWrite(test_payload),
+        # )
+        # await sensor.process(incoming_telegram)
+
+        # incoming_value = sensor.is_on()
+        # assert incoming_value == test_value
+
+        # await expose.set(test_value)
+        # assert xknx.telegrams.qsize() == 1
