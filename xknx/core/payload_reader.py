@@ -35,14 +35,12 @@ class PayloadReader:
         self.xknx = xknx
         self.address = address
         self.response_received_event = asyncio.Event()
-        self.success: bool = False
         self.timeout_in_seconds = timeout_in_seconds
         self.received_payload: APCI | None = None
 
     def reset(self) -> None:
         """Reset reader for next send."""
         self.response_received_event = asyncio.Event()
-        self.success = False
         self.received_payload = None
 
     async def send(
@@ -72,15 +70,13 @@ class PayloadReader:
                 self.timeout_in_seconds,
                 self.address,
             )
+        else:
+            return self.received_payload
         finally:
             # cleanup to not leave callbacks (for asyncio.CancelledError)
             self.xknx.telegram_queue.unregister_telegram_received_cb(cb_obj)
 
-        if not self.success:
-            return None
-        if self.received_payload is None:
-            return None
-        return self.received_payload
+        return None
 
     async def send_telegram(self, payload: APCI) -> None:
         """Send the telegram."""
@@ -99,6 +95,5 @@ class PayloadReader:
         if response_class:
             if not isinstance(telegram.payload, response_class):
                 return
-        self.success = True
         self.received_payload = telegram.payload
         self.response_received_event.set()
