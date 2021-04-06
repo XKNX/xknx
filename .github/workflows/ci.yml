@@ -46,14 +46,8 @@ jobs:
     - name: CI
       run: |
         tox
-    - name: Upload coverage artifact
-      uses: actions/upload-artifact@v2.2.2
-      with:
-        name: coverage-${{ matrix.python-version }}
-        path: .coverage
     - name: Combine coverage results
       run: |
-        coverage combine coverage*/.coverage*
         coverage report --fail-under=94
         coverage xml
     - name: Upload coverage to Codecov
