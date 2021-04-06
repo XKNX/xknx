@@ -307,16 +307,3 @@ class TestBinarySensorExposeLoop:
         assert bin_sensor.state == test_value
         assert expose.resolve_state() == bin_sensor.state
         await xknx.telegram_queue.stop()
-
-        # incoming_telegram = Telegram(
-        #     destination_address=GroupAddress("1/1/1"),
-        #     direction=TelegramDirection.INCOMING,
-        #     payload=GroupValueWrite(test_payload),
-        # )
-        # await sensor.process(incoming_telegram)
-
-        # incoming_value = sensor.is_on()
-        # assert incoming_value == test_value
-
-        # await expose.set(test_value)
-        # assert xknx.telegrams.qsize() == 1

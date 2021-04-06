@@ -2,11 +2,14 @@
 
 ## Unreleased changes
 
+## Devices
+
 - Add support for cover lock
-- Drop support for python 3.7
+- ExposeSensor values can now be read from other xknx devices that share a group address
 
 ### Internals
 
+- Drop support for python 3.7
 - use pytest tests instead of unittest TestCase
 - Move RequestResponse and subclasses to xknx.io.request_response.*
 - Move ConnectionConfig to xknx.io.connection
