@@ -34,7 +34,7 @@ class TestConnectResponse:
         xknx = XKNX()
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
         requ_resp = RequestResponse(xknx, udp_client, KNXIPBody)
-        requ_resp.response_received_or_timeout.wait = MagicMock(
+        requ_resp.response_received_event.wait = MagicMock(
             side_effect=asyncio.TimeoutError()
         )
         await requ_resp.start()
@@ -55,7 +55,7 @@ class TestConnectResponse:
         xknx = XKNX()
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
         requ_resp = RequestResponse(xknx, udp_client, KNXIPBody)
-        requ_resp.response_received_or_timeout.wait = MagicMock(
+        requ_resp.response_received_event.wait = MagicMock(
             side_effect=asyncio.CancelledError()
         )
         with pytest.raises(asyncio.CancelledError):

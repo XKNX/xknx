@@ -133,7 +133,7 @@ class TestGatewayScanner:
         netifaces_mock.interfaces.return_value = []
 
         gateway_scanner = GatewayScanner(xknx)
-        gateway_scanner._response_received_or_timeout.wait = MagicMock(
+        gateway_scanner._response_received_event.wait = MagicMock(
             side_effect=asyncio.TimeoutError()
         )
         timed_out_scan = await gateway_scanner.scan()

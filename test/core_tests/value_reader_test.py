@@ -44,7 +44,7 @@ class TestValueReader:
         """Test value reader: read timeout."""
         xknx = XKNX()
         value_reader = ValueReader(xknx, GroupAddress("0/0/0"))
-        value_reader.response_received_or_timeout.wait = MagicMock(
+        value_reader.response_received_event.wait = MagicMock(
             side_effect=asyncio.TimeoutError()
         )
 
@@ -69,7 +69,7 @@ class TestValueReader:
         """Test value reader: read cancelled."""
         xknx = XKNX()
         value_reader = ValueReader(xknx, GroupAddress("0/0/0"))
-        value_reader.response_received_or_timeout.wait = MagicMock(
+        value_reader.response_received_event.wait = MagicMock(
             side_effect=asyncio.CancelledError()
         )
         with pytest.raises(asyncio.CancelledError):
@@ -123,16 +123,16 @@ class TestValueReader:
 
         await value_reader.telegram_received(telegram_wrong_address)
         assert value_reader.received_telegram is None
-        assert not value_reader.success
+        assert not value_reader.response_received_event.is_set()
 
         await value_reader.telegram_received(telegram_wrong_type)
         assert value_reader.received_telegram is None
-        assert not value_reader.success
+        assert not value_reader.response_received_event.is_set()
 
         await value_reader.telegram_received(expected_telegram_1)
         assert value_reader.received_telegram == expected_telegram_1
-        assert value_reader.success
+        assert value_reader.response_received_event.is_set()
 
         await value_reader.telegram_received(expected_telegram_2)
         assert value_reader.received_telegram == expected_telegram_2
-        assert value_reader.success
+        assert value_reader.response_received_event.is_set()
