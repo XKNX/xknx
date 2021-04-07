@@ -2,6 +2,8 @@
 
 ## Unreleased changes
 
+## 0.18.0
+
 ## Devices
 
 - Add support for cover lock
