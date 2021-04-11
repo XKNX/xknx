@@ -210,13 +210,13 @@ class TestDPTFloat:
 
     def test_14_057(self):
         """Test DPT4ByteFloat object."""
-        assert round(DPT4ByteFloat().from_knx((0x3F, 0x71, 0xEB, 0x86)), 7) == 0.9450001
+        assert DPT4ByteFloat().from_knx((0x3F, 0x71, 0xEB, 0x86)) == 0.9450001
         assert DPT4ByteFloat().to_knx(0.945000052452) == (0x3F, 0x71, 0xEB, 0x86)
         assert DPT4ByteFloat().unit == ""
 
     def test_4byte_float_values_from_voltage_meter(self):
         """Test parsing DPT4ByteFloat from voltage meter."""
-        assert round(DPT4ByteFloat().from_knx((0x43, 0x65, 0xE3, 0xD7)), 2) == 229.89
+        assert DPT4ByteFloat().from_knx((0x43, 0x65, 0xE3, 0xD7)) == 229.89
         assert DPT4ByteFloat().to_knx(229.89) == (0x43, 0x65, 0xE3, 0xD7)
 
     def test_4byte_float_zero_value(self):
