@@ -40,11 +40,14 @@ class DPT4ByteFloat(DPTBase):
             raw_float = cast(float, struct.unpack(">f", bytes(raw))[0])
         except struct.error:
             raise ConversionError("Could not parse %s" % cls.__name__, raw=raw)
-        # prevent log10(0.0) -> ValueError: math domain error
-        if abs_float := abs(raw_float):
+        try:
             # round to 7 digit precicion independent of exponent - same value as ETS 5.7 group monitor
-            return round(raw_float, 7 - ceil(log10(abs_float)))
-        return 0.0
+            return round(raw_float, 7 - ceil(log10(abs(raw_float))))
+        except (ValueError, OverflowError):
+            # account for 0 and special values
+            # ValueError: log10(0.0); ceil(float('nan'))
+            # OverflowError: ceil(float('inf'))
+            return raw_float
 
     @classmethod
     def to_knx(cls, value: float) -> tuple[int, ...]:

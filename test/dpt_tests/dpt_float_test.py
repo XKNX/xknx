@@ -1,4 +1,5 @@
 """Unit test for KNX 2 and 4 byte float objects."""
+import math
 import struct
 from unittest.mock import patch
 
@@ -223,6 +224,20 @@ class TestDPTFloat:
         """Test parsing and streaming of DPT4ByteFloat zero value."""
         assert DPT4ByteFloat().from_knx((0x00, 0x00, 0x00, 0x00)) == 0.00
         assert DPT4ByteFloat().to_knx(0.00) == (0x00, 0x00, 0x00, 0x00)
+
+    def test_4byte_float_special_value(self):
+        """Test parsing and streaming of DPT4ByteFloat special value."""
+        assert math.isnan(DPT4ByteFloat().from_knx((0x7F, 0xC0, 0x00, 0x00)))
+        assert DPT4ByteFloat().to_knx(float("nan")) == (0x7F, 0xC0, 0x00, 0x00)
+
+        assert math.isinf(DPT4ByteFloat().from_knx((0x7F, 0x80, 0x00, 0x00)))
+        assert DPT4ByteFloat().to_knx(float("inf")) == (0x7F, 0x80, 0x00, 0x00)
+
+        assert DPT4ByteFloat().from_knx((0xFF, 0x80, 0x00, 0x00)) == float("-inf")
+        assert DPT4ByteFloat().to_knx(float("-inf")) == (0xFF, 0x80, 0x00, 0x00)
+
+        assert DPT4ByteFloat().from_knx((0x80, 0x00, 0x00, 0x00)) == float("-0")
+        assert DPT4ByteFloat().to_knx(float("-0")) == (0x80, 0x00, 0x00, 0x00)
 
     def test_4byte_float_to_knx_wrong_parameter(self):
         """Test parsing of DPT4ByteFloat with wrong value (string)."""
