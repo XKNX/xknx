@@ -203,9 +203,6 @@ class TestSensorExposeLoop:
         )
         await xknx.telegrams.join()
         xknx.knxip_interface.send_telegram.assert_called_with(outgoing_telegram)
-        # if isinstance(test_value, float):
-        #     assert round(expose.resolve_state(), 4) == test_value
-        # else:
         assert expose.resolve_state() == test_value
 
         # init sensor after expose is set - with same group address
@@ -237,9 +234,6 @@ class TestSensorExposeLoop:
             ]
         )
         # test if Sensor has successfully read from ExposeSensor
-        # if isinstance(test_value, float):
-        #     assert round(sensor.resolve_state(), 4) == test_value
-        # else:
         assert sensor.resolve_state() == test_value
         assert expose.resolve_state() == sensor.resolve_state()
         await xknx.telegram_queue.stop()
