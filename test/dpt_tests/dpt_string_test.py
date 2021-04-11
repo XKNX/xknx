@@ -98,7 +98,7 @@ class TestDPTString:
     def test_to_knx_too_long(self):
         """Test serializing DPTString to KNX with wrong value (to long)."""
         with pytest.raises(ConversionError):
-            DPTString().to_knx("AAAAABBBBBCCCCx")
+            DPTString.to_knx("AAAAABBBBBCCCCx")
 
     def test_from_knx_wrong_parameter_too_large(self):
         """Test parsing of KNX string with too many elements."""
@@ -120,7 +120,7 @@ class TestDPTString:
             0x00,
         )
         with pytest.raises(ConversionError):
-            DPTString().from_knx(raw)
+            DPTString.from_knx(raw)
 
     def test_from_knx_wrong_parameter_too_small(self):
         """Test parsing of KNX string with too less elements."""
@@ -140,4 +140,4 @@ class TestDPTString:
             0x00,
         )
         with pytest.raises(ConversionError):
-            DPTString().from_knx(raw)
+            DPTString.from_knx(raw)

@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Internals
+
+- Round DPT 14 values to precision of 7 digits
+
 ## 0.18.0
 
 ## Devices

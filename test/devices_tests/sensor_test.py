@@ -16,15 +16,16 @@ class TestSensor:
     @pytest.mark.parametrize(
         "value_type,raw_payload,expected_state",
         [
+            # DPT-14 values are according to ETS group monitor values
             (
                 "absolute_temperature",
                 DPTArray((0x44, 0xD7, 0xD2, 0x8B)),
-                1726.5794677734375,
+                1726.579,
             ),
             (
                 "acceleration",
                 DPTArray((0x45, 0x94, 0xD8, 0x5D)),
-                4763.04541015625,
+                4763.045,
             ),
             (
                 "volume_liquid_litre",
@@ -49,12 +50,12 @@ class TestSensor:
             (
                 "activity",
                 DPTArray((0x45, 0x76, 0x0, 0xA3)),
-                3936.039794921875,
+                3936.04,
             ),
             (
                 "amplitude",
                 DPTArray((0x45, 0x9A, 0xED, 0x8)),
-                4957.62890625,
+                4957.629,
             ),
             (
                 "angle",
@@ -64,27 +65,27 @@ class TestSensor:
             (
                 "angle_deg",
                 DPTArray((0x44, 0x5C, 0x20, 0x2B)),
-                880.5026245117188,
+                880.5026,
             ),
             (
                 "angle_rad",
                 DPTArray((0x44, 0x36, 0x75, 0x1)),
-                729.8281860351562,
+                729.8282,
             ),
             (
                 "angular_frequency",
                 DPTArray((0x43, 0xBC, 0x20, 0x8D)),
-                376.2543029785156,
+                376.2543,
             ),
             (
                 "angular_momentum",
                 DPTArray((0xC2, 0x75, 0xB7, 0xB5)),
-                -61.42940139770508,
+                -61.4294,
             ),
             (
                 "angular_velocity",
                 DPTArray((0xC4, 0xD9, 0x10, 0xB3)),
-                -1736.5218505859375,
+                -1736.522,
             ),
             (
                 "apparant_energy",
@@ -99,7 +100,7 @@ class TestSensor:
             (
                 "area",
                 DPTArray((0x45, 0x63, 0x1E, 0xCD)),
-                3633.925048828125,
+                3633.925,
             ),
             (
                 "brightness",
@@ -109,17 +110,17 @@ class TestSensor:
             (
                 "capacitance",
                 DPTArray((0x45, 0xC9, 0x1D, 0x9D)),
-                6435.70166015625,
+                6435.702,
             ),
             (
                 "charge_density_surface",
                 DPTArray((0x45, 0xDB, 0x66, 0x99)),
-                7020.82470703125,
+                7020.825,
             ),
             (
                 "charge_density_volume",
                 DPTArray((0xC4, 0x8C, 0x33, 0xD7)),
-                -1121.6199951171875,
+                -1121.62,
             ),
             (
                 "color_temperature",
@@ -129,17 +130,17 @@ class TestSensor:
             (
                 "common_temperature",
                 DPTArray((0x45, 0xD9, 0xC6, 0x3F)),
-                6968.78076171875,
+                6968.781,
             ),
             (
                 "compressibility",
                 DPTArray((0x45, 0x89, 0x94, 0xAB)),
-                4402.58349609375,
+                4402.583,
             ),
             (
                 "conductance",
                 DPTArray((0x45, 0xA6, 0x28, 0xF9)),
-                5317.12158203125,
+                5317.122,
             ),
             (
                 "counter_pulses",
@@ -174,82 +175,82 @@ class TestSensor:
             (
                 "density",
                 DPTArray((0x44, 0xA5, 0xCB, 0x27)),
-                1326.3485107421875,
+                1326.349,
             ),
             (
                 "electrical_conductivity",
                 DPTArray((0xC4, 0xC6, 0xF5, 0x6E)),
-                -1591.669677734375,
+                -1591.67,
             ),
             (
                 "electric_charge",
                 DPTArray((0x46, 0x14, 0xF6, 0xA0)),
-                9533.65625,
+                9533.656,
             ),
             (
                 "electric_current",
                 DPTArray((0x45, 0xAD, 0x45, 0x90)),
-                5544.6953125,
+                5544.695,
             ),
             (
                 "electric_current_density",
                 DPTArray((0x45, 0x7C, 0x57, 0xF6)),
-                4037.49755859375,
+                4037.498,
             ),
             (
                 "electric_dipole_moment",
                 DPTArray((0x45, 0x58, 0xF1, 0x73)),
-                3471.090576171875,
+                3471.091,
             ),
             (
                 "electric_displacement",
                 DPTArray((0xC5, 0x34, 0x8B, 0x0)),
-                -2888.6875,
+                -2888.688,
             ),
             (
                 "electric_field_strength",
                 DPTArray((0xC6, 0x17, 0x1C, 0x39)),
-                -9671.0556640625,
+                -9671.056,
             ),
             (
                 "electric_flux",
                 DPTArray((0x45, 0x8F, 0x6C, 0xFD)),
-                4589.62353515625,
+                4589.624,
             ),
             (
                 "electric_flux_density",
                 DPTArray((0xC6, 0x0, 0x50, 0xA8)),
-                -8212.1640625,
+                -8212.164,
             ),
             (
                 "electric_polarization",
                 DPTArray((0x45, 0xF8, 0x89, 0xC6)),
-                7953.2216796875,
+                7953.222,
             ),
             (
                 "electric_potential",
                 DPTArray((0xC6, 0x18, 0xA4, 0xAF)),
-                -9769.1708984375,
+                -9769.171,
             ),
             (
                 "electric_potential_difference",
                 DPTArray((0xC6, 0xF, 0x1D, 0x6)),
-                -9159.255859375,
+                -9159.256,
             ),
             (
                 "electromagnetic_moment",
                 DPTArray((0x45, 0x82, 0x48, 0xAE)),
-                4169.0849609375,
+                4169.085,
             ),
             (
                 "electromotive_force",
                 DPTArray((0x45, 0xBC, 0xEF, 0xEB)),
-                6045.98974609375,
+                6045.99,
             ),
             (
                 "energy",
                 DPTArray((0x45, 0x4B, 0xB3, 0xF8)),
-                3259.248046875,
+                3259.248,
             ),
             (
                 "enthalpy",
@@ -264,27 +265,27 @@ class TestSensor:
             (
                 "force",
                 DPTArray((0x45, 0x9E, 0x2C, 0xE1)),
-                5061.60986328125,
+                5061.61,
             ),
             (
                 "frequency",
                 DPTArray((0x45, 0xC2, 0x3C, 0x44)),
-                6215.533203125,
+                6215.533,
             ),
             (
                 "heatcapacity",
                 DPTArray((0xC5, 0xB3, 0x56, 0x7E)),
-                -5738.8115234375,
+                -5738.812,
             ),
             (
                 "heatflowrate",
                 DPTArray((0x44, 0xEC, 0x80, 0x7A)),
-                1892.014892578125,
+                1892.015,
             ),
             (
                 "heat_quantity",
                 DPTArray((0xC5, 0xA6, 0xB6, 0xD5)),
-                -5334.85400390625,
+                -5334.854,
             ),
             (
                 "humidity",
@@ -294,7 +295,7 @@ class TestSensor:
             (
                 "impedance",
                 DPTArray((0x45, 0xDD, 0x79, 0x6D)),
-                7087.17822265625,
+                7087.178,
             ),
             (
                 "illuminance",
@@ -309,7 +310,7 @@ class TestSensor:
             (
                 "length",
                 DPTArray((0xC5, 0x9D, 0xAE, 0xC5)),
-                -5045.84619140625,
+                -5045.846,
             ),
             (
                 "length_mm",
@@ -319,7 +320,7 @@ class TestSensor:
             (
                 "light_quantity",
                 DPTArray((0x45, 0x4A, 0xF5, 0x68)),
-                3247.337890625,
+                3247.338,
             ),
             (
                 "long_delta_timesec",
@@ -329,72 +330,72 @@ class TestSensor:
             (
                 "luminance",
                 DPTArray((0x45, 0x18, 0xD9, 0x76)),
-                2445.59130859375,
+                2445.591,
             ),
             (
                 "luminous_flux",
                 DPTArray((0x45, 0xBD, 0x16, 0x9)),
-                6050.75439453125,
+                6050.754,
             ),
             (
                 "luminous_intensity",
                 DPTArray((0x46, 0xB, 0xBE, 0x7E)),
-                8943.623046875,
+                8943.623,
             ),
             (
                 "magnetic_field_strength",
                 DPTArray((0x44, 0x15, 0xF1, 0xAD)),
-                599.7761840820312,
+                599.7762,
             ),
             (
                 "magnetic_flux",
                 DPTArray((0xC5, 0xCB, 0x3C, 0x98)),
-                -6503.57421875,
+                -6503.574,
             ),
             (
                 "magnetic_flux_density",
                 DPTArray((0x45, 0xB6, 0xBD, 0x42)),
-                5847.6572265625,
+                5847.657,
             ),
             (
                 "magnetic_moment",
                 DPTArray((0xC3, 0x8E, 0x7F, 0x73)),
-                -284.9956970214844,
+                -284.9957,
             ),
             (
                 "magnetic_polarization",
                 DPTArray((0x45, 0x8C, 0xFA, 0xCB)),
-                4511.34912109375,
+                4511.349,
             ),
             (
                 "magnetization",
                 DPTArray((0x45, 0xF7, 0x9D, 0xA2)),
-                7923.7041015625,
+                7923.704,
             ),
             (
                 "magnetomotive_force",
                 DPTArray((0xC6, 0x4, 0xC2, 0xDA)),
-                -8496.712890625,
+                -8496.713,
             ),
             (
                 "mass",
                 DPTArray((0x45, 0x8F, 0x70, 0xA4)),
-                4590.080078125,
+                4590.08,
             ),
             (
                 "mass_flux",
                 DPTArray((0xC6, 0x7, 0x34, 0xFF)),
-                -8653.2490234375,
+                -8653.249,
             ),
             (
                 "mol",
                 DPTArray((0xC4, 0xA0, 0xF4, 0x68)),
-                -1287.6376953125,
+                -1287.638,
             ),
             (
                 "momentum",
                 DPTArray((0xC5, 0x27, 0xAA, 0x5B)),
-                -2682.647216796875,
+                -2682.647,
             ),
             (
                 "percent",
@@ -419,17 +420,17 @@ class TestSensor:
             (
                 "phaseanglerad",
                 DPTArray((0x45, 0x54, 0xAC, 0x2E)),
-                3402.76123046875,
+                3402.761,
             ),
             (
                 "phaseangledeg",
                 DPTArray((0xC5, 0x25, 0x13, 0x38)),
-                -2641.201171875,
+                -2641.201,
             ),
             (
                 "power",
                 DPTArray((0x45, 0xCB, 0xE2, 0x5C)),
-                6524.294921875,
+                6524.295,
             ),
             (
                 "power_2byte",
@@ -444,7 +445,7 @@ class TestSensor:
             (
                 "powerfactor",
                 DPTArray((0xC5, 0x35, 0x28, 0x21)),
-                -2898.508056640625,
+                -2898.508,
             ),
             (
                 "ppm",
@@ -454,7 +455,7 @@ class TestSensor:
             (
                 "pressure",
                 DPTArray((0xC5, 0xE6, 0xE6, 0x63)),
-                -7388.79833984375,
+                -7388.798,
             ),
             (
                 "pressure_2byte",
@@ -474,7 +475,7 @@ class TestSensor:
             (
                 "reactance",
                 DPTArray((0x45, 0xB0, 0x50, 0x91)),
-                5642.07080078125,
+                5642.071,
             ),
             (
                 "reactive_energy",
@@ -489,12 +490,12 @@ class TestSensor:
             (
                 "resistance",
                 DPTArray((0xC5, 0xFC, 0x5F, 0xC2)),
-                -8075.9697265625,
+                -8075.97,
             ),
             (
                 "resistivity",
                 DPTArray((0xC5, 0x57, 0x76, 0xC3)),
-                -3447.422607421875,
+                -3447.423,
             ),
             (
                 "rotation_angle",
@@ -509,32 +510,32 @@ class TestSensor:
             (
                 "self_inductance",
                 DPTArray((0xC4, 0xA1, 0xB0, 0x6)),
-                -1293.500732421875,
+                -1293.501,
             ),
             (
                 "solid_angle",
                 DPTArray((0xC5, 0xC6, 0xE5, 0x47)),
-                -6364.65966796875,
+                -6364.66,
             ),
             (
                 "sound_intensity",
                 DPTArray((0xC4, 0xF2, 0x56, 0xE6)),
-                -1938.715576171875,
+                -1938.716,
             ),
             (
                 "speed",
                 DPTArray((0xC5, 0xCD, 0x1C, 0x6A)),
-                -6563.5517578125,
+                -6563.552,
             ),
             (
                 "stress",
                 DPTArray((0x45, 0xDC, 0xA8, 0xF2)),
-                7061.1181640625,
+                7061.118,
             ),
             (
                 "surface_tension",
                 DPTArray((0x46, 0xB, 0xAC, 0x11)),
-                8939.0166015625,
+                8939.017,
             ),
             (
                 "temperature",
@@ -549,7 +550,7 @@ class TestSensor:
             (
                 "temperature_difference",
                 DPTArray((0xC6, 0xC, 0x50, 0xBC)),
-                -8980.18359375,
+                -8980.184,
             ),
             (
                 "temperature_difference_2byte",
@@ -564,17 +565,17 @@ class TestSensor:
             (
                 "thermal_capacity",
                 DPTArray((0x45, 0x83, 0xEA, 0xB3)),
-                4221.33740234375,
+                4221.337,
             ),
             (
                 "thermal_conductivity",
                 DPTArray((0xC5, 0x9C, 0x4D, 0x22)),
-                -5001.6416015625,
+                -5001.642,
             ),
             (
                 "thermoelectric_power",
                 DPTArray((0x41, 0xCF, 0x9E, 0x4F)),
-                25.952299118041992,
+                25.9523,
             ),
             (
                 "time_1",
@@ -619,12 +620,12 @@ class TestSensor:
             (
                 "time_seconds",
                 DPTArray((0x45, 0xEC, 0x91, 0x7C)),
-                7570.185546875,
+                7570.186,
             ),
             (
                 "torque",
                 DPTArray((0xC5, 0x9, 0x23, 0x5F)),
-                -2194.210693359375,
+                -2194.211,
             ),
             (
                 "voltage",
@@ -634,7 +635,7 @@ class TestSensor:
             (
                 "volume",
                 DPTArray((0x46, 0x16, 0x98, 0x43)),
-                9638.0654296875,
+                9638.065,
             ),
             (
                 "volume_flow",
@@ -644,17 +645,17 @@ class TestSensor:
             (
                 "volume_flux",
                 DPTArray((0xC5, 0x4, 0x2D, 0x72)),
-                -2114.84033203125,
+                -2114.84,
             ),
             (
                 "weight",
                 DPTArray((0x45, 0x20, 0x10, 0xE8)),
-                2561.056640625,
+                2561.057,
             ),
             (
                 "work",
                 DPTArray((0x45, 0x64, 0x5D, 0xBE)),
-                3653.85888671875,
+                3653.859,
             ),
             (
                 "wind_speed_ms",
