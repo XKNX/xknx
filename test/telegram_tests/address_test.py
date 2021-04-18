@@ -3,47 +3,99 @@ import pytest
 from xknx.exceptions import CouldNotParseAddress
 from xknx.telegram import GroupAddress, GroupAddressType, IndividualAddress
 
+group_addresses_valid = {
+    "0/0": 0,
+    "0/1": 1,
+    "0/11": 11,
+    "0/111": 111,
+    "0/1111": 1111,
+    "0/2047": 2047,
+    "0/0/0": 0,
+    "0/0/1": 1,
+    "0/0/11": 11,
+    "0/0/111": 111,
+    "0/0/255": 255,
+    "0/1/11": 267,
+    "0/1/111": 367,
+    "0/7/255": 2047,
+    "1/0": 2048,
+    "1/0/0": 2048,
+    "1/1/111": 2415,
+    "1/7/255": 4095,
+    "31/7/255": 65535,
+    "1": 1,
+    0: 0,
+    65535: 65535,
+    (0xFF, 0xFF): 65535,
+    GroupAddress("1/1/111"): 2415,
+    None: 0,
+}
+
+group_addresses_invalid = [
+    "0/2049",
+    "0/8/0",
+    "0/0/256",
+    "32/0",
+    "0/0a",
+    "a0/0",
+    "abc",
+    "1.1.1",
+    "0.0",
+    IndividualAddress("11.11.111"),
+    65536,
+    (0xFF, 0xFFF),
+    (0xFFF, 0xFF),
+    (-1, -1),
+    [],
+]
+
+individual_addresses_valid = {
+    "0.0.0": 0,
+    "123": 123,
+    "1.0.0": 4096,
+    "1.1.0": 4352,
+    "1.1.1": 4353,
+    "1.1.11": 4363,
+    "1.1.111": 4463,
+    "1.11.111": 7023,
+    "11.11.111": 47983,
+    IndividualAddress("11.11.111"): 47983,
+    "15.15.255": 65535,
+    (0xFF, 0xFF): 65535,
+    0: 0,
+    65535: 65535,
+}
+
+individual_addresses_invalid = [
+    "15.15.256",
+    "16.0.0",
+    "0.16.0",
+    "15.15.255a",
+    "a15.15.255",
+    "abc",
+    "1/1/1",
+    "0/0",
+    GroupAddress("1/1/111"),
+    65536,
+    (0xFF, 0xFFF),
+    (0xFFF, 0xFF),
+    (-1, -1),
+    [],
+]
+
 
 class TestIndividualAddress:
     """Test class for IndividualAddress."""
 
-    valid_addresses = [
-        ("0.0.0", 0),
-        ("123", 123),
-        ("1.0.0", 4096),
-        ("1.1.0", 4352),
-        ("1.1.1", 4353),
-        ("1.1.11", 4363),
-        ("1.1.111", 4463),
-        ("1.11.111", 7023),
-        ("11.11.111", 47983),
-        (IndividualAddress("11.11.111"), 47983),
-        ("15.15.255", 65535),
-        ((0xFF, 0xFF), 65535),
-        (0, 0),
-        (65535, 65535),
-    ]
-    invalid_addresses = [
-        "15.15.256",
-        "16.0.0",
-        "0.16.0",
-        "15.15.255a",
-        "a15.15.255",
-        "abc",
-        65536,
-        (0xFF, 0xFFF),
-        (0xFFF, 0xFF),
-        (-1, -1),
-        [],
-    ]
-
-    @pytest.mark.parametrize("address_test,address_raw", valid_addresses)
+    @pytest.mark.parametrize(
+        "address_test,address_raw", individual_addresses_valid.items()
+    )
     def test_with_valid(self, address_test, address_raw):
         """Test with some valid addresses."""
 
         assert IndividualAddress(address_test).raw == address_raw
 
-    @pytest.mark.parametrize("address_test", invalid_addresses)
+    @pytest.mark.parametrize("address_test", individual_addresses_invalid)
     def test_with_invalid(self, address_test):
         """Test with some invalid addresses."""
 
@@ -95,50 +147,7 @@ class TestIndividualAddress:
 class TestGroupAddress:
     """Test class for GroupAddress."""
 
-    valid_addresses = [
-        ("0/0", 0),
-        ("0/1", 1),
-        ("0/11", 11),
-        ("0/111", 111),
-        ("0/1111", 1111),
-        ("0/2047", 2047),
-        ("0/0/0", 0),
-        ("0/0/1", 1),
-        ("0/0/11", 11),
-        ("0/0/111", 111),
-        ("0/0/255", 255),
-        ("0/1/11", 267),
-        ("0/1/111", 367),
-        ("0/7/255", 2047),
-        ("1/0", 2048),
-        ("1/0/0", 2048),
-        ("1/1/111", 2415),
-        ("1/7/255", 4095),
-        ("31/7/255", 65535),
-        ("1", 1),
-        (0, 0),
-        (65535, 65535),
-        ((0xFF, 0xFF), 65535),
-        (GroupAddress("1/1/111"), 2415),
-        (None, 0),
-    ]
-
-    invalid_addresses = [
-        "0/2049",
-        "0/8/0",
-        "0/0/256",
-        "32/0",
-        "0/0a",
-        "a0/0",
-        "abc",
-        65536,
-        (0xFF, 0xFFF),
-        (0xFFF, 0xFF),
-        (-1, -1),
-        [],
-    ]
-
-    @pytest.mark.parametrize("address_test,address_raw", valid_addresses)
+    @pytest.mark.parametrize("address_test,address_raw", group_addresses_valid.items())
     def test_with_valid(self, address_test, address_raw):
         """
         Test if the class constructor generates valid raw values.
@@ -151,7 +160,7 @@ class TestGroupAddress:
 
         assert GroupAddress(address_test).raw == address_raw
 
-    @pytest.mark.parametrize("address_test", invalid_addresses)
+    @pytest.mark.parametrize("address_test", group_addresses_invalid)
     def test_with_invalid(self, address_test):
         """
         Test if constructor raises an exception for all known invalid cases.
