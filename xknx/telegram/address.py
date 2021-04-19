@@ -26,22 +26,22 @@ GroupAddressableType = Optional[Union["GroupAddress", str, int, Tuple[int, int]]
 IndividualAddressableType = Optional[
     Union["IndividualAddress", str, int, Tuple[int, int]]
 ]
-XknxInternalAddressableType = Union["XknxInternalAddress", str]
-DeviceAddressableType = Union[GroupAddressableType, XknxInternalAddressableType]
-DeviceGroupAddress = Union["GroupAddress", "XknxInternalAddress"]
+InternalGroupAddressableType = Union["InternalGroupAddress", str]
+DeviceAddressableType = Union[GroupAddressableType, InternalGroupAddressableType]
+DeviceGroupAddress = Union["GroupAddress", "InternalGroupAddress"]
 
 
 def parse_destination_address(
     address: DeviceAddressableType,
 ) -> DeviceGroupAddress:
-    """Parse an Addressable type to GroupAddress or XknxInternalAddress."""
-    if isinstance(address, (GroupAddress, XknxInternalAddress)):
+    """Parse an Addressable type to GroupAddress or InternalGroupAddress."""
+    if isinstance(address, (GroupAddress, InternalGroupAddress)):
         return address
     try:
         return GroupAddress(address)
     except CouldNotParseAddress as ex:
         if isinstance(address, str):
-            return XknxInternalAddress(address)
+            return InternalGroupAddress(address)
         raise ex
 
 
@@ -326,14 +326,14 @@ class GroupAddress(BaseAddress):
         return f'GroupAddress("{self}")'
 
 
-class XknxInternalAddress:
+class InternalGroupAddress:
     """Class for handling addresses used internally in xknx devices only."""
 
-    def __init__(self, address: str | XknxInternalAddress) -> None:
-        """Initialize XknxInternalAddress class."""
+    def __init__(self, address: str | InternalGroupAddress) -> None:
+        """Initialize InternalGroupAddress class."""
         self.address: str
 
-        if isinstance(address, XknxInternalAddress):
+        if isinstance(address, InternalGroupAddress):
             self.address = address.address
             return
         if not isinstance(address, str):
@@ -355,7 +355,7 @@ class XknxInternalAddress:
 
     def __repr__(self) -> str:
         """Return object as parsable string."""
-        return f'XknxInternalAddress("{self}")'
+        return f'InternalGroupAddress("{self}")'
 
     def __eq__(self, other: object | None) -> bool:
         """

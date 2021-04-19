@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import Awaitable, Callable, Iterator
 
 from xknx.telegram import Telegram
-from xknx.telegram.address import DeviceGroupAddress, GroupAddress, XknxInternalAddress
+from xknx.telegram.address import DeviceGroupAddress, GroupAddress, InternalGroupAddress
 
 from .device import Device
 
@@ -84,7 +84,7 @@ class Devices:
     async def process(self, telegram: Telegram) -> None:
         """Process telegram."""
         if isinstance(
-            telegram.destination_address, (GroupAddress, XknxInternalAddress)
+            telegram.destination_address, (GroupAddress, InternalGroupAddress)
         ):
             for device in self.devices_by_group_address(telegram.destination_address):
                 await device.process(telegram)

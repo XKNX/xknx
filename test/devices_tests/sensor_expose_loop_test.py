@@ -6,7 +6,7 @@ from xknx import XKNX
 from xknx.devices import BinarySensor, ExposeSensor, Sensor
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.telegram import AddressFilter, Telegram, TelegramDirection
-from xknx.telegram.address import GroupAddress, XknxInternalAddress
+from xknx.telegram.address import GroupAddress, InternalGroupAddress
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
@@ -305,8 +305,8 @@ class TestBinarySensorExposeLoop:
 
 
 @pytest.mark.asyncio
-class TestBinarySensorInternalAddressExposeLoop:
-    """Process incoming Telegrams and send the values to the bus again."""
+class TestBinarySensorInternalGroupAddressExposeLoop:
+    """Process incoming Telegrams and send values to other devices."""
 
     @pytest.mark.parametrize(
         "value_type,test_payload,test_value",
@@ -340,11 +340,11 @@ class TestBinarySensorInternalAddressExposeLoop:
         await expose.set(test_value)
         await xknx.telegrams.join()
         outgoing_telegram = Telegram(
-            destination_address=XknxInternalAddress("i-test"),
+            destination_address=InternalGroupAddress("i-test"),
             direction=TelegramDirection.OUTGOING,
             payload=GroupValueWrite(test_payload),
         )
-        # Internal address isn't passed to knxip_interface
+        # InternalGroupAddress isn't passed to knxip_interface
         xknx.knxip_interface.send_telegram.assert_not_called()
         telegram_callback.assert_called_with(outgoing_telegram)
         assert expose.resolve_state() == test_value
@@ -356,12 +356,12 @@ class TestBinarySensorInternalAddressExposeLoop:
         # wait_for_result so we don't have to await self.xknx.telegrams.join()
         await bin_sensor.sync(wait_for_result=True)
         read_telegram = Telegram(
-            destination_address=XknxInternalAddress("i-test"),
+            destination_address=InternalGroupAddress("i-test"),
             direction=TelegramDirection.OUTGOING,
             payload=GroupValueRead(),
         )
         response_telegram = Telegram(
-            destination_address=XknxInternalAddress("i-test"),
+            destination_address=InternalGroupAddress("i-test"),
             direction=TelegramDirection.OUTGOING,
             payload=GroupValueResponse(test_payload),
         )

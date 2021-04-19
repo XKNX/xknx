@@ -27,7 +27,7 @@ from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.address import (
     DeviceGroupAddress,
-    XknxInternalAddress,
+    InternalGroupAddress,
     parse_destination_address,
 )
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
@@ -143,7 +143,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
     async def process(self, telegram: Telegram, always_callback: bool = False) -> bool:
         """Process incoming or outgoing telegram."""
         if not isinstance(
-            telegram.destination_address, (GroupAddress, XknxInternalAddress)
+            telegram.destination_address, (GroupAddress, InternalGroupAddress)
         ) or not self.has_group_address(telegram.destination_address):
             return False
         if not isinstance(

@@ -14,7 +14,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from xknx.telegram import Telegram
-from xknx.telegram.address import GroupAddress, XknxInternalAddress
+from xknx.telegram.address import GroupAddress, InternalGroupAddress
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 if TYPE_CHECKING:
@@ -29,12 +29,12 @@ class ValueReader:
     def __init__(
         self,
         xknx: XKNX,
-        group_address: GroupAddress | XknxInternalAddress,
+        group_address: GroupAddress | InternalGroupAddress,
         timeout_in_seconds: float = 2.0,
     ):
         """Initialize ValueReader class."""
         self.xknx = xknx
-        self.group_address: GroupAddress | XknxInternalAddress = group_address
+        self.group_address: GroupAddress | InternalGroupAddress = group_address
         self.response_received_event = asyncio.Event()
         self.timeout_in_seconds: float = timeout_in_seconds
         self.received_telegram: Telegram | None = None

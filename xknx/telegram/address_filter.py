@@ -21,7 +21,7 @@ Patterns can be
         AddressFilter("1-3,4,5")
         AddressFilter("-10")
 
-    for xknx internal addresses:
+    for xknx internal group addresses:
 
         AddressFilter("i-test")
         AddressFilter("i-t?st")
@@ -33,7 +33,7 @@ from fnmatch import fnmatch
 
 from xknx.exceptions import ConversionError
 
-from .address import GroupAddress, XknxInternalAddress, parse_destination_address
+from .address import GroupAddress, InternalGroupAddress, parse_destination_address
 
 
 class AddressFilter:
@@ -42,12 +42,12 @@ class AddressFilter:
     def __init__(self, pattern: str) -> None:
         """Initialize AddressFilter class."""
         self.level_filters: list[AddressFilter.LevelFilter] = []
-        self.internal_address_pattern: str | None = None
+        self.internal_group_address_pattern: str | None = None
         self._parse_pattern(pattern)
 
     def _parse_pattern(self, pattern: str) -> None:
         if pattern.startswith("i"):
-            self.internal_address_pattern = XknxInternalAddress(pattern).address
+            self.internal_group_address_pattern = InternalGroupAddress(pattern).address
             return
 
         for part in pattern.split("/"):
@@ -55,7 +55,7 @@ class AddressFilter:
         if len(self.level_filters) > 3:
             raise ConversionError("Too many parts within pattern.", pattern=pattern)
 
-    def match(self, address: str | GroupAddress | XknxInternalAddress) -> bool:
+    def match(self, address: str | GroupAddress | InternalGroupAddress) -> bool:
         """Test if provided address matches Addressfilter."""
         if isinstance(address, str):
             address = parse_destination_address(address)
@@ -67,8 +67,11 @@ class AddressFilter:
                 return self._match_level2(address)
             return self._match_free(address)
 
-        if isinstance(address, XknxInternalAddress) and self.internal_address_pattern:
-            return fnmatch(address.address, self.internal_address_pattern)
+        if (
+            isinstance(address, InternalGroupAddress)
+            and self.internal_group_address_pattern
+        ):
+            return fnmatch(address.address, self.internal_group_address_pattern)
 
         return False
 

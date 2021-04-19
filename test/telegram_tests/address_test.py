@@ -5,7 +5,7 @@ from xknx.telegram.address import (
     GroupAddress,
     GroupAddressType,
     IndividualAddress,
-    XknxInternalAddress,
+    InternalGroupAddress,
     parse_destination_address,
 )
 
@@ -89,7 +89,7 @@ individual_addresses_invalid = [
     [],
 ]
 
-internal_addresses_valid = {
+internal_group_addresses_valid = {
     "i 123": "123",
     "i-123": "123",
     "i_123": "123",
@@ -101,10 +101,10 @@ internal_addresses_valid = {
     "i   abc  ": "abc",
     "i asdf 123 adsf ": "asdf 123 adsf",
     "i-1/2/3": "1/2/3",
-    XknxInternalAddress("i-123"): "123",
+    InternalGroupAddress("i-123"): "123",
 }
 
-internal_addresses_invalid = [
+internal_group_addresses_invalid = [
     "i",
     "i-",
     "i ",
@@ -269,21 +269,21 @@ class TestGroupAddress:
         assert repr(GroupAddress("0", GroupAddressType.LONG)) == 'GroupAddress("0/0/0")'
 
 
-class TestXknxInternalAddress:
-    """Test class for XknxInternalAddress."""
+class TestInternalGroupAddress:
+    """Test class for InternalGroupAddress."""
 
     @pytest.mark.parametrize(
-        "address_test,address_raw", internal_addresses_valid.items()
+        "address_test,address_raw", internal_group_addresses_valid.items()
     )
     def test_with_valid(self, address_test, address_raw):
         """Test if the class constructor generates valid raw values."""
 
-        assert XknxInternalAddress(address_test).address == address_raw
+        assert InternalGroupAddress(address_test).address == address_raw
 
     @pytest.mark.parametrize(
         "address_test",
         [
-            *internal_addresses_invalid,
+            *internal_group_addresses_invalid,
             *group_addresses_valid,
             *group_addresses_invalid,
             *individual_addresses_valid,
@@ -294,25 +294,25 @@ class TestXknxInternalAddress:
         """Test if constructor raises an exception for all known invalid cases."""
 
         with pytest.raises(CouldNotParseAddress):
-            XknxInternalAddress(address_test)
+            InternalGroupAddress(address_test)
 
     def test_equal(self):
         """Test if the equal operator works in all cases."""
-        assert XknxInternalAddress("i 123") == XknxInternalAddress("i 123")
-        assert XknxInternalAddress("i-asdf") == XknxInternalAddress("i asdf")
-        assert XknxInternalAddress("i-asdf") == XknxInternalAddress("iasdf")
-        assert XknxInternalAddress("i-1") != XknxInternalAddress("i-2")
-        assert XknxInternalAddress("i-1") is not None
-        assert XknxInternalAddress("i-example") != "example"
-        assert XknxInternalAddress("i-0") != GroupAddress(0)
-        assert XknxInternalAddress("i-1") != IndividualAddress(1)
-        assert XknxInternalAddress("i-1") != 1
+        assert InternalGroupAddress("i 123") == InternalGroupAddress("i 123")
+        assert InternalGroupAddress("i-asdf") == InternalGroupAddress("i asdf")
+        assert InternalGroupAddress("i-asdf") == InternalGroupAddress("iasdf")
+        assert InternalGroupAddress("i-1") != InternalGroupAddress("i-2")
+        assert InternalGroupAddress("i-1") is not None
+        assert InternalGroupAddress("i-example") != "example"
+        assert InternalGroupAddress("i-0") != GroupAddress(0)
+        assert InternalGroupAddress("i-1") != IndividualAddress(1)
+        assert InternalGroupAddress("i-1") != 1
 
     def test_representation(self):
         """Test string representation of address."""
-        assert repr(XknxInternalAddress("i0")) == 'XknxInternalAddress("i-0")'
-        assert repr(XknxInternalAddress("i-0")) == 'XknxInternalAddress("i-0")'
-        assert repr(XknxInternalAddress("i 0")) == 'XknxInternalAddress("i-0")'
+        assert repr(InternalGroupAddress("i0")) == 'InternalGroupAddress("i-0")'
+        assert repr(InternalGroupAddress("i-0")) == 'InternalGroupAddress("i-0")'
+        assert repr(InternalGroupAddress("i 0")) == 'InternalGroupAddress("i-0")'
 
 
 class TestParseDestinationAddress:
@@ -323,15 +323,15 @@ class TestParseDestinationAddress:
         """Test if the function returns GroupAddress objects."""
         assert isinstance(parse_destination_address(address_test), GroupAddress)
 
-    @pytest.mark.parametrize("address_test", internal_addresses_valid)
-    def test_parse_internal_address(self, address_test):
-        """Test if the function returns XknxIndividualAddress objects."""
-        assert isinstance(parse_destination_address(address_test), XknxInternalAddress)
+    @pytest.mark.parametrize("address_test", internal_group_addresses_valid)
+    def test_parse_internal_group_address(self, address_test):
+        """Test if the function returns InternalGroupAddress objects."""
+        assert isinstance(parse_destination_address(address_test), InternalGroupAddress)
 
     @pytest.mark.parametrize(
         "address_test",
         [
-            *internal_addresses_invalid,
+            *internal_group_addresses_invalid,
             *group_addresses_invalid,
         ],
     )
