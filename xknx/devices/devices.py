@@ -7,7 +7,8 @@ from __future__ import annotations
 
 from typing import Awaitable, Callable, Iterator
 
-from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram import Telegram
+from xknx.telegram.address import DeviceGroupAddress, GroupAddress, XknxInternalAddress
 
 from .device import Device
 
@@ -36,7 +37,9 @@ class Devices:
         """Iterate registered devices."""
         yield from self.__devices
 
-    def devices_by_group_address(self, group_address: GroupAddress) -> Iterator[Device]:
+    def devices_by_group_address(
+        self, group_address: DeviceGroupAddress
+    ) -> Iterator[Device]:
         """Return device(s) by group address."""
         for device in self.__devices:
             if device.has_group_address(group_address):
@@ -80,7 +83,9 @@ class Devices:
 
     async def process(self, telegram: Telegram) -> None:
         """Process telegram."""
-        if isinstance(telegram.destination_address, GroupAddress):
+        if isinstance(
+            telegram.destination_address, (GroupAddress, XknxInternalAddress)
+        ):
             for device in self.devices_by_group_address(telegram.destination_address):
                 await device.process(telegram)
 

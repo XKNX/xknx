@@ -10,7 +10,8 @@ import logging
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterator
 
 from xknx.remote_value import RemoteValue
-from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram import Telegram
+from xknx.telegram.address import DeviceGroupAddress
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 if TYPE_CHECKING:
@@ -111,7 +112,7 @@ class Device(ABC):
         """Return name of device."""
         return self.name
 
-    def has_group_address(self, group_address: GroupAddress) -> bool:
+    def has_group_address(self, group_address: DeviceGroupAddress) -> bool:
         """Test if device has given group address."""
         for remote_value in self._iter_remote_values():
             if remote_value.has_group_address(group_address):

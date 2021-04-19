@@ -14,7 +14,8 @@ import logging
 from typing import TYPE_CHECKING, Awaitable, Callable
 
 from xknx.exceptions import CommunicationError, XKNXException
-from xknx.telegram import AddressFilter, GroupAddress, Telegram, TelegramDirection
+from xknx.telegram import AddressFilter, Telegram, TelegramDirection
+from xknx.telegram.address import GroupAddress, XknxInternalAddress
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -35,7 +36,7 @@ class TelegramQueue:
             self,
             callback: AsyncTelegramCallback,
             address_filters: list[AddressFilter] | None = None,
-            group_addresses: list[GroupAddress] | None = None,
+            group_addresses: list[GroupAddress | XknxInternalAddress] | None = None,
             match_for_outgoing_telegrams: bool = False,
         ):
             """Initialize Callback class."""
@@ -54,7 +55,9 @@ class TelegramQueue:
                 return False
             if self._match_all:
                 return True
-            if isinstance(telegram.destination_address, GroupAddress):
+            if isinstance(
+                telegram.destination_address, (GroupAddress, XknxInternalAddress)
+            ):
                 for address_filter in self.address_filters:
                     if address_filter.match(telegram.destination_address):
                         return True
@@ -74,7 +77,7 @@ class TelegramQueue:
         self,
         telegram_received_cb: AsyncTelegramCallback,
         address_filters: list[AddressFilter] | None = None,
-        group_addresses: list[GroupAddress] | None = None,
+        group_addresses: list[GroupAddress | XknxInternalAddress] | None = None,
         match_for_outgoing: bool = False,
     ) -> TelegramQueue.Callback:
         """Register callback for a telegram being received from KNX bus."""
@@ -172,15 +175,15 @@ class TelegramQueue:
     async def process_telegram_outgoing(self, telegram: Telegram) -> None:
         """Process outgoing telegram."""
         telegram_logger.debug(telegram)
-        if self.xknx.knxip_interface is not None:
+        if not isinstance(telegram.destination_address, XknxInternalAddress):
+            if self.xknx.knxip_interface is None:
+                raise CommunicationError("No KNXIP interface defined")
             await self.xknx.knxip_interface.send_telegram(telegram)
-            await self.xknx.devices.process(telegram)
 
-            for telegram_received_cb in self.telegram_received_cbs:
-                if telegram_received_cb.is_within_filter(telegram):
-                    await telegram_received_cb.callback(telegram)
-        else:
-            raise CommunicationError("No KNXIP interface defined")
+        await self.xknx.devices.process(telegram)
+        for telegram_received_cb in self.telegram_received_cbs:
+            if telegram_received_cb.is_within_filter(telegram):
+                await telegram_received_cb.callback(telegram)
 
     async def process_telegram_incoming(self, telegram: Telegram) -> None:
         """Process incoming telegram."""

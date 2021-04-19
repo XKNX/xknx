@@ -1,7 +1,13 @@
 """Unit test for Address class."""
 import pytest
 from xknx.exceptions import CouldNotParseAddress
-from xknx.telegram import GroupAddress, GroupAddressType, IndividualAddress
+from xknx.telegram.address import (
+    GroupAddress,
+    GroupAddressType,
+    IndividualAddress,
+    XknxInternalAddress,
+    parse_destination_address,
+)
 
 group_addresses_valid = {
     "0/0": 0,
@@ -81,6 +87,30 @@ individual_addresses_invalid = [
     (0xFFF, 0xFF),
     (-1, -1),
     [],
+]
+
+internal_addresses_valid = {
+    "i 123": "123",
+    "i-123": "123",
+    "i_123": "123",
+    "i abc": "abc",
+    "i-abc": "abc",
+    "i_abc": "abc",
+    "i123": "123",
+    "iabc": "abc",
+    "i   abc  ": "abc",
+    "i asdf 123 adsf ": "asdf 123 adsf",
+    "i-1/2/3": "1/2/3",
+    XknxInternalAddress("i-123"): "123",
+}
+
+internal_addresses_invalid = [
+    "i",
+    "i-",
+    "i ",
+    "i  ",
+    "i- ",
+    "a",
 ]
 
 
@@ -237,3 +267,75 @@ class TestGroupAddress:
         assert repr(GroupAddress("0", GroupAddressType.FREE)) == 'GroupAddress("0")'
         assert repr(GroupAddress("0", GroupAddressType.SHORT)) == 'GroupAddress("0/0")'
         assert repr(GroupAddress("0", GroupAddressType.LONG)) == 'GroupAddress("0/0/0")'
+
+
+class TestXknxInternalAddress:
+    """Test class for XknxInternalAddress."""
+
+    @pytest.mark.parametrize(
+        "address_test,address_raw", internal_addresses_valid.items()
+    )
+    def test_with_valid(self, address_test, address_raw):
+        """Test if the class constructor generates valid raw values."""
+
+        assert XknxInternalAddress(address_test).address == address_raw
+
+    @pytest.mark.parametrize(
+        "address_test",
+        [
+            *internal_addresses_invalid,
+            *group_addresses_valid,
+            *group_addresses_invalid,
+            *individual_addresses_valid,
+            *individual_addresses_invalid,
+        ],
+    )
+    def test_with_invalid(self, address_test):
+        """Test if constructor raises an exception for all known invalid cases."""
+
+        with pytest.raises(CouldNotParseAddress):
+            XknxInternalAddress(address_test)
+
+    def test_equal(self):
+        """Test if the equal operator works in all cases."""
+        assert XknxInternalAddress("i 123") == XknxInternalAddress("i 123")
+        assert XknxInternalAddress("i-asdf") == XknxInternalAddress("i asdf")
+        assert XknxInternalAddress("i-asdf") == XknxInternalAddress("iasdf")
+        assert XknxInternalAddress("i-1") != XknxInternalAddress("i-2")
+        assert XknxInternalAddress("i-1") is not None
+        assert XknxInternalAddress("i-example") != "example"
+        assert XknxInternalAddress("i-0") != GroupAddress(0)
+        assert XknxInternalAddress("i-1") != IndividualAddress(1)
+        assert XknxInternalAddress("i-1") != 1
+
+    def test_representation(self):
+        """Test string representation of address."""
+        assert repr(XknxInternalAddress("i0")) == 'XknxInternalAddress("i-0")'
+        assert repr(XknxInternalAddress("i-0")) == 'XknxInternalAddress("i-0")'
+        assert repr(XknxInternalAddress("i 0")) == 'XknxInternalAddress("i-0")'
+
+
+class TestParseDestinationAddress:
+    """Test class for parsing destination addresses."""
+
+    @pytest.mark.parametrize("address_test", group_addresses_valid)
+    def test_parse_group_address(self, address_test):
+        """Test if the function returns GroupAddress objects."""
+        assert isinstance(parse_destination_address(address_test), GroupAddress)
+
+    @pytest.mark.parametrize("address_test", internal_addresses_valid)
+    def test_parse_internal_address(self, address_test):
+        """Test if the function returns XknxIndividualAddress objects."""
+        assert isinstance(parse_destination_address(address_test), XknxInternalAddress)
+
+    @pytest.mark.parametrize(
+        "address_test",
+        [
+            *internal_addresses_invalid,
+            *group_addresses_invalid,
+        ],
+    )
+    def test_parse_invalid(self, address_test):
+        """Test if the function raises CouldNotParseAddress on invalid values."""
+        with pytest.raises(CouldNotParseAddress):
+            parse_destination_address(address_test)

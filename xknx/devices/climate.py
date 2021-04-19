@@ -24,7 +24,7 @@ from .sensor import Sensor
 
 if TYPE_CHECKING:
     from xknx.telegram import Telegram
-    from xknx.telegram.address import GroupAddress
+    from xknx.telegram.address import DeviceGroupAddress
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
@@ -167,7 +167,7 @@ class Climate(Device):
         """Return unique id for this device."""
         return f"{self.temperature.group_address_state}"
 
-    def has_group_address(self, group_address: GroupAddress) -> bool:
+    def has_group_address(self, group_address: DeviceGroupAddress) -> bool:
         """Test if device has given group address."""
         if self.mode is not None and self.mode.has_group_address(group_address):
             return True
@@ -276,7 +276,7 @@ class Climate(Device):
             return self.base_temperature + self.setpoint_shift_min
         return None
 
-    async def process_group_write(self, telegram: "Telegram") -> None:
+    async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         for remote_value in self._iter_remote_values():
             await remote_value.process(telegram)

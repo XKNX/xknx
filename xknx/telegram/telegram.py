@@ -18,7 +18,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import Enum
 
-from .address import GroupAddress, IndividualAddress
+from .address import GroupAddress, IndividualAddress, XknxInternalAddress
 from .apci import APCI
 
 
@@ -34,7 +34,9 @@ class Telegram:
 
     def __init__(
         self,
-        destination_address: GroupAddress | IndividualAddress = GroupAddress(0),
+        destination_address: GroupAddress
+        | IndividualAddress
+        | XknxInternalAddress = GroupAddress(0),
         direction: TelegramDirection = TelegramDirection.OUTGOING,
         payload: APCI | None = None,
         source_address: IndividualAddress = IndividualAddress(0),

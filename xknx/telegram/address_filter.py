@@ -3,29 +3,37 @@ AddressFilter provides a mechanism for filtering KNX addresses with patterns.
 
 Patterns can be
 
-    for level3 KNX addresses:
+    for level3 KNX group addresses:
 
         AddressFilter("1/*/2-5")
         AddressFilter("1/1-3,4,5/*")
         AddressFilter("1/2/-10)
 
-    for level2 KNX addresses:
+    for level2 KNX group addresses:
 
         AddressFilter("*/2-5")
         AddressFilter("1-3,4,5/*")
         AddressFilter("2/-10")
 
-    for free format KNX addresses:
+    for free format KNX group addresses:
 
         AddressFilter("2-5")
         AddressFilter("1-3,4,5")
         AddressFilter("-10")
+
+    for xknx internal addresses:
+
+        AddressFilter("i-test")
+        AddressFilter("i-t?st")
+        AddressFilter("i-t*t")
 """
 from __future__ import annotations
 
+from fnmatch import fnmatch
+
 from xknx.exceptions import ConversionError
 
-from .address import GroupAddress
+from .address import GroupAddress, XknxInternalAddress, parse_destination_address
 
 
 class AddressFilter:
@@ -34,23 +42,35 @@ class AddressFilter:
     def __init__(self, pattern: str) -> None:
         """Initialize AddressFilter class."""
         self.level_filters: list[AddressFilter.LevelFilter] = []
+        self.internal_address_pattern: str | None = None
         self._parse_pattern(pattern)
 
     def _parse_pattern(self, pattern: str) -> None:
+        if pattern.startswith("i"):
+            self.internal_address_pattern = XknxInternalAddress(pattern).address
+            return
+
         for part in pattern.split("/"):
             self.level_filters.append(AddressFilter.LevelFilter(part))
         if len(self.level_filters) > 3:
             raise ConversionError("Too many parts within pattern.", pattern=pattern)
 
-    def match(self, address: str | GroupAddress) -> bool:
+    def match(self, address: str | GroupAddress | XknxInternalAddress) -> bool:
         """Test if provided address matches Addressfilter."""
         if isinstance(address, str):
-            address = GroupAddress(address)
-        if len(self.level_filters) == 3:
-            return self._match_level3(address)
-        if len(self.level_filters) == 2:
-            return self._match_level2(address)
-        return self._match_free(address)
+            address = parse_destination_address(address)
+
+        if isinstance(address, GroupAddress) and self.level_filters:
+            if len(self.level_filters) == 3:
+                return self._match_level3(address)
+            if len(self.level_filters) == 2:
+                return self._match_level2(address)
+            return self._match_free(address)
+
+        if isinstance(address, XknxInternalAddress) and self.internal_address_pattern:
+            return fnmatch(address.address, self.internal_address_pattern)
+
+        return False
 
     def _match_level3(self, address: GroupAddress) -> bool:
         if address.main is None or address.middle is None:
