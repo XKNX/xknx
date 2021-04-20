@@ -93,11 +93,14 @@ internal_group_addresses_valid = {
     "i 123": "123",
     "i-123": "123",
     "i_123": "123",
+    "I 123": "123",
     "i abc": "abc",
     "i-abc": "abc",
     "i_abc": "abc",
+    "I-abc": "abc",
     "i123": "123",
     "iabc": "abc",
+    "IABC": "ABC",
     "i   abc  ": "abc",
     "i asdf 123 adsf ": "asdf 123 adsf",
     "i-1/2/3": "1/2/3",
@@ -300,7 +303,7 @@ class TestInternalGroupAddress:
         """Test if the equal operator works in all cases."""
         assert InternalGroupAddress("i 123") == InternalGroupAddress("i 123")
         assert InternalGroupAddress("i-asdf") == InternalGroupAddress("i asdf")
-        assert InternalGroupAddress("i-asdf") == InternalGroupAddress("iasdf")
+        assert InternalGroupAddress("i-asdf") == InternalGroupAddress("Iasdf")
         assert InternalGroupAddress("i-1") != InternalGroupAddress("i-2")
         assert InternalGroupAddress("i-1") is not None
         assert InternalGroupAddress("i-example") != "example"

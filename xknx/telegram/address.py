@@ -341,9 +341,9 @@ class InternalGroupAddress:
             raise CouldNotParseAddress(address)
 
         prefix_length = 1
-        if len(address) < 2 or not address.startswith("i"):
+        if len(address) < 2 or not address[0].lower() == "i":
             raise CouldNotParseAddress(address)
-        if address[1] in ("-_:."):
+        if address[1] in "-_":
             prefix_length = 2
 
         self.address = address[prefix_length:].strip()
