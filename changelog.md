@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Devices
+
+- Add InternalGroupAddress for communication between Devices without sending to the bus.
+
 ### Internals
 
 - Round DPT 14 values to precision of 7 digits
