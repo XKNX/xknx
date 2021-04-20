@@ -153,7 +153,9 @@ class TelegramQueue:
                 self.xknx.telegrams.task_done()
 
             # limit rate to knx bus - defaults to 20 per second
-            if self.xknx.rate_limit:
+            if self.xknx.rate_limit and not isinstance(
+                telegram.destination_address, InternalGroupAddress
+            ):
                 await asyncio.sleep(1 / self.xknx.rate_limit)
 
     async def _process_all_telegrams(self) -> None:
