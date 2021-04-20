@@ -28,7 +28,7 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.address import (
     DeviceGroupAddress,
     InternalGroupAddress,
-    parse_destination_address,
+    parse_device_group_address,
 )
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
@@ -67,8 +67,8 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
             if addresses is None:
                 return None
             if not isinstance(addresses, list):
-                return parse_destination_address(addresses)
-            active, *passive = map(parse_destination_address, addresses)
+                return parse_device_group_address(addresses)
+            active, *passive = map(parse_device_group_address, addresses)
             self.passive_group_addresses.extend(passive)  # type: ignore
             return active
 

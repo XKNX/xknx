@@ -6,7 +6,7 @@ from xknx.telegram.address import (
     GroupAddressType,
     IndividualAddress,
     InternalGroupAddress,
-    parse_destination_address,
+    parse_device_group_address,
 )
 
 group_addresses_valid = {
@@ -321,12 +321,14 @@ class TestParseDestinationAddress:
     @pytest.mark.parametrize("address_test", group_addresses_valid)
     def test_parse_group_address(self, address_test):
         """Test if the function returns GroupAddress objects."""
-        assert isinstance(parse_destination_address(address_test), GroupAddress)
+        assert isinstance(parse_device_group_address(address_test), GroupAddress)
 
     @pytest.mark.parametrize("address_test", internal_group_addresses_valid)
     def test_parse_internal_group_address(self, address_test):
         """Test if the function returns InternalGroupAddress objects."""
-        assert isinstance(parse_destination_address(address_test), InternalGroupAddress)
+        assert isinstance(
+            parse_device_group_address(address_test), InternalGroupAddress
+        )
 
     @pytest.mark.parametrize(
         "address_test",
@@ -338,4 +340,4 @@ class TestParseDestinationAddress:
     def test_parse_invalid(self, address_test):
         """Test if the function raises CouldNotParseAddress on invalid values."""
         with pytest.raises(CouldNotParseAddress):
-            parse_destination_address(address_test)
+            parse_device_group_address(address_test)

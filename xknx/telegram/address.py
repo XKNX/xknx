@@ -5,6 +5,7 @@ The module can handle:
 
 * individual addresses of devices.
 * (logical) group addresses.
+* xknx internal group addresses.
 
 The module supports all different writings of group addresses:
 
@@ -31,7 +32,7 @@ DeviceAddressableType = Union[GroupAddressableType, InternalGroupAddressableType
 DeviceGroupAddress = Union["GroupAddress", "InternalGroupAddress"]
 
 
-def parse_destination_address(
+def parse_device_group_address(
     address: DeviceAddressableType,
 ) -> DeviceGroupAddress:
     """Parse an Addressable type to GroupAddress or InternalGroupAddress."""

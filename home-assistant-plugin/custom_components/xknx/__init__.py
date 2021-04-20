@@ -16,7 +16,7 @@ from xknx.io import (
     ConnectionType,
 )
 from xknx.telegram import AddressFilter, Telegram
-from xknx.telegram.address import parse_destination_address
+from xknx.telegram.address import parse_device_group_address
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 from homeassistant.const import (
@@ -403,7 +403,7 @@ class KNXModule:
     async def service_event_register_modify(self, call: ServiceCall) -> None:
         """Service for adding or removing a GroupAddress to the knx_event filter."""
         attr_address = call.data[KNX_ADDRESS]
-        group_addresses = map(parse_destination_address, attr_address)
+        group_addresses = map(parse_device_group_address, attr_address)
 
         if call.data.get(SERVICE_XKNX_ATTR_REMOVE):
             for group_address in group_addresses:
@@ -474,7 +474,7 @@ class KNXModule:
 
         for address in attr_address:
             telegram = Telegram(
-                destination_address=parse_destination_address(address),
+                destination_address=parse_device_group_address(address),
                 payload=GroupValueWrite(payload),
             )
             await self.xknx.telegrams.put(telegram)
@@ -483,7 +483,7 @@ class KNXModule:
         """Service for sending a GroupValueRead telegram to the KNX bus."""
         for address in call.data[KNX_ADDRESS]:
             telegram = Telegram(
-                destination_address=parse_destination_address(address),
+                destination_address=parse_device_group_address(address),
                 payload=GroupValueRead(),
             )
             await self.xknx.telegrams.put(telegram)

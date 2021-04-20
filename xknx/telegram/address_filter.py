@@ -33,7 +33,7 @@ from fnmatch import fnmatch
 
 from xknx.exceptions import ConversionError
 
-from .address import GroupAddress, InternalGroupAddress, parse_destination_address
+from .address import GroupAddress, InternalGroupAddress, parse_device_group_address
 
 
 class AddressFilter:
@@ -58,7 +58,7 @@ class AddressFilter:
     def match(self, address: str | GroupAddress | InternalGroupAddress) -> bool:
         """Test if provided address matches Addressfilter."""
         if isinstance(address, str):
-            address = parse_destination_address(address)
+            address = parse_device_group_address(address)
 
         if isinstance(address, GroupAddress) and self.level_filters:
             if len(self.level_filters) == 3:

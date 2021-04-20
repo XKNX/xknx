@@ -5,7 +5,7 @@ import voluptuous as vol
 from xknx.devices.climate import SetpointShiftMode
 from xknx.exceptions import CouldNotParseAddress
 from xknx.io import DEFAULT_MCAST_PORT
-from xknx.telegram.address import IndividualAddress, parse_destination_address
+from xknx.telegram.address import IndividualAddress, parse_device_group_address
 
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -37,7 +37,7 @@ def ga_validator(value: Any) -> str:
     """Validate that value is parsable as GroupAddress or InternalGroupAddress."""
     if isinstance(value, (str, int)):
         try:
-            parse_destination_address(value)
+            parse_device_group_address(value)
             return value
         except CouldNotParseAddress:
             pass
