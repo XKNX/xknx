@@ -324,9 +324,9 @@ class ClimateMode(Device):
         """Return object as readable string."""
         return (
             '<ClimateMode name="{}" '
-            'operation_mode="{}" '
-            'controller_mode="{}" '
-            'controller_status="{}" '
+            "operation_mode={} "
+            "controller_mode={} "
+            "controller_status={} "
             "/>".format(
                 self.name,
                 self.remote_value_operation_mode.group_addr_str(),

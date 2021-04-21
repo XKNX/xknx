@@ -304,73 +304,71 @@ class Light(Device):
         str_brightness = (
             ""
             if not self.supports_brightness
-            else f' brightness="{self.brightness.group_addr_str()}"'
+            else f" brightness={self.brightness.group_addr_str()}"
         )
 
         str_color = (
-            "" if not self.supports_color else f' color="{self.color.group_addr_str()}"'
+            "" if not self.supports_color else f" color={self.color.group_addr_str()}"
         )
 
         str_rgbw = (
-            "" if not self.supports_rgbw else f' rgbw="{self.rgbw.group_addr_str()}"'
+            "" if not self.supports_rgbw else f" rgbw={self.rgbw.group_addr_str()}"
         )
 
         str_tunable_white = (
             ""
             if not self.supports_tunable_white
-            else f' tunable white="{self.tunable_white.group_addr_str()}"'
+            else f" tunable_white={self.tunable_white.group_addr_str()}"
         )
 
         str_color_temperature = (
             ""
             if not self.supports_color_temperature
-            else ' color temperature="{}"'.format(
-                self.color_temperature.group_addr_str()
-            )
+            else f" color_temperature={self.color_temperature.group_addr_str()}"
         )
 
         str_red_state = (
             ""
             if not self.red.switch.initialized
-            else f' red_state="{self.red.switch.group_addr_str()}"'
+            else f" red_state={self.red.switch.group_addr_str()}"
         )
         str_red_brightness = (
             ""
             if not self.red.brightness.initialized
-            else f' red_brightness="{self.red.brightness.group_addr_str()}"'
+            else f" red_brightness={self.red.brightness.group_addr_str()}"
         )
 
         str_green_state = (
             ""
             if not self.green.switch.initialized
-            else f' green_state="{self.green.switch.group_addr_str()}"'
+            else f" green_state={self.green.switch.group_addr_str()}"
         )
         str_green_brightness = (
             ""
             if not self.green.brightness.initialized
-            else f' green_brightness="{self.green.brightness.group_addr_str()}"'
+            else f" green_brightness={self.green.brightness.group_addr_str()}"
         )
 
         str_blue_state = (
             ""
             if not self.blue.switch.initialized
-            else f' blue_state="{self.blue.switch.group_addr_str()}"'
+            else f" blue_state={self.blue.switch.group_addr_str()}"
         )
         str_blue_brightness = (
             ""
             if not self.blue.brightness.initialized
-            else f' blue_brightness="{self.blue.brightness.group_addr_str()}"'
+            else f" blue_brightness={self.blue.brightness.group_addr_str()}"
         )
 
         str_white_state = (
             ""
             if not self.white.switch.initialized
-            else f' white_state="{self.white.switch.group_addr_str()}"'
+            else f" white_state={self.white.switch.group_addr_str()}"
         )
         str_white_brightness = (
             ""
             if not self.white.brightness.initialized
-            else f' white_brightness="{self.white.brightness.group_addr_str()}"'
+            else f" white_brightness={self.white.brightness.group_addr_str()}"
         )
 
         return '<Light name="{}" ' 'switch="{}"{}{}{}{}{}{}{}{}{}{}{}{}{} />'.format(

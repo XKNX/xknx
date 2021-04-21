@@ -257,16 +257,16 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
 
     def group_addr_str(self) -> str:
         """Return object as readable string."""
-        return "{}/{}/{}/{}".format(
-            self.group_address.__repr__(),
-            self.group_address_state.__repr__(),
-            self.value,
-            self._payload(),
+        return '<"{}", "{}", {}, {} />'.format(
+            self.group_address,
+            self.group_address_state,
+            self.passive_group_addresses,
+            self.value.__repr__(),
         )
 
     def __str__(self) -> str:
         """Return object as string representation."""
-        return '<{} device_name="{}" feature_name="{}" {}/>'.format(
+        return '<{} device_name="{}" feature_name="{}" {} />'.format(
             self.__class__.__name__,
             self.device_name,
             self.feature_name,

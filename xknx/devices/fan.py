@@ -102,10 +102,10 @@ class Fan(Device):
         str_oscillation = (
             ""
             if not self.supports_oscillation
-            else f' oscillation="{self.oscillation.group_addr_str()}"'
+            else f" oscillation={self.oscillation.group_addr_str()}"
         )
 
-        return '<Fan name="{}" ' 'speed="{}"{} />'.format(
+        return '<Fan name="{}" speed={}{} />'.format(
             self.name, self.speed.group_addr_str(), str_oscillation
         )
 
