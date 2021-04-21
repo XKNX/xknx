@@ -293,13 +293,13 @@ class Climate(Device):
         """Return object as readable string."""
         return (
             '<Climate name="{}" '
-            'temperature="{}" '
-            'target_temperature="{}" '
+            "temperature={} "
+            "target_temperature={} "
             'temperature_step="{}" '
-            'setpoint_shift="{}" '
+            "setpoint_shift={} "
             'setpoint_shift_max="{}" '
             'setpoint_shift_min="{}" '
-            'group_address_on_off="{}" '
+            "group_address_on_off={} "
             "/>".format(
                 self.name,
                 self.temperature.group_addr_str(),

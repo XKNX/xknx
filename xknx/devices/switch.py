@@ -98,6 +98,6 @@ class Switch(Device):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<Switch name="{}" switch="{}" />'.format(
+        return '<Switch name="{}" switch={} />'.format(
             self.name, self.switch.group_addr_str()
         )

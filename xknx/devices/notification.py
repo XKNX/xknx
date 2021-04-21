@@ -58,6 +58,6 @@ class Notification(Device):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<Notification name="{}" message="{}" />'.format(
+        return '<Notification name="{}" message={} />'.format(
             self.name, self._message.group_addr_str()
         )

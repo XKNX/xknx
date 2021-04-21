@@ -153,13 +153,13 @@ class Cover(Device):
         """Return object as readable string."""
         return (
             '<Cover name="{}" '
-            'updown="{}" '
-            'step="{}" '
-            'stop="{}" '
-            'position_current="{}" '
-            'position_target="{}" '
-            'angle="{}" '
-            'locked="{}" '
+            "updown={} "
+            "step={} "
+            "stop_={} "
+            "position_current={} "
+            "position_target={} "
+            "angle={} "
+            "locked={} "
             'travel_time_down="{}" '
             'travel_time_up="{}" />'.format(
                 self.name,
