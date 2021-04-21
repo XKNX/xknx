@@ -3,8 +3,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from xknx import XKNX
-from xknx.dpt import DPTArray, DPTBinary
-from xknx.exceptions import CouldNotParseTelegram
+from xknx.dpt import DPT2ByteFloat, DPTArray, DPTBinary
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.remote_value import RemoteValue, RemoteValueSwitch
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
@@ -14,6 +14,45 @@ from xknx.telegram.apci import GroupValueWrite
 @patch.multiple(RemoteValue, __abstractmethods__=set())
 class TestRemoteValue:
     """Test class for RemoteValue objects."""
+
+    async def test_get_set_value(self):
+        """Test value getter and setter."""
+        xknx = XKNX()
+        remote_value = RemoteValue(xknx)
+        remote_value.to_knx = lambda value: DPTArray(DPT2ByteFloat.to_knx(value))
+        remote_value.after_update_cb = AsyncMock()
+
+        assert remote_value.value is None
+        remote_value.value = 2.2
+        assert remote_value.value == 2.2
+        # invalid value raises ConversionError
+        with pytest.raises(ConversionError):
+            remote_value.value = "a"
+        # new value is used in response Telegram
+        test_payload = remote_value.to_knx(2.2)
+        remote_value._send = AsyncMock()
+        await remote_value.respond()
+        remote_value._send.assert_called_with(test_payload, response=True)
+        # callback is not called when setting value programmatically
+        remote_value.after_update_cb.assert_not_called()
+        # no Telegram was sent to the queue
+        assert xknx.telegrams.qsize() == 0
+
+    async def test_set_value(self):
+        """Test set_value awaitable."""
+        xknx = XKNX()
+        remote_value = RemoteValue(xknx)
+        remote_value.to_knx = lambda value: DPTArray(DPT2ByteFloat.to_knx(value))
+        remote_value.after_update_cb = AsyncMock()
+
+        await remote_value.update_value(3.3)
+        assert remote_value.value == 3.3
+        remote_value.after_update_cb.assert_called_once()
+        assert xknx.telegrams.qsize() == 0
+        # invalid value raises ConversionError
+        with pytest.raises(ConversionError):
+            await remote_value.update_value("a")
+        assert remote_value.value == 3.3
 
     async def test_info_set_uninitialized(self):
         """Test for info if RemoteValue is not initialized."""

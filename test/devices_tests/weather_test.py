@@ -166,8 +166,8 @@ class TestWeather:
             group_address_wind_alarm="1/3/9",
         )
 
-        weather._rain_alarm.value = DPTBinary(1)
-        weather._wind_alarm.value = DPTBinary(1)
+        weather._rain_alarm.value = True
+        weather._wind_alarm.value = True
 
         assert weather.ha_current_state() == WeatherCondition.LIGHTNING_RAINY
 
@@ -181,8 +181,8 @@ class TestWeather:
             group_address_frost_alarm="1/3/10",
         )
 
-        weather._rain_alarm.value = DPTBinary(1)
-        weather._frost_alarm.value = DPTBinary(1)
+        weather._rain_alarm.value = True
+        weather._frost_alarm.value = True
 
         assert weather.ha_current_state() == WeatherCondition.SNOWY_RAINY
 
@@ -197,7 +197,7 @@ class TestWeather:
             group_address_frost_alarm="1/3/10",
         )
 
-        weather._wind_alarm.value = DPTBinary(1)
+        weather._wind_alarm.value = True
 
         assert weather.ha_current_state() == WeatherCondition.WINDY
 
@@ -212,7 +212,7 @@ class TestWeather:
             group_address_frost_alarm="1/3/10",
         )
 
-        weather._rain_alarm.value = DPTBinary(1)
+        weather._rain_alarm.value = True
 
         assert weather.ha_current_state() == WeatherCondition.RAINY
 
