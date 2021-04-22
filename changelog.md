@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Devices
+
+- Add InternalGroupAddress for communication between Devices without sending to the bus.
+
 ### Internals
 
 - RemoteValue.value changed to a settable property. It is used to create payloads for outgoing telegrams.

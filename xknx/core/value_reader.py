@@ -13,7 +13,8 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING
 
-from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram import Telegram
+from xknx.telegram.address import GroupAddress, InternalGroupAddress
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 if TYPE_CHECKING:
@@ -26,11 +27,14 @@ class ValueReader:
     """Class for reading the value of a specific KNX group address from KNX bus."""
 
     def __init__(
-        self, xknx: XKNX, group_address: GroupAddress, timeout_in_seconds: float = 2.0
+        self,
+        xknx: XKNX,
+        group_address: GroupAddress | InternalGroupAddress,
+        timeout_in_seconds: float = 2.0,
     ):
         """Initialize ValueReader class."""
         self.xknx = xknx
-        self.group_address: GroupAddress = group_address
+        self.group_address: GroupAddress | InternalGroupAddress = group_address
         self.response_received_event = asyncio.Event()
         self.timeout_in_seconds: float = timeout_in_seconds
         self.received_telegram: Telegram | None = None

@@ -5,6 +5,7 @@ The module can handle:
 
 * individual addresses of devices.
 * (logical) group addresses.
+* xknx internal group addresses.
 
 The module supports all different writings of group addresses:
 
@@ -26,6 +27,23 @@ GroupAddressableType = Optional[Union["GroupAddress", str, int, Tuple[int, int]]
 IndividualAddressableType = Optional[
     Union["IndividualAddress", str, int, Tuple[int, int]]
 ]
+InternalGroupAddressableType = Union["InternalGroupAddress", str]
+DeviceAddressableType = Union[GroupAddressableType, InternalGroupAddressableType]
+DeviceGroupAddress = Union["GroupAddress", "InternalGroupAddress"]
+
+
+def parse_device_group_address(
+    address: DeviceAddressableType,
+) -> DeviceGroupAddress:
+    """Parse an Addressable type to GroupAddress or InternalGroupAddress."""
+    if isinstance(address, (GroupAddress, InternalGroupAddress)):
+        return address
+    try:
+        return GroupAddress(address)
+    except CouldNotParseAddress as ex:
+        if isinstance(address, str):
+            return InternalGroupAddress(address)
+        raise ex
 
 
 def address_tuple_to_int(address: tuple[int, int]) -> int:
@@ -65,8 +83,6 @@ class BaseAddress(ABC):
 
         Returns `True` if we check against the same subclass and the
         raw Value matches.
-
-        Returns `False` if we check against `None`.
         """
         if isinstance(self, type(other)):
             return self.__hash__() == other.__hash__()
@@ -88,7 +104,7 @@ class IndividualAddress(BaseAddress):
     )
 
     def __init__(self, address: IndividualAddressableType) -> None:
-        """Initialize Address class."""
+        """Initialize IndividualAddress class."""
         super().__init__()
         if isinstance(address, IndividualAddress):
             self.raw = address.raw
@@ -196,7 +212,7 @@ class GroupAddress(BaseAddress):
         address: GroupAddressableType,
         levels: GroupAddressType = GroupAddressType.LONG,
     ) -> None:
-        """Initialize Address class."""
+        """Initialize GroupAddress class."""
         super().__init__()
         self.levels = levels
 
@@ -307,5 +323,52 @@ class GroupAddress(BaseAddress):
         return f"{self.sub}"
 
     def __repr__(self) -> str:
-        """Return object as readable string."""
+        """Return object as parsable string."""
         return f'GroupAddress("{self}")'
+
+
+class InternalGroupAddress:
+    """Class for handling addresses used internally in xknx devices only."""
+
+    def __init__(self, address: str | InternalGroupAddress) -> None:
+        """Initialize InternalGroupAddress class."""
+        self.address: str
+
+        if isinstance(address, InternalGroupAddress):
+            self.address = address.address
+            return
+        if not isinstance(address, str):
+            raise CouldNotParseAddress(address)
+
+        prefix_length = 1
+        if len(address) < 2 or not address[0].lower() == "i":
+            raise CouldNotParseAddress(address)
+        if address[1] in "-_":
+            prefix_length = 2
+
+        self.address = address[prefix_length:].strip()
+        if not self.address:
+            raise CouldNotParseAddress(address)
+
+    def __str__(self) -> str:
+        """Return object as readable string (e.g. 'i-123')."""
+        return f"i-{self.address}"
+
+    def __repr__(self) -> str:
+        """Return object as parsable string."""
+        return f'InternalGroupAddress("{self}")'
+
+    def __eq__(self, other: object | None) -> bool:
+        """
+        Implement the equal operator.
+
+        Returns `True` if we check against the same subclass and the
+        raw Value matches.
+        """
+        if isinstance(self, type(other)):
+            return self.__hash__() == other.__hash__()
+        return False
+
+    def __hash__(self) -> int:
+        """Hash Address so it can be used as dict key."""
+        return hash(self.address)

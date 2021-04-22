@@ -1,7 +1,8 @@
 """Unit test for Address class."""
 import pytest
 from xknx.exceptions import ConversionError
-from xknx.telegram import AddressFilter, GroupAddress
+from xknx.telegram import AddressFilter
+from xknx.telegram.address import GroupAddress, InternalGroupAddress
 
 
 class TestAddressFilter:
@@ -148,3 +149,63 @@ class TestAddressFilter:
             == GroupAddress.MAX_FREE
         )
         assert AddressFilter.Range._adjust_range(-1) == 0
+
+    def test_internal_address_filter_exact(self):
+        """Test AddressFilter for InternalGroupAddress."""
+        af1 = AddressFilter("i-1")
+        assert af1.match("i1")
+        assert af1.match("i 1")
+        assert af1.match("i-1")
+        assert af1.match(InternalGroupAddress("i-1"))
+        assert not af1.match("1")
+        assert not af1.match(GroupAddress(1))
+
+    def test_internal_address_filter_wildcard(self):
+        """Test AddressFilter with wildcards for InternalGroupAddress."""
+        af1 = AddressFilter("i-?")
+        assert af1.match("i1")
+        assert af1.match("i 2")
+        assert af1.match("i-3")
+        assert af1.match(InternalGroupAddress("i-4"))
+        assert not af1.match("1")
+        assert not af1.match(GroupAddress(1))
+        assert not af1.match("i11")
+        assert not af1.match("i 11")
+        assert not af1.match("i-11")
+        assert not af1.match(InternalGroupAddress("i-11"))
+
+        af2 = AddressFilter("i-t?st")
+        assert af2.match("it1st")
+        assert af2.match("i t2st")
+        assert af2.match("i-test")
+        assert af2.match(InternalGroupAddress("i-test"))
+        assert not af2.match("1")
+        assert not af2.match(GroupAddress(1))
+        assert not af2.match("i11")
+        assert not af2.match("i tst")
+        assert not af2.match("i-teest")
+        assert not af2.match(InternalGroupAddress("i-tst"))
+
+        af3 = AddressFilter("i-*")
+        assert af3.match("i1")
+        assert af3.match("i asdf")
+        assert af3.match("i-3sdf")
+        assert af3.match(InternalGroupAddress("i-4"))
+        assert not af3.match("1")
+        assert not af3.match(GroupAddress(1))
+        assert af3.match("i11")
+        assert af3.match("i 11??")
+        assert af3.match("i-11*")
+        assert af3.match(InternalGroupAddress("i-11"))
+
+        af4 = AddressFilter("i-t*t")
+        assert af4.match("it1t")
+        assert af4.match("i t22t")
+        assert af4.match("i-testt")
+        assert af4.match("i-tt")
+        assert af4.match(InternalGroupAddress("i-t333t"))
+        assert not af4.match("1")
+        assert not af4.match(GroupAddress(1))
+        assert not af4.match("i testx")
+        assert not af4.match("i-11test")
+        assert not af4.match(InternalGroupAddress("i-11"))

@@ -73,9 +73,6 @@ class CEMIFrame:
     @telegram.setter
     def telegram(self, telegram: Telegram) -> None:
         """Set telegram."""
-        self.dst_addr = telegram.destination_address
-        self.payload = telegram.payload
-
         # TODO: Move to separate function, together with setting of
         # CEMIMessageCode
         self.flags = (
@@ -94,6 +91,9 @@ class CEMIFrame:
             self.flags |= CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
         else:
             raise TypeError()
+
+        self.dst_addr = telegram.destination_address
+        self.payload = telegram.payload
 
     def set_hops(self, hops: int) -> None:
         """Set hops."""

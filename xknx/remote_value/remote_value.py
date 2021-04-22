@@ -25,16 +25,21 @@ from typing import (
 from xknx.dpt.dpt import DPTArray, DPTBinary, DPTPayloadType
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.address import (
+    DeviceGroupAddress,
+    InternalGroupAddress,
+    parse_device_group_address,
+)
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 if TYPE_CHECKING:
-    from xknx.telegram.address import GroupAddressableType
+    from xknx.telegram.address import DeviceAddressableType
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
 
 AsyncCallbackType = Callable[[], Awaitable[None]]
-GroupAddressesType = Union["GroupAddressableType", List["GroupAddressableType"]]
+GroupAddressesType = Union["DeviceAddressableType", List["DeviceAddressableType"]]
 ValueType = TypeVar("ValueType")
 
 
@@ -53,17 +58,17 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
     ):
         """Initialize RemoteValue class."""
         self.xknx: XKNX = xknx
-        self.passive_group_addresses: list[GroupAddress] = []
+        self.passive_group_addresses: list[DeviceGroupAddress] = []
 
         def unpack_group_addresses(
             addresses: GroupAddressesType | None,
-        ) -> GroupAddress | None:
+        ) -> DeviceGroupAddress | None:
             """Parse group addresses and assign passive addresses when given."""
             if addresses is None:
                 return None
             if not isinstance(addresses, list):
-                return GroupAddress(addresses)
-            active, *passive = map(GroupAddress, addresses)
+                return parse_device_group_address(addresses)
+            active, *passive = map(parse_device_group_address, addresses)
             self.passive_group_addresses.extend(passive)  # type: ignore
             return active
 
@@ -128,16 +133,16 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
         """Evaluate if remote value has a group_address set."""
         return bool(self.group_address)
 
-    def has_group_address(self, group_address: GroupAddress) -> bool:
+    def has_group_address(self, group_address: DeviceGroupAddress) -> bool:
         """Test if device has given group address."""
 
-        def _internal_addresses() -> Iterator[GroupAddress | None]:
+        def remote_value_addresses() -> Iterator[DeviceGroupAddress | None]:
             """Yield all group_addresses."""
             yield self.group_address
             yield self.group_address_state
             yield from self.passive_group_addresses
 
-        return group_address in _internal_addresses()
+        return group_address in remote_value_addresses()
 
     @abstractmethod
     # TODO: typing - remove Optional
@@ -157,7 +162,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
     async def process(self, telegram: Telegram, always_callback: bool = False) -> bool:
         """Process incoming or outgoing telegram."""
         if not isinstance(
-            telegram.destination_address, GroupAddress
+            telegram.destination_address, (GroupAddress, InternalGroupAddress)
         ) or not self.has_group_address(telegram.destination_address):
             return False
         if not isinstance(

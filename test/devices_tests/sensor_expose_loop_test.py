@@ -5,7 +5,8 @@ import pytest
 from xknx import XKNX
 from xknx.devices import BinarySensor, ExposeSensor, Sensor
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.telegram import GroupAddress, Telegram, TelegramDirection
+from xknx.telegram import AddressFilter, Telegram, TelegramDirection
+from xknx.telegram.address import GroupAddress, InternalGroupAddress
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
@@ -292,6 +293,80 @@ class TestBinarySensorExposeLoop:
             payload=GroupValueResponse(test_payload),
         )
         xknx.knxip_interface.send_telegram.assert_has_calls(
+            [
+                call(read_telegram),
+                call(response_telegram),
+            ]
+        )
+        # test if Sensor has successfully read from ExposeSensor
+        assert bin_sensor.state == test_value
+        assert expose.resolve_state() == bin_sensor.state
+        await xknx.telegram_queue.stop()
+
+
+@pytest.mark.asyncio
+class TestBinarySensorInternalGroupAddressExposeLoop:
+    """Process incoming Telegrams and send values to other devices."""
+
+    @pytest.mark.parametrize(
+        "value_type,test_payload,test_value",
+        [
+            ("binary", DPTBinary(0), False),
+            ("binary", DPTBinary(1), True),
+        ],
+    )
+    async def test_binary_sensor_loop(self, value_type, test_payload, test_value):
+        """Test binary_sensor and expose_sensor with binary values."""
+        xknx = XKNX()
+        xknx.knxip_interface = AsyncMock()
+        xknx.rate_limit = False
+
+        telegram_callback = AsyncMock()
+        xknx.telegram_queue.register_telegram_received_cb(
+            telegram_callback,
+            address_filters=[AddressFilter("i-test")],
+            match_for_outgoing=True,
+        )
+        await xknx.telegram_queue.start()
+
+        expose = ExposeSensor(
+            xknx,
+            "TestExpose",
+            group_address="i-test",
+            value_type=value_type,
+        )
+        assert expose.resolve_state() is None
+
+        await expose.set(test_value)
+        await xknx.telegrams.join()
+        outgoing_telegram = Telegram(
+            destination_address=InternalGroupAddress("i-test"),
+            direction=TelegramDirection.OUTGOING,
+            payload=GroupValueWrite(test_payload),
+        )
+        # InternalGroupAddress isn't passed to knxip_interface
+        xknx.knxip_interface.send_telegram.assert_not_called()
+        telegram_callback.assert_called_with(outgoing_telegram)
+        assert expose.resolve_state() == test_value
+
+        bin_sensor = BinarySensor(xknx, "TestSensor", group_address_state="i-test")
+        assert bin_sensor.state is None
+
+        # read sensor state (from expose as it has the same GA)
+        # wait_for_result so we don't have to await self.xknx.telegrams.join()
+        await bin_sensor.sync(wait_for_result=True)
+        read_telegram = Telegram(
+            destination_address=InternalGroupAddress("i-test"),
+            direction=TelegramDirection.OUTGOING,
+            payload=GroupValueRead(),
+        )
+        response_telegram = Telegram(
+            destination_address=InternalGroupAddress("i-test"),
+            direction=TelegramDirection.OUTGOING,
+            payload=GroupValueResponse(test_payload),
+        )
+        xknx.knxip_interface.send_telegram.assert_not_called()
+        telegram_callback.assert_has_calls(
             [
                 call(read_telegram),
                 call(response_telegram),

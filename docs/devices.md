@@ -55,6 +55,25 @@ GroupAddress("1/3/3")
 [GroupAddress("4/2/10"), GroupAddress("4/2/20"), GroupAddress("4/3/10"), GroupAddress("4/3/20")]
 ```
 
+## [](#header-2)Addresses
+
+`GroupAddress` classes are initialized with strings or integers in the format “1/2/3” for 3-level GA-structure, “1/2” for 2-level GA-structure or “1” for free GA-structure.
+
+`InternalGroupAddress` classes are initialized by prepending "i", "i-" or "i_" to any string. These can be used to connect xknx devices without sending telegrams to the KNX/IP interface.
+
+Addresses passed to devices as arguments are initialized by `xknx.telegram.address.parse_device_group_address()` to create the according address class.
+
+```python
+>>> s = Switch(xknx,
+...     name="Switch",
+...     group_address=["1/2/3", "1/2/100", "i-🤖⚡️"],
+...     )
+>>> s.switch.group_address
+GroupAddress("1/2/3")
+>>> s.switch.passive_group_addresses
+[GroupAddress("1/2/100"), InternalGroupAddress("i-🤖⚡️")]
+```
+
 ## [](#header-2)Device classes
 
 The following pages will give you an overview over the available devices within XKNX.
