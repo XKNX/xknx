@@ -450,10 +450,10 @@ class Weather(Device):
         """Return object as readable string."""
         return (
             '<Weather name="{}" '
-            'temperature="{}" brightness_south="{}" brightness_north="{}" brightness_west="{}" '
-            'brightness_east="{}" wind_speed="{}" wind_bearing="{}" rain_alarm="{}" '
-            'wind_alarm="{}" frost_alarm="{}" day_night="{}" '
-            'air_pressure="{}" humidity="{}" />'.format(
+            "temperature={} brightness_south={} brightness_north={} brightness_west={} "
+            "brightness_east={} wind_speed={} wind_bearing={} rain_alarm={} "
+            "wind_alarm={} frost_alarm={} day_night={} "
+            "air_pressure={} humidity={} />".format(
                 self.name,
                 self._temperature.group_addr_str(),
                 self._brightness_south.group_addr_str(),

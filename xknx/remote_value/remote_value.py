@@ -77,7 +77,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
 
         self.device_name: str = "Unknown" if device_name is None else device_name
         self.feature_name: str = "Unknown" if feature_name is None else feature_name
-        self.value: ValueType | None = None
+        self._value: ValueType | None = None
         self.telegram: Telegram | None = None
         self.after_update_cb: AsyncCallbackType | None = after_update_cb
 
@@ -94,6 +94,25 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
             # KeyError if it was never added to StateUpdater
             # AttributeError if instantiation failed (tests mostly)
             pass
+
+    @property
+    def value(self) -> ValueType | None:
+        """Get current value."""
+        return self._value
+
+    @value.setter
+    def value(self, value: Any) -> None:
+        """Set new value without creating a Telegram or calling after_update_cb. Raises ConversionError on invalid value."""
+        if value is not None:
+            # raises ConversionError on invalid value
+            self.to_knx(value)
+        self._value = value
+
+    async def update_value(self, value: Any) -> None:
+        """Set new value without creating a Telegram. Awaits after_update_cb. Raises ConversionError on invalid value."""
+        self.value = value
+        if self.after_update_cb is not None:
+            await self.after_update_cb()
 
     @property
     def initialized(self) -> bool:
@@ -173,8 +192,8 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
             )
         decoded_payload = self.from_knx(_new_payload)
         self.xknx.state_updater.update_received(self)
-        if self.value is None or always_callback or self.value != decoded_payload:
-            self.value = decoded_payload
+        if self._value is None or always_callback or self._value != decoded_payload:
+            self._value = decoded_payload
             self.telegram = telegram
             if self.after_update_cb is not None:
                 await self.after_update_cb()
@@ -216,12 +235,12 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
 
         payload = self.to_knx(value)
         await self._send(payload, response)
-        # self.payload is set and after_update_cb() called when the outgoing telegram is processed.
+        # self._value is set and after_update_cb() called when the outgoing telegram is processed.
 
     async def respond(self) -> None:
         """Send current payload as GroupValueResponse telegram to KNX bus."""
-        payload = self._payload()
-        if payload is not None:
+        if self._value is not None:
+            payload = self.to_knx(self._value)
             await self._send(payload, response=True)
 
     async def read_state(self, wait_for_result: bool = False) -> None:
@@ -247,14 +266,6 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
             else:
                 await value_reader.send_group_read()
 
-    def _payload(self) -> DPTArray | DPTBinary | None:
-        """Obtain payload from Telegram."""
-        if self.telegram is not None and isinstance(
-            self.telegram.payload, (GroupValueWrite, GroupValueResponse)
-        ):
-            return self.telegram.payload.value
-        return None
-
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
@@ -262,16 +273,16 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
 
     def group_addr_str(self) -> str:
         """Return object as readable string."""
-        return "{}/{}/{}/{}".format(
-            self.group_address.__repr__(),
-            self.group_address_state.__repr__(),
-            self.value,
-            self._payload(),
+        return '<"{}", "{}", {}, {} />'.format(
+            self.group_address,
+            self.group_address_state,
+            self.passive_group_addresses,
+            self.value.__repr__(),
         )
 
     def __str__(self) -> str:
         """Return object as string representation."""
-        return '<{} device_name="{}" feature_name="{}" {}/>'.format(
+        return '<{} device_name="{}" feature_name="{}" {} />'.format(
             self.__class__.__name__,
             self.device_name,
             self.feature_name,

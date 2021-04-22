@@ -49,7 +49,7 @@ class Scene(Device):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<Scene name="{}" ' 'scene_value="{}" scene_number="{}" />'.format(
+        return '<Scene name="{}" ' 'scene_value={} scene_number="{}" />'.format(
             self.name, self.scene_value.group_addr_str(), self.scene_number
         )
 

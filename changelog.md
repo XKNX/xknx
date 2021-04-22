@@ -8,6 +8,8 @@
 
 ### Internals
 
+- RemoteValue.value changed to a settable property. It is used to create payloads for outgoing telegrams.
+- RemoteValue.update_value (async) sets a new value and awaits the callbacks without sending to the bus.
 - Round DPT 14 values to precision of 7 digits
 
 ## 0.18.0

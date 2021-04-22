@@ -191,6 +191,6 @@ class BinarySensor(Device):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<BinarySensor name="{}" remote_value="{}" state="{}"/>'.format(
-            self.name, self.remote_value.group_addr_str(), self.state
+        return '<BinarySensor name="{}" remote_value={} state={} />'.format(
+            self.name, self.remote_value.group_addr_str(), self.state.__repr__()
         )
