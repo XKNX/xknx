@@ -6,7 +6,8 @@ import pytest
 from xknx import XKNX
 from xknx.dpt import DPTBinary
 from xknx.exceptions import CommunicationError, CouldNotParseTelegram
-from xknx.telegram import AddressFilter, GroupAddress, Telegram, TelegramDirection
+from xknx.telegram import AddressFilter, Telegram, TelegramDirection
+from xknx.telegram.address import GroupAddress, InternalGroupAddress
 from xknx.telegram.apci import GroupValueWrite
 
 
@@ -61,7 +62,11 @@ class TestTelegramQueue:
             direction=TelegramDirection.OUTGOING,
             payload=GroupValueWrite(DPTBinary(1)),
         )
-
+        telegram_internal = Telegram(
+            direction=TelegramDirection.OUTGOING,
+            payload=GroupValueWrite(DPTBinary(1)),
+            destination_address=InternalGroupAddress("i-test"),
+        )
         await xknx.telegram_queue.start()
 
         # no sleep for incoming telegrams
@@ -69,12 +74,20 @@ class TestTelegramQueue:
         xknx.telegrams.put_nowait(telegram_in)
         await xknx.telegrams.join()
         assert async_sleep_mock.call_count == 0
+
         # sleep for outgoing telegrams
         xknx.telegrams.put_nowait(telegram_out)
         xknx.telegrams.put_nowait(telegram_out)
         await xknx.telegrams.join()
         assert async_sleep_mock.call_count == 2
         async_sleep_mock.assert_called_with(sleep_time)
+
+        async_sleep_mock.reset_mock()
+        # no sleep for internal group address telegrams
+        xknx.telegrams.put_nowait(telegram_internal)
+        xknx.telegrams.put_nowait(telegram_internal)
+        await xknx.telegrams.join()
+        async_sleep_mock.assert_not_called()
 
         await xknx.telegram_queue.stop()
 
