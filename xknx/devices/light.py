@@ -371,7 +371,7 @@ class Light(Device):
             else f" white_brightness={self.white.brightness.group_addr_str()}"
         )
 
-        return '<Light name="{}" ' 'switch="{}"{}{}{}{}{}{}{}{}{}{}{}{}{} />'.format(
+        return '<Light name="{}" ' "switch={}{}{}{}{}{}{}{}{}{}{}{}{}{} />".format(
             self.name,
             self.switch.group_addr_str(),
             str_brightness,
