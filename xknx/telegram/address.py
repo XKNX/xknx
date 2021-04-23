@@ -317,9 +317,9 @@ class GroupAddress(BaseAddress):
         Honors the used `GroupAddressType` of this group.
         """
         if self.levels == GroupAddressType.LONG:
-            return "{0.main}/{0.middle}/{0.sub}".format(self)
+            return f"{self.main}/{self.middle}/{self.sub}"
         if self.levels == GroupAddressType.SHORT:
-            return "{0.main}/{0.sub}".format(self)
+            return f"{self.main}/{self.sub}"
         return f"{self.sub}"
 
     def __repr__(self) -> str:

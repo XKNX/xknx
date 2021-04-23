@@ -72,14 +72,24 @@ class TestStringRepresentations:
         )
         assert (
             str(remote_value)
-            == '<RemoteValue device_name="MyDevice" feature_name="Unknown" <"1/2/3", "1/2/4", [], None /> />'
+            == '<RemoteValue device_name="MyDevice" feature_name="Unknown" <1/2/3, 1/2/4, [], None /> />'
         )
 
         remote_value.value = 34
         assert (
             str(remote_value)
             == '<RemoteValue device_name="MyDevice" feature_name="Unknown" '
-            '<"1/2/3", "1/2/4", [], 34 /> />'
+            "<1/2/3, 1/2/4, [], 34 /> />"
+        )
+
+        remote_value_passive = RemoteValue(
+            xknx,
+            group_address=["1/2/3", "1/2/4", "i-test"],
+            device_name="MyDevice",
+        )
+        assert (
+            str(remote_value_passive)
+            == "<RemoteValue device_name=\"MyDevice\" feature_name=\"Unknown\" <1/2/3, None, ['1/2/4', 'i-test'], None /> />"
         )
 
     def test_binary_sensor(self):
@@ -90,7 +100,7 @@ class TestStringRepresentations:
         )
         assert (
             str(binary_sensor)
-            == '<BinarySensor name="Fnord" remote_value=<"None", "1/2/3", [], None /> state=None />'
+            == '<BinarySensor name="Fnord" remote_value=<None, 1/2/3, [], None /> state=None />'
         )
 
     def test_climate(self):
@@ -111,12 +121,12 @@ class TestStringRepresentations:
         )
         assert (
             str(climate) == '<Climate name="Wohnzimmer" '
-            'temperature=<"None", "1/2/1", [], None /> '
-            'target_temperature=<"1/2/2", "None", [], None /> '
+            "temperature=<None, 1/2/1, [], None /> "
+            "target_temperature=<1/2/2, None, [], None /> "
             'temperature_step="0.1" '
-            'setpoint_shift=<"1/2/3", "1/2/4", [], None /> '
+            "setpoint_shift=<1/2/3, 1/2/4, [], None /> "
             'setpoint_shift_max="20" setpoint_shift_min="-20" '
-            'group_address_on_off=<"1/2/14", "1/2/15", [], None /> />'
+            "group_address_on_off=<1/2/14, 1/2/15, [], None /> />"
         )
 
     def test_climate_mode(self):
@@ -137,9 +147,9 @@ class TestStringRepresentations:
         )
         assert (
             str(climate_mode) == '<ClimateMode name="Wohnzimmer Mode" '
-            'operation_mode=<"1/2/5", "1/2/6", [], None /> '
-            'controller_mode=<"1/2/12", "1/2/13", [], None /> '
-            'controller_status=<"1/2/10", "1/2/11", [], None /> />'
+            "operation_mode=<1/2/5, 1/2/6, [], None /> "
+            "controller_mode=<1/2/12, 1/2/13, [], None /> "
+            "controller_status=<1/2/10, 1/2/11, [], None /> />"
         )
 
     def test_cover(self):
@@ -161,13 +171,13 @@ class TestStringRepresentations:
         )
         assert (
             str(cover) == '<Cover name="Rolladen" '
-            'updown=<"1/2/2", "None", [], None /> '
-            'step=<"1/2/3", "None", [], None /> '
-            'stop_=<"1/2/4", "None", [], None /> '
-            'position_current=<"None", "1/2/6", [], None /> '
-            'position_target=<"1/2/5", "None", [], None /> '
-            'angle=<"1/2/7", "1/2/8", [], None /> '
-            'locked=<"None", "1/2/9", [], None /> '
+            "updown=<1/2/2, None, [], None /> "
+            "step=<1/2/3, None, [], None /> "
+            "stop_=<1/2/4, None, [], None /> "
+            "position_current=<None, 1/2/6, [], None /> "
+            "position_target=<1/2/5, None, [], None /> "
+            "angle=<1/2/7, 1/2/8, [], None /> "
+            "locked=<None, 1/2/9, [], None /> "
             'travel_time_down="8" '
             'travel_time_up="10" />'
         )
@@ -185,7 +195,7 @@ class TestStringRepresentations:
         )
         assert (
             str(fan)
-            == '<Fan name="Dunstabzug" speed=<"1/2/3", "1/2/4", [], None /> oscillation=<"1/2/5", "1/2/6", [], None /> />'
+            == '<Fan name="Dunstabzug" speed=<1/2/3, 1/2/4, [], None /> oscillation=<1/2/5, 1/2/6, [], None /> />'
         )
 
     def test_light(self):
@@ -197,10 +207,7 @@ class TestStringRepresentations:
             group_address_switch="1/2/3",
             group_address_switch_state="1/2/4",
         )
-        assert (
-            str(light)
-            == '<Light name="Licht" switch="<"1/2/3", "1/2/4", [], None />" />'
-        )
+        assert str(light) == '<Light name="Licht" switch=<1/2/3, 1/2/4, [], None /> />'
 
     def test_light_dimmable(self):
         """Test string representation of dimmable light object."""
@@ -215,8 +222,8 @@ class TestStringRepresentations:
         )
         assert (
             str(light) == '<Light name="Licht" '
-            'switch="<"1/2/3", "1/2/4", [], None />" '
-            'brightness=<"1/2/5", "1/2/6", [], None /> />'
+            "switch=<1/2/3, 1/2/4, [], None /> "
+            "brightness=<1/2/5, 1/2/6, [], None /> />"
         )
 
     def test_light_color(self):
@@ -232,8 +239,8 @@ class TestStringRepresentations:
         )
         assert (
             str(light) == '<Light name="Licht" '
-            'switch="<"1/2/3", "1/2/4", [], None />" '
-            'color=<"1/2/5", "1/2/6", [], None /> />'
+            "switch=<1/2/3, 1/2/4, [], None /> "
+            "color=<1/2/5, 1/2/6, [], None /> />"
         )
 
     async def test_notification(self):
@@ -244,13 +251,13 @@ class TestStringRepresentations:
         )
         assert (
             str(notification)
-            == '<Notification name="Alarm" message=<"1/2/3", "1/2/4", [], None /> />'
+            == '<Notification name="Alarm" message=<1/2/3, 1/2/4, [], None /> />'
         )
         await notification.set("Einbrecher im Haus")
         await notification.process(xknx.telegrams.get_nowait())
         assert (
             str(notification) == '<Notification name="Alarm" '
-            'message=<"1/2/3", "1/2/4", [], \'Einbrecher im \' /> />'
+            "message=<1/2/3, 1/2/4, [], 'Einbrecher im ' /> />"
         )
 
     def test_scene(self):
@@ -259,7 +266,7 @@ class TestStringRepresentations:
         scene = Scene(xknx, name="Romantic", group_address="1/2/3", scene_number=23)
         assert (
             str(scene)
-            == '<Scene name="Romantic" scene_value=<"1/2/3", "None", [], None /> scene_number="23" />'
+            == '<Scene name="Romantic" scene_value=<1/2/3, None, [], None /> scene_number="23" />'
         )
 
     async def test_sensor(self):
@@ -270,7 +277,7 @@ class TestStringRepresentations:
         )
         assert (
             str(sensor)
-            == '<Sensor name="MeinSensor" sensor=<"None", "1/2/3", [], None /> value=None unit="%"/>'
+            == '<Sensor name="MeinSensor" sensor=<None, 1/2/3, [], None /> value=None unit="%"/>'
         )
         # self.loop.run_until_complete(sensor.sensor_value.set(25))
         telegram = Telegram(
@@ -281,7 +288,7 @@ class TestStringRepresentations:
         await sensor.process_group_write(telegram)
         assert (
             str(sensor)
-            == '<Sensor name="MeinSensor" sensor=<"None", "1/2/3", [], 25 /> value=25 unit="%"/>'
+            == '<Sensor name="MeinSensor" sensor=<None, 1/2/3, [], 25 /> value=25 unit="%"/>'
         )
 
     async def test_expose_sensor(self):
@@ -292,13 +299,13 @@ class TestStringRepresentations:
         )
         assert (
             str(sensor)
-            == '<ExposeSensor name="MeinSensor" sensor=<"1/2/3", "None", [], None /> value=None unit="%"/>'
+            == '<ExposeSensor name="MeinSensor" sensor=<1/2/3, None, [], None /> value=None unit="%"/>'
         )
         await sensor.set(25)
         await sensor.process(xknx.telegrams.get_nowait())
         assert (
             str(sensor)
-            == '<ExposeSensor name="MeinSensor" sensor=<"1/2/3", "None", [], 25 /> value=25 unit="%"/>'
+            == '<ExposeSensor name="MeinSensor" sensor=<1/2/3, None, [], 25 /> value=25 unit="%"/>'
         )
 
     def test_switch(self):
@@ -309,7 +316,7 @@ class TestStringRepresentations:
         )
         assert (
             str(switch)
-            == '<Switch name="Schalter" switch=<"1/2/3", "1/2/4", [], None /> />'
+            == '<Switch name="Schalter" switch=<1/2/3, 1/2/4, [], None /> />'
         )
 
     async def test_weather(self):
@@ -334,14 +341,14 @@ class TestStringRepresentations:
         )
         assert (
             str(weather)
-            == '<Weather name="Home" temperature=<"None", "7/0/1", [], None /> '
-            'brightness_south=<"None", "7/0/5", [], None /> brightness_north=<"None", "None", [], None /> '
-            'brightness_west=<"None", "7/0/3", [], None /> '
-            'brightness_east=<"None", "7/0/4", [], None /> wind_speed=<"None", "7/0/2", [], None /> '
-            'wind_bearing=<"None", "7/0/6", [], None /> rain_alarm=<"None", "7/0/0", [], None /> '
-            'wind_alarm=<"None", "7/0/10", [], None /> frost_alarm=<"None", "7/0/8", [], None /> '
-            'day_night=<"None", "7/0/7", [], None /> air_pressure=<"None", "7/0/9", [], None /> '
-            'humidity=<"None", "7/0/9", [], None /> />'
+            == '<Weather name="Home" temperature=<None, 7/0/1, [], None /> '
+            "brightness_south=<None, 7/0/5, [], None /> brightness_north=<None, None, [], None /> "
+            "brightness_west=<None, 7/0/3, [], None /> "
+            "brightness_east=<None, 7/0/4, [], None /> wind_speed=<None, 7/0/2, [], None /> "
+            "wind_bearing=<None, 7/0/6, [], None /> rain_alarm=<None, 7/0/0, [], None /> "
+            "wind_alarm=<None, 7/0/10, [], None /> frost_alarm=<None, 7/0/8, [], None /> "
+            "day_night=<None, 7/0/7, [], None /> air_pressure=<None, 7/0/9, [], None /> "
+            "humidity=<None, 7/0/9, [], None /> />"
         )
 
         telegram = Telegram(
@@ -353,14 +360,14 @@ class TestStringRepresentations:
 
         assert (
             str(weather)
-            == '<Weather name="Home" temperature=<"None", "7/0/1", [], None /> '
-            'brightness_south=<"None", "7/0/5", [], None /> brightness_north=<"None", "None", [], None /> '
-            'brightness_west=<"None", "7/0/3", [], None /> '
-            'brightness_east=<"None", "7/0/4", [], None /> wind_speed=<"None", "7/0/2", [], None /> '
-            'wind_bearing=<"None", "7/0/6", [], None /> rain_alarm=<"None", "7/0/0", [], None /> '
-            'wind_alarm=<"None", "7/0/10", [], True /> '
-            'frost_alarm=<"None", "7/0/8", [], None /> day_night=<"None", "7/0/7", [], None /> '
-            'air_pressure=<"None", "7/0/9", [], None /> humidity=<"None", "7/0/9", [], None /> />'
+            == '<Weather name="Home" temperature=<None, 7/0/1, [], None /> '
+            "brightness_south=<None, 7/0/5, [], None /> brightness_north=<None, None, [], None /> "
+            "brightness_west=<None, 7/0/3, [], None /> "
+            "brightness_east=<None, 7/0/4, [], None /> wind_speed=<None, 7/0/2, [], None /> "
+            "wind_bearing=<None, 7/0/6, [], None /> rain_alarm=<None, 7/0/0, [], None /> "
+            "wind_alarm=<None, 7/0/10, [], True /> "
+            "frost_alarm=<None, 7/0/8, [], None /> day_night=<None, 7/0/7, [], None /> "
+            "air_pressure=<None, 7/0/9, [], None /> humidity=<None, 7/0/9, [], None /> />"
         )
 
     def test_datetime(self):
@@ -369,7 +376,7 @@ class TestStringRepresentations:
         date_time = DateTime(xknx, name="Zeit", group_address="1/2/3", localtime=False)
         assert (
             str(date_time)
-            == '<DateTime name="Zeit" _remote_value=<"1/2/3", "None", [], None /> broadcast_type="TIME" />'
+            == '<DateTime name="Zeit" _remote_value=<1/2/3, None, [], None /> broadcast_type="TIME" />'
         )
 
     def test_could_not_parse_telegramn_exception(self):
