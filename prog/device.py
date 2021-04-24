@@ -83,7 +83,7 @@ class A_Device:
         telegram = Telegram(
             self.ia, 
             TelegramDirection.OUTGOING,
-            Restart(),
+            Restart(sequqence_number = 2),
             prio_system = True,
             )
         await self.xknx.telegrams.put(telegram)

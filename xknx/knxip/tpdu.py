@@ -39,8 +39,8 @@ class TPDU:
     @property
     def telegram(self) -> Telegram:
         """Return telegram."""
-        raise()
-        return Telegram()
+        return Telegram(destination_address=self.destination_address,
+                        )
 
     @telegram.setter
     def telegram(self, telegram: Telegram) -> None:

@@ -23,14 +23,16 @@ def encode_cmd_and_payload(
     encoded_payload: int = 0,
     appended_payload: bytes | None = None,
     additional_flags = None,
+    sequence_number = 0,
 ) -> bytes:
     """Encode cmd and payload."""
     if appended_payload is None:
         appended_payload = bytes()
         
+    sequence_number &= 0x0F
     command_and_flag = cmd.value
     if additional_flags:
-        command_and_flag |= additional_flags.value
+        command_and_flag |= additional_flags.value | (sequence_number << 10)
 
     data = bytearray(
         [
@@ -673,7 +675,7 @@ class DeviceDescriptorRead(APCI):
             additional_flags= APCIAdditionalFlags.NUMBERED_DATA_PACKET 
 
         return encode_cmd_and_payload(
-            self.code, 
+            self.CODE, 
             encoded_payload=self.descriptor,
             additional_flags = additional_flags)
 
@@ -733,6 +735,10 @@ class Restart(APCI):
 
     CODE = APCIService.RESTART
 
+    def __init__(self, sequqence_number = None) -> None:
+        """Initialize a new instance of DeviceDescriptorRead."""
+        self.sequqence_number = sequqence_number
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
         return 1
@@ -745,7 +751,14 @@ class Restart(APCI):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        return encode_cmd_and_payload(self.CODE)
+        additional_flags = None
+        if self.sequqence_number:
+            additional_flags= APCIAdditionalFlags.NUMBERED_DATA_PACKET
+
+        return encode_cmd_and_payload(
+            self.CODE, 
+            additional_flags = additional_flags,
+            sequence_number=self.sequqence_number)
 
     def __str__(self) -> str:
         """Return object as readable string."""
