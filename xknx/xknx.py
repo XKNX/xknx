@@ -1,4 +1,6 @@
 """XKNX is an Asynchronous Python module for reading and writing KNX/IP packets."""
+from __future__ import annotations
+
 import asyncio
 import logging
 from logging.handlers import TimedRotatingFileHandler
@@ -6,9 +8,8 @@ import os
 import signal
 from sys import platform
 from types import TracebackType
-from typing import Awaitable, Callable, Optional, Type, Union
+from typing import Awaitable, Callable
 
-from xknx.config import Config
 from xknx.core import StateUpdater, TelegramQueue
 from xknx.devices import Device, Devices
 from xknx.io import (
@@ -27,34 +28,30 @@ logger = logging.getLogger("xknx.log")
 class XKNX:
     """Class for reading and writing KNX/IP packets."""
 
-    # pylint: disable=too-many-instance-attributes
-
     DEFAULT_ADDRESS = "15.15.250"
     DEFAULT_RATE_LIMIT = 20
 
     def __init__(
         self,
-        config: Optional[str] = None,
-        own_address: Union[str, IndividualAddress] = DEFAULT_ADDRESS,
+        own_address: str | IndividualAddress = DEFAULT_ADDRESS,
         address_format: GroupAddressType = GroupAddressType.LONG,
-        telegram_received_cb: Optional[Callable[[Telegram], Awaitable[None]]] = None,
-        device_updated_cb: Optional[Callable[[Device], Awaitable[None]]] = None,
+        telegram_received_cb: Callable[[Telegram], Awaitable[None]] | None = None,
+        device_updated_cb: Callable[[Device], Awaitable[None]] | None = None,
         rate_limit: int = DEFAULT_RATE_LIMIT,
         multicast_group: str = DEFAULT_MCAST_GRP,
         multicast_port: int = DEFAULT_MCAST_PORT,
-        log_directory: Optional[str] = None,
+        log_directory: str | None = None,
         state_updater: bool = False,
         daemon_mode: bool = False,
         connection_config: ConnectionConfig = ConnectionConfig(),
     ) -> None:
         """Initialize XKNX class."""
-        # pylint: disable=too-many-arguments
         self.devices = Devices()
-        self.telegrams: asyncio.Queue[Optional[Telegram]] = asyncio.Queue()
+        self.telegrams: asyncio.Queue[Telegram | None] = asyncio.Queue()
         self.sigint_received = asyncio.Event()
         self.telegram_queue = TelegramQueue(self)
         self.state_updater = StateUpdater(self)
-        self.knxip_interface: Optional[KNXIPInterface] = None
+        self.knxip_interface: KNXIPInterface | None = None
         self.started = asyncio.Event()
         self.connected = asyncio.Event()
         self.address_format = address_format
@@ -69,9 +66,6 @@ class XKNX:
 
         if log_directory is not None:
             self.setup_logging(log_directory)
-
-        if config is not None:
-            Config(self).read(config)
 
         if telegram_received_cb is not None:
             self.telegram_queue.register_telegram_received_cb(telegram_received_cb)
@@ -95,9 +89,9 @@ class XKNX:
 
     async def __aexit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc: Optional[BaseException],
-        traceback: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: TracebackType | None,
     ) -> None:
         """Stop XKNX from context manager."""
         await self.stop()

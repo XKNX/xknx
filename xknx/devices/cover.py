@@ -7,8 +7,10 @@ It provides functionality for
 * reading the current state from KNX bus.
 * Cover will also predict the current position.
 """
+from __future__ import annotations
+
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional
+from typing import TYPE_CHECKING, Any, Iterator
 
 from xknx.remote_value import (
     GroupAddressesType,
@@ -32,34 +34,29 @@ logger = logging.getLogger("xknx.log")
 class Cover(Device):
     """Class for managing a cover."""
 
-    # pylint: disable=too-many-instance-attributes
-    # pylint: disable=too-many-public-methods
-    # pylint: disable=too-many-locals
-
-    # Average typical travel time of a cover
     DEFAULT_TRAVEL_TIME_DOWN = 22
     DEFAULT_TRAVEL_TIME_UP = 22
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         name: str,
-        group_address_long: Optional[GroupAddressesType] = None,
-        group_address_short: Optional[GroupAddressesType] = None,
-        group_address_stop: Optional[GroupAddressesType] = None,
-        group_address_position: Optional[GroupAddressesType] = None,
-        group_address_position_state: Optional[GroupAddressesType] = None,
-        group_address_angle: Optional[GroupAddressesType] = None,
-        group_address_angle_state: Optional[GroupAddressesType] = None,
+        group_address_long: GroupAddressesType | None = None,
+        group_address_short: GroupAddressesType | None = None,
+        group_address_stop: GroupAddressesType | None = None,
+        group_address_position: GroupAddressesType | None = None,
+        group_address_position_state: GroupAddressesType | None = None,
+        group_address_angle: GroupAddressesType | None = None,
+        group_address_angle_state: GroupAddressesType | None = None,
+        group_address_locked_state: GroupAddressesType | None = None,
         travel_time_down: float = DEFAULT_TRAVEL_TIME_DOWN,
         travel_time_up: float = DEFAULT_TRAVEL_TIME_UP,
         invert_position: bool = False,
         invert_angle: bool = False,
-        device_updated_cb: Optional[DeviceCallbackType] = None,
-        device_class: Optional[str] = None,
+        device_updated_cb: DeviceCallbackType | None = None,
+        device_class: str | None = None,
     ):
         """Initialize Cover class."""
-        # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
         # self.after_update for position changes is called after updating the
         # travelcalculator (in process_group_write and set_*) - angle changes
@@ -121,11 +118,19 @@ class Cover(Device):
             range_to=angle_range_to,
         )
 
+        self.locked = RemoteValueSwitch(
+            xknx,
+            group_address_state=group_address_locked_state,
+            device_name=self.name,
+            feature_name="Locked",
+            after_update_cb=self.after_update,
+        )
+
         self.travel_time_down = travel_time_down
         self.travel_time_up = travel_time_up
 
         self.travelcalculator = TravelCalculator(travel_time_down, travel_time_up)
-        self.travel_direction_tilt: Optional[TravelStatus] = None
+        self.travel_direction_tilt: TravelStatus | None = None
 
         self.device_class = device_class
 
@@ -137,55 +142,24 @@ class Cover(Device):
         yield self.position_current
         yield self.position_target
         yield self.angle
+        yield self.locked
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return unique id for this device."""
         return f"{self.updown.group_address}"
-
-    @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Cover":
-        """Initialize object from configuration structure."""
-        group_address_long = config.get("group_address_long")
-        group_address_short = config.get("group_address_short")
-        group_address_stop = config.get("group_address_stop")
-        group_address_position = config.get("group_address_position")
-        group_address_position_state = config.get("group_address_position_state")
-        group_address_angle = config.get("group_address_angle")
-        group_address_angle_state = config.get("group_address_angle_state")
-        travel_time_down = config.get("travel_time_down", cls.DEFAULT_TRAVEL_TIME_DOWN)
-        travel_time_up = config.get("travel_time_up", cls.DEFAULT_TRAVEL_TIME_UP)
-        invert_position = config.get("invert_position", False)
-        invert_angle = config.get("invert_angle", False)
-        device_class = config.get("device_class")
-
-        return cls(
-            xknx,
-            name,
-            group_address_long=group_address_long,
-            group_address_short=group_address_short,
-            group_address_stop=group_address_stop,
-            group_address_position=group_address_position,
-            group_address_position_state=group_address_position_state,
-            group_address_angle=group_address_angle,
-            group_address_angle_state=group_address_angle_state,
-            travel_time_down=travel_time_down,
-            travel_time_up=travel_time_up,
-            invert_position=invert_position,
-            invert_angle=invert_angle,
-            device_class=device_class,
-        )
 
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
             '<Cover name="{}" '
-            'updown="{}" '
-            'step="{}" '
-            'stop="{}" '
-            'position_current="{}" '
-            'position_target="{}" '
-            'angle="{}" '
+            "updown={} "
+            "step={} "
+            "stop_={} "
+            "position_current={} "
+            "position_target={} "
+            "angle={} "
+            "locked={} "
             'travel_time_down="{}" '
             'travel_time_up="{}" />'.format(
                 self.name,
@@ -195,6 +169,7 @@ class Cover(Device):
                 self.position_current.group_addr_str(),
                 self.position_target.group_addr_str(),
                 self.angle.group_addr_str(),
+                self.locked.group_addr_str(),
                 self.travel_time_down,
                 self.travel_time_up,
             )
@@ -318,23 +293,6 @@ class Cover(Device):
         ):
             await self.stop()
 
-    async def do(self, action: str) -> None:
-        """Execute 'do' commands."""
-        if action == "up":
-            await self.set_up()
-        elif action == "short_up":
-            await self.set_short_up()
-        elif action == "down":
-            await self.set_down()
-        elif action == "short_down":
-            await self.set_short_down()
-        elif action == "stop":
-            await self.stop()
-        else:
-            logger.warning(
-                "Could not understand action %s for device %s", action, self.get_name()
-            )
-
     async def sync(self, wait_for_result: bool = False) -> None:
         """Read states of device from KNX bus."""
         await self.position_current.read_state(wait_for_result=wait_for_result)
@@ -365,14 +323,19 @@ class Cover(Device):
         await self.position_current.process(telegram, always_callback=True)
         await self.position_target.process(telegram)
         await self.angle.process(telegram)
+        await self.locked.process(telegram)
 
-    def current_position(self) -> Optional[int]:
+    def current_position(self) -> int | None:
         """Return current position of cover."""
         return self.travelcalculator.current_position()
 
-    def current_angle(self) -> Optional[int]:
+    def current_angle(self) -> int | None:
         """Return current tilt angle of cover."""
         return self.angle.value
+
+    def is_locked(self) -> bool | None:
+        """Return if the cover is currently locked for manual movement."""
+        return self.locked.value
 
     def is_traveling(self) -> bool:
         """Return if cover is traveling at the moment."""
@@ -402,6 +365,11 @@ class Cover(Device):
     def supports_stop(self) -> bool:
         """Return if cover supports manual stopping."""
         return self.stop_.writable or self.step.writable
+
+    @property
+    def supports_locked(self) -> bool:
+        """Return if cover supports locking."""
+        return self.locked.initialized
 
     @property
     def supports_position(self) -> bool:

@@ -13,11 +13,12 @@ It contains
 * and the payload (e.g. GroupValueWrite("12%")).
 
 """
-from enum import Enum
-from typing import Optional, Union
-#from xknx.knxip.knxip_enum import TPDUType
+from __future__ import annotations
 
-from .address import GroupAddress, IndividualAddress
+from datetime import datetime
+from enum import Enum
+
+from .address import GroupAddress, IndividualAddress, InternalGroupAddress
 from .apci import APCI
 
 class TPDUType(Enum):
@@ -34,13 +35,13 @@ class TelegramDirection(Enum):
 class Telegram:
     """Class for KNX telegrams."""
 
-    # pylint: disable=too-few-public-methods
-
     def __init__(
         self,
-        destination_address: Union[GroupAddress, IndividualAddress] = GroupAddress(0),
+        destination_address: GroupAddress
+        | IndividualAddress
+        | InternalGroupAddress = GroupAddress(0),
         direction: TelegramDirection = TelegramDirection.OUTGOING,
-        payload: Optional[APCI] = None,
+        payload: APCI | None = None,
         source_address: IndividualAddress = IndividualAddress(0),
         tpdu_type: TPDUType = TPDUType.T_DATA,
         prio_system = False,
@@ -52,6 +53,7 @@ class Telegram:
         self.source_address = source_address
         self.tpdu_type = tpdu_type
         self.prio_system = prio_system
+        self.timestamp = datetime.now()
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -67,7 +69,17 @@ class Telegram:
 
     def __eq__(self, other: object) -> bool:
         """Equal operator."""
-        return bool(self.__dict__ == other.__dict__)
+        for key, value in self.__dict__.items():
+            if key == "timestamp":
+                continue
+            if key not in other.__dict__:
+                return False
+            if other.__dict__[key] != value:
+                return False
+        for key, value in other.__dict__.items():
+            if key not in self.__dict__:
+                return False
+        return True
 
     def __hash__(self) -> int:
         """Hash function."""

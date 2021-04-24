@@ -9,6 +9,7 @@ xknx.egg-info/
 .tox
 .DS_Store
 .coverage
+coverage.xml
 venv
 .idea/
 .vscode/

@@ -1,25 +1,12 @@
 """Unit test for KNX/IP ConnectionStateRequests."""
-import asyncio
-import unittest
-
+import pytest
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import HPAI, ConnectionStateRequest, KNXIPFrame
 
 
-class Test_KNXIP_ConnStateReq(unittest.TestCase):
+class TestKNXIPConnectionStateRequest:
     """Test class for KNX/IP ConnectionStateRequests."""
-
-    # pylint: disable=too-many-public-methods,invalid-name
-
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
 
     def test_connection_state_request(self):
         """Test parsing and streaming connection state request KNX/IP packet."""
@@ -45,11 +32,11 @@ class Test_KNXIP_ConnStateReq(unittest.TestCase):
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 
-        self.assertTrue(isinstance(knxipframe.body, ConnectionStateRequest))
+        assert isinstance(knxipframe.body, ConnectionStateRequest)
 
-        self.assertEqual(knxipframe.body.communication_channel_id, 21)
-        self.assertEqual(
-            knxipframe.body.control_endpoint, HPAI(ip_addr="192.168.200.12", port=50100)
+        assert knxipframe.body.communication_channel_id == 21
+        assert knxipframe.body.control_endpoint == HPAI(
+            ip_addr="192.168.200.12", port=50100
         )
 
         connectionstate_request = ConnectionStateRequest(
@@ -59,12 +46,12 @@ class Test_KNXIP_ConnStateReq(unittest.TestCase):
         )
         knxipframe2 = KNXIPFrame.init_from_body(connectionstate_request)
 
-        self.assertEqual(knxipframe2.to_knx(), list(raw))
+        assert knxipframe2.to_knx() == list(raw)
 
     def test_from_knx_wrong_info(self):
         """Test parsing and streaming wrong ConnectionStateRequest."""
         raw = (0x06, 0x10, 0x02, 0x07, 0x00, 0x010)
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
-        with self.assertRaises(CouldNotParseKNXIP):
+        with pytest.raises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)

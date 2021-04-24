@@ -4,8 +4,10 @@ Module for managing operation and controller modes.
 Operation modes can be 'auto', 'comfort', 'standby', 'economy', 'protection' and use either a binary DPT or DPT 20.102.
 Controller modes use DPT 20.105.
 """
+from __future__ import annotations
+
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Iterator
 
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
 from xknx.exceptions import DeviceIllegalValue
@@ -28,30 +30,27 @@ if TYPE_CHECKING:
 class ClimateMode(Device):
     """Class for managing the climate mode."""
 
-    # pylint: disable=invalid-name,too-many-instance-attributes
-
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         name: str,
-        group_address_operation_mode: Optional[GroupAddressesType] = None,
-        group_address_operation_mode_state: Optional[GroupAddressesType] = None,
-        group_address_operation_mode_protection: Optional[GroupAddressesType] = None,
-        group_address_operation_mode_night: Optional[GroupAddressesType] = None,
-        group_address_operation_mode_comfort: Optional[GroupAddressesType] = None,
-        group_address_operation_mode_standby: Optional[GroupAddressesType] = None,
-        group_address_controller_status: Optional[GroupAddressesType] = None,
-        group_address_controller_status_state: Optional[GroupAddressesType] = None,
-        group_address_controller_mode: Optional[GroupAddressesType] = None,
-        group_address_controller_mode_state: Optional[GroupAddressesType] = None,
-        group_address_heat_cool: Optional[GroupAddressesType] = None,
-        group_address_heat_cool_state: Optional[GroupAddressesType] = None,
-        operation_modes: Optional[List[Union[str, HVACOperationMode]]] = None,
-        controller_modes: Optional[List[Union[str, HVACControllerMode]]] = None,
-        device_updated_cb: Optional[DeviceCallbackType] = None,
+        group_address_operation_mode: GroupAddressesType | None = None,
+        group_address_operation_mode_state: GroupAddressesType | None = None,
+        group_address_operation_mode_protection: GroupAddressesType | None = None,
+        group_address_operation_mode_night: GroupAddressesType | None = None,
+        group_address_operation_mode_comfort: GroupAddressesType | None = None,
+        group_address_operation_mode_standby: GroupAddressesType | None = None,
+        group_address_controller_status: GroupAddressesType | None = None,
+        group_address_controller_status_state: GroupAddressesType | None = None,
+        group_address_controller_mode: GroupAddressesType | None = None,
+        group_address_controller_mode_state: GroupAddressesType | None = None,
+        group_address_heat_cool: GroupAddressesType | None = None,
+        group_address_heat_cool_state: GroupAddressesType | None = None,
+        operation_modes: list[str | HVACOperationMode] | None = None,
+        controller_modes: list[str | HVACControllerMode] | None = None,
+        device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize ClimateMode class."""
-        # pylint: disable=too-many-arguments, too-many-locals, too-many-branches, too-many-statements
         super().__init__(xknx, name, device_updated_cb)
 
         self.remote_value_operation_mode = RemoteValueOperationMode(
@@ -138,7 +137,7 @@ class ClimateMode(Device):
         self.operation_mode = HVACOperationMode.STANDBY
         self.controller_mode = HVACControllerMode.HEAT
 
-        self._operation_modes: List[HVACOperationMode] = []
+        self._operation_modes: list[HVACOperationMode] = []
         if operation_modes is None:
             self._operation_modes = self.gather_operation_modes()
         else:
@@ -148,7 +147,7 @@ class ClimateMode(Device):
                 elif isinstance(op_mode, HVACOperationMode):
                     self._operation_modes.append(op_mode)
 
-        self._controller_modes: List[HVACControllerMode] = []
+        self._controller_modes: list[HVACControllerMode] = []
         if controller_modes is None:
             self._controller_modes = self.gather_controller_modes()
         else:
@@ -173,56 +172,6 @@ class ClimateMode(Device):
         self._use_binary_operation_modes = any(
             operation_mode.initialized
             for operation_mode in self._iter_binary_operation_modes()
-        )
-
-    @classmethod
-    def from_config(
-        cls, xknx: "XKNX", name: str, config: Dict[str, Any]
-    ) -> "ClimateMode":
-        """Initialize object from configuration structure."""
-        # pylint: disable=too-many-locals
-        group_address_operation_mode = config.get("group_address_operation_mode")
-        group_address_operation_mode_state = config.get(
-            "group_address_operation_mode_state"
-        )
-        group_address_operation_mode_protection = config.get(
-            "group_address_operation_mode_protection"
-        )
-        group_address_operation_mode_night = config.get(
-            "group_address_operation_mode_night"
-        )
-        group_address_operation_mode_comfort = config.get(
-            "group_address_operation_mode_comfort"
-        )
-        group_address_operation_mode_standby = config.get(
-            "group_address_operation_mode_standby"
-        )
-        group_address_controller_status = config.get("group_address_controller_status")
-        group_address_controller_status_state = config.get(
-            "group_address_controller_status_state"
-        )
-        group_address_controller_mode = config.get("group_address_controller_mode")
-        group_address_controller_mode_state = config.get(
-            "group_address_controller_mode_state"
-        )
-        group_address_heat_cool = config.get("group_address_heat_cool")
-        group_address_heat_cool_state = config.get("group_address_heat_cool_state")
-
-        return cls(
-            xknx,
-            name,
-            group_address_operation_mode=group_address_operation_mode,
-            group_address_operation_mode_state=group_address_operation_mode_state,
-            group_address_operation_mode_protection=group_address_operation_mode_protection,
-            group_address_operation_mode_night=group_address_operation_mode_night,
-            group_address_operation_mode_comfort=group_address_operation_mode_comfort,
-            group_address_operation_mode_standby=group_address_operation_mode_standby,
-            group_address_controller_status=group_address_controller_status,
-            group_address_controller_status_state=group_address_controller_status_state,
-            group_address_controller_mode=group_address_controller_mode,
-            group_address_controller_mode_state=group_address_controller_mode_state,
-            group_address_heat_cool=group_address_heat_cool,
-            group_address_heat_cool_state=group_address_heat_cool_state,
         )
 
     def _iter_remote_values(
@@ -288,12 +237,15 @@ class ClimateMode(Device):
                 "operation (preset) mode not supported", str(operation_mode)
             )
 
-        rv: RemoteValueClimateModeBase[Any, HVACOperationMode]
-        for rv in chain(
+        rv_operation: RemoteValueClimateModeBase[Any, HVACOperationMode]
+        for rv_operation in chain(
             self._iter_byte_operation_modes(), self._iter_binary_operation_modes()
         ):
-            if rv.writable and operation_mode in rv.supported_operation_modes():
-                await rv.set(operation_mode)
+            if (
+                rv_operation.writable
+                and operation_mode in rv_operation.supported_operation_modes()
+            ):
+                await rv_operation.set(operation_mode)
 
         await self._set_internal_operation_mode(operation_mode)
 
@@ -307,71 +259,74 @@ class ClimateMode(Device):
                 "controller (HVAC) mode not supported", str(controller_mode)
             )
 
-        rv: RemoteValueClimateModeBase[Any, HVACControllerMode]
-        for rv in self._iter_controller_remote_values():
-            if rv.writable and controller_mode in rv.supported_operation_modes():
-                await rv.set(controller_mode)
+        rv_controller: RemoteValueClimateModeBase[Any, HVACControllerMode]
+        for rv_controller in self._iter_controller_remote_values():
+            if (
+                rv_controller.writable
+                and controller_mode in rv_controller.supported_operation_modes()
+            ):
+                await rv_controller.set(controller_mode)
 
         await self._set_internal_controller_mode(controller_mode)
 
     @property
-    def operation_modes(self) -> List[HVACOperationMode]:
+    def operation_modes(self) -> list[HVACOperationMode]:
         """Return all configured operation modes."""
         if not self.supports_operation_mode:
             return []
         return self._operation_modes
 
     @property
-    def controller_modes(self) -> List[HVACControllerMode]:
+    def controller_modes(self) -> list[HVACControllerMode]:
         """Return all configured controller modes."""
         if not self.supports_controller_mode:
             return []
         return self._controller_modes
 
-    def gather_operation_modes(self) -> List[HVACOperationMode]:
+    def gather_operation_modes(self) -> list[HVACOperationMode]:
         """Gather operation modes from RemoteValues."""
-        operation_modes: List[HVACOperationMode] = []
-        for rv in chain(
+        operation_modes: list[HVACOperationMode] = []
+        for rv_operation in chain(
             self._iter_binary_operation_modes(), self._iter_byte_operation_modes()
         ):
-            if rv.writable:
-                operation_modes.extend(rv.supported_operation_modes())
+            if rv_operation.writable:
+                operation_modes.extend(rv_operation.supported_operation_modes())
         # remove duplicates
         return list(set(operation_modes))
 
-    def gather_controller_modes(self) -> List[HVACControllerMode]:
+    def gather_controller_modes(self) -> list[HVACControllerMode]:
         """Gather controller modes from RemoteValues."""
-        controller_modes: List[HVACControllerMode] = []
-        for rv in self._iter_controller_remote_values():
-            if rv.writable:
-                controller_modes.extend(rv.supported_operation_modes())
+        controller_modes: list[HVACControllerMode] = []
+        for rv_controller in self._iter_controller_remote_values():
+            if rv_controller.writable:
+                controller_modes.extend(rv_controller.supported_operation_modes())
         # remove duplicates
         return list(set(controller_modes))
 
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         if self.supports_operation_mode:
-            for rv in self._iter_remote_values():
-                if await rv.process(telegram):
+            for rv_mode in self._iter_remote_values():
+                if await rv_mode.process(telegram):
                     #  ignore inactive RemoteValueBinaryOperationMode
-                    if rv.value:
-                        await self._set_internal_operation_mode(rv.value)
+                    if rv_mode.value:
+                        await self._set_internal_operation_mode(rv_mode.value)
                         return
 
         if self.supports_controller_mode:
-            for rv in self._iter_controller_remote_values():
-                if await rv.process(telegram):
-                    if rv.value is not None:
-                        await self._set_internal_controller_mode(rv.value)
+            for rv_controller in self._iter_controller_remote_values():
+                if await rv_controller.process(telegram):
+                    if rv_controller.value is not None:
+                        await self._set_internal_controller_mode(rv_controller.value)
                     return
 
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
             '<ClimateMode name="{}" '
-            'operation_mode="{}" '
-            'controller_mode="{}" '
-            'controller_status="{}" '
+            "operation_mode={} "
+            "controller_mode={} "
+            "controller_status={} "
             "/>".format(
                 self.name,
                 self.remote_value_operation_mode.group_addr_str(),

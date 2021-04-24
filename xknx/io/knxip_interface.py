@@ -6,15 +6,16 @@ KNXIPInterface manages KNX/IP Tunneling or Routing connections.
 * provides callbacks after having received a telegram from the network.
 
 """
-from enum import Enum
+from __future__ import annotations
+
 import ipaddress
 import logging
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, cast
 
 import netifaces
 from xknx.exceptions import CommunicationError, XKNXException
 
-from .const import DEFAULT_MCAST_PORT
+from .connection import ConnectionConfig, ConnectionType
 from .gateway_scanner import GatewayScanFilter, GatewayScanner
 from .routing import Routing
 from .tunnel import Tunnel
@@ -28,79 +29,17 @@ if TYPE_CHECKING:
 logger = logging.getLogger("xknx.log")
 
 
-class ConnectionType(Enum):
-    """Enum class for different types of KNX/IP Connections."""
-
-    AUTOMATIC = 0
-    TUNNELING = 1
-    ROUTING = 2
-
-
-class ConnectionConfig:
-    """
-    Connection configuration.
-
-    Handles:
-    * type of connection:
-        * AUTOMATIC for using GatewayScanner for searching and finding KNX/IP devices in the network.
-        * TUNNELING connect to a specific KNX/IP tunneling device.
-        * ROUTING use KNX/IP multicast routing.
-    * local_ip: Local ip of the interface though which KNXIPInterface should connect.
-    * gateway_ip: IP of KNX/IP tunneling device.
-    * gateway_port: Port of KNX/IP tunneling device.
-    * route_back: the KNXnet/IP Server shall use the IP address and the port number in the IP package
-        received as the target IP address or port number for the response to the KNXnet/IP Client.
-    * auto_reconnect: Auto reconnect to KNX/IP tunneling device if connection cannot be established.
-    * auto_reconnect_wait: Wait n seconds before trying to reconnect to KNX/IP tunneling device.
-    * scan_filter: For AUTOMATIC connection, limit scan with the given filter
-    """
-
-    # pylint: disable=too-few-public-methods,too-many-instance-attributes
-
-    def __init__(
-        self,
-        connection_type: ConnectionType = ConnectionType.AUTOMATIC,
-        local_ip: Optional[str] = None,
-        local_port: int = 0,
-        gateway_ip: Optional[str] = None,
-        gateway_port: int = DEFAULT_MCAST_PORT,
-        route_back: bool = False,
-        auto_reconnect: bool = True,
-        auto_reconnect_wait: int = 3,
-        scan_filter: GatewayScanFilter = GatewayScanFilter(),
-    ):
-        """Initialize ConnectionConfig class."""
-        # pylint: disable=too-many-arguments
-        self.connection_type = connection_type
-        self.local_ip = local_ip
-        self.local_port = local_port
-        self.gateway_ip = gateway_ip
-        self.gateway_port = gateway_port
-        self.route_back = route_back
-        self.auto_reconnect = auto_reconnect
-        self.auto_reconnect_wait = auto_reconnect_wait
-        if connection_type == ConnectionType.TUNNELING:
-            scan_filter.tunnelling = True
-        elif connection_type == ConnectionType.ROUTING:
-            scan_filter.routing = True
-        self.scan_filter = scan_filter
-
-    def __eq__(self, other: object) -> bool:
-        """Equality for ConnectionConfig class (used in unit tests)."""
-        return self.__dict__ == other.__dict__
-
-
 class KNXIPInterface:
     """Class for managing KNX/IP Tunneling or Routing connections."""
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         connection_config: ConnectionConfig = ConnectionConfig(),
     ):
         """Initialize KNXIPInterface class."""
         self.xknx = xknx
-        self.interface: Optional["Interface"] = None
+        self.interface: Interface | None = None
         self.connection_config = connection_config
 
     async def start(self) -> None:
@@ -155,7 +94,7 @@ class KNXIPInterface:
 
     async def start_tunnelling(
         self,
-        local_ip: Optional[str],
+        local_ip: str | None,
         local_port: int,
         gateway_ip: str,
         gateway_port: int,
@@ -164,7 +103,6 @@ class KNXIPInterface:
         route_back: bool,
     ) -> None:
         """Start KNX/IP tunnel."""
-        # pylint: disable=too-many-arguments
         validate_ip(gateway_ip, address_name="Gateway IP address")
         if local_ip is None:
             local_ip = self.find_local_ip(gateway_ip=gateway_ip)
@@ -202,7 +140,7 @@ class KNXIPInterface:
             await self.interface.disconnect()
             self.interface = None
 
-    def telegram_received(self, telegram: "Telegram") -> None:
+    def telegram_received(self, telegram: Telegram) -> None:
         """Put received telegram into queue. Callback for having received telegram."""
         self.xknx.telegrams.put_nowait(telegram)
 
@@ -217,7 +155,7 @@ class KNXIPInterface:
     def find_local_ip(gateway_ip: str) -> str:
         """Find local IP address on same subnet as gateway."""
 
-        def _scan_interfaces(gateway: ipaddress.IPv4Address) -> Optional[str]:
+        def _scan_interfaces(gateway: ipaddress.IPv4Address) -> str | None:
             """Return local IP address on same subnet as given gateway."""
             for interface in netifaces.interfaces():
                 try:

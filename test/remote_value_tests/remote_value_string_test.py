@@ -1,7 +1,5 @@
 """Unit test for RemoteValueString objects."""
-import asyncio
-import unittest
-
+import pytest
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -10,49 +8,38 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-class TestRemoteValueString(unittest.TestCase):
+@pytest.mark.asyncio
+class TestRemoteValueString:
     """Test class for RemoteValueString objects."""
-
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
 
     def test_to_knx(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueString(xknx)
-        self.assertEqual(
-            remote_value.to_knx("KNX is OK"),
-            DPTArray(
-                (
-                    0x4B,
-                    0x4E,
-                    0x58,
-                    0x20,
-                    0x69,
-                    0x73,
-                    0x20,
-                    0x4F,
-                    0x4B,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                )
-            ),
+        assert remote_value.to_knx("KNX is OK") == DPTArray(
+            (
+                0x4B,
+                0x4E,
+                0x58,
+                0x20,
+                0x69,
+                0x73,
+                0x20,
+                0x4F,
+                0x4B,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+            )
         )
 
     def test_from_knx(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueString(xknx)
-        self.assertEqual(
+        assert (
             remote_value.from_knx(
                 DPTArray(
                     (
@@ -72,47 +59,41 @@ class TestRemoteValueString(unittest.TestCase):
                         0x00,
                     )
                 )
-            ),
-            "KNX is OK",
+            )
+            == "KNX is OK"
         )
 
     def test_to_knx_error(self):
         """Test to_knx function with wrong parametern."""
         xknx = XKNX()
         remote_value = RemoteValueString(xknx)
-        with self.assertRaises(ConversionError):
+        with pytest.raises(ConversionError):
             remote_value.to_knx("123456789012345")
 
-    def test_set(self):
+    async def test_set(self):
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValueString(xknx, group_address=GroupAddress("1/2/3"))
-        self.loop.run_until_complete(remote_value.set("asdf"))
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        await remote_value.set("asdf")
+        assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(
-                    DPTArray((97, 115, 100, 102, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
-                ),
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(
+                DPTArray((97, 115, 100, 102, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
             ),
         )
-        self.loop.run_until_complete(remote_value.set("ASDF"))
-        self.assertEqual(xknx.telegrams.qsize(), 1)
+        await remote_value.set("ASDF")
+        assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
-        self.assertEqual(
-            telegram,
-            Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(
-                    DPTArray((65, 83, 68, 70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
-                ),
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(
+                DPTArray((65, 83, 68, 70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
             ),
         )
 
-    def test_process(self):
+    async def test_process(self):
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueString(xknx, group_address=GroupAddress("1/2/3"))
@@ -139,29 +120,22 @@ class TestRemoteValueString(unittest.TestCase):
                 )
             ),
         )
-        self.loop.run_until_complete(remote_value.process(telegram))
-        self.assertEqual(remote_value.value, "AAAAABBBBBCCCC")
+        await remote_value.process(telegram)
+        assert remote_value.value == "AAAAABBBBBCCCC"
 
-    def test_to_process_error(self):
+    async def test_to_process_error(self):
         """Test process errornous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueString(xknx, group_address=GroupAddress("1/2/3"))
-        with self.assertRaises(CouldNotParseTelegram):
+        with pytest.raises(CouldNotParseTelegram):
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/3"),
                 payload=GroupValueWrite(DPTBinary(1)),
             )
-            self.loop.run_until_complete(remote_value.process(telegram))
-        with self.assertRaises(CouldNotParseTelegram):
+            await remote_value.process(telegram)
+        with pytest.raises(CouldNotParseTelegram):
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(
-                    DPTArray(
-                        (
-                            0x64,
-                            0x65,
-                        )
-                    )
-                ),
+                payload=GroupValueWrite(DPTArray((0x64, 0x65))),
             )
-            self.loop.run_until_complete(remote_value.process(telegram))
+            await remote_value.process(telegram)

@@ -7,9 +7,11 @@ The module will
 * ... check if received telegrams have the correct type and address.
 * ... store the received telegram for further processing.
 """
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Optional, Type, Union
+from typing import TYPE_CHECKING
 
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
@@ -25,27 +27,25 @@ class PayloadReader:
 
     def __init__(
         self,
-        xknx: "XKNX",
-        address: Union[GroupAddress, IndividualAddress],
+        xknx: XKNX,
+        address: GroupAddress | IndividualAddress,
         timeout_in_seconds: float = 2.0,
     ) -> None:
         """Initialize PayloadReader class."""
         self.xknx = xknx
         self.address = address
-        self.response_received_or_timeout = asyncio.Event()
-        self.success: bool = False
+        self.response_received_event = asyncio.Event()
         self.timeout_in_seconds = timeout_in_seconds
-        self.received_payload: Optional[APCI] = None
+        self.received_payload: APCI | None = None
 
     def reset(self) -> None:
         """Reset reader for next send."""
-        self.response_received_or_timeout = asyncio.Event()
-        self.success = False
+        self.response_received_event = asyncio.Event()
         self.received_payload = None
 
     async def send(
-        self, payload: APCI, response_class: Optional[Type[APCI]] = None
-    ) -> Optional[APCI]:
+        self, payload: APCI, response_class: type[APCI] | None = None
+    ) -> APCI | None:
         """
         Send APCI payload request and wait for a response.
 
@@ -61,7 +61,7 @@ class PayloadReader:
 
         try:
             await asyncio.wait_for(
-                self.response_received_or_timeout.wait(),
+                self.response_received_event.wait(),
                 timeout=self.timeout_in_seconds,
             )
         except asyncio.TimeoutError:
@@ -70,15 +70,13 @@ class PayloadReader:
                 self.timeout_in_seconds,
                 self.address,
             )
+        else:
+            return self.received_payload
         finally:
             # cleanup to not leave callbacks (for asyncio.CancelledError)
             self.xknx.telegram_queue.unregister_telegram_received_cb(cb_obj)
 
-        if not self.success:
-            return None
-        if self.received_payload is None:
-            return None
-        return self.received_payload
+        return None
 
     async def send_telegram(self, payload: APCI) -> None:
         """Send the telegram."""
@@ -87,7 +85,7 @@ class PayloadReader:
         )
 
     async def telegram_received(
-        self, telegram: Telegram, response_class: Optional[Type[APCI]] = None
+        self, telegram: Telegram, response_class: type[APCI] | None = None
     ) -> None:
         """Test if telegram is of correct type and address, then trigger event."""
         if self.address != telegram.source_address:
@@ -97,6 +95,5 @@ class PayloadReader:
         if response_class:
             if not isinstance(telegram.payload, response_class):
                 return
-        self.success = True
         self.received_payload = telegram.payload
-        self.response_received_or_timeout.set()
+        self.response_received_event.set()

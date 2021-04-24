@@ -1,15 +1,16 @@
 """Abstraction to send ConnectonStateRequest and wait for ConnectionStateResponse."""
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
+from xknx.io.const import CONNECTIONSTATE_REQUEST_TIMEOUT
 from xknx.knxip import HPAI, ConnectionStateRequest, ConnectionStateResponse, KNXIPFrame
 
-from .const import CONNECTIONSTATE_REQUEST_TIMEOUT
 from .request_response import RequestResponse
 
 if TYPE_CHECKING:
+    from xknx.io.udp_client import UDPClient
     from xknx.xknx import XKNX
-
-    from .udp_client import UDPClient
 
 
 class ConnectionState(RequestResponse):
@@ -17,8 +18,8 @@ class ConnectionState(RequestResponse):
 
     def __init__(
         self,
-        xknx: "XKNX",
-        udp_client: "UDPClient",
+        xknx: XKNX,
+        udp_client: UDPClient,
         communication_channel_id: int,
         route_back: bool = False,
     ):

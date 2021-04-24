@@ -1,6 +1,8 @@
 """Module for managing a KNX scene."""
+from __future__ import annotations
+
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional
+from typing import TYPE_CHECKING, Iterator
 
 from xknx.remote_value import GroupAddressesType, RemoteValueSceneNumber
 
@@ -17,14 +19,13 @@ class Scene(Device):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         name: str,
-        group_address: Optional[GroupAddressesType] = None,
+        group_address: GroupAddressesType | None = None,
         scene_number: int = 1,
-        device_updated_cb: Optional[DeviceCallbackType] = None,
+        device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Sceneclass."""
-        # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
 
         # TODO: state_updater: disable for scene number per default?
@@ -42,34 +43,16 @@ class Scene(Device):
         yield self.scene_value
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return unique id for this device."""
         return f"{self.scene_value.group_address}_{self.scene_number}"
 
-    @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Scene":
-        """Initialize object from configuration structure."""
-        group_address = config.get("group_address")
-        scene_number = int(config.get("scene_number"))  # type: ignore
-        return cls(
-            xknx, name=name, group_address=group_address, scene_number=scene_number
-        )
-
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<Scene name="{}" ' 'scene_value="{}" scene_number="{}" />'.format(
+        return '<Scene name="{}" ' 'scene_value={} scene_number="{}" />'.format(
             self.name, self.scene_value.group_addr_str(), self.scene_number
         )
 
     async def run(self) -> None:
         """Activate scene."""
         await self.scene_value.set(self.scene_number)
-
-    async def do(self, action: str) -> None:
-        """Execute 'do' commands."""
-        if action == "run":
-            await self.run()
-        else:
-            logger.warning(
-                "Could not understand action %s for device %s", action, self.get_name()
-            )

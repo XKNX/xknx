@@ -1,5 +1,5 @@
 """Factory function to initialize KNX devices from config."""
-from typing import Optional, Tuple
+from __future__ import annotations
 
 from xknx import XKNX
 from xknx.devices import (
@@ -84,6 +84,7 @@ def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
         ),
         group_address_angle=config.get(CoverSchema.CONF_ANGLE_ADDRESS),
         group_address_angle_state=config.get(CoverSchema.CONF_ANGLE_STATE_ADDRESS),
+        group_address_locked_state=config.get(CoverSchema.CONF_LOCKED_STATE_ADDRESS),
         group_address_position=config.get(CoverSchema.CONF_POSITION_ADDRESS),
         travel_time_down=config[CoverSchema.CONF_TRAVELLING_TIME_DOWN],
         travel_time_up=config[CoverSchema.CONF_TRAVELLING_TIME_UP],
@@ -95,7 +96,7 @@ def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
 
 def _create_light_color(
     color: str, config: ConfigType
-) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
+) -> tuple[str | None, str | None, str | None, str | None]:
     """Load color configuration from configuration structure."""
     if "individual_colors" in config and color in config["individual_colors"]:
         sub_config = config["individual_colors"][color]
@@ -264,9 +265,9 @@ def _create_climate(knx_module: XKNX, config: ConfigType) -> XknxClimate:
         max_temp=config.get(ClimateSchema.CONF_MAX_TEMP),
         mode=climate_mode,
         on_off_invert=config[ClimateSchema.CONF_ON_OFF_INVERT],
-        create_temperature_sensors=config.get(
+        create_temperature_sensors=config[
             ClimateSchema.CONF_CREATE_TEMPERATURE_SENSORS
-        ),
+        ],
     )
 
 
@@ -277,7 +278,7 @@ def _create_switch(knx_module: XKNX, config: ConfigType) -> XknxSwitch:
         name=config[CONF_NAME],
         group_address=config[KNX_ADDRESS],
         group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
-        invert=config.get(SwitchSchema.CONF_INVERT),
+        invert=config[SwitchSchema.CONF_INVERT],
     )
 
 
@@ -290,7 +291,6 @@ def _create_sensor(knx_module: XKNX, config: ConfigType) -> XknxSensor:
         sync_state=config[SensorSchema.CONF_SYNC_STATE],
         always_callback=config[SensorSchema.CONF_ALWAYS_CALLBACK],
         value_type=config[CONF_TYPE],
-        ha_value_template=config.get(SensorSchema.CONF_VALUE_TEMPLATE),
     )
 
 
@@ -321,7 +321,7 @@ def _create_binary_sensor(knx_module: XKNX, config: ConfigType) -> XknxBinarySen
         knx_module,
         name=device_name,
         group_address_state=config[BinarySensorSchema.CONF_STATE_ADDRESS],
-        invert=config.get(BinarySensorSchema.CONF_INVERT),
+        invert=config[BinarySensorSchema.CONF_INVERT],
         sync_state=config[BinarySensorSchema.CONF_SYNC_STATE],
         device_class=config.get(CONF_DEVICE_CLASS),
         ignore_internal_state=config[BinarySensorSchema.CONF_IGNORE_INTERNAL_STATE],

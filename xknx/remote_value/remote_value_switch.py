@@ -3,7 +3,9 @@ Module for managing an DPT Switch remote value.
 
 DPT 1.001.
 """
-from typing import TYPE_CHECKING, Optional, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -19,17 +21,16 @@ class RemoteValueSwitch(RemoteValue[DPTBinary, bool]):
 
     def __init__(
         self,
-        xknx: "XKNX",
-        group_address: Optional[GroupAddressesType] = None,
-        group_address_state: Optional[GroupAddressesType] = None,
+        xknx: XKNX,
+        group_address: GroupAddressesType | None = None,
+        group_address_state: GroupAddressesType | None = None,
         sync_state: bool = True,
-        device_name: Optional[str] = None,
+        device_name: str | None = None,
         feature_name: str = "State",
-        after_update_cb: Optional[AsyncCallbackType] = None,
+        after_update_cb: AsyncCallbackType | None = None,
         invert: bool = False,
     ):
         """Initialize remote value of KNX DPT 1.001."""
-        # pylint: disable=too-many-arguments
         super().__init__(
             xknx,
             group_address,
@@ -41,9 +42,7 @@ class RemoteValueSwitch(RemoteValue[DPTBinary, bool]):
         )
         self.invert = bool(invert)
 
-    def payload_valid(
-        self, payload: Optional[Union[DPTArray, DPTBinary]]
-    ) -> Optional[DPTBinary]:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTBinary | None:
         """Test if telegram payload may be parsed."""
         # pylint: disable=no-self-use
         return payload if isinstance(payload, DPTBinary) else None

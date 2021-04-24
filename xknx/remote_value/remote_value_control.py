@@ -4,7 +4,9 @@ Module for managing a control remote value.
 Examples are switching commands with priority control, relative dimming or blinds control commands.
 DPT 2.yyy and DPT 3.yyy
 """
-from typing import TYPE_CHECKING, Any, Optional, Type, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTControlStepCode
 from xknx.exceptions import ConversionError
@@ -20,17 +22,16 @@ class RemoteValueControl(RemoteValue[DPTBinary, Any]):
 
     def __init__(
         self,
-        xknx: "XKNX",
-        group_address: Optional[GroupAddressesType] = None,
-        group_address_state: Optional[GroupAddressesType] = None,
+        xknx: XKNX,
+        group_address: GroupAddressesType | None = None,
+        group_address_state: GroupAddressesType | None = None,
         sync_state: bool = True,
-        value_type: Optional[str] = None,
-        device_name: Optional[str] = None,
+        value_type: str | None = None,
+        device_name: str | None = None,
         feature_name: str = "Control",
-        after_update_cb: Optional[AsyncCallbackType] = None,
+        after_update_cb: AsyncCallbackType | None = None,
     ):
         """Initialize control remote value."""
-        # pylint: disable=too-many-arguments
         if value_type is None:
             raise ConversionError("no value type given", device_name=device_name)
         # TODO: typing - parse from DPTControlStepCode when parse_transcoder is a classmethod
@@ -39,7 +40,7 @@ class RemoteValueControl(RemoteValue[DPTBinary, Any]):
             raise ConversionError(
                 "invalid value type", value_type=value_type, device_name=device_name
             )
-        self.dpt_class: Type[DPTControlStepCode] = _dpt_class  # type: ignore
+        self.dpt_class: type[DPTControlStepCode] = _dpt_class  # type: ignore
         super().__init__(
             xknx,
             group_address,
@@ -50,9 +51,7 @@ class RemoteValueControl(RemoteValue[DPTBinary, Any]):
             after_update_cb=after_update_cb,
         )
 
-    def payload_valid(
-        self, payload: Optional[Union[DPTArray, DPTBinary]]
-    ) -> Optional[DPTBinary]:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTBinary | None:
         """Test if telegram payload may be parsed."""
         # pylint: disable=no-self-use
         return payload if isinstance(payload, DPTBinary) else None
@@ -67,11 +66,11 @@ class RemoteValueControl(RemoteValue[DPTBinary, Any]):
         return self.dpt_class.from_knx((payload.value,))
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return self.dpt_class.unit
 
     @property
-    def ha_device_class(self) -> Optional[str]:
+    def ha_device_class(self) -> str | None:
         """Return a string representing the home assistant device class."""
         return getattr(self.dpt_class, "ha_device_class", None)  # type: ignore

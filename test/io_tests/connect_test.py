@@ -1,10 +1,10 @@
 """Unit test for KNX/IP Connect Request/Response."""
-import asyncio
-import unittest
 from unittest.mock import patch
 
+import pytest
 from xknx import XKNX
-from xknx.io import Connect, UDPClient
+from xknx.io import UDPClient
+from xknx.io.request_response import Connect
 from xknx.knxip import (
     HPAI,
     ConnectRequest,
@@ -16,26 +16,18 @@ from xknx.knxip import (
 )
 
 
-class TestConnect(unittest.TestCase):
+@pytest.mark.asyncio
+class TestConnect:
     """Test class for xknx/io/Connect objects."""
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
-    def test_connect(self):
+    async def test_connect(self):
         """Test connecting from KNX bus."""
         xknx = XKNX()
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
         connect = Connect(xknx, udp_client, route_back=False)
         connect.timeout_in_seconds = 0
 
-        self.assertEqual(connect.awaited_response_class, ConnectResponse)
+        assert connect.awaited_response_class == ConnectResponse
 
         # Expected KNX/IP-Frame:
         exp_knxipframe = KNXIPFrame.init_from_body(
@@ -51,7 +43,7 @@ class TestConnect(unittest.TestCase):
             "xknx.io.UDPClient.getsockname"
         ) as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
-            self.loop.run_until_complete(connect.start())
+            await connect.start()
             mock_udp_send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type
@@ -80,18 +72,18 @@ class TestConnect(unittest.TestCase):
         res_knxipframe.body.communication_channel = 23
         res_knxipframe.body.identifier = 7
         connect.response_rec_callback(res_knxipframe, None)
-        self.assertTrue(connect.success)
-        self.assertEqual(connect.communication_channel, 23)
-        self.assertEqual(connect.identifier, 7)
+        assert connect.success
+        assert connect.communication_channel == 23
+        assert connect.identifier == 7
 
-    def test_connect_route_back_true(self):
+    async def test_connect_route_back_true(self):
         """Test connecting from KNX bus."""
         xknx = XKNX()
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
         connect = Connect(xknx, udp_client, route_back=True)
         connect.timeout_in_seconds = 0
 
-        self.assertEqual(connect.awaited_response_class, ConnectResponse)
+        assert connect.awaited_response_class == ConnectResponse
 
         # Expected KNX/IP-Frame:
         exp_knxipframe = KNXIPFrame.init_from_body(
@@ -101,7 +93,7 @@ class TestConnect(unittest.TestCase):
             "xknx.io.UDPClient.getsockname"
         ) as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
-            self.loop.run_until_complete(connect.start())
+            await connect.start()
             mock_udp_send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type
@@ -130,6 +122,6 @@ class TestConnect(unittest.TestCase):
         res_knxipframe.body.communication_channel = 23
         res_knxipframe.body.identifier = 7
         connect.response_rec_callback(res_knxipframe, None)
-        self.assertTrue(connect.success)
-        self.assertEqual(connect.communication_channel, 23)
-        self.assertEqual(connect.identifier, 7)
+        assert connect.success
+        assert connect.communication_channel == 23
+        assert connect.identifier == 7

@@ -1,6 +1,6 @@
 # XKNX - An Asynchronous KNX Library Written in Python
 
-[![Coverage Status](https://coveralls.io/repos/github/XKNX/xknx/badge.svg?branch=main)](https://coveralls.io/github/XKNX/xknx?branch=main)
+[![codecov](https://codecov.io/gh/XKNX/xknx/branch/main/graph/badge.svg?token=irWbIygS84)](https://codecov.io/gh/XKNX/xknx)
 [![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
@@ -14,7 +14,7 @@ We need your help for testing and improving XKNX. For questions, feature request
 
 ## Development
 
-You will need at least Python 3.7 in order to use XKNX.
+You will need at least Python 3.8 in order to use XKNX.
 
 Setting up your local environment:
 

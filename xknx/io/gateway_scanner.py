@@ -5,11 +5,12 @@ GatewayScanner is an abstraction for searching for KNX/IP devices on the local n
 * and sends UDP multicast search requests
 * it returns the first found device
 """
+from __future__ import annotations
 
 import asyncio
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 import netifaces
 from xknx.knxip import (
@@ -33,8 +34,6 @@ logger = logging.getLogger("xknx.log")
 class GatewayDescriptor:
     """Used to return information about the discovered gateways."""
 
-    # pylint: disable=too-few-public-methods
-
     def __init__(
         self,
         name: str,
@@ -46,7 +45,6 @@ class GatewayDescriptor:
         supports_routing: bool = False,
     ):
         """Initialize GatewayDescriptor class."""
-        # pylint: disable=too-many-arguments
         self.name = name
         self.ip_addr = ip_addr
         self.port = port
@@ -71,13 +69,11 @@ class GatewayDescriptor:
 class GatewayScanFilter:
     """Filter to limit gateway scan attempts."""
 
-    # pylint: disable=too-few-public-methods
-
     def __init__(
         self,
-        name: Optional[str] = None,
-        tunnelling: Optional[bool] = None,
-        routing: Optional[bool] = None,
+        name: str | None = None,
+        tunnelling: bool | None = None,
+        routing: bool | None = None,
     ):
         """Initialize GatewayScanFilter class."""
         self.name = name
@@ -101,13 +97,11 @@ class GatewayScanFilter:
 class GatewayScanner:
     """Class for searching KNX/IP devices."""
 
-    # pylint: disable=too-few-public-methods
-    # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         timeout_in_seconds: float = 4.0,
-        stop_on_found: Optional[int] = 1,
+        stop_on_found: int | None = 1,
         scan_filter: GatewayScanFilter = GatewayScanFilter(),
     ):
         """Initialize GatewayScanner class."""
@@ -115,13 +109,13 @@ class GatewayScanner:
         self.timeout_in_seconds = timeout_in_seconds
         self.stop_on_found = stop_on_found
         self.scan_filter = scan_filter
-        self.found_gateways: List[GatewayDescriptor] = []
-        self._udp_clients: List[UDPClient] = []
-        self._response_received_or_timeout = asyncio.Event()
+        self.found_gateways: list[GatewayDescriptor] = []
+        self._udp_clients: list[UDPClient] = []
+        self._response_received_event = asyncio.Event()
         self._count_upper_bound = 0
         """Clean value of self.stop_on_found, computed when ``scan`` is called."""
 
-    async def scan(self) -> List[GatewayDescriptor]:
+    async def scan(self) -> list[GatewayDescriptor]:
         """Scan and return a list of GatewayDescriptors on success."""
         if self.stop_on_found is None:
             self._count_upper_bound = 0
@@ -130,7 +124,7 @@ class GatewayScanner:
         await self._send_search_requests()
         try:
             await asyncio.wait_for(
-                self._response_received_or_timeout.wait(),
+                self._response_received_event.wait(),
                 timeout=self.timeout_in_seconds,
             )
         except asyncio.TimeoutError:
@@ -146,7 +140,6 @@ class GatewayScanner:
 
     async def _send_search_requests(self) -> None:
         """Find all interfaces with active IPv4 connection to search for gateways."""
-        # pylint: disable=no-member
         for interface in netifaces.interfaces():
             try:
                 af_inet = netifaces.ifaddresses(interface)[netifaces.AF_INET]
@@ -213,4 +206,4 @@ class GatewayScanner:
         if self.scan_filter.match(gateway):
             self.found_gateways.append(gateway)
             if 0 < self._count_upper_bound <= len(self.found_gateways):
-                self._response_received_or_timeout.set()
+                self._response_received_event.set()

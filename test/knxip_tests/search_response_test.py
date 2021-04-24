@@ -1,7 +1,4 @@
 """Unit test for KNX/IP SearchResponse objects."""
-import asyncio
-import unittest
-
 from xknx import XKNX
 from xknx.knxip import (
     HPAI,
@@ -13,19 +10,8 @@ from xknx.knxip import (
 )
 
 
-class Test_KNXIP_Discovery(unittest.TestCase):
+class TestKNXIPSearchResponse:
     """Test class for KNX/IP SearchResponse objects."""
-
-    # pylint: disable=too-many-public-methods,invalid-name
-
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
 
     def test_search_response(self):
         """Test parsing and streaming SearchResponse KNX/IP packet."""
@@ -113,23 +99,21 @@ class Test_KNXIP_Discovery(unittest.TestCase):
         )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
-        self.assertEqual(knxipframe.from_knx(raw), 80)
-        self.assertEqual(knxipframe.to_knx(), list(raw))
+        assert knxipframe.from_knx(raw) == 80
+        assert knxipframe.to_knx() == list(raw)
 
-        self.assertTrue(isinstance(knxipframe.body, SearchResponse))
-        self.assertEqual(knxipframe.body.control_endpoint, HPAI("192.168.42.10", 3671))
-        self.assertEqual(len(knxipframe.body.dibs), 2)
+        assert isinstance(knxipframe.body, SearchResponse)
+        assert knxipframe.body.control_endpoint == HPAI("192.168.42.10", 3671)
+        assert len(knxipframe.body.dibs) == 2
         # Specific testing of parsing and serializing of
         # DIBDeviceInformation and DIBSuppSVCFamilies is
         # done within knxip_dib_test.py
-        self.assertTrue(isinstance(knxipframe.body.dibs[0], DIBDeviceInformation))
-        self.assertTrue(isinstance(knxipframe.body.dibs[1], DIBSuppSVCFamilies))
-        self.assertEqual(knxipframe.body.device_name, "Gira KNX/IP-Router")
-        self.assertTrue(knxipframe.body.dibs[1].supports(DIBServiceFamily.ROUTING))
-        self.assertTrue(knxipframe.body.dibs[1].supports(DIBServiceFamily.TUNNELING))
-        self.assertFalse(
-            knxipframe.body.dibs[1].supports(DIBServiceFamily.OBJECT_SERVER)
-        )
+        assert isinstance(knxipframe.body.dibs[0], DIBDeviceInformation)
+        assert isinstance(knxipframe.body.dibs[1], DIBSuppSVCFamilies)
+        assert knxipframe.body.device_name == "Gira KNX/IP-Router"
+        assert knxipframe.body.dibs[1].supports(DIBServiceFamily.ROUTING)
+        assert knxipframe.body.dibs[1].supports(DIBServiceFamily.TUNNELING)
+        assert not knxipframe.body.dibs[1].supports(DIBServiceFamily.OBJECT_SERVER)
 
         search_response = SearchResponse(
             xknx, control_endpoint=HPAI(ip_addr="192.168.42.10", port=3671)
@@ -138,10 +122,10 @@ class Test_KNXIP_Discovery(unittest.TestCase):
         search_response.dibs.append(knxipframe.body.dibs[1])
         knxipframe2 = KNXIPFrame.init_from_body(search_response)
 
-        self.assertEqual(knxipframe2.to_knx(), list(raw))
+        assert knxipframe2.to_knx() == list(raw)
 
     def test_unknown_device_name(self):
         """Test device_name if no DIBDeviceInformation is present."""
         xknx = XKNX()
         search_response = SearchResponse(xknx)
-        self.assertEqual(search_response.device_name, "UNKNOWN")
+        assert search_response.device_name == "UNKNOWN"

@@ -32,17 +32,6 @@ await xknx.devices['TimeTest'].sync()
 * `localtime` If set `True` sync() and GroupValueRead requests always return the current local time. On `False` the set value will be sent. Default: `True`
 * `device_updated_cb` awaitable callback for each update.
 
-
-## [](#header-2)Configuration via **xknx.yaml**
-
-Time objects are usually configured via [`xknx.yaml`](/configuration):
-
-```yaml
-groups:
-    time:
-        General.Time: {group_address: '2/1/2'}
-```
-
 ## [](#header-2)Daemon mode
 
 When XKNX is started in [daemon mode](/xknx), with START_STATE_UPDATER enabled, XKNX will automatically send the time to the KNX bus with the `sync_state`-loop.

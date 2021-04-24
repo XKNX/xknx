@@ -1,10 +1,47 @@
 # Changelog
 
-## Unreleased changes
+## 0.18.1 Internal group addresses 2021-04-23
+
+### Devices
+
+- Add InternalGroupAddress for communication between Devices without sending to the bus.
+
+### Internals
+
+- RemoteValue.value changed to a settable property. It is used to create payloads for outgoing telegrams.
+- RemoteValue.update_value (async) sets a new value and awaits the callbacks without sending to the bus.
+- Round DPT 14 values to precision of 7 digits
+
+## 0.18.0
+
+## Devices
+
+- Add support for cover lock
+- ExposeSensor values can now be read from other xknx devices that share a group address
+- Add more information to sensors and binary sensors in the HA integration
+
+### Breaking Changes
+
+- Remove configuration handling from core library (use https://xknx.io/config-converter)
+
+### Internals
+
+- Drop support for python 3.7
+- use pytest tests instead of unittest TestCase
+- Move RequestResponse and subclasses to xknx.io.request_response.*
+- Move ConnectionConfig to xknx.io.connection
+- Store last Telegram and decoded value in RemoteValue
+- Improve CI to use Codecov instead of Coveralls for code coverage reports
+
+## 0.17.5 Add support for unique ids 2021-03-30
 
 ### HA integration
 
 - Add experimental (opt-in) support for unique ids
+
+### Internals
+
+- Remove unfinished config v2
 
 ## 0.17.4 Bugfix for ValueReader 2021-03-26
 

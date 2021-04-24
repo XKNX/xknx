@@ -3,7 +3,9 @@ Module for Serialization and Deserialization of a KNX Connect Request informatio
 
 Connect requests are used to start a new tunnel connection on a KNX/IP device.
 """
-from typing import TYPE_CHECKING, List
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from xknx.exceptions import CouldNotParseKNXIP
 
@@ -18,15 +20,12 @@ if TYPE_CHECKING:
 class ConnectRequest(KNXIPBody):
     """Representation of a KNX Connect Request."""
 
-    # pylint: disable=too-many-instance-attributes
-
-    service_type = KNXIPServiceType.CONNECT_REQUEST
-
+    SERVICE_TYPE = KNXIPServiceType.CONNECT_REQUEST
     CRI_LENGTH = 4
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         request_type: ConnectRequestType = ConnectRequestType.TUNNEL_CONNECTION,
         control_endpoint: HPAI = HPAI(),
         data_endpoint: HPAI = HPAI(),
@@ -61,10 +60,10 @@ class ConnectRequest(KNXIPBody):
         pos += cri_from_knx(raw[pos:])
         return pos
 
-    def to_knx(self) -> List[int]:
+    def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
 
-        def cri_to_knx() -> List[int]:
+        def cri_to_knx() -> list[int]:
             """Serialize CRI (Connect Request Information)."""
             cri = []
             cri.append(ConnectRequest.CRI_LENGTH)

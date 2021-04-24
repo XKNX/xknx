@@ -41,20 +41,10 @@ sensor.resolve_state()
 
 # Returns the unit of the value as string
 sensor.unit_of_measurement()
+
+# Returns the last received telegram or None
+sensor.last_telegram
 ```
-
-## [](#header-2)Configuration via **xknx.yaml**
-
-Sensor objects are usually configured via [`xknx.yaml`](/configuration):
-
-```yaml
-    sensor:
-        Heating.Valve1: {group_address_state: '2/0/0', value_type: 'percent'}
-        Heating.Valve2: {group_address_state: '2/0/1', value_type: 'percent', sync_state: False}
-        Kitchen.Temperature: {group_address_state: '2/0/2', value_type: 'temperature'}
-        Some.Other.Value: {group_address_state: '2/0/3'}
-```
-
 
 
 

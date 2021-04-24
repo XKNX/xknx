@@ -3,7 +3,7 @@ Module for managing an 1 count remote value.
 
 DPT 6.010.
 """
-from typing import Optional, Union
+from __future__ import annotations
 
 from xknx.dpt import DPTArray, DPTBinary, DPTValue1Count
 
@@ -15,9 +15,7 @@ class RemoteValue1Count(RemoteValue[DPTArray, int]):
 
     # pylint: disable=no-self-use
 
-    def payload_valid(
-        self, payload: Optional[Union[DPTArray, DPTBinary]]
-    ) -> Optional[DPTArray]:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray | None:
         """Test if telegram payload may be parsed."""
         return (
             payload

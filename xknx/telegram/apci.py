@@ -6,10 +6,12 @@ APCI stands for Application Layer Protocol Control Information.
 An APCI payload contains a service and payload. For example, a GroupValueWrite
 is a service that takes a DPT as a value.
 """
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from enum import Enum
 import struct
-from typing import ClassVar, Optional, Union, cast
+from typing import ClassVar, cast
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
@@ -17,9 +19,9 @@ from xknx.telegram.address import IndividualAddress
 
 
 def encode_cmd_and_payload(
-    cmd: Union["APCIService", "APCIUserService", "APCIExtendedService"],
+    cmd: APCIService | APCIUserService | APCIExtendedService,
     encoded_payload: int = 0,
-    appended_payload: Optional[bytes] = None,
+    appended_payload: bytes | None = None,
     additional_flags = None,
 ) -> bytes:
     """Encode cmd and payload."""
@@ -111,7 +113,7 @@ class APCI(ABC):
     This base class is only the interface for the derived classes.
     """
 
-    code: ClassVar[Union[APCIService, APCIUserService, APCIExtendedService]] = cast(
+    CODE: ClassVar[APCIService | APCIUserService | APCIExtendedService] = cast(
         APCIService, None
     )
 
@@ -132,7 +134,7 @@ class APCI(ABC):
         return self.__dict__ == other.__dict__
 
     @staticmethod
-    def resolve_apci(apci: int) -> "APCI":
+    def resolve_apci(apci: int) -> APCI:
         """
         Return APCI instance from APCI command.
 
@@ -219,7 +221,7 @@ class GroupValueRead(APCI):
     Does not have any payload.
     """
 
-    code = APCIService.GROUP_READ
+    CODE = APCIService.GROUP_READ
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -233,7 +235,7 @@ class GroupValueRead(APCI):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        return encode_cmd_and_payload(self.code)
+        return encode_cmd_and_payload(self.CODE)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -246,9 +248,9 @@ class GroupValueWrite(APCI):
     Takes a value (DPT) as payload.
     """
 
-    code = APCIService.GROUP_WRITE
+    CODE = APCIService.GROUP_WRITE
 
-    def __init__(self, value: Optional[Union[DPTBinary, DPTArray]] = None) -> None:
+    def __init__(self, value: DPTBinary | DPTArray | None = None) -> None:
         """Initialize a new instance of GroupValueWrite."""
         self.value = value
 
@@ -270,10 +272,10 @@ class GroupValueWrite(APCI):
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
         if isinstance(self.value, DPTBinary):
-            return encode_cmd_and_payload(self.code, encoded_payload=self.value.value)
+            return encode_cmd_and_payload(self.CODE, encoded_payload=self.value.value)
         if isinstance(self.value, DPTArray):
             return encode_cmd_and_payload(
-                self.code, appended_payload=bytes(self.value.value)
+                self.CODE, appended_payload=bytes(self.value.value)
             )
         raise TypeError()
 
@@ -289,9 +291,9 @@ class GroupValueResponse(APCI):
     Takes a value (DPT) as payload.
     """
 
-    code = APCIService.GROUP_RESPONSE
+    CODE = APCIService.GROUP_RESPONSE
 
-    def __init__(self, value: Optional[Union[DPTBinary, DPTArray]] = None) -> None:
+    def __init__(self, value: DPTBinary | DPTArray | None = None) -> None:
         """Initialize a new instance of GroupValueResponse."""
         self.value = value
 
@@ -313,10 +315,10 @@ class GroupValueResponse(APCI):
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
         if isinstance(self.value, DPTBinary):
-            return encode_cmd_and_payload(self.code, encoded_payload=self.value.value)
+            return encode_cmd_and_payload(self.CODE, encoded_payload=self.value.value)
         if isinstance(self.value, DPTArray):
             return encode_cmd_and_payload(
-                self.code, appended_payload=bytes(self.value.value)
+                self.CODE, appended_payload=bytes(self.value.value)
             )
         raise TypeError()
 
@@ -332,11 +334,11 @@ class IndividualAddressWrite(APCI):
     Payload contains the serial number and (new) address of the device.
     """
 
-    code = APCIService.INDIVIDUAL_ADDRESS_WRITE
+    CODE = APCIService.INDIVIDUAL_ADDRESS_WRITE
 
     def __init__(
         self,
-        address: Optional[IndividualAddress] = None,
+        address: IndividualAddress | None = None,
     ) -> None:
         """Initialize a new instance of IndividualAddressWrite."""
         if address is None:
@@ -357,7 +359,7 @@ class IndividualAddressWrite(APCI):
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
         return encode_cmd_and_payload(
-            self.code, appended_payload=bytes(self.address.to_knx())
+            self.CODE, appended_payload=bytes(self.address.to_knx())
         )
 
     def __str__(self) -> str:
@@ -368,7 +370,7 @@ class IndividualAddressWrite(APCI):
 class IndividualAddressRead(APCI):
     """IndividualAddressRead service."""
 
-    code = APCIService.INDIVIDUAL_ADDRESS_READ
+    CODE = APCIService.INDIVIDUAL_ADDRESS_READ
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -382,7 +384,7 @@ class IndividualAddressRead(APCI):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        return encode_cmd_and_payload(self.code)
+        return encode_cmd_and_payload(self.CODE)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -397,7 +399,7 @@ class IndividualAddressResponse(APCI):
     response address.
     """
 
-    code = APCIService.INDIVIDUAL_ADDRESS_RESPONSE
+    CODE = APCIService.INDIVIDUAL_ADDRESS_RESPONSE
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -411,7 +413,7 @@ class IndividualAddressResponse(APCI):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        return encode_cmd_and_payload(self.code)
+        return encode_cmd_and_payload(self.CODE)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -425,7 +427,7 @@ class ADCRead(APCI):
     Payload contains the channel and number of samples to take.
     """
 
-    code = APCIService.ADC_READ
+    CODE = APCIService.ADC_READ
 
     def __init__(self, channel: int = 0, count: int = 0) -> None:
         """Initialize a new instance of ADCRead."""
@@ -447,7 +449,7 @@ class ADCRead(APCI):
         payload = struct.pack("!BB", self.channel, self.count)
 
         return encode_cmd_and_payload(
-            self.code, encoded_payload=payload[0], appended_payload=payload[1:]
+            self.CODE, encoded_payload=payload[0], appended_payload=payload[1:]
         )
 
     def __str__(self) -> str:
@@ -462,7 +464,7 @@ class ADCResponse(APCI):
     Payload contains the channel, number of samples and value.
     """
 
-    code = APCIService.ADC_RESPONSE
+    CODE = APCIService.ADC_RESPONSE
 
     def __init__(self, channel: int = 0, count: int = 0, value: int = 0) -> None:
         """Initialize a new instance of ADCResponse."""
@@ -485,7 +487,7 @@ class ADCResponse(APCI):
         payload = struct.pack("!BBH", self.channel, self.count, self.value)
 
         return encode_cmd_and_payload(
-            self.code, encoded_payload=payload[0], appended_payload=payload[1:]
+            self.CODE, encoded_payload=payload[0], appended_payload=payload[1:]
         )
 
     def __str__(self) -> str:
@@ -500,7 +502,7 @@ class MemoryRead(APCI):
     Payload indicates address (64 KiB) and count (1-63 bytes).
     """
 
-    code = APCIService.MEMORY_READ
+    CODE = APCIService.MEMORY_READ
 
     def __init__(self, address: int = 0, count: int = 0) -> None:
         """Initialize a new instance of MemoryRead."""
@@ -527,7 +529,7 @@ class MemoryRead(APCI):
         payload = struct.pack("!BH", self.count, self.address)
 
         return encode_cmd_and_payload(
-            self.code, encoded_payload=payload[0], appended_payload=payload[1:]
+            self.CODE, encoded_payload=payload[0], appended_payload=payload[1:]
         )
 
     def __str__(self) -> str:
@@ -542,10 +544,10 @@ class MemoryWrite(APCI):
     Payload indicates address (64 KiB), count (1-63 bytes) and data.
     """
 
-    code = APCIService.MEMORY_WRITE
+    CODE = APCIService.MEMORY_WRITE
 
     def __init__(
-        self, address: int = 0, count: int = 0, data: Optional[bytes] = None
+        self, address: int = 0, count: int = 0, data: bytes | None = None
     ) -> None:
         """Initialize a new instance of MemoryWrite."""
 
@@ -579,7 +581,7 @@ class MemoryWrite(APCI):
         payload = struct.pack(f"!BH{size}s", self.count, self.address, self.data)
 
         return encode_cmd_and_payload(
-            self.code, encoded_payload=payload[0], appended_payload=payload[1:]
+            self.CODE, encoded_payload=payload[0], appended_payload=payload[1:]
         )
 
     def __str__(self) -> str:
@@ -594,10 +596,10 @@ class MemoryResponse(APCI):
     Payload indicates address (64 KiB), count (1-63 bytes) and data.
     """
 
-    code = APCIService.MEMORY_RESPONSE
+    CODE = APCIService.MEMORY_RESPONSE
 
     def __init__(
-        self, address: int = 0, count: int = 0, data: Optional[bytes] = None
+        self, address: int = 0, count: int = 0, data: bytes | None = None
     ) -> None:
         """Initialize a new instance of MemoryResponse."""
 
@@ -631,7 +633,7 @@ class MemoryResponse(APCI):
         payload = struct.pack(f"!BH{size}s", self.count, self.address, self.data)
 
         return encode_cmd_and_payload(
-            self.code, encoded_payload=payload[0], appended_payload=payload[1:]
+            self.CODE, encoded_payload=payload[0], appended_payload=payload[1:]
         )
 
     def __str__(self) -> str:
@@ -646,7 +648,7 @@ class DeviceDescriptorRead(APCI):
     Payload contains the descriptor.
     """
 
-    code = APCIService.DEVICE_DESCRIPTOR_READ
+    CODE = APCIService.DEVICE_DESCRIPTOR_READ
 
     def __init__(self, descriptor: int = 0, is_numbered = False) -> None:
         """Initialize a new instance of DeviceDescriptorRead."""
@@ -687,7 +689,7 @@ class DeviceDescriptorResponse(APCI):
     Payload contains the descriptor and value.
     """
 
-    code = APCIService.DEVICE_DESCRIPTOR_RESPONSE
+    CODE = APCIService.DEVICE_DESCRIPTOR_RESPONSE
 
     def __init__(self, descriptor: int = 0, value: int = 0) -> None:
         """Initialize a new instance of DeviceDescriptorResponse."""
@@ -712,7 +714,7 @@ class DeviceDescriptorResponse(APCI):
         payload = struct.pack("!H", self.value)
 
         return encode_cmd_and_payload(
-            self.code, encoded_payload=self.descriptor, appended_payload=payload
+            self.CODE, encoded_payload=self.descriptor, appended_payload=payload
         )
 
     def __str__(self) -> str:
@@ -729,7 +731,7 @@ class Restart(APCI):
     Does not take any payload.
     """
 
-    code = APCIService.RESTART
+    CODE = APCIService.RESTART
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -743,7 +745,7 @@ class Restart(APCI):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        return encode_cmd_and_payload(self.code)
+        return encode_cmd_and_payload(self.CODE)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -757,7 +759,7 @@ class UserMemoryRead(APCI):
     Payload indicates address (1 MiB) and count (1-15 bytes).
     """
 
-    code = APCIUserService.USER_MEMORY_READ
+    CODE = APCIUserService.USER_MEMORY_READ
 
     def __init__(self, address: int = 0, count: int = 0) -> None:
         """Initialize a new instance of UserMemoryRead."""
@@ -787,7 +789,7 @@ class UserMemoryRead(APCI):
 
         payload = struct.pack("!BH", byte0, address)
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -801,10 +803,10 @@ class UserMemoryWrite(APCI):
     Payload indicates address (1 MiB), count and data.
     """
 
-    code = APCIUserService.USER_MEMORY_WRITE
+    CODE = APCIUserService.USER_MEMORY_WRITE
 
     def __init__(
-        self, address: int = 0, count: int = 0, data: Optional[bytes] = None
+        self, address: int = 0, count: int = 0, data: bytes | None = None
     ) -> None:
         """Initialize a new instance of UserMemoryWrite."""
 
@@ -841,7 +843,7 @@ class UserMemoryWrite(APCI):
         size = len(self.data)
         payload = struct.pack(f"!BH{size}s", byte0, address, self.data)
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -855,10 +857,10 @@ class UserMemoryResponse(APCI):
     Payload indicates address (1 MiB), count and data.
     """
 
-    code = APCIUserService.USER_MEMORY_RESPONSE
+    CODE = APCIUserService.USER_MEMORY_RESPONSE
 
     def __init__(
-        self, address: int = 0, count: int = 0, data: Optional[bytes] = None
+        self, address: int = 0, count: int = 0, data: bytes | None = None
     ) -> None:
         """Initialize a new instance of UserMemoryResponse."""
 
@@ -895,7 +897,7 @@ class UserMemoryResponse(APCI):
         size = len(self.data)
         payload = struct.pack(f"!BH{size}s", byte0, address, self.data)
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -905,7 +907,7 @@ class UserMemoryResponse(APCI):
 class UserManufacturerInfoRead(APCI):
     """UserManufacturerInfoRead service."""
 
-    code = APCIUserService.USER_MANUFACTURER_INFO_READ
+    CODE = APCIUserService.USER_MANUFACTURER_INFO_READ
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -920,7 +922,7 @@ class UserManufacturerInfoRead(APCI):
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
 
-        return encode_cmd_and_payload(self.code)
+        return encode_cmd_and_payload(self.CODE)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -930,9 +932,9 @@ class UserManufacturerInfoRead(APCI):
 class UserManufacturerInfoResponse(APCI):
     """UserManufacturerInfoResponse service."""
 
-    code = APCIUserService.USER_MANUFACTURER_INFO_RESPONSE
+    CODE = APCIUserService.USER_MANUFACTURER_INFO_RESPONSE
 
-    def __init__(self, manufacturer_id: int = 0, data: Optional[bytes] = None) -> None:
+    def __init__(self, manufacturer_id: int = 0, data: bytes | None = None) -> None:
         """Initialize a new instance of UserManufacturerInfoResponse."""
         if data is None:
             data = bytes([0x00, 0x00])
@@ -952,7 +954,7 @@ class UserManufacturerInfoResponse(APCI):
         """Serialize to KNX/IP raw data."""
         payload = struct.pack("!B2s", self.manufacturer_id, self.data)
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -962,10 +964,10 @@ class UserManufacturerInfoResponse(APCI):
 class FunctionPropertyCommand(APCI):
     """FunctionPropertyCommand service."""
 
-    code = APCIUserService.FUNCTION_PROPERTY_COMMAND
+    CODE = APCIUserService.FUNCTION_PROPERTY_COMMAND
 
     def __init__(
-        self, object_index: int = 0, property_id: int = 0, data: Optional[bytes] = None
+        self, object_index: int = 0, property_id: int = 0, data: bytes | None = None
     ) -> None:
         """Initialize a new instance of FunctionPropertyCommand."""
         if data is None:
@@ -994,7 +996,7 @@ class FunctionPropertyCommand(APCI):
             f"!BB{size}s", self.object_index, self.property_id, self.data
         )
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -1004,10 +1006,10 @@ class FunctionPropertyCommand(APCI):
 class FunctionPropertyStateRead(APCI):
     """FunctionPropertyStateRead service."""
 
-    code = APCIUserService.FUNCTION_PROPERTY_STATE_READ
+    CODE = APCIUserService.FUNCTION_PROPERTY_STATE_READ
 
     def __init__(
-        self, object_index: int = 0, property_id: int = 0, data: Optional[bytes] = None
+        self, object_index: int = 0, property_id: int = 0, data: bytes | None = None
     ) -> None:
         """Initialize a new instance of FunctionPropertyStateRead."""
         if data is None:
@@ -1036,7 +1038,7 @@ class FunctionPropertyStateRead(APCI):
             f"!BB{size}s", self.object_index, self.property_id, self.data
         )
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -1046,14 +1048,14 @@ class FunctionPropertyStateRead(APCI):
 class FunctionPropertyStateResponse(APCI):
     """FunctionPropertyStateResponse service."""
 
-    code = APCIUserService.FUNCTION_PROPERTY_STATE_READ
+    CODE = APCIUserService.FUNCTION_PROPERTY_STATE_READ
 
     def __init__(
         self,
         object_index: int = 0,
         property_id: int = 0,
         return_code: int = 0,
-        data: Optional[bytes] = None,
+        data: bytes | None = None,
     ) -> None:
         """Initialize a new instance of FunctionPropertyStateResponse."""
         if data is None:
@@ -1090,7 +1092,7 @@ class FunctionPropertyStateResponse(APCI):
             self.data,
         )
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -1100,7 +1102,7 @@ class FunctionPropertyStateResponse(APCI):
 class AuthorizeRequest(APCI):
     """AuthorizeRequest service."""
 
-    code = APCIExtendedService.AUTHORIZE_REQUEST
+    CODE = APCIExtendedService.AUTHORIZE_REQUEST
 
     def __init__(self, key: int = 0) -> None:
         """Initialize a new instance of AuthorizeRequest."""
@@ -1118,7 +1120,7 @@ class AuthorizeRequest(APCI):
         """Serialize to KNX/IP raw data."""
         payload = struct.pack("!BI", 0, self.key)
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -1128,7 +1130,7 @@ class AuthorizeRequest(APCI):
 class AuthorizeResponse(APCI):
     """AuthorizeResponse service."""
 
-    code = APCIExtendedService.AUTHORIZE_RESPONSE
+    CODE = APCIExtendedService.AUTHORIZE_RESPONSE
 
     def __init__(self, level: int = 0) -> None:
         """Initialize a new instance of AuthorizeResponse."""
@@ -1146,7 +1148,7 @@ class AuthorizeResponse(APCI):
         """Serialize to KNX/IP raw data."""
         payload = struct.pack("!B", self.level)
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -1160,7 +1162,7 @@ class PropertyValueRead(APCI):
     Payload indicates object, property, count and start.
     """
 
-    code = APCIExtendedService.PROPERTY_VALUE_READ
+    CODE = APCIExtendedService.PROPERTY_VALUE_READ
 
     def __init__(
         self,
@@ -1203,7 +1205,7 @@ class PropertyValueRead(APCI):
             self.start_index,
         )
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -1222,7 +1224,7 @@ class PropertyValueWrite(APCI):
     Payload indicates object, property, count, start and data itself.
     """
 
-    code = APCIExtendedService.PROPERTY_VALUE_WRITE
+    CODE = APCIExtendedService.PROPERTY_VALUE_WRITE
 
     def __init__(
         self,
@@ -1230,7 +1232,7 @@ class PropertyValueWrite(APCI):
         property_id: int = 0,
         count: int = 0,
         start_index: int = 0,
-        data: Optional[bytes] = None,
+        data: bytes | None = None,
     ) -> None:
         """Initialize a new instance of PropertyValueWrite."""
 
@@ -1263,7 +1265,7 @@ class PropertyValueWrite(APCI):
             self.data,
         )
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def from_knx(self, raw: bytes) -> None:
         """Parse/deserialize from KNX/IP raw data."""
@@ -1302,7 +1304,7 @@ class PropertyValueResponse(APCI):
     the payload depends on the data.
     """
 
-    code = APCIExtendedService.PROPERTY_VALUE_RESPONSE
+    CODE = APCIExtendedService.PROPERTY_VALUE_RESPONSE
 
     def __init__(
         self,
@@ -1310,7 +1312,7 @@ class PropertyValueResponse(APCI):
         property_id: int = 0,
         count: int = 0,
         start_index: int = 0,
-        data: Optional[bytes] = None,
+        data: bytes | None = None,
     ) -> None:
         """Initialize a new instance of PropertyValueResponse."""
 
@@ -1358,7 +1360,7 @@ class PropertyValueResponse(APCI):
             self.data,
         )
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -1377,7 +1379,7 @@ class PropertyValueResponse(APCI):
 class PropertyDescriptionRead(APCI):
     """PropertyDescriptionRead service."""
 
-    code = APCIExtendedService.PROPERTY_DESCRIPTION_READ
+    CODE = APCIExtendedService.PROPERTY_DESCRIPTION_READ
 
     def __init__(
         self, object_index: int = 0, property_id: int = 0, property_index: int = 0
@@ -1403,7 +1405,7 @@ class PropertyDescriptionRead(APCI):
             "!BBB", self.object_index, self.property_id, self.property_index
         )
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -1413,7 +1415,7 @@ class PropertyDescriptionRead(APCI):
 class PropertyDescriptionResponse(APCI):
     """PropertyDescriptionResponse service."""
 
-    code = APCIExtendedService.PROPERTY_DESCRIPTION_RESPONSE
+    CODE = APCIExtendedService.PROPERTY_DESCRIPTION_RESPONSE
 
     def __init__(
         self,
@@ -1464,7 +1466,7 @@ class PropertyDescriptionResponse(APCI):
             self.access,
         )
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -1474,9 +1476,9 @@ class PropertyDescriptionResponse(APCI):
 class IndividualAddressSerialRead(APCI):
     """IndividualAddressSerialRead service."""
 
-    code = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_READ
+    CODE = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_READ
 
-    def __init__(self, serial: Optional[bytes] = None) -> None:
+    def __init__(self, serial: bytes | None = None) -> None:
         """Initialize a new instance of PropertyDescriptionRead."""
         if serial is None:
             serial = bytes([0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
@@ -1498,7 +1500,7 @@ class IndividualAddressSerialRead(APCI):
 
         payload = struct.pack("!6s", self.serial)
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -1508,12 +1510,12 @@ class IndividualAddressSerialRead(APCI):
 class IndividualAddressSerialResponse(APCI):
     """IndividualAddressSerialResponse service."""
 
-    code = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_RESPONSE
+    CODE = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_RESPONSE
 
     def __init__(
         self,
-        serial: Optional[bytes] = None,
-        address: Optional[IndividualAddress] = None,
+        serial: bytes | None = None,
+        address: IndividualAddress | None = None,
     ) -> None:
         """Initialize a new instance of IndividualAddressSerialResponse."""
         if serial is None:
@@ -1542,7 +1544,7 @@ class IndividualAddressSerialResponse(APCI):
         address_high, address_low = self.address.to_knx()
         payload = struct.pack("!6sBBH", self.serial, address_high, address_low, 0)
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -1552,12 +1554,12 @@ class IndividualAddressSerialResponse(APCI):
 class IndividualAddressSerialWrite(APCI):
     """IndividualAddressSerialWrite service."""
 
-    code = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_WRITE
+    CODE = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_WRITE
 
     def __init__(
         self,
-        serial: Optional[bytes] = None,
-        address: Optional[IndividualAddress] = None,
+        serial: bytes | None = None,
+        address: IndividualAddress | None = None,
     ) -> None:
         """Initialize a new instance of IndividualAddressSerialWrite."""
         if serial is None:
@@ -1586,7 +1588,7 @@ class IndividualAddressSerialWrite(APCI):
         address_high, address_low = self.address.to_knx()
         payload = struct.pack("!6sBBI", self.serial, address_high, address_low, 0)
 
-        return encode_cmd_and_payload(self.code, appended_payload=payload)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""

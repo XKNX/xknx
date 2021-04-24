@@ -3,7 +3,9 @@ Module for Serialization and Deserialization of a KNX Disconnect Request informa
 
 Disconnect requests are used to disconnect a tunnel from a KNX/IP device.
 """
-from typing import TYPE_CHECKING, List
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from xknx.exceptions import CouldNotParseKNXIP
 
@@ -18,13 +20,11 @@ if TYPE_CHECKING:
 class DisconnectRequest(KNXIPBody):
     """Representation of a KNX Disconnect Request."""
 
-    # pylint: disable=too-many-instance-attributes
-
-    service_type = KNXIPServiceType.DISCONNECT_REQUEST
+    SERVICE_TYPE = KNXIPServiceType.DISCONNECT_REQUEST
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         communication_channel_id: int = 1,
         control_endpoint: HPAI = HPAI(),
     ):
@@ -53,10 +53,10 @@ class DisconnectRequest(KNXIPBody):
         pos += self.control_endpoint.from_knx(raw[pos:])
         return pos
 
-    def to_knx(self) -> List[int]:
+    def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
 
-        def info_to_knx() -> List[int]:
+        def info_to_knx() -> list[int]:
             """Serialize information bytes."""
             info = []
             info.append(self.communication_channel_id)

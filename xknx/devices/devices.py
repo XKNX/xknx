@@ -3,9 +3,12 @@ Module for handling a vector/array of devices.
 
 More or less an array with devices. Adds some search functionality to find devices.
 """
-from typing import Awaitable, Callable, Iterator, List, Union
+from __future__ import annotations
 
-from xknx.telegram import GroupAddress, Telegram
+from typing import Awaitable, Callable, Iterator
+
+from xknx.telegram import Telegram
+from xknx.telegram.address import DeviceGroupAddress, GroupAddress, InternalGroupAddress
 
 from .device import Device
 
@@ -17,8 +20,8 @@ class Devices:
 
     def __init__(self) -> None:
         """Initialize Devices class."""
-        self.__devices: List[Device] = []
-        self.device_updated_cbs: List[DeviceCallbackType] = []
+        self.__devices: list[Device] = []
+        self.device_updated_cbs: list[DeviceCallbackType] = []
 
     def register_device_updated_cb(self, device_updated_cb: DeviceCallbackType) -> None:
         """Register callback for devices beeing updated."""
@@ -34,13 +37,15 @@ class Devices:
         """Iterate registered devices."""
         yield from self.__devices
 
-    def devices_by_group_address(self, group_address: GroupAddress) -> Iterator[Device]:
+    def devices_by_group_address(
+        self, group_address: DeviceGroupAddress
+    ) -> Iterator[Device]:
         """Return device(s) by group address."""
         for device in self.__devices:
             if device.has_group_address(group_address):
                 yield device
 
-    def __getitem__(self, key: Union[str, int]) -> Device:
+    def __getitem__(self, key: str | int) -> Device:
         """Return device by name or by index."""
         for device in self.__devices:
             if device.name == key:
@@ -78,7 +83,9 @@ class Devices:
 
     async def process(self, telegram: Telegram) -> None:
         """Process telegram."""
-        if isinstance(telegram.destination_address, GroupAddress):
+        if isinstance(
+            telegram.destination_address, (GroupAddress, InternalGroupAddress)
+        ):
             for device in self.devices_by_group_address(telegram.destination_address):
                 await device.process(telegram)
 

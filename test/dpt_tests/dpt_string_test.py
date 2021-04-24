@@ -1,14 +1,11 @@
 """Unit test for KNX string object."""
-import unittest
-
+import pytest
 from xknx.dpt import DPTString
 from xknx.exceptions import ConversionError
 
 
-class TestDPTString(unittest.TestCase):
+class TestDPTString:
     """Test class for KNX float object."""
-
-    # pylint: disable=too-many-public-methods,invalid-name
 
     def test_value_from_documentation(self):
         """Test parsing and streaming Example from documentation."""
@@ -29,8 +26,8 @@ class TestDPTString(unittest.TestCase):
             0x00,
         )
         string = "KNX is OK"
-        self.assertEqual(DPTString.to_knx(string), raw)
-        self.assertEqual(DPTString.from_knx(raw), string)
+        assert DPTString.to_knx(string) == raw
+        assert DPTString.from_knx(raw) == string
 
     def test_value_empty_string(self):
         """Test parsing and streaming empty string."""
@@ -51,8 +48,8 @@ class TestDPTString(unittest.TestCase):
             0x00,
         )
         string = ""
-        self.assertEqual(DPTString.to_knx(string), raw)
-        self.assertEqual(DPTString.from_knx(raw), string)
+        assert DPTString.to_knx(string) == raw
+        assert DPTString.from_knx(raw) == string
 
     def test_value_max_string(self):
         """Test parsing and streaming large string."""
@@ -73,8 +70,8 @@ class TestDPTString(unittest.TestCase):
             0x43,
         )
         string = "AAAAABBBBBCCCC"
-        self.assertEqual(DPTString.to_knx(string), raw)
-        self.assertEqual(DPTString.from_knx(raw), string)
+        assert DPTString.to_knx(string) == raw
+        assert DPTString.from_knx(raw) == string
 
     def test_value_special_chars(self):
         """Test parsing and streaming string with special chars."""
@@ -95,13 +92,13 @@ class TestDPTString(unittest.TestCase):
             0xDF,
         )
         string = "Hey!?$ ÄÖÜäöüß"
-        self.assertEqual(DPTString.to_knx(string), raw)
-        self.assertEqual(DPTString.from_knx(raw), string)
+        assert DPTString.to_knx(string) == raw
+        assert DPTString.from_knx(raw) == string
 
     def test_to_knx_too_long(self):
         """Test serializing DPTString to KNX with wrong value (to long)."""
-        with self.assertRaises(ConversionError):
-            DPTString().to_knx("AAAAABBBBBCCCCx")
+        with pytest.raises(ConversionError):
+            DPTString.to_knx("AAAAABBBBBCCCCx")
 
     def test_from_knx_wrong_parameter_too_large(self):
         """Test parsing of KNX string with too many elements."""
@@ -122,8 +119,8 @@ class TestDPTString(unittest.TestCase):
             0x00,
             0x00,
         )
-        with self.assertRaises(ConversionError):
-            DPTString().from_knx(raw)
+        with pytest.raises(ConversionError):
+            DPTString.from_knx(raw)
 
     def test_from_knx_wrong_parameter_too_small(self):
         """Test parsing of KNX string with too less elements."""
@@ -142,5 +139,5 @@ class TestDPTString(unittest.TestCase):
             0x00,
             0x00,
         )
-        with self.assertRaises(ConversionError):
-            DPTString().from_knx(raw)
+        with pytest.raises(ConversionError):
+            DPTString.from_knx(raw)

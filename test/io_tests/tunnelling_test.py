@@ -1,11 +1,11 @@
 """Unit test for KNX/IP Tunnelling Request/Response."""
-import asyncio
-import unittest
 from unittest.mock import patch
 
+import pytest
 from xknx import XKNX
 from xknx.dpt import DPTArray
-from xknx.io import Tunnelling, UDPClient
+from xknx.io import UDPClient
+from xknx.io.request_response import Tunnelling
 from xknx.knxip import (
     ErrorCode,
     KNXIPFrame,
@@ -17,21 +17,12 @@ from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-class TestTunnelling(unittest.TestCase):
+@pytest.mark.asyncio
+class TestTunnelling:
     """Test class for xknx/io/Tunnelling objects."""
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
-    def test_tunnelling(self):
+    async def test_tunnelling(self):
         """Test tunnelling from KNX bus."""
-        # pylint: disable=too-many-locals
         xknx = XKNX()
         communication_channel_id = 23
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
@@ -51,8 +42,8 @@ class TestTunnelling(unittest.TestCase):
         )
         tunnelling.timeout_in_seconds = 0
 
-        self.assertEqual(tunnelling.awaited_response_class, TunnellingAck)
-        self.assertEqual(tunnelling.communication_channel_id, communication_channel_id)
+        assert tunnelling.awaited_response_class == TunnellingAck
+        assert tunnelling.communication_channel_id == communication_channel_id
 
         # Expected KNX/IP-Frame:
         tunnelling_request = TunnellingRequest(
@@ -67,7 +58,7 @@ class TestTunnelling(unittest.TestCase):
             "xknx.io.UDPClient.getsockname"
         ) as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
-            self.loop.run_until_complete(tunnelling.start())
+            await tunnelling.start()
             mock_udp_send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type
@@ -94,4 +85,4 @@ class TestTunnelling(unittest.TestCase):
         res_knxipframe = KNXIPFrame(xknx)
         res_knxipframe.init(KNXIPServiceType.TUNNELLING_ACK)
         tunnelling.response_rec_callback(res_knxipframe, None)
-        self.assertTrue(tunnelling.success)
+        assert tunnelling.success

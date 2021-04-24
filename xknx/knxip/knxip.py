@@ -4,7 +4,9 @@ Module for serialization and deserialization of KNX/IP packets.
 It consists of a header and a body.
 Depending on the service_type_ident different types of body classes are instanciated.
 """
-from typing import TYPE_CHECKING, List, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from xknx.exceptions import CouldNotParseKNXIP
 
@@ -30,11 +32,11 @@ if TYPE_CHECKING:
 class KNXIPFrame:
     """Class for KNX/IP Frames."""
 
-    def __init__(self, xknx: "XKNX"):
+    def __init__(self, xknx: XKNX):
         """Initialize object."""
         self.xknx = xknx
         self.header = KNXIPHeader()
-        self.body: Optional[KNXIPBody] = None
+        self.body: KNXIPBody | None = None
 
     def init(self, service_type_ident: KNXIPServiceType) -> KNXIPBody:
         """Init object by service_type_ident. Will instanciate a body object depending on service_type_ident."""
@@ -71,10 +73,10 @@ class KNXIPFrame:
         return body
 
     @staticmethod
-    def init_from_body(knxip_body: KNXIPBody) -> "KNXIPFrame":
+    def init_from_body(knxip_body: KNXIPBody) -> KNXIPFrame:
         """Return KNXIPFrame from KNXIPBody."""
         knxipframe = KNXIPFrame(knxip_body.xknx)
-        knxipframe.header.service_type_ident = knxip_body.__class__.service_type
+        knxipframe.header.service_type_ident = knxip_body.__class__.SERVICE_TYPE
         knxipframe.body = knxip_body
         knxipframe.header.set_length(knxip_body)
         return knxipframe
@@ -90,7 +92,7 @@ class KNXIPFrame:
 
         return pos
 
-    def to_knx(self) -> List[int]:
+    def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
         if self.body is None:
             raise CouldNotParseKNXIP("No body defined in KNXIPFrame.")

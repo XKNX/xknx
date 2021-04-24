@@ -3,12 +3,15 @@ Device is the base class for all implemented devices (e.g. Lights/Switches/Senso
 
 It provides basis functionality for reading the state from the KNX bus.
 """
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 import logging
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterator, List, Optional
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterator
 
 from xknx.remote_value import RemoteValue
-from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram import Telegram
+from xknx.telegram.address import DeviceGroupAddress
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 if TYPE_CHECKING:
@@ -24,14 +27,14 @@ class Device(ABC):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         name: str,
-        device_updated_cb: Optional[DeviceCallbackType] = None,
+        device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Device class."""
         self.xknx = xknx
         self.name = name
-        self.device_updated_cbs: List[DeviceCallbackType] = []
+        self.device_updated_cbs: list[DeviceCallbackType] = []
         if device_updated_cb is not None:
             self.register_device_updated_cb(device_updated_cb)
 
@@ -59,7 +62,7 @@ class Device(ABC):
         yield from ()
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return local unique id of this device."""
         return None
 
@@ -76,7 +79,6 @@ class Device(ABC):
     async def after_update(self) -> None:
         """Execute callbacks after internal state has been changed."""
         for device_updated_cb in self.device_updated_cbs:
-            # pylint: disable=not-callable
             await device_updated_cb(self)
 
     async def sync(self, wait_for_result: bool = False) -> None:
@@ -110,21 +112,12 @@ class Device(ABC):
         """Return name of device."""
         return self.name
 
-    def has_group_address(self, group_address: GroupAddress) -> bool:
+    def has_group_address(self, group_address: DeviceGroupAddress) -> bool:
         """Test if device has given group address."""
         for remote_value in self._iter_remote_values():
             if remote_value.has_group_address(group_address):
                 return True
         return False
-
-    async def do(self, action: str) -> None:
-        """Execute 'do' commands."""
-        # pylint: disable=invalid-name
-        logger.info(
-            "'do()' not implemented for action '%s' of %s",
-            action,
-            self.__class__.__name__,
-        )
 
     def __eq__(self, other: object) -> bool:
         """Compare for quality."""

@@ -1,6 +1,8 @@
 """Module for managing a notification via KNX."""
+from __future__ import annotations
+
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional
+from typing import TYPE_CHECKING, Iterator
 
 from xknx.remote_value import GroupAddressesType, RemoteValueString
 
@@ -18,14 +20,13 @@ class Notification(Device):
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         name: str,
-        group_address: Optional[GroupAddressesType] = None,
-        group_address_state: Optional[GroupAddressesType] = None,
-        device_updated_cb: Optional[DeviceCallbackType] = None,
+        group_address: GroupAddressesType | None = None,
+        group_address_state: GroupAddressesType | None = None,
+        device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize notification class."""
-        # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
 
         self._message = RemoteValueString(
@@ -41,23 +42,8 @@ class Notification(Device):
         """Iterate the devices RemoteValue classes."""
         yield self._message
 
-    @classmethod
-    def from_config(
-        cls, xknx: "XKNX", name: str, config: Dict[str, Any]
-    ) -> "Notification":
-        """Initialize object from configuration structure."""
-        group_address = config.get("group_address")
-        group_address_state = config.get("group_address_state")
-
-        return cls(
-            xknx,
-            name,
-            group_address=group_address,
-            group_address_state=group_address_state,
-        )
-
     @property
-    def message(self) -> Optional[str]:
+    def message(self) -> str | None:
         """Return the current message."""
         return self._message.value
 
@@ -70,17 +56,8 @@ class Notification(Device):
         """Process incoming and outgoing GROUP WRITE telegram."""
         await self._message.process(telegram)
 
-    async def do(self, action: str) -> None:
-        """Execute 'do' commands."""
-        if action.startswith("message:"):
-            await self.set(action[8:])
-        else:
-            logger.warning(
-                "Could not understand action %s for device %s", action, self.get_name()
-            )
-
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<Notification name="{}" message="{}" />'.format(
+        return '<Notification name="{}" message={} />'.format(
             self.name, self._message.group_addr_str()
         )

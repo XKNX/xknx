@@ -1,4 +1,6 @@
 """Abstraction to send ConnectRequest and wait for ConnectResponse."""
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from xknx.knxip import (
@@ -12,15 +14,14 @@ from xknx.knxip import (
 from .request_response import RequestResponse
 
 if TYPE_CHECKING:
+    from xknx.io.udp_client import UDPClient
     from xknx.xknx import XKNX
-
-    from .udp_client import UDPClient
 
 
 class Connect(RequestResponse):
     """Class to send a ConnectRequest and wait for ConnectResponse.."""
 
-    def __init__(self, xknx: "XKNX", udp_client: "UDPClient", route_back: bool = False):
+    def __init__(self, xknx: XKNX, udp_client: UDPClient, route_back: bool = False):
         """Initialize Connect class."""
         self.udp_client = udp_client
         self.route_back = route_back

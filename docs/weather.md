@@ -34,29 +34,6 @@ The weather device is basically a set of sensors that you can obtain from your w
 
 ```
 
-## [](#header-2)Configuration via xknx.yaml
-
-```yaml
-groups:
-    weather:
-        Home:
-          {
-            group_address_temperature: "7/0/0",
-            group_address_brightness_south: "7/0/1",
-            group_address_brightness_west: "7/0/2",
-            group_address_brightness_east: "7/0/3",
-            group_address_wind_speed: "7/0/4",
-            group_address_rain_alarm: "7/0/5",
-            group_address_frost_alarm: "7/0/6",
-            group_address_wind_alarm: "7/0/7",
-            group_address_day_night: "7/0/8",
-            group_address_air_pressure: "7/0/9",
-            group_address_humidity: "7/0/10",
-            create_sensors: True,
-            sync_state: True,
-          }
-```
-
 ## [](#header-2)Interface
 
 - **xknx** is the XKNX object.

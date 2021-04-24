@@ -4,7 +4,9 @@ Module for Serialization and Deserialization of a KNX Tunnelling ACK information
 Tunneling requests are used to transmit a KNX telegram within an existing KNX tunnel connection.
 With a Tunnelling ACK the receiving party acknowledges the valid processing of the request.
 """
-from typing import TYPE_CHECKING, List
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from xknx.exceptions import CouldNotParseKNXIP
 
@@ -19,14 +21,11 @@ if TYPE_CHECKING:
 class TunnellingAck(KNXIPBodyResponse):
     """Representation of a KNX Tunnelling Ack."""
 
-    # pylint: disable=too-many-instance-attributes
-
-    service_type = KNXIPServiceType.TUNNELLING_ACK
-
+    SERVICE_TYPE = KNXIPServiceType.TUNNELLING_ACK
     BODY_LENGTH = 4
 
     def __init__(
-        self, xknx: "XKNX", communication_channel_id: int = 1, sequence_counter: int = 0
+        self, xknx: XKNX, communication_channel_id: int = 1, sequence_counter: int = 0
     ):
         """Initialize TunnellingAck object."""
         super().__init__(xknx)
@@ -55,10 +54,10 @@ class TunnellingAck(KNXIPBodyResponse):
         pos = ack_from_knx(raw)
         return pos
 
-    def to_knx(self) -> List[int]:
+    def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
 
-        def ack_to_knx() -> List[int]:
+        def ack_to_knx() -> list[int]:
             """Serialize ACK information."""
             ack = []
             ack.append(TunnellingAck.BODY_LENGTH)

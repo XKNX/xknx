@@ -1,10 +1,10 @@
 """Unit test for KNX/IP ConnectionState Request/Response."""
-import asyncio
-import unittest
 from unittest.mock import patch
 
+import pytest
 from xknx import XKNX
-from xknx.io import ConnectionState, UDPClient
+from xknx.io import UDPClient
+from xknx.io.request_response import ConnectionState
 from xknx.knxip import (
     HPAI,
     ConnectionStateRequest,
@@ -15,19 +15,11 @@ from xknx.knxip import (
 )
 
 
-class TestConnectionState(unittest.TestCase):
+@pytest.mark.asyncio
+class TestConnectionState:
     """Test class for xknx/io/ConnectionState objects."""
 
-    def setUp(self):
-        """Set up test class."""
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def tearDown(self):
-        """Tear down test class."""
-        self.loop.close()
-
-    def test_connectionstate(self):
+    async def test_connectionstate(self):
         """Test connectionstateing from KNX bus."""
         xknx = XKNX()
         communication_channel_id = 23
@@ -37,12 +29,8 @@ class TestConnectionState(unittest.TestCase):
         )
         connectionstate.timeout_in_seconds = 0
 
-        self.assertEqual(
-            connectionstate.awaited_response_class, ConnectionStateResponse
-        )
-        self.assertEqual(
-            connectionstate.communication_channel_id, communication_channel_id
-        )
+        assert connectionstate.awaited_response_class == ConnectionStateResponse
+        assert connectionstate.communication_channel_id == communication_channel_id
 
         # Expected KNX/IP-Frame:
         exp_knxipframe = KNXIPFrame.init_from_body(
@@ -56,7 +44,7 @@ class TestConnectionState(unittest.TestCase):
             "xknx.io.UDPClient.getsockname"
         ) as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
-            self.loop.run_until_complete(connectionstate.start())
+            await connectionstate.start()
             mock_udp_send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type
@@ -83,9 +71,9 @@ class TestConnectionState(unittest.TestCase):
         res_knxipframe = KNXIPFrame(xknx)
         res_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_RESPONSE)
         connectionstate.response_rec_callback(res_knxipframe, None)
-        self.assertTrue(connectionstate.success)
+        assert connectionstate.success
 
-    def test_connectionstate_route_back_true(self):
+    async def test_connectionstate_route_back_true(self):
         """Test connectionstateing from KNX bus."""
         xknx = XKNX()
         communication_channel_id = 23
@@ -95,12 +83,8 @@ class TestConnectionState(unittest.TestCase):
         )
         connectionstate.timeout_in_seconds = 0
 
-        self.assertEqual(
-            connectionstate.awaited_response_class, ConnectionStateResponse
-        )
-        self.assertEqual(
-            connectionstate.communication_channel_id, communication_channel_id
-        )
+        assert connectionstate.awaited_response_class == ConnectionStateResponse
+        assert connectionstate.communication_channel_id == communication_channel_id
 
         # Expected KNX/IP-Frame:
         exp_knxipframe = KNXIPFrame.init_from_body(
@@ -113,7 +97,7 @@ class TestConnectionState(unittest.TestCase):
             "xknx.io.UDPClient.getsockname"
         ) as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
-            self.loop.run_until_complete(connectionstate.start())
+            await connectionstate.start()
             mock_udp_send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type
@@ -140,4 +124,4 @@ class TestConnectionState(unittest.TestCase):
         res_knxipframe = KNXIPFrame(xknx)
         res_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_RESPONSE)
         connectionstate.response_rec_callback(res_knxipframe, None)
-        self.assertTrue(connectionstate.success)
+        assert connectionstate.success

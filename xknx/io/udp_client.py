@@ -4,11 +4,13 @@ UDPClient is an abstraction for handling the complete UDP io.
 The module is build upon asyncio udp functions.
 Due to lame support of UDP multicast within asyncio some special treatment for multicast is necessary.
 """
+from __future__ import annotations
+
 import asyncio
 import logging
 import socket
 from sys import platform
-from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, cast
+from typing import TYPE_CHECKING, Callable, Tuple, cast
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, XKNXException
 from xknx.knxip import KNXIPFrame, KNXIPServiceType
@@ -26,15 +28,13 @@ knx_logger = logging.getLogger("xknx.knx")
 class UDPClient:
     """Class for handling (sending and receiving) UDP packets."""
 
-    # pylint: disable=too-few-public-methods
-
     class Callback:
         """Callback class for handling callbacks for different 'KNX service types' of received packets."""
 
         def __init__(
             self,
-            callback: "CallbackType",
-            service_types: Optional[List[KNXIPServiceType]] = None,
+            callback: CallbackType,
+            service_types: list[KNXIPServiceType] | None = None,
         ):
             """Initialize Callback class."""
             self.callback = callback
@@ -51,19 +51,19 @@ class UDPClient:
             self,
             own_ip: str,
             multicast: bool = False,
-            data_received_callback: Optional[Callable[[bytes], None]] = None,
+            data_received_callback: Callable[[bytes], None] | None = None,
         ):
             """Initialize UDPClientFactory class."""
             self.own_ip = own_ip
             self.multicast = multicast
-            self.transport: Optional[asyncio.BaseTransport] = None
+            self.transport: asyncio.BaseTransport | None = None
             self.data_received_callback = data_received_callback
 
         def connection_made(self, transport: asyncio.BaseTransport) -> None:
             """Assign transport. Callback after udp connection was made."""
             self.transport = transport
 
-        def datagram_received(self, data: bytes, addr: Tuple[str, int]) -> None:
+        def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
             """Call assigned callback. Callback for datagram received."""
             raw_socket_logger.debug("Received from %s: %s", addr, data.hex())
             if self.data_received_callback is not None:
@@ -73,19 +73,18 @@ class UDPClient:
             """Call when a send or receive operation raises an OSError."""
             logger.warning("Error received: %s", exc)
 
-        def connection_lost(self, exc: Optional[Exception]) -> None:
+        def connection_lost(self, exc: Exception | None) -> None:
             """Log error. Callback for connection lost."""
             logger.debug("Closing transport.")
 
     def __init__(
         self,
-        xknx: "XKNX",
-        local_addr: Tuple[str, int],
-        remote_addr: Tuple[str, int],
+        xknx: XKNX,
+        local_addr: tuple[str, int],
+        remote_addr: tuple[str, int],
         multicast: bool = False,
     ):
         """Initialize UDPClient class."""
-        # pylint: disable=too-many-arguments
         if not isinstance(local_addr, tuple):
             raise TypeError()
         if not isinstance(remote_addr, tuple):
@@ -94,9 +93,9 @@ class UDPClient:
         self.local_addr = local_addr
         self.remote_addr = remote_addr
         self.multicast = multicast
-        self.callbacks: List["UDPClient.Callback"] = []
+        self.callbacks: list[UDPClient.Callback] = []
 
-        self.transport: Optional[asyncio.DatagramTransport] = None
+        self.transport: asyncio.DatagramTransport | None = None
 
     def data_received_callback(self, raw: bytes) -> None:
         """Parse and process KNXIP frame. Callback for having received an UDP packet."""
@@ -128,9 +127,9 @@ class UDPClient:
 
     def register_callback(
         self,
-        callback: "CallbackType",
-        service_types: Optional[List[KNXIPServiceType]] = None,
-    ) -> "UDPClient.Callback":
+        callback: CallbackType,
+        service_types: list[KNXIPServiceType] | None = None,
+    ) -> UDPClient.Callback:
         """Register callback."""
         if service_types is None:
             service_types = []
@@ -139,13 +138,13 @@ class UDPClient:
         self.callbacks.append(callb)
         return callb
 
-    def unregister_callback(self, callb: "UDPClient.Callback") -> None:
+    def unregister_callback(self, callb: UDPClient.Callback) -> None:
         """Unregister callback."""
         self.callbacks.remove(callb)
 
     @staticmethod
     def create_multicast_sock(
-        own_ip: str, remote_addr: Tuple[str, int]
+        own_ip: str, remote_addr: tuple[str, int]
     ) -> socket.SocketType:
         """Create UDP multicast socket."""
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -216,7 +215,7 @@ class UDPClient:
         else:
             self.transport.sendto(bytes(knxipframe.to_knx()))
 
-    def getsockname(self) -> Tuple[str, int]:
+    def getsockname(self) -> tuple[str, int]:
         """Return socket IP and port."""
         if self.transport is None:
             raise CommunicationError(
@@ -224,7 +223,7 @@ class UDPClient:
             )
         return cast(Tuple[str, int], self.transport.get_extra_info("sockname"))
 
-    def getremote(self) -> Optional[str]:
+    def getremote(self) -> str | None:
         """Return peername."""
         return (
             self.transport.get_extra_info("peername")

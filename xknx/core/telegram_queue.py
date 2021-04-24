@@ -7,13 +7,15 @@ The underlaying KNXIPInterface will poll the queue and send the packets to the c
 
 You may register callbacks to be notified if a telegram was pushed to the queue.
 """
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Awaitable, Callable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Awaitable, Callable
 
 from xknx.exceptions import CommunicationError, XKNXException
-from xknx.telegram import AddressFilter, GroupAddress, Telegram, TelegramDirection
-from xknx.telegram.apci import GroupValueWrite
+from xknx.telegram import AddressFilter, Telegram, TelegramDirection
+from xknx.telegram.address import GroupAddress, InternalGroupAddress
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -30,13 +32,11 @@ class TelegramQueue:
     class Callback:
         """Callback class for handling telegram received callbacks."""
 
-        # pylint: disable=too-few-public-methods
-
         def __init__(
             self,
-            callback: "AsyncTelegramCallback",
-            address_filters: Optional[List[AddressFilter]] = None,
-            group_addresses: Optional[List[GroupAddress]] = None,
+            callback: AsyncTelegramCallback,
+            address_filters: list[AddressFilter] | None = None,
+            group_addresses: list[GroupAddress | InternalGroupAddress] | None = None,
             match_for_outgoing_telegrams: bool = False,
         ):
             """Initialize Callback class."""
@@ -55,7 +55,9 @@ class TelegramQueue:
                 return False
             if self._match_all:
                 return True
-            if isinstance(telegram.destination_address, GroupAddress):
+            if isinstance(
+                telegram.destination_address, (GroupAddress, InternalGroupAddress)
+            ):
                 for address_filter in self.address_filters:
                     if address_filter.match(telegram.destination_address):
                         return True
@@ -64,20 +66,20 @@ class TelegramQueue:
                         return True
             return False
 
-    def __init__(self, xknx: "XKNX"):
+    def __init__(self, xknx: XKNX):
         """Initialize TelegramQueue class."""
         self.xknx = xknx
-        self.telegram_received_cbs: List[TelegramQueue.Callback] = []
-        self.outgoing_queue: asyncio.Queue[Optional[Telegram]] = asyncio.Queue()
-        self._consumer_task: Optional[Awaitable[Tuple[None, None]]] = None
+        self.telegram_received_cbs: list[TelegramQueue.Callback] = []
+        self.outgoing_queue: asyncio.Queue[Telegram | None] = asyncio.Queue()
+        self._consumer_task: Awaitable[tuple[None, None]] | None = None
 
     def register_telegram_received_cb(
         self,
-        telegram_received_cb: "AsyncTelegramCallback",
-        address_filters: Optional[List[AddressFilter]] = None,
-        group_addresses: Optional[List[GroupAddress]] = None,
+        telegram_received_cb: AsyncTelegramCallback,
+        address_filters: list[AddressFilter] | None = None,
+        group_addresses: list[GroupAddress | InternalGroupAddress] | None = None,
         match_for_outgoing: bool = False,
-    ) -> "TelegramQueue.Callback":
+    ) -> TelegramQueue.Callback:
         """Register callback for a telegram being received from KNX bus."""
         callback = TelegramQueue.Callback(
             telegram_received_cb,
@@ -89,7 +91,7 @@ class TelegramQueue:
         return callback
 
     def unregister_telegram_received_cb(
-        self, telegram_received_cb: "TelegramQueue.Callback"
+        self, telegram_received_cb: TelegramQueue.Callback
     ) -> None:
         """Unregister callback for a telegram beeing received from KNX bus."""
         self.telegram_received_cbs.remove(telegram_received_cb)
@@ -151,7 +153,9 @@ class TelegramQueue:
                 self.xknx.telegrams.task_done()
 
             # limit rate to knx bus - defaults to 20 per second
-            if self.xknx.rate_limit:
+            if self.xknx.rate_limit and not isinstance(
+                telegram.destination_address, InternalGroupAddress
+            ):
                 await asyncio.sleep(1 / self.xknx.rate_limit)
 
     async def _process_all_telegrams(self) -> None:
@@ -173,16 +177,15 @@ class TelegramQueue:
     async def process_telegram_outgoing(self, telegram: Telegram) -> None:
         """Process outgoing telegram."""
         telegram_logger.debug(telegram)
-        if self.xknx.knxip_interface is not None:
+        if not isinstance(telegram.destination_address, InternalGroupAddress):
+            if self.xknx.knxip_interface is None:
+                raise CommunicationError("No KNXIP interface defined")
             await self.xknx.knxip_interface.send_telegram(telegram)
-            if isinstance(telegram.payload, GroupValueWrite):
-                await self.xknx.devices.process(telegram)
 
-            for telegram_received_cb in self.telegram_received_cbs:
-                if telegram_received_cb.is_within_filter(telegram):
-                    await telegram_received_cb.callback(telegram)
-        else:
-            raise CommunicationError("No KNXIP interface defined")
+        await self.xknx.devices.process(telegram)
+        for telegram_received_cb in self.telegram_received_cbs:
+            if telegram_received_cb.is_within_filter(telegram):
+                await telegram_received_cb.callback(telegram)
 
     async def process_telegram_incoming(self, telegram: Telegram) -> None:
         """Process incoming telegram."""

@@ -6,9 +6,11 @@ It provides functionality for
 * setting fan to specific speed / step
 * reading the current speed from KNX bus.
 """
+from __future__ import annotations
+
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Any, Iterator
 
 from xknx.remote_value import (
     GroupAddressesType,
@@ -37,25 +39,21 @@ class FanSpeedMode(Enum):
 class Fan(Device):
     """Class for managing a fan."""
 
-    # pylint: disable=too-many-instance-attributes
-    # pylint: disable=too-many-public-methods
-
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         name: str,
-        group_address_speed: Optional[GroupAddressesType] = None,
-        group_address_speed_state: Optional[GroupAddressesType] = None,
-        group_address_oscillation: Optional[GroupAddressesType] = None,
-        group_address_oscillation_state: Optional[GroupAddressesType] = None,
-        device_updated_cb: Optional[DeviceCallbackType] = None,
-        max_step: Optional[int] = None,
+        group_address_speed: GroupAddressesType | None = None,
+        group_address_speed_state: GroupAddressesType | None = None,
+        group_address_oscillation: GroupAddressesType | None = None,
+        group_address_oscillation_state: GroupAddressesType | None = None,
+        device_updated_cb: DeviceCallbackType | None = None,
+        max_step: int | None = None,
     ):
         """Initialize fan class."""
-        # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
 
-        self.speed: Union[RemoteValueDptValue1Ucount, RemoteValueScaling]
+        self.speed: RemoteValueDptValue1Ucount | RemoteValueScaling
         self.mode = FanSpeedMode.STEP if max_step else FanSpeedMode.PERCENT
         self.max_step = max_step
 
@@ -98,35 +96,16 @@ class Fan(Device):
         """Return if fan supports oscillation."""
         return self.oscillation.initialized
 
-    @classmethod
-    def from_config(cls, xknx: "XKNX", name: str, config: Dict[str, Any]) -> "Fan":
-        """Initialize object from configuration structure."""
-        group_address_speed = config.get("group_address_speed")
-        group_address_speed_state = config.get("group_address_speed_state")
-        group_address_oscillation = config.get("group_address_oscillation")
-        group_address_oscillation_state = config.get("group_address_oscillation_state")
-        max_step = config.get("max_step")
-
-        return cls(
-            xknx,
-            name,
-            group_address_speed=group_address_speed,
-            group_address_speed_state=group_address_speed_state,
-            group_address_oscillation=group_address_oscillation,
-            group_address_oscillation_state=group_address_oscillation_state,
-            max_step=max_step,
-        )
-
     def __str__(self) -> str:
         """Return object as readable string."""
 
         str_oscillation = (
             ""
             if not self.supports_oscillation
-            else f' oscillation="{self.oscillation.group_addr_str()}"'
+            else f" oscillation={self.oscillation.group_addr_str()}"
         )
 
-        return '<Fan name="{}" ' 'speed="{}"{} />'.format(
+        return '<Fan name="{}" speed={}{} />'.format(
             self.name, self.speed.group_addr_str(), str_oscillation
         )
 
@@ -138,30 +117,17 @@ class Fan(Device):
         """Set the fan oscillation mode on or off."""
         await self.oscillation.set(oscillation)
 
-    async def do(self, action: str) -> None:
-        """Execute 'do' commands."""
-        if action.startswith("speed:"):
-            await self.set_speed(int(action[6:]))
-        elif action == "oscillation:True":
-            await self.set_oscillation(True)
-        elif action == "oscillation:False":
-            await self.set_oscillation(False)
-        else:
-            logger.warning(
-                "Could not understand action %s for device %s", action, self.get_name()
-            )
-
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         await self.speed.process(telegram)
         await self.oscillation.process(telegram)
 
     @property
-    def current_speed(self) -> Optional[int]:
+    def current_speed(self) -> int | None:
         """Return current speed of fan."""
         return self.speed.value
 
     @property
-    def current_oscillation(self) -> Optional[bool]:
+    def current_oscillation(self) -> bool | None:
         """Return true if the fan is oscillating."""
         return self.oscillation.value

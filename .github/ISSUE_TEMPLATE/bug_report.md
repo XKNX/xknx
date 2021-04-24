@@ -25,6 +25,6 @@ Please provide details about your installation.
   - if applicable: excerpt of bus monitor output
 -->
 
-**Problem-relevant `xknx.yaml` or `configuration.yaml` entries (fill out even if it seems unimportant):**
+**Problem-relevant `configuration.yaml` entries (fill out even if it seems unimportant):**
 
 **Traceback (if applicable):**
