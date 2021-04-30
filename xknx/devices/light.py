@@ -78,17 +78,25 @@ class _SwitchAndBrightness:
     @property
     def is_on(self) -> bool | None:
         """Return if light is on."""
-        return self.switch.value
+        if self.switch.initialized:
+            return self.switch.value
+        if self.brightness.initialized and self.brightness.value is not None:
+            return bool(self.brightness.value)
+        return None
 
     async def set_on(self) -> None:
         """Switch light on."""
         if self.switch.initialized:
             await self.switch.on()
+        elif self.brightness.initialized:
+            await self.brightness.set(self.brightness.range_to)
 
     async def set_off(self) -> None:
         """Switch light off."""
         if self.switch.initialized:
             await self.switch.off()
+        elif self.brightness.initialized:
+            await self.brightness.set(0)
 
     def __eq__(self, other: object) -> bool:
         """Compare for quality."""
@@ -394,8 +402,8 @@ class Light(Device):
         """Return the current switch state of the device."""
         if self.switch.value is not None:
             return self.switch.value
-        if any(c.switch.value is not None for c in self._iter_individual_colors()):
-            return any(c.switch.value for c in self._iter_individual_colors())
+        if any(c.is_on is not None for c in self._iter_individual_colors()):
+            return any(c.is_on for c in self._iter_individual_colors())
         return None
 
     async def set_on(self) -> None:
@@ -414,7 +422,7 @@ class Light(Device):
 
     @property
     def current_brightness(self) -> int | None:
-        """Return current brightness of light."""
+        """Return current brightness of light between 0..255."""
         return self.brightness.value
 
     async def set_brightness(self, brightness: int) -> None:
