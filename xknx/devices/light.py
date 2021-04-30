@@ -274,8 +274,8 @@ class Light(Device):
             return f"{self.switch.group_address}"
 
         return (
-            f"{self.red.switch.group_address}_{self.green.switch.group_address}_"
-            f"{self.blue.switch.group_address}_{self.white.switch.group_address}"
+            f"{self.red.brightness.group_address}_{self.green.brightness.group_address}_"
+            f"{self.blue.brightness.group_address}_{self.white.brightness.group_address}"
         )
 
     @property
