@@ -16,7 +16,7 @@ from xknx.dpt import (
     DPTValue1Count,
 )
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
-from xknx.exceptions import CouldNotParseTelegram, DeviceIllegalValue
+from xknx.exceptions import ConversionError, CouldNotParseTelegram, DeviceIllegalValue
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
@@ -144,6 +144,7 @@ class TestClimate:
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
             group_address_setpoint_shift_state="1/2/4",
+            setpoint_shift_mode=SetpointShiftMode.DPT6010,
         )
 
         after_update_callback = Mock()
@@ -409,7 +410,12 @@ class TestClimate:
         climate1 = Climate(xknx, "TestClimate")
         assert not climate1.initialized_for_setpoint_shift_calculations
 
-        climate2 = Climate(xknx, "TestClimate", group_address_setpoint_shift="1/2/3")
+        climate2 = Climate(
+            xknx,
+            "TestClimate",
+            group_address_setpoint_shift="1/2/3",
+            setpoint_shift_mode=SetpointShiftMode.DPT6010,
+        )
         assert not climate2.initialized_for_setpoint_shift_calculations
         await climate2.set_setpoint_shift(4)
         await xknx.devices.process(xknx.telegrams.get_nowait())
@@ -420,6 +426,7 @@ class TestClimate:
             "TestClimate",
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
+            setpoint_shift_mode=SetpointShiftMode.DPT6010,
         )
         await climate3.set_setpoint_shift(4)
         await xknx.devices.process(xknx.telegrams.get_nowait())
@@ -428,6 +435,66 @@ class TestClimate:
         await climate3.target_temperature.set(23.00)
         await xknx.devices.process(xknx.telegrams.get_nowait())
         assert climate3.initialized_for_setpoint_shift_calculations
+
+    async def test_setpoint_shift_mode_autosensing(self):
+        """Test autosensing setpoint_shift_mode."""
+
+        xknx = XKNX()
+        climate_dpt6 = Climate(
+            xknx,
+            "TestClimate",
+            group_address_temperature="1/2/1",
+            group_address_target_temperature_state="1/2/2",
+            group_address_setpoint_shift="1/2/3",
+        )
+        climate_dpt6.target_temperature.value = 23.00
+
+        # uninitialized
+        with pytest.raises(ConversionError):
+            await climate_dpt6.set_setpoint_shift(1)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(DPTValue1Count.to_knx(-4))),
+        )
+        await climate_dpt6.process(telegram)
+        assert climate_dpt6.initialized_for_setpoint_shift_calculations
+
+        await climate_dpt6.set_setpoint_shift(1)
+        _telegram = xknx.telegrams.get_nowait()
+        # DPTValue1Count is used for outgoing
+        assert _telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(10)),  # 1 / 0.1 setpoint_shift_step
+        )
+
+        climate_dpt9 = Climate(
+            xknx,
+            "TestClimate",
+            group_address_temperature="1/2/1",
+            group_address_target_temperature_state="1/2/2",
+            group_address_setpoint_shift="1/2/3",
+        )
+        climate_dpt9.target_temperature.value = 23.00
+
+        # uninitialized
+        with pytest.raises(ConversionError):
+            await climate_dpt9.set_setpoint_shift(1)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(DPTTemperature.to_knx(-4))),
+        )
+        await climate_dpt9.process(telegram)
+        assert climate_dpt9.initialized_for_setpoint_shift_calculations
+
+        await climate_dpt9.set_setpoint_shift(1)
+        _telegram = xknx.telegrams.get_nowait()
+        # DPTTemperature is used for outgoing
+        assert _telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(DPTTemperature.to_knx(1))),
+        )
 
     #
     # TEST for unitialized target_temperature_min/target_temperature_max
@@ -460,6 +527,7 @@ class TestClimate:
             "TestClimate",
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
+            setpoint_shift_mode=SetpointShiftMode.DPT6010,
             max_temp="42",
             min_temp="3",
         )
@@ -485,6 +553,7 @@ class TestClimate:
             "TestClimate",
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
+            setpoint_shift_mode=SetpointShiftMode.DPT6010,
         )
 
         await climate.set_setpoint_shift(3)
@@ -562,6 +631,7 @@ class TestClimate:
             "TestClimate",
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
+            setpoint_shift_mode=SetpointShiftMode.DPT6010,
         )
 
         await climate.set_setpoint_shift(1)
@@ -639,6 +709,7 @@ class TestClimate:
             "TestClimate",
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
+            setpoint_shift_mode=SetpointShiftMode.DPT6010,
             temperature_step=0.5,
             setpoint_shift_max=10,
             setpoint_shift_min=-10,
@@ -697,6 +768,7 @@ class TestClimate:
             group_address_target_temperature_state="1/2/1",
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
+            setpoint_shift_mode=SetpointShiftMode.DPT6010,
         )
 
         await climate.set_target_temperature(21.00)

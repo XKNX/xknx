@@ -5,14 +5,23 @@ DPT 6.010.
 """
 from __future__ import annotations
 
+from enum import Enum
 from typing import TYPE_CHECKING
 
-from xknx.dpt import DPTArray, DPTBinary, DPTValue1Count
+from xknx.dpt import DPTArray, DPTBinary, DPTTemperature, DPTValue1Count
+from xknx.exceptions import ConversionError
 
 from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
+
+
+class SetpointShiftMode(Enum):
+    """Enum for setting the setpoint shift mode."""
+
+    DPT6010 = DPTValue1Count
+    DPT9002 = DPTTemperature
 
 
 class RemoteValueSetpointShift(RemoteValue[DPTArray, float]):
@@ -25,6 +34,7 @@ class RemoteValueSetpointShift(RemoteValue[DPTArray, float]):
         group_address_state: GroupAddressesType | None = None,
         device_name: str | None = None,
         after_update_cb: AsyncCallbackType | None = None,
+        setpoint_shift_mode: SetpointShiftMode | None = None,
         setpoint_shift_step: float = 0.1,
     ):
         """Initialize RemoteValueSetpointShift class."""
@@ -37,23 +47,40 @@ class RemoteValueSetpointShift(RemoteValue[DPTArray, float]):
             after_update_cb=after_update_cb,
         )
 
+        self.dpt_class: type[DPTValue1Count | DPTTemperature] | None = (
+            setpoint_shift_mode.value if setpoint_shift_mode is not None else None
+        )
         self.setpoint_shift_step = setpoint_shift_step
 
     def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray | None:
         """Test if telegram payload may be parsed."""
-        # pylint: disable=no-self-use
-        return (
-            payload
-            if isinstance(payload, DPTArray) and len(payload.value) == 1
-            else None
-        )
+        if not isinstance(payload, DPTArray):
+            return None
+        payload_length = len(payload.value)
+        if self.dpt_class is None:
+            if payload_length == DPTTemperature.payload_length:
+                self.dpt_class = DPTTemperature
+            elif payload_length == DPTValue1Count.payload_length:
+                self.dpt_class = DPTValue1Count
+            else:
+                return None
+        return payload if payload_length == self.dpt_class.payload_length else None
 
     def to_knx(self, value: float) -> DPTArray:
         """Convert value to payload."""
-        converted_value = int(value / self.setpoint_shift_step)
-        return DPTArray(DPTValue1Count.to_knx(converted_value))
+        if self.dpt_class is None:
+            raise ConversionError(
+                "Setpoint shift DPT not initialized for %s" % self.device_name
+            )
+        if self.dpt_class == DPTValue1Count:
+            converted_value = int(value / self.setpoint_shift_step)
+            return DPTArray(DPTValue1Count.to_knx(converted_value))
+        return DPTArray(DPTTemperature.to_knx(value))
 
     def from_knx(self, payload: DPTArray) -> float:
         """Convert current payload to value."""
-        converted_payload = DPTValue1Count.from_knx(payload.value)
-        return converted_payload * self.setpoint_shift_step
+        assert self.dpt_class is not None  # checked by payload_valid() from process()
+        payload_value = self.dpt_class.from_knx(payload.value)
+        if self.dpt_class == DPTValue1Count:
+            return payload_value * self.setpoint_shift_step
+        return payload_value
