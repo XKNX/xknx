@@ -22,8 +22,9 @@ from .address import GroupAddress, IndividualAddress, InternalGroupAddress
 from .apci import APCI
 
 class TPDUType(Enum):
-        T_DATA = 0
-        T_Connect = 1
+        T_DATA       = 0
+        T_Connect    = 1
+        T_Disconnect = 2
 
 
 class TelegramDirection(Enum):

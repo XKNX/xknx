@@ -25,6 +25,7 @@ class TPDU:
         self.xknx = xknx
         self.src_addr = src_addr
         self.destination_address = IndividualAddress(None)
+        self.tpdu_type = None
         
     @staticmethod
     def init_from_telegram(
@@ -46,6 +47,7 @@ class TPDU:
     def telegram(self, telegram: Telegram) -> None:
         """Set telegram."""
         self.destination_address = telegram.destination_address
+        self.tpdu_type = telegram.tpdu_type
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
@@ -74,16 +76,24 @@ class TPDU:
     def to_knx(self):
         data = [0x11, 0x00, 0xb0, 0x60, 0x00, 0x00]
         data += self.destination_address.to_knx()
-        data += [ 0x00, 0x80]
+        if self.tpdu_type == TPDUType.T_Connect:
+            data += [ 0x00, 0x80]
+        elif self.tpdu_type == TPDUType.T_Disconnect:
+            data += [ 0x00, 0x81]
+        else:
+            raise RuntimeError("Invalid TPDUType"+self.tpdu_type)
         return data
     
     def __str__(self) -> str:
         """Return object as readable string."""
         res = '<TPDUFrame DestinationAddress="{}" '.format(
                 self.destination_address.__repr__())
+        '''
         data = self.to_knx()
         for i in data:
             res += hex(i) + " "
-        return res 
+        '''
+        return res
+         
 
        

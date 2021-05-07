@@ -7,7 +7,8 @@ from xknx.telegram import Telegram, TelegramDirection, IndividualAddress,TPDUTyp
 #from xknx.io import Connect
 #from xknx.knxip import ConnectRequestType
 #from xknx.io.tunnelling import Tunnelling
-from xknx.telegram.apci import DeviceDescriptorRead, IndividualAddressRead, IndividualAddressWrite, Restart
+from xknx.telegram.apci import DeviceDescriptorRead, IndividualAddressRead, IndividualAddressWrite, Restart,\
+    APCIService
 from xknx.telegram.address import GroupAddress, GroupAddressType
 #from xknx.knxip import TPDUType
 
@@ -21,35 +22,37 @@ class A_Device:
     defines a device as programming unit
     '''
     def __init__(self, xknx, ia:IndividualAddress, groupAddressType=GroupAddressType.LONG):
-#    def __init__(self, xknx, ia):
         self.xknx = xknx
         self.ia = ia
         #self.state = ConnectionState.NOT_CONNECTED
         self.groupAddressType = groupAddressType
-    
-    async def connect(self):
+        self.last_telegram = None
         
-        '''        
-        # get UDP client
-        udp_client = self.xknx.knxip_interface.interface.udp_client
-        connect = Connect(
-            self.xknx, 
-            udp_client,
-            False,
-            ConnectRequestType.DEVICE_MGMT_CONNECTION,
-            self.ia)
-        await connect.start()
-        if connect.success:
-            print ("successssssssssssss")
+    async def process_telegram(self, telegram):
+        self.last_telegram = telegram
         
-        '''
-        #telegram = Telegram(self.ia, TelegramDirection.OUTGOING, Connect())
+    async def DeviceDescriptor_Respone_arrived(self):
+        # analyse telegram
+        if self.last_telegram.payload:
+            return self.last_telegram.payload.CODE == APCIService.DEVICE_DESCRIPTOR_RESPONSE
+        return self.last_telegram is not None
+        
+    async def T_Connect(self):
         telegram = Telegram(
             self.ia, 
             TelegramDirection.OUTGOING,
             None,
             None,
             TPDUType.T_Connect)
+        await self.xknx.telegrams.put(telegram)
+    
+    async def T_Disconnect(self):
+        telegram = Telegram(
+            self.ia, 
+            TelegramDirection.OUTGOING,
+            None,
+            None,
+            TPDUType.T_Disconnect)
         await self.xknx.telegrams.put(telegram)
     
     async def DeviceDescriptor_Read(self, descriptor):
