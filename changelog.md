@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Devices
+
+- Climate: make `setpoint_shift_mode` optional. When `None` assign its DPT from the first incoming payload.
+
 ## 0.18.1 Internal group addresses 2021-04-23
 
 ### Devices
