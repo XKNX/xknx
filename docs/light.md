@@ -163,5 +163,4 @@ print(light.supports_color_temperature)
 # Requesting current state via KNX GroupValueRead for all _state addresses
 await light.sync()
 
-## [](#header-2)Configuration via **xknx.yaml**
 ```

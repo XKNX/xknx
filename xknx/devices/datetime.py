@@ -1,9 +1,8 @@
 """
 Module for broadcasting date/time to the KNX bus.
 
-DateTime is a virtual/pseudo device, using the infrastructure for
-beeing configured via xknx.yaml and synchronized periodically
-by StateUpdate.
+DateTime is a virtual/pseudo device, optionally
+broadcasting localtime periodically.
 """
 from __future__ import annotations
 

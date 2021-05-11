@@ -75,6 +75,18 @@ class TestLight:
         )
         assert light.supports_color
 
+    def test_supports_individual_color_only_brightness_true(self):
+        """Test supports_color true."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Individual colors only brightness",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_blue="1/1/11",
+        )
+        assert light.supports_color
+
     def test_supports_individual_color_false(self):
         """Test supports_color false."""
         xknx = XKNX()
@@ -140,6 +152,19 @@ class TestLight:
             group_address_switch_white_state="1/1/14",
             group_address_brightness_white="1/1/15",
             group_address_brightness_white_state="1/1/16",
+        )
+        assert light.supports_rgbw
+
+    def test_supports_individual_color_only_brightness_rgbw_true(self):
+        """Test supports_color true."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Individual colors only brightness",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_white="1/1/12",
         )
         assert light.supports_rgbw
 
@@ -454,6 +479,58 @@ class TestLight:
         for color in light._iter_individual_colors():
             assert color.is_on is True
 
+    async def test_set_on_individual_color_only_brightness(self):
+        """Test switching on a Light."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Individual colors only brightness",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
+            group_address_brightness_white="1/1/15",
+            group_address_brightness_white_state="1/1/16",
+        )
+        assert light.state is None
+        for color in light._iter_individual_colors():
+            assert color.is_on is None
+
+        await light.set_on()
+        assert xknx.telegrams.qsize() == 4
+
+        telegrams = [xknx.telegrams.get_nowait() for _ in range(4)]
+
+        test_telegrams = [
+            Telegram(
+                destination_address=GroupAddress("1/1/3"),
+                payload=GroupValueWrite(DPTArray((0xFF,))),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/7"),
+                payload=GroupValueWrite(DPTArray((0xFF,))),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/11"),
+                payload=GroupValueWrite(DPTArray((0xFF,))),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/15"),
+                payload=GroupValueWrite(DPTArray((0xFF,))),
+            ),
+        ]
+        assert len(set(telegrams)) == 4
+        assert set(telegrams) == set(test_telegrams)
+
+        for telegram in telegrams:
+            await light.process(telegram)
+
+        assert light.state is True
+        for color in light._iter_individual_colors():
+            assert color.is_on is True
+
     #
     # TEST SET OFF
     #
@@ -473,6 +550,9 @@ class TestLight:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(0)),
         )
+
+        await light.process(telegram)
+        assert light.state is False
 
     async def test_set_off_individual_color(self):
         """Test switching off a Light."""
@@ -522,6 +602,59 @@ class TestLight:
         ]
         assert len(set(telegrams)) == 4
         assert set(telegrams) == set(test_telegrams)
+
+        for telegram in telegrams:
+            await light.process(telegram)
+        assert light.state is False
+        for color in light._iter_individual_colors():
+            assert color.is_on is False
+
+    async def test_set_off_individual_color_only_brightness(self):
+        """Test switching off a Light."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Diningroom.Light_1",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
+            group_address_brightness_white="1/1/15",
+            group_address_brightness_white_state="1/1/16",
+        )
+        await light.set_off()
+        assert xknx.telegrams.qsize() == 4
+
+        telegrams = [xknx.telegrams.get_nowait() for _ in range(4)]
+
+        test_telegrams = [
+            Telegram(
+                destination_address=GroupAddress("1/1/3"),
+                payload=GroupValueWrite(DPTArray((0,))),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/7"),
+                payload=GroupValueWrite(DPTArray((0,))),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/11"),
+                payload=GroupValueWrite(DPTArray((0,))),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/1/15"),
+                payload=GroupValueWrite(DPTArray((0,))),
+            ),
+        ]
+        assert len(set(telegrams)) == 4
+        assert set(telegrams) == set(test_telegrams)
+
+        for telegram in telegrams:
+            await light.process(telegram)
+        assert light.state is False
+        for color in light._iter_individual_colors():
+            assert color.is_on is False
 
     #
     # TEST SET BRIGHTNESS
@@ -1306,10 +1439,10 @@ class TestLight:
         light = Light(
             xknx,
             name="TestLight",
-            group_address_switch_green="1/2/3",
-            group_address_switch_blue="1/2/4",
-            group_address_switch_red="1/2/5",
-            group_address_switch_white="1/2/6",
+            group_address_brightness_green="1/2/3",
+            group_address_brightness_blue="1/2/4",
+            group_address_brightness_red="1/2/5",
+            group_address_brightness_white="1/2/6",
             group_address_brightness="1/2/5",
             group_address_tunable_white="1/2/9",
             group_address_color_temperature="1/2/11",

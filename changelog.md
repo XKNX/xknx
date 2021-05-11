@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Devices
+
+- Light: Support individual color lights without switch object
+
 ## 0.18.1 Internal group addresses 2021-04-23
 
 ### Devices
