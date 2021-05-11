@@ -4,6 +4,7 @@
 
 ### Devices
 
+- Climate: make `setpoint_shift_mode` optional. When `None` assign its DPT from the first incoming payload.
 - Light: Support individual color lights without switch object
 
 ## 0.18.1 Internal group addresses 2021-04-23
