@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased changes
+## 0.18.2 Climate and Light improvements 2021-05-11
 
 ### Devices
 
