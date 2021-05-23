@@ -15,18 +15,18 @@ Climate are representations of KNX HVAC/Climate controls.
 
 - `xknx` is the XKNX object.
 - `name` is the name of the object.
-- `group_address_temperature` KNX address of current room temperature.
-- `group_address_target_temperature` KNX address for setting the target temperature if setpoint shift is not supported.
-- `group_address_target_temperature_state` KNX address for reading the target temperature from the KNX bus. Used in for setpoint_shift calculations as base temperature.
-- `group_address_setpoint_shift` KNX address to set setpoint_shift (base temperature deviation).
-- `group_address_setpoint_shift_state` KNX address to read current setpoint_shift.
-- `setpoint_shift_mode` Enum for setpoint_shift payload encoding. Can be *DPT 6.010* or *DPT 9.002*. Default: SetpointShiftMode.DPT6010
+- `group_address_temperature` KNX address of current room temperature. *DPT 9.001*
+- `group_address_target_temperature` KNX address for setting the target temperature if setpoint shift is not supported. *DPT 9.001*
+- `group_address_target_temperature_state` KNX address for reading the target temperature from the KNX bus. Used in for setpoint_shift calculations as base temperature. *DPT 9.001*
+- `group_address_setpoint_shift` KNX address to set setpoint_shift (base temperature deviation). *DPT 6.010* or *DPT 9.002*
+- `group_address_setpoint_shift_state` KNX address to read current setpoint_shift. *DPT 6.010* or *DPT 9.002*
+- `setpoint_shift_mode` SetpointShiftMode Enum for setpoint_shift payload encoding. When `None` it is infered from first incoming payload. Default: `None`
 - `setpoint_shift_max` Maximum value for setpoint_shift.
 - `setpoint_shift_min` Minimum value for setpoint_shift.
-- `temperature_step` Set the multiplier for setpoint_shift (*DPT 6*) calculations and the step size for HA UI-elements.
-- `group_address_on_off` KNX address for turning climate device on or off.
-- `group_address_on_off_state` KNX address for reading the on/off state.
-- `on_off_invert` Invert on/off.
+- `temperature_step` Set the multiplier for setpoint_shift calculations when DPT 6.010 is used.
+- `group_address_on_off` KNX address for turning climate device on or off. *DPT 1*
+- `group_address_on_off_state` KNX address for reading the on/off state. *DPT 1*
+- `on_off_invert` Invert on/off. Default: `False`
 - `max_temp` Maximum value for target temperature.
 - `min_temp` Minimum value for target temperature.
 - `mode` ClimateMode instance for this climate device

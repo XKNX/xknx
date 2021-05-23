@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.18.2 Climate and Light improvements 2021-05-11
+
+### Devices
+
+- Climate: make `setpoint_shift_mode` optional. When `None` assign its DPT from the first incoming payload.
+- Light: Support individual color lights without switch object
+
 ## 0.18.1 Internal group addresses 2021-04-23
 
 ### Devices

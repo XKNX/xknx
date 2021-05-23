@@ -6,7 +6,6 @@ Module for managing the climate within a room.
 """
 from __future__ import annotations
 
-from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any, Iterator
 
@@ -17,6 +16,7 @@ from xknx.remote_value import (
     RemoteValueSwitch,
     RemoteValueTemp,
 )
+from xknx.remote_value.remote_value_setpoint_shift import SetpointShiftMode
 
 from .climate_mode import ClimateMode
 from .device import Device, DeviceCallbackType
@@ -30,17 +30,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger("xknx.log")
 
 
-class SetpointShiftMode(Enum):
-    """Enum for setting the setpoint shift mode."""
-
-    DPT6010 = 1
-    DPT9002 = 2
-
-
 DEFAULT_SETPOINT_SHIFT_MAX = 6
 DEFAULT_SETPOINT_SHIFT_MIN = -6
 DEFAULT_TEMPERATURE_STEP = 0.1
-DEFAULT_SETPOINT_SHIFT_MODE = SetpointShiftMode.DPT6010
 
 
 class Climate(Device):
@@ -55,7 +47,7 @@ class Climate(Device):
         group_address_target_temperature_state: GroupAddressesType | None = None,
         group_address_setpoint_shift: GroupAddressesType | None = None,
         group_address_setpoint_shift_state: GroupAddressesType | None = None,
-        setpoint_shift_mode: SetpointShiftMode = DEFAULT_SETPOINT_SHIFT_MODE,
+        setpoint_shift_mode: SetpointShiftMode | None = None,
         setpoint_shift_max: float = DEFAULT_SETPOINT_SHIFT_MAX,
         setpoint_shift_min: float = DEFAULT_SETPOINT_SHIFT_MIN,
         temperature_step: float = DEFAULT_TEMPERATURE_STEP,
@@ -94,24 +86,15 @@ class Climate(Device):
             after_update_cb=self.after_update,
         )
 
-        self._setpoint_shift: RemoteValueTemp | RemoteValueSetpointShift
-        if setpoint_shift_mode == SetpointShiftMode.DPT9002:
-            self._setpoint_shift = RemoteValueTemp(
-                xknx,
-                group_address_setpoint_shift,
-                group_address_setpoint_shift_state,
-                device_name=self.name,
-                after_update_cb=self.after_update,
-            )
-        else:
-            self._setpoint_shift = RemoteValueSetpointShift(
-                xknx,
-                group_address_setpoint_shift,
-                group_address_setpoint_shift_state,
-                device_name=self.name,
-                after_update_cb=self.after_update,
-                setpoint_shift_step=self.temperature_step,
-            )
+        self._setpoint_shift = RemoteValueSetpointShift(
+            xknx,
+            group_address_setpoint_shift,
+            group_address_setpoint_shift_state,
+            device_name=self.name,
+            after_update_cb=self.after_update,
+            setpoint_shift_mode=setpoint_shift_mode,
+            setpoint_shift_step=self.temperature_step,
+        )
 
         self.supports_on_off = (
             group_address_on_off is not None or group_address_on_off_state is not None
@@ -133,12 +116,10 @@ class Climate(Device):
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
-        yield from (
-            self.temperature,
-            self.target_temperature,
-            self._setpoint_shift,
-            self.on,
-        )
+        yield self.temperature
+        yield self.target_temperature
+        yield self._setpoint_shift
+        yield self.on
 
     def create_temperature_sensors(self) -> None:
         """Create temperature sensors."""
