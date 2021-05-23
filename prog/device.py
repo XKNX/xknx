@@ -33,9 +33,16 @@ class A_Device:
         
     async def DeviceDescriptor_Respone_arrived(self):
         # analyse telegram
-        if self.last_telegram.payload:
-            return self.last_telegram.payload.CODE == APCIService.DEVICE_DESCRIPTOR_RESPONSE
-        return self.last_telegram is not None
+        if self.last_telegram:
+            if self.last_telegram.payload:
+                return self.last_telegram.payload.CODE == APCIService.DEVICE_DESCRIPTOR_RESPONSE
+        return False
+    
+    async def IndividualAddress_Respone(self):
+        if self.last_telegram:
+            if self.last_telegram.payload.CODE == APCIService.INDIVIDUAL_ADDRESS_RESPONSE:
+                return self.last_telegram.source_address
+        return None
         
     async def T_Connect(self):
         telegram = Telegram(
