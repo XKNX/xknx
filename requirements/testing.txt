@@ -1,5 +1,5 @@
 -r production.txt
-pre-commit==2.12.1
+pre-commit==2.13.0
 isort==5.8.0
 flake8==3.9.2
 flake8-isort==4.0.0
