@@ -10,6 +10,7 @@ from .remote_value_climate_mode import (
 )
 from .remote_value_color_rgb import RemoteValueColorRGB
 from .remote_value_color_rgbw import RemoteValueColorRGBW
+from .remote_value_color_xyy import RemoteValueColorXYY
 from .remote_value_control import RemoteValueControl
 from .remote_value_datetime import RemoteValueDateTime
 from .remote_value_dpt_2_byte_unsigned import RemoteValueDpt2ByteUnsigned
@@ -32,6 +33,7 @@ __all__ = [
     "RemoteValueBinaryOperationMode",
     "RemoteValueColorRGB",
     "RemoteValueColorRGBW",
+    "RemoteValueColorXYY",
     "RemoteValueControl",
     "RemoteValueControllerMode",
     "RemoteValueDateTime",

@@ -16,11 +16,13 @@ from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterator, Tuple, cast
 
+from xknx.dpt.dpt_color import XYYColor
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
     RemoteValueColorRGB,
     RemoteValueColorRGBW,
+    RemoteValueColorXYY,
     RemoteValueDpt2ByteUnsigned,
     RemoteValueScaling,
     RemoteValueSwitch,
@@ -121,6 +123,8 @@ class Light(Device):
         group_address_color_state: GroupAddressesType | None = None,
         group_address_rgbw: GroupAddressesType | None = None,
         group_address_rgbw_state: GroupAddressesType | None = None,
+        group_address_xyy_color: GroupAddressesType | None = None,
+        group_address_xyy_color_state: GroupAddressesType | None = None,
         group_address_tunable_white: GroupAddressesType | None = None,
         group_address_tunable_white_state: GroupAddressesType | None = None,
         group_address_color_temperature: GroupAddressesType | None = None,
@@ -182,6 +186,15 @@ class Light(Device):
             group_address_rgbw_state,
             device_name=self.name,
             after_update_cb=self.after_update,
+        )
+
+        self._xyy_color_valid: XYYColor | None = None
+        self.xyy_color = RemoteValueColorXYY(
+            xknx,
+            group_address_xyy_color,
+            group_address_xyy_color_state,
+            device_name=self.name,
+            after_update_cb=self._xyy_color_from_rv,
         )
 
         self.tunable_white = RemoteValueScaling(
@@ -257,6 +270,7 @@ class Light(Device):
         yield self.brightness
         yield self.color
         yield self.rgbw
+        yield self.xyy_color
         yield self.tunable_white
         yield self.color_temperature
         for color in self._iter_individual_colors():
@@ -296,6 +310,11 @@ class Light(Device):
         return self.rgbw.initialized or all(
             c.brightness.initialized for c in self._iter_individual_colors()
         )
+
+    @property
+    def supports_xyy_color(self) -> bool:
+        """Return if light supports xyY-color."""
+        return self.xyy_color.initialized
 
     @property
     def supports_tunable_white(self) -> bool:
@@ -492,6 +511,32 @@ class Light(Device):
                     await self.blue.brightness.set(color[2])
                     return
             logger.warning("Colors not supported for device %s", self.get_name())
+
+    async def _xyy_color_from_rv(self) -> None:
+        """Update the current postion from RemoteValue (Callback)."""
+        new_xyy = self.xyy_color.value
+        if new_xyy is None:
+            return
+        new_color, new_brightness = new_xyy
+        if self._xyy_color_valid is not None:
+            if new_color is None:
+                new_color = self._xyy_color_valid.color
+            if new_brightness is None:
+                new_brightness = self._xyy_color_valid.brightness
+        self._xyy_color_valid = XYYColor(color=new_color, brightness=new_brightness)
+        await self.after_update()
+
+    @property
+    def current_xyy_color(self) -> XYYColor | None:
+        """Return current xyY-color of the light."""
+        return self._xyy_color_valid
+
+    async def set_xyy_color(self, xyy: XYYColor) -> None:
+        """Set xyY-color of the light."""
+        if not self.supports_xyy_color:
+            logger.warning("XYY-color not supported for device %s", self.get_name())
+            return
+        await self.xyy_color.set(xyy)
 
     @property
     def current_tunable_white(self) -> int | None:
