@@ -513,17 +513,17 @@ class Light(Device):
             logger.warning("Colors not supported for device %s", self.get_name())
 
     async def _xyy_color_from_rv(self) -> None:
-        """Update the current postion from RemoteValue (Callback)."""
+        """Update the current xyY-color from RemoteValue (Callback)."""
         new_xyy = self.xyy_color.value
-        if new_xyy is None:
-            return
-        new_color, new_brightness = new_xyy
-        if self._xyy_color_valid is not None:
+        if new_xyy is None or self._xyy_color_valid is None:
+            self._xyy_color_valid = new_xyy
+        else:
+            new_color, new_brightness = new_xyy
             if new_color is None:
                 new_color = self._xyy_color_valid.color
             if new_brightness is None:
                 new_brightness = self._xyy_color_valid.brightness
-        self._xyy_color_valid = XYYColor(color=new_color, brightness=new_brightness)
+            self._xyy_color_valid = XYYColor(color=new_color, brightness=new_brightness)
         await self.after_update()
 
     @property

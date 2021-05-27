@@ -12,8 +12,9 @@ class XYYColor(NamedTuple):
     """
     Representation of XY color with brightness.
 
-    `color`: tuple(x-axis, y-axis) each 0..1 - None if not valid.
-    `brigtness`: int 0..255 - None if not valid.
+    `color`: tuple(x-axis, y-axis) each 0..1; None if invalid.
+    `brigtness`: int 0..255; None if invalid.
+    tuple(tuple(float, float) | None, int | None)
     """
 
     color: tuple[float, float] | None = None
@@ -43,9 +44,13 @@ class DPTColorXYY(DPTBase):
         )
 
     @classmethod
-    def to_knx(cls, value: XYYColor) -> tuple[int, int, int, int, int, int]:
+    def to_knx(
+        cls, value: XYYColor | tuple[tuple[float, float] | None, int | None]
+    ) -> tuple[int, int, int, int, int, int]:
         """Serialize to KNX/IP raw data."""
         try:
+            if not isinstance(value, XYYColor):
+                value = XYYColor(*value)
             color_valid = False
             brightness_valid = False
             x_axis, y_axis, brightness = 0, 0, 0
@@ -57,7 +62,7 @@ class DPTColorXYY(DPTBase):
                 x_axis, y_axis = (round(axis * 0xFFFF) for axis in value.color)
 
             if value.brightness is not None:
-                if 0 <= value.brightness <= 255:
+                if not 0 <= value.brightness <= 255:
                     raise ValueError
                 brightness_valid = True
                 brightness = int(value.brightness)
@@ -70,5 +75,5 @@ class DPTColorXYY(DPTBase):
                 brightness,
                 color_valid << 1 | brightness_valid,
             )
-        except ValueError:
+        except (ValueError, TypeError):
             raise ConversionError("Could not serialize %s" % cls.__name__, value=value)

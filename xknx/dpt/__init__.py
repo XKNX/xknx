@@ -167,6 +167,7 @@ from .dpt_4byte_int import (
     DPTReactiveEnergykVARh,
     DPTValue4Count,
 )
+from .dpt_color import DPTColorXYY
 from .dpt_date import DPTDate
 from .dpt_datetime import DPTDateTime
 from .dpt_hvac_mode import DPTControllerStatus, DPTHVACContrMode, DPTHVACMode
@@ -207,6 +208,7 @@ __all__ = [
     "DPTChargeDensitySurface",
     "DPTChargeDensityVolume",
     "DPTColorTemperature",
+    "DPTColorXYY",
     "DPTCommonTemperature",
     "DPTCompressibility",
     "DPTConductance",
