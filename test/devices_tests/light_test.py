@@ -1261,7 +1261,7 @@ class TestLight:
             group_address_xyy_color="1/2/5",
         )
         assert light.current_xyy_color is None
-        # invalid brightness
+        # initial with invalid brightness
         await light.process(
             Telegram(
                 destination_address=GroupAddress("1/2/5"),
@@ -1293,6 +1293,14 @@ class TestLight:
             )
         )
         assert light.current_xyy_color == ((0.82, 0.69), 165)
+        # invalid brightness
+        await light.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/5"),
+                payload=GroupValueWrite(DPTArray((0x2E, 0x14, 0x40, 0x00, 0x00, 0x02))),
+            )
+        )
+        assert light.current_xyy_color == ((0.18, 0.25), 165)
 
     async def test_process_tunable_white(self):
         """Test process / reading telegrams from telegram queue. Test if tunable white is processed."""

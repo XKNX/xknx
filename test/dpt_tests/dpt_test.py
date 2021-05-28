@@ -69,6 +69,11 @@ class TestDPT:
         with pytest.raises(TypeError):
             DPTArray("bla")
 
+    def test_dpt_representation(self):
+        """Test representation of DPTBinary and DPTArray."""
+        assert DPTBinary(True).__repr__() == "DPTBinary(0x1)"
+        assert DPTArray((5, 15)).__repr__() == "DPTArray((0x5, 0xf))"
+
 
 class TestDPTBase:
     """Test class for transcoder base object."""
