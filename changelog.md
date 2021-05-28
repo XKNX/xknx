@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Devices
+
+- Light: support for xyY-color (DPT 242.600)
+
 ## 0.18.2 Climate and Light improvements 2021-05-11
 
 ### Devices

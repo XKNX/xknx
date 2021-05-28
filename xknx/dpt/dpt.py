@@ -164,6 +164,10 @@ class DPTBinary:
             return self.value == other.value
         return False
 
+    def __repr__(self) -> str:
+        """Return object representation."""
+        return f"DPTBinary({hex(self.value)})"
+
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<DPTBinary value="{self.value}" />'
@@ -191,6 +195,10 @@ class DPTArray:
         if isinstance(other, DPTArray):
             return self.value == other.value
         return False
+
+    def __repr__(self) -> str:
+        """Return object representation."""
+        return "DPTArray(({}))".format(", ".join(hex(b) for b in self.value))
 
     def __str__(self) -> str:
         """Return object as readable string."""
