@@ -23,6 +23,8 @@ The Light object is either a representation of a binary or dimm actor, LED-contr
 - `group_address_color_state` KNX group address for the current RGB color. *DPT 232.600*
 - `group_address_rgbw` KNX group address to set the RGBW color. *DPT 251.600*
 - `group_address_rgbw_state` KNX group address for the current RGBW color. *DPT 251.600*
+- `group_address_xyy_color`: KNX group address to set the xyY color. *DPT 242.600*
+- `group_address_xyy_color_state`: KNX group address for the current xyY color. *DPT 242.600*
 - `group_address_tunable_white` KNX group address to set relative color temperature. *DPT 5.001*
 - `group_address_tunable_white_state` KNX group address for the current relative color temperature. *DPT 5.001*
 - `group_address_color_temperature` KNX group address to set absolute color temperature. *DPT 7.600*
