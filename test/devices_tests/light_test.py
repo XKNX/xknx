@@ -17,7 +17,7 @@ class TestLight:
     #
     # TEST SUPPORT DIMMING
     #
-    def test_supports_dimm_yes(self):
+    def test_supports_dimm_true(self):
         """Test supports_dimm attribute with a light with dimmer."""
         xknx = XKNX()
         light = Light(
@@ -28,7 +28,7 @@ class TestLight:
         )
         assert light.supports_brightness
 
-    def test_supports_dimm_no(self):
+    def test_supports_dimm_false(self):
         """Test supports_dimm attribute with a Light without dimmer."""
         xknx = XKNX()
         light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
@@ -189,6 +189,23 @@ class TestLight:
         )
         assert not light.supports_rgbw
 
+    def test_supports_xyy_color_true(self):
+        """Test supports_xyy_color true."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Diningroom.Light_1",
+            group_address_switch="1/6/4",
+            group_address_xyy_color="1/6/5",
+        )
+        assert light.supports_xyy_color
+
+    def test_supports_xyy_color_false(self):
+        """Test supports_xyy_color false."""
+        xknx = XKNX()
+        light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
+        assert not light.supports_xyy_color
+
     #
     # TEST SUPPORT TUNABLE WHITE
     #
@@ -242,16 +259,18 @@ class TestLight:
             group_address_switch_state="1/2/3",
             group_address_brightness_state="1/2/5",
             group_address_color_state="1/2/6",
+            group_address_xyy_color_state="1/2/4",
             group_address_tunable_white_state="1/2/7",
             group_address_color_temperature_state="1/2/8",
             group_address_rgbw_state="1/2/9",
         )
-        await light.sync()
+        expected_telegrams = 7
 
-        assert xknx.telegrams.qsize() == 6
+        await light.sync()
+        assert xknx.telegrams.qsize() == expected_telegrams
 
         telegrams = []
-        for _ in range(6):
+        for _ in range(expected_telegrams):
             telegrams.append(xknx.telegrams.get_nowait())
 
         test_telegrams = [
@@ -265,6 +284,9 @@ class TestLight:
                 destination_address=GroupAddress("1/2/6"), payload=GroupValueRead()
             ),
             Telegram(
+                destination_address=GroupAddress("1/2/4"), payload=GroupValueRead()
+            ),
+            Telegram(
                 destination_address=GroupAddress("1/2/9"), payload=GroupValueRead()
             ),
             Telegram(
@@ -274,9 +296,8 @@ class TestLight:
                 destination_address=GroupAddress("1/2/8"), payload=GroupValueRead()
             ),
         ]
-
-        assert len(telegrams) == 6
-        assert telegrams == test_telegrams
+        assert len(set(telegrams)) == expected_telegrams
+        assert set(telegrams) == set(test_telegrams)
 
     async def test_sync_individual_color(self):
         """Test sync function / sending group reads to KNX bus. Testing with a Light without dimm functionality."""
@@ -341,63 +362,8 @@ class TestLight:
                 payload=GroupValueRead(),
             ),
         ]
-
         assert len(set(telegrams)) == 8
         assert set(telegrams) == set(test_telegrams)
-
-    #
-    # SYNC WITH STATE ADDRESS
-    #
-    async def test_sync_state_address(self):
-        """Test sync function / sending group reads to KNX bus. Testing with a Light with dimm functionality."""
-        xknx = XKNX()
-        light = Light(
-            xknx,
-            name="TestLight",
-            group_address_switch="1/2/3",
-            group_address_switch_state="1/2/4",
-            group_address_brightness="1/2/5",
-            group_address_brightness_state="1/2/6",
-            group_address_color="1/2/7",
-            group_address_color_state="1/2/8",
-            group_address_tunable_white="1/2/9",
-            group_address_tunable_white_state="1/2/10",
-            group_address_color_temperature="1/2/11",
-            group_address_color_temperature_state="1/2/12",
-            group_address_rgbw="1/2/13",
-            group_address_rgbw_state="1/2/14",
-        )
-        await light.sync()
-
-        assert xknx.telegrams.qsize() == 6
-
-        telegrams = []
-        for _ in range(6):
-            telegrams.append(xknx.telegrams.get_nowait())
-
-        test_telegrams = [
-            Telegram(
-                destination_address=GroupAddress("1/2/4"), payload=GroupValueRead()
-            ),
-            Telegram(
-                destination_address=GroupAddress("1/2/6"), payload=GroupValueRead()
-            ),
-            Telegram(
-                destination_address=GroupAddress("1/2/8"), payload=GroupValueRead()
-            ),
-            Telegram(
-                destination_address=GroupAddress("1/2/14"), payload=GroupValueRead()
-            ),
-            Telegram(
-                destination_address=GroupAddress("1/2/10"), payload=GroupValueRead()
-            ),
-            Telegram(
-                destination_address=GroupAddress("1/2/12"), payload=GroupValueRead()
-            ),
-        ]
-
-        assert len(telegrams) == 6
-        assert telegrams == test_telegrams
 
     #
     # TEST SET ON
@@ -939,6 +905,45 @@ class TestLight:
             )
 
     #
+    # TEST SET COLOR AS RGBW
+    #
+    async def test_set_xyy_color(self):
+        """Test setting XYY value of a Light."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_xyy_color="1/2/4",
+        )
+        await light.set_xyy_color(((0.52, 0.31), 25))
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/4"),
+            payload=GroupValueWrite(DPTArray((0x85, 0x1E, 0x4F, 0x5C, 0x19, 0x03))),
+        )
+        await xknx.devices.process(telegram)
+        assert light.current_xyy_color == ((0.52, 0.31), 25)
+
+    async def test_set_xyy_color_not_possible(self):
+        """Test setting XYY value of a non light without color."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_color="1/2/4",
+        )
+        with patch("logging.Logger.warning") as mock_warn:
+            await light.set_xyy_color(((0.5, 0.3), 25))
+
+            assert xknx.telegrams.qsize() == 0
+            mock_warn.assert_called_with(
+                "XYY-color not supported for device %s", "TestLight"
+            )
+
+    #
     # TEST SET TUNABLE WHITE
     #
     async def test_set_tw(self):
@@ -1246,6 +1251,49 @@ class TestLight:
         await light.process(telegram)
         assert light.current_color == (None, 42)
 
+    async def test_process_xyy_color(self):
+        """Test process / reading telegrams from telegram queue. Test if color is processed."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_xyy_color="1/2/5",
+        )
+        assert light.current_xyy_color is None
+        # invalid brightness
+        await light.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/5"),
+                payload=GroupValueWrite(DPTArray((0x2E, 0x14, 0x40, 0x00, 0x55, 0x02))),
+            )
+        )
+        assert light.current_xyy_color == ((0.18, 0.25), None)
+        # add valid brightness
+        await light.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/5"),
+                payload=GroupValueWrite(DPTArray((0x2E, 0x14, 0x40, 0x00, 0x55, 0x03))),
+            )
+        )
+        assert light.current_xyy_color == ((0.18, 0.25), 85)
+        # invalid color
+        await light.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/5"),
+                payload=GroupValueWrite(DPTArray((0xD1, 0xEB, 0xB0, 0xA3, 0xA5, 0x01))),
+            )
+        )
+        assert light.current_xyy_color == ((0.18, 0.25), 165)
+        # both valid
+        await light.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/5"),
+                payload=GroupValueWrite(DPTArray((0xD1, 0xEB, 0xB0, 0xA3, 0xA5, 0x03))),
+            )
+        )
+        assert light.current_xyy_color == ((0.82, 0.69), 165)
+
     async def test_process_tunable_white(self):
         """Test process / reading telegrams from telegram queue. Test if tunable white is processed."""
         xknx = XKNX()
@@ -1371,6 +1419,8 @@ class TestLight:
             group_address_color_temperature_state="1/7/10",
             group_address_rgbw="1/7/11",
             group_address_rgbw_state="1/7/12",
+            group_address_xyy_color="1/7/13",
+            group_address_xyy_color_state="1/7/14",
             group_address_switch_red="1/1/1",
             group_address_switch_red_state="1/1/2",
             group_address_brightness_red="1/1/3",
@@ -1400,6 +1450,8 @@ class TestLight:
         assert light.has_group_address(GroupAddress("1/7/10"))
         assert light.has_group_address(GroupAddress("1/7/11"))
         assert light.has_group_address(GroupAddress("1/7/12"))
+        assert light.has_group_address(GroupAddress("1/7/13"))
+        assert light.has_group_address(GroupAddress("1/7/14"))
 
         assert light.has_group_address(GroupAddress("1/1/1"))
         assert light.has_group_address(GroupAddress("1/1/2"))
@@ -1418,7 +1470,7 @@ class TestLight:
         assert light.has_group_address(GroupAddress("1/1/15"))
         assert light.has_group_address(GroupAddress("1/1/16"))
 
-        assert not light.has_group_address(GroupAddress("1/7/13"))
+        assert not light.has_group_address(GroupAddress("1/7/15"))
 
     def test_unique_id(self):
         """Test unique id functionality."""
