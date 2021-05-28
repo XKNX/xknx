@@ -94,12 +94,14 @@ class KNXExposeSensor:
         )
         return device
 
+    @callback
     def _init_expose_state(self) -> None:
         """Initialize state of the exposure."""
         init_state = self.hass.states.get(self.entity_id)
         init_value = self._get_expose_value(init_state)
-        if init_value is not None:
-            self.device.sensor_value.value = init_value
+        self.device.sensor_value.value = (
+            init_value if init_value is not None else self.expose_default
+        )
 
     @callback
     def shutdown(self) -> None:
@@ -109,15 +111,21 @@ class KNXExposeSensor:
             self._remove_listener = None
         self.device.shutdown()
 
-    def _get_expose_value(self, state: State) -> StateType:
+    def _get_expose_value(self, state: State | None) -> StateType:
         """Extract value from state."""
         if state is None or state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             return None
-        return (
+        value = (
             state.state
             if self.expose_attribute is None
             else state.attributes.get(self.expose_attribute)
         )
+        if self.type == "binary":
+            if value in (1, STATE_ON, "True"):
+                value = True
+            elif value in (0, STATE_OFF, "False"):
+                value = False
+        return value
 
     async def _async_entity_changed(self, event: Event) -> None:
         """Handle entity change."""
@@ -133,18 +141,10 @@ class KNXExposeSensor:
 
     async def _async_set_knx_value(self, value: StateType) -> None:
         """Set new value on xknx ExposeSensor."""
-        assert self.device is not None
         if value is None:
             if self.expose_default is None:
                 return
             value = self.expose_default
-
-        if self.type == "binary":
-            if value in (1, STATE_ON, "True"):
-                value = True
-            elif value in (0, STATE_OFF, "False"):
-                value = False
-
         await self.device.set(value)
 
 
