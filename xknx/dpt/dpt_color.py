@@ -31,15 +31,21 @@ class DPTColorXYY(DPTBase):
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
 
-        x_axis = raw[0] << 8 | raw[1]
-        y_axis = raw[2] << 8 | raw[3]
+        x_axis_int = raw[0] << 8 | raw[1]
+        y_axis_int = raw[2] << 8 | raw[3]
         brightness = raw[4]
 
         color_valid = raw[5] >> 1 & 0b1
         brightness_valid = raw[5] & 0b1
 
         return XYYColor(
-            color=(x_axis / 0xFFFF, y_axis / 0xFFFF) if color_valid else None,
+            color=(
+                # round to 5 digits for better readability but still preserving precicion
+                round(x_axis_int / 0xFFFF, 5),
+                round(y_axis_int / 0xFFFF, 5),
+            )
+            if color_valid
+            else None,
             brightness=brightness if brightness_valid else None,
         )
 
