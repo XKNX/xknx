@@ -13,7 +13,7 @@ class XYYColor(NamedTuple):
     Representation of XY color with brightness.
 
     `color`: tuple(x-axis, y-axis) each 0..1; None if invalid.
-    `brigtness`: int 0..255; None if invalid.
+    `brightness`: int 0..255; None if invalid.
     tuple(tuple(float, float) | None, int | None)
     """
 
