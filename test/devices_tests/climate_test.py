@@ -1163,6 +1163,7 @@ class TestClimate:
         climate_mode = ClimateMode(
             xknx,
             "TestClimate",
+            group_address_operation_mode="i-op-mode",
             group_address_heat_cool="1/2/14",
             group_address_heat_cool_state="1/2/15",
         )
