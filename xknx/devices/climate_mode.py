@@ -159,16 +159,12 @@ class ClimateMode(Device):
 
         self.supports_operation_mode = any(
             operation_mode.initialized
-            for operation_mode in self._iter_byte_operation_modes()
-        ) or any(
-            operation_mode.initialized
-            for operation_mode in self._iter_binary_operation_modes()
+            for operation_mode in self._iter_operation_remote_values()
         )
         self.supports_controller_mode = any(
-            operation_mode.initialized
-            for operation_mode in self._iter_controller_remote_values()
+            controller_mode.initialized
+            for controller_mode in self._iter_controller_remote_values()
         )
-
         self._use_binary_operation_modes = any(
             operation_mode.initialized
             for operation_mode in self._iter_binary_operation_modes()
@@ -245,9 +241,7 @@ class ClimateMode(Device):
             )
 
         rv_operation: RemoteValueClimateModeBase[Any, HVACOperationMode]
-        for rv_operation in chain(
-            self._iter_byte_operation_modes(), self._iter_binary_operation_modes()
-        ):
+        for rv_operation in self._iter_operation_remote_values():
             if (
                 rv_operation.writable
                 and operation_mode in rv_operation.supported_operation_modes()
@@ -293,9 +287,7 @@ class ClimateMode(Device):
     def gather_operation_modes(self) -> list[HVACOperationMode]:
         """Gather operation modes from RemoteValues."""
         operation_modes: list[HVACOperationMode] = []
-        for rv_operation in chain(
-            self._iter_binary_operation_modes(), self._iter_byte_operation_modes()
-        ):
+        for rv_operation in self._iter_operation_remote_values():
             if rv_operation.writable:
                 operation_modes.extend(rv_operation.supported_operation_modes())
         # remove duplicates
