@@ -1,4 +1,5 @@
 """Unit test for Light objects."""
+import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -475,6 +476,8 @@ class TestLight:
         assert light.state is True
         for color in light._iter_individual_colors():
             assert color.is_on is True
+        # run one more cycle of the event loop to call debounced 'Device.after_update' Task
+        await asyncio.sleep(0)
 
     async def test_set_on_individual_color_only_brightness(self):
         """Test switching on a Light."""
@@ -527,6 +530,7 @@ class TestLight:
         assert light.state is True
         for color in light._iter_individual_colors():
             assert color.is_on is True
+        await asyncio.sleep(0)
 
     #
     # TEST SET OFF
@@ -605,6 +609,8 @@ class TestLight:
         assert light.state is False
         for color in light._iter_individual_colors():
             assert color.is_on is False
+        # run one more cycle of the event loop to call debounced 'Device.after_update' Task
+        await asyncio.sleep(0)
 
     async def test_set_off_individual_color_only_brightness(self):
         """Test switching off a Light."""
@@ -652,6 +658,8 @@ class TestLight:
         assert light.state is False
         for color in light._iter_individual_colors():
             assert color.is_on is False
+        # run one more cycle of the event loop to call debounced 'Device.after_update' Task
+        await asyncio.sleep(0)
 
     #
     # TEST SET BRIGHTNESS
@@ -823,6 +831,8 @@ class TestLight:
             )
         )
         assert light.current_color == ((23, 24, 25), None)
+        # run one more cycle of the event loop to call debounced 'Device.after_update' Task
+        await asyncio.sleep(0)
 
     async def test_set_individual_color_not_possible(self):
         """Test setting the color of a non light without color."""
@@ -861,6 +871,8 @@ class TestLight:
         )
         await xknx.devices.process(telegram)
         assert light.current_color == ((23, 24, 25), 26)
+        # run one more cycle of the event loop to call debounced 'Device.after_update' Task
+        await asyncio.sleep(0)
 
     async def test_set_color_rgbw_not_possible(self):
         """Test setting RGBW value of a non light without color."""
@@ -953,6 +965,8 @@ class TestLight:
             )
         )
         assert light.current_color == ((23, 24, 25), 26)
+        # run one more cycle of the event loop to call debounced 'Device.after_update' Task
+        await asyncio.sleep(0)
 
     async def test_set_individual_color_rgbw_not_possible(self):
         """Test setting RGBW value of a non light without color."""
@@ -1364,6 +1378,8 @@ class TestLight:
         for telegram in telegrams:
             await light.process(telegram)
         assert light.current_color == ((42, 43, 44), None)
+        # run one more cycle of the event loop to call debounced 'Device.after_update' Task
+        await asyncio.sleep(0)
 
     async def test_process_color_rgbw(self):
         """Test process / reading telegrams from telegram queue. Test if RGBW is processed."""
