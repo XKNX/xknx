@@ -16,6 +16,7 @@ import asyncio
 from enum import Enum
 from itertools import chain
 import logging
+import time
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterator, Tuple, cast
 
 from xknx.dpt.dpt_color import XYYColor
@@ -358,6 +359,7 @@ class Light(Device):
         yield from (self.red, self.green, self.blue, self.white)
 
     async def _individual_color_callback_debounce(self) -> None:
+        logger.warning("Individual color callback at %s", time.time())
         DEBOUNCE_TIME = 0.2
 
         async def debouncer(remaining_iterations: int) -> None:
