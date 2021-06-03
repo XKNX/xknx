@@ -159,16 +159,12 @@ class ClimateMode(Device):
 
         self.supports_operation_mode = any(
             operation_mode.initialized
-            for operation_mode in self._iter_byte_operation_modes()
-        ) or any(
-            operation_mode.initialized
-            for operation_mode in self._iter_binary_operation_modes()
+            for operation_mode in self._iter_operation_remote_values()
         )
         self.supports_controller_mode = any(
-            operation_mode.initialized
-            for operation_mode in self._iter_controller_remote_values()
+            controller_mode.initialized
+            for controller_mode in self._iter_controller_remote_values()
         )
-
         self._use_binary_operation_modes = any(
             operation_mode.initialized
             for operation_mode in self._iter_binary_operation_modes()
@@ -179,9 +175,27 @@ class ClimateMode(Device):
     ) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate climate mode RemoteValue classes."""
         return chain(
-            self._iter_byte_operation_modes(),
+            self._iter_operation_remote_values(),
             self._iter_controller_remote_values(),
+        )
+
+    def _iter_operation_remote_values(
+        self,
+    ) -> Iterator[RemoteValueClimateModeBase[Any, HVACOperationMode]]:
+        return chain(
             self._iter_binary_operation_modes(),
+            self._iter_byte_operation_modes(),
+        )
+
+    def _iter_binary_operation_modes(
+        self,
+    ) -> Iterator[RemoteValueClimateModeBase[Any, HVACOperationMode]]:
+        """Iterate DPT 1 binary operation modes."""
+        yield from (
+            self.remote_value_operation_mode_comfort,
+            self.remote_value_operation_mode_night,
+            self.remote_value_operation_mode_protection,
+            self.remote_value_operation_mode_standby,
         )
 
     def _iter_byte_operation_modes(
@@ -199,17 +213,6 @@ class ClimateMode(Device):
         """Iterate DPT 20.105 controller remote values."""
         yield self.remote_value_controller_mode
         yield self.remote_value_heat_cool
-
-    def _iter_binary_operation_modes(
-        self,
-    ) -> Iterator[RemoteValueClimateModeBase[Any, HVACOperationMode]]:
-        """Iterate DPT 1 binary operation modes."""
-        yield from (
-            self.remote_value_operation_mode_comfort,
-            self.remote_value_operation_mode_night,
-            self.remote_value_operation_mode_protection,
-            self.remote_value_operation_mode_standby,
-        )
 
     async def _set_internal_operation_mode(
         self, operation_mode: HVACOperationMode
@@ -238,9 +241,7 @@ class ClimateMode(Device):
             )
 
         rv_operation: RemoteValueClimateModeBase[Any, HVACOperationMode]
-        for rv_operation in chain(
-            self._iter_byte_operation_modes(), self._iter_binary_operation_modes()
-        ):
+        for rv_operation in self._iter_operation_remote_values():
             if (
                 rv_operation.writable
                 and operation_mode in rv_operation.supported_operation_modes()
@@ -286,9 +287,7 @@ class ClimateMode(Device):
     def gather_operation_modes(self) -> list[HVACOperationMode]:
         """Gather operation modes from RemoteValues."""
         operation_modes: list[HVACOperationMode] = []
-        for rv_operation in chain(
-            self._iter_binary_operation_modes(), self._iter_byte_operation_modes()
-        ):
+        for rv_operation in self._iter_operation_remote_values():
             if rv_operation.writable:
                 operation_modes.extend(rv_operation.supported_operation_modes())
         # remove duplicates
@@ -306,7 +305,7 @@ class ClimateMode(Device):
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         if self.supports_operation_mode:
-            for rv_mode in self._iter_remote_values():
+            for rv_mode in self._iter_operation_remote_values():
                 if await rv_mode.process(telegram):
                     #  ignore inactive RemoteValueBinaryOperationMode
                     if rv_mode.value:

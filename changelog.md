@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Bugfix
+
+- ClimateMode: fix telegram processing operation mode and controller mode (heat/cool) are both used
+
 ## 0.18.3 XYY colors 2021-05-30
 
 ### Devices
