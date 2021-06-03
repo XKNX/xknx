@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 from enum import Enum
+from itertools import chain
 import logging
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterator, Tuple, cast
 
@@ -329,6 +330,13 @@ class Light(Device):
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
+        return chain(
+            self._iter_instant_remote_values(),
+            self._iter_debounce_remote_values(),
+        )
+
+    def _iter_instant_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
+        """Iterate the devices RemoteValue classes calling after_update_cb immediately."""
         yield self.switch
         yield self.brightness
         yield self.color
@@ -338,6 +346,9 @@ class Light(Device):
         yield self.xyy_color
         yield self.tunable_white
         yield self.color_temperature
+
+    def _iter_debounce_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
+        """Iterate the devices RemoteValue classes debouncing after_update_cb."""
         for color in self._iter_individual_colors():
             yield color.switch
             yield color.brightness
@@ -594,8 +605,10 @@ class Light(Device):
 
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        for remote_value in self._iter_remote_values():
+        for remote_value in self._iter_instant_remote_values():
             await remote_value.process(telegram)
+        for remote_value in self._iter_debounce_remote_values():
+            await remote_value.process(telegram, always_callback=True)
 
     def __str__(self) -> str:
         """Return object as readable string."""
