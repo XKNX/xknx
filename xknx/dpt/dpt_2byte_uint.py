@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .dpt import DPTNumeric
 
 
-class DPT2ByteUnsigned(DPTBase):
+class DPT2ByteUnsigned(DPTNumeric):
     """
     Abstraction for KNX 2 Byte "2-octet unsigned value".
 
@@ -15,14 +15,15 @@ class DPT2ByteUnsigned(DPTBase):
     DPT 7.***
     """
 
-    value_min = 0
-    value_max = 65535
     dpt_main_number = 7
     dpt_sub_number: int | None = None
     value_type = "2byte_unsigned"
     unit = ""
-    resolution = 1
     payload_length = 2
+
+    value_min = 0
+    value_max = 65535
+    resolution = 1
 
     @classmethod
     def from_knx(cls, raw: tuple[int, ...]) -> int:
@@ -31,7 +32,7 @@ class DPT2ByteUnsigned(DPTBase):
         return (raw[0] * 256) + raw[1]
 
     @classmethod
-    def to_knx(cls, value: int) -> tuple[int, int]:
+    def to_knx(cls, value: int | float) -> tuple[int, int]:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = int(value)
@@ -72,7 +73,6 @@ class DPTTimePeriod10Msec(DPT2ByteUnsigned):
     dpt_sub_number = 3
     value_type = "time_period_10msec"
     unit = "ms"
-    resolution = 10
 
 
 class DPTTimePeriod100Msec(DPT2ByteUnsigned):
@@ -82,7 +82,6 @@ class DPTTimePeriod100Msec(DPT2ByteUnsigned):
     dpt_sub_number = 4
     value_type = "time_period_100msec"
     unit = "ms"
-    resolution = 100
 
 
 class DPTTimePeriodSec(DPT2ByteUnsigned):
