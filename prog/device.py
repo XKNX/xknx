@@ -8,7 +8,7 @@ from xknx.telegram import Telegram, TelegramDirection, IndividualAddress,TPDUTyp
 #from xknx.knxip import ConnectRequestType
 #from xknx.io.tunnelling import Tunnelling
 from xknx.telegram.apci import DeviceDescriptorRead, IndividualAddressRead, IndividualAddressWrite, Restart,\
-    APCIService
+    APCIService,PropertyValueRead
 from xknx.telegram.address import GroupAddress, GroupAddressType
 #from xknx.knxip import TPDUType
 
@@ -61,12 +61,38 @@ class A_Device:
             None,
             TPDUType.T_Disconnect)
         await self.xknx.telegrams.put(telegram)
+
+    async def T_ACK(self, seq_no):
+        if seq_no == 1:
+            telegram = Telegram(
+                self.ia, 
+                TelegramDirection.OUTGOING,
+                None,
+                None,
+                TPDUType.T_ACK1)
+        else:
+            telegram = Telegram(
+                self.ia, 
+                TelegramDirection.OUTGOING,
+                None,
+                None,
+                TPDUType.T_ACK)
+        await self.xknx.telegrams.put(telegram)
     
     async def DeviceDescriptor_Read(self, descriptor):
         telegram = Telegram(
             self.ia, 
             TelegramDirection.OUTGOING,
             DeviceDescriptorRead(descriptor, is_numbered = True),
+            prio_system = True,
+            )
+        await self.xknx.telegrams.put(telegram)
+        
+    async def PropertyValue_Read(self):
+        telegram = Telegram(
+            self.ia, 
+            TelegramDirection.OUTGOING,
+            PropertyValueRead(0,0x0b,1,1,True,1),
             prio_system = True,
             )
         await self.xknx.telegrams.put(telegram)

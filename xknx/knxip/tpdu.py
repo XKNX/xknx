@@ -80,6 +80,10 @@ class TPDU:
             data += [ 0x00, 0x80]
         elif self.tpdu_type == TPDUType.T_Disconnect:
             data += [ 0x00, 0x81]
+        elif self.tpdu_type == TPDUType.T_ACK:
+            data += [ 0x00, 0xc2]
+        elif self.tpdu_type == TPDUType.T_ACK1:
+            data += [ 0x00, 0xc6]
         else:
             raise RuntimeError("Invalid TPDUType"+self.tpdu_type)
         return data

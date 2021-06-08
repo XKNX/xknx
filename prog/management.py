@@ -50,8 +50,8 @@ class NetworkManagement:
         await d.IndividualAddress_Read()        
         await asyncio.sleep(2)
         dst = await d.IndividualAddress_Respone()
-        #for i in range(240):
-        for i in range(3):
+        for i in range(240):
+        #for i in range(3):
             if dst:
                 break
             await d.IndividualAddress_Read()
@@ -61,12 +61,23 @@ class NetworkManagement:
         if not dst:
             return NM_TIME_OUT
         await d.IndividualAddress_Write()
+        
+        # Zusatz ETS reengeneering
+        await d.IndividualAddress_Read()
+        await asyncio.sleep(1)
+        dst = await d.IndividualAddress_Respone()
+        if dst != ia:
+            print ("dst != ia:", dst, ia)
+        
         await d.T_Connect()
         await d.DeviceDescriptor_Read(0)
         await asyncio.sleep(0.5)
         if await d.DeviceDescriptor_Respone_arrived():
             print ("DeviceDescriptor_Respone_arrived.2")
-            await asyncio.sleep(1)
+            await d.T_ACK(0)
+            await d.PropertyValue_Read()
+            await asyncio.sleep(0.5)
+            await d.T_ACK(1)
             await d.Restart()
             await asyncio.sleep(1)
             await d.T_Disconnect()

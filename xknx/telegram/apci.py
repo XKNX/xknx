@@ -1183,12 +1183,17 @@ class PropertyValueRead(APCI):
         property_id: int = 0,
         count: int = 0,
         start_index: int = 1,
+        is_numbered = False,
+        sequence_number=0,
     ) -> None:
         """Initialize a new instance of PropertyValueRead."""
         self.object_index = object_index
         self.property_id = property_id
         self.count = count
         self.start_index = start_index
+        self.is_numbered = is_numbered
+        self.sequence_number = sequence_number
+
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1217,8 +1222,15 @@ class PropertyValueRead(APCI):
             self.count << 4,
             self.start_index,
         )
-
-        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+        additional_flags = None
+        if self.is_numbered:
+            additional_flags= APCIAdditionalFlags.NUMBERED_DATA_PACKET
+            
+        return encode_cmd_and_payload(
+            self.CODE, 
+            appended_payload=payload,
+            additional_flags = additional_flags,
+            sequence_number = self.sequence_number)
 
     def __str__(self) -> str:
         """Return object as readable string."""
