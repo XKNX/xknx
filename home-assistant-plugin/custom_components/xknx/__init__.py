@@ -36,7 +36,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, KNX_ADDRESS, SupportedPlatforms
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
-from .factory import create_knx_device
 from .schema import (
     BinarySensorSchema,
     ClimateSchema,
@@ -79,6 +78,8 @@ SERVICE_XKNX_READ = "read"
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
+            # deprecated since 2021.4
+            cv.deprecated("config_file"),
             # deprecated since 2021.2
             cv.deprecated(CONF_XKNX_FIRE_EVENT),
             cv.deprecated("fire_event_filter", replacement_key=CONF_XKNX_EVENT_FILTER),
@@ -227,14 +228,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
     for platform in SupportedPlatforms:
-        if platform.value in config[DOMAIN]:
-            for device_config in config[DOMAIN][platform.value]:
-                create_knx_device(platform, knx_module.xknx, device_config)
-
-    # We need to wait until all entities are loaded into the device list since they could also be created from other platforms
-    for platform in SupportedPlatforms:
+        if platform.value not in config[DOMAIN]:
+            continue
         hass.async_create_task(
-            discovery.async_load_platform(hass, platform.value, DOMAIN, {}, config)
+            discovery.async_load_platform(
+                hass,
+                platform.value,
+                DOMAIN,
+                {
+                    "platform_config": config[DOMAIN][platform.value],
+                },
+                config,
+            )
         )
 
     hass.services.async_register(
@@ -393,7 +398,7 @@ class KNXModule:
         address_filters = list(
             map(AddressFilter, self.config[DOMAIN][CONF_XKNX_EVENT_FILTER])
         )
-        return self.xknx.telegram_queue.register_telegram_received_cb(  # type: ignore[no-any-return]
+        return self.xknx.telegram_queue.register_telegram_received_cb(
             self.telegram_received_cb,
             address_filters=address_filters,
             group_addresses=[],

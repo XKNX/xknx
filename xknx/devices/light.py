@@ -16,11 +16,13 @@ from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterator, Tuple, cast
 
+from xknx.dpt.dpt_color import XYYColor
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
     RemoteValueColorRGB,
     RemoteValueColorRGBW,
+    RemoteValueColorXYY,
     RemoteValueDpt2ByteUnsigned,
     RemoteValueScaling,
     RemoteValueSwitch,
@@ -99,7 +101,7 @@ class _SwitchAndBrightness:
             await self.brightness.set(0)
 
     def __eq__(self, other: object) -> bool:
-        """Compare for quality."""
+        """Compare for equality."""
         return self.__dict__ == other.__dict__
 
 
@@ -121,6 +123,8 @@ class Light(Device):
         group_address_color_state: GroupAddressesType | None = None,
         group_address_rgbw: GroupAddressesType | None = None,
         group_address_rgbw_state: GroupAddressesType | None = None,
+        group_address_xyy_color: GroupAddressesType | None = None,
+        group_address_xyy_color_state: GroupAddressesType | None = None,
         group_address_tunable_white: GroupAddressesType | None = None,
         group_address_tunable_white_state: GroupAddressesType | None = None,
         group_address_color_temperature: GroupAddressesType | None = None,
@@ -182,6 +186,15 @@ class Light(Device):
             group_address_rgbw_state,
             device_name=self.name,
             after_update_cb=self.after_update,
+        )
+
+        self._xyy_color_valid: XYYColor | None = None
+        self.xyy_color = RemoteValueColorXYY(
+            xknx,
+            group_address_xyy_color,
+            group_address_xyy_color_state,
+            device_name=self.name,
+            after_update_cb=self._xyy_color_from_rv,
         )
 
         self.tunable_white = RemoteValueScaling(
@@ -257,6 +270,7 @@ class Light(Device):
         yield self.brightness
         yield self.color
         yield self.rgbw
+        yield self.xyy_color
         yield self.tunable_white
         yield self.color_temperature
         for color in self._iter_individual_colors():
@@ -298,6 +312,11 @@ class Light(Device):
         )
 
     @property
+    def supports_xyy_color(self) -> bool:
+        """Return if light supports xyY-color."""
+        return self.xyy_color.initialized
+
+    @property
     def supports_tunable_white(self) -> bool:
         """Return if light supports tunable white / relative color temperature."""
         return self.tunable_white.initialized
@@ -306,96 +325,6 @@ class Light(Device):
     def supports_color_temperature(self) -> bool:
         """Return if light supports absolute color temperature."""
         return self.color_temperature.initialized
-
-    def __str__(self) -> str:
-        """Return object as readable string."""
-        str_brightness = (
-            ""
-            if not self.supports_brightness
-            else f" brightness={self.brightness.group_addr_str()}"
-        )
-
-        str_color = (
-            "" if not self.supports_color else f" color={self.color.group_addr_str()}"
-        )
-
-        str_rgbw = (
-            "" if not self.supports_rgbw else f" rgbw={self.rgbw.group_addr_str()}"
-        )
-
-        str_tunable_white = (
-            ""
-            if not self.supports_tunable_white
-            else f" tunable_white={self.tunable_white.group_addr_str()}"
-        )
-
-        str_color_temperature = (
-            ""
-            if not self.supports_color_temperature
-            else f" color_temperature={self.color_temperature.group_addr_str()}"
-        )
-
-        str_red_state = (
-            ""
-            if not self.red.switch.initialized
-            else f" red_state={self.red.switch.group_addr_str()}"
-        )
-        str_red_brightness = (
-            ""
-            if not self.red.brightness.initialized
-            else f" red_brightness={self.red.brightness.group_addr_str()}"
-        )
-
-        str_green_state = (
-            ""
-            if not self.green.switch.initialized
-            else f" green_state={self.green.switch.group_addr_str()}"
-        )
-        str_green_brightness = (
-            ""
-            if not self.green.brightness.initialized
-            else f" green_brightness={self.green.brightness.group_addr_str()}"
-        )
-
-        str_blue_state = (
-            ""
-            if not self.blue.switch.initialized
-            else f" blue_state={self.blue.switch.group_addr_str()}"
-        )
-        str_blue_brightness = (
-            ""
-            if not self.blue.brightness.initialized
-            else f" blue_brightness={self.blue.brightness.group_addr_str()}"
-        )
-
-        str_white_state = (
-            ""
-            if not self.white.switch.initialized
-            else f" white_state={self.white.switch.group_addr_str()}"
-        )
-        str_white_brightness = (
-            ""
-            if not self.white.brightness.initialized
-            else f" white_brightness={self.white.brightness.group_addr_str()}"
-        )
-
-        return '<Light name="{}" ' "switch={}{}{}{}{}{}{}{}{}{}{}{}{}{} />".format(
-            self.name,
-            self.switch.group_addr_str(),
-            str_brightness,
-            str_color,
-            str_rgbw,
-            str_tunable_white,
-            str_color_temperature,
-            str_red_state,
-            str_red_brightness,
-            str_green_state,
-            str_green_brightness,
-            str_blue_state,
-            str_blue_brightness,
-            str_white_state,
-            str_white_brightness,
-        )
 
     @property
     def state(self) -> bool | None:
@@ -493,6 +422,32 @@ class Light(Device):
                     return
             logger.warning("Colors not supported for device %s", self.get_name())
 
+    async def _xyy_color_from_rv(self) -> None:
+        """Update the current xyY-color from RemoteValue (Callback)."""
+        new_xyy = self.xyy_color.value
+        if new_xyy is None or self._xyy_color_valid is None:
+            self._xyy_color_valid = new_xyy
+        else:
+            new_color, new_brightness = new_xyy
+            if new_color is None:
+                new_color = self._xyy_color_valid.color
+            if new_brightness is None:
+                new_brightness = self._xyy_color_valid.brightness
+            self._xyy_color_valid = XYYColor(color=new_color, brightness=new_brightness)
+        await self.after_update()
+
+    @property
+    def current_xyy_color(self) -> XYYColor | None:
+        """Return current xyY-color of the light."""
+        return self._xyy_color_valid
+
+    async def set_xyy_color(self, xyy: XYYColor) -> None:
+        """Set xyY-color of the light."""
+        if not self.supports_xyy_color:
+            logger.warning("XYY-color not supported for device %s", self.get_name())
+            return
+        await self.xyy_color.set(xyy)
+
     @property
     def current_tunable_white(self) -> int | None:
         """Return current relative color temperature of light."""
@@ -524,3 +479,99 @@ class Light(Device):
         """Process incoming and outgoing GROUP WRITE telegram."""
         for remote_value in self._iter_remote_values():
             await remote_value.process(telegram)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        str_brightness = (
+            ""
+            if not self.supports_brightness
+            else f" brightness={self.brightness.group_addr_str()}"
+        )
+
+        str_color = (
+            "" if not self.supports_color else f" color={self.color.group_addr_str()}"
+        )
+
+        str_rgbw = (
+            "" if not self.supports_rgbw else f" rgbw={self.rgbw.group_addr_str()}"
+        )
+
+        str_xyy_color = (
+            ""
+            if not self.supports_xyy_color
+            else f" xyy_color={self.xyy_color.group_addr_str()}"
+        )
+        str_tunable_white = (
+            ""
+            if not self.supports_tunable_white
+            else f" tunable_white={self.tunable_white.group_addr_str()}"
+        )
+
+        str_color_temperature = (
+            ""
+            if not self.supports_color_temperature
+            else f" color_temperature={self.color_temperature.group_addr_str()}"
+        )
+
+        str_red_state = (
+            ""
+            if not self.red.switch.initialized
+            else f" red_state={self.red.switch.group_addr_str()}"
+        )
+        str_red_brightness = (
+            ""
+            if not self.red.brightness.initialized
+            else f" red_brightness={self.red.brightness.group_addr_str()}"
+        )
+
+        str_green_state = (
+            ""
+            if not self.green.switch.initialized
+            else f" green_state={self.green.switch.group_addr_str()}"
+        )
+        str_green_brightness = (
+            ""
+            if not self.green.brightness.initialized
+            else f" green_brightness={self.green.brightness.group_addr_str()}"
+        )
+
+        str_blue_state = (
+            ""
+            if not self.blue.switch.initialized
+            else f" blue_state={self.blue.switch.group_addr_str()}"
+        )
+        str_blue_brightness = (
+            ""
+            if not self.blue.brightness.initialized
+            else f" blue_brightness={self.blue.brightness.group_addr_str()}"
+        )
+
+        str_white_state = (
+            ""
+            if not self.white.switch.initialized
+            else f" white_state={self.white.switch.group_addr_str()}"
+        )
+        str_white_brightness = (
+            ""
+            if not self.white.brightness.initialized
+            else f" white_brightness={self.white.brightness.group_addr_str()}"
+        )
+
+        return '<Light name="{}" ' "switch={}{}{}{}{}{}{}{}{}{}{}{}{}{}{} />".format(
+            self.name,
+            self.switch.group_addr_str(),
+            str_brightness,
+            str_color,
+            str_rgbw,
+            str_xyy_color,
+            str_tunable_white,
+            str_color_temperature,
+            str_red_state,
+            str_red_brightness,
+            str_green_state,
+            str_green_brightness,
+            str_blue_state,
+            str_blue_brightness,
+            str_white_state,
+            str_white_brightness,
+        )

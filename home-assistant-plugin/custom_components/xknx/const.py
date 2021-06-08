@@ -27,8 +27,7 @@ CONF_RESET_AFTER = "reset_after"
 
 ATTR_COUNTER = "counter"
 ATTR_SOURCE = "source"
-ATTR_LAST_KNX_UPDATE = "last_knx_update"
-ATTR_MOVEMENT_LOCKED = "movement_locked"
+ATTR_LAST_XKNX_UPDATE = "last_knx_update"
 
 
 class ColorTempModes(Enum):

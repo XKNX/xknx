@@ -1,10 +1,22 @@
 # Changelog
 
+## 0.18.4 ClimateMode bugfix 2021-06-04
+
+### Bugfix
+
+- ClimateMode: Fix telegram processing when operation_mode and controller_mode (heat/cool) are both used
+
+## 0.18.3 XYY colors 2021-05-30
+
+### Devices
+
+- Light: Support for xyY-color (DPT 242.600)
+
 ## 0.18.2 Climate and Light improvements 2021-05-11
 
 ### Devices
 
-- Climate: make `setpoint_shift_mode` optional. When `None` assign its DPT from the first incoming payload.
+- Climate: Make `setpoint_shift_mode` optional. When `None` assign its DPT from the first incoming payload.
 - Light: Support individual color lights without switch object
 
 ## 0.18.1 Internal group addresses 2021-04-23
