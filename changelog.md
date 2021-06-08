@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.18.5 DPTNumeric 2021-06-08
+
+### Internals
+
+- `DPTBase.parse_transcoder` is now a classmethod to allow parsing only subclasses.
+- Add `DPTNumeric` as base class for DPTs representing numeric values.
+
 ## 0.18.4 ClimateMode bugfix 2021-06-04
 
 ### Bugfix

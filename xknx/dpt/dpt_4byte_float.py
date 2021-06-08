@@ -11,10 +11,10 @@ from typing import cast
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .dpt import DPTNumeric
 
 
-class DPT4ByteFloat(DPTBase):
+class DPT4ByteFloat(DPTNumeric):
     """
     Abstraction for KNX 4 Octet Floating Point Numbers, with a maximum usable range as specified in IEEE 754.
 
@@ -31,6 +31,10 @@ class DPT4ByteFloat(DPTBase):
     value_type = "4byte_float"
     unit = ""
     payload_length = 4
+
+    value_min = float("-inf")
+    value_max = float("inf")
+    resolution = 0.0000001
 
     @classmethod
     def from_knx(cls, raw: tuple[int, ...]) -> float:

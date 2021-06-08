@@ -10,24 +10,25 @@ import struct
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .dpt import DPTNumeric
 
 
-class DPT2ByteSigned(DPTBase):
+class DPT2ByteSigned(DPTNumeric):
     """
     Abstraction for KNX 2 Byte signed values.
 
     DPT 8.***
     """
 
-    value_min = -32768
-    value_max = 32767
     dpt_main_number = 8
     dpt_sub_number: int | None = None
     value_type = "2byte_signed"
     unit = ""
-    resolution: float = 1
     payload_length = 2
+
+    value_min = -32768
+    value_max = 32767
+    resolution = 1
 
     _struct_format = ">h"
 
@@ -42,7 +43,7 @@ class DPT2ByteSigned(DPTBase):
             raise ConversionError("Could not parse %s" % cls.__name__, raw=raw)
 
     @classmethod
-    def to_knx(cls, value: int) -> tuple[int, ...]:
+    def to_knx(cls, value: int | float) -> tuple[int, ...]:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = int(value)
@@ -83,7 +84,6 @@ class DPTDeltaTime10Msec(DPT2ByteSigned):
     dpt_sub_number = 3
     value_type = "delta_time_10ms"
     unit = "ms"
-    resolution = 10
 
 
 class DPTDeltaTime100Msec(DPT2ByteSigned):
@@ -93,7 +93,6 @@ class DPTDeltaTime100Msec(DPT2ByteSigned):
     dpt_sub_number = 4
     value_type = "delta_time_100ms"
     unit = "ms"
-    resolution = 100
 
 
 class DPTDeltaTimeSec(DPT2ByteSigned):
@@ -130,7 +129,6 @@ class DPTPercentV16(DPT2ByteSigned):
     dpt_sub_number = 10
     value_type = "percentV16"
     unit = "%"
-    resolution = 0.01
 
 
 class DPTRotationAngle(DPT2ByteSigned):
