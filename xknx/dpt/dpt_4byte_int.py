@@ -11,24 +11,25 @@ import struct
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .dpt import DPTNumeric
 
 
-class DPT4ByteUnsigned(DPTBase):
+class DPT4ByteUnsigned(DPTNumeric):
     """
     Abstraction for KNX 4 Byte "32-bit unsigned".
 
     DPT 12.***
     """
 
-    value_min = 0
-    value_max = 4294967295
     dpt_main_number = 12
     dpt_sub_number: int | None = None
     value_type = "4byte_unsigned"
     unit = ""
-    resolution: float = 1
     payload_length = 4
+
+    value_min = 0
+    value_max = 4294967295
+    resolution = 1
 
     _struct_format = ">I"
 
@@ -43,7 +44,7 @@ class DPT4ByteUnsigned(DPTBase):
             raise ConversionError("Could not parse %s" % cls.__name__, raw=raw)
 
     @classmethod
-    def to_knx(cls, value: int) -> tuple[int, ...]:
+    def to_knx(cls, value: int | float) -> tuple[int, ...]:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = int(value)
@@ -66,13 +67,14 @@ class DPT4ByteSigned(DPT4ByteUnsigned):
     DPT 13.***
     """
 
-    value_min = -2147483648
-    value_max = 2147483647
     dpt_main_number = 13
     dpt_sub_number: int | None = None
     value_type = "4byte_signed"
     unit = ""
-    resolution: float = 1
+
+    value_min = -2147483648
+    value_max = 2147483647
+    resolution = 1
 
     _struct_format = ">i"
 
@@ -111,7 +113,6 @@ class DPTFlowRateM3H(DPT4ByteSigned):
     dpt_sub_number = 2
     value_type = "flow_rate_m3h"
     unit = "m³/h"
-    resolution = 0.0001
 
 
 class DPTActiveEnergy(DPT4ByteSigned):

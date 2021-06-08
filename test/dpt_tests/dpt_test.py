@@ -1,6 +1,15 @@
 """Unit test for KNX binary/integer objects."""
 import pytest
-from xknx.dpt import DPTArray, DPTBase, DPTBinary
+from xknx.dpt import (
+    DPT2ByteFloat,
+    DPTArray,
+    DPTBase,
+    DPTBinary,
+    DPTNumeric,
+    DPTScaling,
+    DPTString,
+    DPTTemperature,
+)
 from xknx.exceptions import ConversionError
 
 
@@ -78,6 +87,11 @@ class TestDPT:
 class TestDPTBase:
     """Test class for transcoder base object."""
 
+    def test_dpt_abstract_subclasses_ignored(self):
+        """Test if abstract base classes are ignored by __recursive_subclasses__."""
+        for dpt in DPTBase.__recursive_subclasses__():
+            assert dpt is not DPTNumeric
+
     def test_dpt_subclasses_definition_types(self):
         """Test value_type and dpt_*_number values for correct type in subclasses of DPTBase."""
         for dpt in DPTBase.__recursive_subclasses__():
@@ -128,3 +142,29 @@ class TestDPTBase:
         dpt7 = DPTBase.parse_transcoder("active_energy")
         dpt8 = DPTBase.parse_transcoder("13.010")
         assert dpt7 == dpt8
+
+    def test_parse_transcoder_from_subclass(self):
+        """Test parsing only subclasses of a DPT class."""
+        assert DPTBase.parse_transcoder("string") == DPTString
+        assert DPTNumeric.parse_transcoder("string") is None
+        assert DPT2ByteFloat.parse_transcoder("string") is None
+
+        assert DPTBase.parse_transcoder("percent") == DPTScaling
+        assert DPTNumeric.parse_transcoder("percent") == DPTScaling
+        assert DPT2ByteFloat.parse_transcoder("percent") is None
+
+        assert DPTBase.parse_transcoder("temperature") == DPTTemperature
+        assert DPTNumeric.parse_transcoder("temperature") == DPTTemperature
+        assert DPT2ByteFloat.parse_transcoder("temperature") == DPTTemperature
+
+
+class TestDPTNumeric:
+    """Test class for numeric transcoder base object."""
+
+    @pytest.mark.parametrize("dpt_class", DPTNumeric.__recursive_subclasses__())
+    def test_values(self, dpt_class):
+        """Test boundary values are set for numeric definitions (because mypy doesn't)."""
+
+        assert isinstance(dpt_class.value_min, (int, float))
+        assert isinstance(dpt_class.value_max, (int, float))
+        assert isinstance(dpt_class.resolution, (int, float))

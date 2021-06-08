@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from inspect import isabstract
 from typing import Any, Iterator, TypeVar, cast
 
 from xknx.exceptions import ConversionError
@@ -82,7 +83,8 @@ class DPTBase(ABC):
         """Yield all subclasses and their subclasses."""
         for subclass in cls.__subclasses__():
             yield from subclass.__recursive_subclasses__()
-            yield subclass
+            if not isabstract(subclass):
+                yield subclass
 
     @classmethod
     def has_distinct_dpt_numbers(cls) -> bool:
@@ -94,50 +96,65 @@ class DPTBase(ABC):
         """Return True if value_type is defined (not inherited)."""
         return "value_type" in cls.__dict__
 
-    @staticmethod
+    @classmethod
     def transcoder_by_dpt(
-        dpt_main: int, dpt_sub: int | None = None
+        cls, dpt_main: int, dpt_sub: int | None = None
     ) -> type[DPTBase] | None:
         """Return Class reference of DPTBase subclass with matching DPT number."""
-        for dpt in DPTBase.__recursive_subclasses__():
+        for dpt in cls.__recursive_subclasses__():
             if dpt.has_distinct_dpt_numbers():
                 if dpt_main == dpt.dpt_main_number and dpt_sub == dpt.dpt_sub_number:
                     return dpt
         return None
 
-    @staticmethod
-    def transcoder_by_value_type(value_type: str) -> type[DPTBase] | None:
+    @classmethod
+    def transcoder_by_value_type(cls, value_type: str) -> type[DPTBase] | None:
         """Return Class reference of DPTBase subclass with matching value_type."""
-        for dpt in DPTBase.__recursive_subclasses__():
+        for dpt in cls.__recursive_subclasses__():
             if dpt.has_distinct_value_type():
                 if value_type == dpt.value_type:
                     return dpt
         return None
 
-    # TODO: convert to classmethod to allow parsing only subclasses (eg. for Numeric, Control etc.)
-    @staticmethod
-    def parse_transcoder(value_type: int | str) -> type[DPTBase] | None:
+    @classmethod
+    def parse_transcoder(cls, value_type: int | str) -> type[DPTBase] | None:
         """Return Class reference of DPTBase subclass from value_type or DPT number."""
         if isinstance(value_type, int):
-            return DPTBase.transcoder_by_dpt(value_type)
+            return cls.transcoder_by_dpt(value_type)
         if isinstance(value_type, str):
             string_type = value_type.strip()
-            transcoder = DPTBase.transcoder_by_value_type(string_type)
+            transcoder = cls.transcoder_by_value_type(string_type)
             if transcoder is None:
-                # Try to parse the value_type if it is a string but not found by DPTBase.transcoder_by_value_type()
+                # Try to parse the value_type if it is a string but not found by cls.transcoder_by_value_type()
                 # for backwards compatibility (eg. "DPT-5") and strings representing numbers (eg. "7", "9.001")
                 string_type = string_type.upper().strip(" DPT-")
                 if string_type.isdigit():
-                    transcoder = DPTBase.transcoder_by_dpt(int(string_type))
+                    transcoder = cls.transcoder_by_dpt(int(string_type))
                 else:
                     try:
                         main, sub = map(int, string_type.split("."))
-                        transcoder = DPTBase.transcoder_by_dpt(
-                            dpt_main=main, dpt_sub=sub
-                        )
+                        transcoder = cls.transcoder_by_dpt(dpt_main=main, dpt_sub=sub)
                     except (ValueError, IndexError):
                         pass
             return transcoder
+
+
+class DPTNumeric(DPTBase):
+    """Base class for KNX data point types decoding numeric values."""
+
+    value_min: int | float
+    value_max: int | float
+    resolution: int | float
+
+    @classmethod
+    @abstractmethod
+    def from_knx(cls, raw: tuple[int, ...]) -> int | float:
+        """Parse/deserialize from KNX/IP raw data (big endian)."""
+
+    @classmethod
+    @abstractmethod
+    def to_knx(cls, value: int | float) -> bytes | tuple[int, ...]:
+        """Serialize to KNX/IP raw data."""
 
 
 class DPTBinary:
