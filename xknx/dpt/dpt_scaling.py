@@ -21,7 +21,7 @@ class DPTScaling(DPTNumeric):
 
     value_min = 0
     value_max = 100
-    resolution = 100 / 255
+    resolution = 1
 
     @classmethod
     def from_knx(cls, raw: tuple[int, ...]) -> int:
@@ -73,4 +73,4 @@ class DPTAngle(DPTScaling):
 
     value_min = 0
     value_max = 360
-    resolution = 360 / 255
+    resolution = 1
