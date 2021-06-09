@@ -3,11 +3,12 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from inspect import isabstract
-from typing import Any, Iterator, TypeVar, cast
+from typing import Any, Iterator, Type, TypeVar, cast
 
 from xknx.exceptions import ConversionError
 
 DPTPayloadType = TypeVar("DPTPayloadType", "DPTArray", "DPTBinary")
+T = TypeVar("T", bound=Type["DPTBase"])  # pylint: disable=invalid-name
 
 
 class DPTBase(ABC):
@@ -79,7 +80,7 @@ class DPTBase(ABC):
             raise ConversionError("Invalid raw bytes", raw=raw)
 
     @classmethod
-    def __recursive_subclasses__(cls) -> Iterator[type[DPTBase]]:
+    def __recursive_subclasses__(cls: T) -> Iterator[T]:
         """Yield all subclasses and their subclasses."""
         for subclass in cls.__subclasses__():
             yield from subclass.__recursive_subclasses__()
@@ -98,8 +99,8 @@ class DPTBase(ABC):
 
     @classmethod
     def transcoder_by_dpt(
-        cls, dpt_main: int, dpt_sub: int | None = None
-    ) -> type[DPTBase] | None:
+        cls: T, dpt_main: int, dpt_sub: int | None = None
+    ) -> T | None:
         """Return Class reference of DPTBase subclass with matching DPT number."""
         for dpt in cls.__recursive_subclasses__():
             if dpt.has_distinct_dpt_numbers():
@@ -108,7 +109,7 @@ class DPTBase(ABC):
         return None
 
     @classmethod
-    def transcoder_by_value_type(cls, value_type: str) -> type[DPTBase] | None:
+    def transcoder_by_value_type(cls: T, value_type: str) -> T | None:
         """Return Class reference of DPTBase subclass with matching value_type."""
         for dpt in cls.__recursive_subclasses__():
             if dpt.has_distinct_value_type():
@@ -117,7 +118,7 @@ class DPTBase(ABC):
         return None
 
     @classmethod
-    def parse_transcoder(cls, value_type: int | str) -> type[DPTBase] | None:
+    def parse_transcoder(cls: T, value_type: int | str) -> T | None:
         """Return Class reference of DPTBase subclass from value_type or DPT number."""
         if isinstance(value_type, int):
             return cls.transcoder_by_dpt(value_type)

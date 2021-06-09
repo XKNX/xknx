@@ -1,4 +1,4 @@
-"""Unit test for RemoteValueSensor objects."""
+"""Unit test for RemoteValueSetpointShift objects."""
 import pytest
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary, DPTTemperature, DPTValue1Count
@@ -10,7 +10,7 @@ from xknx.remote_value.remote_value_setpoint_shift import (
 
 
 class TestRemoteValueSetpointShift:
-    """Test class for RemoteValueSensor objects."""
+    """Test class for RemoteValueSetpointShift objects."""
 
     def test_payload_valid_mode_assignment(self):
         """Test if setpoint_shift_mode is assigned properly by payload length."""

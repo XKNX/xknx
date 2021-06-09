@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Internals
+
+- fix DPTBase classmethod return types
+
 ## 0.18.5 DPTNumeric 2021-06-08
 
 ### Internals
