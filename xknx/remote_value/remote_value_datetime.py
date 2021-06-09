@@ -40,7 +40,7 @@ class RemoteValueDateTime(RemoteValue[DPTArray, time.struct_time]):
         feature_name: str = "DateTime",
         after_update_cb: AsyncCallbackType | None = None,
     ):
-        """Initialize RemoteValueSensor class."""
+        """Initialize RemoteValueDateTime class."""
         try:
             self.dpt_class: type[DPTDate | DPTDateTime | DPTTime] = DateTimeType[
                 value_type.upper()
