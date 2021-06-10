@@ -17,7 +17,7 @@ from .remote_value_dpt_2_byte_unsigned import RemoteValueDpt2ByteUnsigned
 from .remote_value_dpt_value_1_ucount import RemoteValueDptValue1Ucount
 from .remote_value_scaling import RemoteValueScaling
 from .remote_value_scene_number import RemoteValueSceneNumber
-from .remote_value_sensor import RemoteValueSensor
+from .remote_value_sensor import RemoteValueNumeric, RemoteValueSensor
 from .remote_value_setpoint_shift import RemoteValueSetpointShift
 from .remote_value_step import RemoteValueStep
 from .remote_value_string import RemoteValueString
@@ -39,6 +39,7 @@ __all__ = [
     "RemoteValueDateTime",
     "RemoteValueDpt2ByteUnsigned",
     "RemoteValueDptValue1Ucount",
+    "RemoteValueNumeric",
     "RemoteValueOperationMode",
     "RemoteValueScaling",
     "RemoteValueSceneNumber",
