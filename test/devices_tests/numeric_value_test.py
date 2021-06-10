@@ -170,6 +170,8 @@ class TestNumericValue:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x0C, 0x1A))),
         )
+        # test HomeAssistant device class
+        assert num_value.ha_device_class() == "temperature"
 
     #
     # SYNC
