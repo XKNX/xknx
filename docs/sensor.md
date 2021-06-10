@@ -2,7 +2,7 @@
 layout: default
 title: Sensor
 parent: Devices
-nav_order: 6
+nav_order: 7
 ---
 
 # [](#header-1)Sensor - Monitor values of KNX
