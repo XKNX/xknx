@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Devices
+
+- Add NumericValue device.
+
 ### Internals
 
 - Add RemoteValueNumeric for values of type `float | int`.
