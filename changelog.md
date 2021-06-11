@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Devices
+
+- Add `respond` option to Switch. If `True` GroupValueRead telegrams to the `group_address` are answered.
+
 ### Internals
 
 - fix DPTBase classmethod return types

@@ -32,6 +32,7 @@ class Switch(Device):
         name: str,
         group_address: GroupAddressesType | None = None,
         group_address_state: GroupAddressesType | None = None,
+        respond: bool = False,
         invert: bool = False,
         reset_after: float | None = None,
         device_updated_cb: DeviceCallbackType | None = None,
@@ -41,7 +42,7 @@ class Switch(Device):
 
         self.reset_after = reset_after
         self._reset_task: asyncio.Task[None] | None = None
-
+        self.respond = respond
         self.switch = RemoteValueSwitch(
             xknx,
             group_address,
@@ -91,6 +92,11 @@ class Switch(Device):
                 self._reset_task = asyncio.create_task(
                     self._reset_state(self.reset_after)
                 )
+
+    async def process_group_read(self, telegram: "Telegram") -> None:
+        """Process incoming GroupValueResponse telegrams."""
+        if self.respond and telegram.destination_address == self.switch.group_address:
+            await self.switch.respond()
 
     async def _reset_state(self, wait_seconds: float) -> None:
         await asyncio.sleep(wait_seconds)
