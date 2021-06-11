@@ -105,21 +105,21 @@ class TestNumericValue:
     #
     # TEST RESPOND
     #
-    async def test_respond(self):
-        """Test respond function."""
+    async def test_respond_to_read(self):
+        """Test respond_to_read function."""
         xknx = XKNX()
         responding = NumericValue(
             xknx,
             "TestSensor1",
             group_address="1/1/1",
-            respond=True,
+            respond_to_read=True,
             value_type="volume_liquid_litre",
         )
         non_responding = NumericValue(
             xknx,
             "TestSensor2",
             group_address="1/1/1",
-            respond=False,
+            respond_to_read=False,
             value_type="volume_liquid_litre",
         )
         responding_multiple = NumericValue(
@@ -127,7 +127,7 @@ class TestNumericValue:
             "TestSensor3",
             group_address=["1/1/1", "3/3/3"],
             group_address_state="2/2/2",
-            respond=True,
+            respond_to_read=True,
             value_type="volume_liquid_litre",
         )
         #  set initial payload of NumericValue
