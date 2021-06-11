@@ -1,10 +1,10 @@
 # Changelog
 
-## Unreleased changes
+## 0.18.6 NumericValue 2021-06-11
 
 ### Devices
 
-- Add `respond_to_read` option to Switch. If `True` GroupValueRead telegrams to the `group_address` are answered.
+- Add `respond_to_read` option to Switch. If `True` GroupValueRead telegrams addressed to the `group_address` are answered.
 - Add NumericValue device.
 
 ### Internals
