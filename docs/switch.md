@@ -2,7 +2,7 @@
 layout: default
 title: Switches
 parent: Devices
-nav_order: 7
+nav_order: 8
 ---
 
 # [](#header-1)Switches

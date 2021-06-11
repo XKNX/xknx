@@ -4,11 +4,13 @@
 
 ### Devices
 
-- Add `respond` option to Switch. If `True` GroupValueRead telegrams to the `group_address` are answered.
+- Add `respond_to_read` option to Switch. If `True` GroupValueRead telegrams to the `group_address` are answered.
+- Add NumericValue device.
 
 ### Internals
 
-- fix DPTBase classmethod return types
+- Add RemoteValueNumeric for values of type `float | int`.
+- Fix DPTBase classmethod return types
 
 ## 0.18.5 DPTNumeric 2021-06-08
 

@@ -2,7 +2,7 @@
 layout: default
 title: Weather
 parent: Devices
-nav_order: 9
+nav_order: 10
 ---
 
 # [](#header-1)Weather device

@@ -775,6 +775,8 @@ class TestSensor:
         assert sensor.sensor_value.value == 16.96
         assert sensor.sensor_value.telegram.payload.value == DPTArray((0x06, 0xA0))
         assert sensor.resolve_state() == 16.96
+        # test HomeAssistant device class
+        assert sensor.ha_device_class() == "temperature"
 
     async def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
