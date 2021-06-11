@@ -4,6 +4,7 @@
 
 ### Devices
 
+- Add `respond_to_read` option to Switch. If `True` GroupValueRead telegrams to the `group_address` are answered.
 - Add NumericValue device.
 
 ### Internals

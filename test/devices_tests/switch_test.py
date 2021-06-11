@@ -224,6 +224,71 @@ class TestSwitch:
         after_update_callback.assert_called_with(switch)
 
     #
+    # TEST RESPOND
+    #
+    async def test_respond_to_read(self):
+        """Test respond_to_read function."""
+        xknx = XKNX()
+        responding = Switch(
+            xknx,
+            "TestSensor1",
+            group_address="1/1/1",
+            respond_to_read=True,
+        )
+        non_responding = Switch(
+            xknx,
+            "TestSensor2",
+            group_address="1/1/1",
+            respond_to_read=False,
+        )
+        responding_multiple = Switch(
+            xknx,
+            "TestSensor3",
+            group_address=["1/1/1", "3/3/3"],
+            group_address_state="2/2/2",
+            respond_to_read=True,
+        )
+        #  set initial payload of Switch
+        responding.switch.value = True
+        non_responding.switch.value = True
+        responding_multiple.switch.value = True
+
+        read_telegram = Telegram(
+            destination_address=GroupAddress("1/1/1"), payload=GroupValueRead()
+        )
+        # verify no response when respond is False
+        await non_responding.process(read_telegram)
+        assert xknx.telegrams.qsize() == 0
+
+        # verify response when respond is True
+        await responding.process(read_telegram)
+        assert xknx.telegrams.qsize() == 1
+        response = xknx.telegrams.get_nowait()
+        assert response == Telegram(
+            destination_address=GroupAddress("1/1/1"),
+            payload=GroupValueResponse(DPTBinary(True)),
+        )
+        # verify no response when GroupValueRead request is not for group_address
+        await responding_multiple.process(read_telegram)
+        assert xknx.telegrams.qsize() == 1
+        response = xknx.telegrams.get_nowait()
+        assert response == Telegram(
+            destination_address=GroupAddress("1/1/1"),
+            payload=GroupValueResponse(DPTBinary(True)),
+        )
+        await responding_multiple.process(
+            Telegram(
+                destination_address=GroupAddress("2/2/2"), payload=GroupValueRead()
+            )
+        )
+        await responding_multiple.process(
+            Telegram(
+                destination_address=GroupAddress("3/3/3"), payload=GroupValueRead()
+            )
+        )
+        assert xknx.telegrams.qsize() == 0
+
+    #
     # TEST SET ON
     #
     async def test_set_on(self):
