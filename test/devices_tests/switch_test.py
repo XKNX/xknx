@@ -226,27 +226,27 @@ class TestSwitch:
     #
     # TEST RESPOND
     #
-    async def test_respond(self):
-        """Test respond function."""
+    async def test_respond_to_read(self):
+        """Test respond_to_read function."""
         xknx = XKNX()
         responding = Switch(
             xknx,
             "TestSensor1",
             group_address="1/1/1",
-            respond=True,
+            respond_to_read=True,
         )
         non_responding = Switch(
             xknx,
             "TestSensor2",
             group_address="1/1/1",
-            respond=False,
+            respond_to_read=False,
         )
         responding_multiple = Switch(
             xknx,
             "TestSensor3",
             group_address=["1/1/1", "3/3/3"],
             group_address_state="2/2/2",
-            respond=True,
+            respond_to_read=True,
         )
         #  set initial payload of Switch
         responding.switch.value = True
