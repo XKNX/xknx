@@ -397,7 +397,7 @@ class Light(Device):
         if white is not None:
             if self.supports_rgbw:
                 if self.rgbw.initialized:
-                    await self.rgbw.set(list(color) + [white])
+                    await self.rgbw.set((*color, white))
                     return
                 if all(
                     c.brightness.initialized for c in self._iter_individual_colors()

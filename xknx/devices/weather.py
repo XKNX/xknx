@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterator
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
-    RemoteValueSensor,
+    RemoteValueNumeric,
     RemoteValueSwitch,
 )
 
@@ -105,7 +105,7 @@ class Weather(Device):
         """Initialize Weather class."""
         super().__init__(xknx, name, device_updated_cb)
 
-        self._temperature = RemoteValueSensor(
+        self._temperature = RemoteValueNumeric(
             xknx,
             group_address_state=group_address_temperature,
             sync_state=sync_state,
@@ -115,7 +115,7 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
-        self._brightness_south = RemoteValueSensor(
+        self._brightness_south = RemoteValueNumeric(
             xknx,
             group_address_state=group_address_brightness_south,
             sync_state=sync_state,
@@ -125,7 +125,7 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
-        self._brightness_north = RemoteValueSensor(
+        self._brightness_north = RemoteValueNumeric(
             xknx,
             group_address_state=group_address_brightness_north,
             sync_state=sync_state,
@@ -135,7 +135,7 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
-        self._brightness_west = RemoteValueSensor(
+        self._brightness_west = RemoteValueNumeric(
             xknx,
             group_address_state=group_address_brightness_west,
             sync_state=sync_state,
@@ -145,7 +145,7 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
-        self._brightness_east = RemoteValueSensor(
+        self._brightness_east = RemoteValueNumeric(
             xknx,
             group_address_state=group_address_brightness_east,
             sync_state=sync_state,
@@ -155,7 +155,7 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
-        self._wind_speed = RemoteValueSensor(
+        self._wind_speed = RemoteValueNumeric(
             xknx,
             group_address_state=group_address_wind_speed,
             sync_state=sync_state,
@@ -165,7 +165,7 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
-        self._wind_bearing = RemoteValueSensor(
+        self._wind_bearing = RemoteValueNumeric(
             xknx,
             group_address_state=group_address_wind_bearing,
             sync_state=sync_state,
@@ -207,7 +207,7 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
-        self._air_pressure = RemoteValueSensor(
+        self._air_pressure = RemoteValueNumeric(
             xknx,
             group_address_state=group_address_air_pressure,
             sync_state=sync_state,
@@ -217,7 +217,7 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
-        self._humidity = RemoteValueSensor(
+        self._humidity = RemoteValueNumeric(
             xknx,
             group_address_state=group_address_humidity,
             sync_state=sync_state,
@@ -259,40 +259,40 @@ class Weather(Device):
     @property
     def temperature(self) -> float | None:
         """Return current temperature."""
-        return self._temperature.value  # type: ignore
+        return self._temperature.value
 
     @property
     def brightness_south(self) -> float:
         """Return brightness south."""
         if self._brightness_south.value is not None:
-            return self._brightness_south.value  # type: ignore
+            return self._brightness_south.value
         return 0.0
 
     @property
     def brightness_north(self) -> float:
         """Return brightness north."""
         if self._brightness_north.value is not None:
-            return self._brightness_north.value  # type: ignore
+            return self._brightness_north.value
         return 0.0
 
     @property
     def brightness_east(self) -> float:
         """Return brightness east."""
         if self._brightness_east.value is not None:
-            return self._brightness_east.value  # type: ignore
+            return self._brightness_east.value
         return 0.0
 
     @property
     def brightness_west(self) -> float:
         """Return brightness west."""
         if self._brightness_west.value is not None:
-            return self._brightness_west.value  # type: ignore
+            return self._brightness_west.value
         return 0.0
 
     @property
     def wind_speed(self) -> float | None:
         """Return wind speed in m/s."""
-        return self._wind_speed.value  # type: ignore
+        return self._wind_speed.value
 
     @property
     def wind_bearing(self) -> int | None:
@@ -322,12 +322,12 @@ class Weather(Device):
     @property
     def air_pressure(self) -> float | None:
         """Return pressure in Pa."""
-        return self._air_pressure.value  # type: ignore
+        return self._air_pressure.value
 
     @property
     def humidity(self) -> float | None:
         """Return humidity in %."""
-        return self._humidity.value  # type: ignore
+        return self._humidity.value
 
     @property
     def max_brightness(self) -> float:

@@ -11,6 +11,7 @@ from .expose_sensor import ExposeSensor
 from .fan import Fan
 from .light import Light
 from .notification import Notification
+from .numeric_value import NumericValue
 from .scene import Scene
 from .sensor import Sensor
 from .switch import Switch
@@ -29,6 +30,7 @@ __all__ = [
     "Fan",
     "Light",
     "Notification",
+    "NumericValue",
     "Scene",
     "Sensor",
     "Switch",

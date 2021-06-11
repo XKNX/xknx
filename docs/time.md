@@ -2,7 +2,7 @@
 layout: default
 title: Time
 parent: Devices
-nav_order: 8
+nav_order: 9
 ---
 
 # [](#header-1)Time

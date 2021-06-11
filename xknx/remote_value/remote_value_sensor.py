@@ -6,9 +6,10 @@ for serialization and deserialization of the KNX value.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+from abc import abstractmethod
+from typing import TYPE_CHECKING, TypeVar, Union
 
-from xknx.dpt import DPTArray, DPTBase, DPTBinary
+from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTNumeric
 from xknx.exceptions import ConversionError
 
 from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
@@ -16,9 +17,13 @@ from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
+ValueType = TypeVar("ValueType")
 
-class RemoteValueSensor(RemoteValue[DPTArray, Union[int, float, str]]):
-    """Abstraction for many different sensor DPT types."""
+
+class _RemoteValueGeneric(RemoteValue[DPTArray, ValueType]):
+    """Abstraction for generic DPT types."""
+
+    dpt_base_class: type[DPTBase]
 
     def __init__(
         self,
@@ -34,7 +39,7 @@ class RemoteValueSensor(RemoteValue[DPTArray, Union[int, float, str]]):
         """Initialize RemoteValueSensor class."""
         if value_type is None:
             raise ConversionError("no value type given", device_name=device_name)
-        _dpt_class = DPTBase.parse_transcoder(value_type)
+        _dpt_class = self.dpt_base_class.parse_transcoder(value_type)
         if _dpt_class is None:
             raise ConversionError(
                 "invalid value type", value_type=value_type, device_name=device_name
@@ -59,13 +64,13 @@ class RemoteValueSensor(RemoteValue[DPTArray, Union[int, float, str]]):
             else None
         )
 
-    def to_knx(self, value: int | float | str) -> DPTArray:
+    def to_knx(self, value: ValueType) -> DPTArray:
         """Convert value to payload."""
         return DPTArray(self.dpt_class.to_knx(value))
 
-    def from_knx(self, payload: DPTArray) -> int | float | str:
+    @abstractmethod
+    def from_knx(self, payload: DPTArray) -> ValueType:
         """Convert current payload to value."""
-        return self.dpt_class.from_knx(payload.value)  # type: ignore
 
     @property
     def unit_of_measurement(self) -> str | None:
@@ -76,3 +81,25 @@ class RemoteValueSensor(RemoteValue[DPTArray, Union[int, float, str]]):
     def ha_device_class(self) -> str | None:
         """Return a string representing the home assistant device class."""
         return getattr(self.dpt_class, "ha_device_class", None)  # type: ignore
+
+
+class RemoteValueSensor(_RemoteValueGeneric[Union[int, float, str]]):
+    """Abstraction for sensor DPT types."""
+
+    dpt_base_class = DPTBase
+    dpt_class: type[DPTBase]
+
+    def from_knx(self, payload: DPTArray) -> int | float | str:
+        """Convert current payload to value."""
+        return self.dpt_class.from_knx(payload.value)  # type: ignore
+
+
+class RemoteValueNumeric(_RemoteValueGeneric[Union[int, float]]):
+    """Abstraction for numeric DPT types."""
+
+    dpt_base_class = DPTNumeric
+    dpt_class: type[DPTNumeric]
+
+    def from_knx(self, payload: DPTArray) -> int | float:
+        """Convert current payload to value."""
+        return self.dpt_class.from_knx(payload.value)
