@@ -62,7 +62,10 @@ class NumericValue(Device):
 
     async def process_group_read(self, telegram: "Telegram") -> None:
         """Process incoming GroupValueResponse telegrams."""
-        if self.respond:
+        if (
+            self.respond
+            and telegram.destination_address == self.sensor_value.group_address
+        ):
             await self.sensor_value.respond()
 
     async def set(self, value: float | int) -> None:
