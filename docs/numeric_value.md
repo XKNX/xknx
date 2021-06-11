@@ -29,7 +29,7 @@ value = NumericValue(
     xknx=xknx,
     name='Temperature limit',
     group_address='6/2/1',
-    manage_state=True,
+    respond=True,
     value_type='temperature'
 )
 
