@@ -29,14 +29,14 @@ class NumericValue(Device):
         name: str,
         group_address: GroupAddressesType | None = None,
         group_address_state: GroupAddressesType | None = None,
+        respond: bool = False,
         sync_state: bool = True,
-        manage_state: bool = False,
         value_type: int | str | None = None,
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Sensor class."""
         super().__init__(xknx, name, device_updated_cb)
-
+        self.respond = respond
         self.sensor_value = RemoteValueNumeric(
             xknx,
             group_address=group_address,
@@ -46,7 +46,6 @@ class NumericValue(Device):
             device_name=self.name,
             after_update_cb=self.after_update,
         )
-        self.manage_state = manage_state
 
     def _iter_remote_values(self) -> Iterator[RemoteValueNumeric]:
         """Iterate the devices RemoteValue classes."""
@@ -63,7 +62,7 @@ class NumericValue(Device):
 
     async def process_group_read(self, telegram: "Telegram") -> None:
         """Process incoming GroupValueResponse telegrams."""
-        if self.manage_state:
+        if self.respond:
             await self.sensor_value.respond()
 
     async def set(self, value: float | int) -> None:

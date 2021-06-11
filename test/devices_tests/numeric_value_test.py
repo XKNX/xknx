@@ -102,36 +102,36 @@ class TestNumericValue:
 
         assert sensor.resolve_state() == expected_state
 
-    async def test_manage_state(self):
-        """Test manage_state function."""
+    async def test_respond(self):
+        """Test respond function."""
         xknx = XKNX()
-        managed = NumericValue(
+        responding = NumericValue(
             xknx,
             "TestSensor",
             group_address="1/1/1",
-            manage_state=True,
+            respond=True,
             value_type="volume_liquid_litre",
         )
-        unmanaged = NumericValue(
+        non_responding = NumericValue(
             xknx,
             "TestSensor",
             group_address="1/1/1",
-            manage_state=False,
+            respond=False,
             value_type="volume_liquid_litre",
         )
         #  set initial payload of NumericValue
-        managed.sensor_value.value = 256
-        unmanaged.sensor_value.value = 256
+        responding.sensor_value.value = 256
+        non_responding.sensor_value.value = 256
 
         read_telegram = Telegram(
             destination_address=GroupAddress("1/1/1"), payload=GroupValueRead()
         )
-        # verify no response when manage_state is False
-        await unmanaged.process(read_telegram)
+        # verify no response when respond is False
+        await non_responding.process(read_telegram)
         assert xknx.telegrams.qsize() == 0
 
-        # verify response when manage_state is True
-        await managed.process(read_telegram)
+        # verify response when respond is True
+        await responding.process(read_telegram)
         assert xknx.telegrams.qsize() == 1
         response = xknx.telegrams.get_nowait()
         assert response == Telegram(
