@@ -13,14 +13,14 @@ NumericValue devices send values to the KNX bus. Received values update the devi
 
 ## [](#header-2)Interface
 
-* `xknx` is the XKNX object.
-* `name` is the name of the object.
-* `group_address` is the KNX group address of the numeric value device. Used for sending.
-* `group_address_state` is the KNX group address of the numeric value device.
-* `sync_state` defines if the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address state. Defaults to `True`
-* `manage_state` defines if a GroupValueRead request shall be answered. Defaults to `False`
-* `value_type` controls how the value should be encoded / decoded. The attribut may have may have parseable value types representing numeric values.
-* `device_updated_cb` awaitable callback for each update.
+- `xknx` is the XKNX object.
+- `name` is the name of the object.
+- `group_address` is the KNX group address of the numeric value device. Used for sending.
+- `group_address_state` is the KNX group address of the numeric value device.
+- `respond` if `True` GroupValueRead requests to the `group_address` are answered. Defaults to `False`
+- `sync_state` defines if the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address state. Defaults to `True`
+- `value_type` controls how the value should be encoded / decoded. The attribut may have may have parseable value types representing numeric values.
+- `device_updated_cb` awaitable callback for each update.
 
 ## [](#header-2)Example
 
