@@ -27,26 +27,26 @@ Shutters are simple representations of blind/roller cover actuators. With XKNX y
 - `travel_time_up` seconds to reach upper end position. Default: 22
 - `invert_position` invert position (payload for eg. set_up() and relative position). Default: False
 - `invert_angle` invert angle. Default: False
-- `device_class` may be used to store the type of cover, e.g. "shutter" for Home-Assistant (see [cover documentation](https://www.home-assistant.io/integrations/cover/) for details).
 - `device_updated_cb` awaitable callback for each update.
 
 ## [](#header-2)Example
 
 ```python
-cover = Cover(xknx,
-              'TestCover',
-              group_address_long='1/2/1',
-              group_address_short='1/2/2',
-              group_address_position='1/2/3',
-              group_address_position_state='1/2/4',
-              group_address_angle='1/2/5',
-              group_address_angle_state='1/2/6',
-              group_address_locked_state='1/2/7',
-              travel_time_down=50,
-              travel_time_up=60,
-              invert_position=False,
-              invert_angle=False,
-              device_class='shutter')
+cover = Cover(
+    xknx,
+    'TestCover',
+    group_address_long='1/2/1',
+    group_address_short='1/2/2',
+    group_address_position='1/2/3',
+    group_address_position_state='1/2/4',
+    group_address_angle='1/2/5',
+    group_address_angle_state='1/2/6',
+    group_address_locked_state='1/2/7',
+    travel_time_down=50,
+    travel_time_up=60,
+    invert_position=False,
+    invert_angle=False,
+)
 
 # Moving to up position
 await cover.set_up()
