@@ -27,6 +27,8 @@ Climate are representations of KNX HVAC/Climate controls.
 - `group_address_on_off` KNX address for turning climate device on or off. *DPT 1*
 - `group_address_on_off_state` KNX address for reading the on/off state. *DPT 1*
 - `on_off_invert` Invert on/off. Default: `False`
+- `group_address_active_state` KNX address for reading if the climate device is currently active. *DPT 1*
+- `group_address_command_value_state` KNX address for reading the current command value / valve position in %. *DPT 5.001*
 - `max_temp` Maximum value for target temperature.
 - `min_temp` Minimum value for target temperature.
 - `mode` ClimateMode instance for this climate device
