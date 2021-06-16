@@ -4,6 +4,7 @@
 
 ### Devices
 
+- Remove unused HA-specific attributes (unique_id, device_class, create_sensors)
 - Climate: add `group_address_active_state`, `group_address_command_value_state` and a `is_active` property.
 
 ## 0.18.6 NumericValue 2021-06-11
