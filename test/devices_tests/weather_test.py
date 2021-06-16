@@ -336,34 +336,6 @@ class TestWeather:
         assert weather.ha_current_state() == WeatherCondition.EXCEPTIONAL
 
     #
-    # Create sensor tests
-    #
-    def test_create_sensor(self):
-        """Test default state mapping."""
-        xknx = XKNX()
-        Weather(
-            name="weather",
-            xknx=xknx,
-            group_address_brightness_east="1/3/5",
-            group_address_brightness_south="1/3/6",
-            group_address_brightness_west="1/3/7",
-        )
-
-        assert len(xknx.devices) == 1
-
-        Weather(
-            name="weather",
-            xknx=xknx,
-            group_address_brightness_east="1/3/5",
-            group_address_brightness_south="1/3/6",
-            group_address_brightness_west="1/3/7",
-            group_address_wind_alarm="1/5/4",
-            create_sensors=True,
-        )
-
-        assert len(xknx.devices) == 6
-
-    #
     # GENERATOR _iter_remote_values
     #
     def test_iter_remote_values(self):
@@ -390,9 +362,3 @@ class TestWeather:
         weather = Weather(name="weather", xknx=xknx, group_address_temperature="1/3/4")
         assert weather._temperature.has_group_address(GroupAddress("1/3/4"))
         assert not weather._temperature.has_group_address(GroupAddress("1/2/4"))
-
-    def test_unique_id(self):
-        """Test unique id functionality."""
-        xknx = XKNX()
-        weather = Weather(name="weather", xknx=xknx, group_address_temperature="1/3/4")
-        assert weather.unique_id == "1/3/4"
