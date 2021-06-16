@@ -128,9 +128,3 @@ class TestDevice:
         xknx = XKNX()
         device = Device(xknx, "TestDevice")
         await device.process_group_read(Telegram())
-
-    def test_unique_id(self):
-        """Test unique id functionality."""
-        xknx = XKNX()
-        device = Device(xknx, "Test")
-        assert device.unique_id is None
