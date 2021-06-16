@@ -1380,6 +1380,68 @@ class TestClimate:
             payload=GroupValueWrite(DPTBinary(True)),
         )
 
+    async def test_is_active(self):
+        """Test is_active property."""
+        xknx = XKNX()
+        climate_active = Climate(
+            xknx, "TestClimate1", group_address_active_state="1/1/1"
+        )
+        climate_command = Climate(
+            xknx, "TestClimate2", group_address_command_value_state="2/2/2"
+        )
+        climate_active_command = Climate(
+            xknx,
+            "TestClimate3",
+            group_address_active_state="1/1/1",
+            group_address_command_value_state="2/2/2",
+        )
+        assert climate_active.is_active is None
+        assert climate_command.is_active is None
+        assert climate_active_command.is_active is None
+        # set active to False
+        await xknx.devices.process(
+            Telegram(
+                destination_address=GroupAddress("1/1/1"),
+                payload=GroupValueWrite(DPTBinary(False)),
+            )
+        )
+        assert climate_active.is_active is False
+        assert climate_command.is_active is None
+        assert climate_active_command.is_active is False
+        # set command to 50%
+        await xknx.devices.process(
+            Telegram(
+                destination_address=GroupAddress("2/2/2"),
+                payload=GroupValueWrite(DPTArray((128,))),
+            )
+        )
+        assert climate_active.is_active is False
+        assert climate_command.is_active is True
+        assert climate_active_command.is_active is False
+        # set active to True
+        await xknx.devices.process(
+            Telegram(
+                destination_address=GroupAddress("1/1/1"),
+                payload=GroupValueWrite(DPTBinary(True)),
+            )
+        )
+        assert climate_active.is_active is True
+        assert climate_command.is_active is True
+        assert climate_active_command.is_active is True
+        # set command to 0%
+        await xknx.devices.process(
+            Telegram(
+                destination_address=GroupAddress("2/2/2"),
+                payload=GroupValueWrite(DPTArray((0,))),
+            )
+        )
+        assert climate_active.is_active is True
+        assert climate_command.is_active is False
+        assert climate_active_command.is_active is True
+        # only command initialized
+        climate_active_command.active.value = None
+        assert climate_active_command.is_active is False
+
     #
     # Create temperature sensor tests
     #

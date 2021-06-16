@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any, Iterator
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
+    RemoteValueScaling,
     RemoteValueSetpointShift,
     RemoteValueSwitch,
     RemoteValueTemp,
@@ -54,6 +55,8 @@ class Climate(Device):
         group_address_on_off: GroupAddressesType | None = None,
         group_address_on_off_state: GroupAddressesType | None = None,
         on_off_invert: bool = False,
+        group_address_active_state: GroupAddressesType | None = None,
+        group_address_command_value_state: GroupAddressesType | None = None,
         min_temp: float | None = None,
         max_temp: float | None = None,
         mode: ClimateMode | None = None,
@@ -109,6 +112,22 @@ class Climate(Device):
             invert=on_off_invert,
         )
 
+        self.active = RemoteValueSwitch(
+            xknx,
+            group_address_state=group_address_active_state,
+            device_name=self.name,
+            feature_name="Active",
+            after_update_cb=self.after_update,
+        )
+
+        self.command_value = RemoteValueScaling(
+            xknx,
+            group_address_state=group_address_command_value_state,
+            device_name=self.name,
+            feature_name="Command value",
+            after_update_cb=self.after_update,
+        )
+
         self.mode = mode
 
         if create_temperature_sensors:
@@ -120,6 +139,8 @@ class Climate(Device):
         yield self.target_temperature
         yield self._setpoint_shift
         yield self.on
+        yield self.active
+        yield self.command_value
 
     def create_temperature_sensors(self) -> None:
         """Create temperature sensors."""
@@ -159,6 +180,15 @@ class Climate(Device):
         """Return power status."""
         # None will return False
         return bool(self.on.value)
+
+    @property
+    def is_active(self) -> bool | None:
+        """Return if currently active. None if unknown."""
+        if self.active.value is not None:
+            return self.active.value
+        if self.command_value.value is not None:
+            return bool(self.command_value.value)
+        return None
 
     async def turn_on(self) -> None:
         """Set power status to on."""
