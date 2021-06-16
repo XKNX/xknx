@@ -66,11 +66,6 @@ class Switch(Device):
         super().__del__()
 
     @property
-    def unique_id(self) -> str | None:
-        """Return unique id for this device."""
-        return f"{self.switch.group_address}"
-
-    @property
     def state(self) -> bool | None:
         """Return the current switch state of the device."""
         return self.switch.value

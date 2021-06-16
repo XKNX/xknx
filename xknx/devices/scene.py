@@ -42,11 +42,6 @@ class Scene(Device):
         """Iterate the devices RemoteValue classes."""
         yield self.scene_value
 
-    @property
-    def unique_id(self) -> str | None:
-        """Return unique id for this device."""
-        return f"{self.scene_value.group_address}_{self.scene_number}"
-
     def __str__(self) -> str:
         """Return object as readable string."""
         return '<Scene name="{}" ' 'scene_value={} scene_number="{}" />'.format(

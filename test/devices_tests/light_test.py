@@ -1479,32 +1479,3 @@ class TestLight:
         assert light.has_group_address(GroupAddress("1/1/16"))
 
         assert not light.has_group_address(GroupAddress("1/7/15"))
-
-    def test_unique_id(self):
-        """Test unique id functionality."""
-        xknx = XKNX()
-        light = Light(
-            xknx,
-            name="TestLight",
-            group_address_switch="1/2/3",
-            group_address_brightness="1/2/5",
-            group_address_tunable_white="1/2/9",
-            group_address_color_temperature="1/2/11",
-        )
-        assert light.unique_id == "1/2/3"
-
-    def test_unique_id_colors(self):
-        """Test unique id for colors functionality."""
-        xknx = XKNX()
-        light = Light(
-            xknx,
-            name="TestLight",
-            group_address_brightness_green="1/2/3",
-            group_address_brightness_blue="1/2/4",
-            group_address_brightness_red="1/2/5",
-            group_address_brightness_white="1/2/6",
-            group_address_brightness="1/2/5",
-            group_address_tunable_white="1/2/9",
-            group_address_color_temperature="1/2/11",
-        )
-        assert light.unique_id == "1/2/5_1/2/3_1/2/4_1/2/6"

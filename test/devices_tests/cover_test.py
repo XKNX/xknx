@@ -936,18 +936,3 @@ class TestCover:
         assert cover.has_group_address(GroupAddress("1/2/5"))
         assert cover.has_group_address(GroupAddress("1/2/6"))
         assert not cover.has_group_address(GroupAddress("1/2/7"))
-
-    def test_unique_id(self):
-        """Test unique id functionality."""
-        xknx = XKNX()
-        cover = Cover(
-            xknx,
-            "TestCover",
-            group_address_long="1/2/1",
-            group_address_short="1/2/2",
-            group_address_position="1/2/3",
-            group_address_position_state="1/2/4",
-            group_address_angle="1/2/5",
-            group_address_angle_state="1/2/6",
-        )
-        assert cover.unique_id == "1/2/1"

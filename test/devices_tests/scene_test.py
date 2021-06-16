@@ -45,9 +45,3 @@ class TestScene:
         scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
         assert scene.has_group_address(GroupAddress("1/2/1"))
         assert not scene.has_group_address(GroupAddress("2/2/2"))
-
-    def test_unique_id(self):
-        """Test unique id functionality."""
-        xknx = XKNX()
-        scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
-        assert scene.unique_id == "1/2/1_23"

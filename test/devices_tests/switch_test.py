@@ -395,9 +395,3 @@ class TestSwitch:
         assert switch1.state is False
         callback_mock.assert_called_once()
         callback_mock.reset_mock()
-
-    def test_unique_id(self):
-        """Test unique id functionality."""
-        xknx = XKNX()
-        switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
-        assert switch.unique_id == "1/2/3"
