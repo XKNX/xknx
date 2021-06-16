@@ -21,7 +21,6 @@ from xknx.remote_value.remote_value_setpoint_shift import SetpointShiftMode
 
 from .climate_mode import ClimateMode
 from .device import Device, DeviceCallbackType
-from .sensor import Sensor
 
 if TYPE_CHECKING:
     from xknx.telegram import Telegram
@@ -60,7 +59,6 @@ class Climate(Device):
         min_temp: float | None = None,
         max_temp: float | None = None,
         mode: ClimateMode | None = None,
-        create_temperature_sensors: bool = False,
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Climate class."""
@@ -130,9 +128,6 @@ class Climate(Device):
 
         self.mode = mode
 
-        if create_temperature_sensors:
-            self.create_temperature_sensors()
-
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
         yield self.temperature
@@ -141,33 +136,6 @@ class Climate(Device):
         yield self.on
         yield self.active
         yield self.command_value
-
-    def create_temperature_sensors(self) -> None:
-        """Create temperature sensors."""
-        for suffix, group_address, value_type in (
-            (
-                "temperature",
-                self.temperature.group_address_state,
-                "temperature",
-            ),
-            (
-                "target temperature",
-                self.target_temperature.group_address_state,
-                "temperature",
-            ),
-        ):
-            if group_address is not None:
-                Sensor(
-                    self.xknx,
-                    name=self.name + " " + suffix,
-                    group_address_state=group_address,
-                    value_type=value_type,
-                )
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return unique id for this device."""
-        return f"{self.temperature.group_address_state}"
 
     def has_group_address(self, group_address: DeviceGroupAddress) -> bool:
         """Test if device has given group address."""
