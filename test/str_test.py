@@ -95,9 +95,7 @@ class TestStringRepresentations:
     def test_binary_sensor(self):
         """Test string representation of binary sensor object."""
         xknx = XKNX()
-        binary_sensor = BinarySensor(
-            xknx, name="Fnord", group_address_state="1/2/3", device_class="motion"
-        )
+        binary_sensor = BinarySensor(xknx, name="Fnord", group_address_state="1/2/3")
         assert (
             str(binary_sensor)
             == '<BinarySensor name="Fnord" remote_value=<None, 1/2/3, [], None /> state=None />'
