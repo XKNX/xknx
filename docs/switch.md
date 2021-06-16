@@ -46,6 +46,3 @@ print(switch.state)
 # Requesting state via KNX GroupValueRead
 await switch.sync(wait_for_result=True)
 ```
-
-
-
