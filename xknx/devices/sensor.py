@@ -35,7 +35,6 @@ class Sensor(Device):
         sync_state: bool = True,
         always_callback: bool = False,
         value_type: int | str | None = None,
-        ha_value_template: Any = None,
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Sensor class."""
@@ -66,16 +65,10 @@ class Sensor(Device):
                 after_update_cb=self.after_update,
             )
         self.always_callback = always_callback
-        self.ha_value_template = ha_value_template
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
         yield self.sensor_value
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return unique id for this device."""
-        return f"{self.sensor_value.group_address_state}"
 
     @property
     def last_telegram(self) -> Telegram | None:

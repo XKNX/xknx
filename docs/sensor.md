@@ -45,6 +45,3 @@ sensor.unit_of_measurement()
 # Returns the last received telegram or None
 sensor.last_telegram
 ```
-
-
-
