@@ -14,7 +14,6 @@ async def main():
         xknx,
         "DiningRoom.Motion.Sensor",
         group_address_state="6/0/2",
-        device_class="motion",
     )
     await sensor1.sync(wait_for_result=True)
     print(sensor1)
