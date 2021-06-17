@@ -18,6 +18,7 @@ class TestRemoteValueRaw:
         rv_0 = RemoteValueRaw(xknx, payload_length=0)
         rv_1 = RemoteValueRaw(xknx, payload_length=1)
         rv_2 = RemoteValueRaw(xknx, payload_length=2)
+
         assert rv_0.to_knx(1) == DPTBinary(True)
         assert rv_0.to_knx(4) == DPTBinary(4)
         assert rv_1.to_knx(100) == DPTArray((0x64,))
@@ -29,10 +30,14 @@ class TestRemoteValueRaw:
         rv_0 = RemoteValueRaw(xknx, payload_length=0)
         rv_1 = RemoteValueRaw(xknx, payload_length=1)
         rv_2 = RemoteValueRaw(xknx, payload_length=2)
+
         assert rv_0.from_knx(DPTBinary(True)) == 1
         assert rv_0.from_knx(DPTBinary(0x4)) == 4
         assert rv_1.from_knx(DPTArray((0x64,))) == 100
         assert rv_2.from_knx(DPTArray((0x00, 0x64))) == 100
+
+        with pytest.raises(ConversionError):
+            assert rv_1.from_knx(DPTArray((256,)))
 
     async def test_set(self):
         """Test setting value."""
