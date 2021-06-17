@@ -15,6 +15,7 @@ from .remote_value_control import RemoteValueControl
 from .remote_value_datetime import RemoteValueDateTime
 from .remote_value_dpt_2_byte_unsigned import RemoteValueDpt2ByteUnsigned
 from .remote_value_dpt_value_1_ucount import RemoteValueDptValue1Ucount
+from .remote_value_raw import RemoteValueRaw
 from .remote_value_scaling import RemoteValueScaling
 from .remote_value_scene_number import RemoteValueSceneNumber
 from .remote_value_sensor import RemoteValueNumeric, RemoteValueSensor
@@ -41,6 +42,7 @@ __all__ = [
     "RemoteValueDptValue1Ucount",
     "RemoteValueNumeric",
     "RemoteValueOperationMode",
+    "RemoteValueRaw",
     "RemoteValueScaling",
     "RemoteValueSceneNumber",
     "RemoteValueSensor",

@@ -4,6 +4,7 @@
 
 ### Devices
 
+- Add RawValue device.
 - Remove unused HA-specific attributes (unique_id, device_class, create_sensors)
 - Climate: add `group_address_active_state`, `group_address_command_value_state` and a `is_active` property.
 

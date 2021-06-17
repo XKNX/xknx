@@ -21,7 +21,7 @@ from typing import (
     Union,
 )
 
-from xknx.dpt.dpt import DPTArray, DPTBinary, DPTPayloadType
+from xknx.dpt.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.address import (
@@ -38,6 +38,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger("xknx.log")
 
 AsyncCallbackType = Callable[[], Awaitable[None]]
+DPTPayloadType = TypeVar(
+    "DPTPayloadType", DPTArray, DPTBinary, Union[DPTArray, DPTBinary]
+)
 GroupAddressesType = Union["DeviceAddressableType", List["DeviceAddressableType"]]
 ValueType = TypeVar("ValueType")
 
