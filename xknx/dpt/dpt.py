@@ -7,7 +7,6 @@ from typing import Any, Iterator, Type, TypeVar, cast
 
 from xknx.exceptions import ConversionError
 
-DPTPayloadType = TypeVar("DPTPayloadType", "DPTArray", "DPTBinary")
 T = TypeVar("T", bound=Type["DPTBase"])  # pylint: disable=invalid-name
 
 
@@ -171,7 +170,7 @@ class DPTBinary:
             value = value[0]
         if not isinstance(value, int):
             raise TypeError()
-        if value > DPTBinary.APCI_BITMASK:
+        if value > DPTBinary.APCI_BITMASK or value < 0:
             raise ConversionError("Could not init DPTBinary", value=str(value))
 
         self.value = value
@@ -200,9 +199,7 @@ class DPTArray:
         if isinstance(value, int):
             self.value = (value,)
         elif isinstance(value, (list, bytes)):
-            self.value = tuple(
-                value,
-            )
+            self.value = tuple(value)
         elif isinstance(value, tuple):
             self.value = value
         else:

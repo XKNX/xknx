@@ -16,11 +16,15 @@ from xknx.dpt import (
     DPTHVACContrMode,
     DPTHVACMode,
 )
-from xknx.dpt.dpt import DPTPayloadType
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACModeType, HVACOperationMode
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
-from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
+from .remote_value import (
+    AsyncCallbackType,
+    DPTPayloadType,
+    GroupAddressesType,
+    RemoteValue,
+)
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
