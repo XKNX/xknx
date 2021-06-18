@@ -46,7 +46,7 @@ The Light object is either a representation of a binary or dimm actor, LED-contr
 - `group_address_switch_white_state` KNX group address for the state of the white component. *DPT 1.001*
 - `group_address_brightness_white` KNX group address to set the brightness of the white component. *DPT 5.001*
 - `group_address_brightness_white_state` KNX group address for the current brightness of the white component. *DPT 5.001*
-
+- `sync_state` defines if and how often the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
 - `min_kelvin` lowest possible color temperature in Kelvin. Default: 2700
 - `max_kelvin` hightest possible color temperature in Kelvin. Default: 6000
 - `device_updated_cb` awaitable callback for each update.

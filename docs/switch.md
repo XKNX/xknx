@@ -18,6 +18,7 @@ Switches are simple representations of binary actors. They mainly support switch
 - `group_address` is the KNX group address of the switch device. Used for sending.
 - `group_address_state` is the KNX group address of the switch state. Used for updating and reading state.
 - `respond_to_read` if `True` GroupValueRead requests to the `group_address` are answered. Defaults to `False`
+- `sync_state` defines if and how often the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
 - `invert` inverts the payload so state "on" is represented by 0 on bus and "off" by 1. Defaults to `False`
 - `reset_after` may be used to reset the switch to `OFF` again after given time in sec. Defaults to `None`
 - `device_updated_cb` awaitable callback for each update.

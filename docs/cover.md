@@ -23,6 +23,7 @@ Shutters are simple representations of blind/roller cover actuators. With XKNX y
 - `group_address_angle` KNX group address to tilt blinds to relative position. *DPT 5.001*
 - `group_address_angle_state` KNX group address to retrieve angle of blinds. *DPT 5.001*
 - `group_address_locked_state` KNX group address to retrieve if manual interaction with the cover is currently disabled. *DPT 1.001*
+- `sync_state` defines if and how often the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
 - `travel_time_down` seconds to reach lower end position. Default: 22
 - `travel_time_up` seconds to reach upper end position. Default: 22
 - `invert_position` invert position (payload for eg. set_up() and relative position). Default: False
