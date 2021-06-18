@@ -32,7 +32,7 @@ class BinarySensor(Device):
         name: str,
         group_address_state: GroupAddressesType = None,
         invert: bool = False,
-        sync_state: bool = True,
+        sync_state: bool | int | float | str = True,
         ignore_internal_state: bool = False,
         reset_after: float | None = None,
         context_timeout: float | None = None,

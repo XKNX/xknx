@@ -19,7 +19,7 @@ The logic within switches can further handle if a button is pressed once or twic
 - `name` is the name of the object.
 - `group_address_state` is the KNX group address of the sensor device.
 - `invert` inverts the payload so state "on" is represented by 0 on bus and "off" by 1. Defaults to `False`
-- `sync_state` defines if the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
+- `sync_state` defines if and how often the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
 - `ignore_internal_state` allows callback call regardless of the current binary sensor state. Defaults to `False`
 - `context_timeout` time in seconds telegrams should be counted towards the current context to increment the counter. If set `ignore_internal_state` is set `True`. Defaults to `None`
 - `reset_after` may be used to reset the internal state to `OFF` again after given time in sec. Defaults to `None`

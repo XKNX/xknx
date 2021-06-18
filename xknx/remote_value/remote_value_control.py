@@ -25,7 +25,7 @@ class RemoteValueControl(RemoteValue[DPTBinary, Any]):
         xknx: XKNX,
         group_address: GroupAddressesType | None = None,
         group_address_state: GroupAddressesType | None = None,
-        sync_state: bool = True,
+        sync_state: bool | int | float | str = True,
         value_type: str | None = None,
         device_name: str | None = None,
         feature_name: str = "Control",

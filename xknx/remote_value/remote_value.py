@@ -53,7 +53,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
         xknx: XKNX,
         group_address: GroupAddressesType | None = None,
         group_address_state: GroupAddressesType | None = None,
-        sync_state: bool = True,
+        sync_state: bool | int | float | str = True,
         device_name: str | None = None,
         feature_name: str | None = None,
         after_update_cb: AsyncCallbackType | None = None,
