@@ -18,7 +18,7 @@ NumericValue devices send values to the KNX bus. Received values update the devi
 - `group_address` is the KNX group address of the numeric value device. Used for sending.
 - `group_address_state` is the KNX group address of the numeric value device.
 - `respond_to_read` if `True` GroupValueRead requests to the `group_address` are answered. Defaults to `False`
-- `sync_state` defines if the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address state. Defaults to `True`
+- `sync_state` defines if and how often the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
 - `value_type` controls how the value should be encoded / decoded. The attribut may have may have parseable value types representing numeric values.
 - `device_updated_cb` awaitable callback for each update.
 

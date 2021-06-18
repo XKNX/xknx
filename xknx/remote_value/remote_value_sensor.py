@@ -30,7 +30,7 @@ class _RemoteValueGeneric(RemoteValue[DPTArray, ValueType]):
         xknx: XKNX,
         group_address: GroupAddressesType | None = None,
         group_address_state: GroupAddressesType | None = None,
-        sync_state: bool = True,
+        sync_state: bool | int | float | str = True,
         value_type: int | str | None = None,
         device_name: str | None = None,
         feature_name: str = "Value",
