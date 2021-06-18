@@ -24,7 +24,7 @@ class RemoteValueSwitch(RemoteValue[DPTBinary, bool]):
         xknx: XKNX,
         group_address: GroupAddressesType | None = None,
         group_address_state: GroupAddressesType | None = None,
-        sync_state: bool = True,
+        sync_state: bool | int | float | str = True,
         device_name: str | None = None,
         feature_name: str = "State",
         after_update_cb: AsyncCallbackType | None = None,

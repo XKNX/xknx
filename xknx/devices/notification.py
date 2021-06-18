@@ -24,6 +24,7 @@ class Notification(Device):
         name: str,
         group_address: GroupAddressesType | None = None,
         group_address_state: GroupAddressesType | None = None,
+        sync_state: bool | int | float | str = True,
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize notification class."""
@@ -33,6 +34,7 @@ class Notification(Device):
             xknx,
             group_address=group_address,
             group_address_state=group_address_state,
+            sync_state=sync_state,
             device_name=name,
             feature_name="Message",
             after_update_cb=self.after_update,

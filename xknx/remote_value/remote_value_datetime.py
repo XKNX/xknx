@@ -34,7 +34,7 @@ class RemoteValueDateTime(RemoteValue[DPTArray, time.struct_time]):
         xknx: XKNX,
         group_address: GroupAddressesType | None = None,
         group_address_state: GroupAddressesType | None = None,
-        sync_state: bool = True,
+        sync_state: bool | int | float | str = True,
         value_type: str = "time",
         device_name: str | None = None,
         feature_name: str = "DateTime",

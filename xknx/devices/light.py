@@ -56,12 +56,14 @@ class _SwitchAndBrightness:
         group_address_switch_state: GroupAddressesType | None = None,
         group_address_brightness: GroupAddressesType | None = None,
         group_address_brightness_state: GroupAddressesType | None = None,
+        sync_state: bool | int | float | str = True,
         after_update_cb: AsyncCallback | None = None,
     ):
         self.switch = RemoteValueSwitch(
             xknx,
             group_address_switch,
             group_address_switch_state,
+            sync_state=sync_state,
             device_name=name,
             feature_name=feature_name + "_state",
             after_update_cb=after_update_cb,
@@ -70,6 +72,7 @@ class _SwitchAndBrightness:
             xknx,
             group_address_brightness,
             group_address_brightness_state,
+            sync_state=sync_state,
             device_name=name,
             feature_name=feature_name + "_brightness",
             after_update_cb=after_update_cb,
@@ -145,6 +148,7 @@ class Light(Device):
         group_address_switch_white_state: GroupAddressesType | None = None,
         group_address_brightness_white: GroupAddressesType | None = None,
         group_address_brightness_white_state: GroupAddressesType | None = None,
+        sync_state: bool | int | float | str = True,
         min_kelvin: int | None = None,
         max_kelvin: int | None = None,
         device_updated_cb: DeviceCallbackType | None = None,
@@ -156,6 +160,7 @@ class Light(Device):
             xknx,
             group_address_switch,
             group_address_switch_state,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="State",
             after_update_cb=self.after_update,
@@ -165,6 +170,7 @@ class Light(Device):
             xknx,
             group_address_brightness,
             group_address_brightness_state,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Brightness",
             after_update_cb=self.after_update,
@@ -176,6 +182,7 @@ class Light(Device):
             xknx,
             group_address_color,
             group_address_color_state,
+            sync_state=sync_state,
             device_name=self.name,
             after_update_cb=self.after_update,
         )
@@ -184,6 +191,7 @@ class Light(Device):
             xknx,
             group_address_rgbw,
             group_address_rgbw_state,
+            sync_state=sync_state,
             device_name=self.name,
             after_update_cb=self.after_update,
         )
@@ -193,6 +201,7 @@ class Light(Device):
             xknx,
             group_address_xyy_color,
             group_address_xyy_color_state,
+            sync_state=sync_state,
             device_name=self.name,
             after_update_cb=self._xyy_color_from_rv,
         )
@@ -201,6 +210,7 @@ class Light(Device):
             xknx,
             group_address_tunable_white,
             group_address_tunable_white_state,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Tunable white",
             after_update_cb=self.after_update,
@@ -212,6 +222,7 @@ class Light(Device):
             xknx,
             group_address_color_temperature,
             group_address_color_temperature_state,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Color temperature",
             after_update_cb=self.after_update,
@@ -225,7 +236,8 @@ class Light(Device):
             group_address_switch_red_state,
             group_address_brightness_red,
             group_address_brightness_red_state,
-            self.after_update,
+            sync_state=sync_state,
+            after_update_cb=self.after_update,
         )
 
         self.green = _SwitchAndBrightness(
@@ -236,7 +248,8 @@ class Light(Device):
             group_address_switch_green_state,
             group_address_brightness_green,
             group_address_brightness_green_state,
-            self.after_update,
+            sync_state=sync_state,
+            after_update_cb=self.after_update,
         )
 
         self.blue = _SwitchAndBrightness(
@@ -247,7 +260,8 @@ class Light(Device):
             group_address_switch_blue_state,
             group_address_brightness_blue,
             group_address_brightness_blue_state,
-            self.after_update,
+            sync_state=sync_state,
+            after_update_cb=self.after_update,
         )
 
         self.white = _SwitchAndBrightness(
@@ -258,7 +272,8 @@ class Light(Device):
             group_address_switch_white_state,
             group_address_brightness_white,
             group_address_brightness_white_state,
-            self.after_update,
+            sync_state=sync_state,
+            after_update_cb=self.after_update,
         )
 
         self.min_kelvin = min_kelvin

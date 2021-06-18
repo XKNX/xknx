@@ -49,6 +49,7 @@ class Cover(Device):
         group_address_angle: GroupAddressesType | None = None,
         group_address_angle_state: GroupAddressesType | None = None,
         group_address_locked_state: GroupAddressesType | None = None,
+        sync_state: bool | int | float | str = True,
         travel_time_down: float = DEFAULT_TRAVEL_TIME_DOWN,
         travel_time_up: float = DEFAULT_TRAVEL_TIME_UP,
         invert_position: bool = False,
@@ -79,6 +80,7 @@ class Cover(Device):
         self.stop_ = RemoteValueSwitch(
             xknx,
             group_address=group_address_stop,
+            sync_state=False,
             device_name=self.name,
             after_update_cb=None,
         )
@@ -88,6 +90,7 @@ class Cover(Device):
         self.position_current = RemoteValueScaling(
             xknx,
             group_address_state=group_address_position_state,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Position",
             after_update_cb=self._current_position_from_rv,
@@ -110,6 +113,7 @@ class Cover(Device):
             xknx,
             group_address_angle,
             group_address_angle_state,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Tilt angle",
             after_update_cb=self.after_update,
@@ -120,6 +124,7 @@ class Cover(Device):
         self.locked = RemoteValueSwitch(
             xknx,
             group_address_state=group_address_locked_state,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Locked",
             after_update_cb=self.after_update,

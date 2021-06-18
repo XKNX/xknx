@@ -97,7 +97,7 @@ class Weather(Device):
         group_address_day_night: GroupAddressesType | None = None,
         group_address_air_pressure: GroupAddressesType | None = None,
         group_address_humidity: GroupAddressesType | None = None,
-        sync_state: bool = True,
+        sync_state: bool | int | float | str = True,
         device_updated_cb: DeviceCallbackType | None = None,
     ) -> None:
         """Initialize Weather class."""
@@ -176,6 +176,7 @@ class Weather(Device):
         self._rain_alarm = RemoteValueSwitch(
             xknx,
             group_address_state=group_address_rain_alarm,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Rain alarm",
             after_update_cb=self.after_update,
@@ -184,6 +185,7 @@ class Weather(Device):
         self._frost_alarm = RemoteValueSwitch(
             xknx,
             group_address_state=group_address_frost_alarm,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Frost alarm",
             after_update_cb=self.after_update,
@@ -192,6 +194,7 @@ class Weather(Device):
         self._wind_alarm = RemoteValueSwitch(
             xknx,
             group_address_state=group_address_wind_alarm,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Wind alarm",
             after_update_cb=self.after_update,
@@ -200,6 +203,7 @@ class Weather(Device):
         self._day_night = RemoteValueSwitch(
             xknx,
             group_address_state=group_address_day_night,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Day/Night",
             after_update_cb=self.after_update,
