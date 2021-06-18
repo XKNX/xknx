@@ -31,7 +31,7 @@ class RawValue(Device):
         group_address: GroupAddressesType | None = None,
         group_address_state: GroupAddressesType | None = None,
         respond_to_read: bool = False,
-        sync_state: bool = True,
+        sync_state: bool | int | float | str = True,
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Sensor class."""

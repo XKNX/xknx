@@ -26,7 +26,7 @@ class RemoteValueRaw(RemoteValue[Union[DPTArray, DPTBinary], int]):
         payload_length: int,
         group_address: GroupAddressesType | None = None,
         group_address_state: GroupAddressesType | None = None,
-        sync_state: bool = True,
+        sync_state: bool | int | float | str = True,
         device_name: str | None = None,
         feature_name: str = "Raw",
         after_update_cb: AsyncCallbackType | None = None,
