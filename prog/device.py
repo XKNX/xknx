@@ -1,6 +1,7 @@
 '''
 This module implements the application layer functionality of a device.
 '''
+import asyncio
 from enum import Enum
 
 from xknx.telegram import Telegram, TelegramDirection, IndividualAddress,TPDUType
@@ -8,7 +9,7 @@ from xknx.telegram import Telegram, TelegramDirection, IndividualAddress,TPDUTyp
 #from xknx.knxip import ConnectRequestType
 #from xknx.io.tunnelling import Tunnelling
 from xknx.telegram.apci import DeviceDescriptorRead, IndividualAddressRead, IndividualAddressWrite, Restart,\
-    APCIService,PropertyValueRead
+    APCIService,PropertyValueRead,APCIExtendedService
 from xknx.telegram.address import GroupAddress, GroupAddressType
 #from xknx.knxip import TPDUType
 
@@ -30,14 +31,13 @@ class A_Device:
         
     async def process_telegram(self, telegram):
         self.last_telegram = telegram
+        if telegram.payload:
+            if telegram.payload.CODE == APCIService.DEVICE_DESCRIPTOR_RESPONSE:
+                self.T_ACK()
+            if telegram.payload.CODE == APCIExtendedService.PROPERTY_VALUE_RESPONSE:
+                self.T_ACK(True)
         
-    async def DeviceDescriptor_Respone_arrived(self):
-        # analyse telegram
-        if self.last_telegram:
-            if self.last_telegram.payload:
-                return self.last_telegram.payload.CODE == APCIService.DEVICE_DESCRIPTOR_RESPONSE
-        return False
-    
+        
     async def IndividualAddress_Respone(self):
         if self.last_telegram:
             if self.last_telegram.payload.CODE == APCIService.INDIVIDUAL_ADDRESS_RESPONSE:
@@ -53,6 +53,14 @@ class A_Device:
             TPDUType.T_Connect)
         await self.xknx.telegrams.put(telegram)
     
+    async def T_Connect_Response(self):
+        await self.T_Connect()
+        while True:
+            await asyncio.sleep(0.1)
+            if self.last_telegram:
+                if self.last_telegram.tpdu_type == TPDUType.T_Disconnect:
+                    return
+    
     async def T_Disconnect(self):
         telegram = Telegram(
             self.ia, 
@@ -62,21 +70,18 @@ class A_Device:
             TPDUType.T_Disconnect)
         await self.xknx.telegrams.put(telegram)
 
-    async def T_ACK(self, seq_no):
-        if seq_no == 1:
-            telegram = Telegram(
-                self.ia, 
-                TelegramDirection.OUTGOING,
-                None,
-                None,
-                TPDUType.T_ACK1)
+    async def T_ACK(self, numbered=False):
+        if numbered:
+            tpdu_type = TPDUType.T_ACK_NUMBERED
         else:
-            telegram = Telegram(
-                self.ia, 
-                TelegramDirection.OUTGOING,
-                None,
-                None,
-                TPDUType.T_ACK)
+            tpdu_type = TPDUType.T_ACK
+            
+        telegram = Telegram(
+            self.ia, 
+            TelegramDirection.OUTGOING,
+            None,
+            None,
+            tpdu_type)
         await self.xknx.telegrams.put(telegram)
     
     async def DeviceDescriptor_Read(self, descriptor):
@@ -87,6 +92,15 @@ class A_Device:
             prio_system = True,
             )
         await self.xknx.telegrams.put(telegram)
+        
+    async def DeviceDescriptor_Read_Response(self, descriptor):
+        await self.DeviceDescriptor_Read(descriptor)
+        while True:
+            await asyncio.sleep(0.1)
+            if self.last_telegram:
+                if self.last_telegram.payload:
+                    if self.last_telegram.payload.CODE == APCIService.DEVICE_DESCRIPTOR_RESPONSE:
+                        return
         
     async def PropertyValue_Read(self):
         telegram = Telegram(
@@ -106,6 +120,14 @@ class A_Device:
             )
         await self.xknx.telegrams.put(telegram)
 
+    async def IndividualAddress_Read_Response(self):
+        while True:
+            await self.IndividualAddress_Read()
+            await asyncio.sleep(2)
+            if self.last_telegram:
+                if self.last_telegram.payload.CODE == APCIService.INDIVIDUAL_ADDRESS_RESPONSE:
+                    return self.last_telegram.source_address
+
     async def IndividualAddress_Write(self):
         telegram = Telegram(
             GroupAddress(0, self.groupAddressType), 
@@ -123,4 +145,7 @@ class A_Device:
             prio_system = True,
             )
         await self.xknx.telegrams.put(telegram)
+        
+    async def test(self):
+        await asyncio.sleep(1)
         
