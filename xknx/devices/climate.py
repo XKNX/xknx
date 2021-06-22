@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any, Iterator
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
+    RemoteValueScaling,
     RemoteValueSetpointShift,
     RemoteValueSwitch,
     RemoteValueTemp,
@@ -20,7 +21,6 @@ from xknx.remote_value.remote_value_setpoint_shift import SetpointShiftMode
 
 from .climate_mode import ClimateMode
 from .device import Device, DeviceCallbackType
-from .sensor import Sensor
 
 if TYPE_CHECKING:
     from xknx.telegram import Telegram
@@ -54,10 +54,12 @@ class Climate(Device):
         group_address_on_off: GroupAddressesType | None = None,
         group_address_on_off_state: GroupAddressesType | None = None,
         on_off_invert: bool = False,
+        group_address_active_state: GroupAddressesType | None = None,
+        group_address_command_value_state: GroupAddressesType | None = None,
+        sync_state: bool | int | float | str = True,
         min_temp: float | None = None,
         max_temp: float | None = None,
         mode: ClimateMode | None = None,
-        create_temperature_sensors: bool = False,
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Climate class."""
@@ -72,6 +74,7 @@ class Climate(Device):
         self.temperature = RemoteValueTemp(
             xknx,
             group_address_state=group_address_temperature,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Current temperature",
             after_update_cb=self.after_update,
@@ -81,6 +84,7 @@ class Climate(Device):
             xknx,
             group_address_target_temperature,
             group_address_target_temperature_state,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Target temperature",
             after_update_cb=self.after_update,
@@ -90,6 +94,7 @@ class Climate(Device):
             xknx,
             group_address_setpoint_shift,
             group_address_setpoint_shift_state,
+            sync_state=sync_state,
             device_name=self.name,
             after_update_cb=self.after_update,
             setpoint_shift_mode=setpoint_shift_mode,
@@ -104,15 +109,31 @@ class Climate(Device):
             xknx,
             group_address_on_off,
             group_address_on_off_state,
+            sync_state=sync_state,
             device_name=self.name,
             after_update_cb=self.after_update,
             invert=on_off_invert,
         )
 
-        self.mode = mode
+        self.active = RemoteValueSwitch(
+            xknx,
+            group_address_state=group_address_active_state,
+            sync_state=sync_state,
+            device_name=self.name,
+            feature_name="Active",
+            after_update_cb=self.after_update,
+        )
 
-        if create_temperature_sensors:
-            self.create_temperature_sensors()
+        self.command_value = RemoteValueScaling(
+            xknx,
+            group_address_state=group_address_command_value_state,
+            sync_state=sync_state,
+            device_name=self.name,
+            feature_name="Command value",
+            after_update_cb=self.after_update,
+        )
+
+        self.mode = mode
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
@@ -120,33 +141,8 @@ class Climate(Device):
         yield self.target_temperature
         yield self._setpoint_shift
         yield self.on
-
-    def create_temperature_sensors(self) -> None:
-        """Create temperature sensors."""
-        for suffix, group_address, value_type in (
-            (
-                "temperature",
-                self.temperature.group_address_state,
-                "temperature",
-            ),
-            (
-                "target temperature",
-                self.target_temperature.group_address_state,
-                "temperature",
-            ),
-        ):
-            if group_address is not None:
-                Sensor(
-                    self.xknx,
-                    name=self.name + " " + suffix,
-                    group_address_state=group_address,
-                    value_type=value_type,
-                )
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return unique id for this device."""
-        return f"{self.temperature.group_address_state}"
+        yield self.active
+        yield self.command_value
 
     def has_group_address(self, group_address: DeviceGroupAddress) -> bool:
         """Test if device has given group address."""
@@ -159,6 +155,15 @@ class Climate(Device):
         """Return power status."""
         # None will return False
         return bool(self.on.value)
+
+    @property
+    def is_active(self) -> bool | None:
+        """Return if currently active. None if unknown."""
+        if self.active.value is not None:
+            return self.active.value
+        if self.command_value.value is not None:
+            return bool(self.command_value.value)
+        return None
 
     async def turn_on(self) -> None:
         """Set power status to on."""

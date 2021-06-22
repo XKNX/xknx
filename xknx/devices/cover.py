@@ -49,12 +49,12 @@ class Cover(Device):
         group_address_angle: GroupAddressesType | None = None,
         group_address_angle_state: GroupAddressesType | None = None,
         group_address_locked_state: GroupAddressesType | None = None,
+        sync_state: bool | int | float | str = True,
         travel_time_down: float = DEFAULT_TRAVEL_TIME_DOWN,
         travel_time_up: float = DEFAULT_TRAVEL_TIME_UP,
         invert_position: bool = False,
         invert_angle: bool = False,
         device_updated_cb: DeviceCallbackType | None = None,
-        device_class: str | None = None,
     ):
         """Initialize Cover class."""
         super().__init__(xknx, name, device_updated_cb)
@@ -80,6 +80,7 @@ class Cover(Device):
         self.stop_ = RemoteValueSwitch(
             xknx,
             group_address=group_address_stop,
+            sync_state=False,
             device_name=self.name,
             after_update_cb=None,
         )
@@ -89,6 +90,7 @@ class Cover(Device):
         self.position_current = RemoteValueScaling(
             xknx,
             group_address_state=group_address_position_state,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Position",
             after_update_cb=self._current_position_from_rv,
@@ -111,6 +113,7 @@ class Cover(Device):
             xknx,
             group_address_angle,
             group_address_angle_state,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Tilt angle",
             after_update_cb=self.after_update,
@@ -121,6 +124,7 @@ class Cover(Device):
         self.locked = RemoteValueSwitch(
             xknx,
             group_address_state=group_address_locked_state,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Locked",
             after_update_cb=self.after_update,
@@ -132,8 +136,6 @@ class Cover(Device):
         self.travelcalculator = TravelCalculator(travel_time_down, travel_time_up)
         self.travel_direction_tilt: TravelStatus | None = None
 
-        self.device_class = device_class
-
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
         yield self.updown
@@ -143,11 +145,6 @@ class Cover(Device):
         yield self.position_target
         yield self.angle
         yield self.locked
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return unique id for this device."""
-        return f"{self.updown.group_address}"
 
     def __str__(self) -> str:
         """Return object as readable string."""

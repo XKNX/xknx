@@ -1380,40 +1380,64 @@ class TestClimate:
             payload=GroupValueWrite(DPTBinary(True)),
         )
 
-    #
-    # Create temperature sensor tests
-    #
-    def test_create_sensor(self):
-        """Test default state mapping."""
+    async def test_is_active(self):
+        """Test is_active property."""
         xknx = XKNX()
-        Climate(
-            name="climate",
-            xknx=xknx,
-            group_address_temperature="5/1/1",
-            group_address_target_temperature="5/1/4",
+        climate_active = Climate(
+            xknx, "TestClimate1", group_address_active_state="1/1/1"
         )
-
-        assert len(xknx.devices) == 1
-
-        Climate(
-            name="climate",
-            xknx=xknx,
-            group_address_temperature="5/1/1",
-            group_address_target_temperature="5/1/4",
-            create_temperature_sensors=True,
+        climate_command = Climate(
+            xknx, "TestClimate2", group_address_command_value_state="2/2/2"
         )
-
-        assert len(xknx.devices) == 3
-
-    def test_unique_id(self):
-        """Test unique id functionality."""
-        xknx = XKNX()
-        climate = Climate(
+        climate_active_command = Climate(
             xknx,
-            "TestClimate",
-            group_address_temperature="1/2/1",
-            group_address_target_temperature="1/2/2",
-            group_address_setpoint_shift="1/2/3",
-            temperature_step=0.3,
+            "TestClimate3",
+            group_address_active_state="1/1/1",
+            group_address_command_value_state="2/2/2",
         )
-        assert climate.unique_id == "1/2/1"
+        assert climate_active.is_active is None
+        assert climate_command.is_active is None
+        assert climate_active_command.is_active is None
+        # set active to False
+        await xknx.devices.process(
+            Telegram(
+                destination_address=GroupAddress("1/1/1"),
+                payload=GroupValueWrite(DPTBinary(False)),
+            )
+        )
+        assert climate_active.is_active is False
+        assert climate_command.is_active is None
+        assert climate_active_command.is_active is False
+        # set command to 50%
+        await xknx.devices.process(
+            Telegram(
+                destination_address=GroupAddress("2/2/2"),
+                payload=GroupValueWrite(DPTArray((128,))),
+            )
+        )
+        assert climate_active.is_active is False
+        assert climate_command.is_active is True
+        assert climate_active_command.is_active is False
+        # set active to True
+        await xknx.devices.process(
+            Telegram(
+                destination_address=GroupAddress("1/1/1"),
+                payload=GroupValueWrite(DPTBinary(True)),
+            )
+        )
+        assert climate_active.is_active is True
+        assert climate_command.is_active is True
+        assert climate_active_command.is_active is True
+        # set command to 0%
+        await xknx.devices.process(
+            Telegram(
+                destination_address=GroupAddress("2/2/2"),
+                payload=GroupValueWrite(DPTArray((0,))),
+            )
+        )
+        assert climate_active.is_active is True
+        assert climate_command.is_active is False
+        assert climate_active_command.is_active is True
+        # only command initialized
+        climate_active_command.active.value = None
+        assert climate_active_command.is_active is False

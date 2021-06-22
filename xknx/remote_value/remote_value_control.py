@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTControlStepCode
+from xknx.dpt import DPTArray, DPTBinary, DPTControlStepCode
 from xknx.exceptions import ConversionError
 
 from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
@@ -25,7 +25,7 @@ class RemoteValueControl(RemoteValue[DPTBinary, Any]):
         xknx: XKNX,
         group_address: GroupAddressesType | None = None,
         group_address_state: GroupAddressesType | None = None,
-        sync_state: bool = True,
+        sync_state: bool | int | float | str = True,
         value_type: str | None = None,
         device_name: str | None = None,
         feature_name: str = "Control",
@@ -34,13 +34,12 @@ class RemoteValueControl(RemoteValue[DPTBinary, Any]):
         """Initialize control remote value."""
         if value_type is None:
             raise ConversionError("no value type given", device_name=device_name)
-        # TODO: typing - parse from DPTControlStepCode when parse_transcoder is a classmethod
-        _dpt_class = DPTBase.parse_transcoder(value_type)
-        if _dpt_class is None or not isinstance(_dpt_class(), DPTControlStepCode):
+        _dpt_class = DPTControlStepCode.parse_transcoder(value_type)
+        if _dpt_class is None:
             raise ConversionError(
                 "invalid value type", value_type=value_type, device_name=device_name
             )
-        self.dpt_class: type[DPTControlStepCode] = _dpt_class  # type: ignore
+        self.dpt_class: type[DPTControlStepCode] = _dpt_class
         super().__init__(
             xknx,
             group_address,

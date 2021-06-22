@@ -16,11 +16,15 @@ from xknx.dpt import (
     DPTHVACContrMode,
     DPTHVACMode,
 )
-from xknx.dpt.dpt import DPTPayloadType
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACModeType, HVACOperationMode
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
-from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
+from .remote_value import (
+    AsyncCallbackType,
+    DPTPayloadType,
+    GroupAddressesType,
+    RemoteValue,
+)
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -50,7 +54,7 @@ class RemoteValueOperationMode(RemoteValueClimateModeBase[DPTArray, HVACOperatio
         xknx: XKNX,
         group_address: GroupAddressesType | None = None,
         group_address_state: GroupAddressesType | None = None,
-        sync_state: bool = True,
+        sync_state: bool | int | float | str = True,
         device_name: str | None = None,
         feature_name: str = "Climate mode",
         climate_mode_type: ClimateModeType | None = None,
@@ -111,7 +115,7 @@ class RemoteValueControllerMode(
         xknx: XKNX,
         group_address: GroupAddressesType | None = None,
         group_address_state: GroupAddressesType | None = None,
-        sync_state: bool = True,
+        sync_state: bool | int | float | str = True,
         device_name: str | None = None,
         feature_name: str = "Controller Mode",
         after_update_cb: AsyncCallbackType | None = None,
@@ -161,7 +165,7 @@ class RemoteValueBinaryOperationMode(
         xknx: XKNX,
         group_address: GroupAddressesType | None = None,
         group_address_state: GroupAddressesType | None = None,
-        sync_state: bool = True,
+        sync_state: bool | int | float | str = True,
         device_name: str | None = None,
         feature_name: str = "Climate mode binary",
         after_update_cb: AsyncCallbackType | None = None,
@@ -187,7 +191,7 @@ class RemoteValueBinaryOperationMode(
             xknx,
             group_address=group_address,
             group_address_state=group_address_state,
-            sync_state=True,
+            sync_state=sync_state,
             device_name=device_name,
             feature_name=feature_name,
             after_update_cb=after_update_cb,
@@ -244,7 +248,7 @@ class RemoteValueBinaryHeatCool(
         xknx: XKNX,
         group_address: GroupAddressesType | None = None,
         group_address_state: GroupAddressesType | None = None,
-        sync_state: bool = True,
+        sync_state: bool | int | float | str = True,
         device_name: str | None = None,
         feature_name: str = "Controller mode Heat/Cool",
         after_update_cb: AsyncCallbackType | None = None,
@@ -270,7 +274,7 @@ class RemoteValueBinaryHeatCool(
             xknx,
             group_address=group_address,
             group_address_state=group_address_state,
-            sync_state=True,
+            sync_state=sync_state,
             device_name=device_name,
             feature_name=feature_name,
             after_update_cb=after_update_cb,

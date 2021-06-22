@@ -61,11 +61,6 @@ class Device(ABC):
         # yield from (<list all used RemoteValue instances>)
         yield from ()
 
-    @property
-    def unique_id(self) -> str | None:
-        """Return local unique id of this device."""
-        return None
-
     def register_device_updated_cb(self, device_updated_cb: DeviceCallbackType) -> None:
         """Register device updated callback."""
         self.device_updated_cbs.append(device_updated_cb)

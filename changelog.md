@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.18.7 RawValue 2021-06-18
+
+### Devices
+
+- Add RawValue device.
+- Remove unused HA-specific attributes (unique_id, device_class, create_sensors).
+- Climate: add `group_address_active_state`, `group_address_command_value_state` and a `is_active` property.
+- Configurable `sync_state` in all devices.
+
+## 0.18.6 NumericValue 2021-06-11
+
+### Devices
+
+- Add `respond_to_read` option to Switch. If `True` GroupValueRead telegrams addressed to the `group_address` are answered.
+- Add NumericValue device.
+
+### Internals
+
+- Add RemoteValueNumeric for values of type `float | int`.
+- Fix DPTBase classmethod return types
+
 ## 0.18.5 DPTNumeric 2021-06-08
 
 ### Internals

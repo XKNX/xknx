@@ -2,7 +2,7 @@
 layout: default
 title: Sensor
 parent: Devices
-nav_order: 6
+nav_order: 8
 ---
 
 # [](#header-1)Sensor - Monitor values of KNX
@@ -45,6 +45,3 @@ sensor.unit_of_measurement()
 # Returns the last received telegram or None
 sensor.last_telegram
 ```
-
-
-

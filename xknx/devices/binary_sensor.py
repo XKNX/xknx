@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import TYPE_CHECKING, Any, Iterator, cast
+from typing import TYPE_CHECKING, Iterator, cast
 
 from xknx.remote_value import GroupAddressesType, RemoteValueSwitch
 
@@ -32,19 +32,15 @@ class BinarySensor(Device):
         name: str,
         group_address_state: GroupAddressesType = None,
         invert: bool = False,
-        sync_state: bool = True,
+        sync_state: bool | int | float | str = True,
         ignore_internal_state: bool = False,
-        device_class: str | None = None,
         reset_after: float | None = None,
         context_timeout: float | None = None,
-        ha_value_template: Any = None,
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize BinarySensor class."""
         super().__init__(xknx, name, device_updated_cb)
 
-        self.device_class = device_class
-        self.ha_value_template = ha_value_template
         self.ignore_internal_state = ignore_internal_state or bool(context_timeout)
         self.reset_after = reset_after
         self.state: bool | None = None
@@ -69,11 +65,6 @@ class BinarySensor(Device):
     def _iter_remote_values(self) -> Iterator[RemoteValueSwitch]:
         """Iterate the devices RemoteValue classes."""
         yield self.remote_value
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return unique id for this device."""
-        return f"{self.remote_value.group_address_state}"
 
     @property
     def last_telegram(self) -> Telegram | None:

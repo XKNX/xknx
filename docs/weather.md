@@ -2,7 +2,7 @@
 layout: default
 title: Weather
 parent: Devices
-nav_order: 9
+nav_order: 11
 ---
 
 # [](#header-1)Weather device
@@ -50,7 +50,6 @@ The weather device is basically a set of sensors that you can obtain from your w
 - **group_address_day_night** KNX address for reading a day/night object.
 - **group_address_air_pressure** KNX address reading current air pressure. **DPT 9.006**
 - **group_address_humidity** KNX address for reading current humidity. **DPT 9.007**
-- **create_sensors** If true, also adds sensors for all values to the xknx device list (useful for Home Assistant). Default: False
 - **sync_state** Periodically sync the state.
 - **device_updated_cb** awaitable callback for each update.
 
@@ -76,8 +75,3 @@ The weather device is basically a set of sensors that you can obtain from your w
         print(weather.wind_speed) # get the current wind speed in m/s
 
 ```
-
-
-
-
-

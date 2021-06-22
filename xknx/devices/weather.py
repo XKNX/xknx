@@ -21,11 +21,10 @@ from typing import TYPE_CHECKING, Any, Callable, Iterator
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
-    RemoteValueSensor,
+    RemoteValueNumeric,
     RemoteValueSwitch,
 )
 
-from . import BinarySensor, Sensor
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
@@ -98,14 +97,13 @@ class Weather(Device):
         group_address_day_night: GroupAddressesType | None = None,
         group_address_air_pressure: GroupAddressesType | None = None,
         group_address_humidity: GroupAddressesType | None = None,
-        create_sensors: bool = False,
-        sync_state: bool = True,
+        sync_state: bool | int | float | str = True,
         device_updated_cb: DeviceCallbackType | None = None,
     ) -> None:
         """Initialize Weather class."""
         super().__init__(xknx, name, device_updated_cb)
 
-        self._temperature = RemoteValueSensor(
+        self._temperature = RemoteValueNumeric(
             xknx,
             group_address_state=group_address_temperature,
             sync_state=sync_state,
@@ -115,7 +113,7 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
-        self._brightness_south = RemoteValueSensor(
+        self._brightness_south = RemoteValueNumeric(
             xknx,
             group_address_state=group_address_brightness_south,
             sync_state=sync_state,
@@ -125,7 +123,7 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
-        self._brightness_north = RemoteValueSensor(
+        self._brightness_north = RemoteValueNumeric(
             xknx,
             group_address_state=group_address_brightness_north,
             sync_state=sync_state,
@@ -135,7 +133,7 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
-        self._brightness_west = RemoteValueSensor(
+        self._brightness_west = RemoteValueNumeric(
             xknx,
             group_address_state=group_address_brightness_west,
             sync_state=sync_state,
@@ -145,7 +143,7 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
-        self._brightness_east = RemoteValueSensor(
+        self._brightness_east = RemoteValueNumeric(
             xknx,
             group_address_state=group_address_brightness_east,
             sync_state=sync_state,
@@ -155,7 +153,7 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
-        self._wind_speed = RemoteValueSensor(
+        self._wind_speed = RemoteValueNumeric(
             xknx,
             group_address_state=group_address_wind_speed,
             sync_state=sync_state,
@@ -165,7 +163,7 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
-        self._wind_bearing = RemoteValueSensor(
+        self._wind_bearing = RemoteValueNumeric(
             xknx,
             group_address_state=group_address_wind_bearing,
             sync_state=sync_state,
@@ -178,6 +176,7 @@ class Weather(Device):
         self._rain_alarm = RemoteValueSwitch(
             xknx,
             group_address_state=group_address_rain_alarm,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Rain alarm",
             after_update_cb=self.after_update,
@@ -186,6 +185,7 @@ class Weather(Device):
         self._frost_alarm = RemoteValueSwitch(
             xknx,
             group_address_state=group_address_frost_alarm,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Frost alarm",
             after_update_cb=self.after_update,
@@ -194,6 +194,7 @@ class Weather(Device):
         self._wind_alarm = RemoteValueSwitch(
             xknx,
             group_address_state=group_address_wind_alarm,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Wind alarm",
             after_update_cb=self.after_update,
@@ -202,12 +203,13 @@ class Weather(Device):
         self._day_night = RemoteValueSwitch(
             xknx,
             group_address_state=group_address_day_night,
+            sync_state=sync_state,
             device_name=self.name,
             feature_name="Day/Night",
             after_update_cb=self.after_update,
         )
 
-        self._air_pressure = RemoteValueSensor(
+        self._air_pressure = RemoteValueNumeric(
             xknx,
             group_address_state=group_address_air_pressure,
             sync_state=sync_state,
@@ -217,7 +219,7 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
-        self._humidity = RemoteValueSensor(
+        self._humidity = RemoteValueNumeric(
             xknx,
             group_address_state=group_address_humidity,
             sync_state=sync_state,
@@ -226,9 +228,6 @@ class Weather(Device):
             feature_name="Humidity",
             after_update_cb=self.after_update,
         )
-
-        if create_sensors:
-            self.create_sensors()
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices remote values."""
@@ -246,11 +245,6 @@ class Weather(Device):
         yield self._air_pressure
         yield self._humidity
 
-    @property
-    def unique_id(self) -> str | None:
-        """Return unique id for this device."""
-        return f"{self._temperature.group_address_state}"
-
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         for remote_value in self._iter_remote_values():
@@ -259,40 +253,40 @@ class Weather(Device):
     @property
     def temperature(self) -> float | None:
         """Return current temperature."""
-        return self._temperature.value  # type: ignore
+        return self._temperature.value
 
     @property
     def brightness_south(self) -> float:
         """Return brightness south."""
         if self._brightness_south.value is not None:
-            return self._brightness_south.value  # type: ignore
+            return self._brightness_south.value
         return 0.0
 
     @property
     def brightness_north(self) -> float:
         """Return brightness north."""
         if self._brightness_north.value is not None:
-            return self._brightness_north.value  # type: ignore
+            return self._brightness_north.value
         return 0.0
 
     @property
     def brightness_east(self) -> float:
         """Return brightness east."""
         if self._brightness_east.value is not None:
-            return self._brightness_east.value  # type: ignore
+            return self._brightness_east.value
         return 0.0
 
     @property
     def brightness_west(self) -> float:
         """Return brightness west."""
         if self._brightness_west.value is not None:
-            return self._brightness_west.value  # type: ignore
+            return self._brightness_west.value
         return 0.0
 
     @property
     def wind_speed(self) -> float | None:
         """Return wind speed in m/s."""
-        return self._wind_speed.value  # type: ignore
+        return self._wind_speed.value
 
     @property
     def wind_bearing(self) -> int | None:
@@ -322,12 +316,12 @@ class Weather(Device):
     @property
     def air_pressure(self) -> float | None:
         """Return pressure in Pa."""
-        return self._air_pressure.value  # type: ignore
+        return self._air_pressure.value
 
     @property
     def humidity(self) -> float | None:
         """Return humidity in %."""
-        return self._humidity.value  # type: ignore
+        return self._humidity.value
 
     @property
     def max_brightness(self) -> float:
@@ -338,76 +332,6 @@ class Weather(Device):
             self.brightness_north,
             self.brightness_east,
         )
-
-    def create_sensors(self) -> None:
-        """Expose sensors to xknx."""
-        for suffix, group_address in (
-            ("_rain_alarm", self._rain_alarm.group_address_state),
-            ("_wind_alarm", self._wind_alarm.group_address_state),
-            ("_frost_alarm", self._frost_alarm.group_address_state),
-            ("_day_night", self._day_night.group_address_state),
-        ):
-            if group_address is not None:
-                BinarySensor(
-                    self.xknx,
-                    name=self.name + suffix,
-                    group_address_state=group_address,
-                )
-
-        for suffix, group_address, value_type in (
-            (
-                "_temperature",
-                self._temperature.group_address_state,
-                "temperature",
-            ),
-            (
-                "_brightness_south",
-                self._brightness_south.group_address_state,
-                "illuminance",
-            ),
-            (
-                "_brightness_north",
-                self._brightness_north.group_address_state,
-                "illuminance",
-            ),
-            (
-                "_brightness_west",
-                self._brightness_west.group_address_state,
-                "illuminance",
-            ),
-            (
-                "_brightness_east",
-                self._brightness_east.group_address_state,
-                "illuminance",
-            ),
-            (
-                "_wind_speed",
-                self._wind_speed.group_address_state,
-                "wind_speed_ms",
-            ),
-            (
-                "_wind_bearing",
-                self._wind_bearing.group_address_state,
-                "angle",
-            ),
-            (
-                "_air_pressure",
-                self._air_pressure.group_address_state,
-                "pressure",
-            ),
-            (
-                "_humidity",
-                self._humidity.group_address_state,
-                "humidity",
-            ),
-        ):
-            if group_address is not None:
-                Sensor(
-                    self.xknx,
-                    name=self.name + suffix,
-                    group_address_state=group_address,
-                    value_type=value_type,
-                )
 
     def ha_current_state(self, current_date: date = date.today()) -> WeatherCondition:
         """Return the current state for home assistant."""
