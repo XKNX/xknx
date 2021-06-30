@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased changes
+## 0.18.8 Position-only cover 2021-06.30
 
 ### Devices
 
