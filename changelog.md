@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Devices
+
+- Cover: enable `set_up` and `set_down` with `group_address_position` only (without `group_address_long`).
+
 ## 0.18.7 RawValue 2021-06-18
 
 ### Devices
