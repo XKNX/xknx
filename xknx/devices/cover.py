@@ -174,17 +174,23 @@ class Cover(Device):
 
     async def set_down(self) -> None:
         """Move cover down."""
-        await self.updown.down()
-        self.travelcalculator.start_travel_down()
-        self.travel_direction_tilt = None
-        await self.after_update()
+        if self.updown.writable:
+            await self.updown.down()
+            self.travelcalculator.start_travel_down()
+            self.travel_direction_tilt = None
+            await self.after_update()
+        elif self.position_target.writable:
+            await self.position_target.set(self.travelcalculator.position_closed)
 
     async def set_up(self) -> None:
         """Move cover up."""
-        await self.updown.up()
-        self.travelcalculator.start_travel_up()
-        self.travel_direction_tilt = None
-        await self.after_update()
+        if self.updown.writable:
+            await self.updown.up()
+            self.travelcalculator.start_travel_up()
+            self.travel_direction_tilt = None
+            await self.after_update()
+        elif self.position_target.writable:
+            await self.position_target.set(self.travelcalculator.position_open)
 
     async def set_short_down(self) -> None:
         """Move cover short down."""

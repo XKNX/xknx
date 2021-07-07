@@ -432,13 +432,11 @@ class TestCover:
         await cover_short_stop.stop()
         assert xknx.telegrams.qsize() == 2
         telegram = xknx.telegrams.get_nowait()
-        print(telegram)
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/5"),
             payload=GroupValueWrite(DPTArray(0xFF)),
         )
         telegram = xknx.telegrams.get_nowait()
-        print(telegram)
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/2"),
             payload=GroupValueWrite(DPTBinary(1)),
@@ -449,13 +447,11 @@ class TestCover:
         await cover_short_stop.stop()
         assert xknx.telegrams.qsize() == 2
         telegram = xknx.telegrams.get_nowait()
-        print(telegram)
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/5"),
             payload=GroupValueWrite(DPTArray(0x00)),
         )
         telegram = xknx.telegrams.get_nowait()
-        print(telegram)
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/2"),
             payload=GroupValueWrite(DPTBinary(0)),
@@ -481,6 +477,36 @@ class TestCover:
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray(0x80)),
+        )
+
+    async def test_position_without_binary(self):
+        """Test moving cover - with no binary positioning supported."""
+        xknx = XKNX()
+        cover = Cover(
+            xknx,
+            "TestCover",
+            group_address_position="1/2/3",
+        )
+        await cover.set_down()
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(0xFF)),
+        )
+        await cover.set_position(50)
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(0x80)),
+        )
+        await cover.set_up()
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(0x00)),
         )
 
     async def test_position_without_position_address_up(self):
