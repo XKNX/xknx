@@ -21,12 +21,15 @@ from enum import Enum
 from .address import GroupAddress, IndividualAddress, InternalGroupAddress
 from .apci import APCI
 
+
 class TPDUType(Enum):
-        T_DATA           = 0
-        T_Connect        = 1
-        T_Disconnect     = 2
-        T_ACK            = 3
-        T_ACK_NUMBERED   = 4
+    """Types of TPDU."""
+
+    T_DATA = 0
+    T_CONNECT = 1
+    T_DISCONNECT = 2
+    T_ACK = 3
+    T_ACK_NUMBERED = 4
 
 
 class TelegramDirection(Enum):
@@ -34,6 +37,7 @@ class TelegramDirection(Enum):
 
     INCOMING = "Incoming"
     OUTGOING = "Outgoing"
+
 
 class Telegram:
     """Class for KNX telegrams."""
@@ -47,7 +51,7 @@ class Telegram:
         payload: APCI | None = None,
         source_address: IndividualAddress = IndividualAddress(0),
         tpdu_type: TPDUType = TPDUType.T_DATA,
-        prio_system = False,
+        prio_system: bool = False,
     ) -> None:
         """Initialize Telegram class."""
         self.destination_address = destination_address

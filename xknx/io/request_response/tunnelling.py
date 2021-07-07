@@ -48,7 +48,7 @@ class Tunnelling(RequestResponse):
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent on bus."""
         if self.telegram.tpdu_type == TPDUType.T_DATA:
-            pdu = CEMIFrame.init_from_telegram(
+            pdu:CEMIFrame|TPDU = CEMIFrame.init_from_telegram(
                 self.xknx,
                 telegram=self.telegram,
                 code=CEMIMessageCode.L_DATA_REQ,

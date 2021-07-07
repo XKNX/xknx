@@ -22,8 +22,8 @@ def encode_cmd_and_payload(
     cmd: APCIService | APCIUserService | APCIExtendedService,
     encoded_payload: int = 0,
     appended_payload: bytes | None = None,
-    additional_flags = None,
-    sequence_number = 0,
+    additional_flags: APCIAdditionalFlags | None = None,
+    sequence_number: int = 0,
 ) -> bytes:
     """Encode cmd and payload."""
     if appended_payload is None:
@@ -105,6 +105,7 @@ class APCIExtendedService(Enum):
     INDIVIDUAL_ADDRESS_SERIAL_WRITE = 0x03DE
 
 class APCIAdditionalFlags(Enum):
+    """ APCI Additional Flags """
     NUMBERED_DATA_PACKET = 0x4000
 
 
@@ -652,7 +653,7 @@ class DeviceDescriptorRead(APCI):
 
     CODE = APCIService.DEVICE_DESCRIPTOR_READ
 
-    def __init__(self, descriptor: int = 0, is_numbered = False) -> None:
+    def __init__(self, descriptor: int = 0, is_numbered: bool = False) -> None:
         """Initialize a new instance of DeviceDescriptorRead."""
         self.descriptor = descriptor
         self.is_numbered = is_numbered
@@ -735,7 +736,7 @@ class Restart(APCI):
 
     CODE = APCIService.RESTART
 
-    def __init__(self, sequqence_number = None) -> None:
+    def __init__(self, sequqence_number: int = 0) -> None:
         """Initialize a new instance of DeviceDescriptorRead."""
         self.sequqence_number = sequqence_number
 
@@ -1183,8 +1184,8 @@ class PropertyValueRead(APCI):
         property_id: int = 0,
         count: int = 0,
         start_index: int = 1,
-        is_numbered = False,
-        sequence_number=0,
+        is_numbered: bool = False,
+        sequence_number: int = 0,
     ) -> None:
         """Initialize a new instance of PropertyValueRead."""
         self.object_index = object_index

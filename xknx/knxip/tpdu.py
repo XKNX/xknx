@@ -1,42 +1,44 @@
-'''
-Created on 14.01.2021
+"""
+Created on 14.01.2021.
 
 @author: bonzius
-'''
-#from enum import Enum
-from _curses import raw
-''' alternative class to CEMIFrame for non T_DATA requests '''
-from xknx.telegram import IndividualAddress, Telegram, TPDUType
+"""
+from xknx.telegram import IndividualAddress, GroupAddress, Telegram, TPDUType
 from xknx.exceptions import UnsupportedCEMIMessage
 from .knxip_enum import CEMIMessageCode
 
-
-#from xknx.telegram.telegram import TPDUTelegram
-#from typing import Optional, Union
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from xknx.xknx import XKNX
+    from typing import Union, List
+    from Adress import InternalGroupAddress
 
 
 class TPDU:
-    
+    """alternative class to CEMIFrame for non T_DATA requests."""
+
     def __init__(
         self,
-        xknx = "XKNX",
+        xknx: XKNX,
         src_addr: IndividualAddress = IndividualAddress(None),
     ):
+        """Initialize TPDU."""
         self.xknx = xknx
         self.src_addr = src_addr
-        self.destination_address = IndividualAddress(None)
-        self.tpdu_type = None
-        
+        self.destination_address: Union[GroupAddress, IndividualAddress, InternalGroupAddress] = IndividualAddress(None)
+        self.tpdu_type: TPDUType | None = None
+
     @staticmethod
     def init_from_telegram(
-        xknx: "XKNX",
+        xknx: XKNX,
         telegram: Telegram,
         src_addr: IndividualAddress = IndividualAddress(None),
-    ):
-        """Return CEMIFrame from a Telegram."""
+    ) -> TPDU:
+        """Return TPDU from a Telegram."""
         tpdu = TPDU(xknx, src_addr)
         tpdu.telegram = telegram
         return tpdu
+
     @property
     def telegram(self) -> Telegram:
         """Return telegram."""
@@ -66,38 +68,37 @@ class TPDU:
                     raw[0], raw.hex()
                 )
             )
-        self.destination_address = IndividualAddress((raw[6],raw[7]))
+        self.destination_address = IndividualAddress((raw[6], raw[7]))
         self.data = raw
         return 10
 
-    def calculated_length(self):
+    def calculated_length(self) -> int:
+        """Length of PDU."""
         return 10
-    
-    def to_knx(self):
+
+    def to_knx(self) -> List[int]:
+        """Convert PDU to KNX."""
         data = [0x11, 0x00, 0xb0, 0x60, 0x00, 0x00]
         data += self.destination_address.to_knx()
-        if self.tpdu_type == TPDUType.T_Connect:
-            data += [ 0x00, 0x80]
-        elif self.tpdu_type == TPDUType.T_Disconnect:
-            data += [ 0x00, 0x81]
+        if self.tpdu_type == TPDUType.T_CONNECT:
+            data += [0x00, 0x80]
+        elif self.tpdu_type == TPDUType.T_DISCONNECT:
+            data += [0x00, 0x81]
         elif self.tpdu_type == TPDUType.T_ACK:
-            data += [ 0x00, 0xc2]
+            data += [0x00, 0xc2]
         elif self.tpdu_type == TPDUType.T_ACK_NUMBERED:
-            data += [ 0x00, 0xc6]
+            data += [0x00, 0xc6]
         else:
-            raise RuntimeError("Invalid TPDUType"+self.tpdu_type)
+            raise RuntimeError("Invalid TPDUType" + str(self.tpdu_type))
         return data
-    
+
     def __str__(self) -> str:
         """Return object as readable string."""
         res = '<TPDUFrame DestinationAddress="{}" '.format(
-                self.destination_address.__repr__())
+            self.destination_address.__repr__())
         '''
         data = self.to_knx()
         for i in data:
             res += hex(i) + " "
         '''
         return res
-         
-
-       
