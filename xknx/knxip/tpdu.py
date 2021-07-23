@@ -19,7 +19,7 @@ class TPDU:
 
     def __init__(
         self,
-        xknx: XKNX,
+        xknx: "XKNX",
         src_addr: IndividualAddress = IndividualAddress(None),
     ):
         """Initialize TPDU."""
@@ -30,10 +30,10 @@ class TPDU:
 
     @staticmethod
     def init_from_telegram(
-        xknx: XKNX,
+        xknx: "XKNX",
         telegram: Telegram,
-        src_addr: IndividualAddress = IndividualAddress(None),
-    ) -> TPDU:
+        src_addr: IndividualAddress = IndividualAddress(None)
+    ):        # -> TPDU: this will not compile
         """Return TPDU from a Telegram."""
         tpdu = TPDU(xknx, src_addr)
         tpdu.telegram = telegram
@@ -76,7 +76,7 @@ class TPDU:
         """Length of PDU."""
         return 10
 
-    def to_knx(self) -> List[int]:
+    def to_knx(self): # -> List[int]: does not compile
         """Convert PDU to KNX."""
         data = [0x11, 0x00, 0xb0, 0x60, 0x00, 0x00]
         data += self.destination_address.to_knx()

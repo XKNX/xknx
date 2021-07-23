@@ -196,5 +196,3 @@ class DIBServiceFamily(Enum):
 
     # Object Server'.
     OBJECT_SERVER = 0x08
-    
-

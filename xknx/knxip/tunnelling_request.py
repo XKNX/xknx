@@ -32,14 +32,14 @@ class TunnellingRequest(KNXIPBody):
         xknx: XKNX,
         communication_channel_id: int = 1,
         sequence_counter: int = 0,
-        cemi: CEMIFrame|TPDU | None = None,
+        cemi: CEMIFrame | TPDU | None = None,
     ):
         """Initialize TunnellingRequest object."""
         super().__init__(xknx)
 
         self.communication_channel_id = communication_channel_id
         self.sequence_counter = sequence_counter
-        self.cemi: CEMIFrame |TPDU| None = (
+        self.cemi: CEMIFrame | TPDU | None = (
             cemi
             if cemi is not None
             else CEMIFrame(xknx, code=CEMIMessageCode.L_DATA_REQ)

@@ -28,7 +28,7 @@ def encode_cmd_and_payload(
     """Encode cmd and payload."""
     if appended_payload is None:
         appended_payload = bytes()
-        
+
     sequence_number &= 0x0F
     command_and_flag = cmd.value
     if additional_flags:
@@ -70,7 +70,7 @@ class APCIService(Enum):
     RESTART = 0x0380
 
     ESCAPE = 0x03C0
-    
+
 
 class APCIUserService(Enum):
     """Enum class for user message APCI services."""
@@ -104,8 +104,10 @@ class APCIExtendedService(Enum):
     INDIVIDUAL_ADDRESS_SERIAL_RESPONSE = 0x03DD
     INDIVIDUAL_ADDRESS_SERIAL_WRITE = 0x03DE
 
+
 class APCIAdditionalFlags(Enum):
-    """ APCI Additional Flags """
+    """APCI Additional Flags."""
+
     NUMBERED_DATA_PACKET = 0x4000
 
 
@@ -243,6 +245,7 @@ class GroupValueRead(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return "<GroupValueRead />"
+
 
 class GroupValueWrite(APCI):
     """
@@ -670,15 +673,15 @@ class DeviceDescriptorRead(APCI):
         """Serialize to KNX/IP raw data."""
         if self.descriptor < 0 or self.descriptor >= 2 ** 6:
             raise ConversionError("Descriptor out of range.")
-        
+
         additional_flags = None
         if self.is_numbered:
-            additional_flags= APCIAdditionalFlags.NUMBERED_DATA_PACKET 
+            additional_flags = APCIAdditionalFlags.NUMBERED_DATA_PACKET
 
         return encode_cmd_and_payload(
-            self.CODE, 
+            self.CODE,
             encoded_payload=self.descriptor,
-            additional_flags = additional_flags)
+            additional_flags=additional_flags)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -754,11 +757,11 @@ class Restart(APCI):
         """Serialize to KNX/IP raw data."""
         additional_flags = None
         if self.sequqence_number:
-            additional_flags= APCIAdditionalFlags.NUMBERED_DATA_PACKET
+            additional_flags = APCIAdditionalFlags.NUMBERED_DATA_PACKET
 
         return encode_cmd_and_payload(
-            self.CODE, 
-            additional_flags = additional_flags,
+            self.CODE,
+            additional_flags=additional_flags,
             sequence_number=self.sequqence_number)
 
     def __str__(self) -> str:
@@ -1195,7 +1198,6 @@ class PropertyValueRead(APCI):
         self.is_numbered = is_numbered
         self.sequence_number = sequence_number
 
-
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
         return 5
@@ -1225,13 +1227,13 @@ class PropertyValueRead(APCI):
         )
         additional_flags = None
         if self.is_numbered:
-            additional_flags= APCIAdditionalFlags.NUMBERED_DATA_PACKET
-            
+            additional_flags = APCIAdditionalFlags.NUMBERED_DATA_PACKET
+
         return encode_cmd_and_payload(
-            self.CODE, 
+            self.CODE,
             appended_payload=payload,
-            additional_flags = additional_flags,
-            sequence_number = self.sequence_number)
+            additional_flags=additional_flags,
+            sequence_number=self.sequence_number)
 
     def __str__(self) -> str:
         """Return object as readable string."""

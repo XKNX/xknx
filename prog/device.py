@@ -50,7 +50,7 @@ class A_Device:
             TelegramDirection.OUTGOING,
             None,
             None,
-            TPDUType.T_Connect)
+            TPDUType.T_CONNECT)
         await self.xknx.telegrams.put(telegram)
     
     async def T_Connect_Response(self):
@@ -58,7 +58,7 @@ class A_Device:
         while True:
             await asyncio.sleep(0.1)
             if self.last_telegram:
-                if self.last_telegram.tpdu_type == TPDUType.T_Disconnect:
+                if self.last_telegram.tpdu_type == TPDUType.T_DISCONNECT:
                     return
     
     async def T_Disconnect(self):
@@ -67,7 +67,7 @@ class A_Device:
             TelegramDirection.OUTGOING,
             None,
             None,
-            TPDUType.T_Disconnect)
+            TPDUType.T_DISCONNECT)
         await self.xknx.telegrams.put(telegram)
 
     async def T_ACK(self, numbered=False):
