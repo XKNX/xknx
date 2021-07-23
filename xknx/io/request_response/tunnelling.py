@@ -14,7 +14,6 @@ from xknx.knxip import (
 from .request_response import RequestResponse
 from xknx.telegram.telegram import TPDUType
 from xknx.knxip.tpdu import TPDU
-# from xknx.knxip import TPDUType
 
 if TYPE_CHECKING:
     from xknx.io.udp_client import UDPClient
