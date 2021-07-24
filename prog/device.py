@@ -4,14 +4,10 @@ This module implements the application layer functionality of a device.
 import asyncio
 from enum import Enum
 
-from xknx.telegram import Telegram, TelegramDirection, IndividualAddress,TPDUType
-#from xknx.io import Connect
-#from xknx.knxip import ConnectRequestType
-#from xknx.io.tunnelling import Tunnelling
+from xknx.telegram import Telegram, TelegramDirection, IndividualAddress,TPDUType,Priority
 from xknx.telegram.apci import DeviceDescriptorRead, IndividualAddressRead, IndividualAddressWrite, Restart,\
     APCIService,PropertyValueRead,APCIExtendedService
 from xknx.telegram.address import GroupAddress, GroupAddressType
-#from xknx.knxip import TPDUType
 
 class ConnectionState(Enum):
     NOT_CONNECTED = 0
@@ -33,9 +29,9 @@ class A_Device:
         self.last_telegram = telegram
         if telegram.payload:
             if telegram.payload.CODE == APCIService.DEVICE_DESCRIPTOR_RESPONSE:
-                self.T_ACK()
+                await self.T_ACK()
             if telegram.payload.CODE == APCIExtendedService.PROPERTY_VALUE_RESPONSE:
-                self.T_ACK(True)
+                await self.T_ACK(True)
         
         
     async def IndividualAddress_Respone(self):
@@ -89,7 +85,7 @@ class A_Device:
             self.ia, 
             TelegramDirection.OUTGOING,
             DeviceDescriptorRead(descriptor, is_numbered = True),
-            prio_system = True,
+            priority = Priority.SYSTEM,
             )
         await self.xknx.telegrams.put(telegram)
         
@@ -107,7 +103,7 @@ class A_Device:
             self.ia, 
             TelegramDirection.OUTGOING,
             PropertyValueRead(0,0x0b,1,1,True,1),
-            prio_system = True,
+            priority = Priority.SYSTEM,
             )
         await self.xknx.telegrams.put(telegram)
         
@@ -116,7 +112,7 @@ class A_Device:
             GroupAddress(0, self.groupAddressType), 
             TelegramDirection.OUTGOING,
             IndividualAddressRead(),
-            prio_system = True,
+            priority = Priority.SYSTEM,
             )
         await self.xknx.telegrams.put(telegram)
 
@@ -133,7 +129,7 @@ class A_Device:
             GroupAddress(0, self.groupAddressType), 
             TelegramDirection.OUTGOING,
             IndividualAddressWrite(self.ia),
-            prio_system = True,
+            priority = Priority.SYSTEM,
             )
         await self.xknx.telegrams.put(telegram)
         
@@ -142,7 +138,7 @@ class A_Device:
             self.ia, 
             TelegramDirection.OUTGOING,
             Restart(sequqence_number = 2),
-            prio_system = True,
+            priority = Priority.SYSTEM,
             )
         await self.xknx.telegrams.put(telegram)
         

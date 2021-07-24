@@ -3,6 +3,8 @@ Created on 14.01.2021.
 
 @author: bonzius
 """
+from __future__ import annotations
+
 from xknx.telegram import IndividualAddress, GroupAddress, Telegram, TPDUType
 from xknx.exceptions import UnsupportedCEMIMessage
 from .knxip_enum import CEMIMessageCode
@@ -10,7 +12,7 @@ from .knxip_enum import CEMIMessageCode
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
-    from typing import Union, List
+    # from typing import Union, List
     from Adress import InternalGroupAddress
 
 
@@ -25,7 +27,7 @@ class TPDU:
         """Initialize TPDU."""
         self.xknx = xknx
         self.src_addr = src_addr
-        self.destination_address: Union[GroupAddress, IndividualAddress, InternalGroupAddress] = IndividualAddress(None)
+        self.destination_address: GroupAddress | IndividualAddress | InternalGroupAddress = IndividualAddress(None)
         self.tpdu_type: TPDUType | None = None
 
     @staticmethod
@@ -33,7 +35,7 @@ class TPDU:
         xknx: "XKNX",
         telegram: Telegram,
         src_addr: IndividualAddress = IndividualAddress(None)
-    ):        # -> TPDU: this will not compile
+    ) -> TPDU:
         """Return TPDU from a Telegram."""
         tpdu = TPDU(xknx, src_addr)
         tpdu.telegram = telegram
@@ -76,21 +78,19 @@ class TPDU:
         """Length of PDU."""
         return 10
 
-    def to_knx(self): # -> List[int]: does not compile
+    def to_knx(self) -> list[int]:
         """Convert PDU to KNX."""
         data = [0x11, 0x00, 0xb0, 0x60, 0x00, 0x00]
         data += self.destination_address.to_knx()
         if self.tpdu_type == TPDUType.T_CONNECT:
-            data += [0x00, 0x80]
-        elif self.tpdu_type == TPDUType.T_DISCONNECT:
-            data += [0x00, 0x81]
-        elif self.tpdu_type == TPDUType.T_ACK:
-            data += [0x00, 0xc2]
-        elif self.tpdu_type == TPDUType.T_ACK_NUMBERED:
-            data += [0x00, 0xc6]
-        else:
-            raise RuntimeError("Invalid TPDUType" + str(self.tpdu_type))
-        return data
+            return data + [0x00, 0x80]
+        if self.tpdu_type == TPDUType.T_DISCONNECT:
+            return data + [0x00, 0x81]
+        if self.tpdu_type == TPDUType.T_ACK:
+            return data + [0x00, 0xc2]
+        if self.tpdu_type == TPDUType.T_ACK_NUMBERED:
+            return data + [0x00, 0xc6]
+        raise RuntimeError("Invalid TPDUType" + str(self.tpdu_type))
 
     def __str__(self) -> str:
         """Return object as readable string."""

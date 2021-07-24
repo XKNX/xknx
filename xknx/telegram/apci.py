@@ -29,10 +29,9 @@ def encode_cmd_and_payload(
     if appended_payload is None:
         appended_payload = bytes()
 
-    sequence_number &= 0x0F
     command_and_flag = cmd.value
     if additional_flags:
-        command_and_flag |= additional_flags.value | (sequence_number << 10)
+        command_and_flag |= additional_flags.value | ((sequence_number & 0x0F) << 10)
 
     data = bytearray(
         [
@@ -659,7 +658,8 @@ class DeviceDescriptorRead(APCI):
     def __init__(self, descriptor: int = 0, is_numbered: bool = False) -> None:
         """Initialize a new instance of DeviceDescriptorRead."""
         self.descriptor = descriptor
-        self.is_numbered = is_numbered
+        if is_numbered:
+            self.additional_flags = APCIAdditionalFlags.NUMBERED_DATA_PACKET 
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -674,14 +674,10 @@ class DeviceDescriptorRead(APCI):
         if self.descriptor < 0 or self.descriptor >= 2 ** 6:
             raise ConversionError("Descriptor out of range.")
 
-        additional_flags = None
-        if self.is_numbered:
-            additional_flags = APCIAdditionalFlags.NUMBERED_DATA_PACKET
-
         return encode_cmd_and_payload(
             self.CODE,
             encoded_payload=self.descriptor,
-            additional_flags=additional_flags)
+            additional_flags=self.additional_flags)
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -740,7 +736,7 @@ class Restart(APCI):
     CODE = APCIService.RESTART
 
     def __init__(self, sequqence_number: int = 0) -> None:
-        """Initialize a new instance of DeviceDescriptorRead."""
+        """Initialize a new instance of Restart."""
         self.sequqence_number = sequqence_number
 
     def calculated_length(self) -> int:
@@ -1195,7 +1191,8 @@ class PropertyValueRead(APCI):
         self.property_id = property_id
         self.count = count
         self.start_index = start_index
-        self.is_numbered = is_numbered
+        if is_numbered:
+            self.additional_flags = APCIAdditionalFlags.NUMBERED_DATA_PACKET 
         self.sequence_number = sequence_number
 
     def calculated_length(self) -> int:
@@ -1225,14 +1222,11 @@ class PropertyValueRead(APCI):
             self.count << 4,
             self.start_index,
         )
-        additional_flags = None
-        if self.is_numbered:
-            additional_flags = APCIAdditionalFlags.NUMBERED_DATA_PACKET
 
         return encode_cmd_and_payload(
             self.CODE,
             appended_payload=payload,
-            additional_flags=additional_flags,
+            additional_flags=self.additional_flags,
             sequence_number=self.sequence_number)
 
     def __str__(self) -> str:

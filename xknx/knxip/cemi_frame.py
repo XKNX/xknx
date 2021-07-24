@@ -20,6 +20,10 @@ from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
 
 from .knxip_enum import CEMIFlags, CEMIMessageCode
+from _ast import Continue
+from xknx.knxip.knxip_enum import CEMIFlags
+from xknx import telegram
+from xknx.telegram.telegram import Priority
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -75,25 +79,25 @@ class CEMIFrame:
         """Set telegram."""
         # TODO: Move to separate function, together with setting of
         # CEMIMessageCode
-        if telegram.prio_system:
-            self.flags = (
-                CEMIFlags.FRAME_TYPE_STANDARD
-                | CEMIFlags.DO_NOT_REPEAT
-                | CEMIFlags.BROADCAST
-                | CEMIFlags.NO_ACK_REQUESTED
-                | CEMIFlags.CONFIRM_NO_ERROR
-                | CEMIFlags.HOP_COUNT_1ST
-            )
+        self.flags = (
+            CEMIFlags.FRAME_TYPE_STANDARD
+            | CEMIFlags.DO_NOT_REPEAT
+            | CEMIFlags.BROADCAST
+            | CEMIFlags.NO_ACK_REQUESTED
+            | CEMIFlags.CONFIRM_NO_ERROR
+            | CEMIFlags.HOP_COUNT_1ST
+        )
+        if telegram.priority == Priority.SYSTEM:
+            # do nothing
+            pass
+        elif telegram.priority == Priority.URGENT:
+            self.flags |= CEMIFlags.PRIORITY_URGENT
+        elif telegram.priority == Priority.NORMAL:
+            self.flags |= CEMIFlags.PRIORITY_NORMAL
+        elif telegram.priority == Priority.LOW:
+            self.flags |= CEMIFlags.PRIORITY_LOW
         else:
-            self.flags = (
-                CEMIFlags.FRAME_TYPE_STANDARD
-                | CEMIFlags.DO_NOT_REPEAT
-                | CEMIFlags.BROADCAST
-                | CEMIFlags.PRIORITY_LOW
-                | CEMIFlags.NO_ACK_REQUESTED
-                | CEMIFlags.CONFIRM_NO_ERROR
-                | CEMIFlags.HOP_COUNT_1ST
-            )
+            raise RuntimeError("Unknown telegram priority: "+telegram.priority)
 
         if isinstance(telegram.destination_address, GroupAddress):
             self.flags |= CEMIFlags.DESTINATION_GROUP_ADDRESS

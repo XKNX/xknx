@@ -22,6 +22,14 @@ from .address import GroupAddress, IndividualAddress, InternalGroupAddress
 from .apci import APCI
 
 
+class Priority(Enum):
+    """Priority of KNX telegram"""
+    SYSTEM = 0
+    URGENT = 1
+    NORMAL = 2
+    LOW = 3
+
+
 class TPDUType(Enum):
     """Types of TPDU."""
 
@@ -51,7 +59,7 @@ class Telegram:
         payload: APCI | None = None,
         source_address: IndividualAddress = IndividualAddress(0),
         tpdu_type: TPDUType = TPDUType.T_DATA,
-        prio_system: bool = False,
+        priority: Priotity = Priority.LOW,
     ) -> None:
         """Initialize Telegram class."""
         self.destination_address = destination_address
@@ -59,7 +67,7 @@ class Telegram:
         self.payload = payload
         self.source_address = source_address
         self.tpdu_type = tpdu_type
-        self.prio_system = prio_system
+        self.priority = priority
         self.timestamp = datetime.now()
 
     def __str__(self) -> str:
