@@ -462,7 +462,11 @@ class Light(Device):
 
     @property
     def current_hs_color(self) -> tuple[float, float] | None:
-        """Return current HS-color of the light."""
+        """Return current HS-color of the light.
+
+        Hue is scaled 0-360 (265 possible values from KNX)
+        Sat is scaled 0-100
+        """
         if (hue := self.hue.value) is not None and (
             (saturation := self.saturation.value) is not None
         ):

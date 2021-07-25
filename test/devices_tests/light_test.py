@@ -1368,6 +1368,36 @@ class TestLight:
         await light.process(telegram)
         assert light.current_color == (None, 42)
 
+    async def test_process_hs_color(self):
+        """Test process / reading telegrams from telegram queue. Test if color is processed."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_hue="1/2/4",
+            group_address_hue_state="1/4/4",
+            group_address_saturation="1/2/5",
+            group_address_saturation_state="1/4/5",
+        )
+        assert light.current_hs_color is None
+        # initialize hue
+        await light.process(
+            Telegram(
+                destination_address=GroupAddress("1/4/4"),
+                payload=GroupValueWrite(DPTArray((0x2E,))),
+            )
+        )
+        assert light.current_hs_color is None
+        # initialize saturation
+        await light.process(
+            Telegram(
+                destination_address=GroupAddress("1/4/5"),
+                payload=GroupValueWrite(DPTArray((0x55,))),
+            )
+        )
+        assert light.current_hs_color == (65, 33)
+
     async def test_process_xyy_color(self):
         """Test process / reading telegrams from telegram queue. Test if color is processed."""
         xknx = XKNX()
