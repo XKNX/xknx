@@ -24,6 +24,7 @@ from xknx.remote_value import (
     RemoteValueColorRGBW,
     RemoteValueColorXYY,
     RemoteValueDpt2ByteUnsigned,
+    RemoteValueNumeric,
     RemoteValueScaling,
     RemoteValueSwitch,
 )
@@ -126,6 +127,10 @@ class Light(Device):
         group_address_color_state: GroupAddressesType | None = None,
         group_address_rgbw: GroupAddressesType | None = None,
         group_address_rgbw_state: GroupAddressesType | None = None,
+        group_address_hue: GroupAddressesType | None = None,
+        group_address_hue_state: GroupAddressesType | None = None,
+        group_address_saturation: GroupAddressesType | None = None,
+        group_address_saturation_state: GroupAddressesType | None = None,
         group_address_xyy_color: GroupAddressesType | None = None,
         group_address_xyy_color_state: GroupAddressesType | None = None,
         group_address_tunable_white: GroupAddressesType | None = None,
@@ -193,6 +198,28 @@ class Light(Device):
             group_address_rgbw_state,
             sync_state=sync_state,
             device_name=self.name,
+            after_update_cb=self.after_update,
+        )
+
+        self.hue = RemoteValueNumeric(
+            xknx,
+            group_address_hue,
+            group_address_hue_state,
+            sync_state=sync_state,
+            value_type="angle",
+            device_name=self.name,
+            feature_name="Hue",
+            after_update_cb=self.after_update,
+        )
+
+        self.saturation = RemoteValueNumeric(
+            xknx,
+            group_address_saturation,
+            group_address_saturation_state,
+            sync_state=sync_state,
+            value_type="percent",
+            device_name=self.name,
+            feature_name="Saturation",
             after_update_cb=self.after_update,
         )
 
@@ -285,6 +312,8 @@ class Light(Device):
         yield self.brightness
         yield self.color
         yield self.rgbw
+        yield self.hue
+        yield self.saturation
         yield self.xyy_color
         yield self.tunable_white
         yield self.color_temperature
@@ -314,6 +343,11 @@ class Light(Device):
         return self.rgbw.initialized or all(
             c.brightness.initialized for c in self._iter_individual_colors()
         )
+
+    @property
+    def supports_hs_color(self) -> bool:
+        """Return if light supports HS-color."""
+        return self.hue.initialized and self.saturation.initialized
 
     @property
     def supports_xyy_color(self) -> bool:
@@ -426,6 +460,32 @@ class Light(Device):
                     return
             logger.warning("Colors not supported for device %s", self.get_name())
 
+    @property
+    def current_hs_color(self) -> tuple[float, float] | None:
+        """Return current HS-color of the light."""
+        if (hue := self.hue.value) is not None and (
+            (saturation := self.saturation.value) is not None
+        ):
+            return (hue, saturation)
+        return None
+
+    async def set_hs_color(self, hs_color: tuple[float, float]) -> None:
+        """Set HS-color of the light."""
+        if not self.supports_hs_color:
+            logger.warning("HS-color not supported for device %s", self.get_name())
+            return
+        value_sent = False
+        if (hue := hs_color[0]) != self.hue.value:
+            await self.hue.set(hue)
+            value_sent = True
+        if (saturation := hs_color[1]) != self.saturation.value:
+            await self.saturation.set(saturation)
+            value_sent = True
+        if not value_sent:
+            # at least one value shall be sent to enable turn-on by hs_color
+            await self.hue.set(hue)
+            await self.saturation.set(saturation)
+
     async def _xyy_color_from_rv(self) -> None:
         """Update the current xyY-color from RemoteValue (Callback)."""
         new_xyy = self.xyy_color.value
@@ -500,6 +560,18 @@ class Light(Device):
             "" if not self.supports_rgbw else f" rgbw={self.rgbw.group_addr_str()}"
         )
 
+        str_hue = (
+            ""
+            if not self.hue.initialized
+            else f" brightness={self.hue.group_addr_str()}"
+        )
+
+        str_saturation = (
+            ""
+            if not self.saturation.initialized
+            else f" brightness={self.saturation.group_addr_str()}"
+        )
+
         str_xyy_color = (
             ""
             if not self.supports_xyy_color
@@ -561,21 +633,26 @@ class Light(Device):
             else f" white_brightness={self.white.brightness.group_addr_str()}"
         )
 
-        return '<Light name="{}" ' "switch={}{}{}{}{}{}{}{}{}{}{}{}{}{}{} />".format(
-            self.name,
-            self.switch.group_addr_str(),
-            str_brightness,
-            str_color,
-            str_rgbw,
-            str_xyy_color,
-            str_tunable_white,
-            str_color_temperature,
-            str_red_state,
-            str_red_brightness,
-            str_green_state,
-            str_green_brightness,
-            str_blue_state,
-            str_blue_brightness,
-            str_white_state,
-            str_white_brightness,
+        return (
+            '<Light name="{}" '
+            "switch={}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{} />".format(
+                self.name,
+                self.switch.group_addr_str(),
+                str_brightness,
+                str_color,
+                str_rgbw,
+                str_hue,
+                str_saturation,
+                str_xyy_color,
+                str_tunable_white,
+                str_color_temperature,
+                str_red_state,
+                str_red_brightness,
+                str_green_state,
+                str_green_brightness,
+                str_blue_state,
+                str_blue_brightness,
+                str_white_state,
+                str_white_brightness,
+            )
         )
