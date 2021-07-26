@@ -189,6 +189,37 @@ class TestLight:
         )
         assert not light.supports_rgbw
 
+    def test_supports_hs_color_true(self):
+        """Test supports_hs_color true."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Hue and saturation",
+            group_address_switch="1/6/4",
+            group_address_hue="1/6/5",
+            group_address_saturation="1/6/6",
+        )
+        assert light.supports_hs_color
+
+    def test_supports_hs_color_false(self):
+        """Test supports_hs_color false."""
+        xknx = XKNX()
+        light_hue = Light(
+            xknx,
+            "Light hue only",
+            group_address_switch="1/6/4",
+            group_address_hue="1/6/5",
+        )
+        assert not light_hue.supports_hs_color
+
+        light_saturation = Light(
+            xknx,
+            "Light saturation only",
+            group_address_switch="1/6/4",
+            group_address_saturation="1/6/5",
+        )
+        assert not light_saturation.supports_hs_color
+
     def test_supports_xyy_color_true(self):
         """Test supports_xyy_color true."""
         xknx = XKNX()
@@ -250,7 +281,7 @@ class TestLight:
     # SYNC
     #
     async def test_sync(self):
-        """Test sync function / sending group reads to KNX bus. Testing with a Light without dimm functionality."""
+        """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         light = Light(
             xknx,
@@ -905,7 +936,93 @@ class TestLight:
             )
 
     #
-    # TEST SET COLOR AS RGBW
+    # TEST SET COLOR AS HS
+    #
+    async def test_set_hs_color(self):
+        """Test setting HS value of a Light."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_hue="1/2/4",
+            group_address_saturation="1/2/5",
+        )
+        await light.set_hs_color((359, 99))
+        assert xknx.telegrams.qsize() == 2
+
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/4"),
+            payload=GroupValueWrite(DPTArray((0xFE,))),
+        )
+        await xknx.devices.process(telegram)
+
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTArray((0xFC,))),
+        )
+        await xknx.devices.process(telegram)
+
+        assert light.current_hs_color == (359, 99)
+
+        # change only one
+        await light.set_hs_color((18, 99))
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/4"),
+            payload=GroupValueWrite(DPTArray((0x0D,))),
+        )
+        await xknx.devices.process(telegram)
+
+        await light.set_hs_color((18, 3))
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTArray((0x08,))),
+        )
+        await xknx.devices.process(telegram)
+
+        # call set_hs_color with current color shall trigger both values
+        await light.set_hs_color((18, 3))
+        assert xknx.telegrams.qsize() == 2
+
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/4"),
+            payload=GroupValueWrite(DPTArray((0x0D,))),
+        )
+        await xknx.devices.process(telegram)
+
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTArray((0x08,))),
+        )
+        await xknx.devices.process(telegram)
+
+    async def test_set_hs_color_not_possible(self):
+        """Test setting HS value of a light not supporting it."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_color="1/2/4",
+        )
+        with patch("logging.Logger.warning") as mock_warn:
+            await light.set_hs_color((22, 25))
+
+            assert xknx.telegrams.qsize() == 0
+            mock_warn.assert_called_with(
+                "HS-color not supported for device %s", "TestLight"
+            )
+
+    #
+    # TEST SET COLOR AS XYY
     #
     async def test_set_xyy_color(self):
         """Test setting XYY value of a Light."""
@@ -927,7 +1044,7 @@ class TestLight:
         assert light.current_xyy_color == ((0.52, 0.31), 25)
 
     async def test_set_xyy_color_not_possible(self):
-        """Test setting XYY value of a non light without color."""
+        """Test setting XYY value of a light not supporting it."""
         xknx = XKNX()
         light = Light(
             xknx,
@@ -1251,6 +1368,36 @@ class TestLight:
         await light.process(telegram)
         assert light.current_color == (None, 42)
 
+    async def test_process_hs_color(self):
+        """Test process / reading telegrams from telegram queue. Test if color is processed."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_hue="1/2/4",
+            group_address_hue_state="1/4/4",
+            group_address_saturation="1/2/5",
+            group_address_saturation_state="1/4/5",
+        )
+        assert light.current_hs_color is None
+        # initialize hue
+        await light.process(
+            Telegram(
+                destination_address=GroupAddress("1/4/4"),
+                payload=GroupValueWrite(DPTArray((0x2E,))),
+            )
+        )
+        assert light.current_hs_color is None
+        # initialize saturation
+        await light.process(
+            Telegram(
+                destination_address=GroupAddress("1/4/5"),
+                payload=GroupValueWrite(DPTArray((0x55,))),
+            )
+        )
+        assert light.current_hs_color == (65, 33)
+
     async def test_process_xyy_color(self):
         """Test process / reading telegrams from telegram queue. Test if color is processed."""
         xknx = XKNX()
@@ -1427,6 +1574,10 @@ class TestLight:
             group_address_color_temperature_state="1/7/10",
             group_address_rgbw="1/7/11",
             group_address_rgbw_state="1/7/12",
+            group_address_hue="1/7/81",
+            group_address_hue_state="1/7/82",
+            group_address_saturation="1/7/83",
+            group_address_saturation_state="1/7/84",
             group_address_xyy_color="1/7/13",
             group_address_xyy_color_state="1/7/14",
             group_address_switch_red="1/1/1",
@@ -1458,9 +1609,16 @@ class TestLight:
         assert light.has_group_address(GroupAddress("1/7/10"))
         assert light.has_group_address(GroupAddress("1/7/11"))
         assert light.has_group_address(GroupAddress("1/7/12"))
+        # hue
+        assert light.has_group_address(GroupAddress("1/7/81"))
+        assert light.has_group_address(GroupAddress("1/7/82"))
+        # saturation
+        assert light.has_group_address(GroupAddress("1/7/83"))
+        assert light.has_group_address(GroupAddress("1/7/84"))
+        # xyy
         assert light.has_group_address(GroupAddress("1/7/13"))
         assert light.has_group_address(GroupAddress("1/7/14"))
-
+        # individual
         assert light.has_group_address(GroupAddress("1/1/1"))
         assert light.has_group_address(GroupAddress("1/1/2"))
         assert light.has_group_address(GroupAddress("1/1/3"))

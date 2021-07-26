@@ -1,5 +1,11 @@
 # Changelog
 
+## unreleased changes
+
+### Devices
+
+- Light: Support for HS-color (DPT 5.003 hue and 5.001 saturation)
+
 ## 0.18.8 Position-only cover 2021-06.30
 
 ### Devices

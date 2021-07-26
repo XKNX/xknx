@@ -23,6 +23,10 @@ The Light object is either a representation of a binary or dimm actor, LED-contr
 - `group_address_color_state` KNX group address for the current RGB color. *DPT 232.600*
 - `group_address_rgbw` KNX group address to set the RGBW color. *DPT 251.600*
 - `group_address_rgbw_state` KNX group address for the current RGBW color. *DPT 251.600*
+- `group_address_hue` KNX group address to set the current hue. *DPT 5.003*
+- `group_address_hue_state` KNX group address for the current hue. *DPT 5.003*
+- `group_address_saturation` KNX group address to set the current saturation. *DPT 5.001*
+- `group_address_saturation_state` KNX group address for the current saturation. *DPT 5.001*
 - `group_address_xyy_color`: KNX group address to set the xyY color. *DPT 242.600*
 - `group_address_xyy_color_state`: KNX group address for the current xyY color. *DPT 242.600*
 - `group_address_tunable_white` KNX group address to set relative color temperature. *DPT 5.001*
@@ -165,4 +169,25 @@ print(light.supports_color_temperature)
 # Requesting current state via KNX GroupValueRead for all _state addresses
 await light.sync()
 
+```
+
+## [](#header-2)Example: HSV-color light
+
+```python
+light = Light(
+    xknx,
+    "Hue and saturation",
+    group_address_switch="1/1/1",
+    group_address_switch_state='1/2/1',
+    group_address_brightness='1/1/2',
+    group_address_brightness_state='1/2/2',
+    group_address_hue="1/1/3",
+    group_address_hue_state="1/2/3",
+    group_address_saturation="1/1/4",
+    group_address_saturation_state="1/2/4",
+)
+print(light.supports_brightness)
+print(light.supports_hs_color)
+
+await light.set_hs_color((25,40))
 ```
