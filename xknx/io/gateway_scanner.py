@@ -67,7 +67,10 @@ class GatewayDescriptor:
 
 
 class GatewayScanFilter:
-    """Filter to limit gateway scan attempts."""
+    """Filter to limit gateway scan attempts.
+
+    If `tunnelling` and `routing` are True it is treated as OR.
+    """
 
     def __init__(
         self,
@@ -84,14 +87,13 @@ class GatewayScanFilter:
         """Check whether the given GatewayDescriptor matches the filter."""
         if self.name is not None and self.name != gateway.name:
             return False
-        if (
-            self.tunnelling is not None
-            and self.tunnelling != gateway.supports_tunnelling
-        ):
-            return False
-        if self.routing is not None and self.routing != gateway.supports_routing:
-            return False
-        return True
+        if self.tunnelling is None and self.routing is None:
+            return True
+        if self.tunnelling is gateway.supports_tunnelling:
+            return True
+        if self.routing is gateway.supports_routing:
+            return True
+        return False
 
 
 class GatewayScanner:
