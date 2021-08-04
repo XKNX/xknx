@@ -71,6 +71,9 @@ class DPTHVACContrMode(_DPTClimateMode[HVACControllerMode]):
     DPT 20.105
     """
 
+    dpt_main_number = 20
+    dpt_sub_number = 105
+
     SUPPORTED_MODES: dict[int, HVACControllerMode] = {
         0: HVACControllerMode.AUTO,
         1: HVACControllerMode.HEAT,
@@ -95,6 +98,9 @@ class DPTHVACMode(_DPTClimateMode[HVACOperationMode]):
 
     DPT 20.102
     """
+
+    dpt_main_number = 20
+    dpt_sub_number = 102
 
     SUPPORTED_MODES: dict[int, HVACOperationMode] = {
         0: HVACOperationMode.AUTO,
