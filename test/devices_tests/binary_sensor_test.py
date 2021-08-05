@@ -1,5 +1,4 @@
 """Unit test for BinarySensor objects."""
-import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -72,10 +71,10 @@ class TestBinarySensor:
         await bs_invert.process(telegram_off)
         assert bs_invert.state is False
 
-    async def test_process_reset_after(self):
+    async def test_process_reset_after(self, time_travel):
         """Test process / reading telegrams from telegram queue."""
         xknx = XKNX()
-        reset_after_sec = 0.001
+        reset_after_sec = 1
         async_after_update_callback = AsyncMock()
         binaryinput = BinarySensor(
             xknx,
@@ -91,7 +90,8 @@ class TestBinarySensor:
 
         await binaryinput.process(telegram_on)
         assert binaryinput.state
-        await asyncio.sleep(reset_after_sec * 1.2)
+
+        await time_travel(reset_after_sec)
         assert not binaryinput.state
         # once for 'on' and once for 'off'
         assert async_after_update_callback.call_count == 2
@@ -105,7 +105,8 @@ class TestBinarySensor:
         # second and third telegram resets timer but doesn't run callback
         async_after_update_callback.assert_called_once()
         assert binaryinput.state
-        await asyncio.sleep(reset_after_sec * 1.2)
+
+        await time_travel(reset_after_sec)
         assert not binaryinput.state
         # once for 'on' and once for 'off'
         assert async_after_update_callback.call_count == 2

@@ -9,7 +9,7 @@ with open(path.join(THIS_DIRECTORY, "README.md"), encoding="utf-8") as f:
 
 VERSION = {}
 # pylint: disable=exec-used
-with open(path.join(THIS_DIRECTORY, "xknx/__version__.py")) as fp:
+with open(path.join(THIS_DIRECTORY, "xknx/__version__.py"), encoding="utf-8") as fp:
     exec(fp.read(), VERSION)
 
 REQUIRES = ["netifaces>=0.10.9"]

@@ -1,5 +1,4 @@
 """Unit test for Switch objects."""
-import asyncio
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -158,10 +157,10 @@ class TestSwitch:
         await switch.process(telegram_inv_off)
         assert switch.state is False
 
-    async def test_process_reset_after(self):
+    async def test_process_reset_after(self, time_travel):
         """Test process reset_after."""
         xknx = XKNX()
-        reset_after_sec = 0.001
+        reset_after_sec = 1
         switch = Switch(
             xknx, "TestInput", group_address="1/2/3", reset_after=reset_after_sec
         )
@@ -173,12 +172,12 @@ class TestSwitch:
         await switch.process(telegram_on)
         assert switch.state
         assert xknx.telegrams.qsize() == 0
-        await asyncio.sleep(reset_after_sec * 2)
+        await time_travel(reset_after_sec)
         assert xknx.telegrams.qsize() == 1
         await switch.process(xknx.telegrams.get_nowait())
         assert not switch.state
 
-    async def test_process_reset_after_cancel_existing(self):
+    async def test_process_reset_after_cancel_existing(self, time_travel):
         """Test process reset_after cancels existing reset tasks."""
         xknx = XKNX()
         reset_after_sec = 0.01
@@ -193,12 +192,12 @@ class TestSwitch:
         await switch.process(telegram_on)
         assert switch.state
         assert xknx.telegrams.qsize() == 0
-        await asyncio.sleep(reset_after_sec / 2)
+        await time_travel(reset_after_sec / 2)
         # half way through the reset timer
         await switch.process(telegram_on)
         assert switch.state
 
-        await asyncio.sleep(reset_after_sec / 2)
+        await time_travel(reset_after_sec / 2)
         assert xknx.telegrams.qsize() == 0
 
     async def test_process_callback(self):
