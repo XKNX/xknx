@@ -658,8 +658,9 @@ class DeviceDescriptorRead(APCI):
     def __init__(self, descriptor: int = 0, is_numbered: bool = False) -> None:
         """Initialize a new instance of DeviceDescriptorRead."""
         self.descriptor = descriptor
+        self.additional_flags = None
         if is_numbered:
-            self.additional_flags = APCIAdditionalFlags.NUMBERED_DATA_PACKET 
+            self.additional_flags = APCIAdditionalFlags.NUMBERED_DATA_PACKET
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -677,7 +678,8 @@ class DeviceDescriptorRead(APCI):
         return encode_cmd_and_payload(
             self.CODE,
             encoded_payload=self.descriptor,
-            additional_flags=self.additional_flags)
+            additional_flags=self.additional_flags,
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -758,7 +760,8 @@ class Restart(APCI):
         return encode_cmd_and_payload(
             self.CODE,
             additional_flags=additional_flags,
-            sequence_number=self.sequqence_number)
+            sequence_number=self.sequqence_number,
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -1191,8 +1194,9 @@ class PropertyValueRead(APCI):
         self.property_id = property_id
         self.count = count
         self.start_index = start_index
+        self.additional_flags = None
         if is_numbered:
-            self.additional_flags = APCIAdditionalFlags.NUMBERED_DATA_PACKET 
+            self.additional_flags = APCIAdditionalFlags.NUMBERED_DATA_PACKET
         self.sequence_number = sequence_number
 
     def calculated_length(self) -> int:
@@ -1227,7 +1231,8 @@ class PropertyValueRead(APCI):
             self.CODE,
             appended_payload=payload,
             additional_flags=self.additional_flags,
-            sequence_number=self.sequence_number)
+            sequence_number=self.sequence_number,
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""

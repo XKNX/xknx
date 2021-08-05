@@ -20,9 +20,9 @@ from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
 
 from .knxip_enum import CEMIFlags, CEMIMessageCode
-from _ast import Continue
-from xknx.knxip.knxip_enum import CEMIFlags
-from xknx import telegram
+
+# from _ast import Continue
+# from xknx import telegram
 from xknx.telegram.telegram import Priority
 
 if TYPE_CHECKING:
@@ -97,7 +97,7 @@ class CEMIFrame:
         elif telegram.priority == Priority.LOW:
             self.flags |= CEMIFlags.PRIORITY_LOW
         else:
-            raise RuntimeError("Unknown telegram priority: "+telegram.priority)
+            raise RuntimeError("Unknown telegram priority: " + str(telegram.priority))
 
         if isinstance(telegram.destination_address, GroupAddress):
             self.flags |= CEMIFlags.DESTINATION_GROUP_ADDRESS

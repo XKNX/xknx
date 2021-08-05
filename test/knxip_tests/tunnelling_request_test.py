@@ -43,9 +43,9 @@ class TestKNXIPTunnelingRequest:
         assert isinstance(knxipframe.body, TunnellingRequest)
         assert knxipframe.body.communication_channel_id == 1
         assert knxipframe.body.sequence_counter == 23
-        assert isinstance(knxipframe.body.cemi, CEMIFrame)
+        assert isinstance(knxipframe.body.pdu, CEMIFrame)
 
-        assert knxipframe.body.cemi.telegram == Telegram(
+        assert knxipframe.body.pdu.telegram == Telegram(
             destination_address=GroupAddress("9/0/8"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
@@ -56,7 +56,7 @@ class TestKNXIPTunnelingRequest:
             payload=GroupValueWrite(DPTBinary(1)),
         )
         tunnelling_request = TunnellingRequest(
-            xknx, communication_channel_id=1, sequence_counter=23, cemi=cemi
+            xknx, communication_channel_id=1, sequence_counter=23, pdu=cemi
         )
         knxipframe2 = KNXIPFrame.init_from_body(tunnelling_request)
 

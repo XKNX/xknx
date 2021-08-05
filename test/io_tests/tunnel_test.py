@@ -42,6 +42,9 @@ class TestTunnelling:
         self.tg_received_mock.assert_called_once_with(telegram)
         send_ack_mock.assert_called_once_with(0x02, 0x21)
 
+    '''
+    This test is now useless because "too small CEMIs are handeled as TPDUs
+    
     @patch("xknx.io.Tunnel._send_tunnelling_ack")
     def test_tunnel_request_received_cemi_too_small(self, send_ack_mock):
         """Test Tunnel sending ACK for unsupported frames."""
@@ -53,6 +56,7 @@ class TestTunnelling:
         self.tunnel.udp_client.data_received_callback(raw)
         self.tg_received_mock.assert_not_called()
         send_ack_mock.assert_called_once_with(0x02, 0x81)
+    '''
 
     @patch("xknx.io.Tunnel._send_tunnelling_ack")
     def test_tunnel_request_received_apci_unsupported(self, send_ack_mock):

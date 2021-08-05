@@ -32,27 +32,25 @@ class TunnellingRequest(KNXIPBody):
         xknx: XKNX,
         communication_channel_id: int = 1,
         sequence_counter: int = 0,
-        cemi: CEMIFrame | TPDU | None = None,
+        pdu: CEMIFrame | TPDU | None = None,
     ):
         """Initialize TunnellingRequest object."""
         super().__init__(xknx)
 
         self.communication_channel_id = communication_channel_id
         self.sequence_counter = sequence_counter
-        self.cemi: CEMIFrame | TPDU | None = (
-            cemi
-            if cemi is not None
-            else CEMIFrame(xknx, code=CEMIMessageCode.L_DATA_REQ)
+        self.pdu: CEMIFrame | TPDU | None = (
+            pdu if pdu is not None else CEMIFrame(xknx, code=CEMIMessageCode.L_DATA_REQ)
         )
 
     def calculated_length(self) -> int:
         """Get length of KNX/IP body."""
-        assert self.cemi is not None
-        return TunnellingRequest.HEADER_LENGTH + self.cemi.calculated_length()
+        assert self.pdu is not None
+        return TunnellingRequest.HEADER_LENGTH + self.pdu.calculated_length()
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-        assert self.cemi is not None
+        assert self.pdu is not None
 
         def header_from_knx(header: bytes) -> int:
             """Parse header bytes."""
@@ -67,20 +65,20 @@ class TunnellingRequest(KNXIPBody):
         pos = header_from_knx(raw)
         if len(raw[pos:]) == 10:
             # TPDU
-            self.cemi = TPDU(self.xknx)
+            self.pdu = TPDU(self.xknx)
         try:
-            pos += self.cemi.from_knx(raw[pos:])
+            pos += self.pdu.from_knx(raw[pos:])
         except UnsupportedCEMIMessage as unsupported_cemi_err:
             logger.debug("CEMI not supported: %s", unsupported_cemi_err)
-            # Set cemi to None - this is checked in Tunnel() to send Ack even for unsupported CEMI messages.
-            self.cemi = None
+            # Set pdu to None - this is checked in Tunnel() to send Ack even for unsupported CEMI messages.
+            self.pdu = None
             return len(raw)
 
         return pos
 
     def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
-        if self.cemi is None:
+        if self.pdu is None:
             raise CouldNotParseKNXIP("No CEMIFrame defined.")
 
         def header_to_knx() -> list[int]:
@@ -94,14 +92,14 @@ class TunnellingRequest(KNXIPBody):
 
         data = []
         data.extend(header_to_knx())
-        data.extend(self.cemi.to_knx())
+        data.extend(self.pdu.to_knx())
         return data
 
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
             '<TunnellingRequest communication_channel_id="{}" '
-            'sequence_counter="{}" cemi="{}" />'.format(
-                self.communication_channel_id, self.sequence_counter, self.cemi
+            'sequence_counter="{}" pdu="{}" />'.format(
+                self.communication_channel_id, self.sequence_counter, self.pdu
             )
         )

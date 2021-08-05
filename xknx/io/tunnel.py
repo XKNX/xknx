@@ -286,13 +286,13 @@ class Tunnel(Interface):
             tunneling_request.communication_channel_id,
             tunneling_request.sequence_counter,
         )
-        # Don't handle invalid cemi frames (None) and only handle incoming L_DATA_IND frames.
+        # Don't handle invalid pdu frames (None) and only handle incoming L_DATA_IND frames.
         # Ignore L_DATA_CON confirmation frames. L_DATA_REQ frames should only be outgoing.
         if (
-            tunneling_request.cemi is not None
-            and tunneling_request.cemi.code is CEMIMessageCode.L_DATA_IND
+            tunneling_request.pdu is not None
+            and tunneling_request.pdu.code is CEMIMessageCode.L_DATA_IND
         ):
-            telegram = tunneling_request.cemi.telegram
+            telegram = tunneling_request.pdu.telegram
             telegram.direction = TelegramDirection.INCOMING
             if self.telegram_received_callback is not None:
                 self.telegram_received_callback(telegram)

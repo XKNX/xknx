@@ -10,8 +10,10 @@ from xknx.exceptions import UnsupportedCEMIMessage
 from .knxip_enum import CEMIMessageCode
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
+
     # from typing import Union, List
     from Adress import InternalGroupAddress
 
@@ -21,20 +23,24 @@ class TPDU:
 
     def __init__(
         self,
-        xknx: "XKNX",
+        xknx: XKNX,
         src_addr: IndividualAddress = IndividualAddress(None),
     ):
         """Initialize TPDU."""
         self.xknx = xknx
         self.src_addr = src_addr
-        self.destination_address: GroupAddress | IndividualAddress | InternalGroupAddress = IndividualAddress(None)
+        self.destination_address: GroupAddress | IndividualAddress | InternalGroupAddress = IndividualAddress(
+            None
+        )
         self.tpdu_type: TPDUType | None = None
+        self.code: CEMIMessageCode | None = None
+        self.data = bytes()
 
     @staticmethod
     def init_from_telegram(
-        xknx: "XKNX",
+        xknx: XKNX,
         telegram: Telegram,
-        src_addr: IndividualAddress = IndividualAddress(None)
+        src_addr: IndividualAddress = IndividualAddress(None),
     ) -> TPDU:
         """Return TPDU from a Telegram."""
         tpdu = TPDU(xknx, src_addr)
@@ -44,8 +50,9 @@ class TPDU:
     @property
     def telegram(self) -> Telegram:
         """Return telegram."""
-        return Telegram(destination_address=self.destination_address,
-                        )
+        return Telegram(
+            destination_address=self.destination_address,
+        )
 
     @telegram.setter
     def telegram(self, telegram: Telegram) -> None:
@@ -55,13 +62,6 @@ class TPDU:
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-        '''
-        if raw[0] != 0x11:
-            raise UnsupportedCEMIMessage(
-                "Invalid TPDU message code: {} in TPDU: {}".format(
-                    raw[0], raw.hex()
-                ))
-        '''
         try:
             self.code = CEMIMessageCode(raw[0])
         except ValueError:
@@ -80,25 +80,21 @@ class TPDU:
 
     def to_knx(self) -> list[int]:
         """Convert PDU to KNX."""
-        data = [0x11, 0x00, 0xb0, 0x60, 0x00, 0x00]
+        data = [0x11, 0x00, 0xB0, 0x60, 0x00, 0x00]
         data += self.destination_address.to_knx()
         if self.tpdu_type == TPDUType.T_CONNECT:
             return data + [0x00, 0x80]
         if self.tpdu_type == TPDUType.T_DISCONNECT:
             return data + [0x00, 0x81]
         if self.tpdu_type == TPDUType.T_ACK:
-            return data + [0x00, 0xc2]
+            return data + [0x00, 0xC2]
         if self.tpdu_type == TPDUType.T_ACK_NUMBERED:
-            return data + [0x00, 0xc6]
+            return data + [0x00, 0xC6]
         raise RuntimeError("Invalid TPDUType" + str(self.tpdu_type))
 
     def __str__(self) -> str:
         """Return object as readable string."""
         res = '<TPDUFrame DestinationAddress="{}" '.format(
-            self.destination_address.__repr__())
-        '''
-        data = self.to_knx()
-        for i in data:
-            res += hex(i) + " "
-        '''
+            self.destination_address.__repr__()
+        )
         return res

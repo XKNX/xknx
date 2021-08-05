@@ -23,7 +23,8 @@ from .apci import APCI
 
 
 class Priority(Enum):
-    """Priority of KNX telegram"""
+    """Priority of KNX telegram."""
+
     SYSTEM = 0
     URGENT = 1
     NORMAL = 2
@@ -59,7 +60,7 @@ class Telegram:
         payload: APCI | None = None,
         source_address: IndividualAddress = IndividualAddress(0),
         tpdu_type: TPDUType = TPDUType.T_DATA,
-        priority: Priotity = Priority.LOW,
+        priority: Priority = Priority.LOW,
     ) -> None:
         """Initialize Telegram class."""
         self.destination_address = destination_address

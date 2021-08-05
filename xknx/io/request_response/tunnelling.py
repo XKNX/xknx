@@ -58,12 +58,13 @@ class Tunnelling(RequestResponse):
             pdu = TPDU.init_from_telegram(
                 self.xknx,
                 telegram=self.telegram,
-                src_addr=self.src_address,)
+                src_addr=self.src_address,
+            )
 
         tunnelling_request = TunnellingRequest(
             self.xknx,
             communication_channel_id=self.communication_channel_id,
             sequence_counter=self.sequence_counter,
-            cemi=pdu,
+            pdu=pdu,
         )
         return KNXIPFrame.init_from_body(tunnelling_request)
