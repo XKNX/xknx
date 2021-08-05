@@ -51,7 +51,7 @@ class BinarySensor(Device):
         self._last_set: float | None = None
         self._reset_task: asyncio.Task[None] | None = None
         self._context_task: asyncio.Task[None] | None = None
-        # TODO: log a warning if reset_after and sync_state are true ? This could cause actions to self-fire.
+
         self.remote_value = RemoteValueSwitch(
             xknx,
             group_address_state=group_address_state,
@@ -100,20 +100,15 @@ class BinarySensor(Device):
                     self._counter_task(self._context_timeout)
                 )
             else:
-                await self._trigger_callbacks()
+                await self.after_update()
 
     async def _counter_task(self, wait_seconds: float) -> None:
         """Trigger after 1 second to prevent double triggers."""
         await asyncio.sleep(wait_seconds)
-        await self._trigger_callbacks()
+        await self.after_update()
 
         self._count_set_on = 0
         self._count_set_off = 0
-
-        await self.after_update()
-
-    async def _trigger_callbacks(self) -> None:
-        """Trigger callbacks for device if any."""
         await self.after_update()
 
     @property
