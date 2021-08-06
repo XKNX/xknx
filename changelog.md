@@ -4,7 +4,7 @@
 
 ### Internals
 
-- GatewayScanFilter: Treat `tunnelling` and `routing` attributes as OR when both are `True`.
+- GatewayScanFilter: Ignore non-gateway KNX/IP devices
 
 ## 0.18.9 HS-color 2021-07-26
 
