@@ -67,7 +67,11 @@ class GatewayDescriptor:
 
 
 class GatewayScanFilter:
-    """Filter to limit gateway scan attempts."""
+    """Filter to limit gateway scan attempts.
+
+    If `tunnelling` and `routing` are set it is treated as AND.
+    KNX/IP devices that don't support `tunnelling` or `routing` aren't matched.
+    """
 
     def __init__(
         self,
@@ -81,7 +85,7 @@ class GatewayScanFilter:
         self.routing = routing
 
     def match(self, gateway: GatewayDescriptor) -> bool:
-        """Check whether the given GatewayDescriptor matches the filter."""
+        """Check whether the device is a gateway and given GatewayDescriptor matches the filter."""
         if self.name is not None and self.name != gateway.name:
             return False
         if (
@@ -91,7 +95,7 @@ class GatewayScanFilter:
             return False
         if self.routing is not None and self.routing != gateway.supports_routing:
             return False
-        return True
+        return gateway.supports_tunnelling or gateway.supports_routing
 
 
 class GatewayScanner:

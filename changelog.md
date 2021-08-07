@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Internals
+
+- GatewayScanFilter: Ignore non-gateway KNX/IP devices
+
 ## 0.18.9 HS-color 2021-07-26
 
 ### Devices
