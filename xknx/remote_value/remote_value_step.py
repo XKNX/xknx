@@ -22,18 +22,12 @@ class RemoteValueStep(RemoteValue):
 
     def __init__(self,
                  xknx,
-                 group_address=None,
-                 group_address_state=None,
-                 device_name=None,
-                 after_update_cb=None,
-                 invert=False):
+                 *a,
+                 invert=False,
+                 **kw):
         """Initialize remote value of KNX DPT 1.007."""
         # pylint: disable=too-many-arguments
-        super().__init__(xknx,
-                         group_address,
-                         group_address_state,
-                         device_name=device_name,
-                         after_update_cb=after_update_cb)
+        super().__init__(xknx, *a, **kw)
         self.invert = invert
 
     def payload_valid(self, payload):

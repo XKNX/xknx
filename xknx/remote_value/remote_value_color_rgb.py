@@ -12,20 +12,6 @@ from .remote_value import RemoteValue
 class RemoteValueColorRGB(RemoteValue):
     """Abstraction for remote value of KNX DPT 232.600 (DPT_Color_RGB)."""
 
-    def __init__(self,
-                 xknx,
-                 group_address=None,
-                 group_address_state=None,
-                 device_name=None,
-                 after_update_cb=None):
-        """Initialize remote value of KNX DPT 232.600 (DPT_Color_RGB)."""
-        # pylint: disable=too-many-arguments
-        super().__init__(xknx,
-                         group_address,
-                         group_address_state,
-                         device_name=device_name,
-                         after_update_cb=after_update_cb)
-
     def payload_valid(self, payload):
         """Test if telegram payload may be parsed."""
         return (isinstance(payload, DPTArray)

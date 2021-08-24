@@ -201,20 +201,12 @@ class RemoteValueSensor(RemoteValue):
 
     def __init__(self,
                  xknx,
-                 group_address=None,
-                 group_address_state=None,
-                 sync_state=True,
+                 *a,
                  value_type=None,
-                 device_name=None,
-                 after_update_cb=None):
+                 **kw):
         """Initialize RemoteValueSensor class."""
         # pylint: disable=too-many-arguments
-        super().__init__(xknx,
-                         group_address,
-                         group_address_state,
-                         sync_state=sync_state,
-                         device_name=device_name,
-                         after_update_cb=after_update_cb)
+        super().__init__(xknx, *a, **kw)
         if value_type not in self.DPTMAP:
             raise ConversionError("invalid value type", value_type=value_type, device_name=device_name)
         self.value_type = value_type

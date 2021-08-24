@@ -12,17 +12,9 @@ from .remote_value import RemoteValue
 class RemoteValueColorRGBW(RemoteValue):
     """Abstraction for remote value of KNX DPT 251.600 (DPT_Color_RGBW)."""
 
-    def __init__(self,
-                 xknx,
-                 group_address=None,
-                 group_address_state=None,
-                 device_name=None,
-                 after_update_cb=None):
+    def __init__(self, xknx, *a, **kw):
         """Initialize remote value of KNX DPT 251.600 (DPT_Color_RGBW)."""
-        # pylint: disable=too-many-arguments
-        super(RemoteValueColorRGBW, self).__init__(
-            xknx, group_address, group_address_state,
-            device_name=device_name, after_update_cb=after_update_cb)
+        super().__init__(xknx, *a, **kw)
         self.previous_value = (0, 0, 0, 0)
 
     def payload_valid(self, payload):

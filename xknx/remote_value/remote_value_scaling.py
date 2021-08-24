@@ -13,19 +13,13 @@ class RemoteValueScaling(RemoteValue):
 
     def __init__(self,
                  xknx,
-                 group_address=None,
-                 group_address_state=None,
-                 device_name=None,
-                 after_update_cb=None,
+                 *a,
                  range_from=0,
-                 range_to=100):
+                 range_to=100,
+                 **kw):
         """Initialize remote value of KNX DPT 5.001 (DPT_Scaling)."""
         # pylint: disable=too-many-arguments
-        super().__init__(xknx,
-                         group_address,
-                         group_address_state,
-                         device_name=device_name,
-                         after_update_cb=after_update_cb)
+        super().__init__(xknx, *a, **kw)
         self.range_from = range_from
         self.range_to = range_to
 

@@ -19,7 +19,8 @@ class RemoteValue():
                  group_address_state=None,
                  sync_state=True,
                  device_name=None,
-                 after_update_cb=None):
+                 after_update_cb=None,
+                 skip_same_payload=True):
         """Initialize RemoteValue class."""
         # pylint: disable=too-many-arguments
         self.xknx = xknx
@@ -35,6 +36,7 @@ class RemoteValue():
             if device_name is None else device_name
         self.after_update_cb = after_update_cb
         self.payload = None
+        self.skip_same_payload = skip_same_payload
 
     @property
     def initialized(self):
@@ -95,7 +97,7 @@ class RemoteValue():
                                         payload=telegram.payload,
                                         group_address=telegram.group_address,
                                         device_name=self.device_name)
-        if self.payload != telegram.payload or self.payload is None:
+        if not self.skip_same_payload or self.payload is None or self.payload != telegram.payload:
             self.payload = telegram.payload
             if self.after_update_cb is not None:
                 await self.after_update_cb()
