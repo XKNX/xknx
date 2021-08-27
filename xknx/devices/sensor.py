@@ -20,7 +20,8 @@ class Sensor(Device):
                  group_address_state=None,
                  sync_state=True,
                  value_type=None,
-                 device_updated_cb=None):
+                 device_updated_cb=None,
+                 ignore_internal_state=False):
         """Initialize Sensor class."""
         # pylint: disable=too-many-arguments
         super().__init__(xknx, name, device_updated_cb)
@@ -31,7 +32,8 @@ class Sensor(Device):
             sync_state=sync_state,
             value_type=value_type,
             device_name=self.name,
-            after_update_cb=self.after_update)
+            after_update_cb=self.after_update,
+            ignore_internal_state=ignore_internal_state)
 
     @classmethod
     def from_config(cls, xknx, name, config):
