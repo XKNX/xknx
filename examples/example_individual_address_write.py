@@ -1,12 +1,12 @@
 """Example for individual address write."""
 import asyncio
 
-# import logging
-
-
-from xknx.telegram.address import IndividualAddress
 from xknx import XKNX
-from prog.management import NetworkManagement, NM_OK, NM_EXISTS, NM_TIME_OUT
+from xknx.telegram.address import IndividualAddress
+
+from prog.management import NM_EXISTS, NM_OK, NM_TIME_OUT, NetworkManagement
+
+# import logging
 
 
 async def main():

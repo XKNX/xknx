@@ -609,7 +609,7 @@ class TestStringRepresentations:
         tunnelling_request.sequence_counter = 42
         assert (
             str(tunnelling_request)
-            == '<TunnellingRequest communication_channel_id="23" sequence_counter="42" cemi="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")"'
+            == '<TunnellingRequest communication_channel_id="23" sequence_counter="42" pdu="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")"'
             ' DestinationAddress="GroupAddress("0/0/0")" Flags="               0" payload="None" />" />'
         )
 

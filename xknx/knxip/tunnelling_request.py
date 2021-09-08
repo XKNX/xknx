@@ -9,11 +9,11 @@ import logging
 from typing import TYPE_CHECKING
 
 from xknx.exceptions import CouldNotParseKNXIP, UnsupportedCEMIMessage
+from xknx.knxip.tpdu import TPDU
 
 from .body import KNXIPBody
 from .cemi_frame import CEMIFrame, CEMIMessageCode
 from .knxip_enum import KNXIPServiceType
-from xknx.knxip.tpdu import TPDU
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX

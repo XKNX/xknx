@@ -10,10 +10,10 @@ from xknx.knxip import (
     TunnellingAck,
     TunnellingRequest,
 )
+from xknx.knxip.tpdu import TPDU
+from xknx.telegram.telegram import TPDUType
 
 from .request_response import RequestResponse
-from xknx.telegram.telegram import TPDUType
-from xknx.knxip.tpdu import TPDU
 
 if TYPE_CHECKING:
     from xknx.io.udp_client import UDPClient

@@ -19,11 +19,11 @@ from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMI
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
 
-from .knxip_enum import CEMIFlags, CEMIMessageCode
-
 # from _ast import Continue
 # from xknx import telegram
 from xknx.telegram.telegram import Priority
+
+from .knxip_enum import CEMIFlags, CEMIMessageCode
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX

@@ -5,17 +5,17 @@ Created on 14.01.2021.
 """
 from __future__ import annotations
 
-from xknx.telegram import IndividualAddress, GroupAddress, Telegram, TPDUType
-from xknx.exceptions import UnsupportedCEMIMessage
-from .knxip_enum import CEMIMessageCode
-
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
+from xknx.exceptions import UnsupportedCEMIMessage
+from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TPDUType
 
+from .knxip_enum import CEMIMessageCode
+
+if TYPE_CHECKING:
     # from typing import Union, List
     from Adress import InternalGroupAddress
+    from xknx.xknx import XKNX
 
 
 class TPDU:
