@@ -238,7 +238,7 @@ class TestTelegramQueue:
 
         async def process_exception():
             raise CouldNotParseTelegram(
-                "Something went wrong when receiving the telegram." ""
+                "Something went wrong when receiving the telegram."
             )
 
         process_tg_in_mock.return_value = asyncio.ensure_future(process_exception())
@@ -254,9 +254,7 @@ class TestTelegramQueue:
 
         logging_error_mock.assert_called_once_with(
             "Error while processing telegram %s",
-            CouldNotParseTelegram(
-                "Something went wrong when receiving the telegram." ""
-            ),
+            CouldNotParseTelegram("Something went wrong when receiving the telegram."),
         )
 
     @patch("xknx.core.TelegramQueue.process_telegram_outgoing", new_callable=AsyncMock)
@@ -385,3 +383,34 @@ class TestTelegramQueue:
         await xknx.telegram_queue.process_telegram_incoming(telegram)
         async_telegram_received_cb_one.assert_not_called()
         async_telegram_received_cb_two.assert_called_once_with(telegram)
+
+    #
+    # TEST BAD CALLBACKS
+    #
+    @patch("logging.Logger.exception")
+    async def test_callback_raising(self, logging_exception_mock):
+        """Test telegram_received_callback raising an exception."""
+        xknx = XKNX()
+        good_callback_1 = AsyncMock()
+        bad_callback = AsyncMock(side_effect=Exception("Boom"))
+        good_callback_2 = AsyncMock()
+
+        xknx.telegram_queue.register_telegram_received_cb(good_callback_1)
+        xknx.telegram_queue.register_telegram_received_cb(bad_callback)
+        xknx.telegram_queue.register_telegram_received_cb(good_callback_2)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            direction=TelegramDirection.INCOMING,
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        await xknx.telegram_queue.process_telegram_incoming(telegram)
+
+        good_callback_1.assert_called_once_with(telegram)
+        bad_callback.assert_called_once_with(telegram)
+        good_callback_2.assert_called_once_with(telegram)
+
+        logging_exception_mock.assert_called_once_with(
+            "Unexpected error while processing telegram_received_cb for %s",
+            telegram,
+        )

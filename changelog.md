@@ -4,6 +4,8 @@
 
 ### Internals
 
+- Catch and log exceptions raised in callbacks to not stall the TelegramQueue
+- Handle callbacks in separate asyncio Tasks
 - GatewayScanFilter: Ignore non-gateway KNX/IP devices
 
 ## 0.18.9 HS-color 2021-07-26
