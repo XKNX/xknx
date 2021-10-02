@@ -205,14 +205,14 @@ class Cover(Device):
         if self.stop_.writable:
             await self.stop_.on()
         elif self.step.writable:
-            if (
-                self.travel_direction_tilt == TravelStatus.DIRECTION_UP
-                or self.travelcalculator.travel_direction == TravelStatus.DIRECTION_UP
+            if TravelStatus.DIRECTION_UP in (
+                self.travelcalculator.travel_direction,
+                self.travel_direction_tilt,
             ):
                 await self.step.decrease()
-            elif (
-                self.travel_direction_tilt == TravelStatus.DIRECTION_DOWN
-                or self.travelcalculator.travel_direction == TravelStatus.DIRECTION_DOWN
+            elif TravelStatus.DIRECTION_DOWN in (
+                self.travelcalculator.travel_direction,
+                self.travel_direction_tilt,
             ):
                 await self.step.increase()
         else:
