@@ -1,6 +1,6 @@
 """Unit test for telegram received callback."""
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
 from xknx import XKNX
@@ -385,8 +385,42 @@ class TestTelegramQueue:
         async_telegram_received_cb_two.assert_called_once_with(telegram)
 
     #
-    # TEST BAD CALLBACKS
+    # TEST EXCEPTION HANDLING
     #
+    @patch("logging.Logger.exception")
+    @patch("xknx.xknx.Devices.process", side_effect=Exception)
+    async def test_process_raising(self, process_mock, logging_exception_mock):
+        """Test unexpected exception handling in telegram queues."""
+        xknx = XKNX()
+        telegram_in = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            direction=TelegramDirection.INCOMING,
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        # InternalGroupAddress to avoid CommunicationError for missing knxip_interface
+        telegram_out = Telegram(
+            destination_address=InternalGroupAddress("i-outgoing"),
+            direction=TelegramDirection.OUTGOING,
+            payload=GroupValueWrite(DPTBinary(0)),
+        )
+        xknx.telegrams.put_nowait(telegram_in)
+        xknx.telegrams.put_nowait(telegram_out)
+
+        await xknx.telegram_queue.start()
+        await xknx.telegram_queue.stop()
+
+        log_calls = [
+            call(
+                "Unexpected error while processing incoming telegram %s",
+                telegram_in,
+            ),
+            call(
+                "Unexpected error while processing outgoing telegram %s",
+                telegram_out,
+            ),
+        ]
+        logging_exception_mock.assert_has_calls(log_calls)
+
     @patch("logging.Logger.exception")
     async def test_callback_raising(self, logging_exception_mock):
         """Test telegram_received_callback raising an exception."""
