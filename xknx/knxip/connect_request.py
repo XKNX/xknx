@@ -81,8 +81,8 @@ class ConnectRequest(KNXIPBody):
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<ConnectRequest control_endpoint="{}" data_endpoint="{}" '
-            'request_type="{}" />'.format(
-                self.control_endpoint, self.data_endpoint, self.request_type
-            )
+            "<ConnectRequest "
+            f'control_endpoint="{self.control_endpoint}" '
+            f'data_endpoint="{self.data_endpoint}" '
+            f'request_type="{self.request_type}" />'
         )

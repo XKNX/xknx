@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Callable
 
+from xknx.core import XknxConnectionState
 from xknx.knxip import (
     CEMIFrame,
     CEMIMessageCode,
@@ -87,6 +88,9 @@ class Routing(Interface):
 
     async def connect(self) -> bool:
         """Start routing."""
+        await self.xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.CONNECTING
+        )
         try:
             await self.udpclient.connect()
         except OSError as ex:
@@ -95,13 +99,20 @@ class Routing(Interface):
                 type(ex).__name__,
                 ex,
             )
+            await self.xknx.connection_manager.connection_state_changed(
+                XknxConnectionState.DISCONNECTED
+            )
             # close udp client to prevent open file descriptors
             await self.udpclient.stop()
             raise ex
-        self.xknx.connected.set()
+        await self.xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.CONNECTED
+        )
         return True
 
     async def disconnect(self) -> None:
         """Stop routing."""
         await self.udpclient.stop()
-        self.xknx.connected.clear()
+        await self.xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.DISCONNECTED
+        )

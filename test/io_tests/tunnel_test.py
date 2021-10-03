@@ -42,6 +42,7 @@ class TestTunnelling:
         self.tg_received_mock.assert_called_once_with(telegram)
         send_ack_mock.assert_called_once_with(0x02, 0x21)
 
+    # pylint: disable=pointless-string-statement
     '''
     This test is now useless because "too small CEMIs are handeled as TPDUs
 

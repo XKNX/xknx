@@ -124,8 +124,11 @@ class TelegramQueue:
             if telegram.direction == TelegramDirection.INCOMING:
                 try:
                     await self.process_telegram_incoming(telegram)
-                except XKNXException as ex:
-                    logger.error("Error while processing incoming telegram %s", ex)
+                except XKNXException:
+                    logger.exception(
+                        "Unexpected xknx error while processing incoming telegram %s",
+                        telegram,
+                    )
                 except Exception:  # pylint: disable=broad-except
                     # prevent the parser Task from stalling when unexpected errors occur
                     logger.exception(

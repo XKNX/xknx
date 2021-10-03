@@ -18,8 +18,6 @@ if TYPE_CHECKING:
 class RemoteValueDpt2ByteUnsigned(RemoteValue[DPTArray, int]):
     """Abstraction for remote value of KNX DPT 7.001."""
 
-    # pylint: disable=no-self-use
-
     def __init__(
         self,
         xknx: XKNX,

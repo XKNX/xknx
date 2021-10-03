@@ -723,9 +723,7 @@ class DeviceDescriptorResponse(APCI):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<DeviceDescriptorResponse descriptor="{}" value="{}" />'.format(
-            self.descriptor, self.value
-        )
+        return f'<DeviceDescriptorResponse descriptor="{self.descriptor}" value="{self.value}" />'
 
 
 class Restart(APCI):
@@ -1237,10 +1235,12 @@ class PropertyValueRead(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<PropertyValueRead object_index="{}" property_id="{}" count="{}" '
-            'start_index="{}" />'.format(
-                self.object_index, self.property_id, self.count, self.start_index
-            )
+            "<PropertyValueRead "
+            f'object_index="{self.object_index}" '
+            f'property_id="{self.property_id}" '
+            f'count="{self.count}" '
+            f'start_index="{self.start_index}" '
+            "/>"
         )
 
 
@@ -1312,14 +1312,13 @@ class PropertyValueWrite(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<PropertyValueWrite object_index="{}" property_id="{}" count="{}" '
-            'start_index="{}" data="{}" />'.format(
-                self.object_index,
-                self.property_id,
-                self.count,
-                self.start_index,
-                self.data.hex(),
-            )
+            "<PropertyValueWrite "
+            f'object_index="{self.object_index}" '
+            f'property_id="{self.property_id}" '
+            f'count="{self.count}" '
+            f'start_index="{self.start_index}" '
+            f'data="{self.data.hex()}" '
+            "/>"
         )
 
 
@@ -1392,14 +1391,13 @@ class PropertyValueResponse(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<PropertyValueResponse object_index="{}" property_id="{}" count="{}" '
-            'start_index="{}" data="{}" />'.format(
-                self.object_index,
-                self.property_id,
-                self.count,
-                self.start_index,
-                self.data.hex(),
-            )
+            "<PropertyValueResponse "
+            f'object_index="{self.object_index}" '
+            f'property_id="{self.property_id}" '
+            f'count="{self.count}" '
+            f'start_index="{self.start_index}" '
+            f'data="{self.data.hex()}" '
+            "/>"
         )
 
 

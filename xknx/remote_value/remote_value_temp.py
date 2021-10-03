@@ -13,8 +13,6 @@ from .remote_value import RemoteValue
 class RemoteValueTemp(RemoteValue[DPTArray, float]):
     """Abstraction for remote value of KNX 9.001 (DPT_Value_Temp)."""
 
-    # pylint: disable=no-self-use
-
     def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray | None:
         """Test if telegram payload may be parsed."""
         return (

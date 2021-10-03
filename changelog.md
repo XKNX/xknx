@@ -4,10 +4,26 @@
 
 ### Internals
 
+## 0.18.11 Task Registry 2021-10-16
+
+### Internals
+
+- Stop state updater if connection is lost and restart if restored
+- Add central task registry to keep track of tasks spawned in devices
+
+## 0.18.10 Connection Manager 2021-10-13
+
+### Internals
+
 - DPTString: replace invalid characters with question marks in `to_knx`
 - Catch and log exceptions raised in callbacks to not stall the TelegramQueue
 - Handle callbacks in separate asyncio Tasks
 - GatewayScanFilter: Ignore non-gateway KNX/IP devices
+- Introduce connection state change handler
+
+### Home Assistant Plugin
+
+- Properly handle disconnected state in the UI.
 
 ## 0.18.9 HS-color 2021-07-26
 

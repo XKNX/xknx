@@ -20,9 +20,7 @@ setup(
     version=VERSION["__version__"],
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
-    download_url="https://github.com/XKNX/xknx/archive/{}.zip".format(
-        VERSION["__version__"]
-    ),
+    download_url=f"https://github.com/XKNX/xknx/archive/{VERSION['__version__']}.zip",
     url="https://xknx.io/",
     author="Julius Mittenzwei",
     author_email="julius@mittenzwei.com",
@@ -35,6 +33,7 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
     ],
     packages=find_packages(include=["xknx", "xknx.*"]),
     package_data={"xknx": ["py.typed"]},

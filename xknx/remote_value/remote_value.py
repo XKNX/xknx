@@ -275,20 +275,20 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
 
     def group_addr_str(self) -> str:
         """Return object as readable string."""
-        return "<{}, {}, {}, {} />".format(
-            self.group_address,
-            self.group_address_state,
-            list(map(str, self.passive_group_addresses)),
-            self.value.__repr__(),
+        return (
+            f"<{self.group_address}, "
+            f"{self.group_address_state}, "
+            f"{list(map(str, self.passive_group_addresses))}, "
+            f"{self.value.__repr__()} />"
         )
 
     def __str__(self) -> str:
         """Return object as string representation."""
-        return '<{} device_name="{}" feature_name="{}" {} />'.format(
-            self.__class__.__name__,
-            self.device_name,
-            self.feature_name,
-            self.group_addr_str(),
+        return (
+            f"<{self.__class__.__name__} "
+            f'device_name="{self.device_name}" '
+            f'feature_name="{self.feature_name}" '
+            f"{self.group_addr_str()} />"
         )
 
     def __eq__(self, other: object) -> bool:

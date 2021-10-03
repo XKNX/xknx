@@ -10,6 +10,7 @@ import asyncio
 import time
 from typing import TYPE_CHECKING, Iterator
 
+from xknx.core import Task
 from xknx.remote_value import GroupAddressesType, RemoteValueDateTime
 
 from .device import Device, DeviceCallbackType
@@ -43,22 +44,17 @@ class DateTime(Device):
             device_name=name,
             after_update_cb=self.after_update,
         )
-        self._broadcast_task = self._create_broadcast_task(minutes=60)
-
-    def __del__(self) -> None:
-        """Destructor. Cleaning up if this was not done before."""
-        if self._broadcast_task:
-            try:
-                self._broadcast_task.cancel()
-            except RuntimeError:
-                pass
-        super().__del__()
+        self._broadcast_task: Task | None = self._create_broadcast_task(minutes=60)
 
     def _iter_remote_values(self) -> Iterator[RemoteValueDateTime]:
         """Iterate the devices RemoteValue classes."""
         yield self._remote_value
 
-    def _create_broadcast_task(self, minutes: int = 60) -> asyncio.Task[None] | None:
+    def _iter_tasks(self) -> Iterator[Task | None]:
+        """Iterate the device tasks."""
+        yield self._broadcast_task
+
+    def _create_broadcast_task(self, minutes: int = 60) -> Task | None:
         """Create an asyncio.Task for broadcasting local time periodically if `localtime` is set."""
 
         async def broadcast_loop(self: "DateTime", minutes: int) -> None:
@@ -68,8 +64,13 @@ class DateTime(Device):
                 await asyncio.sleep(minutes * 60)
 
         if self.localtime:
-            loop = asyncio.get_event_loop()
-            return loop.create_task(broadcast_loop(self, minutes=minutes))
+            task: Task = self.xknx.task_registry.register(
+                f"datetime.broadcast_{id(self)}",
+                broadcast_loop(self, minutes=minutes),
+                restart_after_reconnect=True,
+            )
+            task.start()
+            return task
         return None
 
     async def broadcast_localtime(self, response: bool = False) -> None:
@@ -94,6 +95,8 @@ class DateTime(Device):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<DateTime name="{}" _remote_value={} broadcast_type="{}" />'.format(
-            self.name, self._remote_value.group_addr_str(), self._broadcast_type
+        return (
+            f'<DateTime name="{self.name}" '
+            f"_remote_value={self._remote_value.group_addr_str()} "
+            f'broadcast_type="{self._broadcast_type}" />'
         )

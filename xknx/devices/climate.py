@@ -278,22 +278,13 @@ class Climate(Device):
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<Climate name="{}" '
-            "temperature={} "
-            "target_temperature={} "
-            'temperature_step="{}" '
-            "setpoint_shift={} "
-            'setpoint_shift_max="{}" '
-            'setpoint_shift_min="{}" '
-            "group_address_on_off={} "
-            "/>".format(
-                self.name,
-                self.temperature.group_addr_str(),
-                self.target_temperature.group_addr_str(),
-                self.temperature_step,
-                self._setpoint_shift.group_addr_str(),
-                self.setpoint_shift_max,
-                self.setpoint_shift_min,
-                self.on.group_addr_str(),
-            )
+            f'<Climate name="{self.name}" '
+            f"temperature={self.temperature.group_addr_str()} "
+            f"target_temperature={self.target_temperature.group_addr_str()} "
+            f'temperature_step="{self.temperature_step}" '
+            f"setpoint_shift={self._setpoint_shift.group_addr_str()} "
+            f'setpoint_shift_max="{self.setpoint_shift_max}" '
+            f'setpoint_shift_min="{self.setpoint_shift_min}" '
+            f"group_address_on_off={self.on.group_addr_str()} "
+            "/>"
         )

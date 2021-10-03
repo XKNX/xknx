@@ -15,12 +15,6 @@ or monitored by other listeners - that triggers different events.
 Please join XKNX on Discord (https://discord.gg/EuAQDXU) and chat with JohanElmis for
 specific questions.
 """
-
-
-# Disabling some Pylint checks as it assumes that the global variables are all constants.
-# pylint: disable=invalid-name
-# pylint: disable=global-statement
-
 try:
     import asyncio
     import re
@@ -69,8 +63,6 @@ RE_FREQUENCY = re.compile("Frequency_")
 @asyncio.coroutine
 def device_updated_cb(device):
     """Do something with the updated device."""
-    global mqttc
-
     # print(device.name + ' ' + str(device.resolve_state()) + ' ' + device.unit_of_measurement())
     topic = None
     value = None
@@ -144,8 +136,6 @@ async def main():
     Then the XKNX Daemon will be started.
     Then everything else happens in the device_updated-function above as it is triggered when we receive data.
     """
-    global mqttc
-
     # Connect to KNX/IP device and listen if a switch was updated via KNX bus.
     xknx = XKNX(device_updated_cb=device_updated_cb, daemon_mode=True)
 

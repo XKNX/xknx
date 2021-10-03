@@ -76,6 +76,7 @@ class TPDU:
 
     def calculated_length(self) -> int:
         """Length of PDU."""
+        # pylint: disable=no-self-use
         return 10
 
     def to_knx(self) -> list[int]:

@@ -98,20 +98,15 @@ class TestDPTBase:
             if dpt.value_type is not None:
                 assert isinstance(
                     dpt.value_type, str
-                ), "Wrong type for value_type in {} : {} - str `None` expected".format(
-                    dpt,
-                    type(dpt.value_type),
-                )
+                ), f"Wrong type for value_type in {dpt} : {type(dpt.value_type)} - str `None` expected"
             if dpt.dpt_main_number is not None:
-                assert isinstance(dpt.dpt_main_number, int), (
-                    "Wrong type for dpt_main_number in %s : %s - int or `None` expected"
-                    % (dpt, type(dpt.dpt_main_number))
-                )
+                assert isinstance(
+                    dpt.dpt_main_number, int
+                ), f"Wrong type for dpt_main_number in {dpt} : {type(dpt.dpt_main_number)} - int or `None` expected"
             if dpt.dpt_sub_number is not None:
-                assert isinstance(dpt.dpt_sub_number, int), (
-                    "Wrong type for dpt_sub_number in %s : %s - int or `None` expected"
-                    % (dpt, type(dpt.dpt_sub_number))
-                )
+                assert isinstance(
+                    dpt.dpt_sub_number, int
+                ), f"Wrong type for dpt_sub_number in {dpt} : {type(dpt.dpt_sub_number)} - int or `None` expected"
 
     def test_dpt_subclasses_no_duplicate_value_types(self):
         """Test for duplicate value_type values in subclasses of DPTBase."""

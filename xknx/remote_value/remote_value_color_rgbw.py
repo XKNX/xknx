@@ -43,7 +43,6 @@ class RemoteValueColorRGBW(RemoteValue[DPTArray, Tuple[int, int, int, int]]):
 
     def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray | None:
         """Test if telegram payload may be parsed."""
-        # pylint: disable=no-self-use
         return (
             payload
             if isinstance(payload, DPTArray) and len(payload.value) == 6
@@ -74,7 +73,6 @@ class RemoteValueColorRGBW(RemoteValue[DPTArray, Tuple[int, int, int, int]]):
         * 4 bytes: 0x000f right padding to 6 bytes
         * < 4 bytes: error
         """
-        # pylint: disable=no-self-use
         if not isinstance(value, (list, tuple)):
             raise ConversionError(
                 "Could not serialize RemoteValueColorRGBW (wrong type, expecting list of 4-6 bytes))",
