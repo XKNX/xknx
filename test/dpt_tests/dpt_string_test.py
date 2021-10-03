@@ -95,6 +95,29 @@ class TestDPTString:
         assert DPTString.to_knx(string) == raw
         assert DPTString.from_knx(raw) == string
 
+    def test_to_knx_invalid_chars(self):
+        """Test streaming string with invalid chars."""
+        raw = (
+            0x4D,
+            0x61,
+            0x74,
+            0x6F,
+            0x75,
+            0x3F,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+        )
+        string = "Matouš"
+        knx_string = "Matou?"
+        assert DPTString.to_knx(string) == raw
+        assert DPTString.from_knx(raw) == knx_string
+
     def test_to_knx_too_long(self):
         """Test serializing DPTString to KNX with wrong value (to long)."""
         with pytest.raises(ConversionError):
