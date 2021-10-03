@@ -149,7 +149,8 @@ class CEMIFrame:
     def from_knx_data_link_layer(self, cemi: bytes) -> int:
         """Parse L_DATA_IND, CEMIMessageCode.L_DATA_REQ, CEMIMessageCode.L_DATA_CON."""
         if len(cemi) < 11:
-            # eg. ETS Line-Scan issues L_DATA_IND with length 10
+            # eg. ETS Line-Scan issues L_DATA_IND with length 10 or checking for individual addresses
+            # at start of ETS programming procedure
             raise UnsupportedCEMIMessage(
                 "CEMI too small. Length: {}; CEMI: {}".format(len(cemi), cemi.hex())
             )

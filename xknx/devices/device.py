@@ -6,6 +6,7 @@ It provides basis functionality for reading the state from the KNX bus.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterator
 
@@ -73,8 +74,13 @@ class Device(ABC):
 
     async def after_update(self) -> None:
         """Execute callbacks after internal state has been changed."""
-        for device_updated_cb in self.device_updated_cbs:
-            await device_updated_cb(self)
+        try:
+            await asyncio.gather(*[cb(self) for cb in self.device_updated_cbs])
+        except Exception:  # pylint: disable=broad-except
+            logger.exception(
+                "Unexpected error while processing device_updated_cb for %s",
+                self,
+            )
 
     async def sync(self, wait_for_result: bool = False) -> None:
         """Read states of device from KNX bus."""
