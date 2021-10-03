@@ -14,13 +14,15 @@ async def main():
     # xknx = XKNX(log_directory="/home/sparky2021/tmp")
     xknx = XKNX()
     await xknx.start()
-    nm = NetworkManagement(xknx)
-    rc = await nm.IndividualAddress_Write(IndividualAddress("1.2.1"))
-    if rc == NM_OK:
+    network_management = NetworkManagement(xknx)
+    return_code = await network_management.IndividualAddress_Write(
+        IndividualAddress("1.2.1")
+    )
+    if return_code == NM_OK:
         print("Individual address write succeeded.")
-    elif rc == NM_EXISTS:
+    elif return_code == NM_EXISTS:
         print("Individual address already occupied.")
-    elif rc == NM_TIME_OUT:
+    elif return_code == NM_TIME_OUT:
         print("Individual address write reached time out.")
     else:
         raise RuntimeError("IndividualAddress_Write retuned unknown return code")
