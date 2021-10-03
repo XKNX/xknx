@@ -126,6 +126,12 @@ class TelegramQueue:
                     await self.process_telegram_incoming(telegram)
                 except XKNXException as ex:
                     logger.error("Error while processing incoming telegram %s", ex)
+                except Exception:  # pylint: disable=broad-except
+                    # prevent the parser Task from stalling when unexpected errors occur
+                    logger.exception(
+                        "Unexpected error while processing incoming telegram %s",
+                        telegram,
+                    )
                 finally:
                     self.xknx.telegrams.task_done()
             elif telegram.direction == TelegramDirection.OUTGOING:
@@ -148,6 +154,11 @@ class TelegramQueue:
                     logger.warning(ex)
             except XKNXException as ex:
                 logger.error("Error while processing outgoing telegram %s", ex)
+            except Exception:  # pylint: disable=broad-except
+                # prevent the sender Task from stalling when unexpected errors occur (eg. ValueError from creating KNXIPFrames)
+                logger.exception(
+                    "Unexpected error while processing outgoing telegram %s", telegram
+                )
             finally:
                 self.outgoing_queue.task_done()
                 self.xknx.telegrams.task_done()
@@ -183,14 +194,25 @@ class TelegramQueue:
             await self.xknx.knxip_interface.send_telegram(telegram)
 
         await self.xknx.devices.process(telegram)
-        for telegram_received_cb in self.telegram_received_cbs:
-            if telegram_received_cb.is_within_filter(telegram):
-                await telegram_received_cb.callback(telegram)
+        await self._run_telegram_received_cbs(telegram)
 
     async def process_telegram_incoming(self, telegram: Telegram) -> None:
         """Process incoming telegram."""
         telegram_logger.debug(telegram)
-        for telegram_received_cb in self.telegram_received_cbs:
-            if telegram_received_cb.is_within_filter(telegram):
-                await telegram_received_cb.callback(telegram)
+        await self._run_telegram_received_cbs(telegram)
         await self.xknx.devices.process(telegram)
+
+    async def _run_telegram_received_cbs(self, telegram: Telegram) -> None:
+        """Run registered callbacks. Don't propagate exceptions."""
+        callbacks = [
+            cb.callback(telegram)
+            for cb in self.telegram_received_cbs
+            if cb.is_within_filter(telegram)
+        ]
+        try:
+            await asyncio.gather(*callbacks)
+        except Exception:  # pylint: disable=broad-except
+            logger.exception(
+                "Unexpected error while processing telegram_received_cb for %s",
+                telegram,
+            )
