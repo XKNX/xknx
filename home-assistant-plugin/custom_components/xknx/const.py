@@ -35,6 +35,7 @@ class ColorTempModes(Enum):
 
     ABSOLUTE = "DPT-7.600"
     RELATIVE = "DPT-5.001"
+    RELATIVE_TEMP = "DPT-9.002"
 
 
 class SupportedPlatforms(Enum):

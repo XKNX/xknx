@@ -131,20 +131,12 @@ def _create_light(xknx: XKNX, config: ConfigType) -> XknxLight:
             return None
         return config[LightSchema.CONF_INDIVIDUAL_COLORS][color].get(feature)
 
-    group_address_tunable_white = None
-    group_address_tunable_white_state = None
-    group_address_color_temp = None
-    group_address_color_temp_state = None
-    if config[LightSchema.CONF_COLOR_TEMP_MODE] == ColorTempModes.ABSOLUTE:
-        group_address_color_temp = config.get(LightSchema.CONF_COLOR_TEMP_ADDRESS)
-        group_address_color_temp_state = config.get(
-            LightSchema.CONF_COLOR_TEMP_STATE_ADDRESS
-        )
-    elif config[LightSchema.CONF_COLOR_TEMP_MODE] == ColorTempModes.RELATIVE:
-        group_address_tunable_white = config.get(LightSchema.CONF_COLOR_TEMP_ADDRESS)
-        group_address_tunable_white_state = config.get(
-            LightSchema.CONF_COLOR_TEMP_STATE_ADDRESS
-        )
+    group_address_color_temp = config.get(LightSchema.CONF_COLOR_TEMP_ADDRESS)
+    group_address_color_temp_state = config.get(
+        LightSchema.CONF_COLOR_TEMP_STATE_ADDRESS
+    )
+
+    color_temperature_mode = config[LightSchema.CONF_COLOR_TEMP_MODE]
 
     return XknxLight(
         xknx,
@@ -159,8 +151,6 @@ def _create_light(xknx: XKNX, config: ConfigType) -> XknxLight:
         group_address_color_state=config.get(LightSchema.CONF_COLOR_STATE_ADDRESS),
         group_address_rgbw=config.get(LightSchema.CONF_RGBW_ADDRESS),
         group_address_rgbw_state=config.get(LightSchema.CONF_RGBW_STATE_ADDRESS),
-        group_address_tunable_white=group_address_tunable_white,
-        group_address_tunable_white_state=group_address_tunable_white_state,
         group_address_color_temperature=group_address_color_temp,
         group_address_color_temperature_state=group_address_color_temp_state,
         group_address_switch_red=individual_color_addresses(
@@ -213,6 +203,7 @@ def _create_light(xknx: XKNX, config: ConfigType) -> XknxLight:
         ),
         min_kelvin=config[LightSchema.CONF_MIN_KELVIN],
         max_kelvin=config[LightSchema.CONF_MAX_KELVIN],
+        color_temperature_mode=color_temperature_mode,
     )
 
 
@@ -281,19 +272,23 @@ class KNXLight(KnxEntity, LightEntity):
     def color_temp(self) -> int | None:
         """Return the color temperature in mireds."""
         if self._device.supports_color_temperature:
-            kelvin = self._device.current_color_temperature
-            # Avoid division by zero if actuator reported 0 Kelvin (e.g., uninitialized DALI-Gateway)
-            if kelvin is not None and kelvin > 0:
-                return color_util.color_temperature_kelvin_to_mired(kelvin)
-        if self._device.supports_tunable_white:
-            relative_ct = self._device.current_tunable_white
-            if relative_ct is not None:
-                # as KNX devices typically use Kelvin we use it as base for
-                # calculating ct from percent
-                return color_util.color_temperature_kelvin_to_mired(
-                    self._min_kelvin
-                    + ((relative_ct / 255) * (self._max_kelvin - self._min_kelvin))
-                )
+            if (
+                self._device.color_temperature_mode == ColorTempModes.ABSOLUTE
+                or self._device.color_temperature_mode == ColorTempModes.RELATIVE_TEMP
+            ):
+                kelvin = self._device.current_color_temperature
+                # Avoid division by zero if actuator reported 0 Kelvin (e.g., uninitialized DALI-Gateway)
+                if kelvin is not None and kelvin > 0:
+                    return color_util.color_temperature_kelvin_to_mired(kelvin)
+            else:
+                relative_ct = self._device.current_tunable_white
+                if relative_ct is not None:
+                    # as KNX devices typically use Kelvin we use it as base for
+                    # calculating ct from percent
+                    return color_util.color_temperature_kelvin_to_mired(
+                        self._min_kelvin
+                        + ((relative_ct / 255) * (self._max_kelvin - self._min_kelvin))
+                    )
         return None
 
     @property

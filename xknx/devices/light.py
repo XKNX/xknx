@@ -27,6 +27,7 @@ from xknx.remote_value import (
     RemoteValueNumeric,
     RemoteValueScaling,
     RemoteValueSwitch,
+    RemoteValueTemp,
 )
 
 from .device import Device, DeviceCallbackType
@@ -45,6 +46,7 @@ class ColorTempModes(Enum):
 
     ABSOLUTE = "DPT-7.600"
     RELATIVE = "DPT-5.001"
+    RELATIVE_TEMP = "DPT-9.002"
 
 
 class _SwitchAndBrightness:
@@ -133,8 +135,6 @@ class Light(Device):
         group_address_saturation_state: GroupAddressesType | None = None,
         group_address_xyy_color: GroupAddressesType | None = None,
         group_address_xyy_color_state: GroupAddressesType | None = None,
-        group_address_tunable_white: GroupAddressesType | None = None,
-        group_address_tunable_white_state: GroupAddressesType | None = None,
         group_address_color_temperature: GroupAddressesType | None = None,
         group_address_color_temperature_state: GroupAddressesType | None = None,
         group_address_switch_red: GroupAddressesType | None = None,
@@ -156,6 +156,7 @@ class Light(Device):
         sync_state: bool | int | float | str = True,
         min_kelvin: int | None = None,
         max_kelvin: int | None = None,
+        color_temperature_mode: ColorTempModes = ColorTempModes.ABSOLUTE,
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Light class."""
@@ -233,27 +234,41 @@ class Light(Device):
             after_update_cb=self._xyy_color_from_rv,
         )
 
-        self.tunable_white = RemoteValueScaling(
-            xknx,
-            group_address_tunable_white,
-            group_address_tunable_white_state,
-            sync_state=sync_state,
-            device_name=self.name,
-            feature_name="Tunable white",
-            after_update_cb=self.after_update,
-            range_from=0,
-            range_to=255,
-        )
+        self.color_temperature_mode = color_temperature_mode
 
-        self.color_temperature = RemoteValueDpt2ByteUnsigned(
-            xknx,
-            group_address_color_temperature,
-            group_address_color_temperature_state,
-            sync_state=sync_state,
-            device_name=self.name,
-            feature_name="Color temperature",
-            after_update_cb=self.after_update,
-        )
+        self.color_temperature: RemoteValue[Any, Any]
+        if self.color_temperature_mode == ColorTempModes.ABSOLUTE:
+            self.color_temperature = RemoteValueDpt2ByteUnsigned(
+                xknx,
+                group_address_color_temperature,
+                group_address_color_temperature_state,
+                sync_state=sync_state,
+                device_name=self.name,
+                feature_name="Color temperature",
+                after_update_cb=self.after_update,
+            )
+        elif self.color_temperature_mode == ColorTempModes.RELATIVE:
+            self.color_temperature = RemoteValueScaling(
+                xknx,
+                group_address_color_temperature,
+                group_address_color_temperature_state,
+                sync_state=sync_state,
+                device_name=self.name,
+                feature_name="Color Temperature",
+                after_update_cb=self.after_update,
+                range_from=0,
+                range_to=255,
+            )
+        elif self.color_temperature_mode == ColorTempModes.RELATIVE_TEMP:
+            self.color_temperature = RemoteValueTemp(
+                xknx,
+                group_address_color_temperature,
+                group_address_color_temperature_state,
+                sync_state=sync_state,
+                device_name=self.name,
+                feature_name="Color temperature",
+                after_update_cb=self.after_update,
+            )
 
         self.red = _SwitchAndBrightness(
             xknx,
@@ -315,7 +330,6 @@ class Light(Device):
         yield self.hue
         yield self.saturation
         yield self.xyy_color
-        yield self.tunable_white
         yield self.color_temperature
         for color in self._iter_individual_colors():
             yield color.switch
@@ -353,11 +367,6 @@ class Light(Device):
     def supports_xyy_color(self) -> bool:
         """Return if light supports xyY-color."""
         return self.xyy_color.initialized
-
-    @property
-    def supports_tunable_white(self) -> bool:
-        """Return if light supports tunable white / relative color temperature."""
-        return self.tunable_white.initialized
 
     @property
     def supports_color_temperature(self) -> bool:
@@ -517,27 +526,15 @@ class Light(Device):
         await self.xyy_color.set(xyy)
 
     @property
-    def current_tunable_white(self) -> int | None:
-        """Return current relative color temperature of light."""
-        return self.tunable_white.value
-
-    async def set_tunable_white(self, tunable_white: int) -> None:
-        """Set relative color temperature of light."""
-        if not self.supports_tunable_white:
-            logger.warning("Tunable white not supported for device %s", self.get_name())
-            return
-        await self.tunable_white.set(tunable_white)
-
-    @property
     def current_color_temperature(self) -> int | None:
-        """Return current absolute color temperature of light."""
+        """Return current color temperature of light."""
         return self.color_temperature.value
 
     async def set_color_temperature(self, color_temperature: int) -> None:
-        """Set absolute color temperature of light."""
+        """Set color temperature of light."""
         if not self.supports_color_temperature:
             logger.warning(
-                "Absolute Color Temperature not supported for device %s",
+                "Color Temperature not supported for device %s",
                 self.get_name(),
             )
             return
@@ -580,11 +577,6 @@ class Light(Device):
             ""
             if not self.supports_xyy_color
             else f" xyy_color={self.xyy_color.group_addr_str()}"
-        )
-        str_tunable_white = (
-            ""
-            if not self.supports_tunable_white
-            else f" tunable_white={self.tunable_white.group_addr_str()}"
         )
 
         str_color_temperature = (
@@ -637,26 +629,22 @@ class Light(Device):
             else f" white_brightness={self.white.brightness.group_addr_str()}"
         )
 
-        return (
-            '<Light name="{}" '
-            "switch={}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{} />".format(
-                self.name,
-                self.switch.group_addr_str(),
-                str_brightness,
-                str_color,
-                str_rgbw,
-                str_hue,
-                str_saturation,
-                str_xyy_color,
-                str_tunable_white,
-                str_color_temperature,
-                str_red_state,
-                str_red_brightness,
-                str_green_state,
-                str_green_brightness,
-                str_blue_state,
-                str_blue_brightness,
-                str_white_state,
-                str_white_brightness,
-            )
+        return '<Light name="{}" ' "switch={}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{} />".format(
+            self.name,
+            self.switch.group_addr_str(),
+            str_brightness,
+            str_color,
+            str_rgbw,
+            str_hue,
+            str_saturation,
+            str_xyy_color,
+            str_color_temperature,
+            str_red_state,
+            str_red_brightness,
+            str_green_state,
+            str_green_brightness,
+            str_blue_state,
+            str_blue_brightness,
+            str_white_state,
+            str_white_brightness,
         )

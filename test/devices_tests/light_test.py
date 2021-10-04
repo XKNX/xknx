@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from xknx import XKNX
 from xknx.devices import Light
+from xknx.devices.light import ColorTempModes
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
@@ -238,26 +239,6 @@ class TestLight:
         assert not light.supports_xyy_color
 
     #
-    # TEST SUPPORT TUNABLE WHITE
-    #
-    def test_supports_tw_yes(self):
-        """Test supports_tw attribute with a light with tunable white function."""
-        xknx = XKNX()
-        light = Light(
-            xknx,
-            "Diningroom.Light_1",
-            group_address_switch="1/6/4",
-            group_address_tunable_white="1/6/6",
-        )
-        assert light.supports_tunable_white
-
-    def test_supports_tw_no(self):
-        """Test supports_tw attribute with a Light without tunable white function."""
-        xknx = XKNX()
-        light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
-        assert not light.supports_tunable_white
-
-    #
     # TEST SUPPORT COLOR TEMPERATURE
     #
     def test_supports_color_temp_true(self):
@@ -268,6 +249,7 @@ class TestLight:
             "Diningroom.Light_1",
             group_address_switch="1/6/4",
             group_address_color_temperature="1/6/6",
+            color_temperature_mode=ColorTempModes.ABSOLUTE,
         )
         assert light.supports_color_temperature
 
@@ -291,11 +273,10 @@ class TestLight:
             group_address_brightness_state="1/2/5",
             group_address_color_state="1/2/6",
             group_address_xyy_color_state="1/2/4",
-            group_address_tunable_white_state="1/2/7",
             group_address_color_temperature_state="1/2/8",
             group_address_rgbw_state="1/2/9",
         )
-        expected_telegrams = 7
+        expected_telegrams = 6
 
         await light.sync()
         assert xknx.telegrams.qsize() == expected_telegrams
@@ -319,9 +300,6 @@ class TestLight:
             ),
             Telegram(
                 destination_address=GroupAddress("1/2/9"), payload=GroupValueRead()
-            ),
-            Telegram(
-                destination_address=GroupAddress("1/2/7"), payload=GroupValueRead()
             ),
             Telegram(
                 destination_address=GroupAddress("1/2/8"), payload=GroupValueRead()
@@ -1061,18 +1039,19 @@ class TestLight:
             )
 
     #
-    # TEST SET TUNABLE WHITE
+    # TEST SET COLOR TEMPERATURE RELATIVE
     #
-    async def test_set_tw(self):
-        """Test setting the tunable white value of a Light."""
+    async def test_set_color_temperature_relative(self):
+        """Test setting the relative color temperature value of a Light."""
         xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
             group_address_switch="1/2/3",
-            group_address_tunable_white="1/2/5",
+            group_address_color_temperature="1/2/5",
+            color_temperature_mode=ColorTempModes.RELATIVE,
         )
-        await light.set_tunable_white(23)
+        await light.set_color_temperature(23)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
@@ -1080,28 +1059,18 @@ class TestLight:
             payload=GroupValueWrite(DPTArray(23)),
         )
 
-    async def test_set_tw_unsupported(self):
-        """Test setting the tunable white value of a non tw Light."""
-        xknx = XKNX()
-        light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
-        with patch("logging.Logger.warning") as mock_warn:
-            await light.set_tunable_white(23)
-            assert xknx.telegrams.qsize() == 0
-            mock_warn.assert_called_with(
-                "Tunable white not supported for device %s", "TestLight"
-            )
-
     #
-    # TEST SET COLOR TEMPERATURE
+    # TEST SET COLOR TEMPERATURE ABSOLUTE
     #
-    async def test_set_color_temp(self):
-        """Test setting the color temperature value of a Light."""
+    async def test_set_color_temperature_absolute(self):
+        """Test setting the absolute color temperature value of a Light."""
         xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
             group_address_switch="1/2/3",
             group_address_color_temperature="1/2/5",
+            color_temperature_mode=ColorTempModes.ABSOLUTE,
         )
         await light.set_color_temperature(4000)
         assert xknx.telegrams.qsize() == 1
@@ -1126,8 +1095,36 @@ class TestLight:
             await light.set_color_temperature(4000)
             assert xknx.telegrams.qsize() == 0
             mock_warn.assert_called_with(
-                "Absolute Color Temperature not supported for device %s", "TestLight"
+                "Color Temperature not supported for device %s", "TestLight"
             )
+
+    #
+    # TEST SET COLOR TEMPERATURE RELATIVE_TEMP
+    #
+    async def test_set_color_temperature_relative_temp(self):
+        """Test setting the relative (temp) color temperature value of a Light."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_color_temperature="1/2/5",
+            color_temperature_mode=ColorTempModes.RELATIVE_TEMP,
+        )
+        await light.set_color_temperature(4000)
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(
+                DPTArray(
+                    (
+                        0x46,
+                        0x1A,
+                    )
+                )
+            ),
+        )
 
     #
     # TEST PROCESS
@@ -1449,32 +1446,34 @@ class TestLight:
         )
         assert light.current_xyy_color == ((0.18, 0.25), 165)
 
-    async def test_process_tunable_white(self):
-        """Test process / reading telegrams from telegram queue. Test if tunable white is processed."""
+    async def test_process_color_temperature_relative(self):
+        """Test process / reading telegrams from telegram queue. Test if color temperature relative is processed."""
         xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
             group_address_switch="1/2/3",
-            group_address_tunable_white="1/2/5",
+            group_address_color_temperature="1/2/5",
+            color_temperature_mode=ColorTempModes.RELATIVE,
         )
-        assert light.current_tunable_white is None
+        assert light.current_color_temperature is None
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
             payload=GroupValueWrite(DPTArray(23)),
         )
         await light.process(telegram)
-        assert light.current_tunable_white == 23
+        assert light.current_color_temperature == 23
 
-    async def test_process_tunable_white_wrong_payload(self):
+    async def test_process_color_temperature_relative_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
             group_address_switch="1/2/3",
-            group_address_tunable_white="1/2/5",
+            group_address_color_temperature="1/2/5",
+            color_temperature_mode=ColorTempModes.RELATIVE,
         )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
@@ -1483,14 +1482,15 @@ class TestLight:
         with pytest.raises(CouldNotParseTelegram):
             await light.process(telegram)
 
-    async def test_process_tunable_white_payload_invalid_length(self):
+    async def test_process_color_temperature_relative_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
         xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
             group_address_switch="1/2/3",
-            group_address_tunable_white="1/2/5",
+            group_address_color_temperature="1/2/5",
+            color_temperature_mode=ColorTempModes.RELATIVE,
         )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
@@ -1568,8 +1568,6 @@ class TestLight:
             group_address_brightness_state="1/7/4",
             group_address_color="1/7/5",
             group_address_color_state="1/7/6",
-            group_address_tunable_white="1/7/7",
-            group_address_tunable_white_state="1/7/8",
             group_address_color_temperature="1/7/9",
             group_address_color_temperature_state="1/7/10",
             group_address_rgbw="1/7/11",
@@ -1603,8 +1601,6 @@ class TestLight:
         assert light.has_group_address(GroupAddress("1/7/4"))
         assert light.has_group_address(GroupAddress("1/7/5"))
         assert light.has_group_address(GroupAddress("1/7/6"))
-        assert light.has_group_address(GroupAddress("1/7/7"))
-        assert light.has_group_address(GroupAddress("1/7/8"))
         assert light.has_group_address(GroupAddress("1/7/9"))
         assert light.has_group_address(GroupAddress("1/7/10"))
         assert light.has_group_address(GroupAddress("1/7/11"))
