@@ -70,8 +70,7 @@ class DisconnectResponse(KNXIPBodyResponse):
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<DisconnectResponse CommunicationChannelID="{}" '
-            'status_code="{}" />'.format(
-                self.communication_channel_id, self.status_code
-            )
+            "<DisconnectResponse "
+            f'CommunicationChannelID="{self.communication_channel_id}" '
+            f'status_code="{self.status_code}" />'
         )

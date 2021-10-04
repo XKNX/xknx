@@ -20,9 +20,7 @@ setup(
     version=VERSION["__version__"],
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
-    download_url="https://github.com/XKNX/xknx/archive/{}.zip".format(
-        VERSION["__version__"]
-    ),
+    download_url=f"https://github.com/XKNX/xknx/archive/{VERSION['__version__']}.zip",
     url="https://xknx.io/",
     author="Julius Mittenzwei",
     author_email="julius@mittenzwei.com",

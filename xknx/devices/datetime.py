@@ -94,6 +94,8 @@ class DateTime(Device):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<DateTime name="{}" _remote_value={} broadcast_type="{}" />'.format(
-            self.name, self._remote_value.group_addr_str(), self._broadcast_type
+        return (
+            f'<DateTime name="{self.name}" '
+            f"_remote_value={self._remote_value.group_addr_str()} "
+            f'broadcast_type="{self._broadcast_type}" />'
         )

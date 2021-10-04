@@ -323,14 +323,9 @@ class ClimateMode(Device):
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<ClimateMode name="{}" '
-            "operation_mode={} "
-            "controller_mode={} "
-            "controller_status={} "
-            "/>".format(
-                self.name,
-                self.remote_value_operation_mode.group_addr_str(),
-                self.remote_value_controller_mode.group_addr_str(),
-                self.remote_value_controller_status.group_addr_str(),
-            )
+            f'<ClimateMode name="{self.name}" '
+            f"operation_mode={self.remote_value_operation_mode.group_addr_str()} "
+            f"controller_mode={self.remote_value_controller_mode.group_addr_str()} "
+            f"controller_status={self.remote_value_controller_status.group_addr_str()} "
+            "/>"
         )

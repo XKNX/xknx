@@ -46,6 +46,4 @@ class SearchRequest(KNXIPBody):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<SearchRequest discovery_endpoint="{}" />'.format(
-            self.discovery_endpoint
-        )
+        return f'<SearchRequest discovery_endpoint="{self.discovery_endpoint}" />'

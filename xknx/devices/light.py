@@ -638,25 +638,23 @@ class Light(Device):
         )
 
         return (
-            '<Light name="{}" '
-            "switch={}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{} />".format(
-                self.name,
-                self.switch.group_addr_str(),
-                str_brightness,
-                str_color,
-                str_rgbw,
-                str_hue,
-                str_saturation,
-                str_xyy_color,
-                str_tunable_white,
-                str_color_temperature,
-                str_red_state,
-                str_red_brightness,
-                str_green_state,
-                str_green_brightness,
-                str_blue_state,
-                str_blue_brightness,
-                str_white_state,
-                str_white_brightness,
-            )
+            f'<Light name="{self.name}" '
+            f"switch={self.switch.group_addr_str()}"
+            f"{str_brightness}"
+            f"{str_color}"
+            f"{str_rgbw}"
+            f"{str_hue}"
+            f"{str_saturation}"
+            f"{str_xyy_color}"
+            f"{str_tunable_white}"
+            f"{str_color_temperature}"
+            f"{str_red_state}"
+            f"{str_red_brightness}"
+            f"{str_green_state}"
+            f"{str_green_brightness}"
+            f"{str_blue_state}"
+            f"{str_blue_brightness}"
+            f"{str_white_state}"
+            f"{str_white_brightness}"
+            " />"
         )

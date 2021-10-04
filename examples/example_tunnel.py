@@ -22,11 +22,7 @@ async def main():
     # an individual address will most likely be assigned by the tunnelling server
     xknx.own_address = IndividualAddress("15.15.249")
 
-    print(
-        "Connecting to {}:{} from {}".format(
-            gateway.ip_addr, gateway.port, gateway.local_ip
-        )
-    )
+    print("Connecting to {gateway.ip_addr}:{gateway.port} from {gateway.local_ip}")
 
     tunnel = Tunnel(
         xknx,

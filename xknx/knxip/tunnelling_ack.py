@@ -73,8 +73,8 @@ class TunnellingAck(KNXIPBodyResponse):
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<TunnellingAck communication_channel_id="{}" '
-            'sequence_counter="{}" status_code="{}" />'.format(
-                self.communication_channel_id, self.sequence_counter, self.status_code
-            )
+            "<TunnellingAck "
+            f'communication_channel_id="{self.communication_channel_id}" '
+            f'sequence_counter="{self.sequence_counter}" '
+            f'status_code="{self.status_code}" />'
         )

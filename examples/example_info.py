@@ -31,7 +31,7 @@ async def main(argv: List[str]):
         DeviceDescriptorRead(descriptor=0), response_class=DeviceDescriptorResponse
     )
     if payload is not None:
-        print("Mask version: %04x" % payload.value)
+        print(f"Mask version: {payload.value:04x}")
 
     # Read the serial number of the device (object 0, property 11).
     payload = await reader.send(
@@ -40,14 +40,8 @@ async def main(argv: List[str]):
     )
     if payload is not None:
         print(
-            "Serial number: {:02x}{:02x}:{:02x}{:02x}{:02x}{:02x}".format(
-                payload.data[0],
-                payload.data[1],
-                payload.data[2],
-                payload.data[3],
-                payload.data[4],
-                payload.data[5],
-            )
+            f"Serial number: {payload.data[0]:02x}{payload.data[1]:02x}:"
+            f"{payload.data[2]:02x}{payload.data[3]:02x}{payload.data[4]:02x}{payload.data[5]:02x}"
         )
 
     # Check if the device is in programming mode (object 0, property 54).
@@ -56,7 +50,7 @@ async def main(argv: List[str]):
         response_class=PropertyValueResponse,
     )
     if payload is not None:
-        print("Programming mode: %s" % ("ON" if payload.data[0] else "OFF"))
+        print(f"Programming mode: {'ON' if payload.data[0] else 'OFF'}")
 
     await xknx.stop()
 

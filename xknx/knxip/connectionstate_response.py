@@ -69,8 +69,7 @@ class ConnectionStateResponse(KNXIPBodyResponse):
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<ConnectionStateResponse CommunicationChannelID="{}" '
-            'status_code="{}" />'.format(
-                self.communication_channel_id, self.status_code
-            )
+            "<ConnectionStateResponse "
+            f'CommunicationChannelID="{self.communication_channel_id}" '
+            f'status_code="{self.status_code}" />'
         )
