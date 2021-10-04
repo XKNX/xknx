@@ -100,19 +100,6 @@ class Fan(Device):
         """Return if fan supports oscillation."""
         return self.oscillation.initialized
 
-    def __str__(self) -> str:
-        """Return object as readable string."""
-
-        str_oscillation = (
-            ""
-            if not self.supports_oscillation
-            else f" oscillation={self.oscillation.group_addr_str()}"
-        )
-
-        return '<Fan name="{}" speed={}{} />'.format(
-            self.name, self.speed.group_addr_str(), str_oscillation
-        )
-
     async def set_speed(self, speed: int) -> None:
         """Set the fan to a desginated speed."""
         await self.speed.set(speed)
@@ -135,3 +122,14 @@ class Fan(Device):
     def current_oscillation(self) -> bool | None:
         """Return true if the fan is oscillating."""
         return self.oscillation.value
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+
+        str_oscillation = (
+            ""
+            if not self.supports_oscillation
+            else f" oscillation={self.oscillation.group_addr_str()}"
+        )
+
+        return f'<Fan name="{self.name}" speed={self.speed.group_addr_str()}{str_oscillation} />'

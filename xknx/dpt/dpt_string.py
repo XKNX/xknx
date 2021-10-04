@@ -42,7 +42,7 @@ class DPTString(DPTBase):
             # bytes(knx_value, 'ascii') would raise UnicodeEncodeError
             return tuple(map(lambda char: char if char <= 0xFF else ord("?"), raw))
         except ValueError:
-            raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
+            raise ConversionError(f"Could not serialize {cls.__name__}", value=value)
 
     @classmethod
     def _test_boundaries(cls, value: str) -> bool:

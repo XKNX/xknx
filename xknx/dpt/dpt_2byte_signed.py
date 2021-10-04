@@ -40,7 +40,7 @@ class DPT2ByteSigned(DPTNumeric):
         try:
             return struct.unpack(cls._struct_format, bytes(raw))[0]  # type: ignore
         except struct.error:
-            raise ConversionError("Could not parse %s" % cls.__name__, raw=raw)
+            raise ConversionError(f"Could not parse {cls.__name__}", raw=raw)
 
     @classmethod
     def to_knx(cls, value: int | float) -> tuple[int, ...]:
@@ -51,7 +51,7 @@ class DPT2ByteSigned(DPTNumeric):
                 raise ValueError
             return tuple(struct.pack(cls._struct_format, knx_value))
         except (ValueError, struct.error):
-            raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
+            raise ConversionError(f"Could not serialize {cls.__name__}", value=value)
 
     @classmethod
     def _test_boundaries(cls, value: int) -> bool:

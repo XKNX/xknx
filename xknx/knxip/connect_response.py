@@ -99,13 +99,10 @@ class ConnectResponse(KNXIPBodyResponse):
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<ConnectResponse communication_channel="{}" '
-            'status_code="{}" control_endpoint="{}" '
-            'request_type="{}" identifier="{}" />'.format(
-                self.communication_channel,
-                self.status_code,
-                self.control_endpoint,
-                self.request_type,
-                self.identifier,
-            )
+            "<ConnectResponse "
+            f'communication_channel="{self.communication_channel}" '
+            f'status_code="{self.status_code}" '
+            f'control_endpoint="{self.control_endpoint}" '
+            f'request_type="{self.request_type}" '
+            f'identifier="{self.identifier}" />'
         )

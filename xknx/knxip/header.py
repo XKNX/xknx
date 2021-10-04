@@ -38,7 +38,7 @@ class KNXIPHeader:
             self.service_type_ident = KNXIPServiceType(data[2] * 256 + data[3])
         except ValueError:
             raise CouldNotParseKNXIP(
-                "KNXIPServiceType unknown: {}".format(hex(data[2] * 256 + data[3]))
+                f"KNXIPServiceType unknown: {hex(data[2] * 256 + data[3])}"
             )
         self.b4_reserve = data[4]
         self.total_length = data[5]
@@ -64,14 +64,12 @@ class KNXIPHeader:
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<KNXIPHeader HeaderLength="{}" ProtocolVersion="{}" '
-            'KNXIPServiceType="{}" Reserve="{}" TotalLength="{}" />'.format(
-                self.header_length,
-                self.protocol_version,
-                self.service_type_ident.name,
-                self.b4_reserve,
-                self.total_length,
-            )
+            "<KNXIPHeader "
+            f'HeaderLength="{self.header_length}" '
+            f'ProtocolVersion="{self.protocol_version}" '
+            f'KNXIPServiceType="{self.service_type_ident.name}" '
+            f'Reserve="{self.b4_reserve}" '
+            f'TotalLength="{self.total_length}" />'
         )
 
     def __eq__(self, other: object) -> bool:

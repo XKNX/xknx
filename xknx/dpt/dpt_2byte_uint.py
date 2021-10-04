@@ -40,7 +40,7 @@ class DPT2ByteUnsigned(DPTNumeric):
                 raise ValueError
             return knx_value >> 8, knx_value & 0xFF
         except ValueError:
-            raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
+            raise ConversionError(f"Could not serialize {cls.__name__}", value=value)
 
     @classmethod
     def _test_boundaries(cls, value: int) -> bool:

@@ -109,9 +109,7 @@ class DIBGeneric(DIB):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<DIB dtc="{}" data="{}" />'.format(
-            self.dtc, ", ".join("0x%02x" % i for i in self.data)
-        )
+        return f'<DIB dtc="{self.dtc}" data="{", ".join(f"0x{i:02x}" for i in self.data)}" />'
 
 
 class DIBSuppSVCFamilies(DIB):
@@ -177,11 +175,10 @@ class DIBSuppSVCFamilies(DIB):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<DIBSuppSVCFamilies families="[{}]" />'.format(
-            ", ".join(
-                f"{family.name} version: {family.version}" for family in self.families
-            )
+        _families_str = ", ".join(
+            f"{family.name} version: {family.version}" for family in self.families
         )
+        return f'<DIBSuppSVCFamilies families="[{_families_str}]" />'
 
 
 class DIBDeviceInformation(DIB):
@@ -222,9 +219,9 @@ class DIBDeviceInformation(DIB):
         installation_project_identifier = raw[6] * 256 + raw[7]
         self.project_number = installation_project_identifier >> 4
         self.installation_number = installation_project_identifier & 15
-        self.serial_number = ":".join("%02x" % i for i in raw[8:14])
-        self.multicast_address = ".".join("%i" % i for i in raw[14:18])
-        self.mac_address = ":".join("%02x" % i for i in raw[18:24])
+        self.serial_number = ":".join(f"{i:02x}" for i in raw[8:14])
+        self.multicast_address = ".".join(f"{i:d}" for i in raw[14:18])
+        self.mac_address = ":".join(f"{i:02x}" for i in raw[18:24])
         self.name = "".join(map(chr, raw[24:54])).rstrip("\0")
         return DIBDeviceInformation.LENGTH
 
@@ -271,23 +268,13 @@ class DIBDeviceInformation(DIB):
         """Return object as readable string."""
         return (
             "<DIBDeviceInformation "
-            '\n\tknx_medium="{}" '
-            '\n\tprogramming_mode="{}" '
-            '\n\tindividual_address="{}" '
-            '\n\tinstallation_number="{}" '
-            '\n\tproject_number="{}" '
-            '\n\tserial_number="{}" '
-            '\n\tmulticast_address="{}" '
-            '\n\tmac_address="{}" '
-            '\n\tname="{}" />'.format(
-                self.knx_medium,
-                self.programming_mode,
-                self.individual_address,
-                self.installation_number,
-                self.project_number,
-                self.serial_number,
-                self.multicast_address,
-                self.mac_address,
-                self.name,
-            )
+            f'\n\tknx_medium="{self.knx_medium}" '
+            f'\n\tprogramming_mode="{self.programming_mode}" '
+            f'\n\tindividual_address="{self.individual_address}" '
+            f'\n\tinstallation_number="{self.installation_number}" '
+            f'\n\tproject_number="{self.project_number}" '
+            f'\n\tserial_number="{self.serial_number}" '
+            f'\n\tmulticast_address="{self.multicast_address}" '
+            f'\n\tmac_address="{self.mac_address}" '
+            f'\n\tname="{self.name}" />'
         )

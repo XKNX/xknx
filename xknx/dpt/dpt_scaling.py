@@ -34,7 +34,7 @@ class DPTScaling(DPTNumeric):
 
         if not cls._test_boundaries(value):
             raise ConversionError(
-                "Could not parse %s" % cls.__name__, value=value, raw=raw
+                f"Could not parse {cls.__name__}", value=value, raw=raw
             )
 
         return value
@@ -51,7 +51,7 @@ class DPTScaling(DPTNumeric):
 
             return (knx_value,)
         except ValueError:
-            raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
+            raise ConversionError(f"Could not serialize {cls.__name__}", value=value)
 
     @classmethod
     def _test_boundaries(cls, value: float) -> bool:

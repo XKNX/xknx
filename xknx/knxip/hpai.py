@@ -29,7 +29,7 @@ class HPAI:
             raise CouldNotParseKNXIP("wrong HPAI length")
         if raw[1] != HPAI.TYPE_UDP:
             raise CouldNotParseKNXIP("wrong HPAI type")
-        self.ip_addr = "{}.{}.{}.{}".format(raw[2], raw[3], raw[4], raw[5])
+        self.ip_addr = f"{raw[2]}.{raw[3]}.{raw[4]}.{raw[5]}"
         self.port = raw[6] * 256 + raw[7]
         return HPAI.LENGTH
 
