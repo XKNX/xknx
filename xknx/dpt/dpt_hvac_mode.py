@@ -61,7 +61,7 @@ class _DPTClimateMode(DPTBase, Generic[HVACModeType]):
         for knx_value, mode in cls.SUPPORTED_MODES.items():
             if mode == value:
                 return (knx_value,)
-        raise ConversionError("Could not parse %s" % cls.__name__, value=value)
+        raise ConversionError(f"Could not parse {cls.__name__}", value=value)
 
 
 class DPTHVACContrMode(_DPTClimateMode[HVACControllerMode]):

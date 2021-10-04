@@ -42,12 +42,14 @@ class Scene(Device):
         """Iterate the devices RemoteValue classes."""
         yield self.scene_value
 
-    def __str__(self) -> str:
-        """Return object as readable string."""
-        return '<Scene name="{}" ' 'scene_value={} scene_number="{}" />'.format(
-            self.name, self.scene_value.group_addr_str(), self.scene_number
-        )
-
     async def run(self) -> None:
         """Activate scene."""
         await self.scene_value.set(self.scene_number)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<Scene name="{self.name}" '
+            f"scene_value={self.scene_value.group_addr_str()} "
+            f'scene_number="{self.scene_number}" />'
+        )

@@ -82,4 +82,4 @@ class DPTColorXYY(DPTBase):
                 color_valid << 1 | brightness_valid,
             )
         except (ValueError, TypeError):
-            raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
+            raise ConversionError(f"Could not serialize {cls.__name__}", value=value)

@@ -87,9 +87,9 @@ class ExposeSensor(Device):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<ExposeSensor name="{}" sensor={} value={} unit="{}"/>'.format(
-            self.name,
-            self.sensor_value.group_addr_str(),
-            self.resolve_state().__repr__(),
-            self.unit_of_measurement(),
+        return (
+            f'<ExposeSensor name="{self.name}" '
+            f"sensor={self.sensor_value.group_addr_str()} "
+            f"value={self.resolve_state().__repr__()} "
+            f'unit="{self.unit_of_measurement()}"/>'
         )

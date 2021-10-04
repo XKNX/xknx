@@ -86,9 +86,9 @@ class NumericValue(Device):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<NumericValue name="{}" addresses={} value={} unit="{}"/>'.format(
-            self.name,
-            self.sensor_value.group_addr_str(),
-            self.resolve_state().__repr__(),
-            self.unit_of_measurement(),
+        return (
+            f'<NumericValue name="{self.name}" '
+            f"addresses={self.sensor_value.group_addr_str()} "
+            f"value={self.resolve_state().__repr__()} "
+            f'unit="{self.unit_of_measurement()}"/>'
         )

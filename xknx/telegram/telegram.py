@@ -51,13 +51,12 @@ class Telegram:
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<Telegram direction="{}" source_address="{}" '
-            'destination_address="{}" payload="{}" />'.format(
-                self.direction.value,
-                self.source_address,
-                self.destination_address,
-                self.payload,
-            )
+            "<Telegram "
+            f'direction="{self.direction.value}" '
+            f'source_address="{self.source_address}" '
+            f'destination_address="{self.destination_address}" '
+            f'payload="{self.payload}" '
+            "/>"
         )
 
     def __eq__(self, other: object) -> bool:

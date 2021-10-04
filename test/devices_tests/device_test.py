@@ -60,6 +60,29 @@ class TestDevice:
         after_update_callback1.assert_not_called()
         after_update_callback2.assert_not_called()
 
+    @patch("logging.Logger.exception")
+    async def test_bad_callback(self, logging_exception_mock):
+        """Test handling callback raising an exception"""
+        xknx = XKNX()
+        device = Device(xknx, "TestDevice")
+        good_callback_1 = AsyncMock()
+        bad_callback = AsyncMock(side_effect=Exception("Boom"))
+        good_callback_2 = AsyncMock()
+
+        device.register_device_updated_cb(good_callback_1)
+        device.register_device_updated_cb(bad_callback)
+        device.register_device_updated_cb(good_callback_2)
+
+        await device.after_update()
+        good_callback_1.assert_called_with(device)
+        bad_callback.assert_called_with(device)
+        good_callback_2.assert_called_with(device)
+
+        logging_exception_mock.assert_called_once_with(
+            "Unexpected error while processing device_updated_cb for %s",
+            device,
+        )
+
     async def test_process(self):
         """Test if telegram is handled by the correct process_* method."""
         xknx = XKNX()

@@ -95,8 +95,8 @@ class TunnellingRequest(KNXIPBody):
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<TunnellingRequest communication_channel_id="{}" '
-            'sequence_counter="{}" cemi="{}" />'.format(
-                self.communication_channel_id, self.sequence_counter, self.cemi
-            )
+            "<TunnellingRequest "
+            f'communication_channel_id="{self.communication_channel_id}" '
+            f'sequence_counter="{self.sequence_counter}" '
+            f'cemi="{self.cemi}" />'
         )

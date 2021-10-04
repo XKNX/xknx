@@ -146,32 +146,6 @@ class Cover(Device):
         yield self.angle
         yield self.locked
 
-    def __str__(self) -> str:
-        """Return object as readable string."""
-        return (
-            '<Cover name="{}" '
-            "updown={} "
-            "step={} "
-            "stop_={} "
-            "position_current={} "
-            "position_target={} "
-            "angle={} "
-            "locked={} "
-            'travel_time_down="{}" '
-            'travel_time_up="{}" />'.format(
-                self.name,
-                self.updown.group_addr_str(),
-                self.step.group_addr_str(),
-                self.stop_.group_addr_str(),
-                self.position_current.group_addr_str(),
-                self.position_target.group_addr_str(),
-                self.angle.group_addr_str(),
-                self.locked.group_addr_str(),
-                self.travel_time_down,
-                self.travel_time_up,
-            )
-        )
-
     async def set_down(self) -> None:
         """Move cover down."""
         if self.updown.writable:
@@ -383,3 +357,19 @@ class Cover(Device):
     def supports_angle(self) -> bool:
         """Return if cover supports tilt angle."""
         return self.angle.initialized
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<Cover name="{self.name}" '
+            f"updown={self.updown.group_addr_str()} "
+            f"step={self.step.group_addr_str()} "
+            f"stop_={self.stop_.group_addr_str()} "
+            f"position_current={self.position_current.group_addr_str()} "
+            f"position_target={self.position_target.group_addr_str()} "
+            f"angle={self.angle.group_addr_str()} "
+            f"locked={self.locked.group_addr_str()} "
+            f'travel_time_down="{self.travel_time_down}" '
+            f'travel_time_up="{self.travel_time_up}" '
+            "/>"
+        )

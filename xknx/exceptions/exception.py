@@ -46,8 +46,9 @@ class CouldNotParseTelegram(XKNXException):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<CouldNotParseTelegram description="{}" {}/>'.format(
-            self.description, self._format_parameter()
+        return (
+            "<CouldNotParseTelegram "
+            f'description="{self.description}" {self._format_parameter()}/>'
         )
 
 
@@ -122,6 +123,4 @@ class DeviceIllegalValue(XKNXException):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<DeviceIllegalValue description="{}" value="{}" />'.format(
-            self.value, self.description
-        )
+        return f'<DeviceIllegalValue description="{self.value}" value="{self.description}" />'

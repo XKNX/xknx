@@ -32,7 +32,7 @@ class DPTValue1ByteUnsigned(DPTNumeric):
 
         if not cls._test_boundaries(value):
             raise ConversionError(
-                "Could not parse %s" % cls.__name__, value=value, raw=raw
+                f"Could not parse {cls.__name__}", value=value, raw=raw
             )
 
         return value
@@ -46,7 +46,7 @@ class DPTValue1ByteUnsigned(DPTNumeric):
                 raise ValueError
             return (knx_value,)
         except ValueError:
-            raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
+            raise ConversionError(f"Could not serialize {cls.__name__}", value=value)
 
     @classmethod
     def _test_boundaries(cls, value: int) -> bool:
@@ -129,7 +129,7 @@ class DPTSceneNumber(DPTValue1ByteUnsigned):
 
         if not cls._test_boundaries(value):
             raise ConversionError(
-                "Could not parse %s" % cls.__name__, value=value, raw=raw
+                f"Could not parse {cls.__name__}", value=value, raw=raw
             )
 
         return value
@@ -143,4 +143,4 @@ class DPTSceneNumber(DPTValue1ByteUnsigned):
                 raise ValueError
             return (knx_value,)
         except ValueError:
-            raise ConversionError("Could not serialize %s" % cls.__name__, value=value)
+            raise ConversionError(f"Could not serialize {cls.__name__}", value=value)
