@@ -20,7 +20,7 @@ async def main():
             if gateway.supports_tunnelling:
                 print("- Device supports tunneling")
             if gateway.supports_routing:
-                print("- Device supports routing, connecting via {gateway.local_ip}")
+                print(f"- Device supports routing, connecting via {gateway.local_ip}")
 
 
 asyncio.run(main())
