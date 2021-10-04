@@ -125,7 +125,9 @@ class TelegramQueue:
                 try:
                     await self.process_telegram_incoming(telegram)
                 except XKNXException as ex:
-                    logger.error("Error while processing incoming telegram %s", ex)
+                    logger.error(
+                        "Error while processing incoming telegram (%s) %s", telegram, ex
+                    )
                 except Exception:  # pylint: disable=broad-except
                     # prevent the parser Task from stalling when unexpected errors occur
                     logger.exception(
