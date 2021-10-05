@@ -1556,6 +1556,66 @@ class TestLight:
         with pytest.raises(CouldNotParseTelegram):
             await light.process(telegram)
 
+    async def test_process_color_temperature_absolute_temp(self):
+        """Test process / reading telegrams from telegram queue. Test if color temperature is processed."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_color_temperature="1/2/5",
+            color_temperature_mode=ColorTempModes.ABSOLUTE_TEMP,
+        )
+        assert light.current_color_temperature is None
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(
+                DPTArray(
+                    (
+                        0x46,
+                        0x1A,
+                    )
+                )
+            ),
+        )
+        await light.process(telegram)
+        assert light.current_color_temperature == 4000
+
+    async def test_process_color_temperature_absolute_temp_wrong_payload(self):
+        """Test process wrong telegrams. (wrong payload type)."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_color_temperature="1/2/5",
+            color_temperature_mode=ColorTempModes.ABSOLUTE_TEMP,
+        )
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        with pytest.raises(CouldNotParseTelegram):
+            await light.process(telegram)
+
+    async def test_process_color_temperature_absolute_temp_payload_invalid_length(self):
+        """Test process wrong telegrams. (wrong payload length)."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_color_temperature="1/2/5",
+            color_temperature_mode=ColorTempModes.ABSOLUTE_TEMP,
+        )
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTArray(23)),
+        )
+        with pytest.raises(CouldNotParseTelegram):
+            await light.process(telegram)
+
     def test_has_group_address(self):
         """Test has_group_address."""
         xknx = XKNX()
