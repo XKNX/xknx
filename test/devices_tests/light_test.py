@@ -1580,7 +1580,7 @@ class TestLight:
             ),
         )
         await light.process(telegram)
-        assert light.current_color_temperature == 4000
+        assert pytest.approx(light.current_color_temperature, 0.1) == 4000
 
     async def test_process_color_temperature_absolute_temp_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
