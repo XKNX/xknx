@@ -29,10 +29,8 @@ The Light object is either a representation of a binary or dimm actor, LED-contr
 - `group_address_saturation_state` KNX group address for the current saturation. *DPT 5.001*
 - `group_address_xyy_color`: KNX group address to set the xyY color. *DPT 242.600*
 - `group_address_xyy_color_state`: KNX group address for the current xyY color. *DPT 242.600*
-- `group_address_tunable_white` KNX group address to set relative color temperature. *DPT 5.001*
-- `group_address_tunable_white_state` KNX group address for the current relative color temperature. *DPT 5.001*
-- `group_address_color_temperature` KNX group address to set absolute color temperature. *DPT 7.600*
-- `group_address_color_temperature_state` KNX group address for the current absolute color temperature. *DPT 7.600*
+- `group_address_color_temperature` KNX group address to set color temperature. Value and DPT depending on `color_temperature_mode`. *DPT 7.600*, *DPT 5.001* or *DPT 9.002*
+- `group_address_color_temperature_state` KNX group address for the current color temperature. Value and DPT depending on `color_temperature_mode`. *DPT 7.600*, *DPT 5.001* or *DPT 9.002*
 
 - `group_address_switch_red` KNX group address to switch the red component. *DPT 1.001*
 - `group_address_switch_red_state` KNX group address for the state of the red component. *DPT 1.001*
@@ -53,6 +51,10 @@ The Light object is either a representation of a binary or dimm actor, LED-contr
 - `sync_state` defines if and how often the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
 - `min_kelvin` lowest possible color temperature in Kelvin. Default: 2700
 - `max_kelvin` hightest possible color temperature in Kelvin. Default: 6000
+- `color_temperature_mode` the mode used for color temperature. Default: absolute
+  - `absolute` absolute color temperature in kelvin *DPT 7.600*
+  - `relative` relative color temperature in percent *DPT 5.001*
+  - `absolute_temp` absolute color temperature in kelvin, if device uses *DPT 9.002*
 - `device_updated_cb` awaitable callback for each update.
 
 ## [](#header-2)Example
@@ -68,10 +70,9 @@ light = Light(xknx,
               group_address_color_state='1/2/8',
               group_address_rgbw='1/2/13',
               group_address_rgbw_state='1/2/14',
-              group_address_tunable_white='1/2/9',
-              group_address_tunable_white_state='1/2/10',
               group_address_color_temperature='1/2/11',
-              group_address_color_temperature_state='1/2/12')
+              group_address_color_temperature_state='1/2/12',
+              color_temperature_mode='absolute')
 
 # Switching light on
 await light.set_on()
@@ -88,9 +89,6 @@ await light.set_color((20, 70,200))
 # Set rgbw color
 await light.set_color((20,70,200), 30)
 
-# Set relative color temperature (percent)
-await set_tunable_white(25)
-
 # Set absolute color temperature (Kelvin)
 await set_color_temperature(3300)
 
@@ -98,7 +96,6 @@ await set_color_temperature(3300)
 await light.do('on')
 await light.do('off')
 await light.do('brightness:80')
-await light.do('tunable_white:75')
 await light.do('color_temperature:5000')
 
 # Update current state via KNX GroupValueRead
@@ -111,8 +108,6 @@ print(light.current_brightness)
 print(light.supports_color)
 print(light.current_color)
 print(light.supports_rgbw)
-print(light.supports_tunable_white)
-print(light.current_tunable_white)
 print(light.supports_color_temperature)
 print(light.current_color_temperature)
 ```
@@ -163,7 +158,6 @@ print(light.supports_brightness)
 print(light.supports_color)
 print(light.supports_rgbw)
 print(light.current_color)
-print(light.supports_tunable_white)
 print(light.supports_color_temperature)
 
 # Requesting current state via KNX GroupValueRead for all _state addresses

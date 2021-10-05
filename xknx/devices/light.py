@@ -46,7 +46,7 @@ class ColorTempModes(Enum):
 
     ABSOLUTE = "DPT-7.600"
     RELATIVE = "DPT-5.001"
-    RELATIVE_TEMP = "DPT-9.002"
+    ABSOLUTE_TEMP = "DPT-9.002"
 
 
 class _SwitchAndBrightness:
@@ -235,8 +235,8 @@ class Light(Device):
         )
 
         self.color_temperature_mode = color_temperature_mode
-
         self.color_temperature: RemoteValue[Any, Any]
+
         if self.color_temperature_mode == ColorTempModes.ABSOLUTE:
             self.color_temperature = RemoteValueDpt2ByteUnsigned(
                 xknx,
@@ -259,7 +259,7 @@ class Light(Device):
                 range_from=0,
                 range_to=255,
             )
-        elif self.color_temperature_mode == ColorTempModes.RELATIVE_TEMP:
+        elif self.color_temperature_mode == ColorTempModes.ABSOLUTE_TEMP:
             self.color_temperature = RemoteValueTemp(
                 xknx,
                 group_address_color_temperature,

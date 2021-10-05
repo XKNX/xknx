@@ -2,6 +2,17 @@
 
 ## Unreleased changes
 
+### Devices
+
+- Light: Added `color_temperature_mode` parameter with following modes:
+  - `absolute`: Default mode. Set the absolute color temperature in kelvin (`DPT-7.600`).
+  - `relative`: Set the relative temperature in percent (`DPT-5.001`).
+  - `absolute_temp`: Set the absolute color temperature in kelvin if the device uses `DPT-9.002`.
+
+### Breaking Changes
+
+- Light: Removed `group_address_tunable_white` and `group_address_tunable_white_state`. To continue using relative color temperature assign the group addresses to `group_address_color_temperature` and `group_address_color_temperature_state` and set `color_temperature_mode` to `relative`.
+
 ### Internals
 
 - DPTString: replace invalid characters with question marks in `to_knx`

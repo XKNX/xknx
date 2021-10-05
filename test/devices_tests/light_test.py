@@ -1099,17 +1099,17 @@ class TestLight:
             )
 
     #
-    # TEST SET COLOR TEMPERATURE RELATIVE_TEMP
+    # TEST SET COLOR TEMPERATURE ABSOLUTE_TEMP
     #
-    async def test_set_color_temperature_relative_temp(self):
-        """Test setting the relative (temp) color temperature value of a Light."""
+    async def test_set_color_temperature_absolute_temp(self):
+        """Test setting the absolute temp color temperature value of a Light."""
         xknx = XKNX()
         light = Light(
             xknx,
             name="TestLight",
             group_address_switch="1/2/3",
             group_address_color_temperature="1/2/5",
-            color_temperature_mode=ColorTempModes.RELATIVE_TEMP,
+            color_temperature_mode=ColorTempModes.ABSOLUTE_TEMP,
         )
         await light.set_color_temperature(4000)
         assert xknx.telegrams.qsize() == 1

@@ -274,7 +274,7 @@ class KNXLight(KnxEntity, LightEntity):
         if self._device.supports_color_temperature:
             if (
                 self._device.color_temperature_mode == ColorTempModes.ABSOLUTE
-                or self._device.color_temperature_mode == ColorTempModes.RELATIVE_TEMP
+                or self._device.color_temperature_mode == ColorTempModes.ABSOLUTE_TEMP
             ):
                 kelvin = self._device.current_color_temperature
                 # Avoid division by zero if actuator reported 0 Kelvin (e.g., uninitialized DALI-Gateway)
