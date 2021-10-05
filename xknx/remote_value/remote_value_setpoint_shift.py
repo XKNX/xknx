@@ -72,7 +72,7 @@ class RemoteValueSetpointShift(RemoteValue[DPTArray, float]):
         """Convert value to payload."""
         if self.dpt_class is None:
             raise ConversionError(
-                "Setpoint shift DPT not initialized for %s" % self.device_name
+                f"Setpoint shift DPT not initialized for {self.device_name}"
             )
         if self.dpt_class == DPTValue1Count:
             converted_value = int(value / self.setpoint_shift_step)

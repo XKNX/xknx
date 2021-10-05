@@ -114,9 +114,7 @@ class CEMIFrame:
             self.code = CEMIMessageCode(raw[0])
         except ValueError:
             raise UnsupportedCEMIMessage(
-                "CEMIMessageCode not implemented: {} in CEMI: {}".format(
-                    raw[0], raw.hex()
-                )
+                f"CEMIMessageCode not implemented: {raw[0]} in CEMI: {raw.hex()}"
             )
 
         if self.code not in (
@@ -125,9 +123,7 @@ class CEMIFrame:
             CEMIMessageCode.L_DATA_CON,
         ):
             raise UnsupportedCEMIMessage(
-                "Could not handle CEMIMessageCode: {} / {} in CEMI: {}".format(
-                    self.code, raw[0], raw.hex()
-                )
+                f"Could not handle CEMIMessageCode: {self.code} / {raw[0]} in CEMI: {raw.hex()}"
             )
 
         return self.from_knx_data_link_layer(raw)
@@ -138,7 +134,7 @@ class CEMIFrame:
             # eg. ETS Line-Scan issues L_DATA_IND with length 10 or checking for individual addresses
             # at start of ETS programming procedure
             raise UnsupportedCEMIMessage(
-                "CEMI too small. Length: {}; CEMI: {}".format(len(cemi), cemi.hex())
+                f"CEMI too small. Length: {len(cemi)}; CEMI: {cemi.hex()}"
             )
 
         # AddIL (Additional Info Length), as specified within
@@ -165,9 +161,7 @@ class CEMIFrame:
         apdu = cemi[9 + addil :]
         if len(apdu) != (self.mpdu_len + 1):
             raise CouldNotParseKNXIP(
-                "APDU LEN should be {} but is {} in CEMI: {}".format(
-                    self.mpdu_len, len(apdu), cemi.hex()
-                )
+                f"APDU LEN should be {self.mpdu_len} but is {len(apdu)} in CEMI: {cemi.hex()}"
             )
 
         tpci_apci = (apdu[0] << 8) + apdu[1]
@@ -176,7 +170,7 @@ class CEMIFrame:
             self.payload = APCI.resolve_apci(tpci_apci & 0x03FF)
         except ConversionError:
             raise UnsupportedCEMIMessage(
-                "APCI not supported: {:#012b}".format(tpci_apci & 0x03FF)
+                f"APCI not supported: {(tpci_apci & 0x03FF):#012b}"
             )
 
         self.payload.from_knx(apdu)
@@ -208,13 +202,11 @@ class CEMIFrame:
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<CEMIFrame SourceAddress="{}" DestinationAddress="{}" '
-            'Flags="{:16b}" payload="{}" />'.format(
-                self.src_addr.__repr__(),
-                self.dst_addr.__repr__(),
-                self.flags,
-                self.payload,
-            )
+            "<CEMIFrame "
+            f'SourceAddress="{self.src_addr.__repr__()}" '
+            f'DestinationAddress="{self.dst_addr.__repr__()}" '
+            f'Flags="{self.flags:16b}" '
+            f'payload="{self.payload}" />'
         )
 
     def __eq__(self, other: object) -> bool:

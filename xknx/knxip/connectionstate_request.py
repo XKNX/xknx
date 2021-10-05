@@ -70,8 +70,7 @@ class ConnectionStateRequest(KNXIPBody):
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<ConnectionStateRequest CommunicationChannelID="{}", '
-            'control_endpoint="{}" />'.format(
-                self.communication_channel_id, self.control_endpoint
-            )
+            "<ConnectionStateRequest "
+            f'CommunicationChannelID="{self.communication_channel_id}", '
+            f'control_endpoint="{self.control_endpoint}" />'
         )

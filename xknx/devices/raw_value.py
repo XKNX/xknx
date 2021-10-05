@@ -78,8 +78,8 @@ class RawValue(Device):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<RawValue name="{}" addresses={} value={}/>'.format(
-            self.name,
-            self.remote_value.group_addr_str(),
-            self.resolve_state().__repr__(),
+        return (
+            f'<RawValue name="{self.name}" '
+            f"addresses={self.remote_value.group_addr_str()} "
+            f"value={self.resolve_state().__repr__()}/>"
         )

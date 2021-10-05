@@ -196,4 +196,4 @@ def validate_ip(address: str, address_name: str = "IP address") -> None:
     try:
         ipaddress.IPv4Address(address)
     except ipaddress.AddressValueError as ex:
-        raise XKNXException("%s is not a valid IPv4 address." % address_name) from ex
+        raise XKNXException(f"{address_name} is not a valid IPv4 address.") from ex

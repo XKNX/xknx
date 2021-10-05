@@ -373,24 +373,19 @@ class Weather(Device):
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            '<Weather name="{}" '
-            "temperature={} brightness_south={} brightness_north={} brightness_west={} "
-            "brightness_east={} wind_speed={} wind_bearing={} rain_alarm={} "
-            "wind_alarm={} frost_alarm={} day_night={} "
-            "air_pressure={} humidity={} />".format(
-                self.name,
-                self._temperature.group_addr_str(),
-                self._brightness_south.group_addr_str(),
-                self._brightness_north.group_addr_str(),
-                self._brightness_west.group_addr_str(),
-                self._brightness_east.group_addr_str(),
-                self._wind_speed.group_addr_str(),
-                self._wind_bearing.group_addr_str(),
-                self._rain_alarm.group_addr_str(),
-                self._wind_alarm.group_addr_str(),
-                self._frost_alarm.group_addr_str(),
-                self._day_night.group_addr_str(),
-                self._air_pressure.group_addr_str(),
-                self._humidity.group_addr_str(),
-            )
+            f'<Weather name="{self.name}" '
+            f"temperature={self._temperature.group_addr_str()} "
+            f"brightness_south={self._brightness_south.group_addr_str()} "
+            f"brightness_north={self._brightness_north.group_addr_str()} "
+            f"brightness_west={self._brightness_west.group_addr_str()} "
+            f"brightness_east={self._brightness_east.group_addr_str()} "
+            f"wind_speed={self._wind_speed.group_addr_str()} "
+            f"wind_bearing={self._wind_bearing.group_addr_str()} "
+            f"rain_alarm={self._rain_alarm.group_addr_str()} "
+            f"wind_alarm={self._wind_alarm.group_addr_str()} "
+            f"frost_alarm={self._frost_alarm.group_addr_str()} "
+            f"day_night={self._day_night.group_addr_str()} "
+            f"air_pressure={self._air_pressure.group_addr_str()} "
+            f"humidity={self._humidity.group_addr_str()} "
+            "/>"
         )

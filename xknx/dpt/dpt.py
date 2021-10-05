@@ -68,7 +68,7 @@ class DPTBase(ABC):
     def test_bytesarray(cls, raw: tuple[int, ...]) -> None:
         """Test if array of raw bytes has the correct length and values of correct type."""
         if cls.payload_length is None:
-            raise NotImplementedError("payload_length has to be defined for: %s" % cls)
+            raise NotImplementedError(f"payload_length has to be defined for: {cls}")
         if (
             not isinstance(raw, (tuple, list))
             or len(raw) != cls.payload_length
@@ -213,8 +213,8 @@ class DPTArray:
 
     def __repr__(self) -> str:
         """Return object representation."""
-        return "DPTArray(({}))".format(", ".join(hex(b) for b in self.value))
+        return f"DPTArray(({', '.join(hex(b) for b in self.value)}))"
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<DPTArray value="[{}]" />'.format(",".join(hex(b) for b in self.value))
+        return f'<DPTArray value="[{",".join(hex(b) for b in self.value)}]" />'

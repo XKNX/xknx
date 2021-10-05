@@ -61,6 +61,9 @@ class SearchResponse(KNXIPBody):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<SearchResponse control_endpoint="{}" dibs="[\n{}\n]" />'.format(
-            self.control_endpoint, ",\n".join(dib.__str__() for dib in self.dibs)
+        _dibs_str = ",\n".join(dib.__str__() for dib in self.dibs)
+        return (
+            "<SearchResponse "
+            f'control_endpoint="{self.control_endpoint}" '
+            f'dibs="[\n{_dibs_str}\n]" />'
         )

@@ -55,14 +55,12 @@ class GatewayDescriptor:
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return '<GatewayDescriptor name="{}" addr="{}:{}" local="{}@{}" routing="{}" tunnelling="{}" />'.format(
-            self.name,
-            self.ip_addr,
-            self.port,
-            self.local_ip,
-            self.local_interface,
-            self.supports_routing,
-            self.supports_tunnelling,
+        return (
+            f'<GatewayDescriptor name="{self.name}" '
+            f'addr="{self.ip_addr}:{self.port}" '
+            f'local="{self.local_ip}@{self.local_interface}" '
+            f'routing="{self.supports_routing}" '
+            f'tunnelling="{self.supports_tunnelling}" />'
         )
 
 
