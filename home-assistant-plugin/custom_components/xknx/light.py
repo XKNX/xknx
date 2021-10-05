@@ -281,7 +281,7 @@ class KNXLight(KnxEntity, LightEntity):
                 if kelvin is not None and kelvin > 0:
                     return color_util.color_temperature_kelvin_to_mired(kelvin)
             else:
-                relative_ct = self._device.current_tunable_white
+                relative_ct = self._device.current_color_temperature
                 if relative_ct is not None:
                     # as KNX devices typically use Kelvin we use it as base for
                     # calculating ct from percent
@@ -308,10 +308,7 @@ class KNXLight(KnxEntity, LightEntity):
             return COLOR_MODE_RGBW
         if self._device.supports_color:
             return COLOR_MODE_RGB
-        if (
-            self._device.supports_color_temperature
-            or self._device.supports_tunable_white
-        ):
+        if self._device.supports_color_temperature:
             return COLOR_MODE_COLOR_TEMP
         if self._device.supports_brightness:
             return COLOR_MODE_BRIGHTNESS
@@ -380,14 +377,20 @@ class KNXLight(KnxEntity, LightEntity):
             kelvin = min(self._max_kelvin, max(self._min_kelvin, kelvin))
 
             if self._device.supports_color_temperature:
-                await self._device.set_color_temperature(kelvin)
-            elif self._device.supports_tunable_white:
-                relative_ct = int(
-                    255
-                    * (kelvin - self._min_kelvin)
-                    / (self._max_kelvin - self._min_kelvin)
-                )
-                await self._device.set_tunable_white(relative_ct)
+
+                if (
+                    self._device.color_temperature_mode == ColorTempModes.ABSOLUTE
+                    or self._device.color_temperature_mode
+                    == ColorTempModes.ABSOLUTE_TEMP
+                ):
+                    await self._device.set_color_temperature(kelvin)
+                elif self.device.color_temperature_mode == ColorTempModes.RELATIVE:
+                    relative_ct = int(
+                        255
+                        * (kelvin - self._min_kelvin)
+                        / (self._max_kelvin - self._min_kelvin)
+                    )
+                await self._device.set_color_temperature(relative_ct)
 
         if brightness is not None:
             # brightness: 1..255; 0 brightness will call async_turn_off()
