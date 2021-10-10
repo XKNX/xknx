@@ -397,13 +397,9 @@ class KNXModule:
         )
 
     async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
-        """Call invoked after a KNX telegram was received."""
-        new_state = state == XknxConnectionState.CONNECTED
-        old_state = self.connected
-
-        self.connected = new_state
-        if old_state != new_state:
-            [await device.after_update() for device in self.xknx.devices]
+        """Call invoked after a KNX connection state change was received."""
+        self.connected = state == XknxConnectionState.CONNECTED
+        [await device.after_update() for device in self.xknx.devices]
 
         self.hass.bus.async_fire(
             "knx_connection_state_change",

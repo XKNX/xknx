@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class ConnectionManager:
-    """Manages connection and its state within XKNX."""
+    """Manages connection state changes XKNX."""
 
     def __init__(self) -> None:
         """Initialize ConnectionState class."""
