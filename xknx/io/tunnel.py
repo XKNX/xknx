@@ -96,7 +96,7 @@ class Tunnel(Interface):
 
     async def connect(self) -> bool:
         """Connect to a KNX tunneling interface. Returns True on success."""
-        self.xknx.connection_manager.connection_state_changed(
+        await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTING
         )
         try:
@@ -115,22 +115,24 @@ class Tunnel(Interface):
             await self.udp_client.stop()
             raise ex
         else:
+            await self.xknx.connection_manager.connection_state_changed(
+                XknxConnectionState.CONNECTED
+            )
             self._tunnel_established()
             return True
 
     def _tunnel_established(self) -> None:
         """Set up interface when the tunnel is ready."""
         self.sequence_number = 0
-        self.xknx.connection_manager.connection_state_changed(
-            XknxConnectionState.CONNECTED
-        )
         # self._stop_reconnect()
         self.start_heartbeat()
 
     def _tunnel_lost(self) -> None:
         """Prepare for reconnection or shutdown when the connection is lost. Callback."""
-        self.xknx.connection_manager.connection_state_changed(
-            XknxConnectionState.DISCONNECTED
+        asyncio.create_task(
+            self.xknx.connection_manager.connection_state_changed(
+                XknxConnectionState.DISCONNECTED
+            )
         )
         self.stop_heartbeat()
         if self.auto_reconnect:
@@ -140,8 +142,8 @@ class Tunnel(Interface):
 
     async def _reconnect(self) -> None:
         """Reconnect to tunnel device."""
-        self.xknx.connection_manager.connection_state_changed(
-            XknxConnectionState.RECONNECTING
+        await self.xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.CONNECTING
         )
         await self._disconnect_request(True)
         await self.udp_client.stop()
@@ -157,7 +159,7 @@ class Tunnel(Interface):
 
     async def disconnect(self) -> None:
         """Disconnect tunneling connection."""
-        self.xknx.connection_manager.connection_state_changed(
+        await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
         self.stop_heartbeat()
@@ -321,7 +323,7 @@ class Tunnel(Interface):
         )
         self.udp_client.send(KNXIPFrame.init_from_body(ack))
 
-    def _disconnect_request_received(
+    async def _disconnect_request_received(
         self, disconnect_request: DisconnectRequest
     ) -> None:
         """Handle incoming disconnect request."""

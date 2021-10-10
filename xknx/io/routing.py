@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Callable
 
+from xknx.core import XknxConnectionState
 from xknx.knxip import (
     CEMIFrame,
     CEMIMessageCode,
@@ -17,7 +18,6 @@ from xknx.knxip import (
 )
 from xknx.telegram import TelegramDirection
 
-from ..core import XknxConnectionState
 from .interface import Interface
 from .udp_client import UDPClient
 
@@ -89,7 +89,7 @@ class Routing(Interface):
     async def connect(self) -> bool:
         """Start routing."""
         try:
-            self.xknx.connection_manager.connection_state_changed(
+            await self.xknx.connection_manager.connection_state_changed(
                 XknxConnectionState.CONNECTING
             )
             await self.udpclient.connect()
@@ -102,7 +102,7 @@ class Routing(Interface):
             # close udp client to prevent open file descriptors
             await self.udpclient.stop()
             raise ex
-        self.xknx.connection_manager.connection_state_changed(
+        await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTED
         )
         return True
@@ -110,6 +110,6 @@ class Routing(Interface):
     async def disconnect(self) -> None:
         """Stop routing."""
         await self.udpclient.stop()
-        self.xknx.connection_manager.connection_state_changed(
+        await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )

@@ -58,7 +58,7 @@ class XKNX:
         self.sigint_received = asyncio.Event()
         self.telegram_queue = TelegramQueue(self)
         self.state_updater = StateUpdater(self)
-        self.connection_manager = ConnectionManager(self)
+        self.connection_manager = ConnectionManager()
         self.knxip_interface: KNXIPInterface | None = None
         self.started = asyncio.Event()
         self.address_format = address_format

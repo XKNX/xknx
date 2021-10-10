@@ -7,20 +7,16 @@ from typing import TYPE_CHECKING, Awaitable, Callable
 from xknx.core.connection_state import XknxConnectionState
 
 if TYPE_CHECKING:
-    from xknx.xknx import XKNX
-
     AsyncConnectionStateCallback = Callable[[XknxConnectionState], Awaitable[None]]
 
 
 class ConnectionManager:
     """Manages connection and its state within XKNX."""
 
-    def __init__(self, xknx: XKNX) -> None:
+    def __init__(self) -> None:
         """Initialize ConnectionState class."""
-        self.xknx = xknx
         self.connected = asyncio.Event()
         self._state = XknxConnectionState.DISCONNECTED
-        self._state_changed = asyncio.Event()
         self._connection_state_changed_cbs: list[AsyncConnectionStateCallback] = []
 
     def register_connection_state_changed_cb(
@@ -37,6 +33,9 @@ class ConnectionManager:
 
     async def connection_state_changed(self, state: XknxConnectionState) -> None:
         """Run registered callbacks. Set internal state flag."""
+        if self._state == state:
+            return
+
         self._state = state
         if state == XknxConnectionState.CONNECTED:
             self.connected.set()
