@@ -17,6 +17,7 @@ from xknx.knxip import (
 )
 from xknx.telegram import TelegramDirection
 
+from ..core import XknxConnectionState
 from .interface import Interface
 from .udp_client import UDPClient
 
@@ -88,6 +89,9 @@ class Routing(Interface):
     async def connect(self) -> bool:
         """Start routing."""
         try:
+            self.xknx.connection_manager.connection_state_changed(
+                XknxConnectionState.CONNECTING
+            )
             await self.udpclient.connect()
         except OSError as ex:
             logger.debug(
@@ -98,10 +102,14 @@ class Routing(Interface):
             # close udp client to prevent open file descriptors
             await self.udpclient.stop()
             raise ex
-        self.xknx.connected.set()
+        self.xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.CONNECTED
+        )
         return True
 
     async def disconnect(self) -> None:
         """Stop routing."""
         await self.udpclient.stop()
-        self.xknx.connected.clear()
+        self.xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.DISCONNECTED
+        )

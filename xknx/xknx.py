@@ -10,7 +10,12 @@ from sys import platform
 from types import TracebackType
 from typing import Awaitable, Callable
 
-from xknx.core import StateUpdater, TelegramQueue
+from xknx.core import (
+    ConnectionManager,
+    StateUpdater,
+    TelegramQueue,
+    XknxConnectionState,
+)
 from xknx.devices import Device, Devices
 from xknx.io import (
     DEFAULT_MCAST_GRP,
@@ -37,6 +42,8 @@ class XKNX:
         address_format: GroupAddressType = GroupAddressType.LONG,
         telegram_received_cb: Callable[[Telegram], Awaitable[None]] | None = None,
         device_updated_cb: Callable[[Device], Awaitable[None]] | None = None,
+        connection_state_changed_cb: Callable[[XknxConnectionState], Awaitable[None]]
+        | None = None,
         rate_limit: int = DEFAULT_RATE_LIMIT,
         multicast_group: str = DEFAULT_MCAST_GRP,
         multicast_port: int = DEFAULT_MCAST_PORT,
@@ -51,9 +58,9 @@ class XKNX:
         self.sigint_received = asyncio.Event()
         self.telegram_queue = TelegramQueue(self)
         self.state_updater = StateUpdater(self)
+        self.connection_manager = ConnectionManager(self)
         self.knxip_interface: KNXIPInterface | None = None
         self.started = asyncio.Event()
-        self.connected = asyncio.Event()
         self.address_format = address_format
         self.own_address = IndividualAddress(own_address)
         self.rate_limit = rate_limit
@@ -72,6 +79,11 @@ class XKNX:
 
         if device_updated_cb is not None:
             self.devices.register_device_updated_cb(device_updated_cb)
+
+        if connection_state_changed_cb is not None:
+            self.connection_manager.register_connection_state_changed_cb(
+                connection_state_changed_cb
+            )
 
     def __del__(self) -> None:
         """Destructor. Cleaning up if this was not done before."""
