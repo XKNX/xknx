@@ -1,7 +1,6 @@
 {
   "domain": "xknx",
   "name": "KNX",
-  "version": "0.18.3",
   "documentation": "https://www.home-assistant.io/integrations/knx",
   "requirements": [],
   "codeowners": ["@Julius2342", "@farmio", "@marvin-w"],
