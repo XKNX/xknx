@@ -6,6 +6,7 @@ from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
+from xknx.core import XknxConnectionState
 from xknx.remote_value import RemoteValue
 
 if TYPE_CHECKING:
@@ -21,12 +22,17 @@ MAX_UPDATE_INTERVAL = 1440
 class StateUpdater:
     """Class for keeping the states of RemoteValues up to date."""
 
-    def __init__(self, xknx: XKNX, parallel_reads: int = 2):
+    def __init__(self, xknx: XKNX, active: bool = False, parallel_reads: int = 2):
         """Initialize StateUpdater class."""
         self.xknx = xknx
         self.started = False
         self._workers: dict[int, _StateTracker] = {}
         self._semaphore = asyncio.Semaphore(value=parallel_reads)
+
+        if active:
+            self.xknx.connection_manager.register_connection_state_changed_cb(
+                connection_state_changed_cb=self.connection_state_change_callback
+            )
 
     def register_remote_value(
         self,
@@ -134,6 +140,15 @@ class StateUpdater:
         self.started = False
         for worker in self._workers.values():
             worker.stop()
+
+    async def connection_state_change_callback(
+        self, state: XknxConnectionState
+    ) -> None:
+        """Start and stop StateUpdater via connection state update."""
+        if state == XknxConnectionState.CONNECTED:
+            self.start()
+        else:
+            self.stop()
 
 
 class StateTrackerType(Enum):
