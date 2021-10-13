@@ -21,6 +21,7 @@ from xknx.knxip import (
 )
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 
+from ..core import XknxConnectionState
 from .const import HEARTBEAT_RATE
 from .interface import Interface
 from .request_response import Connect, ConnectionState, Disconnect, Tunnelling
@@ -95,6 +96,9 @@ class Tunnel(Interface):
 
     async def connect(self) -> bool:
         """Connect to a KNX tunneling interface. Returns True on success."""
+        await self.xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.CONNECTING
+        )
         try:
             await self.udp_client.connect()
             await self._connect_request()
@@ -111,19 +115,25 @@ class Tunnel(Interface):
             await self.udp_client.stop()
             raise ex
         else:
+            await self.xknx.connection_manager.connection_state_changed(
+                XknxConnectionState.CONNECTED
+            )
             self._tunnel_established()
             return True
 
     def _tunnel_established(self) -> None:
         """Set up interface when the tunnel is ready."""
         self.sequence_number = 0
-        self.xknx.connected.set()
         # self._stop_reconnect()
         self.start_heartbeat()
 
     def _tunnel_lost(self) -> None:
         """Prepare for reconnection or shutdown when the connection is lost. Callback."""
-        self.xknx.connected.clear()
+        asyncio.create_task(
+            self.xknx.connection_manager.connection_state_changed(
+                XknxConnectionState.DISCONNECTED
+            )
+        )
         self.stop_heartbeat()
         if self.auto_reconnect:
             self._reconnect_task = asyncio.create_task(self._reconnect())
@@ -132,6 +142,9 @@ class Tunnel(Interface):
 
     async def _reconnect(self) -> None:
         """Reconnect to tunnel device."""
+        await self.xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.CONNECTING
+        )
         await self._disconnect_request(True)
         await self.udp_client.stop()
         await asyncio.sleep(self.auto_reconnect_wait)
@@ -146,7 +159,9 @@ class Tunnel(Interface):
 
     async def disconnect(self) -> None:
         """Disconnect tunneling connection."""
-        self.xknx.connected.clear()
+        await self.xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.DISCONNECTED
+        )
         self.stop_heartbeat()
         self._stop_reconnect()
         await self._disconnect_request(False)
@@ -232,7 +247,7 @@ class Tunnel(Interface):
                 # TODO: How to test this?
                 if self._reconnect_task is None or self._reconnect_task.done():
                     self._tunnel_lost()
-                await self.xknx.connected.wait()
+                await self.xknx.connection_manager.connected.wait()
                 success = await self._tunnelling_request(telegram)
                 if not success:
                     raise CommunicationError(

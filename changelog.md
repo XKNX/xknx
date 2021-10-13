@@ -8,6 +8,11 @@
 - Catch and log exceptions raised in callbacks to not stall the TelegramQueue
 - Handle callbacks in separate asyncio Tasks
 - GatewayScanFilter: Ignore non-gateway KNX/IP devices
+- Introduce connection state change handler
+
+### Home Assistant Plugin
+
+- Properly handle disconnected state in the UI.
 
 ## 0.18.9 HS-color 2021-07-26
 

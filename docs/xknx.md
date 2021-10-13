@@ -21,7 +21,8 @@ The `XKNX()` object is the core element of any XKNX installation. It should be o
 ```python
 xknx = XKNX(
     own_address=DEFAULT_ADDRESS,
-    address_format=GroupAddressType.LONG
+    address_format=GroupAddressType.LONG,
+    connection_state_changed_cb=None,
     telegram_received_cb=None,
     device_updated_cb=None,
     rate_limit=DEFAULT_RATE_LIMIT,
@@ -41,6 +42,7 @@ The constructor of the XKNX object takes several parameters:
   - FREE: integer or hex representation
   - SHORT: representation like '1/34' without middle groups
   - LONG: representation like '1/2/34' with middle groups
+- `connection_state_changed_cb` is a callback which is called every time the connection state to the gateway changes. See [callbacks](#callbacks) documentation for details.
 - `telegram_received_cb` is a callback which is called after every received KNX telegram. See [callbacks](#callbacks) documentation for details.
 - `device_updated_cb` is an async callback after a [XKNX device](#devices) was updated. See [callbacks](#callbacks) documentation for details.
 - `rate_limit` in telegrams per second - can be used to limit the outgoing traffic to the KNX/IP interface. The default value is 20 packets per second.
@@ -107,8 +109,9 @@ An awaitable `telegram_received_cb` will be called for each KNX telegram receive
 ```python
 import asyncio
 from xknx import XKNX
+from xknx.telegram import Telegram
 
-async def telegram_received_cb(telegram):
+async def telegram_received_cb(telegram: Telegram):
     print("Telegram received: {0}".format(telegram))
 
 async def main():
@@ -124,10 +127,10 @@ For all devices stored in the `devices` storage (see [above](#devices)) a callba
 ```python
 import asyncio
 from xknx import XKNX
-from xknx.devices import Switch
+from xknx.devices import Device, Switch
 
 
-async def device_updated_cb(device):
+async def device_updated_cb(device: Device):
     print("Callback received from {0}".format(device.name))
 
 
@@ -137,6 +140,26 @@ async def main():
                     name='TestSwitch',
                     group_address='1/1/11')
 
+    await xknx.start()
+    await xknx.stop()
+
+asyncio.run(main())
+```
+
+An awaitable `connection_state_change_cb` will be called every time the connection state to the gateway changes. Example:
+
+```python
+import asyncio
+from xknx import XKNX
+from xknx.core import XknxConnectionState
+
+
+async def connection_state_change_cb(state: XknxConnectionState):
+    print("Callback received with state {0}".format(state.name))
+
+
+async def main():
+    xknx = XKNX(connection_state_change_cb=connection_state_change_cb, daemon_mode=True)
     await xknx.start()
     await xknx.stop()
 

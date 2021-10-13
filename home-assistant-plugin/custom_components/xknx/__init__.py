@@ -6,6 +6,7 @@ import logging
 
 import voluptuous as vol
 from xknx import XKNX
+from xknx.core import XknxConnectionState
 from xknx.core.telegram_queue import TelegramQueue
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import XKNXException
@@ -310,6 +311,9 @@ class KNXModule:
 
         self.init_xknx()
         self._knx_event_callback: TelegramQueue.Callback = self.register_callback()
+        self.xknx.connection_manager.register_connection_state_changed_cb(
+            self.connection_state_changed_cb
+        )
 
     def init_xknx(self) -> None:
         """Initialize XKNX object."""
@@ -326,7 +330,6 @@ class KNXModule:
         """Start XKNX object. Connect to tunneling or Routing device."""
         await self.xknx.start()
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
-        self.connected = True
 
     async def stop(self, event: Event) -> None:
         """Stop XKNX object. Disconnect from tunneling or Routing device."""
@@ -390,6 +393,19 @@ class KNXModule:
                 "direction": telegram.direction.value,
                 "source": str(telegram.source_address),
                 "telegramtype": telegram.payload.__class__.__name__,
+            },
+        )
+
+    async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
+        """Call invoked after a KNX connection state change was received."""
+        self.connected = state == XknxConnectionState.CONNECTED
+        for device in self.xknx.devices:
+            await device.after_update()
+
+        self.hass.bus.async_fire(
+            "knx_connection_state_change",
+            {
+                "connection_state": state.name,
             },
         )
 

@@ -45,6 +45,16 @@ class TestXknxModule:
 
         assert len(xknx.devices.device_updated_cbs) == 1
 
+    def test_register_connection_state_change_cb(self):
+        """Test register con state callback."""
+
+        async def con_state_change(connection_state):
+            """Connection State Changed."""
+
+        xknx = XKNX(connection_state_changed_cb=con_state_change)
+
+        assert len(xknx.connection_manager._connection_state_changed_cbs) == 1
+
     @patch("xknx.io.KNXIPInterface.start", new_callable=AsyncMock)
     async def test_xknx_start(self, start_mock):
         """Test xknx start."""
