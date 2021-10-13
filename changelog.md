@@ -4,6 +4,10 @@
 
 ### Internals
 
+## 0.18.10 Connection Manager 2021-10-13
+
+### Internals
+
 - DPTString: replace invalid characters with question marks in `to_knx`
 - Catch and log exceptions raised in callbacks to not stall the TelegramQueue
 - Handle callbacks in separate asyncio Tasks
