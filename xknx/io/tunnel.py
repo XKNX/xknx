@@ -323,7 +323,7 @@ class Tunnel(Interface):
         )
         self.udp_client.send(KNXIPFrame.init_from_body(ack))
 
-    async def _disconnect_request_received(
+    def _disconnect_request_received(
         self, disconnect_request: DisconnectRequest
     ) -> None:
         """Handle incoming disconnect request."""
