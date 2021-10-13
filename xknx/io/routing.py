@@ -88,16 +88,19 @@ class Routing(Interface):
 
     async def connect(self) -> bool:
         """Start routing."""
+        await self.xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.CONNECTING
+        )
         try:
-            await self.xknx.connection_manager.connection_state_changed(
-                XknxConnectionState.CONNECTING
-            )
             await self.udpclient.connect()
         except OSError as ex:
             logger.debug(
                 "Could not establish connection to KNX/IP network. %s: %s",
                 type(ex).__name__,
                 ex,
+            )
+            await self.xknx.connection_manager.connection_state_changed(
+                XknxConnectionState.DISCONNECTED
             )
             # close udp client to prevent open file descriptors
             await self.udpclient.stop()

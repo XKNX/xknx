@@ -2,12 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Awaitable, Callable
+from typing import Awaitable, Callable
 
 from xknx.core.connection_state import XknxConnectionState
 
-if TYPE_CHECKING:
-    AsyncConnectionStateCallback = Callable[[XknxConnectionState], Awaitable[None]]
+AsyncConnectionStateCallback = Callable[[XknxConnectionState], Awaitable[None]]
 
 
 class ConnectionManager:
