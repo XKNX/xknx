@@ -138,9 +138,9 @@ class XKNX:
 
     async def stop(self) -> None:
         """Stop XKNX module."""
+        self.state_updater.stop()
         await self.join()
         await self.telegram_queue.stop()
-        self.state_updater.stop()
         await self._stop_knxip_interface_if_exists()
         self.started.clear()
 
