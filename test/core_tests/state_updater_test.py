@@ -1,13 +1,16 @@
 """Unit test for StateUpdater."""
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
 from xknx import XKNX
+from xknx.core import XknxConnectionState
 from xknx.core.state_updater import StateTrackerType, _StateTracker
 from xknx.remote_value import RemoteValue
 from xknx.telegram import GroupAddress
 
 
 @patch.multiple(RemoteValue, __abstractmethods__=set())
+@pytest.mark.asyncio
 class TestStateUpdater:
     """Test class for state updater."""
 
@@ -147,6 +150,7 @@ class TestStateUpdater:
         xknx.state_updater._workers[id(remote_value_2)] = Mock()
 
         assert not xknx.state_updater.started
+        xknx.connection_manager._state = XknxConnectionState.CONNECTED
         xknx.state_updater.start()
         assert xknx.state_updater.started
         # start
@@ -170,3 +174,26 @@ class TestStateUpdater:
         xknx.state_updater._workers[
             id(remote_value_1)
         ].update_received.assert_not_called()
+
+    async def test_stop_start_state_updater_when_reconnecting(self):
+        """Test start/stop state updater after reconnect."""
+
+        xknx = XKNX()
+        assert not xknx.state_updater.started
+
+        xknx.connection_manager._state = XknxConnectionState.CONNECTED
+        xknx.state_updater.start()
+
+        assert xknx.state_updater.started
+
+        await xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.DISCONNECTED
+        )
+
+        assert not xknx.state_updater.started
+
+        await xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.CONNECTED
+        )
+
+        assert xknx.state_updater.started

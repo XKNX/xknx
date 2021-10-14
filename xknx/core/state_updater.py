@@ -22,17 +22,12 @@ MAX_UPDATE_INTERVAL = 1440
 class StateUpdater:
     """Class for keeping the states of RemoteValues up to date."""
 
-    def __init__(self, xknx: XKNX, active: bool = False, parallel_reads: int = 2):
+    def __init__(self, xknx: XKNX, parallel_reads: int = 2):
         """Initialize StateUpdater class."""
         self.xknx = xknx
         self.started = False
         self._workers: dict[int, _StateTracker] = {}
         self._semaphore = asyncio.Semaphore(value=parallel_reads)
-
-        if active:
-            self.xknx.connection_manager.register_connection_state_changed_cb(
-                connection_state_changed_cb=self.connection_state_change_callback
-            )
 
     def register_remote_value(
         self,
@@ -127,28 +122,48 @@ class StateUpdater:
         if self.started and id(remote_value) in self._workers:
             self._workers[id(remote_value)].update_received()
 
-    def start(self) -> None:
-        """Start StateUpdater. Initialize states."""
+    def _start(self) -> None:
+        """Start internal StateUpdater. Initialize states."""
         logger.debug("StateUpdater initializing values")
         self.started = True
         for worker in self._workers.values():
             worker.start()
 
-    def stop(self) -> None:
-        """Stop StateUpdater."""
+    def _stop(self) -> None:
+        """Stop internal StateUpdater."""
         logger.debug("StateUpdater stopping")
         self.started = False
         for worker in self._workers.values():
             worker.stop()
 
+    def start(self) -> None:
+        """Start StateUpdater."""
+        self.xknx.connection_manager.register_connection_state_changed_cb(
+            self.connection_state_change_callback
+        )
+
+        if self.xknx.connection_manager.state == XknxConnectionState.CONNECTED:
+            self._start()
+
+    def stop(self) -> None:
+        """Stop StateUpdater."""
+        self.xknx.connection_manager.unregister_connection_state_changed_cb(
+            self.connection_state_change_callback
+        )
+
+        self._stop()
+
     async def connection_state_change_callback(
         self, state: XknxConnectionState
     ) -> None:
         """Start and stop StateUpdater via connection state update."""
-        if state == XknxConnectionState.CONNECTED:
-            self.start()
-        else:
-            self.stop()
+        if state == XknxConnectionState.CONNECTED and not self.started:
+            self._start()
+        elif (
+            state == XknxConnectionState.DISCONNECTED
+            or state == XknxConnectionState.CONNECTING
+        ) and self.started:
+            self._stop()
 
 
 class StateTrackerType(Enum):
