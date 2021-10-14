@@ -13,8 +13,6 @@ from .remote_value import RemoteValue
 class RemoteValueDptValue1Ucount(RemoteValue[DPTArray, int]):
     """Abstraction for remote value of KNX DPT 5.010."""
 
-    # pylint: disable=no-self-use
-
     def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray | None:
         """Test if telegram payload may be parsed."""
         return (

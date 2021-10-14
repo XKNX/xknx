@@ -19,8 +19,6 @@ if TYPE_CHECKING:
 class RemoteValueColorRGB(RemoteValue[DPTArray, Tuple[int, int, int]]):
     """Abstraction for remote value of KNX DPT 232.600 (DPT_Color_RGB)."""
 
-    # pylint: disable=no-self-use
-
     def __init__(
         self,
         xknx: XKNX,

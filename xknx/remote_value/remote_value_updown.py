@@ -49,7 +49,6 @@ class RemoteValueUpDown(RemoteValue[DPTBinary, "RemoteValueUpDown.Direction"]):
 
     def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTBinary | None:
         """Test if telegram payload may be parsed."""
-        # pylint: disable=no-self-use
         return payload if isinstance(payload, DPTBinary) else None
 
     def to_knx(self, value: RemoteValueUpDown.Direction) -> DPTBinary:

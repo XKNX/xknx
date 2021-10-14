@@ -10,7 +10,6 @@ from xknx.dpt import (
 from xknx.exceptions import ConversionError
 
 
-# pylint: disable=no-member
 class TestDPTControlStepCode:
     """Test class for DPTControlStepCode objects."""
 

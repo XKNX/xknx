@@ -87,7 +87,6 @@ class RemoteValueOperationMode(RemoteValueClimateModeBase[DPTArray, HVACOperatio
 
     def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray | None:
         """Test if telegram payload may be parsed."""
-        # pylint: disable=no-self-use
         return (
             payload
             if isinstance(payload, DPTArray) and len(payload.value) == 1
@@ -107,8 +106,6 @@ class RemoteValueControllerMode(
     RemoteValueClimateModeBase[DPTArray, HVACControllerMode]
 ):
     """Abstraction for remote value of KNX climate controller modes."""
-
-    # pylint: disable=no-self-use
 
     def __init__(
         self,
@@ -199,7 +196,6 @@ class RemoteValueBinaryOperationMode(
 
     def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTBinary | None:
         """Test if telegram payload may be parsed."""
-        # pylint: disable=no-self-use
         return payload if isinstance(payload, DPTBinary) else None
 
     def to_knx(self, value: Any) -> DPTBinary:
@@ -282,7 +278,6 @@ class RemoteValueBinaryHeatCool(
 
     def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTBinary | None:
         """Test if telegram payload may be parsed."""
-        # pylint: disable=no-self-use
         return payload if isinstance(payload, DPTBinary) else None
 
     @staticmethod
