@@ -160,9 +160,9 @@ class StateUpdater:
         if state == XknxConnectionState.CONNECTED and not self.started:
             self._start()
         elif (
-            state == XknxConnectionState.DISCONNECTED
-            or state == XknxConnectionState.CONNECTING
-        ) and self.started:
+            state in (XknxConnectionState.DISCONNECTED, XknxConnectionState.CONNECTING)
+            and self.started
+        ):
             self._stop()
 
 

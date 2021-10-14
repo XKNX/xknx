@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from xknx import XKNX
-from xknx.core import XknxConnectionState
 from xknx.io import ConnectionConfig, ConnectionType
 
 
