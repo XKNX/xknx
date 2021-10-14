@@ -13,6 +13,7 @@ from typing import Awaitable, Callable
 from xknx.core import (
     ConnectionManager,
     StateUpdater,
+    TaskRegistry,
     TelegramQueue,
     XknxConnectionState,
 )
@@ -59,6 +60,7 @@ class XKNX:
         self.telegram_queue = TelegramQueue(self)
         self.state_updater = StateUpdater(self)
         self.connection_manager = ConnectionManager()
+        self.task_registry = TaskRegistry(self)
         self.start_state_updater = state_updater
         self.knxip_interface: KNXIPInterface | None = None
         self.started = asyncio.Event()
@@ -110,6 +112,7 @@ class XKNX:
 
     async def start(self) -> None:
         """Start XKNX module. Connect to KNX/IP devices and start state updater."""
+        self.task_registry.start()
         self.knxip_interface = KNXIPInterface(
             self, connection_config=self.connection_config
         )
@@ -138,6 +141,7 @@ class XKNX:
 
     async def stop(self) -> None:
         """Stop XKNX module."""
+        self.task_registry.stop()
         self.state_updater.stop()
         await self.join()
         await self.telegram_queue.stop()

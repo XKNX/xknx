@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Iterator, cast
 
 from xknx.remote_value import GroupAddressesType, RemoteValueSwitch
 
+from ..core import Task
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
@@ -49,8 +50,8 @@ class BinarySensor(Device):
         self._count_set_on = 0
         self._count_set_off = 0
         self._last_set: float | None = None
-        self._reset_task: asyncio.Task[None] | None = None
-        self._context_task: asyncio.Task[None] | None = None
+        self._reset_task: Task | None = None
+        self._context_task: Task | None = None
 
         self.remote_value = RemoteValueSwitch(
             xknx,
@@ -71,17 +72,6 @@ class BinarySensor(Device):
         """Return the last telegram received from the RemoteValue."""
         return self.remote_value.telegram
 
-    def __del__(self) -> None:
-        """Destructor. Cleaning up if this was not done before."""
-        try:
-            if self._reset_task:
-                self._reset_task.cancel()
-            if self._context_task:
-                self._context_task.cancel()
-        except RuntimeError:
-            pass
-        super().__del__()
-
     async def _state_from_remote_value(self) -> None:
         """Update the internal state from RemoteValue (Callback)."""
         if self.remote_value.value is not None:
@@ -94,11 +84,10 @@ class BinarySensor(Device):
 
             if self.ignore_internal_state and self._context_timeout:
                 self.bump_and_get_counter(state)
-                if self._context_task:
-                    self._context_task.cancel()
-                self._context_task = asyncio.create_task(
-                    self._counter_task(self._context_timeout)
+                self._context_task = self.xknx.task_registry.register(
+                    "binary_sensor.context", self._counter_task(self._context_timeout)
                 )
+                self._context_task.start()
             else:
                 await self.after_update()
 
@@ -159,9 +148,10 @@ class BinarySensor(Device):
     def _process_reset_after(self) -> None:
         """Create Task for resetting state if 'reset_after' is configured."""
         if self.reset_after is not None and self.state:
-            if self._reset_task:
-                self._reset_task.cancel()
-            self._reset_task = asyncio.create_task(self._reset_state(self.reset_after))
+            self._reset_task = self.xknx.task_registry.register(
+                "binary_sensor.reset", self._reset_state(self.reset_after)
+            )
+            self._reset_task.start()
 
     async def _reset_state(self, wait_seconds: float) -> None:
         await asyncio.sleep(wait_seconds)
