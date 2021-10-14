@@ -28,7 +28,8 @@ class ConnectionManager:
         self, connection_state_changed_cb: AsyncConnectionStateCallback
     ) -> None:
         """Unregister callback for connection state beeing updated."""
-        self._connection_state_changed_cbs.remove(connection_state_changed_cb)
+        if connection_state_changed_cb in self._connection_state_changed_cbs:
+            self._connection_state_changed_cbs.remove(connection_state_changed_cb)
 
     async def connection_state_changed(self, state: XknxConnectionState) -> None:
         """Run registered callbacks. Set internal state flag."""
@@ -40,8 +41,11 @@ class ConnectionManager:
             self.connected.set()
         else:
             self.connected.clear()
-        for connection_state_changed_cb in self._connection_state_changed_cbs:
-            await connection_state_changed_cb(state)
+        if tasks := [
+            connection_state_change_cb(state)
+            for connection_state_change_cb in self._connection_state_changed_cbs
+        ]:
+            await asyncio.gather(*tasks)
 
     @property
     def state(self) -> XknxConnectionState:

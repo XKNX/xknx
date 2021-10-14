@@ -49,7 +49,6 @@ class RemoteValueStep(RemoteValue[DPTBinary, "RemoteValueStep.Direction"]):
 
     def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTBinary | None:
         """Test if telegram payload may be parsed."""
-        # pylint: disable=no-self-use
         return payload if isinstance(payload, DPTBinary) else None
 
     # from KNX Association System Specifications AS v1.5.00:

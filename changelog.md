@@ -4,6 +4,8 @@
 
 ### Internals
 
+- Stop state updater if connection is lost and restart if restored
+
 ## 0.18.10 Connection Manager 2021-10-13
 
 ### Internals

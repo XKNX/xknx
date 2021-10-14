@@ -177,7 +177,6 @@ class TitleEnum(Enum):
 
     def __str__(self) -> str:
         """Return string representation."""
-        # pylint: disable=no-member
         return self.name.title()
 
 

@@ -59,6 +59,7 @@ class XKNX:
         self.telegram_queue = TelegramQueue(self)
         self.state_updater = StateUpdater(self)
         self.connection_manager = ConnectionManager()
+        self.start_state_updater = state_updater
         self.knxip_interface: KNXIPInterface | None = None
         self.started = asyncio.Event()
         self.address_format = address_format
@@ -67,7 +68,6 @@ class XKNX:
         self.multicast_group = multicast_group
         self.multicast_port = multicast_port
         self.connection_config = connection_config
-        self.start_state_updater = state_updater
         self.daemon_mode = daemon_mode
         self.version = VERSION
 
