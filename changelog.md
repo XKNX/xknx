@@ -4,7 +4,12 @@
 
 ### Internals
 
+## 0.18.11 Task Registry 2021-10-16
+
+### Internals
+
 - Stop state updater if connection is lost and restart if restored
+- Add central task registry to keep track of tasks spawned in devices
 
 ## 0.18.10 Connection Manager 2021-10-13
 
