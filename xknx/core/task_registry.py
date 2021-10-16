@@ -31,6 +31,11 @@ class Task:
         """Start a task."""
         self._task = asyncio.create_task(self.task, name=self.name)
 
+    def __await__(self) -> Generator[None, None, None]:
+        """Wait for task to be finished."""
+        if self._task:
+            yield from self._task
+
     def cancel(self) -> None:
         """Cancel a task."""
         if self._task:
@@ -54,12 +59,14 @@ class TaskRegistry:
     def __init__(self, xknx: XKNX) -> None:
         """Initialize TaskRegistry class."""
         self.xknx = xknx
+        self.track_tasks = True
         self.tasks: list[Task] = []
 
     def register(
         self,
         name: str,
         task: AsyncCallbackType,
+        track_task: bool = True,
         restart_on_connection_loss: bool = False,
     ) -> Task:
         """Register new task."""
@@ -69,7 +76,8 @@ class TaskRegistry:
             name=name, task=task, restart_on_connection_loss=restart_on_connection_loss
         )
 
-        self.tasks.append(_task)
+        if self.track_tasks and track_task:
+            self.tasks.append(_task)
 
         return _task
 
@@ -96,6 +104,11 @@ class TaskRegistry:
             task.cancel()
 
         self.tasks = []
+
+    async def block_till_done(self) -> None:
+        """Await all tracked tasks."""
+        for task in self.tasks:
+            await task
 
     async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
         """Handle connection state changes."""

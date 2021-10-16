@@ -10,9 +10,9 @@ import asyncio
 import time
 from typing import TYPE_CHECKING, Iterator
 
+from xknx.core import Task
 from xknx.remote_value import GroupAddressesType, RemoteValueDateTime
 
-from ..core import Task
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
@@ -61,7 +61,7 @@ class DateTime(Device):
 
         if self.localtime:
             task: Task = self.xknx.task_registry.register(
-                "datetime.broadcast",
+                f"datetime.broadcast_{id(self)}",
                 broadcast_loop(self, minutes=minutes),
                 restart_on_connection_loss=True,
             )

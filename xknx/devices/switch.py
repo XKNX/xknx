@@ -12,6 +12,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Iterator
 
+from xknx.core import Task
 from xknx.remote_value import GroupAddressesType, RemoteValueSwitch
 
 from .device import Device, DeviceCallbackType
@@ -42,7 +43,8 @@ class Switch(Device):
         super().__init__(xknx, name, device_updated_cb)
 
         self.reset_after = reset_after
-        self._reset_task: asyncio.Task[None] | None = None
+        self._reset_task_name = f"switch.reset_{id(self)}"
+        self._reset_task: Task | None = None
         self.respond_to_read = respond_to_read
         self.switch = RemoteValueSwitch(
             xknx,
@@ -84,11 +86,12 @@ class Switch(Device):
         """Process incoming and outgoing GROUP WRITE telegram."""
         if await self.switch.process(telegram):
             if self.reset_after is not None and self.switch.value:
-                if self._reset_task:
-                    self._reset_task.cancel()
-                self._reset_task = asyncio.create_task(
-                    self._reset_state(self.reset_after)
+                self._reset_task = self.xknx.task_registry.register(
+                    self._reset_task_name,
+                    self._reset_state(self.reset_after),
+                    track_task=True,
                 )
+                self._reset_task.start()
 
     async def process_group_read(self, telegram: "Telegram") -> None:
         """Process incoming GroupValueResponse telegrams."""

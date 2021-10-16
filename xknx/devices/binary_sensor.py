@@ -14,9 +14,9 @@ import asyncio
 import time
 from typing import TYPE_CHECKING, Iterator, cast
 
+from xknx.core import Task
 from xknx.remote_value import GroupAddressesType, RemoteValueSwitch
 
-from ..core import Task
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
@@ -50,6 +50,8 @@ class BinarySensor(Device):
         self._count_set_on = 0
         self._count_set_off = 0
         self._last_set: float | None = None
+        self._reset_task_name = f"binary_sensor.reset_{id(self)}"
+        self._context_task_name = f"binary_sensor.context_{id(self)}"
         self._reset_task: Task | None = None
         self._context_task: Task | None = None
 
@@ -85,7 +87,7 @@ class BinarySensor(Device):
             if self.ignore_internal_state and self._context_timeout:
                 self.bump_and_get_counter(state)
                 self._context_task = self.xknx.task_registry.register(
-                    "binary_sensor.context", self._counter_task(self._context_timeout)
+                    self._context_task_name, self._counter_task(self._context_timeout)
                 )
                 self._context_task.start()
             else:
@@ -149,7 +151,9 @@ class BinarySensor(Device):
         """Create Task for resetting state if 'reset_after' is configured."""
         if self.reset_after is not None and self.state:
             self._reset_task = self.xknx.task_registry.register(
-                "binary_sensor.reset", self._reset_state(self.reset_after)
+                self._reset_task_name,
+                self._reset_state(self.reset_after),
+                track_task=True,
             )
             self._reset_task.start()
 

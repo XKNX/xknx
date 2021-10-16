@@ -198,7 +198,7 @@ class TestBinarySensor:
         await switch.process(telegram)
         async_after_update_callback.assert_not_called()
         assert switch.counter == 1
-        await switch._context_task._task
+        await switch._context_task
         async_after_update_callback.assert_called_with(switch)
         # once with counter 1 and once with counter 0
         assert async_after_update_callback.call_count == 2
@@ -211,7 +211,7 @@ class TestBinarySensor:
         assert switch.counter == 2
         async_after_update_callback.assert_not_called()
 
-        await switch._context_task._task
+        await switch._context_task
         async_after_update_callback.assert_called_with(switch)
         # once with counter 2 and once with counter 0
         assert async_after_update_callback.call_count == 2
