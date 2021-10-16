@@ -108,6 +108,9 @@ class Tunnel(Interface):
                 type(ex).__name__,
                 ex,
             )
+            await self.xknx.connection_manager.connection_state_changed(
+                XknxConnectionState.DISCONNECTED
+            )
             if self.auto_reconnect:
                 self._reconnect_task = asyncio.create_task(self._reconnect())
                 return False

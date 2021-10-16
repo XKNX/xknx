@@ -10,6 +10,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterator
 
+from xknx.core import Task
 from xknx.remote_value import RemoteValue
 from xknx.telegram import Telegram
 from xknx.telegram.address import DeviceGroupAddress
@@ -54,12 +55,19 @@ class Device(ABC):
         self.device_updated_cbs = []
         for remote_value in self._iter_remote_values():
             remote_value.__del__()
+        for task in self._iter_tasks():
+            if task:
+                self.xknx.task_registry.unregister(task.name)
 
     @abstractmethod
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
         # yield self.remote_value
         # yield from (<list all used RemoteValue instances>)
+        yield from ()
+
+    def _iter_tasks(self) -> Iterator[Task | None]:  # pylint: disable=no-self-use
+        """Iterate the device tasks."""
         yield from ()
 
     def register_device_updated_cb(self, device_updated_cb: DeviceCallbackType) -> None:
