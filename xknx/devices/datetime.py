@@ -50,6 +50,10 @@ class DateTime(Device):
         """Iterate the devices RemoteValue classes."""
         yield self._remote_value
 
+    def _iter_tasks(self) -> Iterator[Task | None]:
+        """Iterate the device tasks."""
+        yield self._broadcast_task
+
     def _create_broadcast_task(self, minutes: int = 60) -> Task | None:
         """Create an asyncio.Task for broadcasting local time periodically if `localtime` is set."""
 

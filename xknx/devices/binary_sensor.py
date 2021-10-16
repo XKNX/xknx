@@ -69,6 +69,11 @@ class BinarySensor(Device):
         """Iterate the devices RemoteValue classes."""
         yield self.remote_value
 
+    def _iter_tasks(self) -> Iterator[Task | None]:
+        """Iterate the device tasks."""
+        yield self._context_task
+        yield self._reset_task
+
     @property
     def last_telegram(self) -> Telegram | None:
         """Return the last telegram received from the RemoteValue."""
