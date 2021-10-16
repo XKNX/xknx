@@ -22,12 +22,12 @@ class Task:
         self,
         name: str,
         task: AsyncCallbackType,
-        restart_on_connection_loss: bool = False,
+        restart_after_reconnect: bool = False,
     ) -> None:
         """Initialize Task class."""
         self.name = name
         self.task = task
-        self.restart_on_connection_loss = restart_on_connection_loss
+        self.restart_after_reconnect = restart_after_reconnect
         self._task: asyncio.Task[None] | None = None
 
     def start(self) -> None:
@@ -46,14 +46,14 @@ class Task:
             self._task = None
 
     def connection_lost(self) -> None:
-        """Cancel a task if connection was lost."""
-        if self.restart_on_connection_loss and self._task:
+        """Cancel a task if connection was lost and the task should be cancelled if no connection is established."""
+        if self.restart_after_reconnect and self._task:
             logger.debug("Stopping task %s because of connection loss.", self.name)
             self.cancel()
 
     def reconnected(self) -> None:
         """Restart when reconnected to bus."""
-        if self.restart_on_connection_loss and not self._task:
+        if self.restart_after_reconnect and not self._task:
             logger.debug(
                 "Restarting task %s as the connection to the bus was reestablished.",
                 self.name,
@@ -74,13 +74,13 @@ class TaskRegistry:
         name: str,
         task: AsyncCallbackType,
         track_task: bool = True,
-        restart_on_connection_loss: bool = False,
+        restart_after_reconnect: bool = False,
     ) -> Task:
         """Register new task."""
         self.unregister(name)
 
         _task: Task = Task(
-            name=name, task=task, restart_on_connection_loss=restart_on_connection_loss
+            name=name, task=task, restart_after_reconnect=restart_after_reconnect
         )
 
         if track_task:

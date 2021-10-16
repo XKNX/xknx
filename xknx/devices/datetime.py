@@ -63,7 +63,7 @@ class DateTime(Device):
             task: Task = self.xknx.task_registry.register(
                 f"datetime.broadcast_{id(self)}",
                 broadcast_loop(self, minutes=minutes),
-                restart_on_connection_loss=True,
+                restart_after_reconnect=True,
             )
             task.start()
             return task
