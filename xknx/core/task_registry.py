@@ -48,14 +48,15 @@ class Task:
     def connection_lost(self) -> None:
         """Cancel a task if connection was lost."""
         if self.restart_on_connection_loss and self._task:
-            logger.info(f"Stopping task {self.name} because of connection loss.")
+            logger.debug("Stopping task %s because of connection loss.", self.name)
             self.cancel()
 
     def reconnected(self) -> None:
         """Restart when reconnected to bus."""
         if self.restart_on_connection_loss and not self._task:
-            logger.info(
-                f"Restarting task {self.name} as the connection to the bus was reestablished."
+            logger.debug(
+                "Restarting task %s as the connection to the bus was reestablished.",
+                self.name,
             )
             self.start()
 
@@ -66,7 +67,6 @@ class TaskRegistry:
     def __init__(self, xknx: XKNX) -> None:
         """Initialize TaskRegistry class."""
         self.xknx = xknx
-        self.track_tasks = True
         self.tasks: list[Task] = []
 
     def register(
@@ -83,7 +83,7 @@ class TaskRegistry:
             name=name, task=task, restart_on_connection_loss=restart_on_connection_loss
         )
 
-        if self.track_tasks and track_task:
+        if track_task:
             self.tasks.append(_task)
 
         return _task
