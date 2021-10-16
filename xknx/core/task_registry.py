@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import TYPE_CHECKING, Any, Awaitable, Generator, Union
 
 from xknx.core import XknxConnectionState
@@ -10,6 +11,8 @@ AsyncCallbackType = Union[Generator[Any, None, Any], Awaitable]
 
 if TYPE_CHECKING:
     from xknx import XKNX
+
+logger = logging.getLogger("xknx.log")
 
 
 class Task:
@@ -45,11 +48,15 @@ class Task:
     def connection_lost(self) -> None:
         """Cancel a task if connection was lost."""
         if self.restart_on_connection_loss and self._task:
+            logger.info(f"Stopping task {self.name} because of connection loss.")
             self.cancel()
 
     def reconnected(self) -> None:
         """Restart when reconnected to bus."""
         if self.restart_on_connection_loss and not self._task:
+            logger.info(
+                f"Restarting task {self.name} as the connection to the bus was reestablished."
+            )
             self.start()
 
 
