@@ -25,7 +25,7 @@ class TestTunnelling:
         """Test tunnelling from KNX bus."""
         xknx = XKNX()
         communication_channel_id = 23
-        udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
+        udp_client = UDPClient(("192.168.1.1", 0), ("192.168.1.2", 1234))
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x1, 0x2, 0x3))),
@@ -47,7 +47,6 @@ class TestTunnelling:
 
         # Expected KNX/IP-Frame:
         tunnelling_request = TunnellingRequest(
-            xknx,
             communication_channel_id=communication_channel_id,
             sequence_counter=sequence_counter,
         )
@@ -62,14 +61,14 @@ class TestTunnelling:
             mock_udp_send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type
-        wrong_knxipframe = KNXIPFrame(xknx)
+        wrong_knxipframe = KNXIPFrame()
         wrong_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_REQUEST)
         with patch("logging.Logger.warning") as mock_warning:
             tunnelling.response_rec_callback(wrong_knxipframe, None)
             mock_warning.assert_called_with("Could not understand knxipframe")
 
         # Response KNX/IP-Frame with error:
-        err_knxipframe = KNXIPFrame(xknx)
+        err_knxipframe = KNXIPFrame()
         err_knxipframe.init(KNXIPServiceType.TUNNELLING_ACK)
         err_knxipframe.body.status_code = ErrorCode.E_CONNECTION_ID
         with patch("logging.Logger.debug") as mock_warning:
@@ -82,7 +81,7 @@ class TestTunnelling:
             )
 
         # Correct Response KNX/IP-Frame:
-        res_knxipframe = KNXIPFrame(xknx)
+        res_knxipframe = KNXIPFrame()
         res_knxipframe.init(KNXIPServiceType.TUNNELLING_ACK)
         tunnelling.response_rec_callback(res_knxipframe, None)
         assert tunnelling.success

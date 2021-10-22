@@ -12,7 +12,9 @@ import ipaddress
 import logging
 from typing import TYPE_CHECKING, cast
 
+from dependency_injector.wiring import Provide
 import netifaces
+from xknx.core import DependencyContainer
 from xknx.exceptions import CommunicationError, XKNXException
 
 from .connection import ConnectionConfig, ConnectionType
@@ -35,7 +37,9 @@ class KNXIPInterface:
     def __init__(
         self,
         xknx: XKNX,
-        connection_config: ConnectionConfig = ConnectionConfig(),
+        connection_config: ConnectionConfig = Provide[
+            DependencyContainer.config.connection_config  # pylint: disable=no-member
+        ],
     ):
         """Initialize KNXIPInterface class."""
         self.xknx = xknx

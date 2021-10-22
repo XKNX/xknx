@@ -1,5 +1,4 @@
 """Unit test for KNX/IP SearchRequest objects."""
-from xknx import XKNX
 from xknx.knxip import HPAI, KNXIPFrame, SearchRequest
 
 
@@ -24,8 +23,7 @@ class TestKNXIPSearchRequest:
             0x0E,
             0x57,
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
 
         assert isinstance(knxipframe.body, SearchRequest)
@@ -34,9 +32,7 @@ class TestKNXIPSearchRequest:
         )
 
         knxipframe2 = KNXIPFrame.init_from_body(
-            SearchRequest(
-                xknx, discovery_endpoint=HPAI(ip_addr="224.0.23.12", port=3671)
-            )
+            SearchRequest(discovery_endpoint=HPAI(ip_addr="224.0.23.12", port=3671))
         )
 
         assert knxipframe2.to_knx() == list(raw)

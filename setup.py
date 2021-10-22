@@ -12,7 +12,7 @@ VERSION = {}
 with open(path.join(THIS_DIRECTORY, "xknx/__version__.py"), encoding="utf-8") as fp:
     exec(fp.read(), VERSION)
 
-REQUIRES = ["netifaces>=0.10.9"]
+REQUIRES = ["netifaces>=0.11.0", "dependency-injector>=4.36.2"]
 
 setup(
     name="xknx",

@@ -156,7 +156,6 @@ class GatewayScanner:
         logger.debug("Searching on %s / %s", interface, ip_addr)
 
         udp_client = UDPClient(
-            self.xknx,
             (ip_addr, 0),
             (self.xknx.multicast_group, self.xknx.multicast_port),
             multicast=True,
@@ -173,7 +172,7 @@ class GatewayScanner:
         (local_addr, local_port) = udp_client.getsockname()
         discovery_endpoint = HPAI(ip_addr=local_addr, port=local_port)
 
-        search_request = SearchRequest(self.xknx, discovery_endpoint=discovery_endpoint)
+        search_request = SearchRequest(discovery_endpoint=discovery_endpoint)
         udp_client.send(KNXIPFrame.init_from_body(search_request))
 
     def _response_rec_callback(

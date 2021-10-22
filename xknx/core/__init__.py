@@ -2,6 +2,7 @@
 # flake8: noqa
 from .connection_manager import ConnectionManager
 from .connection_state import XknxConnectionState
+from .dependency_container import DependencyContainer
 from .payload_reader import PayloadReader
 from .state_updater import StateUpdater
 from .task_registry import Task, TaskRegistry

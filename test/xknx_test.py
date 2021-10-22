@@ -80,15 +80,16 @@ class TestXknxModule:
         self, start_mock
     ):
         """Test xknx start and stop with connection config."""
-        xknx = XKNX()
-
         connection_config = ConnectionConfig(connection_type=ConnectionType.TUNNELING)
-        xknx.connection_config = connection_config
+        xknx = XKNX(connection_config=connection_config)
 
         await xknx.start()
 
         start_mock.assert_called_once()
-        assert xknx.knxip_interface.connection_config == connection_config
+        assert (
+            xknx.knxip_interface.connection_config.connection_type
+            == ConnectionType.TUNNELING
+        )
 
         await xknx.stop()
         assert xknx.knxip_interface is None

@@ -23,7 +23,7 @@ class TestConnect:
     async def test_connect(self):
         """Test connecting from KNX bus."""
         xknx = XKNX()
-        udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
+        udp_client = UDPClient(("192.168.1.1", 0), ("192.168.1.2", 1234))
         connect = Connect(xknx, udp_client, route_back=False)
         connect.timeout_in_seconds = 0
 
@@ -32,7 +32,6 @@ class TestConnect:
         # Expected KNX/IP-Frame:
         exp_knxipframe = KNXIPFrame.init_from_body(
             ConnectRequest(
-                xknx,
                 request_type=ConnectRequestType.TUNNEL_CONNECTION,
                 control_endpoint=HPAI(ip_addr="192.168.1.3", port=4321),
                 data_endpoint=HPAI(ip_addr="192.168.1.3", port=4321),
@@ -47,14 +46,14 @@ class TestConnect:
             mock_udp_send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type
-        wrong_knxipframe = KNXIPFrame(xknx)
+        wrong_knxipframe = KNXIPFrame()
         wrong_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_REQUEST)
         with patch("logging.Logger.warning") as mock_warning:
             connect.response_rec_callback(wrong_knxipframe, None)
             mock_warning.assert_called_with("Could not understand knxipframe")
 
         # Response KNX/IP-Frame with error:
-        err_knxipframe = KNXIPFrame(xknx)
+        err_knxipframe = KNXIPFrame()
         err_knxipframe.init(KNXIPServiceType.CONNECT_RESPONSE)
         err_knxipframe.body.status_code = ErrorCode.E_CONNECTION_ID
         with patch("logging.Logger.debug") as mock_warning:
@@ -67,7 +66,7 @@ class TestConnect:
             )
 
         # Correct Response KNX/IP-Frame:
-        res_knxipframe = KNXIPFrame(xknx)
+        res_knxipframe = KNXIPFrame()
         res_knxipframe.init(KNXIPServiceType.CONNECT_RESPONSE)
         res_knxipframe.body.communication_channel = 23
         res_knxipframe.body.identifier = 7
@@ -79,7 +78,7 @@ class TestConnect:
     async def test_connect_route_back_true(self):
         """Test connecting from KNX bus."""
         xknx = XKNX()
-        udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
+        udp_client = UDPClient(("192.168.1.1", 0), ("192.168.1.2", 1234))
         connect = Connect(xknx, udp_client, route_back=True)
         connect.timeout_in_seconds = 0
 
@@ -87,7 +86,7 @@ class TestConnect:
 
         # Expected KNX/IP-Frame:
         exp_knxipframe = KNXIPFrame.init_from_body(
-            ConnectRequest(xknx, request_type=ConnectRequestType.TUNNEL_CONNECTION)
+            ConnectRequest(request_type=ConnectRequestType.TUNNEL_CONNECTION)
         )
         with patch("xknx.io.UDPClient.send") as mock_udp_send, patch(
             "xknx.io.UDPClient.getsockname"
@@ -97,14 +96,14 @@ class TestConnect:
             mock_udp_send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type
-        wrong_knxipframe = KNXIPFrame(xknx)
+        wrong_knxipframe = KNXIPFrame()
         wrong_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_REQUEST)
         with patch("logging.Logger.warning") as mock_warning:
             connect.response_rec_callback(wrong_knxipframe, None)
             mock_warning.assert_called_with("Could not understand knxipframe")
 
         # Response KNX/IP-Frame with error:
-        err_knxipframe = KNXIPFrame(xknx)
+        err_knxipframe = KNXIPFrame()
         err_knxipframe.init(KNXIPServiceType.CONNECT_RESPONSE)
         err_knxipframe.body.status_code = ErrorCode.E_CONNECTION_ID
         with patch("logging.Logger.debug") as mock_warning:
@@ -117,7 +116,7 @@ class TestConnect:
             )
 
         # Correct Response KNX/IP-Frame:
-        res_knxipframe = KNXIPFrame(xknx)
+        res_knxipframe = KNXIPFrame()
         res_knxipframe.init(KNXIPServiceType.CONNECT_RESPONSE)
         res_knxipframe.body.communication_channel = 23
         res_knxipframe.body.identifier = 7

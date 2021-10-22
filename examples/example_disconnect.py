@@ -22,7 +22,7 @@ async def main():
         print("Gateway does not support tunneling")
         return
 
-    udp_client = UDPClient(xknx, (gateway.local_ip, 0), (gateway.ip_addr, gateway.port))
+    udp_client = UDPClient((gateway.local_ip, 0), (gateway.ip_addr, gateway.port))
 
     await udp_client.connect()
 

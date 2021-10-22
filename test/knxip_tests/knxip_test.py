@@ -1,6 +1,5 @@
 """Unit test for KNX/IP base class."""
 import pytest
-from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import KNXIPFrame
 from xknx.knxip.knxip_enum import KNXIPServiceType
@@ -11,8 +10,7 @@ class TestKNXIPFrame:
 
     def test_wrong_init(self):
         """Testing init method with wrong service_type_ident."""
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         with pytest.raises(AttributeError):
             knxipframe.init(23)
 
@@ -41,7 +39,6 @@ class TestKNXIPFrame:
             0xB4,
             0x00,
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         with pytest.raises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)

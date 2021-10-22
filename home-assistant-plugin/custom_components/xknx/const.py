@@ -21,7 +21,7 @@ from homeassistant.components.climate.const import (
     PRESET_SLEEP,
 )
 
-DOMAIN: Final = "knx"
+DOMAIN: Final = "xknx"
 
 # Address is used for configuration and services by the same functions so the key has to match
 KNX_ADDRESS: Final = "address"

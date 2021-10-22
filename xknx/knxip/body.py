@@ -3,13 +3,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import logging
-from typing import TYPE_CHECKING, ClassVar, cast
+from typing import ClassVar, cast
 
 from .error_code import ErrorCode
 from .knxip_enum import KNXIPServiceType
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
 
@@ -19,9 +16,8 @@ class KNXIPBody(ABC):
 
     SERVICE_TYPE: ClassVar[KNXIPServiceType] = cast(KNXIPServiceType, None)
 
-    def __init__(self, xknx: XKNX):
+    def __init__(self) -> None:
         """Initialize KNXIPBody object."""
-        self.xknx = xknx
 
     @abstractmethod
     def calculated_length(self) -> int:

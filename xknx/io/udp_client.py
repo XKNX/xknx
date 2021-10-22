@@ -10,15 +10,12 @@ import asyncio
 import logging
 import socket
 from sys import platform
-from typing import TYPE_CHECKING, Callable, Tuple, cast
+from typing import Callable, Tuple, cast
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, XKNXException
 from xknx.knxip import KNXIPFrame, KNXIPServiceType
 
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
-
-    CallbackType = Callable[[KNXIPFrame, "UDPClient"], None]
+CallbackType = Callable[[KNXIPFrame, "UDPClient"], None]
 
 raw_socket_logger = logging.getLogger("xknx.raw_socket")
 logger = logging.getLogger("xknx.log")
@@ -79,7 +76,6 @@ class UDPClient:
 
     def __init__(
         self,
-        xknx: XKNX,
         local_addr: tuple[str, int],
         remote_addr: tuple[str, int],
         multicast: bool = False,
@@ -89,7 +85,6 @@ class UDPClient:
             raise TypeError()
         if not isinstance(remote_addr, tuple):
             raise TypeError()
-        self.xknx = xknx
         self.local_addr = local_addr
         self.remote_addr = remote_addr
         self.multicast = multicast
@@ -101,7 +96,7 @@ class UDPClient:
         """Parse and process KNXIP frame. Callback for having received an UDP packet."""
         if raw:
             try:
-                knxipframe = KNXIPFrame(self.xknx)
+                knxipframe = KNXIPFrame()
                 knxipframe.from_knx(raw)
             except CouldNotParseKNXIP as couldnotparseknxip:
                 knx_logger.debug(

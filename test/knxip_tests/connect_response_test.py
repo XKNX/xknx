@@ -1,6 +1,5 @@
 """Unit test for KNX/IP ConnectResponses."""
 import pytest
-from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import HPAI, ConnectRequestType, ConnectResponse, ErrorCode, KNXIPFrame
 
@@ -32,8 +31,7 @@ class TestKNXIPConnectResponse:
             0x11,
             0xFF,
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
         assert isinstance(knxipframe.body, ConnectResponse)
         assert knxipframe.body.communication_channel == 1
@@ -45,7 +43,6 @@ class TestKNXIPConnectResponse:
         assert knxipframe.body.identifier == 4607
 
         connect_response = ConnectResponse(
-            xknx,
             communication_channel=1,
             status_code=ErrorCode.E_NO_ERROR,
             request_type=ConnectRequestType.TUNNEL_CONNECTION,
@@ -80,8 +77,7 @@ class TestKNXIPConnectResponse:
             0x11,
             0xFF,
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         with pytest.raises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
 
@@ -107,8 +103,7 @@ class TestKNXIPConnectResponse:
             0x04,
             0x04,
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         with pytest.raises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
 
@@ -139,15 +134,13 @@ class TestKNXIPConnectResponse:
             0x00,
             0x00,
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
         assert isinstance(knxipframe.body, ConnectResponse)
         assert knxipframe.body.status_code == ErrorCode.E_NO_MORE_CONNECTIONS
         assert knxipframe.body.communication_channel == 192
 
         connect_response = ConnectResponse(
-            xknx,
             communication_channel=192,
             status_code=ErrorCode.E_NO_MORE_CONNECTIONS,
             request_type=ConnectRequestType.TUNNEL_CONNECTION,
@@ -185,8 +178,7 @@ class TestKNXIPConnectResponse:
             0x00,
             0x00,
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
         assert isinstance(knxipframe.body, ConnectResponse)
         assert knxipframe.body.status_code == ErrorCode.E_NO_MORE_CONNECTIONS
@@ -219,8 +211,7 @@ class TestKNXIPConnectResponse:
             0x00,
             0x00,
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
         assert isinstance(knxipframe.body, ConnectResponse)
         assert knxipframe.body.status_code == ErrorCode.E_NO_MORE_CONNECTIONS

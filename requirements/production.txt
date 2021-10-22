@@ -1,1 +1,2 @@
 netifaces==0.11.0
+dependency-injector==4.36.2

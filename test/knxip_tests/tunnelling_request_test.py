@@ -1,6 +1,5 @@
 """Unit test for KNX/IP TunnellingRequest objects."""
 import pytest
-from xknx import XKNX
 from xknx.dpt import DPTBinary
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import CEMIFrame, CEMIMessageCode, KNXIPFrame, TunnellingRequest
@@ -36,8 +35,7 @@ class TestKNXIPTunnelingRequest:
             0x00,
             0x81,
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
 
         assert isinstance(knxipframe.body, TunnellingRequest)
@@ -50,13 +48,13 @@ class TestKNXIPTunnelingRequest:
             payload=GroupValueWrite(DPTBinary(1)),
         )
 
-        cemi = CEMIFrame(xknx, code=CEMIMessageCode.L_DATA_REQ)
+        cemi = CEMIFrame(code=CEMIMessageCode.L_DATA_REQ)
         cemi.telegram = Telegram(
             destination_address=GroupAddress("9/0/8"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
         tunnelling_request = TunnellingRequest(
-            xknx, communication_channel_id=1, sequence_counter=23, cemi=cemi
+            communication_channel_id=1, sequence_counter=23, cemi=cemi
         )
         knxipframe2 = KNXIPFrame.init_from_body(tunnelling_request)
 
@@ -65,15 +63,13 @@ class TestKNXIPTunnelingRequest:
     def test_from_knx_wrong_header(self):
         """Test parsing and streaming wrong TunnellingRequest (wrong header length byte)."""
         raw = (0x06, 0x10, 0x04, 0x20, 0x00, 0x15, 0x03)
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         with pytest.raises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
 
     def test_from_knx_wrong_header2(self):
         """Test parsing and streaming wrong TunnellingRequest (wrong header length)."""
         raw = (0x06, 0x10, 0x04, 0x20, 0x00, 0x15, 0x04)
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         with pytest.raises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)

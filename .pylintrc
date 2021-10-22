@@ -2,7 +2,7 @@
 ignore=test
 persistent=no
 reports=no
-extension-pkg-whitelist=netifaces
+extension-pkg-whitelist=netifaces,dependency_injector
 
 [MESSAGES CONTROL]
 # Reasons disabled:

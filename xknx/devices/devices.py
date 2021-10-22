@@ -7,9 +7,11 @@ from __future__ import annotations
 
 from typing import Awaitable, Callable, Iterator
 
+from dependency_injector.wiring import Provide
 from xknx.telegram import Telegram
 from xknx.telegram.address import DeviceGroupAddress, GroupAddress, InternalGroupAddress
 
+from ..core import ConnectionManager, DependencyContainer
 from .device import Device
 
 DeviceCallbackType = Callable[[Device], Awaitable[None]]
@@ -18,7 +20,12 @@ DeviceCallbackType = Callable[[Device], Awaitable[None]]
 class Devices:
     """Class for handling a vector/array of devices."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        connection_manager: ConnectionManager = Provide[
+            DependencyContainer.connection_manager
+        ],
+    ) -> None:
         """Initialize Devices class."""
         self.__devices: list[Device] = []
         self.device_updated_cbs: list[DeviceCallbackType] = []

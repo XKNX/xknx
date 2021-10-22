@@ -6,7 +6,6 @@ Routing indications are used to transport CEMI Messages.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
 from xknx.exceptions import CouldNotParseKNXIP, UnsupportedCEMIMessage
 
@@ -14,8 +13,6 @@ from .body import KNXIPBody
 from .cemi_frame import CEMIFrame
 from .knxip_enum import CEMIMessageCode, KNXIPServiceType
 
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 logger = logging.getLogger("xknx.log")
 
 
@@ -24,13 +21,11 @@ class RoutingIndication(KNXIPBody):
 
     SERVICE_TYPE = KNXIPServiceType.ROUTING_INDICATION
 
-    def __init__(self, xknx: XKNX, cemi: CEMIFrame | None = None):
+    def __init__(self, cemi: CEMIFrame | None = None):
         """Initialize SearchRequest object."""
-        super().__init__(xknx)
+        super().__init__()
         self.cemi: CEMIFrame | None = (
-            cemi
-            if cemi is not None
-            else CEMIFrame(xknx, code=CEMIMessageCode.L_DATA_IND)
+            cemi if cemi is not None else CEMIFrame(code=CEMIMessageCode.L_DATA_IND)
         )
 
     def calculated_length(self) -> int:

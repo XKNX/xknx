@@ -9,6 +9,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Callable
 
+from dependency_injector.wiring import Provide
 from xknx.exceptions import CommunicationError, XKNXException
 from xknx.knxip import (
     CEMIMessageCode,
@@ -21,7 +22,7 @@ from xknx.knxip import (
 )
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 
-from ..core import XknxConnectionState
+from ..core import ConnectionManager, DependencyContainer, XknxConnectionState
 from .const import HEARTBEAT_RATE
 from .interface import Interface
 from .request_response import Connect, ConnectionState, Disconnect, Tunnelling
@@ -49,9 +50,13 @@ class Tunnel(Interface):
         telegram_received_callback: TelegramCallbackType | None = None,
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
+        connection_manager: ConnectionManager = Provide[
+            DependencyContainer.connection_manager
+        ],
     ):
         """Initialize Tunnel class."""
         self.xknx = xknx
+        # self.connection_manager = connection_manager
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
         self.local_ip = local_ip
@@ -78,7 +83,6 @@ class Tunnel(Interface):
     def init_udp_client(self) -> None:
         """Initialize udp_client."""
         self.udp_client = UDPClient(
-            self.xknx,
             (self.local_ip, self.local_port),
             (self.gateway_ip, self.gateway_port),
         )
@@ -320,7 +324,6 @@ class Tunnel(Interface):
     ) -> None:
         """Send tunnelling ACK after tunnelling request received."""
         ack = TunnellingAck(
-            self.xknx,
             communication_channel_id=communication_channel_id,
             sequence_counter=sequence_counter,
         )
@@ -335,7 +338,6 @@ class Tunnel(Interface):
         # If we do we close our communication_channel before reconnection.
         if disconnect_request.communication_channel_id == self.communication_channel:
             disconnect_response = DisconnectResponse(
-                self.xknx,
                 communication_channel_id=self.communication_channel,
             )
             self.udp_client.send(KNXIPFrame.init_from_body(disconnect_response))

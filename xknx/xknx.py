@@ -6,12 +6,14 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
 import signal
+import sys
 from sys import platform
 from types import TracebackType
 from typing import Awaitable, Callable
 
 from xknx.core import (
     ConnectionManager,
+    DependencyContainer,
     StateUpdater,
     TaskRegistry,
     TelegramQueue,
@@ -54,7 +56,25 @@ class XKNX:
         connection_config: ConnectionConfig = ConnectionConfig(),
     ) -> None:
         """Initialize XKNX class."""
+        self.container = DependencyContainer()
+        self.container.config.set("connection_config", connection_config)
+        self.container.config.set("daemon_mode", daemon_mode)
+        self.container.config.set("multicast_group", multicast_group)
+        self.container.config.set("multicast_port", multicast_port)
+        self.container.config.set("rate_limit", rate_limit)
+        self.container.config.set("own_address", own_address)
+        self.container.config.set("address_format", address_format)
+        self.container.wire(  # pylint: disable=no-member
+            modules=[
+                sys.modules["xknx"],
+                sys.modules["xknx.knxip"],
+                sys.modules["xknx.io"],
+            ]
+        )
+        self.container.init_resources()  # pylint: disable=no-member
+
         self.devices = Devices()
+        self._connection_config = connection_config
         self.telegrams: asyncio.Queue[Telegram | None] = asyncio.Queue()
         self.sigint_received = asyncio.Event()
         self.telegram_queue = TelegramQueue(self)
@@ -69,7 +89,6 @@ class XKNX:
         self.rate_limit = rate_limit
         self.multicast_group = multicast_group
         self.multicast_port = multicast_port
-        self.connection_config = connection_config
         self.daemon_mode = daemon_mode
         self.version = VERSION
 
@@ -96,6 +115,9 @@ class XKNX:
             except RuntimeError as exp:
                 logger.warning("Could not close loop, reason: %s", exp)
 
+        if self.container:
+            self.container.unwire()  # pylint: disable=no-member
+
     async def __aenter__(self) -> "XKNX":
         """Start XKNX from context manager."""
         await self.start()
@@ -113,13 +135,11 @@ class XKNX:
     async def start(self) -> None:
         """Start XKNX module. Connect to KNX/IP devices and start state updater."""
         self.task_registry.start()
-        self.knxip_interface = KNXIPInterface(
-            self, connection_config=self.connection_config
-        )
+        self.knxip_interface = KNXIPInterface(self)
         logger.info(
             "XKNX v%s starting %s connection to KNX bus.",
             VERSION,
-            self.connection_config.connection_type.name.lower(),
+            self._connection_config.connection_type.name.lower(),
         )
         await self.knxip_interface.start()
         await self.telegram_queue.start()

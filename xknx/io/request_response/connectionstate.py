@@ -42,7 +42,6 @@ class ConnectionState(RequestResponse):
             (local_addr, local_port) = self.udpclient.getsockname()
             endpoint = HPAI(ip_addr=local_addr, port=local_port)
         connectionstate_request = ConnectionStateRequest(
-            self.xknx,
             communication_channel_id=self.communication_channel_id,
             control_endpoint=endpoint,
         )

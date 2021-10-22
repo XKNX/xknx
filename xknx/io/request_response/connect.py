@@ -38,7 +38,6 @@ class Connect(RequestResponse):
             (local_addr, local_port) = self.udp_client.getsockname()
             endpoint = HPAI(ip_addr=local_addr, port=local_port)
         connect_request = ConnectRequest(
-            self.xknx,
             request_type=ConnectRequestType.TUNNEL_CONNECTION,
             control_endpoint=endpoint,
             data_endpoint=endpoint,

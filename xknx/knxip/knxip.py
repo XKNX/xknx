@@ -6,8 +6,6 @@ Depending on the service_type_ident different types of body classes are instanci
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from xknx.exceptions import CouldNotParseKNXIP
 
 from .body import KNXIPBody
@@ -25,16 +23,12 @@ from .search_response import SearchResponse
 from .tunnelling_ack import TunnellingAck
 from .tunnelling_request import TunnellingRequest
 
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
-
 
 class KNXIPFrame:
     """Class for KNX/IP Frames."""
 
-    def __init__(self, xknx: XKNX):
+    def __init__(self) -> None:
         """Initialize object."""
-        self.xknx = xknx
         self.header = KNXIPHeader()
         self.body: KNXIPBody | None = None
 
@@ -44,27 +38,27 @@ class KNXIPFrame:
 
         body: KNXIPBody
         if service_type_ident == KNXIPServiceType.ROUTING_INDICATION:
-            body = RoutingIndication(self.xknx)
+            body = RoutingIndication()
         elif service_type_ident == KNXIPServiceType.CONNECT_REQUEST:
-            body = ConnectRequest(self.xknx)
+            body = ConnectRequest()
         elif service_type_ident == KNXIPServiceType.CONNECT_RESPONSE:
-            body = ConnectResponse(self.xknx)
+            body = ConnectResponse()
         elif service_type_ident == KNXIPServiceType.TUNNELLING_REQUEST:
-            body = TunnellingRequest(self.xknx)
+            body = TunnellingRequest()
         elif service_type_ident == KNXIPServiceType.TUNNELLING_ACK:
-            body = TunnellingAck(self.xknx)
+            body = TunnellingAck()
         elif service_type_ident == KNXIPServiceType.SEARCH_REQUEST:
-            body = SearchRequest(self.xknx)
+            body = SearchRequest()
         elif service_type_ident == KNXIPServiceType.SEARCH_RESPONSE:
-            body = SearchResponse(self.xknx)
+            body = SearchResponse()
         elif service_type_ident == KNXIPServiceType.DISCONNECT_REQUEST:
-            body = DisconnectRequest(self.xknx)
+            body = DisconnectRequest()
         elif service_type_ident == KNXIPServiceType.DISCONNECT_RESPONSE:
-            body = DisconnectResponse(self.xknx)
+            body = DisconnectResponse()
         elif service_type_ident == KNXIPServiceType.CONNECTIONSTATE_REQUEST:
-            body = ConnectionStateRequest(self.xknx)
+            body = ConnectionStateRequest()
         elif service_type_ident == KNXIPServiceType.CONNECTIONSTATE_RESPONSE:
-            body = ConnectionStateResponse(self.xknx)
+            body = ConnectionStateResponse()
         else:
             raise CouldNotParseKNXIP(
                 f"KNXIPServiceType not implemented: {service_type_ident.name}"
@@ -75,7 +69,7 @@ class KNXIPFrame:
     @staticmethod
     def init_from_body(knxip_body: KNXIPBody) -> KNXIPFrame:
         """Return KNXIPFrame from KNXIPBody."""
-        knxipframe = KNXIPFrame(knxip_body.xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.header.service_type_ident = knxip_body.__class__.SERVICE_TYPE
         knxipframe.body = knxip_body
         knxipframe.header.set_length(knxip_body)
