@@ -126,6 +126,7 @@ class XKNX:
         ],
     ) -> ConnectionManager:
         """Get the connection manager conveniently."""
+        assert isinstance(connection_manager, ConnectionManager)
         return connection_manager
 
     async def __aenter__(self) -> "XKNX":
