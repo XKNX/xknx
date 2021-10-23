@@ -576,6 +576,7 @@ class TestStringRepresentations:
 
     def test_search_reqeust(self):
         """Test string representation of KNX/IP SearchRequest."""
+        XKNX()
         search_request = SearchRequest()
         assert (
             str(search_request)
@@ -633,6 +634,7 @@ class TestStringRepresentations:
 
     def test_knxip_frame(self):
         """Test string representation of KNX/IP Frame."""
+        XKNX()
         knxipframe = KNXIPFrame()
         knxipframe.init(KNXIPServiceType.SEARCH_REQUEST)
         assert (

@@ -8,7 +8,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Callable
 
-from xknx.core import XknxConnectionState
+from dependency_injector.wiring import Provide
+from xknx.core import ConnectionManager, DependencyContainer, XknxConnectionState
 from xknx.knxip import (
     CEMIFrame,
     CEMIMessageCode,
@@ -38,11 +39,15 @@ class Routing(Interface):
         xknx: XKNX,
         telegram_received_callback: TelegramCallbackType,
         local_ip: str,
+        connection_manager: ConnectionManager = Provide[
+            DependencyContainer.connection_manager
+        ],
     ):
         """Initialize Routing class."""
         self.xknx = xknx
         self.telegram_received_callback = telegram_received_callback
         self.local_ip = local_ip
+        self.connection_manager = connection_manager
 
         self.udpclient = UDPClient(
             (local_ip, 0),
@@ -86,7 +91,7 @@ class Routing(Interface):
 
     async def connect(self) -> bool:
         """Start routing."""
-        await self.xknx.connection_manager.connection_state_changed(
+        await self.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTING
         )
         try:
@@ -97,13 +102,13 @@ class Routing(Interface):
                 type(ex).__name__,
                 ex,
             )
-            await self.xknx.connection_manager.connection_state_changed(
+            await self.connection_manager.connection_state_changed(
                 XknxConnectionState.DISCONNECTED
             )
             # close udp client to prevent open file descriptors
             await self.udpclient.stop()
             raise ex
-        await self.xknx.connection_manager.connection_state_changed(
+        await self.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTED
         )
         return True
@@ -111,6 +116,6 @@ class Routing(Interface):
     async def disconnect(self) -> None:
         """Stop routing."""
         await self.udpclient.stop()
-        await self.xknx.connection_manager.connection_state_changed(
+        await self.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )

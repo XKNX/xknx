@@ -150,7 +150,7 @@ class TestStateUpdater:
         xknx.state_updater._workers[id(remote_value_2)] = Mock()
 
         assert not xknx.state_updater.started
-        xknx.connection_manager._state = XknxConnectionState.CONNECTED
+        xknx.connection_manager()._state = XknxConnectionState.CONNECTED
         xknx.state_updater.start()
         assert xknx.state_updater.started
         # start
@@ -179,21 +179,20 @@ class TestStateUpdater:
         """Test start/stop state updater after reconnect."""
 
         xknx = XKNX()
+        connection_manager = xknx.connection_manager()
         assert not xknx.state_updater.started
 
-        xknx.connection_manager._state = XknxConnectionState.CONNECTED
+        connection_manager._state = XknxConnectionState.CONNECTED
         xknx.state_updater.start()
 
         assert xknx.state_updater.started
 
-        await xknx.connection_manager.connection_state_changed(
+        await connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
 
         assert not xknx.state_updater.started
 
-        await xknx.connection_manager.connection_state_changed(
-            XknxConnectionState.CONNECTED
-        )
+        await connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
 
         assert xknx.state_updater.started

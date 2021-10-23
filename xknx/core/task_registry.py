@@ -3,14 +3,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Awaitable, Generator, Union
+from typing import Any, Awaitable, Generator, Union
 
-from xknx.core import XknxConnectionState
+from dependency_injector.wiring import Provide
+from xknx.core import ConnectionManager, DependencyContainer, XknxConnectionState
 
 AsyncCallbackType = Union[Generator[Any, None, Any], Awaitable]
-
-if TYPE_CHECKING:
-    from xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
 
@@ -64,9 +62,14 @@ class Task:
 class TaskRegistry:
     """Manages async tasks in XKNX."""
 
-    def __init__(self, xknx: XKNX) -> None:
+    def __init__(
+        self,
+        connection_manager: ConnectionManager = Provide[
+            DependencyContainer.connection_manager
+        ],
+    ) -> None:
         """Initialize TaskRegistry class."""
-        self.xknx = xknx
+        self.connection_manager = connection_manager
         self.tasks: list[Task] = []
 
     def register(
@@ -97,13 +100,13 @@ class TaskRegistry:
 
     def start(self) -> None:
         """Start task registry."""
-        self.xknx.connection_manager.register_connection_state_changed_cb(
+        self.connection_manager.register_connection_state_changed_cb(
             self.connection_state_changed_cb
         )
 
     def stop(self) -> None:
         """Stop task registry and cancel all tasks."""
-        self.xknx.connection_manager.unregister_connection_state_changed_cb(
+        self.connection_manager.unregister_connection_state_changed_cb(
             self.connection_state_changed_cb
         )
 

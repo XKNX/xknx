@@ -271,7 +271,7 @@ class KNXModule:
 
         self.init_xknx()
         self._knx_event_callback: TelegramQueue.Callback = self.register_callback()
-        self.xknx.connection_manager.register_connection_state_changed_cb(
+        self.xknx.connection_manager().register_connection_state_changed_cb(
             self.connection_state_changed_cb
         )
 

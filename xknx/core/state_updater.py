@@ -6,7 +6,8 @@ from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
-from xknx.core import XknxConnectionState
+from dependency_injector.wiring import Provide
+from xknx.core import ConnectionManager, DependencyContainer, XknxConnectionState
 from xknx.remote_value import RemoteValue
 
 if TYPE_CHECKING:
@@ -22,9 +23,17 @@ MAX_UPDATE_INTERVAL = 1440
 class StateUpdater:
     """Class for keeping the states of RemoteValues up to date."""
 
-    def __init__(self, xknx: XKNX, parallel_reads: int = 2):
+    def __init__(
+        self,
+        xknx: XKNX,
+        connection_manager: ConnectionManager = Provide[
+            DependencyContainer.connection_manager
+        ],
+        parallel_reads: int = 2,
+    ):
         """Initialize StateUpdater class."""
         self.xknx = xknx
+        self.connection_manager = connection_manager
         self.started = False
         self._workers: dict[int, _StateTracker] = {}
         self._semaphore = asyncio.Semaphore(value=parallel_reads)
@@ -138,16 +147,16 @@ class StateUpdater:
 
     def start(self) -> None:
         """Start StateUpdater."""
-        self.xknx.connection_manager.register_connection_state_changed_cb(
+        self.connection_manager.register_connection_state_changed_cb(
             self.connection_state_change_callback
         )
 
-        if self.xknx.connection_manager.state == XknxConnectionState.CONNECTED:
+        if self.connection_manager.state == XknxConnectionState.CONNECTED:
             self._start()
 
     def stop(self) -> None:
         """Stop StateUpdater."""
-        self.xknx.connection_manager.unregister_connection_state_changed_cb(
+        self.connection_manager.unregister_connection_state_changed_cb(
             self.connection_state_change_callback
         )
 

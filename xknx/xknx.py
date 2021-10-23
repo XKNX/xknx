@@ -11,6 +11,7 @@ from sys import platform
 from types import TracebackType
 from typing import Awaitable, Callable
 
+from dependency_injector.wiring import Provide
 from xknx.core import (
     ConnectionManager,
     DependencyContainer,
@@ -68,6 +69,7 @@ class XKNX:
             modules=[
                 sys.modules["xknx"],
                 sys.modules["xknx.knxip"],
+                sys.modules["xknx.core"],
                 sys.modules["xknx.io"],
             ]
         )
@@ -79,8 +81,7 @@ class XKNX:
         self.sigint_received = asyncio.Event()
         self.telegram_queue = TelegramQueue(self)
         self.state_updater = StateUpdater(self)
-        self.connection_manager = ConnectionManager()
-        self.task_registry = TaskRegistry(self)
+        self.task_registry = TaskRegistry()
         self.start_state_updater = state_updater
         self.knxip_interface: KNXIPInterface | None = None
         self.started = asyncio.Event()
@@ -102,7 +103,7 @@ class XKNX:
             self.devices.register_device_updated_cb(device_updated_cb)
 
         if connection_state_changed_cb is not None:
-            self.connection_manager.register_connection_state_changed_cb(
+            self.connection_manager().register_connection_state_changed_cb(
                 connection_state_changed_cb
             )
 
@@ -117,6 +118,15 @@ class XKNX:
 
         if self.container:
             self.container.unwire()  # pylint: disable=no-member
+
+    def connection_manager(  # pylint: disable=no-self-use
+        self,
+        connection_manager: ConnectionManager = Provide[
+            DependencyContainer.connection_manager
+        ],
+    ) -> ConnectionManager:
+        """Get the connection manager conveniently."""
+        return connection_manager
 
     async def __aenter__(self) -> "XKNX":
         """Start XKNX from context manager."""
