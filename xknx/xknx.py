@@ -103,7 +103,7 @@ class XKNX:
             self.devices.register_device_updated_cb(device_updated_cb)
 
         if connection_state_changed_cb is not None:
-            self.connection_manager().register_connection_state_changed_cb(
+            self.get_connection_manager().register_connection_state_changed_cb(
                 connection_state_changed_cb
             )
 
@@ -119,7 +119,7 @@ class XKNX:
         if self.container:
             self.container.unwire()  # pylint: disable=no-member
 
-    def connection_manager(  # pylint: disable=no-self-use
+    def get_connection_manager(  # pylint: disable=no-self-use
         self,
         connection_manager: ConnectionManager = Provide[
             DependencyContainer.connection_manager

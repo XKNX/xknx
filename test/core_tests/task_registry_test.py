@@ -76,9 +76,10 @@ class TestTaskRegistry:
         """Test reconnect handling."""
 
         xknx = XKNX()
+        xknx.container.wire()  # pylint: disable=no-member
         xknx.task_registry.start()
-        assert len(xknx.connection_manager()._connection_state_changed_cbs) == 1
-        await xknx.connection_manager().connection_state_changed(
+        assert len(xknx.get_connection_manager()._connection_state_changed_cbs) == 1
+        await xknx.get_connection_manager().connection_state_changed(
             XknxConnectionState.CONNECTED
         )
 
@@ -91,11 +92,11 @@ class TestTaskRegistry:
         )
         assert len(xknx.task_registry.tasks) == 1
         task.start()
-        await xknx.connection_manager().connection_state_changed(
+        await xknx.get_connection_manager().connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
         assert task._task is None
-        await xknx.connection_manager().connection_state_changed(
+        await xknx.get_connection_manager().connection_state_changed(
             XknxConnectionState.CONNECTED
         )
         assert task._task is not None
@@ -104,4 +105,5 @@ class TestTaskRegistry:
         xknx.task_registry.stop()
         assert len(xknx.task_registry.tasks) == 0
         assert task._task is None
-        assert len(xknx.connection_manager()._connection_state_changed_cbs) == 0
+        assert len(xknx.get_connection_manager()._connection_state_changed_cbs) == 0
+        xknx.container.unwire()  # pylint: disable=no-member

@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import Iterator
 
+from dependency_injector.wiring import Provide, as_int
+from xknx.core import DependencyContainer
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP
 
 
@@ -20,6 +22,20 @@ class HPAI:
         """Initialize HPAI object."""
         self.ip_addr = ip_addr
         self.port = port
+
+    @classmethod
+    def from_config(
+        cls,
+        multicast_group: str = Provide[
+            DependencyContainer.config.multicast_group
+        ],  # pylint: disable=no-member
+        multicast_port: int = Provide[
+            DependencyContainer.config.multicast_port,  # pylint: disable=no-member
+            as_int(),
+        ],
+    ) -> HPAI:
+        """Return new HPAI from config."""
+        return HPAI(ip_addr=multicast_group, port=multicast_port)
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""

@@ -18,10 +18,10 @@ class TestConnectionManager:
 
         xknx = XKNX()
         async_connection_state_changed_cb = AsyncMock()
-        xknx.connection_manager().register_connection_state_changed_cb(
+        xknx.get_connection_manager().register_connection_state_changed_cb(
             async_connection_state_changed_cb
         )
-        await xknx.connection_manager().connection_state_changed(
+        await xknx.get_connection_manager().connection_state_changed(
             XknxConnectionState.CONNECTED
         )
         async_connection_state_changed_cb.assert_called_once_with(
@@ -50,11 +50,11 @@ class TestConnectionManager:
 
         xknx = XKNX()
         async_connection_state_changed_cb = AsyncMock()
-        xknx.connection_manager().register_connection_state_changed_cb(
+        xknx.get_connection_manager().register_connection_state_changed_cb(
             async_connection_state_changed_cb
         )
-        assert xknx.connection_manager().state == XknxConnectionState.DISCONNECTED
-        await xknx.connection_manager().connection_state_changed(
+        assert xknx.get_connection_manager().state == XknxConnectionState.DISCONNECTED
+        await xknx.get_connection_manager().connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
         async_connection_state_changed_cb.assert_not_called()

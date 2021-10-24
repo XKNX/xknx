@@ -53,7 +53,7 @@ class TestXknxModule:
 
         xknx = XKNX(connection_state_changed_cb=con_state_change)
 
-        assert len(xknx.connection_manager()._connection_state_changed_cbs) == 1
+        assert len(xknx.get_connection_manager()._connection_state_changed_cbs) == 1
 
     @patch("xknx.io.KNXIPInterface.start", new_callable=AsyncMock)
     async def test_xknx_start(self, start_mock):
