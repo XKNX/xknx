@@ -71,6 +71,7 @@ class XKNX:
                 sys.modules["xknx.knxip"],
                 sys.modules["xknx.core"],
                 sys.modules["xknx.io"],
+                sys.modules["xknx.xknx"],
             ]
         )
         self.container.init_resources()  # pylint: disable=no-member
