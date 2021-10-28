@@ -9,7 +9,7 @@ from _testcapi import awaitType
 from xknx import telegram
 from xknx.telegram.address import GroupAddress, IndividualAddress
 
-from prog.device import A_Device
+from xknx.prog.device import A_Device
 
 NM_OK = 0
 NM_EXISTS = 1
