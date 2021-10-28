@@ -91,7 +91,4 @@ class TPDU:
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        res = '<TPDUFrame DestinationAddress="{}" '.format(
-            self.destination_address.__repr__()
-        )
-        return res
+        return f'<TPDUFrame DestinationAddress="{self.destination_address.__repr__()}" '
