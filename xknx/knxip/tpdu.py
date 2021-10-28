@@ -65,7 +65,9 @@ class TPDU:
         try:
             self.code = CEMIMessageCode(raw[0])
         except ValueError:
-            raise UnsupportedCEMIMessage(f"CEMIMessageCode not implemented: {raw[0]} in CEMI: {raw.hex()}")
+            raise UnsupportedCEMIMessage(
+                f"CEMIMessageCode not implemented: {raw[0]} in CEMI: {raw.hex()}"
+            )
         self.destination_address = IndividualAddress((raw[6], raw[7]))
         self.data = raw
         return 10
