@@ -9,7 +9,7 @@ This package contains all objects managing Tunneling and Routing Connections..
 # flake8: noqa
 from .connection import ConnectionConfig, ConnectionType
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
-from .gateway_scanner import GatewayScanFilter, GatewayScanner
+from .gateway_scanner import GatewayDescriptor, GatewayScanFilter, GatewayScanner
 from .knxip_interface import KNXIPInterface
 from .routing import Routing
 from .tunnel import Tunnel

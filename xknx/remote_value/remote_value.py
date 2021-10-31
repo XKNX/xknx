@@ -213,6 +213,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
                     if response
                     else GroupValueWrite(payload)
                 ),
+                source_address=self.xknx.current_address,
             )
             await self.xknx.telegrams.put(telegram)
 

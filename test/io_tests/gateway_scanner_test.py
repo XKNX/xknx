@@ -47,6 +47,7 @@ class TestGatewayScanner:
         local_ip="192.168.42.50",
         supports_tunnelling=True,
         supports_routing=True,
+        individual_address=IndividualAddress("1.1.0"),
     )
     gateway_desc_neither = GatewayDescriptor(
         name="AC/S 1.1.1 Application Control",
@@ -152,9 +153,30 @@ class TestGatewayScanner:
 
         assert gateway_scanner.found_gateways == []
         gateway_scanner._response_rec_callback(
-            test_search_response, udp_client_mock, interface="en1"
+            test_search_response,
+            udp_client_mock,
+            interface="en1",
+            netmask="255.255.255.0",
         )
         assert str(gateway_scanner.found_gateways[0]) == str(self.gateway_desc_both)
+
+    def test_search_response_wrong_network(self):
+        """Test function of gateway scanner when network iface doesnt match search response."""
+        xknx = XKNX()
+        gateway_scanner = GatewayScanner(xknx)
+        test_search_response = fake_router_search_response(xknx)
+        udp_client_mock = create_autospec(UDPClient)
+        udp_client_mock.local_addr = ("192.168.100.50", 0)
+        udp_client_mock.getsockname.return_value = ("192.168.100.50", 0)
+
+        assert gateway_scanner.found_gateways == []
+        gateway_scanner._response_rec_callback(
+            test_search_response,
+            udp_client_mock,
+            interface="en1",
+            netmask="255.255.255.0",
+        )
+        assert gateway_scanner.found_gateways == []
 
     @patch("xknx.io.gateway_scanner.netifaces", autospec=True)
     async def test_scan_timeout(self, netifaces_mock):
@@ -192,8 +214,8 @@ class TestGatewayScanner:
 
         assert _search_interface_mock.call_count == 2
         expected_calls = [
-            ((gateway_scanner, "lo0", "127.0.0.1"),),
-            ((gateway_scanner, "en1", "10.1.1.2"),),
+            ((gateway_scanner, "lo0", "127.0.0.1", "255.0.0.0"),),
+            ((gateway_scanner, "en1", "10.1.1.2", "255.255.255.0"),),
         ]
         assert _search_interface_mock.call_args_list == expected_calls
         assert test_scan == []
