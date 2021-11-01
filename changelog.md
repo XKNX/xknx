@@ -2,6 +2,13 @@
 
 ## Unreleased changes
 
+## 0.18.12 Add always callback to NumericValue and RawValue 2021-11-01
+
+### Internals
+
+- Gatewayscanner now also reports the individual address of the gateway
+- Outgoing telegrams will now have the correct source_address if tunneling is used
+
 ### Devices
 
 - Added `always_callback` option to NumericValue and RawValue
