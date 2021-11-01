@@ -664,11 +664,9 @@ class TestStringRepresentations:
             local_ip="192.168.2.50",
             supports_tunnelling=True,
             supports_routing=False,
+            individual_address=IndividualAddress("1.1.1"),
         )
-        assert (
-            str(gateway_descriptor)
-            == '<GatewayDescriptor name="KNX-Interface" addr="192.168.2.3:1234" local="192.168.2.50@en1" routing="False" tunnelling="True" />'
-        )
+        assert str(gateway_descriptor) == "1.1.1 - KNX-Interface @ 192.168.2.3:1234"
 
     #
     # Routing Indication

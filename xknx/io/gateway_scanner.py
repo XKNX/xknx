@@ -9,12 +9,14 @@ from __future__ import annotations
 
 import asyncio
 from functools import partial
+from ipaddress import IPv4Address, IPv4Network
 import logging
 from typing import TYPE_CHECKING
 
 import netifaces
 from xknx.knxip import (
     HPAI,
+    DIBDeviceInformation,
     DIBServiceFamily,
     DIBSuppSVCFamilies,
     KNXIPFrame,
@@ -22,6 +24,7 @@ from xknx.knxip import (
     SearchRequest,
     SearchResponse,
 )
+from xknx.telegram import IndividualAddress
 
 from .udp_client import UDPClient
 
@@ -43,6 +46,7 @@ class GatewayDescriptor:
         local_ip: str,
         supports_tunnelling: bool = False,
         supports_routing: bool = False,
+        individual_address: IndividualAddress | None = None,
     ):
         """Initialize GatewayDescriptor class."""
         self.name = name
@@ -52,16 +56,11 @@ class GatewayDescriptor:
         self.local_ip = local_ip
         self.supports_routing = supports_routing
         self.supports_tunnelling = supports_tunnelling
+        self.individual_address = individual_address
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return (
-            f'<GatewayDescriptor name="{self.name}" '
-            f'addr="{self.ip_addr}:{self.port}" '
-            f'local="{self.local_ip}@{self.local_interface}" '
-            f'routing="{self.supports_routing}" '
-            f'tunnelling="{self.supports_tunnelling}" />'
-        )
+        return f"{self.individual_address} - {self.name} @ {self.ip_addr}:{self.port}"
 
 
 class GatewayScanFilter:
@@ -146,12 +145,15 @@ class GatewayScanner:
             try:
                 af_inet = netifaces.ifaddresses(interface)[netifaces.AF_INET]
                 ip_addr = af_inet[0]["addr"]
-                await self._search_interface(interface, ip_addr)
+                netmask = af_inet[0]["netmask"]
+                await self._search_interface(interface, ip_addr, netmask)
             except KeyError:
                 logger.info("Could not connect to an KNX/IP device on %s", interface)
                 continue
 
-    async def _search_interface(self, interface: str, ip_addr: str) -> None:
+    async def _search_interface(
+        self, interface: str, ip_addr: str, netmask: str
+    ) -> None:
         """Send a search request on a specific interface."""
         logger.debug("Searching on %s / %s", interface, ip_addr)
 
@@ -163,7 +165,7 @@ class GatewayScanner:
         )
 
         udp_client.register_callback(
-            partial(self._response_rec_callback, interface=interface),
+            partial(self._response_rec_callback, interface=interface, netmask=netmask),
             [KNXIPServiceType.SEARCH_RESPONSE],
         )
         await udp_client.connect()
@@ -177,11 +179,23 @@ class GatewayScanner:
         udp_client.send(KNXIPFrame.init_from_body(search_request))
 
     def _response_rec_callback(
-        self, knx_ip_frame: KNXIPFrame, udp_client: UDPClient, interface: str = ""
+        self,
+        knx_ip_frame: KNXIPFrame,
+        udp_client: UDPClient,
+        interface: str = "",
+        netmask: str = "",
     ) -> None:
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knx_ip_frame.body, SearchResponse):
             logger.warning("Could not understand knxipframe")
+            return
+
+        address: IPv4Address = IPv4Address(knx_ip_frame.body.control_endpoint.ip_addr)
+        network: IPv4Network = IPv4Network(
+            f"{udp_client.local_addr[0]}/{netmask}", False
+        )
+
+        if address not in network:
             return
 
         gateway = GatewayDescriptor(
@@ -199,6 +213,16 @@ class GatewayScanner:
             )
             gateway.supports_routing = dib.supports(DIBServiceFamily.ROUTING)
             gateway.supports_tunnelling = dib.supports(DIBServiceFamily.TUNNELING)
+        except StopIteration:
+            pass
+
+        try:
+            device_infos = next(
+                device_infos
+                for device_infos in knx_ip_frame.body.dibs
+                if isinstance(device_infos, DIBDeviceInformation)
+            )
+            gateway.individual_address = device_infos.individual_address
         except StopIteration:
             pass
 
