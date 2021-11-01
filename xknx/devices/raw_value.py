@@ -32,10 +32,12 @@ class RawValue(Device):
         group_address_state: GroupAddressesType | None = None,
         respond_to_read: bool = False,
         sync_state: bool | int | float | str = True,
+        always_callback: bool = False,
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Sensor class."""
         super().__init__(xknx, name, device_updated_cb)
+        self.always_callback = always_callback
         self.respond_to_read = respond_to_read
         self.remote_value = RemoteValueRaw(
             xknx,
@@ -58,7 +60,7 @@ class RawValue(Device):
 
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        await self.remote_value.process(telegram)
+        await self.remote_value.process(telegram, always_callback=self.always_callback)
 
     async def process_group_read(self, telegram: "Telegram") -> None:
         """Process incoming GroupValueResponse telegrams."""
