@@ -2,7 +2,9 @@
 
 ## Unreleased changes
 
-### Internals
+### Devices
+
+- Added `always_callback` option to NumericValue and RawValue
 
 ## 0.18.11 Task Registry 2021-10-16
 

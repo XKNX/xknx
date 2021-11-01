@@ -32,10 +32,12 @@ class NumericValue(Device):
         respond_to_read: bool = False,
         sync_state: bool | int | float | str = True,
         value_type: int | str | None = None,
+        always_callback: bool = False,
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Sensor class."""
         super().__init__(xknx, name, device_updated_cb)
+        self.always_callback = always_callback
         self.respond_to_read = respond_to_read
         self.sensor_value = RemoteValueNumeric(
             xknx,
@@ -58,7 +60,7 @@ class NumericValue(Device):
 
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        await self.sensor_value.process(telegram)
+        await self.sensor_value.process(telegram, always_callback=self.always_callback)
 
     async def process_group_read(self, telegram: "Telegram") -> None:
         """Process incoming GroupValueResponse telegrams."""

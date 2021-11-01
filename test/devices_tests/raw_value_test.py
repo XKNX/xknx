@@ -1,4 +1,6 @@
 """Unit test for RawValue objects."""
+from unittest.mock import AsyncMock
+
 import pytest
 from xknx import XKNX
 from xknx.devices import RawValue
@@ -136,6 +138,61 @@ class TestRawValue:
             )
         )
         assert xknx.telegrams.qsize() == 0
+
+    #
+    # TEST PROCESS CALLBACK
+    #
+
+    async def test_process_callback(self):
+        """Test process / reading telegrams from telegram queue. Test if callback is called."""
+
+        xknx = XKNX()
+        sensor = RawValue(
+            xknx,
+            "TestSensor",
+            2,
+            group_address="1/2/3",
+        )
+        after_update_callback = AsyncMock()
+        sensor.register_device_updated_cb(after_update_callback)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray((0x01, 0x02))),
+        )
+        await sensor.process(telegram)
+        after_update_callback.assert_called_with(sensor)
+        assert sensor.last_telegram == telegram
+        # consecutive telegrams with same payload shall only trigger one callback
+        after_update_callback.reset_mock()
+        await sensor.process(telegram)
+        after_update_callback.assert_not_called()
+
+    async def test_process_callback_always(self):
+        """Test process / reading telegrams from telegram queue. Test if callback is called."""
+
+        xknx = XKNX()
+        sensor = RawValue(
+            xknx,
+            "TestSensor",
+            2,
+            group_address="1/2/3",
+            always_callback=True,
+        )
+        after_update_callback = AsyncMock()
+        sensor.register_device_updated_cb(after_update_callback)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray((0x01, 0x02))),
+        )
+        await sensor.process(telegram)
+        after_update_callback.assert_called_with(sensor)
+        assert sensor.last_telegram == telegram
+        # every telegram shall trigger callback
+        after_update_callback.reset_mock()
+        await sensor.process(telegram)
+        after_update_callback.assert_called_with(sensor)
 
     #
     # TEST SET
