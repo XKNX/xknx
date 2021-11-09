@@ -206,6 +206,7 @@ class CEMIFrame:
             f'SourceAddress="{self.src_addr.__repr__()}" '
             f'DestinationAddress="{self.dst_addr.__repr__()}" '
             f'Flags="{self.flags:16b}" '
+            f'code="{self.code.name}" '
             f'payload="{self.payload}" />'
         )
 

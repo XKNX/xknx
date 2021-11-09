@@ -515,8 +515,8 @@ class TestStringRepresentations:
         connect_request.data_endpoint = HPAI(ip_addr="192.168.42.2", port=33942)
         assert (
             str(connect_request)
-            == '<ConnectRequest control_endpoint="<HPAI 192.168.42.1:33941 />" data_endpoint="<HPAI 192.168.42.2:33942 />" request_type="ConnectRequest'
-            'Type.TUNNEL_CONNECTION" />'
+            == '<ConnectRequest control_endpoint="<HPAI 192.168.42.1:33941 />" data_endpoint="<HPAI 192.168.42.2:33942 />" '
+            'request_type="ConnectRequestType.TUNNEL_CONNECTION" />'
         )
 
     def test_connect_response(self):
@@ -529,8 +529,9 @@ class TestStringRepresentations:
         connect_response.identifier = 42
         assert (
             str(connect_response)
-            == '<ConnectResponse communication_channel="13" status_code="ErrorCode.E_NO_ERROR" control_endpoint="<HPAI 192.168.42.1:33941 />" request_t'
-            'ype="ConnectRequestType.TUNNEL_CONNECTION" identifier="42" />'
+            == '<ConnectResponse communication_channel="13" status_code="ErrorCode.E_NO_ERROR" '
+            'control_endpoint="<HPAI 192.168.42.1:33941 />" '
+            'request_type="ConnectRequestType.TUNNEL_CONNECTION" identifier="42" />'
         )
 
     def test_disconnect_request(self):
@@ -609,8 +610,9 @@ class TestStringRepresentations:
         tunnelling_request.sequence_counter = 42
         assert (
             str(tunnelling_request)
-            == '<TunnellingRequest communication_channel_id="23" sequence_counter="42" cemi="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")"'
-            ' DestinationAddress="GroupAddress("0/0/0")" Flags="               0" payload="None" />" />'
+            == '<TunnellingRequest communication_channel_id="23" sequence_counter="42" '
+            'cemi="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")" DestinationAddress="GroupAddress("0/0/0")" '
+            'Flags="               0" code="L_DATA_REQ" payload="None" />" />'
         )
 
     def test_tunnelling_ack(self):
@@ -635,8 +637,8 @@ class TestStringRepresentations:
         )
         assert (
             str(cemi_frame)
-            == '<CEMIFrame SourceAddress="GroupAddress("1/2/3")" DestinationAddress="GroupAddress("1/2/5")" Flags="1011110011100000" '
-            'payload="<GroupValueWrite value="<DPTBinary value="7" />" />" />'
+            == '<CEMIFrame SourceAddress="GroupAddress("1/2/3")" DestinationAddress="GroupAddress("1/2/5")" '
+            'Flags="1011110011100000" code="L_DATA_IND" payload="<GroupValueWrite value="<DPTBinary value="7" />" />" />'
         )
 
     def test_knxip_frame(self):
@@ -646,8 +648,8 @@ class TestStringRepresentations:
         knxipframe.init(KNXIPServiceType.SEARCH_REQUEST)
         assert (
             str(knxipframe)
-            == '<KNXIPFrame <KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="SEARCH_REQUEST" Reserve="0" TotalLeng'
-            'th="0" />\n'
+            == '<KNXIPFrame <KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="SEARCH_REQUEST" '
+            'Reserve="0" TotalLength="0" />\n'
             ' body="<SearchRequest discovery_endpoint="<HPAI 224.0.23.12:3671 />" />" />'
         )
 
@@ -677,5 +679,6 @@ class TestStringRepresentations:
         routing_indication = RoutingIndication(xknx)
         assert (
             str(routing_indication)
-            == '<RoutingIndication cemi="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")" DestinationAddress="GroupAddress("0/0/0")" Flags="               0" payload="None" />" />'
+            == '<RoutingIndication cemi="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")" '
+            'DestinationAddress="GroupAddress("0/0/0")" Flags="               0" code="L_DATA_IND" payload="None" />" />'
         )
