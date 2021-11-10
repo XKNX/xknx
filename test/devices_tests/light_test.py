@@ -684,6 +684,52 @@ class TestLight:
                 "Dimming not supported for device %s", "TestLight"
             )
 
+    async def test_set_individual_color_with_gloabl_switch(self):
+        """Test switching on and dimming a Light with global addresses."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Diningroom.Light_1",
+            group_address_switch="1/0/0",
+            group_address_brightness="1/0/1",
+            group_address_switch_red="1/1/1",
+            group_address_switch_red_state="1/1/2",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_switch_green="1/1/5",
+            group_address_switch_green_state="1/1/6",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_switch_blue="1/1/9",
+            group_address_switch_blue_state="1/1/10",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
+            group_address_switch_white="1/1/13",
+            group_address_switch_white_state="1/1/14",
+            group_address_brightness_white="1/1/15",
+            group_address_brightness_white_state="1/1/16",
+        )
+        assert light.state is None
+        for color in light._iter_individual_colors():
+            assert color.is_on is None
+        # turn on
+        await light.set_on()
+        assert xknx.telegrams.qsize() == 1
+
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/0/0"),
+            payload=GroupValueWrite(DPTBinary(True)),
+        )
+        # brightness
+        await light.set_brightness(23)
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/0/1"),
+            payload=GroupValueWrite(DPTArray(23)),
+        )
+
     #
     # TEST SET COLOR
     #
