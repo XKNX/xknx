@@ -92,16 +92,18 @@ class _SwitchAndBrightness:
 
     async def set_on(self) -> None:
         """Switch light on."""
-        if self.switch.initialized:
+        if self.switch.writable:
             await self.switch.on()
-        elif self.brightness.initialized:
+            return
+        if self.brightness.writable:
             await self.brightness.set(self.brightness.range_to)
 
     async def set_off(self) -> None:
         """Switch light off."""
-        if self.switch.initialized:
+        if self.switch.writable:
             await self.switch.off()
-        elif self.brightness.initialized:
+            return
+        if self.brightness.writable:
             await self.brightness.set(0)
 
     def __eq__(self, other: object) -> bool:
@@ -375,15 +377,17 @@ class Light(Device):
 
     async def set_on(self) -> None:
         """Switch light on."""
-        if self.switch.initialized:
+        if self.switch.writable:
             await self.switch.on()
+            return
         for color in self._iter_individual_colors():
             await color.set_on()
 
     async def set_off(self) -> None:
         """Switch light off."""
-        if self.switch.initialized:
+        if self.switch.writable:
             await self.switch.off()
+            return
         for color in self._iter_individual_colors():
             await color.set_off()
 
