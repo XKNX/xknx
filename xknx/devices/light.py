@@ -116,7 +116,7 @@ class _SwitchAndBrightness:
 class Light(Device):
     """Class for managing a light."""
 
-    DEBOUNCE_TIME = 0.2
+    DEBOUNCE_TIMEOUT = 0.2
     DEFAULT_MIN_KELVIN = 2700  # 370 mireds
     DEFAULT_MAX_KELVIN = 6000  # 166 mireds
 
@@ -360,7 +360,7 @@ class Light(Device):
         """Run callback after all individual colors were updated or timeout passed."""
 
         async def debouncer() -> None:
-            await asyncio.sleep(Light.DEBOUNCE_TIME)
+            await asyncio.sleep(Light.DEBOUNCE_TIMEOUT)
             self._reset_individual_color_debounce_telegrams()
             await asyncio.shield(self.after_update())
 
