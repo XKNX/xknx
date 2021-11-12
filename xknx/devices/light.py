@@ -16,7 +16,6 @@ import asyncio
 from enum import Enum
 from itertools import chain
 import logging
-import time
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterator, Tuple, cast
 
 from xknx.dpt.dpt_color import XYYColor
@@ -117,6 +116,7 @@ class _SwitchAndBrightness:
 class Light(Device):
     """Class for managing a light."""
 
+    DEBOUNCE_TIME = 0.2
     DEFAULT_MIN_KELVIN = 2700  # 370 mireds
     DEFAULT_MAX_KELVIN = 6000  # 166 mireds
 
@@ -310,24 +310,11 @@ class Light(Device):
 
         self.min_kelvin = min_kelvin
         self.max_kelvin = max_kelvin
-        self._debounce_task: asyncio.Task[None] | None = None
-        self._debounce_telegrams: int = sum(
-            (
-                self.red.switch.initialized or self.red.brightness.initialized,
-                self.green.switch.initialized or self.green.brightness.initialized,
-                self.blue.switch.initialized or self.blue.brightness.initialized,
-                self.white.switch.initialized or self.white.brightness.initialized,
-            )
+        self._individual_color_debounce_task_name = (
+            f"{id(self)}_individual_color_debounce"
         )
-
-    def __del__(self) -> None:
-        """Destructor. Cleaning up if this was not done before."""
-        try:
-            if self._debounce_task:
-                self._debounce_task.cancel()
-        except RuntimeError:
-            pass
-        super().__del__()
+        self._individual_color_debounce_telegram_counter: int
+        self._reset_individual_color_debounce_telegrams()
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
@@ -358,32 +345,35 @@ class Light(Device):
         """Iterate the devices individual colors."""
         yield from (self.red, self.green, self.blue, self.white)
 
-    async def _individual_color_callback_debounce(self) -> None:
-        logger.warning("Individual color callback at %s", time.time())
-        DEBOUNCE_TIME = 0.2
-
-        async def debouncer(remaining_iterations: int) -> None:
-            print(f"running {remaining_iterations} : {self._debounce_telegrams}")
-            if remaining_iterations > 0:
-                await asyncio.sleep(DEBOUNCE_TIME)
-            self._debounce_telegrams = sum(
-                (
-                    self.red.switch.initialized or self.red.brightness.initialized,
-                    self.green.switch.initialized or self.green.brightness.initialized,
-                    self.blue.switch.initialized or self.blue.brightness.initialized,
-                    self.white.switch.initialized or self.white.brightness.initialized,
-                )
+    def _reset_individual_color_debounce_telegrams(self) -> None:
+        """Reset individual color debounce telegram counter."""
+        self._individual_color_debounce_telegram_counter = sum(
+            (
+                self.red.switch.initialized or self.red.brightness.initialized,
+                self.green.switch.initialized or self.green.brightness.initialized,
+                self.blue.switch.initialized or self.blue.brightness.initialized,
+                self.white.switch.initialized or self.white.brightness.initialized,
             )
-            # await asyncio.shield(self.after_update())
-            # await self.after_update()
-            asyncio.create_task(self.after_update(), name="##callback")
-            print(f"finished {remaining_iterations}")
+        )
 
-        if self._debounce_task is not None:
-            self._debounce_task.cancel()
-        self._debounce_telegrams -= 1
-        print(f"scheduling {self._debounce_telegrams}")
-        self._debounce_task = asyncio.create_task(debouncer(self._debounce_telegrams))
+    async def _individual_color_callback_debounce(self) -> None:
+        """Run callback after all individual colors were updated or timeout passed."""
+
+        async def debouncer() -> None:
+            await asyncio.sleep(Light.DEBOUNCE_TIME)
+            self._reset_individual_color_debounce_telegrams()
+            await asyncio.shield(self.after_update())
+
+        self._individual_color_debounce_telegram_counter -= 1
+        if self._individual_color_debounce_telegram_counter > 0:
+            # task registry cancels existing task
+            self.xknx.task_registry.register(
+                self._individual_color_debounce_task_name, debouncer()
+            ).start()
+            return
+        self.xknx.task_registry.unregister(self._individual_color_debounce_task_name)
+        self._reset_individual_color_debounce_telegrams()
+        await self.after_update()
 
     @property
     def supports_brightness(self) -> bool:
