@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Internals
+
+- Fix GatewayScanner on MacOS and Windows and only return one instance of a gateway
+
 ### Devices
 
 - Light: Only send to global switch or brightness address if individual colors are also configured
