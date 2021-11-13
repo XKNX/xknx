@@ -156,27 +156,17 @@ class TestGatewayScanner:
             test_search_response,
             udp_client_mock,
             interface="en1",
-            netmask="255.255.255.0",
         )
+
         assert str(gateway_scanner.found_gateways[0]) == str(self.gateway_desc_both)
+        assert len(gateway_scanner.found_gateways) == 1
 
-    def test_search_response_wrong_network(self):
-        """Test function of gateway scanner when network iface doesnt match search response."""
-        xknx = XKNX()
-        gateway_scanner = GatewayScanner(xknx)
-        test_search_response = fake_router_search_response(xknx)
-        udp_client_mock = create_autospec(UDPClient)
-        udp_client_mock.local_addr = ("192.168.100.50", 0)
-        udp_client_mock.getsockname.return_value = ("192.168.100.50", 0)
-
-        assert gateway_scanner.found_gateways == []
         gateway_scanner._response_rec_callback(
             test_search_response,
             udp_client_mock,
-            interface="en1",
-            netmask="255.255.255.0",
+            interface="eth1",
         )
-        assert gateway_scanner.found_gateways == []
+        assert len(gateway_scanner.found_gateways) == 1
 
     @patch("xknx.io.gateway_scanner.netifaces", autospec=True)
     async def test_scan_timeout(self, netifaces_mock):
@@ -214,8 +204,8 @@ class TestGatewayScanner:
 
         assert _search_interface_mock.call_count == 2
         expected_calls = [
-            ((gateway_scanner, "lo0", "127.0.0.1", "255.0.0.0"),),
-            ((gateway_scanner, "en1", "10.1.1.2", "255.255.255.0"),),
+            ((gateway_scanner, "lo0", "127.0.0.1"),),
+            ((gateway_scanner, "en1", "10.1.1.2"),),
         ]
         assert _search_interface_mock.call_args_list == expected_calls
         assert test_scan == []

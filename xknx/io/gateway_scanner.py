@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import asyncio
 from functools import partial
-from ipaddress import IPv4Address, IPv4Network
 import logging
 from typing import TYPE_CHECKING
 
@@ -132,6 +131,7 @@ class GatewayScanner:
             pass
         finally:
             await self._stop()
+
         return self.found_gateways
 
     async def _stop(self) -> None:
@@ -145,15 +145,12 @@ class GatewayScanner:
             try:
                 af_inet = netifaces.ifaddresses(interface)[netifaces.AF_INET]
                 ip_addr = af_inet[0]["addr"]
-                netmask = af_inet[0]["netmask"]
-                await self._search_interface(interface, ip_addr, netmask)
+                await self._search_interface(interface, ip_addr)
             except KeyError:
                 logger.info("Could not connect to an KNX/IP device on %s", interface)
                 continue
 
-    async def _search_interface(
-        self, interface: str, ip_addr: str, netmask: str
-    ) -> None:
+    async def _search_interface(self, interface: str, ip_addr: str) -> None:
         """Send a search request on a specific interface."""
         logger.debug("Searching on %s / %s", interface, ip_addr)
 
@@ -165,7 +162,7 @@ class GatewayScanner:
         )
 
         udp_client.register_callback(
-            partial(self._response_rec_callback, interface=interface, netmask=netmask),
+            partial(self._response_rec_callback, interface=interface),
             [KNXIPServiceType.SEARCH_RESPONSE],
         )
         await udp_client.connect()
@@ -183,19 +180,10 @@ class GatewayScanner:
         knx_ip_frame: KNXIPFrame,
         udp_client: UDPClient,
         interface: str = "",
-        netmask: str = "",
     ) -> None:
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knx_ip_frame.body, SearchResponse):
             logger.warning("Could not understand knxipframe")
-            return
-
-        address: IPv4Address = IPv4Address(knx_ip_frame.body.control_endpoint.ip_addr)
-        network: IPv4Network = IPv4Network(
-            f"{udp_client.local_addr[0]}/{netmask}", False
-        )
-
-        if address not in network:
             return
 
         gateway = GatewayDescriptor(
@@ -229,7 +217,10 @@ class GatewayScanner:
         self._add_found_gateway(gateway)
 
     def _add_found_gateway(self, gateway: GatewayDescriptor) -> None:
-        if self.scan_filter.match(gateway):
+        if self.scan_filter.match(gateway) and not any(
+            _gateway.individual_address == gateway.individual_address
+            for _gateway in self.found_gateways
+        ):
             self.found_gateways.append(gateway)
             if 0 < self._count_upper_bound <= len(self.found_gateways):
                 self._response_received_event.set()
