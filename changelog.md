@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased changes
+## 0.18.13 Hold your colour 2021-11-13
 
 ### Internals
 
@@ -8,7 +8,7 @@
 
 ### Devices
 
-- Light: Only send to global switch or brightness address if individual colors are also configured
+- Light: Only send to global switch or brightness address if individual colors are configured to not overwrite actuator colors
 - Light: Debounce individual colors callback to mitigate color flicker in visualizations
 
 ## 0.18.12 Add always callback to NumericValue and RawValue 2021-11-01
