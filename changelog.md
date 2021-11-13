@@ -5,6 +5,7 @@
 ### Devices
 
 - Light: Only send to global switch or brightness address if individual colors are also configured
+- Light: Debounce individual colors callback to mitigate color flicker in visualizations
 
 ## 0.18.12 Add always callback to NumericValue and RawValue 2021-11-01
 
