@@ -21,7 +21,7 @@ from homeassistant.components.climate.const import (
     PRESET_SLEEP,
 )
 
-DOMAIN: Final = "knx"
+DOMAIN: Final = "xknx"
 
 # Address is used for configuration and services by the same functions so the key has to match
 KNX_ADDRESS: Final = "address"
@@ -31,13 +31,14 @@ CONF_XKNX_EXPOSE: Final = "expose"
 CONF_XKNX_INDIVIDUAL_ADDRESS: Final = "individual_address"
 CONF_XKNX_ROUTING: Final = "routing"
 CONF_XKNX_TUNNELING: Final = "tunneling"
+CONF_PAYLOAD: Final = "payload"
+CONF_PAYLOAD_LENGTH: Final = "payload_length"
 CONF_RESET_AFTER: Final = "reset_after"
 CONF_RESPOND_TO_READ: Final = "respond_to_read"
 CONF_STATE_ADDRESS: Final = "state_address"
 CONF_SYNC_STATE: Final = "sync_state"
 
 ATTR_COUNTER: Final = "counter"
-ATTR_LAST_XKNX_UPDATE: Final = "last_knx_update"
 ATTR_SOURCE: Final = "source"
 
 
@@ -52,6 +53,7 @@ class SupportedPlatforms(Enum):
     """Supported platforms."""
 
     BINARY_SENSOR = "binary_sensor"
+    BUTTON = "button"
     CLIMATE = "climate"
     COVER = "cover"
     FAN = "fan"
@@ -77,11 +79,11 @@ CONTROLLER_MODES: Final = {
 }
 
 CURRENT_HVAC_ACTIONS: Final = {
-    "Heat": CURRENT_HVAC_HEAT,
-    "Cool": CURRENT_HVAC_COOL,
-    "Off": CURRENT_HVAC_OFF,
-    "Fan only": CURRENT_HVAC_FAN,
-    "Dry": CURRENT_HVAC_DRY,
+    HVAC_MODE_HEAT: CURRENT_HVAC_HEAT,
+    HVAC_MODE_COOL: CURRENT_HVAC_COOL,
+    HVAC_MODE_OFF: CURRENT_HVAC_OFF,
+    HVAC_MODE_FAN_ONLY: CURRENT_HVAC_FAN,
+    HVAC_MODE_DRY: CURRENT_HVAC_DRY,
 }
 
 PRESET_MODES: Final = {
