@@ -1,20 +1,17 @@
-"""Support for KNX scenes."""
+"""Support for KNX/IP buttons."""
 from __future__ import annotations
 
-from typing import Any
-
 from xknx import XKNX
-from xknx.devices import Scene as XknxScene
+from xknx.devices import RawValue as XknxRawValue
 
-from homeassistant.components.scene import Scene
+from homeassistant.components.button import ButtonEntity
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, KNX_ADDRESS
+from .const import CONF_PAYLOAD, CONF_PAYLOAD_LENGTH, DOMAIN, KNX_ADDRESS
 from .knx_entity import KnxEntity
-from .schema import SceneSchema
 
 
 async def async_setup_platform(
@@ -23,37 +20,38 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the scenes for KNX platform."""
+    """Set up buttons for KNX platform."""
     if not discovery_info or not discovery_info["platform_config"]:
         return
     platform_config = discovery_info["platform_config"]
     xknx: XKNX = hass.data[DOMAIN].xknx
 
     async_add_entities(
-        KNXScene(xknx, entity_config) for entity_config in platform_config
+        KNXButton(xknx, entity_config) for entity_config in platform_config
     )
 
 
-class KNXScene(KnxEntity, Scene):
-    """Representation of a KNX scene."""
+class KNXButton(KnxEntity, ButtonEntity):
+    """Representation of a KNX button."""
 
-    _device: XknxScene
+    _device: XknxRawValue
 
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
-        """Init KNX scene."""
+        """Initialize a KNX button."""
         super().__init__(
-            device=XknxScene(
+            device=XknxRawValue(
                 xknx,
                 name=config[CONF_NAME],
+                payload_length=config[CONF_PAYLOAD_LENGTH],
                 group_address=config[KNX_ADDRESS],
-                scene_number=config[SceneSchema.CONF_SCENE_NUMBER],
             )
         )
+        self._payload = config[CONF_PAYLOAD]
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_unique_id = (
-            f"{self._device.scene_value.group_address}_{self._device.scene_number}"
+            f"{self._device.remote_value.group_address}_{self._payload}"
         )
 
-    async def async_activate(self, **kwargs: Any) -> None:
-        """Activate the scene."""
-        await self._device.run()
+    async def async_press(self) -> None:
+        """Press the button."""
+        await self._device.set(self._payload)
