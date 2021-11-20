@@ -328,7 +328,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
         """Return device specific state attributes."""
         attr: dict[str, Any] = {}
 
-        if self._device.command_value.initialized:
+        if self._device.command_value.has_any_group_address:
             attr[ATTR_COMMAND_VALUE] = self._device.command_value.value
         return attr
 

@@ -752,7 +752,11 @@ class TestSensor:
         """Test sensor has group address."""
         xknx = XKNX()
         sensor = Sensor(
-            xknx, "TestSensor", value_type="temperature", group_address_state="1/2/3"
+            xknx,
+            "TestSensor",
+            value_type="temperature",
+            group_address_state="1/2/3",
+            sync_state=False,
         )
         assert sensor.has_group_address(GroupAddress("1/2/3"))
         assert not sensor.has_group_address(GroupAddress("1/2/4"))

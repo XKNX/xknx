@@ -109,6 +109,7 @@ class TestCover:
             xknx,
             "Children.Venetian",
             group_address_locked_state="1/4/14",
+            sync_state=False,
         )
         assert cover_locked.supports_locked
         cover_manual_stop = Cover(
@@ -953,6 +954,7 @@ class TestCover:
             group_address_position_state="1/2/4",
             group_address_angle="1/2/5",
             group_address_angle_state="1/2/6",
+            sync_state=False,
         )
 
         assert cover.has_group_address(GroupAddress("1/2/1"))

@@ -39,24 +39,31 @@ class TestClimate:
     def test_support_temperature(self):
         """Test supports_temperature flag."""
         xknx = XKNX()
-        climate = Climate(xknx, "TestClimate", group_address_temperature="1/2/3")
+        climate = Climate(
+            xknx, "TestClimate", group_address_temperature="1/2/3", sync_state=False
+        )
 
-        assert climate.temperature.initialized
-        assert not climate.target_temperature.initialized
+        assert climate.temperature.has_any_group_address
+        assert not climate.target_temperature.has_any_group_address
 
     def test_support_target_temperature(self):
         """Test supports_target__temperature flag."""
         xknx = XKNX()
-        climate = Climate(xknx, "TestClimate", group_address_target_temperature="1/2/3")
+        climate = Climate(
+            xknx,
+            "TestClimate",
+            group_address_target_temperature="1/2/3",
+            sync_state=False,
+        )
 
-        assert not climate.temperature.initialized
-        assert climate.target_temperature.initialized
+        assert not climate.temperature.has_any_group_address
+        assert climate.target_temperature.has_any_group_address
 
     def test_support_operation_mode(self):
         """Test supports_supports_operation_mode flag. One group address for all modes."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimate", group_address_operation_mode="1/2/4"
+            xknx, "TestClimate", group_address_operation_mode="1/2/4", sync_state=False
         )
         assert climate_mode.supports_operation_mode
 
@@ -64,7 +71,10 @@ class TestClimate:
         """Test supports_supports_operation_mode flag. Splitted group addresses for each mode."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimate", group_address_operation_mode_protection="1/2/4"
+            xknx,
+            "TestClimate",
+            group_address_operation_mode_protection="1/2/4",
+            sync_state=False,
         )
         assert climate_mode.supports_operation_mode
 
@@ -83,6 +93,7 @@ class TestClimate:
             group_address_setpoint_shift_state="1/2/4",
             group_address_on_off="1/2/11",
             group_address_on_off_state="1/2/12",
+            sync_state=False,
         )
 
         assert climate.has_group_address(GroupAddress("1/2/1"))
@@ -101,6 +112,7 @@ class TestClimate:
         climate_mode = ClimateMode(
             xknx,
             name=None,
+            sync_state=False,
             group_address_operation_mode="1/2/4",
             group_address_operation_mode_state="1/2/5",
             group_address_operation_mode_protection="1/2/6",
@@ -145,6 +157,7 @@ class TestClimate:
             group_address_setpoint_shift="1/2/3",
             group_address_setpoint_shift_state="1/2/4",
             setpoint_shift_mode=SetpointShiftMode.DPT6010,
+            sync_state=False,
         )
 
         after_update_callback = Mock()
@@ -170,7 +183,7 @@ class TestClimate:
 
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimate", group_address_operation_mode="1/2/5"
+            xknx, "TestClimate", group_address_operation_mode="1/2/5", sync_state=False
         )
 
         after_update_callback = Mock()
@@ -203,6 +216,7 @@ class TestClimate:
             group_address_temperature="1/2/1",
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
+            sync_state=False,
         )
 
         after_update_callback = Mock()
@@ -242,7 +256,10 @@ class TestClimate:
 
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimateMode", group_address_operation_mode="1/2/4"
+            xknx,
+            "TestClimateMode",
+            group_address_operation_mode="1/2/4",
+            sync_state=False,
         )
 
         after_update_callback = Mock()
@@ -272,7 +289,7 @@ class TestClimate:
         """Test set_operation_mode."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimate", group_address_operation_mode="1/2/4"
+            xknx, "TestClimate", group_address_operation_mode="1/2/4", sync_state=False
         )
 
         for operation_mode in DPT_20102_MODES:
@@ -288,7 +305,7 @@ class TestClimate:
         """Test set_operation_mode with DPT20.105 controller."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimate", group_address_controller_mode="1/2/4"
+            xknx, "TestClimate", group_address_controller_mode="1/2/4", sync_state=False
         )
 
         for _, controller_mode in DPTHVACContrMode.SUPPORTED_MODES.items():
@@ -1227,6 +1244,7 @@ class TestClimate:
             group_address_operation_mode_protection="1/2/5",
             group_address_operation_mode_night="1/2/6",
             group_address_operation_mode_comfort="1/2/7",
+            sync_state=False,
         )
 
         assert set(climate_mode.operation_modes) == {
@@ -1240,7 +1258,10 @@ class TestClimate:
         """Test get_supported_operation_modes with only night mode supported."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimate", group_address_operation_mode_night="1/2/7"
+            xknx,
+            "TestClimate",
+            group_address_operation_mode_night="1/2/7",
+            sync_state=False,
         )
         # If one binary climate object is set, all 4 operation modes are supported.
         assert set(climate_mode.operation_modes) == {
@@ -1258,6 +1279,7 @@ class TestClimate:
             "TestClimate",
             group_address_heat_cool="1/2/14",
             group_address_heat_cool_state="1/2/15",
+            sync_state=False,
         )
         assert set(climate_mode.controller_modes) == {
             HVACControllerMode.HEAT,

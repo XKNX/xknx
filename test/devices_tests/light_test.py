@@ -72,6 +72,7 @@ class TestLight:
             group_address_switch_blue_state="1/1/10",
             group_address_brightness_blue="1/1/11",
             group_address_brightness_blue_state="1/1/12",
+            sync_state=False,
         )
         assert light.supports_color
 
@@ -101,6 +102,7 @@ class TestLight:
             group_address_switch_green_state="1/1/6",
             group_address_brightness_green="1/1/7",
             group_address_brightness_green_state="1/1/8",
+            sync_state=False,
         )
         assert not light.supports_color
 
@@ -116,6 +118,7 @@ class TestLight:
             group_address_switch="1/6/4",
             group_address_rgbw="1/6/5",
             group_address_color="1/6/6",
+            sync_state=False,
         )
         assert light.supports_rgbw
 
@@ -127,6 +130,7 @@ class TestLight:
             "Diningroom.Light_1",
             group_address_switch="1/6/4",
             group_address_color="1/6/6",
+            sync_state=False,
         )
         assert not light.supports_rgbw
 
@@ -152,6 +156,7 @@ class TestLight:
             group_address_switch_white_state="1/1/14",
             group_address_brightness_white="1/1/15",
             group_address_brightness_white_state="1/1/16",
+            sync_state=False,
         )
         assert light.supports_rgbw
 
@@ -186,6 +191,7 @@ class TestLight:
             group_address_switch_blue_state="1/1/10",
             group_address_brightness_blue="1/1/11",
             group_address_brightness_blue_state="1/1/12",
+            sync_state=False,
         )
         assert not light.supports_rgbw
 
@@ -1734,6 +1740,7 @@ class TestLight:
             group_address_switch_white_state="1/1/14",
             group_address_brightness_white="1/1/15",
             group_address_brightness_white_state="1/1/16",
+            sync_state=False,
         )
         assert light.has_group_address(GroupAddress("1/7/1"))
         assert light.has_group_address(GroupAddress("1/7/2"))

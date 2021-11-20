@@ -86,9 +86,9 @@ class _SwitchAndBrightness:
     @property
     def is_on(self) -> bool | None:
         """Return if light is on."""
-        if self.switch.initialized:
+        if self.switch.has_any_group_address:
             return self.switch.value
-        if self.brightness.initialized and self.brightness.value is not None:
+        if self.brightness.has_any_group_address and self.brightness.value is not None:
             return bool(self.brightness.value)
         return None
 
@@ -349,10 +349,14 @@ class Light(Device):
         """Reset individual color debounce telegram counter."""
         self._individual_color_debounce_telegram_counter = sum(
             (
-                self.red.switch.initialized or self.red.brightness.initialized,
-                self.green.switch.initialized or self.green.brightness.initialized,
-                self.blue.switch.initialized or self.blue.brightness.initialized,
-                self.white.switch.initialized or self.white.brightness.initialized,
+                self.red.switch.has_any_group_address
+                or self.red.brightness.has_any_group_address,
+                self.green.switch.has_any_group_address
+                or self.green.brightness.has_any_group_address,
+                self.blue.switch.has_any_group_address
+                or self.blue.brightness.has_any_group_address,
+                self.white.switch.has_any_group_address
+                or self.white.brightness.has_any_group_address,
             )
         )
 
@@ -378,41 +382,42 @@ class Light(Device):
     @property
     def supports_brightness(self) -> bool:
         """Return if light supports brightness."""
-        return self.brightness.initialized
+        return self.brightness.has_any_group_address
 
     @property
     def supports_color(self) -> bool:
         """Return if light supports color."""
-        return self.color.initialized or all(
-            c.brightness.initialized for c in (self.red, self.green, self.blue)
+        return self.color.has_any_group_address or all(
+            c.brightness.has_any_group_address
+            for c in (self.red, self.green, self.blue)
         )
 
     @property
     def supports_rgbw(self) -> bool:
         """Return if light supports RGBW."""
-        return self.rgbw.initialized or all(
-            c.brightness.initialized for c in self._iter_individual_colors()
+        return self.rgbw.has_any_group_address or all(
+            c.brightness.has_any_group_address for c in self._iter_individual_colors()
         )
 
     @property
     def supports_hs_color(self) -> bool:
         """Return if light supports HS-color."""
-        return self.hue.initialized and self.saturation.initialized
+        return self.hue.has_any_group_address and self.saturation.has_any_group_address
 
     @property
     def supports_xyy_color(self) -> bool:
         """Return if light supports xyY-color."""
-        return self.xyy_color.initialized
+        return self.xyy_color.has_any_group_address
 
     @property
     def supports_tunable_white(self) -> bool:
         """Return if light supports tunable white / relative color temperature."""
-        return self.tunable_white.initialized
+        return self.tunable_white.has_any_group_address
 
     @property
     def supports_color_temperature(self) -> bool:
         """Return if light supports absolute color temperature."""
-        return self.color_temperature.initialized
+        return self.color_temperature.has_any_group_address
 
     @property
     def state(self) -> bool | None:
@@ -459,11 +464,11 @@ class Light(Device):
         If the device supports RGBW, get the current RGB+White values instead.
         """
         if self.supports_rgbw:
-            if self.rgbw.initialized:
+            if self.rgbw.has_any_group_address:
                 if not self.rgbw.value:
                     return None, None
                 return self.rgbw.value[:3], self.rgbw.value[3]
-        if self.color.initialized:
+        if self.color.has_any_group_address:
             return self.color.value, None
         # individual RGB addresses - white will return None when it is not initialized
         colors = (
@@ -486,11 +491,12 @@ class Light(Device):
         """
         if white is not None:
             if self.supports_rgbw:
-                if self.rgbw.initialized:
+                if self.rgbw.has_any_group_address:
                     await self.rgbw.set((*color, white))
                     return
                 if all(
-                    c.brightness.initialized for c in self._iter_individual_colors()
+                    c.brightness.has_any_group_address
+                    for c in self._iter_individual_colors()
                 ):
                     await self.red.brightness.set(color[0])
                     await self.green.brightness.set(color[1])
@@ -500,11 +506,12 @@ class Light(Device):
             logger.warning("RGBW not supported for device %s", self.get_name())
         else:
             if self.supports_color:
-                if self.color.initialized:
+                if self.color.has_any_group_address:
                     await self.color.set(color)
                     return
                 if all(
-                    c.brightness.initialized for c in (self.red, self.green, self.blue)
+                    c.brightness.has_any_group_address
+                    for c in (self.red, self.green, self.blue)
                 ):
                     await self.red.brightness.set(color[0])
                     await self.green.brightness.set(color[1])
@@ -620,13 +627,13 @@ class Light(Device):
 
         str_hue = (
             ""
-            if not self.hue.initialized
+            if not self.hue.has_any_group_address
             else f" brightness={self.hue.group_addr_str()}"
         )
 
         str_saturation = (
             ""
-            if not self.saturation.initialized
+            if not self.saturation.has_any_group_address
             else f" brightness={self.saturation.group_addr_str()}"
         )
 
@@ -649,45 +656,45 @@ class Light(Device):
 
         str_red_state = (
             ""
-            if not self.red.switch.initialized
+            if not self.red.switch.has_any_group_address
             else f" red_state={self.red.switch.group_addr_str()}"
         )
         str_red_brightness = (
             ""
-            if not self.red.brightness.initialized
+            if not self.red.brightness.has_any_group_address
             else f" red_brightness={self.red.brightness.group_addr_str()}"
         )
 
         str_green_state = (
             ""
-            if not self.green.switch.initialized
+            if not self.green.switch.has_any_group_address
             else f" green_state={self.green.switch.group_addr_str()}"
         )
         str_green_brightness = (
             ""
-            if not self.green.brightness.initialized
+            if not self.green.brightness.has_any_group_address
             else f" green_brightness={self.green.brightness.group_addr_str()}"
         )
 
         str_blue_state = (
             ""
-            if not self.blue.switch.initialized
+            if not self.blue.switch.has_any_group_address
             else f" blue_state={self.blue.switch.group_addr_str()}"
         )
         str_blue_brightness = (
             ""
-            if not self.blue.brightness.initialized
+            if not self.blue.brightness.has_any_group_address
             else f" blue_brightness={self.blue.brightness.group_addr_str()}"
         )
 
         str_white_state = (
             ""
-            if not self.white.switch.initialized
+            if not self.white.switch.has_any_group_address
             else f" white_state={self.white.switch.group_addr_str()}"
         )
         str_white_brightness = (
             ""
-            if not self.white.brightness.initialized
+            if not self.white.brightness.has_any_group_address
             else f" white_brightness={self.white.brightness.group_addr_str()}"
         )
 

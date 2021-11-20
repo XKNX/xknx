@@ -43,10 +43,18 @@ class TestDevices:
         xknx = XKNX()
         devices = Devices()
 
-        light1 = Light(xknx, "Livingroom", group_address_switch="1/6/7")
-        sensor1 = BinarySensor(xknx, "Diningroom", group_address_state="3/0/1")
-        sensor2 = BinarySensor(xknx, "Diningroom", group_address_state="3/0/1")
-        light2 = Light(xknx, "Livingroom", group_address_switch="1/6/8")
+        light1 = Light(
+            xknx, "Livingroom", group_address_switch="1/6/7", sync_state=False
+        )
+        sensor1 = BinarySensor(
+            xknx, "Diningroom", group_address_state="3/0/1", sync_state=False
+        )
+        sensor2 = BinarySensor(
+            xknx, "Diningroom", group_address_state="3/0/1", sync_state=False
+        )
+        light2 = Light(
+            xknx, "Livingroom", group_address_switch="1/6/8", sync_state=False
+        )
         devices.add(light1)
         devices.add(sensor1)
         devices.add(sensor2)
@@ -68,10 +76,18 @@ class TestDevices:
         xknx = XKNX()
         devices = Devices()
 
-        light1 = Light(xknx, "Livingroom", group_address_switch="1/6/7")
-        sensor1 = BinarySensor(xknx, "Diningroom", group_address_state="3/0/1")
-        sensor2 = BinarySensor(xknx, "Diningroom", group_address_state="3/0/1")
-        light2 = Light(xknx, "Livingroom", group_address_switch="1/6/8")
+        light1 = Light(
+            xknx, "Livingroom", group_address_switch="1/6/7", sync_state=False
+        )
+        sensor1 = BinarySensor(
+            xknx, "Diningroom", group_address_state="3/0/1", sync_state=False
+        )
+        sensor2 = BinarySensor(
+            xknx, "Diningroom", group_address_state="3/0/1", sync_state=False
+        )
+        light2 = Light(
+            xknx, "Livingroom", group_address_switch="1/6/8", sync_state=False
+        )
         devices.add(light1)
         devices.add(sensor1)
         devices.add(sensor2)
@@ -84,16 +100,30 @@ class TestDevices:
         xknx = XKNX()
         assert len(xknx.devices) == 0
 
-        Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
+        Light(
+            xknx, "Living-Room.Light_1", group_address_switch="1/6/7", sync_state=False
+        )
         assert len(xknx.devices) == 1
 
-        BinarySensor(xknx, "DiningRoom.Motion.Sensor", group_address_state="3/0/1")
+        BinarySensor(
+            xknx,
+            "DiningRoom.Motion.Sensor",
+            group_address_state="3/0/1",
+            sync_state=False,
+        )
         assert len(xknx.devices) == 2
 
-        BinarySensor(xknx, "DiningRoom.Motion.Sensor", group_address_state="3/0/1")
+        BinarySensor(
+            xknx,
+            "DiningRoom.Motion.Sensor",
+            group_address_state="3/0/1",
+            sync_state=False,
+        )
         assert len(xknx.devices) == 3
 
-        Light(xknx, "Living-Room.Light_2", group_address_switch="1/6/8")
+        Light(
+            xknx, "Living-Room.Light_2", group_address_switch="1/6/8", sync_state=False
+        )
         assert len(xknx.devices) == 4
 
     def test_contains(self):

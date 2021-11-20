@@ -164,6 +164,7 @@ class TestWeather:
             xknx=xknx,
             group_address_rain_alarm="1/3/8",
             group_address_wind_alarm="1/3/9",
+            sync_state=False,
         )
 
         weather._rain_alarm.value = True
@@ -179,6 +180,7 @@ class TestWeather:
             xknx=xknx,
             group_address_rain_alarm="1/3/8",
             group_address_frost_alarm="1/3/10",
+            sync_state=False,
         )
 
         weather._rain_alarm.value = True
@@ -195,6 +197,7 @@ class TestWeather:
             group_address_rain_alarm="1/3/8",
             group_address_wind_alarm="1/3/9",
             group_address_frost_alarm="1/3/10",
+            sync_state=False,
         )
 
         weather._wind_alarm.value = True
@@ -210,6 +213,7 @@ class TestWeather:
             group_address_rain_alarm="1/3/8",
             group_address_wind_alarm="1/3/9",
             group_address_frost_alarm="1/3/10",
+            sync_state=False,
         )
 
         weather._rain_alarm.value = True
@@ -347,6 +351,7 @@ class TestWeather:
             group_address_temperature="1/3/4",
             group_address_rain_alarm="1/4/5",
             group_address_brightness_south="7/7/0",
+            sync_state=False,
         )
         assert weather.has_group_address(GroupAddress("1/3/4"))
         assert weather.has_group_address(GroupAddress("7/7/0"))
@@ -359,6 +364,11 @@ class TestWeather:
     def test_has_group_address(self):
         """Test sensor has group address."""
         xknx = XKNX()
-        weather = Weather(name="weather", xknx=xknx, group_address_temperature="1/3/4")
+        weather = Weather(
+            name="weather",
+            xknx=xknx,
+            group_address_temperature="1/3/4",
+            sync_state=False,
+        )
         assert weather._temperature.has_group_address(GroupAddress("1/3/4"))
         assert not weather._temperature.has_group_address(GroupAddress("1/2/4"))

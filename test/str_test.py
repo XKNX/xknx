@@ -61,7 +61,9 @@ class TestStringRepresentations:
     """Test class for Configuration logic."""
 
     @patch.multiple(RemoteValue, __abstractmethods__=set())
-    def test_remote_value(self):
+    @patch("xknx.core.StateUpdaterMixin.start")
+    @patch("xknx.core.StateUpdaterMixin.stop")
+    def test_remote_value(self, start, stop):
         """Test string representation of remote value."""
         xknx = XKNX()
         remote_value = RemoteValue(
@@ -92,7 +94,9 @@ class TestStringRepresentations:
             == "<RemoteValue device_name=\"MyDevice\" feature_name=\"Unknown\" <1/2/3, None, ['1/2/4', 'i-test'], None /> />"
         )
 
-    def test_binary_sensor(self):
+    @patch("xknx.core.StateUpdaterMixin.start")
+    @patch("xknx.core.StateUpdaterMixin.stop")
+    def test_binary_sensor(self, start, stop):
         """Test string representation of binary sensor object."""
         xknx = XKNX()
         binary_sensor = BinarySensor(xknx, name="Fnord", group_address_state="1/2/3")
@@ -101,7 +105,9 @@ class TestStringRepresentations:
             == '<BinarySensor name="Fnord" remote_value=<None, 1/2/3, [], None /> state=None />'
         )
 
-    def test_climate(self):
+    @patch("xknx.core.StateUpdaterMixin.start")
+    @patch("xknx.core.StateUpdaterMixin.stop")
+    def test_climate(self, start, stop):
         """Test string representation of climate object."""
         xknx = XKNX()
         climate = Climate(
@@ -127,7 +133,9 @@ class TestStringRepresentations:
             "group_address_on_off=<1/2/14, 1/2/15, [], None /> />"
         )
 
-    def test_climate_mode(self):
+    @patch("xknx.core.StateUpdaterMixin.start")
+    @patch("xknx.core.StateUpdaterMixin.stop")
+    def test_climate_mode(self, start, stop):
         """Test string representation of climate mode object."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -150,7 +158,9 @@ class TestStringRepresentations:
             "controller_status=<1/2/10, 1/2/11, [], None /> />"
         )
 
-    def test_cover(self):
+    @patch("xknx.core.StateUpdaterMixin.start")
+    @patch("xknx.core.StateUpdaterMixin.stop")
+    def test_cover(self, start, stop):
         """Test string representation of cover object."""
         xknx = XKNX()
         cover = Cover(
@@ -180,7 +190,9 @@ class TestStringRepresentations:
             'travel_time_up="10" />'
         )
 
-    def test_fan(self):
+    @patch("xknx.core.StateUpdaterMixin.start")
+    @patch("xknx.core.StateUpdaterMixin.stop")
+    def test_fan(self, start, stop):
         """Test string representation of fan object."""
         xknx = XKNX()
         fan = Fan(
@@ -196,7 +208,9 @@ class TestStringRepresentations:
             == '<Fan name="Dunstabzug" speed=<1/2/3, 1/2/4, [], None /> oscillation=<1/2/5, 1/2/6, [], None /> />'
         )
 
-    def test_light(self):
+    @patch("xknx.core.StateUpdaterMixin.start")
+    @patch("xknx.core.StateUpdaterMixin.stop")
+    def test_light(self, start, stop):
         """Test string representation of non dimmable light object."""
         xknx = XKNX()
         light = Light(
@@ -207,7 +221,9 @@ class TestStringRepresentations:
         )
         assert str(light) == '<Light name="Licht" switch=<1/2/3, 1/2/4, [], None /> />'
 
-    def test_light_dimmable(self):
+    @patch("xknx.core.StateUpdaterMixin.start")
+    @patch("xknx.core.StateUpdaterMixin.stop")
+    def test_light_dimmable(self, start, stop):
         """Test string representation of dimmable light object."""
         xknx = XKNX()
         light = Light(
@@ -229,6 +245,7 @@ class TestStringRepresentations:
         xknx = XKNX()
         light = Light(
             xknx,
+            sync_state=False,
             name="Licht",
             group_address_switch="1/2/3",
             group_address_switch_state="1/2/4",
@@ -310,7 +327,11 @@ class TestStringRepresentations:
         """Test string representation of switch object."""
         xknx = XKNX()
         switch = Switch(
-            xknx, name="Schalter", group_address="1/2/3", group_address_state="1/2/4"
+            xknx,
+            name="Schalter",
+            group_address="1/2/3",
+            group_address_state="1/2/4",
+            sync_state=False,
         )
         assert (
             str(switch)

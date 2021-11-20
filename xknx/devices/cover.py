@@ -346,17 +346,17 @@ class Cover(Device):
     @property
     def supports_locked(self) -> bool:
         """Return if cover supports locking."""
-        return self.locked.initialized
+        return self.locked.has_any_group_address
 
     @property
     def supports_position(self) -> bool:
         """Return if cover supports direct positioning."""
-        return self.position_target.initialized
+        return self.position_target.has_any_group_address
 
     @property
     def supports_angle(self) -> bool:
         """Return if cover supports tilt angle."""
-        return self.angle.initialized
+        return self.angle.has_any_group_address
 
     def __str__(self) -> str:
         """Return object as readable string."""

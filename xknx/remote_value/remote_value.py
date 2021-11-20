@@ -21,6 +21,7 @@ from typing import (
     Union,
 )
 
+from xknx.core import StateUpdaterMixin
 from xknx.dpt.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
@@ -45,7 +46,7 @@ GroupAddressesType = Union["DeviceAddressableType", List["DeviceAddressableType"
 ValueType = TypeVar("ValueType")
 
 
-class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
+class RemoteValue(StateUpdaterMixin, ABC, Generic[DPTPayloadType, ValueType]):
     """Class for managing remote knx value."""
 
     def __init__(
@@ -83,14 +84,15 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
         self.telegram: Telegram | None = None
         self.after_update_cb: AsyncCallbackType | None = after_update_cb
 
-        # if sync_state and self.group_address_state:
-        #    self.xknx.state_updater.register_remote_value(
-        #        self, tracker_options=sync_state
-        #    )
+        # start state updater
+        StateUpdaterMixin.__init__(self, xknx, self, sync_state)
+        if self.group_address_state and sync_state:
+            self.start()
 
     def __del__(self) -> None:
         """Destructor. Removing self from StateUpdater if was registered."""
-        pass
+        if self.started:
+            self.stop()
 
     @property
     def value(self) -> ValueType | None:
@@ -112,7 +114,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
             await self.after_update_cb()
 
     @property
-    def initialized(self) -> bool:
+    def has_any_group_address(self) -> bool:
         """Evaluate if remote value is initialized with group address."""
         return bool(
             self.group_address_state
@@ -214,7 +216,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
 
     async def set(self, value: ValueType, response: bool = False) -> None:
         """Set new value."""
-        if not self.initialized:
+        if not self.has_any_group_address:
             logger.info(
                 "Setting value of uninitialized device: %s - %s (value: %s)",
                 self.device_name,
@@ -290,14 +292,14 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
     def __eq__(self, other: object) -> bool:
         """Equal operator."""
         for key, value in self.__dict__.items():
-            if key == "after_update_cb":
+            if key == "after_update_cb" or key == "remote_value" or key == "_worker":
                 continue
             if key not in other.__dict__:
                 return False
             if other.__dict__[key] != value:
                 return False
         for key, value in other.__dict__.items():
-            if key == "after_update_cb":
+            if key == "after_update_cb" or key == "remote_value" or key == "_worker":
                 continue
             if key not in self.__dict__:
                 return False

@@ -3,7 +3,7 @@
 from .connection_manager import ConnectionManager
 from .connection_state import XknxConnectionState
 from .payload_reader import PayloadReader
-from .state_updater import StateUpdater, _StateTracker
+from .state_updater import StateUpdaterMixin, _StateTracker
 from .task_registry import Task, TaskRegistry
 from .telegram_queue import TelegramQueue
 from .value_reader import ValueReader

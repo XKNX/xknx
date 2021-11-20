@@ -290,7 +290,11 @@ class TestBinarySensor:
         """Test counter functionality."""
         xknx = XKNX()
         switch = BinarySensor(
-            xknx, "TestInput", group_address_state="1/2/3", context_timeout=1
+            xknx,
+            "TestInput",
+            group_address_state="1/2/3",
+            context_timeout=1,
+            sync_state=False,
         )
         with patch("time.time") as mock_time:
             mock_time.return_value = 1517000000.0

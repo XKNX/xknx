@@ -98,7 +98,7 @@ class Fan(Device):
     @property
     def supports_oscillation(self) -> bool:
         """Return if fan supports oscillation."""
-        return self.oscillation.initialized
+        return self.oscillation.has_any_group_address
 
     async def set_speed(self, speed: int) -> None:
         """Set the fan to a desginated speed."""

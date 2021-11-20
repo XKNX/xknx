@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from xknx import XKNX
+import xknx.core
 from xknx.dpt import DPT2ByteFloat, DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.remote_value import RemoteValue, RemoteValueSwitch
@@ -161,7 +162,9 @@ class TestRemoteValue:
                 "State",
             )
 
-    def test_unpacking_passive_address(self):
+    @patch("xknx.core.StateUpdaterMixin.start")
+    @patch("xknx.core.StateUpdaterMixin.stop")
+    def test_unpacking_passive_address(self, start, stop):
         """Test if passive group addresses are properly unpacked."""
         xknx = XKNX()
 
@@ -207,7 +210,7 @@ class TestRemoteValue:
         assert remote_value.writable
         assert not remote_value.readable
         # RemoteValue is initialized with only passive group address
-        assert remote_value.initialized
+        assert remote_value.has_any_group_address
         with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_always_valid:
             patch_always_valid.side_effect = lambda payload: payload
             test_payload = DPTArray((0x01, 0x02))

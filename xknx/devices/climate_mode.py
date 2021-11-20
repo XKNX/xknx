@@ -159,15 +159,15 @@ class ClimateMode(Device):
                     self._controller_modes.append(ct_mode)
 
         self.supports_operation_mode = any(
-            operation_mode.initialized
+            operation_mode.has_any_group_address
             for operation_mode in self._iter_operation_remote_values()
         )
         self.supports_controller_mode = any(
-            controller_mode.initialized
+            controller_mode.has_any_group_address
             for controller_mode in self._iter_controller_remote_values()
         )
         self._use_binary_operation_modes = any(
-            operation_mode.initialized
+            operation_mode.has_any_group_address
             for operation_mode in self._iter_binary_operation_modes()
         )
 

@@ -119,7 +119,11 @@ class TestNotification:
         """Test has_group_address."""
         xknx = XKNX()
         notification = Notification(
-            xknx, "Warning", group_address="1/2/3", group_address_state="1/2/4"
+            xknx,
+            "Warning",
+            group_address="1/2/3",
+            group_address_state="1/2/4",
+            sync_state=False,
         )
         assert notification.has_group_address(GroupAddress("1/2/3"))
         assert notification.has_group_address(GroupAddress("1/2/4"))

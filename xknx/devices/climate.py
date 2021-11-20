@@ -177,9 +177,9 @@ class Climate(Device):
     def initialized_for_setpoint_shift_calculations(self) -> bool:
         """Test if object is initialized for setpoint shift calculations."""
         if (
-            self._setpoint_shift.initialized
+            self._setpoint_shift.has_any_group_address
             and self._setpoint_shift.value is not None
-            and self.target_temperature.initialized
+            and self.target_temperature.has_any_group_address
             and self.target_temperature.value is not None
         ):
             return True
