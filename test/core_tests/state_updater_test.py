@@ -1,10 +1,12 @@
 """Unit test for StateUpdater."""
-from unittest.mock import Mock, patch
+import asyncio
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from xknx import XKNX
 from xknx.core import XknxConnectionState
-from xknx.core.state_updater import StateTrackerType, _StateTracker
+from xknx.core.state_updater import StateTrackerType, StateUpdater, _StateTracker
+import xknx.remote_value
 from xknx.remote_value import RemoteValue
 from xknx.telegram import GroupAddress
 
@@ -14,106 +16,160 @@ from xknx.telegram import GroupAddress
 class TestStateUpdater:
     """Test class for state updater."""
 
-    def test_register_unregister(self):
-        """Test register and unregister."""
-        xknx = XKNX()
-        assert len(xknx.state_updater._workers) == 0
-        # register when state address and sync_state is set
-        remote_value_1 = RemoteValue(
-            xknx, sync_state=True, group_address_state=GroupAddress("1/1/1")
-        )
-        assert len(xknx.state_updater._workers) == 1
-        # don't register when sync_state is False
-        remote_value_2 = RemoteValue(
-            xknx, sync_state=False, group_address_state=GroupAddress("1/1/1")
-        )
-        assert len(xknx.state_updater._workers) == 1
-        # manual registration
-        xknx.state_updater.register_remote_value(remote_value_2)
-        assert len(xknx.state_updater._workers) == 2
-        # manual unregister
-        xknx.state_updater.unregister_remote_value(remote_value_1)
-        # only remote_value_2 remaining
-        assert len(xknx.state_updater._workers) == 1
-        assert list(xknx.state_updater._workers.keys())[0] == id(remote_value_2)
-        # unregister on RemoteValue.__del__()
-        remote_value_2.__del__()
-        assert len(xknx.state_updater._workers) == 0
-
-    def test_tracker_parser(self):
+    @pytest.mark.parametrize(
+        "sync_state,expected_tracker_type,expected_update_interval",
+        [
+            (
+                "init",
+                StateTrackerType.INIT,
+                60,
+            ),
+            (
+                2,
+                StateTrackerType.EXPIRE,
+                2,
+            ),
+            (
+                6.9,
+                StateTrackerType.EXPIRE,
+                6.9,
+            ),
+            (
+                "expire",
+                StateTrackerType.EXPIRE,
+                60,
+            ),
+            (
+                "expire 30",
+                StateTrackerType.EXPIRE,
+                30,
+            ),
+            (
+                "every",
+                StateTrackerType.PERIODICALLY,
+                60,
+            ),
+            (
+                "every 10",
+                StateTrackerType.PERIODICALLY,
+                10,
+            ),
+        ],
+    )
+    def test_tracker_parser(
+        self, sync_state, expected_tracker_type, expected_update_interval
+    ):
         """Test parsing tracker options."""
         xknx = XKNX()
+        tracker_type, update_interval = StateUpdater.parse_tracker_options(
+            sync_state, RemoteValue(xknx)
+        )
 
-        def _get_only_tracker() -> _StateTracker:
-            # _workers is unordered so it just works with 1 item
-            assert len(xknx.state_updater._workers) == 1
-            _tracker = next(iter(xknx.state_updater._workers.values()))
-            return _tracker
+        assert tracker_type == expected_tracker_type
+        assert update_interval == expected_update_interval
 
-        # INIT
-        remote_value_init = RemoteValue(
-            xknx, sync_state="init", group_address_state=GroupAddress("1/1/1")
+    @patch("xknx.remote_value.RemoteValue.read_state")
+    async def test_read_mutex(self, read_state):
+        """Test read mutex."""
+        xknx = XKNX()
+        remote_value_invalid = RemoteValue(
+            xknx, sync_state="invalid", group_address_state=GroupAddress("1/1/1")
         )
-        assert _get_only_tracker().tracker_type == StateTrackerType.INIT
-        remote_value_init.__del__()
-        # DEFAULT with int
-        remote_value_expire = RemoteValue(
-            xknx, sync_state=2, group_address_state=GroupAddress("1/1/1")
+        state_updater = StateUpdater(xknx, remote_value_invalid)
+
+        xknx.connection_manager.connected.set()
+
+        await state_updater.read_state_mutex()
+
+        read_state.assert_called_once()
+
+    @patch("xknx.core.state_updater._StateTracker.reset")
+    @patch("xknx.remote_value.RemoteValue.read_state")
+    async def test_state_tracker_worker(self, reset, read_state):
+        """Test state tracker worker."""
+        xknx = XKNX()
+        remote_value_invalid = RemoteValue(
+            xknx, sync_state="invalid", group_address_state=GroupAddress("1/1/1")
         )
-        assert _get_only_tracker().tracker_type == StateTrackerType.EXPIRE
-        assert _get_only_tracker().update_interval == 2 * 60
-        remote_value_expire.__del__()
-        # DEFAULT with float
-        remote_value_expire = RemoteValue(
-            xknx, sync_state=6.9, group_address_state=GroupAddress("1/1/1")
+        state_updater = StateUpdater(xknx, remote_value_invalid)
+
+        xknx.connection_manager.connected.set()
+
+        state_updater.start()
+
+        await state_updater._worker._task
+
+        read_state.assert_called_once()
+        reset.assert_called_once()
+
+        assert state_updater.initialized
+
+        state_updater._worker = None
+        assert not state_updater.initialized
+
+        state_updater.stop()
+
+    @patch("xknx.core.state_updater._StateTracker.reset")
+    async def test_state_tracker_update_received(self, reset):
+        """Test state tracker."""
+        xknx = XKNX()
+        remote_value_invalid = RemoteValue(
+            xknx, sync_state="invalid", group_address_state=GroupAddress("1/1/1")
         )
-        assert _get_only_tracker().tracker_type == StateTrackerType.EXPIRE
-        assert _get_only_tracker().update_interval == 6.9 * 60
-        remote_value_expire.__del__()
-        # EXPIRE with default time
-        remote_value_expire = RemoteValue(
-            xknx, sync_state="expire", group_address_state=GroupAddress("1/1/1")
+        state_updater = StateUpdater(xknx, remote_value_invalid)
+
+        state_updater.started = True
+        state_updater.update_received()
+        reset.assert_called_once()
+
+        state_updater = StateUpdater(xknx, remote_value_invalid, "init")
+        state_updater.started = True
+        reset.reset_mock()
+
+        state_updater.update_received()
+        reset.assert_not_called()
+
+    @patch("xknx.core.state_updater._StateTracker._update_loop", new_callable=AsyncMock)
+    async def test_state_updater_update_loop(self, _update_loop):
+        """Test state tracker."""
+        xknx = XKNX()
+        remote_value_invalid = RemoteValue(
+            xknx, sync_state="invalid", group_address_state=GroupAddress("1/1/1")
         )
-        assert _get_only_tracker().tracker_type == StateTrackerType.EXPIRE
-        assert _get_only_tracker().update_interval == 60 * 60
-        remote_value_expire.__del__()
-        # EXPIRE with 30 minutes
-        remote_value_expire = RemoteValue(
-            xknx, sync_state="expire 30", group_address_state=GroupAddress("1/1/1")
-        )
-        assert _get_only_tracker().tracker_type == StateTrackerType.EXPIRE
-        assert _get_only_tracker().update_interval == 30 * 60
-        remote_value_expire.__del__()
-        # PERIODICALLY with default time
-        remote_value_every = RemoteValue(
-            xknx, sync_state="every", group_address_state=GroupAddress("1/1/1")
-        )
-        assert _get_only_tracker().tracker_type == StateTrackerType.PERIODICALLY
-        assert _get_only_tracker().update_interval == 60 * 60
-        remote_value_every.__del__()
-        # PERIODICALLY 10 * 60 seconds
-        remote_value_every = RemoteValue(
-            xknx, sync_state="every 10", group_address_state=GroupAddress("1/1/1")
-        )
-        assert _get_only_tracker().tracker_type == StateTrackerType.PERIODICALLY
-        assert _get_only_tracker().update_interval == 10 * 60
-        remote_value_every.__del__()
+        state_updater = StateUpdater(xknx, remote_value_invalid)
+        state_updater._worker.reset()
+
+        state_updater.stop()
+
+    async def test_start_update_loop_and_stop_directly(self):
+        """Test state tracker."""
+        read_state_event = asyncio.Event()
+
+        async def awaitable():
+            """Fake read state mutex."""
+            read_state_event.set()
+
+        state_tracker = _StateTracker(awaitable, StateTrackerType.EXPIRE, 0.00001)
+        task = asyncio.create_task(state_tracker._update_loop())
+        await read_state_event.wait()
+        task.cancel()
 
     @patch("logging.Logger.warning")
     def test_tracker_parser_invalid_options(self, logging_warning_mock):
         """Test parsing invalid tracker options."""
         xknx = XKNX()
+        state_updater = None
 
         def _get_only_tracker() -> _StateTracker:
             # _workers is unordered so it just works with 1 item
-            assert len(xknx.state_updater._workers) == 1
-            _tracker = next(iter(xknx.state_updater._workers.values()))
-            return _tracker
+            assert state_updater._worker
+            return state_updater._worker
 
         # INVALID string
         remote_value_invalid = RemoteValue(
             xknx, sync_state="invalid", group_address_state=GroupAddress("1/1/1")
         )
+        state_updater = StateUpdater(xknx, remote_value_invalid, "invalid")
         logging_warning_mock.assert_called_once_with(
             'Could not parse StateUpdater tracker_options "%s" for %s. Using default %s %s minutes.',
             "invalid",
@@ -129,6 +185,7 @@ class TestStateUpdater:
         remote_value_long = RemoteValue(
             xknx, sync_state=1441, group_address_state=GroupAddress("1/1/1")
         )
+        state_updater = StateUpdater(xknx, remote_value_long, 1441)
         logging_warning_mock.assert_called_once_with(
             "StateUpdater interval of %s to long for %s. Using maximum of %s minutes (1 day)",
             1441,
@@ -140,60 +197,29 @@ class TestStateUpdater:
     def test_state_updater_start_update_stop(self):
         """Test start, update_received and stop of StateUpdater."""
         xknx = XKNX()
+
         remote_value_1 = RemoteValue(
             xknx, sync_state=True, group_address_state=GroupAddress("1/1/1")
         )
         remote_value_2 = RemoteValue(
             xknx, sync_state=True, group_address_state=GroupAddress("1/1/2")
         )
-        xknx.state_updater._workers[id(remote_value_1)] = Mock()
-        xknx.state_updater._workers[id(remote_value_2)] = Mock()
+        state_updater = StateUpdater(xknx, remote_value_1)
+        state_updater._worker = Mock()
 
-        assert not xknx.state_updater.started
+        assert not state_updater.started
         xknx.connection_manager._state = XknxConnectionState.CONNECTED
-        xknx.state_updater.start()
-        assert xknx.state_updater.started
+        state_updater.start()
+        assert state_updater.started
         # start
-        xknx.state_updater._workers[id(remote_value_1)].start.assert_called_once_with()
-        xknx.state_updater._workers[id(remote_value_2)].start.assert_called_once_with()
+        state_updater._worker.start.assert_called_once_with()
         # update
-        xknx.state_updater.update_received(remote_value_2)
-        xknx.state_updater._workers[
-            id(remote_value_1)
-        ].update_received.assert_not_called()
-        xknx.state_updater._workers[
-            id(remote_value_2)
-        ].update_received.assert_called_once_with()
+        state_updater.update_received()
+        state_updater._worker.update_received.assert_called_once_with()
         # stop
-        xknx.state_updater.stop()
-        assert not xknx.state_updater.started
-        xknx.state_updater._workers[id(remote_value_1)].stop.assert_called_once_with()
-        xknx.state_updater._workers[id(remote_value_2)].stop.assert_called_once_with()
+        state_updater.stop()
+        assert not state_updater.started
+        state_updater._worker.stop.assert_called_once_with()
         # don't update when not started
-        xknx.state_updater.update_received(remote_value_1)
-        xknx.state_updater._workers[
-            id(remote_value_1)
-        ].update_received.assert_not_called()
-
-    async def test_stop_start_state_updater_when_reconnecting(self):
-        """Test start/stop state updater after reconnect."""
-
-        xknx = XKNX()
-        assert not xknx.state_updater.started
-
-        xknx.connection_manager._state = XknxConnectionState.CONNECTED
-        xknx.state_updater.start()
-
-        assert xknx.state_updater.started
-
-        await xknx.connection_manager.connection_state_changed(
-            XknxConnectionState.DISCONNECTED
-        )
-
-        assert not xknx.state_updater.started
-
-        await xknx.connection_manager.connection_state_changed(
-            XknxConnectionState.CONNECTED
-        )
-
-        assert xknx.state_updater.started
+        state_updater.update_received()
+        state_updater._worker.update_received.assert_called_once_with()

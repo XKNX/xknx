@@ -58,7 +58,7 @@ class TestXknxModule:
     @patch("xknx.io.KNXIPInterface.start", new_callable=AsyncMock)
     async def test_xknx_start(self, start_mock):
         """Test xknx start."""
-        xknx = XKNX(state_updater=True)
+        xknx = XKNX()
 
         await xknx.start()
         start_mock.assert_called_once()
@@ -69,7 +69,7 @@ class TestXknxModule:
         """Test xknx start."""
 
         async def run_in_contextmanager():
-            async with XKNX(state_updater=True) as xknx:
+            async with XKNX() as xknx:
                 assert xknx.started.is_set()
                 ipinterface_mock.assert_called_once()
 
@@ -93,4 +93,3 @@ class TestXknxModule:
         await xknx.stop()
         assert xknx.knxip_interface is None
         assert xknx.telegram_queue._consumer_task.done()
-        assert not xknx.state_updater.started

@@ -83,19 +83,14 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
         self.telegram: Telegram | None = None
         self.after_update_cb: AsyncCallbackType | None = after_update_cb
 
-        if sync_state and self.group_address_state:
-            self.xknx.state_updater.register_remote_value(
-                self, tracker_options=sync_state
-            )
+        # if sync_state and self.group_address_state:
+        #    self.xknx.state_updater.register_remote_value(
+        #        self, tracker_options=sync_state
+        #    )
 
     def __del__(self) -> None:
         """Destructor. Removing self from StateUpdater if was registered."""
-        try:
-            self.xknx.state_updater.unregister_remote_value(self)
-        except (KeyError, AttributeError):
-            # KeyError if it was never added to StateUpdater
-            # AttributeError if instantiation failed (tests mostly)
-            pass
+        pass
 
     @property
     def value(self) -> ValueType | None:
@@ -193,7 +188,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
                 feature_name=self.feature_name,
             )
         decoded_payload = self.from_knx(_new_payload)
-        self.xknx.state_updater.update_received(self)
+        # self.xknx.state_updater.update_received(self)
         if self._value is None or always_callback or self._value != decoded_payload:
             self._value = decoded_payload
             self.telegram = telegram

@@ -6,7 +6,6 @@ from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
-from xknx.core import XknxConnectionState
 from xknx.remote_value import RemoteValue
 
 if TYPE_CHECKING:
@@ -20,150 +19,135 @@ MAX_UPDATE_INTERVAL = 1440
 
 
 class StateUpdater:
-    """Class for keeping the states of RemoteValues up to date."""
+    """Class for keeping the state of a RemoteValue up to date."""
 
-    def __init__(self, xknx: XKNX, parallel_reads: int = 2):
+    state_updater_semaphore = asyncio.Semaphore(value=2)
+
+    def __init__(
+        self,
+        xknx: XKNX,
+        remote_value: RemoteValue[Any, Any],
+        sync_state: bool | int | float | str = True,
+    ):
         """Initialize StateUpdater class."""
         self.xknx = xknx
         self.started = False
-        self._workers: dict[int, _StateTracker] = {}
-        self._semaphore = asyncio.Semaphore(value=parallel_reads)
+        self.remote_value = remote_value
+        self.sync_state = sync_state
+        self._worker: _StateTracker | None = None
+
+        self.register_remote_value()
+
+    @staticmethod
+    def parse_tracker_options(
+        tracker_options: bool | int | float | str,
+        remote_value: RemoteValue[Any, Any],
+    ) -> tuple[StateTrackerType, int | float]:
+        """Parse tracker type and expiration time."""
+        tracker_type = StateTrackerType.EXPIRE
+        update_interval: int | float = DEFAULT_UPDATE_INTERVAL
+
+        if isinstance(tracker_options, bool):
+            # `True` would be overwritten by the check for `int`
+            return (tracker_type, update_interval)
+        if isinstance(tracker_options, (int, float)):
+            update_interval = tracker_options
+        elif isinstance(tracker_options, str):
+            _options = tracker_options.split()
+            if _options[0].upper() == "INIT":
+                tracker_type = StateTrackerType.INIT
+            elif _options[0].upper() == "EXPIRE":
+                tracker_type = StateTrackerType.EXPIRE
+            elif _options[0].upper() == "EVERY":
+                tracker_type = StateTrackerType.PERIODICALLY
+            else:
+                logger.warning(
+                    'Could not parse StateUpdater tracker_options "%s" for %s. Using default %s %s minutes.',
+                    tracker_options,
+                    remote_value,
+                    tracker_type,
+                    update_interval,
+                )
+                return (tracker_type, update_interval)
+            try:
+                if _options[1].isdigit():
+                    update_interval = int(_options[1])
+            except IndexError:
+                pass  # No time given (no _options[1])
+
+        if update_interval > MAX_UPDATE_INTERVAL:
+            logger.warning(
+                "StateUpdater interval of %s to long for %s. Using maximum of %s minutes (1 day)",
+                tracker_options,
+                remote_value,
+                MAX_UPDATE_INTERVAL,
+            )
+            update_interval = MAX_UPDATE_INTERVAL
+        return (tracker_type, update_interval)
+
+    async def read_state_mutex(self) -> None:
+        """Schedule to read the state from the KNX bus - one at a time."""
+        async with StateUpdater.state_updater_semaphore:
+            # wait until there is a bus connection
+            await self.xknx.connection_manager.connected.wait()
+            # wait until there is nothing else to send to the bus
+            await self.xknx.telegram_queue.outgoing_queue.join()
+            logger.debug(
+                "StateUpdater reading %s for %s - %s",
+                self.remote_value.group_address_state,
+                self.remote_value.device_name,
+                self.remote_value.feature_name,
+            )
+            # shield from cancellation so update_received() don't cancel the
+            # ValueReader leaving the telegram_received_cb until next telegram
+            await asyncio.shield(self.remote_value.read_state(wait_for_result=True))
 
     def register_remote_value(
         self,
-        remote_value: RemoteValue[Any, Any],
-        tracker_options: bool | int | float | str = True,
     ) -> None:
         """Register a RemoteValue to initialize its state and/or track for expiration."""
-
-        def parse_tracker_options(
-            tracker_options: bool | int | float | str,
-        ) -> tuple[StateTrackerType, int | float]:
-            """Parse tracker type and expiration time."""
-            tracker_type = StateTrackerType.EXPIRE
-            update_interval: int | float = DEFAULT_UPDATE_INTERVAL
-
-            if isinstance(tracker_options, bool):
-                # `True` would be overwritten by the check for `int`
-                return (tracker_type, update_interval)
-            if isinstance(tracker_options, (int, float)):
-                update_interval = tracker_options
-            elif isinstance(tracker_options, str):
-                _options = tracker_options.split()
-                if _options[0].upper() == "INIT":
-                    tracker_type = StateTrackerType.INIT
-                elif _options[0].upper() == "EXPIRE":
-                    tracker_type = StateTrackerType.EXPIRE
-                elif _options[0].upper() == "EVERY":
-                    tracker_type = StateTrackerType.PERIODICALLY
-                else:
-                    logger.warning(
-                        'Could not parse StateUpdater tracker_options "%s" for %s. Using default %s %s minutes.',
-                        tracker_options,
-                        remote_value,
-                        tracker_type,
-                        update_interval,
-                    )
-                    return (tracker_type, update_interval)
-                try:
-                    if _options[1].isdigit():
-                        update_interval = int(_options[1])
-                except IndexError:
-                    pass  # No time given (no _options[1])
-
-            if update_interval > MAX_UPDATE_INTERVAL:
-                logger.warning(
-                    "StateUpdater interval of %s to long for %s. Using maximum of %s minutes (1 day)",
-                    tracker_options,
-                    remote_value,
-                    MAX_UPDATE_INTERVAL,
-                )
-                update_interval = MAX_UPDATE_INTERVAL
-            return (tracker_type, update_interval)
-
-        async def read_state_mutex() -> None:
-            """Schedule to read the state from the KNX bus - one at a time."""
-            async with self._semaphore:
-                # wait until there is nothing else to send to the bus
-                await self.xknx.telegram_queue.outgoing_queue.join()
-                logger.debug(
-                    "StateUpdater reading %s for %s - %s",
-                    remote_value.group_address_state,
-                    remote_value.device_name,
-                    remote_value.feature_name,
-                )
-                # shield from cancellation so update_received() don't cancel the
-                # ValueReader leaving the telegram_received_cb until next telegram
-                await asyncio.shield(remote_value.read_state(wait_for_result=True))
-
-        tracker_type, update_interval = parse_tracker_options(tracker_options)
+        tracker_type, update_interval = StateUpdater.parse_tracker_options(
+            self.sync_state, self.remote_value
+        )
         tracker = _StateTracker(
-            read_state_awaitable=read_state_mutex,
+            read_state_awaitable=self.read_state_mutex,
             tracker_type=tracker_type,
             interval_min=update_interval,
         )
-        self._workers[id(remote_value)] = tracker
+        self._worker = tracker
 
         logger.debug(
             "StateUpdater registered %s %s for %s",
             tracker_type,
             update_interval,
-            remote_value,
+            self.remote_value,
         )
-        if self.started:
-            tracker.start()
 
-    def unregister_remote_value(self, remote_value: RemoteValue[Any, Any]) -> None:
-        """Unregister a RemoteValue from StateUpdater."""
-        self._workers.pop(id(remote_value)).stop()
-
-    def update_received(self, remote_value: RemoteValue[Any, Any]) -> None:
+    def update_received(self) -> None:
         """Reset the timer when a state update was received."""
-        if self.started and id(remote_value) in self._workers:
-            self._workers[id(remote_value)].update_received()
+        if self.started and self._worker:
+            self._worker.update_received()
 
-    def _start(self) -> None:
+    def start(self) -> None:
         """Start internal StateUpdater. Initialize states."""
-        logger.debug("StateUpdater initializing values")
         self.started = True
-        for worker in self._workers.values():
-            worker.start()
+        if self._worker:
+            self._worker.start()
 
-    def _stop(self) -> None:
+    def stop(self) -> None:
         """Stop internal StateUpdater."""
         logger.debug("StateUpdater stopping")
         self.started = False
-        for worker in self._workers.values():
-            worker.stop()
+        if self._worker:
+            self._worker.stop()
 
-    def start(self) -> None:
-        """Start StateUpdater."""
-        self.xknx.connection_manager.register_connection_state_changed_cb(
-            self.connection_state_change_callback
-        )
+    @property
+    def initialized(self) -> bool:
+        """Return the initialized state of the worker."""
+        if self._worker:
+            return self._worker.initialized
 
-        if self.xknx.connection_manager.state == XknxConnectionState.CONNECTED:
-            self._start()
-
-    def stop(self) -> None:
-        """Stop StateUpdater."""
-        self.xknx.connection_manager.unregister_connection_state_changed_cb(
-            self.connection_state_change_callback
-        )
-
-        self._stop()
-
-    async def connection_state_change_callback(
-        self, state: XknxConnectionState
-    ) -> None:
-        """Start and stop StateUpdater via connection state update."""
-        if state == XknxConnectionState.CONNECTED and not self.started:
-            self._start()
-        elif (
-            state in (XknxConnectionState.DISCONNECTED, XknxConnectionState.CONNECTING)
-            and self.started
-        ):
-            self._stop()
+        return False
 
 
 class StateTrackerType(Enum):
@@ -188,6 +172,7 @@ class _StateTracker:
         self.update_interval = interval_min * 60
         self._read_state = read_state_awaitable
         self._task: asyncio.Task[None] | None = None
+        self.initialized = False
 
     def start(self) -> None:
         """Start StateTracker - read state on call."""
@@ -197,6 +182,7 @@ class _StateTracker:
     async def _start_init(self) -> None:
         """Initialize state, start update loop if appropriate."""
         await self._read_state()
+        self.initialized = True
         if self.tracker_type is not StateTrackerType.INIT:
             self.reset()
 

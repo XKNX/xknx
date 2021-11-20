@@ -12,7 +12,6 @@ from typing import Awaitable, Callable
 
 from xknx.core import (
     ConnectionManager,
-    StateUpdater,
     TaskRegistry,
     TelegramQueue,
     XknxConnectionState,
@@ -49,7 +48,6 @@ class XKNX:
         multicast_group: str = DEFAULT_MCAST_GRP,
         multicast_port: int = DEFAULT_MCAST_PORT,
         log_directory: str | None = None,
-        state_updater: bool = False,
         daemon_mode: bool = False,
         connection_config: ConnectionConfig = ConnectionConfig(),
     ) -> None:
@@ -58,10 +56,8 @@ class XKNX:
         self.telegrams: asyncio.Queue[Telegram | None] = asyncio.Queue()
         self.sigint_received = asyncio.Event()
         self.telegram_queue = TelegramQueue(self)
-        self.state_updater = StateUpdater(self)
         self.connection_manager = ConnectionManager()
         self.task_registry = TaskRegistry(self)
-        self.start_state_updater = state_updater
         self.knxip_interface: KNXIPInterface | None = None
         self.started = asyncio.Event()
         self.address_format = address_format
@@ -124,8 +120,6 @@ class XKNX:
         )
         await self.knxip_interface.start()
         await self.telegram_queue.start()
-        if self.start_state_updater:
-            self.state_updater.start()
         self.started.set()
         if self.daemon_mode:
             await self.loop_until_sigint()
@@ -143,7 +137,6 @@ class XKNX:
     async def stop(self) -> None:
         """Stop XKNX module."""
         self.task_registry.stop()
-        self.state_updater.stop()
         await self.join()
         await self.telegram_queue.stop()
         await self._stop_knxip_interface_if_exists()
