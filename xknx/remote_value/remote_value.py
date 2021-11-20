@@ -91,8 +91,11 @@ class RemoteValue(StateUpdaterMixin, ABC, Generic[DPTPayloadType, ValueType]):
 
     def __del__(self) -> None:
         """Destructor. Removing self from StateUpdater if was registered."""
-        if self.started:
-            self.stop()
+        try:
+            if self.started:
+                self.stop()
+        except AttributeError:
+            pass
 
     @property
     def value(self) -> ValueType | None:
@@ -292,14 +295,14 @@ class RemoteValue(StateUpdaterMixin, ABC, Generic[DPTPayloadType, ValueType]):
     def __eq__(self, other: object) -> bool:
         """Equal operator."""
         for key, value in self.__dict__.items():
-            if key == "after_update_cb" or key == "remote_value" or key == "_worker":
+            if key in ("after_update_cb", "remote_value", "_worker"):
                 continue
             if key not in other.__dict__:
                 return False
             if other.__dict__[key] != value:
                 return False
         for key, value in other.__dict__.items():
-            if key == "after_update_cb" or key == "remote_value" or key == "_worker":
+            if key in ("after_update_cb", "remote_value", "_worker"):
                 continue
             if key not in self.__dict__:
                 return False
