@@ -6,7 +6,6 @@ import pytest
 from xknx import XKNX
 from xknx.core import XknxConnectionState
 from xknx.core.state_updater import StateTrackerType, StateUpdaterMixin, _StateTracker
-import xknx.remote_value
 from xknx.remote_value import RemoteValue
 from xknx.telegram import GroupAddress
 

@@ -3,7 +3,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from xknx import XKNX
-import xknx.core
 from xknx.dpt import DPT2ByteFloat, DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.remote_value import RemoteValue, RemoteValueSwitch
