@@ -930,7 +930,12 @@ class TestClimate:
     async def test_sync(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
-        climate = Climate(xknx, "TestClimate", group_address_temperature="1/2/3")
+        climate = Climate(
+            xknx,
+            "TestClimate",
+            group_address_temperature="1/2/3",
+            sync_state=False,
+        )
         await climate.sync()
         assert xknx.telegrams.qsize() == 1
         telegram1 = xknx.telegrams.get_nowait()
@@ -972,6 +977,7 @@ class TestClimate:
             "TestClimate",
             group_address_controller_mode="1/2/13",
             group_address_controller_mode_state="1/2/14",
+            sync_state=False,
         )
         await climate_mode.sync()
         assert xknx.telegrams.qsize() == 1
@@ -1295,6 +1301,7 @@ class TestClimate:
             "TestClimate",
             group_address_operation_mode="1/2/7",
             operation_modes=modes,
+            sync_state=False,
         )
         assert climate_mode.operation_modes == modes
 
@@ -1308,6 +1315,7 @@ class TestClimate:
             "TestClimate",
             group_address_operation_mode="1/2/7",
             operation_modes=str_modes,
+            sync_state=False,
         )
         assert climate_mode.operation_modes == modes
 
@@ -1325,6 +1333,7 @@ class TestClimate:
             "TestClimate",
             group_address_controller_mode="1/2/7",
             controller_modes=str_modes,
+            sync_state=False,
         )
         assert climate_mode.controller_modes == modes
 
@@ -1337,13 +1346,19 @@ class TestClimate:
             xknx,
             "TestClimate",
             controller_modes=str_modes,
+            sync_state=False,
         )
         assert climate_mode.controller_modes == modes
 
     async def test_process_power_status(self):
         """Test process / reading telegrams from telegram queue. Test if DPT20.105 controller mode is set correctly."""
         xknx = XKNX()
-        climate = Climate(xknx, "TestClimate", group_address_on_off="1/2/2")
+        climate = Climate(
+            xknx,
+            "TestClimate",
+            group_address_on_off="1/2/2",
+            sync_state=False,
+        )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/2"),
             payload=GroupValueWrite(DPTBinary(1)),
@@ -1364,7 +1379,12 @@ class TestClimate:
     async def test_power_on_off(self):
         """Test turn_on and turn_off functions."""
         xknx = XKNX()
-        climate = Climate(xknx, "TestClimate", group_address_on_off="1/2/2")
+        climate = Climate(
+            xknx,
+            "TestClimate",
+            group_address_on_off="1/2/2",
+            sync_state=False,
+        )
         await climate.turn_on()
         _telegram = xknx.telegrams.get_nowait()
         await xknx.devices.process(_telegram)
@@ -1406,10 +1426,16 @@ class TestClimate:
         """Test is_active property."""
         xknx = XKNX()
         climate_active = Climate(
-            xknx, "TestClimate1", group_address_active_state="1/1/1"
+            xknx,
+            "TestClimate1",
+            group_address_active_state="1/1/1",
+            sync_state=False,
         )
         climate_command = Climate(
-            xknx, "TestClimate2", group_address_command_value_state="2/2/2"
+            xknx,
+            "TestClimate2",
+            group_address_command_value_state="2/2/2",
+            sync_state=False,
         )
         climate_active_command = Climate(
             xknx,

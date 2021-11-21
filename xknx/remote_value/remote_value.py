@@ -21,7 +21,7 @@ from typing import (
     Union,
 )
 
-from xknx.core import StateUpdaterMixin
+from xknx.core import StateUpdater
 from xknx.dpt.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
@@ -46,7 +46,7 @@ GroupAddressesType = Union["DeviceAddressableType", List["DeviceAddressableType"
 ValueType = TypeVar("ValueType")
 
 
-class RemoteValue(StateUpdaterMixin, ABC, Generic[DPTPayloadType, ValueType]):
+class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
     """Class for managing remote knx value."""
 
     def __init__(
@@ -85,15 +85,14 @@ class RemoteValue(StateUpdaterMixin, ABC, Generic[DPTPayloadType, ValueType]):
         self.after_update_cb: AsyncCallbackType | None = after_update_cb
 
         # start state updater
-        StateUpdaterMixin.__init__(self, xknx, self, sync_state)
-        if self.group_address_state and sync_state:
-            self.start()
+        self.state_updater = StateUpdater(xknx, self, sync_state)
+        self.state_updater.start()
 
     def __del__(self) -> None:
         """Destructor. Removing self from StateUpdater if was registered."""
         try:
-            if self.started:
-                self.stop()
+            if self.state_updater and self.state_updater.started:
+                self.state_updater.stop()
         except AttributeError:
             pass
 
@@ -295,14 +294,14 @@ class RemoteValue(StateUpdaterMixin, ABC, Generic[DPTPayloadType, ValueType]):
     def __eq__(self, other: object) -> bool:
         """Equal operator."""
         for key, value in self.__dict__.items():
-            if key in ("after_update_cb", "remote_value", "_worker"):
+            if key in ("after_update_cb", "state_updater"):
                 continue
             if key not in other.__dict__:
                 return False
             if other.__dict__[key] != value:
                 return False
         for key, value in other.__dict__.items():
-            if key in ("after_update_cb", "remote_value", "_worker"):
+            if key in ("after_update_cb", "state_updater"):
                 continue
             if key not in self.__dict__:
                 return False

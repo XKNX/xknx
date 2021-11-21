@@ -349,6 +349,7 @@ class TestCover:
             group_address_short="1/2/2",
             group_address_position="1/2/3",
             group_address_position_state="1/2/4",
+            sync_state=False,
         )
         # Attempt stopping while not actually moving
         await cover_short_stop.stop()
@@ -394,6 +395,7 @@ class TestCover:
             group_address_stop="1/2/0",
             group_address_position="1/2/3",
             group_address_position_state="1/2/4",
+            sync_state=False,
         )
         await cover_manual_stop.stop()
         assert xknx.telegrams.qsize() == 1
@@ -413,6 +415,7 @@ class TestCover:
             group_address_short="1/2/2",
             group_address_angle="1/2/5",
             group_address_angle_state="1/2/6",
+            sync_state=False,
         )
         # Attempt stopping while not actually tilting
         await cover_short_stop.stop()
@@ -471,6 +474,7 @@ class TestCover:
             group_address_short="1/2/2",
             group_address_position="1/2/3",
             group_address_position_state="1/2/4",
+            sync_state=False,
         )
         await cover.set_position(50)
         assert xknx.telegrams.qsize() == 1
@@ -487,6 +491,7 @@ class TestCover:
             xknx,
             "TestCover",
             group_address_position="1/2/3",
+            sync_state=False,
         )
         await cover.set_down()
         assert xknx.telegrams.qsize() == 1
@@ -519,6 +524,7 @@ class TestCover:
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position_state="1/2/4",
+            sync_state=False,
         )
         cover.travelcalculator.set_position(60)
         await cover.set_position(50)
@@ -545,6 +551,7 @@ class TestCover:
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position_state="1/2/4",
+            sync_state=False,
         )
         cover.travelcalculator.set_position(70)
         await cover.set_position(80)
@@ -569,6 +576,7 @@ class TestCover:
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position_state="1/2/4",
+            sync_state=False,
         )
 
         with patch("logging.Logger.warning") as mock_warn:
@@ -595,6 +603,7 @@ class TestCover:
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position_state="1/2/4",
+            sync_state=False,
         )
 
         with patch("logging.Logger.warning") as mock_warn:
@@ -624,6 +633,7 @@ class TestCover:
             group_address_position="1/4/16",
             group_address_angle="1/4/18",
             group_address_angle_state="1/4/19",
+            sync_state=False,
         )
         await cover.set_angle(50)
         assert xknx.telegrams.qsize() == 1
@@ -662,6 +672,7 @@ class TestCover:
             group_address_short="1/2/2",
             group_address_position="1/2/3",
             group_address_position_state="1/2/4",
+            sync_state=False,
         )
         # initial position process - position is unknown so this is the new state - not moving
         telegram = Telegram(
@@ -705,6 +716,7 @@ class TestCover:
             group_address_short="1/2/2",
             group_address_angle="1/2/3",
             group_address_angle_state="1/2/4",
+            sync_state=False,
         )
         telegram = Telegram(
             GroupAddress("1/2/4"), payload=GroupValueWrite(DPTArray(42))
@@ -720,6 +732,7 @@ class TestCover:
             "TestCover",
             group_address_long="1/2/1",
             group_address_locked_state="1/2/4",
+            sync_state=False,
         )
         telegram = Telegram(
             GroupAddress("1/2/4"), payload=GroupValueWrite(DPTBinary(1))
@@ -731,7 +744,11 @@ class TestCover:
         """Test process / reading telegrams from telegram queue. Test if up/down is processed correctly."""
         xknx = XKNX()
         cover = Cover(
-            xknx, "TestCover", group_address_long="1/2/1", group_address_short="1/2/2"
+            xknx,
+            "TestCover",
+            group_address_long="1/2/1",
+            group_address_short="1/2/2",
+            sync_state=False,
         )
         cover.travelcalculator.set_position(50)
         assert not cover.is_traveling()
@@ -745,7 +762,11 @@ class TestCover:
         """Test process / reading telegrams from telegram queue. Test if up/down is processed correctly."""
         xknx = XKNX()
         cover = Cover(
-            xknx, "TestCover", group_address_long="1/2/1", group_address_short="1/2/2"
+            xknx,
+            "TestCover",
+            group_address_long="1/2/1",
+            group_address_short="1/2/2",
+            sync_state=False,
         )
         cover.travelcalculator.set_position(50)
         assert not cover.is_traveling()
@@ -763,6 +784,7 @@ class TestCover:
             "TestCover",
             group_address_long="1/2/1",
             group_address_stop="1/2/2",
+            sync_state=False,
         )
         cover.travelcalculator.set_position(50)
         await cover.set_down()
@@ -781,6 +803,7 @@ class TestCover:
             "TestCover",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
+            sync_state=False,
         )
         cover.travelcalculator.set_position(50)
         await cover.set_down()
@@ -805,6 +828,7 @@ class TestCover:
             group_address_position_state="1/2/5",
             group_address_angle="1/2/6",
             group_address_angle_state="1/2/7",
+            sync_state=False,
         )
 
         after_update_callback = AsyncMock()
@@ -850,6 +874,7 @@ class TestCover:
             group_address_position_state="1/2/4",
             travel_time_down=10,
             travel_time_up=10,
+            sync_state=False,
         )
         with patch("time.time") as mock_time:
             mock_time.return_value = 1517000000.0
@@ -920,6 +945,7 @@ class TestCover:
             group_address_stop="1/2/2",
             travel_time_down=10,
             travel_time_up=10,
+            sync_state=False,
         )
         with patch(
             "xknx.devices.Cover.stop", new_callable=AsyncMock

@@ -61,9 +61,7 @@ class TestStringRepresentations:
     """Test class for Configuration logic."""
 
     @patch.multiple(RemoteValue, __abstractmethods__=set())
-    @patch("xknx.core.StateUpdaterMixin.start")
-    @patch("xknx.core.StateUpdaterMixin.stop")
-    def test_remote_value(self, start, stop):
+    def test_remote_value(self):
         """Test string representation of remote value."""
         xknx = XKNX()
         remote_value = RemoteValue(
@@ -71,6 +69,7 @@ class TestStringRepresentations:
             group_address="1/2/3",
             device_name="MyDevice",
             group_address_state="1/2/4",
+            sync_state=False,
         )
         assert (
             str(remote_value)
@@ -94,20 +93,21 @@ class TestStringRepresentations:
             == "<RemoteValue device_name=\"MyDevice\" feature_name=\"Unknown\" <1/2/3, None, ['1/2/4', 'i-test'], None /> />"
         )
 
-    @patch("xknx.core.StateUpdaterMixin.start")
-    @patch("xknx.core.StateUpdaterMixin.stop")
-    def test_binary_sensor(self, start, stop):
+    def test_binary_sensor(self):
         """Test string representation of binary sensor object."""
         xknx = XKNX()
-        binary_sensor = BinarySensor(xknx, name="Fnord", group_address_state="1/2/3")
+        binary_sensor = BinarySensor(
+            xknx,
+            name="Fnord",
+            group_address_state="1/2/3",
+            sync_state=False,
+        )
         assert (
             str(binary_sensor)
             == '<BinarySensor name="Fnord" remote_value=<None, 1/2/3, [], None /> state=None />'
         )
 
-    @patch("xknx.core.StateUpdaterMixin.start")
-    @patch("xknx.core.StateUpdaterMixin.stop")
-    def test_climate(self, start, stop):
+    def test_climate(self):
         """Test string representation of climate object."""
         xknx = XKNX()
         climate = Climate(
@@ -122,6 +122,7 @@ class TestStringRepresentations:
             setpoint_shift_min=-20,
             group_address_on_off="1/2/14",
             group_address_on_off_state="1/2/15",
+            sync_state=False,
         )
         assert (
             str(climate) == '<Climate name="Wohnzimmer" '
@@ -133,9 +134,7 @@ class TestStringRepresentations:
             "group_address_on_off=<1/2/14, 1/2/15, [], None /> />"
         )
 
-    @patch("xknx.core.StateUpdaterMixin.start")
-    @patch("xknx.core.StateUpdaterMixin.stop")
-    def test_climate_mode(self, start, stop):
+    def test_climate_mode(self):
         """Test string representation of climate mode object."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -150,6 +149,7 @@ class TestStringRepresentations:
             group_address_controller_status_state="1/2/11",
             group_address_controller_mode="1/2/12",
             group_address_controller_mode_state="1/2/13",
+            sync_state=False,
         )
         assert (
             str(climate_mode) == '<ClimateMode name="Wohnzimmer Mode" '
@@ -158,9 +158,7 @@ class TestStringRepresentations:
             "controller_status=<1/2/10, 1/2/11, [], None /> />"
         )
 
-    @patch("xknx.core.StateUpdaterMixin.start")
-    @patch("xknx.core.StateUpdaterMixin.stop")
-    def test_cover(self, start, stop):
+    def test_cover(self):
         """Test string representation of cover object."""
         xknx = XKNX()
         cover = Cover(
@@ -176,6 +174,7 @@ class TestStringRepresentations:
             group_address_locked_state="1/2/9",
             travel_time_down=8,
             travel_time_up=10,
+            sync_state=False,
         )
         assert (
             str(cover) == '<Cover name="Rolladen" '
@@ -190,9 +189,7 @@ class TestStringRepresentations:
             'travel_time_up="10" />'
         )
 
-    @patch("xknx.core.StateUpdaterMixin.start")
-    @patch("xknx.core.StateUpdaterMixin.stop")
-    def test_fan(self, start, stop):
+    def test_fan(self):
         """Test string representation of fan object."""
         xknx = XKNX()
         fan = Fan(
@@ -202,15 +199,14 @@ class TestStringRepresentations:
             group_address_speed_state="1/2/4",
             group_address_oscillation="1/2/5",
             group_address_oscillation_state="1/2/6",
+            sync_state=False,
         )
         assert (
             str(fan)
             == '<Fan name="Dunstabzug" speed=<1/2/3, 1/2/4, [], None /> oscillation=<1/2/5, 1/2/6, [], None /> />'
         )
 
-    @patch("xknx.core.StateUpdaterMixin.start")
-    @patch("xknx.core.StateUpdaterMixin.stop")
-    def test_light(self, start, stop):
+    def test_light(self):
         """Test string representation of non dimmable light object."""
         xknx = XKNX()
         light = Light(
@@ -218,12 +214,11 @@ class TestStringRepresentations:
             name="Licht",
             group_address_switch="1/2/3",
             group_address_switch_state="1/2/4",
+            sync_state=False,
         )
         assert str(light) == '<Light name="Licht" switch=<1/2/3, 1/2/4, [], None /> />'
 
-    @patch("xknx.core.StateUpdaterMixin.start")
-    @patch("xknx.core.StateUpdaterMixin.stop")
-    def test_light_dimmable(self, start, stop):
+    def test_light_dimmable(self):
         """Test string representation of dimmable light object."""
         xknx = XKNX()
         light = Light(
@@ -233,6 +228,7 @@ class TestStringRepresentations:
             group_address_switch_state="1/2/4",
             group_address_brightness="1/2/5",
             group_address_brightness_state="1/2/6",
+            sync_state=False,
         )
         assert (
             str(light) == '<Light name="Licht" '
@@ -288,7 +284,11 @@ class TestStringRepresentations:
         """Test string representation of sensor object."""
         xknx = XKNX()
         sensor = Sensor(
-            xknx, name="MeinSensor", group_address_state="1/2/3", value_type="percent"
+            xknx,
+            name="MeinSensor",
+            group_address_state="1/2/3",
+            value_type="percent",
+            sync_state=False,
         )
         assert (
             str(sensor)
@@ -356,6 +356,7 @@ class TestStringRepresentations:
             group_address_air_pressure="7/0/9",
             group_address_humidity="7/0/9",
             group_address_wind_alarm="7/0/10",
+            sync_state=False,
         )
         assert (
             str(weather)

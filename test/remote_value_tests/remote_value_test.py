@@ -125,7 +125,9 @@ class TestRemoteValue:
     async def test_read_state(self):
         """Test read state while waiting for the result."""
         xknx = XKNX()
-        remote_value = RemoteValueSwitch(xknx, group_address_state="1/2/3")
+        remote_value = RemoteValueSwitch(
+            xknx, group_address_state="1/2/3", sync_state=False
+        )
 
         with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_valid, patch(
             "xknx.core.ValueReader.read", new_callable=AsyncMock
@@ -161,8 +163,8 @@ class TestRemoteValue:
                 "State",
             )
 
-    @patch("xknx.core.StateUpdaterMixin.start")
-    @patch("xknx.core.StateUpdaterMixin.stop")
+    @patch("xknx.core.StateUpdater.start")
+    @patch("xknx.core.StateUpdater.stop")
     def test_unpacking_passive_address(self, start, stop):
         """Test if passive group addresses are properly unpacked."""
         xknx = XKNX()

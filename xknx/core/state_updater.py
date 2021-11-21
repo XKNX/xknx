@@ -17,7 +17,7 @@ DEFAULT_UPDATE_INTERVAL = 60
 MAX_UPDATE_INTERVAL = 1440
 
 
-class StateUpdaterMixin:
+class StateUpdater:
     """Class for keeping the state of a RemoteValue up to date."""
 
     state_updater_semaphore = asyncio.Semaphore(value=2)
@@ -86,7 +86,7 @@ class StateUpdaterMixin:
 
     async def read_state_mutex(self) -> None:
         """Schedule to read the state from the KNX bus - one at a time."""
-        async with StateUpdaterMixin.state_updater_semaphore:
+        async with StateUpdater.state_updater_semaphore:
             # wait until there is a bus connection
             await self.xknx.connection_manager.connected.wait()
             # wait until there is nothing else to send to the bus
@@ -105,7 +105,7 @@ class StateUpdaterMixin:
         self,
     ) -> None:
         """Register a RemoteValue to initialize its state and/or track for expiration."""
-        tracker_type, update_interval = StateUpdaterMixin.parse_tracker_options(
+        tracker_type, update_interval = StateUpdater.parse_tracker_options(
             self.sync_state, self.remote_value
         )
         tracker = _StateTracker(
@@ -129,6 +129,10 @@ class StateUpdaterMixin:
 
     def start(self) -> None:
         """Start internal StateUpdater. Initialize states."""
+        #  dont start if we have no state address
+        if not self.remote_value.group_address_state or not self.sync_state:
+            return
+
         self.started = True
         if self._worker:
             self._worker.start()

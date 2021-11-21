@@ -212,6 +212,7 @@ class TestSensorExposeLoop:
             "TestSensor",
             group_address_state="1/1/1",
             value_type=value_type,
+            sync_state=False,
         )
         assert sensor.resolve_state() is None
 

@@ -17,7 +17,12 @@ class TestWeather:
     async def test_temperature(self):
         """Test resolve state with temperature."""
         xknx = XKNX()
-        weather = Weather(name="weather", xknx=xknx, group_address_temperature="1/3/4")
+        weather = Weather(
+            name="weather",
+            xknx=xknx,
+            group_address_temperature="1/3/4",
+            sync_state=False,
+        )
 
         await weather.process(
             Telegram(
@@ -42,6 +47,7 @@ class TestWeather:
             group_address_brightness_west="1/3/7",
             group_address_brightness_north="1/3/8",
             group_address_temperature="1/4/4",
+            sync_state=False,
         )
 
         await weather.process(
@@ -91,7 +97,12 @@ class TestWeather:
     async def test_pressure(self):
         """Test resolve state with pressure."""
         xknx = XKNX()
-        weather = Weather(name="weather", xknx=xknx, group_address_air_pressure="1/3/4")
+        weather = Weather(
+            name="weather",
+            xknx=xknx,
+            group_address_air_pressure="1/3/4",
+            sync_state=False,
+        )
 
         await weather.process(
             Telegram(
@@ -107,7 +118,9 @@ class TestWeather:
     async def test_humidity(self):
         """Test humidity."""
         xknx = XKNX()
-        weather = Weather(name="weather", xknx=xknx, group_address_humidity="1/2/4")
+        weather = Weather(
+            name="weather", xknx=xknx, group_address_humidity="1/2/4", sync_state=False
+        )
 
         await weather.process(
             Telegram(
@@ -124,7 +137,10 @@ class TestWeather:
         """Test wind speed received."""
         xknx = XKNX()
         weather: Weather = Weather(
-            name="weather", xknx=xknx, group_address_wind_speed="1/3/8"
+            name="weather",
+            xknx=xknx,
+            group_address_wind_speed="1/3/8",
+            sync_state=False,
         )
 
         await weather.process(
@@ -142,7 +158,10 @@ class TestWeather:
         """Test wind bearing received."""
         xknx = XKNX()
         weather: Weather = Weather(
-            name="weather", xknx=xknx, group_address_wind_bearing="1/3/8"
+            name="weather",
+            xknx=xknx,
+            group_address_wind_bearing="1/3/8",
+            sync_state=False,
         )
 
         await weather.process(
@@ -228,6 +247,7 @@ class TestWeather:
             xknx=xknx,
             group_address_brightness_east="1/3/5",
             group_address_brightness_south="1/3/6",
+            sync_state=False,
         )
 
         await weather.process(
@@ -253,6 +273,7 @@ class TestWeather:
             group_address_brightness_east="1/3/5",
             group_address_brightness_south="1/3/6",
             group_address_brightness_west="1/3/7",
+            sync_state=False,
         )
 
         await weather.process(
@@ -276,6 +297,7 @@ class TestWeather:
             xknx=xknx,
             group_address_brightness_south="1/3/6",
             group_address_brightness_west="1/3/7",
+            sync_state=False,
         )
 
         await weather.process(
@@ -300,6 +322,7 @@ class TestWeather:
             group_address_brightness_east="1/3/5",
             group_address_brightness_south="1/3/6",
             group_address_brightness_west="1/3/7",
+            sync_state=False,
         )
 
         await weather.process(
@@ -320,7 +343,10 @@ class TestWeather:
         """Test day night mapping."""
         xknx = XKNX()
         weather: Weather = Weather(
-            name="weather", xknx=xknx, group_address_day_night="1/3/20"
+            name="weather",
+            xknx=xknx,
+            group_address_day_night="1/3/20",
+            sync_state=False,
         )
 
         await weather.process(
