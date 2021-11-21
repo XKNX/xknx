@@ -1,6 +1,6 @@
 """Conftest for XKNX."""
 import asyncio
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -52,6 +52,7 @@ def time_travel(event_loop: asyncio.AbstractEventLoop) -> EventLoopClockAdvancer
 
 
 @pytest.fixture(autouse=True)
-def monkeypatch(monkeypatch):
+def mock_state_updater_start(monkeypatch):
+    """Mock state updater start as its part of all RemoteValues."""
     monkeypatch.setattr("xknx.core.StateUpdater.start", MagicMock())
     yield monkeypatch
