@@ -86,7 +86,6 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
 
         # start state updater
         self.state_updater = StateUpdater(xknx, self, sync_state)
-        self.state_updater.start()
 
     def __del__(self) -> None:
         """Destructor. Removing self from StateUpdater if was registered."""
@@ -192,7 +191,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
                 feature_name=self.feature_name,
             )
         decoded_payload = self.from_knx(_new_payload)
-        # self.xknx.state_updater.update_received(self)
+        self.state_updater.update_received()
         if self._value is None or always_callback or self._value != decoded_payload:
             self._value = decoded_payload
             self.telegram = telegram

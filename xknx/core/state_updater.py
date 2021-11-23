@@ -32,10 +32,11 @@ class StateUpdater:
         self.xknx = xknx
         self.started = False
         self.remote_value = remote_value
+        self.initialized = asyncio.Event()
         self.sync_state = sync_state
-        self._worker: _StateTracker | None = None
+        self._worker: _StateTracker = self.create_state_tracker()
 
-        self.register_remote_value()
+        self.start()
 
     @staticmethod
     def parse_tracker_options(
@@ -101,56 +102,44 @@ class StateUpdater:
             # ValueReader leaving the telegram_received_cb until next telegram
             await asyncio.shield(self.remote_value.read_state(wait_for_result=True))
 
-    def register_remote_value(
+    def create_state_tracker(
         self,
-    ) -> None:
+    ) -> _StateTracker:
         """Register a RemoteValue to initialize its state and/or track for expiration."""
         tracker_type, update_interval = StateUpdater.parse_tracker_options(
             self.sync_state, self.remote_value
         )
-        tracker = _StateTracker(
+        return _StateTracker(
             read_state_awaitable=self.read_state_mutex,
+            set_initialized_cb=self.set_initialized,
             tracker_type=tracker_type,
             interval_min=update_interval,
-        )
-        self._worker = tracker
-
-        logger.debug(
-            "StateUpdater registered %s %s for %s",
-            tracker_type,
-            update_interval,
-            self.remote_value,
         )
 
     def update_received(self) -> None:
         """Reset the timer when a state update was received."""
-        if self.started and self._worker:
+        if self.started:
             self._worker.update_received()
 
     def start(self) -> None:
         """Start internal StateUpdater. Initialize states."""
         #  dont start if we have no state address
         if not self.remote_value.group_address_state or not self.sync_state:
+            self.initialized.set()
             return
 
         self.started = True
-        if self._worker:
-            self._worker.start()
+        self._worker.start()
+
+    def set_initialized(self) -> None:
+        """Set state to initialised."""
+        self.initialized.set()
 
     def stop(self) -> None:
         """Stop internal StateUpdater."""
         logger.debug("StateUpdater stopping")
         self.started = False
-        if self._worker:
-            self._worker.stop()
-
-    @property
-    def initialized(self) -> bool:
-        """Return the initialized state of the worker."""
-        if self._worker:
-            return self._worker.initialized
-
-        return False
+        self._worker.stop()
 
 
 class StateTrackerType(Enum):
@@ -167,15 +156,16 @@ class _StateTracker:
     def __init__(
         self,
         read_state_awaitable: Callable[[], Awaitable[None]],
+        set_initialized_cb: Callable[[], None],
         tracker_type: StateTrackerType = StateTrackerType.EXPIRE,
         interval_min: float = 60,
     ):
         """Initialize StateTracker class."""
         self.tracker_type = tracker_type
         self.update_interval = interval_min * 60
+        self._mark_as_initialized = set_initialized_cb
         self._read_state = read_state_awaitable
         self._task: asyncio.Task[None] | None = None
-        self.initialized = False
 
     def start(self) -> None:
         """Start StateTracker - read state on call."""
@@ -185,7 +175,7 @@ class _StateTracker:
     async def _start_init(self) -> None:
         """Initialize state, start update loop if appropriate."""
         await self._read_state()
-        self.initialized = True
+        self._mark_as_initialized()
         if self.tracker_type is not StateTrackerType.INIT:
             self.reset()
 

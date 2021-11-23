@@ -13,9 +13,9 @@ class TestTaskRegistry:
     #
     # TEST REGISTER/UNREGISTER
     #
-    async def test_register(self):
+    async def test_register(self, monkeypatch):
         """Test register."""
-
+        monkeypatch.undo()
         xknx = XKNX()
 
         async def callback() -> None:
@@ -72,9 +72,9 @@ class TestTaskRegistry:
     #
     # TEST CONNECTION HANDLING
     #
-    async def test_reconnect_handling(self):
+    async def test_reconnect_handling(self, monkeypatch):
         """Test reconnect handling."""
-
+        monkeypatch.undo()
         xknx = XKNX()
         xknx.task_registry.start()
         assert len(xknx.connection_manager._connection_state_changed_cbs) == 1

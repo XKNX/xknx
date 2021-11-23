@@ -98,10 +98,7 @@ class TestStateUpdater:
         read_state.assert_called_once()
         reset.assert_called_once()
 
-        assert remote_value.state_updater.initialized
-
-        remote_value.state_updater._worker = None
-        assert not remote_value.state_updater.initialized
+        assert remote_value.state_updater.initialized.is_set()
 
         remote_value.state_updater.stop()
 
@@ -143,7 +140,12 @@ class TestStateUpdater:
             """Fake read state mutex."""
             read_state_event.set()
 
-        state_tracker = _StateTracker(awaitable, StateTrackerType.EXPIRE, 0.00001)
+        def set_initialized_cb():
+            """Fake set in intialized."""
+
+        state_tracker = _StateTracker(
+            awaitable, set_initialized_cb, StateTrackerType.EXPIRE, 0.00002
+        )
         task = asyncio.create_task(state_tracker._update_loop())
         await read_state_event.wait()
         task.cancel()

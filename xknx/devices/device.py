@@ -36,18 +36,48 @@ class Device(ABC):
         """Initialize Device class."""
         self.xknx = xknx
         self.name = name
+        self.available = False
         self.device_updated_cbs: list[DeviceCallbackType] = []
         if device_updated_cb is not None:
             self.register_device_updated_cb(device_updated_cb)
 
         self.xknx.devices.add(self)
+        self._task: Task | None = None
+
+        self._create_task()
+
+    def _create_task(self) -> None:
+        """Create task for state initialization."""
+        self._task = self.xknx.task_registry.register(
+            str(id(self)), self.listen_for_state_initialization()
+        )
+        self._task.start()
 
     def __del__(self) -> None:
         """Remove Device form Devices."""
         try:
             self.shutdown()
-        except ValueError:
+        except (ValueError, AttributeError):
             pass
+
+    async def listen_for_state_initialization(self) -> None:
+        """Listen for state initialization for the state updater."""
+        try:
+            for remote_value in self._iter_remote_values():
+                await remote_value.state_updater.initialized.wait()
+
+            self.available = True
+            logger.info(
+                "Device state is now initialized for %s - marking as available",
+                self,
+            )
+            await self.after_update()
+        except AttributeError:
+            logger.error(
+                "Error!",
+                self,
+            )
+            await self.listen_for_state_initialization()
 
     def shutdown(self) -> None:
         """Prepare for deletion. Remove callbacks and device form Devices vector."""
@@ -58,6 +88,9 @@ class Device(ABC):
         for task in self._iter_tasks():
             if task:
                 self.xknx.task_registry.unregister(task.name)
+
+        if self._task:
+            self.xknx.task_registry.unregister(self._task.name)
 
     @abstractmethod
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
