@@ -1,8 +1,26 @@
 # Changelog
 
-## Unreleased changes
+## 0.18.13 Hold your colour 2021-11-13
 
 ### Internals
+
+- Fix GatewayScanner on MacOS and Windows and only return one instance of a gateway
+
+### Devices
+
+- Light: Only send to global switch or brightness address if individual colors are configured to not overwrite actuator colors
+- Light: Debounce individual colors callback to mitigate color flicker in visualizations
+
+## 0.18.12 Add always callback to NumericValue and RawValue 2021-11-01
+
+### Internals
+
+- Gatewayscanner now also reports the individual address of the gateway
+- Outgoing telegrams will now have the correct source_address if tunneling is used
+
+### Devices
+
+- Added `always_callback` option to NumericValue and RawValue
 
 ## 0.18.11 Task Registry 2021-10-16
 

@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 import netifaces
 from xknx.knxip import (
     HPAI,
+    DIBDeviceInformation,
     DIBServiceFamily,
     DIBSuppSVCFamilies,
     KNXIPFrame,
@@ -22,6 +23,7 @@ from xknx.knxip import (
     SearchRequest,
     SearchResponse,
 )
+from xknx.telegram import IndividualAddress
 
 from .udp_client import UDPClient
 
@@ -43,6 +45,7 @@ class GatewayDescriptor:
         local_ip: str,
         supports_tunnelling: bool = False,
         supports_routing: bool = False,
+        individual_address: IndividualAddress | None = None,
     ):
         """Initialize GatewayDescriptor class."""
         self.name = name
@@ -52,16 +55,11 @@ class GatewayDescriptor:
         self.local_ip = local_ip
         self.supports_routing = supports_routing
         self.supports_tunnelling = supports_tunnelling
+        self.individual_address = individual_address
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return (
-            f'<GatewayDescriptor name="{self.name}" '
-            f'addr="{self.ip_addr}:{self.port}" '
-            f'local="{self.local_ip}@{self.local_interface}" '
-            f'routing="{self.supports_routing}" '
-            f'tunnelling="{self.supports_tunnelling}" />'
-        )
+        return f"{self.individual_address} - {self.name} @ {self.ip_addr}:{self.port}"
 
 
 class GatewayScanFilter:
@@ -133,6 +131,7 @@ class GatewayScanner:
             pass
         finally:
             await self._stop()
+
         return self.found_gateways
 
     async def _stop(self) -> None:
@@ -177,7 +176,10 @@ class GatewayScanner:
         udp_client.send(KNXIPFrame.init_from_body(search_request))
 
     def _response_rec_callback(
-        self, knx_ip_frame: KNXIPFrame, udp_client: UDPClient, interface: str = ""
+        self,
+        knx_ip_frame: KNXIPFrame,
+        udp_client: UDPClient,
+        interface: str = "",
     ) -> None:
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knx_ip_frame.body, SearchResponse):
@@ -202,10 +204,23 @@ class GatewayScanner:
         except StopIteration:
             pass
 
+        try:
+            device_infos = next(
+                device_infos
+                for device_infos in knx_ip_frame.body.dibs
+                if isinstance(device_infos, DIBDeviceInformation)
+            )
+            gateway.individual_address = device_infos.individual_address
+        except StopIteration:
+            pass
+
         self._add_found_gateway(gateway)
 
     def _add_found_gateway(self, gateway: GatewayDescriptor) -> None:
-        if self.scan_filter.match(gateway):
+        if self.scan_filter.match(gateway) and not any(
+            _gateway.individual_address == gateway.individual_address
+            for _gateway in self.found_gateways
+        ):
             self.found_gateways.append(gateway)
             if 0 < self._count_upper_bound <= len(self.found_gateways):
                 self._response_received_event.set()

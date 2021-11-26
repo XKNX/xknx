@@ -81,7 +81,11 @@ class PayloadReader:
     async def send_telegram(self, payload: APCI) -> None:
         """Send the telegram."""
         await self.xknx.telegrams.put(
-            Telegram(destination_address=self.address, payload=payload)
+            Telegram(
+                destination_address=self.address,
+                payload=payload,
+                source_address=self.xknx.current_address,
+            )
         )
 
     async def telegram_received(

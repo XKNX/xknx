@@ -184,6 +184,7 @@ class Tunnel(Interface):
             self.communication_channel = connect.communication_channel
             # Use the individual address provided by the tunnelling server
             self._src_address = IndividualAddress(connect.identifier)
+            self.xknx.current_address = self._src_address
             logger.debug(
                 "Tunnel established communication_channel=%s, id=%s",
                 connect.communication_channel,

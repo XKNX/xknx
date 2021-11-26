@@ -684,6 +684,52 @@ class TestLight:
                 "Dimming not supported for device %s", "TestLight"
             )
 
+    async def test_set_individual_color_with_gloabl_switch(self):
+        """Test switching on and dimming a Light with global addresses."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Diningroom.Light_1",
+            group_address_switch="1/0/0",
+            group_address_brightness="1/0/1",
+            group_address_switch_red="1/1/1",
+            group_address_switch_red_state="1/1/2",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_switch_green="1/1/5",
+            group_address_switch_green_state="1/1/6",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_switch_blue="1/1/9",
+            group_address_switch_blue_state="1/1/10",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
+            group_address_switch_white="1/1/13",
+            group_address_switch_white_state="1/1/14",
+            group_address_brightness_white="1/1/15",
+            group_address_brightness_white_state="1/1/16",
+        )
+        assert light.state is None
+        for color in light._iter_individual_colors():
+            assert color.is_on is None
+        # turn on
+        await light.set_on()
+        assert xknx.telegrams.qsize() == 1
+
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/0/0"),
+            payload=GroupValueWrite(DPTBinary(True)),
+        )
+        # brightness
+        await light.set_brightness(23)
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/0/1"),
+            payload=GroupValueWrite(DPTArray(23)),
+        )
+
     #
     # TEST SET COLOR
     #
@@ -1367,6 +1413,98 @@ class TestLight:
         )
         await light.process(telegram)
         assert light.current_color == (None, 42)
+
+    async def test_process_individual_color_debouncer(self, time_travel):
+        """Test the debouncer for individual color lights."""
+        xknx = XKNX()
+        rgb_callback = AsyncMock()
+        rgbw_callback = AsyncMock()
+
+        rgb_light = Light(
+            xknx,
+            "TestRGBLight",
+            group_address_switch_red="1/1/1",
+            group_address_switch_red_state="1/1/2",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_switch_green="1/1/5",
+            group_address_switch_green_state="1/1/6",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_switch_blue="1/1/9",
+            group_address_switch_blue_state="1/1/10",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
+            device_updated_cb=rgb_callback,
+        )
+        rgbw_light = Light(
+            xknx,
+            "TestRGBWLight",
+            group_address_switch="1/1/0",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
+            group_address_brightness_white="1/1/15",
+            group_address_brightness_white_state="1/1/16",
+            device_updated_cb=rgbw_callback,
+        )
+
+        assert rgb_light.current_color == (None, None)
+        assert rgbw_light.current_color == (None, None)
+
+        red = Telegram(
+            destination_address=GroupAddress("1/1/4"),
+            payload=GroupValueWrite(DPTArray(42)),
+        )
+        green = Telegram(
+            destination_address=GroupAddress("1/1/8"),
+            payload=GroupValueWrite(DPTArray(43)),
+        )
+        blue = Telegram(
+            destination_address=GroupAddress("1/1/12"),
+            payload=GroupValueWrite(DPTArray(44)),
+        )
+        white = Telegram(
+            destination_address=GroupAddress("1/1/16"),
+            payload=GroupValueWrite(DPTArray(50)),
+        )
+
+        await xknx.devices.process(red)
+        rgb_callback.assert_not_called()
+        rgbw_callback.assert_not_called()
+        await xknx.devices.process(green)
+        rgb_callback.assert_not_called()
+        rgbw_callback.assert_not_called()
+        await xknx.devices.process(blue)
+        rgb_callback.assert_called_once()
+        rgbw_callback.assert_not_called()
+        await xknx.devices.process(white)
+        rgbw_callback.assert_called_once()
+
+        assert rgb_light.current_color == ((42, 43, 44), None)
+        assert rgbw_light.current_color == ((42, 43, 44), 50)
+
+        rgb_callback.reset_mock()
+        rgbw_callback.reset_mock()
+        # second time with only 2 telegrams
+        await xknx.devices.process(red)
+        rgb_callback.assert_not_called()
+        rgbw_callback.assert_not_called()
+        await xknx.devices.process(green)
+        rgb_callback.assert_not_called()
+        rgbw_callback.assert_not_called()
+        await time_travel(Light.DEBOUNCE_TIMEOUT / 2)
+        rgb_callback.assert_not_called()
+        rgbw_callback.assert_not_called()
+        await time_travel(Light.DEBOUNCE_TIMEOUT / 2)
+        rgb_callback.assert_called_once()
+        rgbw_callback.assert_called_once()
+
+        assert rgb_light.current_color == ((42, 43, 44), None)
+        assert rgbw_light.current_color == ((42, 43, 44), 50)
 
     async def test_process_hs_color(self):
         """Test process / reading telegrams from telegram queue. Test if color is processed."""

@@ -72,6 +72,7 @@ class XKNX:
         self.connection_config = connection_config
         self.daemon_mode = daemon_mode
         self.version = VERSION
+        self.current_address = IndividualAddress(0)
 
         if log_directory is not None:
             self.setup_logging(log_directory)

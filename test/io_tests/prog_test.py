@@ -16,9 +16,11 @@ from xknx.knxip import (
 )
 from xknx.telegram import IndividualAddress
 
+from xknx.prog.management import NM_EXISTS, NM_OK, NM_TIME_OUT, NetworkManagement
+
 
 @pytest.mark.asyncio
-class TestGatewayScanner:
+class TestProgrammingInterface:
     """Test class for xknx/io/GatewayScanner objects."""
 
     gateway_desc_interface = GatewayDescriptor(
@@ -97,6 +99,52 @@ class TestGatewayScanner:
         },
     }
 
+    '''
+        xknx = XKNX()
+
+        netifaces_mock.interfaces.return_value = self.fake_interfaces
+        netifaces_mock.ifaddresses = lambda interface: self.fake_ifaddresses[interface]
+        netifaces_mock.AF_INET = 2
+
+        async def async_none():
+            return None
+
+        _search_interface_mock.return_value = asyncio.ensure_future(async_none())
+
+        #xknx.start()
+        network_management = NetworkManagement(xknx)
+        return_code = network_management.IndividualAddress_Write(
+            IndividualAddress("1.2.1")
+            )
+        assert return_code == NM_OK
+
+        
+        ''
+        xknx = XKNX()
+
+        netifaces_mock.interfaces.return_value = self.fake_interfaces
+        netifaces_mock.ifaddresses = lambda interface: self.fake_ifaddresses[interface]
+        netifaces_mock.AF_INET = 2
+
+        async def async_none():
+            return None
+
+        _search_interface_mock.return_value = asyncio.ensure_future(async_none())
+
+        gateway_scanner = GatewayScanner(xknx, timeout_in_seconds=0)
+
+        test_scan = await gateway_scanner.scan()
+
+        assert _search_interface_mock.call_count == 2
+        expected_calls = [
+            ((gateway_scanner, "lo0", "127.0.0.1"),),
+            ((gateway_scanner, "en1", "10.1.1.2"),),
+        ]
+        assert _search_interface_mock.call_args_list == expected_calls
+        assert test_scan == []
+    '''
+        
+        
     def test_gateway_scan_filter_match(self):
         """Test match function of gateway filter."""
         filter_default = GatewayScanFilter()
@@ -210,6 +258,35 @@ class TestGatewayScanner:
         assert _search_interface_mock.call_args_list == expected_calls
         assert test_scan == []
 
+    @patch("xknx.io.gateway_scanner.netifaces", autospec=True)
+    @patch("xknx.io.GatewayScanner._search_interface", autospec=True)
+    async def test_write_individual_address_success(self, _write_ia_mock, netifaces_mock):
+        """Test finding all valid interfaces to send search requests to. No requests are sent."""
+        xknx = XKNX()
+
+        netifaces_mock.interfaces.return_value = self.fake_interfaces
+        netifaces_mock.ifaddresses = lambda interface: self.fake_ifaddresses[interface]
+        netifaces_mock.AF_INET = 2
+
+        async def async_none():
+            return None
+
+        _write_ia_mock.return_value = asyncio.ensure_future(async_none())
+
+        network_management = NetworkManagement(xknx)
+        return_code = await network_management.IndividualAddress_Write(
+            IndividualAddress("1.2.1")
+            )
+        assert return_code == NM_OK
+
+        assert _write_ia_mock.call_count == 2
+        '''
+        expected_calls = [
+            ((gateway_scanner, "lo0", "127.0.0.1"),),
+            ((gateway_scanner, "en1", "10.1.1.2"),),
+        ]
+        assert _search_interface_mock.call_args_list == expected_calls
+        '''
 
 def fake_router_search_response(xknx: XKNX) -> KNXIPFrame:
     """Return the KNXIPFrame of a KNX/IP Router with a SearchResponse body."""

@@ -12,7 +12,9 @@ It provides functionality for
 """
 from __future__ import annotations
 
+import asyncio
 from enum import Enum
+from itertools import chain
 import logging
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterator, Tuple, cast
 
@@ -92,16 +94,18 @@ class _SwitchAndBrightness:
 
     async def set_on(self) -> None:
         """Switch light on."""
-        if self.switch.initialized:
+        if self.switch.writable:
             await self.switch.on()
-        elif self.brightness.initialized:
+            return
+        if self.brightness.writable:
             await self.brightness.set(self.brightness.range_to)
 
     async def set_off(self) -> None:
         """Switch light off."""
-        if self.switch.initialized:
+        if self.switch.writable:
             await self.switch.off()
-        elif self.brightness.initialized:
+            return
+        if self.brightness.writable:
             await self.brightness.set(0)
 
     def __eq__(self, other: object) -> bool:
@@ -112,6 +116,7 @@ class _SwitchAndBrightness:
 class Light(Device):
     """Class for managing a light."""
 
+    DEBOUNCE_TIMEOUT = 0.2
     DEFAULT_MIN_KELVIN = 2700  # 370 mireds
     DEFAULT_MAX_KELVIN = 6000  # 166 mireds
 
@@ -264,7 +269,7 @@ class Light(Device):
             group_address_brightness_red,
             group_address_brightness_red_state,
             sync_state=sync_state,
-            after_update_cb=self.after_update,
+            after_update_cb=self._individual_color_callback_debounce,
         )
 
         self.green = _SwitchAndBrightness(
@@ -276,7 +281,7 @@ class Light(Device):
             group_address_brightness_green,
             group_address_brightness_green_state,
             sync_state=sync_state,
-            after_update_cb=self.after_update,
+            after_update_cb=self._individual_color_callback_debounce,
         )
 
         self.blue = _SwitchAndBrightness(
@@ -288,7 +293,7 @@ class Light(Device):
             group_address_brightness_blue,
             group_address_brightness_blue_state,
             sync_state=sync_state,
-            after_update_cb=self.after_update,
+            after_update_cb=self._individual_color_callback_debounce,
         )
 
         self.white = _SwitchAndBrightness(
@@ -300,14 +305,26 @@ class Light(Device):
             group_address_brightness_white,
             group_address_brightness_white_state,
             sync_state=sync_state,
-            after_update_cb=self.after_update,
+            after_update_cb=self._individual_color_callback_debounce,
         )
 
         self.min_kelvin = min_kelvin
         self.max_kelvin = max_kelvin
+        self._individual_color_debounce_task_name = (
+            f"{id(self)}_individual_color_debounce"
+        )
+        self._individual_color_debounce_telegram_counter: int
+        self._reset_individual_color_debounce_telegrams()
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
+        return chain(
+            self._iter_instant_remote_values(),
+            self._iter_debounce_remote_values(),
+        )
+
+    def _iter_instant_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
+        """Iterate the devices RemoteValue classes calling after_update_cb immediately."""
         yield self.switch
         yield self.brightness
         yield self.color
@@ -317,6 +334,9 @@ class Light(Device):
         yield self.xyy_color
         yield self.tunable_white
         yield self.color_temperature
+
+    def _iter_debounce_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
+        """Iterate the devices RemoteValue classes debouncing after_update_cb."""
         for color in self._iter_individual_colors():
             yield color.switch
             yield color.brightness
@@ -324,6 +344,36 @@ class Light(Device):
     def _iter_individual_colors(self) -> Iterator[_SwitchAndBrightness]:
         """Iterate the devices individual colors."""
         yield from (self.red, self.green, self.blue, self.white)
+
+    def _reset_individual_color_debounce_telegrams(self) -> None:
+        """Reset individual color debounce telegram counter."""
+        self._individual_color_debounce_telegram_counter = sum(
+            (
+                self.red.switch.initialized or self.red.brightness.initialized,
+                self.green.switch.initialized or self.green.brightness.initialized,
+                self.blue.switch.initialized or self.blue.brightness.initialized,
+                self.white.switch.initialized or self.white.brightness.initialized,
+            )
+        )
+
+    async def _individual_color_callback_debounce(self) -> None:
+        """Run callback after all individual colors were updated or timeout passed."""
+
+        async def debouncer() -> None:
+            await asyncio.sleep(Light.DEBOUNCE_TIMEOUT)
+            self._reset_individual_color_debounce_telegrams()
+            await asyncio.shield(self.after_update())
+
+        self._individual_color_debounce_telegram_counter -= 1
+        if self._individual_color_debounce_telegram_counter > 0:
+            # task registry cancels existing task
+            self.xknx.task_registry.register(
+                self._individual_color_debounce_task_name, debouncer()
+            ).start()
+            return
+        self.xknx.task_registry.unregister(self._individual_color_debounce_task_name)
+        self._reset_individual_color_debounce_telegrams()
+        await self.after_update()
 
     @property
     def supports_brightness(self) -> bool:
@@ -375,15 +425,17 @@ class Light(Device):
 
     async def set_on(self) -> None:
         """Switch light on."""
-        if self.switch.initialized:
+        if self.switch.writable:
             await self.switch.on()
+            return
         for color in self._iter_individual_colors():
             await color.set_on()
 
     async def set_off(self) -> None:
         """Switch light off."""
-        if self.switch.initialized:
+        if self.switch.writable:
             await self.switch.off()
+            return
         for color in self._iter_individual_colors():
             await color.set_off()
 
@@ -545,8 +597,10 @@ class Light(Device):
 
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        for remote_value in self._iter_remote_values():
+        for remote_value in self._iter_instant_remote_values():
             await remote_value.process(telegram)
+        for remote_value in self._iter_debounce_remote_values():
+            await remote_value.process(telegram, always_callback=True)
 
     def __str__(self) -> str:
         """Return object as readable string."""

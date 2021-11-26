@@ -70,7 +70,9 @@ class ValueReader:
     async def send_group_read(self) -> None:
         """Send group read."""
         telegram = Telegram(
-            destination_address=self.group_address, payload=GroupValueRead()
+            destination_address=self.group_address,
+            payload=GroupValueRead(),
+            source_address=self.xknx.current_address,
         )
         await self.xknx.telegrams.put(telegram)
 
