@@ -56,6 +56,8 @@ class Switch(Device):
             after_update_cb=self.after_update,
         )
 
+        self._start_state_initialization_listener()
+
     def _iter_remote_values(self) -> Iterator[RemoteValueSwitch]:
         """Iterate the devices RemoteValue classes."""
         yield self.switch

@@ -170,6 +170,7 @@ class ClimateMode(Device):
             operation_mode.has_any_group_address
             for operation_mode in self._iter_binary_operation_modes()
         )
+        self._start_state_initialization_listener()
 
     def _iter_remote_values(
         self,

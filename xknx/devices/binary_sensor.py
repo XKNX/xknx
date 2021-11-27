@@ -64,6 +64,7 @@ class BinarySensor(Device):
             # after_update called internally
             after_update_cb=self._state_from_remote_value,
         )
+        self._start_state_initialization_listener()
 
     def _iter_remote_values(self) -> Iterator[RemoteValueSwitch]:
         """Iterate the devices RemoteValue classes."""

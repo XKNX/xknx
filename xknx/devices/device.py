@@ -44,9 +44,7 @@ class Device(ABC):
         self.xknx.devices.add(self)
         self._task: Task | None = None
 
-        self._create_task()
-
-    def _create_task(self) -> None:
+    def _start_state_initialization_listener(self) -> None:
         """Create task for state initialization."""
         self._task = self.xknx.task_registry.register(
             str(id(self)), self.listen_for_state_initialization()
@@ -62,22 +60,15 @@ class Device(ABC):
 
     async def listen_for_state_initialization(self) -> None:
         """Listen for state initialization for the state updater."""
-        try:
-            for remote_value in self._iter_remote_values():
-                await remote_value.state_updater.initialized.wait()
+        for remote_value in self._iter_remote_values():
+            await remote_value.state_updater.initialized.wait()
 
-            self.available = True
-            logger.info(
-                "Device state is now initialized for %s - marking as available",
-                self,
-            )
-            await self.after_update()
-        except AttributeError:
-            logger.error(
-                "Error!",
-                self,
-            )
-            await self.listen_for_state_initialization()
+        self.available = True
+        logger.info(
+            "Device state is now initialized for %s - marking as available",
+            self,
+        )
+        await self.after_update()
 
     def shutdown(self) -> None:
         """Prepare for deletion. Remove callbacks and device form Devices vector."""

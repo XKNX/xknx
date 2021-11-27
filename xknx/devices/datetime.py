@@ -46,6 +46,8 @@ class DateTime(Device):
         )
         self._broadcast_task: Task | None = self._create_broadcast_task(minutes=60)
 
+        self._start_state_initialization_listener()
+
     def _iter_remote_values(self) -> Iterator[RemoteValueDateTime]:
         """Iterate the devices RemoteValue classes."""
         yield self._remote_value

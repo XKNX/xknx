@@ -37,6 +37,7 @@ class Scene(Device):
             after_update_cb=self.after_update,
         )
         self.scene_number = int(scene_number)
+        self._start_state_initialization_listener()
 
     def _iter_remote_values(self) -> Iterator[RemoteValueSceneNumber]:
         """Iterate the devices RemoteValue classes."""

@@ -316,6 +316,8 @@ class Light(Device):
         self._individual_color_debounce_telegram_counter: int
         self._reset_individual_color_debounce_telegrams()
 
+        self._start_state_initialization_listener()
+
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
         return chain(

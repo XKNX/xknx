@@ -229,6 +229,8 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
+        self._start_state_initialization_listener()
+
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices remote values."""
         yield self._temperature

@@ -135,6 +135,7 @@ class Cover(Device):
 
         self.travelcalculator = TravelCalculator(travel_time_down, travel_time_up)
         self.travel_direction_tilt: TravelStatus | None = None
+        self._start_state_initialization_listener()
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""

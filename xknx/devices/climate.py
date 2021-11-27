@@ -134,6 +134,7 @@ class Climate(Device):
         )
 
         self.mode = mode
+        self._start_state_initialization_listener()
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
