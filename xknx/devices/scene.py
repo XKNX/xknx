@@ -26,7 +26,7 @@ class Scene(Device):
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Sceneclass."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name, device_updated_cb, True)
 
         # TODO: state_updater: disable for scene number per default?
         self.scene_value = RemoteValueSceneNumber(

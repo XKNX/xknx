@@ -164,7 +164,7 @@ class Light(Device):
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Light class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name, device_updated_cb, sync_state)
 
         self.switch = RemoteValueSwitch(
             xknx,

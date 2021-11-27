@@ -40,7 +40,7 @@ class Switch(Device):
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Switch class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name, device_updated_cb, sync_state)
 
         self.reset_after = reset_after
         self._reset_task_name = f"switch.reset_{id(self)}"

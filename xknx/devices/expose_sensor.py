@@ -40,7 +40,7 @@ class ExposeSensor(Device):
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Sensor class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name, device_updated_cb, False)
 
         self.sensor_value: RemoteValueSensor | RemoteValueSwitch
         if value_type == "binary":

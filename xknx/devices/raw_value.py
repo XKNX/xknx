@@ -36,7 +36,7 @@ class RawValue(Device):
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Sensor class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name, device_updated_cb, sync_state)
         self.always_callback = always_callback
         self.respond_to_read = respond_to_read
         self.remote_value = RemoteValueRaw(

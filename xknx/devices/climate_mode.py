@@ -52,7 +52,7 @@ class ClimateMode(Device):
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize ClimateMode class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name, device_updated_cb, sync_state)
 
         self.remote_value_operation_mode = RemoteValueOperationMode(
             xknx,

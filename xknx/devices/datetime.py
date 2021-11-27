@@ -33,7 +33,7 @@ class DateTime(Device):
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize DateTime class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name, device_updated_cb, False)
         self.localtime = localtime
         self._broadcast_type = broadcast_type.upper()
         self._remote_value = RemoteValueDateTime(

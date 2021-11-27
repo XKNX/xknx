@@ -52,7 +52,7 @@ class Fan(Device):
         max_step: int | None = None,
     ):
         """Initialize fan class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name, device_updated_cb, sync_state)
 
         self.speed: RemoteValueDptValue1Ucount | RemoteValueScaling
         self.mode = FanSpeedMode.STEP if max_step else FanSpeedMode.PERCENT

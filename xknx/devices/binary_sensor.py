@@ -40,7 +40,7 @@ class BinarySensor(Device):
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize BinarySensor class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name, device_updated_cb, sync_state)
 
         self.ignore_internal_state = ignore_internal_state or bool(context_timeout)
         self.reset_after = reset_after

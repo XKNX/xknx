@@ -32,17 +32,19 @@ class Device(ABC):
         xknx: XKNX,
         name: str,
         device_updated_cb: DeviceCallbackType | None = None,
+        sync_state: bool | int | float | str = True,
     ):
         """Initialize Device class."""
         self.xknx = xknx
         self.name = name
         self.available = False
+        self.sync_state = sync_state
         self.device_updated_cbs: list[DeviceCallbackType] = []
         if device_updated_cb is not None:
             self.register_device_updated_cb(device_updated_cb)
 
-        self.xknx.devices.add(self)
         self._task: Task | None = None
+        self.xknx.devices.add(self)
 
     def _start_state_initialization_listener(self) -> None:
         """Create task for state initialization."""

@@ -57,7 +57,7 @@ class Cover(Device):
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Cover class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name, device_updated_cb, sync_state)
         # self.after_update for position changes is called after updating the
         # travelcalculator (in process_group_write and set_*) - angle changes
         # are updated from RemoteValue objects
