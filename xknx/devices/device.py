@@ -66,7 +66,7 @@ class Device(ABC):
             await remote_value.state_updater.initialized.wait()
 
         self.available = True
-        logger.info(
+        logger.debug(
             "Device state is now initialized for %s - marking as available",
             self,
         )
