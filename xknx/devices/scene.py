@@ -22,17 +22,19 @@ class Scene(Device):
         xknx: XKNX,
         name: str,
         group_address: GroupAddressesType | None = None,
+        sync_state: bool | int | float | str = True,
         scene_number: int = 1,
         device_updated_cb: DeviceCallbackType | None = None,
     ):
         """Initialize Sceneclass."""
-        super().__init__(xknx, name, device_updated_cb, True)
+        super().__init__(xknx, name, device_updated_cb, sync_state)
 
         # TODO: state_updater: disable for scene number per default?
         self.scene_value = RemoteValueSceneNumber(
             xknx,
             group_address=group_address,
             device_name=self.name,
+            sync_state=sync_state,
             feature_name="Scene number",
             after_update_cb=self.after_update,
         )
