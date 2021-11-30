@@ -152,15 +152,27 @@ class TestDevice:
         device = Device(xknx, "TestDevice")
         await device.process_group_read(Telegram())
 
+    async def test_available(self):
+        """Test available property."""
+        xknx = XKNX()
+        device = Device(xknx, "TestDevice")
+        device._connected = False
+        device._available = False
+        assert not device.available
+        device._connected = True
+        assert not device.available
+        device._available = True
+        assert device.available
+
     async def test_device_state_initialization_listener(self, monkeypatch):
         """Test state initialization listener for device."""
         monkeypatch.undo()
         xknx = XKNX()
         after_update_callback = AsyncMock()
         device = Device(xknx, "TestDevice", device_updated_cb=after_update_callback)
-        assert not device.available
+        assert not device._available
 
         device._start_state_initialization_listener()
         await xknx.task_registry.block_till_done()
-        assert device.available
+        assert device._available
         after_update_callback.assert_called_with(device)

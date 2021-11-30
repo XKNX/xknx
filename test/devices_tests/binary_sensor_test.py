@@ -233,11 +233,25 @@ class TestBinarySensor:
             XknxConnectionState.CONNECTED
         )
         assert sensor.remote_value.state_updater.started
-        assert not sensor.available
+        assert not sensor._available
 
         await xknx.task_registry.block_till_done()
 
-        assert sensor.available
+        assert sensor._available
+
+        await xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.DISCONNECTED
+        )
+        assert not sensor.remote_value.state_updater.started
+        assert not sensor._available
+
+        await xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.CONNECTED
+        )
+        assert sensor.remote_value.state_updater.started
+        assert not sensor._available
+
+        await xknx.task_registry.block_till_done()
 
     async def test_process_callback_ignore_internal_state_no_counter(self):
         """Test after_update_callback after state of switch was changed."""

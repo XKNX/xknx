@@ -236,23 +236,25 @@ class TestStateUpdater:
         remote_value.state_updater.start()
         assert not remote_value.state_updater.started
 
-        await xknx.connection_manager.connection_state_changed(
+        xknx.connection_manager._state = XknxConnectionState.CONNECTED
+
+        await remote_value.state_updater.connection_state_change_callback(
             XknxConnectionState.CONNECTED
         )
         assert remote_value.state_updater.started
 
         # process disconnect
-        await xknx.connection_manager.connection_state_changed(
+        await remote_value.state_updater.connection_state_change_callback(
             XknxConnectionState.DISCONNECTED
         )
         assert not remote_value.state_updater.started
 
-        await xknx.connection_manager.connection_state_changed(
+        await remote_value.state_updater.connection_state_change_callback(
             XknxConnectionState.CONNECTING
         )
         assert not remote_value.state_updater.started
 
-        await xknx.connection_manager.connection_state_changed(
+        await remote_value.state_updater.connection_state_change_callback(
             XknxConnectionState.CONNECTED
         )
         assert remote_value.state_updater.started

@@ -10,7 +10,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterator
 
-from xknx.core import Task
+from xknx.core import Task, XknxConnectionState
 from xknx.remote_value import RemoteValue
 from xknx.telegram import Telegram
 from xknx.telegram.address import DeviceGroupAddress
@@ -37,7 +37,8 @@ class Device(ABC):
         """Initialize Device class."""
         self.xknx = xknx
         self.name = name
-        self.available = False
+        self._available = False
+        self._connected = False
         self.sync_state = sync_state
         self.device_updated_cbs: list[DeviceCallbackType] = []
         if device_updated_cb is not None:
@@ -46,12 +47,52 @@ class Device(ABC):
         self._task: Task | None = None
         self.xknx.devices.add(self)
 
-    def _start_state_initialization_listener(self) -> None:
+    def _start_state_initialization_listener(
+        self, register_callbacks: bool = True
+    ) -> None:
         """Create task for state initialization."""
+        if register_callbacks:
+            self.xknx.connection_manager.register_connection_state_changed_cb(
+                self.connection_state_change_callback
+            )
+            self._connected = (
+                self.xknx.connection_manager.state == XknxConnectionState.CONNECTED
+            )
+
         self._task = self.xknx.task_registry.register(
             str(id(self)), self.listen_for_state_initialization()
         )
         self._task.start()
+
+    async def connection_state_change_callback(
+        self, state: XknxConnectionState
+    ) -> None:
+        """Start and stop StateUpdater via connection state update."""
+        await self._update_state_updaters(state)
+
+        if self._connected and state is not XknxConnectionState.CONNECTED:
+            self._connected = False
+            self._available = False
+            await self.after_update()
+        elif state is XknxConnectionState.CONNECTED:
+            #  after update called after state initialisation
+            self._connected = True
+            #  restart state initialisation after updating state updater internally
+            self._start_state_initialization_listener(False)
+
+    async def _update_state_updaters(self, state: XknxConnectionState) -> None:
+        """Update the state updaters."""
+        #  update all the state updaters belonging to this device
+        if tasks := [
+            remote_value.state_updater.connection_state_change_callback(state)
+            for remote_value in self._iter_remote_values()
+        ]:
+            await asyncio.gather(*tasks)
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is connected and available."""
+        return self._available and self._connected
 
     def __del__(self) -> None:
         """Remove Device form Devices."""
@@ -65,7 +106,7 @@ class Device(ABC):
         for remote_value in self._iter_remote_values():
             await remote_value.state_updater.initialized.wait()
 
-        self.available = True
+        self._available = True
         logger.debug(
             "Device state is now initialized for %s - marking as available",
             self,
@@ -75,6 +116,9 @@ class Device(ABC):
     def shutdown(self) -> None:
         """Prepare for deletion. Remove callbacks and device form Devices vector."""
         self.xknx.devices.remove(self)
+        self.xknx.connection_manager.unregister_connection_state_changed_cb(
+            self.connection_state_change_callback
+        )
         self.device_updated_cbs = []
         for remote_value in self._iter_remote_values():
             remote_value.__del__()
