@@ -89,7 +89,7 @@ class TestStateUpdater:
         xknx = XKNX()
         remote_value = RemoteValue(xknx, group_address_state=GroupAddress("1/1/1"))
 
-        xknx.connection_manager.connected.set()
+        xknx.connection_manager._state = XknxConnectionState.CONNECTED
 
         remote_value.state_updater.start()
 
@@ -200,7 +200,7 @@ class TestStateUpdater:
         )
         remote_value.state_updater._worker = Mock()
 
-        assert remote_value.state_updater.started
+        assert not remote_value.state_updater.started
         xknx.connection_manager._state = XknxConnectionState.CONNECTED
         remote_value.state_updater.start()
         assert remote_value.state_updater.started
@@ -221,3 +221,38 @@ class TestStateUpdater:
         remote_value.state_updater.start()
 
         assert not remote_value.state_updater.started
+
+    async def test_state_updater_connection_handling(self, monkeypatch):
+        """Test connection handling of state updater."""
+        monkeypatch.undo()
+        xknx = XKNX()
+
+        remote_value = RemoteValue(
+            xknx, sync_state=True, group_address_state=GroupAddress("1/1/1")
+        )
+        remote_value.state_updater._worker = Mock()
+
+        assert not remote_value.state_updater.started
+        remote_value.state_updater.start()
+        assert not remote_value.state_updater.started
+
+        await xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.CONNECTED
+        )
+        assert remote_value.state_updater.started
+
+        # process disconnect
+        await xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.DISCONNECTED
+        )
+        assert not remote_value.state_updater.started
+
+        await xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.CONNECTING
+        )
+        assert not remote_value.state_updater.started
+
+        await xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.CONNECTED
+        )
+        assert remote_value.state_updater.started

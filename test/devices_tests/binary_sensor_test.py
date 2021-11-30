@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from xknx import XKNX
+from xknx.core import XknxConnectionState
 from xknx.devices import BinarySensor
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
@@ -216,6 +217,27 @@ class TestBinarySensor:
         # once with counter 2 and once with counter 0
         assert async_after_update_callback.call_count == 2
         assert switch.counter == 0
+
+    @patch("xknx.remote_value.RemoteValue.read_state")
+    async def test_process_state_updater_callback(self, read_state, monkeypatch):
+        """Test process state updater initialization."""
+        monkeypatch.undo()
+        xknx = XKNX()
+        sensor = BinarySensor(
+            xknx,
+            "TestInput",
+            group_address_state="1/2/3",
+            sync_state="init",
+        )
+        await xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.CONNECTED
+        )
+        assert sensor.remote_value.state_updater.started
+        assert not sensor.available
+
+        await xknx.task_registry.block_till_done()
+
+        assert sensor.available
 
     async def test_process_callback_ignore_internal_state_no_counter(self):
         """Test after_update_callback after state of switch was changed."""

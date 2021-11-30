@@ -6,6 +6,8 @@ from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
+from xknx.core import XknxConnectionState
+
 if TYPE_CHECKING:
     from xknx.remote_value import RemoteValue
     from xknx.xknx import XKNX
@@ -88,8 +90,6 @@ class StateUpdater:
     async def read_state_mutex(self) -> None:
         """Schedule to read the state from the KNX bus - one at a time."""
         async with StateUpdater.state_updater_semaphore:
-            # wait until there is a bus connection
-            await self.xknx.connection_manager.connected.wait()
             # wait until there is nothing else to send to the bus
             await self.xknx.telegram_queue.outgoing_queue.join()
             logger.debug(
@@ -121,7 +121,7 @@ class StateUpdater:
         if self.started:
             self._worker.update_received()
 
-    def start(self) -> None:
+    def _start(self) -> None:
         """Start internal StateUpdater. Initialize states."""
         #  dont start if we have no state address
         if not self.remote_value.group_address_state or not self.sync_state:
@@ -135,11 +135,40 @@ class StateUpdater:
         """Set state to initialised."""
         self.initialized.set()
 
-    def stop(self) -> None:
+    def _stop(self) -> None:
         """Stop internal StateUpdater."""
         logger.debug("StateUpdater stopping")
         self.started = False
         self._worker.stop()
+
+    def start(self) -> None:
+        """Start StateUpdater."""
+        self.xknx.connection_manager.register_connection_state_changed_cb(
+            self.connection_state_change_callback
+        )
+
+        if self.xknx.connection_manager.state == XknxConnectionState.CONNECTED:
+            self._start()
+
+    def stop(self) -> None:
+        """Stop StateUpdater."""
+        self.xknx.connection_manager.unregister_connection_state_changed_cb(
+            self.connection_state_change_callback
+        )
+
+        self._stop()
+
+    async def connection_state_change_callback(
+        self, state: XknxConnectionState
+    ) -> None:
+        """Start and stop StateUpdater via connection state update."""
+        if state == XknxConnectionState.CONNECTED and not self.started:
+            self._start()
+        elif (
+            state in (XknxConnectionState.DISCONNECTED, XknxConnectionState.CONNECTING)
+            and self.started
+        ):
+            self._stop()
 
 
 class StateTrackerType(Enum):
