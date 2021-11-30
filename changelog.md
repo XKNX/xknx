@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased changes
+
+### Internals
+
+- The State Updater has been refactored and will be spawned per Remote Value.
+  The global `state_updater` option has been removed.
+
+### Home Assistant
+
+- Devices are now only set to available when the bus is connected and the state updater ran.
+
 ## 0.18.13 Hold your colour 2021-11-13
 
 ### Internals

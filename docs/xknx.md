@@ -29,7 +29,6 @@ xknx = XKNX(
     multicast_group=DEFAULT_MCAST_GRP,
     multicast_port=DEFAULT_MCAST_PORT,
     log_directory=None,
-    state_updater=False,
     daemon_mode=False,
     connection_config=ConnectionConfig()
 )
@@ -49,7 +48,6 @@ The constructor of the XKNX object takes several parameters:
 - `multicast_group` is the multicast IP address - can be used to override the default multicast address (`224.0.23.12`)
 - `multicast_port` is the multicast port - can be used to override the default multicast port (`3671`)
 - `log_directory` is the path to the log directory - when set to a valid directory we log to a dedicated file in this directory called `xknx.log`. The log files are rotated each night and will exist for 7 days. After that the oldest one will be deleted.
-- if `state_updater` is set, XKNX will start (once `start() is called) an asynchronous process for syncing the states of all connected devices every hour
 - if `daemon_mode` is set, start will only stop if Control-X is pressed. This function is useful for using XKNX as a daemon, e.g. for using the callback functions or using the internal action logic.
 - `connection_config` replaces a ConnectionConfig() that was read from a yaml config file.
 
