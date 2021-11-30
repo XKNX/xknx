@@ -123,11 +123,6 @@ class StateUpdater:
 
     def _start(self) -> None:
         """Start internal StateUpdater. Initialize states."""
-        #  dont start if we have no state address
-        if not self.remote_value.group_address_state or not self.sync_state:
-            self.initialized.set()
-            return
-
         self.started = True
         self._worker.start()
 
@@ -143,6 +138,11 @@ class StateUpdater:
 
     def start(self) -> None:
         """Start StateUpdater."""
+        #  dont start if we have no state address
+        if not self.remote_value.group_address_state or not self.sync_state:
+            self.initialized.set()
+            return
+
         self.xknx.connection_manager.register_connection_state_changed_cb(
             self.connection_state_change_callback
         )
@@ -221,6 +221,7 @@ class _StateTracker:
 
     def update_received(self) -> None:
         """Reset the timer if a telegram was received for a "expire" typed StateUpdater."""
+        self._mark_as_initialized()
         if self.tracker_type == StateTrackerType.EXPIRE:
             self.reset()
 
