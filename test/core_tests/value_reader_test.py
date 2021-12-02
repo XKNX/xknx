@@ -33,7 +33,7 @@ class TestValueReader:
         # GroupValueRead telegram is still in the queue because we are not actually processing it
         assert xknx.telegrams.qsize() == 1
         # Callback was removed again
-        assert xknx.telegram_queue.telegram_received_cbs == []
+        assert not xknx.telegram_queue.telegram_received_cbs
         # Telegram was received
         assert value_reader.received_telegram == response_telegram
         # Successfull read() returns the telegram
@@ -59,7 +59,7 @@ class TestValueReader:
             GroupAddress("0/0/0"),
         )
         # Callback was removed again
-        assert xknx.telegram_queue.telegram_received_cbs == []
+        assert not xknx.telegram_queue.telegram_received_cbs
         # No telegram was received
         assert value_reader.received_telegram is None
         # Unsuccessfull read() returns None
@@ -78,7 +78,7 @@ class TestValueReader:
         # GroupValueRead telegram is still in the queue because we are not actually processing it
         assert xknx.telegrams.qsize() == 1
         # Callback was removed again
-        assert xknx.telegram_queue.telegram_received_cbs == []
+        assert not xknx.telegram_queue.telegram_received_cbs
         # No telegram was received
         assert value_reader.received_telegram is None
 

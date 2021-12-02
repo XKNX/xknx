@@ -45,7 +45,7 @@ class TestConnectResponse:
             "RequestResponse",
         )
         # Callback was removed again
-        assert udp_client.callbacks == []
+        assert not udp_client.callbacks
 
     @patch(
         "xknx.io.request_response.RequestResponse.send_request", new_callable=AsyncMock
@@ -61,4 +61,4 @@ class TestConnectResponse:
         with pytest.raises(asyncio.CancelledError):
             await requ_resp.start()
         # Callback was removed again
-        assert udp_client.callbacks == []
+        assert not udp_client.callbacks
