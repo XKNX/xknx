@@ -35,10 +35,10 @@ class NetworkManagement:
                 await self.reg_dev[addr].process_telegram(telegram)
 
     async def IndividualAddress_Write(self, ia):
-
         d = A_Device(self.xknx, ia)
         self.reg_dev[ia] = d
 
+        # chech if IA is already present
         try:
             await asyncio.wait_for(d.T_Connect_Response(), 0.5)
             return NM_EXISTS
@@ -51,47 +51,21 @@ class NetworkManagement:
             return NM_EXISTS
         except asyncio.TimeoutError:
             pass
-        '''
-        # wait for response
-        await asyncio.sleep(0.5)
-        if await d.DeviceDescriptor_Respone_arrived():
-            print ("DeviceDescriptor_Respone_arrived.1")
-            await d.T_Disconnect()
-            return NM_EXISTS
-        '''
+
+        # wait until PROG button is pressed
         try:
             await asyncio.wait_for(d.IndividualAddress_Read_Response(), 600)
         except asyncio.TimeoutError:
             return NM_TIME_OUT
-        '''
-        await asyncio.sleep(2)
-        dst = await d.IndividualAddress_Respone()
-        for i in range(240):
-        #for i in range(3):
-            if dst:
-                break
-            await d.IndividualAddress_Read()
-            await asyncio.sleep(2)
-            dst = await d.IndividualAddress_Respone()
 
-        if not dst:
-            return NM_TIME_OUT
-        '''
         await d.IndividualAddress_Write()
 
         # Zusatz ETS reengeneering
-        '''
-        await d.IndividualAddress_Read()
-        await asyncio.sleep(1)
-        dst = await d.IndividualAddress_Respone()
-        if dst != ia:
-            print ("dst != ia:", dst, ia)
-        '''
         await d.T_Connect()
         try:
             await asyncio.wait_for(d.DeviceDescriptor_Read_Response(0), 1.0)
         except asyncio.TimeoutError:
-            raise RuntimeError(f"No device response from {self.ia}")
+            raise RuntimeError(f"No device response from {ia}")
 
         await d.PropertyValue_Read()
         await d.Restart()
