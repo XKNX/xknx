@@ -1216,7 +1216,7 @@ class TestClimate:
         """Test get_supported_operation_modes no operation_modes supported."""
         xknx = XKNX()
         climate_mode = ClimateMode(xknx, "TestClimate")
-        assert climate_mode.operation_modes == []
+        assert not climate_mode.operation_modes
 
     def test_supported_operation_modes_with_separate_addresses(self):
         """Test get_supported_operation_modes with separated group addresses."""

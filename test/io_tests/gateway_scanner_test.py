@@ -151,7 +151,7 @@ class TestGatewayScanner:
         udp_client_mock.local_addr = ("192.168.42.50", 0)
         udp_client_mock.getsockname.return_value = ("192.168.42.50", 0)
 
-        assert gateway_scanner.found_gateways == []
+        assert not gateway_scanner.found_gateways
         gateway_scanner._response_rec_callback(
             test_search_response,
             udp_client_mock,
