@@ -13,12 +13,12 @@ from sys import platform
 from typing import TYPE_CHECKING, Callable, Tuple, cast
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, XKNXException
-from xknx.knxip import KNXIPFrame, KNXIPServiceType
+from xknx.knxip import HPAI, KNXIPFrame, KNXIPServiceType
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
-    CallbackType = Callable[[KNXIPFrame, "UDPClient"], None]
+    CallbackType = Callable[[KNXIPFrame, HPAI, "UDPClient"], None]
 
 raw_socket_logger = logging.getLogger("xknx.raw_socket")
 logger = logging.getLogger("xknx.log")
@@ -51,7 +51,8 @@ class UDPClient:
             self,
             own_ip: str,
             multicast: bool = False,
-            data_received_callback: Callable[[bytes], None] | None = None,
+            data_received_callback: Callable[[bytes, tuple[str, int]], None]
+            | None = None,
         ):
             """Initialize UDPClientFactory class."""
             self.own_ip = own_ip
@@ -67,7 +68,7 @@ class UDPClient:
             """Call assigned callback. Callback for datagram received."""
             raw_socket_logger.debug("Received from %s: %s", addr, data.hex())
             if self.data_received_callback is not None:
-                self.data_received_callback(data)
+                self.data_received_callback(data, addr)
 
         def error_received(self, exc: Exception) -> None:
             """Call when a send or receive operation raises an OSError."""
@@ -97,7 +98,7 @@ class UDPClient:
 
         self.transport: asyncio.DatagramTransport | None = None
 
-    def data_received_callback(self, raw: bytes) -> None:
+    def data_received_callback(self, raw: bytes, source: tuple[str, int]) -> None:
         """Parse and process KNXIP frame. Callback for having received an UDP packet."""
         if raw:
             try:
@@ -105,24 +106,31 @@ class UDPClient:
                 knxipframe.from_knx(raw)
             except CouldNotParseKNXIP as couldnotparseknxip:
                 knx_logger.debug(
-                    "Unsupported KNXIPFrame: %s in %s",
+                    "Unsupported KNXIPFrame from %s:%s: %s in %s",
+                    source[0],
+                    source[1],
                     couldnotparseknxip.description,
                     raw.hex(),
                 )
             else:
-                knx_logger.debug("Received: %s", knxipframe)
-                self.handle_knxipframe(knxipframe)
+                knx_logger.debug(
+                    "Received from %s:%s: %s", source[0], source[1], knxipframe
+                )
+                self.handle_knxipframe(knxipframe, HPAI(*source))
 
-    def handle_knxipframe(self, knxipframe: KNXIPFrame) -> None:
-        """Handle KNXIP Frame and call all callbacks which watch for the service type ident."""
+    def handle_knxipframe(self, knxipframe: KNXIPFrame, source: HPAI) -> None:
+        """Handle KNXIP Frame and call all callbacks matching the service type ident."""
         handled = False
         for callback in self.callbacks:
             if callback.has_service(knxipframe.header.service_type_ident):
-                callback.callback(knxipframe, self)
+                callback.callback(knxipframe, source, self)
                 handled = True
         if not handled:
             knx_logger.debug(
-                "Unhandled %s: %s", knxipframe.header.service_type_ident, knxipframe
+                "Unhandled %s: %s from: %s",
+                knxipframe.header.service_type_ident,
+                knxipframe,
+                source,
             )
 
     def register_callback(

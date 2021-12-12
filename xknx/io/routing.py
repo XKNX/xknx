@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Callable
 
 from xknx.core import XknxConnectionState
 from xknx.knxip import (
+    HPAI,
     CEMIFrame,
     CEMIMessageCode,
     KNXIPFrame,
@@ -55,7 +56,9 @@ class Routing(Interface):
             self.response_rec_callback, [KNXIPServiceType.ROUTING_INDICATION]
         )
 
-    def response_rec_callback(self, knxipframe: KNXIPFrame, _: UDPClient) -> None:
+    def response_rec_callback(
+        self, knxipframe: KNXIPFrame, source: HPAI, _: UDPClient
+    ) -> None:
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knxipframe.body, RoutingIndication):
             logger.warning("Service type not implemented: %s", knxipframe)

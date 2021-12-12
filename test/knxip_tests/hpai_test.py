@@ -15,9 +15,11 @@ class TestKNXIPHPAI:
         assert hpai.from_knx(raw) == 8
         assert hpai.ip_addr == "192.168.42.1"
         assert hpai.port == 33941
+        assert not hpai.route_back
 
         hpai2 = HPAI(ip_addr="192.168.42.1", port=33941)
         assert hpai2.to_knx() == list(raw)
+        assert not hpai2.route_back
 
     def test_from_knx_wrong_input1(self):
         """Test parsing of wrong HPAI KNX/IP packet (wrong length)."""
@@ -42,3 +44,12 @@ class TestKNXIPHPAI:
         hpai = HPAI(ip_addr=127001)
         with pytest.raises(ConversionError):
             hpai.to_knx()
+
+    def test_route_back(self):
+        """Test route_back property."""
+        hpai = HPAI()
+        assert hpai.ip_addr == "0.0.0.0"
+        assert hpai.port == 0
+        assert hpai.route_back
+        hpai.ip_addr = "10.1.2.3"
+        assert not hpai.route_back
