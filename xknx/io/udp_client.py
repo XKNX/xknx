@@ -106,15 +106,15 @@ class UDPClient:
                 knxipframe.from_knx(raw)
             except CouldNotParseKNXIP as couldnotparseknxip:
                 knx_logger.debug(
-                    "Unsupported KNXIPFrame from %s:%s: %s in %s",
-                    source[0],
-                    source[1],
+                    "Unsupported KNXIPFrame: %s in %s from %s:%s",
                     couldnotparseknxip.description,
                     raw.hex(),
+                    source[0],
+                    source[1],
                 )
             else:
                 knx_logger.debug(
-                    "Received from %s:%s: %s", source[0], source[1], knxipframe
+                    "Received: %s from %s:%s", knxipframe, source[0], source[1]
                 )
                 self.handle_knxipframe(knxipframe, HPAI(*source))
 
