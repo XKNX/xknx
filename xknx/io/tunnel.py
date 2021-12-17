@@ -34,6 +34,9 @@ TelegramCallbackType = Callable[[Telegram], None]
 
 logger = logging.getLogger("xknx.log")
 
+# See 3/6/3 EMI_IMI §4.1.5 Data Link Layer messages
+REQUEST_TO_CONFIRMATION_TIMEOUT = 3
+
 
 class Tunnel(Interface):
     """Class for handling KNX/IP tunnels."""
@@ -59,7 +62,8 @@ class Tunnel(Interface):
         self.route_back = route_back
         self.telegram_received_callback = telegram_received_callback
 
-        self._tunnelling_request_semaphore = asyncio.BoundedSemaphore(1)
+        self._tunnelling_request_confirmation_event = asyncio.Event()
+
         self.udp_client: UDPClient
         self.init_udp_client()
 
@@ -262,7 +266,6 @@ class Tunnel(Interface):
 
     async def _tunnelling_request(self, telegram: Telegram) -> bool:
         """Send Telegram to tunnelling device."""
-        await self._tunnelling_request_semaphore.acquire()
         if self.communication_channel is None:
             raise CommunicationError(
                 "Sending telegram failed. No active communication channel."
@@ -275,15 +278,19 @@ class Tunnel(Interface):
             self.sequence_number,
             self.communication_channel,
         )
-        await tunnelling.start()
-        if not tunnelling.success:
-            try:
-                self._tunnelling_request_semaphore.release()
-            except ValueError:
-                logger.warning(
-                    "Tunnel semaphore released twice from failing TunnellingACK: %s",
-                    tunnelling.response_status_code,
-                )
+        self._tunnelling_request_confirmation_event.clear()
+        _, pending = await asyncio.wait(
+            (
+                tunnelling.start(),
+                self._tunnelling_request_confirmation_event.wait(),
+            ),
+            return_when=asyncio.ALL_COMPLETED,
+            timeout=REQUEST_TO_CONFIRMATION_TIMEOUT,
+        )
+        if pending:
+            # REQUEST_TO_CONFIRMATION_TIMEOUT is longer than tunnelling timeout of 1 second
+            # so pending should always be from self._tunnelling_request_confirmation_event
+            logger.warning("Data Link Layer confirmation timed out for %s", telegram)
         return tunnelling.success
 
     def _increase_sequence_number(self) -> None:
@@ -314,7 +321,6 @@ class Tunnel(Interface):
         # we should only ACK if the request matches the expected sequence number or one less
         # we should not ACK and discard the request if the sequence number is higher than the expected sequence number
         #   or if the sequence number lower thatn (expected -1)
-        # I'm not sure if we need to ACK L_DATA_CON frames.
         self._send_tunnelling_ack(
             tunneling_request.communication_channel_id,
             tunneling_request.sequence_counter,
@@ -329,12 +335,7 @@ class Tunnel(Interface):
                 self.telegram_received_callback(telegram)
         elif tunneling_request.cemi.code is CEMIMessageCode.L_DATA_CON:
             # L_DATA_CON confirmation frame signals ready to send next telegram
-            try:
-                self._tunnelling_request_semaphore.release()
-            except ValueError:
-                logger.warning(
-                    "Tunnel semaphore released twice from %s", tunneling_request
-                )
+            self._tunnelling_request_confirmation_event.set()
         elif tunneling_request.cemi.code is CEMIMessageCode.L_DATA_REQ:
             # L_DATA_REQ frames should only be outgoing.
             logger.warning(
