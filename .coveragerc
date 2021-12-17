@@ -20,3 +20,6 @@ exclude_lines =
     logger.info
     logger.warning
     logger.error
+
+    # Don't complain about missing debug-only code:
+    def __repr__
