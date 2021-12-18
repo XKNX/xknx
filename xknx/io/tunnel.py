@@ -279,19 +279,21 @@ class Tunnel(Interface):
             self.communication_channel,
         )
         self._tunnelling_request_confirmation_event.clear()
-        _, pending = await asyncio.wait(
-            (
-                tunnelling.start(),
-                self._tunnelling_request_confirmation_event.wait(),
-            ),
-            return_when=asyncio.ALL_COMPLETED,
-            timeout=REQUEST_TO_CONFIRMATION_TIMEOUT,
+        send_and_wait_for_confirmation = asyncio.gather(
+            tunnelling.start(), self._tunnelling_request_confirmation_event.wait()
         )
-        if pending:
+        try:
+            await asyncio.wait_for(
+                send_and_wait_for_confirmation, timeout=REQUEST_TO_CONFIRMATION_TIMEOUT
+            )
+        except asyncio.TimeoutError:
             # REQUEST_TO_CONFIRMATION_TIMEOUT is longer than tunnelling timeout of 1 second
-            # so pending should always be from self._tunnelling_request_confirmation_event
-            logger.warning("Data Link Layer confirmation timed out for %s", telegram)
-        return tunnelling.success
+            # so exception should always be from self._tunnelling_request_confirmation_event
+            logger.warning(
+                "L_DATA_CON Data Link Layer confirmation timed out for %s", telegram
+            )
+        finally:
+            return tunnelling.success
 
     def _increase_sequence_number(self) -> None:
         """Increase sequence number."""
