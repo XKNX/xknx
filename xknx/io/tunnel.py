@@ -292,8 +292,7 @@ class Tunnel(Interface):
             logger.warning(
                 "L_DATA_CON Data Link Layer confirmation timed out for %s", telegram
             )
-        finally:
-            return tunnelling.success
+        return tunnelling.success
 
     def _increase_sequence_number(self) -> None:
         """Increase sequence number."""
