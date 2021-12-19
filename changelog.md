@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Internals
+
+- Tunnel: Implement flow control according to KNX spec recommendations: wait for L_DATA.con frame before sending next L_DATA.req with 3 second timeout
+
 ## 0.18.13 Hold your colour 2021-11-13
 
 ### Internals
