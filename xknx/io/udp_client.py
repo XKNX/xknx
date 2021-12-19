@@ -145,7 +145,7 @@ class UDPClient:
     @staticmethod
     def create_multicast_sock(
         own_ip: str, remote_addr: tuple[str, int]
-    ) -> socket.SocketType:
+    ) -> socket.socket:
         """Create UDP multicast socket."""
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
