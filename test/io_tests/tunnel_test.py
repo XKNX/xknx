@@ -1,14 +1,20 @@
 """Unit test for KNX/IP Tunnelling Request/Response."""
+import asyncio
 from unittest.mock import Mock, patch
 
+import pytest
 from xknx import XKNX
+from xknx.dpt import DPTArray
 from xknx.io import Tunnel
-from xknx.knxip import CEMIFrame
-from xknx.telegram import TelegramDirection
+from xknx.knxip import CEMIFrame, KNXIPFrame, TunnellingAck, TunnellingRequest
+from xknx.knxip.knxip_enum import CEMIMessageCode
+from xknx.telegram import Telegram, TelegramDirection
+from xknx.telegram.apci import GroupValueWrite
 
 
-class TestTunnelling:
-    """Test class for xknx/io/Tunnelling objects."""
+@pytest.mark.asyncio
+class TestTunnel:
+    """Test class for xknx/io/Tunnel objects."""
 
     def setup_method(self):
         """Set up test class."""
@@ -65,3 +71,35 @@ class TestTunnelling:
         self.tunnel.udp_client.data_received_callback(raw)
         self.tg_received_mock.assert_not_called()
         send_ack_mock.assert_called_once_with(0x02, 0x4F)
+
+    async def test_tunnel_wait_for_l2_confirmation(self, time_travel):
+        """Test tunnel waits for L_DATA.con before sending another L_DATA.req."""
+        self.tunnel.udp_client.send = Mock()
+        self.tunnel.communication_channel = 1
+
+        test_telegram = Telegram(payload=GroupValueWrite(DPTArray((1,))))
+        test_ack = KNXIPFrame.init_from_body(
+            TunnellingAck(self.xknx, sequence_counter=23)
+        )
+        confirmation = KNXIPFrame.init_from_body(
+            TunnellingRequest(
+                self.xknx,
+                communication_channel_id=1,
+                sequence_counter=23,
+                cemi=CEMIFrame.init_from_telegram(
+                    self.xknx, test_telegram, code=CEMIMessageCode.L_DATA_CON
+                ),
+            )
+        )
+        task = asyncio.create_task(self.tunnel.send_telegram(test_telegram))
+        await time_travel(0)
+        self.tunnel.udp_client.handle_knxipframe(test_ack)
+        await time_travel(0)
+        assert not task.done()
+        assert self.tunnel.udp_client.send.call_count == 1
+        self.tunnel.udp_client.handle_knxipframe(confirmation)
+        await time_travel(0)
+        assert task.done()
+        # one call for the outgoing request and one for the ACK for the confirmation
+        assert self.tunnel.udp_client.send.call_count == 2
+        await task
