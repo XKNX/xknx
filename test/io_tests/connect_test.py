@@ -50,7 +50,7 @@ class TestConnect:
         wrong_knxipframe = KNXIPFrame(xknx)
         wrong_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_REQUEST)
         with patch("logging.Logger.warning") as mock_warning:
-            connect.response_rec_callback(wrong_knxipframe, None)
+            connect.response_rec_callback(wrong_knxipframe, HPAI(), None)
             mock_warning.assert_called_with("Could not understand knxipframe")
 
         # Response KNX/IP-Frame with error:
@@ -58,7 +58,7 @@ class TestConnect:
         err_knxipframe.init(KNXIPServiceType.CONNECT_RESPONSE)
         err_knxipframe.body.status_code = ErrorCode.E_CONNECTION_ID
         with patch("logging.Logger.debug") as mock_warning:
-            connect.response_rec_callback(err_knxipframe, None)
+            connect.response_rec_callback(err_knxipframe, HPAI(), None)
             mock_warning.assert_called_with(
                 "Error: KNX bus responded to request of type '%s' with error in '%s': %s",
                 type(connect).__name__,
@@ -71,7 +71,7 @@ class TestConnect:
         res_knxipframe.init(KNXIPServiceType.CONNECT_RESPONSE)
         res_knxipframe.body.communication_channel = 23
         res_knxipframe.body.identifier = 7
-        connect.response_rec_callback(res_knxipframe, None)
+        connect.response_rec_callback(res_knxipframe, HPAI(), None)
         assert connect.success
         assert connect.communication_channel == 23
         assert connect.identifier == 7
@@ -100,7 +100,7 @@ class TestConnect:
         wrong_knxipframe = KNXIPFrame(xknx)
         wrong_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_REQUEST)
         with patch("logging.Logger.warning") as mock_warning:
-            connect.response_rec_callback(wrong_knxipframe, None)
+            connect.response_rec_callback(wrong_knxipframe, HPAI(), None)
             mock_warning.assert_called_with("Could not understand knxipframe")
 
         # Response KNX/IP-Frame with error:
@@ -108,7 +108,7 @@ class TestConnect:
         err_knxipframe.init(KNXIPServiceType.CONNECT_RESPONSE)
         err_knxipframe.body.status_code = ErrorCode.E_CONNECTION_ID
         with patch("logging.Logger.debug") as mock_warning:
-            connect.response_rec_callback(err_knxipframe, None)
+            connect.response_rec_callback(err_knxipframe, HPAI(), None)
             mock_warning.assert_called_with(
                 "Error: KNX bus responded to request of type '%s' with error in '%s': %s",
                 type(connect).__name__,
@@ -121,7 +121,7 @@ class TestConnect:
         res_knxipframe.init(KNXIPServiceType.CONNECT_RESPONSE)
         res_knxipframe.body.communication_channel = 23
         res_knxipframe.body.identifier = 7
-        connect.response_rec_callback(res_knxipframe, None)
+        connect.response_rec_callback(res_knxipframe, HPAI(), None)
         assert connect.success
         assert connect.communication_channel == 23
         assert connect.identifier == 7

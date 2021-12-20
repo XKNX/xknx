@@ -10,7 +10,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from xknx.io.udp_client import UDPClient
-from xknx.knxip import ErrorCode, KNXIPBodyResponse, KNXIPFrame
+from xknx.knxip import HPAI, ErrorCode, KNXIPBodyResponse, KNXIPFrame
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -68,7 +68,9 @@ class RequestResponse:
         """Build knxipframe (within derived class) and send via UDP."""
         self.udpclient.send(self.create_knxipframe())
 
-    def response_rec_callback(self, knxipframe: KNXIPFrame, _: UDPClient) -> None:
+    def response_rec_callback(
+        self, knxipframe: KNXIPFrame, source: HPAI, _: UDPClient
+    ) -> None:
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knxipframe.body, self.awaited_response_class):
             logger.warning("Could not understand knxipframe")

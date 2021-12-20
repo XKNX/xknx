@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Callable
 
 from xknx.exceptions import CommunicationError, XKNXException
 from xknx.knxip import (
+    HPAI,
     CEMIMessageCode,
     DisconnectRequest,
     DisconnectResponse,
@@ -306,7 +307,9 @@ class Tunnel(Interface):
     #
     ####################
 
-    def _request_received(self, knxipframe: KNXIPFrame, _udp_client: UDPClient) -> None:
+    def _request_received(
+        self, knxipframe: KNXIPFrame, source: HPAI, _udp_client: UDPClient
+    ) -> None:
         """Handle incoming requests."""
         if isinstance(knxipframe.body, TunnellingRequest):
             self._tunnelling_request_received(knxipframe.body)
