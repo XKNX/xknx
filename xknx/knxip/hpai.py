@@ -21,11 +21,6 @@ class HPAI:
         self.ip_addr = ip_addr
         self.port = port
 
-    @property
-    def route_back(self) -> bool:
-        """Return True if HPAI is a route back address information."""
-        return self.ip_addr == "0.0.0.0"
-
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         if len(raw) < HPAI.LENGTH:
