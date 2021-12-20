@@ -6,7 +6,7 @@ import pytest
 from xknx import XKNX
 from xknx.dpt import DPTArray
 from xknx.io import Tunnel
-from xknx.knxip import CEMIFrame, KNXIPFrame, TunnellingAck, TunnellingRequest
+from xknx.knxip import HPAI, CEMIFrame, KNXIPFrame, TunnellingAck, TunnellingRequest
 from xknx.knxip.knxip_enum import CEMIMessageCode
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueWrite
@@ -93,11 +93,11 @@ class TestTunnel:
         )
         task = asyncio.create_task(self.tunnel.send_telegram(test_telegram))
         await time_travel(0)
-        self.tunnel.udp_client.handle_knxipframe(test_ack)
+        self.tunnel.udp_client.handle_knxipframe(test_ack, HPAI())
         await time_travel(0)
         assert not task.done()
         assert self.tunnel.udp_client.send.call_count == 1
-        self.tunnel.udp_client.handle_knxipframe(confirmation)
+        self.tunnel.udp_client.handle_knxipframe(confirmation, HPAI())
         await time_travel(0)
         assert task.done()
         # one call for the outgoing request and one for the ACK for the confirmation
