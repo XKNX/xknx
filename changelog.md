@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Internals
+
+- Fix Gateway Scanner on Linux
+
 ## 0.18.14 Tunnelling flow control 2021-12-20
 
 ### Internals
