@@ -189,7 +189,9 @@ class GatewayScanner:
 
         self._udp_clients.append(udp_client)
 
-        discovery_endpoint = HPAI(ip_addr=self.xknx.multicast_group, port=self.xknx.multicast_port)
+        discovery_endpoint = HPAI(
+            ip_addr=self.xknx.multicast_group, port=self.xknx.multicast_port
+        )
 
         search_request = SearchRequest(self.xknx, discovery_endpoint=discovery_endpoint)
         udp_client.send(KNXIPFrame.init_from_body(search_request))
