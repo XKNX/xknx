@@ -143,12 +143,21 @@ class TelegramQueue:
 
     async def _outgoing_rate_limiter(self) -> None:
         """Endless loop for processing outgoing telegrams."""
+        rate_limiter: asyncio.Task[None] | None = None
         while True:
             telegram = await self.outgoing_queue.get()
             # Breaking up queue if None is pushed to the queue
             if telegram is None:
                 self.outgoing_queue.task_done()
                 break
+
+            # limit rate to knx bus - defaults to 20 per second
+            if self.xknx.rate_limit and not isinstance(
+                telegram.destination_address, InternalGroupAddress
+            ):
+                rate_limiter = asyncio.create_task(
+                    asyncio.sleep(1 / self.xknx.rate_limit)
+                )
 
             try:
                 await self.process_telegram_outgoing(telegram)
@@ -165,12 +174,8 @@ class TelegramQueue:
             finally:
                 self.outgoing_queue.task_done()
                 self.xknx.telegrams.task_done()
-
-            # limit rate to knx bus - defaults to 20 per second
-            if self.xknx.rate_limit and not isinstance(
-                telegram.destination_address, InternalGroupAddress
-            ):
-                await asyncio.sleep(1 / self.xknx.rate_limit)
+                if rate_limiter is not None:
+                    await rate_limiter
 
     async def _process_all_telegrams(self) -> None:
         """Process all telegrams being queued. Used in unit tests."""
