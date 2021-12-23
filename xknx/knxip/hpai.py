@@ -51,9 +51,13 @@ class HPAI:
         data.append(self.port & 255)
         return data
 
+    def __repr__(self) -> str:
+        """Representation of object."""
+        return f"HPAI('{self.ip_addr}', {self.port})"
+
     def __str__(self) -> str:
         """Return object as readable string."""
-        return f"<HPAI {self.ip_addr}:{self.port} />"
+        return f"{self.ip_addr}:{self.port}"
 
     def __eq__(self, other: object) -> bool:
         """Equal operator."""

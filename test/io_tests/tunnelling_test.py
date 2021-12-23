@@ -7,6 +7,7 @@ from xknx.dpt import DPTArray
 from xknx.io import UDPClient
 from xknx.io.request_response import Tunnelling
 from xknx.knxip import (
+    HPAI,
     ErrorCode,
     KNXIPFrame,
     KNXIPServiceType,
@@ -65,7 +66,7 @@ class TestTunnelling:
         wrong_knxipframe = KNXIPFrame(xknx)
         wrong_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_REQUEST)
         with patch("logging.Logger.warning") as mock_warning:
-            tunnelling.response_rec_callback(wrong_knxipframe, None)
+            tunnelling.response_rec_callback(wrong_knxipframe, HPAI(), None)
             mock_warning.assert_called_with("Could not understand knxipframe")
 
         # Response KNX/IP-Frame with error:
@@ -73,7 +74,7 @@ class TestTunnelling:
         err_knxipframe.init(KNXIPServiceType.TUNNELLING_ACK)
         err_knxipframe.body.status_code = ErrorCode.E_CONNECTION_ID
         with patch("logging.Logger.debug") as mock_warning:
-            tunnelling.response_rec_callback(err_knxipframe, None)
+            tunnelling.response_rec_callback(err_knxipframe, HPAI(), None)
             mock_warning.assert_called_with(
                 "Error: KNX bus responded to request of type '%s' with error in '%s': %s",
                 type(tunnelling).__name__,
@@ -84,5 +85,5 @@ class TestTunnelling:
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame(xknx)
         res_knxipframe.init(KNXIPServiceType.TUNNELLING_ACK)
-        tunnelling.response_rec_callback(res_knxipframe, None)
+        tunnelling.response_rec_callback(res_knxipframe, HPAI(), None)
         assert tunnelling.success

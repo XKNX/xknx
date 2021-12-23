@@ -154,6 +154,7 @@ class TestGatewayScanner:
         assert not gateway_scanner.found_gateways
         gateway_scanner._response_rec_callback(
             test_search_response,
+            HPAI("192.168.42.50", 0),
             udp_client_mock,
             interface="en1",
         )
@@ -163,6 +164,7 @@ class TestGatewayScanner:
 
         gateway_scanner._response_rec_callback(
             test_search_response,
+            HPAI("192.168.42.230", 0),
             udp_client_mock,
             interface="eth1",
         )

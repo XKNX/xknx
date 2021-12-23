@@ -80,7 +80,7 @@ class _RemoteValueGeneric(RemoteValue[DPTArray, ValueType]):
     @property
     def ha_device_class(self) -> str | None:
         """Return a string representing the home assistant device class."""
-        return getattr(self.dpt_class, "ha_device_class", None)  # type: ignore
+        return getattr(self.dpt_class, "ha_device_class", None)
 
 
 class RemoteValueSensor(_RemoteValueGeneric[Union[int, float, str]]):

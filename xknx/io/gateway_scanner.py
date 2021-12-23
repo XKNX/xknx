@@ -43,8 +43,8 @@ class GatewayDescriptor:
         port: int,
         local_interface: str,
         local_ip: str,
-        supports_tunnelling: bool = False,
         supports_routing: bool = False,
+        supports_tunnelling: bool = False,
         individual_address: IndividualAddress | None = None,
     ):
         """Initialize GatewayDescriptor class."""
@@ -56,6 +56,21 @@ class GatewayDescriptor:
         self.supports_routing = supports_routing
         self.supports_tunnelling = supports_tunnelling
         self.individual_address = individual_address
+
+    def __repr__(self) -> str:
+        """Return object as representation string."""
+        return (
+            "GatewayDescriptor(\n"
+            f"    name={self.name},\n"
+            f"    ip_addr={self.ip_addr},\n"
+            f"    port={self.port},\n"
+            f"    local_interface={self.local_interface},\n"
+            f"    local_ip={self.local_ip},\n"
+            f"    supports_routing={self.supports_routing},\n"
+            f"    supports_tunnelling={self.supports_tunnelling},\n"
+            f"    individual_address={self.individual_address}\n"
+            ")"
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -145,10 +160,15 @@ class GatewayScanner:
             try:
                 af_inet = netifaces.ifaddresses(interface)[netifaces.AF_INET]
                 ip_addr = af_inet[0]["addr"]
-                await self._search_interface(interface, ip_addr)
             except KeyError:
-                logger.info("Could not connect to an KNX/IP device on %s", interface)
+                logger.debug("No IPv4 address found on %s", interface)
                 continue
+            except ValueError as err:
+                # rare case when an interface disappears during search initialisation
+                logger.debug("Invalid interface %s: %s", interface, err)
+                continue
+            else:
+                await self._search_interface(interface, ip_addr)
 
     async def _search_interface(self, interface: str, ip_addr: str) -> None:
         """Send a search request on a specific interface."""
@@ -169,8 +189,9 @@ class GatewayScanner:
 
         self._udp_clients.append(udp_client)
 
-        (local_addr, local_port) = udp_client.getsockname()
-        discovery_endpoint = HPAI(ip_addr=local_addr, port=local_port)
+        discovery_endpoint = HPAI(
+            ip_addr=self.xknx.multicast_group, port=self.xknx.multicast_port
+        )
 
         search_request = SearchRequest(self.xknx, discovery_endpoint=discovery_endpoint)
         udp_client.send(KNXIPFrame.init_from_body(search_request))
@@ -178,6 +199,7 @@ class GatewayScanner:
     def _response_rec_callback(
         self,
         knx_ip_frame: KNXIPFrame,
+        source: HPAI,
         udp_client: UDPClient,
         interface: str = "",
     ) -> None:
@@ -214,6 +236,7 @@ class GatewayScanner:
         except StopIteration:
             pass
 
+        logger.debug("Found KNX/IP device at %s: %s", source, repr(gateway))
         self._add_found_gateway(gateway)
 
     def _add_found_gateway(self, gateway: GatewayDescriptor) -> None:

@@ -15,7 +15,7 @@ async def main():
     xknx = XKNX()
     await xknx.start()
     network_management = NetworkManagement(xknx)
-    return_code = await network_management.IndividualAddress_Write(
+    return_code = await network_management.individualaddress_write(
         IndividualAddress("1.2.1")
     )
     if return_code == NM_OK:

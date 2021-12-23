@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.18.15 Come back almighty Gateway Scanner
+
+### Internals
+
+- Fix Gateway Scanner on Linux
+
+## 0.18.14 Tunnelling flow control 2021-12-20
+
+### Internals
+
+- Tunnel: Implement flow control according to KNX spec recommendations: wait for L_DATA.con frame before sending next L_DATA.req with 3 second timeout
+- Logging: Some changes to loggers like `knx` now includes the source/destination HPAI and a timestamp
+- Fix a rare race-condition in the gateway scanner where a non-existing interface was queried
+
 ## 0.18.13 Hold your colour 2021-11-13
 
 ### Internals
