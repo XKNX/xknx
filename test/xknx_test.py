@@ -55,7 +55,7 @@ class TestXknxModule:
 
         assert len(xknx.connection_manager._connection_state_changed_cbs) == 1
 
-    @patch("xknx.io.KNXIPInterface.start", new_callable=AsyncMock)
+    @patch("xknx.io.KNXIPInterface._start", new_callable=AsyncMock)
     async def test_xknx_start(self, start_mock):
         """Test xknx start."""
         xknx = XKNX(state_updater=True)
@@ -64,7 +64,7 @@ class TestXknxModule:
         start_mock.assert_called_once()
         await xknx.stop()
 
-    @patch("xknx.io.KNXIPInterface.start", new_callable=AsyncMock)
+    @patch("xknx.io.KNXIPInterface._start", new_callable=AsyncMock)
     async def test_xknx_start_as_context_manager(self, ipinterface_mock):
         """Test xknx start."""
 
@@ -75,7 +75,7 @@ class TestXknxModule:
 
         await run_in_contextmanager()
 
-    @patch("xknx.io.KNXIPInterface.start", new_callable=AsyncMock)
+    @patch("xknx.io.KNXIPInterface._start", new_callable=AsyncMock)
     async def test_xknx_start_and_stop_with_dedicated_connection_config(
         self, start_mock
     ):

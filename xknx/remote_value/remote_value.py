@@ -22,7 +22,7 @@ from typing import (
 )
 
 from xknx.dpt.dpt import DPTArray, DPTBinary
-from xknx.exceptions import CouldNotParseTelegram
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.address import (
     DeviceGroupAddress,
@@ -192,7 +192,17 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
                 device_name=self.device_name,
                 feature_name=self.feature_name,
             )
-        decoded_payload = self.from_knx(_new_payload)
+        try:
+            decoded_payload = self.from_knx(_new_payload)
+        except ConversionError as err:
+            logger.warning(
+                "Can not process %s for %s - %s: %s",
+                telegram,
+                self.device_name,
+                self.feature_name,
+                err,
+            )
+            return False
         self.xknx.state_updater.update_received(self)
         if self._value is None or always_callback or self._value != decoded_payload:
             self._value = decoded_payload

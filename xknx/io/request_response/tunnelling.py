@@ -28,6 +28,7 @@ class Tunnelling(RequestResponse):
         self,
         xknx: XKNX,
         udp_client: UDPClient,
+        data_endpoint: tuple[str, int] | None,
         telegram: Telegram,
         src_address: IndividualAddress,
         sequence_counter: int,
@@ -36,6 +37,7 @@ class Tunnelling(RequestResponse):
         """Initialize Tunnelling class."""
         self.xknx = xknx
         self.udp_client = udp_client
+        self.data_endpoint_addr = data_endpoint
         self.src_address = src_address
 
         super().__init__(xknx, self.udp_client, TunnellingAck)
@@ -43,6 +45,10 @@ class Tunnelling(RequestResponse):
         self.telegram = telegram
         self.sequence_counter = sequence_counter
         self.communication_channel_id = communication_channel_id
+
+    async def send_request(self) -> None:
+        """Build knxipframe (within derived class) and send via UDP."""
+        self.udpclient.send(self.create_knxipframe(), addr=self.data_endpoint_addr)
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent on bus."""

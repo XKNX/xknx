@@ -35,14 +35,11 @@ class SearchRequest(KNXIPBody):
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-        pos = self.discovery_endpoint.from_knx(raw)
-        return pos
+        return self.discovery_endpoint.from_knx(raw)
 
     def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
-        data = []
-        data.extend(self.discovery_endpoint.to_knx())
-        return data
+        return self.discovery_endpoint.to_knx()
 
     def __str__(self) -> str:
         """Return object as readable string."""

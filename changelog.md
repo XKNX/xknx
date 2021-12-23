@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased changes
+
+### Devices
+
+- Handle ConversionError in RemoteValue, log a readable warning
+
+### Connection
+
+- Optionally run KNXIPInterface in separate thread
+- Handle separate Tunneling control and data endpoints
+- Fix rate limiter wait time: don't add time waiting for ACK or L_DATA.con frames to the rate_limit
+
+## Internals
+
+- Cleanup some list generating code in the knxip module
+
 ## 0.18.15 Come back almighty Gateway Scanner
 
 ### Internals

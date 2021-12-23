@@ -2,7 +2,7 @@
 import pytest
 from xknx.dpt import DPTControllerStatus, DPTHVACMode
 from xknx.dpt.dpt_hvac_mode import HVACOperationMode
-from xknx.exceptions import ConversionError, CouldNotParseKNXIP
+from xknx.exceptions import ConversionError
 
 
 class TestDPTControllerStatus:
@@ -68,7 +68,7 @@ class TestDPTControllerStatus:
 
     def test_mode_from_knx_wrong_code(self):
         """Test parsing of DPTHVACMode with wrong code."""
-        with pytest.raises(CouldNotParseKNXIP):
+        with pytest.raises(ConversionError):
             DPTHVACMode.from_knx((0x05,))
 
     def test_controller_status_from_knx_wrong_value(self):
@@ -78,5 +78,5 @@ class TestDPTControllerStatus:
 
     def test_controller_status_from_knx_wrong_code(self):
         """Test parsing of DPTControllerStatus with wrong code."""
-        with pytest.raises(CouldNotParseKNXIP):
+        with pytest.raises(ConversionError):
             DPTControllerStatus.from_knx((0x00,))

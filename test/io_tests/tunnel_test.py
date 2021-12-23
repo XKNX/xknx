@@ -1,14 +1,24 @@
 """Unit test for KNX/IP Tunnelling Request/Response."""
 import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from xknx import XKNX
 from xknx.dpt import DPTArray
 from xknx.io import Tunnel
-from xknx.knxip import HPAI, CEMIFrame, KNXIPFrame, TunnellingAck, TunnellingRequest
+from xknx.knxip import (
+    HPAI,
+    CEMIFrame,
+    ConnectRequest,
+    ConnectResponse,
+    DisconnectRequest,
+    DisconnectResponse,
+    KNXIPFrame,
+    TunnellingAck,
+    TunnellingRequest,
+)
 from xknx.knxip.knxip_enum import CEMIMessageCode
-from xknx.telegram import Telegram, TelegramDirection
+from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueWrite
 
 
@@ -108,3 +118,88 @@ class TestTunnel:
         # one call for the outgoing request and one for the ACK for the confirmation
         assert self.tunnel.udp_client.send.call_count == 2
         await task
+
+    async def test_tunnel_connect_send_disconnect(self, time_travel):
+        """Test initiating a tunnelling connection."""
+        local_addr = ("192.168.1.1", 12345)
+        gateway_control_addr = ("192.168.1.2", 3671)
+        gateway_data_addr = ("192.168.1.2", 56789)
+        self.tunnel.udp_client.connect = AsyncMock()
+        self.tunnel.udp_client.getsockname = Mock(return_value=local_addr)
+        self.tunnel.udp_client.send = Mock()
+        self.tunnel.udp_client.stop = AsyncMock()
+
+        # Connect
+        connect_request = ConnectRequest(
+            self.xknx,
+            control_endpoint=HPAI(*local_addr),
+            data_endpoint=HPAI(*local_addr),
+        )
+        connect_frame = KNXIPFrame.init_from_body(connect_request)
+
+        connection_task = asyncio.create_task(self.tunnel.connect())
+        await time_travel(0)
+        self.tunnel.udp_client.connect.assert_called_once()
+        self.tunnel.udp_client.send.assert_called_once_with(connect_frame)
+
+        connect_response_frame = KNXIPFrame.init_from_body(
+            ConnectResponse(
+                self.xknx,
+                communication_channel=23,
+                data_endpoint=HPAI(*gateway_data_addr),
+                identifier=7,
+            )
+        )
+        self.tunnel.udp_client.handle_knxipframe(
+            connect_response_frame, gateway_control_addr
+        )
+        await connection_task
+        assert self.tunnel._data_endpoint_addr == gateway_data_addr
+        assert self.tunnel._src_address == IndividualAddress(7)
+
+        # Send - use data endpoint
+        self.tunnel.udp_client.send.reset_mock()
+        test_telegram = Telegram(payload=GroupValueWrite(DPTArray((1,))))
+        test_telegram_frame = KNXIPFrame.init_from_body(
+            TunnellingRequest(
+                self.xknx,
+                communication_channel_id=23,
+                sequence_counter=0,
+                cemi=CEMIFrame.init_from_telegram(
+                    self.xknx,
+                    test_telegram,
+                    code=CEMIMessageCode.L_DATA_REQ,
+                    src_addr=IndividualAddress(7),
+                ),
+            )
+        )
+        asyncio.create_task(self.tunnel.send_telegram(test_telegram))
+        await time_travel(0)
+        self.tunnel.udp_client.send.assert_called_once_with(
+            test_telegram_frame, addr=gateway_data_addr
+        )
+        # skip ack and confirmation
+
+        # Disconnect
+        self.tunnel.udp_client.send.reset_mock()
+        disconnect_request = DisconnectRequest(
+            self.xknx, communication_channel_id=23, control_endpoint=HPAI(*local_addr)
+        )
+        disconnect_frame = KNXIPFrame.init_from_body(disconnect_request)
+
+        disconnection_task = asyncio.create_task(self.tunnel.disconnect())
+        await time_travel(0)
+        self.tunnel.udp_client.send.assert_called_once_with(disconnect_frame)
+
+        disconnect_response_frame = KNXIPFrame.init_from_body(
+            DisconnectResponse(
+                self.xknx,
+                communication_channel_id=23,
+            )
+        )
+        self.tunnel.udp_client.handle_knxipframe(
+            disconnect_response_frame, gateway_control_addr
+        )
+        await disconnection_task
+        assert self.tunnel._data_endpoint_addr is None
+        self.tunnel.udp_client.stop.assert_called_once()

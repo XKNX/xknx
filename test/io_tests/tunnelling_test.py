@@ -26,6 +26,7 @@ class TestTunnelling:
         """Test tunnelling from KNX bus."""
         xknx = XKNX()
         communication_channel_id = 23
+        data_endpoint = ("192.168.1.2", 4567)
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
@@ -36,6 +37,7 @@ class TestTunnelling:
         tunnelling = Tunnelling(
             xknx,
             udp_client,
+            data_endpoint,
             telegram,
             src_address,
             sequence_counter,
@@ -60,7 +62,7 @@ class TestTunnelling:
         ) as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
             await tunnelling.start()
-            mock_udp_send.assert_called_with(exp_knxipframe)
+            mock_udp_send.assert_called_with(exp_knxipframe, addr=data_endpoint)
 
         # Response KNX/IP-Frame with wrong type
         wrong_knxipframe = KNXIPFrame(xknx)

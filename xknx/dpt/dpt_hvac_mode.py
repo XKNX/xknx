@@ -4,7 +4,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Generic, TypeVar
 
-from xknx.exceptions import ConversionError, CouldNotParseKNXIP
+from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
 
@@ -51,9 +51,10 @@ class _DPTClimateMode(DPTBase, Generic[HVACModeType]):
     def from_knx(cls, raw: tuple[int, ...]) -> HVACModeType:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
-        if raw[0] in cls.SUPPORTED_MODES:
+        try:
             return cls.SUPPORTED_MODES[raw[0]]
-        raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
+        except KeyError:
+            raise ConversionError(f"Payload not supported for {cls.__name__}", raw=raw)
 
     @classmethod
     def to_knx(cls, value: HVACModeType) -> tuple[int]:
@@ -61,7 +62,7 @@ class _DPTClimateMode(DPTBase, Generic[HVACModeType]):
         for knx_value, mode in cls.SUPPORTED_MODES.items():
             if mode == value:
                 return (knx_value,)
-        raise ConversionError(f"Could not parse {cls.__name__}", value=value)
+        raise ConversionError(f"Value not supported for {cls.__name__}", value=value)
 
 
 class DPTHVACContrMode(_DPTClimateMode[HVACControllerMode]):
@@ -135,4 +136,4 @@ class DPTControllerStatus(_DPTClimateMode[HVACOperationMode]):
             return HVACOperationMode.STANDBY
         if raw[0] & 1 > 0:
             return HVACOperationMode.COMFORT
-        raise CouldNotParseKNXIP("Could not parse HVACOperationMode")
+        raise ConversionError(f"Payload not supported for {cls.__name__}", raw=raw)
