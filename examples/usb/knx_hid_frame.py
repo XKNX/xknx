@@ -205,6 +205,7 @@ class KNXUSBTransferProtocolHeader:
         self._emi_id = None
         self._manufacturer_code = 0x0000
         self._expected_byte_count = 8
+        self._data_format = ">BBHBBH"
         self._valid = False
 
     @classmethod
@@ -217,7 +218,7 @@ class KNXUSBTransferProtocolHeader:
     def to_knx(self) -> bytes:
         """ """
         if self._valid:
-            return struct.pack("<BBHBBH", self._protocol_version, self._header_length, self._body_length,
+            return struct.pack(self._data_format, self._protocol_version, self._header_length, self._body_length,
                                self._protocol_id.value, self._emi_id.value, self._manufacturer_code)
         return bytes()
 
@@ -268,7 +269,7 @@ class KNXUSBTransferProtocolHeader:
             self._protocol_id,
             self._emi_id,
             self._manufacturer_code,
-        ) = struct.unpack("<BBHBBH", data)
+        ) = struct.unpack(self._data_format, data)
         self._protocol_id = ProtocolID(self._protocol_id)
         self._emi_id = EMIID(self._emi_id)
         self._valid = True
@@ -360,7 +361,7 @@ class KNXHIDReportBody:
             return bytes()
 
     @property
-    def knx_usb_transfer_protocol_header(self) -> Optional[KNXUSBTransferProtocolHeader]:
+    def transfer_protocol_header(self) -> Optional[KNXUSBTransferProtocolHeader]:
         """
         Contains the header part as described in `3.4.1.3 Data (KNX HID report body)`
         of the KNX specification
@@ -368,7 +369,7 @@ class KNXHIDReportBody:
         return self._header
 
     @property
-    def knx_usb_transfer_protocol_body(self) -> Optional[KNXUSBTransferProtocolBody]:
+    def transfer_protocol_body(self) -> Optional[KNXUSBTransferProtocolBody]:
         """
         Contains the body part as described in `3.4.1.3 Data (KNX HID report body)`
         of the KNX specification
