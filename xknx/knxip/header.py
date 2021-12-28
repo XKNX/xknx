@@ -52,14 +52,14 @@ class KNXIPHeader:
 
     def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
-        data = []
-        data.append(self.header_length)
-        data.append(self.protocol_version)
-        data.append((self.service_type_ident.value >> 8) & 255)
-        data.append(self.service_type_ident.value & 255)
-        data.append((self.total_length >> 8) & 255)
-        data.append(self.total_length & 255)
-        return data
+        return [
+            self.header_length,
+            self.protocol_version,
+            (self.service_type_ident.value >> 8) & 255,
+            self.service_type_ident.value & 255,
+            (self.total_length >> 8) & 255,
+            self.total_length & 255,
+        ]
 
     def __str__(self) -> str:
         """Return object as readable string."""

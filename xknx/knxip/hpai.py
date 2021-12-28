@@ -43,13 +43,13 @@ class HPAI:
             for i in ip_addr.split("."):
                 yield int(i)
 
-        data = []
-        data.append(HPAI.LENGTH)
-        data.append(HPAI.TYPE_UDP)
-        data.extend(ip_addr_to_bytes(self.ip_addr))
-        data.append((self.port >> 8) & 255)
-        data.append(self.port & 255)
-        return data
+        return [
+            HPAI.LENGTH,
+            HPAI.TYPE_UDP,
+            *ip_addr_to_bytes(self.ip_addr),
+            (self.port >> 8) & 255,
+            self.port & 255,
+        ]
 
     def __repr__(self) -> str:
         """Representation of object."""
