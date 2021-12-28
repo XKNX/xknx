@@ -30,6 +30,17 @@ class CommunicationError(XKNXException):
         self.should_log = should_log
 
 
+class USBDeviceNotFoundError(XKNXException):
+    """ """
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+    def __str__(self) -> str:
+        """ """
+        return self.message
+
+
 class CouldNotParseTelegram(XKNXException):
     """Could not parse telegram error."""
 

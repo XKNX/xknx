@@ -1,9 +1,13 @@
 from enum import IntEnum
+import logging
 from typing import List, Optional
 import platform
 
-from loguru import logger
 import usb
+
+logger = logging.getLogger("xknx.log")
+knx_logger = logging.getLogger("xknx.knx")
+usb_logger = logging.getLogger("xknx.usb")
 
 
 class USBVendorId(IntEnum):
@@ -121,10 +125,10 @@ class USBDevice:
                     self._device.detach_kernel_driver(0)
                     # usb.util.claim_interface(self._device, interface.bInterfaceNumber)
                 except usb.core.USBError as e:
-                    logger.error(f"Could not detach kernel driver: {str(e)}")
+                    usb_logger.error(f"Could not detach kernel driver: {str(e)}")
 
 
-def get_first_matching_usb_device(interface_data: USBKNXInterfaceData) -> USBDevice:
+def get_first_matching_usb_device(interface_data: USBKNXInterfaceData) -> Optional[USBDevice]:
     """
     Returns the device with serial number matching `interface_data.serial_number`.
     If there is more than one device with the same serial number, the first is returned.
@@ -145,7 +149,7 @@ def get_first_matching_usb_device(interface_data: USBKNXInterfaceData) -> USBDev
     device: USBDevice
         object representing a usb device (if non is found, it's default initialized with None/empty string)
     """
-    device = USBDevice()
+    device = None
     devices = get_connected_usb_device_list(interface_data)
     matching_devices = [device for device in devices if
                         (interface_data.serial_number and device.serial_number == str(interface_data.serial_number))]
@@ -176,7 +180,7 @@ def get_connected_usb_device_list(interface_data: USBKNXInterfaceData) -> List[U
                           backend=_get_usb_backend()))
         device_list = _create_usb_device_list(usb_device_list)
     except usb.core.NoBackendError as e:
-        logger.error(str(e))
+        usb_logger.error(str(e))
         raise
     return device_list
 
@@ -231,7 +235,7 @@ def get_all_hid_devices() -> List[USBDevice]:
             usb.core.find(find_all=True, custom_match=FindHIDClass(hid_device_class), backend=_get_usb_backend()))
         device_list = _create_usb_device_list(usb_device_list)
     except usb.core.NoBackendError:
-        logger.error("No backend found")
+        usb_logger.error("No backend found")
         raise
     return device_list
 
@@ -242,17 +246,16 @@ def _get_usb_backend():
     if platform.system() == 'Windows':
         # TODO: here we loaded libusb dll and use it as backend
         #       libusb as backend on windows supports almost no function (install WinUSB with Zadig?)
-        logger.warning("TODO: load libusb dll on Windows")
-        pass
+        usb_logger.warning("TODO: load libusb dll on Windows")
     return backend
 
 
 def _log_usb_device(index: int, device: usb.core.Device):
     """ """
-    logger.info(f"device {index}")
-    logger.info(f"    manufacturer  : {device.manufacturer} (idVendor: {device.idVendor:#0{6}x})")
-    logger.info(f"    product       : {device.product} (idProduct: {device.idProduct:#0{6}x})")
-    logger.info(f"    serial_number : {device.serial_number}")
+    usb_logger.info(f"device {index}")
+    usb_logger.info(f"    manufacturer  : {device.manufacturer} (idVendor: {device.idVendor:#0{6}x})")
+    usb_logger.info(f"    product       : {device.product} (idProduct: {device.idProduct:#0{6}x})")
+    usb_logger.info(f"    serial_number : {device.serial_number}")
 
 
 def _create_usb_device(device: usb.core.Device) -> USBDevice:
@@ -268,12 +271,13 @@ def _create_usb_device(device: usb.core.Device) -> USBDevice:
 def _create_usb_device_list(usb_device_list: List[usb.core.Device]) -> List[USBDevice]:
     """ """
     device_list = []
-    logger.info(f"found {len(usb_device_list)} device(s)")
+    usb_logger.info(f"found {len(usb_device_list)} device(s)")
     for index, device in enumerate(usb_device_list, start=1):
         try:
             _log_usb_device(index, device)
             device_list.append(_create_usb_device(device))
         except ValueError as e:
-            logger.error(f"Exception reading information of idVendor: {device.idVendor}, idProduct: {device.idProduct}")
-            logger.error(str(e))
+            usb_logger.error(
+                f"Exception reading information of idVendor: {device.idVendor}, idProduct: {device.idProduct}")
+            usb_logger.error(str(e))
     return device_list

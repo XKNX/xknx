@@ -1,9 +1,12 @@
+import logging
 import struct
 from typing import Optional
 
-from loguru import logger
+from .knx_hid_datatypes import PacketType, ProtocolID, SequenceNumber, EMIID
 
-from knx_hid_datatypes import PacketType, ProtocolID, SequenceNumber, EMIID
+logger = logging.getLogger("xknx.log")
+knx_logger = logging.getLogger("xknx.knx")
+usb_logger = logging.getLogger("xknx.usb")
 
 
 class PacketInfo:
@@ -41,7 +44,7 @@ class PacketInfo:
         self._packet_type = None
 
     @classmethod
-    def from_bytes(cls, data: bytes):
+    def from_knx(cls, data: bytes):
         """ """
         obj = cls()
         obj._init(data)
@@ -92,10 +95,11 @@ class KNXHIDReportHeader:
         self._report_id = 0x01
         self._packet_info = None
         self._data_length = 0
+        self._expected_data_length = 3
         self._valid = False
 
     @classmethod
-    def from_bytes(cls, data: bytes):
+    def from_knx(cls, data: bytes):
         """ """
         obj = cls()
         obj._init(data)
@@ -140,11 +144,12 @@ class KNXHIDReportHeader:
 
     def _init(self, data: bytes):
         """ """
-        if len(data) != 3:
-            logger.error(f"KNX HID Report Header: received {len(data)} bytes, but expected 3")
+        if len(data) != self._expected_data_length:
+            logger.error(
+                f"KNX HID Report Header: received {len(data)} bytes, but expected {self._expected_data_length}")
             return
         self._report_id = data[0]
-        self._packet_info = PacketInfo.from_bytes(data[1:2])
+        self._packet_info = PacketInfo.from_knx(data[1:2])
         self._data_length = data[2]
         if self._report_id == 0x01:
             self._valid = True
@@ -209,7 +214,7 @@ class KNXUSBTransferProtocolHeader:
         self._valid = False
 
     @classmethod
-    def from_bytes(cls, data: bytes):
+    def from_knx(cls, data: bytes):
         """ """
         obj = cls()
         obj._init(data)
@@ -294,7 +299,7 @@ class KNXUSBTransferProtocolBody:
         self._max_bytes_partial = 61
 
     @classmethod
-    def from_bytes(cls, data: bytes):
+    def from_knx(cls, data: bytes):
         """ """
         obj = cls()
         obj._init(data)
@@ -347,7 +352,7 @@ class KNXHIDReportBody:
         self._partial = False
 
     @classmethod
-    def from_bytes(cls, data: bytes, partial: bool = False):
+    def from_knx(cls, data: bytes, partial: bool = False):
         """ Takes the report body data bytes and create a `KNXHIDReportBody` object """
         obj = cls()
         obj._init(data, partial)
@@ -391,11 +396,11 @@ class KNXHIDReportBody:
         self._data_raw = data
         self._partial = partial
         if self._partial:
-            self._body = KNXUSBTransferProtocolBody.from_bytes(data)
+            self._body = KNXUSBTransferProtocolBody.from_knx(data)
             self._is_valid = self._body.is_valid
         else:
-            self._header = KNXUSBTransferProtocolHeader.from_bytes(data[:8])  # only in the start packet has a header
-            self._body = KNXUSBTransferProtocolBody.from_bytes(data[8:])
+            self._header = KNXUSBTransferProtocolHeader.from_knx(data[:8])  # only in the start packet has a header
+            self._body = KNXUSBTransferProtocolBody.from_knx(data[8:])
             self._is_valid = self._header.is_valid and self._body.is_valid
 
 
@@ -411,7 +416,7 @@ class KNXHIDFrame:
         self._partial = False
 
     @classmethod
-    def from_bytes(cls, data: bytes, partial: bool = False):
+    def from_knx(cls, data: bytes, partial: bool = False):
         """ Takes USB HID data and creates a `KNXHIDFrame` object. """
         obj = cls()
         obj._init(data, partial)
@@ -469,6 +474,6 @@ class KNXHIDFrame:
             )
         self._data_raw = data
         self._partial = partial
-        self._header = KNXHIDReportHeader.from_bytes(self._data_raw[:3])
-        self._body = KNXHIDReportBody.from_bytes(self._data_raw[3:], partial=partial)
+        self._header = KNXHIDReportHeader.from_knx(self._data_raw[:3])
+        self._body = KNXHIDReportBody.from_knx(self._data_raw[3:], partial=partial)
         self._is_valid = self._header.is_valid and self._body.is_valid

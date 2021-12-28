@@ -24,6 +24,8 @@ from xknx.io import (
     ConnectionConfig,
     KNXIPInterface,
 )
+from xknx.io.connection import ConnectionConfigUSB
+from xknx.io.usb_interface import USBInterface
 from xknx.telegram import GroupAddressType, IndividualAddress, Telegram
 
 from .__version__ import __version__ as VERSION
@@ -51,7 +53,7 @@ class XKNX:
         log_directory: str | None = None,
         state_updater: bool = False,
         daemon_mode: bool = False,
-        connection_config: ConnectionConfig = ConnectionConfig(),
+        connection_config: ConnectionConfig | ConnectionConfigUSB = ConnectionConfig(),
     ) -> None:
         """Initialize XKNX class."""
         self.devices = Devices()
@@ -114,14 +116,19 @@ class XKNX:
     async def start(self) -> None:
         """Start XKNX module. Connect to KNX/IP devices and start state updater."""
         self.task_registry.start()
-        self.knxip_interface = KNXIPInterface(
-            self, connection_config=self.connection_config
-        )
-        logger.info(
-            "XKNX v%s starting %s connection to KNX bus.",
-            VERSION,
-            self.connection_config.connection_type.name.lower(),
-        )
+        if isinstance(self.connection_config, ConnectionConfig):
+            self.knxip_interface = KNXIPInterface(
+                self, connection_config=self.connection_config
+            )
+            logger.info(
+                "XKNX v%s starting %s connection to KNX bus.",
+                VERSION,
+                self.connection_config.connection_type.name.lower(),
+            )
+        if isinstance(self.connection_config, ConnectionConfigUSB):
+            self.knxip_interface = USBInterface(self, connection_config=self.connection_config)
+            logger.info("XKNX start logging on USB device (idVendor: 0x%04x, idProduct: 0x%04x)",
+                        self.connection_config.idVendor, self.connection_config.idProduct)
         await self.knxip_interface.start()
         await self.telegram_queue.start()
         if self.start_state_updater:
@@ -190,6 +197,7 @@ class XKNX:
             "xknx.raw_socket",
             "xknx.telegram",
             "xknx.state_updater",
+            "xknx.usb"
         ]:
             _logger = logging.getLogger(log_namespace)
             _logger.addHandler(_handler)

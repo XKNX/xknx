@@ -64,3 +64,26 @@ class ConnectionConfig:
     def __eq__(self, other: object) -> bool:
         """Equality for ConnectionConfig class (used in unit tests)."""
         return self.__dict__ == other.__dict__
+
+
+class ConnectionConfigUSB:
+    """
+    USB connection configuration
+
+    Contains the device parameters necessary for a USB connection.
+    At least the vendor and product id should be specified.
+    """
+    def __init__(
+        self,
+        idVendor: int = 0x0000,
+        idProduct: int = 0x0000,
+        serial_number: str = ""
+    ):
+        """ """
+        self.idVendor = idVendor
+        self.idProduct = idProduct
+        self.serial_number = serial_number
+
+    def __eq__(self, other: object) -> bool:
+        """ """
+        return self.__dict__ == other.__dict__

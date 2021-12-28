@@ -1,7 +1,6 @@
-from examples.usb.knx_hid_frame import KNXHIDFrame
-
-import usb_util
-from knx_hid_datatypes import PacketType
+from xknx.usb.knx_hid_datatypes import PacketType
+from xknx.usb.knx_hid_frame import KNXHIDFrame
+import xknx.usb.util as usb_util
 
 
 def get_knx_frame() -> bytes:
