@@ -35,13 +35,14 @@ class USBDevice:
 
     def __init__(self):
         """"""
-        self._device = None
+        self._device: Optional[usb.Device] = None
         self._manufacturer = ""
         self._product = ""
         self._serial_number = ""
+        self._interface: Optional[usb.Interface] = None
         self._active_configuration = None
-        self._ep_in = None
-        self._ep_out = None
+        self._ep_in: Optional[usb.Endpoint] = None
+        self._ep_out: Optional[usb.Endpoint] = None
 
     @property
     def device(self) -> Optional[usb.core.Device]:
@@ -83,27 +84,33 @@ class USBDevice:
 
     def use(self) -> None:
         """ """
-        self._claim_interface()
         if self._device:
             self._device.set_configuration()
             # if we have an interrupt port, use that one to communicate (3.3.2.3 HID class pipes)
             # here we assume there is one
             self._active_configuration = self._device.get_active_configuration()
-            interface = self._active_configuration[(0, 0)]
+            self._interface = self._active_configuration[(0, 0)]
             self._ep_in = usb.util.find_descriptor(
-                interface,
+                self._interface,
                 # match the first IN endpoint
                 custom_match= \
                     lambda e: \
                         usb.util.endpoint_direction(e.bEndpointAddress) == \
                         usb.util.ENDPOINT_IN)
             self._ep_out = usb.util.find_descriptor(
-                interface,
+                self._interface,
                 # match the first IN endpoint
                 custom_match= \
                     lambda e: \
                         usb.util.endpoint_direction(e.bEndpointAddress) == \
                         usb.util.ENDPOINT_OUT)
+            self._claim_interface()
+
+    def release(self) -> None:
+        """ """
+        if self._device and self._interface:
+            usb.util.release_interface(self._device, self._interface)
+            self._device.attach_kernel_driver(self._interface)
 
     def read(self) -> bytes:
         """ """
@@ -123,7 +130,7 @@ class USBDevice:
             if self._device.is_kernel_driver_active(0):
                 try:
                     self._device.detach_kernel_driver(0)
-                    # usb.util.claim_interface(self._device, interface.bInterfaceNumber)
+                    usb.util.claim_interface(self._device, self._interface)
                 except usb.core.USBError as e:
                     usb_logger.error(f"Could not detach kernel driver: {str(e)}")
 
