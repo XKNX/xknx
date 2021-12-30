@@ -6,6 +6,10 @@
 
 - Handle separate Tunneling control and data endpoints
 
+## Internals
+
+- Cleanup some list generating code in the knxip module
+
 ## 0.18.15 Come back almighty Gateway Scanner
 
 ### Internals

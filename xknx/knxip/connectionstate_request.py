@@ -54,18 +54,11 @@ class ConnectionStateRequest(KNXIPBody):
 
     def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
-
-        def info_to_knx() -> list[int]:
-            """Serialize information bytes."""
-            info = []
-            info.append(self.communication_channel_id)
-            info.append(0x00)  # Reserved
-            return info
-
-        data = []
-        data.extend(info_to_knx())
-        data.extend(self.control_endpoint.to_knx())
-        return data
+        return [
+            self.communication_channel_id,
+            0x00,  # Reserved
+            *self.control_endpoint.to_knx(),
+        ]
 
     def __str__(self) -> str:
         """Return object as readable string."""
