@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Connection
+
+- Handle separate Tunneling control and data endpoints
+
 ## 0.18.15 Come back almighty Gateway Scanner
 
 ### Internals
