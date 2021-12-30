@@ -28,10 +28,10 @@ the KNX system tools.
 ## 3.4 KNX USB HID class frames
 ### 3.4.1 HID report frame
 #### 3.4.1.1 HID report frame structure
-![Figure 12 – HID Report frame structure](assets/img/hid_report_frame_structure.png)
+![Figure 12 – HID Report frame structure](assets/img/usb_hid_report_frame_structure.png)
 *Figure 12 – HID Report frame structure*
 
-![Figure 13 - HID Report Structure](assets/img/hid_report_structure.png)
+![Figure 13 - HID Report Structure](assets/img/usb_hid_report_structure.png)
 *Figure 13 - HID Report Structure*
 
 #### 3.4.1.2 KNX HID report header
@@ -97,7 +97,7 @@ following the data length field itself. The maximum value is 61.
 #### 3.4.1.3 Data (KNX HID report body)
 The data field (KNX HID Report Body) consists of the KNX USB Transfer Header and the KNX USB 
 Transfer Body (example for an L_Data_Request in cEMI format):
-![Figure 16 – KNX HID Report Body structure](assets/img/knx_hid_report_body_structure.png)
+![Figure 16 – KNX HID Report Body structure](assets/img/usb_knx_hid_report_body_structure.png)
 *Figure 16 – KNX HID Report Body structure*
 
 The KNX USB Transfer Protocol Header shall only be located in the start packet. 
@@ -184,6 +184,37 @@ If not fully complying with the standard indicated in the Protocol ID field, the
 field of the KNX USB Transfer Protocol Header (7th & 8th octet) shall filled in with the manufacturer’s 
 KNX member ID. Example: an own manufacturer specific application layer is used on top of standardised 
 lower layers.
+
+### 3.4.2 KNX tunnelling
+For communication between a tool on a PC and a KNX device connected to the KNX network, KNX 
+frames are tunnelled on the USB link using one of the EMI formats.
+The time-out for a KNX tunnelling is 1 s. This is, a KNX USB Interface Device shall be able to receive a 
+tunnelling frame, transmit it on the KNX medium and send the local confirmation back to the tool within 
+1 s. This is a recommended value which shall be complied to under normal bus load.
+
+#### 3.4.2.1 Examples of tunnelled KNX frames
+Example of a KNX frame (L_Data_Request in cEMI format) with a length of less than 52 octets.
+![USB tunneling single frame](assets/img/usb_knx_tunneling_example_single_frame.png)
+
+Example of a KNX frame (L_Data_Request in cEMI format) with a length of 160 octets.
+* 1st (start) packet:
+
+![USB tunneling multiple frame 1](assets/img/usb_knx_tunneling_multiple_frame_1.png)
+
+* 2nd (partial) packet:
+
+![USB tunneling multiple frame 2](assets/img/usb_knx_tunneling_multiple_frame_2.png)
+
+* 3rd (end) packet:
+
+![USB tunneling multiple frame 3](assets/img/usb_knx_tunneling_multiple_frame_3.png)
+
+### 3.4.3 Local device management
+Local device management in this context means the “KNX Management”, e.g. reading/writing the 
+Individual Address of the “local device” or other. Management of the local device on USB level is not in 
+the scope of this document.
+Local device management is done using the local device management services provided by the EMI 
+standard (EMI1/2 or common EMI), that is implemented in the local interface.
 
 # Sources
 [1] [KNX Specifications](https://my.knx.org/de/shop/knx-specifications)

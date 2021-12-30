@@ -3,10 +3,18 @@ import struct
 from typing import Optional
 
 from .knx_hid_datatypes import PacketType, ProtocolID, SequenceNumber, EMIID
+from .knx_hid_transfer import KNXUSBTransferProtocolBody, KNXUSBTransferProtocolBodyData, KNXUSBTransferProtocolHeader, KNXUSBTransferProtocolHeaderData
 
 logger = logging.getLogger("xknx.log")
 knx_logger = logging.getLogger("xknx.knx")
 usb_logger = logging.getLogger("xknx.usb")
+
+
+class PacketInfoData:
+    """ """
+    def __init__(self, sequence_number: SequenceNumber, packet_type: PacketType) -> None:
+        self.sequence_number = sequence_number
+        self.packet_type = packet_type
 
 
 class PacketInfo:
@@ -44,6 +52,14 @@ class PacketInfo:
         self._packet_type = None
 
     @classmethod
+    def from_data(cls, data: PacketInfoData):
+        """ """
+        obj = cls()
+        obj._sequence_number = data.sequence_number
+        obj._packet_type = data.packet_type
+        return obj
+
+    @classmethod
     def from_knx(cls, data: bytes):
         """ """
         obj = cls()
@@ -76,6 +92,13 @@ class PacketInfo:
         self._packet_type = PacketType(data[0] & 0x0F)
 
 
+class KNXHIDReportHeaderData:
+    """ """
+    def __init__(self, packet_info: PacketInfo, data_length: int) -> None:
+        self.packet_info = packet_info
+        self.data_length = data_length
+
+
 class KNXHIDReportHeader:
     """
     Represents the header of a KNX HID report frame (3.4.1.2 KNX HID report header)
@@ -89,14 +112,26 @@ class KNXHIDReportHeader:
         (fixed to 0x01)
     packet_info: PacketInfo (1 octet)
     data_length: int (1 octet)
+        The data length is the number of octets of the data field (KNX HID Report Body).
+        This is the information following the data length field itself. The maximum value is 61.
     """
 
     def __init__(self) -> None:
         self._report_id = 0x01
         self._packet_info = None
         self._data_length = 0
-        self._expected_data_length = 3
+        self._max_expected_data_length = 61
         self._valid = False
+
+    @classmethod
+    def from_data(cls, data: KNXHIDReportHeaderData):
+        """ """
+        obj = cls()
+        obj._packet_info = data.packet_info
+        if data.data_length <= obj._max_expected_data_length:
+            obj._data_length = data.data_length
+            obj._valid = True
+        return obj
 
     @classmethod
     def from_knx(cls, data: bytes):
@@ -144,9 +179,9 @@ class KNXHIDReportHeader:
 
     def _init(self, data: bytes):
         """ """
-        if len(data) != self._expected_data_length:
+        if len(data) > self._max_expected_data_length:
             logger.error(
-                f"KNX HID Report Header: received {len(data)} bytes, but expected {self._expected_data_length}")
+                f"KNX HID Report Header: received {len(data)} bytes, but expected not more than {self._max_expected_data_length}")
             return
         self._report_id = data[0]
         self._packet_info = PacketInfo.from_knx(data[1:2])
@@ -155,189 +190,13 @@ class KNXHIDReportHeader:
             self._valid = True
 
 
-class KNXUSBTransferProtocolHeader:
-    """
-    The KNX USB Transfer Protocol Header shall only be located in the start packet.
-    (3.4.1.3 Data (KNX HID report body))
-
-    Parameters
-    ----------
-    protocol_version: (1 octet)
-        The protocol version information shall state the revision of the KNX USB
-        Transfer Protocol that the following frame (from header length field on)
-        is subject to. The only valid protocol version at this time is ‘0’.
-    header_length: (1 octet)
-        The Header Length shall be the number of octets of the KNX USB Transfer
-        Protocol Header.
-        Version ‘0’ of the protocol shall always use header length = 8.
-        If the value of the Header Length field in the KNX USB Transfer protocol
-        header is not 8, the receiver shall reject the entire HID Report.
-    body_length: (2 octets)
-        The Body Length shall be the number of octets of the KNX USB Transfer Protocol
-        Body. Typically this is the length of the EMI frame (EMI1/2 or cEMI) with
-        EMI Message Code included. For a KNX Frame with APDU-length = 255 (e.g. extended frame
-        format on TP1), the length of the KNX USB Transfer Protocol Body can be
-        greater than 255. Therefore two octets are needed for the length information.
-    protocol_id: (1 octet)
-        It is required that an interface device connecting a PC with a field bus
-        via an USB link can not only transfer KNX frames but also other protocols.
-        For this purpose, the field Protocol ID (octet 5) in the header shall be
-        used as the main protocol separator.
-        The information whether a frame is a request, a response or an indication
-        shall be given by the contents of the field EMI Message Code. This is the
-        1st octet in the KNX USB Transfer Protocol Body.
-    emi_id: (1 octet)
-        For a KNX Tunnel, the 6th octet within the KNX USB Transfer Protocol Header
-        shall be an identifier representing the EMI format used in the KNX USB
-        Transfer Protocol Body.
-    manufacturer_code: (2 octets)
-        In protocol version ‘0’, this field shall always be present.
-        Value ‘0000h’ shall be used for transmission of frames that fully comply
-        with the standardised field bus protocol, indicated with Protocol ID octet.
-        In case of a KNX Link Layer Tunnel, this field shall be set to ‘0000h’.
-        If not fully complying with the standard indicated in the Protocol ID field,
-        then the manufacturer code field of the KNX USB Transfer Protocol Header
-        (7th & 8th octet) shall filled in with the manufacturer’s KNX member ID.
-        Example: an own manufacturer specific application layer is used on top
-        of standardised lower layers.
-    """
-
-    def __init__(self) -> None:
-        self._protocol_version = 0x00
-        self._header_length = 0x00
-        self._body_length = 0x0000
-        self._protocol_id = 0x00
-        self._emi_id = None
-        self._manufacturer_code = 0x0000
-        self._expected_byte_count = 8
-        self._data_format = ">BBHBBH"
-        self._valid = False
-
-    @classmethod
-    def from_knx(cls, data: bytes):
-        """ """
-        obj = cls()
-        obj._init(data)
-        return obj
-
-    def to_knx(self) -> bytes:
-        """ """
-        if self._valid:
-            return struct.pack(self._data_format, self._protocol_version, self._header_length, self._body_length,
-                               self._protocol_id.value, self._emi_id.value, self._manufacturer_code)
-        return bytes()
-
-    @property
-    def protocol_version(self) -> int:
-        """ """
-        return self._protocol_version
-
-    @property
-    def header_length(self) -> int:
-        """ """
-        return self._header_length
-
-    @property
-    def body_length(self) -> int:
-        """ """
-        return self._body_length
-
-    @property
-    def protocol_id(self) -> int:
-        """ """
-        return self._protocol_id
-
-    @property
-    def emi_id(self) -> Optional[EMIID]:
-        """ """
-        return self._emi_id
-
-    @property
-    def manufacturer_code(self) -> int:
-        """ """
-        return self._manufacturer_code
-
-    @property
-    def is_valid(self) -> bool:
-        """ """
-        return self._valid
-
-    def _init(self, data: bytes):
-        """ """
-        if len(data) != self._expected_byte_count:
-            logger.error(f"received {len(data)} bytes, expected {self._expected_byte_count}")
-            return
-        (
-            self._protocol_version,
-            self._header_length,
-            self._body_length,
-            self._protocol_id,
-            self._emi_id,
-            self._manufacturer_code,
-        ) = struct.unpack(self._data_format, data)
-        self._protocol_id = ProtocolID(self._protocol_id)
-        self._emi_id = EMIID(self._emi_id)
-        self._valid = True
-
-
-class KNXUSBTransferProtocolBody:
-    """
-    Represents the body part of `3.4.1.3 Data (KNX HID report body)` of the KNX specification
-    Header data is only present in the first frame.
-
-    Parameters
-    ----------
-    emi_message_code: (1 octet)
-    data: (max. 52 octets (first frame) / 61 octets)
-    """
-
-    def __init__(self):
-        self._emi_message_code = None
-        self._data = None
-        self._valid = False
-        self._max_bytes = 53
-        self._max_bytes_partial = 61
-
-    @classmethod
-    def from_knx(cls, data: bytes):
-        """ """
-        obj = cls()
-        obj._init(data)
-        return obj
-
-    def to_knx(self, partial: bool) -> bytes:
-        """ """
-        if self._valid:
-            data_length = self._max_bytes_partial if partial else self._max_bytes
-            data_length -= 1  # subtract the EMI message code
-            data = self._data.ljust(data_length, b'\x00')
-            return struct.pack(f"<B{len(data)}s", self._emi_message_code, data)
-        return bytes()
-
-    @property
-    def emi_message_code(self):
-        """ """
-        return self._emi_message_code
-
-    @property
-    def data(self) -> Optional[bytes]:
-        """ """
-        return self._data
-
-    @property
-    def is_valid(self) -> bool:
-        """ """
-        return self._valid
-
-    def _init(self, data: bytes) -> None:
-        """ """
-        if len(data) not in [self._max_bytes, self._max_bytes_partial]:
-            logger.error(
-                f"received {len(data)} bytes, expected {self._max_bytes} bytes for start packets, or {self._max_bytes_partial} bytes for partial packets")
-            return
-        self._emi_message_code = data[0]
-        self._data = data[1:]
-        self._valid = True
+class KNXHIDReportBodyData:
+    """ """
+    def __init__(self, protocol_id: ProtocolID, emi_id: EMIID, emi_data: bytes, partial: bool) -> None:
+        self.protocol_id = protocol_id
+        self.emi_id = emi_id
+        self.emi_data = emi_data
+        self.partial = partial
 
 
 class KNXHIDReportBody:
@@ -345,11 +204,22 @@ class KNXHIDReportBody:
 
     def __init__(self):
         self._max_size = 61  # HID frame has max. size of 64 - 3 octets for the header
-        self._data_raw = None
-        self._header = None
-        self._body = None
+        self._header: Optional[KNXUSBTransferProtocolHeader] = None
+        self._body: Optional[KNXUSBTransferProtocolBody] = None
         self._is_valid = False
         self._partial = False
+
+    @classmethod
+    def from_data(cls, data: KNXHIDReportBodyData):
+        """ """
+        obj = cls()
+        obj._body = KNXUSBTransferProtocolBody.from_data(KNXUSBTransferProtocolBodyData(data.emi_data, data.partial))
+        if data.partial:
+            obj._is_valid = obj._body.is_valid
+        else:
+            obj._header = KNXUSBTransferProtocolHeader.from_data(KNXUSBTransferProtocolHeaderData(obj._body.length, data.protocol_id, data.emi_id))
+            obj._is_valid = obj._header.is_valid and obj._body.is_valid
+        return obj
 
     @classmethod
     def from_knx(cls, data: bytes, partial: bool = False):
@@ -382,6 +252,15 @@ class KNXHIDReportBody:
         return self._body
 
     @property
+    def length(self) -> int:
+        """ """
+        if self._partial and self._body:
+            return self._body.length
+        elif self._header and self._body:
+            return self._header.header_length + self._body.length
+        return 0
+
+    @property
     def is_valid(self) -> bool:
         """ Returns true if all fields could be parsed successfully """
         return self._is_valid
@@ -393,7 +272,6 @@ class KNXHIDReportBody:
                 f"only received {len(data)} bytes, expected {self._max_size}. (Unused bytes in the last HID report frame shall be filled with 00h (3.4.1.2.2 Sequence number))"
             )
             return
-        self._data_raw = data
         self._partial = partial
         if self._partial:
             self._body = KNXUSBTransferProtocolBody.from_knx(data)
@@ -404,16 +282,36 @@ class KNXHIDReportBody:
             self._is_valid = self._header.is_valid and self._body.is_valid
 
 
+class KNXHIDFrameData:
+    """ Holds the data necessary to initialize a `KNXHIDFrame` object """
+
+    def __init__(self, packet_info: PacketInfo, hid_report_body_data: KNXHIDReportBodyData) -> None:
+        self.packet_info = packet_info
+        self.hid_report_body_data = hid_report_body_data
+
+
 class KNXHIDFrame:
     """ Represents `3.4.1.1 HID report frame structure` of the KNX specification """
 
     def __init__(self) -> None:
-        self._body = None
-        self._data_raw = bytes()
+        self._body: Optional[KNXHIDReportBody] = None
         self._expected_byte_count = 64
-        self._header = None
+        self._header: Optional[KNXHIDReportHeader] = None
         self._is_valid = False
         self._partial = False
+
+    @classmethod
+    def from_data(cls, data: KNXHIDFrameData):
+        """ """
+        obj = cls()
+        obj._body = KNXHIDReportBody.from_data(data.hid_report_body_data)
+        obj._header = KNXHIDReportHeader.from_data(KNXHIDReportHeaderData(data.packet_info, obj._body.length))
+        obj._partial = data.hid_report_body_data.partial
+        if data.hid_report_body_data.partial:
+            obj._is_valid = obj._body.is_valid
+        else:
+            obj._is_valid = obj._header.is_valid and obj._body.is_valid
+        return obj
 
     @classmethod
     def from_knx(cls, data: bytes, partial: bool = False):
@@ -472,8 +370,7 @@ class KNXHIDFrame:
             logger.warning(
                 f"only received {len(data)} bytes, expected {self._expected_byte_count}. (Unused bytes in the last HID report frame shall be filled with 00h (3.4.1.2.2 Sequence number))"
             )
-        self._data_raw = data
         self._partial = partial
-        self._header = KNXHIDReportHeader.from_knx(self._data_raw[:3])
-        self._body = KNXHIDReportBody.from_knx(self._data_raw[3:], partial=partial)
+        self._header = KNXHIDReportHeader.from_knx(data[:3])
+        self._body = KNXHIDReportBody.from_knx(data[3:], partial=partial)
         self._is_valid = self._header.is_valid and self._body.is_valid

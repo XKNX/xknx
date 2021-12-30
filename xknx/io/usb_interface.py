@@ -13,7 +13,7 @@ class USBInterface(Interface):
 
     def __init__(self, xknx, connection_config: ConnectionConfigUSB) -> None:
         self.xknx = xknx
-        self.usb_client: USBClient = USBClient(connection_config)
+        self.usb_client: USBClient = USBClient(xknx, connection_config)
 
     async def start(self) -> None:
         """

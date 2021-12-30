@@ -14,13 +14,30 @@ class SequenceNumber(IntEnum):
     FIFTH_PACKET = 0x05
 
 
+class DataSizeBySequenceNumber:
+    """ Returns the data size of the `KNX HID Report Body` by sequence number """
+    sizes: dict = {
+        SequenceNumber.FIRST_PACKET: 53,
+        SequenceNumber.SECOND_PACKET: 61,
+        SequenceNumber.THIRD_PACKET: 61,
+        SequenceNumber.FOURTH_PACKET: 61,
+        SequenceNumber.FIFTH_PACKET: 61,
+    }
+
+    @staticmethod
+    def of(sequence_number: SequenceNumber) -> int:
+        """ """
+        return DataSizeBySequenceNumber.sizes.get(sequence_number, 0x00)
+
+
 class PacketType(IntEnum):
     """
     (3.4.1.2.3 Packet type)
     all other values are reserved / not allowed
     """
-    START = 0x01  # (0001b)
-    END = 0x02  # (0010b)
+    # START/END just as convenience for lookup, don't use!
+    # START = 0x01  # (0001b)
+    # END = 0x02  # (0010b)
     START_AND_END = 0x03  # (0011b)
     PARTIAL = 0x04  # (0100b)
     START_AND_PARTIAL = 0x05  # (0101b)
