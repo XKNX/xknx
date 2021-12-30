@@ -58,11 +58,11 @@ class TestRemoteValueControl:
                 payload=GroupValueWrite(DPTArray(0x01)),
             )
             await remote_value.process(telegram)
-        with pytest.raises(ConversionError):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTBinary(0x10)),
-            )
-            await remote_value.process(telegram)
-            # pylint: disable=pointless-statement
-            remote_value.value
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(0x10)),
+        )
+        assert await remote_value.process(telegram) is False
+        # pylint: disable=pointless-statement
+        remote_value.value
