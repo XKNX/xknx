@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Connection
+
+- Fix rate limiter wait time. Don't add time waiting for ACK or L_DATA.con frames to the rate_limit.
+
 ## 0.18.15 Come back almighty Gateway Scanner
 
 ### Internals
