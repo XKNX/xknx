@@ -6,6 +6,10 @@
 
 - Handle ConversionError in RemoteValue, log a readable warning
 
+## Internals
+
+- Cleanup some list generating code in the knxip module
+
 ## 0.18.15 Come back almighty Gateway Scanner
 
 ### Internals
