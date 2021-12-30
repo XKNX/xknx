@@ -6,6 +6,10 @@
 
 - Fix rate limiter wait time. Don't add time waiting for ACK or L_DATA.con frames to the rate_limit.
 
+## Internals
+
+- Cleanup some list generating code in the knxip module
+
 ## 0.18.15 Come back almighty Gateway Scanner
 
 ### Internals
