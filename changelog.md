@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Devices
+
+- Handle ConversionError in RemoteValue, log a readable warning
+
 ## 0.18.15 Come back almighty Gateway Scanner
 
 ### Internals
