@@ -41,6 +41,7 @@ from xknx.knxip import (
     DIBSuppSVCFamilies,
     DisconnectRequest,
     DisconnectResponse,
+    HostProtocol,
     KNXIPFrame,
     KNXIPHeader,
     KNXIPServiceType,
@@ -493,9 +494,13 @@ class TestStringRepresentations:
 
     def test_hpai(self):
         """Test string representation of HPAI."""
-        hpai = HPAI(ip_addr="192.168.42.1", port=33941)
-        assert str(hpai) == "192.168.42.1:33941"
-        assert repr(hpai) == "HPAI('192.168.42.1', 33941)"
+        hpai_udp = HPAI(ip_addr="192.168.42.1", port=33941)
+        assert str(hpai_udp) == "192.168.42.1:33941/udp"
+        assert repr(hpai_udp) == "HPAI('192.168.42.1', 33941, HostProtocol.IPV4_UDP)"
+
+        hpai_tcp = HPAI(ip_addr="10.1.4.1", port=3671, protocol=HostProtocol.IPV4_TCP)
+        assert str(hpai_tcp) == "10.1.4.1:3671/tcp"
+        assert repr(hpai_tcp) == "HPAI('10.1.4.1', 3671, HostProtocol.IPV4_TCP)"
 
     def test_header(self):
         """Test string representation of KNX/IP-Header."""
@@ -516,7 +521,7 @@ class TestStringRepresentations:
         connect_request.data_endpoint = HPAI(ip_addr="192.168.42.2", port=33942)
         assert (
             str(connect_request)
-            == '<ConnectRequest control_endpoint="192.168.42.1:33941" data_endpoint="192.168.42.2:33942" '
+            == '<ConnectRequest control_endpoint="192.168.42.1:33941/udp" data_endpoint="192.168.42.2:33942/udp" '
             'request_type="ConnectRequestType.TUNNEL_CONNECTION" />'
         )
 
@@ -531,7 +536,7 @@ class TestStringRepresentations:
         assert (
             str(connect_response)
             == '<ConnectResponse communication_channel="13" status_code="ErrorCode.E_NO_ERROR" '
-            'data_endpoint="192.168.42.1:33941" '
+            'data_endpoint="192.168.42.1:33941/udp" '
             'request_type="ConnectRequestType.TUNNEL_CONNECTION" identifier="42" />'
         )
 
@@ -543,7 +548,7 @@ class TestStringRepresentations:
         disconnect_request.control_endpoint = HPAI(ip_addr="192.168.42.1", port=33941)
         assert (
             str(disconnect_request)
-            == '<DisconnectRequest CommunicationChannelID="13" control_endpoint="192.168.42.1:33941" />'
+            == '<DisconnectRequest CommunicationChannelID="13" control_endpoint="192.168.42.1:33941/udp" />'
         )
 
     def test_disconnect_response(self):
@@ -566,7 +571,7 @@ class TestStringRepresentations:
         )
         assert (
             str(connectionstate_request)
-            == '<ConnectionStateRequest CommunicationChannelID="23", control_endpoint="192.168.42.1:33941" />'
+            == '<ConnectionStateRequest CommunicationChannelID="23", control_endpoint="192.168.42.1:33941/udp" />'
         )
 
     def test_connectionstate_response(self):
@@ -585,7 +590,7 @@ class TestStringRepresentations:
         search_request = SearchRequest(xknx)
         assert (
             str(search_request)
-            == '<SearchRequest discovery_endpoint="224.0.23.12:3671" />'
+            == '<SearchRequest discovery_endpoint="224.0.23.12:3671/udp" />'
         )
 
     def test_search_response(self):
@@ -597,7 +602,7 @@ class TestStringRepresentations:
         search_response.dibs.append(DIBGeneric())
         assert (
             str(search_response)
-            == '<SearchResponse control_endpoint="192.168.42.1:33941" dibs="[\n'
+            == '<SearchResponse control_endpoint="192.168.42.1:33941/udp" dibs="[\n'
             '<DIB dtc="0" data="" />,\n'
             '<DIB dtc="0" data="" />\n'
             ']" />'
@@ -651,7 +656,7 @@ class TestStringRepresentations:
             str(knxipframe)
             == '<KNXIPFrame <KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="SEARCH_REQUEST" '
             'Reserve="0" TotalLength="0" />\n'
-            ' body="<SearchRequest discovery_endpoint="224.0.23.12:3671" />" />'
+            ' body="<SearchRequest discovery_endpoint="224.0.23.12:3671/udp" />" />'
         )
 
     #
