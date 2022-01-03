@@ -136,11 +136,12 @@ class DIBSuppSVCFamilies(DIB):
         super().__init__()
         self.families: list[DIBSuppSVCFamilies.Family] = []
 
-    def supports(self, name: DIBServiceFamily) -> bool:
-        """Return if device supports a given service family by name."""
+    def supports(self, name: DIBServiceFamily, version: int | None = None) -> bool:
+        """Return if device supports a given service family by name and optional minimum version."""
         for family in self.families:
             if name == family.name:
-                return True
+                if version is None or family.version >= version:
+                    return True
         return False
 
     def calculated_length(self) -> int:

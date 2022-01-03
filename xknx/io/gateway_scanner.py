@@ -45,6 +45,7 @@ class GatewayDescriptor:
         local_ip: str,
         supports_routing: bool = False,
         supports_tunnelling: bool = False,
+        supports_tunnelling_tcp: bool = False,
         individual_address: IndividualAddress | None = None,
     ):
         """Initialize GatewayDescriptor class."""
@@ -55,6 +56,7 @@ class GatewayDescriptor:
         self.local_ip = local_ip
         self.supports_routing = supports_routing
         self.supports_tunnelling = supports_tunnelling
+        self.supports_tunnelling_tcp = supports_tunnelling_tcp
         self.individual_address = individual_address
 
     def __repr__(self) -> str:
@@ -68,6 +70,7 @@ class GatewayDescriptor:
             f"    local_ip={self.local_ip},\n"
             f"    supports_routing={self.supports_routing},\n"
             f"    supports_tunnelling={self.supports_tunnelling},\n"
+            f"    supports_tunnelling_tcp={self.supports_tunnelling_tcp},\n"
             f"    individual_address={self.individual_address}\n"
             ")"
         )
@@ -88,11 +91,13 @@ class GatewayScanFilter:
         self,
         name: str | None = None,
         tunnelling: bool | None = None,
+        tunnelling_tcp: bool | None = None,
         routing: bool | None = None,
     ):
         """Initialize GatewayScanFilter class."""
         self.name = name
         self.tunnelling = tunnelling
+        self.tunnelling_tcp = tunnelling_tcp
         self.routing = routing
 
     def match(self, gateway: GatewayDescriptor) -> bool:
@@ -104,9 +109,18 @@ class GatewayScanFilter:
             and self.tunnelling != gateway.supports_tunnelling
         ):
             return False
+        if (
+            self.tunnelling_tcp is not None
+            and self.tunnelling_tcp != gateway.supports_tunnelling_tcp
+        ):
+            return False
         if self.routing is not None and self.routing != gateway.supports_routing:
             return False
-        return gateway.supports_tunnelling or gateway.supports_routing
+        return (
+            gateway.supports_tunnelling
+            or gateway.supports_tunnelling_tcp
+            or gateway.supports_routing
+        )
 
 
 class GatewayScanner:
@@ -222,7 +236,11 @@ class GatewayScanner:
                 if isinstance(dib, DIBSuppSVCFamilies)
             )
             gateway.supports_routing = dib.supports(DIBServiceFamily.ROUTING)
-            gateway.supports_tunnelling = dib.supports(DIBServiceFamily.TUNNELING)
+            if dib.supports(DIBServiceFamily.TUNNELING):
+                gateway.supports_tunnelling = True
+                gateway.supports_tunnelling_tcp = dib.supports(
+                    DIBServiceFamily.TUNNELING, version=2
+                )
         except StopIteration:
             pass
 
