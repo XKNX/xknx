@@ -1,7 +1,7 @@
 """Manages a connection to the KNX bus."""
 from __future__ import annotations
 
-from enum import Enum
+from enum import Enum, auto
 
 from .const import DEFAULT_MCAST_PORT
 from .gateway_scanner import GatewayScanFilter
@@ -10,9 +10,10 @@ from .gateway_scanner import GatewayScanFilter
 class ConnectionType(Enum):
     """Enum class for different types of KNX/IP Connections."""
 
-    AUTOMATIC = 0
-    TUNNELING = 1
-    ROUTING = 2
+    AUTOMATIC = auto()
+    ROUTING = auto()
+    TUNNELING = auto()
+    TUNNELING_TCP = auto()
 
 
 class ConnectionConfig:
@@ -22,13 +23,15 @@ class ConnectionConfig:
     Handles:
     * type of connection:
         * AUTOMATIC for using GatewayScanner for searching and finding KNX/IP devices in the network.
-        * TUNNELING connect to a specific KNX/IP tunneling device.
         * ROUTING use KNX/IP multicast routing.
+        * TUNNELING connect to a specific KNX/IP tunneling device via UDP.
+        * TUNNELING_TCP connect to a specific KNX/IP tunneling v2 device via TCP.
     * local_ip: Local ip of the interface though which KNXIPInterface should connect.
     * gateway_ip: IP of KNX/IP tunneling device.
     * gateway_port: Port of KNX/IP tunneling device.
-    * route_back: the KNXnet/IP Server shall use the IP address and the port number in the IP package
-        received as the target IP address or port number for the response to the KNXnet/IP Client.
+    * route_back: For TUNNELING connection.
+        The KNXnet/IP Server shall use the IP address and port in the received IP package
+        as the target IP address or port number for the response to the KNXnet/IP Client.
     * auto_reconnect: Auto reconnect to KNX/IP tunneling device if connection cannot be established.
     * auto_reconnect_wait: Wait n seconds before trying to reconnect to KNX/IP tunneling device.
     * scan_filter: For AUTOMATIC connection, limit scan with the given filter
