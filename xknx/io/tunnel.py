@@ -69,6 +69,7 @@ class Tunnel(Interface):
         self.init_udp_client()
 
         self._src_address = xknx.own_address
+        self._data_endpoint_addr: tuple[str, int] | None = None
         self.sequence_number = 0
         self.communication_channel: int | None = None
         self.number_heartbeat_failed = 0
@@ -144,6 +145,7 @@ class Tunnel(Interface):
             )
         )
         self.stop_heartbeat()
+        self._data_endpoint_addr = None
         if self.auto_reconnect:
             self._reconnect_task = asyncio.create_task(self._reconnect())
         else:
@@ -172,6 +174,7 @@ class Tunnel(Interface):
             XknxConnectionState.DISCONNECTED
         )
         self.stop_heartbeat()
+        self._data_endpoint_addr = None
         self._stop_reconnect()
         await self._disconnect_request(False)
         await self.udp_client.stop()
@@ -188,6 +191,11 @@ class Tunnel(Interface):
         await connect.start()
         if connect.success:
             self.communication_channel = connect.communication_channel
+            # assign data_endpoint received from server
+            self._data_endpoint_addr = (
+                connect.data_endpoint.ip_addr,
+                connect.data_endpoint.port,
+            )
             # Use the individual address provided by the tunnelling server
             self._src_address = IndividualAddress(connect.identifier)
             self.xknx.current_address = self._src_address
@@ -274,6 +282,7 @@ class Tunnel(Interface):
         tunnelling = Tunnelling(
             self.xknx,
             self.udp_client,
+            self._data_endpoint_addr,
             telegram,
             self._src_address,
             self.sequence_number,
@@ -355,7 +364,9 @@ class Tunnel(Interface):
             communication_channel_id=communication_channel_id,
             sequence_counter=sequence_counter,
         )
-        self.udp_client.send(KNXIPFrame.init_from_body(ack))
+        self.udp_client.send(
+            KNXIPFrame.init_from_body(ack), addr=self._data_endpoint_addr
+        )
 
     def _disconnect_request_received(
         self, disconnect_request: DisconnectRequest

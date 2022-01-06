@@ -32,8 +32,8 @@ class ConnectResponse(KNXIPBodyResponse):
         communication_channel: int = 0,
         status_code: ErrorCode = ErrorCode.E_NO_ERROR,
         request_type: ConnectRequestType = ConnectRequestType.TUNNEL_CONNECTION,
-        control_endpoint: HPAI = HPAI(),
-        identifier: int | None = None,
+        data_endpoint: HPAI = HPAI(),
+        identifier: int = 0,
     ):
         """Initialize ConnectResponse class."""
         super().__init__(xknx)
@@ -41,7 +41,7 @@ class ConnectResponse(KNXIPBodyResponse):
         self.communication_channel = communication_channel
         self.status_code = status_code
         self.request_type = request_type
-        self.control_endpoint = control_endpoint
+        self.data_endpoint = data_endpoint
         # identifier shall contain KNX Individual Address assigned to this KNXnet/IP Tunnelling connection
         self.identifier = identifier
 
@@ -67,11 +67,11 @@ class ConnectResponse(KNXIPBodyResponse):
         pos = 2
 
         if self.status_code == ErrorCode.E_NO_ERROR:
-            pos += self.control_endpoint.from_knx(raw[pos:])
+            pos += self.data_endpoint.from_knx(raw[pos:])
             pos += crd_from_knx(raw[pos:])
         else:
             # do not parse HPAI and CRD in case of errors - just check length
-            pos += len(raw[pos:])
+            pos = len(raw)
         return pos
 
     def to_knx(self) -> list[int]:
@@ -91,7 +91,7 @@ class ConnectResponse(KNXIPBodyResponse):
         data = []
         data.append(self.communication_channel)
         data.append(self.status_code.value)
-        data.extend(self.control_endpoint.to_knx())
+        data.extend(self.data_endpoint.to_knx())
         data.extend(crd_to_knx())
 
         return data
@@ -102,7 +102,7 @@ class ConnectResponse(KNXIPBodyResponse):
             "<ConnectResponse "
             f'communication_channel="{self.communication_channel}" '
             f'status_code="{self.status_code}" '
-            f'control_endpoint="{self.control_endpoint}" '
+            f'data_endpoint="{self.data_endpoint}" '
             f'request_type="{self.request_type}" '
             f'identifier="{self.identifier}" />'
         )

@@ -101,7 +101,7 @@ class KNXIPFrame:
         data.extend(self.body.to_knx())
         return data
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return f'<KNXIPFrame {self.header}\n body="{self.body}" />'
 
