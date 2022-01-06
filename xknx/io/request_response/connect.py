@@ -27,6 +27,7 @@ class Connect(RequestResponse):
         self.route_back = route_back
         super().__init__(xknx, self.udp_client, ConnectResponse)
         self.communication_channel = 0
+        self.data_endpoint = HPAI()
         self.identifier = 0
 
     def create_knxipframe(self) -> KNXIPFrame:
@@ -48,6 +49,6 @@ class Connect(RequestResponse):
     def on_success_hook(self, knxipframe: KNXIPFrame) -> None:
         """Set communication channel and identifier after having received a valid answer."""
         assert isinstance(knxipframe.body, ConnectResponse)
-        assert isinstance(knxipframe.body.identifier, int)
         self.communication_channel = knxipframe.body.communication_channel
+        self.data_endpoint = knxipframe.body.data_endpoint
         self.identifier = knxipframe.body.identifier

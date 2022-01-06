@@ -526,12 +526,12 @@ class TestStringRepresentations:
         connect_response = ConnectResponse(xknx)
         connect_response.communication_channel = 13
         connect_response.request_type = ConnectRequestType.TUNNEL_CONNECTION
-        connect_response.control_endpoint = HPAI(ip_addr="192.168.42.1", port=33941)
+        connect_response.data_endpoint = HPAI(ip_addr="192.168.42.1", port=33941)
         connect_response.identifier = 42
         assert (
             str(connect_response)
             == '<ConnectResponse communication_channel="13" status_code="ErrorCode.E_NO_ERROR" '
-            'control_endpoint="192.168.42.1:33941" '
+            'data_endpoint="192.168.42.1:33941" '
             'request_type="ConnectRequestType.TUNNEL_CONNECTION" identifier="42" />'
         )
 

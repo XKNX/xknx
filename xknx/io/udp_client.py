@@ -116,7 +116,7 @@ class UDPClient:
                 )
             else:
                 knx_logger.debug(
-                    "Received from %s:%s at %s:\n%s",
+                    "Received from %s:%s at %s:\n %s",
                     source[0],
                     source[1],
                     time.time(),
@@ -213,27 +213,28 @@ class UDPClient:
             (transport, _) = await loop.create_datagram_endpoint(
                 lambda: udp_client_factory,
                 local_addr=self.local_addr,
-                remote_addr=self.remote_addr,
             )
             # TODO: typing - remove cast - loop.create_datagram_endpoint should return a DatagramTransport
             self.transport = cast(asyncio.DatagramTransport, transport)
 
-    def send(self, knxipframe: KNXIPFrame) -> None:
+    def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
         """Send KNXIPFrame to socket."""
+        _addr = addr or self.remote_addr
         knx_logger.debug(
-            "Sending to %s:%s at %s:\n%s",
-            self.remote_addr[0],
-            self.remote_addr[1],
-            time.time(),
-            knxipframe,
+            "Sending to %s:%s at %s:\n %s", _addr[0], _addr[1], time.time(), knxipframe
         )
         if self.transport is None:
             raise XKNXException("Transport not connected")
 
         if self.multicast:
+            if addr is not None:
+                logger.warning(
+                    "Multicast send to specific address is invalid. %s",
+                    knxipframe,
+                )
             self.transport.sendto(bytes(knxipframe.to_knx()), self.remote_addr)
         else:
-            self.transport.sendto(bytes(knxipframe.to_knx()))
+            self.transport.sendto(bytes(knxipframe.to_knx()), addr=_addr)
 
     def getsockname(self) -> tuple[str, int]:
         """Return socket IP and port."""
