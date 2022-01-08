@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Devices
+
+- Handle ConversionError in RemoteValue, log a readable warning
+
 ### Connection
 
 - Handle separate Tunneling control and data endpoints
