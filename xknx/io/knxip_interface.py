@@ -16,7 +16,7 @@ import netifaces
 from xknx.exceptions import CommunicationError, XKNXException
 
 from .connection import ConnectionConfig, ConnectionType
-from .gateway_scanner import GatewayScanFilter, GatewayScanner
+from .gateway_scanner import GatewayDescriptor, GatewayScanFilter, GatewayScanner
 from .routing import Routing
 from .tunnel import Tunnel
 
@@ -44,10 +44,7 @@ class KNXIPInterface:
 
     async def start(self) -> None:
         """Start interface. Connecting KNX/IP device with the selected method."""
-        if (
-            self.connection_config.connection_type == ConnectionType.ROUTING
-            and self.connection_config.local_ip is not None
-        ):
+        if self.connection_config.connection_type == ConnectionType.ROUTING:
             await self.start_routing(self.connection_config.local_ip)
         elif (
             self.connection_config.connection_type == ConnectionType.TUNNELING
@@ -63,21 +60,12 @@ class KNXIPInterface:
                 route_back=self.connection_config.route_back,
             )
         else:
-            await self.start_automatic(self.connection_config.scan_filter)
+            await self.start_automatic()
 
-    async def start_automatic(self, scan_filter: GatewayScanFilter) -> None:
+    async def start_automatic(self) -> None:
         """Start GatewayScanner and connect to the found device."""
-        gatewayscanner = GatewayScanner(self.xknx, scan_filter=scan_filter)
-        gateways = await gatewayscanner.scan()
-
-        if not gateways:
-            raise XKNXException("No Gateways found")
-
-        gateway = gateways[0]
-
-        # on Linux gateway.local_ip can be any interface listening to the
-        # multicast group (even 127.0.0.1) so we set the interface with find_local_ip
-        local_interface_ip = self.find_local_ip(gateway_ip=gateway.ip_addr)
+        scan_filter = self.connection_config.scan_filter
+        gateway, local_interface_ip = await self.find_gateway(scan_filter)
 
         if gateway.supports_tunnelling and scan_filter.routing is not True:
             await self.start_tunnelling(
@@ -127,8 +115,12 @@ class KNXIPInterface:
         )
         await self.interface.connect()
 
-    async def start_routing(self, local_ip: str) -> None:
+    async def start_routing(self, local_ip: str | None = None) -> None:
         """Start KNX/IP Routing."""
+        if local_ip is None:
+            scan_filter = self.connection_config.scan_filter
+            scan_filter.routing = True
+            _gateway, local_ip = await self.find_gateway(scan_filter)
         validate_ip(local_ip, address_name="Local IP address")
         logger.debug("Starting Routing from %s as %s", local_ip, self.xknx.own_address)
         self.interface = Routing(self.xknx, self.telegram_received, local_ip)
@@ -150,6 +142,22 @@ class KNXIPInterface:
             await self.interface.send_telegram(telegram)
         else:
             raise CommunicationError("KNX/IP interface not connected")
+
+    async def find_gateway(
+        self, scan_filter: GatewayScanFilter
+    ) -> tuple[GatewayDescriptor, str]:
+        """Find Gateway and connect to it."""
+        gatewayscanner = GatewayScanner(self.xknx, scan_filter=scan_filter)
+        gateways = await gatewayscanner.scan()
+
+        if not gateways:
+            raise XKNXException("No Gateways found")
+        gateway = gateways[0]
+        # on Linux gateway.local_ip can be any interface listening to the
+        # multicast group (even 127.0.0.1) so we set the interface with find_local_ip
+        local_interface_ip = self.find_local_ip(gateway_ip=gateway.ip_addr)
+
+        return gateway, local_interface_ip
 
     @staticmethod
     def find_local_ip(gateway_ip: str) -> str:

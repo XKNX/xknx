@@ -55,10 +55,6 @@ class ConnectionConfig:
         self.route_back = route_back
         self.auto_reconnect = auto_reconnect
         self.auto_reconnect_wait = auto_reconnect_wait
-        if connection_type == ConnectionType.TUNNELING:
-            scan_filter.tunnelling = True
-        elif connection_type == ConnectionType.ROUTING:
-            scan_filter.routing = True
         self.scan_filter = scan_filter
 
     def __eq__(self, other: object) -> bool:
