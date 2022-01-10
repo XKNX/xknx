@@ -45,6 +45,7 @@ class ConnectionConfig:
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
         scan_filter: GatewayScanFilter = GatewayScanFilter(),
+        threaded: bool = True,
     ):
         """Initialize ConnectionConfig class."""
         self.connection_type = connection_type
@@ -56,6 +57,7 @@ class ConnectionConfig:
         self.auto_reconnect = auto_reconnect
         self.auto_reconnect_wait = auto_reconnect_wait
         self.scan_filter = scan_filter
+        self.threaded = threaded
 
     def __eq__(self, other: object) -> bool:
         """Equality for ConnectionConfig class (used in unit tests)."""
