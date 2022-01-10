@@ -23,6 +23,7 @@ from xknx.io import (
     DEFAULT_MCAST_PORT,
     ConnectionConfig,
     KNXIPInterface,
+    knx_interface_factory,
 )
 from xknx.telegram import GroupAddressType, IndividualAddress, Telegram
 
@@ -114,8 +115,9 @@ class XKNX:
     async def start(self) -> None:
         """Start XKNX module. Connect to KNX/IP devices and start state updater."""
         self.task_registry.start()
-        self.knxip_interface = KNXIPInterface(
-            self, connection_config=self.connection_config
+        self.knxip_interface = knx_interface_factory(
+            xknx=self,
+            connection_config=self.connection_config,
         )
         logger.info(
             "XKNX v%s starting %s connection to KNX bus.",

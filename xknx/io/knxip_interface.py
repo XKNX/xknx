@@ -11,8 +11,8 @@ from __future__ import annotations
 import asyncio
 import ipaddress
 import logging
-from threading import Thread
-from typing import TYPE_CHECKING, cast
+import threading
+from typing import TYPE_CHECKING, Any, Awaitable, TypeVar, cast
 
 import netifaces
 from xknx.exceptions import CommunicationError, XKNXException
@@ -30,6 +30,17 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("xknx.log")
 
+T = TypeVar("T")  # pylint: disable=invalid-name
+
+
+def knx_interface_factory(
+    xknx: XKNX, connection_config: ConnectionConfig
+) -> KNXIPInterface:
+    """Create KNX/IP interface from config."""
+    if connection_config.threaded:
+        return KNXIPInterfaceThreaded(xknx=xknx, connection_config=connection_config)
+    return KNXIPInterface(xknx=xknx, connection_config=connection_config)
+
 
 class KNXIPInterface:
     """Class for managing KNX/IP Tunneling or Routing connections."""
@@ -43,28 +54,9 @@ class KNXIPInterface:
         self.xknx = xknx
         self._interface: Interface | None = None
         self.connection_config = connection_config
-        self._main_loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
-        self._thread_loop: asyncio.AbstractEventLoop | None = None
-
-    def _run_in_thread(self) -> None:
-        """Start KNX/IP interface in its own thread."""
-        self._thread_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self._thread_loop)
-        self._thread_loop.run_forever()
 
     async def start(self) -> None:
         """Start KNX/IP interface."""
-        if self.connection_config.threaded:
-            connection_thread = Thread(
-                target=self._run_in_thread, name="KNX Interface", daemon=True
-            )
-            connection_thread.start()
-            while self._thread_loop is None:
-                # wait for the thread to initialize its loop
-                await asyncio.sleep(0.1)
-            future = asyncio.run_coroutine_threadsafe(self._start(), self._thread_loop)
-            return future.result()
-
         await self._start()
 
     async def _start(self) -> None:
@@ -118,7 +110,7 @@ class KNXIPInterface:
         """Start KNX/IP tunnel."""
         validate_ip(gateway_ip, address_name="Gateway IP address")
         if local_ip is None:
-            local_ip = self.find_local_ip(gateway_ip=gateway_ip)
+            local_ip = find_local_ip(gateway_ip=gateway_ip)
         validate_ip(local_ip, address_name="Local IP address")
         logger.debug(
             "Starting tunnel from %s:%s to %s:%s",
@@ -154,37 +146,18 @@ class KNXIPInterface:
     async def stop(self) -> None:
         """Stop connected interfae (either Tunneling or Routing)."""
         if self._interface is not None:
-            if self._thread_loop is not None:
-                future = asyncio.run_coroutine_threadsafe(
-                    self._interface.disconnect(), self._thread_loop
-                )
-                future.result()
-            else:
-                await self._interface.disconnect()
-
+            await self._interface.disconnect()
             self._interface = None
 
     def telegram_received(self, telegram: Telegram) -> None:
         """Put received telegram into queue. Callback for having received telegram."""
-        if self._thread_loop is not None:
-            self._main_loop.call_soon_threadsafe(
-                self.xknx.telegrams.put_nowait, telegram
-            )
-        else:
-            self.xknx.telegrams.put_nowait(telegram)
+        self.xknx.telegrams.put_nowait(telegram)
 
     async def send_telegram(self, telegram: "Telegram") -> None:
         """Send telegram to connected device (either Tunneling or Routing)."""
-        if self._interface is not None:
-            if self._thread_loop is not None:
-                future = asyncio.run_coroutine_threadsafe(
-                    self._interface.send_telegram(telegram), self._thread_loop
-                )
-                future.result()
-            else:
-                await self._interface.send_telegram(telegram)
-        else:
+        if self._interface is None:
             raise CommunicationError("KNX/IP interface not connected")
+        return await self._interface.send_telegram(telegram)
 
     async def find_gateway(
         self, scan_filter: GatewayScanFilter
@@ -198,48 +171,114 @@ class KNXIPInterface:
         gateway = gateways[0]
         # on Linux gateway.local_ip can be any interface listening to the
         # multicast group (even 127.0.0.1) so we set the interface with find_local_ip
-        local_interface_ip = self.find_local_ip(gateway_ip=gateway.ip_addr)
+        local_interface_ip = find_local_ip(gateway_ip=gateway.ip_addr)
 
         return gateway, local_interface_ip
 
-    @staticmethod
-    def find_local_ip(gateway_ip: str) -> str:
-        """Find local IP address on same subnet as gateway."""
 
-        def _scan_interfaces(gateway: ipaddress.IPv4Address) -> str | None:
-            """Return local IP address on same subnet as given gateway."""
-            for interface in netifaces.interfaces():
-                try:
-                    af_inet = netifaces.ifaddresses(interface)[netifaces.AF_INET]
-                    for link in af_inet:
-                        network = ipaddress.IPv4Network(
-                            (link["addr"], link["netmask"]), strict=False
-                        )
-                        if gateway in network:
-                            logger.debug("Using interface: %s", interface)
-                            return cast(str, link["addr"])
-                except KeyError:
-                    logger.debug(
-                        "Could not find IPv4 address on interface %s", interface
+class KNXIPInterfaceThreaded(KNXIPInterface):
+    """Class for managing KNX/IP Tunneling or Routing connections."""
+
+    def __init__(
+        self,
+        xknx: XKNX,
+        connection_config: ConnectionConfig = ConnectionConfig(),
+    ):
+        """Initialize KNXIPInterface class."""
+        super().__init__(xknx, connection_config)
+        self._main_loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
+        self._thread_loop: asyncio.AbstractEventLoop
+
+        loop_loaded = threading.Event()
+        connection_thread = threading.Thread(
+            target=self._init_connection_loop,
+            args=[loop_loaded],
+            name="KNX Interface",
+            daemon=True,
+        )
+        connection_thread.start()
+        loop_loaded.wait()  # wait for the thread to initialize its loop
+
+    def _init_connection_loop(self, loop_loaded: threading.Event) -> None:
+        """Start KNX/IP interface in its own thread."""
+        self._thread_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self._thread_loop)
+        loop_loaded.set()
+        self._thread_loop.run_forever()
+
+    async def _await_from_connection_thread(self, coro: Awaitable[T]) -> T:
+        """Await coroutine in different thread."""
+        fut = asyncio.run_coroutine_threadsafe(coro, self._thread_loop)
+        finished = threading.Event()
+
+        def fut_finished_cb(_: Any) -> None:  # with py3.9 `Future[T]` should be working
+            """Fire threading.Event when the future is finished."""
+            finished.set()
+
+        fut.add_done_callback(fut_finished_cb)
+        # wait on that event in an executor, yielding control to _main_loop
+        await self._main_loop.run_in_executor(None, finished.wait)
+        return fut.result()
+
+    async def start(self) -> None:
+        """Start KNX/IP interface."""
+        return await self._await_from_connection_thread(self._start())
+
+    async def stop(self) -> None:
+        """Stop connected interfae (either Tunneling or Routing)."""
+        if self._interface is not None:
+            await self._await_from_connection_thread(self._interface.disconnect())
+            self._interface = None
+
+    def telegram_received(self, telegram: Telegram) -> None:
+        """Put received telegram into queue. Callback for having received telegram."""
+        self._main_loop.call_soon_threadsafe(self.xknx.telegrams.put_nowait, telegram)
+
+    async def send_telegram(self, telegram: "Telegram") -> None:
+        """Send telegram to connected device (either Tunneling or Routing)."""
+        if self._interface is None:
+            raise CommunicationError("KNX/IP interface not connected")
+
+        await self._await_from_connection_thread(
+            self._interface.send_telegram(telegram)
+        )
+
+
+def find_local_ip(gateway_ip: str) -> str:
+    """Find local IP address on same subnet as gateway."""
+
+    def _scan_interfaces(gateway: ipaddress.IPv4Address) -> str | None:
+        """Return local IP address on same subnet as given gateway."""
+        for interface in netifaces.interfaces():
+            try:
+                af_inet = netifaces.ifaddresses(interface)[netifaces.AF_INET]
+                for link in af_inet:
+                    network = ipaddress.IPv4Network(
+                        (link["addr"], link["netmask"]), strict=False
                     )
-                    continue
-            return None
+                    if gateway in network:
+                        logger.debug("Using interface: %s", interface)
+                        return cast(str, link["addr"])
+            except KeyError:
+                logger.debug("Could not find IPv4 address on interface %s", interface)
+                continue
+        return None
 
-        def _find_default_gateway() -> ipaddress.IPv4Address:
-            """Return IP address of default gateway."""
-            gws = netifaces.gateways()
-            return ipaddress.IPv4Address(gws["default"][netifaces.AF_INET][0])
+    def _find_default_gateway() -> ipaddress.IPv4Address:
+        """Return IP address of default gateway."""
+        gws = netifaces.gateways()
+        return ipaddress.IPv4Address(gws["default"][netifaces.AF_INET][0])
 
-        gateway = ipaddress.IPv4Address(gateway_ip)
-        local_ip = _scan_interfaces(gateway)
-        if local_ip is None:
-            logger.warning(
-                "No interface on same subnet as gateway found. Falling back to default gateway."
-            )
-            default_gateway = _find_default_gateway()
-            local_ip = _scan_interfaces(default_gateway)
-        assert isinstance(local_ip, str)
-        return local_ip
+    gateway = ipaddress.IPv4Address(gateway_ip)
+    local_ip = _scan_interfaces(gateway)
+    if local_ip is None:
+        logger.warning(
+            "No interface on same subnet as gateway found. Falling back to default gateway."
+        )
+        default_gateway = _find_default_gateway()
+        local_ip = _scan_interfaces(default_gateway)
+    assert isinstance(local_ip, str)
+    return local_ip
 
 
 def validate_ip(address: str, address_name: str = "IP address") -> None:
