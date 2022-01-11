@@ -45,7 +45,7 @@ class ConnectionConfig:
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
         scan_filter: GatewayScanFilter = GatewayScanFilter(),
-        threaded: bool = True,
+        threaded: bool = False,
     ):
         """Initialize ConnectionConfig class."""
         self.connection_type = connection_type

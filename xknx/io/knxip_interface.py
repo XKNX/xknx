@@ -239,7 +239,7 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
         if self._interface is None:
             raise CommunicationError("KNX/IP interface not connected")
 
-        await self._await_from_connection_thread(
+        return await self._await_from_connection_thread(
             self._interface.send_telegram(telegram)
         )
 
