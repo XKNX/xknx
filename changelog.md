@@ -8,6 +8,7 @@
 
 ### Connection
 
+- Optionally run KNXIPInterface in separate thread
 - Handle separate Tunneling control and data endpoints
 - Fix rate limiter wait time: don't add time waiting for ACK or L_DATA.con frames to the rate_limit
 

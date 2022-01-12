@@ -10,7 +10,7 @@ This package contains all objects managing Tunneling and Routing Connections..
 from .connection import ConnectionConfig, ConnectionType
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .gateway_scanner import GatewayDescriptor, GatewayScanFilter, GatewayScanner
-from .knxip_interface import KNXIPInterface
+from .knxip_interface import KNXIPInterface, knx_interface_factory
 from .routing import Routing
 from .tunnel import Tunnel
 from .udp_client import UDPClient
