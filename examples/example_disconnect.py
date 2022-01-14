@@ -2,8 +2,10 @@
 import asyncio
 
 from xknx import XKNX
-from xknx.io import GatewayScanner, UDPClient
+from xknx.io import GatewayScanner
 from xknx.io.request_response import ConnectionState, Disconnect
+from xknx.io.transport import UDPClient
+from xknx.knxip import HPAI
 
 
 async def main():
@@ -25,16 +27,21 @@ async def main():
     udp_client = UDPClient(xknx, (gateway.local_ip, 0), (gateway.ip_addr, gateway.port))
 
     await udp_client.connect()
+    local_hpai = HPAI(*udp_client.getsockname())
 
     for i in range(0, 255):
 
-        conn_state = ConnectionState(xknx, udp_client, communication_channel_id=i)
+        conn_state = ConnectionState(
+            xknx, udp_client, communication_channel_id=i, local_hpai=local_hpai
+        )
 
         await conn_state.start()
 
         if conn_state.success:
             print("Disconnecting ", i)
-            disconnect = Disconnect(xknx, udp_client, communication_channel_id=i)
+            disconnect = Disconnect(
+                xknx, udp_client, communication_channel_id=i, local_hpai=local_hpai
+            )
 
             await disconnect.start()
 

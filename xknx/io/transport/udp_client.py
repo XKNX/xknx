@@ -14,36 +14,20 @@ import time
 from typing import TYPE_CHECKING, Callable, Tuple, cast
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, XKNXException
-from xknx.knxip import HPAI, KNXIPFrame, KNXIPServiceType
+from xknx.knxip import HPAI, KNXIPFrame
+
+from .ip_transport import KNXIPTransport
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
-
-    CallbackType = Callable[[KNXIPFrame, HPAI, "UDPClient"], None]
 
 raw_socket_logger = logging.getLogger("xknx.raw_socket")
 logger = logging.getLogger("xknx.log")
 knx_logger = logging.getLogger("xknx.knx")
 
 
-class UDPClient:
+class UDPClient(KNXIPTransport):
     """Class for handling (sending and receiving) UDP packets."""
-
-    class Callback:
-        """Callback class for handling callbacks for different 'KNX service types' of received packets."""
-
-        def __init__(
-            self,
-            callback: CallbackType,
-            service_types: list[KNXIPServiceType] | None = None,
-        ):
-            """Initialize Callback class."""
-            self.callback = callback
-            self.service_types = service_types or []
-
-        def has_service(self, service_type: KNXIPServiceType) -> bool:
-            """Test if callback is listening for given service type."""
-            return len(self.service_types) == 0 or service_type in self.service_types
 
     class UDPClientFactory(asyncio.DatagramProtocol):
         """Abstraction for managing the asyncio-udp transports."""
@@ -138,23 +122,6 @@ class UDPClient:
                 knxipframe,
                 source,
             )
-
-    def register_callback(
-        self,
-        callback: CallbackType,
-        service_types: list[KNXIPServiceType] | None = None,
-    ) -> UDPClient.Callback:
-        """Register callback."""
-        if service_types is None:
-            service_types = []
-
-        callb = UDPClient.Callback(callback, service_types)
-        self.callbacks.append(callb)
-        return callb
-
-    def unregister_callback(self, callb: UDPClient.Callback) -> None:
-        """Unregister callback."""
-        self.callbacks.remove(callb)
 
     @staticmethod
     def create_multicast_sock(
@@ -252,7 +219,7 @@ class UDPClient:
             else None
         )
 
-    async def stop(self) -> None:
+    def stop(self) -> None:
         """Stop UDP socket."""
         if self.transport is not None:
             self.transport.close()

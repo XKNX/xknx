@@ -9,7 +9,7 @@ from xknx.knxip import HPAI, ConnectionStateRequest, ConnectionStateResponse, KN
 from .request_response import RequestResponse
 
 if TYPE_CHECKING:
-    from xknx.io.udp_client import UDPClient
+    from xknx.io.transport import KNXIPTransport
     from xknx.xknx import XKNX
 
 
@@ -19,31 +19,25 @@ class ConnectionState(RequestResponse):
     def __init__(
         self,
         xknx: XKNX,
-        udp_client: UDPClient,
+        transport: KNXIPTransport,
         communication_channel_id: int,
-        route_back: bool = False,
+        local_hpai: HPAI,
     ):
         """Initialize ConnectionState class."""
-        self.udp_client = udp_client
-        self.route_back = route_back
         super().__init__(
             xknx,
-            self.udp_client,
+            transport,
             ConnectionStateResponse,
             timeout_in_seconds=CONNECTIONSTATE_REQUEST_TIMEOUT,
         )
         self.communication_channel_id = communication_channel_id
+        self.local_hpai = local_hpai
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
-        if self.route_back:
-            endpoint = HPAI()
-        else:
-            (local_addr, local_port) = self.udpclient.getsockname()
-            endpoint = HPAI(ip_addr=local_addr, port=local_port)
         connectionstate_request = ConnectionStateRequest(
             self.xknx,
             communication_channel_id=self.communication_channel_id,
-            control_endpoint=endpoint,
+            control_endpoint=self.local_hpai,
         )
         return KNXIPFrame.init_from_body(connectionstate_request)

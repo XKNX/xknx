@@ -4,8 +4,9 @@ from unittest.mock import MagicMock, create_autospec, patch
 
 import pytest
 from xknx import XKNX
-from xknx.io import GatewayScanFilter, GatewayScanner, UDPClient
+from xknx.io import GatewayScanFilter, GatewayScanner
 from xknx.io.gateway_scanner import GatewayDescriptor
+from xknx.io.transport import UDPClient
 from xknx.knxip import (
     HPAI,
     DIBDeviceInformation,

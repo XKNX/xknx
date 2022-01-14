@@ -20,7 +20,7 @@ from xknx.knxip import (
 from xknx.telegram import TelegramDirection
 
 from .interface import Interface
-from .udp_client import UDPClient
+from .transport import KNXIPTransport, UDPClient
 
 if TYPE_CHECKING:
     from xknx.telegram import Telegram
@@ -57,7 +57,7 @@ class Routing(Interface):
         )
 
     def response_rec_callback(
-        self, knxipframe: KNXIPFrame, source: HPAI, _: UDPClient
+        self, knxipframe: KNXIPFrame, source: HPAI, _: KNXIPTransport
     ) -> None:
         """Verify and handle knxipframe. Callback from internal udpclient."""
         if not isinstance(knxipframe.body, RoutingIndication):
@@ -106,7 +106,7 @@ class Routing(Interface):
                 XknxConnectionState.DISCONNECTED
             )
             # close udp client to prevent open file descriptors
-            await self.udpclient.stop()
+            self.udpclient.stop()
             raise ex
         await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTED
@@ -115,7 +115,7 @@ class Routing(Interface):
 
     async def disconnect(self) -> None:
         """Stop routing."""
-        await self.udpclient.stop()
+        self.udpclient.stop()
         await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )

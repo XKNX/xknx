@@ -4,8 +4,8 @@ from unittest.mock import patch
 import pytest
 from xknx import XKNX
 from xknx.dpt import DPTArray
-from xknx.io import UDPClient
 from xknx.io.request_response import Tunnelling
+from xknx.io.transport import UDPClient
 from xknx.knxip import (
     HPAI,
     ErrorCode,
@@ -57,8 +57,8 @@ class TestTunnelling:
         tunnelling_request.cemi.telegram = telegram
         tunnelling_request.cemi.src_addr = src_address
         exp_knxipframe = KNXIPFrame.init_from_body(tunnelling_request)
-        with patch("xknx.io.UDPClient.send") as mock_udp_send, patch(
-            "xknx.io.UDPClient.getsockname"
+        with patch("xknx.io.transport.UDPClient.send") as mock_udp_send, patch(
+            "xknx.io.transport.UDPClient.getsockname"
         ) as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
             await tunnelling.start()

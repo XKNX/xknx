@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 import pytest
 from xknx import XKNX
-from xknx.io import UDPClient
 from xknx.io.request_response import Connect
+from xknx.io.transport import UDPClient
 from xknx.knxip import (
     HPAI,
     ConnectRequest,
@@ -24,7 +24,8 @@ class TestConnect:
         """Test connecting from KNX bus."""
         xknx = XKNX()
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
-        connect = Connect(xknx, udp_client, route_back=False)
+        local_hpai = HPAI(ip_addr="192.168.1.3", port=4321)
+        connect = Connect(xknx, udp_client, local_hpai=local_hpai)
         connect.timeout_in_seconds = 0
 
         assert connect.awaited_response_class == ConnectResponse
@@ -34,13 +35,13 @@ class TestConnect:
             ConnectRequest(
                 xknx,
                 request_type=ConnectRequestType.TUNNEL_CONNECTION,
-                control_endpoint=HPAI(ip_addr="192.168.1.3", port=4321),
-                data_endpoint=HPAI(ip_addr="192.168.1.3", port=4321),
+                control_endpoint=local_hpai,
+                data_endpoint=local_hpai,
             )
         )
 
-        with patch("xknx.io.UDPClient.send") as mock_udp_send, patch(
-            "xknx.io.UDPClient.getsockname"
+        with patch("xknx.io.transport.UDPClient.send") as mock_udp_send, patch(
+            "xknx.io.transport.UDPClient.getsockname"
         ) as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
             await connect.start()
@@ -80,7 +81,8 @@ class TestConnect:
         """Test connecting from KNX bus."""
         xknx = XKNX()
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
-        connect = Connect(xknx, udp_client, route_back=True)
+        local_hpai = HPAI()  # route_back: No IP address, no port, UDP
+        connect = Connect(xknx, udp_client, local_hpai=local_hpai)
         connect.timeout_in_seconds = 0
 
         assert connect.awaited_response_class == ConnectResponse
@@ -89,8 +91,8 @@ class TestConnect:
         exp_knxipframe = KNXIPFrame.init_from_body(
             ConnectRequest(xknx, request_type=ConnectRequestType.TUNNEL_CONNECTION)
         )
-        with patch("xknx.io.UDPClient.send") as mock_udp_send, patch(
-            "xknx.io.UDPClient.getsockname"
+        with patch("xknx.io.transport.UDPClient.send") as mock_udp_send, patch(
+            "xknx.io.transport.UDPClient.getsockname"
         ) as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
             await connect.start()

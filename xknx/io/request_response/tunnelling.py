@@ -14,18 +14,20 @@ from xknx.knxip import (
 from .request_response import RequestResponse
 
 if TYPE_CHECKING:
-    from xknx.io.udp_client import UDPClient
+    from xknx.io.transport import UDPClient
     from xknx.telegram import IndividualAddress, Telegram
     from xknx.xknx import XKNX
 
 
 class Tunnelling(RequestResponse):
-    """Class to TunnelingRequest and wait for TunnelingResponse."""
+    """Class to TunnelingRequest and wait for TunnelingACK (UDP only)."""
+
+    transport: UDPClient
 
     def __init__(
         self,
         xknx: XKNX,
-        udp_client: UDPClient,
+        transport: UDPClient,
         data_endpoint: tuple[str, int] | None,
         telegram: Telegram,
         src_address: IndividualAddress,
@@ -33,12 +35,10 @@ class Tunnelling(RequestResponse):
         communication_channel_id: int,
     ):
         """Initialize Tunnelling class."""
-        self.xknx = xknx
-        self.udp_client = udp_client
         self.data_endpoint_addr = data_endpoint
         self.src_address = src_address
 
-        super().__init__(xknx, self.udp_client, TunnellingAck)
+        super().__init__(xknx, transport, TunnellingAck)
 
         self.telegram = telegram
         self.sequence_counter = sequence_counter
@@ -46,7 +46,7 @@ class Tunnelling(RequestResponse):
 
     async def send_request(self) -> None:
         """Build knxipframe (within derived class) and send via UDP."""
-        self.udpclient.send(self.create_knxipframe(), addr=self.data_endpoint_addr)
+        self.transport.send(self.create_knxipframe(), addr=self.data_endpoint_addr)
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""

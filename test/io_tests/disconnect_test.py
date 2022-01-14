@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 import pytest
 from xknx import XKNX
-from xknx.io import UDPClient
 from xknx.io.request_response import Disconnect
+from xknx.io.transport import UDPClient
 from xknx.knxip import (
     HPAI,
     DisconnectRequest,
@@ -24,8 +24,9 @@ class TestDisconnect:
         xknx = XKNX()
         communication_channel_id = 23
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
+        local_hpai = HPAI(ip_addr="192.168.1.3", port=4321)
         disconnect = Disconnect(
-            xknx, udp_client, communication_channel_id, route_back=False
+            xknx, udp_client, communication_channel_id, local_hpai=local_hpai
         )
         disconnect.timeout_in_seconds = 0
 
@@ -37,11 +38,11 @@ class TestDisconnect:
             DisconnectRequest(
                 xknx,
                 communication_channel_id=communication_channel_id,
-                control_endpoint=HPAI(ip_addr="192.168.1.3", port=4321),
+                control_endpoint=local_hpai,
             )
         )
-        with patch("xknx.io.UDPClient.send") as mock_udp_send, patch(
-            "xknx.io.UDPClient.getsockname"
+        with patch("xknx.io.transport.UDPClient.send") as mock_udp_send, patch(
+            "xknx.io.transport.UDPClient.getsockname"
         ) as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
             await disconnect.start()
@@ -78,8 +79,9 @@ class TestDisconnect:
         xknx = XKNX()
         communication_channel_id = 23
         udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
+        local_hpai = HPAI()
         disconnect = Disconnect(
-            xknx, udp_client, communication_channel_id, route_back=True
+            xknx, udp_client, communication_channel_id, local_hpai=local_hpai
         )
         disconnect.timeout_in_seconds = 0
 
@@ -93,8 +95,8 @@ class TestDisconnect:
                 communication_channel_id=communication_channel_id,
             )
         )
-        with patch("xknx.io.UDPClient.send") as mock_udp_send, patch(
-            "xknx.io.UDPClient.getsockname"
+        with patch("xknx.io.transport.UDPClient.send") as mock_udp_send, patch(
+            "xknx.io.transport.UDPClient.getsockname"
         ) as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
             await disconnect.start()

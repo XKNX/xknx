@@ -25,7 +25,7 @@ from xknx.knxip import (
 )
 from xknx.telegram import IndividualAddress
 
-from .udp_client import UDPClient
+from .transport import UDPClient
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -159,14 +159,14 @@ class GatewayScanner:
         except asyncio.TimeoutError:
             pass
         finally:
-            await self._stop()
+            self._stop()
 
         return self.found_gateways
 
-    async def _stop(self) -> None:
+    def _stop(self) -> None:
         """Stop tearing down udpclient."""
         for udp_client in self._udp_clients:
-            await udp_client.stop()
+            udp_client.stop()
 
     async def _send_search_requests(self) -> None:
         """Find all interfaces with active IPv4 connection to search for gateways."""

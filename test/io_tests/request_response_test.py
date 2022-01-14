@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from xknx import XKNX
-from xknx.io import UDPClient
 from xknx.io.request_response import RequestResponse
+from xknx.io.transport import UDPClient
 from xknx.knxip import DisconnectResponse, KNXIPBody
 
 

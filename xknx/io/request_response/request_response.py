@@ -9,7 +9,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING
 
-from xknx.io.udp_client import UDPClient
+from xknx.io.transport import KNXIPTransport
 from xknx.knxip import HPAI, ErrorCode, KNXIPBodyResponse, KNXIPFrame
 
 if TYPE_CHECKING:
@@ -24,13 +24,13 @@ class RequestResponse:
     def __init__(
         self,
         xknx: XKNX,
-        udp_client: UDPClient,
+        transport: KNXIPTransport,
         awaited_response_class: type[KNXIPBodyResponse],
         timeout_in_seconds: float = 1.0,
     ):
         """Initialize RequstResponse class."""
         self.xknx = xknx
-        self.udpclient = udp_client
+        self.transport = transport
         self.awaited_response_class: type[KNXIPBodyResponse] = awaited_response_class
         self.response_received_event = asyncio.Event()
         self.success = False
@@ -44,7 +44,7 @@ class RequestResponse:
 
     async def start(self) -> None:
         """Start. Send request and wait for an answer."""
-        callb = self.udpclient.register_callback(
+        callb = self.transport.register_callback(
             self.response_rec_callback, [self.awaited_response_class.SERVICE_TYPE]
         )
         await self.send_request()
@@ -62,16 +62,16 @@ class RequestResponse:
             )
         finally:
             # cleanup to not leave callbacks (for asyncio.CancelledError)
-            self.udpclient.unregister_callback(callb)
+            self.transport.unregister_callback(callb)
 
     async def send_request(self) -> None:
         """Build knxipframe (within derived class) and send via UDP."""
-        self.udpclient.send(self.create_knxipframe())
+        self.transport.send(self.create_knxipframe())
 
     def response_rec_callback(
-        self, knxipframe: KNXIPFrame, source: HPAI, _: UDPClient
+        self, knxipframe: KNXIPFrame, source: HPAI, _: KNXIPTransport
     ) -> None:
-        """Verify and handle knxipframe. Callback from internal udpclient."""
+        """Verify and handle knxipframe. Callback from internal transport."""
         if not isinstance(knxipframe.body, self.awaited_response_class):
             logger.warning("Could not understand knxipframe")
             return

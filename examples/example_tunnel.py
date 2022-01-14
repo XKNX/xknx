@@ -3,7 +3,7 @@ import asyncio
 
 from xknx import XKNX
 from xknx.dpt import DPTBinary
-from xknx.io import GatewayScanner, Tunnel
+from xknx.io import GatewayScanner, UDPTunnel
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
@@ -24,7 +24,7 @@ async def main():
 
     print(f"Connecting to {gateway.ip_addr}:{gateway.port} from {gateway.local_ip}")
 
-    tunnel = Tunnel(
+    tunnel = UDPTunnel(
         xknx,
         gateway_ip=gateway.ip_addr,
         gateway_port=gateway.port,
