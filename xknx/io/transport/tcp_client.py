@@ -10,7 +10,12 @@ import logging
 import time
 from typing import TYPE_CHECKING, Callable, Tuple, cast
 
-from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, XKNXException
+from xknx.exceptions import (
+    CommunicationError,
+    CouldNotParseKNXIP,
+    IncompleteKNXIPFrame,
+    XKNXException,
+)
 from xknx.knxip import HPAI, HostProtocol, KNXIPFrame
 
 from .ip_transport import KNXIPTransport
@@ -64,29 +69,46 @@ class TCPClient(KNXIPTransport):
         self.callbacks = []
 
         self.transport: asyncio.Transport | None = None
+        self._buffer = bytes()
 
     def data_received_callback(self, raw: bytes) -> None:
-        """Parse and process KNXIP frame. Callback for having received a TCP packet."""
-        if raw:
-            try:
-                knxipframe = KNXIPFrame(self.xknx)
-                knxipframe.from_knx(raw)
-            except CouldNotParseKNXIP as couldnotparseknxip:
-                knx_logger.debug(
-                    "Unsupported KNXIPFrame from %s at %s: %s in %s",
-                    self.remote_hpai,
-                    time.time(),
-                    couldnotparseknxip.description,
-                    raw.hex(),
-                )
-            else:
-                knx_logger.debug(
-                    "Received from %s at %s:\n%s",
-                    self.remote_hpai,
-                    time.time(),
-                    knxipframe,
-                )
-                self.handle_knxipframe(knxipframe, self.remote_hpai)
+        """Parse and process KNXIP frame. Callback for having received data over TCP."""
+        if self._buffer:
+            raw = self._buffer + raw
+            self._buffer = bytes()
+        if not raw:
+            return
+        try:
+            knxipframe = KNXIPFrame(self.xknx)
+            frame_length = knxipframe.from_knx(raw)
+        except IncompleteKNXIPFrame:
+            self._buffer = raw
+            raw_socket_logger.debug(
+                "Incomplete KNX/IP frame. Waiting for rest: %s", raw.hex()
+            )
+            return
+        except CouldNotParseKNXIP as couldnotparseknxip:
+            knx_logger.debug(
+                "Unsupported KNXIPFrame from %s at %s: %s in %s",
+                self.remote_hpai,
+                time.time(),
+                couldnotparseknxip.description,
+                raw.hex(),
+            )
+            if not (frame_length := knxipframe.header.total_length):
+                return
+        else:
+            knx_logger.debug(
+                "Received from %s at %s:\n%s",
+                self.remote_hpai,
+                time.time(),
+                knxipframe,
+            )
+            self.handle_knxipframe(knxipframe, self.remote_hpai)
+
+        # parse data after current KNX/IP frame
+        if len(raw) > frame_length:
+            self.data_received_callback(raw[frame_length:])
 
     def handle_knxipframe(self, knxipframe: KNXIPFrame, source: HPAI) -> None:
         """Handle KNXIP Frame and call all callbacks matching the service type ident."""

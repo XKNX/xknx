@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from xknx.exceptions import CouldNotParseKNXIP
+from xknx.exceptions import CouldNotParseKNXIP, IncompleteKNXIPFrame
 
 from .body import KNXIPBody
 from .connect_request import ConnectRequest
@@ -84,13 +84,13 @@ class KNXIPFrame:
     def from_knx(self, data: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         pos = self.header.from_knx(data)
-
-        pos += self.init(self.header.service_type_ident).from_knx(data[pos:])
-
-        if pos != len(data):
-            raise CouldNotParseKNXIP("KNXIP data has wrong length")
-
-        return pos
+        if len(data) < self.header.total_length:
+            raise IncompleteKNXIPFrame("Incomplete data for KNXIPFrame")
+        # limit data to self.header.total_length for streaming socket data
+        self.init(self.header.service_type_ident).from_knx(
+            data[pos : self.header.total_length]
+        )
+        return self.header.total_length
 
     def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
