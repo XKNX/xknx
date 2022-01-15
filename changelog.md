@@ -8,12 +8,14 @@
 
 ### Connection
 
+- Add support for TCP tunnel connections
 - Optionally run KNXIPInterface in separate thread
 - Handle separate Tunneling control and data endpoints
 - Fix rate limiter wait time: don't add time waiting for ACK or L_DATA.con frames to the rate_limit
 
 ## Internals
 
+- Some refactoring and code movement in the io module - especially in KNXIPInterface
 - Cleanup some list generating code in the knxip module
 
 ## 0.18.15 Come back almighty Gateway Scanner
