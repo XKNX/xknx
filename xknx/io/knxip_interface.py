@@ -62,7 +62,7 @@ class KNXIPInterface:
     async def _start(self) -> None:
         """Start interface. Connecting KNX/IP device with the selected method."""
         if self.connection_config.connection_type == ConnectionType.ROUTING:
-            await self._start_routing(self.connection_config.local_ip)
+            await self._start_routing(local_ip=self.connection_config.local_ip)
         elif (
             self.connection_config.connection_type == ConnectionType.TUNNELING
             and self.connection_config.gateway_ip is not None

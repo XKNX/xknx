@@ -53,3 +53,10 @@ class TestKNXIPFrame:
         knxipframe = KNXIPFrame(xknx)
         with pytest.raises(IncompleteKNXIPFrame):
             knxipframe.from_knx(raw)
+
+    def test_to_knx_no_body(self):
+        """Test to_knx method without body raises exception."""
+        xknx = XKNX()
+        knxipframe = KNXIPFrame(xknx)
+        with pytest.raises(CouldNotParseKNXIP):
+            knxipframe.to_knx()
