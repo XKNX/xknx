@@ -15,7 +15,7 @@
 
 ## Internals
 
-- Some refactoring and code movement in the io module - especially in KNXIPInterface
+- Some refactoring and code movement in the io module - especially in KNXIPInterface; renamed UDPClient to UDPTransport
 - Cleanup some list generating code in the knxip module
 
 ## 0.18.15 Come back almighty Gateway Scanner
