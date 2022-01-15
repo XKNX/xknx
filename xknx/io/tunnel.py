@@ -77,7 +77,7 @@ class _Tunnel(Interface):
 
     @abstractmethod
     def _init_transport(self) -> None:
-        """Initialize transport client."""
+        """Initialize transport transport."""
         # set up self.transport
 
     @abstractmethod
@@ -112,7 +112,7 @@ class _Tunnel(Interface):
             if self.auto_reconnect:
                 self._reconnect_task = asyncio.create_task(self._reconnect())
                 return False
-            # close udp client to prevent open file descriptors
+            # close udp transport to prevent open file descriptors
             self.transport.stop()
             raise ex
         else:
@@ -298,7 +298,7 @@ class _Tunnel(Interface):
     ####################
 
     def _request_received(
-        self, knxipframe: KNXIPFrame, source: HPAI, _client: KNXIPTransport
+        self, knxipframe: KNXIPFrame, source: HPAI, _transport: KNXIPTransport
     ) -> None:
         """Handle incoming requests."""
         if isinstance(knxipframe.body, TunnellingRequest):
@@ -372,7 +372,7 @@ class TCPTunnel(_Tunnel):
         )
 
     def _init_transport(self) -> None:
-        """Initialize transport client."""
+        """Initialize transport transport."""
         self.transport = TCPTransport(
             self.xknx,
             (self.gateway_ip, self.gateway_port),
@@ -446,7 +446,7 @@ class UDPTunnel(_Tunnel):
         )
 
     def _init_transport(self) -> None:
-        """Initialize transport client."""
+        """Initialize transport transport."""
         self.transport = UDPTransport(
             self.xknx,
             (self.local_ip, self.local_port),

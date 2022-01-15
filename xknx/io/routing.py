@@ -105,7 +105,7 @@ class Routing(Interface):
             await self.xknx.connection_manager.connection_state_changed(
                 XknxConnectionState.DISCONNECTED
             )
-            # close udp client to prevent open file descriptors
+            # close udp transport to prevent open file descriptors
             self.udp_transport.stop()
             raise ex
         await self.xknx.connection_manager.connection_state_changed(
