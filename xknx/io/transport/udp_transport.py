@@ -1,5 +1,5 @@
 """
-UDPClient is an abstraction for handling the complete UDP io.
+UDPTransport is an abstraction for handling the complete UDP io.
 
 The module is build upon asyncio udp functions.
 Due to lame support of UDP multicast within asyncio some special treatment for multicast is necessary.
@@ -26,10 +26,10 @@ logger = logging.getLogger("xknx.log")
 knx_logger = logging.getLogger("xknx.knx")
 
 
-class UDPClient(KNXIPTransport):
+class UDPTransport(KNXIPTransport):
     """Class for handling (sending and receiving) UDP packets."""
 
-    class UDPClientFactory(asyncio.DatagramProtocol):
+    class UDPTransportFactory(asyncio.DatagramProtocol):
         """Abstraction for managing the asyncio-udp transports."""
 
         def __init__(
@@ -39,7 +39,7 @@ class UDPClient(KNXIPTransport):
             data_received_callback: Callable[[bytes, tuple[str, int]], None]
             | None = None,
         ):
-            """Initialize UDPClientFactory class."""
+            """Initialize UDPTransportFactory class."""
             self.own_ip = own_ip
             self.multicast = multicast
             self.transport: asyncio.BaseTransport | None = None
@@ -70,7 +70,7 @@ class UDPClient(KNXIPTransport):
         remote_addr: tuple[str, int],
         multicast: bool = False,
     ):
-        """Initialize UDPClient class."""
+        """Initialize UDPTransport class."""
         if not isinstance(local_addr, tuple):
             raise TypeError()
         if not isinstance(remote_addr, tuple):
@@ -79,7 +79,7 @@ class UDPClient(KNXIPTransport):
         self.local_addr = local_addr
         self.remote_addr = remote_addr
         self.multicast = multicast
-        self.callbacks: list[UDPClient.Callback] = []
+        self.callbacks: list[UDPTransport.Callback] = []
 
         self.transport: asyncio.DatagramTransport | None = None
 
@@ -162,23 +162,25 @@ class UDPClient(KNXIPTransport):
 
     async def connect(self) -> None:
         """Connect UDP socket. Open UDP port and build mulitcast socket if necessary."""
-        udp_client_factory = UDPClient.UDPClientFactory(
+        udp_transport_factory = UDPTransport.UDPTransportFactory(
             self.local_addr[0],
             multicast=self.multicast,
             data_received_callback=self.data_received_callback,
         )
         loop = asyncio.get_running_loop()
         if self.multicast:
-            sock = UDPClient.create_multicast_sock(self.local_addr[0], self.remote_addr)
+            sock = UDPTransport.create_multicast_sock(
+                self.local_addr[0], self.remote_addr
+            )
             (transport, _) = await loop.create_datagram_endpoint(
-                lambda: udp_client_factory, sock=sock
+                lambda: udp_transport_factory, sock=sock
             )
             # TODO: typing - remove cast - loop.create_datagram_endpoint should return a DatagramTransport
             self.transport = cast(asyncio.DatagramTransport, transport)
 
         else:
             (transport, _) = await loop.create_datagram_endpoint(
-                lambda: udp_client_factory,
+                lambda: udp_transport_factory,
                 local_addr=self.local_addr,
             )
             # TODO: typing - remove cast - loop.create_datagram_endpoint should return a DatagramTransport

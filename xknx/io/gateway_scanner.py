@@ -25,7 +25,7 @@ from xknx.knxip import (
 )
 from xknx.telegram import IndividualAddress
 
-from .transport import UDPClient
+from .transport import UDPTransport
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -139,7 +139,7 @@ class GatewayScanner:
         self.stop_on_found = stop_on_found
         self.scan_filter = scan_filter
         self.found_gateways: list[GatewayDescriptor] = []
-        self._udp_clients: list[UDPClient] = []
+        self._udp_transports: list[UDPTransport] = []
         self._response_received_event = asyncio.Event()
         self._count_upper_bound = 0
         """Clean value of self.stop_on_found, computed when ``scan`` is called."""
@@ -164,9 +164,9 @@ class GatewayScanner:
         return self.found_gateways
 
     def _stop(self) -> None:
-        """Stop tearing down udpclient."""
-        for udp_client in self._udp_clients:
-            udp_client.stop()
+        """Stop tearing down udp_transport."""
+        for udp_transport in self._udp_transports:
+            udp_transport.stop()
 
     async def _send_search_requests(self) -> None:
         """Find all interfaces with active IPv4 connection to search for gateways."""
@@ -188,36 +188,36 @@ class GatewayScanner:
         """Send a search request on a specific interface."""
         logger.debug("Searching on %s / %s", interface, ip_addr)
 
-        udp_client = UDPClient(
+        udp_transport = UDPTransport(
             self.xknx,
             (ip_addr, 0),
             (self.xknx.multicast_group, self.xknx.multicast_port),
             multicast=True,
         )
 
-        udp_client.register_callback(
+        udp_transport.register_callback(
             partial(self._response_rec_callback, interface=interface),
             [KNXIPServiceType.SEARCH_RESPONSE],
         )
-        await udp_client.connect()
+        await udp_transport.connect()
 
-        self._udp_clients.append(udp_client)
+        self._udp_transports.append(udp_transport)
 
         discovery_endpoint = HPAI(
             ip_addr=self.xknx.multicast_group, port=self.xknx.multicast_port
         )
 
         search_request = SearchRequest(self.xknx, discovery_endpoint=discovery_endpoint)
-        udp_client.send(KNXIPFrame.init_from_body(search_request))
+        udp_transport.send(KNXIPFrame.init_from_body(search_request))
 
     def _response_rec_callback(
         self,
         knx_ip_frame: KNXIPFrame,
         source: HPAI,
-        udp_client: UDPClient,
+        udp_transport: UDPTransport,
         interface: str = "",
     ) -> None:
-        """Verify and handle knxipframe. Callback from internal udpclient."""
+        """Verify and handle knxipframe. Callback from internal udp_transport."""
         if not isinstance(knx_ip_frame.body, SearchResponse):
             logger.warning("Could not understand knxipframe")
             return
@@ -227,7 +227,7 @@ class GatewayScanner:
             ip_addr=knx_ip_frame.body.control_endpoint.ip_addr,
             port=knx_ip_frame.body.control_endpoint.port,
             local_interface=interface,
-            local_ip=udp_client.local_addr[0],
+            local_ip=udp_transport.local_addr[0],
         )
         try:
             dib = next(

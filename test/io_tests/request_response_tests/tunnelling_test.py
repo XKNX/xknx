@@ -5,7 +5,7 @@ import pytest
 from xknx import XKNX
 from xknx.dpt import DPTArray
 from xknx.io.request_response import Tunnelling
-from xknx.io.transport import UDPClient
+from xknx.io.transport import UDPTransport
 from xknx.knxip import (
     HPAI,
     ErrorCode,
@@ -27,7 +27,7 @@ class TestTunnelling:
         xknx = XKNX()
         communication_channel_id = 23
         data_endpoint = ("192.168.1.2", 4567)
-        udp_client = UDPClient(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
+        udp_transport = UDPTransport(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x1, 0x2, 0x3))),
@@ -36,7 +36,7 @@ class TestTunnelling:
         src_address = IndividualAddress("2.2.2")
         tunnelling = Tunnelling(
             xknx,
-            udp_client,
+            udp_transport,
             data_endpoint,
             telegram,
             src_address,
@@ -57,8 +57,8 @@ class TestTunnelling:
         tunnelling_request.cemi.telegram = telegram
         tunnelling_request.cemi.src_addr = src_address
         exp_knxipframe = KNXIPFrame.init_from_body(tunnelling_request)
-        with patch("xknx.io.transport.UDPClient.send") as mock_udp_send, patch(
-            "xknx.io.transport.UDPClient.getsockname"
+        with patch("xknx.io.transport.UDPTransport.send") as mock_udp_send, patch(
+            "xknx.io.transport.UDPTransport.getsockname"
         ) as mock_udp_getsockname:
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
             await tunnelling.start()

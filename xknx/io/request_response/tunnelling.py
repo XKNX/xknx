@@ -14,7 +14,7 @@ from xknx.knxip import (
 from .request_response import RequestResponse
 
 if TYPE_CHECKING:
-    from xknx.io.transport import UDPClient
+    from xknx.io.transport import UDPTransport
     from xknx.telegram import IndividualAddress, Telegram
     from xknx.xknx import XKNX
 
@@ -22,12 +22,12 @@ if TYPE_CHECKING:
 class Tunnelling(RequestResponse):
     """Class to TunnelingRequest and wait for TunnelingACK (UDP only)."""
 
-    transport: UDPClient
+    transport: UDPTransport
 
     def __init__(
         self,
         xknx: XKNX,
-        transport: UDPClient,
+        transport: UDPTransport,
         data_endpoint: tuple[str, int] | None,
         telegram: Telegram,
         src_address: IndividualAddress,

@@ -29,7 +29,7 @@ from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 from .const import HEARTBEAT_RATE
 from .interface import Interface
 from .request_response import Connect, ConnectionState, Disconnect, Tunnelling
-from .transport import KNXIPTransport, TCPClient, UDPClient
+from .transport import KNXIPTransport, TCPTransport, UDPTransport
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -349,7 +349,7 @@ class _Tunnel(Interface):
 class TCPTunnel(_Tunnel):
     """Class for handling KNX/IP TCP tunnels."""
 
-    transport: TCPClient
+    transport: TCPTransport
 
     def __init__(
         self,
@@ -373,7 +373,7 @@ class TCPTunnel(_Tunnel):
 
     def _init_transport(self) -> None:
         """Initialize transport client."""
-        self.transport = TCPClient(
+        self.transport = TCPTransport(
             self.xknx,
             (self.gateway_ip, self.gateway_port),
         )
@@ -415,7 +415,7 @@ class TCPTunnel(_Tunnel):
 class UDPTunnel(_Tunnel):
     """Class for handling KNX/IP UDP tunnels."""
 
-    transport: UDPClient
+    transport: UDPTransport
 
     def __init__(
         self,
@@ -447,7 +447,7 @@ class UDPTunnel(_Tunnel):
 
     def _init_transport(self) -> None:
         """Initialize transport client."""
-        self.transport = UDPClient(
+        self.transport = UDPTransport(
             self.xknx,
             (self.local_ip, self.local_port),
             (self.gateway_ip, self.gateway_port),

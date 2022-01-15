@@ -1,5 +1,5 @@
 """
-TCPClient is an abstraction for handling the complete TCP io.
+TCPTransport is an abstraction for handling the complete TCP io.
 
 The module is build upon asyncio stream socket functions.
 """
@@ -28,10 +28,10 @@ logger = logging.getLogger("xknx.log")
 knx_logger = logging.getLogger("xknx.knx")
 
 
-class TCPClient(KNXIPTransport):
+class TCPTransport(KNXIPTransport):
     """Class for handling (sending and receiving) TCP packets."""
 
-    class TCPClientFactory(asyncio.Protocol):
+    class TCPTransportFactory(asyncio.Protocol):
         """Abstraction for managing the asyncio-tcp protocol."""
 
         def __init__(
@@ -39,7 +39,7 @@ class TCPClient(KNXIPTransport):
             data_received_callback: Callable[[bytes], None],
             connection_lost_callback: Callable[[], None],
         ):
-            """Initialize UDPClientFactory class."""
+            """Initialize UDPTransportFactory class."""
             self.transport: asyncio.BaseTransport | None = None
             self.data_received_callback = data_received_callback
             self.connection_lost_callback = connection_lost_callback
@@ -63,7 +63,7 @@ class TCPClient(KNXIPTransport):
         xknx: XKNX,
         remote_addr: tuple[str, int],
     ):
-        """Initialize UDPClient class."""
+        """Initialize UDPTransport class."""
         self.xknx = xknx
         self.remote_hpai = HPAI(*remote_addr, protocol=HostProtocol.IPV4_TCP)
         self.callbacks = []
@@ -127,17 +127,17 @@ class TCPClient(KNXIPTransport):
 
     async def connect(self) -> None:
         """Connect TCP socket."""
-        tcp_client_factory = TCPClient.TCPClientFactory(
+        tcp_transport_factory = TCPTransport.TCPTransportFactory(
             data_received_callback=self.data_received_callback,
             connection_lost_callback=self.stop,
         )
         loop = asyncio.get_running_loop()
         (transport, _) = await loop.create_connection(
-            lambda: tcp_client_factory,
+            lambda: tcp_transport_factory,
             host=self.remote_hpai.ip_addr,
             port=self.remote_hpai.port,
         )
-        # TODO: typing - remove cast - loop.create_datagram_endpoint should return a DatagramTransport
+        # TODO: typing - remove cast - loop.create_connection should return a asyncio.Transport
         self.transport = cast(asyncio.Transport, transport)
 
     def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
