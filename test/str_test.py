@@ -25,6 +25,7 @@ from xknx.exceptions import (
     CouldNotParseKNXIP,
     CouldNotParseTelegram,
     DeviceIllegalValue,
+    IncompleteKNXIPFrame,
 )
 from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.knxip import (
@@ -420,6 +421,11 @@ class TestStringRepresentations:
             str(exception)
             == '<DeviceIllegalValue description="12" value="Fnord exceeded" />'
         )
+
+    def test_incomplete_knxip_frame_excetpion(self):
+        """Test string representation of IncompleteKNXIPFrame exception."""
+        exception = IncompleteKNXIPFrame("Hello")
+        assert str(exception) == '<IncompleteKNXIPFrame description="Hello" />'
 
     def test_address(self):
         """Test string representation of address object."""
