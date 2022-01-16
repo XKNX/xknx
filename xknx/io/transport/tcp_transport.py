@@ -8,14 +8,9 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import TYPE_CHECKING, Callable, Tuple, cast
+from typing import TYPE_CHECKING, Callable, cast
 
-from xknx.exceptions import (
-    CommunicationError,
-    CouldNotParseKNXIP,
-    IncompleteKNXIPFrame,
-    XKNXException,
-)
+from xknx.exceptions import CouldNotParseKNXIP, IncompleteKNXIPFrame, XKNXException
 from xknx.knxip import HPAI, HostProtocol, KNXIPFrame
 
 from .ip_transport import KNXIPTransport
@@ -66,8 +61,8 @@ class TCPTransport(KNXIPTransport):
         """Initialize UDPTransport class."""
         self.xknx = xknx
         self.remote_hpai = HPAI(*remote_addr, protocol=HostProtocol.IPV4_TCP)
-        self.callbacks = []
 
+        self.callbacks = []
         self.transport: asyncio.Transport | None = None
         self._buffer = bytes()
 
@@ -105,25 +100,9 @@ class TCPTransport(KNXIPTransport):
                 knxipframe,
             )
             self.handle_knxipframe(knxipframe, self.remote_hpai)
-
         # parse data after current KNX/IP frame
         if len(raw) > frame_length:
             self.data_received_callback(raw[frame_length:])
-
-    def handle_knxipframe(self, knxipframe: KNXIPFrame, source: HPAI) -> None:
-        """Handle KNXIP Frame and call all callbacks matching the service type ident."""
-        handled = False
-        for callback in self.callbacks:
-            if callback.has_service(knxipframe.header.service_type_ident):
-                callback.callback(knxipframe, source, self)
-                handled = True
-        if not handled:
-            knx_logger.debug(
-                "Unhandled %s: %s from: %s",
-                knxipframe.header.service_type_ident,
-                knxipframe,
-                source,
-            )
 
     async def connect(self) -> None:
         """Connect TCP socket."""
@@ -152,24 +131,3 @@ class TCPTransport(KNXIPTransport):
             raise XKNXException("Transport not connected")
 
         self.transport.write(bytes(knxipframe.to_knx()))
-
-    def getsockname(self) -> tuple[str, int]:
-        """Return socket IP and port."""
-        if self.transport is None:
-            raise CommunicationError(
-                "No transport defined. Socket information not resolveable"
-            )
-        return cast(Tuple[str, int], self.transport.get_extra_info("sockname"))
-
-    def getremote(self) -> str | None:
-        """Return peername."""
-        return (
-            self.transport.get_extra_info("peername")
-            if self.transport is not None
-            else None
-        )
-
-    def stop(self) -> None:
-        """Stop TCP socket."""
-        if self.transport is not None:
-            self.transport.close()

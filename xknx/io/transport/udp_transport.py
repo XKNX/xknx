@@ -11,9 +11,9 @@ import logging
 import socket
 from sys import platform
 import time
-from typing import TYPE_CHECKING, Callable, Tuple, cast
+from typing import TYPE_CHECKING, Callable, cast
 
-from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, XKNXException
+from xknx.exceptions import CouldNotParseKNXIP, XKNXException
 from xknx.knxip import HPAI, KNXIPFrame
 
 from .ip_transport import KNXIPTransport
@@ -79,8 +79,8 @@ class UDPTransport(KNXIPTransport):
         self.local_addr = local_addr
         self.remote_addr = remote_addr
         self.multicast = multicast
-        self.callbacks: list[UDPTransport.Callback] = []
 
+        self.callbacks = []
         self.transport: asyncio.DatagramTransport | None = None
 
     def data_received_callback(self, raw: bytes, source: tuple[str, int]) -> None:
@@ -107,21 +107,6 @@ class UDPTransport(KNXIPTransport):
                     knxipframe,
                 )
                 self.handle_knxipframe(knxipframe, HPAI(*source))
-
-    def handle_knxipframe(self, knxipframe: KNXIPFrame, source: HPAI) -> None:
-        """Handle KNXIP Frame and call all callbacks matching the service type ident."""
-        handled = False
-        for callback in self.callbacks:
-            if callback.has_service(knxipframe.header.service_type_ident):
-                callback.callback(knxipframe, source, self)
-                handled = True
-        if not handled:
-            knx_logger.debug(
-                "Unhandled %s: %s from: %s",
-                knxipframe.header.service_type_ident,
-                knxipframe,
-                source,
-            )
 
     @staticmethod
     def create_multicast_sock(
@@ -204,24 +189,3 @@ class UDPTransport(KNXIPTransport):
             self.transport.sendto(bytes(knxipframe.to_knx()), self.remote_addr)
         else:
             self.transport.sendto(bytes(knxipframe.to_knx()), addr=_addr)
-
-    def getsockname(self) -> tuple[str, int]:
-        """Return socket IP and port."""
-        if self.transport is None:
-            raise CommunicationError(
-                "No transport defined. Socket information not resolveable"
-            )
-        return cast(Tuple[str, int], self.transport.get_extra_info("sockname"))
-
-    def getremote(self) -> str | None:
-        """Return peername."""
-        return (
-            self.transport.get_extra_info("peername")
-            if self.transport is not None
-            else None
-        )
-
-    def stop(self) -> None:
-        """Stop UDP socket."""
-        if self.transport is not None:
-            self.transport.close()
