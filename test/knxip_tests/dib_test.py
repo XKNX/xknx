@@ -104,7 +104,7 @@ class TestKNXIPDIB:
         assert dib.installation_number == 2
         assert dib.to_knx() == list(raw)
 
-    def test_dib_sup_svc_families(self):
+    def test_dib_sup_svc_families_router(self):
         """Test parsing of svc families."""
         raw = (0x0C, 0x02, 0x02, 0x01, 0x03, 0x02, 0x04, 0x01, 0x05, 0x01, 0x07, 0x01)
 
@@ -123,3 +123,34 @@ class TestKNXIPDIB:
         ]
 
         assert dib.to_knx() == list(raw)
+
+        assert dib.supports(DIBServiceFamily.CORE)
+        assert dib.supports(DIBServiceFamily.DEVICE_MANAGEMENT)
+        assert dib.supports(DIBServiceFamily.DEVICE_MANAGEMENT, version=2)
+        assert dib.supports(DIBServiceFamily.TUNNELING)
+        assert not dib.supports(DIBServiceFamily.TUNNELING, version=2)
+        assert dib.supports(DIBServiceFamily.ROUTING, version=1)
+
+    def test_dib_sup_svc_families_interface(self):
+        """Test parsing of svc families."""
+        raw = (0x0A, 0x02, 0x02, 0x02, 0x03, 0x02, 0x04, 0x02, 0x07, 0x01)
+
+        dib = DIB.determine_dib(raw)
+        assert isinstance(dib, DIBSuppSVCFamilies)
+        assert dib.from_knx(raw) == 10
+
+        assert dib.families == [
+            DIBSuppSVCFamilies.Family(DIBServiceFamily.CORE, 2),
+            DIBSuppSVCFamilies.Family(DIBServiceFamily.DEVICE_MANAGEMENT, 2),
+            DIBSuppSVCFamilies.Family(DIBServiceFamily.TUNNELING, 2),
+            DIBSuppSVCFamilies.Family(
+                DIBServiceFamily.REMOTE_CONFIGURATION_DIAGNOSIS, 1
+            ),
+        ]
+
+        assert dib.to_knx() == list(raw)
+
+        assert dib.supports(DIBServiceFamily.TUNNELING)
+        assert dib.supports(DIBServiceFamily.TUNNELING, version=2)
+        assert not dib.supports(DIBServiceFamily.ROUTING)
+        assert not dib.supports(DIBServiceFamily.ROUTING, version=2)

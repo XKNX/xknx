@@ -1,9 +1,9 @@
 """Module for serialization and deserialization of KNX/IP Header."""
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import Final
 
-from xknx.exceptions import CouldNotParseKNXIP
+from xknx.exceptions import CouldNotParseKNXIP, IncompleteKNXIPFrame
 
 from .body import KNXIPBody
 from .knxip_enum import KNXIPServiceType
@@ -12,13 +12,11 @@ from .knxip_enum import KNXIPServiceType
 class KNXIPHeader:
     """Class for serialization and deserialization of KNX/IP Header."""
 
-    HEADERLENGTH: ClassVar[int] = 0x06
-    PROTOCOLVERSION: ClassVar[int] = 0x10
+    HEADERLENGTH: Final = 0x06
+    PROTOCOLVERSION: Final = 0x10  # The only valid protocol version at this time is 1.0
 
     def __init__(self) -> None:
         """Initialize KNXIPHeader class."""
-        self.header_length = KNXIPHeader.HEADERLENGTH
-        self.protocol_version = KNXIPHeader.PROTOCOLVERSION
         self.service_type_ident = KNXIPServiceType.ROUTING_INDICATION
         self.b4_reserve = 0
         self.total_length = 0  # to be set later
@@ -26,14 +24,14 @@ class KNXIPHeader:
     def from_knx(self, data: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         if len(data) < KNXIPHeader.HEADERLENGTH:
-            raise CouldNotParseKNXIP("wrong connection header length")
+            raise IncompleteKNXIPFrame("wrong connection header length")
         if data[0] != KNXIPHeader.HEADERLENGTH:
             raise CouldNotParseKNXIP("wrong connection header length")
+        # set immediately, as we need it for tcp stream parsing before raising exception
+        self.total_length = data[5]
         if data[1] != KNXIPHeader.PROTOCOLVERSION:
             raise CouldNotParseKNXIP("wrong protocol version")
 
-        self.header_length = data[0]
-        self.protocol_version = data[1]
         try:
             self.service_type_ident = KNXIPServiceType(data[2] * 256 + data[3])
         except ValueError:
@@ -41,7 +39,6 @@ class KNXIPHeader:
                 f"KNXIPServiceType unknown: {hex(data[2] * 256 + data[3])}"
             )
         self.b4_reserve = data[4]
-        self.total_length = data[5]
         return KNXIPHeader.HEADERLENGTH
 
     def set_length(self, body: KNXIPBody) -> None:
@@ -53,8 +50,8 @@ class KNXIPHeader:
     def to_knx(self) -> list[int]:
         """Serialize to KNX/IP raw data."""
         return [
-            self.header_length,
-            self.protocol_version,
+            KNXIPHeader.HEADERLENGTH,
+            KNXIPHeader.PROTOCOLVERSION,
             (self.service_type_ident.value >> 8) & 255,
             self.service_type_ident.value & 255,
             (self.total_length >> 8) & 255,
@@ -65,8 +62,8 @@ class KNXIPHeader:
         """Return object as readable string."""
         return (
             "<KNXIPHeader "
-            f'HeaderLength="{self.header_length}" '
-            f'ProtocolVersion="{self.protocol_version}" '
+            f'HeaderLength="{KNXIPHeader.HEADERLENGTH}" '
+            f'ProtocolVersion="{KNXIPHeader.PROTOCOLVERSION}" '
             f'KNXIPServiceType="{self.service_type_ident.name}" '
             f'Reserve="{self.b4_reserve}" '
             f'TotalLength="{self.total_length}" />'

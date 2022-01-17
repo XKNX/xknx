@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from xknx import XKNX
 from xknx.dpt import DPTArray
-from xknx.io import Tunnel
+from xknx.io import UDPTunnel
 from xknx.knxip import (
     HPAI,
     CEMIFrame,
@@ -23,7 +23,7 @@ from xknx.telegram.apci import GroupValueWrite
 
 
 @pytest.mark.asyncio
-class TestTunnel:
+class TestUDPTunnel:
     """Test class for xknx/io/Tunnel objects."""
 
     def setup_method(self):
@@ -31,7 +31,7 @@ class TestTunnel:
         # pylint: disable=attribute-defined-outside-init
         self.xknx = XKNX()
         self.tg_received_mock = Mock()
-        self.tunnel = Tunnel(
+        self.tunnel = UDPTunnel(
             self.xknx,
             gateway_ip="192.168.1.2",
             gateway_port=3671,
@@ -43,7 +43,7 @@ class TestTunnel:
             route_back=False,
         )
 
-    @patch("xknx.io.Tunnel._send_tunnelling_ack")
+    @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
     def test_tunnel_request_received(self, send_ack_mock):
         """Test Tunnel for calling send_ack on normal frames."""
         # LDataInd GroupValueWrite from 1.1.22 to to 5/1/22 with DPT9 payload 0C 3F
@@ -54,11 +54,11 @@ class TestTunnel:
         telegram = _cemi.telegram
         telegram.direction = TelegramDirection.INCOMING
 
-        self.tunnel.udp_client.data_received_callback(raw, ("192.168.1.2", 3671))
+        self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
         self.tg_received_mock.assert_called_once_with(telegram)
         send_ack_mock.assert_called_once_with(0x02, 0x21)
 
-    @patch("xknx.io.Tunnel._send_tunnelling_ack")
+    @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
     def test_tunnel_request_received_cemi_too_small(self, send_ack_mock):
         """Test Tunnel sending ACK for unsupported frames."""
         # LDataInd T_Connect from 1.0.250 to 1.0.255 (xknx tunnel endpoint) - ETS Line-Scan
@@ -66,11 +66,11 @@ class TestTunnel:
         # communication_channel_id: 0x02   sequence_counter: 0x81
         raw = bytes.fromhex("0610 0420 0014 04 02 81 00 2900b06010fa10ff0080")
 
-        self.tunnel.udp_client.data_received_callback(raw, ("192.168.1.2", 3671))
+        self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
         self.tg_received_mock.assert_not_called()
         send_ack_mock.assert_called_once_with(0x02, 0x81)
 
-    @patch("xknx.io.Tunnel._send_tunnelling_ack")
+    @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
     def test_tunnel_request_received_apci_unsupported(self, send_ack_mock):
         """Test Tunnel sending ACK for unsupported frames."""
         # LDataInd Unsupported Extended APCI from 0.0.1 to 0/0/0 broadcast
@@ -78,13 +78,13 @@ class TestTunnel:
         # communication_channel_id: 0x02   sequence_counter: 0x4f
         raw = bytes.fromhex("0610 0420 0015 04 02 4f 00 2900b0d0000100000103f8")
 
-        self.tunnel.udp_client.data_received_callback(raw, ("192.168.1.2", 3671))
+        self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
         self.tg_received_mock.assert_not_called()
         send_ack_mock.assert_called_once_with(0x02, 0x4F)
 
     async def test_tunnel_wait_for_l2_confirmation(self, time_travel):
         """Test tunnel waits for L_DATA.con before sending another L_DATA.req."""
-        self.tunnel.udp_client.send = Mock()
+        self.tunnel.transport.send = Mock()
         self.tunnel.communication_channel = 1
 
         test_telegram = Telegram(payload=GroupValueWrite(DPTArray((1,))))
@@ -103,15 +103,15 @@ class TestTunnel:
         )
         task = asyncio.create_task(self.tunnel.send_telegram(test_telegram))
         await time_travel(0)
-        self.tunnel.udp_client.handle_knxipframe(test_ack, HPAI())
+        self.tunnel.transport.handle_knxipframe(test_ack, HPAI())
         await time_travel(0)
         assert not task.done()
-        assert self.tunnel.udp_client.send.call_count == 1
-        self.tunnel.udp_client.handle_knxipframe(confirmation, HPAI())
+        assert self.tunnel.transport.send.call_count == 1
+        self.tunnel.transport.handle_knxipframe(confirmation, HPAI())
         await time_travel(0)
         assert task.done()
         # one call for the outgoing request and one for the ACK for the confirmation
-        assert self.tunnel.udp_client.send.call_count == 2
+        assert self.tunnel.transport.send.call_count == 2
         await task
 
     async def test_tunnel_connect_send_disconnect(self, time_travel):
@@ -119,10 +119,10 @@ class TestTunnel:
         local_addr = ("192.168.1.1", 12345)
         gateway_control_addr = ("192.168.1.2", 3671)
         gateway_data_addr = ("192.168.1.2", 56789)
-        self.tunnel.udp_client.connect = AsyncMock()
-        self.tunnel.udp_client.getsockname = Mock(return_value=local_addr)
-        self.tunnel.udp_client.send = Mock()
-        self.tunnel.udp_client.stop = AsyncMock()
+        self.tunnel.transport.connect = AsyncMock()
+        self.tunnel.transport.getsockname = Mock(return_value=local_addr)
+        self.tunnel.transport.send = Mock()
+        self.tunnel.transport.stop = Mock()
 
         # Connect
         connect_request = ConnectRequest(
@@ -134,8 +134,8 @@ class TestTunnel:
 
         connection_task = asyncio.create_task(self.tunnel.connect())
         await time_travel(0)
-        self.tunnel.udp_client.connect.assert_called_once()
-        self.tunnel.udp_client.send.assert_called_once_with(connect_frame)
+        self.tunnel.transport.connect.assert_called_once()
+        self.tunnel.transport.send.assert_called_once_with(connect_frame)
 
         connect_response_frame = KNXIPFrame.init_from_body(
             ConnectResponse(
@@ -145,7 +145,7 @@ class TestTunnel:
                 identifier=7,
             )
         )
-        self.tunnel.udp_client.handle_knxipframe(
+        self.tunnel.transport.handle_knxipframe(
             connect_response_frame, gateway_control_addr
         )
         await connection_task
@@ -153,7 +153,7 @@ class TestTunnel:
         assert self.tunnel._src_address == IndividualAddress(7)
 
         # Send - use data endpoint
-        self.tunnel.udp_client.send.reset_mock()
+        self.tunnel.transport.send.reset_mock()
         test_telegram = Telegram(payload=GroupValueWrite(DPTArray((1,))))
         test_telegram_frame = KNXIPFrame.init_from_body(
             TunnellingRequest(
@@ -170,13 +170,13 @@ class TestTunnel:
         )
         asyncio.create_task(self.tunnel.send_telegram(test_telegram))
         await time_travel(0)
-        self.tunnel.udp_client.send.assert_called_once_with(
+        self.tunnel.transport.send.assert_called_once_with(
             test_telegram_frame, addr=gateway_data_addr
         )
         # skip ack and confirmation
 
         # Disconnect
-        self.tunnel.udp_client.send.reset_mock()
+        self.tunnel.transport.send.reset_mock()
         disconnect_request = DisconnectRequest(
             self.xknx, communication_channel_id=23, control_endpoint=HPAI(*local_addr)
         )
@@ -184,7 +184,7 @@ class TestTunnel:
 
         disconnection_task = asyncio.create_task(self.tunnel.disconnect())
         await time_travel(0)
-        self.tunnel.udp_client.send.assert_called_once_with(disconnect_frame)
+        self.tunnel.transport.send.assert_called_once_with(disconnect_frame)
 
         disconnect_response_frame = KNXIPFrame.init_from_body(
             DisconnectResponse(
@@ -192,9 +192,9 @@ class TestTunnel:
                 communication_channel_id=23,
             )
         )
-        self.tunnel.udp_client.handle_knxipframe(
+        self.tunnel.transport.handle_knxipframe(
             disconnect_response_frame, gateway_control_addr
         )
         await disconnection_task
         assert self.tunnel._data_endpoint_addr is None
-        self.tunnel.udp_client.stop.assert_called_once()
+        self.tunnel.transport.stop.assert_called_once()

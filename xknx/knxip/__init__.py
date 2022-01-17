@@ -19,6 +19,7 @@ from .knxip_enum import (
     ConnectRequestType,
     DIBServiceFamily,
     DIBTypeCode,
+    HostProtocol,
     KNXIPServiceType,
     KNXMedium,
 )
@@ -51,6 +52,7 @@ __all__ = [
     "ConnectRequestType",
     "DIBServiceFamily",
     "DIBTypeCode",
+    "HostProtocol",
     "KNXIPServiceType",
     "KNXMedium",
     "RoutingIndication",

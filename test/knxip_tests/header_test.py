@@ -13,8 +13,8 @@ class TestKNXIPHeader:
         raw = (0x06, 0x10, 0x04, 0x21, 0x00, 0x0A)
         header = KNXIPHeader()
         assert header.from_knx(raw) == 6
-        assert header.header_length == 6
-        assert header.protocol_version == 16
+        assert header.HEADERLENGTH == 6
+        assert header.PROTOCOLVERSION == 16
         assert header.service_type_ident == KNXIPServiceType.TUNNELLING_ACK
         assert header.b4_reserve == 0
         assert header.total_length == 10

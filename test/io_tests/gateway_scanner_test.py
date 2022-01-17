@@ -4,8 +4,9 @@ from unittest.mock import MagicMock, create_autospec, patch
 
 import pytest
 from xknx import XKNX
-from xknx.io import GatewayScanFilter, GatewayScanner, UDPClient
+from xknx.io import GatewayScanFilter, GatewayScanner
 from xknx.io.gateway_scanner import GatewayDescriptor
+from xknx.io.transport import UDPTransport
 from xknx.knxip import (
     HPAI,
     DIBDeviceInformation,
@@ -26,7 +27,7 @@ class TestGatewayScanner:
         ip_addr="10.1.1.11",
         port=3761,
         local_interface="en1",
-        local_ip="110.1.1.100",
+        local_ip="10.1.1.100",
         supports_tunnelling=True,
         supports_routing=False,
     )
@@ -46,6 +47,7 @@ class TestGatewayScanner:
         local_interface="en1",
         local_ip="192.168.42.50",
         supports_tunnelling=True,
+        supports_tunnelling_tcp=True,
         supports_routing=True,
         individual_address=IndividualAddress("1.1.0"),
     )
@@ -101,6 +103,7 @@ class TestGatewayScanner:
         """Test match function of gateway filter."""
         filter_default = GatewayScanFilter()
         filter_tunnel = GatewayScanFilter(tunnelling=True)
+        filter_tcp_tunnel = GatewayScanFilter(tunnelling_tcp=True)
         filter_router = GatewayScanFilter(routing=True)
         filter_name = GatewayScanFilter(name="KNX-Router")
         filter_no_tunnel = GatewayScanFilter(tunnelling=False)
@@ -116,6 +119,11 @@ class TestGatewayScanner:
         assert not filter_tunnel.match(self.gateway_desc_router)
         assert filter_tunnel.match(self.gateway_desc_both)
         assert not filter_tunnel.match(self.gateway_desc_neither)
+
+        assert not filter_tcp_tunnel.match(self.gateway_desc_interface)
+        assert not filter_tcp_tunnel.match(self.gateway_desc_router)
+        assert filter_tcp_tunnel.match(self.gateway_desc_both)
+        assert not filter_tcp_tunnel.match(self.gateway_desc_neither)
 
         assert not filter_router.match(self.gateway_desc_interface)
         assert filter_router.match(self.gateway_desc_router)
@@ -147,15 +155,15 @@ class TestGatewayScanner:
         xknx = XKNX()
         gateway_scanner = GatewayScanner(xknx)
         test_search_response = fake_router_search_response(xknx)
-        udp_client_mock = create_autospec(UDPClient)
-        udp_client_mock.local_addr = ("192.168.42.50", 0)
-        udp_client_mock.getsockname.return_value = ("192.168.42.50", 0)
+        udp_transport_mock = create_autospec(UDPTransport)
+        udp_transport_mock.local_addr = ("192.168.42.50", 0)
+        udp_transport_mock.getsockname.return_value = ("192.168.42.50", 0)
 
         assert not gateway_scanner.found_gateways
         gateway_scanner._response_rec_callback(
             test_search_response,
             HPAI("192.168.42.50", 0),
-            udp_client_mock,
+            udp_transport_mock,
             interface="en1",
         )
 
@@ -165,7 +173,7 @@ class TestGatewayScanner:
         gateway_scanner._response_rec_callback(
             test_search_response,
             HPAI("192.168.42.230", 0),
-            udp_client_mock,
+            udp_transport_mock,
             interface="eth1",
         )
         assert len(gateway_scanner.found_gateways) == 1
