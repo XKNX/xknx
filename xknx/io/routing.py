@@ -9,6 +9,7 @@ import logging
 from typing import TYPE_CHECKING, Callable
 
 from xknx.core import XknxConnectionState
+from xknx.exceptions import CommunicationError
 from xknx.knxip import (
     HPAI,
     CEMIFrame,
@@ -107,7 +108,7 @@ class Routing(Interface):
             )
             # close udp transport to prevent open file descriptors
             self.udp_transport.stop()
-            raise ex
+            raise CommunicationError("Routing could not be started") from ex
         await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTED
         )
