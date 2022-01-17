@@ -164,6 +164,13 @@ class DIBTypeCode(Enum):
     MFR_DATA = 0xFE
 
 
+class HostProtocol(Enum):
+    """Enum class for host protocol."""
+
+    IPV4_UDP = 0x01
+    IPV4_TCP = 0x02
+
+
 class KNXMedium(Enum):
     """Enum class for KNX Medium."""
 

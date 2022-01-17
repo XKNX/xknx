@@ -25,7 +25,7 @@ from xknx.knxip import (
 )
 from xknx.telegram import IndividualAddress
 
-from .udp_client import UDPClient
+from .transport import UDPTransport
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -45,6 +45,7 @@ class GatewayDescriptor:
         local_ip: str,
         supports_routing: bool = False,
         supports_tunnelling: bool = False,
+        supports_tunnelling_tcp: bool = False,
         individual_address: IndividualAddress | None = None,
     ):
         """Initialize GatewayDescriptor class."""
@@ -55,6 +56,7 @@ class GatewayDescriptor:
         self.local_ip = local_ip
         self.supports_routing = supports_routing
         self.supports_tunnelling = supports_tunnelling
+        self.supports_tunnelling_tcp = supports_tunnelling_tcp
         self.individual_address = individual_address
 
     def __repr__(self) -> str:
@@ -68,6 +70,7 @@ class GatewayDescriptor:
             f"    local_ip={self.local_ip},\n"
             f"    supports_routing={self.supports_routing},\n"
             f"    supports_tunnelling={self.supports_tunnelling},\n"
+            f"    supports_tunnelling_tcp={self.supports_tunnelling_tcp},\n"
             f"    individual_address={self.individual_address}\n"
             ")"
         )
@@ -88,11 +91,13 @@ class GatewayScanFilter:
         self,
         name: str | None = None,
         tunnelling: bool | None = None,
+        tunnelling_tcp: bool | None = None,
         routing: bool | None = None,
     ):
         """Initialize GatewayScanFilter class."""
         self.name = name
         self.tunnelling = tunnelling
+        self.tunnelling_tcp = tunnelling_tcp
         self.routing = routing
 
     def match(self, gateway: GatewayDescriptor) -> bool:
@@ -104,9 +109,18 @@ class GatewayScanFilter:
             and self.tunnelling != gateway.supports_tunnelling
         ):
             return False
+        if (
+            self.tunnelling_tcp is not None
+            and self.tunnelling_tcp != gateway.supports_tunnelling_tcp
+        ):
+            return False
         if self.routing is not None and self.routing != gateway.supports_routing:
             return False
-        return gateway.supports_tunnelling or gateway.supports_routing
+        return (
+            gateway.supports_tunnelling
+            or gateway.supports_tunnelling_tcp
+            or gateway.supports_routing
+        )
 
 
 class GatewayScanner:
@@ -125,7 +139,7 @@ class GatewayScanner:
         self.stop_on_found = stop_on_found
         self.scan_filter = scan_filter
         self.found_gateways: list[GatewayDescriptor] = []
-        self._udp_clients: list[UDPClient] = []
+        self._udp_transports: list[UDPTransport] = []
         self._response_received_event = asyncio.Event()
         self._count_upper_bound = 0
         """Clean value of self.stop_on_found, computed when ``scan`` is called."""
@@ -145,14 +159,14 @@ class GatewayScanner:
         except asyncio.TimeoutError:
             pass
         finally:
-            await self._stop()
+            self._stop()
 
         return self.found_gateways
 
-    async def _stop(self) -> None:
-        """Stop tearing down udpclient."""
-        for udp_client in self._udp_clients:
-            await udp_client.stop()
+    def _stop(self) -> None:
+        """Stop tearing down udp_transport."""
+        for udp_transport in self._udp_transports:
+            udp_transport.stop()
 
     async def _send_search_requests(self) -> None:
         """Find all interfaces with active IPv4 connection to search for gateways."""
@@ -174,36 +188,36 @@ class GatewayScanner:
         """Send a search request on a specific interface."""
         logger.debug("Searching on %s / %s", interface, ip_addr)
 
-        udp_client = UDPClient(
+        udp_transport = UDPTransport(
             self.xknx,
             (ip_addr, 0),
             (self.xknx.multicast_group, self.xknx.multicast_port),
             multicast=True,
         )
 
-        udp_client.register_callback(
+        udp_transport.register_callback(
             partial(self._response_rec_callback, interface=interface),
             [KNXIPServiceType.SEARCH_RESPONSE],
         )
-        await udp_client.connect()
+        await udp_transport.connect()
 
-        self._udp_clients.append(udp_client)
+        self._udp_transports.append(udp_transport)
 
         discovery_endpoint = HPAI(
             ip_addr=self.xknx.multicast_group, port=self.xknx.multicast_port
         )
 
         search_request = SearchRequest(self.xknx, discovery_endpoint=discovery_endpoint)
-        udp_client.send(KNXIPFrame.init_from_body(search_request))
+        udp_transport.send(KNXIPFrame.init_from_body(search_request))
 
     def _response_rec_callback(
         self,
         knx_ip_frame: KNXIPFrame,
         source: HPAI,
-        udp_client: UDPClient,
+        udp_transport: UDPTransport,
         interface: str = "",
     ) -> None:
-        """Verify and handle knxipframe. Callback from internal udpclient."""
+        """Verify and handle knxipframe. Callback from internal udp_transport."""
         if not isinstance(knx_ip_frame.body, SearchResponse):
             logger.warning("Could not understand knxipframe")
             return
@@ -213,7 +227,7 @@ class GatewayScanner:
             ip_addr=knx_ip_frame.body.control_endpoint.ip_addr,
             port=knx_ip_frame.body.control_endpoint.port,
             local_interface=interface,
-            local_ip=udp_client.local_addr[0],
+            local_ip=udp_transport.local_addr[0],
         )
         try:
             dib = next(
@@ -222,7 +236,11 @@ class GatewayScanner:
                 if isinstance(dib, DIBSuppSVCFamilies)
             )
             gateway.supports_routing = dib.supports(DIBServiceFamily.ROUTING)
-            gateway.supports_tunnelling = dib.supports(DIBServiceFamily.TUNNELING)
+            if dib.supports(DIBServiceFamily.TUNNELING):
+                gateway.supports_tunnelling = True
+                gateway.supports_tunnelling_tcp = dib.supports(
+                    DIBServiceFamily.TUNNELING, version=2
+                )
         except StopIteration:
             pass
 

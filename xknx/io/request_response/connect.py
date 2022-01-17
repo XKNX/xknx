@@ -14,35 +14,29 @@ from xknx.knxip import (
 from .request_response import RequestResponse
 
 if TYPE_CHECKING:
-    from xknx.io.udp_client import UDPClient
+    from xknx.io.transport import KNXIPTransport
     from xknx.xknx import XKNX
 
 
 class Connect(RequestResponse):
     """Class to send a ConnectRequest and wait for ConnectResponse.."""
 
-    def __init__(self, xknx: XKNX, udp_client: UDPClient, route_back: bool = False):
+    def __init__(self, xknx: XKNX, transport: KNXIPTransport, local_hpai: HPAI):
         """Initialize Connect class."""
-        self.udp_client = udp_client
-        self.route_back = route_back
-        super().__init__(xknx, self.udp_client, ConnectResponse)
+        super().__init__(xknx, transport, ConnectResponse)
         self.communication_channel = 0
         self.data_endpoint = HPAI()
         self.identifier = 0
+        self.local_hpai = local_hpai
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
-        # set control_endpoint and data_endpoint to the same udp_connection
-        if self.route_back:
-            endpoint = HPAI()
-        else:
-            (local_addr, local_port) = self.udp_client.getsockname()
-            endpoint = HPAI(ip_addr=local_addr, port=local_port)
+        # use the same HPAI for control_endpoint and data_endpoint
         connect_request = ConnectRequest(
             self.xknx,
             request_type=ConnectRequestType.TUNNEL_CONNECTION,
-            control_endpoint=endpoint,
-            data_endpoint=endpoint,
+            control_endpoint=self.local_hpai,
+            data_endpoint=self.local_hpai,
         )
         return KNXIPFrame.init_from_body(connect_request)
 

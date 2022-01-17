@@ -65,6 +65,19 @@ class CouldNotParseKNXIP(XKNXException):
         return f'<CouldNotParseKNXIP description="{self.description}" />'
 
 
+class IncompleteKNXIPFrame(CouldNotParseKNXIP):
+    """
+    Exception class for incomplete KNXIP data.
+
+    Used for TCP connections to indicate to buffer the data until the complete frame is received.
+    UDP connections should just handle CouldNotParseKNXIP.
+    """
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<IncompleteKNXIPFrame description="{self.description}" />'
+
+
 class UnsupportedCEMIMessage(XKNXException):
     """Exception class for unsupported CEMI Messages."""
 

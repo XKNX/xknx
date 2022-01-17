@@ -20,7 +20,7 @@ from xknx.exceptions import CommunicationError, XKNXException
 from .connection import ConnectionConfig, ConnectionType
 from .gateway_scanner import GatewayDescriptor, GatewayScanFilter, GatewayScanner
 from .routing import Routing
-from .tunnel import Tunnel
+from .tunnel import TCPTunnel, UDPTunnel
 
 if TYPE_CHECKING:
     from xknx.telegram import Telegram
@@ -62,12 +62,12 @@ class KNXIPInterface:
     async def _start(self) -> None:
         """Start interface. Connecting KNX/IP device with the selected method."""
         if self.connection_config.connection_type == ConnectionType.ROUTING:
-            await self._start_routing(self.connection_config.local_ip)
+            await self._start_routing(local_ip=self.connection_config.local_ip)
         elif (
             self.connection_config.connection_type == ConnectionType.TUNNELING
             and self.connection_config.gateway_ip is not None
         ):
-            await self._start_tunnelling(
+            await self._start_tunnelling_udp(
                 local_ip=self.connection_config.local_ip,
                 local_port=self.connection_config.local_port,
                 gateway_ip=self.connection_config.gateway_ip,
@@ -75,6 +75,16 @@ class KNXIPInterface:
                 auto_reconnect=self.connection_config.auto_reconnect,
                 auto_reconnect_wait=self.connection_config.auto_reconnect_wait,
                 route_back=self.connection_config.route_back,
+            )
+        elif (
+            self.connection_config.connection_type == ConnectionType.TUNNELING_TCP
+            and self.connection_config.gateway_ip is not None
+        ):
+            await self._start_tunnelling_tcp(
+                gateway_ip=self.connection_config.gateway_ip,
+                gateway_port=self.connection_config.gateway_port,
+                auto_reconnect=self.connection_config.auto_reconnect,
+                auto_reconnect_wait=self.connection_config.auto_reconnect_wait,
             )
         else:
             await self._start_automatic()
@@ -85,7 +95,7 @@ class KNXIPInterface:
         gateway, local_interface_ip = await self.find_gateway(scan_filter)
 
         if gateway.supports_tunnelling and scan_filter.routing is not True:
-            await self._start_tunnelling(
+            await self._start_tunnelling_udp(
                 local_interface_ip,
                 self.connection_config.local_port,
                 gateway.ip_addr,
@@ -97,7 +107,31 @@ class KNXIPInterface:
         elif gateway.supports_routing:
             await self._start_routing(local_interface_ip)
 
-    async def _start_tunnelling(
+    async def _start_tunnelling_tcp(
+        self,
+        gateway_ip: str,
+        gateway_port: int,
+        auto_reconnect: bool,
+        auto_reconnect_wait: int,
+    ) -> None:
+        """Start KNX/IP TCP tunnel."""
+        validate_ip(gateway_ip, address_name="Gateway IP address")
+        logger.debug(
+            "Starting tunnel to %s:%s over TCP",
+            gateway_ip,
+            gateway_port,
+        )
+        self._interface = TCPTunnel(
+            self.xknx,
+            gateway_ip=gateway_ip,
+            gateway_port=gateway_port,
+            telegram_received_callback=self.telegram_received,
+            auto_reconnect=auto_reconnect,
+            auto_reconnect_wait=auto_reconnect_wait,
+        )
+        await self._interface.connect()
+
+    async def _start_tunnelling_udp(
         self,
         local_ip: str | None,
         local_port: int,
@@ -107,7 +141,7 @@ class KNXIPInterface:
         auto_reconnect_wait: int,
         route_back: bool,
     ) -> None:
-        """Start KNX/IP tunnel."""
+        """Start KNX/IP UDP tunnel."""
         validate_ip(gateway_ip, address_name="Gateway IP address")
         if local_ip is None:
             local_ip = find_local_ip(gateway_ip=gateway_ip)
@@ -119,7 +153,7 @@ class KNXIPInterface:
             gateway_ip,
             gateway_port,
         )
-        self._interface = Tunnel(
+        self._interface = UDPTunnel(
             self.xknx,
             gateway_ip=gateway_ip,
             gateway_port=gateway_port,

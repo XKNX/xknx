@@ -7,6 +7,7 @@ from .exception import (
     CouldNotParseKNXIP,
     CouldNotParseTelegram,
     DeviceIllegalValue,
+    IncompleteKNXIPFrame,
     UnsupportedCEMIMessage,
     XKNXException,
 )
@@ -18,6 +19,7 @@ __all__ = [
     "CouldNotParseKNXIP",
     "CouldNotParseTelegram",
     "DeviceIllegalValue",
+    "IncompleteKNXIPFrame",
     "UnsupportedCEMIMessage",
     "XKNXException",
 ]

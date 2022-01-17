@@ -20,7 +20,7 @@ from xknx.knxip import (
 from xknx.telegram import TelegramDirection
 
 from .interface import Interface
-from .udp_client import UDPClient
+from .transport import KNXIPTransport, UDPTransport
 
 if TYPE_CHECKING:
     from xknx.telegram import Telegram
@@ -45,21 +45,21 @@ class Routing(Interface):
         self.telegram_received_callback = telegram_received_callback
         self.local_ip = local_ip
 
-        self.udpclient = UDPClient(
+        self.udp_transport = UDPTransport(
             self.xknx,
             (local_ip, 0),
             (self.xknx.multicast_group, self.xknx.multicast_port),
             multicast=True,
         )
 
-        self.udpclient.register_callback(
+        self.udp_transport.register_callback(
             self.response_rec_callback, [KNXIPServiceType.ROUTING_INDICATION]
         )
 
     def response_rec_callback(
-        self, knxipframe: KNXIPFrame, source: HPAI, _: UDPClient
+        self, knxipframe: KNXIPFrame, source: HPAI, _: KNXIPTransport
     ) -> None:
-        """Verify and handle knxipframe. Callback from internal udpclient."""
+        """Verify and handle knxipframe. Callback from internal udp_transport."""
         if not isinstance(knxipframe.body, RoutingIndication):
             logger.warning("Service type not implemented: %s", knxipframe)
         elif knxipframe.body.cemi is None:
@@ -87,7 +87,7 @@ class Routing(Interface):
 
     async def send_knxipframe(self, knxipframe: KNXIPFrame) -> None:
         """Send KNXIPFrame to connected routing device."""
-        self.udpclient.send(knxipframe)
+        self.udp_transport.send(knxipframe)
 
     async def connect(self) -> bool:
         """Start routing."""
@@ -95,7 +95,7 @@ class Routing(Interface):
             XknxConnectionState.CONNECTING
         )
         try:
-            await self.udpclient.connect()
+            await self.udp_transport.connect()
         except OSError as ex:
             logger.debug(
                 "Could not establish connection to KNX/IP network. %s: %s",
@@ -105,8 +105,8 @@ class Routing(Interface):
             await self.xknx.connection_manager.connection_state_changed(
                 XknxConnectionState.DISCONNECTED
             )
-            # close udp client to prevent open file descriptors
-            await self.udpclient.stop()
+            # close udp transport to prevent open file descriptors
+            self.udp_transport.stop()
             raise ex
         await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTED
@@ -115,7 +115,7 @@ class Routing(Interface):
 
     async def disconnect(self) -> None:
         """Stop routing."""
-        await self.udpclient.stop()
+        self.udp_transport.stop()
         await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
