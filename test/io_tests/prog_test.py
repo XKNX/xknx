@@ -4,8 +4,6 @@ from unittest.mock import patch
 
 import pytest
 from xknx import XKNX
-#from xknx.io import GatewayScanFilter, GatewayScanner, UDPClient
-#from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.telegram import IndividualAddress
 from xknx.prog.management import NM_EXISTS, NM_OK, NetworkManagement
 
@@ -15,11 +13,12 @@ class TestProgrammingInterface:
     """Test class for xknx/io/GatewayScanner objects."""
 
     called = 0
+
     async def fake_devicedescriptor_read_response(self, *p):
         """Fake function for evicedescriptor_read_response."""
         if self.called == 1:
             return
-        self.called+=1
+        self.called += 1
         await asyncio.sleep(60.)
 
     @patch("xknx.prog.device.ProgDevice.individualaddress_read_response", autospec=True)
@@ -31,7 +30,7 @@ class TestProgrammingInterface:
         network_management = NetworkManagement(xknx)
         return_code = await network_management.individualaddress_write(
             IndividualAddress("1.2.1")
-            )
+        )
         assert return_code == NM_OK
 
     @patch("xknx.prog.device.ProgDevice.devicedescriptor_read_response", autospec=True)
@@ -41,6 +40,5 @@ class TestProgrammingInterface:
         network_management = NetworkManagement(xknx)
         return_code = await network_management.individualaddress_write(
             IndividualAddress("1.2.1")
-            )
+        )
         assert return_code == NM_EXISTS
-

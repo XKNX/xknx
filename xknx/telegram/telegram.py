@@ -58,7 +58,7 @@ class Telegram:
         | InternalGroupAddress = GroupAddress(0),
         direction: TelegramDirection = TelegramDirection.OUTGOING,
         payload: APCI | None = None,
-        source_address: IndividualAddress = IndividualAddress(0),
+        source_address: IndividualAddress | None = IndividualAddress(0),
         tpdu_type: TPDUType = TPDUType.T_DATA,
         priority: Priority = Priority.LOW,
     ) -> None:

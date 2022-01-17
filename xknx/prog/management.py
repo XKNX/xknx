@@ -5,25 +5,37 @@ in KNX-Standard 3.5.2
 
 import asyncio
 
-from xknx.telegram.address import GroupAddress
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+)
+
+from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.prog.device import ProgDevice
+
+if TYPE_CHECKING:
+    from device import Device
+    from xknx.xknx import XKNX
+    from xknx.telegram import Telegram
+
 
 NM_OK = 0
 NM_EXISTS = 1
 NM_TIME_OUT = 2
 
+
 class NetworkManagement:
     """Class for network management functionality."""
 
-    def __init__(self, xknx):
+    def __init__(self, xknx: XKNX):
         self.xknx = xknx
         xknx.telegram_queue.register_telegram_received_cb(
             self.telegram_received_cb
-            )
+        )
         # map for registered devices
-        self.reg_dev = {}
+        self.reg_dev: Dict[IndividualAddress, Device] = {}
 
-    async def telegram_received_cb(self, tele):
+    async def telegram_received_cb(self, tele: Telegram) -> None:
         """Do something with the received telegram."""
         if tele.source_address in self.reg_dev:
             await self.reg_dev[tele.source_address].process_telegram(tele)
@@ -31,7 +43,7 @@ class NetworkManagement:
             for reg_dev_val in self.reg_dev.values():
                 await reg_dev_val.process_telegram(tele)
 
-    async def individualaddress_write(self, ind_add):
+    async def individualaddress_write(self, ind_add: IndividualAddress) -> int:
         """Perform IndividualAdress_Write."""
         device = ProgDevice(self.xknx, ind_add)
         self.reg_dev[ind_add] = device
