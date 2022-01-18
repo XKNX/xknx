@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased changes
+## 0.19.0 Tunneling connection protocol 2022-01-18
 
 ### Devices
 
@@ -19,7 +19,7 @@
 - Some refactoring and code movement in the io module - especially in KNXIPInterface; renamed UDPClient to UDPTransport
 - Cleanup some list generating code in the knxip module
 
-## 0.18.15 Come back almighty Gateway Scanner
+## 0.18.15 Come back almighty Gateway Scanner 2021-12-22
 
 ### Internals
 
