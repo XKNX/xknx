@@ -101,6 +101,28 @@ class TestXknxModule:
         new_callable=AsyncMock,
         side_effect=OSError,
     )
+    async def test_xknx_start_tunneling_initial_connection_error(
+        self, transport_connect_mock
+    ):
+        """Test xknx start raising when socket can't be set up."""
+        xknx = XKNX(
+            state_updater=True,
+            connection_config=ConnectionConfig(
+                connection_type=ConnectionType.TUNNELING, gateway_ip="127.0.0.2"
+            ),
+        )
+        with pytest.raises(CommunicationError):
+            await xknx.start()
+        transport_connect_mock.assert_called_once()
+        assert xknx.telegram_queue._consumer_task is None  # not started
+        assert not xknx.state_updater.started
+        assert not xknx.started.is_set()
+
+    @patch(
+        "xknx.io.transport.UDPTransport.connect",
+        new_callable=AsyncMock,
+        side_effect=OSError,
+    )
     async def test_xknx_start_routing_initial_connection_error(
         self, transport_connect_mock
     ):
