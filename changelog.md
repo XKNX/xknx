@@ -8,6 +8,7 @@
 
 ### Connection
 
+- Raise if an initial connection can not be established, auto-reconnect only when the connection was successful once
 - Add support for TCP tunnel connections
 - Optionally run KNXIPInterface in separate thread
 - Handle separate Tunneling control and data endpoints

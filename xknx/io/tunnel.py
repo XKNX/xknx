@@ -64,6 +64,7 @@ class _Tunnel(Interface):
         self.sequence_number = 0
         self.telegram_received_callback = telegram_received_callback
         self._data_endpoint_addr: tuple[str, int] | None = None
+        self._initial_connection = True
         self._is_reconnecting = False
         self._reconnect_task: asyncio.Task[None] | None = None
         self._src_address = xknx.own_address
@@ -109,12 +110,14 @@ class _Tunnel(Interface):
             await self.xknx.connection_manager.connection_state_changed(
                 XknxConnectionState.DISCONNECTED
             )
-            if self.auto_reconnect:
+            if not self._initial_connection and self.auto_reconnect:
                 self._reconnect_task = asyncio.create_task(self._reconnect())
                 return False
-            # close udp transport to prevent open file descriptors
+            # close transport to prevent open file descriptors
             self.transport.stop()
-            raise ex
+            raise CommunicationError(
+                "Tunnel connection could not be established"
+            ) from ex
         else:
             self._tunnel_established()
             await self.xknx.connection_manager.connection_state_changed(
@@ -124,6 +127,7 @@ class _Tunnel(Interface):
 
     def _tunnel_established(self) -> None:
         """Set up interface when the tunnel is ready."""
+        self._initial_connection = False
         self.sequence_number = 0
 
     def _tunnel_lost(self) -> None:
