@@ -68,9 +68,8 @@ class KNXIPTransport(ABC):
                 handled = True
         if not handled:
             knx_logger.debug(
-                "Unhandled %s: %s from: %s",
+                "Unhandled: %s from: %s",
                 knxipframe.header.service_type_ident,
-                knxipframe,
                 source,
             )
 
