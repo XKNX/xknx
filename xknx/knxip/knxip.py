@@ -15,6 +15,8 @@ from .connect_request import ConnectRequest
 from .connect_response import ConnectResponse
 from .connectionstate_request import ConnectionStateRequest
 from .connectionstate_response import ConnectionStateResponse
+from .description_request import DescriptionRequest
+from .description_response import DescriptionResponse
 from .disconnect_request import DisconnectRequest
 from .disconnect_response import DisconnectResponse
 from .header import KNXIPHeader
@@ -53,6 +55,10 @@ class KNXIPFrame:
             body = TunnellingRequest(self.xknx)
         elif service_type_ident == KNXIPServiceType.TUNNELLING_ACK:
             body = TunnellingAck(self.xknx)
+        elif service_type_ident == KNXIPServiceType.DESCRIPTION_REQUEST:
+            body = DescriptionRequest(self.xknx)
+        elif service_type_ident == KNXIPServiceType.DESCRIPTION_RESPONSE:
+            body = DescriptionResponse(self.xknx)
         elif service_type_ident == KNXIPServiceType.SEARCH_REQUEST:
             body = SearchRequest(self.xknx)
         elif service_type_ident == KNXIPServiceType.SEARCH_RESPONSE:
