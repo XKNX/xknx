@@ -6,6 +6,10 @@
 
 - Tunneling: Fix route_back connections sending to invalid address
 
+### Protocol
+
+- add DescriptionRequest and DescriptionResponse Frame parser
+
 ## 0.19.0 Tunneling connection protocol 2022-01-18
 
 ### Devices
