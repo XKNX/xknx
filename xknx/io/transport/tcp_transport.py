@@ -60,6 +60,7 @@ class TCPTransport(KNXIPTransport):
     ):
         """Initialize UDPTransport class."""
         self.xknx = xknx
+        self.remote_addr = remote_addr
         self.remote_hpai = HPAI(*remote_addr, protocol=HostProtocol.IPV4_TCP)
 
         self.callbacks = []

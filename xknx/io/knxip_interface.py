@@ -20,7 +20,7 @@ from xknx.exceptions import CommunicationError, XKNXException
 from .connection import ConnectionConfig, ConnectionType
 from .gateway_scanner import GatewayDescriptor, GatewayScanFilter, GatewayScanner
 from .routing import Routing
-from .tunnel import TCPTunnel, UDPTunnel
+from .tunnel import TCPTunnel, UDPTunnel, _Tunnel
 
 if TYPE_CHECKING:
     import concurrent
@@ -54,8 +54,9 @@ class KNXIPInterface:
     ):
         """Initialize KNXIPInterface class."""
         self.xknx = xknx
-        self._interface: Interface | None = None
         self.connection_config = connection_config
+        self._gateway_info: GatewayDescriptor | None = None
+        self._interface: Interface | None = None
 
     async def start(self) -> None:
         """Start KNX/IP interface. Raise `CommunicationError` if connection fails."""
@@ -95,6 +96,7 @@ class KNXIPInterface:
         """Start GatewayScanner and connect to the found device."""
         scan_filter = self.connection_config.scan_filter
         gateway, local_interface_ip = await self.find_gateway(scan_filter)
+        self._gateway_info = gateway
 
         if gateway.supports_tunnelling and scan_filter.routing is not True:
             await self._start_tunnelling_udp(
@@ -174,6 +176,7 @@ class KNXIPInterface:
             scan_filter = self.connection_config.scan_filter
             scan_filter.routing = True
             _gateway, local_ip = await self.find_gateway(scan_filter)
+            self._gateway_info = _gateway
         validate_ip(local_ip, address_name="Local IP address")
         logger.debug("Starting Routing from %s as %s", local_ip, self.xknx.own_address)
         self._interface = Routing(self.xknx, self.telegram_received, local_ip)
@@ -194,6 +197,14 @@ class KNXIPInterface:
         if self._interface is None:
             raise CommunicationError("KNX/IP interface not connected")
         return await self._interface.send_telegram(telegram)
+
+    async def gateway_info(self) -> GatewayDescriptor | None:
+        """Get gateway descriptor from interface."""
+        if self._gateway_info is not None:
+            return self._gateway_info
+        if isinstance(self._interface, _Tunnel):
+            return await self._interface.request_description()
+        return None
 
     async def find_gateway(
         self, scan_filter: GatewayScanFilter
@@ -278,6 +289,16 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
         return await self._await_from_connection_thread(
             self._interface.send_telegram(telegram)
         )
+
+    async def gateway_info(self) -> GatewayDescriptor | None:
+        """Get gateway descriptor from interface."""
+        if self._gateway_info is not None:
+            return self._gateway_info
+        if isinstance(self._interface, _Tunnel):
+            return await self._await_from_connection_thread(
+                self._interface.request_description()
+            )
+        return None
 
 
 def find_local_ip(gateway_ip: str) -> str:

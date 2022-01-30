@@ -24,6 +24,7 @@ class KNXIPTransport(ABC):
 
     callbacks: list[KNXIPTransport.Callback]
     local_hpai: HPAI
+    remote_addr: tuple[str, int]
     transport: asyncio.BaseTransport | None
 
     class Callback:
