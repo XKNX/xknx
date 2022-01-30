@@ -6,6 +6,8 @@ from .connect_request import ConnectRequest
 from .connect_response import ConnectResponse
 from .connectionstate_request import ConnectionStateRequest
 from .connectionstate_response import ConnectionStateResponse
+from .description_request import DescriptionRequest
+from .description_response import DescriptionResponse
 from .dib import DIB, DIBDeviceInformation, DIBGeneric, DIBSuppSVCFamilies
 from .disconnect_request import DisconnectRequest
 from .disconnect_response import DisconnectResponse
@@ -37,6 +39,8 @@ __all__ = [
     "ConnectResponse",
     "ConnectionStateRequest",
     "ConnectionStateResponse",
+    "DescriptionRequest",
+    "DescriptionResponse",
     "DIB",
     "DIBDeviceInformation",
     "DIBGeneric",
