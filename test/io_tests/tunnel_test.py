@@ -114,11 +114,23 @@ class TestUDPTunnel:
         assert self.tunnel.transport.send.call_count == 2
         await task
 
-    async def test_tunnel_connect_send_disconnect(self, time_travel):
+    @pytest.mark.parametrize(
+        "route_back,data_endpoint_addr,local_endpoint",
+        [
+            (False, ("192.168.1.2", 56789), HPAI("192.168.1.1", 12345)),
+            (True, None, HPAI()),
+        ],
+    )
+    async def test_tunnel_connect_send_disconnect(
+        self, time_travel, route_back, data_endpoint_addr, local_endpoint
+    ):
         """Test initiating a tunnelling connection."""
         local_addr = ("192.168.1.1", 12345)
-        gateway_control_addr = ("192.168.1.2", 3671)
-        gateway_data_addr = ("192.168.1.2", 56789)
+        remote_addr = ("192.168.1.2", 3671)
+        self.tunnel.route_back = route_back
+        gateway_data_endpoint = (
+            HPAI(*data_endpoint_addr) if data_endpoint_addr else HPAI()
+        )
         self.tunnel.transport.connect = AsyncMock()
         self.tunnel.transport.getsockname = Mock(return_value=local_addr)
         self.tunnel.transport.send = Mock()
@@ -127,8 +139,8 @@ class TestUDPTunnel:
         # Connect
         connect_request = ConnectRequest(
             self.xknx,
-            control_endpoint=HPAI(*local_addr),
-            data_endpoint=HPAI(*local_addr),
+            control_endpoint=local_endpoint,
+            data_endpoint=local_endpoint,
         )
         connect_frame = KNXIPFrame.init_from_body(connect_request)
 
@@ -141,15 +153,13 @@ class TestUDPTunnel:
             ConnectResponse(
                 self.xknx,
                 communication_channel=23,
-                data_endpoint=HPAI(*gateway_data_addr),
+                data_endpoint=gateway_data_endpoint,
                 identifier=7,
             )
         )
-        self.tunnel.transport.handle_knxipframe(
-            connect_response_frame, gateway_control_addr
-        )
+        self.tunnel.transport.handle_knxipframe(connect_response_frame, remote_addr)
         await connection_task
-        assert self.tunnel._data_endpoint_addr == gateway_data_addr
+        assert self.tunnel._data_endpoint_addr == data_endpoint_addr
         assert self.tunnel._src_address == IndividualAddress(7)
 
         # Send - use data endpoint
@@ -171,14 +181,14 @@ class TestUDPTunnel:
         asyncio.create_task(self.tunnel.send_telegram(test_telegram))
         await time_travel(0)
         self.tunnel.transport.send.assert_called_once_with(
-            test_telegram_frame, addr=gateway_data_addr
+            test_telegram_frame, addr=data_endpoint_addr
         )
         # skip ack and confirmation
 
         # Disconnect
         self.tunnel.transport.send.reset_mock()
         disconnect_request = DisconnectRequest(
-            self.xknx, communication_channel_id=23, control_endpoint=HPAI(*local_addr)
+            self.xknx, communication_channel_id=23, control_endpoint=local_endpoint
         )
         disconnect_frame = KNXIPFrame.init_from_body(disconnect_request)
 
@@ -192,9 +202,7 @@ class TestUDPTunnel:
                 communication_channel_id=23,
             )
         )
-        self.tunnel.transport.handle_knxipframe(
-            disconnect_response_frame, gateway_control_addr
-        )
+        self.tunnel.transport.handle_knxipframe(disconnect_response_frame, remote_addr)
         await disconnection_task
         assert self.tunnel._data_endpoint_addr is None
         self.tunnel.transport.stop.assert_called_once()

@@ -184,8 +184,12 @@ class _Tunnel(Interface):
             self.communication_channel = connect.communication_channel
             # assign data_endpoint received from server
             self._data_endpoint_addr = (
-                connect.data_endpoint.ip_addr,
-                connect.data_endpoint.port,
+                (
+                    connect.data_endpoint.ip_addr,
+                    connect.data_endpoint.port,
+                )
+                if not connect.data_endpoint.route_back
+                else None
             )
             # Use the individual address provided by the tunnelling server
             self._src_address = IndividualAddress(connect.identifier)

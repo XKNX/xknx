@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Connection
+
+- Tunneling: Fix route_back connections sending to invalid address
+
 ## 0.19.0 Tunneling connection protocol 2022-01-18
 
 ### Devices
