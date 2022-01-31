@@ -27,9 +27,7 @@ class NetworkManagement:
     def __init__(self, xknx: XKNX):
         """Construct NM instance."""
         self.xknx = xknx
-        xknx.telegram_queue.register_telegram_received_cb(
-            self.telegram_received_cb
-        )
+        xknx.telegram_queue.register_telegram_received_cb(self.telegram_received_cb)
         # map for registered devices
         self.reg_dev: dict[IndividualAddress, Device] = {}
 

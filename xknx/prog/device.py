@@ -23,6 +23,7 @@ from xknx.telegram.apci import (
     PropertyValueRead,
     Restart,
 )
+
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
@@ -37,7 +38,12 @@ class ConnectionState(Enum):
 class ProgDevice:
     """This Class defines a device as programming unit (A_Device)."""
 
-    def __init__(self, xknx: XKNX, ind_add: IndividualAddress, group_address_type: GroupAddressType = GroupAddressType.LONG):
+    def __init__(
+        self,
+        xknx: XKNX,
+        ind_add: IndividualAddress,
+        group_address_type: GroupAddressType = GroupAddressType.LONG,
+    ):
         """Init this class."""
         self.xknx = xknx
         self.ind_add = ind_add
@@ -58,18 +64,18 @@ class ProgDevice:
         """Process a IndividualAddress_Respone."""
         if self.last_telegram:
             if self.last_telegram.payload:
-                if self.last_telegram.payload.CODE == APCIService.INDIVIDUAL_ADDRESS_RESPONSE:
+                if (
+                    self.last_telegram.payload.CODE
+                    == APCIService.INDIVIDUAL_ADDRESS_RESPONSE
+                ):
                     return self.last_telegram.source_address
         return None
 
     async def t_connect(self) -> None:
         """Perform a T_Connect."""
         telegram = Telegram(
-            self.ind_add,
-            TelegramDirection.OUTGOING,
-            None,
-            None,
-            TPDUType.T_CONNECT)
+            self.ind_add, TelegramDirection.OUTGOING, None, None, TPDUType.T_CONNECT
+        )
         await self.xknx.telegrams.put(telegram)
 
     async def t_connect_response(self) -> None:
@@ -84,11 +90,8 @@ class ProgDevice:
     async def t_disconnect(self) -> None:
         """Perform a T_Disconnect."""
         telegram = Telegram(
-            self.ind_add,
-            TelegramDirection.OUTGOING,
-            None,
-            None,
-            TPDUType.T_DISCONNECT)
+            self.ind_add, TelegramDirection.OUTGOING, None, None, TPDUType.T_DISCONNECT
+        )
         await self.xknx.telegrams.put(telegram)
 
     async def t_ack(self, numbered: bool = False) -> None:
@@ -99,11 +102,8 @@ class ProgDevice:
             tpdu_type = TPDUType.T_ACK
 
         telegram = Telegram(
-            self.ind_add,
-            TelegramDirection.OUTGOING,
-            None,
-            None,
-            tpdu_type)
+            self.ind_add, TelegramDirection.OUTGOING, None, None, tpdu_type
+        )
         await self.xknx.telegrams.put(telegram)
 
     async def devicedescriptor_read(self, descriptor: int) -> None:
@@ -123,7 +123,10 @@ class ProgDevice:
             await asyncio.sleep(0.1)
             if self.last_telegram:
                 if self.last_telegram.payload:
-                    if self.last_telegram.payload.CODE == APCIService.DEVICE_DESCRIPTOR_RESPONSE:
+                    if (
+                        self.last_telegram.payload.CODE
+                        == APCIService.DEVICE_DESCRIPTOR_RESPONSE
+                    ):
                         return
 
     async def propertyvalue_read(self) -> None:
@@ -131,7 +134,7 @@ class ProgDevice:
         telegram = Telegram(
             self.ind_add,
             TelegramDirection.OUTGOING,
-            PropertyValueRead(0, 0x0b, 1, 1, True, 1),
+            PropertyValueRead(0, 0x0B, 1, 1, True, 1),
             priority=Priority.SYSTEM,
         )
         await self.xknx.telegrams.put(telegram)
@@ -153,7 +156,10 @@ class ProgDevice:
             await asyncio.sleep(2)
             if self.last_telegram:
                 if self.last_telegram.payload:
-                    if self.last_telegram.payload.CODE == APCIService.INDIVIDUAL_ADDRESS_RESPONSE:
+                    if (
+                        self.last_telegram.payload.CODE
+                        == APCIService.INDIVIDUAL_ADDRESS_RESPONSE
+                    ):
                         return self.last_telegram.source_address
 
     async def individualaddress_write(self) -> None:
