@@ -1,7 +1,4 @@
-'''
-This modul implements the management procedures as described
-in KNX-Standard 3.5.2
-'''
+"""This modul implements the management procedures as described in KNX-Standard 3.5.2."""
 from __future__ import annotations
 
 import asyncio
@@ -29,12 +26,13 @@ class NetworkManagement:
     """Class for network management functionality."""
 
     def __init__(self, xknx: XKNX):
+        """Construct NM instance."""
         self.xknx = xknx
         xknx.telegram_queue.register_telegram_received_cb(
             self.telegram_received_cb
         )
         # map for registered devices
-        self.reg_dev: Dict[IndividualAddress, Device] = {}
+        self.reg_dev: dict[IndividualAddress, Device] = {}
 
     async def telegram_received_cb(self, tele: Telegram) -> None:
         """Do something with the received telegram."""

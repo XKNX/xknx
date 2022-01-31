@@ -37,12 +37,12 @@ class ConnectionState(Enum):
 class ProgDevice:
     """This Class defines a device as programming unit (A_Device)."""
 
-    def __init__(self, xknx: XKNX, ia: IndividualAddress, groupAddressType: GroupAddressType = GroupAddressType.LONG):
+    def __init__(self, xknx: XKNX, ind_add: IndividualAddress, group_address_type: GroupAddressType = GroupAddressType.LONG):
         """Init this class."""
         self.xknx = xknx
-        self.ind_add = ia
+        self.ind_add = ind_add
         # self.state = ConnectionState.NOT_CONNECTED
-        self.group_address_type = groupAddressType
+        self.group_address_type = group_address_type
         self.last_telegram: Telegram | None = None
 
     async def process_telegram(self, telegram: Telegram) -> None:
