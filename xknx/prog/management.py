@@ -5,7 +5,6 @@ import asyncio
 
 from typing import (
     TYPE_CHECKING,
-    Dict,
 )
 
 from xknx.telegram.address import GroupAddress, IndividualAddress
