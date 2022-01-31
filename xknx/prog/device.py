@@ -1,4 +1,5 @@
 """This module implements the application layer functionality of a device."""
+from __future__ import annotations
 
 import asyncio
 from enum import Enum
@@ -28,6 +29,7 @@ if TYPE_CHECKING:
 
 class ConnectionState(Enum):
     """Connection State."""
+
     NOT_CONNECTED = 0
     A_CONNECTED = 1
 
@@ -121,7 +123,7 @@ class ProgDevice:
             await asyncio.sleep(0.1)
             if self.last_telegram:
                 if self.last_telegram.payload:
-                   if self.last_telegram.payload.CODE == APCIService.DEVICE_DESCRIPTOR_RESPONSE:
+                    if self.last_telegram.payload.CODE == APCIService.DEVICE_DESCRIPTOR_RESPONSE:
                         return
 
     async def propertyvalue_read(self) -> None:

@@ -175,7 +175,7 @@ class TestUDPTunnel:
                 self.xknx,
                 communication_channel_id=23,
                 sequence_counter=0,
-                cemi=CEMIFrame.init_from_telegram(
+                pdu=CEMIFrame.init_from_telegram(
                     self.xknx,
                     test_telegram,
                     code=CEMIMessageCode.L_DATA_REQ,

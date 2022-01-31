@@ -320,14 +320,7 @@ class _Tunnel(Interface):
         self, tunneling_request: TunnellingRequest
     ) -> None:
         """Handle incoming tunnel request."""
-        # we should only ACK if the request matches the expected sequence number or one less
-        # we should not ACK and discard the request if the sequence number is higher than the expected sequence number
-        #   or if the sequence number lower thatn (expected -1)
-        self._send_tunnelling_ack(
-            tunneling_request.communication_channel_id,
-            tunneling_request.sequence_counter,
-        )
-        if tunneling_request.cemi is None:
+        if tunneling_request.pdu is None:
             # Don't handle invalid cemi frames (None)
             return
         if tunneling_request.pdu.code is CEMIMessageCode.L_DATA_IND:
@@ -414,7 +407,7 @@ class TCPTunnel(_Tunnel):
             self.xknx,
             communication_channel_id=self.communication_channel,
             sequence_counter=self.sequence_number,
-            cemi=cemi,
+            pdu=cemi,
         )
 
         async def _async_wrapper() -> None:

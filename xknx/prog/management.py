@@ -2,6 +2,7 @@
 This modul implements the management procedures as described
 in KNX-Standard 3.5.2
 '''
+from __future__ import annotations
 
 import asyncio
 
