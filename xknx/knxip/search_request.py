@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class SearchRequest(KNXIPBody):
-    """Representation of a KNX Connect Request."""
+    """Representation of a KNX Search Request."""
 
     SERVICE_TYPE = KNXIPServiceType.SEARCH_REQUEST
 

@@ -56,7 +56,7 @@ class KNXIPInterface:
         self.connection_config = connection_config
 
     async def start(self) -> None:
-        """Start KNX/IP interface."""
+        """Start KNX/IP interface. Raise `CommunicationError` if connection fails."""
         await self._start()
 
     async def _start(self) -> None:
@@ -309,7 +309,10 @@ def find_local_ip(gateway_ip: str) -> str:
         logger.warning(
             "No interface on same subnet as gateway found. Falling back to default gateway."
         )
-        default_gateway = _find_default_gateway()
+        try:
+            default_gateway = _find_default_gateway()
+        except KeyError as err:
+            raise CommunicationError(f"No route to {gateway} found") from err
         local_ip = _scan_interfaces(default_gateway)
     assert isinstance(local_ip, str)
     return local_ip

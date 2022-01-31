@@ -1,6 +1,16 @@
 # Changelog
 
-## Unreleased changes
+## 0.19.1 Bugfix for route_back 2022-01-31
+
+### Connection
+
+- Tunneling: Fix route_back connections sending to invalid address
+
+### Protocol
+
+- add DescriptionRequest and DescriptionResponse Frame parser
+
+## 0.19.0 Tunneling connection protocol 2022-01-18
 
 ### Devices
 
@@ -8,6 +18,7 @@
 
 ### Connection
 
+- Raise if an initial connection can not be established, auto-reconnect only when the connection was successful once
 - Add support for TCP tunnel connections
 - Optionally run KNXIPInterface in separate thread
 - Handle separate Tunneling control and data endpoints
@@ -18,7 +29,7 @@
 - Some refactoring and code movement in the io module - especially in KNXIPInterface; renamed UDPClient to UDPTransport
 - Cleanup some list generating code in the knxip module
 
-## 0.18.15 Come back almighty Gateway Scanner
+## 0.18.15 Come back almighty Gateway Scanner 2021-12-22
 
 ### Internals
 

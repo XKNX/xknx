@@ -1,3 +1,3 @@
 """XKNX version."""
 
-__version__ = "0.18.16.dev"
+__version__ = "0.19.1"

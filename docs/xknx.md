@@ -165,29 +165,3 @@ async def main():
 
 asyncio.run(main())
 ```
-
-# [](#header-2)Dockerised xknx's app
-
-To run xknx from a container, set 'route_back=true' or use host network mode.
-
-Available env variables are:
-
-- XKNX_GENERAL_OWN_ADDRESS
-- XKNX_GENERAL_RATE_LIMIT
-- XKNX_GENERAL_MULTICAST_GROUP
-- XKNX_GENERAL_MULTICAST_PORT
-- XKNX_CONNECTION_GATEWAY_IP: Your KNX Gateway IP address
-- XKNX_CONNECTION_GATEWAY_PORT: Your KNX Gateway UDP port
-- XKNX_CONNECTION_LOCAL_IP
-- XKNX_CONNECTION_ROUTE_BACK: Set 'true' to be able to work in a container
-
-Example of a `docker run` with an xknx based app:
-
-```bash
-docker run --name myapp -d \
-  -e XKNX_CONNECTION_GATEWAY_IP='192.168.0.123' \
-  -e XKNX_CONNECTION_LOCAL_PORT=12399 \
-  -e XKNX_CONNECTION_ROUTE_BACK=true \
-  -p 12300:12399/udp \
-  myapp:latest
-```
