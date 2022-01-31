@@ -2,18 +2,15 @@
 from __future__ import annotations
 
 import asyncio
+from typing import TYPE_CHECKING
 
-from typing import (
-    TYPE_CHECKING,
-)
-
-from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.prog.device import ProgDevice
+from xknx.telegram.address import GroupAddress, IndividualAddress
 
 if TYPE_CHECKING:
     from device import Device
-    from xknx.xknx import XKNX
     from xknx.telegram import Telegram
+    from xknx.xknx import XKNX
 
 
 NM_OK = 0
