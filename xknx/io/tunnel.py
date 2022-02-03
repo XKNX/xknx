@@ -30,7 +30,7 @@ from .const import HEARTBEAT_RATE
 from .gateway_scanner import GatewayDescriptor
 from .interface import Interface
 from .request_response import Connect, ConnectionState, Disconnect, Tunnelling
-from .self_description import RequestDescription
+from .self_description import DescriptionQuery
 from .transport import KNXIPTransport, TCPTransport, UDPTransport
 
 if TYPE_CHECKING:
@@ -244,7 +244,7 @@ class _Tunnel(Interface):
 
     async def request_description(self) -> GatewayDescriptor | None:
         """Request description from tunneling server."""
-        description = RequestDescription(
+        description = DescriptionQuery(
             self.xknx,
             self.transport,
             local_hpai=self.local_hpai,

@@ -5,9 +5,12 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Final
 
-from xknx.exceptions import XKNXException
 from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.knxip import HPAI, DescriptionRequest, DescriptionResponse, KNXIPFrame
+
+from .const import DEFAULT_MCAST_PORT
+from .transport import UDPTransport
+from .util import find_local_ip
 
 if TYPE_CHECKING:
     from xknx.io.transport import KNXIPTransport
@@ -18,7 +21,42 @@ logger = logging.getLogger("xknx.log")
 DESCRIPTION_TIMEOUT: Final = 2
 
 
-class RequestDescription:
+async def request_description(
+    xknx: XKNX,
+    gateway_ip: str,
+    gateway_port: int = DEFAULT_MCAST_PORT,
+    local_ip: str | None = None,
+    local_port: int = 0,
+    route_back: bool = False,
+) -> GatewayDescriptor | None:
+    """Set up a UDP transport to request a description from a KNXnet/IP device."""
+    _local_ip = local_ip or find_local_ip(gateway_ip)
+    transport = UDPTransport(
+        xknx,
+        local_addr=(_local_ip, local_port),
+        remote_addr=(gateway_ip, gateway_port),
+        multicast=False,
+    )
+    await transport.connect()
+
+    local_hpai: HPAI
+    if route_back:
+        local_hpai = HPAI()
+    else:
+        local_addr = transport.getsockname()
+        local_hpai = HPAI(*local_addr)
+
+    description = DescriptionQuery(
+        xknx,
+        transport,
+        local_hpai=local_hpai,
+    )
+    await description.start()
+    transport.stop()
+    return description.gateway_descriptor
+
+
+class DescriptionQuery:
     """Class to send a DescriptionRequest and wait for DescriptionResponse."""
 
     def __init__(self, xknx: XKNX, transport: KNXIPTransport, local_hpai: HPAI):
@@ -56,8 +94,6 @@ class RequestDescription:
                 DESCRIPTION_TIMEOUT,
                 self.__class__.__name__,
             )
-        except XKNXException as ex:
-            logger.error("Error: %s", ex)
         finally:
             # cleanup to not leave callbacks (for asyncio.CancelledError)
             self.transport.unregister_callback(callb)
