@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Connection
+
+- Do a ConnectionStateRequest heartbeat on TCP tunnel connections too
+
 ## 0.19.1 Bugfix for route_back 2022-01-31
 
 ### Connection
