@@ -6,6 +6,10 @@
 
 - Do a ConnectionStateRequest heartbeat on TCP tunnel connections too
 
+### Devices
+
+- Handle invalid payloads per RemoteValue, log a readable warning
+
 ## 0.19.1 Bugfix for route_back 2022-01-31
 
 ### Connection

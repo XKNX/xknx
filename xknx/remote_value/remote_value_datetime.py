@@ -10,7 +10,7 @@ import time
 from typing import TYPE_CHECKING
 
 from xknx.dpt import DPTArray, DPTBinary, DPTDate, DPTDateTime, DPTTime
-from xknx.exceptions import ConversionError
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
@@ -62,14 +62,14 @@ class RemoteValueDateTime(RemoteValue[DPTArray, time.struct_time]):
             after_update_cb=after_update_cb,
         )
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray | None:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray:
         """Test if telegram payload may be parsed."""
-        return (
-            payload
-            if isinstance(payload, DPTArray)
+        if (
+            isinstance(payload, DPTArray)
             and len(payload.value) == self.dpt_class.payload_length
-            else None
-        )
+        ):
+            return payload
+        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
 
     def to_knx(self, value: time.struct_time) -> DPTArray:
         """Convert value to payload."""
