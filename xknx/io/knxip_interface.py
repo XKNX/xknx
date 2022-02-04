@@ -12,7 +12,7 @@ import asyncio
 import ipaddress
 import logging
 import threading
-from typing import TYPE_CHECKING, Any, Awaitable, TypeVar, cast
+from typing import TYPE_CHECKING, Awaitable, TypeVar, cast
 
 import netifaces
 from xknx.exceptions import CommunicationError, XKNXException
@@ -23,6 +23,8 @@ from .routing import Routing
 from .tunnel import TCPTunnel, UDPTunnel
 
 if TYPE_CHECKING:
+    import concurrent
+
     from xknx.telegram import Telegram
     from xknx.xknx import XKNX
 
@@ -245,7 +247,7 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
         fut = asyncio.run_coroutine_threadsafe(coro, self._thread_loop)
         finished = threading.Event()
 
-        def fut_finished_cb(_: Any) -> None:  # with py3.9 `Future[T]` should be working
+        def fut_finished_cb(_: concurrent.futures.Future[T]) -> None:
             """Fire threading.Event when the future is finished."""
             finished.set()
 
