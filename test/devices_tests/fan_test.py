@@ -1,9 +1,10 @@
 """Unit test for Fan objects."""
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from xknx import XKNX
 from xknx.devices import Fan
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
@@ -140,13 +141,18 @@ class TestFan:
     async def test_process_speed_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
-        fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
+        cb_mock = AsyncMock()
+        fan = Fan(
+            xknx, name="TestFan", group_address_speed="1/2/3", device_updated_cb=cb_mock
+        )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        with pytest.raises(CouldNotParseTelegram):
+        with patch("logging.Logger.warning") as log_mock:
             await fan.process(telegram)
+            log_mock.assert_called_once()
+            cb_mock.assert_not_called()
 
     #
     # TEST PROCESS OSCILLATION
@@ -172,13 +178,18 @@ class TestFan:
     async def test_process_fan_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
         xknx = XKNX()
-        fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
+        cb_mock = AsyncMock()
+        fan = Fan(
+            xknx, name="TestFan", group_address_speed="1/2/3", device_updated_cb=cb_mock
+        )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((23, 24))),
         )
-        with pytest.raises(CouldNotParseTelegram):
+        with patch("logging.Logger.warning") as log_mock:
             await fan.process(telegram)
+            log_mock.assert_called_once()
+            cb_mock.assert_not_called()
 
     #
     # TEST PROCESS STEP MODE
