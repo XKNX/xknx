@@ -186,7 +186,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
             decoded_payload = self.from_knx(_new_payload)
         except (ConversionError, CouldNotParseTelegram) as err:
             logger.warning(
-                "Can not process %s \n for %s - %s: %s",
+                "Can not process %s for %s - %s: %s",
                 telegram,
                 self.device_name,
                 self.feature_name,

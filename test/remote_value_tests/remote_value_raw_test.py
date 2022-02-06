@@ -2,7 +2,7 @@
 import pytest
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.exceptions import ConversionError, CouldNotParseTelegram
+from xknx.exceptions import ConversionError
 from xknx.remote_value import RemoteValueRaw
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
@@ -126,44 +126,44 @@ class TestRemoteValueRaw:
         rv_1 = RemoteValueRaw(xknx, payload_length=1, group_address="1/1/1")
         rv_2 = RemoteValueRaw(xknx, payload_length=2, group_address="1/2/2")
 
-        with pytest.raises(CouldNotParseTelegram):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/0/0"),
-                payload=GroupValueWrite(DPTArray((0x01,))),
-            )
-            await rv_0.process(telegram)
-        with pytest.raises(CouldNotParseTelegram):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/0/0"),
-                payload=GroupValueWrite(DPTArray((0x64, 0x65))),
-            )
-            await rv_0.process(telegram)
+        telegram = Telegram(
+            destination_address=GroupAddress("1/0/0"),
+            payload=GroupValueWrite(DPTArray((0x01,))),
+        )
+        assert await rv_0.process(telegram) is False
 
-        with pytest.raises(CouldNotParseTelegram):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/1/1"),
-                payload=GroupValueWrite(DPTBinary(1)),
-            )
-            await rv_1.process(telegram)
-        with pytest.raises(CouldNotParseTelegram):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/1/1"),
-                payload=GroupValueWrite(DPTArray((0x64, 0x65))),
-            )
-            await rv_1.process(telegram)
+        telegram = Telegram(
+            destination_address=GroupAddress("1/0/0"),
+            payload=GroupValueWrite(DPTArray((0x64, 0x65))),
+        )
+        assert await rv_0.process(telegram) is False
+        assert rv_0.value is None
 
-        with pytest.raises(CouldNotParseTelegram):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/2/2"),
-                payload=GroupValueWrite(DPTBinary(1)),
-            )
-            await rv_2.process(telegram)
-        with pytest.raises(CouldNotParseTelegram):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/2/2"),
-                payload=GroupValueWrite(DPTArray((0x64,))),
-            )
-            await rv_2.process(telegram)
+        telegram = Telegram(
+            destination_address=GroupAddress("1/1/1"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        assert await rv_1.process(telegram) is False
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/1/1"),
+            payload=GroupValueWrite(DPTArray((0x64, 0x65))),
+        )
+        assert await rv_1.process(telegram) is False
+        assert rv_1.value is None
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/2"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        assert await rv_2.process(telegram) is False
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/2"),
+            payload=GroupValueWrite(DPTArray((0x64,))),
+        )
+        assert await rv_2.process(telegram) is False
+        assert rv_2.value is None
 
     def test_to_knx_error(self):
         """Test to_knx function with wrong parameters."""
