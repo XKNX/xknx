@@ -47,9 +47,11 @@ class RemoteValueStep(RemoteValue[DPTBinary, "RemoteValueStep.Direction"]):
         )
         self.invert = invert
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTBinary | None:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTBinary:
         """Test if telegram payload may be parsed."""
-        return payload if isinstance(payload, DPTBinary) else None
+        if isinstance(payload, DPTBinary):
+            return payload
+        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
 
     # from KNX Association System Specifications AS v1.5.00:
     # 1.007 DPT_Step   0 = Decrease 1 = Increase

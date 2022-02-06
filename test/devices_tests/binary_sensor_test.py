@@ -5,7 +5,6 @@ import pytest
 from xknx import XKNX
 from xknx.devices import BinarySensor
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
@@ -119,8 +118,10 @@ class TestBinarySensor:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x1, 0x2, 0x3))),
         )
-        with pytest.raises(CouldNotParseTelegram):
+        with patch("logging.Logger.warning") as log_mock:
             await binary_sensor.process(telegram)
+            log_mock.assert_called_once()
+            assert binary_sensor.state is None
 
     #
     # TEST SWITCHED ON

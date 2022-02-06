@@ -147,11 +147,9 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
         return group_address in remote_value_addresses()
 
     @abstractmethod
-    # TODO: typing - remove Optional
-    def payload_valid(
-        self, payload: DPTArray | DPTBinary | None
-    ) -> DPTPayloadType | None:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTPayloadType:
         """Return payload if telegram payload may be parsed - to be implemented in derived class."""
+        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
 
     @abstractmethod
     def from_knx(self, payload: DPTPayloadType) -> ValueType:
@@ -182,19 +180,11 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
                 device_name=self.device_name,
                 feature_name=self.feature_name,
             )
-        _new_payload = self.payload_valid(telegram.payload.value)
-        if _new_payload is None:
-            raise CouldNotParseTelegram(
-                "payload invalid",
-                payload=str(telegram.payload),
-                destination_address=str(telegram.destination_address),
-                source_address=str(telegram.source_address),
-                device_name=self.device_name,
-                feature_name=self.feature_name,
-            )
+
         try:
+            _new_payload = self.payload_valid(telegram.payload.value)
             decoded_payload = self.from_knx(_new_payload)
-        except ConversionError as err:
+        except (ConversionError, CouldNotParseTelegram) as err:
             logger.warning(
                 "Can not process %s for %s - %s: %s",
                 telegram,

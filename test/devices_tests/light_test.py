@@ -5,7 +5,6 @@ import pytest
 from xknx import XKNX
 from xknx.devices import Light
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
@@ -1279,34 +1278,42 @@ class TestLight:
     async def test_process_dimm_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
+        cb_mock = AsyncMock()
         light = Light(
             xknx,
             name="TestLight",
             group_address_switch="1/2/3",
             group_address_brightness="1/2/5",
+            device_updated_cb=cb_mock,
         )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        with pytest.raises(CouldNotParseTelegram):
+        with patch("logging.Logger.warning") as log_mock:
             await light.process(telegram)
+            log_mock.assert_called_once()
+            cb_mock.assert_not_called()
 
     async def test_process_dimm_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
         xknx = XKNX()
+        cb_mock = AsyncMock()
         light = Light(
             xknx,
             name="TestLight",
             group_address_switch="1/2/3",
             group_address_brightness="1/2/5",
+            device_updated_cb=cb_mock,
         )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
             payload=GroupValueWrite(DPTArray((23, 24))),
         )
-        with pytest.raises(CouldNotParseTelegram):
+        with patch("logging.Logger.warning") as log_mock:
             await light.process(telegram)
+            log_mock.assert_called_once()
+            cb_mock.assert_not_called()
 
     async def test_process_color(self):
         """Test process / reading telegrams from telegram queue. Test if color is processed."""
@@ -1608,34 +1615,42 @@ class TestLight:
     async def test_process_tunable_white_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
+        cb_mock = AsyncMock()
         light = Light(
             xknx,
             name="TestLight",
             group_address_switch="1/2/3",
             group_address_tunable_white="1/2/5",
+            device_updated_cb=cb_mock,
         )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        with pytest.raises(CouldNotParseTelegram):
+        with patch("logging.Logger.warning") as log_mock:
             await light.process(telegram)
+            log_mock.assert_called_once()
+            cb_mock.assert_not_called()
 
     async def test_process_tunable_white_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
         xknx = XKNX()
+        cb_mock = AsyncMock()
         light = Light(
             xknx,
             name="TestLight",
             group_address_switch="1/2/3",
             group_address_tunable_white="1/2/5",
+            device_updated_cb=cb_mock,
         )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
             payload=GroupValueWrite(DPTArray((23, 24))),
         )
-        with pytest.raises(CouldNotParseTelegram):
+        with patch("logging.Logger.warning") as log_mock:
             await light.process(telegram)
+            log_mock.assert_called_once()
+            cb_mock.assert_not_called()
 
     async def test_process_color_temperature(self):
         """Test process / reading telegrams from telegram queue. Test if color temperature is processed."""
@@ -1665,34 +1680,42 @@ class TestLight:
     async def test_process_color_temperature_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
+        cb_mock = AsyncMock()
         light = Light(
             xknx,
             name="TestLight",
             group_address_switch="1/2/3",
             group_address_color_temperature="1/2/5",
+            device_updated_cb=cb_mock,
         )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        with pytest.raises(CouldNotParseTelegram):
+        with patch("logging.Logger.warning") as log_mock:
             await light.process(telegram)
+            log_mock.assert_called_once()
+            cb_mock.assert_not_called()
 
     async def test_process_color_temperature_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
         xknx = XKNX()
+        cb_mock = AsyncMock()
         light = Light(
             xknx,
             name="TestLight",
             group_address_switch="1/2/3",
             group_address_color_temperature="1/2/5",
+            device_updated_cb=cb_mock,
         )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
             payload=GroupValueWrite(DPTArray(23)),
         )
-        with pytest.raises(CouldNotParseTelegram):
+        with patch("logging.Logger.warning") as log_mock:
             await light.process(telegram)
+            log_mock.assert_called_once()
+            cb_mock.assert_not_called()
 
     def test_has_group_address(self):
         """Test has_group_address."""
