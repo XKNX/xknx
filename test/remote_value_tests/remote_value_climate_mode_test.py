@@ -300,6 +300,22 @@ class TestRemoteValueOperationMode:
 
         assert remote_value.value is None
 
+    async def test_to_process_error_binary_operation_mode(self):
+        """Test processing invalid payload."""
+        xknx = XKNX()
+        remote_value = RemoteValueBinaryOperationMode(
+            xknx,
+            group_address="1/2/3",
+            operation_mode=HVACOperationMode.COMFORT,
+        )
+        invalid_telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(
+                DPTArray((1,)),
+            ),
+        )
+        assert await remote_value.process(telegram=invalid_telegram) is False
+
     async def test_to_process_error_controller_mode(self):
         """Test process errornous telegram."""
         xknx = XKNX()
