@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased changes
+
 ## 0.19.2 TCP Heartbeat 2022-02-06
 
 ### Connection
