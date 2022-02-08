@@ -5,6 +5,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Final
 
+from xknx.exceptions import CommunicationError
 from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.knxip import HPAI, DescriptionRequest, DescriptionResponse, KNXIPFrame
 
@@ -37,7 +38,11 @@ async def request_description(
         remote_addr=(gateway_ip, gateway_port),
         multicast=False,
     )
-    await transport.connect()
+    try:
+        await transport.connect()
+    except OSError as err:
+        logger.warning("Could not setup socket: %s", err)
+        return None
 
     local_hpai: HPAI
     if route_back:
@@ -46,14 +51,14 @@ async def request_description(
         local_addr = transport.getsockname()
         local_hpai = HPAI(*local_addr)
 
-    description = DescriptionQuery(
+    description_query = DescriptionQuery(
         xknx,
         transport,
         local_hpai=local_hpai,
     )
-    await description.start()
+    await description_query.start()
     transport.stop()
-    return description.gateway_descriptor
+    return description_query.gateway_descriptor
 
 
 class DescriptionQuery:
@@ -81,7 +86,6 @@ class DescriptionQuery:
         callb = self.transport.register_callback(
             self.response_rec_callback, [DescriptionResponse.SERVICE_TYPE]
         )
-
         try:
             self.transport.send(self.create_knxipframe())
             await asyncio.wait_for(
@@ -94,6 +98,8 @@ class DescriptionQuery:
                 DESCRIPTION_TIMEOUT,
                 self.__class__.__name__,
             )
+        except CommunicationError as err:
+            logger.warning("Sending DescriptionRequest failed: %s", err)
         finally:
             # cleanup to not leave callbacks (for asyncio.CancelledError)
             self.transport.unregister_callback(callb)
