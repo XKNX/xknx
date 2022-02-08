@@ -13,7 +13,7 @@ from sys import platform
 import time
 from typing import TYPE_CHECKING, Callable, cast
 
-from xknx.exceptions import CouldNotParseKNXIP, XKNXException
+from xknx.exceptions import CommunicationError, CouldNotParseKNXIP
 from xknx.knxip import HPAI, KNXIPFrame
 
 from .ip_transport import KNXIPTransport
@@ -178,7 +178,7 @@ class UDPTransport(KNXIPTransport):
             "Sending to %s:%s at %s:\n %s", _addr[0], _addr[1], time.time(), knxipframe
         )
         if self.transport is None:
-            raise XKNXException("Transport not connected")
+            raise CommunicationError("Transport not connected")
 
         if self.multicast:
             if addr is not None:

@@ -11,7 +11,7 @@ import logging
 from typing import TYPE_CHECKING, Awaitable, Callable
 
 from xknx.core import XknxConnectionState
-from xknx.exceptions import CommunicationError, XKNXException
+from xknx.exceptions import CommunicationError
 from xknx.knxip import (
     HPAI,
     CEMIFrame,
@@ -235,7 +235,7 @@ class _Tunnel(Interface):
             await disconnect.start()
             if not disconnect.success and not ignore_error:
                 self.communication_channel = None
-                raise XKNXException("Could not disconnect channel")
+                raise CommunicationError("Could not disconnect channel")
             logger.debug(
                 "Tunnel disconnected (communication_channel: %s)",
                 self.communication_channel,
@@ -509,6 +509,7 @@ class UDPTunnel(_Tunnel):
             self.xknx,
             (self.local_ip, self.local_port),
             (self.gateway_ip, self.gateway_port),
+            multicast=False,
         )
 
     def _get_hpai(self) -> HPAI:
