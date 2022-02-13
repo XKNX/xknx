@@ -74,27 +74,22 @@ class ConnectResponse(KNXIPBodyResponse):
             pos = len(raw)
         return pos
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
 
-        def crd_to_knx() -> list[int]:
+        def crd_to_knx() -> bytes:
             """Serialize CRD (Connect Response Data Block)."""
             assert self.identifier is not None
 
-            crd = []
-            crd.append(ConnectResponse.CRD_LENGTH)
-            crd.append(self.request_type.value)
-            crd.append((self.identifier >> 8) & 255)
-            crd.append(self.identifier & 255)
-            return crd
+            return bytes(
+                (ConnectResponse.CRD_LENGTH, self.request_type.value)
+            ) + self.identifier.to_bytes(2, "big")
 
-        data = []
-        data.append(self.communication_channel)
-        data.append(self.status_code.value)
-        data.extend(self.data_endpoint.to_knx())
-        data.extend(crd_to_knx())
-
-        return data
+        return (
+            bytes((self.communication_channel, self.status_code.value))
+            + self.data_endpoint.to_knx()
+            + crd_to_knx()
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""

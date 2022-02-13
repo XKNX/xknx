@@ -47,16 +47,13 @@ class KNXIPHeader:
             raise TypeError()
         self.total_length = KNXIPHeader.HEADERLENGTH + body.calculated_length()
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        return [
-            KNXIPHeader.HEADERLENGTH,
-            KNXIPHeader.PROTOCOLVERSION,
-            (self.service_type_ident.value >> 8) & 255,
-            self.service_type_ident.value & 255,
-            (self.total_length >> 8) & 255,
-            self.total_length & 255,
-        ]
+        return (
+            bytes((KNXIPHeader.HEADERLENGTH, KNXIPHeader.PROTOCOLVERSION))
+            + self.service_type_ident.value.to_bytes(2, "big")
+            + self.total_length.to_bytes(2, "big")
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""

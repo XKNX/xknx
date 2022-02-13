@@ -186,6 +186,6 @@ class UDPTransport(KNXIPTransport):
                     "Multicast send to specific address is invalid. %s",
                     knxipframe,
                 )
-            self.transport.sendto(bytes(knxipframe.to_knx()), self.remote_addr)
+            self.transport.sendto(knxipframe.to_knx(), self.remote_addr)
         else:
-            self.transport.sendto(bytes(knxipframe.to_knx()), addr=_addr)
+            self.transport.sendto(knxipframe.to_knx(), addr=_addr)

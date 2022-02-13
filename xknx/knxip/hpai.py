@@ -5,7 +5,7 @@ A HPAI contains an IP address and a port.
 """
 from __future__ import annotations
 
-from typing import Iterator
+import socket
 
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP
 
@@ -43,27 +43,22 @@ class HPAI:
             self.protocol = HostProtocol(raw[1])
         except ValueError as err:
             raise CouldNotParseKNXIP("unsupported host protocol code") from err
-        self.ip_addr = f"{raw[2]}.{raw[3]}.{raw[4]}.{raw[5]}"
+        self.ip_addr = socket.inet_ntoa(raw[2:6])
         self.port = raw[6] * 256 + raw[7]
         return HPAI.LENGTH
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-
-        def ip_addr_to_bytes(ip_addr: str) -> Iterator[int]:
-            """Serialize ip address to byte array."""
-            if not isinstance(ip_addr, str):
-                raise ConversionError("ip_addr is not a string")
-            for i in ip_addr.split("."):
-                yield int(i)
-
-        return [
-            HPAI.LENGTH,
-            self.protocol.value,
-            *ip_addr_to_bytes(self.ip_addr),
-            (self.port >> 8) & 255,
-            self.port & 255,
-        ]
+        try:
+            return (
+                bytes((HPAI.LENGTH, self.protocol.value))
+                + socket.inet_aton(self.ip_addr)
+                + self.port.to_bytes(2, "big")
+            )
+        except OSError as err:
+            raise ConversionError(f"Invalid IPv4 address: {self.ip_addr}") from err
+        except OverflowError as err:
+            raise ConversionError(f"Port is not valid: {self.port}") from err
 
     def __repr__(self) -> str:
         """Representation of object."""
