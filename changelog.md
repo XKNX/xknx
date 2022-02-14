@@ -5,6 +5,7 @@
 ### Internals
 
 - Drop support for Python 3.8 to follow Home Assistant changes
+- Return `bytes` from to_knx() in knxip package instead of `list[int]`
 
 ## 0.19.2 TCP Heartbeat 2022-02-06
 

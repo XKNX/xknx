@@ -55,9 +55,11 @@ class HPAI:
                 + socket.inet_aton(self.ip_addr)
                 + self.port.to_bytes(2, "big")
             )
-        except OSError as err:
+        except (OSError, TypeError) as err:
+            # OSError for invalid address strings; TypeError for non-strings
             raise ConversionError(f"Invalid IPv4 address: {self.ip_addr}") from err
-        except OverflowError as err:
+        except (OverflowError, AttributeError) as err:
+            # OverflowError for int < 0 or int > 65535; AttributeError for non-integers
             raise ConversionError(f"Port is not valid: {self.port}") from err
 
     def __repr__(self) -> str:

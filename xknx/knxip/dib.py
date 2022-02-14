@@ -20,6 +20,8 @@ from xknx.telegram import IndividualAddress
 
 from .knxip_enum import DIBServiceFamily, DIBTypeCode, KNXMedium
 
+DIB_HEADER_LENGTH = 2  # structure lenght and description type code
+
 
 class DIB(ABC):
     """
@@ -36,6 +38,8 @@ class DIB(ABC):
     @abstractmethod
     def calculated_length(self) -> int:
         """Get length of KNX/IP object."""
+        # The structure shall always have an even number of octets which may have to be
+        # achieved by padding with 00h in the last octet of the DIB structure.
 
     @abstractmethod
     def from_knx(self, raw: bytes) -> int:
@@ -76,7 +80,8 @@ class DIBGeneric(DIB):
 
     def calculated_length(self) -> int:
         """Get length of KNX/IP object."""
-        return len(self.data)
+        data_length = len(self.data)
+        return DIB_HEADER_LENGTH + data_length + data_length % 2
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
@@ -101,7 +106,11 @@ class DIBGeneric(DIB):
                 self.dtc = DIBTypeCode(self.dtc)
             except ValueError:
                 raise CouldNotParseKNXIP("DTC invalid")
-        return bytes((len(self.data), self.dtc.value)) + self.data
+        return (
+            bytes((self.calculated_length(), self.dtc.value))
+            + self.data
+            + bytes(len(self.data) % 2)  # padding
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -146,7 +155,7 @@ class DIBSuppSVCFamilies(DIB):
 
     def calculated_length(self) -> int:
         """Get length of KNX/IP object."""
-        return len(self.families) * 2 + 2
+        return len(self.families) * 2 + DIB_HEADER_LENGTH
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
@@ -158,17 +167,23 @@ class DIBSuppSVCFamilies(DIB):
         if DIBTypeCode(raw[1]) != DIBTypeCode.SUPP_SVC_FAMILIES:
             raise CouldNotParseKNXIP("DIB is no device info")
 
-        for i in range(0, int((length - 2) / 2)):
-            name = DIBServiceFamily(raw[i * 2 + 2])
-            version = raw[i * 2 + 3]
+        for pos in range(2, length, 2):
+            name = DIBServiceFamily(raw[pos])
+            version = raw[pos + 1]
             self.families.append(DIBSuppSVCFamilies.Family(name, version))
         return length
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        return bytes(
-            (self.calculated_length(), DIBTypeCode.SUPP_SVC_FAMILIES.value)
-        ).join(family.to_knx() for family in self.families)
+        return (
+            bytes(
+                (
+                    self.calculated_length(),
+                    DIBTypeCode.SUPP_SVC_FAMILIES.value,
+                )
+            )
+            + b"".join(family.to_knx() for family in self.families)
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""

@@ -53,7 +53,9 @@ class SearchResponse(KNXIPBody):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        return self.control_endpoint.to_knx().join(dib.to_knx() for dib in self.dibs)
+        return self.control_endpoint.to_knx() + b"".join(
+            dib.to_knx() for dib in self.dibs
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""

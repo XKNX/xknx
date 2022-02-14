@@ -24,7 +24,6 @@ from .knxip_enum import KNXIPServiceType
 from .routing_indication import RoutingIndication
 from .search_request import SearchRequest
 from .search_response import SearchResponse
-from .session_request import SessionRequest
 from .tunnelling_ack import TunnellingAck
 from .tunnelling_request import TunnellingRequest
 
@@ -75,9 +74,6 @@ class KNXIPFrame:
         # Routing
         elif service_type_ident == KNXIPServiceType.ROUTING_INDICATION:
             body = RoutingIndication(self.xknx)
-        # Secure
-        elif service_type_ident == KNXIPServiceType.SESSION_REQUEST:
-            body = SessionRequest(self.xknx)
         else:
             raise CouldNotParseKNXIP(
                 f"KNXIPServiceType not implemented: {service_type_ident.name}"
