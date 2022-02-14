@@ -9,18 +9,17 @@ KNXIPInterface manages KNX/IP Tunneling or Routing connections.
 from __future__ import annotations
 
 import asyncio
-import ipaddress
 import logging
 import threading
-from typing import TYPE_CHECKING, Awaitable, TypeVar, cast
+from typing import TYPE_CHECKING, Awaitable, TypeVar
 
-import netifaces
 from xknx.exceptions import CommunicationError, XKNXException
 
 from .connection import ConnectionConfig, ConnectionType
 from .gateway_scanner import GatewayDescriptor, GatewayScanFilter, GatewayScanner
 from .routing import Routing
-from .tunnel import TCPTunnel, UDPTunnel
+from .tunnel import TCPTunnel, UDPTunnel, _Tunnel
+from .util import find_local_ip, validate_ip
 
 if TYPE_CHECKING:
     import concurrent
@@ -54,8 +53,9 @@ class KNXIPInterface:
     ):
         """Initialize KNXIPInterface class."""
         self.xknx = xknx
-        self._interface: Interface | None = None
         self.connection_config = connection_config
+        self._gateway_info: GatewayDescriptor | None = None
+        self._interface: Interface | None = None
 
     async def start(self) -> None:
         """Start KNX/IP interface. Raise `CommunicationError` if connection fails."""
@@ -95,6 +95,7 @@ class KNXIPInterface:
         """Start GatewayScanner and connect to the found device."""
         scan_filter = self.connection_config.scan_filter
         gateway, local_interface_ip = await self.find_gateway(scan_filter)
+        self._gateway_info = gateway
 
         if gateway.supports_tunnelling and scan_filter.routing is not True:
             await self._start_tunnelling_udp(
@@ -174,6 +175,7 @@ class KNXIPInterface:
             scan_filter = self.connection_config.scan_filter
             scan_filter.routing = True
             _gateway, local_ip = await self.find_gateway(scan_filter)
+            self._gateway_info = _gateway
         validate_ip(local_ip, address_name="Local IP address")
         logger.debug("Starting Routing from %s as %s", local_ip, self.xknx.own_address)
         self._interface = Routing(self.xknx, self.telegram_received, local_ip)
@@ -194,6 +196,14 @@ class KNXIPInterface:
         if self._interface is None:
             raise CommunicationError("KNX/IP interface not connected")
         return await self._interface.send_telegram(telegram)
+
+    async def gateway_info(self) -> GatewayDescriptor | None:
+        """Get gateway descriptor from interface."""
+        if self._gateway_info is not None:
+            return self._gateway_info
+        if isinstance(self._interface, _Tunnel):
+            return await self._interface.request_description()
+        return None
 
     async def find_gateway(
         self, scan_filter: GatewayScanFilter
@@ -279,50 +289,12 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
             self._interface.send_telegram(telegram)
         )
 
-
-def find_local_ip(gateway_ip: str) -> str:
-    """Find local IP address on same subnet as gateway."""
-
-    def _scan_interfaces(gateway: ipaddress.IPv4Address) -> str | None:
-        """Return local IP address on same subnet as given gateway."""
-        for interface in netifaces.interfaces():
-            try:
-                af_inet = netifaces.ifaddresses(interface)[netifaces.AF_INET]
-                for link in af_inet:
-                    network = ipaddress.IPv4Network(
-                        (link["addr"], link["netmask"]), strict=False
-                    )
-                    if gateway in network:
-                        logger.debug("Using interface: %s", interface)
-                        return cast(str, link["addr"])
-            except KeyError:
-                logger.debug("Could not find IPv4 address on interface %s", interface)
-                continue
+    async def gateway_info(self) -> GatewayDescriptor | None:
+        """Get gateway descriptor from interface."""
+        if self._gateway_info is not None:
+            return self._gateway_info
+        if isinstance(self._interface, _Tunnel):
+            return await self._await_from_connection_thread(
+                self._interface.request_description()
+            )
         return None
-
-    def _find_default_gateway() -> ipaddress.IPv4Address:
-        """Return IP address of default gateway."""
-        gws = netifaces.gateways()
-        return ipaddress.IPv4Address(gws["default"][netifaces.AF_INET][0])
-
-    gateway = ipaddress.IPv4Address(gateway_ip)
-    local_ip = _scan_interfaces(gateway)
-    if local_ip is None:
-        logger.warning(
-            "No interface on same subnet as gateway found. Falling back to default gateway."
-        )
-        try:
-            default_gateway = _find_default_gateway()
-        except KeyError as err:
-            raise CommunicationError(f"No route to {gateway} found") from err
-        local_ip = _scan_interfaces(default_gateway)
-    assert isinstance(local_ip, str)
-    return local_ip
-
-
-def validate_ip(address: str, address_name: str = "IP address") -> None:
-    """Raise an exception if address cannot be parsed as IPv4 address."""
-    try:
-        ipaddress.IPv4Address(address)
-    except ipaddress.AddressValueError as ex:
-        raise XKNXException(f"{address_name} is not a valid IPv4 address.") from ex

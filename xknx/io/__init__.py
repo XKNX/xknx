@@ -12,17 +12,19 @@ from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .gateway_scanner import GatewayDescriptor, GatewayScanFilter, GatewayScanner
 from .knxip_interface import KNXIPInterface, knx_interface_factory
 from .routing import Routing
+from .self_description import DescriptionQuery
 from .tunnel import TCPTunnel, UDPTunnel
 
 __all__ = [
     "DEFAULT_MCAST_GRP",
     "DEFAULT_MCAST_PORT",
+    "DescriptionQuery",
     "GatewayScanFilter",
     "GatewayScanner",
     "ConnectionConfig",
     "ConnectionType",
     "KNXIPInterface",
-    "TCPTunnel",
     "Routing",
+    "TCPTunnel",
     "UDPTunnel",
 ]

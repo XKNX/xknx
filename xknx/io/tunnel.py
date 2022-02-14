@@ -11,7 +11,7 @@ import logging
 from typing import TYPE_CHECKING, Awaitable, Callable
 
 from xknx.core import XknxConnectionState
-from xknx.exceptions import CommunicationError, XKNXException
+from xknx.exceptions import CommunicationError
 from xknx.knxip import (
     HPAI,
     CEMIFrame,
@@ -27,8 +27,10 @@ from xknx.knxip import (
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 
 from .const import HEARTBEAT_RATE
+from .gateway_scanner import GatewayDescriptor
 from .interface import Interface
 from .request_response import Connect, ConnectionState, Disconnect, Tunnelling
+from .self_description import DescriptionQuery
 from .transport import KNXIPTransport, TCPTransport, UDPTransport
 
 if TYPE_CHECKING:
@@ -233,12 +235,22 @@ class _Tunnel(Interface):
             await disconnect.start()
             if not disconnect.success and not ignore_error:
                 self.communication_channel = None
-                raise XKNXException("Could not disconnect channel")
+                raise CommunicationError("Could not disconnect channel")
             logger.debug(
                 "Tunnel disconnected (communication_channel: %s)",
                 self.communication_channel,
             )
         self.communication_channel = None
+
+    async def request_description(self) -> GatewayDescriptor | None:
+        """Request description from tunneling server."""
+        description = DescriptionQuery(
+            self.xknx,
+            self.transport,
+            local_hpai=self.local_hpai,
+        )
+        await description.start()
+        return description.gateway_descriptor
 
     async def send_telegram(self, telegram: Telegram) -> None:
         """
@@ -497,6 +509,7 @@ class UDPTunnel(_Tunnel):
             self.xknx,
             (self.local_ip, self.local_port),
             (self.gateway_ip, self.gateway_port),
+            multicast=False,
         )
 
     def _get_hpai(self) -> HPAI:

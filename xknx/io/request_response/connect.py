@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 class Connect(RequestResponse):
-    """Class to send a ConnectRequest and wait for ConnectResponse.."""
+    """Class to send a ConnectRequest and wait for ConnectResponse."""
 
     def __init__(self, xknx: XKNX, transport: KNXIPTransport, local_hpai: HPAI):
         """Initialize Connect class."""

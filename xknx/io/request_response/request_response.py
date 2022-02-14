@@ -9,6 +9,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING
 
+from xknx.exceptions import CommunicationError
 from xknx.io.transport import KNXIPTransport
 from xknx.knxip import HPAI, ErrorCode, KNXIPBodyResponse, KNXIPFrame
 
@@ -47,9 +48,8 @@ class RequestResponse:
         callb = self.transport.register_callback(
             self.response_rec_callback, [self.awaited_response_class.SERVICE_TYPE]
         )
-        await self.send_request()
-
         try:
+            await self.send_request()
             await asyncio.wait_for(
                 self.response_received_event.wait(),
                 timeout=self.timeout_in_seconds,
@@ -60,12 +60,16 @@ class RequestResponse:
                 self.timeout_in_seconds,
                 self.__class__.__name__,
             )
+        except CommunicationError as err:
+            logger.warning(
+                "Sending request of type '%s' failed: %s", self.__class__.__name__, err
+            )
         finally:
             # cleanup to not leave callbacks (for asyncio.CancelledError)
             self.transport.unregister_callback(callb)
 
     async def send_request(self) -> None:
-        """Build knxipframe (within derived class) and send via UDP."""
+        """Build knxipframe (within derived class) and send via transport."""
         self.transport.send(self.create_knxipframe())
 
     def response_rec_callback(
