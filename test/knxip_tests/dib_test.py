@@ -36,7 +36,10 @@ class TestKNXIPDIB:
     def test_device_info(self):
         """Test parsing of device info."""
         raw = bytes.fromhex(
-            "36 01 02 00 11 00 23 42 13 37 13 37 13 37 E0 00 17 0C 00 01 02 03 04 05 47 69 72 61 20 4B 4E 58 2F 49 50 2D 52 6F 75 74 65 72 00 00 00 00 00 00 00 00 00 00 00 00"
+            "36 01 02 00 11 00 23 42 13 37 13 37 13 37 E0 00"
+            "17 0C 00 01 02 03 04 05 47 69 72 61 20 4B 4E 58"
+            "2F 49 50 2D 52 6F 75 74 65 72 00 00 00 00 00 00"
+            "00 00 00 00 00 00"
         )
 
         dib = DIB.determine_dib(raw)

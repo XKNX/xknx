@@ -25,7 +25,10 @@ class TestKNXIPFrame:
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         raw = bytes.fromhex(
-            "061004200015040251002900bce010fa092d010080061004200015040252002900bce0101f082d010080"
+            "06 10 04 20 00 15 04 02 51 00 29 00 bc e0 10 fa"
+            "09 2d 01 00 80"
+            "06 10 04 20 00 15 04 02 52 00 29 00 bc e0 10 1f"
+            "08 2d 01 00 80"
         )  # both frames have lenght 21
         assert knxipframe.from_knx(raw) == 21
         assert knxipframe.from_knx(raw[21:]) == 21

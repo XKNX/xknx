@@ -11,7 +11,8 @@ class TestKNXIPConnectRequest:
     def test_connect_request(self):
         """Test parsing and streaming connection request KNX/IP packet."""
         raw = bytes.fromhex(
-            "06 10 02 05 00 1A 08 01 C0 A8 2A 01 84 95 08 01 C0 A8 2A 01 CC A9 04 04 02 00"
+            "06 10 02 05 00 1A 08 01 C0 A8 2A 01 84 95 08 01"
+            "C0 A8 2A 01 CC A9 04 04 02 00"
         )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
@@ -37,7 +38,8 @@ class TestKNXIPConnectRequest:
     def test_from_knx_wrong_length_of_cri(self):
         """Test parsing and streaming wrong ConnectRequest."""
         raw = bytes.fromhex(
-            "06 10 02 05 00 1A 08 01 C0 A8 2A 01 84 95 08 01 C0 A8 2A 01 CC A9 02 04 02 00"
+            "06 10 02 05 00 1A 08 01 C0 A8 2A 01 84 95 08 01"
+            "C0 A8 2A 01 CC A9 02 04 02 00"
         )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
@@ -47,7 +49,8 @@ class TestKNXIPConnectRequest:
     def test_from_knx_wrong_cri(self):
         """Test parsing and streaming wrong ConnectRequest."""
         raw = bytes.fromhex(
-            "06 10 02 05 00 1A 08 01 C0 A8 2A 01 84 95 08 01 C0 A8 2A 01 CC A9 04 04 02"
+            "06 10 02 05 00 1A 08 01 C0 A8 2A 01 84 95 08 01"
+            "C0 A8 2A 01 CC A9 04 04 02"
         )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
