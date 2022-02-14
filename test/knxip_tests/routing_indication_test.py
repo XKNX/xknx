@@ -35,9 +35,9 @@ class TestKNXIPRountingIndication:
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
 
-        assert knxipframe.header.to_knx() == list(raw[0:6])
-        assert knxipframe.body.to_knx() == list(raw[6:])
-        assert knxipframe.to_knx() == list(raw)
+        assert knxipframe.header.to_knx() == raw[0:6]
+        assert knxipframe.body.to_knx() == raw[6:]
+        assert knxipframe.to_knx() == raw
 
     def test_telegram_set(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet with DPTArray/DPTTime as payload."""
@@ -57,9 +57,9 @@ class TestKNXIPRountingIndication:
 
         raw = bytes.fromhex("0610053000142900BCD012020151040080 0d 17 2a")
 
-        assert knxipframe.header.to_knx() == list(raw[0:6])
-        assert knxipframe.body.to_knx() == list(raw[6:])
-        assert knxipframe.to_knx() == list(raw)
+        assert knxipframe.header.to_knx() == raw[0:6]
+        assert knxipframe.body.to_knx() == raw[6:]
+        assert knxipframe.to_knx() == raw
 
     def test_telegram_get(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, group read."""
@@ -103,9 +103,9 @@ class TestKNXIPRountingIndication:
         routing_indication = RoutingIndication(xknx, cemi=cemi)
         knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
 
-        assert knxipframe2.header.to_knx() == list(raw[0:6])
-        assert knxipframe2.body.to_knx() == list(raw[6:])
-        assert knxipframe2.to_knx() == list(raw)
+        assert knxipframe2.header.to_knx() == raw[0:6]
+        assert knxipframe2.body.to_knx() == raw[6:]
+        assert knxipframe2.to_knx() == raw
 
     def test_end_to_end_group_write_binary_off(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, switch off light in my kitchen."""
@@ -127,9 +127,9 @@ class TestKNXIPRountingIndication:
         routing_indication = RoutingIndication(xknx, cemi=cemi)
         knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
 
-        assert knxipframe2.header.to_knx() == list(raw[0:6])
-        assert knxipframe2.body.to_knx() == list(raw[6:])
-        assert knxipframe2.to_knx() == list(raw)
+        assert knxipframe2.header.to_knx() == raw[0:6]
+        assert knxipframe2.body.to_knx() == raw[6:]
+        assert knxipframe2.to_knx() == raw
 
     def test_end_to_end_group_write_1byte(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, dimm light in my kitchen."""
@@ -151,9 +151,9 @@ class TestKNXIPRountingIndication:
         routing_indication = RoutingIndication(xknx, cemi=cemi)
         knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
 
-        assert knxipframe2.header.to_knx() == list(raw[0:6])
-        assert knxipframe2.body.to_knx() == list(raw[6:])
-        assert knxipframe2.to_knx() == list(raw)
+        assert knxipframe2.header.to_knx() == raw[0:6]
+        assert knxipframe2.body.to_knx() == raw[6:]
+        assert knxipframe2.to_knx() == raw
 
     def test_end_to_end_group_write_2bytes(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, setting value of thermostat."""
@@ -175,9 +175,9 @@ class TestKNXIPRountingIndication:
         routing_indication = RoutingIndication(xknx, cemi=cemi)
         knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
 
-        assert knxipframe2.header.to_knx() == list(raw[0:6])
-        assert knxipframe2.body.to_knx() == list(raw[6:])
-        assert knxipframe2.to_knx() == list(raw)
+        assert knxipframe2.header.to_knx() == raw[0:6]
+        assert knxipframe2.body.to_knx() == raw[6:]
+        assert knxipframe2.to_knx() == raw
 
     def test_end_to_end_group_read(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, group read."""
@@ -199,9 +199,9 @@ class TestKNXIPRountingIndication:
         routing_indication = RoutingIndication(xknx, cemi=cemi)
         knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
 
-        assert knxipframe2.header.to_knx() == list(raw[0:6])
-        assert knxipframe2.body.to_knx() == list(raw[6:])
-        assert knxipframe2.to_knx() == list(raw)
+        assert knxipframe2.header.to_knx() == raw[0:6]
+        assert knxipframe2.body.to_knx() == raw[6:]
+        assert knxipframe2.to_knx() == raw
 
     def test_end_to_end_group_response(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, group response."""
@@ -223,9 +223,9 @@ class TestKNXIPRountingIndication:
         routing_indication = RoutingIndication(xknx, cemi=cemi)
         knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
 
-        assert knxipframe2.header.to_knx() == list(raw[0:6])
-        assert knxipframe2.body.to_knx() == list(raw[6:])
-        assert knxipframe2.to_knx() == list(raw)
+        assert knxipframe2.header.to_knx() == raw[0:6]
+        assert knxipframe2.body.to_knx() == raw[6:]
+        assert knxipframe2.to_knx() == raw
 
     def test_maximum_apci(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet, testing maximum APCI."""
@@ -244,7 +244,7 @@ class TestKNXIPRountingIndication:
 
         raw = bytes.fromhex("0610053000112900BCD0130101510100BF")
 
-        assert knxipframe.to_knx() == list(raw)
+        assert knxipframe.to_knx() == raw
 
         knxipframe2 = KNXIPFrame(xknx)
         knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)

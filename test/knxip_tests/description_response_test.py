@@ -20,7 +20,7 @@ class TestKNXIPDescriptionResponse:
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         assert knxipframe.from_knx(raw) == 72
-        assert knxipframe.to_knx() == list(raw)
+        assert knxipframe.to_knx() == raw
 
         assert isinstance(knxipframe.body, DescriptionResponse)
         assert len(knxipframe.body.dibs) == 2
@@ -46,7 +46,7 @@ class TestKNXIPDescriptionResponse:
         description_response.dibs.append(knxipframe.body.dibs[1])
         knxipframe2 = KNXIPFrame.init_from_body(description_response)
 
-        assert knxipframe2.to_knx() == list(raw)
+        assert knxipframe2.to_knx() == raw
 
     def test_unknown_device_name(self):
         """Test device_name if no DIBDeviceInformation is present."""

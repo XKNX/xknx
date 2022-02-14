@@ -32,23 +32,7 @@ class TestKNXIPFrame:
 
     def test_parsing_too_short_knxip(self):
         """Test parsing and streaming connection state request KNX/IP packet."""
-        raw = (
-            0x06,
-            0x10,
-            0x02,
-            0x07,
-            0x00,
-            0x10,
-            0x15,
-            0x00,
-            0x08,
-            0x01,
-            0xC0,
-            0xA8,
-            0xC8,
-            0x0C,
-            0xC3,
-        )
+        raw = bytes.fromhex("06 10 02 07 00 10 15 00 08 01 C0 A8 C8 0C C3")
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         with pytest.raises(IncompleteKNXIPFrame):

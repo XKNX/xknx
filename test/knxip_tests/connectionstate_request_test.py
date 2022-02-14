@@ -10,24 +10,7 @@ class TestKNXIPConnectionStateRequest:
 
     def test_connection_state_request(self):
         """Test parsing and streaming connection state request KNX/IP packet."""
-        raw = (
-            0x06,
-            0x10,
-            0x02,
-            0x07,
-            0x00,
-            0x10,
-            0x15,
-            0x00,
-            0x08,
-            0x01,
-            0xC0,
-            0xA8,
-            0xC8,
-            0x0C,
-            0xC3,
-            0xB4,
-        )
+        raw = bytes.fromhex("06 10 02 07 00 10 15 00 08 01 C0 A8 C8 0C C3 B4")
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
@@ -46,11 +29,11 @@ class TestKNXIPConnectionStateRequest:
         )
         knxipframe2 = KNXIPFrame.init_from_body(connectionstate_request)
 
-        assert knxipframe2.to_knx() == list(raw)
+        assert knxipframe2.to_knx() == raw
 
     def test_from_knx_wrong_info(self):
         """Test parsing and streaming wrong ConnectionStateRequest."""
-        raw = (0x06, 0x10, 0x02, 0x07, 0x00, 0x010)
+        raw = bytes((0x06, 0x10, 0x02, 0x07, 0x00, 0x010))
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         with pytest.raises(CouldNotParseKNXIP):
