@@ -28,7 +28,11 @@ class TestSelfDescription:
             DescriptionRequest(xknx, control_endpoint=HPAI(*local_addr))
         )
         description_response_raw = bytes.fromhex(
-            "061002040048360102001000000000082d40834de000170c000ab3274a324b4e582f49502d526f7574657200000000000000000000000000000000000c0202020302040205020701",
+            "06 10 02 04 00 48 36 01 02 00 10 00 00 00 00"
+            "08 2d 40 83 4d e0 00 17 0c 00 0a b3 27 4a 32"
+            "4b 4e 58 2f 49 50 2d 52 6f 75 74 65 72 00 00"
+            "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"
+            "0c 02 02 02 03 02 04 02 05 02 07 01",
         )
         description_query = DescriptionQuery(
             xknx, transport=transport_mocked, local_hpai=HPAI(*local_addr)

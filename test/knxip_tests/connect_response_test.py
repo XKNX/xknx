@@ -10,27 +10,8 @@ class TestKNXIPConnectResponse:
 
     def test_connect_response(self):
         """Test parsing and streaming connection response KNX/IP packet."""
-        raw = (
-            0x06,
-            0x10,
-            0x02,
-            0x06,
-            0x00,
-            0x14,
-            0x01,
-            0x00,
-            0x08,
-            0x01,
-            0xC0,
-            0xA8,
-            0x2A,
-            0x0A,
-            0x0E,
-            0x57,
-            0x04,
-            0x04,
-            0x11,
-            0xFF,
+        raw = bytes.fromhex(
+            "06 10 02 06 00 14 01 00 08 01 C0 A8 2A 0A 0E 57 04 04 11 FF"
         )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
@@ -52,31 +33,12 @@ class TestKNXIPConnectResponse:
         )
         knxipframe2 = KNXIPFrame.init_from_body(connect_response)
 
-        assert knxipframe2.to_knx() == list(raw)
+        assert knxipframe2.to_knx() == raw
 
     def test_from_knx_wrong_crd(self):
         """Test parsing and streaming wrong ConnectRequest (wrong CRD length byte)."""
-        raw = (
-            0x06,
-            0x10,
-            0x02,
-            0x06,
-            0x00,
-            0x14,
-            0x01,
-            0x00,
-            0x08,
-            0x01,
-            0xC0,
-            0xA8,
-            0x2A,
-            0x0A,
-            0x0E,
-            0x57,
-            0x03,
-            0x04,
-            0x11,
-            0xFF,
+        raw = bytes.fromhex(
+            "06 10 02 06 00 14 01 00 08 01 C0 A8 2A 0A 0E 57 03 04 11 FF"
         )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
@@ -85,26 +47,7 @@ class TestKNXIPConnectResponse:
 
     def test_from_knx_wrong_crd2(self):
         """Test parsing and streaming wrong ConnectRequest (wrong CRD length)."""
-        raw = (
-            0x06,
-            0x10,
-            0x02,
-            0x06,
-            0x00,
-            0x14,
-            0x01,
-            0x00,
-            0x08,
-            0x01,
-            0xC0,
-            0xA8,
-            0x2A,
-            0x0A,
-            0x0E,
-            0x57,
-            0x04,
-            0x04,
-        )
+        raw = bytes.fromhex("06 10 02 06 00 14 01 00 08 01 C0 A8 2A 0A 0E 57 04 04")
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         with pytest.raises(CouldNotParseKNXIP):
@@ -113,29 +56,11 @@ class TestKNXIPConnectResponse:
     def test_connect_response_connection_error_gira(self):
         """
         Test parsing and streaming connection response KNX/IP packet with error e_no_more_connections.
+
         HPAI and CRD normal. This was received from Gira devices (2020).
         """
-        raw = (
-            0x06,
-            0x10,
-            0x02,
-            0x06,
-            0x00,
-            0x14,
-            0xC0,
-            0x24,
-            0x08,
-            0x01,
-            0x0A,
-            0x01,
-            0x00,
-            0x29,
-            0x0E,
-            0x57,
-            0x04,
-            0x04,
-            0x00,
-            0x00,
+        raw = bytes.fromhex(
+            "06 10 02 06 00 14 C0 24 08 01 0A 01 00 29 0E 57 04 04 00 00"
         )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
@@ -154,34 +79,16 @@ class TestKNXIPConnectResponse:
         )
         knxipframe2 = KNXIPFrame.init_from_body(connect_response)
 
-        assert knxipframe2.to_knx() == list(raw)
+        assert knxipframe2.to_knx() == raw
 
     def test_connect_response_connection_error_lox(self):
         """
         Test parsing and streaming connection response KNX/IP packet with error e_no_more_connections.
+
         HPAI given, CRD all zero. This was received from Loxone device (2020).
         """
-        raw = (
-            0x06,
-            0x10,
-            0x02,
-            0x06,
-            0x00,
-            0x14,
-            0x00,
-            0x24,
-            0x08,
-            0x01,
-            0xC0,
-            0xA8,
-            0x01,
-            0x01,
-            0x0E,
-            0x57,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
+        raw = bytes.fromhex(
+            "06 10 02 06 00 14 00 24 08 01 C0 A8 01 01 0E 57 00 00 00 00"
         )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
@@ -195,28 +102,10 @@ class TestKNXIPConnectResponse:
     def test_connect_response_connection_error_mdt(self):
         """
         Test parsing and streaming connection response KNX/IP packet with error e_no_more_connections.
+
         HPAI and CRD all zero. This was received from MDT device (2020).
         """
-        raw = (
-            0x06,
-            0x10,
-            0x02,
-            0x06,
-            0x00,
-            0x08,
-            0x00,
-            0x24,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-        )
+        raw = bytes.fromhex("06 10 02 06 00 08 00 24 00 00 00 00 00 00 00 00 00 00")
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)

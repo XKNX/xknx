@@ -51,13 +51,11 @@ class SearchResponse(KNXIPBody):
                 return dib.name
         return "UNKNOWN"
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        data = []
-        data.extend(self.control_endpoint.to_knx())
-        for dib in self.dibs:
-            data.extend(dib.to_knx())
-        return data
+        return self.control_endpoint.to_knx() + b"".join(
+            dib.to_knx() for dib in self.dibs
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""

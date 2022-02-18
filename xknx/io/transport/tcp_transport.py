@@ -71,7 +71,7 @@ class TCPTransport(KNXIPTransport):
         """Parse and process KNXIP frame. Callback for having received data over TCP."""
         if self._buffer:
             raw = self._buffer + raw
-            self._buffer = bytes()
+            self._buffer = b""
         if not raw:
             return
         try:
@@ -131,4 +131,4 @@ class TCPTransport(KNXIPTransport):
         if self.transport is None:
             raise CommunicationError("Transport not connected")
 
-        self.transport.write(bytes(knxipframe.to_knx()))
+        self.transport.write(knxipframe.to_knx())

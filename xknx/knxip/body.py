@@ -32,7 +32,7 @@ class KNXIPBody(ABC):
         """Parse/deserialize from KNX/IP raw data."""
 
     @abstractmethod
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
 
     def __eq__(self, other: object) -> bool:

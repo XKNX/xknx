@@ -48,14 +48,16 @@ class TunnellingAck(KNXIPBodyResponse):
         self.status_code = ErrorCode(raw[3])
         return TunnellingAck.BODY_LENGTH
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        return [
-            TunnellingAck.BODY_LENGTH,
-            self.communication_channel_id,
-            self.sequence_counter,
-            self.status_code.value,
-        ]
+        return bytes(
+            (
+                TunnellingAck.BODY_LENGTH,
+                self.communication_channel_id,
+                self.sequence_counter,
+                self.status_code.value,
+            )
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""

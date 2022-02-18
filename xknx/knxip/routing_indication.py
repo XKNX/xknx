@@ -49,7 +49,7 @@ class RoutingIndication(KNXIPBody):
             self.cemi = None
             return len(raw)
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
         if self.cemi is None:
             raise CouldNotParseKNXIP("No CEMIFrame defined.")

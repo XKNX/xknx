@@ -62,7 +62,7 @@ class TestDevice:
 
     @patch("logging.Logger.exception")
     async def test_bad_callback(self, logging_exception_mock):
-        """Test handling callback raising an exception"""
+        """Test handling callback raising an exception."""
         xknx = XKNX()
         device = Device(xknx, "TestDevice")
         good_callback_1 = AsyncMock()
