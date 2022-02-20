@@ -203,3 +203,20 @@ class DIBServiceFamily(Enum):
 
     # Object Server'.
     OBJECT_SERVER = 0x08
+
+
+class SecureSessionStatusCode(Enum):
+    """Enum class for KNX/IP Secure session status codes."""
+
+    # The user could successfully be authenticated
+    STATUS_AUTHENTICATION_SUCCESS = 0x00
+    # An error occurred during secure session handshake
+    STATUS_AUTHENTICATION_FAILED = 0x01
+    # The session is not (yet) authenticated
+    STATUS_UNAUTHENTICATED = 0x02
+    # A timeout occurred during secure session handshake
+    STATUS_TIMEOUT = 0x03
+    # The secure session shall be closed
+    STATUS_CLOSE = 0x04
+    # Prevent inactivity on the secure session closing it with timeout error
+    STATUS_KEEPALIVE = 0x05
