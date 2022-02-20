@@ -18,14 +18,14 @@ from __future__ import annotations
 from abc import ABC
 from enum import Enum
 from re import compile as re_compile
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
 from xknx.exceptions import CouldNotParseAddress
 
 # TODO: typing - remove need for Optional here
-GroupAddressableType = Optional[Union["GroupAddress", str, int, Tuple[int, int]]]
+GroupAddressableType = Optional[Union["GroupAddress", str, int, tuple[int, int]]]
 IndividualAddressableType = Optional[
-    Union["IndividualAddress", str, int, Tuple[int, int]]
+    Union["IndividualAddress", str, int, tuple[int, int]]
 ]
 InternalGroupAddressableType = Union["InternalGroupAddress", str]
 DeviceAddressableType = Union[GroupAddressableType, InternalGroupAddressableType]

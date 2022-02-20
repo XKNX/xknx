@@ -10,16 +10,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import logging
-from typing import (
-    TYPE_CHECKING,
-    Awaitable,
-    Callable,
-    Generic,
-    Iterator,
-    List,
-    TypeVar,
-    Union,
-)
+from typing import TYPE_CHECKING, Awaitable, Callable, Generic, Iterator, TypeVar, Union
 
 from xknx.dpt.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -41,7 +32,7 @@ AsyncCallbackType = Callable[[], Awaitable[None]]
 DPTPayloadType = TypeVar(
     "DPTPayloadType", DPTArray, DPTBinary, Union[DPTArray, DPTBinary]
 )
-GroupAddressesType = Union["DeviceAddressableType", List["DeviceAddressableType"]]
+GroupAddressesType = Union["DeviceAddressableType", list["DeviceAddressableType"]]
 ValueType = TypeVar("ValueType")
 
 

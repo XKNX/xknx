@@ -31,7 +31,7 @@ class DescriptionResponse(KNXIPBody):
 
     def calculated_length(self) -> int:
         """Get length of KNX/IP body."""
-        return sum([dib.calculated_length() for dib in self.dibs])
+        return sum(dib.calculated_length() for dib in self.dibs)
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
