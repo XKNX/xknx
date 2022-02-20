@@ -1,1 +1,2 @@
+cryptography==35.0.0
 netifaces==0.11.0
