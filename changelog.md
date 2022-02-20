@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Protocol
+
+- add SessionRequest, SessionResponse, SessionAuthenticate, SessionStatus, SecureWrapper Frame parser
+
 ### Internals
 
 - Drop support for Python 3.8 to follow Home Assistant changes
