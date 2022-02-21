@@ -29,8 +29,8 @@ pypi:
 	@twine upload dist/*
 
 pylint:
-	@pylint --jobs=0 --rcfile=.pylintrc xknx *.py examples/*.py
-	@pylint --jobs=0 --rcfile=.pylintrc --disable=no-self-use,protected-access,abstract-class-instantiated test/*
+	@pylint --jobs=0 xknx *.py examples/*.py
+	@pylint --jobs=0 --disable=no-self-use,protected-access,abstract-class-instantiated test/*
 
 pydocstyle:
 	@pydocstyle xknx test/*.py test/*.py *.py examples/*.py
