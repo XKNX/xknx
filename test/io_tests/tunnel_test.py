@@ -3,6 +3,7 @@ import asyncio
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPTArray
 from xknx.io import UDPTunnel

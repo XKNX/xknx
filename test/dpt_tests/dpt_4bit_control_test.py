@@ -1,5 +1,6 @@
 """Unit test for DPTControlStepCode objects."""
 import pytest
+
 from xknx.dpt import (
     DPTControlStartStop,
     DPTControlStartStopBlinds,

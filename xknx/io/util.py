@@ -6,6 +6,7 @@ import logging
 from typing import cast
 
 import netifaces
+
 from xknx.exceptions import CommunicationError, XKNXException
 
 logger = logging.getLogger("xknx.log")

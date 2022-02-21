@@ -1,5 +1,6 @@
 """Unit test for RemoteValueStep objects."""
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError

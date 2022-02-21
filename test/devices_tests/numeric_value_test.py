@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+
 from xknx import XKNX
 from xknx.devices import NumericValue
 from xknx.dpt import DPTArray

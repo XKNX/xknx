@@ -3,6 +3,7 @@ import struct
 from unittest.mock import patch
 
 import pytest
+
 from xknx.dpt import DPT2ByteSigned
 from xknx.exceptions import ConversionError
 

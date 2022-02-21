@@ -13,6 +13,7 @@ import logging
 from typing import TYPE_CHECKING
 
 import netifaces
+
 from xknx.knxip import (
     DIB,
     HPAI,

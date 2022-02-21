@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock, call
 
 import pytest
+
 from xknx import XKNX
 from xknx.devices import BinarySensor, ExposeSensor, Sensor
 from xknx.dpt import DPTArray, DPTBinary

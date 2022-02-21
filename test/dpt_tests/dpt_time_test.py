@@ -2,6 +2,7 @@
 import time
 
 import pytest
+
 from xknx.dpt import DPTTime
 from xknx.exceptions import ConversionError
 

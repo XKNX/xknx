@@ -1,5 +1,6 @@
 """Unit test for RemoteValueClimateMode objects."""
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode

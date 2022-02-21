@@ -3,6 +3,7 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from xknx import XKNX
 from xknx.io.request_response import RequestResponse
 from xknx.io.transport import UDPTransport

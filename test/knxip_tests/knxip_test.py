@@ -1,5 +1,6 @@
 """Unit test for KNX/IP base class."""
 import pytest
+
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP, IncompleteKNXIPFrame
 from xknx.knxip import KNXIPFrame

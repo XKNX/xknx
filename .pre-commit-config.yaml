@@ -13,18 +13,20 @@ repos:
           - --safe
           - --quiet
         files: ^((xknx|test|examples|home-assistant-plugin|docs)/.+)?[^/]+\.py$
-  - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.9.2
+  - repo: https://github.com/pycqa/flake8
+    rev: 4.0.1
     hooks:
       - id: flake8
         additional_dependencies:
           - flake8-docstrings==1.6.0
           - pydocstyle==6.0.0
         files: ^(xknx|examples|docs)/.+\.py$
-  - repo: https://github.com/timothycrosley/isort
+  - repo: https://github.com/PyCQA/isort
     rev: 5.10.1
     hooks:
       - id: isort
+        args:
+          - --resolve-all-configs
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.1.0
     hooks:

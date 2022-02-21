@@ -3,6 +3,7 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPTBinary
 from xknx.exceptions import CommunicationError, CouldNotParseTelegram

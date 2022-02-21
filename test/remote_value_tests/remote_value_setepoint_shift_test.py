@@ -1,5 +1,6 @@
 """Unit test for RemoteValueSetpointShift objects."""
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary, DPTTemperature, DPTValue1Count
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
