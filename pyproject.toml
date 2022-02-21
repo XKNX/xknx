@@ -1,3 +1,7 @@
 [tool.black]
 target-version = ["py39", "py310"]
 exclude = "generated"
+
+[tool.pytest.ini_options]
+testpaths = "test"
+asyncio_mode = "auto"

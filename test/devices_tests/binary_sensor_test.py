@@ -1,7 +1,6 @@
 """Unit test for BinarySensor objects."""
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from xknx import XKNX
 from xknx.devices import BinarySensor
 from xknx.dpt import DPTArray, DPTBinary
@@ -9,7 +8,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestBinarySensor:
     """Test class for BinarySensor objects."""
 

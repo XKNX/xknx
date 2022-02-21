@@ -1,7 +1,6 @@
 """Unit test for Notification objects."""
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from xknx import XKNX
 from xknx.devices import Notification
 from xknx.dpt import DPTArray, DPTBinary, DPTString
@@ -9,7 +8,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestNotification:
     """Test class for Notification object."""
 

@@ -10,7 +10,6 @@ from xknx.telegram import GroupAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestValueReader:
     """Test class for value reader."""
 

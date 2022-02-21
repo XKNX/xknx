@@ -10,7 +10,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 @patch.multiple(RemoteValue, __abstractmethods__=set())
 class TestRemoteValue:
     """Test class for RemoteValue objects."""

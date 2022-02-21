@@ -8,7 +8,6 @@ from xknx.exceptions import CommunicationError
 from xknx.io import ConnectionConfig, ConnectionType
 
 
-@pytest.mark.asyncio
 class TestXknxModule:
     """Test class for XKNX."""
 

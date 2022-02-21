@@ -25,7 +25,6 @@ from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestUDPTunnel:
     """Test class for xknx/io/Tunnel objects."""
 

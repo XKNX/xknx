@@ -14,7 +14,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestRemoteValueOperationMode:
     """Test class for RemoteValueOperationMode objects."""
 

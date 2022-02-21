@@ -1,5 +1,4 @@
 """Unit test for Scene objects."""
-import pytest
 from xknx import XKNX
 from xknx.devices import Scene
 from xknx.dpt import DPTArray
@@ -7,7 +6,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestScene:
     """Test class for Scene objects."""
 

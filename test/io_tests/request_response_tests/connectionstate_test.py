@@ -1,7 +1,6 @@
 """Unit test for KNX/IP ConnectionState Request/Response."""
 from unittest.mock import patch
 
-import pytest
 from xknx import XKNX
 from xknx.io.request_response import ConnectionState
 from xknx.io.transport import UDPTransport
@@ -15,7 +14,6 @@ from xknx.knxip import (
 )
 
 
-@pytest.mark.asyncio
 class TestConnectionState:
     """Test class for xknx/io/ConnectionState objects."""
 

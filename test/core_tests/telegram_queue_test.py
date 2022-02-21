@@ -11,7 +11,6 @@ from xknx.telegram.address import GroupAddress, InternalGroupAddress
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestTelegramQueue:
     """Test class for telegram queue."""
 

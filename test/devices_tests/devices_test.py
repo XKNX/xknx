@@ -7,7 +7,6 @@ from xknx.devices import BinarySensor, Device, Devices, Light, Switch
 from xknx.telegram import GroupAddress
 
 
-@pytest.mark.asyncio
 class TestDevices:
     """Test class for devices container within XKNX."""
 

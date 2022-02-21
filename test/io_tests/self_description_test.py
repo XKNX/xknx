@@ -2,14 +2,12 @@
 import asyncio
 from unittest.mock import Mock, patch
 
-import pytest
 from xknx import XKNX
 from xknx.io.self_description import DescriptionQuery, request_description
 from xknx.io.transport.udp_transport import UDPTransport
 from xknx.knxip import HPAI, DescriptionRequest, KNXIPFrame
 
 
-@pytest.mark.asyncio
 class TestSelfDescription:
     """Test class for KNX/IP self description."""
 

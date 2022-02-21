@@ -8,7 +8,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestRemoteValueDptValue2Ucount:
     """Test class for RemoteValueDpt2ByteUnsigned objects."""
 

@@ -29,7 +29,6 @@ DPT_20102_MODES = [
 ]
 
 
-@pytest.mark.asyncio
 class TestClimate:
     """Test class for Climate objects."""
 

@@ -1,7 +1,6 @@
 """Unit test for String representations."""
 from unittest.mock import patch
 
-import pytest
 from xknx import XKNX
 from xknx.devices import (
     BinarySensor,
@@ -58,7 +57,6 @@ from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramDir
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestStringRepresentations:
     """Test class for Configuration logic."""
 

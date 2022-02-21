@@ -10,7 +10,6 @@ from xknx.telegram.address import GroupAddress, InternalGroupAddress
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestSensorExposeLoop:
     """Process incoming Telegrams and send the values to the bus again."""
 
@@ -240,7 +239,6 @@ class TestSensorExposeLoop:
         await xknx.telegram_queue.stop()
 
 
-@pytest.mark.asyncio
 class TestBinarySensorExposeLoop:
     """Process incoming Telegrams and send the values to the bus again."""
 
@@ -304,7 +302,6 @@ class TestBinarySensorExposeLoop:
         await xknx.telegram_queue.stop()
 
 
-@pytest.mark.asyncio
 class TestBinarySensorInternalGroupAddressExposeLoop:
     """Process incoming Telegrams and send values to other devices."""
 
