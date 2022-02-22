@@ -3,13 +3,13 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from xknx import XKNX
 from xknx.io.request_response import RequestResponse
 from xknx.io.transport import UDPTransport
 from xknx.knxip import DisconnectResponse, KNXIPBody
 
 
-@pytest.mark.asyncio
 class TestConnectResponse:
     """Test class for xknx/io/Disconnect objects."""
 

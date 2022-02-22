@@ -175,15 +175,12 @@ class DIBSuppSVCFamilies(DIB):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        return (
-            bytes(
-                (
-                    self.calculated_length(),
-                    DIBTypeCode.SUPP_SVC_FAMILIES.value,
-                )
+        return bytes(
+            (
+                self.calculated_length(),
+                DIBTypeCode.SUPP_SVC_FAMILIES.value,
             )
-            + b"".join(family.to_knx() for family in self.families)
-        )
+        ) + b"".join(family.to_knx() for family in self.families)
 
     def __str__(self) -> str:
         """Return object as readable string."""

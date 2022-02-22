@@ -5,7 +5,7 @@ DPT 232.600.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence, Tuple
+from typing import TYPE_CHECKING, Sequence
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueColorRGB(RemoteValue[DPTArray, Tuple[int, int, int]]):
+class RemoteValueColorRGB(RemoteValue[DPTArray, tuple[int, int, int]]):
     """Abstraction for remote value of KNX DPT 232.600 (DPT_Color_RGB)."""
 
     def __init__(

@@ -2,6 +2,7 @@
 import time
 
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPTArray
 from xknx.exceptions import ConversionError, CouldNotParseTelegram

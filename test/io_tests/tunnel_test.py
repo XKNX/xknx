@@ -3,6 +3,7 @@ import asyncio
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPTArray
 from xknx.io import UDPTunnel
@@ -25,7 +26,6 @@ from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestUDPTunnel:
     """Test class for xknx/io/Tunnel objects."""
 

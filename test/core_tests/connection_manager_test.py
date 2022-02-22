@@ -1,12 +1,10 @@
 """Unit test for connection manager."""
 from unittest.mock import AsyncMock
 
-import pytest
 from xknx import XKNX
 from xknx.core import XknxConnectionState
 
 
-@pytest.mark.asyncio
 class TestConnectionManager:
     """Test class for connection manager."""
 

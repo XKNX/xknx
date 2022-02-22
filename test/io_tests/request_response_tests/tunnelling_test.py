@@ -1,7 +1,6 @@
 """Unit test for KNX/IP Tunnelling Request/Response."""
 from unittest.mock import patch
 
-import pytest
 from xknx import XKNX
 from xknx.dpt import DPTArray
 from xknx.io.request_response import Tunnelling
@@ -18,7 +17,6 @@ from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestTunnelling:
     """Test class for xknx/io/Tunnelling objects."""
 

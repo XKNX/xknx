@@ -1,5 +1,6 @@
 """Unit test for Address class."""
 import pytest
+
 from xknx.exceptions import CouldNotParseAddress
 from xknx.telegram.address import (
     GroupAddress,

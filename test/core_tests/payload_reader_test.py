@@ -2,14 +2,12 @@
 import asyncio
 from unittest.mock import MagicMock, patch
 
-import pytest
 from xknx import XKNX
 from xknx.core import PayloadReader
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import MemoryRead, MemoryResponse
 
 
-@pytest.mark.asyncio
 class TestPayloadReader:
     """Test class for payload reader."""
 

@@ -1,7 +1,6 @@
 """Unit test for Weather objects."""
 import datetime
 
-import pytest
 from xknx import XKNX
 from xknx.devices import Weather
 from xknx.devices.weather import WeatherCondition
@@ -10,7 +9,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestWeather:
     """Test class for Weather objects."""
 

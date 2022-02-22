@@ -3,12 +3,12 @@ import os
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from xknx import XKNX
 from xknx.exceptions import CommunicationError
 from xknx.io import ConnectionConfig, ConnectionType
 
 
-@pytest.mark.asyncio
 class TestXknxModule:
     """Test class for XKNX."""
 

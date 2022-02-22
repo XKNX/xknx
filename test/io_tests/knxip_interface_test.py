@@ -2,14 +2,12 @@
 import threading
 from unittest.mock import DEFAULT, Mock, patch
 
-import pytest
 from xknx import XKNX
 from xknx.io import ConnectionConfig, ConnectionType, knx_interface_factory
 from xknx.io.routing import Routing
 from xknx.io.tunnel import TCPTunnel, UDPTunnel
 
 
-@pytest.mark.asyncio
 class TestKNXIPInterface:
     """Test class for KNX interface objects."""
 
