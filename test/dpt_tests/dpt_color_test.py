@@ -1,5 +1,6 @@
 """Unit test for KNX color objects."""
 import pytest
+
 from xknx.dpt.dpt_color import DPTColorXYY, XYYColor
 from xknx.exceptions import ConversionError
 

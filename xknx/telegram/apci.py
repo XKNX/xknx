@@ -514,9 +514,9 @@ class MemoryRead(APCI):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        if self.address < 0 or self.address >= 2 ** 16:
+        if self.address < 0 or self.address >= 2**16:
             raise ConversionError("Address out of range.")
-        if self.count < 0 or self.count >= 2 ** 6:
+        if self.count < 0 or self.count >= 2**6:
             raise ConversionError("Count out of range.")
 
         payload = struct.pack("!BH", self.count, self.address)
@@ -565,9 +565,9 @@ class MemoryWrite(APCI):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        if self.address < 0 or self.address >= 2 ** 16:
+        if self.address < 0 or self.address >= 2**16:
             raise ConversionError("Address out of range.")
-        if self.count < 0 or self.count >= 2 ** 6:
+        if self.count < 0 or self.count >= 2**6:
             raise ConversionError("Count out of range.")
 
         size = len(self.data)
@@ -617,9 +617,9 @@ class MemoryResponse(APCI):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        if self.address < 0 or self.address >= 2 ** 16:
+        if self.address < 0 or self.address >= 2**16:
             raise ConversionError("Address out of range.")
-        if self.count < 0 or self.count >= 2 ** 6:
+        if self.count < 0 or self.count >= 2**6:
             raise ConversionError("Count out of range.")
 
         size = len(self.data)
@@ -657,7 +657,7 @@ class DeviceDescriptorRead(APCI):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        if self.descriptor < 0 or self.descriptor >= 2 ** 6:
+        if self.descriptor < 0 or self.descriptor >= 2**6:
             raise ConversionError("Descriptor out of range.")
 
         return encode_cmd_and_payload(self.CODE, encoded_payload=self.descriptor)
@@ -693,7 +693,7 @@ class DeviceDescriptorResponse(APCI):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        if self.descriptor < 0 or self.descriptor >= 2 ** 6:
+        if self.descriptor < 0 or self.descriptor >= 2**6:
             raise ConversionError("Descriptor out of range.")
 
         payload = struct.pack("!H", self.value)
@@ -762,9 +762,9 @@ class UserMemoryRead(APCI):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        if self.address < 0 or self.address >= 2 ** 20:
+        if self.address < 0 or self.address >= 2**20:
             raise ConversionError("Address out of range.")
-        if self.count < 0 or self.count >= 2 ** 4:
+        if self.count < 0 or self.count >= 2**4:
             raise ConversionError("Count out of range.")
 
         byte0 = (((self.address & 0x0F0000) >> 16) << 4) | (self.count & 0x0F)
@@ -815,9 +815,9 @@ class UserMemoryWrite(APCI):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        if self.address < 0 or self.address >= 2 ** 20:
+        if self.address < 0 or self.address >= 2**20:
             raise ConversionError("Address out of range.")
-        if self.count < 0 or self.count >= 2 ** 4:
+        if self.count < 0 or self.count >= 2**4:
             raise ConversionError("Count out of range.")
 
         byte0 = (((self.address & 0x0F0000) >> 16) << 4) | (self.count & 0x0F)
@@ -869,9 +869,9 @@ class UserMemoryResponse(APCI):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        if self.address < 0 or self.address >= 2 ** 20:
+        if self.address < 0 or self.address >= 2**20:
             raise ConversionError("Address out of range.")
-        if self.count < 0 or self.count >= 2 ** 4:
+        if self.count < 0 or self.count >= 2**4:
             raise ConversionError("Count out of range.")
 
         byte0 = (((self.address & 0x0F0000) >> 16) << 4) | (self.count & 0x0F)
@@ -1177,7 +1177,7 @@ class PropertyValueRead(APCI):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        if self.count < 0 or self.count > 2 ** 4:
+        if self.count < 0 or self.count > 2**4:
             raise ConversionError("Count out of range.")
 
         payload = struct.pack(
@@ -1236,7 +1236,7 @@ class PropertyValueWrite(APCI):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        if self.count < 0 or self.count > 2 ** 4:
+        if self.count < 0 or self.count > 2**4:
             raise ConversionError("Count out of range.")
 
         size = len(self.data)
@@ -1330,7 +1330,7 @@ class PropertyValueResponse(APCI):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        if self.count < 0 or self.count > 2 ** 4:
+        if self.count < 0 or self.count > 2**4:
             raise ConversionError("Count out of range.")
 
         size = len(self.data)
@@ -1436,7 +1436,7 @@ class PropertyDescriptionResponse(APCI):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        if self.max_count < 0 or self.max_count >= 2 ** 12:
+        if self.max_count < 0 or self.max_count >= 2**12:
             raise ConversionError("Max count out of range.")
 
         payload = struct.pack(

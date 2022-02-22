@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from xknx import XKNX
 from xknx.devices import Climate, ClimateMode
 from xknx.devices.climate import SetpointShiftMode
@@ -29,7 +30,6 @@ DPT_20102_MODES = [
 ]
 
 
-@pytest.mark.asyncio
 class TestClimate:
     """Test class for Climate objects."""
 

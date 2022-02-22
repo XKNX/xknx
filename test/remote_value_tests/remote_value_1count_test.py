@@ -1,5 +1,4 @@
 """Unit test for RemoteValue1Count objects."""
-import pytest
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.remote_value import RemoteValue1Count
@@ -7,7 +6,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestRemoteValue1Count:
     """Test class for RemoteValue1Count objects."""
 

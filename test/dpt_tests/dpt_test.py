@@ -1,5 +1,6 @@
 """Unit test for KNX binary/integer objects."""
 import pytest
+
 from xknx.dpt import (
     DPT2ByteFloat,
     DPTArray,

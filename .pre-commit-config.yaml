@@ -1,32 +1,34 @@
 ---
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.11.0
+    rev: v2.31.0
     hooks:
       - id: pyupgrade
-        args: [--py38-plus]
+        args: [--py39-plus]
   - repo: https://github.com/psf/black
-    rev: 20.8b1
+    rev: 22.1.0
     hooks:
       - id: black
         args:
           - --safe
           - --quiet
         files: ^((xknx|test|examples|home-assistant-plugin|docs)/.+)?[^/]+\.py$
-  - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.9.0
+  - repo: https://github.com/pycqa/flake8
+    rev: 4.0.1
     hooks:
       - id: flake8
         additional_dependencies:
           - flake8-docstrings==1.6.0
           - pydocstyle==6.0.0
         files: ^(xknx|examples|docs)/.+\.py$
-  - repo: https://github.com/timothycrosley/isort
-    rev: 5.8.0
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.10.1
     hooks:
       - id: isort
+        args:
+          - --resolve-all-configs
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.4.0
+    rev: v4.1.0
     hooks:
       - id: check-executables-have-shebangs
         stages: [manual]
@@ -36,7 +38,7 @@ repos:
           - --branch=main
       - id: trailing-whitespace
   - repo: https://github.com/cdce8p/python-typing-update
-    rev: v0.3.2
+    rev: v0.3.5
     hooks:
       # Run `pre-commit run --hook-stage manual python-typing-update --all-files` manually
       # from time to time to update python typing syntax.
@@ -44,7 +46,7 @@ repos:
       - id: python-typing-update
         stages: [manual]
         args:
-          - --py38-plus
+          - --py39-plus
           - --force
           - --keep-updates
         files: ^(xknx)/.+\.py$

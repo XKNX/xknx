@@ -3,6 +3,7 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPTBinary
 from xknx.exceptions import CommunicationError, CouldNotParseTelegram
@@ -11,7 +12,6 @@ from xknx.telegram.address import GroupAddress, InternalGroupAddress
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestTelegramQueue:
     """Test class for telegram queue."""
 

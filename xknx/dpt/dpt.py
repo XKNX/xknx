@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from inspect import isabstract
-from typing import Any, Iterator, Type, TypeVar, cast
+from typing import Any, Iterator, TypeVar, cast
 
 from xknx.exceptions import ConversionError
 
-T = TypeVar("T", bound=Type["DPTBase"])  # pylint: disable=invalid-name
+T = TypeVar("T", bound=type["DPTBase"])  # pylint: disable=invalid-name
 
 
 class DPTBase(ABC):

@@ -1,7 +1,6 @@
 """Example on how to read mask version and properties from a KNX actor."""
 import asyncio
 import sys
-from typing import List
 
 from xknx import XKNX
 from xknx.core import PayloadReader
@@ -14,7 +13,7 @@ from xknx.telegram.apci import (
 )
 
 
-async def main(argv: List[str]):
+async def main(argv: list[str]):
     """Connect and read information from a KNX device. Requires a System B device."""
     if len(argv) == 2:
         address = IndividualAddress(argv[1])

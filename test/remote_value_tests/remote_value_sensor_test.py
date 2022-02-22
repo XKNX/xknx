@@ -1,5 +1,6 @@
 """Unit test for RemoteValueSensor objects."""
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTValue1Ucount
 from xknx.exceptions import ConversionError, CouldNotParseTelegram

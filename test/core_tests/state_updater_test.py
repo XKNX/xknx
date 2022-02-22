@@ -1,7 +1,6 @@
 """Unit test for StateUpdater."""
 from unittest.mock import Mock, patch
 
-import pytest
 from xknx import XKNX
 from xknx.core import XknxConnectionState
 from xknx.core.state_updater import StateTrackerType, _StateTracker
@@ -10,7 +9,6 @@ from xknx.telegram import GroupAddress
 
 
 @patch.multiple(RemoteValue, __abstractmethods__=set())
-@pytest.mark.asyncio
 class TestStateUpdater:
     """Test class for state updater."""
 

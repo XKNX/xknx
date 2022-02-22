@@ -1,7 +1,7 @@
 """Support for KNX/IP lights."""
 from __future__ import annotations
 
-from typing import Any, Tuple, cast
+from typing import Any, cast
 
 from xknx import XKNX
 from xknx.devices.light import Light as XknxLight, XYYColor
@@ -287,7 +287,7 @@ class KNXLight(KnxEntity, LightEntity):
                     # brightness will be calculated from color so color must not hold brightness again
                     # pylint: disable=protected-access
                     return cast(
-                        Tuple[int, int, int], color_util.match_max_scale((255,), rgb)
+                        tuple[int, int, int], color_util.match_max_scale((255,), rgb)
                     )
                 return rgb
         return None
@@ -302,7 +302,7 @@ class KNXLight(KnxEntity, LightEntity):
                     # brightness will be calculated from color so color must not hold brightness again
                     # pylint: disable=protected-access
                     return cast(
-                        Tuple[int, int, int, int],
+                        tuple[int, int, int, int],
                         color_util.match_max_scale((255,), (*rgb, white)),
                     )
                 return (*rgb, white)
@@ -403,7 +403,7 @@ class KNXLight(KnxEntity, LightEntity):
                 # normalize for brightness if brightness is derived from color
                 brightness = self.brightness or 255
             rgb = cast(
-                Tuple[int, int, int],
+                tuple[int, int, int],
                 tuple(color * brightness // 255 for color in rgb),
             )
             white = white * brightness // 255 if white is not None else None

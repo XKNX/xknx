@@ -1,7 +1,6 @@
 """Unit test for Switch objects."""
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from xknx import XKNX
 from xknx.devices import Device, Sensor
 from xknx.dpt import DPTArray
@@ -9,7 +8,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
-@pytest.mark.asyncio
 @patch.multiple(Device, __abstractmethods__=set())
 class TestDevice:
     """Test class for Switch object."""

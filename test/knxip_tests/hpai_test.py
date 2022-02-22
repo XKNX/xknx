@@ -1,5 +1,6 @@
 """Unit test for KNX/IP HPAI objects."""
 import pytest
+
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP
 from xknx.knxip import HPAI, HostProtocol
 

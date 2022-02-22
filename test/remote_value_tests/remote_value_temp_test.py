@@ -1,5 +1,6 @@
 """Unit test for RemoteValueSceneNumber objects."""
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
@@ -8,7 +9,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestRemoteValueTemp:
     """Test class for RemoteValueTemp objects."""
 

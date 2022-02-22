@@ -1,5 +1,6 @@
 """Unit test for KNX/IP TunnellingRequest objects."""
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPTBinary
 from xknx.exceptions import CouldNotParseKNXIP

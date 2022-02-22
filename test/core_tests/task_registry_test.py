@@ -1,12 +1,10 @@
 """Unit test for task registry."""
 import asyncio
 
-import pytest
 from xknx import XKNX
 from xknx.core import XknxConnectionState
 
 
-@pytest.mark.asyncio
 class TestTaskRegistry:
     """Test class for task registry."""
 

@@ -1,5 +1,6 @@
 """Unit test for KNX/IP ConnectRequests."""
 import pytest
+
 from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import HPAI, ConnectRequest, ConnectRequestType, KNXIPFrame
