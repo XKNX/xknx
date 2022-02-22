@@ -51,20 +51,21 @@ def calculate_message_authentication_code_cbc(
 
 def encrypt_data_ctr(
     key: bytes,
-    payload: bytes,
+    mac_cbc: bytes,
+    payload: bytes = bytes(),
     counter_0: bytes = bytes(16),
 ) -> bytes:
     """
     Encrypt data with AES-CTR.
 
-    Payload is expected `MAC CBC + Plain KNX/IP frame` or `MAC CBC` only.
+    Payload is optional; expected plain KNX/IP frame bytes.
     MAC shall be encrypted with coutner 0, KNXnet/IP frame with incremented counters.
     Encrypted MAC is appended to the end of encrypted payload data (if there is any).
     """
     s_cipher = Cipher(algorithms.AES(key), modes.CTR(counter_0))
     s_encryptor = s_cipher.encryptor()
-    mac = s_encryptor.update(payload[:16])
-    data = s_encryptor.update(payload[16:]) + s_encryptor.finalize()
+    mac = s_encryptor.update(mac_cbc)
+    data = s_encryptor.update(payload) + s_encryptor.finalize()
     return data + mac
 
 
@@ -129,7 +130,8 @@ def calculate_wrapper(
     )
     encrypted_data = encrypt_data_ctr(
         session_key,
-        payload=mac_cbc + p_data,
+        mac_cbc=mac_cbc,
+        payload=p_data,
         counter_0=ctr_0_secure_wrapper,
     )
 
@@ -215,7 +217,7 @@ def main():
     )
     message_authentication_code = encrypt_data_ctr(
         peer_device_authentication_code,
-        message_authentication_code_cbc,
+        mac_cbc=message_authentication_code_cbc,
         counter_0=ctr_0_session_response,
     )
     assert message_authentication_code == bytes.fromhex(
@@ -277,7 +279,7 @@ def main():
     assert (
         encrypt_data_ctr(
             password_hash,
-            mac_cbc_authenticate,
+            mac_cbc=mac_cbc_authenticate,
             counter_0=ctr_0_session_authenticate,
         )
         == session_authenticate[8:]
