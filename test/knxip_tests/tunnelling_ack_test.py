@@ -6,7 +6,7 @@ from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import ErrorCode, KNXIPFrame, TunnellingAck
 
 
-class TestKNXIPTunnelingAck:
+class TestKNXIPTunnellingAck:
     """Test class for KNX/IP TunnellingAck objects."""
 
     def test_connect_request(self):
