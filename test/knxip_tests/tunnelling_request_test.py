@@ -9,7 +9,7 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-class TestKNXIPTunnelingRequest:
+class TestKNXIPTunnellingRequest:
     """Test class for KNX/IP TunnellingRequest objects."""
 
     def test_connect_request(self):
