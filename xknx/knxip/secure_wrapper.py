@@ -25,8 +25,14 @@ if TYPE_CHECKING:
 SECURITY_INFORMATION_LENGTH: Final = 16
 # 6 octets for KNX/IP header
 # 2 for smallest payload (eg. SessionStatus)
-# 16 for message authentication code
-MINIMUM_PAYLOAD_LENGTH: Final = 24
+MINIMUM_PAYLOAD_LENGTH: Final = 2
+MESSAGE_AUTHENTICATION_CODE_LENGTH: Final = 16
+
+SECURE_WRAPPER_MINIMUM_LENGTH: Final = (
+    SECURITY_INFORMATION_LENGTH
+    + MINIMUM_PAYLOAD_LENGTH
+    + MESSAGE_AUTHENTICATION_CODE_LENGTH
+)
 
 
 class SecureWrapper(KNXIPBody):
@@ -42,6 +48,7 @@ class SecureWrapper(KNXIPBody):
         serial_number: int = 0,
         message_tag: int = 0,
         encrypted_data: bytes = bytes(0),
+        message_authentication_code: bytes = bytes(16),
     ):
         """Initialize SecureWrapper object."""
         super().__init__(xknx)
@@ -50,20 +57,26 @@ class SecureWrapper(KNXIPBody):
         self.serial_number = serial_number
         self.message_tag = message_tag
         self.encrypted_data = encrypted_data
+        self.message_authentication_code = message_authentication_code
 
     def calculated_length(self) -> int:
         """Get length of KNX/IP body."""
-        return SECURITY_INFORMATION_LENGTH + len(self.encrypted_data)
+        return (
+            SECURITY_INFORMATION_LENGTH
+            + len(self.encrypted_data)
+            + MESSAGE_AUTHENTICATION_CODE_LENGTH
+        )
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) < (SECURITY_INFORMATION_LENGTH + MINIMUM_PAYLOAD_LENGTH):
+        if len(raw) < SECURE_WRAPPER_MINIMUM_LENGTH:
             raise CouldNotParseKNXIP("SecureWrapper has invalid length")
         self.secure_session_id = int.from_bytes(raw[:2], "big")
         self.sequence_information = int.from_bytes(raw[2:8], "big")
         self.serial_number = int.from_bytes(raw[8:14], "big")
         self.message_tag = int.from_bytes(raw[14:16], "big")
-        self.encrypted_data = raw[16:]
+        self.encrypted_data = raw[16:-MESSAGE_AUTHENTICATION_CODE_LENGTH]
+        self.message_authentication_code = raw[-MESSAGE_AUTHENTICATION_CODE_LENGTH:]
         return len(raw)
 
     def to_knx(self) -> bytes:
@@ -74,6 +87,7 @@ class SecureWrapper(KNXIPBody):
             + self.serial_number.to_bytes(6, "big")
             + self.message_tag.to_bytes(2, "big")
             + self.encrypted_data
+            + self.message_authentication_code
         )
 
     def __str__(self) -> str:
@@ -84,5 +98,6 @@ class SecureWrapper(KNXIPBody):
             f'sequence_information="{self.sequence_information}" '
             f'serial_number="{self.serial_number}" '
             f'message_tag="{self.message_tag}" '
-            f"encrypted_data={self.encrypted_data.hex()} />"
+            f'encrypted_data={self.encrypted_data.hex()}" '
+            f"message_authentication_code={self.message_authentication_code.hex()} />"
         )
