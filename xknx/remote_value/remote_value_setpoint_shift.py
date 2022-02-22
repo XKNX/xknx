@@ -9,7 +9,7 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 from xknx.dpt import DPTArray, DPTBinary, DPTTemperature, DPTValue1Count
-from xknx.exceptions import ConversionError
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
@@ -54,19 +54,20 @@ class RemoteValueSetpointShift(RemoteValue[DPTArray, float]):
         )
         self.setpoint_shift_step = setpoint_shift_step
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray | None:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray:
         """Test if telegram payload may be parsed."""
-        if not isinstance(payload, DPTArray):
-            return None
-        payload_length = len(payload.value)
-        if self.dpt_class is None:
-            if payload_length == DPTTemperature.payload_length:
-                self.dpt_class = DPTTemperature
-            elif payload_length == DPTValue1Count.payload_length:
-                self.dpt_class = DPTValue1Count
-            else:
-                return None
-        return payload if payload_length == self.dpt_class.payload_length else None
+        if isinstance(payload, DPTArray):
+            payload_length = len(payload.value)
+            if self.dpt_class is None:
+                if payload_length == DPTTemperature.payload_length:
+                    self.dpt_class = DPTTemperature
+                    return payload
+                if payload_length == DPTValue1Count.payload_length:
+                    self.dpt_class = DPTValue1Count
+                    return payload
+            elif payload_length == self.dpt_class.payload_length:
+                return payload
+        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
 
     def to_knx(self, value: float) -> DPTArray:
         """Convert value to payload."""

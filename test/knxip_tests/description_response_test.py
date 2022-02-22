@@ -15,12 +15,16 @@ class TestKNXIPDescriptionResponse:
     def test_description_response(self):
         """Test parsing and streaming DescriptionResponse KNX/IP packet."""
         raw = bytes.fromhex(
-            "061002040048360102001000000000082d40834de000170c000ab3274a324b4e582f49502d526f7574657200000000000000000000000000000000000c0202020302040205020701",
+            "06 10 02 04 00 48 36 01 02 00 10 00 00 00 00 08"
+            "2d 40 83 4d e0 00 17 0c 00 0a b3 27 4a 32 4b 4e"
+            "58 2f 49 50 2d 52 6f 75 74 65 72 00 00 00 00 00"
+            "00 00 00 00 00 00 00 00 00 00 00 00 0c 02 02 02"
+            "03 02 04 02 05 02 07 01",
         )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         assert knxipframe.from_knx(raw) == 72
-        assert knxipframe.to_knx() == list(raw)
+        assert knxipframe.to_knx() == raw
 
         assert isinstance(knxipframe.body, DescriptionResponse)
         assert len(knxipframe.body.dibs) == 2
@@ -46,7 +50,7 @@ class TestKNXIPDescriptionResponse:
         description_response.dibs.append(knxipframe.body.dibs[1])
         knxipframe2 = KNXIPFrame.init_from_body(description_response)
 
-        assert knxipframe2.to_knx() == list(raw)
+        assert knxipframe2.to_knx() == raw
 
     def test_unknown_device_name(self):
         """Test device_name if no DIBDeviceInformation is present."""

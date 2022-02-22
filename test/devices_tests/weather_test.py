@@ -241,7 +241,7 @@ class TestWeather:
         )
 
     async def test_sunny_summer(self):
-        """Test returns sunny condition if illuminance is in defined interval"""
+        """Test returns sunny condition if illuminance is in defined interval."""
         xknx = XKNX()
         weather: Weather = Weather(
             name="weather",

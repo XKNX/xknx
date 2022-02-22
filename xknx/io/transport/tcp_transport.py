@@ -10,7 +10,7 @@ import logging
 import time
 from typing import TYPE_CHECKING, Callable, cast
 
-from xknx.exceptions import CouldNotParseKNXIP, IncompleteKNXIPFrame, XKNXException
+from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, IncompleteKNXIPFrame
 from xknx.knxip import HPAI, HostProtocol, KNXIPFrame
 
 from .ip_transport import KNXIPTransport
@@ -60,6 +60,7 @@ class TCPTransport(KNXIPTransport):
     ):
         """Initialize UDPTransport class."""
         self.xknx = xknx
+        self.remote_addr = remote_addr
         self.remote_hpai = HPAI(*remote_addr, protocol=HostProtocol.IPV4_TCP)
 
         self.callbacks = []
@@ -70,7 +71,7 @@ class TCPTransport(KNXIPTransport):
         """Parse and process KNXIP frame. Callback for having received data over TCP."""
         if self._buffer:
             raw = self._buffer + raw
-            self._buffer = bytes()
+            self._buffer = b""
         if not raw:
             return
         try:
@@ -128,6 +129,6 @@ class TCPTransport(KNXIPTransport):
             knxipframe,
         )
         if self.transport is None:
-            raise XKNXException("Transport not connected")
+            raise CommunicationError("Transport not connected")
 
-        self.transport.write(bytes(knxipframe.to_knx()))
+        self.transport.write(knxipframe.to_knx())

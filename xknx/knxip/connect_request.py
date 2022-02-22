@@ -60,23 +60,23 @@ class ConnectRequest(KNXIPBody):
         pos += cri_from_knx(raw[pos:])
         return pos
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
 
-        def cri_to_knx() -> list[int]:
+        def cri_to_knx() -> bytes:
             """Serialize CRI (Connect Request Information)."""
-            cri = []
-            cri.append(ConnectRequest.CRI_LENGTH)
-            cri.append(self.request_type.value)
-            cri.append(self.flags)
-            cri.append(0x00)  # Reserved
-            return cri
+            return bytes(
+                (
+                    ConnectRequest.CRI_LENGTH,
+                    self.request_type.value,
+                    self.flags,
+                    0x00,  # Reserved
+                )
+            )
 
-        data = []
-        data.extend(self.control_endpoint.to_knx())
-        data.extend(self.data_endpoint.to_knx())
-        data.extend(cri_to_knx())
-        return data
+        return (
+            self.control_endpoint.to_knx() + self.data_endpoint.to_knx() + cri_to_knx()
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""

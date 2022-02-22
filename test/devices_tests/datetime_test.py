@@ -16,7 +16,7 @@ class TestDateTime:
 
     # pylint: disable=attribute-defined-outside-init
     def teardown_method(self):
-        """Cancel broadcast_task"""
+        """Cancel broadcast_task."""
         self.datetime.__del__()
 
     #

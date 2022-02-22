@@ -52,13 +52,12 @@ class ConnectionStateRequest(KNXIPBody):
         pos += self.control_endpoint.from_knx(raw[pos:])
         return pos
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        return [
-            self.communication_channel_id,
-            0x00,  # Reserved
-            *self.control_endpoint.to_knx(),
-        ]
+        return (
+            bytes((self.communication_channel_id, 0x00))  # 2nd byte is reserved
+            + self.control_endpoint.to_knx()
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""

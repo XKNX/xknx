@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased changes
+
+### Internals
+
+- Drop support for Python 3.8 to follow Home Assistant changes
+- Return `bytes` from to_knx() in knxip package instead of `list[int]`
+
+## 0.19.2 TCP Heartbeat 2022-02-06
+
+### Connection
+
+- Do a ConnectionStateRequest heartbeat on TCP tunnel connections too
+
+### Devices
+
+- Handle invalid payloads per RemoteValue, log a readable warning
+
 ## 0.19.1 Bugfix for route_back 2022-01-31
 
 ### Connection

@@ -11,7 +11,7 @@ import logging
 from typing import TYPE_CHECKING, Awaitable, Callable
 
 from xknx.core import XknxConnectionState
-from xknx.exceptions import CommunicationError, XKNXException
+from xknx.exceptions import CommunicationError
 from xknx.knxip import (
     HPAI,
     CEMIFrame,
@@ -27,8 +27,10 @@ from xknx.knxip import (
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 
 from .const import HEARTBEAT_RATE
+from .gateway_scanner import GatewayDescriptor
 from .interface import Interface
 from .request_response import Connect, ConnectionState, Disconnect, Tunnelling
+from .self_description import DescriptionQuery
 from .transport import KNXIPTransport, TCPTransport, UDPTransport
 
 if TYPE_CHECKING:
@@ -64,6 +66,7 @@ class _Tunnel(Interface):
         self.sequence_number = 0
         self.telegram_received_callback = telegram_received_callback
         self._data_endpoint_addr: tuple[str, int] | None = None
+        self._heartbeat_task: asyncio.Task[None] | None = None
         self._initial_connection = True
         self._is_reconnecting = False
         self._reconnect_task: asyncio.Task[None] | None = None
@@ -129,9 +132,11 @@ class _Tunnel(Interface):
         """Set up interface when the tunnel is ready."""
         self._initial_connection = False
         self.sequence_number = 0
+        self.start_heartbeat()
 
     def _tunnel_lost(self) -> None:
         """Prepare for reconnection or shutdown when the connection is lost. Callback."""
+        self.stop_heartbeat()
         asyncio.create_task(
             self.xknx.connection_manager.connection_state_changed(
                 XknxConnectionState.DISCONNECTED
@@ -162,6 +167,7 @@ class _Tunnel(Interface):
 
     async def disconnect(self) -> None:
         """Disconnect tunneling connection."""
+        self.stop_heartbeat()
         await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
@@ -229,12 +235,22 @@ class _Tunnel(Interface):
             await disconnect.start()
             if not disconnect.success and not ignore_error:
                 self.communication_channel = None
-                raise XKNXException("Could not disconnect channel")
+                raise CommunicationError("Could not disconnect channel")
             logger.debug(
                 "Tunnel disconnected (communication_channel: %s)",
                 self.communication_channel,
             )
         self.communication_channel = None
+
+    async def request_description(self) -> GatewayDescriptor | None:
+        """Request description from tunneling server."""
+        description = DescriptionQuery(
+            self.xknx,
+            self.transport,
+            local_hpai=self.local_hpai,
+        )
+        await description.start()
+        return description.gateway_descriptor
 
     async def send_telegram(self, telegram: Telegram) -> None:
         """
@@ -353,6 +369,42 @@ class _Tunnel(Interface):
             self.communication_channel = None
         self._tunnel_lost()
 
+    ####################
+    #
+    # HEARTBEAT
+    #
+    ####################
+
+    def start_heartbeat(self) -> None:
+        """Start heartbeat for monitoring state of tunnel, as suggested by 03.08.02 KNX Core 5.4."""
+        self._heartbeat_task = asyncio.create_task(self.do_heartbeat())
+
+    def stop_heartbeat(self) -> None:
+        """Stop heartbeat task if running."""
+        if self._heartbeat_task is not None:
+            self._heartbeat_task.cancel()
+            self._heartbeat_task = None
+
+    async def do_heartbeat(self) -> None:
+        """Heartbeat: Worker task, endless loop for sending heartbeat requests."""
+        while True:
+            try:
+                await asyncio.sleep(HEARTBEAT_RATE)
+                if not await self._connectionstate_request():
+                    await self._do_heartbeat_failed()
+            except CommunicationError as err:
+                logger.warning("Heartbeat to KNX bus failed. %s", err)
+                self._tunnel_lost()
+
+    async def _do_heartbeat_failed(self) -> None:
+        """Heartbeat: handling error."""
+        # first heartbeat failed - try 3 more times before disconnecting.
+        for _heartbeats_failed in range(3):
+            if await self._connectionstate_request():
+                return
+        # 3 retries failed
+        raise CommunicationError("No answer from tunneling server.")
+
 
 class TCPTunnel(_Tunnel):
     """Class for handling KNX/IP TCP tunnels."""
@@ -444,8 +496,6 @@ class UDPTunnel(_Tunnel):
         self.local_port = local_port
         self.route_back = route_back
 
-        self._heartbeat_task: asyncio.Task[None] | None = None
-
         super().__init__(
             xknx=xknx,
             telegram_received_callback=telegram_received_callback,
@@ -459,6 +509,7 @@ class UDPTunnel(_Tunnel):
             self.xknx,
             (self.local_ip, self.local_port),
             (self.gateway_ip, self.gateway_port),
+            multicast=False,
         )
 
     def _get_hpai(self) -> HPAI:
@@ -467,22 +518,6 @@ class UDPTunnel(_Tunnel):
             return HPAI()
         (local_addr, local_port) = self.transport.getsockname()
         return HPAI(ip_addr=local_addr, port=local_port)
-
-    # CONNECT DISCONNECT
-    def _tunnel_established(self) -> None:
-        """Set up interface when the tunnel is ready."""
-        super()._tunnel_established()
-        self.start_heartbeat()
-
-    def _tunnel_lost(self) -> None:
-        """Prepare for reconnection or shutdown when the connection is lost. Callback."""
-        self.stop_heartbeat()
-        super()._tunnel_lost()
-
-    async def disconnect(self) -> None:
-        """Disconnect tunneling connection."""
-        self.stop_heartbeat()
-        await super().disconnect()
 
     # OUTGOING REQUESTS
 
@@ -533,39 +568,3 @@ class UDPTunnel(_Tunnel):
         self.transport.send(
             KNXIPFrame.init_from_body(ack), addr=self._data_endpoint_addr
         )
-
-    ####################
-    #
-    # HEARTBEAT
-    #
-    ####################
-
-    def start_heartbeat(self) -> None:
-        """Start heartbeat for monitoring state of tunnel, as suggested by 03.08.02 KNX Core 5.4."""
-        self._heartbeat_task = asyncio.create_task(self.do_heartbeat())
-
-    def stop_heartbeat(self) -> None:
-        """Stop heartbeat task if running."""
-        if self._heartbeat_task is not None:
-            self._heartbeat_task.cancel()
-            self._heartbeat_task = None
-
-    async def do_heartbeat(self) -> None:
-        """Heartbeat: Worker task, endless loop for sending heartbeat requests."""
-        while True:
-            try:
-                await asyncio.sleep(HEARTBEAT_RATE)
-                if not await self._connectionstate_request():
-                    await self._do_heartbeat_failed()
-            except CommunicationError as err:
-                logger.warning("Heartbeat to KNX bus failed. %s", err)
-                self._tunnel_lost()
-
-    async def _do_heartbeat_failed(self) -> None:
-        """Heartbeat: handling error."""
-        # first heartbeat failed - try 3 more times before disconnecting.
-        for _heartbeats_failed in range(3):
-            if await self._connectionstate_request():
-                return
-        # 3 retries failed
-        raise CommunicationError("No answer from tunneling server.")

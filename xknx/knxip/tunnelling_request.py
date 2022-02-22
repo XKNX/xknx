@@ -76,24 +76,21 @@ class TunnellingRequest(KNXIPBody):
 
         return pos
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
         if self.pdu is None:
             raise CouldNotParseKNXIP("No CEMIFrame defined.")
-
-        def header_to_knx() -> list[int]:
-            """Serialize header."""
-            cri = []
-            cri.append(TunnellingRequest.HEADER_LENGTH)
-            cri.append(self.communication_channel_id)
-            cri.append(self.sequence_counter)
-            cri.append(0x00)  # Reserved
-            return cri
-
-        data = []
-        data.extend(header_to_knx())
-        data.extend(self.pdu.to_knx())
-        return data
+        return (
+            bytes(
+                (
+                    TunnellingRequest.HEADER_LENGTH,
+                    self.communication_channel_id,
+                    self.sequence_counter,
+                    0x00,  # Reserved
+                )
+            )
+            + self.pdu.to_knx()
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""

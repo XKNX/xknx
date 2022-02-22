@@ -13,28 +13,8 @@ class TestKNXIPTunnelingRequest:
 
     def test_connect_request(self):
         """Test parsing and streaming connection tunneling request KNX/IP packet."""
-        raw = (
-            0x06,
-            0x10,
-            0x04,
-            0x20,
-            0x00,
-            0x15,
-            0x04,
-            0x01,
-            0x17,
-            0x00,
-            0x11,
-            0x00,
-            0xBC,
-            0xE0,
-            0x00,
-            0x00,
-            0x48,
-            0x08,
-            0x01,
-            0x00,
-            0x81,
+        raw = bytes.fromhex(
+            "06 10 04 20 00 15 04 01 17 00 11 00 BC E0 00 00 48 08 01 00 81"
         )
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
@@ -60,11 +40,11 @@ class TestKNXIPTunnelingRequest:
         )
         knxipframe2 = KNXIPFrame.init_from_body(tunnelling_request)
 
-        assert knxipframe2.to_knx() == list(raw)
+        assert knxipframe2.to_knx() == raw
 
     def test_from_knx_wrong_header(self):
         """Test parsing and streaming wrong TunnellingRequest (wrong header length byte)."""
-        raw = (0x06, 0x10, 0x04, 0x20, 0x00, 0x15, 0x03)
+        raw = bytes((0x06, 0x10, 0x04, 0x20, 0x00, 0x15, 0x03))
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         with pytest.raises(CouldNotParseKNXIP):
@@ -72,7 +52,7 @@ class TestKNXIPTunnelingRequest:
 
     def test_from_knx_wrong_header2(self):
         """Test parsing and streaming wrong TunnellingRequest (wrong header length)."""
-        raw = (0x06, 0x10, 0x04, 0x20, 0x00, 0x15, 0x04)
+        raw = bytes((0x06, 0x10, 0x04, 0x20, 0x00, 0x15, 0x04))
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         with pytest.raises(CouldNotParseKNXIP):

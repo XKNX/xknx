@@ -8,22 +8,7 @@ class TestKNXIPDescriptionRequest:
 
     def test_description_request(self):
         """Test parsing and streaming DescriptionRequest KNX/IP packet."""
-        raw = (
-            0x06,
-            0x10,
-            0x02,
-            0x03,
-            0x00,
-            0x0E,
-            0x08,
-            0x01,
-            0x7F,
-            0x00,
-            0x00,
-            0x02,
-            0x0E,
-            0x57,
-        )
+        raw = bytes.fromhex("06 10 02 03 00 0E 08 01 7F 00 00 02 0E 57")
         xknx = XKNX()
         knxipframe = KNXIPFrame(xknx)
         knxipframe.from_knx(raw)
@@ -37,4 +22,4 @@ class TestKNXIPDescriptionRequest:
             )
         )
 
-        assert knxipframe2.to_knx() == list(raw)
+        assert knxipframe2.to_knx() == raw

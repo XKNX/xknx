@@ -34,7 +34,7 @@ class DescriptionRequest(KNXIPBody):
         """Parse/deserialize from KNX/IP raw data."""
         return self.control_endpoint.from_knx(raw)
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
         return self.control_endpoint.to_knx()
 

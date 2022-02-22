@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Sequence, Tuple
 
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.exceptions import ConversionError
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
@@ -40,13 +40,11 @@ class RemoteValueColorRGB(RemoteValue[DPTArray, Tuple[int, int, int]]):
             after_update_cb=after_update_cb,
         )
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray | None:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray:
         """Test if telegram payload may be parsed."""
-        return (
-            payload
-            if isinstance(payload, DPTArray) and len(payload.value) == 3
-            else None
-        )
+        if isinstance(payload, DPTArray) and len(payload.value) == 3:
+            return payload
+        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
 
     def to_knx(self, value: Sequence[int]) -> DPTArray:
         """Convert value to payload."""

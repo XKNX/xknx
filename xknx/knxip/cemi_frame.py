@@ -191,7 +191,7 @@ class CEMIFrame:
 
         return 10 + addil + self.mpdu_len
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
         if not isinstance(self.payload, APCI):
             raise TypeError()
@@ -200,18 +200,23 @@ class CEMIFrame:
         if not isinstance(self.dst_addr, (GroupAddress, IndividualAddress)):
             raise ConversionError("dst_addr not set")
 
-        data = []
-
-        data.append(self.code.value)
-        data.append(0x00)
-        data.append((self.flags >> 8) & 255)
-        data.append(self.flags & 255)
-        data.extend(self.src_addr.to_knx())
-        data.extend(self.dst_addr.to_knx())
-        data.append(self.payload.calculated_length())
-        data.extend(self.payload.to_knx())
-
-        return data
+        return (
+            bytes(
+                (
+                    self.code.value,
+                    0x00,  # Additional information length
+                )
+            )
+            + self.flags.to_bytes(2, "big")
+            + bytes(
+                (
+                    *self.src_addr.to_knx(),
+                    *self.dst_addr.to_knx(),
+                    self.payload.calculated_length(),
+                )
+            )
+            + self.payload.to_knx()
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""

@@ -109,18 +109,15 @@ class TestRemoteValue:
         """Test if exception is raised when processing telegram with invalid payload."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
-        with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_valid, patch(
-            "xknx.remote_value.RemoteValue.has_group_address"
-        ) as patch_has_group_address:
-            patch_valid.return_value = None
-            patch_has_group_address.return_value = True
+        with patch(
+            "xknx.remote_value.RemoteValue.has_group_address", remote_value=True
+        ):
 
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/1"),
                 payload=GroupValueWrite(DPTArray((0x01, 0x02))),
             )
-            with pytest.raises(CouldNotParseTelegram, match=r".*payload invalid.*"):
-                await remote_value.process(telegram)
+            assert await remote_value.process(telegram) is False
 
     async def test_process_unsupported_payload(self):
         """Test warning is logged when processing telegram with unsupported payload."""

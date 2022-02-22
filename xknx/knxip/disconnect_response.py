@@ -48,12 +48,14 @@ class DisconnectResponse(KNXIPBodyResponse):
         self.status_code = ErrorCode(raw[1])
         return DisconnectResponse.LENGTH
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        return [
-            self.communication_channel_id,
-            self.status_code.value,
-        ]
+        return bytes(
+            (
+                self.communication_channel_id,
+                self.status_code.value,
+            )
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""

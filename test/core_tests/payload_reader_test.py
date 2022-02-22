@@ -14,9 +14,7 @@ class TestPayloadReader:
     """Test class for payload reader."""
 
     def create_telegram_queue_mock(self, xknx: XKNX, response_telegram: Telegram):
-        """
-        Create a TelegramQueue mock that returns a specific response telegram.
-        """
+        """Create a TelegramQueue mock that returns a specific response telegram."""
         xknx.telegram_queue = MagicMock()
 
         def _register_telegram_received_cb(func):

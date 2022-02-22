@@ -45,32 +45,35 @@ class KNXIPFrame:
         self.header.service_type_ident = service_type_ident
 
         body: KNXIPBody
-        if service_type_ident == KNXIPServiceType.ROUTING_INDICATION:
-            body = RoutingIndication(self.xknx)
-        elif service_type_ident == KNXIPServiceType.CONNECT_REQUEST:
-            body = ConnectRequest(self.xknx)
-        elif service_type_ident == KNXIPServiceType.CONNECT_RESPONSE:
-            body = ConnectResponse(self.xknx)
-        elif service_type_ident == KNXIPServiceType.TUNNELLING_REQUEST:
-            body = TunnellingRequest(self.xknx)
-        elif service_type_ident == KNXIPServiceType.TUNNELLING_ACK:
-            body = TunnellingAck(self.xknx)
+        # Core
+        if service_type_ident == KNXIPServiceType.SEARCH_REQUEST:
+            body = SearchRequest(self.xknx)
+        elif service_type_ident == KNXIPServiceType.SEARCH_RESPONSE:
+            body = SearchResponse(self.xknx)
         elif service_type_ident == KNXIPServiceType.DESCRIPTION_REQUEST:
             body = DescriptionRequest(self.xknx)
         elif service_type_ident == KNXIPServiceType.DESCRIPTION_RESPONSE:
             body = DescriptionResponse(self.xknx)
-        elif service_type_ident == KNXIPServiceType.SEARCH_REQUEST:
-            body = SearchRequest(self.xknx)
-        elif service_type_ident == KNXIPServiceType.SEARCH_RESPONSE:
-            body = SearchResponse(self.xknx)
-        elif service_type_ident == KNXIPServiceType.DISCONNECT_REQUEST:
-            body = DisconnectRequest(self.xknx)
-        elif service_type_ident == KNXIPServiceType.DISCONNECT_RESPONSE:
-            body = DisconnectResponse(self.xknx)
+        elif service_type_ident == KNXIPServiceType.CONNECT_REQUEST:
+            body = ConnectRequest(self.xknx)
+        elif service_type_ident == KNXIPServiceType.CONNECT_RESPONSE:
+            body = ConnectResponse(self.xknx)
         elif service_type_ident == KNXIPServiceType.CONNECTIONSTATE_REQUEST:
             body = ConnectionStateRequest(self.xknx)
         elif service_type_ident == KNXIPServiceType.CONNECTIONSTATE_RESPONSE:
             body = ConnectionStateResponse(self.xknx)
+        elif service_type_ident == KNXIPServiceType.DISCONNECT_REQUEST:
+            body = DisconnectRequest(self.xknx)
+        elif service_type_ident == KNXIPServiceType.DISCONNECT_RESPONSE:
+            body = DisconnectResponse(self.xknx)
+        # Tunneling
+        elif service_type_ident == KNXIPServiceType.TUNNELLING_REQUEST:
+            body = TunnellingRequest(self.xknx)
+        elif service_type_ident == KNXIPServiceType.TUNNELLING_ACK:
+            body = TunnellingAck(self.xknx)
+        # Routing
+        elif service_type_ident == KNXIPServiceType.ROUTING_INDICATION:
+            body = RoutingIndication(self.xknx)
         else:
             raise CouldNotParseKNXIP(
                 f"KNXIPServiceType not implemented: {service_type_ident.name}"
@@ -98,14 +101,11 @@ class KNXIPFrame:
         )
         return self.header.total_length
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
         if self.body is None:
             raise CouldNotParseKNXIP("No body defined in KNXIPFrame.")
-        data = []
-        data.extend(self.header.to_knx())
-        data.extend(self.body.to_knx())
-        return data
+        return self.header.to_knx() + self.body.to_knx()
 
     def __repr__(self) -> str:
         """Return object as readable string."""

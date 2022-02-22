@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 import netifaces
 from xknx.knxip import (
+    DIB,
     HPAI,
     DIBDeviceInformation,
     DIBServiceFamily,
@@ -38,11 +39,11 @@ class GatewayDescriptor:
 
     def __init__(
         self,
-        name: str,
         ip_addr: str,
         port: int,
-        local_interface: str,
-        local_ip: str,
+        local_ip: str = "",
+        local_interface: str = "",
+        name: str = "UNKNOWN",
         supports_routing: bool = False,
         supports_tunnelling: bool = False,
         supports_tunnelling_tcp: bool = False,
@@ -58,6 +59,22 @@ class GatewayDescriptor:
         self.supports_tunnelling = supports_tunnelling
         self.supports_tunnelling_tcp = supports_tunnelling_tcp
         self.individual_address = individual_address
+
+    def parse_dibs(self, dibs: list[DIB]) -> None:
+        """Parse DIBs for gateway information."""
+        for dib in dibs:
+            if isinstance(dib, DIBSuppSVCFamilies):
+                self.supports_routing = dib.supports(DIBServiceFamily.ROUTING)
+                if dib.supports(DIBServiceFamily.TUNNELING):
+                    self.supports_tunnelling = True
+                    self.supports_tunnelling_tcp = dib.supports(
+                        DIBServiceFamily.TUNNELING, version=2
+                    )
+                continue
+            if isinstance(dib, DIBDeviceInformation):
+                self.name = dib.name
+                self.individual_address = dib.individual_address
+                continue
 
     def __repr__(self) -> str:
         """Return object as representation string."""
@@ -223,36 +240,12 @@ class GatewayScanner:
             return
 
         gateway = GatewayDescriptor(
-            name=knx_ip_frame.body.device_name,
             ip_addr=knx_ip_frame.body.control_endpoint.ip_addr,
             port=knx_ip_frame.body.control_endpoint.port,
-            local_interface=interface,
             local_ip=udp_transport.local_addr[0],
+            local_interface=interface,
         )
-        try:
-            dib = next(
-                dib
-                for dib in knx_ip_frame.body.dibs
-                if isinstance(dib, DIBSuppSVCFamilies)
-            )
-            gateway.supports_routing = dib.supports(DIBServiceFamily.ROUTING)
-            if dib.supports(DIBServiceFamily.TUNNELING):
-                gateway.supports_tunnelling = True
-                gateway.supports_tunnelling_tcp = dib.supports(
-                    DIBServiceFamily.TUNNELING, version=2
-                )
-        except StopIteration:
-            pass
-
-        try:
-            device_infos = next(
-                device_infos
-                for device_infos in knx_ip_frame.body.dibs
-                if isinstance(device_infos, DIBDeviceInformation)
-            )
-            gateway.individual_address = device_infos.individual_address
-        except StopIteration:
-            pass
+        gateway.parse_dibs(knx_ip_frame.body.dibs)
 
         logger.debug("Found KNX/IP device at %s: %s", source, repr(gateway))
         self._add_found_gateway(gateway)

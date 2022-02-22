@@ -6,11 +6,14 @@ import pytest
 from xknx import XKNX
 from xknx.dpt import DPTArray
 from xknx.io import UDPTunnel
+from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.knxip import (
     HPAI,
     CEMIFrame,
     ConnectRequest,
     ConnectResponse,
+    DescriptionRequest,
+    DescriptionResponse,
     DisconnectRequest,
     DisconnectResponse,
     KNXIPFrame,
@@ -211,3 +214,24 @@ class TestUDPTunnel:
         await disconnection_task
         assert self.tunnel._data_endpoint_addr is None
         self.tunnel.transport.stop.assert_called_once()
+
+    async def test_tunnel_request_description(self, time_travel):
+        """Test tunnel requesting and returning description of connected interface."""
+        local_addr = ("192.168.1.1", 12345)
+        self.tunnel.transport.send = Mock()
+        self.tunnel.transport.getsockname = Mock(return_value=local_addr)
+
+        description_request = KNXIPFrame.init_from_body(
+            DescriptionRequest(self.xknx, control_endpoint=self.tunnel.local_hpai)
+        )
+        description_response = KNXIPFrame.init_from_body(DescriptionResponse(self.xknx))
+
+        task = asyncio.create_task(self.tunnel.request_description())
+        await time_travel(0)
+        self.tunnel.transport.send.assert_called_once_with(description_request)
+        self.tunnel.transport.handle_knxipframe(description_response, HPAI())
+        await time_travel(0)
+        assert task.done()
+        assert isinstance(task.result(), GatewayDescriptor)
+        assert self.tunnel.transport.send.call_count == 1
+        await task

@@ -40,33 +40,18 @@ class DisconnectRequest(KNXIPBody):
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 2:
+            raise CouldNotParseKNXIP("Disconnect info has wrong length")
+        self.communication_channel_id = raw[0]
+        # raw[1] is reserved
+        return self.control_endpoint.from_knx(raw[2:]) + 2
 
-        def info_from_knx(info: bytes) -> int:
-            """Parse info bytes."""
-            if len(info) < 2:
-                raise CouldNotParseKNXIP("Disconnect info has wrong length")
-            self.communication_channel_id = info[0]
-            # info[1] is reserved
-            return 2
-
-        pos = info_from_knx(raw)
-        pos += self.control_endpoint.from_knx(raw[pos:])
-        return pos
-
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-
-        def info_to_knx() -> list[int]:
-            """Serialize information bytes."""
-            info = []
-            info.append(self.communication_channel_id)
-            info.append(0x00)  # Reserved
-            return info
-
-        data = []
-        data.extend(info_to_knx())
-        data.extend(self.control_endpoint.to_knx())
-        return data
+        return (
+            bytes((self.communication_channel_id, 0x00))  # 2nd byte is reserved
+            + self.control_endpoint.to_knx()
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""
