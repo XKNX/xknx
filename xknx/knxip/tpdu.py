@@ -77,18 +77,18 @@ class TPDU:
         # pylint: disable=no-self-use
         return 10
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Convert PDU to KNX."""
-        data = [0x11, 0x00, 0xB0, 0x60, 0x00, 0x00]
-        data += self.destination_address.to_knx()
+        data = bytes((0x11, 0x00, 0xB0, 0x60, 0x00, 0x00))
+        data += bytes(self.destination_address.to_knx())
         if self.tpdu_type == TPDUType.T_CONNECT:
-            return data + [0x00, 0x80]
+            return data + bytes((0x00, 0x80))
         if self.tpdu_type == TPDUType.T_DISCONNECT:
-            return data + [0x00, 0x81]
+            return data + bytes((0x00, 0x81))
         if self.tpdu_type == TPDUType.T_ACK:
-            return data + [0x00, 0xC2]
+            return data + bytes((0x00, 0xC2))
         if self.tpdu_type == TPDUType.T_ACK_NUMBERED:
-            return data + [0x00, 0xC6]
+            return data + bytes((0x00, 0xC6))
         raise RuntimeError("Invalid TPDUType" + str(self.tpdu_type))
 
     def __str__(self) -> str:
