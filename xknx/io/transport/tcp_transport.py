@@ -150,13 +150,8 @@ class SecureTCPTransport(TCPTransport):
 
     def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
         """Send KNXIPFrame to socket. `addr` is ignored on TCP."""
-        knx_logger.debug(
-            "Sending to %s at %s:\n%s",
-            self.remote_hpai,
-            time.time(),
-            knxipframe,
-        )
         if self.secure_session.initialized:
+            knx_logger.debug("Encrypting frame: %s", knxipframe)
             knxipframe = self.secure_session.encrypt_frame(plain_frame=knxipframe)
         super().send(knxipframe, addr)
 
@@ -176,9 +171,5 @@ class SecureTCPTransport(TCPTransport):
                     couldnotparseknxip.description,
                 )
                 return
-            knx_logger.debug(
-                "Decrypted frame at %s:\n%s",
-                time.time(),
-                knxipframe,
-            )
+            knx_logger.debug("Decrypted frame: %s", knxipframe)
         super().handle_knxipframe(knxipframe, source)
