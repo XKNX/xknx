@@ -11,7 +11,8 @@ import time
 from typing import TYPE_CHECKING, Callable, cast
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, IncompleteKNXIPFrame
-from xknx.knxip import HPAI, HostProtocol, KNXIPFrame
+from xknx.io.secure_session import SecureSession
+from xknx.knxip import HPAI, HostProtocol, KNXIPFrame, SecureWrapper
 
 from .ip_transport import KNXIPTransport
 
@@ -58,7 +59,7 @@ class TCPTransport(KNXIPTransport):
         xknx: XKNX,
         remote_addr: tuple[str, int],
     ):
-        """Initialize UDPTransport class."""
+        """Initialize TCPTransport class."""
         self.xknx = xknx
         self.remote_addr = remote_addr
         self.remote_hpai = HPAI(*remote_addr, protocol=HostProtocol.IPV4_TCP)
@@ -132,3 +133,52 @@ class TCPTransport(KNXIPTransport):
             raise CommunicationError("Transport not connected")
 
         self.transport.write(knxipframe.to_knx())
+
+
+class SecureTCPTransport(TCPTransport):
+    """Class for handling (sending and receiving) secure TCP packets."""
+
+    def __init__(
+        self,
+        xknx: XKNX,
+        remote_addr: tuple[str, int],
+        secure_session: SecureSession,
+    ):
+        """Initialize SecureTCPTransport class."""
+        self.secure_session = secure_session
+        super().__init__(xknx, remote_addr)
+
+    def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
+        """Send KNXIPFrame to socket. `addr` is ignored on TCP."""
+        knx_logger.debug(
+            "Sending to %s at %s:\n%s",
+            self.remote_hpai,
+            time.time(),
+            knxipframe,
+        )
+        if self.secure_session.initialized:
+            knxipframe = self.secure_session.encrypt_frame(plain_frame=knxipframe)
+        super().send(knxipframe, addr)
+
+    def handle_knxipframe(self, knxipframe: KNXIPFrame, source: HPAI) -> None:
+        """Handle secure KNXIPFrame. Callback for having received data over TCP."""
+        if isinstance(knxipframe.body, SecureWrapper):
+            if not self.secure_session.initialized:
+                raise CouldNotParseKNXIP(
+                    "Received SecureWrapper with Secure session not initialized"
+                )
+            try:
+                knxipframe = self.secure_session.decrypt_frame(knxipframe)
+            except CouldNotParseKNXIP as couldnotparseknxip:
+                # TODO: log raw data of unsupported frame
+                knx_logger.debug(
+                    "Unsupported encrypted KNXIPFrame: %s",
+                    couldnotparseknxip.description,
+                )
+                return
+            knx_logger.debug(
+                "Decrypted frame at %s:\n%s",
+                time.time(),
+                knxipframe,
+            )
+        super().handle_knxipframe(knxipframe, source)
