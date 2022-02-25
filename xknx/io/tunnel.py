@@ -24,14 +24,23 @@ from xknx.knxip import (
     TunnellingAck,
     TunnellingRequest,
 )
+from xknx.knxip.knxip_enum import SecureSessionStatusCode
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 
 from .const import HEARTBEAT_RATE
 from .gateway_scanner import GatewayDescriptor
 from .interface import Interface
-from .request_response import Connect, ConnectionState, Disconnect, Tunnelling
+from .request_response import (
+    Authenticate,
+    Connect,
+    ConnectionState,
+    Disconnect,
+    Session,
+    Tunnelling,
+)
+from .secure_session import SecureSession
 from .self_description import DescriptionQuery
-from .transport import KNXIPTransport, TCPTransport, UDPTransport
+from .transport import KNXIPTransport, SecureTCPTransport, TCPTransport, UDPTransport
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -85,9 +94,9 @@ class _Tunnel(Interface):
         # set up self.transport
 
     @abstractmethod
-    def _get_hpai(self) -> HPAI:
-        """Return local HPAI for this tunnel."""
-        # local HPAI used for control and data endpoint
+    async def setup_tunnel(self) -> None:
+        """Set up tunnel before sending a ConnectionRequest."""
+        # eg. set local HPAI used for control and data endpoint
 
     ####################
     #
@@ -102,7 +111,7 @@ class _Tunnel(Interface):
         )
         try:
             await self.transport.connect()
-            self.local_hpai = self._get_hpai()
+            await self.setup_tunnel()
             await self._connect_request()
         except (OSError, CommunicationError) as ex:
             logger.debug(
@@ -423,6 +432,8 @@ class TCPTunnel(_Tunnel):
         """Initialize Tunnel class."""
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
+        # TCP always uses 0.0.0.0:0
+        self.local_hpai = HPAI(protocol=HostProtocol.IPV4_TCP)
 
         super().__init__(
             xknx=xknx,
@@ -438,10 +449,8 @@ class TCPTunnel(_Tunnel):
             (self.gateway_ip, self.gateway_port),
         )
 
-    def _get_hpai(self) -> HPAI:
-        """Return local HPAI for this tunnel."""
-        # TCP always uses 0.0.0.0:0
-        return HPAI(protocol=HostProtocol.IPV4_TCP)
+    async def setup_tunnel(self) -> None:
+        """Set up tunnel before sending a ConnectionRequest."""
 
     async def _tunnelling_request(self, telegram: Telegram) -> bool:
         """Send Telegram to tunnelling device."""
@@ -512,12 +521,13 @@ class UDPTunnel(_Tunnel):
             multicast=False,
         )
 
-    def _get_hpai(self) -> HPAI:
-        """Return local HPAI for this tunnel."""
+    async def setup_tunnel(self) -> None:
+        """Set up tunnel before sending a ConnectionRequest."""
         if self.route_back:
-            return HPAI()
+            self.local_hpai = HPAI()
+            return
         (local_addr, local_port) = self.transport.getsockname()
-        return HPAI(ip_addr=local_addr, port=local_port)
+        self.local_hpai = HPAI(ip_addr=local_addr, port=local_port)
 
     # OUTGOING REQUESTS
 
@@ -568,3 +578,85 @@ class UDPTunnel(_Tunnel):
         self.transport.send(
             KNXIPFrame.init_from_body(ack), addr=self._data_endpoint_addr
         )
+
+
+class SecureTunnel(TCPTunnel):
+    """Class for handling KNX/IP secure TCP tunnels."""
+
+    transport: SecureTCPTransport
+
+    def __init__(
+        self,
+        xknx: XKNX,
+        gateway_ip: str,
+        gateway_port: int,
+        telegram_received_callback: TelegramCallbackType | None = None,
+        auto_reconnect: bool = True,
+        auto_reconnect_wait: int = 3,
+        device_authentication_password: str = "hello_device",
+        user_id: int = 2,
+        user_password: str = "hello_user_2",
+    ):
+        """Initialize SecureTunnel class."""
+        # TODO: store derived passwords here and pass them to SecureSession init
+        # in setup_tunnel instead of using .initialize()
+        # TODO: store passowrds in connection_config and use them from there - maybe read .knxkeys file
+        self.secure_session = SecureSession(
+            xknx, device_authentication_password, user_id, user_password
+        )
+        super().__init__(
+            xknx=xknx,
+            gateway_ip=gateway_ip,
+            gateway_port=gateway_port,
+            telegram_received_callback=telegram_received_callback,
+            auto_reconnect=auto_reconnect,
+            auto_reconnect_wait=auto_reconnect_wait,
+        )
+
+    def _init_transport(self) -> None:
+        """Initialize transport transport."""
+        self.transport = SecureTCPTransport(
+            self.xknx,
+            (self.gateway_ip, self.gateway_port),
+            secure_session=self.secure_session,
+        )
+
+    async def setup_tunnel(self) -> None:
+        """Set up tunnel before sending a ConnectionRequest."""
+        # setup secure session
+        public_key = self.secure_session.initialize()
+        request_session = Session(
+            self.xknx,
+            transport=self.transport,
+            ecdh_client_public_key=public_key,
+        )
+        await request_session.start()
+        if request_session.response is None:
+            raise CommunicationError(
+                "Secure session could not be established. No response received."
+            )
+        authenticate_mac = self.secure_session.handshake(request_session.response)
+
+        # TODO: authentication and everything else after now
+        # shall be wrapped in SecureWrapper
+        # TODO: on connection loss restore to not decrypt frames
+        # and renew Session (private key)
+
+        request_authentication = Authenticate(
+            self.xknx,
+            transport=self.transport,
+            user_id=self.secure_session.user_id,
+            message_authentication_code=authenticate_mac,
+        )
+        await request_authentication.start()
+        if request_authentication.response is None:
+            raise CommunicationError(
+                "Secure session could not be established. No response received."
+            )
+        if (  # TODO: look for status in request/response and use `success` instead of response ?
+            request_authentication.response.status
+            != SecureSessionStatusCode.STATUS_AUTHENTICATION_SUCCESS
+        ):
+            raise CommunicationError(
+                f"Secure session authentication failed: {request_authentication.response.status}"
+            )
