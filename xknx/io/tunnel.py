@@ -432,15 +432,14 @@ class TCPTunnel(_Tunnel):
         """Initialize Tunnel class."""
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
-        # TCP always uses 0.0.0.0:0
-        self.local_hpai = HPAI(protocol=HostProtocol.IPV4_TCP)
-
         super().__init__(
             xknx=xknx,
             telegram_received_callback=telegram_received_callback,
             auto_reconnect=auto_reconnect,
             auto_reconnect_wait=auto_reconnect_wait,
         )
+        # TCP always uses 0.0.0.0:0
+        self.local_hpai = HPAI(protocol=HostProtocol.IPV4_TCP)
 
     def _init_transport(self) -> None:
         """Initialize transport transport."""
@@ -504,7 +503,6 @@ class UDPTunnel(_Tunnel):
         self.local_ip = local_ip
         self.local_port = local_port
         self.route_back = route_back
-
         super().__init__(
             xknx=xknx,
             telegram_received_callback=telegram_received_callback,
