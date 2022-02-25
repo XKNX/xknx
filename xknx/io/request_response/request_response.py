@@ -27,7 +27,7 @@ class RequestResponse:
         xknx: XKNX,
         transport: KNXIPTransport,
         awaited_response_class: type[KNXIPBody],
-        timeout_in_seconds: float = 5.0,
+        timeout_in_seconds: float = 1.0,
     ):
         """Initialize RequstResponse class."""
         self.xknx = xknx
