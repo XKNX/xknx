@@ -47,7 +47,7 @@ def sha256_hash(data: bytes) -> bytes:
 def calculate_message_authentication_code_cbc(
     key: bytes,
     additional_data: bytes,
-    payload: bytes = bytes(),
+    payload: bytes = b"",
     block_0: bytes = bytes(16),
 ) -> bytes:
     """Calculate the message authentication code (MAC) for a message with AES-CBC."""
@@ -65,39 +65,40 @@ def calculate_message_authentication_code_cbc(
 
 def encrypt_data_ctr(
     key: bytes,
-    payload: bytes,
+    mac_cbc: bytes,
+    payload: bytes = b"",
     counter_0: bytes = COUNTER_0_HANDSHAKE,
 ) -> tuple[bytes, bytes]:
     """
     Encrypt data with AES-CTR.
 
-    Payload is expected `MAC CBC + Plain KNX/IP frame` or `MAC CBC` only.
+    Payload is expected a full Plain KNX/IP frame with header.
     MAC shall be encrypted with coutner 0, KNXnet/IP frame with incremented counters.
     Returns a tuple of encrypted data (if there is any) and encrypted MAC.
     """
     s_cipher = Cipher(algorithms.AES(key), modes.CTR(counter_0))
     s_encryptor = s_cipher.encryptor()  # type: ignore[no-untyped-call]
-    mac = s_encryptor.update(payload[:16])
-    encrypted_data = s_encryptor.update(payload[16:]) + s_encryptor.finalize()
+    mac = s_encryptor.update(mac_cbc)
+    encrypted_data = s_encryptor.update(payload) + s_encryptor.finalize()
     return (encrypted_data, mac)
 
 
 def decrypt_ctr(
     session_key: bytes,
-    payload: bytes,
+    mac: bytes,
+    payload: bytes = b"",
     counter_0: bytes = COUNTER_0_HANDSHAKE,
 ) -> tuple[bytes, bytes]:
     """
     Decrypt data from SecureWrapper.
 
-    MAC is expected to be the last 16 octets of the payload. This will be sliced and
-    decoded first with counter 0.
+    MAC will be decoded first with counter 0.
     Returns a tuple of (KNX/IP frame bytes, MAC TR for verification).
     """
     cipher = Cipher(algorithms.AES(session_key), modes.CTR(counter_0))
     decryptor = cipher.decryptor()  # type: ignore[no-untyped-call]
-    mac_tr = decryptor.update(payload[-16:])  # MAC is encrypted with counter 0
-    decrypted_data = decryptor.update(payload[:-16]) + decryptor.finalize()
+    mac_tr = decryptor.update(mac)  # MAC is encrypted with counter 0
+    decrypted_data = decryptor.update(payload) + decryptor.finalize()
 
     return (decrypted_data, mac_tr)
 
@@ -192,7 +193,7 @@ class SecureSession:
         )
         _, mac_tr = decrypt_ctr(
             self._device_authentication_code,
-            payload=session_response.message_authentication_code,
+            mac=session_response.message_authentication_code,
         )
         if mac_tr != response_mac_cbc:
             raise CommunicationError("SessionResponse MAC verification failed.")
@@ -212,7 +213,7 @@ class SecureSession:
         )
         _, authenticate_mac = encrypt_data_ctr(
             key=self._user_password,
-            payload=authenticate_mac_cbc,
+            mac_cbc=authenticate_mac_cbc,
         )
         return authenticate_mac
 
@@ -261,7 +262,8 @@ class SecureSession:
         )
         encrypted_data, mac = encrypt_data_ctr(
             key=self._session_key,
-            payload=mac_cbc + plain_payload,
+            mac_cbc=mac_cbc,
+            payload=plain_payload,
             counter_0=(
                 sequence_number
                 + self.serial_number
@@ -299,8 +301,8 @@ class SecureSession:
 
         dec_frame, mac_tr = decrypt_ctr(
             self._session_key,
-            payload=encrypted_frame.body.encrypted_data
-            + encrypted_frame.body.message_authentication_code,
+            mac=encrypted_frame.body.message_authentication_code,
+            payload=encrypted_frame.body.encrypted_data,
             counter_0=(
                 sequence_number_bytes
                 + serial_number_bytes
