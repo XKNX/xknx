@@ -14,6 +14,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 from xknx.exceptions import CommunicationError
 from xknx.knxip import KNXIPFrame, SecureWrapper, SessionResponse
+from xknx.secure import sha256_hash
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -35,13 +36,6 @@ def byte_pad(data: bytes, block_size: int) -> bytes:
     """Padd data with 0x00 until its length is a multiple of block_size."""
     padding = bytes(block_size - (len(data) % block_size))
     return data + padding
-
-
-def sha256_hash(data: bytes) -> bytes:
-    """Calculate SHA256 hash of data."""
-    digest = hashes.Hash(hashes.SHA256())
-    digest.update(data)
-    return digest.finalize()
 
 
 def calculate_message_authentication_code_cbc(
