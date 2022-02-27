@@ -9,14 +9,13 @@ from itertools import chain
 from typing import Any
 from xml.dom.minidom import Attr, Document, NamedNodeMap, parse
 
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
 from xknx.telegram import GroupAddress, IndividualAddress
 
-from .util import (
-    decrypt_aes128cbc,
-    extract_password,
-    hash_keyring_password,
-    sha256_hash,
-)
+from .util import sha256_hash
 
 
 class InterfaceType(enum.Enum):
@@ -258,3 +257,34 @@ def load_key_ring(path: str, password: str) -> Keyring:
 
     keyring.decrypt(password)
     return keyring
+
+
+def decrypt_aes128cbc(
+    encrypted_data: bytes, key: bytes, initialization_vector: bytes
+) -> bytes:
+    """Decrypt data with AES 128 CBC."""
+    cipher = Cipher(algorithms.AES(key), modes.CBC(initialization_vector))
+    decryptor = cipher.decryptor()  # type: ignore[no-untyped-call]
+    return bytes(decryptor.update(encrypted_data) + decryptor.finalize())
+
+
+def hash_keyring_password(password: bytes) -> bytes:
+    """Hash a given keyring password."""
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=16,
+        salt=b"1.keyring.ets.knx.org",
+        iterations=65_536,
+    )
+
+    return kdf.derive(password)
+
+
+def extract_password(data: bytes) -> str:
+    """Extract the password."""
+    if not data:
+        return ""
+
+    length: int = data[-1]
+    res: bytes = data[8:-length]
+    return res.decode("utf-8")
