@@ -216,7 +216,7 @@ class SecureSessionStatusCode(Enum):
     STATUS_UNAUTHENTICATED = 0x02
     # A timeout occurred during secure session handshake
     STATUS_TIMEOUT = 0x03
-    # The secure session shall be closed
-    STATUS_CLOSE = 0x04
     # Prevent inactivity on the secure session closing it with timeout error
-    STATUS_KEEPALIVE = 0x05
+    STATUS_KEEPALIVE = 0x04
+    # The secure session shall be closed
+    STATUS_CLOSE = 0x05

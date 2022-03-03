@@ -1,6 +1,7 @@
 """SecureSession is an abstraction for handling a KNXnet/IP Secure session."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING, cast
 
@@ -12,14 +13,20 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-from xknx.exceptions import CommunicationError
-from xknx.knxip import KNXIPFrame, SecureWrapper, SessionResponse
+from xknx.exceptions import CommunicationError, CouldNotParseKNXIP
+from xknx.knxip import HPAI, KNXIPFrame, SecureWrapper, SessionResponse, SessionStatus
+from xknx.knxip.knxip_enum import SecureSessionStatusCode
 from xknx.secure import sha256_hash
+
+from .const import SESSION_KEEPALIVE_RATE
+from .request_response import Authenticate, Session
+from .transport import TCPTransport
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
+knx_logger = logging.getLogger("xknx.knx")
 
 
 COUNTER_0_HANDSHAKE = (  # used in SessionResponse and SessionAuthenticate
@@ -119,18 +126,19 @@ def derive_user_password(password_string: str) -> bytes:
     return kdf.derive(password_string.encode("latin-1"))
 
 
-class SecureSession:
+class SecureSession(TCPTransport):
     """Class for handling a KNXnet/IP Secure session."""
 
     def __init__(
         self,
         xknx: XKNX,
+        remote_addr: tuple[str, int],
         device_authentication_password: str,
         user_id: int,
         user_password: str,
     ) -> None:
         """Initialize SecureSession class."""
-        self.xknx = xknx
+        super().__init__(xknx, remote_addr=remote_addr)
         self._device_authentication_code = derive_device_authentication_password(
             device_authentication_password
         )
@@ -147,20 +155,92 @@ class SecureSession:
         self.serial_number = bytes.fromhex("00 fa 12 34 56 78")  # TODO configurable?
         self._sequence_number = 0
         self.initialized = False
+        self._keepalive_task: asyncio.Task[None] | None = None
+
+    def handle_knxipframe(self, knxipframe: KNXIPFrame, source: HPAI) -> None:
+        """Handle KNXIP Frame and call all callbacks matching the service type ident."""
+        # TODO: disallow unencrypted frames with exceptions for discovery etc. eg. DescriptionResponse
+        if isinstance(knxipframe.body, SecureWrapper):
+            if not self.initialized:
+                raise CouldNotParseKNXIP(
+                    "Received SecureWrapper with Secure session not initialized"
+                )
+            try:
+                knxipframe = self.decrypt_frame(knxipframe)
+            except CouldNotParseKNXIP as couldnotparseknxip:
+                # TODO: log raw data of unsupported frame
+                knx_logger.debug(
+                    "Unsupported encrypted KNXIPFrame: %s",
+                    couldnotparseknxip.description,
+                )
+                return
+            knx_logger.debug("Decrypted frame: %s", knxipframe)
+        super().handle_knxipframe(knxipframe, source)
+
+    async def connect(self) -> None:
+        """Connect transport."""
+        await super().connect()
+        self._private_key = X25519PrivateKey.generate()
+        self.public_key = self._private_key.public_key().public_bytes(
+            serialization.Encoding.Raw, serialization.PublicFormat.Raw
+        )
+        self._sequence_number = 0
+        # setup secure session
+        request_session = Session(
+            self.xknx,
+            transport=self,
+            ecdh_client_public_key=self.public_key,
+        )
+        await request_session.start()
+        if request_session.response is None:
+            raise CommunicationError(
+                "Secure session could not be established. No response received."
+            )
+        # SessionAuthenticate and everything else after now shall be wrapped in SecureWrapper
+        authenticate_mac = self.handshake(request_session.response)
+        request_authentication = Authenticate(
+            self.xknx,
+            transport=self,
+            user_id=self.user_id,
+            message_authentication_code=authenticate_mac,
+        )
+        await request_authentication.start()
+        if request_authentication.response is None:
+            raise CommunicationError(
+                "Secure session could not be established. No response received."
+            )
+        if (  # TODO: look for status in request/response and use `success` instead of response ?
+            request_authentication.response.status
+            != SecureSessionStatusCode.STATUS_AUTHENTICATION_SUCCESS
+        ):
+            raise CommunicationError(
+                f"Secure session authentication failed: {request_authentication.response.status}"
+            )
+
+    def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
+        """Send KNXIPFrame to socket. `addr` is ignored on TCP."""
+        if self.initialized:
+            knx_logger.debug("Encrypting frame: %s", knxipframe)
+            knxipframe = self.encrypt_frame(plain_frame=knxipframe)
+            # keepalive timer is started with first and resetted with every other
+            # SecureWrapper frame (including wrapped keepalive frames themselves)
+            self.start_keepalive_task()
+        # TODO: disallow sending unencrypted frames over non-initialized session with
+        # exceptions for discovery and SessionRequest
+        super().send(knxipframe, addr)
+
+    def stop(self) -> None:
+        """Stop transport."""
+        # TODO: stend SessionStatus CLOSE
+        self.stop_keepalive_task()
+        self.initialized = False
+        super().stop()
 
     def increment_sequence_number(self) -> bytes:
         """Increment sequence number. Return byte representation of current sequence number."""
         next_sn = self._sequence_number.to_bytes(6, "big")
         self._sequence_number += 1
         return next_sn
-
-    def initialize(self) -> bytes:
-        """Initialize secure session."""
-        self._private_key = X25519PrivateKey.generate()
-        self.public_key = self._private_key.public_key().public_bytes(
-            serialization.Encoding.Raw, serialization.PublicFormat.Raw
-        )
-        return self.public_key
 
     def handshake(self, session_response: SessionResponse) -> bytes:
         """
@@ -210,28 +290,6 @@ class SecureSession:
             mac_cbc=authenticate_mac_cbc,
         )
         return authenticate_mac
-
-    # def _block_0_secure_wrapper(
-    #     self, sequence_number: bytes, payload_length: int
-    # ) -> bytes:
-    #     """Return block 0 for SecureWrapper."""
-    #     return (
-    #         sequence_number
-    #         + self.serial_number
-    #         + self.message_tag
-    #         + payload_length.to_bytes(2, "big")
-    #     )
-
-    # def _counter_0_secure_wrapper(self, sequence_number: bytes) -> bytes:
-    #     """Return counter 0 for SecureWrapper."""
-    #     # octet 14 (0xFF) is constant
-    #     # last octet is the coutner to increment by 1 each step
-    #     return (
-    #         sequence_number
-    #         + self.serial_number
-    #         + self.message_tag
-    #         + bytes.fromhex("ff 00")
-    #     )
 
     def encrypt_frame(self, plain_frame: KNXIPFrame) -> KNXIPFrame:
         """Wrap KNX/IP frame in SecureWrapper."""
@@ -321,3 +379,27 @@ class SecureSession:
         knxipframe.from_knx(dec_frame)
         # TODO: handle KNX/IP frame parsing errors or just put raw back into transport ?
         return knxipframe
+
+    async def _session_keepalive(self) -> None:
+        """Keep session alive."""
+        await asyncio.sleep(SESSION_KEEPALIVE_RATE)
+        self.send(
+            KNXIPFrame.init_from_body(
+                SessionStatus(
+                    self.xknx,
+                    status=SecureSessionStatusCode.STATUS_KEEPALIVE,
+                )
+            )
+        )
+
+    def start_keepalive_task(self) -> None:
+        """Start or restart session keepalive task."""
+        if self._keepalive_task:
+            self._keepalive_task.cancel()
+        self._keepalive_task = asyncio.create_task(self._session_keepalive())
+
+    def stop_keepalive_task(self) -> None:
+        """Stop keepalive task."""
+        if self._keepalive_task:
+            self._keepalive_task.cancel()
+            self._keepalive_task = None

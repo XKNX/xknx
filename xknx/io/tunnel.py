@@ -24,23 +24,15 @@ from xknx.knxip import (
     TunnellingAck,
     TunnellingRequest,
 )
-from xknx.knxip.knxip_enum import SecureSessionStatusCode
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 
 from .const import HEARTBEAT_RATE
 from .gateway_scanner import GatewayDescriptor
 from .interface import Interface
-from .request_response import (
-    Authenticate,
-    Connect,
-    ConnectionState,
-    Disconnect,
-    Session,
-    Tunnelling,
-)
+from .request_response import Connect, ConnectionState, Disconnect, Tunnelling
 from .secure_session import SecureSession
 from .self_description import DescriptionQuery
-from .transport import KNXIPTransport, SecureTCPTransport, TCPTransport, UDPTransport
+from .transport import KNXIPTransport, TCPTransport, UDPTransport
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -581,7 +573,7 @@ class UDPTunnel(_Tunnel):
 class SecureTunnel(TCPTunnel):
     """Class for handling KNX/IP secure TCP tunnels."""
 
-    transport: SecureTCPTransport
+    transport: SecureSession
 
     def __init__(
         self,
@@ -599,9 +591,9 @@ class SecureTunnel(TCPTunnel):
         # TODO: store derived passwords here and pass them to SecureSession init
         # in setup_tunnel instead of using .initialize()
         # TODO: store passowrds in connection_config and use them from there - maybe read .knxkeys file
-        self.secure_session = SecureSession(
-            xknx, device_authentication_password, user_id, user_password
-        )
+        self._device_authentication_password = device_authentication_password
+        self._user_id = user_id
+        self._user_password = user_password
         super().__init__(
             xknx=xknx,
             gateway_ip=gateway_ip,
@@ -613,48 +605,10 @@ class SecureTunnel(TCPTunnel):
 
     def _init_transport(self) -> None:
         """Initialize transport transport."""
-        self.transport = SecureTCPTransport(
+        self.transport = SecureSession(
             self.xknx,
-            (self.gateway_ip, self.gateway_port),
-            secure_session=self.secure_session,
+            remote_addr=(self.gateway_ip, self.gateway_port),
+            device_authentication_password=self._device_authentication_password,
+            user_id=self._user_id,
+            user_password=self._user_password,
         )
-
-    async def setup_tunnel(self) -> None:
-        """Set up tunnel before sending a ConnectionRequest."""
-        # setup secure session
-        public_key = self.secure_session.initialize()
-        request_session = Session(
-            self.xknx,
-            transport=self.transport,
-            ecdh_client_public_key=public_key,
-        )
-        await request_session.start()
-        if request_session.response is None:
-            raise CommunicationError(
-                "Secure session could not be established. No response received."
-            )
-        authenticate_mac = self.secure_session.handshake(request_session.response)
-
-        # TODO: authentication and everything else after now
-        # shall be wrapped in SecureWrapper
-        # TODO: on connection loss restore to not decrypt frames
-        # and renew Session (private key)
-
-        request_authentication = Authenticate(
-            self.xknx,
-            transport=self.transport,
-            user_id=self.secure_session.user_id,
-            message_authentication_code=authenticate_mac,
-        )
-        await request_authentication.start()
-        if request_authentication.response is None:
-            raise CommunicationError(
-                "Secure session could not be established. No response received."
-            )
-        if (  # TODO: look for status in request/response and use `success` instead of response ?
-            request_authentication.response.status
-            != SecureSessionStatusCode.STATUS_AUTHENTICATION_SUCCESS
-        ):
-            raise CommunicationError(
-                f"Secure session authentication failed: {request_authentication.response.status}"
-            )
