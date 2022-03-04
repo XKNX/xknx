@@ -51,6 +51,11 @@ class CEMIFrame:
         self.mpdu_len = mpdu_len
         self.payload = payload
 
+        if payload and payload.additional_flags and hasattr(payload, 'sequence_number'):
+            #self.code = CEMIMessageCode.L_DATA_CON
+            pass 
+        #print("__init__....", payload, self.code)
+
     @staticmethod
     def init_from_telegram(
         xknx: XKNX,
@@ -59,6 +64,7 @@ class CEMIFrame:
         src_addr: IndividualAddress = IndividualAddress(None),
     ) -> CEMIFrame:
         """Return CEMIFrame from a Telegram."""
+        #print("init_from_telegram....")
         cemi = CEMIFrame(xknx, code=code, src_addr=src_addr)
         # dst_addr, payload and cmd are set by telegram.setter - mpdu_len not needed for outgoing telegram
         cemi.telegram = telegram
@@ -108,6 +114,8 @@ class CEMIFrame:
 
         self.dst_addr = telegram.destination_address
         self.payload = telegram.payload
+
+        print(f"##### CEMIFrame-telegram {self.code}", " ".join(f"{b:02x}" for b in self.payload.to_knx()))
 
     def set_hops(self, hops: int) -> None:
         """Set hops."""

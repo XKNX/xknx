@@ -70,6 +70,7 @@ class Telegram:
         self.tpdu_type = tpdu_type
         self.priority = priority
         self.timestamp = datetime.now()
+        self.sequence_number = None
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -78,6 +79,7 @@ class Telegram:
             f'direction="{self.direction.value}" '
             f'source_address="{self.source_address}" '
             f'destination_address="{self.destination_address}" '
+            f'sequence_number="{self.sequence_number}" '
             f'payload="{self.payload}" '
             "/>"
         )

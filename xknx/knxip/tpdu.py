@@ -59,6 +59,7 @@ class TPDU:
         """Set telegram."""
         self.destination_address = telegram.destination_address
         self.tpdu_type = telegram.tpdu_type
+        self.sequence_number = telegram.sequence_number
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
@@ -88,7 +89,8 @@ class TPDU:
         if self.tpdu_type == TPDUType.T_ACK:
             return data + [0x00, 0xC2]
         if self.tpdu_type == TPDUType.T_ACK_NUMBERED:
-            return data + [0x00, 0xC6]
+            return data + [0x00, 0xC2 + ((self.sequence_number & 0x0F) << 2)]
+
         raise RuntimeError("Invalid TPDUType" + str(self.tpdu_type))
 
     def __str__(self) -> str:
