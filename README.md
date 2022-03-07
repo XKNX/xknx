@@ -3,7 +3,7 @@
 [![codecov](https://codecov.io/gh/XKNX/xknx/branch/main/graph/badge.svg?token=irWbIygS84)](https://codecov.io/gh/XKNX/xknx)
 [![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-[![HA integration usage](https://img.shields.io/badge/dynamic/json?color=41BDF5&logo=home-assistant&label=integration%20usage&suffix=%20installs&cacheSeconds=15600&url=https://analytics.home-assistant.io/data.json&query=current.integrations.knx)](https://analytics.home-assistant.io/#integrations)
+[![HA integration usage](https://img.shields.io/badge/dynamic/json?color=41BDF5&logo=home-assistant&label=integration%20usage&suffix=%20installs&cacheSeconds=15600&url=https://analytics.home-assistant.io/data.json&query=current.integrations.knx)](https://www.home-assistant.io/integrations/knx/)
 [![Discord](https://img.shields.io/discord/338619021215924227?color=7289da&label=Chat&logo=discord&logoColor=7289da)](https://discord.gg/bkZe9m4zvw)
 
 ## Documentation
