@@ -2,6 +2,7 @@
 import os
 
 from xknx.secure import Keyring, load_key_ring
+from xknx.secure.keyring import verify_keyring_signature
 
 
 class TestKeyRing:
@@ -18,6 +19,10 @@ class TestKeyRing:
         TestKeyRing.assert_interface(keyring, "user1", "1")
         TestKeyRing.assert_interface(keyring, "user4", "2")
         TestKeyRing.assert_interface(keyring, "@zvI1G&_", "3")
+
+    def test_verify_signature(self):
+        """Test signature verification."""
+        assert verify_keyring_signature(self.keyring_test_file, "pwd")
 
     @staticmethod
     def assert_interface(keyring: Keyring, password: str, user: str) -> None:
