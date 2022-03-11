@@ -151,11 +151,9 @@ class _Tunnel(Interface):
 
     async def _reconnect(self) -> None:
         """Reconnect to tunnel device."""
-        await self.xknx.connection_manager.connection_state_changed(
-            XknxConnectionState.CONNECTING
-        )
-        await self._disconnect_request(True)
-        self.transport.stop()
+        if self.transport.transport:
+            await self._disconnect_request(True)
+            self.transport.stop()
         await asyncio.sleep(self.auto_reconnect_wait)
         if await self.connect():
             logger.info("Successfully reconnected to KNX bus.")
@@ -437,7 +435,8 @@ class TCPTunnel(_Tunnel):
         """Initialize transport transport."""
         self.transport = TCPTransport(
             self.xknx,
-            (self.gateway_ip, self.gateway_port),
+            remote_addr=(self.gateway_ip, self.gateway_port),
+            connection_lost_cb=self._tunnel_lost,
         )
 
     async def setup_tunnel(self) -> None:
@@ -611,4 +610,5 @@ class SecureTunnel(TCPTunnel):
             device_authentication_password=self._device_authentication_password,
             user_id=self._user_id,
             user_password=self._user_password,
+            connection_lost_cb=self._tunnel_lost,
         )

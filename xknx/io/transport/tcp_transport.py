@@ -57,6 +57,7 @@ class TCPTransport(KNXIPTransport):
         self,
         xknx: XKNX,
         remote_addr: tuple[str, int],
+        connection_lost_cb: Callable[[], None] | None = None,
     ):
         """Initialize TCPTransport class."""
         self.xknx = xknx
@@ -64,6 +65,7 @@ class TCPTransport(KNXIPTransport):
         self.remote_hpai = HPAI(*remote_addr, protocol=HostProtocol.IPV4_TCP)
 
         self.callbacks = []
+        self._connection_lost_cb = connection_lost_cb
         self.transport: asyncio.Transport | None = None
         self._buffer = bytes()
 
@@ -109,7 +111,7 @@ class TCPTransport(KNXIPTransport):
         """Connect TCP socket."""
         tcp_transport_factory = TCPTransport.TCPTransportFactory(
             data_received_callback=self.data_received_callback,
-            connection_lost_callback=self.stop,
+            connection_lost_callback=self._connection_lost,
         )
         loop = asyncio.get_running_loop()
         (transport, _) = await loop.create_connection(
@@ -119,6 +121,12 @@ class TCPTransport(KNXIPTransport):
         )
         # TODO: typing - remove cast - loop.create_connection should return a asyncio.Transport
         self.transport = cast(asyncio.Transport, transport)
+
+    def _connection_lost(self) -> None:
+        """Call assigned callback. Callback for connection lost."""
+        self.stop()
+        if self._connection_lost_cb:
+            self._connection_lost_cb()
 
     def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
         """Send KNXIPFrame to socket. `addr` is ignored on TCP."""

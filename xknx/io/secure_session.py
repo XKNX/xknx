@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Callable, cast
 
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric.x25519 import (
@@ -14,13 +14,20 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP
-from xknx.knxip import HPAI, KNXIPFrame, SecureWrapper, SessionResponse, SessionStatus
+from xknx.knxip import (
+    HPAI,
+    KNXIPFrame,
+    KNXIPServiceType,
+    SecureWrapper,
+    SessionResponse,
+    SessionStatus,
+)
 from xknx.knxip.knxip_enum import SecureSessionStatusCode
 from xknx.secure import sha256_hash
 
 from .const import SESSION_KEEPALIVE_RATE
 from .request_response import Authenticate, Session
-from .transport import TCPTransport
+from .transport import KNXIPTransport, TCPTransport
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -136,9 +143,14 @@ class SecureSession(TCPTransport):
         device_authentication_password: str,
         user_id: int,
         user_password: str,
+        connection_lost_cb: Callable[[], None] | None = None,
     ) -> None:
         """Initialize SecureSession class."""
-        super().__init__(xknx, remote_addr=remote_addr)
+        super().__init__(
+            xknx,
+            remote_addr=remote_addr,
+            connection_lost_cb=connection_lost_cb,
+        )
         self._device_authentication_code = derive_device_authentication_password(
             device_authentication_password
         )
@@ -152,10 +164,11 @@ class SecureSession(TCPTransport):
         self._session_key: bytes
 
         self.message_tag = bytes.fromhex("00 00")  # use 0x00 0x00 for tunneling
-        self.serial_number = bytes.fromhex("00 fa 12 34 56 78")  # TODO configurable?
+        self.serial_number = bytes.fromhex("00 00 78 6b 6e 78")  # TODO configurable?
         self._sequence_number = 0
         self.initialized = False
         self._keepalive_task: asyncio.Task[None] | None = None
+        self._session_status_handler: KNXIPTransport.Callback | None = None
 
     def handle_knxipframe(self, knxipframe: KNXIPFrame, source: HPAI) -> None:
         """Handle KNXIP Frame and call all callbacks matching the service type ident."""
@@ -216,6 +229,9 @@ class SecureSession(TCPTransport):
             raise CommunicationError(
                 f"Secure session authentication failed: {request_authentication.response.status}"
             )
+        self._session_status_handler = self.register_callback(
+            self._handle_session_status, [KNXIPServiceType.SESSION_STATUS]
+        )
 
     def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
         """Send KNXIPFrame to socket. `addr` is ignored on TCP."""
@@ -231,7 +247,10 @@ class SecureSession(TCPTransport):
 
     def stop(self) -> None:
         """Stop transport."""
-        # TODO: stend SessionStatus CLOSE
+        # TODO: send SessionStatus CLOSE
+        if self._session_status_handler:
+            self.unregister_callback(self._session_status_handler)
+            self._session_status_handler = None
         self.stop_keepalive_task()
         self.initialized = False
         super().stop()
@@ -403,3 +422,19 @@ class SecureSession(TCPTransport):
         if self._keepalive_task:
             self._keepalive_task.cancel()
             self._keepalive_task = None
+
+    def _handle_session_status(
+        self, knxipframe: KNXIPFrame, source: HPAI, transport: KNXIPTransport
+    ) -> None:
+        """Handle session status."""
+        assert isinstance(knxipframe.body, SessionStatus)
+        if knxipframe.body.status in (
+            SecureSessionStatusCode.STATUS_CLOSE,
+            SecureSessionStatusCode.STATUS_TIMEOUT,
+            SecureSessionStatusCode.STATUS_UNAUTHENTICATED,
+        ):
+            logger.info("Secure session closed by server: %s.", knxipframe.body.status)
+            if self.transport:
+                # closing transport will call `asyncio.Protocol.connection_lost`
+                # and its callback from SecureTunnel
+                self.transport.close()
