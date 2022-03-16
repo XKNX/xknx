@@ -69,6 +69,16 @@ class TPDU:
                 f"CEMIMessageCode not implemented: {raw[0]} in CEMI: {raw.hex()}"
             )
         self.destination_address = IndividualAddress((raw[6], raw[7]))
+        if raw[7] == 0x80:
+            self.tpdu_type = TPDUType.T_CONNECT
+        elif raw[7] == 0x81:
+            self.tpdu_type = TPDUType.T_DISCONNECT
+        elif raw[7] == 0xC2:
+            self.tpdu_type = TPDUType.T_ACK
+        elif raw[7] == 0xC6:
+            self.tpdu_type = TPDUType.T_ACK_NUMBERED
+        else:
+            raise RuntimeError("Invalid TPDUType-code: " + str(raw[7]))
         self.data = raw
         return 10
 
@@ -89,8 +99,8 @@ class TPDU:
             return data + bytes((0x00, 0xC2))
         if self.tpdu_type == TPDUType.T_ACK_NUMBERED:
             return data + bytes((0x00, 0xC6))
-        raise RuntimeError("Invalid TPDUType" + str(self.tpdu_type))
+        raise RuntimeError("Invalid TPDUType: " + str(self.tpdu_type))
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return f'<TPDUFrame DestinationAddress="{self.destination_address.__repr__()}" '
+        return f'<TPDUFrame DestinationAddress="{self.destination_address.__repr__()}"'

@@ -19,6 +19,7 @@ from xknx.telegram.apci import (
     DeviceDescriptorRead,
     IndividualAddressRead,
     IndividualAddressWrite,
+    MemoryRead,
     PropertyValueRead,
     Restart,
 )
@@ -134,6 +135,16 @@ class ProgDevice:
             self.ind_add,
             TelegramDirection.OUTGOING,
             PropertyValueRead(0, 0x0B, 1, 1, True, 1),
+            priority=Priority.SYSTEM,
+        )
+        await self.xknx.telegrams.put(telegram)
+
+    async def memory_read(self, address: int = 0, count: int = 0) -> None:
+        """Perform a PropertyValue_Read."""
+        telegram = Telegram(
+            self.ind_add,
+            TelegramDirection.OUTGOING,
+            MemoryRead(address, count),
             priority=Priority.SYSTEM,
         )
         await self.xknx.telegrams.put(telegram)

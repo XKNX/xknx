@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 NM_OK = 0
 NM_EXISTS = 1
 NM_TIME_OUT = 2
+NM_NOT_EXISTS = 3
 
 
 class NetworkManagement:
@@ -36,24 +37,29 @@ class NetworkManagement:
             for reg_dev_val in self.reg_dev.values():
                 await reg_dev_val.process_telegram(tele)
 
+    async def is_device_present(self, device) -> bool:
+        try:
+            await asyncio.wait_for(device.t_connect_response(), 0.5)
+            return True
+        except asyncio.TimeoutError:
+            pass
+
+        try:
+            await asyncio.wait_for(device.devicedescriptor_read_response(0), 0.5)
+            return True
+        except asyncio.TimeoutError:
+            pass
+        return False
+
     async def individualaddress_write(self, ind_add: IndividualAddress) -> int:
         """Perform IndividualAdress_Write."""
         device = ProgDevice(self.xknx, ind_add)
         self.reg_dev[ind_add] = device
 
         # chech if IA is already present
-        try:
-            await asyncio.wait_for(device.t_connect_response(), 0.5)
-            return NM_EXISTS
-        except asyncio.TimeoutError:
-            pass
-
-        try:
-            await asyncio.wait_for(device.devicedescriptor_read_response(0), 0.5)
+        if await self.is_device_present(device):
             await device.t_disconnect()
             return NM_EXISTS
-        except asyncio.TimeoutError:
-            pass
 
         # wait until PROG button is pressed
         try:
@@ -74,4 +80,17 @@ class NetworkManagement:
         await device.restart()
         await asyncio.sleep(1)
         await device.t_disconnect()
+        return NM_OK
+    
+    async def switch_led(self, ind_add: IndividualAddress, on_off) -> int:
+        """Perform IndividualAdress_Write."""
+        device = ProgDevice(self.xknx, ind_add)
+        self.reg_dev[ind_add] = device
+
+        # chech if IA is present
+        if not await self.is_device_present(device):
+            return NM_NOT_EXISTS
+
+        await device.memory_read(0x60, 1)
+
         return NM_OK

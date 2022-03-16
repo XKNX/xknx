@@ -1,4 +1,4 @@
-"""Unit test for KNX/IP gateway scanner."""
+"""Unit test for xknx programming management."""
 import asyncio
 from unittest.mock import patch
 
@@ -10,7 +10,7 @@ from xknx.telegram import IndividualAddress
 
 @pytest.mark.asyncio
 class TestProgrammingInterface:
-    """Test class for xknx/io/GatewayScanner objects."""
+    """Test class for programming interface test."""
 
     called = 0
 
