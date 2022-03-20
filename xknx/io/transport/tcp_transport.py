@@ -124,9 +124,11 @@ class TCPTransport(KNXIPTransport):
 
     def _connection_lost(self) -> None:
         """Call assigned callback. Callback for connection lost."""
-        self.stop()
-        if self._connection_lost_cb:
-            self._connection_lost_cb()
+        # avoid calling the callback when the transport was stopped intentionally
+        if self.transport is not None:
+            self.stop()
+            if self._connection_lost_cb:
+                self._connection_lost_cb()
 
     def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
         """Send KNXIPFrame to socket. `addr` is ignored on TCP."""
