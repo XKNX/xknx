@@ -318,10 +318,30 @@ class Light(Device):
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
-        return chain(
-            self._iter_instant_remote_values(),
-            self._iter_debounce_remote_values(),
+        # return chain(
+        #     self._iter_instant_remote_values(),
+        #     self._iter_debounce_remote_values(),
+        # )
+        remote_instant_value_names = (
+            "switch",
+            "brightness",
+            "color",
+            "rgbw",
+            "hue",
+            "saturation",
+            "xyy_color",
+            "tunable_white",
+            "color_temperature",
         )
+        for color_value_name in remote_instant_value_names:
+            if getattr(self, color_value_name, None):
+                yield getattr(self, color_value_name, None)
+        remote_color_value_names = ("red", "green", "blue", "white")
+        for color_value_name in remote_color_value_names:
+            color_value: _SwitchAndBrightness = getattr(self, color_value_name, None)
+            if color_value:
+                yield color_value.switch
+                yield color_value.brightness
 
     def _iter_instant_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes calling after_update_cb immediately."""
