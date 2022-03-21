@@ -249,8 +249,8 @@ def load_key_ring(path: str, password: str) -> Keyring:
 
     keyring: Keyring = Keyring()
     with open(path, encoding="utf-8") as file:
-        xml: Document = parse(file)
-        keyring.parse_xml(xml.getElementsByTagName("Keyring")[0])
+        dom: Document = parse(file)
+        keyring.parse_xml(dom.getElementsByTagName("Keyring")[0])
 
     keyring.decrypt(password)
     return keyring
@@ -300,8 +300,8 @@ def verify_keyring_signature(path: str, password: str) -> bool:
     handler = KeyringSAXContentHandler(password)
     signature: bytes
     with open(path, encoding="utf-8") as file:
-        et: Element = ElementTree().parse(file)
-        signature = base64.b64decode(et.attrib.get("Signature", ""))
+        element: Element = ElementTree().parse(file)
+        signature = base64.b64decode(element.attrib.get("Signature", ""))
 
     with open(path, encoding="utf-8") as file:
         parser = xml.sax.make_parser()
