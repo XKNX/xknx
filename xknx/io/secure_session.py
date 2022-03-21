@@ -3,15 +3,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Callable, cast
+from typing import TYPE_CHECKING, Callable
 
-from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric.x25519 import (
     X25519PrivateKey,
     X25519PublicKey,
 )
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP
 from xknx.knxip import (
@@ -23,7 +20,15 @@ from xknx.knxip import (
     SessionStatus,
 )
 from xknx.knxip.knxip_enum import SecureSessionStatusCode
-from xknx.secure import sha256_hash
+from xknx.secure.ip_secure import (
+    calculate_message_authentication_code_cbc,
+    decrypt_ctr,
+    derive_device_authentication_password,
+    derive_user_password,
+    encrypt_data_ctr,
+    generate_ecdh_key_pair,
+)
+from xknx.secure.util import bytes_xor, sha256_hash
 
 from .const import SESSION_KEEPALIVE_RATE
 from .request_response import Authenticate, Session
@@ -39,98 +44,6 @@ knx_logger = logging.getLogger("xknx.knx")
 COUNTER_0_HANDSHAKE = (  # used in SessionResponse and SessionAuthenticate
     b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\x00"
 )
-
-
-def bytes_xor(a: bytes, b: bytes) -> bytes:  # pylint: disable=invalid-name
-    """XOR two bytes values."""
-    return (int.from_bytes(a, "big") ^ int.from_bytes(b, "big")).to_bytes(len(a), "big")
-
-
-def byte_pad(data: bytes, block_size: int) -> bytes:
-    """Padd data with 0x00 until its length is a multiple of block_size."""
-    padding = bytes(block_size - (len(data) % block_size))
-    return data + padding
-
-
-def calculate_message_authentication_code_cbc(
-    key: bytes,
-    additional_data: bytes,
-    payload: bytes = b"",
-    block_0: bytes = bytes(16),
-) -> bytes:
-    """Calculate the message authentication code (MAC) for a message with AES-CBC."""
-    blocks = (
-        block_0 + len(additional_data).to_bytes(2, "big") + additional_data + payload
-    )
-    y_cipher = Cipher(algorithms.AES(key), modes.CBC(bytes(16)))
-    y_encryptor = y_cipher.encryptor()  # type: ignore[no-untyped-call]
-    y_blocks = (
-        y_encryptor.update(byte_pad(blocks, block_size=16)) + y_encryptor.finalize()
-    )
-    # only calculate, no ctr encryption
-    return cast(bytes, y_blocks[-16:])
-
-
-def encrypt_data_ctr(
-    key: bytes,
-    mac_cbc: bytes,
-    payload: bytes = b"",
-    counter_0: bytes = COUNTER_0_HANDSHAKE,
-) -> tuple[bytes, bytes]:
-    """
-    Encrypt data with AES-CTR.
-
-    Payload is expected a full Plain KNX/IP frame with header.
-    MAC shall be encrypted with coutner 0, KNXnet/IP frame with incremented counters.
-    Returns a tuple of encrypted data (if there is any) and encrypted MAC.
-    """
-    s_cipher = Cipher(algorithms.AES(key), modes.CTR(counter_0))
-    s_encryptor = s_cipher.encryptor()  # type: ignore[no-untyped-call]
-    mac = s_encryptor.update(mac_cbc)
-    encrypted_data = s_encryptor.update(payload) + s_encryptor.finalize()
-    return (encrypted_data, mac)
-
-
-def decrypt_ctr(
-    session_key: bytes,
-    mac: bytes,
-    payload: bytes = b"",
-    counter_0: bytes = COUNTER_0_HANDSHAKE,
-) -> tuple[bytes, bytes]:
-    """
-    Decrypt data from SecureWrapper.
-
-    MAC will be decoded first with counter 0.
-    Returns a tuple of (KNX/IP frame bytes, MAC TR for verification).
-    """
-    cipher = Cipher(algorithms.AES(session_key), modes.CTR(counter_0))
-    decryptor = cipher.decryptor()  # type: ignore[no-untyped-call]
-    mac_tr = decryptor.update(mac)  # MAC is encrypted with counter 0
-    decrypted_data = decryptor.update(payload) + decryptor.finalize()
-
-    return (decrypted_data, mac_tr)
-
-
-def derive_device_authentication_password(device_authentication_password: str) -> bytes:
-    """Derive device authentication password."""
-    kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
-        length=16,
-        salt=b"device-authentication-code.1.secure.ip.knx.org",
-        iterations=65536,
-    )
-    return kdf.derive(device_authentication_password.encode("latin-1"))
-
-
-def derive_user_password(password_string: str) -> bytes:
-    """Derive user password."""
-    kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
-        length=16,
-        salt=b"user-password.1.secure.ip.knx.org",
-        iterations=65536,
-    )
-    return kdf.derive(password_string.encode("latin-1"))
 
 
 class SecureSession(TCPTransport):
@@ -193,10 +106,7 @@ class SecureSession(TCPTransport):
     async def connect(self) -> None:
         """Connect transport."""
         await super().connect()
-        self._private_key = X25519PrivateKey.generate()
-        self.public_key = self._private_key.public_key().public_bytes(
-            serialization.Encoding.Raw, serialization.PublicFormat.Raw
-        )
+        self._private_key, self.public_key = generate_ecdh_key_pair()
         self._sequence_number = 0
         # setup secure session
         request_session = Session(
@@ -279,13 +189,14 @@ class SecureSession(TCPTransport):
             session_response.ecdh_server_public_key,
         )
         response_mac_cbc = calculate_message_authentication_code_cbc(
-            self._device_authentication_code,
+            key=self._device_authentication_code,
             additional_data=response_header_data
             + self.session_id.to_bytes(2, "big")
             + pub_keys_xor,  # knx_ip_header + secure_session_id + bytes_xor(client_pub_key, server_pub_key)
         )
         _, mac_tr = decrypt_ctr(
-            self._device_authentication_code,
+            key=self._device_authentication_code,
+            counter_0=COUNTER_0_HANDSHAKE,
             mac=session_response.message_authentication_code,
         )
         if mac_tr != response_mac_cbc:
@@ -306,6 +217,7 @@ class SecureSession(TCPTransport):
         )
         _, authenticate_mac = encrypt_data_ctr(
             key=self._user_password,
+            counter_0=COUNTER_0_HANDSHAKE,
             mac_cbc=authenticate_mac_cbc,
         )
         return authenticate_mac
@@ -333,14 +245,14 @@ class SecureSession(TCPTransport):
         )
         encrypted_data, mac = encrypt_data_ctr(
             key=self._session_key,
-            mac_cbc=mac_cbc,
-            payload=plain_payload,
             counter_0=(
                 sequence_number
                 + self.serial_number
                 + self.message_tag
                 + bytes.fromhex("ff 00")
             ),
+            mac_cbc=mac_cbc,
+            payload=plain_payload,
         )
         return KNXIPFrame.init_from_body(
             SecureWrapper(
@@ -371,15 +283,15 @@ class SecureSession(TCPTransport):
         message_tag_bytes = encrypted_frame.body.message_tag.to_bytes(2, "big")
 
         dec_frame, mac_tr = decrypt_ctr(
-            self._session_key,
-            mac=encrypted_frame.body.message_authentication_code,
-            payload=encrypted_frame.body.encrypted_data,
+            key=self._session_key,
             counter_0=(
                 sequence_number_bytes
                 + serial_number_bytes
                 + message_tag_bytes
                 + bytes.fromhex("ff 00")
             ),
+            mac=encrypted_frame.body.message_authentication_code,
+            payload=encrypted_frame.body.encrypted_data,
         )
         mac_cbc = calculate_message_authentication_code_cbc(
             key=self._session_key,
