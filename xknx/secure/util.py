@@ -3,12 +3,22 @@ from cryptography.hazmat.primitives import hashes
 
 
 def bytes_xor(a: bytes, b: bytes) -> bytes:  # pylint: disable=invalid-name
-    """XOR two bytes values."""
+    """
+    XOR two bytes values.
+
+    Different lenghts raise ValueError.
+    """
+    if len(a) != len(b):
+        raise ValueError("Length of a and b must be equal.")
     return (int.from_bytes(a, "big") ^ int.from_bytes(b, "big")).to_bytes(len(a), "big")
 
 
 def byte_pad(data: bytes, block_size: int) -> bytes:
-    """Padd data with 0x00 until its length is a multiple of block_size."""
+    """
+    Pad data with 0x00 until its length is a multiple of block_size.
+
+    Add a whole block of 0 if data lenght is already a multiple of block_size.
+    """
     padding = bytes(block_size - (len(data) % block_size))
     return data + padding
 
