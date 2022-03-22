@@ -36,7 +36,9 @@ class SessionAuthenticate(KNXIPBody):
         # 01h: Management level access
         # 02h – 7Fh: User level access
         # 80h – FFh: Reserved, shall not be used
-        self.user_id = user_id  # TODO maybe use an Enum instead of int
+        # TODO: maybe use an Enum instead of int or raise an error in
+        #   to_knx() and handle in RequestResponse class
+        self.user_id = user_id
         self.message_authentication_code = message_authentication_code
 
     def calculated_length(self) -> int:
