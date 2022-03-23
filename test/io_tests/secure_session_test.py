@@ -3,10 +3,21 @@ import asyncio
 from unittest.mock import patch
 
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+import pytest
 
 from xknx import XKNX
+from xknx.exceptions import CouldNotParseKNXIP
+from xknx.io.const import SESSION_KEEPALIVE_RATE
 from xknx.io.secure_session import SecureSession
-from xknx.knxip import HPAI, KNXIPFrame, SecureWrapper, SessionRequest, SessionResponse
+from xknx.knxip import (
+    HPAI,
+    KNXIPFrame,
+    SecureWrapper,
+    SessionRequest,
+    SessionResponse,
+    SessionStatus,
+)
+from xknx.knxip.knxip_enum import SecureSessionStatusCode
 
 
 class TestSecureSession:
@@ -34,88 +45,133 @@ class TestSecureSession:
     mock_serial_number = 0x00_FA_12_34_56_78
     mock_message_tag = 0xAF_FE
 
-    async def test_connect(self, time_travel):
-        """Test handshake."""
-        xknx = XKNX()
-        session = SecureSession(
-            xknx,
+    def setup_method(self):
+        """Set up test class."""
+        # pylint: disable=attribute-defined-outside-init
+        self.xknx = XKNX()
+        self.session = SecureSession(
+            self.xknx,
             remote_addr=self.mock_addr,
             device_authentication_password=self.mock_device_authentication_password,
             user_id=self.mock_user_id,
             user_password=self.mock_user_password,
         )
-        session.serial_number = self.mock_serial_number.to_bytes(6, "big")
-        session.message_tag = self.mock_message_tag.to_bytes(2, "big")
+        self.session.serial_number = self.mock_serial_number.to_bytes(6, "big")
+        self.session.message_tag = self.mock_message_tag.to_bytes(2, "big")
 
-        with patch(
-            "xknx.io.transport.tcp_transport.TCPTransport.connect"
-        ) as mock_super_connect, patch(
-            "xknx.io.transport.tcp_transport.TCPTransport.send"
-        ) as mock_super_send, patch(
-            "xknx.io.secure_session.generate_ecdh_key_pair",
-            return_value=(self.mock_private_key, self.mock_public_key),
-        ):
-            connect_task = asyncio.create_task(session.connect())
-            await time_travel(0)
-            mock_super_connect.assert_called_once()
-            # outgoing
-            session_request_frame = KNXIPFrame.init_from_body(
-                SessionRequest(xknx, ecdh_client_public_key=self.mock_public_key)
+    def teardown_method(self):
+        """Cancel keepalive task."""
+        self.session.stop()
+
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    @patch(
+        "xknx.io.secure_session.generate_ecdh_key_pair",
+        return_value=(mock_private_key, mock_public_key),
+    )
+    async def test_connect(
+        self,
+        mock_super_connect,
+        mock_super_send,
+        _mock_generate,
+        time_travel,
+    ):
+        """Test connection and handshake."""
+        connect_task = asyncio.create_task(self.session.connect())
+        await time_travel(0)
+        mock_super_connect.assert_called_once()
+        # outgoing
+        session_request_frame = KNXIPFrame.init_from_body(
+            SessionRequest(self.xknx, ecdh_client_public_key=self.mock_public_key)
+        )
+        mock_super_send.assert_called_once_with(
+            session_request_frame, None  # None for addr in TCP transport
+        )
+        mock_super_send.reset_mock()
+        # incoming
+        session_response_frame = KNXIPFrame.init_from_body(
+            SessionResponse(
+                self.xknx,
+                secure_session_id=1,
+                ecdh_server_public_key=self.mock_server_public_key,
+                message_authentication_code=bytes.fromhex(
+                    "a9 22 50 5a aa 43 61 63 57 0b d5 49 4c 2d f2 a3"
+                ),
             )
-            mock_super_send.assert_called_once_with(
-                session_request_frame, None  # None for addr in TCP transport
+        )
+        self.session.handle_knxipframe(session_response_frame, HPAI(*self.mock_addr))
+        await time_travel(0)
+        # outgoing
+        encrypted_authenticate_frame = KNXIPFrame.init_from_body(
+            SecureWrapper(
+                self.xknx,
+                secure_session_id=self.mock_session_id,
+                sequence_information=0,
+                serial_number=self.mock_serial_number,
+                message_tag=self.mock_message_tag,
+                encrypted_data=bytes.fromhex(
+                    "79 15 a4 f3 6e 6e 42 08"
+                    "d2 8b 4a 20 7d 8f 35 c0"
+                    "d1 38 c2 6a 7b 5e 71 69"
+                ),
+                message_authentication_code=bytes.fromhex(
+                    "52 db a8 e7 e4 bd 80 bd 7d 86 8a 3a e7 87 49 de"
+                ),
             )
-            mock_super_send.reset_mock()
-            # incoming
-            session_response_frame = KNXIPFrame.init_from_body(
-                SessionResponse(
-                    xknx,
-                    secure_session_id=1,
-                    ecdh_server_public_key=self.mock_server_public_key,
-                    message_authentication_code=bytes.fromhex(
-                        "a9 22 50 5a aa 43 61 63 57 0b d5 49 4c 2d f2 a3"
-                    ),
-                )
+        )
+        mock_super_send.assert_called_once_with(
+            encrypted_authenticate_frame, None  # None for addr in TCP transport
+        )
+        mock_super_send.reset_mock()
+        # incoming
+        encrypted_session_status_frame = KNXIPFrame.init_from_body(
+            SecureWrapper(
+                self.xknx,
+                secure_session_id=self.mock_session_id,
+                sequence_information=0,
+                serial_number=0x00_FA_AA_AA_AA_AA,
+                message_tag=self.mock_message_tag,
+                encrypted_data=bytes.fromhex("26 15 6d b5 c7 49 88 8f"),
+                message_authentication_code=bytes.fromhex(
+                    "a3 73 c3 e0 b4 bd e4 49 7c 39 5e 4b 1c 2f 46 a1"
+                ),
             )
-            session.handle_knxipframe(session_response_frame, HPAI(*self.mock_addr))
-            await time_travel(0)
-            # outgoing
-            encrypted_authenticate_frame = KNXIPFrame.init_from_body(
-                SecureWrapper(
-                    xknx,
-                    secure_session_id=self.mock_session_id,
-                    sequence_information=0,
-                    serial_number=self.mock_serial_number,
-                    message_tag=self.mock_message_tag,
-                    encrypted_data=bytes.fromhex(
-                        "79 15 a4 f3 6e 6e 42 08"
-                        "d2 8b 4a 20 7d 8f 35 c0"
-                        "d1 38 c2 6a 7b 5e 71 69"
-                    ),
-                    message_authentication_code=bytes.fromhex(
-                        "52 db a8 e7 e4 bd 80 bd 7d 86 8a 3a e7 87 49 de"
-                    ),
-                )
+        )
+        self.session.handle_knxipframe(
+            encrypted_session_status_frame, HPAI(*self.mock_addr)
+        )
+
+        await connect_task
+        assert not self.session._keepalive_task.done()
+
+        # handle incoming SessionStatus (unencrypted for sake of simplicity)
+        session_status_close_frame = KNXIPFrame.init_from_body(
+            SessionStatus(self.xknx, status=SecureSessionStatusCode.STATUS_CLOSE)
+        )
+        with patch.object(self.session, "transport") as mock_transport:
+            self.session.handle_knxipframe(
+                session_status_close_frame, HPAI(*self.mock_addr)
             )
-            mock_super_send.assert_called_once_with(
-                encrypted_authenticate_frame, None  # None for addr in TCP transport
+            mock_transport.close.assert_called_once()
+
+        # keepalive SessionStatus (not specific for sake of simplicity)
+        await time_travel(SESSION_KEEPALIVE_RATE)
+        mock_super_send.assert_called_once()
+
+    def test_uninitialized(self):
+        """Test for raising when an encrypted Frame arrives at an uninitialized Session."""
+        secure_wrapper_frame = KNXIPFrame.init_from_body(
+            SecureWrapper(
+                self.xknx,
+                secure_session_id=self.mock_session_id,
+                sequence_information=0,
+                serial_number=0x00_FA_AA_AA_AA_AA,
+                message_tag=self.mock_message_tag,
+                encrypted_data=bytes.fromhex("26 15 6d b5 c7 49 88 8f"),
+                message_authentication_code=bytes.fromhex(
+                    "a3 73 c3 e0 b4 bd e4 49 7c 39 5e 4b 1c 2f 46 a1"
+                ),
             )
-            # incoming
-            encrypted_session_status_frame = KNXIPFrame.init_from_body(
-                SecureWrapper(
-                    xknx,
-                    secure_session_id=self.mock_session_id,
-                    sequence_information=0,
-                    serial_number=0x00_FA_AA_AA_AA_AA,
-                    message_tag=self.mock_message_tag,
-                    encrypted_data=bytes.fromhex("26 15 6d b5 c7 49 88 8f"),
-                    message_authentication_code=bytes.fromhex(
-                        "a3 73 c3 e0 b4 bd e4 49 7c 39 5e 4b 1c 2f 46 a1"
-                    ),
-                )
-            )
-            session.handle_knxipframe(
-                encrypted_session_status_frame, HPAI(*self.mock_addr)
-            )
-            await connect_task
-        session.stop()
+        )
+        with pytest.raises(CouldNotParseKNXIP):
+            self.session.handle_knxipframe(secure_wrapper_frame, HPAI(*self.mock_addr))
