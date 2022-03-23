@@ -10,7 +10,11 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
     X25519PublicKey,
 )
 
-from xknx.exceptions import CommunicationError, CouldNotParseKNXIP
+from xknx.exceptions import (
+    CommunicationError,
+    CouldNotParseKNXIP,
+    KNXSecureValidationError,
+)
 from xknx.knxip import (
     HPAI,
     KNXIPFrame,
@@ -79,6 +83,7 @@ class SecureSession(TCPTransport):
         self.message_tag = bytes.fromhex("00 00")  # use 0x00 0x00 for tunneling
         self.serial_number = bytes.fromhex("00 00 78 6b 6e 78")  # TODO configurable?
         self._sequence_number = 0
+        self._sequence_number_received = -1
         self.initialized = False
         self._keepalive_task: asyncio.Task[None] | None = None
         self._session_status_handler: KNXIPTransport.Callback | None = None
@@ -89,10 +94,23 @@ class SecureSession(TCPTransport):
         if isinstance(knxipframe.body, SecureWrapper):
             if not self.initialized:
                 raise CouldNotParseKNXIP(
-                    "Received SecureWrapper with Secure session not initialized"
+                    "Received SecureWrapper while Secure session not initialized"
                 )
+            if not (
+                (new_sequence_number := knxipframe.body.sequence_information)
+                > self._sequence_number_received
+            ):
+                knx_logger.warning(
+                    "Discarding SecureWrapper with invalid sequence number: %s",
+                    knxipframe,
+                )
+                return
             try:
                 knxipframe = self.decrypt_frame(knxipframe)
+            except KNXSecureValidationError as err:
+                knx_logger.warning("Could not decrypt KNXIPFrame: %s", err)
+                # Frame shall be discarded
+                return
             except CouldNotParseKNXIP as couldnotparseknxip:
                 # TODO: log raw data of unsupported frame
                 knx_logger.debug(
@@ -100,6 +118,7 @@ class SecureSession(TCPTransport):
                     couldnotparseknxip.description,
                 )
                 return
+            self._sequence_number_received = new_sequence_number
             knx_logger.debug("Decrypted frame: %s", knxipframe)
         super().handle_knxipframe(knxipframe, source)
 
@@ -121,6 +140,9 @@ class SecureSession(TCPTransport):
             )
         # SessionAuthenticate and everything else after now shall be wrapped in SecureWrapper
         authenticate_mac = self.handshake(request_session.response)
+        self.initialized = True
+        self._sequence_number_received = -1
+
         request_authentication = Authenticate(
             self.xknx,
             transport=self,
@@ -204,7 +226,6 @@ class SecureSession(TCPTransport):
         # calculate session key
         ecdh_shared_secret = self._private_key.exchange(self._peer_public_key)
         self._session_key = sha256_hash(ecdh_shared_secret)[:16]
-        self.initialized = True
         # generate SessionAuthenticate MAC
         authenticate_header_data = bytes.fromhex("06 10 09 53 00 18")
         authenticate_mac_cbc = calculate_message_authentication_code_cbc(
@@ -273,7 +294,9 @@ class SecureSession(TCPTransport):
         # TODO: get raw data from KNXIPFrame class directly instead of recalculating it with to_knx()
         # TODO: refactor so assert isn't needed (maybe subclass SecureWrapper from KNXIPFrame instead of being an attribute)
         assert isinstance(encrypted_frame.body, SecureWrapper)
-        assert encrypted_frame.body.secure_session_id == self.session_id
+        if encrypted_frame.body.secure_session_id != self.session_id:
+            raise KNXSecureValidationError("Wrong secure session id")
+
         session_id_bytes = encrypted_frame.body.secure_session_id.to_bytes(2, "big")
         wrapper_header = encrypted_frame.header.to_knx()
         sequence_number_bytes = encrypted_frame.body.sequence_information.to_bytes(
@@ -304,7 +327,10 @@ class SecureSession(TCPTransport):
                 + len(dec_frame).to_bytes(2, "big")
             ),
         )
-        assert mac_cbc == mac_tr
+        if mac_cbc != mac_tr:
+            raise KNXSecureValidationError(
+                "Verification of message authentication code failed"
+            )
 
         knxipframe = KNXIPFrame(self.xknx)
         knxipframe.from_knx(dec_frame)

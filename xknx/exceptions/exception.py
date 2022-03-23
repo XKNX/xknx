@@ -65,6 +65,14 @@ class CouldNotParseKNXIP(XKNXException):
         return f'<CouldNotParseKNXIP description="{self.description}" />'
 
 
+class KNXSecureValidationError(CouldNotParseKNXIP):
+    """Exception class for invalid KNX Secure data."""
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<KNXSecureValidationError description="{self.description}" />'
+
+
 class IncompleteKNXIPFrame(CouldNotParseKNXIP):
     """
     Exception class for incomplete KNXIP data.

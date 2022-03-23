@@ -1,6 +1,6 @@
 """Test Secure Session."""
 import asyncio
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 import pytest
@@ -175,3 +175,84 @@ class TestSecureSession:
         )
         with pytest.raises(CouldNotParseKNXIP):
             self.session.handle_knxipframe(secure_wrapper_frame, HPAI(*self.mock_addr))
+
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    @patch(
+        "xknx.io.secure_session.generate_ecdh_key_pair",
+        return_value=(mock_private_key, mock_public_key),
+    )
+    async def test_invalid_frames(
+        self,
+        mock_super_connect,
+        mock_super_send,
+        _mock_generate,
+        time_travel,
+    ):
+        """Test handling invalid frames."""
+        callback_mock = Mock()
+        self.session.register_callback(callback_mock)
+        # setup session
+        connect_task = asyncio.create_task(self.session.connect())
+        await time_travel(0)
+        session_response_frame = KNXIPFrame.init_from_body(
+            SessionResponse(
+                self.xknx,
+                secure_session_id=1,
+                ecdh_server_public_key=self.mock_server_public_key,
+                message_authentication_code=bytes.fromhex(
+                    "a9 22 50 5a aa 43 61 63 57 0b d5 49 4c 2d f2 a3"
+                ),
+            )
+        )
+        self.session.handle_knxipframe(session_response_frame, HPAI(*self.mock_addr))
+        await time_travel(0)
+        callback_mock.reset_mock()
+        encrypted_session_status_frame = KNXIPFrame.init_from_body(
+            SecureWrapper(
+                self.xknx,
+                secure_session_id=self.mock_session_id,
+                sequence_information=0,
+                serial_number=0x00_FA_AA_AA_AA_AA,
+                message_tag=self.mock_message_tag,
+                encrypted_data=bytes.fromhex("26 15 6d b5 c7 49 88 8f"),
+                message_authentication_code=bytes.fromhex(
+                    "a3 73 c3 e0 b4 bd e4 49 7c 39 5e 4b 1c 2f 46 a1"
+                ),
+            )
+        )
+        self.session.handle_knxipframe(
+            encrypted_session_status_frame, HPAI(*self.mock_addr)
+        )
+        await connect_task
+        assert self.session.initialized
+        callback_mock.assert_called_once()
+        callback_mock.reset_mock()
+
+        # receive sequence_information 0 again
+        self.session.handle_knxipframe(
+            encrypted_session_status_frame, HPAI(*self.mock_addr)
+        )
+        await time_travel(0)
+        callback_mock.assert_not_called()
+
+        # receive invalid message_authentication_code
+        # (which is invalid brecause the sequence_information is changed)
+        wrong_session_status_frame = KNXIPFrame.init_from_body(
+            SecureWrapper(
+                self.xknx,
+                secure_session_id=self.mock_session_id,
+                sequence_information=1,
+                serial_number=0x00_FA_AA_AA_AA_AA,
+                message_tag=self.mock_message_tag,
+                encrypted_data=bytes.fromhex("26 15 6d b5 c7 49 88 8f"),
+                message_authentication_code=bytes.fromhex(
+                    "a3 73 c3 e0 b4 bd e4 49 7c 39 5e 4b 1c 2f 46 a1"
+                ),
+            )
+        )
+        self.session.handle_knxipframe(
+            wrong_session_status_frame, HPAI(*self.mock_addr)
+        )
+        await time_travel(0)
+        callback_mock.assert_not_called()
