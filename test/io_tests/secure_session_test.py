@@ -6,7 +6,7 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 import pytest
 
 from xknx import XKNX
-from xknx.exceptions import CouldNotParseKNXIP
+from xknx.exceptions import CommunicationError, CouldNotParseKNXIP
 from xknx.io.const import SESSION_KEEPALIVE_RATE
 from xknx.io.secure_session import SecureSession
 from xknx.knxip import (
@@ -256,3 +256,66 @@ class TestSecureSession:
         )
         await time_travel(0)
         callback_mock.assert_not_called()
+
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    @patch(
+        "xknx.io.secure_session.generate_ecdh_key_pair",
+        return_value=(mock_private_key, mock_public_key),
+    )
+    async def test_invalid_session_response(
+        self,
+        mock_super_connect,
+        mock_super_send,
+        _mock_generate,
+        time_travel,
+    ):
+        """Test handling invalid session response."""
+        connect_task = asyncio.create_task(self.session.connect())
+        await time_travel(0)
+        session_response_frame = KNXIPFrame.init_from_body(
+            SessionResponse(
+                self.xknx,
+                secure_session_id=1,
+                ecdh_server_public_key=self.mock_server_public_key,
+                message_authentication_code=bytes.fromhex(
+                    "ff ff ff ff ff 43 61 63 57 0b d5 49 4c 2d f2 a3"
+                ),
+            )
+        )
+        with pytest.raises(CommunicationError):
+            self.session.handle_knxipframe(
+                session_response_frame, HPAI(*self.mock_addr)
+            )
+            await connect_task
+
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    @patch(
+        "xknx.io.secure_session.generate_ecdh_key_pair",
+        return_value=(mock_private_key, mock_public_key),
+    )
+    async def test_invalid_authentication(
+        self,
+        mock_super_connect,
+        mock_super_send,
+        _mock_generate,
+        time_travel,
+    ):
+        """Test handling no session status while authenticating."""
+        connect_task = asyncio.create_task(self.session.connect())
+        await time_travel(0)
+        session_response_frame = KNXIPFrame.init_from_body(
+            SessionResponse(
+                self.xknx,
+                secure_session_id=1,
+                ecdh_server_public_key=self.mock_server_public_key,
+                message_authentication_code=bytes.fromhex(
+                    "a9 22 50 5a aa 43 61 63 57 0b d5 49 4c 2d f2 a3"
+                ),
+            )
+        )
+        self.session.handle_knxipframe(session_response_frame, HPAI(*self.mock_addr))
+        with pytest.raises(CommunicationError):
+            await time_travel(10)
+            await connect_task
