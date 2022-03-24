@@ -11,3 +11,4 @@ HEARTBEAT_RATE = CONNECTION_ALIVE_TIME - (CONNECTIONSTATE_REQUEST_TIMEOUT * 5)
 # any communication over this session) until the session will be dropped.
 SESSION_TIMEOUT = 60
 SESSION_KEEPALIVE_RATE = SESSION_TIMEOUT - 10
+XKNX_SERIAL_NUMBER = bytes.fromhex("00 00 78 6b 6e 78")

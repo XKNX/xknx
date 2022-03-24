@@ -34,7 +34,7 @@ from xknx.secure.ip_secure import (
 )
 from xknx.secure.util import bytes_xor, sha256_hash
 
-from .const import SESSION_KEEPALIVE_RATE
+from .const import SESSION_KEEPALIVE_RATE, XKNX_SERIAL_NUMBER
 from .request_response import Authenticate, Session
 from .transport import KNXIPTransport, TCPTransport
 
@@ -48,6 +48,7 @@ knx_logger = logging.getLogger("xknx.knx")
 COUNTER_0_HANDSHAKE = (  # used in SessionResponse and SessionAuthenticate
     b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\x00"
 )
+MESSAGE_TAG = bytes.fromhex("00 00")  # use 0x00 0x00 for tunneling
 
 
 class SecureSession(TCPTransport):
@@ -77,57 +78,21 @@ class SecureSession(TCPTransport):
         self._private_key: X25519PrivateKey
         self.public_key: bytes
         self._peer_public_key: X25519PublicKey
-        self.session_id: int
         self._session_key: bytes
+        self.session_id: int
 
-        self.message_tag = bytes.fromhex("00 00")  # use 0x00 0x00 for tunneling
-        self.serial_number = bytes.fromhex("00 00 78 6b 6e 78")  # TODO configurable?
         self._sequence_number = 0
         self._sequence_number_received = -1
         self.initialized = False
         self._keepalive_task: asyncio.Task[None] | None = None
         self._session_status_handler: KNXIPTransport.Callback | None = None
 
-    def handle_knxipframe(self, knxipframe: KNXIPFrame, source: HPAI) -> None:
-        """Handle KNXIP Frame and call all callbacks matching the service type ident."""
-        # TODO: disallow unencrypted frames with exceptions for discovery etc. eg. DescriptionResponse
-        if isinstance(knxipframe.body, SecureWrapper):
-            if not self.initialized:
-                raise CouldNotParseKNXIP(
-                    "Received SecureWrapper while Secure session not initialized"
-                )
-            if not (
-                (new_sequence_number := knxipframe.body.sequence_information)
-                > self._sequence_number_received
-            ):
-                knx_logger.warning(
-                    "Discarding SecureWrapper with invalid sequence number: %s",
-                    knxipframe,
-                )
-                return
-            try:
-                knxipframe = self.decrypt_frame(knxipframe)
-            except KNXSecureValidationError as err:
-                knx_logger.warning("Could not decrypt KNXIPFrame: %s", err)
-                # Frame shall be discarded
-                return
-            except CouldNotParseKNXIP as couldnotparseknxip:
-                # TODO: log raw data of unsupported frame
-                knx_logger.debug(
-                    "Unsupported encrypted KNXIPFrame: %s",
-                    couldnotparseknxip.description,
-                )
-                return
-            self._sequence_number_received = new_sequence_number
-            knx_logger.debug("Decrypted frame: %s", knxipframe)
-        super().handle_knxipframe(knxipframe, source)
-
     async def connect(self) -> None:
         """Connect transport."""
         await super().connect()
         self._private_key, self.public_key = generate_ecdh_key_pair()
         self._sequence_number = 0
-        # setup secure session
+        self._sequence_number_received = -1
         request_session = Session(
             self.xknx,
             transport=self,
@@ -141,7 +106,6 @@ class SecureSession(TCPTransport):
         # SessionAuthenticate and everything else after now shall be wrapped in SecureWrapper
         authenticate_mac = self.handshake(request_session.response)
         self.initialized = True
-        self._sequence_number_received = -1
 
         request_authentication = Authenticate(
             self.xknx,
@@ -164,34 +128,6 @@ class SecureSession(TCPTransport):
         self._session_status_handler = self.register_callback(
             self._handle_session_status, [KNXIPServiceType.SESSION_STATUS]
         )
-
-    def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
-        """Send KNXIPFrame to socket. `addr` is ignored on TCP."""
-        if self.initialized:
-            knx_logger.debug("Encrypting frame: %s", knxipframe)
-            knxipframe = self.encrypt_frame(plain_frame=knxipframe)
-            # keepalive timer is started with first and resetted with every other
-            # SecureWrapper frame (including wrapped keepalive frames themselves)
-            self.start_keepalive_task()
-        # TODO: disallow sending unencrypted frames over non-initialized session with
-        # exceptions for discovery and SessionRequest
-        super().send(knxipframe, addr)
-
-    def stop(self) -> None:
-        """Stop transport."""
-        # TODO: send SessionStatus CLOSE
-        if self._session_status_handler:
-            self.unregister_callback(self._session_status_handler)
-            self._session_status_handler = None
-        self.stop_keepalive_task()
-        self.initialized = False
-        super().stop()
-
-    def increment_sequence_number(self) -> bytes:
-        """Increment sequence number. Return byte representation of current sequence number."""
-        next_sn = self._sequence_number.to_bytes(6, "big")
-        self._sequence_number += 1
-        return next_sn
 
     def handshake(self, session_response: SessionResponse) -> bytes:
         """
@@ -243,51 +179,48 @@ class SecureSession(TCPTransport):
         )
         return authenticate_mac
 
-    def encrypt_frame(self, plain_frame: KNXIPFrame) -> KNXIPFrame:
-        """Wrap KNX/IP frame in SecureWrapper."""
-        sequence_number = self.increment_sequence_number()
-        plain_payload = plain_frame.to_knx()  # P
-        payload_length = len(plain_payload)  # Q
-        # 6 KNXnet/IP header, 2 session_id, 6 sequence_number, 6 serial_number, 2 message_tag, 16 MAC = 38
-        total_length = 38 + payload_length
-        # TODO: get header data and total_length from SecureWrapper class
-        wrapper_header = bytes.fromhex("06 10 09 50") + total_length.to_bytes(2, "big")
+    def stop(self) -> None:
+        """Stop transport."""
+        # TODO: send SessionStatus CLOSE
+        if self._session_status_handler:
+            self.unregister_callback(self._session_status_handler)
+            self._session_status_handler = None
+        self.stop_keepalive_task()
+        self.initialized = False
+        super().stop()
 
-        mac_cbc = calculate_message_authentication_code_cbc(
-            key=self._session_key,
-            additional_data=wrapper_header + self.session_id.to_bytes(2, "big"),
-            payload=plain_payload,
-            block_0=(
-                sequence_number
-                + self.serial_number
-                + self.message_tag
-                + payload_length.to_bytes(2, "big")
-            ),
-        )
-        encrypted_data, mac = encrypt_data_ctr(
-            key=self._session_key,
-            counter_0=(
-                sequence_number
-                + self.serial_number
-                + self.message_tag
-                + bytes.fromhex("ff 00")
-            ),
-            mac_cbc=mac_cbc,
-            payload=plain_payload,
-        )
-        return KNXIPFrame.init_from_body(
-            SecureWrapper(
-                self.xknx,
-                secure_session_id=self.session_id,
-                sequence_information=int.from_bytes(
-                    sequence_number, "big"
-                ),  # TODO: remove encoding, decoding, encoding
-                serial_number=int.from_bytes(self.serial_number, "big"),
-                message_tag=int.from_bytes(self.message_tag, "big"),
-                encrypted_data=encrypted_data,
-                message_authentication_code=mac,
-            )
-        )
+    def handle_knxipframe(self, knxipframe: KNXIPFrame, source: HPAI) -> None:
+        """Handle KNXIP Frame and call all callbacks matching the service type ident."""
+        # TODO: disallow unencrypted frames with exceptions for discovery etc. eg. DescriptionResponse
+        if isinstance(knxipframe.body, SecureWrapper):
+            if not self.initialized:
+                raise CouldNotParseKNXIP(
+                    "Received SecureWrapper while Secure session not initialized"
+                )
+            if not (
+                (new_sequence_number := knxipframe.body.sequence_information)
+                > self._sequence_number_received
+            ):
+                knx_logger.warning(
+                    "Discarding SecureWrapper with invalid sequence number: %s",
+                    knxipframe,
+                )
+                return
+            try:
+                knxipframe = self.decrypt_frame(knxipframe)
+            except KNXSecureValidationError as err:
+                knx_logger.warning("Could not decrypt KNXIPFrame: %s", err)
+                # Frame shall be discarded
+                return
+            except CouldNotParseKNXIP as couldnotparseknxip:
+                knx_logger.debug(
+                    "Unsupported encrypted KNXIPFrame: %s",
+                    couldnotparseknxip.description,
+                )
+                return
+            self._sequence_number_received = new_sequence_number
+            knx_logger.debug("Decrypted frame: %s", knxipframe)
+        super().handle_knxipframe(knxipframe, source)
 
     def decrypt_frame(self, encrypted_frame: KNXIPFrame) -> KNXIPFrame:
         """Unwrap and verify KNX/IP frame from SecureWrapper."""
@@ -348,6 +281,70 @@ class SecureSession(TCPTransport):
                 )
             )
         )
+
+    def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
+        """Send KNXIPFrame to socket. `addr` is ignored on TCP."""
+        if self.initialized:
+            knx_logger.debug("Encrypting frame: %s", knxipframe)
+            knxipframe = self.encrypt_frame(plain_frame=knxipframe)
+            # keepalive timer is started with first and resetted with every other
+            # SecureWrapper frame (including wrapped keepalive frames themselves)
+            self.start_keepalive_task()
+        # TODO: disallow sending unencrypted frames over non-initialized session with
+        # exceptions for discovery and SessionRequest
+        super().send(knxipframe, addr)
+
+    def encrypt_frame(self, plain_frame: KNXIPFrame) -> KNXIPFrame:
+        """Wrap KNX/IP frame in SecureWrapper."""
+        sequence_number = self.increment_sequence_number()
+        plain_payload = plain_frame.to_knx()  # P
+        payload_length = len(plain_payload)  # Q
+        # 6 KNXnet/IP header, 2 session_id, 6 sequence_number, 6 serial_number, 2 message_tag, 16 MAC = 38
+        total_length = 38 + payload_length
+        # TODO: get header data and total_length from SecureWrapper class
+        wrapper_header = bytes.fromhex("06 10 09 50") + total_length.to_bytes(2, "big")
+
+        mac_cbc = calculate_message_authentication_code_cbc(
+            key=self._session_key,
+            additional_data=wrapper_header + self.session_id.to_bytes(2, "big"),
+            payload=plain_payload,
+            block_0=(
+                sequence_number
+                + XKNX_SERIAL_NUMBER
+                + MESSAGE_TAG
+                + payload_length.to_bytes(2, "big")
+            ),
+        )
+        encrypted_data, mac = encrypt_data_ctr(
+            key=self._session_key,
+            counter_0=(
+                sequence_number
+                + XKNX_SERIAL_NUMBER
+                + MESSAGE_TAG
+                + bytes.fromhex("ff 00")
+            ),
+            mac_cbc=mac_cbc,
+            payload=plain_payload,
+        )
+        return KNXIPFrame.init_from_body(
+            SecureWrapper(
+                self.xknx,
+                secure_session_id=self.session_id,
+                sequence_information=int.from_bytes(
+                    sequence_number, "big"
+                ),  # TODO: remove encoding, decoding, encoding
+                serial_number=int.from_bytes(XKNX_SERIAL_NUMBER, "big"),
+                message_tag=int.from_bytes(MESSAGE_TAG, "big"),
+                encrypted_data=encrypted_data,
+                message_authentication_code=mac,
+            )
+        )
+
+    def increment_sequence_number(self) -> bytes:
+        """Increment sequence number. Return byte representation of current sequence number."""
+        next_sn = self._sequence_number.to_bytes(6, "big")
+        self._sequence_number += 1
+        return next_sn
 
     def start_keepalive_task(self) -> None:
         """Start or restart session keepalive task."""
