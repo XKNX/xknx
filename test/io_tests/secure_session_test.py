@@ -77,14 +77,14 @@ class TestSecureSession:
         "xknx.io.secure_session.generate_ecdh_key_pair",
         return_value=(mock_private_key, mock_public_key),
     )
-    async def test_connect(
+    async def test_lifecycle(
         self,
         mock_super_connect,
         mock_super_send,
         _mock_generate,
         time_travel,
     ):
-        """Test connection and handshake."""
+        """Test connection, handshake, keepalive and shutdown."""
         connect_task = asyncio.create_task(self.session.connect())
         await time_travel(0)
         mock_super_connect.assert_called_once()
@@ -165,6 +165,16 @@ class TestSecureSession:
         # keepalive SessionStatus (not specific for sake of simplicity)
         await time_travel(SESSION_KEEPALIVE_RATE)
         mock_super_send.assert_called_once()
+        mock_super_send.reset_mock()
+
+        # SessionStatus CLOSE sent on graceful disconnect
+        with patch.object(
+            self.session, "send", wraps=self.session.send
+        ) as mock_send, patch.object(self.session, "transport") as mock_transport:
+            self.session.stop()
+            mock_send.assert_called_once_with(session_status_close_frame)
+            mock_super_send.assert_called_once()
+            mock_transport.close.assert_called_once()
 
     def test_uninitialized(self):
         """Test for raising when an encrypted Frame arrives at an uninitialized Session."""

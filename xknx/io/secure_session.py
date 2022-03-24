@@ -180,12 +180,20 @@ class SecureSession(TCPTransport):
         return authenticate_mac
 
     def stop(self) -> None:
-        """Stop transport."""
-        # TODO: send SessionStatus CLOSE
+        """Stop session and transport."""
         if self._session_status_handler:
             self.unregister_callback(self._session_status_handler)
             self._session_status_handler = None
         self.stop_keepalive_task()
+        if self.transport and self.initialized:
+            self.send(
+                KNXIPFrame.init_from_body(
+                    SessionStatus(
+                        self.xknx,
+                        status=SecureSessionStatusCode.STATUS_CLOSE,
+                    )
+                )
+            )
         self.initialized = False
         super().stop()
 
