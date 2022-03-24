@@ -11,9 +11,7 @@ class TestKNXIPSecureWrapper:
         sequence_number = bytes.fromhex("00 00 00 00 00 00")
         sequence_number_int = int.from_bytes(sequence_number, "big")
         knx_serial_number = bytes.fromhex("00 fa 12 34 56 78")
-        knx_serial_number_int = int.from_bytes(knx_serial_number, "big")
         message_tag = bytes.fromhex("af fe")
-        message_tag_int = int.from_bytes(message_tag, "big")
         encrypted_data = bytes.fromhex(
             "79 15 a4 f3 6e 6e 42 08"  # SessionAuthenticate Frame
             "d2 8b 4a 20 7d 8f 35 c0"
@@ -40,8 +38,8 @@ class TestKNXIPSecureWrapper:
         assert isinstance(knxipframe.body, SecureWrapper)
         assert knxipframe.body.secure_session_id == 1
         assert knxipframe.body.sequence_information == sequence_number_int
-        assert knxipframe.body.serial_number == knx_serial_number_int
-        assert knxipframe.body.message_tag == message_tag_int
+        assert knxipframe.body.serial_number == knx_serial_number
+        assert knxipframe.body.message_tag == message_tag
         assert knxipframe.body.encrypted_data == encrypted_data
         assert (
             knxipframe.body.message_authentication_code == message_authentication_code
@@ -53,8 +51,8 @@ class TestKNXIPSecureWrapper:
             xknx,
             secure_session_id=1,
             sequence_information=sequence_number_int,
-            serial_number=knx_serial_number_int,
-            message_tag=message_tag_int,
+            serial_number=knx_serial_number,
+            message_tag=message_tag,
             encrypted_data=encrypted_data,
             message_authentication_code=message_authentication_code,
         )

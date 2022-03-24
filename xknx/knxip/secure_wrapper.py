@@ -45,8 +45,8 @@ class SecureWrapper(KNXIPBody):
         xknx: XKNX,
         secure_session_id: int = 0,
         sequence_information: int = 0,
-        serial_number: int = 0,
-        message_tag: int = 0,
+        serial_number: bytes = bytes(6),
+        message_tag: bytes = bytes(2),
         encrypted_data: bytes = bytes(0),
         message_authentication_code: bytes = bytes(16),
     ):
@@ -73,8 +73,8 @@ class SecureWrapper(KNXIPBody):
             raise CouldNotParseKNXIP("SecureWrapper has invalid length")
         self.secure_session_id = int.from_bytes(raw[:2], "big")
         self.sequence_information = int.from_bytes(raw[2:8], "big")
-        self.serial_number = int.from_bytes(raw[8:14], "big")
-        self.message_tag = int.from_bytes(raw[14:16], "big")
+        self.serial_number = raw[8:14]
+        self.message_tag = raw[14:16]
         self.encrypted_data = raw[16:-MESSAGE_AUTHENTICATION_CODE_LENGTH]
         self.message_authentication_code = raw[-MESSAGE_AUTHENTICATION_CODE_LENGTH:]
         return len(raw)
@@ -84,8 +84,8 @@ class SecureWrapper(KNXIPBody):
         return (
             self.secure_session_id.to_bytes(2, "big")
             + self.sequence_information.to_bytes(6, "big")
-            + self.serial_number.to_bytes(6, "big")
-            + self.message_tag.to_bytes(2, "big")
+            + self.serial_number
+            + self.message_tag
             + self.encrypted_data
             + self.message_authentication_code
         )
@@ -96,8 +96,8 @@ class SecureWrapper(KNXIPBody):
             f"<SecureWrapper "
             f'secure_session_id="{self.secure_session_id}" '
             f'sequence_information="{self.sequence_information}" '
-            f'serial_number="{self.serial_number}" '
-            f'message_tag="{self.message_tag}" '
+            f'serial_number="{self.serial_number.hex()}" '
+            f'message_tag="{self.message_tag.hex()}" '
             f'encrypted_data={self.encrypted_data.hex()}" '
             f"message_authentication_code={self.message_authentication_code.hex()} />"
         )

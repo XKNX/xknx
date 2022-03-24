@@ -48,7 +48,7 @@ knx_logger = logging.getLogger("xknx.knx")
 COUNTER_0_HANDSHAKE = (  # used in SessionResponse and SessionAuthenticate
     b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\x00"
 )
-MESSAGE_TAG = bytes.fromhex("00 00")  # use 0x00 0x00 for tunneling
+MESSAGE_TAG_TUNNELLING = bytes.fromhex("00 00")  # use 0x00 0x00 for tunneling
 
 
 class SecureSession(TCPTransport):
@@ -234,16 +234,14 @@ class SecureSession(TCPTransport):
         wrapper_header = encrypted_frame.header.to_knx()
         sequence_number_bytes = encrypted_frame.body.sequence_information.to_bytes(
             6, "big"
-        )  # TODO: remove encoding, decoding, encoding
-        serial_number_bytes = encrypted_frame.body.serial_number.to_bytes(6, "big")
-        message_tag_bytes = encrypted_frame.body.message_tag.to_bytes(2, "big")
+        )
 
         dec_frame, mac_tr = decrypt_ctr(
             key=self._session_key,
             counter_0=(
                 sequence_number_bytes
-                + serial_number_bytes
-                + message_tag_bytes
+                + encrypted_frame.body.serial_number
+                + encrypted_frame.body.message_tag
                 + bytes.fromhex("ff 00")
             ),
             mac=encrypted_frame.body.message_authentication_code,
@@ -255,8 +253,8 @@ class SecureSession(TCPTransport):
             payload=dec_frame,
             block_0=(
                 sequence_number_bytes
-                + serial_number_bytes
-                + message_tag_bytes
+                + encrypted_frame.body.serial_number
+                + encrypted_frame.body.message_tag
                 + len(dec_frame).to_bytes(2, "big")
             ),
         )
@@ -311,7 +309,7 @@ class SecureSession(TCPTransport):
             block_0=(
                 sequence_number
                 + XKNX_SERIAL_NUMBER
-                + MESSAGE_TAG
+                + MESSAGE_TAG_TUNNELLING
                 + payload_length.to_bytes(2, "big")
             ),
         )
@@ -320,7 +318,7 @@ class SecureSession(TCPTransport):
             counter_0=(
                 sequence_number
                 + XKNX_SERIAL_NUMBER
-                + MESSAGE_TAG
+                + MESSAGE_TAG_TUNNELLING
                 + bytes.fromhex("ff 00")
             ),
             mac_cbc=mac_cbc,
@@ -333,8 +331,8 @@ class SecureSession(TCPTransport):
                 sequence_information=int.from_bytes(
                     sequence_number, "big"
                 ),  # TODO: remove encoding, decoding, encoding
-                serial_number=int.from_bytes(XKNX_SERIAL_NUMBER, "big"),
-                message_tag=int.from_bytes(MESSAGE_TAG, "big"),
+                serial_number=XKNX_SERIAL_NUMBER,
+                message_tag=MESSAGE_TAG_TUNNELLING,
                 encrypted_data=encrypted_data,
                 message_authentication_code=mac,
             )

@@ -42,8 +42,8 @@ class TestSecureSession:
     mock_device_authentication_password = "trustme"
     mock_user_id = 1
     mock_user_password = "secret"
-    mock_serial_number = 0x00_FA_12_34_56_78
-    mock_message_tag = 0xAF_FE
+    mock_serial_number = bytes.fromhex("00 fa 12 34 56 78")
+    mock_message_tag = bytes.fromhex("af fe")
 
     def setup_method(self):
         """Set up test class."""
@@ -56,12 +56,20 @@ class TestSecureSession:
             user_id=self.mock_user_id,
             user_password=self.mock_user_password,
         )
-        self.session.serial_number = self.mock_serial_number.to_bytes(6, "big")
-        self.session.message_tag = self.mock_message_tag.to_bytes(2, "big")
+        self.patch_serial_number = patch(
+            "xknx.io.secure_session.XKNX_SERIAL_NUMBER", self.mock_serial_number
+        )
+        self.patch_serial_number.start()
+        self.patch_message_tag = patch(
+            "xknx.io.secure_session.MESSAGE_TAG_TUNNELLING", self.mock_message_tag
+        )
+        self.patch_message_tag.start()
 
     def teardown_method(self):
         """Cancel keepalive task."""
         self.session.stop()
+        self.patch_serial_number.stop()
+        self.patch_message_tag.stop()
 
     @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
     @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
@@ -129,7 +137,7 @@ class TestSecureSession:
                 self.xknx,
                 secure_session_id=self.mock_session_id,
                 sequence_information=0,
-                serial_number=0x00_FA_AA_AA_AA_AA,
+                serial_number=bytes.fromhex("00 fa aa aa aa aa"),
                 message_tag=self.mock_message_tag,
                 encrypted_data=bytes.fromhex("26 15 6d b5 c7 49 88 8f"),
                 message_authentication_code=bytes.fromhex(
@@ -165,7 +173,7 @@ class TestSecureSession:
                 self.xknx,
                 secure_session_id=self.mock_session_id,
                 sequence_information=0,
-                serial_number=0x00_FA_AA_AA_AA_AA,
+                serial_number=bytes.fromhex("00 fa aa aa aa aa"),
                 message_tag=self.mock_message_tag,
                 encrypted_data=bytes.fromhex("26 15 6d b5 c7 49 88 8f"),
                 message_authentication_code=bytes.fromhex(
@@ -213,7 +221,7 @@ class TestSecureSession:
                 self.xknx,
                 secure_session_id=self.mock_session_id,
                 sequence_information=0,
-                serial_number=0x00_FA_AA_AA_AA_AA,
+                serial_number=bytes.fromhex("00 fa aa aa aa aa"),
                 message_tag=self.mock_message_tag,
                 encrypted_data=bytes.fromhex("26 15 6d b5 c7 49 88 8f"),
                 message_authentication_code=bytes.fromhex(
@@ -243,7 +251,7 @@ class TestSecureSession:
                 self.xknx,
                 secure_session_id=self.mock_session_id,
                 sequence_information=1,
-                serial_number=0x00_FA_AA_AA_AA_AA,
+                serial_number=bytes.fromhex("00 fa aa aa aa aa"),
                 message_tag=self.mock_message_tag,
                 encrypted_data=bytes.fromhex("26 15 6d b5 c7 49 88 8f"),
                 message_authentication_code=bytes.fromhex(
