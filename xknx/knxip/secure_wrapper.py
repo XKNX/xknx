@@ -98,6 +98,6 @@ class SecureWrapper(KNXIPBody):
             f'sequence_information="{self.sequence_information.hex()}" '
             f'serial_number="{self.serial_number.hex()}" '
             f'message_tag="{self.message_tag.hex()}" '
-            f'encrypted_data={self.encrypted_data.hex()}" '
-            f"message_authentication_code={self.message_authentication_code.hex()} />"
+            f'encrypted_data="{self.encrypted_data.hex()}" '
+            f'message_authentication_code="{self.message_authentication_code.hex()}" />'
         )

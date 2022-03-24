@@ -70,5 +70,5 @@ class SessionAuthenticate(KNXIPBody):
         return (
             f"<SessionAuthenticate "
             f'user_id="{self.user_id}" '
-            f"message_authentication_code={self.message_authentication_code.hex()} />"
+            f'message_authentication_code="{self.message_authentication_code.hex()}" />'
         )

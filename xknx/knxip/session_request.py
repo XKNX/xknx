@@ -57,5 +57,5 @@ class SessionRequest(KNXIPBody):
         return (
             f"<SessionRequest "
             f'control_endpoint="{self.control_endpoint}" '
-            f"ecdh_client_public_key={self.ecdh_client_public_key.hex()} />"
+            f'ecdh_client_public_key="{self.ecdh_client_public_key.hex()}" />'
         )

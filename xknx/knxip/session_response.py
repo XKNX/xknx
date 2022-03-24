@@ -68,5 +68,5 @@ class SessionResponse(KNXIPBody):
             f"<SessionResponse "
             f'secure_session_id="{self.secure_session_id}" '
             f'ecdh_server_public_key="{self.ecdh_server_public_key.hex()}" '
-            f"message_authentication_code={self.message_authentication_code.hex()} />"
+            f'message_authentication_code="{self.message_authentication_code.hex()}" />'
         )
