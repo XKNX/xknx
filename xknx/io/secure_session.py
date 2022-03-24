@@ -205,10 +205,10 @@ class SecureSession(TCPTransport):
                 raise CouldNotParseKNXIP(
                     "Received SecureWrapper while Secure session not initialized"
                 )
-            if not (
-                (new_sequence_number := knxipframe.body.sequence_information)
-                > self._sequence_number_received
-            ):
+            new_sequence_number = int.from_bytes(
+                knxipframe.body.sequence_information, "big"
+            )
+            if not new_sequence_number > self._sequence_number_received:
                 knx_logger.warning(
                     "Discarding SecureWrapper with invalid sequence number: %s",
                     knxipframe,
@@ -240,14 +240,11 @@ class SecureSession(TCPTransport):
 
         session_id_bytes = encrypted_frame.body.secure_session_id.to_bytes(2, "big")
         wrapper_header = encrypted_frame.header.to_knx()
-        sequence_number_bytes = encrypted_frame.body.sequence_information.to_bytes(
-            6, "big"
-        )
 
         dec_frame, mac_tr = decrypt_ctr(
             key=self._session_key,
             counter_0=(
-                sequence_number_bytes
+                encrypted_frame.body.sequence_information
                 + encrypted_frame.body.serial_number
                 + encrypted_frame.body.message_tag
                 + bytes.fromhex("ff 00")
@@ -260,7 +257,7 @@ class SecureSession(TCPTransport):
             additional_data=wrapper_header + session_id_bytes,
             payload=dec_frame,
             block_0=(
-                sequence_number_bytes
+                encrypted_frame.body.sequence_information
                 + encrypted_frame.body.serial_number
                 + encrypted_frame.body.message_tag
                 + len(dec_frame).to_bytes(2, "big")
@@ -302,7 +299,7 @@ class SecureSession(TCPTransport):
 
     def encrypt_frame(self, plain_frame: KNXIPFrame) -> KNXIPFrame:
         """Wrap KNX/IP frame in SecureWrapper."""
-        sequence_number = self.increment_sequence_number()
+        sequence_information = self.increment_sequence_number()
         plain_payload = plain_frame.to_knx()  # P
         payload_length = len(plain_payload)  # Q
         # 6 KNXnet/IP header, 2 session_id, 6 sequence_number, 6 serial_number, 2 message_tag, 16 MAC = 38
@@ -315,7 +312,7 @@ class SecureSession(TCPTransport):
             additional_data=wrapper_header + self.session_id.to_bytes(2, "big"),
             payload=plain_payload,
             block_0=(
-                sequence_number
+                sequence_information
                 + XKNX_SERIAL_NUMBER
                 + MESSAGE_TAG_TUNNELLING
                 + payload_length.to_bytes(2, "big")
@@ -324,7 +321,7 @@ class SecureSession(TCPTransport):
         encrypted_data, mac = encrypt_data_ctr(
             key=self._session_key,
             counter_0=(
-                sequence_number
+                sequence_information
                 + XKNX_SERIAL_NUMBER
                 + MESSAGE_TAG_TUNNELLING
                 + bytes.fromhex("ff 00")
@@ -336,9 +333,7 @@ class SecureSession(TCPTransport):
             SecureWrapper(
                 self.xknx,
                 secure_session_id=self.session_id,
-                sequence_information=int.from_bytes(
-                    sequence_number, "big"
-                ),  # TODO: remove encoding, decoding, encoding
+                sequence_information=sequence_information,
                 serial_number=XKNX_SERIAL_NUMBER,
                 message_tag=MESSAGE_TAG_TUNNELLING,
                 encrypted_data=encrypted_data,

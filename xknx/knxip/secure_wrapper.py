@@ -44,7 +44,7 @@ class SecureWrapper(KNXIPBody):
         self,
         xknx: XKNX,
         secure_session_id: int = 0,
-        sequence_information: int = 0,
+        sequence_information: bytes = bytes(6),
         serial_number: bytes = bytes(6),
         message_tag: bytes = bytes(2),
         encrypted_data: bytes = bytes(0),
@@ -72,7 +72,7 @@ class SecureWrapper(KNXIPBody):
         if len(raw) < SECURE_WRAPPER_MINIMUM_LENGTH:
             raise CouldNotParseKNXIP("SecureWrapper has invalid length")
         self.secure_session_id = int.from_bytes(raw[:2], "big")
-        self.sequence_information = int.from_bytes(raw[2:8], "big")
+        self.sequence_information = raw[2:8]
         self.serial_number = raw[8:14]
         self.message_tag = raw[14:16]
         self.encrypted_data = raw[16:-MESSAGE_AUTHENTICATION_CODE_LENGTH]
@@ -83,7 +83,7 @@ class SecureWrapper(KNXIPBody):
         """Serialize to KNX/IP raw data."""
         return (
             self.secure_session_id.to_bytes(2, "big")
-            + self.sequence_information.to_bytes(6, "big")
+            + self.sequence_information
             + self.serial_number
             + self.message_tag
             + self.encrypted_data
@@ -95,7 +95,7 @@ class SecureWrapper(KNXIPBody):
         return (
             f"<SecureWrapper "
             f'secure_session_id="{self.secure_session_id}" '
-            f'sequence_information="{self.sequence_information}" '
+            f'sequence_information="{self.sequence_information.hex()}" '
             f'serial_number="{self.serial_number.hex()}" '
             f'message_tag="{self.message_tag.hex()}" '
             f'encrypted_data={self.encrypted_data.hex()}" '

@@ -9,7 +9,6 @@ class TestKNXIPSecureWrapper:
     def test_secure_wrapper(self):
         """Test parsing and streaming secure wrapper KNX/IP packet."""
         sequence_number = bytes.fromhex("00 00 00 00 00 00")
-        sequence_number_int = int.from_bytes(sequence_number, "big")
         knx_serial_number = bytes.fromhex("00 fa 12 34 56 78")
         message_tag = bytes.fromhex("af fe")
         encrypted_data = bytes.fromhex(
@@ -37,7 +36,7 @@ class TestKNXIPSecureWrapper:
 
         assert isinstance(knxipframe.body, SecureWrapper)
         assert knxipframe.body.secure_session_id == 1
-        assert knxipframe.body.sequence_information == sequence_number_int
+        assert knxipframe.body.sequence_information == sequence_number
         assert knxipframe.body.serial_number == knx_serial_number
         assert knxipframe.body.message_tag == message_tag
         assert knxipframe.body.encrypted_data == encrypted_data
@@ -50,7 +49,7 @@ class TestKNXIPSecureWrapper:
         secure_wrapper = SecureWrapper(
             xknx,
             secure_session_id=1,
-            sequence_information=sequence_number_int,
+            sequence_information=sequence_number,
             serial_number=knx_serial_number,
             message_tag=message_tag,
             encrypted_data=encrypted_data,

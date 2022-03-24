@@ -114,7 +114,7 @@ class TestSecureSession:
             SecureWrapper(
                 self.xknx,
                 secure_session_id=self.mock_session_id,
-                sequence_information=0,
+                sequence_information=bytes.fromhex("00 00 00 00 00 00"),
                 serial_number=self.mock_serial_number,
                 message_tag=self.mock_message_tag,
                 encrypted_data=bytes.fromhex(
@@ -136,7 +136,7 @@ class TestSecureSession:
             SecureWrapper(
                 self.xknx,
                 secure_session_id=self.mock_session_id,
-                sequence_information=0,
+                sequence_information=bytes.fromhex("00 00 00 00 00 00"),
                 serial_number=bytes.fromhex("00 fa aa aa aa aa"),
                 message_tag=self.mock_message_tag,
                 encrypted_data=bytes.fromhex("26 15 6d b5 c7 49 88 8f"),
@@ -182,7 +182,7 @@ class TestSecureSession:
             SecureWrapper(
                 self.xknx,
                 secure_session_id=self.mock_session_id,
-                sequence_information=0,
+                sequence_information=bytes.fromhex("00 00 00 00 00 00"),
                 serial_number=bytes.fromhex("00 fa aa aa aa aa"),
                 message_tag=self.mock_message_tag,
                 encrypted_data=bytes.fromhex("26 15 6d b5 c7 49 88 8f"),
@@ -230,7 +230,7 @@ class TestSecureSession:
             SecureWrapper(
                 self.xknx,
                 secure_session_id=self.mock_session_id,
-                sequence_information=0,
+                sequence_information=bytes.fromhex("00 00 00 00 00 00"),
                 serial_number=bytes.fromhex("00 fa aa aa aa aa"),
                 message_tag=self.mock_message_tag,
                 encrypted_data=bytes.fromhex("26 15 6d b5 c7 49 88 8f"),
@@ -260,7 +260,7 @@ class TestSecureSession:
             SecureWrapper(
                 self.xknx,
                 secure_session_id=self.mock_session_id,
-                sequence_information=1,
+                sequence_information=bytes.fromhex("00 00 00 00 00 01"),
                 serial_number=bytes.fromhex("00 fa aa aa aa aa"),
                 message_tag=self.mock_message_tag,
                 encrypted_data=bytes.fromhex("26 15 6d b5 c7 49 88 8f"),
