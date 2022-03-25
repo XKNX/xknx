@@ -17,10 +17,10 @@ from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
-ValueType = TypeVar("ValueType")
+ValueT = TypeVar("ValueT")
 
 
-class _RemoteValueGeneric(RemoteValue[DPTArray, ValueType]):
+class _RemoteValueGeneric(RemoteValue[DPTArray, ValueT]):
     """Abstraction for generic DPT types."""
 
     dpt_base_class: type[DPTBase]
@@ -64,12 +64,12 @@ class _RemoteValueGeneric(RemoteValue[DPTArray, ValueType]):
             return payload
         raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
 
-    def to_knx(self, value: ValueType) -> DPTArray:
+    def to_knx(self, value: ValueT) -> DPTArray:
         """Convert value to payload."""
         return DPTArray(self.dpt_class.to_knx(value))
 
     @abstractmethod
-    def from_knx(self, payload: DPTArray) -> ValueType:
+    def from_knx(self, payload: DPTArray) -> ValueT:
         """Convert current payload to value."""
 
     @property
