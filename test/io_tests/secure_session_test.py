@@ -151,6 +151,7 @@ class TestSecureSession:
         )
 
         await connect_task
+        assert self.session.initialized is True
         assert not self.session._keepalive_task.done()
 
         # handle incoming SessionStatus (unencrypted for sake of simplicity)
@@ -363,7 +364,25 @@ class TestSecureSession:
         mock_super_send.assert_called_once_with(
             encrypted_authenticate_frame, None  # None for addr in TCP transport
         )
+        # incoming
+        encrypted_session_status_frame = KNXIPFrame.init_from_body(
+            SecureWrapper(
+                self.xknx,
+                secure_session_id=self.mock_session_id,
+                sequence_information=bytes.fromhex("00 00 00 00 00 00"),
+                serial_number=bytes.fromhex("00 fa aa aa aa aa"),
+                message_tag=self.mock_message_tag,
+                encrypted_data=bytes.fromhex("26 15 6d b5 c7 49 88 8f"),
+                message_authentication_code=bytes.fromhex(
+                    "a3 73 c3 e0 b4 bd e4 49 7c 39 5e 4b 1c 2f 46 a1"
+                ),
+            )
+        )
+        self.session.handle_knxipframe(
+            encrypted_session_status_frame, HPAI(*self.mock_addr)
+        )
         await connect_task
+        assert self.session.initialized is True
 
     @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
     @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
