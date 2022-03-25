@@ -15,11 +15,11 @@ or monitored by other listeners - that triggers different events.
 Please join XKNX on Discord (https://discord.gg/EuAQDXU) and chat with JohanElmis for
 specific questions.
 """
-try:
-    import asyncio
-    import re
-    import sys
+import asyncio
+import re
+import sys
 
+try:
     # The following library is not included.
     from myhouse_sensors_mqtt import MetricType, SensorClientMqtt
 
