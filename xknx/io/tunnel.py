@@ -405,72 +405,6 @@ class _Tunnel(Interface):
         raise CommunicationError("No answer from tunneling server.")
 
 
-class TCPTunnel(_Tunnel):
-    """Class for handling KNX/IP TCP tunnels."""
-
-    transport: TCPTransport
-
-    def __init__(
-        self,
-        xknx: XKNX,
-        gateway_ip: str,
-        gateway_port: int,
-        telegram_received_callback: TelegramCallbackType | None = None,
-        auto_reconnect: bool = True,
-        auto_reconnect_wait: int = 3,
-    ):
-        """Initialize Tunnel class."""
-        self.gateway_ip = gateway_ip
-        self.gateway_port = gateway_port
-        super().__init__(
-            xknx=xknx,
-            telegram_received_callback=telegram_received_callback,
-            auto_reconnect=auto_reconnect,
-            auto_reconnect_wait=auto_reconnect_wait,
-        )
-        # TCP always uses 0.0.0.0:0
-        self.local_hpai = HPAI(protocol=HostProtocol.IPV4_TCP)
-
-    def _init_transport(self) -> None:
-        """Initialize transport transport."""
-        self.transport = TCPTransport(
-            self.xknx,
-            remote_addr=(self.gateway_ip, self.gateway_port),
-            connection_lost_cb=self._tunnel_lost,
-        )
-
-    async def setup_tunnel(self) -> None:
-        """Set up tunnel before sending a ConnectionRequest."""
-
-    async def _tunnelling_request(self, telegram: Telegram) -> bool:
-        """Send Telegram to tunnelling device."""
-        if self.communication_channel is None:
-            raise CommunicationError(
-                "Sending telegram failed. No active communication channel."
-            )
-        cemi = CEMIFrame.init_from_telegram(
-            self.xknx,
-            telegram=telegram,
-            code=CEMIMessageCode.L_DATA_REQ,
-            src_addr=self._src_address,
-        )
-        tunnelling_request = TunnellingRequest(
-            self.xknx,
-            communication_channel_id=self.communication_channel,
-            sequence_counter=self.sequence_number,
-            cemi=cemi,
-        )
-
-        async def _async_wrapper() -> None:
-            self.transport.send(KNXIPFrame.init_from_body(tunnelling_request))
-
-        await self._wait_for_tunnelling_request_confirmation(
-            send_tunneling_request_aw=_async_wrapper(),
-            telegram=telegram,
-        )
-        return True
-
-
 class UDPTunnel(_Tunnel):
     """Class for handling KNX/IP UDP tunnels."""
 
@@ -569,6 +503,72 @@ class UDPTunnel(_Tunnel):
         )
 
 
+class TCPTunnel(_Tunnel):
+    """Class for handling KNX/IP TCP tunnels."""
+
+    transport: TCPTransport
+
+    def __init__(
+        self,
+        xknx: XKNX,
+        gateway_ip: str,
+        gateway_port: int,
+        telegram_received_callback: TelegramCallbackType | None = None,
+        auto_reconnect: bool = True,
+        auto_reconnect_wait: int = 3,
+    ):
+        """Initialize Tunnel class."""
+        self.gateway_ip = gateway_ip
+        self.gateway_port = gateway_port
+        super().__init__(
+            xknx=xknx,
+            telegram_received_callback=telegram_received_callback,
+            auto_reconnect=auto_reconnect,
+            auto_reconnect_wait=auto_reconnect_wait,
+        )
+        # TCP always uses 0.0.0.0:0
+        self.local_hpai = HPAI(protocol=HostProtocol.IPV4_TCP)
+
+    def _init_transport(self) -> None:
+        """Initialize transport transport."""
+        self.transport = TCPTransport(
+            self.xknx,
+            remote_addr=(self.gateway_ip, self.gateway_port),
+            connection_lost_cb=self._tunnel_lost,
+        )
+
+    async def setup_tunnel(self) -> None:
+        """Set up tunnel before sending a ConnectionRequest."""
+
+    async def _tunnelling_request(self, telegram: Telegram) -> bool:
+        """Send Telegram to tunnelling device."""
+        if self.communication_channel is None:
+            raise CommunicationError(
+                "Sending telegram failed. No active communication channel."
+            )
+        cemi = CEMIFrame.init_from_telegram(
+            self.xknx,
+            telegram=telegram,
+            code=CEMIMessageCode.L_DATA_REQ,
+            src_addr=self._src_address,
+        )
+        tunnelling_request = TunnellingRequest(
+            self.xknx,
+            communication_channel_id=self.communication_channel,
+            sequence_counter=self.sequence_number,
+            cemi=cemi,
+        )
+
+        async def _async_wrapper() -> None:
+            self.transport.send(KNXIPFrame.init_from_body(tunnelling_request))
+
+        await self._wait_for_tunnelling_request_confirmation(
+            send_tunneling_request_aw=_async_wrapper(),
+            telegram=telegram,
+        )
+        return True
+
+
 class SecureTunnel(TCPTunnel):
     """Class for handling KNX/IP secure TCP tunnels."""
 
@@ -582,14 +582,12 @@ class SecureTunnel(TCPTunnel):
         telegram_received_callback: TelegramCallbackType | None = None,
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
-        device_authentication_password: str = "hello_device",
         user_id: int = 2,
         user_password: str = "hello_user_2",
+        device_authentication_password: str | None = "hello_device",
     ):
         """Initialize SecureTunnel class."""
-        # TODO: store derived passwords here and pass them to SecureSession init
-        # in setup_tunnel instead of using .initialize()
-        # TODO: store passowrds in connection_config and use them from there - maybe read .knxkeys file
+        # TODO: store passowrds (maybe derived) in connection_config and use them from there
         self._device_authentication_password = device_authentication_password
         self._user_id = user_id
         self._user_password = user_password
@@ -607,8 +605,8 @@ class SecureTunnel(TCPTunnel):
         self.transport = SecureSession(
             self.xknx,
             remote_addr=(self.gateway_ip, self.gateway_port),
-            device_authentication_password=self._device_authentication_password,
             user_id=self._user_id,
             user_password=self._user_password,
+            device_authentication_password=self._device_authentication_password,
             connection_lost_cb=self._tunnel_lost,
         )

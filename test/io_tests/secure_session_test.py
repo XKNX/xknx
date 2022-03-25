@@ -48,14 +48,6 @@ class TestSecureSession:
     def setup_method(self):
         """Set up test class."""
         # pylint: disable=attribute-defined-outside-init
-        self.xknx = XKNX()
-        self.session = SecureSession(
-            self.xknx,
-            remote_addr=self.mock_addr,
-            device_authentication_password=self.mock_device_authentication_password,
-            user_id=self.mock_user_id,
-            user_password=self.mock_user_password,
-        )
         self.patch_serial_number = patch(
             "xknx.io.secure_session.XKNX_SERIAL_NUMBER", self.mock_serial_number
         )
@@ -64,6 +56,15 @@ class TestSecureSession:
             "xknx.io.secure_session.MESSAGE_TAG_TUNNELLING", self.mock_message_tag
         )
         self.patch_message_tag.start()
+
+        self.xknx = XKNX()
+        self.session = SecureSession(
+            self.xknx,
+            remote_addr=self.mock_addr,
+            user_id=self.mock_user_id,
+            user_password=self.mock_user_password,
+            device_authentication_password=self.mock_device_authentication_password,
+        )
 
     def teardown_method(self):
         """Cancel keepalive task."""
@@ -297,7 +298,7 @@ class TestSecureSession:
                 secure_session_id=1,
                 ecdh_server_public_key=self.mock_server_public_key,
                 message_authentication_code=bytes.fromhex(
-                    "ff ff ff ff ff 43 61 63 57 0b d5 49 4c 2d f2 a3"
+                    "ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff"
                 ),
             )
         )
@@ -306,6 +307,63 @@ class TestSecureSession:
                 session_response_frame, HPAI(*self.mock_addr)
             )
             await connect_task
+        # only SessionRequest, no SessionAuthenticate
+        mock_super_send.assert_called_once()
+
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    @patch(
+        "xknx.io.secure_session.generate_ecdh_key_pair",
+        return_value=(mock_private_key, mock_public_key),
+    )
+    async def test_no_authentication(
+        self,
+        mock_super_connect,
+        mock_super_send,
+        _mock_generate,
+        time_travel,
+    ):
+        """Test handling initializing session without verifying server authenticity."""
+        self.session._device_authentication_code = None
+        connect_task = asyncio.create_task(self.session.connect())
+        await time_travel(0)
+        mock_super_send.reset_mock()
+        invalid_session_response_frame = KNXIPFrame.init_from_body(
+            SessionResponse(
+                self.xknx,
+                secure_session_id=1,
+                ecdh_server_public_key=self.mock_server_public_key,
+                message_authentication_code=bytes.fromhex(
+                    "ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff"
+                ),
+            )
+        )
+        self.session.handle_knxipframe(
+            invalid_session_response_frame, HPAI(*self.mock_addr)
+        )
+        await time_travel(0)
+        # outgoing
+        encrypted_authenticate_frame = KNXIPFrame.init_from_body(
+            SecureWrapper(
+                self.xknx,
+                secure_session_id=self.mock_session_id,
+                sequence_information=bytes.fromhex("00 00 00 00 00 00"),
+                serial_number=self.mock_serial_number,
+                message_tag=self.mock_message_tag,
+                encrypted_data=bytes.fromhex(
+                    "79 15 a4 f3 6e 6e 42 08"
+                    "d2 8b 4a 20 7d 8f 35 c0"
+                    "d1 38 c2 6a 7b 5e 71 69"
+                ),
+                message_authentication_code=bytes.fromhex(
+                    "52 db a8 e7 e4 bd 80 bd 7d 86 8a 3a e7 87 49 de"
+                ),
+            )
+        )
+        mock_super_send.assert_called_once_with(
+            encrypted_authenticate_frame, None  # None for addr in TCP transport
+        )
+        await connect_task
 
     @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
     @patch("xknx.io.transport.tcp_transport.TCPTransport.send")

@@ -58,9 +58,9 @@ class SecureSession(TCPTransport):
         self,
         xknx: XKNX,
         remote_addr: tuple[str, int],
-        device_authentication_password: str,
         user_id: int,
         user_password: str,
+        device_authentication_password: str | None = None,
         connection_lost_cb: Callable[[], None] | None = None,
     ) -> None:
         """Initialize SecureSession class."""
@@ -69,8 +69,10 @@ class SecureSession(TCPTransport):
             remote_addr=remote_addr,
             connection_lost_cb=connection_lost_cb,
         )
-        self._device_authentication_code = derive_device_authentication_password(
-            device_authentication_password
+        self._device_authentication_code: bytes | None = (
+            derive_device_authentication_password(device_authentication_password)
+            if device_authentication_password
+            else None
         )
         self.user_id = user_id
         self._user_password = derive_user_password(user_password)
@@ -146,19 +148,20 @@ class SecureSession(TCPTransport):
             self.public_key,
             session_response.ecdh_server_public_key,
         )
-        response_mac_cbc = calculate_message_authentication_code_cbc(
-            key=self._device_authentication_code,
-            additional_data=response_header_data
-            + self.session_id.to_bytes(2, "big")
-            + pub_keys_xor,  # knx_ip_header + secure_session_id + bytes_xor(client_pub_key, server_pub_key)
-        )
-        _, mac_tr = decrypt_ctr(
-            key=self._device_authentication_code,
-            counter_0=COUNTER_0_HANDSHAKE,
-            mac=session_response.message_authentication_code,
-        )
-        if mac_tr != response_mac_cbc:
-            raise CommunicationError("SessionResponse MAC verification failed.")
+        if self._device_authentication_code:
+            response_mac_cbc = calculate_message_authentication_code_cbc(
+                key=self._device_authentication_code,
+                additional_data=response_header_data
+                + self.session_id.to_bytes(2, "big")
+                + pub_keys_xor,  # knx_ip_header + secure_session_id + bytes_xor(client_pub_key, server_pub_key)
+            )
+            _, mac_tr = decrypt_ctr(
+                key=self._device_authentication_code,
+                counter_0=COUNTER_0_HANDSHAKE,
+                mac=session_response.message_authentication_code,
+            )
+            if mac_tr != response_mac_cbc:
+                raise CommunicationError("SessionResponse MAC verification failed.")
         # calculate session key
         ecdh_shared_secret = self._private_key.exchange(self._peer_public_key)
         self._session_key = sha256_hash(ecdh_shared_secret)[:16]
@@ -270,7 +273,6 @@ class SecureSession(TCPTransport):
 
         knxipframe = KNXIPFrame(self.xknx)
         knxipframe.from_knx(dec_frame)
-        # TODO: handle KNX/IP frame parsing errors or just put raw back into transport ?
         return knxipframe
 
     async def _session_keepalive(self) -> None:
