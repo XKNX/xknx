@@ -19,6 +19,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 from xknx.telegram import GroupAddress, IndividualAddress
 
+from ..exceptions.exception import InvalidSignature
 from .util import sha256_hash
 
 
@@ -72,10 +73,11 @@ class XMLInterface(AttributeReader):
     """Interface in a knxkeys file."""
 
     type: InterfaceType
-    host: str
+    host: IndividualAddress
     user_id: int
     password: str
     decrypted_password: str
+    decrypted_authentication: str
     individual_address: IndividualAddress
     authentication: str
     group_addresses: list[XMLAssignedGroupAddress] = []
@@ -84,8 +86,8 @@ class XMLInterface(AttributeReader):
         """Parse all needed attributes from the given node map."""
         attributes = node.attributes
         self.type = InterfaceType(self.get_attribute_value(attributes.get("Type")))
-        self.host = self.get_attribute_value(attributes.get("Host"))
-        self.user_id = self.get_attribute_value(attributes.get("UserID"))
+        self.host = IndividualAddress(self.get_attribute_value(attributes.get("Host")))
+        self.user_id = int(self.get_attribute_value(attributes.get("UserID")))
         self.password = self.get_attribute_value(attributes.get("Password"))
         self.individual_address = IndividualAddress(
             self.get_attribute_value(attributes.get("IndividualAddress"))
@@ -106,6 +108,15 @@ class XMLInterface(AttributeReader):
             self.decrypted_password = extract_password(
                 decrypt_aes128cbc(
                     base64.b64decode(self.password),
+                    password_hash,
+                    initialization_vector,
+                )
+            )
+
+        if self.authentication is not None:
+            self.decrypted_authentication = extract_password(
+                decrypt_aes128cbc(
+                    base64.b64decode(self.authentication),
                     password_hash,
                     initialization_vector,
                 )
@@ -159,6 +170,7 @@ class XMLDevice(AttributeReader):
     decrypted_tool_key: bytes
     management_password: str
     decrypted_management_password: str
+    decrypted_authentication: str
     authentication: str
     sequence_number: int
 
@@ -185,18 +197,49 @@ class XMLDevice(AttributeReader):
             base64.b64decode(self.tool_key), password_hash, initialization_vector
         )
 
+        if self.authentication is not None:
+            self.decrypted_authentication = extract_password(
+                decrypt_aes128cbc(
+                    base64.b64decode(self.authentication),
+                    password_hash,
+                    initialization_vector,
+                )
+            )
+
 
 class Keyring(AttributeReader):
     """Class for loading and decrypting knxkeys XML files."""
 
     backbone: XMLBackbone
-    interfaces: list[XMLInterface] = []
-    group_addresses: list[XMLGroupAddress] = []
-    devices: list[XMLDevice] = []
+    interfaces: list[XMLInterface]
+    group_addresses: list[XMLGroupAddress]
+    devices: list[XMLDevice]
     created_by: str
     created: str
     signature: bytes
     xmlns: str
+
+    def __init__(self) -> None:
+        """Initialize the Keyring."""
+        self.interfaces = []
+        self.devices = []
+        self.group_addresses = []
+
+    def get_device_by_interface(self, interface: XMLInterface) -> XMLDevice | None:
+        """Get the device for a given interface."""
+        for device in self.devices:
+            if device.individual_address == interface.host:
+                return device
+
+        return None
+
+    def get_interface_by_user_id(self, user_id: int) -> XMLInterface | None:
+        """Get the interface with the given user id."""
+        for interface in self.interfaces:
+            if interface.user_id == user_id:
+                return interface
+
+        return None
 
     def parse_xml(self, node: Document) -> None:
         """Parse all needed attributes from the given node map."""
@@ -244,8 +287,12 @@ class Keyring(AttributeReader):
             self.backbone.decrypt_attributes(hashed_password, initialization_vector)
 
 
-def load_key_ring(path: str, password: str) -> Keyring:
+def load_key_ring(path: str, password: str, validate_signature: bool = True) -> Keyring:
     """Load a .knxkeys file from the given path."""
+
+    if validate_signature:
+        if not verify_keyring_signature(path, password):
+            raise InvalidSignature()
 
     keyring: Keyring = Keyring()
     with open(path, encoding="utf-8") as file:

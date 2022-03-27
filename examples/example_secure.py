@@ -5,8 +5,7 @@ import logging
 
 from xknx import XKNX
 from xknx.dpt import DPTBinary
-from xknx.io import ConnectionConfig, ConnectionType
-from xknx.io.tunnel import SecureTunnel
+from xknx.io import ConnectionConfig, ConnectionType, SecureConfig
 from xknx.telegram import GroupAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueWrite
 
@@ -19,17 +18,18 @@ async def main() -> None:
     """Test connection with secure."""
 
     connection_config = ConnectionConfig(
-        connection_type=ConnectionType.TUNNELING,
-        gateway_ip="10.1.0.40",
+        connection_type=ConnectionType.TUNNELING_TCP_SECURE,
+        gateway_ip="192.168.1.188",
+        secure_config=SecureConfig(
+            user_id=4,
+            knxkeys_file_path="/home/marvin/testcase.knxkeys",
+            knxkeys_password="password",
+        ),
     )
     xknx = XKNX(connection_config=connection_config)
+    await xknx.start()
 
-    tunnel = SecureTunnel(
-        xknx, gateway_ip="192.168.1.100", gateway_port=3671, auto_reconnect=False
-    )
-    await tunnel.connect()
-
-    await tunnel.send_telegram(
+    await xknx.knxip_interface.send_telegram(
         Telegram(
             GroupAddress("1/0/32"),
             TelegramDirection.OUTGOING,
@@ -38,7 +38,7 @@ async def main() -> None:
     )
     await asyncio.sleep(5)
     print("Tunnel connected")
-    await tunnel.disconnect()
+    await xknx.stop()
 
 
 asyncio.run(main())

@@ -579,15 +579,14 @@ class SecureTunnel(TCPTunnel):
         xknx: XKNX,
         gateway_ip: str,
         gateway_port: int,
+        user_id: int,
+        user_password: str,
         telegram_received_callback: TelegramCallbackType | None = None,
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
-        user_id: int = 2,
-        user_password: str = "hello_user_2",
-        device_authentication_password: str | None = "hello_device",
+        device_authentication_password: str | None = None,
     ):
         """Initialize SecureTunnel class."""
-        # TODO: store passowrds (maybe derived) in connection_config and use them from there
         self._device_authentication_password = device_authentication_password
         self._user_id = user_id
         self._user_password = user_password

@@ -31,7 +31,7 @@ class TestKNXIPInterface:
         # without gateway_ip automatic is called
         gateway_ip = "127.0.0.2"
         connection_config = ConnectionConfig(
-            ConnectionType.TUNNELING, gateway_ip=gateway_ip
+            connection_type=ConnectionType.TUNNELING, gateway_ip=gateway_ip
         )
         with patch(
             "xknx.io.KNXIPInterface._start_tunnelling_udp"
@@ -69,7 +69,7 @@ class TestKNXIPInterface:
         # without gateway_ip automatic is called
         gateway_ip = "127.0.0.2"
         connection_config = ConnectionConfig(
-            ConnectionType.TUNNELING_TCP, gateway_ip=gateway_ip
+            connection_type=ConnectionType.TUNNELING_TCP, gateway_ip=gateway_ip
         )
         with patch(
             "xknx.io.KNXIPInterface._start_tunnelling_tcp"
@@ -100,7 +100,9 @@ class TestKNXIPInterface:
         """Test starting routing connection."""
         local_ip = "127.0.0.1"
         # set local_ip to avoid gateway scanner
-        connection_config = ConnectionConfig(ConnectionType.ROUTING, local_ip=local_ip)
+        connection_config = ConnectionConfig(
+            connection_type=ConnectionType.ROUTING, local_ip=local_ip
+        )
         with patch("xknx.io.KNXIPInterface._start_routing") as start_routing:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
@@ -149,7 +151,7 @@ class TestKNXIPInterface:
         local_ip = "127.0.0.1"
         # set local_ip to avoid gateway scanner; use routing as it is the simplest mode
         connection_config = ConnectionConfig(
-            ConnectionType.ROUTING, local_ip=local_ip, threaded=True
+            connection_type=ConnectionType.ROUTING, local_ip=local_ip, threaded=True
         )
         telegram_mock = Mock()
         with patch(
