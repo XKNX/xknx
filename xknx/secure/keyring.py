@@ -87,7 +87,7 @@ class XMLInterface(AttributeReader):
         attributes = node.attributes
         self.type = InterfaceType(self.get_attribute_value(attributes.get("Type")))
         self.host = IndividualAddress(self.get_attribute_value(attributes.get("Host")))
-        self.user_id = int(self.get_attribute_value(attributes.get("UserID")))
+        self.user_id = int(self.get_attribute_value(attributes.get("UserID")) or 2)
         self.password = self.get_attribute_value(attributes.get("Password"))
         self.individual_address = IndividualAddress(
             self.get_attribute_value(attributes.get("IndividualAddress"))
