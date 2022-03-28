@@ -214,6 +214,7 @@ class KNXIPInterface:
             user_id=user_id,
             user_password=user_password,
             device_authentication_password=device_authentication_password,
+            telegram_received_callback=self.telegram_received,
         )
         await self._interface.connect()
 

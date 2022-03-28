@@ -1,6 +1,9 @@
 """Unit test for keyring reader."""
 import os
 
+import pytest
+
+from xknx.exceptions.exception import InvalidSignature
 from xknx.secure import Keyring, load_key_ring
 from xknx.secure.keyring import XMLDevice, XMLInterface, verify_keyring_signature
 
@@ -41,6 +44,11 @@ class TestKeyRing:
         """Test signature verification."""
         assert verify_keyring_signature(self.keyring_test_file, "pwd")
         assert verify_keyring_signature(self.testcase_file, "password")
+
+    def test_invalid_signature(self):
+        """Test invalid signature throws error."""
+        with pytest.raises(InvalidSignature):
+            load_key_ring(self.testcase_file, "wrong_password")
 
     @staticmethod
     def assert_interface(keyring: Keyring, password: str, user: str) -> None:
