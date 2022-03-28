@@ -2,6 +2,14 @@
 
 ## Unreleased changes
 
+## 0.20.0 IP Secure 2022-03-29
+
+### Features
+
+- We now support IP Secure!
+  Thanks to MDT for providing us an interface for testing purposes!
+- Add support for requesting tunnel interface information
+
 ### Protocol
 
 - add SessionRequest, SessionResponse, SessionAuthenticate, SessionStatus, SecureWrapper Frame parser
