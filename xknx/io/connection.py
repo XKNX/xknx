@@ -14,6 +14,7 @@ class ConnectionType(Enum):
     ROUTING = auto()
     TUNNELING = auto()
     TUNNELING_TCP = auto()
+    TUNNELING_TCP_SECURE = auto()
 
 
 class ConnectionConfig:
@@ -35,10 +36,13 @@ class ConnectionConfig:
     * auto_reconnect: Auto reconnect to KNX/IP tunneling device if connection cannot be established.
     * auto_reconnect_wait: Wait n seconds before trying to reconnect to KNX/IP tunneling device.
     * scan_filter: For AUTOMATIC connection, limit scan with the given filter
+    * threaded: Run connection logic in separate thread to avoid concurrency issues in HA
+    * secure_config: KNX Secure config to use
     """
 
     def __init__(
         self,
+        *,
         connection_type: ConnectionType = ConnectionType.AUTOMATIC,
         local_ip: str | None = None,
         local_port: int = 0,
@@ -49,6 +53,7 @@ class ConnectionConfig:
         auto_reconnect_wait: int = 3,
         scan_filter: GatewayScanFilter = GatewayScanFilter(),
         threaded: bool = False,
+        secure_config: SecureConfig | None = None,
     ):
         """Initialize ConnectionConfig class."""
         self.connection_type = connection_type
@@ -61,7 +66,41 @@ class ConnectionConfig:
         self.auto_reconnect_wait = auto_reconnect_wait
         self.scan_filter = scan_filter
         self.threaded = threaded
+        self.secure_config = secure_config
 
     def __eq__(self, other: object) -> bool:
         """Equality for ConnectionConfig class (used in unit tests)."""
+        return self.__dict__ == other.__dict__
+
+
+class SecureConfig:
+    """
+    Secure configuration.
+
+    Handles:
+    * user_id: The user id to use when initializing the secure tunnel.
+    * device_authentication_password: the authentication password to use when connecting to the tunnel.
+    * user_password: the user password for knx secure.
+    * knxkeys_file_path: Full path to the knxkeys file including the file name.
+    * knxkeys_password: Password to decrypt the knxkeys file.
+    """
+
+    def __init__(
+        self,
+        *,
+        user_id: int | None = None,
+        device_authentication_password: str | None = None,
+        user_password: str | None = None,
+        knxkeys_file_path: str | None = None,
+        knxkeys_password: str | None = None,
+    ):
+        """Initialize SecureConfig class."""
+        self.user_id = user_id
+        self.device_authentication_password = device_authentication_password
+        self.user_password = user_password
+        self.knxkeys_file_path = knxkeys_file_path
+        self.knxkeys_password = knxkeys_password
+
+    def __eq__(self, other: object) -> bool:
+        """Equality for SecureConfig class (used in unit tests)."""
         return self.__dict__ == other.__dict__

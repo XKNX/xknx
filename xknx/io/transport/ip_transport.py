@@ -102,3 +102,4 @@ class KNXIPTransport(ABC):
         """Stop socket."""
         if self.transport is not None:
             self.transport.close()
+            self.transport = None

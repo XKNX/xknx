@@ -8,6 +8,7 @@ from .exception import (
     CouldNotParseTelegram,
     DeviceIllegalValue,
     IncompleteKNXIPFrame,
+    KNXSecureValidationError,
     UnsupportedCEMIMessage,
     XKNXException,
 )
@@ -20,6 +21,7 @@ __all__ = [
     "CouldNotParseTelegram",
     "DeviceIllegalValue",
     "IncompleteKNXIPFrame",
+    "KNXSecureValidationError",
     "UnsupportedCEMIMessage",
     "XKNXException",
 ]
