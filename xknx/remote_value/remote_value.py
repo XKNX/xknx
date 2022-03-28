@@ -29,9 +29,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger("xknx.log")
 
 AsyncCallbackType = Callable[[], Awaitable[None]]
-DPTPayloadT = TypeVar(  # pylint: disable=invalid-name
-    "DPTPayloadT", DPTArray, DPTBinary, Union[DPTArray, DPTBinary]
-)
+DPTPayloadT = TypeVar("DPTPayloadT", DPTArray, DPTBinary, Union[DPTArray, DPTBinary])
 GroupAddressesType = Union["DeviceAddressableType", list["DeviceAddressableType"]]
 ValueT = TypeVar("ValueT")
 

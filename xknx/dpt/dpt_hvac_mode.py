@@ -8,9 +8,7 @@ from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
 
-HVACModeT = TypeVar(  # pylint: disable=invalid-name
-    "HVACModeT", "HVACControllerMode", "HVACOperationMode"
-)
+HVACModeT = TypeVar("HVACModeT", "HVACControllerMode", "HVACOperationMode")
 
 
 class HVACOperationMode(Enum):
