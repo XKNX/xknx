@@ -177,6 +177,7 @@ class TestSecureSession:
             mock_send.assert_called_once_with(session_status_close_frame)
             mock_super_send.assert_called_once()
             mock_transport.close.assert_called_once()
+            assert self.session._keepalive_task is None
 
     def test_uninitialized(self):
         """Test for raising when an encrypted Frame arrives at an uninitialized Session."""

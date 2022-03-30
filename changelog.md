@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Bug fixes
+
+- Stop SecureSession keepalive_task when session is stopped (and don't restart it from sending STATUS_CLOSE)
+
 ## 0.20.0 IP Secure 2022-03-29
 
 ### Features
