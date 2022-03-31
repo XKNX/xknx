@@ -206,6 +206,15 @@ class XMLDevice(AttributeReader):
                 )
             )
 
+        if self.management_password is not None:
+            self.decrypted_management_password = extract_password(
+                decrypt_aes128cbc(
+                    base64.b64decode(self.management_password),
+                    password_hash,
+                    initialization_vector,
+                )
+            )
+
 
 class Keyring(AttributeReader):
     """Class for loading and decrypting knxkeys XML files."""

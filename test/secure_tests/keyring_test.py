@@ -34,6 +34,7 @@ class TestKeyRing:
         TestKeyRing.assert_interface(keyring, "user2", "4")
         TestKeyRing.assert_interface(keyring, "user3", "5")
         TestKeyRing.assert_interface(keyring, "user4", "6")
+        assert keyring.devices[0].decrypted_management_password == "commissioning"
 
         interface: XMLInterface = keyring.interfaces[0]
         device: XMLDevice = keyring.get_device_by_interface(interface)
