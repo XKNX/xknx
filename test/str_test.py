@@ -49,6 +49,7 @@ from xknx.knxip import (
     RoutingIndication,
     SearchRequest,
     SearchResponse,
+    SearchResponseExtended,
     TunnellingAck,
     TunnellingRequest,
 )
@@ -607,6 +608,21 @@ class TestStringRepresentations:
         assert (
             str(search_response)
             == '<SearchResponse control_endpoint="192.168.42.1:33941/udp" dibs="[\n'
+            '<DIB dtc="0" data="" />,\n'
+            '<DIB dtc="0" data="" />\n'
+            ']" />'
+        )
+
+    def test_search_response_extended(self):
+        """Test string representation of KNX/IP SearchResponseExtended."""
+        xknx = XKNX()
+        search_response = SearchResponseExtended(xknx)
+        search_response.control_endpoint = HPAI(ip_addr="192.168.42.1", port=33941)
+        search_response.dibs.append(DIBGeneric())
+        search_response.dibs.append(DIBGeneric())
+        assert (
+            str(search_response)
+            == '<SearchResponseExtended control_endpoint="192.168.42.1:33941/udp" dibs="[\n'
             '<DIB dtc="0" data="" />,\n'
             '<DIB dtc="0" data="" />\n'
             ']" />'

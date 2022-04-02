@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Features
+
+- Add support for SearchRequestExtended to find interfaces that allow IP Secure
+
 ### Bug fixes
 
 - Stop SecureSession keepalive_task when session is stopped (and don't restart it from sending STATUS_CLOSE)

@@ -12,6 +12,7 @@ from xknx.knxip import (
     DIBServiceFamily,
     DIBSuppSVCFamilies,
     KNXIPFrame,
+    KNXIPServiceType,
     SearchResponse,
 )
 from xknx.telegram import IndividualAddress
@@ -212,8 +213,51 @@ class TestGatewayScanner:
 
         assert _search_interface_mock.call_count == 2
         expected_calls = [
-            ((gateway_scanner, "lo0", "127.0.0.1"),),
-            ((gateway_scanner, "en1", "10.1.1.2"),),
+            ((gateway_scanner, "lo0", "127.0.0.1", KNXIPServiceType.SEARCH_REQUEST),),
+            ((gateway_scanner, "en1", "10.1.1.2", KNXIPServiceType.SEARCH_REQUEST),),
+        ]
+        assert _search_interface_mock.call_args_list == expected_calls
+        assert test_scan == []
+
+    @patch("xknx.io.gateway_scanner.netifaces", autospec=True)
+    @patch("xknx.io.GatewayScanner._search_interface", autospec=True)
+    async def test_send_search_request_extended(
+        self, _search_interface_mock, netifaces_mock
+    ):
+        """Test finding all valid interfaces to send search request extended to. No requests are sent."""
+        xknx = XKNX()
+
+        netifaces_mock.interfaces.return_value = self.fake_interfaces
+        netifaces_mock.ifaddresses = lambda interface: self.fake_ifaddresses[interface]
+        netifaces_mock.AF_INET = 2
+
+        async def async_none():
+            return None
+
+        _search_interface_mock.return_value = asyncio.ensure_future(async_none())
+
+        gateway_scanner = GatewayScanner(xknx, timeout_in_seconds=0)
+
+        test_scan = await gateway_scanner.scan(KNXIPServiceType.SEARCH_REQUEST_EXTENDED)
+
+        assert _search_interface_mock.call_count == 2
+        expected_calls = [
+            (
+                (
+                    gateway_scanner,
+                    "lo0",
+                    "127.0.0.1",
+                    KNXIPServiceType.SEARCH_REQUEST_EXTENDED,
+                ),
+            ),
+            (
+                (
+                    gateway_scanner,
+                    "en1",
+                    "10.1.1.2",
+                    KNXIPServiceType.SEARCH_REQUEST_EXTENDED,
+                ),
+            ),
         ]
         assert _search_interface_mock.call_args_list == expected_calls
         assert test_scan == []

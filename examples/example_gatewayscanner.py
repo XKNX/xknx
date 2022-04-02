@@ -3,13 +3,16 @@ import asyncio
 
 from xknx import XKNX
 from xknx.io import GatewayScanner
+from xknx.knxip import KNXIPServiceType
 
 
 async def main():
     """Search for available KNX/IP devices with GatewayScanner and print out result if a device was found."""
     xknx = XKNX()
     gatewayscanner = GatewayScanner(xknx)
-    gateways = await gatewayscanner.scan()
+    gateways = await gatewayscanner.scan(
+        search_request_type=KNXIPServiceType.SEARCH_REQUEST_EXTENDED
+    )
 
     if not gateways:
         print("No Gateways found")
