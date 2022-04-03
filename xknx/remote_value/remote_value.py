@@ -42,7 +42,7 @@ class RemoteValue(ABC, Generic[DPTPayloadT, ValueT]):
         xknx: XKNX,
         group_address: GroupAddressesType | None = None,
         group_address_state: GroupAddressesType | None = None,
-        sync_state: bool | int | float | str = True,
+        sync_state: None | bool | int | float | str = None,
         device_name: str | None = None,
         feature_name: str | None = None,
         after_update_cb: AsyncCallbackType | None = None,
@@ -72,6 +72,8 @@ class RemoteValue(ABC, Generic[DPTPayloadT, ValueT]):
         self.telegram: Telegram | None = None
         self.after_update_cb: AsyncCallbackType | None = after_update_cb
 
+        if sync_state is None:
+            sync_state = xknx.state_updater.default_use_updater
         if sync_state and self.group_address_state:
             self.xknx.state_updater.register_remote_value(
                 self, tracker_options=sync_state

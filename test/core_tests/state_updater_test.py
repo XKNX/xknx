@@ -115,7 +115,7 @@ class TestStateUpdater:
         logging_warning_mock.assert_called_once_with(
             'Could not parse StateUpdater tracker_options "%s" for %s. Using default %s %s minutes.',
             "invalid",
-            remote_value_invalid,
+            str(remote_value_invalid),
             StateTrackerType.EXPIRE,
             60,
         )
@@ -130,7 +130,7 @@ class TestStateUpdater:
         logging_warning_mock.assert_called_once_with(
             "StateUpdater interval of %s to long for %s. Using maximum of %s minutes (1 day)",
             1441,
-            remote_value_long,
+            str(remote_value_long),
             1440,
         )
         remote_value_long.__del__()

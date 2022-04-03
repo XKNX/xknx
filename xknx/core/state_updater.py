@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, Awaitable, Callable
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, NamedTuple, Union
 
 from xknx.core import XknxConnectionState
 from xknx.remote_value import RemoteValue
@@ -19,67 +19,116 @@ DEFAULT_UPDATE_INTERVAL = 60
 MAX_UPDATE_INTERVAL = 1440
 
 
+class TrackerOptions(NamedTuple):
+    """Options for the state tracker."""
+
+    tracker_type: StateTrackerType
+    update_interval_min: int | float
+
+
+TrackerOptionType = Union[bool, int, float, str, TrackerOptions]
+
+
 class StateUpdater:
     """Class for keeping the states of RemoteValues up to date."""
 
-    def __init__(self, xknx: XKNX, parallel_reads: int = 2):
+    def __init__(
+        self,
+        xknx: XKNX,
+        default_tracker_option: TrackerOptionType,
+        parallel_reads: int = 2,
+    ):
         """Initialize StateUpdater class."""
         self.xknx = xknx
         self.started = False
         self._workers: dict[int, _StateTracker] = {}
         self._semaphore = asyncio.Semaphore(value=parallel_reads)
 
-    def register_remote_value(
+        # used to determine if a RemoteValue shall register a tracker by default
+        self.default_use_updater = bool(default_tracker_option)
+        # set default before using it in `parse_tracker_options()`
+        self._default_tracker_option = TrackerOptions(
+            tracker_type=StateTrackerType.EXPIRE,
+            update_interval_min=DEFAULT_UPDATE_INTERVAL,
+        )
+        #  Default options will be used if instantiated with `True` or `False`.
+        self._default_tracker_option = self.parse_tracker_options(
+            default_tracker_option, "default configuration"
+        )
+
+    def parse_tracker_options(
         self,
-        remote_value: RemoteValue[Any, Any],
-        tracker_options: bool | int | float | str = True,
-    ) -> None:
-        """Register a RemoteValue to initialize its state and/or track for expiration."""
+        tracker_options: TrackerOptionType,
+        tracker_name: str,
+    ) -> TrackerOptions:
+        """Parse tracker type and expiration time."""
 
-        def parse_tracker_options(
-            tracker_options: bool | int | float | str,
-        ) -> tuple[StateTrackerType, int | float]:
-            """Parse tracker type and expiration time."""
-            tracker_type = StateTrackerType.EXPIRE
-            update_interval: int | float = DEFAULT_UPDATE_INTERVAL
-
-            if isinstance(tracker_options, bool):
-                # `True` would be overwritten by the check for `int`
-                return (tracker_type, update_interval)
-            if isinstance(tracker_options, (int, float)):
-                update_interval = tracker_options
-            elif isinstance(tracker_options, str):
-                _options = tracker_options.split()
-                if _options[0].upper() == "INIT":
-                    tracker_type = StateTrackerType.INIT
-                elif _options[0].upper() == "EXPIRE":
-                    tracker_type = StateTrackerType.EXPIRE
-                elif _options[0].upper() == "EVERY":
-                    tracker_type = StateTrackerType.PERIODICALLY
-                else:
-                    logger.warning(
-                        'Could not parse StateUpdater tracker_options "%s" for %s. Using default %s %s minutes.',
-                        tracker_options,
-                        remote_value,
-                        tracker_type,
-                        update_interval,
-                    )
-                    return (tracker_type, update_interval)
-                try:
-                    if _options[1].isdigit():
-                        update_interval = int(_options[1])
-                except IndexError:
-                    pass  # No time given (no _options[1])
-
+        def check_update_interval(update_interval: int | float) -> int | float:
+            """Return valid update interval."""
             if update_interval > MAX_UPDATE_INTERVAL:
                 logger.warning(
                     "StateUpdater interval of %s to long for %s. Using maximum of %s minutes (1 day)",
                     tracker_options,
-                    remote_value,
+                    tracker_name,
                     MAX_UPDATE_INTERVAL,
                 )
-                update_interval = MAX_UPDATE_INTERVAL
-            return (tracker_type, update_interval)
+                return MAX_UPDATE_INTERVAL
+            if update_interval < 1:
+                logger.warning(
+                    "StateUpdater interval of %s to short for %s. Using minimum of 1 minute",
+                    tracker_options,
+                    tracker_name,
+                )
+                return 1
+            return update_interval
+
+        if isinstance(tracker_options, TrackerOptions):
+            return TrackerOptions(
+                tracker_type=tracker_options.tracker_type,
+                update_interval_min=check_update_interval(
+                    tracker_options.update_interval_min
+                ),
+            )
+        if isinstance(tracker_options, bool):
+            # `True` would be overwritten by the check for `int`
+            return self._default_tracker_option
+
+        tracker_type = self._default_tracker_option.tracker_type
+        update_interval: int | float = self._default_tracker_option.update_interval_min
+
+        if isinstance(tracker_options, (int, float)):
+            update_interval = check_update_interval(tracker_options)
+        elif isinstance(tracker_options, str):
+            _options = tracker_options.split()
+            if _options[0].upper() == "INIT":
+                tracker_type = StateTrackerType.INIT
+            elif _options[0].upper() == "EXPIRE":
+                tracker_type = StateTrackerType.EXPIRE
+            elif _options[0].upper() == "EVERY":
+                tracker_type = StateTrackerType.PERIODICALLY
+            else:
+                logger.warning(
+                    'Could not parse StateUpdater tracker_options "%s" for %s. Using default %s %s minutes.',
+                    tracker_options,
+                    tracker_name,
+                    tracker_type,
+                    update_interval,
+                )
+                return TrackerOptions(tracker_type, update_interval)
+            try:
+                if _options[1].isdigit():
+                    update_interval = check_update_interval(int(_options[1]))
+            except IndexError:
+                pass  # No time given (no _options[1])
+
+        return TrackerOptions(tracker_type, update_interval)
+
+    def register_remote_value(
+        self,
+        remote_value: RemoteValue[Any, Any],
+        tracker_options: TrackerOptionType = True,
+    ) -> None:
+        """Register a RemoteValue to initialize its state and/or track for expiration."""
 
         async def read_state_mutex() -> None:
             """Schedule to read the state from the KNX bus - one at a time."""
@@ -96,18 +145,17 @@ class StateUpdater:
                 # ValueReader leaving the telegram_received_cb until next telegram
                 await asyncio.shield(remote_value.read_state(wait_for_result=True))
 
-        tracker_type, update_interval = parse_tracker_options(tracker_options)
+        tracker_options = self.parse_tracker_options(tracker_options, str(remote_value))
         tracker = _StateTracker(
             read_state_awaitable=read_state_mutex,
-            tracker_type=tracker_type,
-            interval_min=update_interval,
+            tracker_options=tracker_options,
         )
         self._workers[id(remote_value)] = tracker
 
         logger.debug(
             "StateUpdater registered %s %s for %s",
-            tracker_type,
-            update_interval,
+            tracker_options.tracker_type,
+            tracker_options.update_interval_min,
             remote_value,
         )
         if self.started:
@@ -157,13 +205,12 @@ class StateUpdater:
         self, state: XknxConnectionState
     ) -> None:
         """Start and stop StateUpdater via connection state update."""
-        if state == XknxConnectionState.CONNECTED and not self.started:
-            self._start()
-        elif (
-            state in (XknxConnectionState.DISCONNECTED, XknxConnectionState.CONNECTING)
-            and self.started
-        ):
-            self._stop()
+        if state == XknxConnectionState.CONNECTED:
+            if not self.started:
+                self._start()
+        else:
+            if self.started:
+                self._stop()
 
 
 class StateTrackerType(Enum):
@@ -180,12 +227,11 @@ class _StateTracker:
     def __init__(
         self,
         read_state_awaitable: Callable[[], Awaitable[None]],
-        tracker_type: StateTrackerType = StateTrackerType.EXPIRE,
-        interval_min: float = 60,
+        tracker_options: TrackerOptions,
     ):
         """Initialize StateTracker class."""
-        self.tracker_type = tracker_type
-        self.update_interval = interval_min * 60
+        self.tracker_type = tracker_options.tracker_type
+        self.update_interval = tracker_options.update_interval_min * 60
         self._read_state = read_state_awaitable
         self._task: asyncio.Task[None] | None = None
 
