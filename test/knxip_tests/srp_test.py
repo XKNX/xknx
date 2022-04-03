@@ -1,19 +1,9 @@
 """Unit test for KNX/IP SRP objects."""
 import pytest
 
-from xknx.exceptions import ConversionError, CouldNotParseKNXIP
-from xknx.knxip import (
-    DIB,
-    DIBDeviceInformation,
-    DIBGeneric,
-    DIBServiceFamily,
-    DIBSuppSVCFamilies,
-    DIBTypeCode,
-    KNXMedium,
-    SearchRequestParameterType,
-)
+from xknx.exceptions import ConversionError
+from xknx.knxip import DIBServiceFamily, DIBTypeCode, SearchRequestParameterType
 from xknx.knxip.srp import Srp
-from xknx.telegram import IndividualAddress
 
 
 class TestKNXIPSRP:
