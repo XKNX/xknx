@@ -12,11 +12,11 @@ from typing import Awaitable, Callable
 
 from xknx.core import (
     ConnectionManager,
-    StateUpdater,
     TaskRegistry,
     TelegramQueue,
     XknxConnectionState,
 )
+from xknx.core.state_updater import StateUpdater, TrackerOptionType
 from xknx.devices import Device, Devices
 from xknx.io import (
     DEFAULT_MCAST_GRP,
@@ -50,7 +50,7 @@ class XKNX:
         multicast_group: str = DEFAULT_MCAST_GRP,
         multicast_port: int = DEFAULT_MCAST_PORT,
         log_directory: str | None = None,
-        state_updater: bool = False,
+        state_updater: TrackerOptionType = False,
         daemon_mode: bool = False,
         connection_config: ConnectionConfig = ConnectionConfig(),
     ) -> None:
@@ -59,10 +59,9 @@ class XKNX:
         self.telegrams: asyncio.Queue[Telegram | None] = asyncio.Queue()
         self.sigint_received = asyncio.Event()
         self.telegram_queue = TelegramQueue(self)
-        self.state_updater = StateUpdater(self)
+        self.state_updater = StateUpdater(self, default_tracker_option=state_updater)
         self.connection_manager = ConnectionManager()
         self.task_registry = TaskRegistry(self)
-        self.start_state_updater = state_updater
         self.knxip_interface: KNXIPInterface | None = None
         self.started = asyncio.Event()
         self.address_format = address_format
@@ -126,8 +125,7 @@ class XKNX:
         )
         await self.knxip_interface.start()
         await self.telegram_queue.start()
-        if self.start_state_updater:
-            self.state_updater.start()
+        self.state_updater.start()
         self.started.set()
         if self.daemon_mode:
             await self.loop_until_sigint()

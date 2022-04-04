@@ -5,6 +5,7 @@
 ### Features
 
 - Add support for SearchRequestExtended to find interfaces that allow IP Secure
+- Use XKNX `state_updater` argument to set default method for StateUpdater. StateUpdater is always started - Device / RemoteValue can always opt in to use it, even if default is `False`.
 
 ### Bug fixes
 
