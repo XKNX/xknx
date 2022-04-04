@@ -9,11 +9,11 @@ is satisfied.
 """
 from __future__ import annotations
 
-from ..exceptions import ConversionError
+from ..exceptions import ConversionError, CouldNotParseKNXIP
 from .knxip_enum import DIBServiceFamily, DIBTypeCode, SearchRequestParameterType
 
 
-class Srp:
+class SRP:
     """Search request parameter for a search request extended."""
 
     SRP_HEADER_SIZE = 2
@@ -34,14 +34,14 @@ class Srp:
         self.type = srp_type
         self.mandatory = mandatory
         self.data = data
-        self.payload_size = Srp.SRP_HEADER_SIZE
+        self.payload_size = SRP.SRP_HEADER_SIZE
 
         if self.type == SearchRequestParameterType.SELECT_BY_SERVICE:
-            self.validate_payload_length(Srp.SERVICE_PAYLOAD_LENGTH)
-            self.payload_size = Srp.SRP_HEADER_SIZE + Srp.SERVICE_PAYLOAD_LENGTH
+            self.validate_payload_length(SRP.SERVICE_PAYLOAD_LENGTH)
+            self.payload_size = SRP.SRP_HEADER_SIZE + SRP.SERVICE_PAYLOAD_LENGTH
         elif self.type == SearchRequestParameterType.SELECT_BY_MAC_ADDRESS:
-            self.validate_payload_length(Srp.MAC_ADDRESS_PAYLOAD_LENGTH)
-            self.payload_size = Srp.SRP_HEADER_SIZE + Srp.MAC_ADDRESS_PAYLOAD_LENGTH
+            self.validate_payload_length(SRP.MAC_ADDRESS_PAYLOAD_LENGTH)
+            self.payload_size = SRP.SRP_HEADER_SIZE + SRP.MAC_ADDRESS_PAYLOAD_LENGTH
         elif self.type == SearchRequestParameterType.REQUEST_DIBS:
             if not self.data or len(self.data) < 1:
                 raise ConversionError("Srp DIBs are not present.")
@@ -49,7 +49,7 @@ class Srp:
             # it shall add an additional Description Type 0 to make the structure length even
             if len(self.data) % 2:
                 self.data = self.data + bytes([0])
-            self.payload_size = Srp.SRP_HEADER_SIZE + len(self.data)
+            self.payload_size = SRP.SRP_HEADER_SIZE + len(self.data)
 
     def validate_payload_length(self, size: int) -> None:
         """Validate the length of the payload."""
@@ -71,8 +71,8 @@ class Srp:
                 [
                     self.payload_size,
                     (
-                        self.mandatory << Srp.MANDATORY_BIT_INDEX
-                        | self.type.value & Srp.MANDATORY_BIT_INDEX
+                        self.mandatory << SRP.MANDATORY_BIT_INDEX
+                        | self.type.value & SRP.MANDATORY_BIT_INDEX
                     ),
                 ]
             )
@@ -80,37 +80,37 @@ class Srp:
         )
 
     @staticmethod
-    def from_knx(data: bytes) -> Srp:
+    def from_knx(data: bytes) -> SRP:
         """Convert the bytes to a SRP object."""
-        if len(data) < Srp.SRP_HEADER_SIZE:
-            raise ConversionError("Data too short for SRP object.")
+        if len(data) < SRP.SRP_HEADER_SIZE:
+            raise CouldNotParseKNXIP("Data too short for SRP object.")
 
-        size: int = data[0] & 0xFF
+        size: int = data[0]
         if size > len(data):
-            raise ConversionError("SRP is larger than actual data size.")
+            raise CouldNotParseKNXIP("SRP is larger than actual data size.")
 
-        return Srp(
+        return SRP(
             SearchRequestParameterType(data[1] & 0x7F),
-            bool(data[1] >> Srp.MANDATORY_BIT_INDEX),
+            bool(data[1] >> SRP.MANDATORY_BIT_INDEX),
             data[2:size],
         )
 
     @staticmethod
-    def with_programming_mode() -> Srp:
+    def with_programming_mode() -> SRP:
         """Create a SRP that limits the response to only devices that are currently in programming mode."""
-        return Srp(SearchRequestParameterType.SELECT_BY_PROGRAMMING_MODE, True)
+        return SRP(SearchRequestParameterType.SELECT_BY_PROGRAMMING_MODE, True)
 
     @staticmethod
-    def with_mac_address(mac_address: bytes) -> Srp:
+    def with_mac_address(mac_address: bytes) -> SRP:
         """
         Create a SRP that limits the response to only allow a device with the given MAC address.
 
         :param mac_address: The mac address to restrict this SRP to
         """
-        return Srp(SearchRequestParameterType.SELECT_BY_MAC_ADDRESS, True, mac_address)
+        return SRP(SearchRequestParameterType.SELECT_BY_MAC_ADDRESS, True, mac_address)
 
     @staticmethod
-    def with_service(family: DIBServiceFamily, family_version: int) -> Srp:
+    def with_service(family: DIBServiceFamily, family_version: int) -> SRP:
         """
         Create a SRP that limits the response to only allow devices that support the given service family.
 
@@ -118,21 +118,21 @@ class Srp:
         :param family_version: The minimum family version so that devices will send a search response extended back
         :return: Srp with the given parameter
         """
-        return Srp(
+        return SRP(
             SearchRequestParameterType.SELECT_BY_SERVICE,
             True,
             bytes([family.value, family_version]),
         )
 
     @staticmethod
-    def with_device_description(dibs: list[DIBTypeCode]) -> Srp:
+    def with_device_description(dibs: list[DIBTypeCode]) -> SRP:
         """
         Create a SRP with a list of DIBs to indicate the server that it should, at least, include.
 
         :param dibs: the description types to include in the SRP
         :return: Srp with given parameters
         """
-        return Srp(
+        return SRP(
             SearchRequestParameterType.REQUEST_DIBS,
             True,
             bytes(dib.value for dib in dibs),
@@ -140,7 +140,7 @@ class Srp:
 
     def __eq__(self, other: object) -> bool:
         """Define equality for SRPs."""
-        if not isinstance(other, Srp):
+        if not isinstance(other, SRP):
             return False
 
         return (

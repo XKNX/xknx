@@ -1,7 +1,7 @@
 """Unit test for KNX/IP SearchRequest Extended objects."""
 from xknx import XKNX
 from xknx.knxip import HPAI, KNXIPFrame, SearchRequestExtended
-from xknx.knxip.srp import Srp
+from xknx.knxip.srp import SRP
 
 
 class TestKNXIPSearchRequestExtended:
@@ -39,12 +39,12 @@ class TestKNXIPSearchRequestExtended:
             ip_addr="224.0.23.12", port=3671
         )
         assert len(knxipframe.body.srps) == 1
-        assert knxipframe.body.srps[0] == Srp.with_programming_mode()
+        assert knxipframe.body.srps[0] == SRP.with_programming_mode()
 
         knxipframe2 = KNXIPFrame.init_from_body(
             SearchRequestExtended(
                 xknx,
-                srps=[Srp.with_programming_mode()],
+                srps=[SRP.with_programming_mode()],
                 discovery_endpoint=HPAI(ip_addr="224.0.23.12", port=3671),
             )
         )
@@ -65,8 +65,8 @@ class TestKNXIPSearchRequestExtended:
             ip_addr="224.0.23.12", port=3671
         )
         assert len(knxipframe.body.srps) == 2
-        assert knxipframe.body.srps[0] == Srp.with_programming_mode()
-        assert knxipframe.body.srps[1] == Srp.with_mac_address(
+        assert knxipframe.body.srps[0] == SRP.with_programming_mode()
+        assert knxipframe.body.srps[1] == SRP.with_mac_address(
             bytes([1, 2, 3, 4, 5, 6])
         )
 
@@ -74,8 +74,8 @@ class TestKNXIPSearchRequestExtended:
             SearchRequestExtended(
                 xknx,
                 srps=[
-                    Srp.with_programming_mode(),
-                    Srp.with_mac_address(bytes([1, 2, 3, 4, 5, 6])),
+                    SRP.with_programming_mode(),
+                    SRP.with_mac_address(bytes([1, 2, 3, 4, 5, 6])),
                 ],
                 discovery_endpoint=HPAI(ip_addr="224.0.23.12", port=3671),
             )

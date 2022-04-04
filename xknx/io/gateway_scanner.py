@@ -76,10 +76,9 @@ class GatewayDescriptor:
                     self.supports_tunnelling_tcp = dib.supports(
                         DIBServiceFamily.TUNNELING, version=2
                     )
-                if self.supports_tunnelling_tcp:
-                    self.supports_secure = dib.supports(
-                        DIBServiceFamily.SECURITY, version=1
-                    )
+                self.supports_secure = dib.supports(
+                    DIBServiceFamily.SECURITY, version=1
+                )
                 continue
             if isinstance(dib, DIBDeviceInformation):
                 self.name = dib.name
@@ -264,9 +263,7 @@ class GatewayScanner:
         interface: str = "",
     ) -> None:
         """Verify and handle knxipframe. Callback from internal udp_transport."""
-        if not isinstance(knx_ip_frame.body, SearchResponse) and not isinstance(
-            knx_ip_frame.body, SearchResponseExtended
-        ):
+        if not isinstance(knx_ip_frame.body, (SearchResponse, SearchResponseExtended)):
             logger.warning("Could not understand knxipframe")
             return
 

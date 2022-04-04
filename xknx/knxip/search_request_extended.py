@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 from .body import KNXIPBody
 from .hpai import HPAI
 from .knxip_enum import KNXIPServiceType
-from .srp import Srp
+from .srp import SRP
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -26,7 +26,7 @@ class SearchRequestExtended(KNXIPBody):
     def __init__(
         self,
         xknx: XKNX,
-        srps: list[Srp] | None = None,
+        srps: list[SRP] | None = None,
         discovery_endpoint: HPAI | None = None,
     ):
         """Initialize SearchRequestExtended object."""
@@ -44,23 +44,19 @@ class SearchRequestExtended(KNXIPBody):
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-        position: int = self.discovery_endpoint.from_knx(raw)
-        index = position
-        while raw[index:]:
-            srp = Srp.from_knx(raw[index:])
-            index += len(srp)
-            position += index
+        pos: int = self.discovery_endpoint.from_knx(raw)
+        while raw[pos:]:
+            srp = SRP.from_knx(raw[pos:])
+            pos += len(srp)
             self.srps.append(srp)
 
-        return position
+        return pos
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        res: bytes = bytes()
-        res += self.discovery_endpoint.to_knx()
-        for srp in self.srps:
-            res += bytes(srp)
-        return res
+        return self.discovery_endpoint.to_knx() + b"".join(
+            bytes(srp) for srp in self.srps
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""
