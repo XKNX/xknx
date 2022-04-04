@@ -160,6 +160,11 @@ class DIBTypeCode(Enum):
     # KNX addresses
     KNX_ADDRESSES = 0x05
 
+    # KNX IP Secure Unicast
+    SUPP_SECURE_SVC_FAMILIES = 0x06
+    TUNNELING_INFO = 0x07
+    ADDITIONAL_DEVICE_INFO = 0x08
+
     # DIB structure for further data defined by device manufacturer.
     MFR_DATA = 0xFE
 
@@ -204,6 +209,9 @@ class DIBServiceFamily(Enum):
     # Object Server'.
     OBJECT_SERVER = 0x08
 
+    # Security - Extended search response only
+    SECURITY = 0x09
+
 
 class SecureSessionStatusCode(Enum):
     """Enum class for KNX/IP Secure session status codes."""
@@ -220,3 +228,22 @@ class SecureSessionStatusCode(Enum):
     STATUS_KEEPALIVE = 0x04
     # The secure session shall be closed
     STATUS_CLOSE = 0x05
+
+
+class SearchRequestParameterType(Enum):
+    """Search Request Parameter (SRP) is used to transfer additional information in a KNXnet/IP SEARCH_REQUEST_EXTENDED."""
+
+    # Used to test behavior of the KNXnet/IP server for unknown SRPs. Don't use!
+    INVALID = 0x00
+
+    # Select only KNXnet/IP Servers that are currently in programming mode
+    SELECT_BY_PROGRAMMING_MODE = 0x01
+
+    # Select only KNXnet/IP Servers that have the given MAC address
+    SELECT_BY_MAC_ADDRESS = 0x02
+
+    # Select only KNXnet/IP Servers that support the given DIBServiceFamily in a given version
+    SELECT_BY_SERVICE = 0x03
+
+    # The Client shall include this SRP to indicate that it is interested in the listed DIBs
+    REQUEST_DIBS = 0x04

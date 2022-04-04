@@ -23,7 +23,9 @@ from .header import KNXIPHeader
 from .knxip_enum import KNXIPServiceType
 from .routing_indication import RoutingIndication
 from .search_request import SearchRequest
+from .search_request_extended import SearchRequestExtended
 from .search_response import SearchResponse
+from .search_response_extended import SearchResponseExtended
 from .secure_wrapper import SecureWrapper
 from .session_authenticate import SessionAuthenticate
 from .session_request import SessionRequest
@@ -53,8 +55,12 @@ class KNXIPFrame:
         # Core
         if service_type_ident == KNXIPServiceType.SEARCH_REQUEST:
             body = SearchRequest(self.xknx)
+        elif service_type_ident == KNXIPServiceType.SEARCH_REQUEST_EXTENDED:
+            body = SearchRequestExtended(self.xknx)
         elif service_type_ident == KNXIPServiceType.SEARCH_RESPONSE:
             body = SearchResponse(self.xknx)
+        elif service_type_ident == KNXIPServiceType.SEARCH_RESPONSE_EXTENDED:
+            body = SearchResponseExtended(self.xknx)
         elif service_type_ident == KNXIPServiceType.DESCRIPTION_REQUEST:
             body = DescriptionRequest(self.xknx)
         elif service_type_ident == KNXIPServiceType.DESCRIPTION_RESPONSE:
