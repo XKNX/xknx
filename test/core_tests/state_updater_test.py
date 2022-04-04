@@ -1,6 +1,8 @@
 """Unit test for StateUpdater."""
 from unittest.mock import Mock, patch
 
+import pytest
+
 from xknx import XKNX
 from xknx.core import XknxConnectionState
 from xknx.core.state_updater import StateTrackerType, _StateTracker
@@ -195,3 +197,32 @@ class TestStateUpdater:
         )
 
         assert xknx.state_updater.started
+
+    @pytest.mark.parametrize(
+        "default,sync_state_value,expected_interval,expected_tracker_type",
+        [
+            (90, True, 90, StateTrackerType.EXPIRE),
+            (False, True, 60, StateTrackerType.EXPIRE),
+            (True, None, 60, StateTrackerType.EXPIRE),
+            (40, None, 40, StateTrackerType.EXPIRE),
+            ("every 70", None, 70, StateTrackerType.PERIODICALLY),
+            ("init", True, 60, StateTrackerType.INIT),
+            ("every 80", "expire 20", 20, StateTrackerType.EXPIRE),
+        ],
+    )
+    async def test_stat_updater_default(
+        self, default, sync_state_value, expected_interval, expected_tracker_type
+    ):
+        """Test setting a default for StateUpdater."""
+        xknx = XKNX(state_updater=default)
+        remote_value = RemoteValue(
+            xknx, sync_state=sync_state_value, group_address_state=GroupAddress("1/1/1")
+        )
+        assert (
+            xknx.state_updater._workers[id(remote_value)].update_interval
+            == expected_interval * 60
+        )
+        assert (
+            xknx.state_updater._workers[id(remote_value)].tracker_type
+            == expected_tracker_type
+        )
