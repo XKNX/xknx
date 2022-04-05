@@ -6,6 +6,7 @@ import pytest
 
 from xknx import XKNX
 from xknx.prog.management import NM_EXISTS, NM_OK, NetworkManagement
+from xknx.prog.device import ProgDevice
 from xknx.telegram import IndividualAddress
 
 

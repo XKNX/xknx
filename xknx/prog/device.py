@@ -47,7 +47,6 @@ class ProgDevice:
         """Init this class."""
         self.xknx = xknx
         self.ind_add = ind_add
-        # self.state = ConnectionState.NOT_CONNECTED
         self.group_address_type = group_address_type
         self.last_telegram: Telegram | None = None
 
@@ -187,7 +186,7 @@ class ProgDevice:
         telegram = Telegram(
             self.ind_add,
             TelegramDirection.OUTGOING,
-            Restart(sequqence_number=2),
+            Restart(sequence_number=2),
             priority=Priority.SYSTEM,
         )
         await self.xknx.telegrams.put(telegram)

@@ -735,9 +735,9 @@ class Restart(APCI):
 
     CODE = APCIService.RESTART
 
-    def __init__(self, sequqence_number: int = 0) -> None:
+    def __init__(self, sequence_number: int = 0) -> None:
         """Initialize a new instance of Restart."""
-        self.sequqence_number = sequqence_number
+        self.sequence_number = sequence_number
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -752,13 +752,13 @@ class Restart(APCI):
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
         additional_flags = None
-        if self.sequqence_number:
+        if self.sequence_number:
             additional_flags = APCIAdditionalFlags.NUMBERED_DATA_PACKET
 
         return encode_cmd_and_payload(
             self.CODE,
             additional_flags=additional_flags,
-            sequence_number=self.sequqence_number,
+            sequence_number=self.sequence_number,
         )
 
     def __str__(self) -> str:

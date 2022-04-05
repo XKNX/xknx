@@ -15,7 +15,7 @@ class TestTpdu:
         xknx = XKNX()
         tpdu = TPDU(xknx, IndividualAddress("1.2.3"))
         # add data from knx
-        in_bytes = bytes((0x11, 0, 0xB0, 0x60, 0, 0, 0x12, 0x01, 0, 0x80))
+        in_bytes = bytes.fromhex("1100b060000012010080")
         tpdu.from_knx(in_bytes)
         # check serialzation result
         o_bytes = tpdu.to_knx()
@@ -31,7 +31,7 @@ class TestTpdu:
         tpdu = TPDU.init_from_telegram(xknx, telegram, IndividualAddress("1.2.3"))
         # check serialzation result
         o_bytes = tpdu.to_knx()
-        assert o_bytes == bytes((0x11, 0, 0xB0, 0x60, 0, 0, 0x12, 0x03, 0, 0x80))
+        assert o_bytes == bytes.fromhex("1100B060000012030080")
         # test calculated length
         assert tpdu.calculated_length() == 10
         # test string representation

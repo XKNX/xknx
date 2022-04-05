@@ -4,10 +4,10 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING
 
+from xknx.prog.device import ProgDevice
 from xknx.telegram.address import GroupAddress, IndividualAddress
 
 if TYPE_CHECKING:
-    from xknx.prog.device import ProgDevice
     from xknx.telegram import Telegram
     from xknx.xknx import XKNX
 
@@ -28,15 +28,15 @@ class NetworkManagement:
         # map for registered devices
         self.reg_dev: dict[IndividualAddress, ProgDevice] = {}
 
-    async def telegram_received_cb(self, tele: Telegram) -> None:
+    async def telegram_received_cb(self, telegram: Telegram) -> None:
         """Do something with the received telegram."""
-        if tele.source_address in self.reg_dev:
-            await self.reg_dev[tele.source_address].process_telegram(tele)
-        if tele.destination_address == GroupAddress("0"):
+        if telegram.source_address in self.reg_dev:
+            await self.reg_dev[telegram.source_address].process_telegram(telegram)
+        if telegram.destination_address == GroupAddress("0"):
             for reg_dev_val in self.reg_dev.values():
-                await reg_dev_val.process_telegram(tele)
+                await reg_dev_val.process_telegram(telegram)
 
-    async def is_device_present(self, device) -> bool:
+    async def is_device_present(self, device: ProgDevice) -> bool:
         """Check if device is present on KNX bus."""
         try:
             await asyncio.wait_for(device.t_connect_response(), 0.5)
@@ -69,7 +69,7 @@ class NetworkManagement:
 
         await device.individualaddress_write()
 
-        # Zusatz ETS reengeneering
+        # Addition from ETS reverse engeneering
         await device.t_connect()
         try:
             await asyncio.wait_for(device.devicedescriptor_read_response(0), 1.0)
