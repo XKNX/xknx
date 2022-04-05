@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased changes
+## 0.20.1 Add support for DPT 16.001 and SearchRequestExtended
 
 ### Features
 
