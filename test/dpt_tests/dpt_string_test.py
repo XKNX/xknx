@@ -1,167 +1,91 @@
 """Unit test for KNX string object."""
 import pytest
 
-from xknx.dpt import DPTString
+from xknx.dpt import DPTLatin1, DPTString
 from xknx.exceptions import ConversionError
 
 
 class TestDPTString:
-    """Test class for KNX float object."""
+    """Test class for KNX ASCII string object."""
 
-    def test_value_from_documentation(self):
-        """Test parsing and streaming Example from documentation."""
-        raw = (
-            0x4B,
-            0x4E,
-            0x58,
-            0x20,
-            0x69,
-            0x73,
-            0x20,
-            0x4F,
-            0x4B,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-        )
-        string = "KNX is OK"
-        assert DPTString.to_knx(string) == raw
-        assert DPTString.from_knx(raw) == string
+    @pytest.mark.parametrize(
+        "string,raw",
+        [
+            (
+                "KNX is OK",
+                (75, 78, 88, 32, 105, 115, 32, 79, 75, 0, 0, 0, 0, 0),
+            ),
+            (
+                "",
+                (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+            ),
+            (
+                "AbCdEfGhIjKlMn",
+                (65, 98, 67, 100, 69, 102, 71, 104, 73, 106, 75, 108, 77, 110),
+            ),
+            (
+                ".,:;-_!?$@&#%/",
+                (46, 44, 58, 59, 45, 95, 33, 63, 36, 64, 38, 35, 37, 47),
+            ),
+        ],
+    )
+    @pytest.mark.parametrize("test_dpt", [DPTString, DPTLatin1])
+    def test_values(self, string, raw, test_dpt):
+        """Test parsing and streaming strings."""
+        assert test_dpt.to_knx(string) == raw
+        assert test_dpt.from_knx(raw) == string
 
-    def test_value_empty_string(self):
-        """Test parsing and streaming empty string."""
-        raw = (
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-        )
-        string = ""
-        assert DPTString.to_knx(string) == raw
-        assert DPTString.from_knx(raw) == string
-
-    def test_value_max_string(self):
-        """Test parsing and streaming large string."""
-        raw = (
-            0x41,
-            0x41,
-            0x41,
-            0x41,
-            0x41,
-            0x42,
-            0x42,
-            0x42,
-            0x42,
-            0x42,
-            0x43,
-            0x43,
-            0x43,
-            0x43,
-        )
-        string = "AAAAABBBBBCCCC"
-        assert DPTString.to_knx(string) == raw
-        assert DPTString.from_knx(raw) == string
-
-    def test_value_special_chars(self):
-        """Test parsing and streaming string with special chars."""
-        raw = (
-            0x48,
-            0x65,
-            0x79,
-            0x21,
-            0x3F,
-            0x24,
-            0x20,
-            0xC4,
-            0xD6,
-            0xDC,
-            0xE4,
-            0xF6,
-            0xFC,
-            0xDF,
-        )
-        string = "Hey!?$ ÄÖÜäöüß"
-        assert DPTString.to_knx(string) == raw
-        assert DPTString.from_knx(raw) == string
-
-    def test_to_knx_invalid_chars(self):
-        """Test streaming string with invalid chars."""
-        raw = (
-            0x4D,
-            0x61,
-            0x74,
-            0x6F,
-            0x75,
-            0x3F,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-        )
-        string = "Matouš"
-        knx_string = "Matou?"
+    @pytest.mark.parametrize(
+        "string,knx_string,raw",
+        [
+            (
+                "Matouš",
+                "Matou?",
+                (77, 97, 116, 111, 117, 63, 0, 0, 0, 0, 0, 0, 0, 0),
+            ),
+            (
+                "Gänsefüßchen",
+                "G?nsef??chen",
+                (71, 63, 110, 115, 101, 102, 63, 63, 99, 104, 101, 110, 0, 0),
+            ),
+        ],
+    )
+    def test_to_knx_ascii_invalid_chars(self, string, knx_string, raw):
+        """Test streaming ASCII string with invalid chars."""
         assert DPTString.to_knx(string) == raw
         assert DPTString.from_knx(raw) == knx_string
+
+    @pytest.mark.parametrize(
+        "string,raw",
+        [
+            (
+                "Gänsefüßchen",
+                (71, 228, 110, 115, 101, 102, 252, 223, 99, 104, 101, 110, 0, 0),
+            ),
+            (
+                "àáâãåæçèéêëìíî",
+                (224, 225, 226, 227, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238),
+            ),
+        ],
+    )
+    def test_to_knx_latin_1(self, string, raw):
+        """Test streaming Latin-1 strings."""
+        assert DPTLatin1.to_knx(string) == raw
+        assert DPTLatin1.from_knx(raw) == string
 
     def test_to_knx_too_long(self):
         """Test serializing DPTString to KNX with wrong value (to long)."""
         with pytest.raises(ConversionError):
             DPTString.to_knx("AAAAABBBBBCCCCx")
 
-    def test_from_knx_wrong_parameter_too_large(self):
-        """Test parsing of KNX string with too many elements."""
-        raw = (
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-        )
-        with pytest.raises(ConversionError):
-            DPTString.from_knx(raw)
-
-    def test_from_knx_wrong_parameter_too_small(self):
-        """Test parsing of KNX string with too less elements."""
-        raw = (
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-        )
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            ((0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),),
+            ((0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),),
+        ],
+    )
+    def test_from_knx_wrong_parameter_length(self, raw):
+        """Test parsing of KNX string with wrong elements length."""
         with pytest.raises(ConversionError):
             DPTString.from_knx(raw)

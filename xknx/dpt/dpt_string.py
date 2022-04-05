@@ -8,7 +8,7 @@ from .dpt import DPTBase
 
 class DPTString(DPTBase):
     """
-    Abstraction for KNX 14 Octet ASCII String.
+    Abstraction for KNX 14 Octet ASCII string.
 
     DPT 16.000
     """
@@ -19,15 +19,15 @@ class DPTString(DPTBase):
     value_type = "string"
     unit = ""
 
+    _encoding = "ascii"
+
     @classmethod
     def from_knx(cls, raw: tuple[int, ...]) -> str:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
-        value = ""
-        for byte in raw:
-            if byte != 0x00:
-                value += chr(byte)
-        return value
+        return bytes(byte for byte in raw if byte != 0x00).decode(
+            cls._encoding, errors="replace"
+        )
 
     @classmethod
     def to_knx(cls, value: str) -> tuple[int, ...]:
@@ -36,15 +36,26 @@ class DPTString(DPTBase):
             knx_value = str(value)
             if not cls._test_boundaries(knx_value):
                 raise ValueError
-            raw = [ord(character) for character in knx_value]
-            raw.extend([0] * (cls.payload_length - len(raw)))
-            # replace invalid characters with question marks
-            # bytes(knx_value, 'ascii') would raise UnicodeEncodeError
-            return tuple(map(lambda char: char if char <= 0xFF else ord("?"), raw))
         except ValueError:
             raise ConversionError(f"Could not serialize {cls.__name__}", value=value)
+        # replace invalid characters with question marks
+        raw_bytes = knx_value.encode(cls._encoding, errors="replace")
+        padding = bytes(cls.payload_length - len(raw_bytes))
+        return tuple(raw_bytes + padding)
 
     @classmethod
     def _test_boundaries(cls, value: str) -> bool:
         """Test if value is within defined range for this object."""
         return len(value) <= cls.payload_length
+
+
+class DPTLatin1(DPTString):
+    """
+    Abstraction for KNX 14 Octet Latin-1 (ISO 8859-1) string.
+
+    DPT 16.001
+    """
+
+    dpt_sub_number = 1
+    value_type = "latin_1"
+    _encoding = "latin_1"
