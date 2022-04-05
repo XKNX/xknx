@@ -1,15 +1,17 @@
 # Changelog
 
-## Unreleased changes
+## 0.20.1 Add support for DPT 16.001 and SearchRequestExtended
 
 ### Features
 
 - Add support for SearchRequestExtended to find interfaces that allow IP Secure
 - Use XKNX `state_updater` argument to set default method for StateUpdater. StateUpdater is always started - Device / RemoteValue can always opt in to use it, even if default is `False`.
+- Add support for DPT 16.001 (DPT_String_8859_1) as `DPTLatin1` with value_type "latin_1".
 
 ### Bug fixes
 
 - Stop SecureSession keepalive_task when session is stopped (and don't restart it from sending STATUS_CLOSE)
+- Fix encoding invalid characters for DPTString (value_type "string")
 
 ## 0.20.0 IP Secure 2022-03-29
 

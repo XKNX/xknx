@@ -172,7 +172,7 @@ from .dpt_date import DPTDate
 from .dpt_datetime import DPTDateTime
 from .dpt_hvac_mode import DPTControllerStatus, DPTHVACContrMode, DPTHVACMode
 from .dpt_scaling import DPTAngle, DPTScaling
-from .dpt_string import DPTString
+from .dpt_string import DPTLatin1, DPTString
 from .dpt_time import DPTTime
 
 __all__ = [
@@ -249,6 +249,7 @@ __all__ = [
     "DPTHVACMode",
     "DPTImpedance",
     "DPTKelvinPerPercent",
+    "DPTLatin1",
     "DPTLength",
     "DPTLengthMm",
     "DPTLightQuantity",
