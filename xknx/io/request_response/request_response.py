@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 from xknx.exceptions import CommunicationError
 from xknx.io.transport import KNXIPTransport
-from xknx.knxip import HPAI, ErrorCode, KNXIPBodyResponse, KNXIPFrame
+from xknx.knxip import HPAI, ErrorCode, KNXIPBody, KNXIPBodyResponse, KNXIPFrame
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -26,13 +26,13 @@ class RequestResponse:
         self,
         xknx: XKNX,
         transport: KNXIPTransport,
-        awaited_response_class: type[KNXIPBodyResponse],
+        awaited_response_class: type[KNXIPBody],
         timeout_in_seconds: float = 1.0,
     ):
         """Initialize RequstResponse class."""
         self.xknx = xknx
         self.transport = transport
-        self.awaited_response_class: type[KNXIPBodyResponse] = awaited_response_class
+        self.awaited_response_class: type[KNXIPBody] = awaited_response_class
         self.response_received_event = asyncio.Event()
         self.success = False
         self.timeout_in_seconds = timeout_in_seconds
@@ -79,22 +79,20 @@ class RequestResponse:
         if not isinstance(knxipframe.body, self.awaited_response_class):
             logger.warning("Could not understand knxipframe")
             return
-        self.response_status_code = knxipframe.body.status_code
         self.response_received_event.set()
-        if knxipframe.body.status_code == ErrorCode.E_NO_ERROR:
-            self.success = True
-            self.on_success_hook(knxipframe)
-        else:
-            self.on_error_hook(knxipframe)
+
+        if isinstance(knxipframe.body, KNXIPBodyResponse):
+            self.response_status_code = knxipframe.body.status_code
+            if knxipframe.body.status_code != ErrorCode.E_NO_ERROR:
+                logger.debug(
+                    "Error: KNX bus responded to request of type '%s' with error in '%s': %s",
+                    self.__class__.__name__,
+                    self.awaited_response_class.__name__,
+                    knxipframe.body.status_code,
+                )
+                return
+        self.success = True
+        self.on_success_hook(knxipframe)
 
     def on_success_hook(self, knxipframe: KNXIPFrame) -> None:
         """Do something after having received a valid answer. May be overwritten in derived class."""
-
-    def on_error_hook(self, knxipframe: KNXIPFrame) -> None:
-        """Do something after having received error within given time. May be overwritten in derived class."""
-        logger.debug(
-            "Error: KNX bus responded to request of type '%s' with error in '%s': %s",
-            self.__class__.__name__,
-            self.awaited_response_class.__name__,
-            knxipframe.body.status_code,  # type: ignore
-        )

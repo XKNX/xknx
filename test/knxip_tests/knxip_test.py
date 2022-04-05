@@ -19,7 +19,7 @@ class TestKNXIPFrame:
 
         with pytest.raises(CouldNotParseKNXIP):
             # this is not yet implemented in xknx
-            knxipframe.init(KNXIPServiceType.SEARCH_REQUEST_EXTENDED)
+            knxipframe.init(KNXIPServiceType.REMOTE_DIAG_RESPONSE)
 
     def test_double_frame(self):
         """Test parsing KNX/IP frame from streaming data containing two frames."""

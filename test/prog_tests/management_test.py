@@ -3,6 +3,7 @@ import asyncio
 from unittest.mock import patch
 
 import pytest
+
 from xknx import XKNX
 from xknx.prog.management import NM_EXISTS, NM_OK, NetworkManagement
 from xknx.telegram import IndividualAddress

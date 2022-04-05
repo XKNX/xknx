@@ -20,7 +20,7 @@ from xknx.telegram import IndividualAddress
 
 from .knxip_enum import DIBServiceFamily, DIBTypeCode, KNXMedium
 
-DIB_HEADER_LENGTH = 2  # structure lenght and description type code
+DIB_HEADER_LENGTH = 2  # structure length and description type code
 
 
 class DIB(ABC):

@@ -65,6 +65,14 @@ class CouldNotParseKNXIP(XKNXException):
         return f'<CouldNotParseKNXIP description="{self.description}" />'
 
 
+class KNXSecureValidationError(CouldNotParseKNXIP):
+    """Exception class for invalid KNX Secure data."""
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<KNXSecureValidationError description="{self.description}" />'
+
+
 class IncompleteKNXIPFrame(CouldNotParseKNXIP):
     """
     Exception class for incomplete KNXIP data.
@@ -137,3 +145,19 @@ class DeviceIllegalValue(XKNXException):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<DeviceIllegalValue description="{self.value}" value="{self.description}" />'
+
+
+class SecureException(XKNXException):
+    """Exception class for ip secure handling."""
+
+
+class InvalidSignature(SecureException):
+    """Exception class used when the signature of a knxkeys file is invalid."""
+
+
+class InterfaceWithUserIdNotFound(SecureException):
+    """Exception class used when requesting an interface with a user id that does not exist."""
+
+
+class InvalidSecureConfiguration(SecureException):
+    """Exception class used when the secure configuration is invalid."""

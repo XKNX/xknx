@@ -4,11 +4,10 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING
 
-from xknx.prog.device import ProgDevice
 from xknx.telegram.address import GroupAddress, IndividualAddress
 
 if TYPE_CHECKING:
-    from device import Device
+    from xknx.prog.device import ProgDevice
     from xknx.telegram import Telegram
     from xknx.xknx import XKNX
 
@@ -27,7 +26,7 @@ class NetworkManagement:
         self.xknx = xknx
         xknx.telegram_queue.register_telegram_received_cb(self.telegram_received_cb)
         # map for registered devices
-        self.reg_dev: dict[IndividualAddress, Device] = {}
+        self.reg_dev: dict[IndividualAddress, ProgDevice] = {}
 
     async def telegram_received_cb(self, tele: Telegram) -> None:
         """Do something with the received telegram."""
@@ -80,17 +79,4 @@ class NetworkManagement:
         await device.restart()
         await asyncio.sleep(1)
         await device.t_disconnect()
-        return NM_OK
-    
-    async def switch_led(self, ind_add: IndividualAddress, on_off) -> int:
-        """Perform IndividualAdress_Write."""
-        device = ProgDevice(self.xknx, ind_add)
-        self.reg_dev[ind_add] = device
-
-        # chech if IA is present
-        if not await self.is_device_present(device):
-            return NM_NOT_EXISTS
-
-        await device.memory_read(0x60, 1)
-
         return NM_OK

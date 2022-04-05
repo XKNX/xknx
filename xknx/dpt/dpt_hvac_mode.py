@@ -8,7 +8,7 @@ from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
 
-HVACModeType = TypeVar("HVACModeType", "HVACControllerMode", "HVACOperationMode")
+HVACModeT = TypeVar("HVACModeT", "HVACControllerMode", "HVACOperationMode")
 
 
 class HVACOperationMode(Enum):
@@ -40,15 +40,15 @@ class HVACControllerMode(Enum):
     NODEM = "NoDem"
 
 
-class _DPTClimateMode(DPTBase, Generic[HVACModeType]):
+class _DPTClimateMode(DPTBase, Generic[HVACModeT]):
     """Base class for KNX Climate modes."""
 
-    SUPPORTED_MODES: dict[int, HVACModeType] = {}
+    SUPPORTED_MODES: dict[int, HVACModeT] = {}
 
     payload_length = 1
 
     @classmethod
-    def from_knx(cls, raw: tuple[int, ...]) -> HVACModeType:
+    def from_knx(cls, raw: tuple[int, ...]) -> HVACModeT:
         """Parse/deserialize from KNX/IP raw data."""
         cls.test_bytesarray(raw)
         try:
@@ -57,7 +57,7 @@ class _DPTClimateMode(DPTBase, Generic[HVACModeType]):
             raise ConversionError(f"Payload not supported for {cls.__name__}", raw=raw)
 
     @classmethod
-    def to_knx(cls, value: HVACModeType) -> tuple[int]:
+    def to_knx(cls, value: HVACModeT) -> tuple[int]:
         """Serialize to KNX/IP raw data."""
         for knx_value, mode in cls.SUPPORTED_MODES.items():
             if mode == value:

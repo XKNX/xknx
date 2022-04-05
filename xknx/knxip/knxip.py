@@ -23,7 +23,14 @@ from .header import KNXIPHeader
 from .knxip_enum import KNXIPServiceType
 from .routing_indication import RoutingIndication
 from .search_request import SearchRequest
+from .search_request_extended import SearchRequestExtended
 from .search_response import SearchResponse
+from .search_response_extended import SearchResponseExtended
+from .secure_wrapper import SecureWrapper
+from .session_authenticate import SessionAuthenticate
+from .session_request import SessionRequest
+from .session_response import SessionResponse
+from .session_status import SessionStatus
 from .tunnelling_ack import TunnellingAck
 from .tunnelling_request import TunnellingRequest
 
@@ -48,8 +55,12 @@ class KNXIPFrame:
         # Core
         if service_type_ident == KNXIPServiceType.SEARCH_REQUEST:
             body = SearchRequest(self.xknx)
+        elif service_type_ident == KNXIPServiceType.SEARCH_REQUEST_EXTENDED:
+            body = SearchRequestExtended(self.xknx)
         elif service_type_ident == KNXIPServiceType.SEARCH_RESPONSE:
             body = SearchResponse(self.xknx)
+        elif service_type_ident == KNXIPServiceType.SEARCH_RESPONSE_EXTENDED:
+            body = SearchResponseExtended(self.xknx)
         elif service_type_ident == KNXIPServiceType.DESCRIPTION_REQUEST:
             body = DescriptionRequest(self.xknx)
         elif service_type_ident == KNXIPServiceType.DESCRIPTION_RESPONSE:
@@ -74,6 +85,17 @@ class KNXIPFrame:
         # Routing
         elif service_type_ident == KNXIPServiceType.ROUTING_INDICATION:
             body = RoutingIndication(self.xknx)
+        # Secure
+        elif service_type_ident == KNXIPServiceType.SECURE_WRAPPER:
+            body = SecureWrapper(self.xknx)
+        elif service_type_ident == KNXIPServiceType.SESSION_AUTHENTICATE:
+            body = SessionAuthenticate(self.xknx)
+        elif service_type_ident == KNXIPServiceType.SESSION_REQUEST:
+            body = SessionRequest(self.xknx)
+        elif service_type_ident == KNXIPServiceType.SESSION_RESPONSE:
+            body = SessionResponse(self.xknx)
+        elif service_type_ident == KNXIPServiceType.SESSION_STATUS:
+            body = SessionStatus(self.xknx)
         else:
             raise CouldNotParseKNXIP(
                 f"KNXIPServiceType not implemented: {service_type_ident.name}"

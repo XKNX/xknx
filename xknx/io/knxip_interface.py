@@ -15,10 +15,15 @@ from typing import TYPE_CHECKING, Awaitable, TypeVar
 
 from xknx.exceptions import CommunicationError, XKNXException
 
+from ..exceptions.exception import (
+    InterfaceWithUserIdNotFound,
+    InvalidSecureConfiguration,
+)
+from ..secure import Keyring, load_key_ring
 from .connection import ConnectionConfig, ConnectionType
 from .gateway_scanner import GatewayDescriptor, GatewayScanFilter, GatewayScanner
 from .routing import Routing
-from .tunnel import TCPTunnel, UDPTunnel, _Tunnel
+from .tunnel import SecureTunnel, TCPTunnel, UDPTunnel, _Tunnel
 from .util import find_local_ip, validate_ip
 
 if TYPE_CHECKING:
@@ -88,6 +93,55 @@ class KNXIPInterface:
                 auto_reconnect=self.connection_config.auto_reconnect,
                 auto_reconnect_wait=self.connection_config.auto_reconnect_wait,
             )
+        elif (
+            self.connection_config.connection_type
+            == ConnectionType.TUNNELING_TCP_SECURE
+            and self.connection_config.gateway_ip is not None
+            and self.connection_config.secure_config is not None
+        ):
+            secure_config = self.connection_config.secure_config
+            user_id: int
+            user_password: str
+            device_authentication_password: str | None
+            if (
+                secure_config.knxkeys_file_path is not None
+                and secure_config.knxkeys_password is not None
+            ):
+                keyring: Keyring = load_key_ring(
+                    secure_config.knxkeys_file_path, secure_config.knxkeys_password
+                )
+                if secure_config.user_id is not None:
+                    user_id = secure_config.user_id
+                    interface = keyring.get_interface_by_user_id(user_id)
+                    if interface is None:
+                        raise InterfaceWithUserIdNotFound()
+
+                    user_password = interface.decrypted_password
+                    device_authentication_password = interface.decrypted_authentication
+                else:
+                    interface = keyring.interfaces[0]
+                    user_id = interface.user_id
+                    user_password = interface.decrypted_password
+                    device_authentication_password = interface.decrypted_authentication
+            else:
+                user_id = secure_config.user_id or 2
+                if secure_config.user_password is None:
+                    raise InvalidSecureConfiguration()
+
+                user_password = secure_config.user_password
+                device_authentication_password = (
+                    secure_config.device_authentication_password
+                )
+
+            await self._start_secure_tunnelling_tcp(
+                gateway_ip=self.connection_config.gateway_ip,
+                gateway_port=self.connection_config.gateway_port,
+                auto_reconnect=self.connection_config.auto_reconnect,
+                auto_reconnect_wait=self.connection_config.auto_reconnect_wait,
+                user_id=user_id,
+                user_password=user_password,
+                device_authentication_password=device_authentication_password,
+            )
         else:
             await self._start_automatic()
 
@@ -131,6 +185,36 @@ class KNXIPInterface:
             telegram_received_callback=self.telegram_received,
             auto_reconnect=auto_reconnect,
             auto_reconnect_wait=auto_reconnect_wait,
+        )
+        await self._interface.connect()
+
+    async def _start_secure_tunnelling_tcp(
+        self,
+        gateway_ip: str,
+        gateway_port: int,
+        auto_reconnect: bool,
+        auto_reconnect_wait: int,
+        user_id: int,
+        user_password: str,
+        device_authentication_password: str | None,
+    ) -> None:
+        """Start KNX/IP TCP tunnel."""
+        validate_ip(gateway_ip, address_name="Gateway IP address")
+        logger.debug(
+            "Starting secure tunnel to %s:%s over TCP",
+            gateway_ip,
+            gateway_port,
+        )
+        self._interface = SecureTunnel(
+            self.xknx,
+            gateway_ip=gateway_ip,
+            gateway_port=gateway_port,
+            auto_reconnect=auto_reconnect,
+            auto_reconnect_wait=auto_reconnect_wait,
+            user_id=user_id,
+            user_password=user_password,
+            device_authentication_password=device_authentication_password,
+            telegram_received_callback=self.telegram_received,
         )
         await self._interface.connect()
 

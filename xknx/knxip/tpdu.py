@@ -13,8 +13,7 @@ from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TPDUType
 from .knxip_enum import CEMIMessageCode
 
 if TYPE_CHECKING:
-    # from typing import Union, List
-    from Adress import InternalGroupAddress
+    from xknx.telegram.address import InternalGroupAddress
     from xknx.xknx import XKNX
 
 
@@ -69,16 +68,16 @@ class TPDU:
                 f"CEMIMessageCode not implemented: {raw[0]} in CEMI: {raw.hex()}"
             )
         self.destination_address = IndividualAddress((raw[6], raw[7]))
-        if raw[7] == 0x80:
+        if raw[9] == 0x80:
             self.tpdu_type = TPDUType.T_CONNECT
-        elif raw[7] == 0x81:
+        elif raw[9] == 0x81:
             self.tpdu_type = TPDUType.T_DISCONNECT
-        elif raw[7] == 0xC2:
+        elif raw[9] == 0xC2:
             self.tpdu_type = TPDUType.T_ACK
-        elif raw[7] == 0xC6:
+        elif raw[9] == 0xC6:
             self.tpdu_type = TPDUType.T_ACK_NUMBERED
         else:
-            raise RuntimeError("Invalid TPDUType-code: " + str(raw[7]))
+            raise RuntimeError("Invalid TPDUType-code: " + str(raw[9]))
         self.data = raw
         return 10
 
@@ -90,6 +89,8 @@ class TPDU:
     def to_knx(self) -> bytes:
         """Convert PDU to KNX."""
         data = bytes((0x11, 0x00, 0xB0, 0x60, 0x00, 0x00))
+        if not isinstance(self.destination_address, IndividualAddress):
+            raise RuntimeError("IndividualAddress expected")
         data += bytes(self.destination_address.to_knx())
         if self.tpdu_type == TPDUType.T_CONNECT:
             return data + bytes((0x00, 0x80))

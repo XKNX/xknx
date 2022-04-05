@@ -24,10 +24,18 @@ from .knxip_enum import (
     HostProtocol,
     KNXIPServiceType,
     KNXMedium,
+    SearchRequestParameterType,
 )
 from .routing_indication import RoutingIndication
 from .search_request import SearchRequest
+from .search_request_extended import SearchRequestExtended
 from .search_response import SearchResponse
+from .search_response_extended import SearchResponseExtended
+from .secure_wrapper import SecureWrapper
+from .session_authenticate import SessionAuthenticate
+from .session_request import SessionRequest
+from .session_response import SessionResponse
+from .session_status import SessionStatus
 from .tunnelling_ack import TunnellingAck
 from .tunnelling_request import TunnellingRequest
 
@@ -61,7 +69,15 @@ __all__ = [
     "KNXMedium",
     "RoutingIndication",
     "SearchRequest",
+    "SearchRequestExtended",
+    "SearchRequestParameterType",
     "SearchResponse",
+    "SearchResponseExtended",
+    "SecureWrapper",
+    "SessionAuthenticate",
+    "SessionRequest",
+    "SessionResponse",
+    "SessionStatus",
     "TunnellingAck",
     "TunnellingRequest",
 ]

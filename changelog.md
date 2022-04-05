@@ -2,10 +2,32 @@
 
 ## Unreleased changes
 
+### Features
+
+- Add support for SearchRequestExtended to find interfaces that allow IP Secure
+- Use XKNX `state_updater` argument to set default method for StateUpdater. StateUpdater is always started - Device / RemoteValue can always opt in to use it, even if default is `False`.
+
+### Bug fixes
+
+- Stop SecureSession keepalive_task when session is stopped (and don't restart it from sending STATUS_CLOSE)
+
+## 0.20.0 IP Secure 2022-03-29
+
+### Features
+
+- We now support IP Secure!
+  Thanks to MDT for providing us an interface for testing purposes!
+- Add support for requesting tunnel interface information
+
+### Protocol
+
+- add SessionRequest, SessionResponse, SessionAuthenticate, SessionStatus, SecureWrapper Frame parser
+
 ### Internals
 
 - Drop support for Python 3.8 to follow Home Assistant changes
 - Return `bytes` from to_knx() in knxip package instead of `list[int]`
+- Add a callback for `connection_lost` of TCP transports to Tunnel
 
 ## 0.19.2 TCP Heartbeat 2022-02-06
 
