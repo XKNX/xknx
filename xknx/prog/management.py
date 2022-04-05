@@ -37,6 +37,7 @@ class NetworkManagement:
                 await reg_dev_val.process_telegram(tele)
 
     async def is_device_present(self, device) -> bool:
+        """Check if device is present on KNX bus."""
         try:
             await asyncio.wait_for(device.t_connect_response(), 0.5)
             return True
