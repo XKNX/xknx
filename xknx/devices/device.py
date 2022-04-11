@@ -78,7 +78,8 @@ class Device(ABC):
         self, device_updated_cb: DeviceCallbackType
     ) -> None:
         """Unregister device updated callback."""
-        self.device_updated_cbs.remove(device_updated_cb)
+        if device_updated_cb in self.device_updated_cbs:
+            self.device_updated_cbs.remove(device_updated_cb)
 
     async def after_update(self) -> None:
         """Execute callbacks after internal state has been changed."""
