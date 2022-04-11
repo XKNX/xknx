@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased changes
+## 0.20.2 Handle shutdown properly
 
 ### Bug fixes
 
