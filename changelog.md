@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Bug fixes
+
+- Properly shutdown climate mode if climate.shutdown() is called and ClimateMode exists
+
 ## 0.20.1 Add support for DPT 16.001 and SearchRequestExtended
 
 ### Features

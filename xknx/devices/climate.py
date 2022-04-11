@@ -173,6 +173,12 @@ class Climate(Device):
         """Set power status to off."""
         await self.on.off()
 
+    def shutdown(self) -> None:
+        """Shutdown this device and the underlying mode."""
+        super().shutdown()
+        if self.mode:
+            self.mode.shutdown()
+
     @property
     def initialized_for_setpoint_shift_calculations(self) -> bool:
         """Test if object is initialized for setpoint shift calculations."""
