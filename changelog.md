@@ -1,8 +1,14 @@
 # Changelog
 
+## Unreleased changes
+
 ### Devices
 
 - Notification: add `value_type` argument to set "string" or "latin_1" text encoding
+
+### Bug fixes
+
+- Fix call from wrong Thread in ConnectionManager
 
 ### Internal
 

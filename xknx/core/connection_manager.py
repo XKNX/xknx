@@ -15,6 +15,7 @@ class ConnectionManager:
     def __init__(self) -> None:
         """Initialize ConnectionState class."""
         self.connected = asyncio.Event()
+        self._main_loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._state = XknxConnectionState.DISCONNECTED
         self._connection_state_changed_cbs: list[AsyncConnectionStateCallback] = []
 
@@ -32,20 +33,20 @@ class ConnectionManager:
             self._connection_state_changed_cbs.remove(connection_state_changed_cb)
 
     async def connection_state_changed(self, state: XknxConnectionState) -> None:
-        """Run registered callbacks. Set internal state flag."""
+        """Run registered callbacks in main loop. Set internal state flag."""
         if self._state == state:
             return
 
         self._state = state
         if state == XknxConnectionState.CONNECTED:
-            self.connected.set()
+            self._main_loop.call_soon_threadsafe(self.connected.set)
         else:
-            self.connected.clear()
-        if tasks := [
-            connection_state_change_cb(state)
-            for connection_state_change_cb in self._connection_state_changed_cbs
-        ]:
-            await asyncio.gather(*tasks)
+            self._main_loop.call_soon_threadsafe(self.connected.clear)
+
+        for connection_state_change_cb in self._connection_state_changed_cbs:
+            asyncio.run_coroutine_threadsafe(
+                connection_state_change_cb(state), self._main_loop
+            )
 
     @property
     def state(self) -> XknxConnectionState:
