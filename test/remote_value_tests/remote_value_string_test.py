@@ -2,7 +2,7 @@
 import pytest
 
 from xknx import XKNX
-from xknx.dpt import DPTArray, DPTBinary
+from xknx.dpt import DPTArray, DPTBinary, DPTLatin1, DPTString
 from xknx.exceptions import ConversionError
 from xknx.remote_value import RemoteValueString
 from xknx.telegram import GroupAddress, Telegram
@@ -15,8 +15,7 @@ class TestRemoteValueString:
     def test_to_knx(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
-        remote_value = RemoteValueString(xknx)
-        assert remote_value.to_knx("KNX is OK") == DPTArray(
+        dpt_array_string = DPTArray(
             (
                 0x4B,
                 0x4E,
@@ -34,6 +33,13 @@ class TestRemoteValueString:
                 0x00,
             )
         )
+        remote_value_ascii = RemoteValueString(xknx)
+        assert remote_value_ascii.dpt_class == DPTString
+        assert remote_value_ascii.to_knx("KNX is OK") == dpt_array_string
+
+        remote_value_latin1 = RemoteValueString(xknx, value_type="latin_1")
+        assert remote_value_latin1.dpt_class == DPTLatin1
+        assert remote_value_latin1.to_knx("KNX is OK") == dpt_array_string
 
     def test_from_knx(self):
         """Test from_knx function with normal operation."""
