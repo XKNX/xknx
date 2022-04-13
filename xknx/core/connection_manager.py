@@ -14,10 +14,15 @@ class ConnectionManager:
 
     def __init__(self) -> None:
         """Initialize ConnectionState class."""
+        self._main_loop: asyncio.AbstractEventLoop | None = None
+
         self.connected = asyncio.Event()
-        self._main_loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._state = XknxConnectionState.DISCONNECTED
         self._connection_state_changed_cbs: list[AsyncConnectionStateCallback] = []
+
+    async def register_loop(self) -> None:
+        """Register main loop to enable thread-safe `connection_state_changed` calls."""
+        self._main_loop = asyncio.get_running_loop()
 
     def register_connection_state_changed_cb(
         self, connection_state_changed_cb: AsyncConnectionStateCallback
@@ -34,19 +39,29 @@ class ConnectionManager:
 
     async def connection_state_changed(self, state: XknxConnectionState) -> None:
         """Run registered callbacks in main loop. Set internal state flag."""
+        if self._main_loop:
+            asyncio.run_coroutine_threadsafe(
+                self._connection_state_changed(state), self._main_loop
+            )
+        else:
+            await self._connection_state_changed(state)
+
+    async def _connection_state_changed(self, state: XknxConnectionState) -> None:
+        """Run registered callbacks. Set internal state flag."""
         if self._state == state:
             return
 
         self._state = state
         if state == XknxConnectionState.CONNECTED:
-            self._main_loop.call_soon_threadsafe(self.connected.set)
+            self.connected.set()
         else:
-            self._main_loop.call_soon_threadsafe(self.connected.clear)
+            self.connected.clear()
 
-        for connection_state_change_cb in self._connection_state_changed_cbs:
-            asyncio.run_coroutine_threadsafe(
-                connection_state_change_cb(state), self._main_loop
-            )
+        if tasks := [
+            connection_state_change_cb(state)
+            for connection_state_change_cb in self._connection_state_changed_cbs
+        ]:
+            await asyncio.gather(*tasks)
 
     @property
     def state(self) -> XknxConnectionState:
