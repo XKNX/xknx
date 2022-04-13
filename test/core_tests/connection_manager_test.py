@@ -108,3 +108,4 @@ class TestConnectionManager:
             await xknx.start()
             # wait for side_effect to finish
             await asyncio.wait_for(xknx.connection_manager.connected.wait(), timeout=1)
+            await xknx.stop()

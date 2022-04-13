@@ -8,7 +8,8 @@
 
 ### Bug fixes
 
-- Fix call from wrong Thread in ConnectionManager
+- Fix call from wrong thread in ConnectionManager
+- Fix thread leak when restarting XKNX
 
 ### Internal
 
