@@ -1,5 +1,13 @@
 # Changelog
 
+### Devices
+
+- Notification: add `value_type` argument to set "string" or "latin_1" text encoding
+
+### Internal
+
+- Change RemoteValueString to _RemoteValueGeneric subclass
+
 ## 0.20.2 Handle shutdown properly
 
 ### Bug fixes
