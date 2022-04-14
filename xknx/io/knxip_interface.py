@@ -356,7 +356,7 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
 
     async def stop(self) -> None:
         """
-        Stop connected interfae (either Tunneling or Routing).
+        Stop connected interface (either Tunneling or Routing).
 
         Can not be restarted, create a new instance instead.
         """
