@@ -320,13 +320,13 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
         self._thread_loop: asyncio.AbstractEventLoop
 
         loop_loaded = threading.Event()
-        connection_thread = threading.Thread(
+        self.connection_thread = threading.Thread(
             target=self._init_connection_loop,
             args=[loop_loaded],
             name="KNX Interface",
             daemon=True,
         )
-        connection_thread.start()
+        self.connection_thread.start()
         loop_loaded.wait()  # wait for the thread to initialize its loop
 
     def _init_connection_loop(self, loop_loaded: threading.Event) -> None:
@@ -355,10 +355,16 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
         return await self._await_from_connection_thread(self._start())
 
     async def stop(self) -> None:
-        """Stop connected interfae (either Tunneling or Routing)."""
+        """
+        Stop connected interface (either Tunneling or Routing).
+
+        Can not be restarted, create a new instance instead.
+        """
         if self._interface is not None:
             await self._await_from_connection_thread(self._interface.disconnect())
             self._interface = None
+        self._thread_loop.call_soon_threadsafe(self._thread_loop.stop)
+        self.connection_thread.join()
 
     def telegram_received(self, telegram: Telegram) -> None:
         """Put received telegram into queue. Callback for having received telegram."""

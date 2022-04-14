@@ -1,8 +1,11 @@
 """Unit test for connection manager."""
-from unittest.mock import AsyncMock
+import asyncio
+import threading
+from unittest.mock import AsyncMock, patch
 
 from xknx import XKNX
 from xknx.core import XknxConnectionState
+from xknx.io import ConnectionConfig
 
 
 class TestConnectionManager:
@@ -81,3 +84,28 @@ class TestConnectionManager:
         )
 
         assert xknx.connection_manager.connected.is_set()
+
+    async def test_threaded_connection(self):
+        """Test starting threaded connection."""
+        # pylint: disable=attribute-defined-outside-init
+        self.main_thread = threading.get_ident()
+        xknx = XKNX(connection_config=ConnectionConfig(threaded=True))
+
+        async def assert_main_thread(*args, **kwargs):
+            """Test callback is done by main thread."""
+            assert self.main_thread == threading.get_ident()
+
+        xknx.connection_manager.register_connection_state_changed_cb(assert_main_thread)
+
+        async def set_connected():
+            """Set connected state."""
+            await xknx.connection_manager.connection_state_changed(
+                XknxConnectionState.CONNECTED
+            )
+            assert self.main_thread != threading.get_ident()
+
+        with patch("xknx.io.KNXIPInterface._start", side_effect=set_connected):
+            await xknx.start()
+            # wait for side_effect to finish
+            await asyncio.wait_for(xknx.connection_manager.connected.wait(), timeout=1)
+            await xknx.stop()
