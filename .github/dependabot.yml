@@ -5,12 +5,3 @@ updates:
   schedule:
     interval: daily
   open-pull-requests-limit: 10
-  ignore:
-  - dependency-name: pylint
-    versions:
-    - 2.8.1
-    - 2.8.2
-  - dependency-name: astroid
-    versions:
-    - 2.5.3
-    - 2.5.6
