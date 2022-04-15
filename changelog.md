@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased changes
+## 0.20.3 Threading fixes 2022-04-15
 
 ### Devices
 
@@ -15,13 +15,13 @@
 
 - Change RemoteValueString to _RemoteValueGeneric subclass
 
-## 0.20.2 Handle shutdown properly
+## 0.20.2 Handle shutdown properly 2022-04-11
 
 ### Bug fixes
 
 - Properly shutdown climate mode if climate.shutdown() is called and ClimateMode exists
 
-## 0.20.1 Add support for DPT 16.001 and SearchRequestExtended
+## 0.20.1 Add support for DPT 16.001 and SearchRequestExtended 2022-04-05
 
 ### Features
 
