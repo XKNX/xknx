@@ -654,8 +654,7 @@ class TestStringRepresentations:
 
     def test_cemi_frame(self):
         """Test string representation of KNX/IP CEMI Frame."""
-        xknx = XKNX()
-        cemi_frame = CEMIFrame(xknx)
+        cemi_frame = CEMIFrame()
         cemi_frame.src_addr = GroupAddress("1/2/3")
         cemi_frame.telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),

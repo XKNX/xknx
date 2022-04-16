@@ -547,7 +547,6 @@ class TCPTunnel(_Tunnel):
                 "Sending telegram failed. No active communication channel."
             )
         cemi = CEMIFrame.init_from_telegram(
-            self.xknx,
             telegram=telegram,
             code=CEMIMessageCode.L_DATA_REQ,
             src_addr=self._src_address,

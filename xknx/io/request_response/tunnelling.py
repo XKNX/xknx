@@ -51,7 +51,6 @@ class Tunnelling(RequestResponse):
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
         cemi = CEMIFrame.init_from_telegram(
-            self.xknx,
             telegram=self.telegram,
             code=CEMIMessageCode.L_DATA_REQ,
             src_addr=self.src_address,

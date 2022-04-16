@@ -39,9 +39,7 @@ class TunnellingRequest(KNXIPBody):
         self.communication_channel_id = communication_channel_id
         self.sequence_counter = sequence_counter
         self.cemi: CEMIFrame | None = (
-            cemi
-            if cemi is not None
-            else CEMIFrame(xknx, code=CEMIMessageCode.L_DATA_REQ)
+            cemi if cemi is not None else CEMIFrame(code=CEMIMessageCode.L_DATA_REQ)
         )
 
     def calculated_length(self) -> int:

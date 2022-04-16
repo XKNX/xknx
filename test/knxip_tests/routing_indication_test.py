@@ -49,7 +49,7 @@ class TestKNXIPRountingIndication:
                 DPTArray(DPTTime().to_knx(time.strptime("13:23:42", "%H:%M:%S")))
             ),
         )
-        cemi = CEMIFrame(xknx, src_addr=IndividualAddress("1.2.2"))
+        cemi = CEMIFrame(src_addr=IndividualAddress("1.2.2"))
         cemi.telegram = telegram
         cemi.set_hops(5)
         routing_indication = RoutingIndication(xknx, cemi=cemi)
@@ -99,7 +99,7 @@ class TestKNXIPRountingIndication:
             source_address=IndividualAddress("15.15.249"),
         )
 
-        cemi = CEMIFrame(xknx, src_addr=IndividualAddress("15.15.249"))
+        cemi = CEMIFrame(src_addr=IndividualAddress("15.15.249"))
         cemi.telegram = telegram
         cemi.set_hops(5)
         routing_indication = RoutingIndication(xknx, cemi=cemi)
@@ -123,7 +123,7 @@ class TestKNXIPRountingIndication:
             source_address=IndividualAddress("15.15.249"),
         )
 
-        cemi = CEMIFrame(xknx, src_addr=IndividualAddress("15.15.249"))
+        cemi = CEMIFrame(src_addr=IndividualAddress("15.15.249"))
         cemi.telegram = telegram
         cemi.set_hops(5)
         routing_indication = RoutingIndication(xknx, cemi=cemi)
@@ -147,7 +147,7 @@ class TestKNXIPRountingIndication:
             source_address=IndividualAddress("15.15.249"),
         )
 
-        cemi = CEMIFrame(xknx, src_addr=IndividualAddress("15.15.249"))
+        cemi = CEMIFrame(src_addr=IndividualAddress("15.15.249"))
         cemi.telegram = telegram
         cemi.set_hops(5)
         routing_indication = RoutingIndication(xknx, cemi=cemi)
@@ -171,7 +171,7 @@ class TestKNXIPRountingIndication:
             source_address=IndividualAddress("1.4.2"),
         )
 
-        cemi = CEMIFrame(xknx, src_addr=IndividualAddress("1.4.2"))
+        cemi = CEMIFrame(src_addr=IndividualAddress("1.4.2"))
         cemi.telegram = telegram
         cemi.set_hops(5)
         routing_indication = RoutingIndication(xknx, cemi=cemi)
@@ -195,7 +195,7 @@ class TestKNXIPRountingIndication:
             source_address=IndividualAddress("15.15.249"),
         )
 
-        cemi = CEMIFrame(xknx, src_addr=IndividualAddress("15.15.249"))
+        cemi = CEMIFrame(src_addr=IndividualAddress("15.15.249"))
         cemi.telegram = telegram
         cemi.set_hops(5)
         routing_indication = RoutingIndication(xknx, cemi=cemi)
@@ -219,7 +219,7 @@ class TestKNXIPRountingIndication:
             source_address=IndividualAddress("1.3.1"),
         )
 
-        cemi = CEMIFrame(xknx, src_addr=IndividualAddress("1.3.1"))
+        cemi = CEMIFrame(src_addr=IndividualAddress("1.3.1"))
         cemi.telegram = telegram
         cemi.set_hops(5)
         routing_indication = RoutingIndication(xknx, cemi=cemi)
@@ -238,7 +238,7 @@ class TestKNXIPRountingIndication:
         )
         xknx = XKNX()
 
-        cemi = CEMIFrame(xknx, src_addr=IndividualAddress("1.3.1"))
+        cemi = CEMIFrame(src_addr=IndividualAddress("1.3.1"))
         cemi.telegram = telegram
         cemi.set_hops(5)
         routing_indication = RoutingIndication(xknx, cemi=cemi)

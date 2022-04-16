@@ -28,9 +28,7 @@ class RoutingIndication(KNXIPBody):
         """Initialize SearchRequest object."""
         super().__init__(xknx)
         self.cemi: CEMIFrame | None = (
-            cemi
-            if cemi is not None
-            else CEMIFrame(xknx, code=CEMIMessageCode.L_DATA_IND)
+            cemi if cemi is not None else CEMIFrame(code=CEMIMessageCode.L_DATA_IND)
         )
 
     def calculated_length(self) -> int:

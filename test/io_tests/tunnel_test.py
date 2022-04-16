@@ -52,7 +52,7 @@ class TestUDPTunnel:
         # LDataInd GroupValueWrite from 1.1.22 to to 5/1/22 with DPT9 payload 0C 3F
         # communication_channel_id: 0x02   sequence_counter: 0x21
         raw = bytes.fromhex("0610 0420 0017 04 02 21 00 2900bcd011162916030080 0c 3f")
-        _cemi = CEMIFrame(self.xknx)
+        _cemi = CEMIFrame()
         _cemi.from_knx(raw[10:])
         telegram = _cemi.telegram
         telegram.direction = TelegramDirection.INCOMING
@@ -100,7 +100,7 @@ class TestUDPTunnel:
                 communication_channel_id=1,
                 sequence_counter=23,
                 cemi=CEMIFrame.init_from_telegram(
-                    self.xknx, test_telegram, code=CEMIMessageCode.L_DATA_CON
+                    test_telegram, code=CEMIMessageCode.L_DATA_CON
                 ),
             )
         )
@@ -174,7 +174,6 @@ class TestUDPTunnel:
                 communication_channel_id=23,
                 sequence_counter=0,
                 cemi=CEMIFrame.init_from_telegram(
-                    self.xknx,
                     test_telegram,
                     code=CEMIMessageCode.L_DATA_REQ,
                     src_addr=IndividualAddress(7),
