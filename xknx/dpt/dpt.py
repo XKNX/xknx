@@ -87,6 +87,13 @@ class DPTBase(ABC):
                 yield subclass
 
     @classmethod
+    def dpt_class_tree(cls: T) -> Iterator[T]:
+        """Yield class, all subclasses and their subclasses that are not abstract."""
+        if not isabstract(cls):
+            yield cls
+        yield from cls.__recursive_subclasses__()
+
+    @classmethod
     def has_distinct_dpt_numbers(cls) -> bool:
         """Return True if dpt numbers are defined (not inherited)."""
         return "dpt_main_number" in cls.__dict__ and "dpt_sub_number" in cls.__dict__
@@ -101,7 +108,7 @@ class DPTBase(ABC):
         cls: T, dpt_main: int, dpt_sub: int | None = None
     ) -> T | None:
         """Return Class reference of DPTBase subclass with matching DPT number."""
-        for dpt in cls.__recursive_subclasses__():
+        for dpt in cls.dpt_class_tree():
             if dpt.has_distinct_dpt_numbers():
                 if dpt_main == dpt.dpt_main_number and dpt_sub == dpt.dpt_sub_number:
                     return dpt
@@ -110,7 +117,7 @@ class DPTBase(ABC):
     @classmethod
     def transcoder_by_value_type(cls: T, value_type: str) -> T | None:
         """Return Class reference of DPTBase subclass with matching value_type."""
-        for dpt in cls.__recursive_subclasses__():
+        for dpt in cls.dpt_class_tree():
             if dpt.has_distinct_value_type():
                 if value_type == dpt.value_type:
                     return dpt
