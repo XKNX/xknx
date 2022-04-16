@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased changes
+
+### Internal
+
+- Move `levels` instance attribute form `GroupAddress` to `address_format` class variable
+
 ## 0.20.3 Threading fixes 2022-04-15
 
 ### Devices

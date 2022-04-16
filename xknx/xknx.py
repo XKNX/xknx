@@ -25,7 +25,7 @@ from xknx.io import (
     KNXIPInterface,
     knx_interface_factory,
 )
-from xknx.telegram import GroupAddressType, IndividualAddress, Telegram
+from xknx.telegram import GroupAddress, GroupAddressType, IndividualAddress, Telegram
 
 from .__version__ import __version__ as VERSION
 
@@ -64,7 +64,6 @@ class XKNX:
         self.task_registry = TaskRegistry(self)
         self.knxip_interface: KNXIPInterface | None = None
         self.started = asyncio.Event()
-        self.address_format = address_format
         self.own_address = IndividualAddress(own_address)
         self.rate_limit = rate_limit
         self.multicast_group = multicast_group
@@ -74,6 +73,7 @@ class XKNX:
         self.version = VERSION
         self.current_address = IndividualAddress(0)
 
+        GroupAddress.address_format = address_format  # for global string representation
         if log_directory is not None:
             self.setup_logging(log_directory)
 

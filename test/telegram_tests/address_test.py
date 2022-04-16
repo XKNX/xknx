@@ -219,7 +219,8 @@ class TestGroupAddress:
         assert GroupAddress("1/0").main == 1
         assert GroupAddress("15/0").main == 15
         assert GroupAddress("31/0/0").main == 31
-        assert GroupAddress("1/0", GroupAddressType.FREE).main is None
+        GroupAddress.address_format = GroupAddressType.FREE
+        assert GroupAddress("1/0").main is None
 
     def test_middle(self):
         """
@@ -229,10 +230,13 @@ class TestGroupAddress:
         * Middle group part of a strings returns the right value
         * Return `None` if not `GroupAddressType.LONG`
         """
-        assert GroupAddress("1/0/1", GroupAddressType.LONG).middle == 0
-        assert GroupAddress("1/7/1", GroupAddressType.LONG).middle == 7
-        assert GroupAddress("1/0", GroupAddressType.SHORT).middle is None
-        assert GroupAddress("1/0", GroupAddressType.FREE).middle is None
+        GroupAddress.address_format = GroupAddressType.LONG
+        assert GroupAddress("1/0/1").middle == 0
+        assert GroupAddress("1/7/1").middle == 7
+        GroupAddress.address_format = GroupAddressType.SHORT
+        assert GroupAddress("1/0").middle is None
+        GroupAddress.address_format = GroupAddressType.FREE
+        assert GroupAddress("1/0").middle is None
 
     def test_sub(self):
         """
@@ -242,15 +246,20 @@ class TestGroupAddress:
         * Sub group part of a strings returns the right value
         * Return never `None`
         """
-        assert GroupAddress("1/0", GroupAddressType.SHORT).sub == 0
-        assert GroupAddress("31/0", GroupAddressType.SHORT).sub == 0
-        assert GroupAddress("1/2047", GroupAddressType.SHORT).sub == 2047
-        assert GroupAddress("31/2047", GroupAddressType.SHORT).sub == 2047
-        assert GroupAddress("1/0/0", GroupAddressType.LONG).sub == 0
-        assert GroupAddress("1/0/255", GroupAddressType.LONG).sub == 255
-        assert GroupAddress("0/0", GroupAddressType.FREE).sub == 0
-        assert GroupAddress("1/0", GroupAddressType.FREE).sub == 2048
-        assert GroupAddress("31/2047", GroupAddressType.FREE).sub == 65535
+        GroupAddress.address_format = GroupAddressType.SHORT
+        assert GroupAddress("1/0").sub == 0
+        assert GroupAddress("31/0").sub == 0
+        assert GroupAddress("1/2047").sub == 2047
+        assert GroupAddress("31/2047").sub == 2047
+
+        GroupAddress.address_format = GroupAddressType.LONG
+        assert GroupAddress("1/0/0").sub == 0
+        assert GroupAddress("1/0/255").sub == 255
+
+        GroupAddress.address_format = GroupAddressType.FREE
+        assert GroupAddress("0/0").sub == 0
+        assert GroupAddress("1/0").sub == 2048
+        assert GroupAddress("31/2047").sub == 65535
 
     def test_to_knx(self):
         """Test if `GroupAddress.to_knx()` generates valid byte tuples."""
@@ -266,11 +275,25 @@ class TestGroupAddress:
         assert GroupAddress(1) != IndividualAddress(1)
         assert GroupAddress(1) != 1
 
-    def test_representation(self):
+    @pytest.mark.parametrize(
+        "initializer,string_free,string_short,string_long",
+        [
+            ("0", "0", "0/0", "0/0/0"),
+            ("1/4/70", "3142", "1/1094", "1/4/70"),
+        ],
+    )
+    def test_representation(self, initializer, string_free, string_short, string_long):
         """Test string representation of address."""
-        assert repr(GroupAddress("0", GroupAddressType.FREE)) == 'GroupAddress("0")'
-        assert repr(GroupAddress("0", GroupAddressType.SHORT)) == 'GroupAddress("0/0")'
-        assert repr(GroupAddress("0", GroupAddressType.LONG)) == 'GroupAddress("0/0/0")'
+        group_address = GroupAddress(initializer)
+        GroupAddress.address_format = GroupAddressType.FREE
+        assert str(group_address) == string_free
+        assert repr(group_address) == f'GroupAddress("{string_free}")'
+        GroupAddress.address_format = GroupAddressType.SHORT
+        assert str(group_address) == string_short
+        assert repr(group_address) == f'GroupAddress("{string_short}")'
+        GroupAddress.address_format = GroupAddressType.LONG
+        assert str(group_address) == string_long
+        assert repr(group_address) == f'GroupAddress("{string_long}")'
 
 
 class TestInternalGroupAddress:

@@ -147,9 +147,7 @@ class CEMIFrame:
         self.src_addr = IndividualAddress((cemi[4 + addil], cemi[5 + addil]))
 
         if self.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS:
-            self.dst_addr = GroupAddress(
-                (cemi[6 + addil], cemi[7 + addil]), levels=self.xknx.address_format
-            )
+            self.dst_addr = GroupAddress((cemi[6 + addil], cemi[7 + addil]))
         else:
             self.dst_addr = IndividualAddress((cemi[6 + addil], cemi[7 + addil]))
 
