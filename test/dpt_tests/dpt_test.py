@@ -93,6 +93,11 @@ class TestDPTBase:
         for dpt in DPTBase.dpt_class_tree():
             assert dpt not in (DPTBase, DPTNumeric)
 
+    @pytest.mark.parametrize("dpt_class", [DPTString, DPT2ByteFloat])
+    def test_dpt_non_abstract_baseclass_included(self, dpt_class):
+        """Test if non-abstract base classes is included by dpt_class_tree."""
+        assert dpt_class in dpt_class.dpt_class_tree()
+
     def test_dpt_subclasses_definition_types(self):
         """Test value_type and dpt_*_number values for correct type in subclasses of DPTBase."""
         for dpt in DPTBase.dpt_class_tree():
