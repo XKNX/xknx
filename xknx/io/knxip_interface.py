@@ -13,13 +13,14 @@ import logging
 import threading
 from typing import TYPE_CHECKING, Awaitable, TypeVar
 
-from xknx.exceptions import CommunicationError, XKNXException
-
-from ..exceptions.exception import (
+from xknx.exceptions import (
+    CommunicationError,
     InterfaceWithUserIdNotFound,
     InvalidSecureConfiguration,
+    XKNXException,
 )
-from ..secure import Keyring, load_key_ring
+from xknx.secure import Keyring, load_key_ring
+
 from .connection import ConnectionConfig, ConnectionType
 from .gateway_scanner import GatewayDescriptor, GatewayScanFilter, GatewayScanner
 from .routing import Routing
