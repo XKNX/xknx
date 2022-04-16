@@ -1,5 +1,4 @@
 """Unit test for KNX/IP SessionResponse objects."""
-from xknx import XKNX
 from xknx.knxip import KNXIPFrame, SessionResponse
 
 
@@ -26,8 +25,7 @@ class TestKNXIPSessionResponse:
             + public_key
             + message_authentication_code
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
 
         assert isinstance(knxipframe.body, SessionResponse)
@@ -40,7 +38,6 @@ class TestKNXIPSessionResponse:
         assert knxipframe.to_knx() == raw
 
         session_response = SessionResponse(
-            xknx,
             secure_session_id=1,
             ecdh_server_public_key=public_key,
             message_authentication_code=message_authentication_code,

@@ -56,7 +56,6 @@ class Tunnelling(RequestResponse):
             src_addr=self.src_address,
         )
         tunnelling_request = TunnellingRequest(
-            self.xknx,
             communication_channel_id=self.communication_channel_id,
             sequence_counter=self.sequence_counter,
             cemi=cemi,

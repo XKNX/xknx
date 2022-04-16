@@ -1,5 +1,4 @@
 """Unit test for KNX/IP SessionAuthenticate objects."""
-from xknx import XKNX
 from xknx.knxip import KNXIPFrame, SessionAuthenticate
 
 
@@ -16,8 +15,7 @@ class TestKNXIPSessionAuthenticate:
             bytes.fromhex("06 10 09 53 00 18" "00 01")  # KNXnet/IP header  # User ID
             + message_authentication_code
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
 
         assert isinstance(knxipframe.body, SessionAuthenticate)
@@ -29,7 +27,6 @@ class TestKNXIPSessionAuthenticate:
         assert knxipframe.to_knx() == raw
 
         session_authenticate = SessionAuthenticate(
-            xknx,
             user_id=1,
             message_authentication_code=message_authentication_code,
         )

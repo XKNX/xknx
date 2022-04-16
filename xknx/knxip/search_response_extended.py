@@ -11,14 +11,9 @@ the server shall only reply to those requests if it can fulfill the requirements
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from .hpai import HPAI
 from .knxip_enum import KNXIPServiceType
 from .search_response import SearchResponse
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class SearchResponseExtended(SearchResponse):
@@ -26,9 +21,9 @@ class SearchResponseExtended(SearchResponse):
 
     SERVICE_TYPE = KNXIPServiceType.SEARCH_RESPONSE_EXTENDED
 
-    def __init__(self, xknx: XKNX, control_endpoint: HPAI = HPAI()):
+    def __init__(self, control_endpoint: HPAI = HPAI()):
         """Initialize SearchResponse object."""
-        super().__init__(xknx, control_endpoint)
+        super().__init__(control_endpoint)
 
     def __str__(self) -> str:
         """Return object as readable string."""

@@ -33,7 +33,6 @@ class Connect(RequestResponse):
         """Create KNX/IP Frame object to be sent to device."""
         # use the same HPAI for control_endpoint and data_endpoint
         connect_request = ConnectRequest(
-            self.xknx,
             request_type=ConnectRequestType.TUNNEL_CONNECTION,
             control_endpoint=self.local_hpai,
             data_endpoint=self.local_hpai,

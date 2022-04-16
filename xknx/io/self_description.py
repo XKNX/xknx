@@ -75,10 +75,7 @@ class DescriptionQuery:
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
-        description_request = DescriptionRequest(
-            self.xknx,
-            control_endpoint=self.local_hpai,
-        )
+        description_request = DescriptionRequest(control_endpoint=self.local_hpai)
         return KNXIPFrame.init_from_body(description_request)
 
     async def start(self) -> None:

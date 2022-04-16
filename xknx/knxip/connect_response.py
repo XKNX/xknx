@@ -7,17 +7,12 @@ assigns a communication channel and an individual address for the client.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from xknx.exceptions import CouldNotParseKNXIP
 
 from .body import KNXIPBodyResponse
 from .error_code import ErrorCode
 from .hpai import HPAI
 from .knxip_enum import ConnectRequestType, KNXIPServiceType
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class ConnectResponse(KNXIPBodyResponse):
@@ -28,7 +23,6 @@ class ConnectResponse(KNXIPBodyResponse):
 
     def __init__(
         self,
-        xknx: XKNX,
         communication_channel: int = 0,
         status_code: ErrorCode = ErrorCode.E_NO_ERROR,
         request_type: ConnectRequestType = ConnectRequestType.TUNNEL_CONNECTION,
@@ -36,8 +30,6 @@ class ConnectResponse(KNXIPBodyResponse):
         identifier: int = 0,
     ):
         """Initialize ConnectResponse class."""
-        super().__init__(xknx)
-
         self.communication_channel = communication_channel
         self.status_code = status_code
         self.request_type = request_type

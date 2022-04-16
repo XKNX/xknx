@@ -1,5 +1,4 @@
 """Unit test for KNX/IP SessionRequest objects."""
-from xknx import XKNX
 from xknx.knxip import HPAI, KNXIPFrame, SessionRequest
 from xknx.knxip.knxip_enum import HostProtocol
 
@@ -22,8 +21,7 @@ class TestKNXIPSessionRequest:
             )
             + public_key
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
 
         assert isinstance(knxipframe.body, SessionRequest)
@@ -32,7 +30,7 @@ class TestKNXIPSessionRequest:
 
         assert knxipframe.to_knx() == raw
 
-        session_request = SessionRequest(xknx, ecdh_client_public_key=public_key)
+        session_request = SessionRequest(ecdh_client_public_key=public_key)
         knxipframe2 = KNXIPFrame.init_from_body(session_request)
 
         assert knxipframe2.to_knx() == raw

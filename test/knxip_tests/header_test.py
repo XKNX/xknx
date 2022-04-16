@@ -1,7 +1,6 @@
 """Unit test for KNX/IP TunnellingAck objects."""
 import pytest
 
-from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import DisconnectRequest, KNXIPHeader, KNXIPServiceType
 
@@ -23,9 +22,8 @@ class TestKNXIPHeader:
 
     def test_set_length(self):
         """Test setting length."""
-        xknx = XKNX()
         header = KNXIPHeader()
-        header.set_length(DisconnectRequest(xknx))
+        header.set_length(DisconnectRequest())
         # 6 (header) + 2 + 8 (HPAI length)
         assert header.total_length == 16
 

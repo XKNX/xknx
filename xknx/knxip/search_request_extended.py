@@ -7,15 +7,10 @@ See AN184 in version 03 from the KNX specifications.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from .body import KNXIPBody
 from .hpai import HPAI
 from .knxip_enum import KNXIPServiceType
 from .srp import SRP
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class SearchRequestExtended(KNXIPBody):
@@ -25,18 +20,12 @@ class SearchRequestExtended(KNXIPBody):
 
     def __init__(
         self,
-        xknx: XKNX,
+        discovery_endpoint: HPAI = HPAI(),
         srps: list[SRP] | None = None,
-        discovery_endpoint: HPAI | None = None,
     ):
         """Initialize SearchRequestExtended object."""
-        super().__init__(xknx)
+        self.discovery_endpoint = discovery_endpoint
         self.srps = srps or []
-        self.discovery_endpoint = (
-            discovery_endpoint
-            if discovery_endpoint is not None
-            else HPAI(ip_addr=xknx.multicast_group, port=xknx.multicast_port)
-        )
 
     def calculated_length(self) -> int:
         """Get length of KNX/IP body."""

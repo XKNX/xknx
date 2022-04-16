@@ -246,12 +246,10 @@ class GatewayScanner:
             ip_addr=self.xknx.multicast_group, port=self.xknx.multicast_port
         )
 
-        search_request: KNXIPBody = SearchRequest(
-            self.xknx, discovery_endpoint=discovery_endpoint
-        )
+        search_request: KNXIPBody = SearchRequest(discovery_endpoint=discovery_endpoint)
         if search_request_type == KNXIPServiceType.SEARCH_REQUEST_EXTENDED:
             search_request = SearchRequestExtended(
-                self.xknx, discovery_endpoint=discovery_endpoint
+                discovery_endpoint=discovery_endpoint
             )
         udp_transport.send(KNXIPFrame.init_from_body(search_request))
 

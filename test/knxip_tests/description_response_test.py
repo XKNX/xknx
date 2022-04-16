@@ -1,5 +1,4 @@
 """Unit test for KNX/IP DescriptionResponse objects."""
-from xknx import XKNX
 from xknx.knxip import (
     DescriptionResponse,
     DIBDeviceInformation,
@@ -21,8 +20,7 @@ class TestKNXIPDescriptionResponse:
             "00 00 00 00 00 00 00 00 00 00 00 00 0c 02 02 02"
             "03 02 04 02 05 02 07 01",
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         assert knxipframe.from_knx(raw) == 72
         assert knxipframe.to_knx() == raw
 
@@ -45,7 +43,7 @@ class TestKNXIPDescriptionResponse:
         )
         assert not knxipframe.body.dibs[1].supports(DIBServiceFamily.OBJECT_SERVER)
 
-        description_response = DescriptionResponse(xknx)
+        description_response = DescriptionResponse()
         description_response.dibs.append(knxipframe.body.dibs[0])
         description_response.dibs.append(knxipframe.body.dibs[1])
         knxipframe2 = KNXIPFrame.init_from_body(description_response)
@@ -54,6 +52,5 @@ class TestKNXIPDescriptionResponse:
 
     def test_unknown_device_name(self):
         """Test device_name if no DIBDeviceInformation is present."""
-        xknx = XKNX()
-        description_response = DescriptionResponse(xknx)
+        description_response = DescriptionResponse()
         assert description_response.device_name == "UNKNOWN"

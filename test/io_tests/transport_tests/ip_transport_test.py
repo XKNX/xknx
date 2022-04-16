@@ -11,7 +11,6 @@ class TestKNXIPTransport:
     @patch.multiple(KNXIPTransport, __abstractmethods__=set())
     def test_callback(self):
         """Test if callback is called correctly."""
-        xknx = Mock()
         transport = KNXIPTransport()
         transport.callbacks = []
         callback_mock = Mock()
@@ -21,14 +20,14 @@ class TestKNXIPTransport:
         )
         assert len(transport.callbacks) == 1
         # Handle KNX/IP frame with different service type
-        wrong_service_type_frame = KNXIPFrame(xknx)
+        wrong_service_type_frame = KNXIPFrame()
         wrong_service_type_frame.header.service_type_ident = (
             KNXIPServiceType.CONNECTIONSTATE_REQUEST
         )
         transport.handle_knxipframe(wrong_service_type_frame, HPAI())
         callback_mock.assert_not_called()
         # Handle KNX/IP frame with correct service type
-        correct_service_type_frame = KNXIPFrame(xknx)
+        correct_service_type_frame = KNXIPFrame()
         correct_service_type_frame.header.service_type_ident = (
             KNXIPServiceType.CONNECTIONSTATE_RESPONSE
         )

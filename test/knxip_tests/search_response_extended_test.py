@@ -1,5 +1,4 @@
 """Unit test for KNX/IP SearchResponseExtended objects."""
-from xknx import XKNX
 from xknx.knxip import (
     HPAI,
     DIBDeviceInformation,
@@ -22,8 +21,7 @@ class TestKNXIPSearchResponseExtended:
             "50 2D 52 6F 75 74 65 72 00 00 00 00 00 00 00 00"
             "00 00 00 00 0C 02 02 01 03 02 04 01 05 01 07 01"
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         assert knxipframe.from_knx(raw) == 80
         assert knxipframe.to_knx() == raw
 
@@ -41,7 +39,7 @@ class TestKNXIPSearchResponseExtended:
         assert not knxipframe.body.dibs[1].supports(DIBServiceFamily.OBJECT_SERVER)
 
         search_response = SearchResponseExtended(
-            xknx, control_endpoint=HPAI(ip_addr="192.168.42.10", port=3671)
+            control_endpoint=HPAI(ip_addr="192.168.42.10", port=3671)
         )
         search_response.dibs.append(knxipframe.body.dibs[0])
         search_response.dibs.append(knxipframe.body.dibs[1])
@@ -51,6 +49,5 @@ class TestKNXIPSearchResponseExtended:
 
     def test_unknown_device_name(self):
         """Test device_name if no DIBDeviceInformation is present."""
-        xknx = XKNX()
-        search_response = SearchResponseExtended(xknx)
+        search_response = SearchResponseExtended()
         assert search_response.device_name == "UNKNOWN"

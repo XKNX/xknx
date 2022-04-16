@@ -23,7 +23,7 @@ class TestSelfDescription:
         transport_mocked.send = Mock()
 
         description_request = KNXIPFrame.init_from_body(
-            DescriptionRequest(xknx, control_endpoint=HPAI(*local_addr))
+            DescriptionRequest(control_endpoint=HPAI(*local_addr))
         )
         description_response_raw = bytes.fromhex(
             "06 10 02 04 00 48 36 01 02 00 10 00 00 00 00"

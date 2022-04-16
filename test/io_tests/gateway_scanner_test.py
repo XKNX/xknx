@@ -153,7 +153,7 @@ class TestGatewayScanner:
         """Test function of gateway scanner."""
         xknx = XKNX()
         gateway_scanner = GatewayScanner(xknx)
-        test_search_response = fake_router_search_response(xknx)
+        test_search_response = fake_router_search_response()
         udp_transport_mock = create_autospec(UDPTransport)
         udp_transport_mock.local_addr = ("192.168.42.50", 0)
         udp_transport_mock.getsockname.return_value = ("192.168.42.50", 0)
@@ -263,9 +263,9 @@ class TestGatewayScanner:
         assert test_scan == []
 
 
-def fake_router_search_response(xknx: XKNX) -> KNXIPFrame:
+def fake_router_search_response() -> KNXIPFrame:
     """Return the KNXIPFrame of a KNX/IP Router with a SearchResponse body."""
-    frame_body = SearchResponse(xknx)
+    frame_body = SearchResponse()
     frame_body.control_endpoint = HPAI(ip_addr="192.168.42.10", port=3671)
 
     device_information = DIBDeviceInformation()
