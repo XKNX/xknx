@@ -33,7 +33,11 @@ class TestRemoteValueString:
                 0x00,
             )
         )
-        remote_value_ascii = RemoteValueString(xknx)
+        remote_value_default = RemoteValueString(xknx)
+        assert remote_value_default.dpt_class == DPTString
+        assert remote_value_default.to_knx("KNX is OK") == dpt_array_string
+
+        remote_value_ascii = RemoteValueString(xknx, value_type="string")
         assert remote_value_ascii.dpt_class == DPTString
         assert remote_value_ascii.to_knx("KNX is OK") == dpt_array_string
 
