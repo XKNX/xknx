@@ -8,15 +8,12 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import TYPE_CHECKING, Callable, cast
+from typing import Callable, cast
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, IncompleteKNXIPFrame
 from xknx.knxip import HPAI, HostProtocol, KNXIPFrame
 
 from .ip_transport import KNXIPTransport
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 raw_socket_logger = logging.getLogger("xknx.raw_socket")
 logger = logging.getLogger("xknx.log")
@@ -55,12 +52,10 @@ class TCPTransport(KNXIPTransport):
 
     def __init__(
         self,
-        xknx: XKNX,
         remote_addr: tuple[str, int],
         connection_lost_cb: Callable[[], None] | None = None,
     ):
         """Initialize TCPTransport class."""
-        self.xknx = xknx
         self.remote_addr = remote_addr
         self.remote_hpai = HPAI(*remote_addr, protocol=HostProtocol.IPV4_TCP)
 

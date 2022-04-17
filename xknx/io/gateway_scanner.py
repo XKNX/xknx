@@ -225,9 +225,8 @@ class GatewayScanner:
         logger.debug("Searching on %s / %s", interface, ip_addr)
 
         udp_transport = UDPTransport(
-            self.xknx,
-            (ip_addr, 0),
-            (self.xknx.multicast_group, self.xknx.multicast_port),
+            local_addr=(ip_addr, 0),
+            remote_addr=(self.xknx.multicast_group, self.xknx.multicast_port),
             multicast=True,
         )
 

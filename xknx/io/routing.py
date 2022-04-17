@@ -47,9 +47,8 @@ class Routing(Interface):
         self.local_ip = local_ip
 
         self.udp_transport = UDPTransport(
-            self.xknx,
-            (local_ip, 0),
-            (self.xknx.multicast_group, self.xknx.multicast_port),
+            local_addr=(local_ip, 0),
+            remote_addr=(self.xknx.multicast_group, self.xknx.multicast_port),
             multicast=True,
         )
 

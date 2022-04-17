@@ -1,7 +1,6 @@
 """Unit test for KNX/IP Tunnelling Request/Response."""
 from unittest.mock import patch
 
-from xknx import XKNX
 from xknx.dpt import DPTArray
 from xknx.io.request_response import Tunnelling
 from xknx.io.transport import UDPTransport
@@ -22,10 +21,9 @@ class TestTunnelling:
 
     async def test_tunnelling(self):
         """Test tunnelling from KNX bus."""
-        xknx = XKNX()
         communication_channel_id = 23
         data_endpoint = ("192.168.1.2", 4567)
-        udp_transport = UDPTransport(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
+        udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x1, 0x2, 0x3))),

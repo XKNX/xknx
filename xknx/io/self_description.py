@@ -33,7 +33,6 @@ async def request_description(
     """Set up a UDP transport to request a description from a KNXnet/IP device."""
     _local_ip = local_ip or find_local_ip(gateway_ip)
     transport = UDPTransport(
-        xknx,
         local_addr=(_local_ip, local_port),
         remote_addr=(gateway_ip, gateway_port),
         multicast=False,

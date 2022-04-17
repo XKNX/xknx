@@ -24,9 +24,7 @@ async def main():
         print("Gateway does not support tunneling")
         return
 
-    udp_transport = UDPTransport(
-        xknx, (gateway.local_ip, 0), (gateway.ip_addr, gateway.port)
-    )
+    udp_transport = UDPTransport((gateway.local_ip, 0), (gateway.ip_addr, gateway.port))
 
     await udp_transport.connect()
     local_hpai = HPAI(*udp_transport.getsockname())

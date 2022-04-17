@@ -435,9 +435,8 @@ class UDPTunnel(_Tunnel):
     def _init_transport(self) -> None:
         """Initialize transport transport."""
         self.transport = UDPTransport(
-            self.xknx,
-            (self.local_ip, self.local_port),
-            (self.gateway_ip, self.gateway_port),
+            local_addr=(self.local_ip, self.local_port),
+            remote_addr=(self.gateway_ip, self.gateway_port),
             multicast=False,
         )
 
@@ -527,7 +526,6 @@ class TCPTunnel(_Tunnel):
     def _init_transport(self) -> None:
         """Initialize transport transport."""
         self.transport = TCPTransport(
-            self.xknx,
             remote_addr=(self.gateway_ip, self.gateway_port),
             connection_lost_cb=self._tunnel_lost,
         )
@@ -595,7 +593,6 @@ class SecureTunnel(TCPTunnel):
     def _init_transport(self) -> None:
         """Initialize transport transport."""
         self.transport = SecureSession(
-            self.xknx,
             remote_addr=(self.gateway_ip, self.gateway_port),
             user_id=self._user_id,
             user_password=self._user_password,

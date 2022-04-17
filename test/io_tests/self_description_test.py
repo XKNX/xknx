@@ -16,9 +16,7 @@ class TestSelfDescription:
         xknx = XKNX()
         local_addr = ("127.0.0.1", 12345)
         remote_addr = ("127.0.0.2", 54321)
-        transport_mocked = UDPTransport(
-            xknx, local_addr=local_addr, remote_addr=remote_addr
-        )
+        transport_mocked = UDPTransport(local_addr=local_addr, remote_addr=remote_addr)
         transport_mocked.getsockname = Mock(return_value=local_addr)
         transport_mocked.send = Mock()
 
