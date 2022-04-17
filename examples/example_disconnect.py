@@ -34,7 +34,7 @@ async def main():
     for i in range(0, 255):
 
         conn_state = ConnectionState(
-            xknx, udp_transport, communication_channel_id=i, local_hpai=local_hpai
+            udp_transport, communication_channel_id=i, local_hpai=local_hpai
         )
 
         await conn_state.start()
@@ -42,7 +42,7 @@ async def main():
         if conn_state.success:
             print("Disconnecting ", i)
             disconnect = Disconnect(
-                xknx, udp_transport, communication_channel_id=i, local_hpai=local_hpai
+                udp_transport, communication_channel_id=i, local_hpai=local_hpai
             )
 
             await disconnect.start()

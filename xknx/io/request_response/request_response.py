@@ -7,14 +7,10 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING
 
 from xknx.exceptions import CommunicationError
 from xknx.io.transport import KNXIPTransport
 from xknx.knxip import HPAI, ErrorCode, KNXIPBody, KNXIPBodyResponse, KNXIPFrame
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
 
@@ -24,13 +20,11 @@ class RequestResponse:
 
     def __init__(
         self,
-        xknx: XKNX,
         transport: KNXIPTransport,
         awaited_response_class: type[KNXIPBody],
         timeout_in_seconds: float = 1.0,
     ):
         """Initialize RequstResponse class."""
-        self.xknx = xknx
         self.transport = transport
         self.awaited_response_class: type[KNXIPBody] = awaited_response_class
         self.response_received_event = asyncio.Event()

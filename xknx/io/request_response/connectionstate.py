@@ -10,7 +10,6 @@ from .request_response import RequestResponse
 
 if TYPE_CHECKING:
     from xknx.io.transport import KNXIPTransport
-    from xknx.xknx import XKNX
 
 
 class ConnectionState(RequestResponse):
@@ -18,14 +17,12 @@ class ConnectionState(RequestResponse):
 
     def __init__(
         self,
-        xknx: XKNX,
         transport: KNXIPTransport,
         communication_channel_id: int,
         local_hpai: HPAI,
     ):
         """Initialize ConnectionState class."""
         super().__init__(
-            xknx,
             transport,
             ConnectionStateResponse,
             timeout_in_seconds=CONNECTIONSTATE_REQUEST_TIMEOUT,

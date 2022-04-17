@@ -183,7 +183,7 @@ class _Tunnel(Interface):
 
     async def _connect_request(self) -> bool:
         """Connect to tunnelling server. Set communication_channel and src_address."""
-        connect = Connect(self.xknx, self.transport, local_hpai=self.local_hpai)
+        connect = Connect(transport=self.transport, local_hpai=self.local_hpai)
         await connect.start()
         if connect.success:
             self.communication_channel = connect.communication_channel
@@ -214,8 +214,7 @@ class _Tunnel(Interface):
         if self.communication_channel is None:
             raise CommunicationError("No active communication channel.")
         conn_state = ConnectionState(
-            self.xknx,
-            self.transport,
+            transport=self.transport,
             communication_channel_id=self.communication_channel,
             local_hpai=self.local_hpai,
         )
@@ -226,8 +225,7 @@ class _Tunnel(Interface):
         """Disconnect from tunnel device. Delete communication_channel."""
         if self.communication_channel is not None:
             disconnect = Disconnect(
-                self.xknx,
-                self.transport,
+                transport=self.transport,
                 communication_channel_id=self.communication_channel,
                 local_hpai=self.local_hpai,
             )
@@ -460,13 +458,12 @@ class UDPTunnel(_Tunnel):
                 "Sending telegram failed. No active communication channel."
             )
         tunnelling = Tunnelling(
-            self.xknx,
-            self.transport,
-            self._data_endpoint_addr,
-            telegram,
-            self._src_address,
-            self.sequence_number,
-            self.communication_channel,
+            transport=self.transport,
+            data_endpoint=self._data_endpoint_addr,
+            telegram=telegram,
+            src_address=self._src_address,
+            sequence_counter=self.sequence_number,
+            communication_channel_id=self.communication_channel,
         )
         await self._wait_for_tunnelling_request_confirmation(
             send_tunneling_request_aw=tunnelling.start(), telegram=telegram

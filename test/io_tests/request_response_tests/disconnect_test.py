@@ -24,7 +24,7 @@ class TestDisconnect:
         udp_transport = UDPTransport(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
         local_hpai = HPAI(ip_addr="192.168.1.3", port=4321)
         disconnect = Disconnect(
-            xknx, udp_transport, communication_channel_id, local_hpai=local_hpai
+            udp_transport, communication_channel_id, local_hpai=local_hpai
         )
         disconnect.timeout_in_seconds = 0
 
@@ -78,7 +78,7 @@ class TestDisconnect:
         udp_transport = UDPTransport(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
         local_hpai = HPAI()
         disconnect = Disconnect(
-            xknx, udp_transport, communication_channel_id, local_hpai=local_hpai
+            udp_transport, communication_channel_id, local_hpai=local_hpai
         )
         disconnect.timeout_in_seconds = 0
 

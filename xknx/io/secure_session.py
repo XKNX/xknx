@@ -96,7 +96,6 @@ class SecureSession(TCPTransport):
         self._sequence_number = 0
         self._sequence_number_received = -1
         request_session = Session(
-            self.xknx,
             transport=self,
             ecdh_client_public_key=self.public_key,
         )
@@ -110,7 +109,6 @@ class SecureSession(TCPTransport):
         self.initialized = True
 
         request_authentication = Authenticate(
-            self.xknx,
             transport=self,
             user_id=self.user_id,
             message_authentication_code=authenticate_mac,

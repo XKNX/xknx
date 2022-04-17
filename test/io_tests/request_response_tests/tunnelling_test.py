@@ -33,7 +33,6 @@ class TestTunnelling:
         sequence_counter = 42
         src_address = IndividualAddress("2.2.2")
         tunnelling = Tunnelling(
-            xknx,
             udp_transport,
             data_endpoint,
             telegram,

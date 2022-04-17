@@ -16,7 +16,6 @@ from .request_response import RequestResponse
 if TYPE_CHECKING:
     from xknx.io.transport import UDPTransport
     from xknx.telegram import IndividualAddress, Telegram
-    from xknx.xknx import XKNX
 
 
 class Tunnelling(RequestResponse):
@@ -26,7 +25,6 @@ class Tunnelling(RequestResponse):
 
     def __init__(
         self,
-        xknx: XKNX,
         transport: UDPTransport,
         data_endpoint: tuple[str, int] | None,
         telegram: Telegram,
@@ -38,7 +36,7 @@ class Tunnelling(RequestResponse):
         self.data_endpoint_addr = data_endpoint
         self.src_address = src_address
 
-        super().__init__(xknx, transport, TunnellingAck)
+        super().__init__(transport, TunnellingAck)
 
         self.telegram = telegram
         self.sequence_counter = sequence_counter

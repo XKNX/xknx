@@ -17,7 +17,7 @@ class TestConnectResponse:
         """Test if create_knxipframe of base class raises an exception."""
         xknx = XKNX()
         udp_transport = UDPTransport(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
-        request_response = RequestResponse(xknx, udp_transport, DisconnectResponse)
+        request_response = RequestResponse(udp_transport, DisconnectResponse)
         request_response.timeout_in_seconds = 0
 
         with pytest.raises(NotImplementedError):
@@ -33,7 +33,7 @@ class TestConnectResponse:
         """Test RequestResponse: timeout. No callback shall be left."""
         xknx = XKNX()
         udp_transport = UDPTransport(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
-        requ_resp = RequestResponse(xknx, udp_transport, KNXIPBody)
+        requ_resp = RequestResponse(udp_transport, KNXIPBody)
         requ_resp.response_received_event.wait = MagicMock(
             side_effect=asyncio.TimeoutError()
         )
@@ -54,7 +54,7 @@ class TestConnectResponse:
         """Test RequestResponse: task cancelled. No callback shall be left."""
         xknx = XKNX()
         udp_transport = UDPTransport(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
-        requ_resp = RequestResponse(xknx, udp_transport, KNXIPBody)
+        requ_resp = RequestResponse(udp_transport, KNXIPBody)
         requ_resp.response_received_event.wait = MagicMock(
             side_effect=asyncio.CancelledError()
         )

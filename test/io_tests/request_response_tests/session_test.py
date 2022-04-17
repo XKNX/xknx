@@ -1,7 +1,6 @@
 """Unit test for KNX/IP Session Request/Response."""
 from unittest.mock import Mock, patch
 
-from xknx import XKNX
 from xknx.io.request_response import Session
 from xknx.knxip import (
     HPAI,
@@ -17,11 +16,9 @@ class TestSession:
 
     async def test_session(self):
         """Test authenticating to secure KNX device."""
-        xknx = XKNX()
         transport_mock = Mock()
         ecdh_public_key = bytes(16)
         session = Session(
-            xknx,
             transport_mock,
             ecdh_client_public_key=ecdh_public_key,
         )
