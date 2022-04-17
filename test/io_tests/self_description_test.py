@@ -2,7 +2,6 @@
 import asyncio
 from unittest.mock import Mock, patch
 
-from xknx import XKNX
 from xknx.io.self_description import DescriptionQuery, request_description
 from xknx.io.transport.udp_transport import UDPTransport
 from xknx.knxip import HPAI, DescriptionRequest, KNXIPFrame
@@ -13,7 +12,6 @@ class TestSelfDescription:
 
     async def test_description_query(self, time_travel):
         """Test DescriptionQuery class."""
-        xknx = XKNX()
         local_addr = ("127.0.0.1", 12345)
         remote_addr = ("127.0.0.2", 54321)
         transport_mocked = UDPTransport(local_addr=local_addr, remote_addr=remote_addr)
@@ -31,7 +29,7 @@ class TestSelfDescription:
             "0c 02 02 02 03 02 04 02 05 02 07 01",
         )
         description_query = DescriptionQuery(
-            xknx, transport=transport_mocked, local_hpai=HPAI(*local_addr)
+            transport=transport_mocked, local_hpai=HPAI(*local_addr)
         )
         task = asyncio.create_task(description_query.start())
         await time_travel(0)
@@ -46,7 +44,6 @@ class TestSelfDescription:
 
     async def test_request_description(self, time_travel):
         """Test request_description function."""
-        xknx = XKNX()
         local_addr = ("127.0.0.1", 12345)
         remote_addr = ("127.0.0.2", 54321)
 
@@ -59,7 +56,7 @@ class TestSelfDescription:
         ) as transport_stop_mock, patch(
             "xknx.io.self_description.DescriptionQuery.start"
         ) as description_query_start_mock:
-            await request_description(xknx, remote_addr[0])
+            await request_description(remote_addr[0])
             transport_connect_mock.assert_called_once_with()
             transport_getsockname_mock.assert_called_once_with()
             transport_stop_mock.assert_called_once_with()

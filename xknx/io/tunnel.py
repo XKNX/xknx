@@ -242,8 +242,7 @@ class _Tunnel(Interface):
     async def request_description(self) -> GatewayDescriptor | None:
         """Request description from tunneling server."""
         description = DescriptionQuery(
-            self.xknx,
-            self.transport,
+            transport=self.transport,
             local_hpai=self.local_hpai,
         )
         await description.start()
