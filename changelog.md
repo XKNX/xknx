@@ -4,6 +4,7 @@
 
 ### Internal
 
+- Include base class in `DPTBase.parse_transcoder()` lookup
 - Move `levels` instance attribute form `GroupAddress` to `address_format` class variable
 - Remove xknx form every class in the knxip package: CEMIFrame, KNXIPFrame and KNXIPBody (and subclasses)
 

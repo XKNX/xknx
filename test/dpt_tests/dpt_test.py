@@ -89,13 +89,18 @@ class TestDPTBase:
     """Test class for transcoder base object."""
 
     def test_dpt_abstract_subclasses_ignored(self):
-        """Test if abstract base classes are ignored by __recursive_subclasses__."""
-        for dpt in DPTBase.__recursive_subclasses__():
-            assert dpt is not DPTNumeric
+        """Test if abstract base classes are ignored by dpt_class_tree and __recursive_subclasses__."""
+        for dpt in DPTBase.dpt_class_tree():
+            assert dpt not in (DPTBase, DPTNumeric)
+
+    @pytest.mark.parametrize("dpt_class", [DPTString, DPT2ByteFloat])
+    def test_dpt_non_abstract_baseclass_included(self, dpt_class):
+        """Test if non-abstract base classes is included by dpt_class_tree."""
+        assert dpt_class in dpt_class.dpt_class_tree()
 
     def test_dpt_subclasses_definition_types(self):
         """Test value_type and dpt_*_number values for correct type in subclasses of DPTBase."""
-        for dpt in DPTBase.__recursive_subclasses__():
+        for dpt in DPTBase.dpt_class_tree():
             if dpt.value_type is not None:
                 assert isinstance(
                     dpt.value_type, str
@@ -112,7 +117,7 @@ class TestDPTBase:
     def test_dpt_subclasses_no_duplicate_value_types(self):
         """Test for duplicate value_type values in subclasses of DPTBase."""
         value_types = []
-        for dpt in DPTBase.__recursive_subclasses__():
+        for dpt in DPTBase.dpt_class_tree():
             if dpt.value_type is not None:
                 value_types.append(dpt.value_type)
         assert len(value_types) == len(set(value_types))
@@ -120,7 +125,7 @@ class TestDPTBase:
     def test_dpt_subclasses_no_duplicate_dpt_number(self):
         """Test for duplicate value_type values in subclasses of DPTBase."""
         dpt_tuples = []
-        for dpt in DPTBase.__recursive_subclasses__():
+        for dpt in DPTBase.dpt_class_tree():
             if dpt.dpt_main_number is not None and dpt.dpt_sub_number is not None:
                 dpt_tuples.append((dpt.dpt_main_number, dpt.dpt_sub_number))
         assert len(dpt_tuples) == len(set(dpt_tuples))
@@ -157,7 +162,7 @@ class TestDPTBase:
 class TestDPTNumeric:
     """Test class for numeric transcoder base object."""
 
-    @pytest.mark.parametrize("dpt_class", DPTNumeric.__recursive_subclasses__())
+    @pytest.mark.parametrize("dpt_class", DPTNumeric.dpt_class_tree())
     def test_values(self, dpt_class):
         """Test boundary values are set for numeric definitions (because mypy doesn't)."""
 
