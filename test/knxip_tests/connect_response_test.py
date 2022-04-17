@@ -1,7 +1,6 @@
 """Unit test for KNX/IP ConnectResponses."""
 import pytest
 
-from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import HPAI, ConnectRequestType, ConnectResponse, ErrorCode, KNXIPFrame
 
@@ -14,8 +13,7 @@ class TestKNXIPConnectResponse:
         raw = bytes.fromhex(
             "06 10 02 06 00 14 01 00 08 01 C0 A8 2A 0A 0E 57 04 04 11 FF"
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
         assert isinstance(knxipframe.body, ConnectResponse)
         assert knxipframe.body.communication_channel == 1
@@ -25,7 +23,6 @@ class TestKNXIPConnectResponse:
         assert knxipframe.body.identifier == 4607
 
         connect_response = ConnectResponse(
-            xknx,
             communication_channel=1,
             status_code=ErrorCode.E_NO_ERROR,
             request_type=ConnectRequestType.TUNNEL_CONNECTION,
@@ -41,16 +38,14 @@ class TestKNXIPConnectResponse:
         raw = bytes.fromhex(
             "06 10 02 06 00 14 01 00 08 01 C0 A8 2A 0A 0E 57 03 04 11 FF"
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         with pytest.raises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
 
     def test_from_knx_wrong_crd2(self):
         """Test parsing and streaming wrong ConnectRequest (wrong CRD length)."""
         raw = bytes.fromhex("06 10 02 06 00 14 01 00 08 01 C0 A8 2A 0A 0E 57 04 04")
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         with pytest.raises(CouldNotParseKNXIP):
             knxipframe.from_knx(raw)
 
@@ -63,15 +58,13 @@ class TestKNXIPConnectResponse:
         raw = bytes.fromhex(
             "06 10 02 06 00 14 C0 24 08 01 0A 01 00 29 0E 57 04 04 00 00"
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
         assert isinstance(knxipframe.body, ConnectResponse)
         assert knxipframe.body.status_code == ErrorCode.E_NO_MORE_CONNECTIONS
         assert knxipframe.body.communication_channel == 192
 
         connect_response = ConnectResponse(
-            xknx,
             communication_channel=192,
             status_code=ErrorCode.E_NO_MORE_CONNECTIONS,
             request_type=ConnectRequestType.TUNNEL_CONNECTION,
@@ -91,8 +84,7 @@ class TestKNXIPConnectResponse:
         raw = bytes.fromhex(
             "06 10 02 06 00 14 00 24 08 01 C0 A8 01 01 0E 57 00 00 00 00"
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
         assert isinstance(knxipframe.body, ConnectResponse)
         assert knxipframe.body.status_code == ErrorCode.E_NO_MORE_CONNECTIONS
@@ -107,8 +99,7 @@ class TestKNXIPConnectResponse:
         HPAI and CRD all zero. This was received from MDT device (2020).
         """
         raw = bytes.fromhex("06 10 02 06 00 08 00 24 00 00 00 00 00 00 00 00 00 00")
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
         assert isinstance(knxipframe.body, ConnectResponse)
         assert knxipframe.body.status_code == ErrorCode.E_NO_MORE_CONNECTIONS

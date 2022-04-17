@@ -1,5 +1,4 @@
 """Unit test for KNX/IP SecureWrapper objects."""
-from xknx import XKNX
 from xknx.knxip import KNXIPFrame, SecureWrapper
 
 
@@ -30,8 +29,7 @@ class TestKNXIPSecureWrapper:
             + encrypted_data
             + message_authentication_code
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
 
         assert isinstance(knxipframe.body, SecureWrapper)
@@ -47,7 +45,6 @@ class TestKNXIPSecureWrapper:
         assert knxipframe.to_knx() == raw
 
         secure_wrapper = SecureWrapper(
-            xknx,
             secure_session_id=1,
             sequence_information=sequence_number,
             serial_number=knx_serial_number,

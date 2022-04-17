@@ -9,14 +9,9 @@ by the KNXnet/IP Server in response to the KNXnet/IP Clients DESCRIPTION_REQUEST
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from .body import KNXIPBody
 from .dib import DIB, DIBDeviceInformation
 from .knxip_enum import KNXIPServiceType
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class DescriptionResponse(KNXIPBody):
@@ -24,9 +19,8 @@ class DescriptionResponse(KNXIPBody):
 
     SERVICE_TYPE = KNXIPServiceType.DESCRIPTION_RESPONSE
 
-    def __init__(self, xknx: XKNX):
+    def __init__(self) -> None:
         """Initialize SearchResponse object."""
-        super().__init__(xknx)
         self.dibs: list[DIB] = []
 
     def calculated_length(self) -> int:

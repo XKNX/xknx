@@ -36,7 +36,6 @@ class ConnectionState(RequestResponse):
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
         connectionstate_request = ConnectionStateRequest(
-            self.xknx,
             communication_channel_id=self.communication_channel_id,
             control_endpoint=self.local_hpai,
         )

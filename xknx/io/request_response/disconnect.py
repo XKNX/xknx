@@ -30,7 +30,6 @@ class Disconnect(RequestResponse):
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
         disconnect_request = DisconnectRequest(
-            self.xknx,
             communication_channel_id=self.communication_channel_id,
             control_endpoint=self.local_hpai,
         )

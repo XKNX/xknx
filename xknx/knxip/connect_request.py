@@ -5,16 +5,11 @@ Connect requests are used to start a new tunnel connection on a KNX/IP device.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from xknx.exceptions import CouldNotParseKNXIP
 
 from .body import KNXIPBody
 from .hpai import HPAI
 from .knxip_enum import ConnectRequestType, KNXIPServiceType
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class ConnectRequest(KNXIPBody):
@@ -25,13 +20,11 @@ class ConnectRequest(KNXIPBody):
 
     def __init__(
         self,
-        xknx: XKNX,
         request_type: ConnectRequestType = ConnectRequestType.TUNNEL_CONNECTION,
         control_endpoint: HPAI = HPAI(),
         data_endpoint: HPAI = HPAI(),
     ):
         """Initialize ConnectRequest object."""
-        super().__init__(xknx)
         self.request_type = request_type
         self.control_endpoint = control_endpoint
         self.data_endpoint = data_endpoint

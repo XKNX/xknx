@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased changes
+
+### Internal
+
+- Move `levels` instance attribute form `GroupAddress` to `address_format` class variable
+- Remove xknx form every class in the knxip package: CEMIFrame, KNXIPFrame and KNXIPBody (and subclasses)
+
 ## 0.20.3 Threading fixes 2022-04-15
 
 ### Devices

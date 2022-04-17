@@ -78,12 +78,11 @@ class Routing(Interface):
     async def send_telegram(self, telegram: "Telegram") -> None:
         """Send Telegram to routing connected device."""
         cemi = CEMIFrame.init_from_telegram(
-            self.xknx,
             telegram=telegram,
             code=CEMIMessageCode.L_DATA_IND,
             src_addr=self.xknx.own_address,
         )
-        routing_indication = RoutingIndication(self.xknx, cemi=cemi)
+        routing_indication = RoutingIndication(cemi=cemi)
         await self.send_knxipframe(KNXIPFrame.init_from_body(routing_indication))
 
     async def send_knxipframe(self, knxipframe: KNXIPFrame) -> None:

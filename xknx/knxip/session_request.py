@@ -6,16 +6,13 @@ handshake for a new secure communication session.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from xknx.exceptions import CouldNotParseKNXIP
 
 from .body import KNXIPBody
 from .hpai import HPAI
 from .knxip_enum import HostProtocol, KNXIPServiceType
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class SessionRequest(KNXIPBody):
@@ -27,12 +24,10 @@ class SessionRequest(KNXIPBody):
 
     def __init__(
         self,
-        xknx: XKNX,
         control_endpoint: HPAI = HPAI(protocol=HostProtocol.IPV4_TCP),
         ecdh_client_public_key: bytes = bytes(32),
     ):
         """Initialize SessionRequest object."""
-        super().__init__(xknx)
         self.control_endpoint = control_endpoint
         self.ecdh_client_public_key = ecdh_client_public_key
 

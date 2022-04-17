@@ -9,7 +9,8 @@ is satisfied.
 """
 from __future__ import annotations
 
-from ..exceptions import ConversionError, CouldNotParseKNXIP
+from xknx.exceptions import ConversionError, CouldNotParseKNXIP
+
 from .knxip_enum import DIBServiceFamily, DIBTypeCode, SearchRequestParameterType
 
 

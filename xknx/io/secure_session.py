@@ -190,10 +190,7 @@ class SecureSession(TCPTransport):
         if self.transport and self.initialized:
             self.send(
                 KNXIPFrame.init_from_body(
-                    SessionStatus(
-                        self.xknx,
-                        status=SecureSessionStatusCode.STATUS_CLOSE,
-                    )
+                    SessionStatus(status=SecureSessionStatusCode.STATUS_CLOSE)
                 )
             )
         self.stop_keepalive_task()
@@ -271,7 +268,7 @@ class SecureSession(TCPTransport):
                 "Verification of message authentication code failed"
             )
 
-        knxipframe = KNXIPFrame(self.xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(dec_frame)
         return knxipframe
 
@@ -280,10 +277,7 @@ class SecureSession(TCPTransport):
         await asyncio.sleep(SESSION_KEEPALIVE_RATE)
         self.send(
             KNXIPFrame.init_from_body(
-                SessionStatus(
-                    self.xknx,
-                    status=SecureSessionStatusCode.STATUS_KEEPALIVE,
-                )
+                SessionStatus(status=SecureSessionStatusCode.STATUS_KEEPALIVE)
             )
         )
 
@@ -333,7 +327,6 @@ class SecureSession(TCPTransport):
         )
         return KNXIPFrame.init_from_body(
             SecureWrapper(
-                self.xknx,
                 secure_session_id=self.session_id,
                 sequence_information=sequence_information,
                 serial_number=XKNX_SERIAL_NUMBER,

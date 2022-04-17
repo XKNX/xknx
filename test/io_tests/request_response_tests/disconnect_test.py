@@ -34,7 +34,6 @@ class TestDisconnect:
         # Expected KNX/IP-Frame:
         exp_knxipframe = KNXIPFrame.init_from_body(
             DisconnectRequest(
-                xknx,
                 communication_channel_id=communication_channel_id,
                 control_endpoint=local_hpai,
             )
@@ -47,14 +46,14 @@ class TestDisconnect:
             mock_udp_send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type
-        wrong_knxipframe = KNXIPFrame(xknx)
+        wrong_knxipframe = KNXIPFrame()
         wrong_knxipframe.init(KNXIPServiceType.DISCONNECT_REQUEST)
         with patch("logging.Logger.warning") as mock_warning:
             disconnect.response_rec_callback(wrong_knxipframe, HPAI(), None)
             mock_warning.assert_called_with("Could not understand knxipframe")
 
         # Response KNX/IP-Frame with error:
-        err_knxipframe = KNXIPFrame(xknx)
+        err_knxipframe = KNXIPFrame()
         err_knxipframe.init(KNXIPServiceType.DISCONNECT_RESPONSE)
         err_knxipframe.body.status_code = ErrorCode.E_CONNECTION_ID
         with patch("logging.Logger.debug") as mock_warning:
@@ -67,7 +66,7 @@ class TestDisconnect:
             )
 
         # Correct Response KNX/IP-Frame:
-        res_knxipframe = KNXIPFrame(xknx)
+        res_knxipframe = KNXIPFrame()
         res_knxipframe.init(KNXIPServiceType.DISCONNECT_RESPONSE)
         disconnect.response_rec_callback(res_knxipframe, HPAI(), None)
         assert disconnect.success
@@ -89,7 +88,6 @@ class TestDisconnect:
         # Expected KNX/IP-Frame:
         exp_knxipframe = KNXIPFrame.init_from_body(
             DisconnectRequest(
-                xknx,
                 communication_channel_id=communication_channel_id,
             )
         )
@@ -101,14 +99,14 @@ class TestDisconnect:
             mock_udp_send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type
-        wrong_knxipframe = KNXIPFrame(xknx)
+        wrong_knxipframe = KNXIPFrame()
         wrong_knxipframe.init(KNXIPServiceType.DISCONNECT_REQUEST)
         with patch("logging.Logger.warning") as mock_warning:
             disconnect.response_rec_callback(wrong_knxipframe, HPAI(), None)
             mock_warning.assert_called_with("Could not understand knxipframe")
 
         # Response KNX/IP-Frame with error:
-        err_knxipframe = KNXIPFrame(xknx)
+        err_knxipframe = KNXIPFrame()
         err_knxipframe.init(KNXIPServiceType.DISCONNECT_RESPONSE)
         err_knxipframe.body.status_code = ErrorCode.E_CONNECTION_ID
         with patch("logging.Logger.debug") as mock_warning:
@@ -121,7 +119,7 @@ class TestDisconnect:
             )
 
         # Correct Response KNX/IP-Frame:
-        res_knxipframe = KNXIPFrame(xknx)
+        res_knxipframe = KNXIPFrame()
         res_knxipframe.init(KNXIPServiceType.DISCONNECT_RESPONSE)
         disconnect.response_rec_callback(res_knxipframe, HPAI(), None)
         assert disconnect.success

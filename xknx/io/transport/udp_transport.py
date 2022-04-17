@@ -87,7 +87,7 @@ class UDPTransport(KNXIPTransport):
         """Parse and process KNXIP frame. Callback for having received an UDP packet."""
         if raw:
             try:
-                knxipframe = KNXIPFrame(self.xknx)
+                knxipframe = KNXIPFrame()
                 knxipframe.from_knx(raw)
             except CouldNotParseKNXIP as couldnotparseknxip:
                 knx_logger.debug(

@@ -5,16 +5,11 @@ Disconnect requests are used to disconnect a tunnel from a KNX/IP device.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from xknx.exceptions import CouldNotParseKNXIP
 
 from .body import KNXIPBody
 from .hpai import HPAI
 from .knxip_enum import KNXIPServiceType
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class DisconnectRequest(KNXIPBody):
@@ -24,13 +19,10 @@ class DisconnectRequest(KNXIPBody):
 
     def __init__(
         self,
-        xknx: XKNX,
         communication_channel_id: int = 1,
         control_endpoint: HPAI = HPAI(),
     ):
         """Initialize DisconnectRequest object."""
-        super().__init__(xknx)
-
         self.communication_channel_id = communication_channel_id
         self.control_endpoint = control_endpoint
 

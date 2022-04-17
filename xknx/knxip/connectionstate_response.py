@@ -6,16 +6,11 @@ With a connectionstate response the receiving party acknowledges the valid proce
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from xknx.exceptions import CouldNotParseKNXIP
 
 from .body import KNXIPBodyResponse
 from .error_code import ErrorCode
 from .knxip_enum import KNXIPServiceType
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class ConnectionStateResponse(KNXIPBodyResponse):
@@ -26,12 +21,10 @@ class ConnectionStateResponse(KNXIPBodyResponse):
 
     def __init__(
         self,
-        xknx: XKNX,
         communication_channel_id: int = 1,
         status_code: ErrorCode = ErrorCode.E_NO_ERROR,
     ):
         """Initialize ConnectionStateResponse object."""
-        super().__init__(xknx)
         self.communication_channel_id = communication_channel_id
         self.status_code = status_code
 

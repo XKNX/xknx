@@ -13,16 +13,11 @@ Documentation within:
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
 
 from .knxip_enum import CEMIFlags, CEMIMessageCode
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class CEMIFrame:
@@ -30,7 +25,6 @@ class CEMIFrame:
 
     def __init__(
         self,
-        xknx: XKNX,
         code: CEMIMessageCode = CEMIMessageCode.L_DATA_IND,
         flags: int = 0,
         src_addr: IndividualAddress = IndividualAddress(None),
@@ -39,7 +33,6 @@ class CEMIFrame:
         payload: APCI | None = None,
     ):
         """Initialize CEMIFrame object."""
-        self.xknx = xknx
         self.code = code
         self.flags = flags
         self.src_addr = src_addr
@@ -49,13 +42,12 @@ class CEMIFrame:
 
     @staticmethod
     def init_from_telegram(
-        xknx: XKNX,
         telegram: Telegram,
         code: CEMIMessageCode = CEMIMessageCode.L_DATA_IND,
         src_addr: IndividualAddress = IndividualAddress(None),
     ) -> CEMIFrame:
         """Return CEMIFrame from a Telegram."""
-        cemi = CEMIFrame(xknx, code=code, src_addr=src_addr)
+        cemi = CEMIFrame(code=code, src_addr=src_addr)
         # dst_addr, payload and cmd are set by telegram.setter - mpdu_len not needed for outgoing telegram
         cemi.telegram = telegram
         return cemi
@@ -147,9 +139,7 @@ class CEMIFrame:
         self.src_addr = IndividualAddress((cemi[4 + addil], cemi[5 + addil]))
 
         if self.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS:
-            self.dst_addr = GroupAddress(
-                (cemi[6 + addil], cemi[7 + addil]), levels=self.xknx.address_format
-            )
+            self.dst_addr = GroupAddress((cemi[6 + addil], cemi[7 + addil]))
         else:
             self.dst_addr = IndividualAddress((cemi[6 + addil], cemi[7 + addil]))
 

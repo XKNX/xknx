@@ -30,10 +30,7 @@ class Session(RequestResponse):
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
         return KNXIPFrame.init_from_body(
-            SessionRequest(
-                self.xknx,
-                ecdh_client_public_key=self.ecdh_client_public_key,
-            )
+            SessionRequest(ecdh_client_public_key=self.ecdh_client_public_key)
         )
 
     def on_success_hook(self, knxipframe: KNXIPFrame) -> None:

@@ -361,7 +361,6 @@ class _Tunnel(Interface):
         # If we do we close our communication_channel before reconnection.
         if disconnect_request.communication_channel_id == self.communication_channel:
             disconnect_response = DisconnectResponse(
-                self.xknx,
                 communication_channel_id=self.communication_channel,
             )
             self.transport.send(KNXIPFrame.init_from_body(disconnect_response))
@@ -494,7 +493,6 @@ class UDPTunnel(_Tunnel):
     ) -> None:
         """Send tunnelling ACK after tunnelling request received."""
         ack = TunnellingAck(
-            self.xknx,
             communication_channel_id=communication_channel_id,
             sequence_counter=sequence_counter,
         )
@@ -547,13 +545,11 @@ class TCPTunnel(_Tunnel):
                 "Sending telegram failed. No active communication channel."
             )
         cemi = CEMIFrame.init_from_telegram(
-            self.xknx,
             telegram=telegram,
             code=CEMIMessageCode.L_DATA_REQ,
             src_addr=self._src_address,
         )
         tunnelling_request = TunnellingRequest(
-            self.xknx,
             communication_channel_id=self.communication_channel,
             sequence_counter=self.sequence_number,
             cemi=cemi,

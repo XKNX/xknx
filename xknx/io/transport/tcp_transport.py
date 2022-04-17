@@ -77,7 +77,7 @@ class TCPTransport(KNXIPTransport):
         if not raw:
             return
         try:
-            knxipframe = KNXIPFrame(self.xknx)
+            knxipframe = KNXIPFrame()
             frame_length = knxipframe.from_knx(raw)
         except IncompleteKNXIPFrame:
             self._buffer = raw

@@ -519,8 +519,7 @@ class TestStringRepresentations:
 
     def test_connect_request(self):
         """Test string representation of KNX/IP ConnectRequest."""
-        xknx = XKNX()
-        connect_request = ConnectRequest(xknx)
+        connect_request = ConnectRequest()
         connect_request.request_type = ConnectRequestType.TUNNEL_CONNECTION
         connect_request.control_endpoint = HPAI(ip_addr="192.168.42.1", port=33941)
         connect_request.data_endpoint = HPAI(ip_addr="192.168.42.2", port=33942)
@@ -532,8 +531,7 @@ class TestStringRepresentations:
 
     def test_connect_response(self):
         """Test string representatoin of KNX/IP ConnectResponse."""
-        xknx = XKNX()
-        connect_response = ConnectResponse(xknx)
+        connect_response = ConnectResponse()
         connect_response.communication_channel = 13
         connect_response.request_type = ConnectRequestType.TUNNEL_CONNECTION
         connect_response.data_endpoint = HPAI(ip_addr="192.168.42.1", port=33941)
@@ -547,8 +545,7 @@ class TestStringRepresentations:
 
     def test_disconnect_request(self):
         """Test string representation of KNX/IP DisconnectRequest."""
-        xknx = XKNX()
-        disconnect_request = DisconnectRequest(xknx)
+        disconnect_request = DisconnectRequest()
         disconnect_request.communication_channel_id = 13
         disconnect_request.control_endpoint = HPAI(ip_addr="192.168.42.1", port=33941)
         assert (
@@ -558,8 +555,7 @@ class TestStringRepresentations:
 
     def test_disconnect_response(self):
         """Test string representation of KNX/IP DisconnectResponse."""
-        xknx = XKNX()
-        disconnect_response = DisconnectResponse(xknx)
+        disconnect_response = DisconnectResponse()
         disconnect_response.communication_channel_id = 23
         assert (
             str(disconnect_response)
@@ -568,8 +564,7 @@ class TestStringRepresentations:
 
     def test_connectionstate_request(self):
         """Test string representation of KNX/IP ConnectionStateRequest."""
-        xknx = XKNX()
-        connectionstate_request = ConnectionStateRequest(xknx)
+        connectionstate_request = ConnectionStateRequest()
         connectionstate_request.communication_channel_id = 23
         connectionstate_request.control_endpoint = HPAI(
             ip_addr="192.168.42.1", port=33941
@@ -581,8 +576,7 @@ class TestStringRepresentations:
 
     def test_connectionstate_response(self):
         """Test string representation of KNX/IP ConnectionStateResponse."""
-        xknx = XKNX()
-        connectionstate_response = ConnectionStateResponse(xknx)
+        connectionstate_response = ConnectionStateResponse()
         connectionstate_response.communication_channel_id = 23
         assert (
             str(connectionstate_response)
@@ -591,17 +585,15 @@ class TestStringRepresentations:
 
     def test_search_reqeust(self):
         """Test string representation of KNX/IP SearchRequest."""
-        xknx = XKNX()
-        search_request = SearchRequest(xknx)
+        search_request = SearchRequest()
         assert (
             str(search_request)
-            == '<SearchRequest discovery_endpoint="224.0.23.12:3671/udp" />'
+            == '<SearchRequest discovery_endpoint="0.0.0.0:0/udp" />'
         )
 
     def test_search_response(self):
         """Test string representation of KNX/IP SearchResponse."""
-        xknx = XKNX()
-        search_response = SearchResponse(xknx)
+        search_response = SearchResponse()
         search_response.control_endpoint = HPAI(ip_addr="192.168.42.1", port=33941)
         search_response.dibs.append(DIBGeneric())
         search_response.dibs.append(DIBGeneric())
@@ -615,8 +607,7 @@ class TestStringRepresentations:
 
     def test_search_response_extended(self):
         """Test string representation of KNX/IP SearchResponseExtended."""
-        xknx = XKNX()
-        search_response = SearchResponseExtended(xknx)
+        search_response = SearchResponseExtended()
         search_response.control_endpoint = HPAI(ip_addr="192.168.42.1", port=33941)
         search_response.dibs.append(DIBGeneric())
         search_response.dibs.append(DIBGeneric())
@@ -630,8 +621,7 @@ class TestStringRepresentations:
 
     def test_tunnelling_request(self):
         """Test string representation of KNX/IP TunnellingRequest."""
-        xknx = XKNX()
-        tunnelling_request = TunnellingRequest(xknx)
+        tunnelling_request = TunnellingRequest()
         tunnelling_request.communication_channel_id = 23
         tunnelling_request.sequence_counter = 42
         assert (
@@ -643,8 +633,7 @@ class TestStringRepresentations:
 
     def test_tunnelling_ack(self):
         """Test string representation of KNX/IP TunnellingAck."""
-        xknx = XKNX()
-        tunnelling_ack = TunnellingAck(xknx)
+        tunnelling_ack = TunnellingAck()
         tunnelling_ack.communication_channel_id = 23
         tunnelling_ack.sequence_counter = 42
         assert (
@@ -654,8 +643,7 @@ class TestStringRepresentations:
 
     def test_cemi_frame(self):
         """Test string representation of KNX/IP CEMI Frame."""
-        xknx = XKNX()
-        cemi_frame = CEMIFrame(xknx)
+        cemi_frame = CEMIFrame()
         cemi_frame.src_addr = GroupAddress("1/2/3")
         cemi_frame.telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
@@ -669,14 +657,13 @@ class TestStringRepresentations:
 
     def test_knxip_frame(self):
         """Test string representation of KNX/IP Frame."""
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.init(KNXIPServiceType.SEARCH_REQUEST)
         assert (
             str(knxipframe)
             == '<KNXIPFrame <KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="SEARCH_REQUEST" '
             'Reserve="0" TotalLength="0" />\n'
-            ' body="<SearchRequest discovery_endpoint="224.0.23.12:3671/udp" />" />'
+            ' body="<SearchRequest discovery_endpoint="0.0.0.0:0/udp" />" />'
         )
 
     #
@@ -701,8 +688,7 @@ class TestStringRepresentations:
     #
     def test_routing_indication_str(self):
         """Test string representation of GatewayDescriptor."""
-        xknx = XKNX()
-        routing_indication = RoutingIndication(xknx)
+        routing_indication = RoutingIndication()
         assert (
             str(routing_indication)
             == '<RoutingIndication cemi="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")" '

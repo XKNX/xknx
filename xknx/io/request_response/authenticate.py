@@ -32,7 +32,6 @@ class Authenticate(RequestResponse):
         """Create KNX/IP Frame object to be sent to device."""
         return KNXIPFrame.init_from_body(
             SessionAuthenticate(
-                self.xknx,
                 user_id=self.user_id,
                 message_authentication_code=self.message_authentication_code,
             )
