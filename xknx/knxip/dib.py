@@ -60,6 +60,8 @@ class DIB(ABC):
             return DIBDeviceInformation()
         if dtc == DIBTypeCode.SUPP_SVC_FAMILIES:
             return DIBSuppSVCFamilies()
+        if dtc == DIBTypeCode.SECURED_SERVICE_FAMILIES:
+            return DIBSecuredServiceFamilies()
         return DIBGeneric()
 
 
@@ -115,79 +117,6 @@ class DIBGeneric(DIB):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<DIB dtc="{self.dtc}" data="{", ".join(f"0x{i:02x}" for i in self.data)}" />'
-
-
-class DIBSuppSVCFamilies(DIB):
-    """Class for serialization and deserialization of KNX DIB Supported Services."""
-
-    class Family:
-        """Class for storing a supported device family."""
-
-        def __init__(self, name: DIBServiceFamily, version: int):
-            """Initialize DIBSuppSVCFamilies.Family."""
-            self.name = name
-            self.version = version
-
-        def to_knx(self) -> bytes:
-            """Serialize to KNX/IP raw data."""
-            return bytes((self.name.value, self.version))
-
-        def __str__(self) -> str:
-            """Return object as readable string."""
-            return f'<Family name="{self.name}" version="{self.version}" />'
-
-        def __eq__(self, other: object) -> bool:
-            """Equal operator."""
-            return self.__dict__ == other.__dict__
-
-    def __init__(self) -> None:
-        """Initialize DIBSuppSVCFamilies class."""
-        super().__init__()
-        self.families: list[DIBSuppSVCFamilies.Family] = []
-
-    def supports(self, name: DIBServiceFamily, version: int | None = None) -> bool:
-        """Return if device supports a given service family by name and optional minimum version."""
-        for family in self.families:
-            if name == family.name:
-                if version is None or family.version >= version:
-                    return True
-        return False
-
-    def calculated_length(self) -> int:
-        """Get length of KNX/IP object."""
-        return len(self.families) * 2 + DIB_HEADER_LENGTH
-
-    def from_knx(self, raw: bytes) -> int:
-        """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) < 2:
-            raise CouldNotParseKNXIP("DIB header too small")
-        length = raw[0]
-        if len(raw) < length:
-            raise CouldNotParseKNXIP("DIB wrong size")
-        if DIBTypeCode(raw[1]) != DIBTypeCode.SUPP_SVC_FAMILIES:
-            raise CouldNotParseKNXIP("DIB is no device info")
-
-        for pos in range(2, length, 2):
-            name = DIBServiceFamily(raw[pos])
-            version = raw[pos + 1]
-            self.families.append(DIBSuppSVCFamilies.Family(name, version))
-        return length
-
-    def to_knx(self) -> bytes:
-        """Serialize to KNX/IP raw data."""
-        return bytes(
-            (
-                self.calculated_length(),
-                DIBTypeCode.SUPP_SVC_FAMILIES.value,
-            )
-        ) + b"".join(family.to_knx() for family in self.families)
-
-    def __str__(self) -> str:
-        """Return object as readable string."""
-        _families_str = ", ".join(
-            f"{family.name} version: {family.version}" for family in self.families
-        )
-        return f'<DIBSuppSVCFamilies families="[{_families_str}]" />'
 
 
 class DIBDeviceInformation(DIB):
@@ -285,3 +214,86 @@ class DIBDeviceInformation(DIB):
             f'\n\tmac_address="{self.mac_address}" '
             f'\n\tname="{self.name}" />'
         )
+
+
+class DIBSuppSVCFamilies(DIB):
+    """Class for serialization and deserialization of KNX DIB Supported Services."""
+
+    type_code = DIBTypeCode.SUPP_SVC_FAMILIES
+
+    class Family:
+        """Class for storing a supported device family."""
+
+        def __init__(self, name: DIBServiceFamily, version: int):
+            """Initialize DIBSuppSVCFamilies.Family."""
+            self.name = name
+            self.version = version
+
+        def to_knx(self) -> bytes:
+            """Serialize to KNX/IP raw data."""
+            return bytes((self.name.value, self.version))
+
+        def __str__(self) -> str:
+            """Return object as readable string."""
+            return f'<Family name="{self.name}" version="{self.version}" />'
+
+        def __eq__(self, other: object) -> bool:
+            """Equal operator."""
+            return self.__dict__ == other.__dict__
+
+    def __init__(self) -> None:
+        """Initialize DIBSuppSVCFamilies class."""
+        super().__init__()
+        self.families: list[DIBSuppSVCFamilies.Family] = []
+
+    def supports(self, name: DIBServiceFamily, version: int | None = None) -> bool:
+        """Return if device supports a given service family by name and optional minimum version."""
+        for family in self.families:
+            if name == family.name:
+                if version is None or family.version >= version:
+                    return True
+        return False
+
+    def calculated_length(self) -> int:
+        """Get length of KNX/IP object."""
+        return len(self.families) * 2 + DIB_HEADER_LENGTH
+
+    def from_knx(self, raw: bytes) -> int:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 2:
+            raise CouldNotParseKNXIP("DIB header too small")
+        length = raw[0]
+        if len(raw) < length:
+            raise CouldNotParseKNXIP("DIB wrong size")
+        if DIBTypeCode(raw[1]) != self.type_code:
+            raise CouldNotParseKNXIP(
+                f"DIB has wrong type code for {self.__class__.__name__}"
+            )
+
+        for pos in range(2, length, 2):
+            name = DIBServiceFamily(raw[pos])
+            version = raw[pos + 1]
+            self.families.append(DIBSuppSVCFamilies.Family(name, version))
+        return length
+
+    def to_knx(self) -> bytes:
+        """Serialize to KNX/IP raw data."""
+        return bytes(
+            (
+                self.calculated_length(),
+                self.type_code.value,
+            )
+        ) + b"".join(family.to_knx() for family in self.families)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        _families_str = ", ".join(
+            f"{family.name} version: {family.version}" for family in self.families
+        )
+        return f'<{self.__class__.__name__} families="[{_families_str}]" />'
+
+
+class DIBSecuredServiceFamilies(DIBSuppSVCFamilies):
+    """Class for serialization and deserialization of KNX DIB Secured Service Families."""
+
+    type_code = DIBTypeCode.SECURED_SERVICE_FAMILIES

@@ -6,6 +6,7 @@ from xknx.knxip import (
     DIB,
     DIBDeviceInformation,
     DIBGeneric,
+    DIBSecuredServiceFamilies,
     DIBServiceFamily,
     DIBSuppSVCFamilies,
     DIBTypeCode,
@@ -109,3 +110,25 @@ class TestKNXIPDIB:
         assert dib.supports(DIBServiceFamily.TUNNELING, version=2)
         assert not dib.supports(DIBServiceFamily.ROUTING)
         assert not dib.supports(DIBServiceFamily.ROUTING, version=2)
+
+    def test_dib_secured_service_families(self):
+        """Test parsing of secured service families."""
+        raw = bytes((0x08, 0x06, 0x03, 0x01, 0x04, 0x01, 0x05, 0x01))
+
+        dib = DIB.determine_dib(raw)
+        assert isinstance(dib, DIBSecuredServiceFamilies)
+        assert dib.from_knx(raw) == 8
+
+        assert dib.families == [
+            DIBSuppSVCFamilies.Family(DIBServiceFamily.DEVICE_MANAGEMENT, 1),
+            DIBSuppSVCFamilies.Family(DIBServiceFamily.TUNNELING, 1),
+            DIBSuppSVCFamilies.Family(DIBServiceFamily.ROUTING, 1),
+        ]
+
+        assert dib.to_knx() == raw
+
+        assert dib.supports(DIBServiceFamily.TUNNELING)
+        assert dib.supports(DIBServiceFamily.TUNNELING, version=1)
+        assert dib.supports(DIBServiceFamily.ROUTING)
+        assert not dib.supports(DIBServiceFamily.ROUTING, version=2)
+        assert dib.supports(DIBServiceFamily.DEVICE_MANAGEMENT)
