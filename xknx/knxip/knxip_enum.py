@@ -160,8 +160,8 @@ class DIBTypeCode(Enum):
     # KNX addresses
     KNX_ADDRESSES = 0x05
 
-    # KNX IP Secure Unicast
-    SUPP_SECURE_SVC_FAMILIES = 0x06
+    # KNX IP Secure
+    SECURED_SERVICE_FAMILIES = 0x06
     TUNNELING_INFO = 0x07
     ADDITIONAL_DEVICE_INFO = 0x08
 

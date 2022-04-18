@@ -15,7 +15,7 @@ from .knxip_enum import DIBServiceFamily, DIBTypeCode, SearchRequestParameterTyp
 
 
 class SRP:
-    """Search request parameter for a search request extended."""
+    """Search request parameter for a SearchRequestExtended."""
 
     SRP_HEADER_SIZE = 2
     MANDATORY_BIT_INDEX = 0x07
@@ -91,15 +91,18 @@ class SRP:
             raise CouldNotParseKNXIP("SRP is larger than actual data size.")
 
         return SRP(
-            SearchRequestParameterType(data[1] & 0x7F),
-            bool(data[1] >> SRP.MANDATORY_BIT_INDEX),
-            data[2:size],
+            srp_type=SearchRequestParameterType(data[1] & 0x7F),
+            mandatory=bool(data[1] >> SRP.MANDATORY_BIT_INDEX),
+            data=data[2:size],
         )
 
     @staticmethod
     def with_programming_mode() -> SRP:
         """Create a SRP that limits the response to only devices that are currently in programming mode."""
-        return SRP(SearchRequestParameterType.SELECT_BY_PROGRAMMING_MODE, True)
+        return SRP(
+            srp_type=SearchRequestParameterType.SELECT_BY_PROGRAMMING_MODE,
+            mandatory=True,
+        )
 
     @staticmethod
     def with_mac_address(mac_address: bytes) -> SRP:
@@ -108,7 +111,11 @@ class SRP:
 
         :param mac_address: The mac address to restrict this SRP to
         """
-        return SRP(SearchRequestParameterType.SELECT_BY_MAC_ADDRESS, True, mac_address)
+        return SRP(
+            srp_type=SearchRequestParameterType.SELECT_BY_MAC_ADDRESS,
+            mandatory=True,
+            data=mac_address,
+        )
 
     @staticmethod
     def with_service(family: DIBServiceFamily, family_version: int) -> SRP:
@@ -120,23 +127,26 @@ class SRP:
         :return: Srp with the given parameter
         """
         return SRP(
-            SearchRequestParameterType.SELECT_BY_SERVICE,
-            True,
-            bytes([family.value, family_version]),
+            srp_type=SearchRequestParameterType.SELECT_BY_SERVICE,
+            mandatory=True,
+            data=bytes([family.value, family_version]),
         )
 
     @staticmethod
-    def with_device_description(dibs: list[DIBTypeCode]) -> SRP:
+    def request_device_description(dibs: list[DIBTypeCode]) -> SRP:
         """
-        Create a SRP with a list of DIBs to indicate the server that it should, at least, include.
+        Create a SRP with a list of DIBs the server shall include in the response.
+
+        The server may include in addition any number of other DIBs in the response.
+        The server shall ignore Description types that are not recognized or not supported.
 
         :param dibs: the description types to include in the SRP
         :return: Srp with given parameters
         """
         return SRP(
-            SearchRequestParameterType.REQUEST_DIBS,
-            True,
-            bytes(dib.value for dib in dibs),
+            srp_type=SearchRequestParameterType.REQUEST_DIBS,
+            mandatory=True,
+            data=bytes(dib.value for dib in dibs),
         )
 
     def __eq__(self, other: object) -> bool:
