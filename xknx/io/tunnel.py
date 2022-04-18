@@ -183,7 +183,7 @@ class _Tunnel(Interface):
 
     async def _connect_request(self) -> bool:
         """Connect to tunnelling server. Set communication_channel and src_address."""
-        connect = Connect(self.xknx, self.transport, local_hpai=self.local_hpai)
+        connect = Connect(transport=self.transport, local_hpai=self.local_hpai)
         await connect.start()
         if connect.success:
             self.communication_channel = connect.communication_channel
@@ -214,8 +214,7 @@ class _Tunnel(Interface):
         if self.communication_channel is None:
             raise CommunicationError("No active communication channel.")
         conn_state = ConnectionState(
-            self.xknx,
-            self.transport,
+            transport=self.transport,
             communication_channel_id=self.communication_channel,
             local_hpai=self.local_hpai,
         )
@@ -226,8 +225,7 @@ class _Tunnel(Interface):
         """Disconnect from tunnel device. Delete communication_channel."""
         if self.communication_channel is not None:
             disconnect = Disconnect(
-                self.xknx,
-                self.transport,
+                transport=self.transport,
                 communication_channel_id=self.communication_channel,
                 local_hpai=self.local_hpai,
             )
@@ -244,8 +242,7 @@ class _Tunnel(Interface):
     async def request_description(self) -> GatewayDescriptor | None:
         """Request description from tunneling server."""
         description = DescriptionQuery(
-            self.xknx,
-            self.transport,
+            transport=self.transport,
             local_hpai=self.local_hpai,
         )
         await description.start()
@@ -437,9 +434,8 @@ class UDPTunnel(_Tunnel):
     def _init_transport(self) -> None:
         """Initialize transport transport."""
         self.transport = UDPTransport(
-            self.xknx,
-            (self.local_ip, self.local_port),
-            (self.gateway_ip, self.gateway_port),
+            local_addr=(self.local_ip, self.local_port),
+            remote_addr=(self.gateway_ip, self.gateway_port),
             multicast=False,
         )
 
@@ -460,13 +456,12 @@ class UDPTunnel(_Tunnel):
                 "Sending telegram failed. No active communication channel."
             )
         tunnelling = Tunnelling(
-            self.xknx,
-            self.transport,
-            self._data_endpoint_addr,
-            telegram,
-            self._src_address,
-            self.sequence_number,
-            self.communication_channel,
+            transport=self.transport,
+            data_endpoint=self._data_endpoint_addr,
+            telegram=telegram,
+            src_address=self._src_address,
+            sequence_counter=self.sequence_number,
+            communication_channel_id=self.communication_channel,
         )
         await self._wait_for_tunnelling_request_confirmation(
             send_tunneling_request_aw=tunnelling.start(), telegram=telegram
@@ -530,7 +525,6 @@ class TCPTunnel(_Tunnel):
     def _init_transport(self) -> None:
         """Initialize transport transport."""
         self.transport = TCPTransport(
-            self.xknx,
             remote_addr=(self.gateway_ip, self.gateway_port),
             connection_lost_cb=self._tunnel_lost,
         )
@@ -598,7 +592,6 @@ class SecureTunnel(TCPTunnel):
     def _init_transport(self) -> None:
         """Initialize transport transport."""
         self.transport = SecureSession(
-            self.xknx,
             remote_addr=(self.gateway_ip, self.gateway_port),
             user_id=self._user_id,
             user_password=self._user_password,

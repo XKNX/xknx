@@ -9,7 +9,6 @@ from .request_response import RequestResponse
 
 if TYPE_CHECKING:
     from xknx.io.transport import KNXIPTransport
-    from xknx.xknx import XKNX
 
 
 class Authenticate(RequestResponse):
@@ -17,13 +16,12 @@ class Authenticate(RequestResponse):
 
     def __init__(
         self,
-        xknx: XKNX,
         transport: KNXIPTransport,
         user_id: int,
         message_authentication_code: bytes,
     ):
         """Initialize Session class."""
-        super().__init__(xknx, transport, SessionStatus, timeout_in_seconds=10)
+        super().__init__(transport, SessionStatus, timeout_in_seconds=10)
         self.user_id = user_id
         self.message_authentication_code = message_authentication_code
         self.response: SessionStatus | None = None

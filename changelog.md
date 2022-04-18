@@ -7,6 +7,8 @@
 - Include base class in `DPTBase.parse_transcoder()` lookup
 - Move `levels` instance attribute form `GroupAddress` to `address_format` class variable
 - Remove xknx form every class in the knxip package: CEMIFrame, KNXIPFrame and KNXIPBody (and subclasses)
+- Remove xknx form every class in the io.request_response package
+- Remove xknx form io.transport package and io.secure_session and io.self_description modules
 
 ## 0.20.3 Threading fixes 2022-04-15
 

@@ -1,7 +1,6 @@
 """Unit test for KNX/IP Authenticate Request/Response."""
 from unittest.mock import Mock, patch
 
-from xknx import XKNX
 from xknx.io.request_response import Authenticate
 from xknx.knxip import (
     HPAI,
@@ -18,12 +17,10 @@ class TestAuthenticate:
 
     async def test_authenticate(self):
         """Test authenticating to secure KNX device."""
-        xknx = XKNX()
         transport_mock = Mock()
         user_id = 123
         mac = bytes(16)
         authenticate = Authenticate(
-            xknx,
             transport_mock,
             user_id=user_id,
             message_authentication_code=mac,

@@ -5,7 +5,6 @@ from unittest.mock import Mock, patch
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 import pytest
 
-from xknx import XKNX
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP
 from xknx.io.const import SESSION_KEEPALIVE_RATE
 from xknx.io.secure_session import SecureSession
@@ -57,9 +56,7 @@ class TestSecureSession:
         )
         self.patch_message_tag.start()
 
-        self.xknx = XKNX()
         self.session = SecureSession(
-            self.xknx,
             remote_addr=self.mock_addr,
             user_id=self.mock_user_id,
             user_password=self.mock_user_password,

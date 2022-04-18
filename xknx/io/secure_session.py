@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Callable
+from typing import Callable
 
 from cryptography.hazmat.primitives.asymmetric.x25519 import (
     X25519PrivateKey,
@@ -38,9 +38,6 @@ from .const import SESSION_KEEPALIVE_RATE, XKNX_SERIAL_NUMBER
 from .request_response import Authenticate, Session
 from .transport import KNXIPTransport, TCPTransport
 
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
-
 logger = logging.getLogger("xknx.log")
 knx_logger = logging.getLogger("xknx.knx")
 
@@ -56,7 +53,6 @@ class SecureSession(TCPTransport):
 
     def __init__(
         self,
-        xknx: XKNX,
         remote_addr: tuple[str, int],
         user_id: int,
         user_password: str,
@@ -65,7 +61,6 @@ class SecureSession(TCPTransport):
     ) -> None:
         """Initialize SecureSession class."""
         super().__init__(
-            xknx,
             remote_addr=remote_addr,
             connection_lost_cb=connection_lost_cb,
         )
@@ -96,7 +91,6 @@ class SecureSession(TCPTransport):
         self._sequence_number = 0
         self._sequence_number_received = -1
         request_session = Session(
-            self.xknx,
             transport=self,
             ecdh_client_public_key=self.public_key,
         )
@@ -110,7 +104,6 @@ class SecureSession(TCPTransport):
         self.initialized = True
 
         request_authentication = Authenticate(
-            self.xknx,
             transport=self,
             user_id=self.user_id,
             message_authentication_code=authenticate_mac,

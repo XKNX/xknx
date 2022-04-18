@@ -1,7 +1,6 @@
 """Unit test for KNX/IP Connect Request/Response."""
 from unittest.mock import patch
 
-from xknx import XKNX
 from xknx.io.request_response import Connect
 from xknx.io.transport import UDPTransport
 from xknx.knxip import (
@@ -20,10 +19,9 @@ class TestConnect:
 
     async def test_connect(self):
         """Test connecting from KNX bus."""
-        xknx = XKNX()
-        udp_transport = UDPTransport(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
+        udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
         local_hpai = HPAI(ip_addr="192.168.1.3", port=4321)
-        connect = Connect(xknx, udp_transport, local_hpai=local_hpai)
+        connect = Connect(udp_transport, local_hpai=local_hpai)
         connect.timeout_in_seconds = 0
 
         assert connect.awaited_response_class == ConnectResponse
@@ -76,10 +74,9 @@ class TestConnect:
 
     async def test_connect_route_back_true(self):
         """Test connecting from KNX bus."""
-        xknx = XKNX()
-        udp_transport = UDPTransport(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
+        udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
         local_hpai = HPAI()  # route_back: No IP address, no port, UDP
-        connect = Connect(xknx, udp_transport, local_hpai=local_hpai)
+        connect = Connect(udp_transport, local_hpai=local_hpai)
         connect.timeout_in_seconds = 0
 
         assert connect.awaited_response_class == ConnectResponse

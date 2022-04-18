@@ -24,9 +24,7 @@ async def main():
         print("Gateway does not support tunneling")
         return
 
-    udp_transport = UDPTransport(
-        xknx, (gateway.local_ip, 0), (gateway.ip_addr, gateway.port)
-    )
+    udp_transport = UDPTransport((gateway.local_ip, 0), (gateway.ip_addr, gateway.port))
 
     await udp_transport.connect()
     local_hpai = HPAI(*udp_transport.getsockname())
@@ -34,7 +32,7 @@ async def main():
     for i in range(0, 255):
 
         conn_state = ConnectionState(
-            xknx, udp_transport, communication_channel_id=i, local_hpai=local_hpai
+            udp_transport, communication_channel_id=i, local_hpai=local_hpai
         )
 
         await conn_state.start()
@@ -42,7 +40,7 @@ async def main():
         if conn_state.success:
             print("Disconnecting ", i)
             disconnect = Disconnect(
-                xknx, udp_transport, communication_channel_id=i, local_hpai=local_hpai
+                udp_transport, communication_channel_id=i, local_hpai=local_hpai
             )
 
             await disconnect.start()

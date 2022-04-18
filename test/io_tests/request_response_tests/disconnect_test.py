@@ -1,7 +1,6 @@
 """Unit test for KNX/IP Disconnect Request/Response."""
 from unittest.mock import patch
 
-from xknx import XKNX
 from xknx.io.request_response import Disconnect
 from xknx.io.transport import UDPTransport
 from xknx.knxip import (
@@ -19,12 +18,11 @@ class TestDisconnect:
 
     async def test_disconnect(self):
         """Test disconnecting from KNX bus."""
-        xknx = XKNX()
         communication_channel_id = 23
-        udp_transport = UDPTransport(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
+        udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
         local_hpai = HPAI(ip_addr="192.168.1.3", port=4321)
         disconnect = Disconnect(
-            xknx, udp_transport, communication_channel_id, local_hpai=local_hpai
+            udp_transport, communication_channel_id, local_hpai=local_hpai
         )
         disconnect.timeout_in_seconds = 0
 
@@ -73,12 +71,11 @@ class TestDisconnect:
 
     async def test_disconnect_route_back_true(self):
         """Test disconnecting from KNX bus."""
-        xknx = XKNX()
         communication_channel_id = 23
-        udp_transport = UDPTransport(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
+        udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
         local_hpai = HPAI()
         disconnect = Disconnect(
-            xknx, udp_transport, communication_channel_id, local_hpai=local_hpai
+            udp_transport, communication_channel_id, local_hpai=local_hpai
         )
         disconnect.timeout_in_seconds = 0
 

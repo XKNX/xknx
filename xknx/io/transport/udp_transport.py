@@ -11,15 +11,12 @@ import logging
 import socket
 from sys import platform
 import time
-from typing import TYPE_CHECKING, Callable, cast
+from typing import Callable, cast
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP
 from xknx.knxip import HPAI, KNXIPFrame
 
 from .ip_transport import KNXIPTransport
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 raw_socket_logger = logging.getLogger("xknx.raw_socket")
 logger = logging.getLogger("xknx.log")
@@ -65,7 +62,6 @@ class UDPTransport(KNXIPTransport):
 
     def __init__(
         self,
-        xknx: XKNX,
         local_addr: tuple[str, int],
         remote_addr: tuple[str, int],
         multicast: bool = False,
@@ -75,7 +71,6 @@ class UDPTransport(KNXIPTransport):
             raise TypeError()
         if not isinstance(remote_addr, tuple):
             raise TypeError()
-        self.xknx = xknx
         self.local_addr = local_addr
         self.remote_addr = remote_addr
         self.multicast = multicast

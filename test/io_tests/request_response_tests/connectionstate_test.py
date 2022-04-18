@@ -1,7 +1,6 @@
 """Unit test for KNX/IP ConnectionState Request/Response."""
 from unittest.mock import patch
 
-from xknx import XKNX
 from xknx.io.request_response import ConnectionState
 from xknx.io.transport import UDPTransport
 from xknx.knxip import (
@@ -19,12 +18,11 @@ class TestConnectionState:
 
     async def test_connectionstate(self):
         """Test connectionstateing from KNX bus."""
-        xknx = XKNX()
         communication_channel_id = 23
-        udp_transport = UDPTransport(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
+        udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
         local_hpai = HPAI(ip_addr="192.168.1.3", port=4321)
         connectionstate = ConnectionState(
-            xknx, udp_transport, communication_channel_id, local_hpai=local_hpai
+            udp_transport, communication_channel_id, local_hpai=local_hpai
         )
         connectionstate.timeout_in_seconds = 0
 
@@ -73,12 +71,11 @@ class TestConnectionState:
 
     async def test_connectionstate_route_back_true(self):
         """Test connectionstateing from KNX bus."""
-        xknx = XKNX()
         communication_channel_id = 23
-        udp_transport = UDPTransport(xknx, ("192.168.1.1", 0), ("192.168.1.2", 1234))
+        udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
         local_hpai = HPAI()
         connectionstate = ConnectionState(
-            xknx, udp_transport, communication_channel_id, local_hpai=local_hpai
+            udp_transport, communication_channel_id, local_hpai=local_hpai
         )
         connectionstate.timeout_in_seconds = 0
 
