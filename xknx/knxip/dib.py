@@ -259,7 +259,7 @@ class DIBSuppSVCFamilies(DIB):
         if len(raw) < 2:
             raise CouldNotParseKNXIP("DIB header too small")
         length = raw[0]
-        if len(raw) < length:
+        if (len(raw) < length) or (length % 2):
             raise CouldNotParseKNXIP("DIB wrong size")
         if DIBTypeCode(raw[1]) != self.type_code:
             raise CouldNotParseKNXIP(
@@ -328,10 +328,10 @@ class DIBTunnelingInfo(DIB):
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) < 2:
+        if len(raw) < 4:
             raise CouldNotParseKNXIP("DIB header too small")
         length = raw[0]
-        if len(raw) < length:
+        if (len(raw) < length) or (length % 4):
             raise CouldNotParseKNXIP("DIB wrong size")
         if DIBTypeCode(raw[1]) != DIBTypeCode.TUNNELING_INFO:
             raise CouldNotParseKNXIP(
