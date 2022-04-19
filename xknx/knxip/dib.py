@@ -316,11 +316,11 @@ class DIBTunnelingInfo(DIB):
     """Class for serialization and deserialization of KNX DIB Tunneling Info."""
 
     def __init__(
-        self, slots: dict[IndividualAddress, TunnelingSlotStatus] = {}
+        self, slots: dict[IndividualAddress, TunnelingSlotStatus] | None = None
     ) -> None:
         """Initialize DIBTunnelingInfo class."""
         self.max_apdu_length = 248
-        self.slots = slots
+        self.slots = slots or {}
 
     def calculated_length(self) -> int:
         """Get length of KNX/IP object."""
