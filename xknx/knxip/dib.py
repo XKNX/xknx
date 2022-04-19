@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import socket
+from typing import NamedTuple
 
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.telegram import IndividualAddress
@@ -30,10 +31,6 @@ class DIB(ABC):
     This base class is only the interface for the derived
     classes.
     """
-
-    @abstractmethod
-    def __init__(self) -> None:
-        """Initialize DIB class."""
 
     @abstractmethod
     def calculated_length(self) -> int:
@@ -62,6 +59,8 @@ class DIB(ABC):
             return DIBSuppSVCFamilies()
         if dtc == DIBTypeCode.SECURED_SERVICE_FAMILIES:
             return DIBSecuredServiceFamilies()
+        if dtc == DIBTypeCode.TUNNELING_INFO:
+            return DIBTunnelingInfo()
         return DIBGeneric()
 
 
@@ -74,7 +73,6 @@ class DIBGeneric(DIB):
 
     def __init__(self) -> None:
         """Initialize DIBGeneric class."""
-        super().__init__()
         # DTC Description Type Code
         self.dtc: DIBTypeCode | int = 0
         # IBD Information Block Data
@@ -126,7 +124,6 @@ class DIBDeviceInformation(DIB):
 
     def __init__(self) -> None:
         """Initialize DIBDeviceInformation class."""
-        super().__init__()
         self.knx_medium: KNXMedium = KNXMedium.TP1
         self.programming_mode: bool = False
         self.individual_address: IndividualAddress = IndividualAddress(None)
@@ -243,7 +240,6 @@ class DIBSuppSVCFamilies(DIB):
 
     def __init__(self) -> None:
         """Initialize DIBSuppSVCFamilies class."""
-        super().__init__()
         self.families: list[DIBSuppSVCFamilies.Family] = []
 
     def supports(self, name: DIBServiceFamily, version: int | None = None) -> bool:
@@ -297,3 +293,76 @@ class DIBSecuredServiceFamilies(DIBSuppSVCFamilies):
     """Class for serialization and deserialization of KNX DIB Secured Service Families."""
 
     type_code = DIBTypeCode.SECURED_SERVICE_FAMILIES
+
+
+class TunnelingSlotStatus(NamedTuple):
+    """Class for storing tunneling slot status."""
+
+    usable: bool
+    authorized: bool
+    free: bool
+
+    def __bytes__(self) -> bytes:
+        """Serialize to KNX/IP raw data."""
+        return bytes(
+            (
+                0x00,  # reserved
+                self.usable << 2 | self.authorized << 1 | self.free,
+            )
+        )
+
+
+class DIBTunnelingInfo(DIB):
+    """Class for serialization and deserialization of KNX DIB Tunneling Info."""
+
+    def __init__(
+        self, slots: dict[IndividualAddress, TunnelingSlotStatus] = {}
+    ) -> None:
+        """Initialize DIBTunnelingInfo class."""
+        self.max_apdu_length = 248
+        self.slots = slots
+
+    def calculated_length(self) -> int:
+        """Get length of KNX/IP object."""
+        return 2 + 2 + len(self.slots) * 4
+
+    def from_knx(self, raw: bytes) -> int:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 2:
+            raise CouldNotParseKNXIP("DIB header too small")
+        length = raw[0]
+        if len(raw) < length:
+            raise CouldNotParseKNXIP("DIB wrong size")
+        if DIBTypeCode(raw[1]) != DIBTypeCode.TUNNELING_INFO:
+            raise CouldNotParseKNXIP(
+                f"DIB has wrong type code for {self.__class__.__name__}"
+            )
+
+        self.max_apdu_length = int.from_bytes(raw[2:4], "big")
+        for pos in range(4, length, 4):
+            address = IndividualAddress((raw[pos], raw[pos + 1]))
+            status = TunnelingSlotStatus(
+                usable=bool(raw[pos + 3] >> 2 & 0b1),
+                authorized=bool(raw[pos + 3] >> 1 & 0b1),
+                free=bool(raw[pos + 3] & 0b1),
+            )
+            self.slots[address] = status
+        return length
+
+    def to_knx(self) -> bytes:
+        """Serialize to KNX/IP raw data."""
+        return (
+            bytes((self.calculated_length(), DIBTypeCode.TUNNELING_INFO.value))
+            + self.max_apdu_length.to_bytes(2, "big")
+            + b"".join(
+                bytes(address.to_knx()) + bytes(status)
+                for address, status in self.slots.items()
+            )
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f"<{self.__class__.__name__} max_adpu_lenght={self.max_apdu_length} "
+            f"slots={self.slots}/>"
+        )

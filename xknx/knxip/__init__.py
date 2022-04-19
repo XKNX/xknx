@@ -14,6 +14,7 @@ from .dib import (
     DIBGeneric,
     DIBSecuredServiceFamilies,
     DIBSuppSVCFamilies,
+    DIBTunnelingInfo,
 )
 from .disconnect_request import DisconnectRequest
 from .disconnect_response import DisconnectResponse
@@ -61,6 +62,7 @@ __all__ = [
     "DIBGeneric",
     "DIBSecuredServiceFamilies",
     "DIBSuppSVCFamilies",
+    "DIBTunnelingInfo",
     "DisconnectRequest",
     "DisconnectResponse",
     "ErrorCode",

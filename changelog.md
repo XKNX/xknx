@@ -4,7 +4,7 @@
 
 ### Protocol
 
-- Add DIBSecuredServiceFamilies parser
+- Add DIBSecuredServiceFamilies and DIBTunnelingInfo parser
 
 ### Internal
 
