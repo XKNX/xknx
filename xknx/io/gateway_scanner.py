@@ -17,9 +17,11 @@ import netifaces
 from xknx.knxip import (
     DIB,
     HPAI,
+    SRP,
     DIBDeviceInformation,
     DIBServiceFamily,
     DIBSuppSVCFamilies,
+    DIBTypeCode,
     KNXIPBody,
     KNXIPFrame,
     KNXIPServiceType,
@@ -245,11 +247,23 @@ class GatewayScanner:
             ip_addr=self.xknx.multicast_group, port=self.xknx.multicast_port
         )
 
-        search_request: KNXIPBody = SearchRequest(discovery_endpoint=discovery_endpoint)
+        search_request: KNXIPBody
         if search_request_type == KNXIPServiceType.SEARCH_REQUEST_EXTENDED:
             search_request = SearchRequestExtended(
-                discovery_endpoint=discovery_endpoint
+                discovery_endpoint=discovery_endpoint,
+                srps=[
+                    SRP.request_device_description(
+                        [
+                            DIBTypeCode.DEVICE_INFO,
+                            DIBTypeCode.SUPP_SVC_FAMILIES,
+                            DIBTypeCode.SECURED_SERVICE_FAMILIES,
+                            DIBTypeCode.TUNNELING_INFO,
+                        ]
+                    )
+                ],
             )
+        else:
+            search_request = SearchRequest(discovery_endpoint=discovery_endpoint)
         udp_transport.send(KNXIPFrame.init_from_body(search_request))
 
     def _response_rec_callback(

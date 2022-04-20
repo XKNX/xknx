@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Protocol
+
+- Add DIBSecuredServiceFamilies and DIBTunnelingInfo parser
+
 ### Internal
 
 - Include base class in `DPTBase.parse_transcoder()` lookup
