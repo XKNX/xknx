@@ -8,7 +8,14 @@ from .connectionstate_request import ConnectionStateRequest
 from .connectionstate_response import ConnectionStateResponse
 from .description_request import DescriptionRequest
 from .description_response import DescriptionResponse
-from .dib import DIB, DIBDeviceInformation, DIBGeneric, DIBSuppSVCFamilies
+from .dib import (
+    DIB,
+    DIBDeviceInformation,
+    DIBGeneric,
+    DIBSecuredServiceFamilies,
+    DIBSuppSVCFamilies,
+    DIBTunnelingInfo,
+)
 from .disconnect_request import DisconnectRequest
 from .disconnect_response import DisconnectResponse
 from .error_code import ErrorCode
@@ -36,6 +43,7 @@ from .session_authenticate import SessionAuthenticate
 from .session_request import SessionRequest
 from .session_response import SessionResponse
 from .session_status import SessionStatus
+from .srp import SRP
 from .tunnelling_ack import TunnellingAck
 from .tunnelling_request import TunnellingRequest
 
@@ -52,7 +60,9 @@ __all__ = [
     "DIB",
     "DIBDeviceInformation",
     "DIBGeneric",
+    "DIBSecuredServiceFamilies",
     "DIBSuppSVCFamilies",
+    "DIBTunnelingInfo",
     "DisconnectRequest",
     "DisconnectResponse",
     "ErrorCode",
@@ -78,6 +88,7 @@ __all__ = [
     "SessionRequest",
     "SessionResponse",
     "SessionStatus",
+    "SRP",
     "TunnellingAck",
     "TunnellingRequest",
 ]

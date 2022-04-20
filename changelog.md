@@ -6,6 +6,10 @@
 
 - Fix exposure of datetime, time and date objects to the Bus
 
+### Protocol
+
+- Add DIBSecuredServiceFamilies and DIBTunnelingInfo parser
+
 ### Internal
 
 - Include base class in `DPTBase.parse_transcoder()` lookup
