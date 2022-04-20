@@ -71,11 +71,11 @@ class TestKNXIPSRP:
                 SRP.request_device_description(
                     [DIBTypeCode.SUPP_SVC_FAMILIES, DIBTypeCode.TUNNELING_INFO]
                 ),
-                bytes.fromhex("04 84 02 07"),
+                bytes.fromhex("04 04 02 07"),
             ),
             (
                 SRP.request_device_description([DIBTypeCode.SUPP_SVC_FAMILIES]),
-                bytes.fromhex("04 84 02 00"),
+                bytes.fromhex("04 04 02 00"),
             ),
         ],
     )
