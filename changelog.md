@@ -2,6 +2,8 @@
 
 ## Unreleased changes
 
+## 0.20.4 Fix exposure of time and date
+
 ### Bugfixes
 
 - Fix exposure of datetime, time and date objects to the Bus
