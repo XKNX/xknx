@@ -23,16 +23,21 @@ class Task:
         name: str,
         task: AsyncCallbackType,
         restart_after_reconnect: bool = False,
+        loop: asyncio.AbstractEventLoop | None = None,
     ) -> None:
         """Initialize Task class."""
         self.name = name
         self.task = task
         self.restart_after_reconnect = restart_after_reconnect
         self._task: asyncio.Task[None] | None = None
+        self._loop = loop
 
     def start(self) -> None:
         """Start a task."""
-        self._task = asyncio.create_task(self.task, name=self.name)
+        if self._loop is not None:
+            self._task = self._loop.create_task(self.task, name=self.name)
+        else:
+            self._task = asyncio.create_task(self.task, name=self.name)
 
     def __await__(self) -> Generator[None, None, None]:
         """Wait for task to be finished."""
@@ -66,8 +71,14 @@ class TaskRegistry:
 
     def __init__(self, xknx: XKNX) -> None:
         """Initialize TaskRegistry class."""
+        self._main_loop: asyncio.AbstractEventLoop | None = None
+
         self.xknx = xknx
         self.tasks: list[Task] = []
+
+    async def register_loop(self) -> None:
+        """Register the main loop for thread safe interaction."""
+        self._main_loop = asyncio.get_running_loop()
 
     def register(
         self,
@@ -80,7 +91,10 @@ class TaskRegistry:
         self.unregister(name)
 
         _task: Task = Task(
-            name=name, task=task, restart_after_reconnect=restart_after_reconnect
+            name=name,
+            task=task,
+            restart_after_reconnect=restart_after_reconnect,
+            loop=self._main_loop,
         )
 
         if track_task:
