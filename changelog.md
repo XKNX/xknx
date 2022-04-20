@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Bugfixes
+
+- Fix exposure of datetime, time and date objects to the Bus
+
 ### Protocol
 
 - Add DIBSecuredServiceFamilies and DIBTunnelingInfo parser
