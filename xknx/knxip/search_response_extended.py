@@ -25,7 +25,7 @@ class SearchResponseExtended(SearchResponse):
         """Initialize SearchResponse object."""
         super().__init__(control_endpoint)
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         _dibs_str = ",\n".join(dib.__str__() for dib in self.dibs)
         return (

@@ -51,7 +51,7 @@ class SearchResponse(KNXIPBody):
             dib.to_knx() for dib in self.dibs
         )
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         _dibs_str = ",\n".join(dib.__str__() for dib in self.dibs)
         return (

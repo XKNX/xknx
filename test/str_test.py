@@ -526,7 +526,7 @@ class TestStringRepresentations:
         assert (
             str(connect_request)
             == '<ConnectRequest control_endpoint="192.168.42.1:33941/udp" data_endpoint="192.168.42.2:33942/udp" '
-            'request_type="ConnectRequestType.TUNNEL_CONNECTION" />'
+            'request_type="ConnectRequestType.TUNNEL_CONNECTION" flags="0x2" />'
         )
 
     def test_connect_response(self):
@@ -550,7 +550,7 @@ class TestStringRepresentations:
         disconnect_request.control_endpoint = HPAI(ip_addr="192.168.42.1", port=33941)
         assert (
             str(disconnect_request)
-            == '<DisconnectRequest CommunicationChannelID="13" control_endpoint="192.168.42.1:33941/udp" />'
+            == '<DisconnectRequest communication_channel_id="13" control_endpoint="192.168.42.1:33941/udp" />'
         )
 
     def test_disconnect_response(self):
@@ -559,7 +559,7 @@ class TestStringRepresentations:
         disconnect_response.communication_channel_id = 23
         assert (
             str(disconnect_response)
-            == '<DisconnectResponse CommunicationChannelID="23" status_code="ErrorCode.E_NO_ERROR" />'
+            == '<DisconnectResponse communication_channel_id="23" status_code="ErrorCode.E_NO_ERROR" />'
         )
 
     def test_connectionstate_request(self):
@@ -571,7 +571,7 @@ class TestStringRepresentations:
         )
         assert (
             str(connectionstate_request)
-            == '<ConnectionStateRequest CommunicationChannelID="23", control_endpoint="192.168.42.1:33941/udp" />'
+            == '<ConnectionStateRequest communication_channel_id="23", control_endpoint="192.168.42.1:33941/udp" />'
         )
 
     def test_connectionstate_response(self):
@@ -580,7 +580,7 @@ class TestStringRepresentations:
         connectionstate_response.communication_channel_id = 23
         assert (
             str(connectionstate_response)
-            == '<ConnectionStateResponse CommunicationChannelID="23" status_code="ErrorCode.E_NO_ERROR" />'
+            == '<ConnectionStateResponse communication_channel_id="23" status_code="ErrorCode.E_NO_ERROR" />'
         )
 
     def test_search_reqeust(self):

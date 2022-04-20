@@ -44,10 +44,10 @@ class ConnectionStateResponse(KNXIPBodyResponse):
         """Serialize to KNX/IP raw data."""
         return bytes((self.communication_channel_id, self.status_code.value))
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return (
             "<ConnectionStateResponse "
-            f'CommunicationChannelID="{self.communication_channel_id}" '
+            f'communication_channel_id="{self.communication_channel_id}" '
             f'status_code="{self.status_code}" />'
         )

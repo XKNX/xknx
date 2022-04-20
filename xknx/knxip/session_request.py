@@ -47,7 +47,7 @@ class SessionRequest(KNXIPBody):
         """Serialize to KNX/IP raw data."""
         return self.control_endpoint.to_knx() + self.ecdh_client_public_key
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return (
             f"<SessionRequest "

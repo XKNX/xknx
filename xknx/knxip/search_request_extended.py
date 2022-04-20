@@ -47,8 +47,10 @@ class SearchRequestExtended(KNXIPBody):
             bytes(srp) for srp in self.srps
         )
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return (
-            f'<SearchRequestExtended discovery_endpoint="{self.discovery_endpoint}" />'
+            "<SearchRequestExtended "
+            f'discovery_endpoint="{self.discovery_endpoint}" '
+            f'srps="{self.srps}" />'
         )

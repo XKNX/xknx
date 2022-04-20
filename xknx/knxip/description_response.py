@@ -48,7 +48,7 @@ class DescriptionResponse(KNXIPBody):
         """Serialize to KNX/IP raw data."""
         return b"".join(dib.to_knx() for dib in self.dibs)
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
-        _dibs_str = ",\n".join(dib.__str__() for dib in self.dibs)
+        _dibs_str = ",\n".join(dib.__repr__() for dib in self.dibs)
         return "<DescriptionResponse " f'dibs="[\n{_dibs_str}\n]" />'

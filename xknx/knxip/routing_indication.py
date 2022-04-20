@@ -49,6 +49,6 @@ class RoutingIndication(KNXIPBody):
             raise CouldNotParseKNXIP("No CEMIFrame defined.")
         return self.cemi.to_knx()
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return f'<RoutingIndication cemi="{self.cemi}" />'
