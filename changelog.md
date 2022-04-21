@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Discovery
+
+- Send SearchRequest and SearchRequestExtended simultaneously when using GatewayScanner
+
 ## 0.20.4 Fix exposure of time and date
 
 ### Bugfixes
