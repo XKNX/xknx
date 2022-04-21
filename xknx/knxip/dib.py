@@ -112,7 +112,7 @@ class DIBGeneric(DIB):
             + bytes(len(self.data) % 2)  # padding
         )
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return f'<DIB dtc="{self.dtc}" data="{", ".join(f"0x{i:02x}" for i in self.data)}" />'
 
@@ -197,7 +197,7 @@ class DIBDeviceInformation(DIB):
             + name_str_to_knx(self.name)
         )
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return (
             "<DIBDeviceInformation "
@@ -230,7 +230,7 @@ class DIBSuppSVCFamilies(DIB):
             """Serialize to KNX/IP raw data."""
             return bytes((self.name.value, self.version))
 
-        def __str__(self) -> str:
+        def __repr__(self) -> str:
             """Return object as readable string."""
             return f'<Family name="{self.name}" version="{self.version}" />'
 
@@ -281,7 +281,7 @@ class DIBSuppSVCFamilies(DIB):
             )
         ) + b"".join(family.to_knx() for family in self.families)
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         _families_str = ", ".join(
             f"{family.name} version: {family.version}" for family in self.families
@@ -360,7 +360,7 @@ class DIBTunnelingInfo(DIB):
             )
         )
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return (
             f"<{self.__class__.__name__} max_adpu_lenght={self.max_apdu_length} "

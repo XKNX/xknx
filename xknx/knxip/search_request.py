@@ -31,6 +31,6 @@ class SearchRequest(KNXIPBody):
         """Serialize to KNX/IP raw data."""
         return self.discovery_endpoint.to_knx()
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return f'<SearchRequest discovery_endpoint="{self.discovery_endpoint}" />'

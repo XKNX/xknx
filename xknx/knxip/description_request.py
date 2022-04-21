@@ -32,6 +32,6 @@ class DescriptionRequest(KNXIPBody):
         """Serialize to KNX/IP raw data."""
         return self.control_endpoint.to_knx()
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return f'<DescriptionRequest control_endpoint="{self.control_endpoint}" />'

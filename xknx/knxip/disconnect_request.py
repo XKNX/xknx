@@ -45,10 +45,10 @@ class DisconnectRequest(KNXIPBody):
             + self.control_endpoint.to_knx()
         )
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return (
             "<DisconnectRequest "
-            f'CommunicationChannelID="{self.communication_channel_id}" '
+            f'communication_channel_id="{self.communication_channel_id}" '
             f'control_endpoint="{self.control_endpoint}" />'
         )

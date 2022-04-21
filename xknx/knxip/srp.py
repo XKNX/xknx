@@ -145,7 +145,7 @@ class SRP:
         """
         return SRP(
             srp_type=SearchRequestParameterType.REQUEST_DIBS,
-            mandatory=True,
+            mandatory=False,
             data=bytes(dib.value for dib in dibs),
         )
 
