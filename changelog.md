@@ -5,6 +5,7 @@
 ### Discovery
 
 - Send SearchRequest and SearchRequestExtended simultaneously when using GatewayScanner
+- Prefer SearchResponseExtended over SearchResponse results for same gateway
 
 ### Internals
 

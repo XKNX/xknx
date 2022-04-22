@@ -166,8 +166,6 @@ class TestGatewayScanner:
             udp_transport_mock,
             interface="en1",
         )
-
-        assert str(gateway_scanner.found_gateways[0]) == str(self.gateway_desc_both)
         assert len(gateway_scanner.found_gateways) == 1
 
         gateway_scanner._response_rec_callback(
@@ -177,6 +175,10 @@ class TestGatewayScanner:
             interface="eth1",
         )
         assert len(gateway_scanner.found_gateways) == 1
+
+        assert str(
+            gateway_scanner.found_gateways[test_search_response.body.control_endpoint]
+        ) == str(self.gateway_desc_both)
 
     @patch("xknx.io.gateway_scanner.netifaces", autospec=True)
     async def test_scan_timeout(self, netifaces_mock):

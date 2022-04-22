@@ -165,7 +165,7 @@ class GatewayScanner:
         self.timeout_in_seconds = timeout_in_seconds
         self.stop_on_found = stop_on_found or 0
         self.scan_filter = scan_filter
-        self.found_gateways: list[GatewayDescriptor] = []
+        self.found_gateways: dict[HPAI, GatewayDescriptor] = {}
         self._udp_transports: list[UDPTransport] = []
         self._response_received_event = asyncio.Event()
 
@@ -183,7 +183,7 @@ class GatewayScanner:
             for udp_transport in self._udp_transports:
                 udp_transport.stop()
 
-        return self.found_gateways
+        return list(self.found_gateways.values())
 
     async def _search_all_interfaces(
         self, search_request_type: KNXIPServiceType = KNXIPServiceType.SEARCH_REQUEST
@@ -261,7 +261,13 @@ class GatewayScanner:
         if not isinstance(knx_ip_frame.body, (SearchResponse, SearchResponseExtended)):
             logger.warning("Could not understand knxipframe")
             return
-
+        if (
+            isinstance(knx_ip_frame.body, SearchResponse)
+            and knx_ip_frame.body.control_endpoint in self.found_gateways
+        ):
+            logger.debug("Skipping SearchResponse for already found gateway")
+            return
+        # SearchResponseExtended shall replace already found SearchResponse results
         gateway = GatewayDescriptor(
             ip_addr=knx_ip_frame.body.control_endpoint.ip_addr,
             port=knx_ip_frame.body.control_endpoint.port,
@@ -271,13 +277,8 @@ class GatewayScanner:
         gateway.parse_dibs(knx_ip_frame.body.dibs)
 
         logger.debug("Found KNX/IP device at %s: %s", source, repr(gateway))
-        self._add_found_gateway(gateway)
+        if self.scan_filter.match(gateway):
+            self.found_gateways[knx_ip_frame.body.control_endpoint] = gateway
 
-    def _add_found_gateway(self, gateway: GatewayDescriptor) -> None:
-        if self.scan_filter.match(gateway) and not any(
-            _gateway.individual_address == gateway.individual_address
-            for _gateway in self.found_gateways
-        ):
-            self.found_gateways.append(gateway)
             if len(self.found_gateways) >= self.stop_on_found:
                 self._response_received_event.set()
