@@ -6,6 +6,10 @@
 
 - Send SearchRequest and SearchRequestExtended simultaneously when using GatewayScanner
 
+### Internals
+
+- make HPAI hashable and add `addr_tuple` convenice property
+
 ## 0.20.4 Fix exposure of time and date
 
 ### Bugfixes
