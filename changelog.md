@@ -5,7 +5,7 @@
 ### Discovery
 
 - Send SearchRequest and SearchRequestExtended simultaneously when using GatewayScanner
-- Prefer SearchResponseExtended over SearchResponse results for same gateway
+- Skip SearchResponse results for Core-V2 devices - wait for SearchResponseExtended
 
 ### Internals
 

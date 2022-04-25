@@ -261,13 +261,21 @@ class GatewayScanner:
         if not isinstance(knx_ip_frame.body, (SearchResponse, SearchResponseExtended)):
             logger.warning("Could not understand knxipframe")
             return
-        if (
-            isinstance(knx_ip_frame.body, SearchResponse)
-            and knx_ip_frame.body.control_endpoint in self.found_gateways
-        ):
-            logger.debug("Skipping SearchResponse for already found gateway")
-            return
-        # SearchResponseExtended shall replace already found SearchResponse results
+
+        # skip non-extended SearchResponse for Core-V2 devices
+        if knx_ip_frame.header.service_type_ident == KNXIPServiceType.SEARCH_RESPONSE:
+            if svc_families_dib := next(
+                (
+                    dib
+                    for dib in knx_ip_frame.body.dibs
+                    if isinstance(dib, DIBSuppSVCFamilies)
+                ),
+                None,
+            ):
+                if svc_families_dib.supports(DIBServiceFamily.CORE, version=2):
+                    logger.debug("Skipping SearchResponse for Core-V2 device")
+                    return
+
         gateway = GatewayDescriptor(
             ip_addr=knx_ip_frame.body.control_endpoint.ip_addr,
             port=knx_ip_frame.body.control_endpoint.port,
