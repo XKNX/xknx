@@ -6,6 +6,7 @@
 
 - Send SearchRequest and SearchRequestExtended simultaneously when using GatewayScanner
 - Skip SearchResponse results for Core-V2 devices - wait for SearchResponseExtended
+- Identify interfaces having KNX IP Secure Tunneling required and skip if using Automatic connection mode
 
 ### Internals
 

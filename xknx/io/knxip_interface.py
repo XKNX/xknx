@@ -149,6 +149,7 @@ class KNXIPInterface:
     async def _start_automatic(self) -> None:
         """Start GatewayScanner and connect to the found device."""
         scan_filter = self.connection_config.scan_filter
+        scan_filter.secure = False  # secure not supported for automatic connection
         gateway, local_interface_ip = await self.find_gateway(scan_filter)
         self._gateway_info = gateway
 

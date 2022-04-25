@@ -14,12 +14,9 @@ from typing import TYPE_CHECKING
 import netifaces
 
 from xknx.knxip import (
-    DIB,
     HPAI,
     SRP,
-    DIBDeviceInformation,
     DIBServiceFamily,
-    DIBSuppSVCFamilies,
     DIBTypeCode,
     KNXIPFrame,
     KNXIPServiceType,
@@ -27,6 +24,14 @@ from xknx.knxip import (
     SearchRequestExtended,
     SearchResponse,
     SearchResponseExtended,
+)
+from xknx.knxip.dib import (
+    DIB,
+    DIBDeviceInformation,
+    DIBSecuredServiceFamilies,
+    DIBSuppSVCFamilies,
+    DIBTunnelingInfo,
+    TunnelingSlotStatus,
 )
 from xknx.telegram import IndividualAddress
 
@@ -58,17 +63,25 @@ class GatewayDescriptor:
         self.name = name
         self.ip_addr = ip_addr
         self.port = port
+        self.individual_address = individual_address
         self.local_interface = local_interface
         self.local_ip = local_ip
         self.supports_routing = supports_routing
         self.supports_tunnelling = supports_tunnelling
         self.supports_tunnelling_tcp = supports_tunnelling_tcp
         self.supports_secure = supports_secure
-        self.individual_address = individual_address
+
+        self.routing_requires_secure: bool | None = None
+        self.tunnelling_requires_secure: bool | None = None
+        self.tunnelling_slots: dict[IndividualAddress, TunnelingSlotStatus] = {}
 
     def parse_dibs(self, dibs: list[DIB]) -> None:
         """Parse DIBs for gateway information."""
         for dib in dibs:
+            if isinstance(dib, DIBDeviceInformation):
+                self.name = dib.name
+                self.individual_address = dib.individual_address
+                continue
             if isinstance(dib, DIBSuppSVCFamilies):
                 self.supports_routing = dib.supports(DIBServiceFamily.ROUTING)
                 if dib.supports(DIBServiceFamily.TUNNELING):
@@ -80,10 +93,31 @@ class GatewayDescriptor:
                     DIBServiceFamily.SECURITY, version=1
                 )
                 continue
-            if isinstance(dib, DIBDeviceInformation):
-                self.name = dib.name
-                self.individual_address = dib.individual_address
+            if isinstance(dib, DIBSecuredServiceFamilies):
+                self.tunnelling_requires_secure = dib.supports(
+                    DIBServiceFamily.TUNNELING
+                )
+                self.routing_requires_secure = dib.supports(DIBServiceFamily.ROUTING)
                 continue
+            if isinstance(dib, DIBTunnelingInfo):
+                self.tunnelling_slots = dib.slots
+                continue
+
+    def match_free_slot(
+        self, individual_addresses: set[IndividualAddress]
+    ) -> IndividualAddress:
+        """Return free slot for tunnelling."""
+        if not self.tunnelling_slots:
+            raise KeyError(f"No slots information available for {self}")
+        if known_slots := individual_addresses.intersection(self.tunnelling_slots):
+            for _ia in known_slots:
+                if (
+                    self.tunnelling_slots[_ia].usable
+                    and self.tunnelling_slots[_ia].free
+                ):
+                    return _ia
+            raise KeyError(f"No free slot found on {self}")
+        raise KeyError(f"No known slot found on {self}")
 
     def __repr__(self) -> str:
         """Return object as representation string."""
@@ -92,13 +126,16 @@ class GatewayDescriptor:
             f"    name={self.name},\n"
             f"    ip_addr={self.ip_addr},\n"
             f"    port={self.port},\n"
+            f"    individual_address={self.individual_address}\n"
             f"    local_interface={self.local_interface},\n"
             f"    local_ip={self.local_ip},\n"
             f"    supports_routing={self.supports_routing},\n"
             f"    supports_tunnelling={self.supports_tunnelling},\n"
             f"    supports_tunnelling_tcp={self.supports_tunnelling_tcp},\n"
             f"    supports_secure={self.supports_secure},\n"
-            f"    individual_address={self.individual_address}\n"
+            f"    routing_requires_secure={self.routing_requires_secure}\n"
+            f"    tunnelling_requires_secure={self.tunnelling_requires_secure}\n"
+            f"    tunnelling_slots={self.tunnelling_slots}\n"
             ")"
         )
 
@@ -120,12 +157,14 @@ class GatewayScanFilter:
         tunnelling: bool | None = None,
         tunnelling_tcp: bool | None = None,
         routing: bool | None = None,
+        secure: bool | None = None,
     ):
         """Initialize GatewayScanFilter class."""
         self.name = name
         self.tunnelling = tunnelling
         self.tunnelling_tcp = tunnelling_tcp
         self.routing = routing
+        self.secure = secure
 
     def match(self, gateway: GatewayDescriptor) -> bool:
         """Check whether the device is a gateway and given GatewayDescriptor matches the filter."""
@@ -143,6 +182,9 @@ class GatewayScanFilter:
             return False
         if self.routing is not None and self.routing != gateway.supports_routing:
             return False
+        if self.secure is not None:
+            if self.secure is not bool(gateway.tunnelling_requires_secure):
+                return False
         return (
             gateway.supports_tunnelling
             or gateway.supports_tunnelling_tcp
