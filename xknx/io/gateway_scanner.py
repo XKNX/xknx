@@ -103,22 +103,6 @@ class GatewayDescriptor:
                 self.tunnelling_slots = dib.slots
                 continue
 
-    def match_free_slot(
-        self, individual_addresses: set[IndividualAddress]
-    ) -> IndividualAddress:
-        """Return free slot for tunnelling."""
-        if not self.tunnelling_slots:
-            raise KeyError(f"No slots information available for {self}")
-        if known_slots := individual_addresses.intersection(self.tunnelling_slots):
-            for _ia in known_slots:
-                if (
-                    self.tunnelling_slots[_ia].usable
-                    and self.tunnelling_slots[_ia].free
-                ):
-                    return _ia
-            raise KeyError(f"No free slot found on {self}")
-        raise KeyError(f"No known slot found on {self}")
-
     def __repr__(self) -> str:
         """Return object as representation string."""
         return (
