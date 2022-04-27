@@ -1,8 +1,6 @@
 """Encryption and Decryption functions for KNX/IP Datagrams."""
 from __future__ import annotations
 
-from typing import cast
-
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -22,12 +20,12 @@ def calculate_message_authentication_code_cbc(
         block_0 + len(additional_data).to_bytes(2, "big") + additional_data + payload
     )
     y_cipher = Cipher(algorithms.AES(key), modes.CBC(bytes(16)))
-    y_encryptor = y_cipher.encryptor()  # type: ignore[no-untyped-call]
+    y_encryptor = y_cipher.encryptor()
     y_blocks = (
         y_encryptor.update(byte_pad(blocks, block_size=16)) + y_encryptor.finalize()
     )
     # only calculate, no ctr encryption
-    return cast(bytes, y_blocks[-16:])
+    return y_blocks[-16:]
 
 
 def decrypt_ctr(
@@ -43,7 +41,7 @@ def decrypt_ctr(
     Returns a tuple of (KNX/IP frame bytes, MAC TR for verification).
     """
     cipher = Cipher(algorithms.AES(key), modes.CTR(counter_0))
-    decryptor = cipher.decryptor()  # type: ignore[no-untyped-call]
+    decryptor = cipher.decryptor()
     mac_tr = decryptor.update(mac)  # MAC is encrypted with counter 0
     decrypted_data = decryptor.update(payload) + decryptor.finalize()
 
@@ -64,7 +62,7 @@ def encrypt_data_ctr(
     Returns a tuple of encrypted data (if there is any) and encrypted MAC.
     """
     s_cipher = Cipher(algorithms.AES(key), modes.CTR(counter_0))
-    s_encryptor = s_cipher.encryptor()  # type: ignore[no-untyped-call]
+    s_encryptor = s_cipher.encryptor()
     mac = s_encryptor.update(mac_cbc)
     encrypted_data = s_encryptor.update(payload) + s_encryptor.finalize()
     return (encrypted_data, mac)

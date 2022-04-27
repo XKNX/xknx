@@ -372,7 +372,7 @@ def decrypt_aes128cbc(
 ) -> bytes:
     """Decrypt data with AES 128 CBC."""
     cipher = Cipher(algorithms.AES(key), modes.CBC(initialization_vector))
-    decryptor = cipher.decryptor()  # type: ignore[no-untyped-call]
+    decryptor = cipher.decryptor()
     return bytes(decryptor.update(encrypted_data) + decryptor.finalize())
 
 
