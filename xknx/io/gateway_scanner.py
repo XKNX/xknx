@@ -1,9 +1,8 @@
 """
 GatewayScanner is an abstraction for searching for KNX/IP devices on the local network.
 
-* It walks through all network interfaces
-* and sends UDP multicast search requests
-* it returns the first found device
+It walks through all network interfaces and sends UDP multicast
+SearchRequest and SearchRequestExtended frames.
 """
 from __future__ import annotations
 
@@ -15,20 +14,24 @@ from typing import TYPE_CHECKING
 import netifaces
 
 from xknx.knxip import (
-    DIB,
     HPAI,
     SRP,
-    DIBDeviceInformation,
     DIBServiceFamily,
-    DIBSuppSVCFamilies,
     DIBTypeCode,
-    KNXIPBody,
     KNXIPFrame,
     KNXIPServiceType,
     SearchRequest,
     SearchRequestExtended,
     SearchResponse,
     SearchResponseExtended,
+)
+from xknx.knxip.dib import (
+    DIB,
+    DIBDeviceInformation,
+    DIBSecuredServiceFamilies,
+    DIBSuppSVCFamilies,
+    DIBTunnelingInfo,
+    TunnelingSlotStatus,
 )
 from xknx.telegram import IndividualAddress
 
@@ -60,17 +63,25 @@ class GatewayDescriptor:
         self.name = name
         self.ip_addr = ip_addr
         self.port = port
+        self.individual_address = individual_address
         self.local_interface = local_interface
         self.local_ip = local_ip
         self.supports_routing = supports_routing
         self.supports_tunnelling = supports_tunnelling
         self.supports_tunnelling_tcp = supports_tunnelling_tcp
         self.supports_secure = supports_secure
-        self.individual_address = individual_address
+
+        self.routing_requires_secure: bool | None = None
+        self.tunnelling_requires_secure: bool | None = None
+        self.tunnelling_slots: dict[IndividualAddress, TunnelingSlotStatus] = {}
 
     def parse_dibs(self, dibs: list[DIB]) -> None:
         """Parse DIBs for gateway information."""
         for dib in dibs:
+            if isinstance(dib, DIBDeviceInformation):
+                self.name = dib.name
+                self.individual_address = dib.individual_address
+                continue
             if isinstance(dib, DIBSuppSVCFamilies):
                 self.supports_routing = dib.supports(DIBServiceFamily.ROUTING)
                 if dib.supports(DIBServiceFamily.TUNNELING):
@@ -82,9 +93,14 @@ class GatewayDescriptor:
                     DIBServiceFamily.SECURITY, version=1
                 )
                 continue
-            if isinstance(dib, DIBDeviceInformation):
-                self.name = dib.name
-                self.individual_address = dib.individual_address
+            if isinstance(dib, DIBSecuredServiceFamilies):
+                self.tunnelling_requires_secure = dib.supports(
+                    DIBServiceFamily.TUNNELING
+                )
+                self.routing_requires_secure = dib.supports(DIBServiceFamily.ROUTING)
+                continue
+            if isinstance(dib, DIBTunnelingInfo):
+                self.tunnelling_slots = dib.slots
                 continue
 
     def __repr__(self) -> str:
@@ -94,13 +110,16 @@ class GatewayDescriptor:
             f"    name={self.name},\n"
             f"    ip_addr={self.ip_addr},\n"
             f"    port={self.port},\n"
+            f"    individual_address={self.individual_address}\n"
             f"    local_interface={self.local_interface},\n"
             f"    local_ip={self.local_ip},\n"
             f"    supports_routing={self.supports_routing},\n"
             f"    supports_tunnelling={self.supports_tunnelling},\n"
             f"    supports_tunnelling_tcp={self.supports_tunnelling_tcp},\n"
             f"    supports_secure={self.supports_secure},\n"
-            f"    individual_address={self.individual_address}\n"
+            f"    routing_requires_secure={self.routing_requires_secure}\n"
+            f"    tunnelling_requires_secure={self.tunnelling_requires_secure}\n"
+            f"    tunnelling_slots={self.tunnelling_slots}\n"
             ")"
         )
 
@@ -122,12 +141,14 @@ class GatewayScanFilter:
         tunnelling: bool | None = None,
         tunnelling_tcp: bool | None = None,
         routing: bool | None = None,
+        secure: bool | None = None,
     ):
         """Initialize GatewayScanFilter class."""
         self.name = name
         self.tunnelling = tunnelling
         self.tunnelling_tcp = tunnelling_tcp
         self.routing = routing
+        self.secure = secure
 
     def match(self, gateway: GatewayDescriptor) -> bool:
         """Check whether the device is a gateway and given GatewayDescriptor matches the filter."""
@@ -145,6 +166,9 @@ class GatewayScanFilter:
             return False
         if self.routing is not None and self.routing != gateway.supports_routing:
             return False
+        if self.secure is not None:
+            if self.secure is not bool(gateway.tunnelling_requires_secure):
+                return False
         return (
             gateway.supports_tunnelling
             or gateway.supports_tunnelling_tcp
@@ -165,23 +189,15 @@ class GatewayScanner:
         """Initialize GatewayScanner class."""
         self.xknx = xknx
         self.timeout_in_seconds = timeout_in_seconds
-        self.stop_on_found = stop_on_found
+        self.stop_on_found = stop_on_found or 0
         self.scan_filter = scan_filter
-        self.found_gateways: list[GatewayDescriptor] = []
+        self.found_gateways: dict[HPAI, GatewayDescriptor] = {}
         self._udp_transports: list[UDPTransport] = []
         self._response_received_event = asyncio.Event()
-        self._count_upper_bound = 0
-        """Clean value of self.stop_on_found, computed when ``scan`` is called."""
 
-    async def scan(
-        self, search_request_type: KNXIPServiceType = KNXIPServiceType.SEARCH_REQUEST
-    ) -> list[GatewayDescriptor]:
+    async def scan(self) -> list[GatewayDescriptor]:
         """Scan and return a list of GatewayDescriptors on success."""
-        if self.stop_on_found is None:
-            self._count_upper_bound = 0
-        else:
-            self._count_upper_bound = max(0, self.stop_on_found)
-        await self._send_search_requests(search_request_type)
+        await self._search_all_interfaces()
         try:
             await asyncio.wait_for(
                 self._response_received_event.wait(),
@@ -190,16 +206,12 @@ class GatewayScanner:
         except asyncio.TimeoutError:
             pass
         finally:
-            self._stop()
+            for udp_transport in self._udp_transports:
+                udp_transport.stop()
 
-        return self.found_gateways
+        return list(self.found_gateways.values())
 
-    def _stop(self) -> None:
-        """Stop tearing down udp_transport."""
-        for udp_transport in self._udp_transports:
-            udp_transport.stop()
-
-    async def _send_search_requests(
+    async def _search_all_interfaces(
         self, search_request_type: KNXIPServiceType = KNXIPServiceType.SEARCH_REQUEST
     ) -> None:
         """Find all interfaces with active IPv4 connection to search for gateways."""
@@ -215,15 +227,14 @@ class GatewayScanner:
                 logger.debug("Invalid interface %s: %s", interface, err)
                 continue
             else:
-                await self._search_interface(interface, ip_addr, search_request_type)
+                await self._send_search_requests(interface, ip_addr)
 
-    async def _search_interface(
+    async def _send_search_requests(
         self,
         interface: str,
         ip_addr: str,
-        search_request_type: KNXIPServiceType = KNXIPServiceType.SEARCH_REQUEST,
     ) -> None:
-        """Send a search request on a specific interface."""
+        """Send search requests on a specific interface."""
         logger.debug("Searching on %s / %s", interface, ip_addr)
 
         udp_transport = UDPTransport(
@@ -246,24 +257,23 @@ class GatewayScanner:
         discovery_endpoint = HPAI(
             ip_addr=self.xknx.multicast_group, port=self.xknx.multicast_port
         )
-
-        search_request: KNXIPBody
-        if search_request_type == KNXIPServiceType.SEARCH_REQUEST_EXTENDED:
-            search_request = SearchRequestExtended(
-                discovery_endpoint=discovery_endpoint,
-                srps=[
-                    SRP.request_device_description(
-                        [
-                            DIBTypeCode.DEVICE_INFO,
-                            DIBTypeCode.SUPP_SVC_FAMILIES,
-                            DIBTypeCode.SECURED_SERVICE_FAMILIES,
-                            DIBTypeCode.TUNNELING_INFO,
-                        ]
-                    )
-                ],
-            )
-        else:
-            search_request = SearchRequest(discovery_endpoint=discovery_endpoint)
+        # send SearchRequestExtended requesting needed DIBs
+        search_request_extended = SearchRequestExtended(
+            discovery_endpoint=discovery_endpoint,
+            srps=[
+                SRP.request_device_description(
+                    [
+                        DIBTypeCode.DEVICE_INFO,
+                        DIBTypeCode.SUPP_SVC_FAMILIES,
+                        DIBTypeCode.SECURED_SERVICE_FAMILIES,
+                        DIBTypeCode.TUNNELING_INFO,
+                    ]
+                )
+            ],
+        )
+        udp_transport.send(KNXIPFrame.init_from_body(search_request_extended))
+        # send SearchRequest for Core-V1 devices
+        search_request = SearchRequest(discovery_endpoint=discovery_endpoint)
         udp_transport.send(KNXIPFrame.init_from_body(search_request))
 
     def _response_rec_callback(
@@ -278,6 +288,20 @@ class GatewayScanner:
             logger.warning("Could not understand knxipframe")
             return
 
+        # skip non-extended SearchResponse for Core-V2 devices
+        if knx_ip_frame.header.service_type_ident == KNXIPServiceType.SEARCH_RESPONSE:
+            if svc_families_dib := next(
+                (
+                    dib
+                    for dib in knx_ip_frame.body.dibs
+                    if isinstance(dib, DIBSuppSVCFamilies)
+                ),
+                None,
+            ):
+                if svc_families_dib.supports(DIBServiceFamily.CORE, version=2):
+                    logger.debug("Skipping SearchResponse for Core-V2 device")
+                    return
+
         gateway = GatewayDescriptor(
             ip_addr=knx_ip_frame.body.control_endpoint.ip_addr,
             port=knx_ip_frame.body.control_endpoint.port,
@@ -287,13 +311,8 @@ class GatewayScanner:
         gateway.parse_dibs(knx_ip_frame.body.dibs)
 
         logger.debug("Found KNX/IP device at %s: %s", source, repr(gateway))
-        self._add_found_gateway(gateway)
+        if self.scan_filter.match(gateway):
+            self.found_gateways[knx_ip_frame.body.control_endpoint] = gateway
 
-    def _add_found_gateway(self, gateway: GatewayDescriptor) -> None:
-        if self.scan_filter.match(gateway) and not any(
-            _gateway.individual_address == gateway.individual_address
-            for _gateway in self.found_gateways
-        ):
-            self.found_gateways.append(gateway)
-            if 0 < self._count_upper_bound <= len(self.found_gateways):
+            if len(self.found_gateways) >= self.stop_on_found:
                 self._response_received_event.set()

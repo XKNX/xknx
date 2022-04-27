@@ -2,6 +2,16 @@
 
 ## Unreleased changes
 
+### Discovery
+
+- Send SearchRequest and SearchRequestExtended simultaneously when using GatewayScanner
+- Skip SearchResponse results for Core-V2 devices - wait for SearchResponseExtended
+- Identify interfaces having KNX IP Secure Tunneling required and skip if using Automatic connection mode
+
+### Internals
+
+- make HPAI hashable and add `addr_tuple` convenice property
+
 ## 0.20.4 Fix exposure of time and date
 
 ### Bugfixes

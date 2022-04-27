@@ -12,7 +12,8 @@ from xknx.knxip import (
     DIBServiceFamily,
     DIBSuppSVCFamilies,
     KNXIPFrame,
-    KNXIPServiceType,
+    SearchRequest,
+    SearchRequestExtended,
     SearchResponse,
 )
 from xknx.telegram import IndividualAddress
@@ -165,8 +166,6 @@ class TestGatewayScanner:
             udp_transport_mock,
             interface="en1",
         )
-
-        assert str(gateway_scanner.found_gateways[0]) == str(self.gateway_desc_both)
         assert len(gateway_scanner.found_gateways) == 1
 
         gateway_scanner._response_rec_callback(
@@ -176,6 +175,10 @@ class TestGatewayScanner:
             interface="eth1",
         )
         assert len(gateway_scanner.found_gateways) == 1
+
+        assert str(
+            gateway_scanner.found_gateways[test_search_response.body.control_endpoint]
+        ) == str(self.gateway_desc_both)
 
     @patch("xknx.io.gateway_scanner.netifaces", autospec=True)
     async def test_scan_timeout(self, netifaces_mock):
@@ -193,36 +196,9 @@ class TestGatewayScanner:
         assert timed_out_scan == []
 
     @patch("xknx.io.gateway_scanner.netifaces", autospec=True)
-    @patch("xknx.io.GatewayScanner._search_interface", autospec=True)
-    async def test_send_search_requests(self, _search_interface_mock, netifaces_mock):
-        """Test finding all valid interfaces to send search requests to. No requests are sent."""
-        xknx = XKNX()
-
-        netifaces_mock.interfaces.return_value = self.fake_interfaces
-        netifaces_mock.ifaddresses = lambda interface: self.fake_ifaddresses[interface]
-        netifaces_mock.AF_INET = 2
-
-        async def async_none():
-            return None
-
-        _search_interface_mock.return_value = asyncio.ensure_future(async_none())
-
-        gateway_scanner = GatewayScanner(xknx, timeout_in_seconds=0)
-
-        test_scan = await gateway_scanner.scan()
-
-        assert _search_interface_mock.call_count == 2
-        expected_calls = [
-            ((gateway_scanner, "lo0", "127.0.0.1", KNXIPServiceType.SEARCH_REQUEST),),
-            ((gateway_scanner, "en1", "10.1.1.2", KNXIPServiceType.SEARCH_REQUEST),),
-        ]
-        assert _search_interface_mock.call_args_list == expected_calls
-        assert test_scan == []
-
-    @patch("xknx.io.gateway_scanner.netifaces", autospec=True)
-    @patch("xknx.io.GatewayScanner._search_interface", autospec=True)
-    async def test_send_search_request_extended(
-        self, _search_interface_mock, netifaces_mock
+    @patch("xknx.io.GatewayScanner._send_search_requests")
+    async def test_search_all_interfaces(
+        self, _send_search_requests_mock, netifaces_mock
     ):
         """Test finding all valid interfaces to send search request extended to. No requests are sent."""
         xknx = XKNX()
@@ -231,36 +207,37 @@ class TestGatewayScanner:
         netifaces_mock.ifaddresses = lambda interface: self.fake_ifaddresses[interface]
         netifaces_mock.AF_INET = 2
 
-        async def async_none():
-            return None
-
-        _search_interface_mock.return_value = asyncio.ensure_future(async_none())
-
         gateway_scanner = GatewayScanner(xknx, timeout_in_seconds=0)
 
-        test_scan = await gateway_scanner.scan(KNXIPServiceType.SEARCH_REQUEST_EXTENDED)
+        test_scan = await gateway_scanner.scan()
 
-        assert _search_interface_mock.call_count == 2
+        assert _send_search_requests_mock.call_count == 2
         expected_calls = [
-            (
-                (
-                    gateway_scanner,
-                    "lo0",
-                    "127.0.0.1",
-                    KNXIPServiceType.SEARCH_REQUEST_EXTENDED,
-                ),
-            ),
-            (
-                (
-                    gateway_scanner,
-                    "en1",
-                    "10.1.1.2",
-                    KNXIPServiceType.SEARCH_REQUEST_EXTENDED,
-                ),
-            ),
+            (("lo0", "127.0.0.1"),),
+            (("en1", "10.1.1.2"),),
         ]
-        assert _search_interface_mock.call_args_list == expected_calls
+        assert _send_search_requests_mock.call_args_list == expected_calls
         assert test_scan == []
+
+    @patch("xknx.io.gateway_scanner.UDPTransport.connect")
+    @patch("xknx.io.gateway_scanner.UDPTransport.send")
+    async def test_send_search_requests(
+        self,
+        udp_transport_send_mock,
+        udp_transport_connect_mock,
+    ):
+        """Test if both search requests are sent per interface."""
+        xknx = XKNX()
+        gateway_scanner = GatewayScanner(xknx, timeout_in_seconds=0)
+
+        await gateway_scanner._send_search_requests(interface="en1", ip_addr="10.1.1.2")
+
+        assert udp_transport_connect_mock.call_count == 1
+        assert udp_transport_send_mock.call_count == 2
+        frame_1 = udp_transport_send_mock.call_args_list[0].args[0]
+        frame_2 = udp_transport_send_mock.call_args_list[1].args[0]
+        assert isinstance(frame_1.body, SearchRequestExtended)
+        assert isinstance(frame_2.body, SearchRequest)
 
 
 def fake_router_search_response() -> KNXIPFrame:
