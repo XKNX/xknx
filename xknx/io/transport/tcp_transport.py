@@ -47,7 +47,7 @@ class TCPTransport(KNXIPTransport):
 
         def connection_lost(self, exc: Exception | None) -> None:
             """Log error. Callback for connection lost."""
-            logger.debug("Closing transport. %s", exc)
+            logger.debug("Closing TCP transport. %s", exc)
             self.connection_lost_callback()
 
     def __init__(

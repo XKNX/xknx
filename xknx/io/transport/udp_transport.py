@@ -31,14 +31,10 @@ class UDPTransport(KNXIPTransport):
 
         def __init__(
             self,
-            own_ip: str,
-            multicast: bool = False,
             data_received_callback: Callable[[bytes, tuple[str, int]], None]
             | None = None,
         ):
             """Initialize UDPTransportFactory class."""
-            self.own_ip = own_ip
-            self.multicast = multicast
             self.transport: asyncio.BaseTransport | None = None
             self.data_received_callback = data_received_callback
 
@@ -58,7 +54,7 @@ class UDPTransport(KNXIPTransport):
 
         def connection_lost(self, exc: Exception | None) -> None:
             """Log error. Callback for connection lost."""
-            logger.debug("Closing transport.")
+            logger.debug("Closing UDP transport.")
 
     def __init__(
         self,
@@ -143,8 +139,6 @@ class UDPTransport(KNXIPTransport):
     async def connect(self) -> None:
         """Connect UDP socket. Open UDP port and build mulitcast socket if necessary."""
         udp_transport_factory = UDPTransport.UDPTransportFactory(
-            self.local_addr[0],
-            multicast=self.multicast,
             data_received_callback=self.data_received_callback,
         )
         loop = asyncio.get_running_loop()
@@ -153,18 +147,15 @@ class UDPTransport(KNXIPTransport):
                 self.local_addr[0], self.remote_addr
             )
             (transport, _) = await loop.create_datagram_endpoint(
-                lambda: udp_transport_factory, sock=sock
+                lambda: udp_transport_factory,
+                sock=sock,
             )
-            # TODO: typing - remove cast - loop.create_datagram_endpoint should return a DatagramTransport
-            self.transport = cast(asyncio.DatagramTransport, transport)
-
         else:
             (transport, _) = await loop.create_datagram_endpoint(
                 lambda: udp_transport_factory,
                 local_addr=self.local_addr,
             )
-            # TODO: typing - remove cast - loop.create_datagram_endpoint should return a DatagramTransport
-            self.transport = cast(asyncio.DatagramTransport, transport)
+        self.transport = cast(asyncio.DatagramTransport, transport)
 
     def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
         """Send KNXIPFrame to socket."""

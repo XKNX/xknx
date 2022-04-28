@@ -4,12 +4,15 @@
 
 ### Discovery
 
+- Use unicast discovery endpoint to receive SearchRespones frames
 - Send SearchRequest and SearchRequestExtended simultaneously when using GatewayScanner
 - Skip SearchResponse results for Core-V2 devices - wait for SearchResponseExtended
 - Identify interfaces having KNX IP Secure Tunneling required and skip if using Automatic connection mode
+- Only send SearchRequests from one interface for each `scan()` call
 
 ### Internals
 
+- Use `ifaddr` instead of `netifaces`
 - make HPAI hashable and add `addr_tuple` convenice property
 
 ## 0.20.4 Fix exposure of time and date

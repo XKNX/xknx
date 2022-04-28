@@ -6,12 +6,12 @@ import logging
 from typing import TYPE_CHECKING, Final
 
 from xknx.exceptions import CommunicationError
+from xknx.io import util
 from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.knxip import HPAI, DescriptionRequest, DescriptionResponse, KNXIPFrame
 
 from .const import DEFAULT_MCAST_PORT
 from .transport import UDPTransport
-from .util import find_local_ip
 
 if TYPE_CHECKING:
     from xknx.io.transport import KNXIPTransport
@@ -29,9 +29,16 @@ async def request_description(
     route_back: bool = False,
 ) -> GatewayDescriptor | None:
     """Set up a UDP transport to request a description from a KNXnet/IP device."""
-    _local_ip = local_ip or find_local_ip(gateway_ip)
+    local_ip = local_ip or util.find_local_ip(gateway_ip)
+    if local_ip is None:
+        # Fall back to default interface and use route back
+        local_ip = await util.get_default_local_ip(gateway_ip)
+        if local_ip is None:
+            return None
+        route_back = True
+
     transport = UDPTransport(
-        local_addr=(_local_ip, local_port),
+        local_addr=(local_ip, local_port),
         remote_addr=(gateway_ip, gateway_port),
         multicast=False,
     )
