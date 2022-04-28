@@ -54,7 +54,7 @@ class UDPTransport(KNXIPTransport):
 
         def connection_lost(self, exc: Exception | None) -> None:
             """Log error. Callback for connection lost."""
-            logger.debug("Closing transport.")
+            logger.debug("Closing UDP transport.")
 
     def __init__(
         self,
