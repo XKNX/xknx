@@ -1,6 +1,6 @@
 """Unit test for KNX/IP gateway scanner."""
 import asyncio
-from unittest.mock import MagicMock, create_autospec, patch
+from unittest.mock import create_autospec, patch
 
 from xknx import XKNX
 from xknx.io import GatewayScanFilter, GatewayScanner
@@ -51,6 +51,7 @@ class TestGatewayScanner:
         supports_routing=True,
         individual_address=IndividualAddress("1.1.0"),
     )
+    gateway_desc_both.tunnelling_requires_secure = False
     gateway_desc_neither = GatewayDescriptor(
         name="AC/S 1.1.1 Application Control",
         ip_addr="10.1.1.15",
@@ -60,50 +61,25 @@ class TestGatewayScanner:
         supports_tunnelling=False,
         supports_routing=False,
     )
-
-    fake_interfaces = ["lo0", "en0", "en1"]
-    fake_ifaddresses = {
-        "lo0": {
-            2: [{"addr": "127.0.0.1", "netmask": "255.0.0.0", "peer": "127.0.0.1"}],
-            30: [
-                {
-                    "addr": "::1",
-                    "netmask": "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/128",
-                    "peer": "::1",
-                    "flags": 0,
-                },
-                {
-                    "addr": "fe80::1%lo0",
-                    "netmask": "ffff:ffff:ffff:ffff::/64",
-                    "flags": 0,
-                },
-            ],
-        },
-        "en0": {18: [{"addr": "FF:FF:00:00:00:00"}]},
-        "en1": {
-            18: [{"addr": "FF:FF:00:00:00:01"}],
-            30: [
-                {
-                    "addr": "fe80::1234:1234:1234:1234%en1",
-                    "netmask": "ffff:ffff:ffff:ffff::/64",
-                    "flags": 1024,
-                }
-            ],
-            2: [
-                {
-                    "addr": "10.1.1.2",
-                    "netmask": "255.255.255.0",
-                    "broadcast": "10.1.1.255",
-                }
-            ],
-        },
-    }
+    gateway_desc_secure_tunnel = GatewayDescriptor(
+        name="KNX-Interface",
+        ip_addr="10.1.1.11",
+        port=3761,
+        local_interface="en1",
+        local_ip="10.1.1.111",
+        supports_routing=False,
+        supports_tunnelling=True,
+        supports_tunnelling_tcp=True,
+        supports_secure=True,
+    )
+    gateway_desc_secure_tunnel.tunnelling_requires_secure = True
 
     def test_gateway_scan_filter_match(self):
         """Test match function of gateway filter."""
         filter_default = GatewayScanFilter()
         filter_tunnel = GatewayScanFilter(tunnelling=True)
-        filter_tcp_tunnel = GatewayScanFilter(tunnelling_tcp=True)
+        filter_tcp_tunnel = GatewayScanFilter(tunnelling_tcp=True, secure=None)
+        filter_secure_tunnel = GatewayScanFilter(tunnelling_tcp=True, secure=True)
         filter_router = GatewayScanFilter(routing=True)
         filter_name = GatewayScanFilter(name="KNX-Router")
         filter_no_tunnel = GatewayScanFilter(tunnelling=False)
@@ -114,41 +90,55 @@ class TestGatewayScanner:
         assert filter_default.match(self.gateway_desc_router)
         assert filter_default.match(self.gateway_desc_both)
         assert not filter_default.match(self.gateway_desc_neither)
+        assert not filter_default.match(self.gateway_desc_secure_tunnel)
 
         assert filter_tunnel.match(self.gateway_desc_interface)
         assert not filter_tunnel.match(self.gateway_desc_router)
         assert filter_tunnel.match(self.gateway_desc_both)
         assert not filter_tunnel.match(self.gateway_desc_neither)
+        assert not filter_tunnel.match(self.gateway_desc_secure_tunnel)
 
         assert not filter_tcp_tunnel.match(self.gateway_desc_interface)
         assert not filter_tcp_tunnel.match(self.gateway_desc_router)
         assert filter_tcp_tunnel.match(self.gateway_desc_both)
         assert not filter_tcp_tunnel.match(self.gateway_desc_neither)
+        assert filter_tcp_tunnel.match(self.gateway_desc_secure_tunnel)
+
+        assert not filter_secure_tunnel.match(self.gateway_desc_interface)
+        assert not filter_secure_tunnel.match(self.gateway_desc_router)
+        assert not filter_secure_tunnel.match(self.gateway_desc_both)
+        assert not filter_secure_tunnel.match(self.gateway_desc_neither)
+        assert filter_secure_tunnel.match(self.gateway_desc_secure_tunnel)
 
         assert not filter_router.match(self.gateway_desc_interface)
         assert filter_router.match(self.gateway_desc_router)
         assert filter_router.match(self.gateway_desc_both)
         assert not filter_router.match(self.gateway_desc_neither)
+        assert not filter_router.match(self.gateway_desc_secure_tunnel)
 
         assert not filter_name.match(self.gateway_desc_interface)
         assert filter_name.match(self.gateway_desc_router)
         assert not filter_name.match(self.gateway_desc_both)
         assert not filter_name.match(self.gateway_desc_neither)
+        assert not filter_name.match(self.gateway_desc_secure_tunnel)
 
         assert not filter_no_tunnel.match(self.gateway_desc_interface)
         assert filter_no_tunnel.match(self.gateway_desc_router)
         assert not filter_no_tunnel.match(self.gateway_desc_both)
         assert not filter_no_tunnel.match(self.gateway_desc_neither)
+        assert not filter_no_tunnel.match(self.gateway_desc_secure_tunnel)
 
         assert filter_no_router.match(self.gateway_desc_interface)
         assert not filter_no_router.match(self.gateway_desc_router)
         assert not filter_no_router.match(self.gateway_desc_both)
         assert not filter_no_router.match(self.gateway_desc_neither)
+        assert not filter_no_router.match(self.gateway_desc_secure_tunnel)
 
         assert not filter_tunnel_and_router.match(self.gateway_desc_interface)
         assert not filter_tunnel_and_router.match(self.gateway_desc_router)
         assert filter_tunnel_and_router.match(self.gateway_desc_both)
         assert not filter_tunnel_and_router.match(self.gateway_desc_neither)
+        assert not filter_tunnel_and_router.match(self.gateway_desc_secure_tunnel)
 
     def test_search_response_reception(self):
         """Test function of gateway scanner."""
@@ -180,44 +170,14 @@ class TestGatewayScanner:
             gateway_scanner.found_gateways[test_search_response.body.control_endpoint]
         ) == str(self.gateway_desc_both)
 
-    @patch("xknx.io.gateway_scanner.netifaces", autospec=True)
-    async def test_scan_timeout(self, netifaces_mock):
+    async def test_scan_timeout(self, time_travel):
         """Test gateway scanner timeout."""
         xknx = XKNX()
-        # No interface shall be found
-        netifaces_mock.interfaces.return_value = []
-
         gateway_scanner = GatewayScanner(xknx)
-        gateway_scanner._response_received_event.wait = MagicMock(
-            side_effect=asyncio.TimeoutError()
-        )
-        timed_out_scan = await gateway_scanner.scan()
-        # Unsuccessfull scan() returns None
-        assert timed_out_scan == []
-
-    @patch("xknx.io.gateway_scanner.netifaces", autospec=True)
-    @patch("xknx.io.GatewayScanner._send_search_requests")
-    async def test_search_all_interfaces(
-        self, _send_search_requests_mock, netifaces_mock
-    ):
-        """Test finding all valid interfaces to send search request extended to. No requests are sent."""
-        xknx = XKNX()
-
-        netifaces_mock.interfaces.return_value = self.fake_interfaces
-        netifaces_mock.ifaddresses = lambda interface: self.fake_ifaddresses[interface]
-        netifaces_mock.AF_INET = 2
-
-        gateway_scanner = GatewayScanner(xknx, timeout_in_seconds=0)
-
-        test_scan = await gateway_scanner.scan()
-
-        assert _send_search_requests_mock.call_count == 2
-        expected_calls = [
-            (("lo0", "127.0.0.1"),),
-            (("en1", "10.1.1.2"),),
-        ]
-        assert _send_search_requests_mock.call_args_list == expected_calls
-        assert test_scan == []
+        timed_out_scan_task = asyncio.create_task(gateway_scanner.scan())
+        await time_travel(gateway_scanner.timeout_in_seconds)
+        # Unsuccessfull scan() returns empty list
+        assert await timed_out_scan_task == []
 
     @patch("xknx.io.gateway_scanner.UDPTransport.connect")
     @patch("xknx.io.gateway_scanner.UDPTransport.send")
@@ -229,8 +189,17 @@ class TestGatewayScanner:
         """Test if both search requests are sent per interface."""
         xknx = XKNX()
         gateway_scanner = GatewayScanner(xknx, timeout_in_seconds=0)
-
-        await gateway_scanner._send_search_requests(interface="en1", ip_addr="10.1.1.2")
+        with patch(
+            "xknx.io.util.get_default_local_ip",
+            return_value="10.1.1.2",
+        ), patch(
+            "xknx.io.util.get_local_interface_name",
+            return_value="en_0123",
+        ), patch(
+            "xknx.io.gateway_scanner.UDPTransport.getsockname",
+            return_value=("10.1.1.2", 56789),
+        ):
+            await gateway_scanner.scan()
 
         assert udp_transport_connect_mock.call_count == 1
         assert udp_transport_send_mock.call_count == 2
@@ -238,6 +207,7 @@ class TestGatewayScanner:
         frame_2 = udp_transport_send_mock.call_args_list[1].args[0]
         assert isinstance(frame_1.body, SearchRequestExtended)
         assert isinstance(frame_2.body, SearchRequest)
+        assert frame_1.body.discovery_endpoint == HPAI(ip_addr="10.1.1.2", port=56789)
 
 
 def fake_router_search_response() -> KNXIPFrame:

@@ -51,13 +51,8 @@ class TestKNXIPInterface:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
             start_tunnelling_udp.assert_called_once_with(
-                local_ip=None,
-                local_port=0,
                 gateway_ip=gateway_ip,
                 gateway_port=3671,
-                auto_reconnect=True,
-                auto_reconnect_wait=3,
-                route_back=False,
             )
         with patch("xknx.io.tunnel.UDPTunnel.connect") as connect_udp:
             interface = knx_interface_factory(self.xknx, connection_config)
@@ -91,8 +86,6 @@ class TestKNXIPInterface:
             start_tunnelling_tcp.assert_called_once_with(
                 gateway_ip=gateway_ip,
                 gateway_port=3671,
-                auto_reconnect=True,
-                auto_reconnect_wait=3,
             )
         with patch("xknx.io.tunnel.TCPTunnel.connect") as connect_tcp:
             interface = knx_interface_factory(self.xknx, connection_config)
@@ -205,8 +198,6 @@ class TestKNXIPInterface:
             start_secure_tunnel.assert_called_once_with(
                 gateway_ip="192.168.1.1",
                 gateway_port=3671,
-                auto_reconnect=True,
-                auto_reconnect_wait=3,
                 user_id=4,
                 user_password="user2",
                 device_authentication_password="authenticationcode",
@@ -252,8 +243,6 @@ class TestKNXIPInterface:
             start_secure_tunnel.assert_called_once_with(
                 gateway_ip="192.168.1.1",
                 gateway_port=3671,
-                auto_reconnect=True,
-                auto_reconnect_wait=3,
                 user_id=3,
                 user_password="user1",
                 device_authentication_password="authenticationcode",
@@ -298,8 +287,6 @@ class TestKNXIPInterface:
             start_secure_tunnel.assert_called_once_with(
                 gateway_ip="192.168.1.1",
                 gateway_port=3671,
-                auto_reconnect=True,
-                auto_reconnect_wait=3,
                 user_id=3,
                 user_password="user1",
                 device_authentication_password="authenticationcode",

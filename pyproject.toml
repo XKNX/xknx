@@ -19,7 +19,6 @@ warn_unreachable = true
 ignore = "test"
 persistent = "no"
 reports = "no"
-extension-pkg-whitelist = "netifaces"
 
 [tool.pylint.message_control]
 # Reasons disabled:

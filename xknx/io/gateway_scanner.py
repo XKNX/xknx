@@ -11,8 +11,8 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING
 
-import netifaces
-
+from xknx.exceptions import XKNXException
+from xknx.io import util
 from xknx.knxip import (
     HPAI,
     SRP,
@@ -141,7 +141,7 @@ class GatewayScanFilter:
         tunnelling: bool | None = None,
         tunnelling_tcp: bool | None = None,
         routing: bool | None = None,
-        secure: bool | None = None,
+        secure: bool | None = False,
     ):
         """Initialize GatewayScanFilter class."""
         self.name = name
@@ -192,13 +192,34 @@ class GatewayScanner:
         self.stop_on_found = stop_on_found or 0
         self.scan_filter = scan_filter
         self.found_gateways: dict[HPAI, GatewayDescriptor] = {}
-        self._udp_transports: list[UDPTransport] = []
         self._response_received_event = asyncio.Event()
 
-    async def scan(self) -> list[GatewayDescriptor]:
+    async def scan(
+        self,
+        local_ip: str | None = None,
+    ) -> list[GatewayDescriptor]:
         """Scan and return a list of GatewayDescriptors on success."""
-        await self._search_all_interfaces()
+        local_ip = local_ip or await util.get_default_local_ip(
+            remote_ip=self.xknx.multicast_group
+        )
+        if local_ip is None:
+            raise XKNXException("No usable network interface found.")
+        interface_name = util.get_local_interface_name(local_ip=local_ip)
+        logger.debug("Searching on %s / %s", interface_name, local_ip)
+
+        udp_transport = UDPTransport(
+            local_addr=(local_ip, 0),
+            remote_addr=(self.xknx.multicast_group, self.xknx.multicast_port),
+        )
+        udp_transport.register_callback(
+            partial(self._response_rec_callback, interface=interface_name),
+            [
+                KNXIPServiceType.SEARCH_RESPONSE,
+                KNXIPServiceType.SEARCH_RESPONSE_EXTENDED,
+            ],
+        )
         try:
+            await self._send_search_requests(udp_transport=udp_transport)
             await asyncio.wait_for(
                 self._response_received_event.wait(),
                 timeout=self.timeout_in_seconds,
@@ -206,57 +227,15 @@ class GatewayScanner:
         except asyncio.TimeoutError:
             pass
         finally:
-            for udp_transport in self._udp_transports:
-                udp_transport.stop()
+            udp_transport.stop()
 
         return list(self.found_gateways.values())
 
-    async def _search_all_interfaces(
-        self, search_request_type: KNXIPServiceType = KNXIPServiceType.SEARCH_REQUEST
-    ) -> None:
-        """Find all interfaces with active IPv4 connection to search for gateways."""
-        for interface in netifaces.interfaces():
-            try:
-                af_inet = netifaces.ifaddresses(interface)[netifaces.AF_INET]
-                ip_addr = af_inet[0]["addr"]
-            except KeyError:
-                logger.debug("No IPv4 address found on %s", interface)
-                continue
-            except ValueError as err:
-                # rare case when an interface disappears during search initialisation
-                logger.debug("Invalid interface %s: %s", interface, err)
-                continue
-            else:
-                await self._send_search_requests(interface, ip_addr)
-
-    async def _send_search_requests(
-        self,
-        interface: str,
-        ip_addr: str,
-    ) -> None:
+    @staticmethod
+    async def _send_search_requests(udp_transport: UDPTransport) -> None:
         """Send search requests on a specific interface."""
-        logger.debug("Searching on %s / %s", interface, ip_addr)
-
-        udp_transport = UDPTransport(
-            local_addr=(ip_addr, 0),
-            remote_addr=(self.xknx.multicast_group, self.xknx.multicast_port),
-            multicast=True,
-        )
-
-        udp_transport.register_callback(
-            partial(self._response_rec_callback, interface=interface),
-            [
-                KNXIPServiceType.SEARCH_RESPONSE,
-                KNXIPServiceType.SEARCH_RESPONSE_EXTENDED,
-            ],
-        )
         await udp_transport.connect()
-
-        self._udp_transports.append(udp_transport)
-
-        discovery_endpoint = HPAI(
-            ip_addr=self.xknx.multicast_group, port=self.xknx.multicast_port
-        )
+        discovery_endpoint = HPAI(*udp_transport.getsockname())
         # send SearchRequestExtended requesting needed DIBs
         search_request_extended = SearchRequestExtended(
             discovery_endpoint=discovery_endpoint,
