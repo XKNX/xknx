@@ -7,12 +7,14 @@ import pytest
 
 from xknx import XKNX
 from xknx.exceptions.exception import (
+    CommunicationError,
     InterfaceWithUserIdNotFound,
     InvalidSecureConfiguration,
 )
 from xknx.io import (
     ConnectionConfig,
     ConnectionType,
+    GatewayDescriptor,
     SecureConfig,
     knx_interface_factory,
 )
@@ -32,11 +34,41 @@ class TestKNXIPInterface:
         """Test starting automatic connection."""
         connection_config = ConnectionConfig()
         assert connection_config.connection_type == ConnectionType.AUTOMATIC
+        interface = knx_interface_factory(self.xknx, connection_config)
         with patch("xknx.io.KNXIPInterface._start_automatic") as start_automatic_mock:
-            interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
             start_automatic_mock.assert_called_once_with()
             assert threading.active_count() == 1
+
+        async def gateway_generator_mock(_):
+            yield GatewayDescriptor(
+                ip_addr="10.1.2.3", port=3671, supports_tunnelling_tcp=True
+            )
+            yield GatewayDescriptor(
+                ip_addr="10.1.2.3", port=3671, supports_tunnelling=True
+            )
+            yield GatewayDescriptor(
+                ip_addr="10.1.2.3", port=3671, supports_routing=True
+            )
+
+        with patch(
+            "xknx.io.knxip_interface.GatewayScanner.async_scan",
+            new=gateway_generator_mock,
+        ), patch(
+            "xknx.io.KNXIPInterface._start_tunnelling_tcp",
+            side_effect=CommunicationError("Error"),
+        ) as start_tunnelling_tcp_mock, patch(
+            "xknx.io.KNXIPInterface._start_tunnelling_udp",
+            side_effect=CommunicationError("Error"),
+        ) as start_tunnelling_udp_mock, patch(
+            "xknx.io.KNXIPInterface._start_routing",
+            side_effect=CommunicationError("Error"),
+        ) as start_routing_mock:
+            with pytest.raises(CommunicationError):
+                await interface.start()
+            start_tunnelling_tcp_mock.assert_called_once()
+            start_tunnelling_udp_mock.assert_called_once()
+            start_routing_mock.assert_called_once()
 
     async def test_start_udp_tunnel_connection(self):
         """Test starting UDP tunnel connection."""
