@@ -206,11 +206,10 @@ class TestGatewayScanner:
 
         async def test():
             xknx = XKNX()
-            async for gateway in GatewayScanner(xknx).async_scan():
+            async for _ in GatewayScanner(xknx).async_scan():
                 break
             else:
                 return True
-            return False
 
         # timeout
         with patch(
@@ -251,6 +250,7 @@ class TestGatewayScanner:
 
         async def test():
             async for gateway in gateway_scanner.async_scan():
+                assert isinstance(gateway, GatewayDescriptor)
                 return True
             return False
 
@@ -260,11 +260,6 @@ class TestGatewayScanner:
         ), patch(
             "xknx.io.gateway_scanner.UDPTransport.register_callback"
         ) as register_callback_mock:
-            # , patch.object(
-            #     gateway_scanner,
-            #     "_scan",
-            #     wraps=gateway_scanner._scan,
-            # ) as _scan_mock:
             scan_task = asyncio.create_task(test())
             await time_travel(0)
             _fished_response_rec_callback = register_callback_mock.call_args.args[0]
