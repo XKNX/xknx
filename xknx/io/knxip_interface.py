@@ -23,7 +23,7 @@ from xknx.io import util
 from xknx.secure import Keyring, load_key_ring
 
 from .connection import ConnectionConfig, ConnectionType
-from .gateway_scanner import GatewayDescriptor, GatewayScanFilter, GatewayScanner
+from .gateway_scanner import GatewayDescriptor, GatewayScanner
 from .routing import Routing
 from .tunnel import SecureTunnel, TCPTunnel, UDPTunnel, _Tunnel
 
@@ -139,13 +139,13 @@ class KNXIPInterface:
 
     async def _start_automatic(self) -> None:
         """Start GatewayScanner and connect to the found device."""
-        for gateway in await self.find_gateways(
-            scan_filter=self.connection_config.scan_filter,  # secure disabled by default
+        async for gateway in GatewayScanner(
+            self.xknx,
             local_ip=self.connection_config.local_ip,
-        ):
+            scan_filter=self.connection_config.scan_filter,  # secure disabled by default
+        ).async_scan():
+            self._gateway_info = gateway
             try:
-                self._gateway_info = gateway
-
                 if gateway.supports_tunnelling_tcp:
                     await self._start_tunnelling_tcp(
                         gateway_ip=gateway.ip_addr,
@@ -162,8 +162,11 @@ class KNXIPInterface:
                     )
             except CommunicationError as ex:
                 logger.debug("Could not connect to %s: %s", gateway, ex)
+                continue
             else:
-                return
+                break
+        else:
+            raise CommunicationError("No usable KNX/IP device found.")
 
     async def _start_tunnelling_tcp(
         self,
@@ -289,22 +292,6 @@ class KNXIPInterface:
         if isinstance(self._interface, _Tunnel):
             return await self._interface.request_description()
         return None
-
-    async def find_gateways(
-        self,
-        scan_filter: GatewayScanFilter,
-        local_ip: str | None = None,
-    ) -> list[GatewayDescriptor]:
-        """Find KNX/IP Gateways."""
-        gatewayscanner = GatewayScanner(
-            self.xknx,
-            stop_on_found=None,
-            scan_filter=scan_filter,
-        )
-        gateways = await gatewayscanner.scan(local_ip=local_ip)
-        if not gateways:
-            raise XKNXException("No Gateways found")
-        return gateways
 
 
 class KNXIPInterfaceThreaded(KNXIPInterface):

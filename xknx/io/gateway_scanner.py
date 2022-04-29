@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 from functools import partial
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, AsyncGenerator
 
 from xknx.exceptions import XKNXException
 from xknx.io import util
@@ -182,27 +182,50 @@ class GatewayScanner:
     def __init__(
         self,
         xknx: XKNX,
-        timeout_in_seconds: float = 4.0,
-        stop_on_found: int | None = 1,
+        local_ip: str | None = None,
+        timeout_in_seconds: float = 3.0,
+        stop_on_found: int | None = None,
         scan_filter: GatewayScanFilter = GatewayScanFilter(),
     ):
         """Initialize GatewayScanner class."""
         self.xknx = xknx
+        self.local_ip = local_ip
         self.timeout_in_seconds = timeout_in_seconds
         self.stop_on_found = stop_on_found or 0
         self.scan_filter = scan_filter
         self.found_gateways: dict[HPAI, GatewayDescriptor] = {}
         self._response_received_event = asyncio.Event()
 
-    async def scan(
-        self,
-        local_ip: str | None = None,
-    ) -> list[GatewayDescriptor]:
+    async def scan(self) -> list[GatewayDescriptor]:
         """Scan and return a list of GatewayDescriptors on success."""
-        local_ip = local_ip or await util.get_default_local_ip(
+        await self._scan()
+        return list(self.found_gateways.values())
+
+    async def async_scan(self) -> AsyncGenerator[GatewayDescriptor, None]:
+        """Search and yield found gareways."""
+        queue: asyncio.Queue[GatewayDescriptor | None] = asyncio.Queue()
+        scan_task = asyncio.create_task(self._scan(queue=queue))
+        try:
+            while True:
+                gateway = await queue.get()
+                if gateway is None:
+                    return
+                yield gateway
+        finally:
+            if not scan_task.done():
+                scan_task.cancel()
+            await scan_task  # to bubble up exceptions
+
+    async def _scan(
+        self, queue: asyncio.Queue[GatewayDescriptor | None] | None = None
+    ) -> None:
+        """Scan for gateways."""
+        local_ip = self.local_ip or await util.get_default_local_ip(
             remote_ip=self.xknx.multicast_group
         )
         if local_ip is None:
+            if queue is not None:
+                queue.put_nowait(None)
             raise XKNXException("No usable network interface found.")
         interface_name = util.get_local_interface_name(local_ip=local_ip)
         logger.debug("Searching on %s / %s", interface_name, local_ip)
@@ -212,7 +235,7 @@ class GatewayScanner:
             remote_addr=(self.xknx.multicast_group, self.xknx.multicast_port),
         )
         udp_transport.register_callback(
-            partial(self._response_rec_callback, interface=interface_name),
+            partial(self._response_rec_callback, interface=interface_name, queue=queue),
             [
                 KNXIPServiceType.SEARCH_RESPONSE,
                 KNXIPServiceType.SEARCH_RESPONSE_EXTENDED,
@@ -226,10 +249,12 @@ class GatewayScanner:
             )
         except asyncio.TimeoutError:
             pass
+        except asyncio.CancelledError:
+            pass
         finally:
             udp_transport.stop()
-
-        return list(self.found_gateways.values())
+            if queue is not None:
+                queue.put_nowait(None)
 
     @staticmethod
     async def _send_search_requests(udp_transport: UDPTransport) -> None:
@@ -261,6 +286,7 @@ class GatewayScanner:
         source: HPAI,
         udp_transport: UDPTransport,
         interface: str = "",
+        queue: asyncio.Queue[GatewayDescriptor | None] | None = None,
     ) -> None:
         """Verify and handle knxipframe. Callback from internal udp_transport."""
         if not isinstance(knx_ip_frame.body, (SearchResponse, SearchResponseExtended)):
@@ -292,6 +318,7 @@ class GatewayScanner:
         logger.debug("Found KNX/IP device at %s: %s", source, repr(gateway))
         if self.scan_filter.match(gateway):
             self.found_gateways[knx_ip_frame.body.control_endpoint] = gateway
-
+            if queue is not None:
+                queue.put_nowait(gateway)
             if len(self.found_gateways) >= self.stop_on_found:
                 self._response_received_event.set()

@@ -9,6 +9,7 @@
 - Skip SearchResponse results for Core-V2 devices - wait for SearchResponseExtended
 - Identify interfaces having KNX IP Secure Tunneling required and skip if using Automatic connection mode
 - Only send SearchRequests from one interface for each `scan()` call
+- Connect to next found interface in case of unsuccessful initial connection when using "automatic" mode
 
 ### Internals
 
