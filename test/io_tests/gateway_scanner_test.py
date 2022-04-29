@@ -1,8 +1,11 @@
 """Unit test for KNX/IP gateway scanner."""
 import asyncio
-from unittest.mock import create_autospec, patch
+from unittest.mock import Mock, create_autospec, patch
+
+import pytest
 
 from xknx import XKNX
+from xknx.exceptions import XKNXException
 from xknx.io import GatewayScanFilter, GatewayScanner
 from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.io.transport import UDPTransport
@@ -170,7 +173,19 @@ class TestGatewayScanner:
             gateway_scanner.found_gateways[test_search_response.body.control_endpoint]
         ) == str(self.gateway_desc_both)
 
-    async def test_scan_timeout(self, time_travel):
+    @patch("xknx.io.gateway_scanner.UDPTransport.connect")
+    @patch("xknx.io.gateway_scanner.UDPTransport.send")
+    @patch(
+        "xknx.io.gateway_scanner.UDPTransport.getsockname",
+        return_value=("10.1.1.2", 56789),
+    )
+    async def test_scan_timeout(
+        self,
+        getsockname_mock,
+        udp_transport_send_mock,
+        udp_transport_connect_mock,
+        time_travel,
+    ):
         """Test gateway scanner timeout."""
         xknx = XKNX()
         gateway_scanner = GatewayScanner(xknx)
@@ -178,6 +193,88 @@ class TestGatewayScanner:
         await time_travel(gateway_scanner.timeout_in_seconds)
         # Unsuccessfull scan() returns empty list
         assert await timed_out_scan_task == []
+
+    @patch("xknx.io.gateway_scanner.UDPTransport.connect")
+    @patch("xknx.io.gateway_scanner.UDPTransport.send")
+    async def test_async_scan_timeout(
+        self,
+        udp_transport_send_mock,
+        udp_transport_connect_mock,
+        time_travel,
+    ):
+        """Test gateway scanner timeout for async generator."""
+
+        async def test():
+            xknx = XKNX()
+            async for gateway in GatewayScanner(xknx).async_scan():
+                break
+            else:
+                return True
+            return False
+
+        # timeout
+        with patch(
+            "xknx.io.util.get_default_local_ip",
+            return_value="10.1.1.2",
+        ), patch(
+            "xknx.io.gateway_scanner.UDPTransport.getsockname",
+            return_value=("10.1.1.2", 56789),
+        ):
+            timed_out_scan_task = asyncio.create_task(test())
+            await time_travel(3)
+            assert await timed_out_scan_task
+        # no matching interface found
+        with patch(
+            "xknx.io.util.get_default_local_ip",
+            return_value=None,
+        ):
+            timed_out_scan_task = asyncio.create_task(test())
+            await time_travel(3)
+            with pytest.raises(XKNXException):
+                await timed_out_scan_task
+
+    @patch("xknx.io.gateway_scanner.UDPTransport.connect")
+    @patch("xknx.io.gateway_scanner.UDPTransport.send")
+    async def test_async_scan_exit(
+        self,
+        udp_transport_send_mock,
+        udp_transport_connect_mock,
+        time_travel,
+    ):
+        """Test gateway scanner timeout for async generator."""
+        xknx = XKNX()
+        test_search_response = fake_router_search_response()
+        udp_transport_mock = Mock()
+        udp_transport_mock.local_addr = ("10.1.1.2", 56789)
+
+        gateway_scanner = GatewayScanner(xknx, local_ip="10.1.1.2")
+
+        async def test():
+            async for gateway in gateway_scanner.async_scan():
+                return True
+            return False
+
+        with patch(
+            "xknx.io.gateway_scanner.UDPTransport.getsockname",
+            return_value=("10.1.1.2", 56789),
+        ), patch(
+            "xknx.io.gateway_scanner.UDPTransport.register_callback"
+        ) as register_callback_mock:
+            # , patch.object(
+            #     gateway_scanner,
+            #     "_scan",
+            #     wraps=gateway_scanner._scan,
+            # ) as _scan_mock:
+            scan_task = asyncio.create_task(test())
+            await time_travel(0)
+            _fished_response_rec_callback = register_callback_mock.call_args.args[0]
+            _fished_response_rec_callback(
+                test_search_response,
+                HPAI("192.168.42.50", 0),
+                udp_transport_mock,
+            )
+            assert await scan_task
+            await time_travel(0)  # for task cleanup
 
     @patch("xknx.io.gateway_scanner.UDPTransport.connect")
     @patch("xknx.io.gateway_scanner.UDPTransport.send")

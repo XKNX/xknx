@@ -191,7 +191,7 @@ class GatewayScanner:
         self.xknx = xknx
         self.local_ip = local_ip
         self.timeout_in_seconds = timeout_in_seconds
-        self.stop_on_found = stop_on_found or 0
+        self.stop_on_found = stop_on_found
         self.scan_filter = scan_filter
         self.found_gateways: dict[HPAI, GatewayDescriptor] = {}
         self._response_received_event = asyncio.Event()
@@ -212,6 +212,7 @@ class GatewayScanner:
                     return
                 yield gateway
         finally:
+            # cleanup after GeneratorExit or XKNXExceptions
             if not scan_task.done():
                 scan_task.cancel()
             await scan_task  # to bubble up exceptions
@@ -320,5 +321,5 @@ class GatewayScanner:
             self.found_gateways[knx_ip_frame.body.control_endpoint] = gateway
             if queue is not None:
                 queue.put_nowait(gateway)
-            if len(self.found_gateways) >= self.stop_on_found:
+            if self.stop_on_found and len(self.found_gateways) >= self.stop_on_found:
                 self._response_received_event.set()
