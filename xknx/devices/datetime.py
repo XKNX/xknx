@@ -7,6 +7,7 @@ broadcasting localtime periodically.
 from __future__ import annotations
 
 import asyncio
+from functools import partial
 import time
 from typing import TYPE_CHECKING, Iterator
 
@@ -65,8 +66,8 @@ class DateTime(Device):
 
         if self.localtime:
             task: Task = self.xknx.task_registry.register(
-                f"datetime.broadcast_{id(self)}",
-                broadcast_loop(self, minutes=minutes),
+                name=f"datetime.broadcast_{id(self)}",
+                task=partial(broadcast_loop, self, minutes),
                 restart_after_reconnect=True,
             )
             task.start()
