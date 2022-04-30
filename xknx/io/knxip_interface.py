@@ -144,7 +144,6 @@ class KNXIPInterface:
             local_ip=self.connection_config.local_ip,
             scan_filter=self.connection_config.scan_filter,  # secure disabled by default
         ).async_scan():
-            self._gateway_info = gateway
             try:
                 if gateway.supports_tunnelling_tcp:
                     await self._start_tunnelling_tcp(
@@ -164,6 +163,7 @@ class KNXIPInterface:
                 logger.debug("Could not connect to %s: %s", gateway, ex)
                 continue
             else:
+                self._gateway_info = gateway
                 break
         else:
             raise CommunicationError("No usable KNX/IP device found.")
