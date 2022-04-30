@@ -2,6 +2,8 @@
 
 ## Unreleased changes
 
+## 0.21.0 Search and connect 2022-04-30
+
 ### Discovery
 
 - Use unicast discovery endpoint to receive SearchRespones frames
@@ -16,7 +18,7 @@
 - Use `ifaddr` instead of `netifaces`
 - make HPAI hashable and add `addr_tuple` convenice property
 
-## 0.20.4 Fix exposure of time and date
+## 0.20.4 Fix exposure of time and date 2022-04-20
 
 ### Bugfixes
 
