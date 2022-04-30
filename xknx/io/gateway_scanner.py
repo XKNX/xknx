@@ -202,7 +202,7 @@ class GatewayScanner:
         return list(self.found_gateways.values())
 
     async def async_scan(self) -> AsyncGenerator[GatewayDescriptor, None]:
-        """Search and yield found gareways."""
+        """Search and yield found gateways."""
         queue: asyncio.Queue[GatewayDescriptor | None] = asyncio.Queue()
         scan_task = asyncio.create_task(self._scan(queue=queue))
         try:
