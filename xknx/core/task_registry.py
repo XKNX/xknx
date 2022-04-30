@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Awaitable, Generator, Union
+from typing import TYPE_CHECKING, Any, Coroutine, Generator, Union
 
 from xknx.core import XknxConnectionState
 
-AsyncCallbackType = Union[Generator[Any, None, Any], Awaitable]
+AsyncCallbackType = Union[Generator[Any, None, Any], Coroutine[Any, Any, None]]
 
 if TYPE_CHECKING:
     from xknx import XKNX
