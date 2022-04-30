@@ -79,6 +79,7 @@ class TestTaskRegistry:
         await xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTED
         )
+        # pylint: disable=attribute-defined-outside-init
         self.test = 0
 
         async def callback() -> None:
