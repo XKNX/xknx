@@ -2,6 +2,8 @@
 
 ## Unreleased changes
 
+## 0.21.1 Fix Task Registry 2022-05-01
+
 ### Bugfixes
 
 - Fix exposure of datetime, time and date objects to the Bus again
