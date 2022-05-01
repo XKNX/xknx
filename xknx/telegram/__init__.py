@@ -8,7 +8,7 @@ Module for handling KNX primitves.
 # flake8: noqa
 from .address import GroupAddress, GroupAddressType, IndividualAddress
 from .address_filter import AddressFilter
-from .telegram import Telegram, TelegramDirection
+from .telegram import Priority, Telegram, TelegramDirection, TPDUType
 
 __all__ = [
     "AddressFilter",
@@ -17,4 +17,6 @@ __all__ = [
     "IndividualAddress",
     "Telegram",
     "TelegramDirection",
+    "TPDUType",
+    "Priority",
 ]

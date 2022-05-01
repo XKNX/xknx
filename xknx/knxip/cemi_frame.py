@@ -16,6 +16,7 @@ from __future__ import annotations
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
+from xknx.telegram.telegram import Priority
 
 from .knxip_enum import CEMIFlags, CEMIMessageCode
 
@@ -39,6 +40,9 @@ class CEMIFrame:
         self.dst_addr = dst_addr
         self.mpdu_len = mpdu_len
         self.payload = payload
+
+        if payload and payload.additional_flags and hasattr(payload, "sequence_number"):
+            pass
 
     @staticmethod
     def init_from_telegram(
@@ -71,11 +75,21 @@ class CEMIFrame:
             CEMIFlags.FRAME_TYPE_STANDARD
             | CEMIFlags.DO_NOT_REPEAT
             | CEMIFlags.BROADCAST
-            | CEMIFlags.PRIORITY_LOW
             | CEMIFlags.NO_ACK_REQUESTED
             | CEMIFlags.CONFIRM_NO_ERROR
             | CEMIFlags.HOP_COUNT_1ST
         )
+        if telegram.priority == Priority.SYSTEM:
+            # do nothing
+            pass
+        elif telegram.priority == Priority.URGENT:
+            self.flags |= CEMIFlags.PRIORITY_URGENT
+        elif telegram.priority == Priority.NORMAL:
+            self.flags |= CEMIFlags.PRIORITY_NORMAL
+        elif telegram.priority == Priority.LOW:
+            self.flags |= CEMIFlags.PRIORITY_LOW
+        else:
+            raise RuntimeError("Unknown telegram priority: " + str(telegram.priority))
 
         if isinstance(telegram.destination_address, GroupAddress):
             self.flags |= CEMIFlags.DESTINATION_GROUP_ADDRESS
@@ -86,6 +100,11 @@ class CEMIFrame:
 
         self.dst_addr = telegram.destination_address
         self.payload = telegram.payload
+
+        print(
+            f"##### CEMIFrame-telegram {self.code}",
+            " ".join(f"{b:02x}" for b in self.payload.to_knx()),
+        )
 
     def set_hops(self, hops: int) -> None:
         """Set hops."""

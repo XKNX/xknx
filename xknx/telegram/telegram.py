@@ -22,6 +22,25 @@ from .address import GroupAddress, IndividualAddress, InternalGroupAddress
 from .apci import APCI
 
 
+class Priority(Enum):
+    """Priority of KNX telegram."""
+
+    SYSTEM = 0
+    URGENT = 1
+    NORMAL = 2
+    LOW = 3
+
+
+class TPDUType(Enum):
+    """Types of TPDU."""
+
+    T_DATA = 0
+    T_CONNECT = 1
+    T_DISCONNECT = 2
+    T_ACK = 3
+    T_ACK_NUMBERED = 4
+
+
 class TelegramDirection(Enum):
     """Enum class for the communication direction of a telegram (from KNX bus or to KNX bus)."""
 
@@ -39,14 +58,19 @@ class Telegram:
         | InternalGroupAddress = GroupAddress(0),
         direction: TelegramDirection = TelegramDirection.OUTGOING,
         payload: APCI | None = None,
-        source_address: IndividualAddress = IndividualAddress(0),
+        source_address: IndividualAddress | None = IndividualAddress(0),
+        tpdu_type: TPDUType = TPDUType.T_DATA,
+        priority: Priority = Priority.LOW,
     ) -> None:
         """Initialize Telegram class."""
         self.destination_address = destination_address
         self.direction = direction
         self.payload = payload
         self.source_address = source_address
+        self.tpdu_type = tpdu_type
+        self.priority = priority
         self.timestamp = datetime.now()
+        self.sequence_number = None
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -55,6 +79,7 @@ class Telegram:
             f'direction="{self.direction.value}" '
             f'source_address="{self.source_address}" '
             f'destination_address="{self.destination_address}" '
+            f'sequence_number="{self.sequence_number}" '
             f'payload="{self.payload}" '
             "/>"
         )

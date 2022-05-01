@@ -61,6 +61,10 @@ class TestUDPTunnel:
         self.tg_received_mock.assert_called_once_with(telegram)
         send_ack_mock.assert_called_once_with(0x02, 0x21)
 
+    # pylint: disable=pointless-string-statement
+    '''
+    This test is now useless because "too small CEMIs are handeled as TPDUs
+
     @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
     def test_tunnel_request_received_cemi_too_small(self, send_ack_mock):
         """Test Tunnel sending ACK for unsupported frames."""
@@ -72,6 +76,7 @@ class TestUDPTunnel:
         self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
         self.tg_received_mock.assert_not_called()
         send_ack_mock.assert_called_once_with(0x02, 0x81)
+    '''
 
     @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
     def test_tunnel_request_received_apci_unsupported(self, send_ack_mock):
@@ -96,7 +101,7 @@ class TestUDPTunnel:
             TunnellingRequest(
                 communication_channel_id=1,
                 sequence_counter=23,
-                cemi=CEMIFrame.init_from_telegram(
+                pdu=CEMIFrame.init_from_telegram(
                     test_telegram, code=CEMIMessageCode.L_DATA_CON
                 ),
             )
@@ -167,7 +172,7 @@ class TestUDPTunnel:
             TunnellingRequest(
                 communication_channel_id=23,
                 sequence_counter=0,
-                cemi=CEMIFrame.init_from_telegram(
+                pdu=CEMIFrame.init_from_telegram(
                     test_telegram,
                     code=CEMIMessageCode.L_DATA_REQ,
                     src_addr=IndividualAddress(7),

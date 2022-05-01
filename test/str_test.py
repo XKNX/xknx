@@ -627,7 +627,7 @@ class TestStringRepresentations:
         assert (
             str(tunnelling_request)
             == '<TunnellingRequest communication_channel_id="23" sequence_counter="42" '
-            'cemi="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")" DestinationAddress="GroupAddress("0/0/0")" '
+            'pdu="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")" DestinationAddress="GroupAddress("0/0/0")" '
             'Flags="               0" code="L_DATA_REQ" payload="None" />" />'
         )
 

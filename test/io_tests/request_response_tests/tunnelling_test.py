@@ -48,8 +48,8 @@ class TestTunnelling:
             communication_channel_id=communication_channel_id,
             sequence_counter=sequence_counter,
         )
-        tunnelling_request.cemi.telegram = telegram
-        tunnelling_request.cemi.src_addr = src_address
+        tunnelling_request.pdu.telegram = telegram
+        tunnelling_request.pdu.src_addr = src_address
         exp_knxipframe = KNXIPFrame.init_from_body(tunnelling_request)
         with patch("xknx.io.transport.UDPTransport.send") as mock_udp_send, patch(
             "xknx.io.transport.UDPTransport.getsockname"

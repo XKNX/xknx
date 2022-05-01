@@ -329,18 +329,18 @@ class _Tunnel(Interface):
         self, tunneling_request: TunnellingRequest
     ) -> None:
         """Handle incoming tunnel request."""
-        if tunneling_request.cemi is None:
+        if tunneling_request.pdu is None:
             # Don't handle invalid cemi frames (None)
             return
-        if tunneling_request.cemi.code is CEMIMessageCode.L_DATA_IND:
-            telegram = tunneling_request.cemi.telegram
+        if tunneling_request.pdu.code is CEMIMessageCode.L_DATA_IND:
+            telegram = tunneling_request.pdu.telegram
             telegram.direction = TelegramDirection.INCOMING
             if self.telegram_received_callback is not None:
                 self.telegram_received_callback(telegram)
-        elif tunneling_request.cemi.code is CEMIMessageCode.L_DATA_CON:
+        elif tunneling_request.pdu.code is CEMIMessageCode.L_DATA_CON:
             # L_DATA_CON confirmation frame signals ready to send next telegram
             self._tunnelling_request_confirmation_event.set()
-        elif tunneling_request.cemi.code is CEMIMessageCode.L_DATA_REQ:
+        elif tunneling_request.pdu.code is CEMIMessageCode.L_DATA_REQ:
             # L_DATA_REQ frames should only be outgoing.
             logger.warning(
                 "Tunnel received unexpected L_DATA_REQ frame: %s", tunneling_request
@@ -543,7 +543,7 @@ class TCPTunnel(_Tunnel):
         tunnelling_request = TunnellingRequest(
             communication_channel_id=self.communication_channel,
             sequence_counter=self.sequence_number,
-            cemi=cemi,
+            pdu=cemi,
         )
 
         async def _async_wrapper() -> None:
