@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Union
 
 from xknx.dpt.dpt import DPTArray, DPTBinary
-from xknx.exceptions import ConversionError
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
@@ -31,7 +31,7 @@ class RemoteValueRaw(RemoteValue[Union[DPTArray, DPTBinary], int]):
         feature_name: str = "Raw",
         after_update_cb: AsyncCallbackType | None = None,
     ):
-        """Initialize RemoteValueSensor class."""
+        """Initialize RemoteValueRaw class."""
         self.payload_length = payload_length
         super().__init__(
             xknx,
@@ -45,13 +45,13 @@ class RemoteValueRaw(RemoteValue[Union[DPTArray, DPTBinary], int]):
 
     def payload_valid(
         self, payload: DPTArray | DPTBinary | None
-    ) -> DPTArray | DPTBinary | None:
+    ) -> DPTArray | DPTBinary:
         """Test if telegram payload may be parsed."""
         if isinstance(payload, DPTBinary) and self.payload_length == 0:
             return payload
         if isinstance(payload, DPTArray) and len(payload.value) == self.payload_length:
             return payload
-        return None
+        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
 
     def to_knx(self, value: int) -> DPTArray | DPTBinary:
         """Convert value to payload."""

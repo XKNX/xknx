@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keyring Project="KeyringTest" CreatedBy="ETS 5.7.2 (Build 743)" Created="2019-06-11T06:45:22" Signature="2RFlNjajWAECK8vV5zJKZA==" xmlns="http://knx.org/xml/keyring/1">
+  <Backbone MulticastAddress="224.0.23.12" Latency="1000" Key="VGnz2DbdiMqN5EE4I7tqLw==" />
+  <Interface Type="Tunneling" Host="1.1.0" UserID="6" Password="wUSTJUFWBS32/79bnHQJqkmVlGn6zDr5N+rYYBf+vLo=" IndividualAddress="1.1.1" Authentication="wZIGtUSIOy5kHhALrEbfpA+3IaYGxde2/gKA57YpKyo=">
+    <Group Address="2305" Senders="1.1.12" />
+  </Interface>
+  <Interface Type="Tunneling" Host="1.1.0" UserID="5" Password="OqTuuTBDiNj+x2BSMqyDqxF04J96G8yFUt73spYWkjg=" IndividualAddress="1.1.2" Authentication="f1B5BhgZSE8mo1swulSEtXmIesFcIeIeHV7FyvorEBQ=" />
+  <Interface Type="Tunneling" Host="1.1.0" UserID="7" Password="yUCI4WRzOlA3paEcqExnGDG9hUvuEW8W36bT6G1Sa5o=" IndividualAddress="1.1.3" Authentication="DKkrtIDmNf+g6TmrTBKm5s3tSU5LOXTgCyR4S4HruZI=" />
+  <Interface Type="Tunneling" Host="1.1.0" UserID="2" Password="DQJOj7CrytX+4EV27SINp3xXa7HEfJQu+XiCt9U5AU8=" IndividualAddress="1.1.4" Authentication="//pj5KplK+4H7gcYVefuuCumcPVI0BBR/MXfFtaat2k=" />
+  <Interface Type="Tunneling" Host="1.1.0" UserID="9" Password="9FiIKdax70lY6fs37PkMVm+VRSJItsuWuvQw2/d7zkA=" IndividualAddress="1.1.5" Authentication="dvHv4LsNYPcr8prylwkGxcLmcVBcHOGEoNgm7gQbqPs=" />
+  <Interface Type="Tunneling" Host="1.1.0" UserID="3" Password="tLWxOxgfhc/sl6fDbrgDolRPeUN2IoCXp+AQ0cGzDNs=" IndividualAddress="1.1.6" Authentication="8xQ9o12myA27RdNdXhaWkWc4wJR+JaqDe1qeMJHipyM=" />
+  <Interface Type="Tunneling" Host="1.1.0" UserID="4" Password="gTUUAi7BLORaCYnZelH63Kkk/f9kLxhs5SBuZQtawYI=" IndividualAddress="1.1.7" Authentication="YuJT1nEYejItU2/nib6XvQCcmgo04QlTJx5xlMEEpF0=" />
+  <Interface Type="Tunneling" Host="1.1.0" UserID="8" Password="aEJsZx3OkXsxKevnTtAW81nKxhM5b0l3H6GP9fnV6mg=" IndividualAddress="1.1.8" Authentication="zpzOlPdwf7mvdsGbQZiQVnhyTs8WoGSIBdWLgoNn+UM=" />
+  <Interface Type="Tunneling" Host="1.1.11" IndividualAddress="1.1.12">
+    <Group Address="2305" Senders="1.1.1" />
+  </Interface>
+  <Interface Type="Tunneling" Host="1.1.10" IndividualAddress="1.1.20">
+    <Group Address="2305" Senders="1.1.1 1.1.12" />
+  </Interface>
+  <GroupAddresses>
+    <Group Address="2305" Key="iA2KpI19ZlW0jseoXSycAg==" />
+  </GroupAddresses>
+  <Devices>
+    <Device IndividualAddress="1.1.0" ToolKey="GI0PDDbpgQUZK2JkTvR8pA==" ManagementPassword="ezGR1sf4vsWKWS8JMIJuzmrtEG2N9WLdyTDrwIZbNuM=" Authentication="qEUJHMW48qXne6MySIUPlWwd7RHLmh6gnS/EIzaTIew=" SequenceNumber="108" />
+    <Device IndividualAddress="1.1.10" ToolKey="MOrvUOILy9IaW9Nz7l/juw==" ManagementPassword="DhI6KGhgfJYAajc0oVxjRSN+rAxqv/1r3X5crLGe/pw=" Authentication="u6AD9znihLukarrLFM7wIMH4vpFGq6RrWwnTMLGoi/0=" />
+    <Device IndividualAddress="1.1.11" ToolKey="eYCTHP2c3ORJAUHhe8jwRQ==" ManagementPassword="hOofNyOCsNknJEoWswUfWXuV33vFhuaSfTVSqS4g934=" Authentication="jHGdBczj7LDqp7H2feOJN0arlh2cfGgqOYQuvTg3Izg=" />
+  </Devices>
+</Keyring>

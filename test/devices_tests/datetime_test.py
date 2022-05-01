@@ -2,7 +2,6 @@
 import time
 from unittest.mock import patch
 
-import pytest
 from xknx import XKNX
 from xknx.devices import DateTime
 from xknx.dpt import DPTArray
@@ -10,13 +9,12 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse
 
 
-@pytest.mark.asyncio
 class TestDateTime:
     """Test class for DateTime object."""
 
     # pylint: disable=attribute-defined-outside-init
     def teardown_method(self):
-        """Cancel broadcast_task"""
+        """Cancel broadcast_task."""
         self.datetime.__del__()
 
     #

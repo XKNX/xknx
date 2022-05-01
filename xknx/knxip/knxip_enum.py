@@ -43,11 +43,11 @@ class KNXIPServiceType(Enum):
     # 0x08 Object Server services
     # 0x09 Security services
     SECURE_WRAPPER = 0x0950
-    SECURE_SESSION_REQUEST = 0x0951
-    SECURE_SESSION_RESPONSE = 0x0952
-    SECURE_SESSION_AUTHENTICATE = 0x0953
-    SECURE_SESSION_STATUS = 0x0954
-    SECURE_TIMER_NOTIFY = 0x0955
+    SESSION_REQUEST = 0x0951
+    SESSION_RESPONSE = 0x0952
+    SESSION_AUTHENTICATE = 0x0953
+    SESSION_STATUS = 0x0954
+    TIMER_NOTIFY = 0x0955
 
 
 class CEMIMessageCode(Enum):
@@ -160,6 +160,11 @@ class DIBTypeCode(Enum):
     # KNX addresses
     KNX_ADDRESSES = 0x05
 
+    # KNX IP Secure
+    SECURED_SERVICE_FAMILIES = 0x06
+    TUNNELING_INFO = 0x07
+    ADDITIONAL_DEVICE_INFO = 0x08
+
     # DIB structure for further data defined by device manufacturer.
     MFR_DATA = 0xFE
 
@@ -203,3 +208,42 @@ class DIBServiceFamily(Enum):
 
     # Object Server'.
     OBJECT_SERVER = 0x08
+
+    # Security - Extended search response only
+    SECURITY = 0x09
+
+
+class SecureSessionStatusCode(Enum):
+    """Enum class for KNX/IP Secure session status codes."""
+
+    # The user could successfully be authenticated
+    STATUS_AUTHENTICATION_SUCCESS = 0x00
+    # An error occurred during secure session handshake
+    STATUS_AUTHENTICATION_FAILED = 0x01
+    # The session is not (yet) authenticated
+    STATUS_UNAUTHENTICATED = 0x02
+    # A timeout occurred during secure session handshake
+    STATUS_TIMEOUT = 0x03
+    # Prevent inactivity on the secure session closing it with timeout error
+    STATUS_KEEPALIVE = 0x04
+    # The secure session shall be closed
+    STATUS_CLOSE = 0x05
+
+
+class SearchRequestParameterType(Enum):
+    """Search Request Parameter (SRP) is used to transfer additional information in a KNXnet/IP SEARCH_REQUEST_EXTENDED."""
+
+    # Used to test behavior of the KNXnet/IP server for unknown SRPs. Don't use!
+    INVALID = 0x00
+
+    # Select only KNXnet/IP Servers that are currently in programming mode
+    SELECT_BY_PROGRAMMING_MODE = 0x01
+
+    # Select only KNXnet/IP Servers that have the given MAC address
+    SELECT_BY_MAC_ADDRESS = 0x02
+
+    # Select only KNXnet/IP Servers that support the given DIBServiceFamily in a given version
+    SELECT_BY_SERVICE = 0x03
+
+    # The Client shall include this SRP to indicate that it is interested in the listed DIBs
+    REQUEST_DIBS = 0x04

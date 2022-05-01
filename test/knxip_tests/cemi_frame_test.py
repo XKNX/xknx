@@ -1,7 +1,6 @@
-"""Tests for the CEMIFrame object"""
-from unittest.mock import MagicMock
+"""Tests for the CEMIFrame object."""
+from pytest import raises
 
-from pytest import fixture, raises
 from xknx.dpt import DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage
 from xknx.knxip.cemi_frame import CEMIFrame
@@ -30,15 +29,9 @@ def get_data(code, adil, flags, src, dst, mpdu_len, tpci_apci, payload):
     )
 
 
-@fixture(name="frame")
-def fixture_frame():
-    """Fixture to get a simple mocked frame"""
-    xknx = MagicMock()
-    return CEMIFrame(xknx)
-
-
-def test_valid_command(frame):
-    """Test for valid frame parsing"""
+def test_valid_command():
+    """Test for valid frame parsing."""
+    frame = CEMIFrame()
     packet_len = frame.from_knx(get_data(0x29, 0, 0, 0, 0, 1, 0, []))
     assert frame.code == CEMIMessageCode.L_DATA_IND
     assert frame.flags == 0
@@ -49,20 +42,23 @@ def test_valid_command(frame):
     assert packet_len == 11
 
 
-def test_invalid_tpci_apci(frame):
-    """Test for invalid APCIService"""
+def test_invalid_tpci_apci():
+    """Test for invalid APCIService."""
+    frame = CEMIFrame()
     with raises(UnsupportedCEMIMessage, match=r".*APCI not supported: .*"):
         frame.from_knx_data_link_layer(get_data(0x29, 0, 0, 0, 0, 1, 0xFFC0, []))
 
 
-def test_invalid_apdu_len(frame):
-    """Test for invalid apdu len"""
+def test_invalid_apdu_len():
+    """Test for invalid apdu len."""
+    frame = CEMIFrame()
     with raises(CouldNotParseKNXIP, match=r".*APDU LEN should be .*"):
         frame.from_knx(get_data(0x29, 0, 0, 0, 0, 2, 0, []))
 
 
-def test_invalid_src_addr(frame):
-    """Test for invalid src addr"""
+def test_invalid_src_addr():
+    """Test for invalid src addr."""
+    frame = CEMIFrame()
     frame.code = CEMIMessageCode.L_DATA_IND
     frame.flags = 0
     frame.mpdu_len = 1
@@ -74,8 +70,9 @@ def test_invalid_src_addr(frame):
         frame.to_knx()
 
 
-def test_invalid_dst_addr(frame):
-    """Test for invalid dst addr"""
+def test_invalid_dst_addr():
+    """Test for invalid dst addr."""
+    frame = CEMIFrame()
     frame.code = CEMIMessageCode.L_DATA_IND
     frame.flags = 0
     frame.mpdu_len = 1
@@ -87,8 +84,9 @@ def test_invalid_dst_addr(frame):
         frame.to_knx()
 
 
-def test_invalid_payload(frame):
-    """Test for having wrong payload set"""
+def test_invalid_payload():
+    """Test for having wrong payload set."""
+    frame = CEMIFrame()
     frame.code = CEMIMessageCode.L_DATA_IND
     frame.flags = 0
     frame.mpdu_len = 1
@@ -103,42 +101,48 @@ def test_invalid_payload(frame):
         frame.to_knx()
 
 
-def test_from_knx_with_not_handleable_cemi(frame):
-    """Test for having unhandlebale cemi set"""
+def test_from_knx_with_not_handleable_cemi():
+    """Test for having unhandlebale cemi set."""
+    frame = CEMIFrame()
     with raises(UnsupportedCEMIMessage, match=r".*CEMIMessageCode not implemented:.*"):
         frame.from_knx(get_data(0x30, 0, 0, 0, 0, 2, 0, []))
 
 
-def test_from_knx_with_not_implemented_cemi(frame):
-    """Test for having not implemented CEMI set"""
+def test_from_knx_with_not_implemented_cemi():
+    """Test for having not implemented CEMI set."""
+    frame = CEMIFrame()
     with raises(UnsupportedCEMIMessage, match=r".*Could not handle CEMIMessageCode:.*"):
         frame.from_knx(
             get_data(CEMIMessageCode.L_BUSMON_IND.value, 0, 0, 0, 0, 2, 0, [])
         )
 
 
-def test_invalid_invalid_len(frame):
-    """Test for invalid cemi len"""
+def test_invalid_invalid_len():
+    """Test for invalid cemi len."""
+    frame = CEMIFrame()
     with raises(UnsupportedCEMIMessage, match=r".*CEMI too small.*"):
         frame.from_knx_data_link_layer(get_data(0x29, 0, 0, 0, 0, 2, 0, [])[:5])
 
 
-def test_from_knx_group_address(frame):
-    """Test conversion for a cemi with a group address as destination"""
+def test_from_knx_group_address():
+    """Test conversion for a cemi with a group address as destination."""
+    frame = CEMIFrame()
     frame.from_knx(get_data(0x29, 0, 0x80, 0, 0, 1, 0, []))
 
     assert frame.dst_addr == GroupAddress(0)
 
 
-def test_from_knx_individual_address(frame):
-    """Test conversion for a cemi with a individual address as destination"""
+def test_from_knx_individual_address():
+    """Test conversion for a cemi with a individual address as destination."""
+    frame = CEMIFrame()
     frame.from_knx(get_data(0x29, 0, 0x00, 0, 0, 1, 0, []))
 
     assert frame.dst_addr == IndividualAddress(0)
 
 
-def test_telegram_group_address(frame):
-    """Test telegram conversion flags with a group address"""
+def test_telegram_group_address():
+    """Test telegram conversion flags with a group address."""
+    frame = CEMIFrame()
     frame.telegram = Telegram(destination_address=GroupAddress(0))
 
     assert (
@@ -146,8 +150,9 @@ def test_telegram_group_address(frame):
     ) == CEMIFlags.DESTINATION_GROUP_ADDRESS
 
 
-def test_telegram_individual_address(frame):
-    """Test telegram conversion flags with a individual address"""
+def test_telegram_individual_address():
+    """Test telegram conversion flags with a individual address."""
+    frame = CEMIFrame()
     frame.telegram = Telegram(destination_address=IndividualAddress(0))
 
     assert (
@@ -155,7 +160,8 @@ def test_telegram_individual_address(frame):
     ) == CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
 
 
-def test_telegram_unsupported_address(frame):
-    """Test telegram conversion flags with an unsupported address"""
+def test_telegram_unsupported_address():
+    """Test telegram conversion flags with an unsupported address."""
+    frame = CEMIFrame()
     with raises(TypeError):
         frame.telegram = Telegram(destination_address=object())

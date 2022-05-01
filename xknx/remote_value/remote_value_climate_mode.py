@@ -16,12 +16,12 @@ from xknx.dpt import (
     DPTHVACContrMode,
     DPTHVACMode,
 )
-from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACModeType, HVACOperationMode
+from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACModeT, HVACOperationMode
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 from .remote_value import (
     AsyncCallbackType,
-    DPTPayloadType,
+    DPTPayloadT,
     GroupAddressesType,
     RemoteValue,
 )
@@ -30,13 +30,13 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueClimateModeBase(RemoteValue[DPTPayloadType, Optional[HVACModeType]]):
+class RemoteValueClimateModeBase(RemoteValue[DPTPayloadT, Optional[HVACModeT]]):
     """Base class for binary climate mode remote values."""
 
     @abstractmethod
     def supported_operation_modes(
         self,
-    ) -> list[HVACModeType]:
+    ) -> list[HVACModeT]:
         """Return a list of all supported operation modes."""
 
 
@@ -85,13 +85,11 @@ class RemoteValueOperationMode(RemoteValueClimateModeBase[DPTArray, HVACOperatio
         """Return a list of all supported operation modes."""
         return list(self._climate_mode_transcoder.SUPPORTED_MODES.values())
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray | None:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray:
         """Test if telegram payload may be parsed."""
-        return (
-            payload
-            if isinstance(payload, DPTArray) and len(payload.value) == 1
-            else None
-        )
+        if isinstance(payload, DPTArray) and len(payload.value) == 1:
+            return payload
+        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
 
     def to_knx(self, value: Any) -> DPTArray:
         """Convert value to payload."""
@@ -128,26 +126,21 @@ class RemoteValueControllerMode(
             after_update_cb=after_update_cb,
         )
 
-    @staticmethod
-    def supported_operation_modes() -> list[HVACControllerMode]:
+    def supported_operation_modes(self) -> list[HVACControllerMode]:
         """Return a list of all supported operation modes."""
         return list(DPTHVACContrMode.SUPPORTED_MODES.values())
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray | None:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray:
         """Test if telegram payload may be parsed."""
-        return (
-            payload
-            if isinstance(payload, DPTArray) and len(payload.value) == 1
-            else None
-        )
+        if isinstance(payload, DPTArray) and len(payload.value) == 1:
+            return payload
+        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
 
-    @staticmethod
-    def to_knx(value: Any) -> DPTArray:
+    def to_knx(self, value: Any) -> DPTArray:
         """Convert value to payload."""
         return DPTArray(DPTHVACContrMode.to_knx(value))
 
-    @staticmethod
-    def from_knx(payload: DPTArray) -> HVACControllerMode | None:
+    def from_knx(self, payload: DPTArray) -> HVACControllerMode | None:
         """Convert current payload to value."""
         return DPTHVACContrMode.from_knx(payload.value)
 
@@ -194,9 +187,11 @@ class RemoteValueBinaryOperationMode(
             after_update_cb=after_update_cb,
         )
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTBinary | None:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTBinary:
         """Test if telegram payload may be parsed."""
-        return payload if isinstance(payload, DPTBinary) else None
+        if isinstance(payload, DPTBinary):
+            return payload
+        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
 
     def to_knx(self, value: Any) -> DPTBinary:
         """Convert value to payload."""
@@ -210,8 +205,7 @@ class RemoteValueBinaryOperationMode(
             feature_name=self.feature_name,
         )
 
-    @staticmethod
-    def supported_operation_modes() -> list[HVACOperationMode]:
+    def supported_operation_modes(self) -> list[HVACOperationMode]:
         """Return a list of the configured operation mode."""
         return [
             HVACOperationMode.COMFORT,
@@ -220,7 +214,7 @@ class RemoteValueBinaryOperationMode(
             HVACOperationMode.STANDBY,
         ]
 
-    def from_knx(self, payload: DPTPayloadType) -> HVACOperationMode | None:
+    def from_knx(self, payload: DPTPayloadT) -> HVACOperationMode | None:
         """Convert current payload to value."""
         if payload == DPTBinary(1):
             return self.operation_mode
@@ -276,12 +270,13 @@ class RemoteValueBinaryHeatCool(
             after_update_cb=after_update_cb,
         )
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTBinary | None:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTBinary:
         """Test if telegram payload may be parsed."""
-        return payload if isinstance(payload, DPTBinary) else None
+        if isinstance(payload, DPTBinary):
+            return payload
+        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
 
-    @staticmethod
-    def supported_operation_modes() -> list[HVACControllerMode]:
+    def supported_operation_modes(self) -> list[HVACControllerMode]:
         """Return a list of the configured operation mode."""
         return [HVACControllerMode.HEAT, HVACControllerMode.COOL]
 
@@ -297,7 +292,7 @@ class RemoteValueBinaryHeatCool(
             feature_name=self.feature_name,
         )
 
-    def from_knx(self, payload: DPTPayloadType) -> HVACControllerMode | None:
+    def from_knx(self, payload: DPTPayloadT) -> HVACControllerMode | None:
         """Convert current payload to value."""
         if payload == DPTBinary(1):
             return self.controller_mode

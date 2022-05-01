@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from xknx.dpt import DPTArray, DPTBinary
+from xknx.exceptions import CouldNotParseTelegram
 
 from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
@@ -43,13 +44,11 @@ class RemoteValueScaling(RemoteValue[DPTArray, int]):
         self.range_from = range_from
         self.range_to = range_to
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray | None:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray:
         """Test if telegram payload may be parsed."""
-        return (
-            payload
-            if isinstance(payload, DPTArray) and len(payload.value) == 1
-            else None
-        )
+        if isinstance(payload, DPTArray) and len(payload.value) == 1:
+            return payload
+        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
 
     def to_knx(self, value: float) -> DPTArray:
         """Convert value to payload."""

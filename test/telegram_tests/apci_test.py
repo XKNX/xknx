@@ -1,5 +1,6 @@
 """Unit test for APCI objects."""
 import pytest
+
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
 from xknx.telegram.address import IndividualAddress

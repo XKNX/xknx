@@ -1,5 +1,6 @@
 """Unit test for KNX DPT 5.010 value."""
 import pytest
+
 from xknx.dpt import DPTTariff, DPTValue1Ucount
 from xknx.exceptions import ConversionError
 

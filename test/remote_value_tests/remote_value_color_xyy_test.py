@@ -1,14 +1,14 @@
 """Unit test for RemoteValueColorXYY objects."""
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.exceptions import ConversionError, CouldNotParseTelegram
+from xknx.exceptions import ConversionError
 from xknx.remote_value import RemoteValueColorXYY
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestRemoteValueColorXYY:
     """Test class for RemoteValueColorXYY objects."""
 
@@ -82,15 +82,17 @@ class TestRemoteValueColorXYY:
         """Test process errornous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueColorXYY(xknx, group_address=GroupAddress("1/2/3"))
-        with pytest.raises(CouldNotParseTelegram):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTBinary(1)),
-            )
-            await remote_value.process(telegram)
-        with pytest.raises(CouldNotParseTelegram):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTArray((0x64, 0x65, 0x66, 0x67))),
-            )
-            await remote_value.process(telegram)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        assert await remote_value.process(telegram) is False
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray((0x64, 0x65, 0x66, 0x67))),
+        )
+        assert await remote_value.process(telegram) is False
+
+        assert remote_value.value is None

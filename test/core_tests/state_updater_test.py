@@ -2,6 +2,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
+
 from xknx import XKNX
 from xknx.core import XknxConnectionState
 from xknx.core.state_updater import StateTrackerType, _StateTracker
@@ -10,7 +11,6 @@ from xknx.telegram import GroupAddress
 
 
 @patch.multiple(RemoteValue, __abstractmethods__=set())
-@pytest.mark.asyncio
 class TestStateUpdater:
     """Test class for state updater."""
 
@@ -117,7 +117,7 @@ class TestStateUpdater:
         logging_warning_mock.assert_called_once_with(
             'Could not parse StateUpdater tracker_options "%s" for %s. Using default %s %s minutes.',
             "invalid",
-            remote_value_invalid,
+            str(remote_value_invalid),
             StateTrackerType.EXPIRE,
             60,
         )
@@ -132,7 +132,7 @@ class TestStateUpdater:
         logging_warning_mock.assert_called_once_with(
             "StateUpdater interval of %s to long for %s. Using maximum of %s minutes (1 day)",
             1441,
-            remote_value_long,
+            str(remote_value_long),
             1440,
         )
         remote_value_long.__del__()
@@ -197,3 +197,32 @@ class TestStateUpdater:
         )
 
         assert xknx.state_updater.started
+
+    @pytest.mark.parametrize(
+        "default,sync_state_value,expected_interval,expected_tracker_type",
+        [
+            (90, True, 90, StateTrackerType.EXPIRE),
+            (False, True, 60, StateTrackerType.EXPIRE),
+            (True, None, 60, StateTrackerType.EXPIRE),
+            (40, None, 40, StateTrackerType.EXPIRE),
+            ("every 70", None, 70, StateTrackerType.PERIODICALLY),
+            ("init", True, 60, StateTrackerType.INIT),
+            ("every 80", "expire 20", 20, StateTrackerType.EXPIRE),
+        ],
+    )
+    async def test_stat_updater_default(
+        self, default, sync_state_value, expected_interval, expected_tracker_type
+    ):
+        """Test setting a default for StateUpdater."""
+        xknx = XKNX(state_updater=default)
+        remote_value = RemoteValue(
+            xknx, sync_state=sync_state_value, group_address_state=GroupAddress("1/1/1")
+        )
+        assert (
+            xknx.state_updater._workers[id(remote_value)].update_interval
+            == expected_interval * 60
+        )
+        assert (
+            xknx.state_updater._workers[id(remote_value)].tracker_type
+            == expected_tracker_type
+        )

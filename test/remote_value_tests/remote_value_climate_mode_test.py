@@ -1,5 +1,6 @@
 """Unit test for RemoteValueClimateMode objects."""
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
@@ -14,7 +15,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestRemoteValueOperationMode:
     """Test class for RemoteValueOperationMode objects."""
 
@@ -285,18 +285,36 @@ class TestRemoteValueOperationMode:
             group_address=GroupAddress("1/2/3"),
             climate_mode_type=RemoteValueOperationMode.ClimateModeType.HVAC_MODE,
         )
-        with pytest.raises(CouldNotParseTelegram):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTBinary(1)),
-            )
-            await remote_value.process(telegram)
-        with pytest.raises(CouldNotParseTelegram):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTArray((0x64, 0x65))),
-            )
-            await remote_value.process(telegram)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        assert await remote_value.process(telegram) is False
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray((0x64, 0x65))),
+        )
+        assert await remote_value.process(telegram) is False
+
+        assert remote_value.value is None
+
+    async def test_to_process_error_binary_operation_mode(self):
+        """Test processing invalid payload."""
+        xknx = XKNX()
+        remote_value = RemoteValueBinaryOperationMode(
+            xknx,
+            group_address="1/2/3",
+            operation_mode=HVACOperationMode.COMFORT,
+        )
+        invalid_telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(
+                DPTArray((1,)),
+            ),
+        )
+        assert await remote_value.process(telegram=invalid_telegram) is False
 
     async def test_to_process_error_controller_mode(self):
         """Test process errornous telegram."""
@@ -304,18 +322,20 @@ class TestRemoteValueOperationMode:
         remote_value = RemoteValueControllerMode(
             xknx, group_address=GroupAddress("1/2/3")
         )
-        with pytest.raises(CouldNotParseTelegram):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTBinary(1)),
-            )
-            await remote_value.process(telegram)
-        with pytest.raises(CouldNotParseTelegram):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTArray((0x64, 0x65))),
-            )
-            await remote_value.process(telegram)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        assert await remote_value.process(telegram) is False
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray((0x64, 0x65))),
+        )
+        assert await remote_value.process(telegram) is False
+
+        assert remote_value.value is None
 
     async def test_to_process_error_heat_cool(self):
         """Test process errornous telegram."""
@@ -325,15 +345,17 @@ class TestRemoteValueOperationMode:
             group_address=GroupAddress("1/2/3"),
             controller_mode=HVACControllerMode.COOL,
         )
-        with pytest.raises(CouldNotParseTelegram):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTArray((0x01,))),
-            )
-            await remote_value.process(telegram)
-        with pytest.raises(CouldNotParseTelegram):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTArray((0x64, 0x65))),
-            )
-            await remote_value.process(telegram)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray((0x01,))),
+        )
+        assert await remote_value.process(telegram) is False
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray((0x64, 0x65))),
+        )
+        assert await remote_value.process(telegram) is False
+
+        assert remote_value.value is None

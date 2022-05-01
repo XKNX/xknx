@@ -78,7 +78,7 @@ class AddressFilter:
     def _match_level3(self, address: GroupAddress) -> bool:
         if address.main is None or address.middle is None:
             raise ConnectionError(
-                f"Match level 3 incompatible with address level {address.levels}"
+                f"Match level 3 incompatible with address level {GroupAddress.address_format}"
             )
         return bool(
             self.level_filters[0].match(address.main)
@@ -89,7 +89,7 @@ class AddressFilter:
     def _match_level2(self, address: GroupAddress) -> bool:
         if address.main is None:
             raise ConnectionError(
-                f"Match level 2 incompatible with address level {address.levels}"
+                f"Match level 2 incompatible with address level {GroupAddress.address_format}"
             )
         return bool(
             self.level_filters[0].match(address.main)

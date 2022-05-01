@@ -15,15 +15,18 @@ from .request_response import RequestResponse
 
 if TYPE_CHECKING:
     from xknx.io.transport import KNXIPTransport
-    from xknx.xknx import XKNX
 
 
 class Connect(RequestResponse):
-    """Class to send a ConnectRequest and wait for ConnectResponse.."""
+    """Class to send a ConnectRequest and wait for ConnectResponse."""
 
-    def __init__(self, xknx: XKNX, transport: KNXIPTransport, local_hpai: HPAI):
+    def __init__(
+        self,
+        transport: KNXIPTransport,
+        local_hpai: HPAI,
+    ):
         """Initialize Connect class."""
-        super().__init__(xknx, transport, ConnectResponse)
+        super().__init__(transport, ConnectResponse)
         self.communication_channel = 0
         self.data_endpoint = HPAI()
         self.identifier = 0
@@ -33,7 +36,6 @@ class Connect(RequestResponse):
         """Create KNX/IP Frame object to be sent to device."""
         # use the same HPAI for control_endpoint and data_endpoint
         connect_request = ConnectRequest(
-            self.xknx,
             request_type=ConnectRequestType.TUNNEL_CONNECTION,
             control_endpoint=self.local_hpai,
             data_endpoint=self.local_hpai,

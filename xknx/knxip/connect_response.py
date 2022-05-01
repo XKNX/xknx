@@ -7,17 +7,12 @@ assigns a communication channel and an individual address for the client.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from xknx.exceptions import CouldNotParseKNXIP
 
 from .body import KNXIPBodyResponse
 from .error_code import ErrorCode
 from .hpai import HPAI
 from .knxip_enum import ConnectRequestType, KNXIPServiceType
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class ConnectResponse(KNXIPBodyResponse):
@@ -28,7 +23,6 @@ class ConnectResponse(KNXIPBodyResponse):
 
     def __init__(
         self,
-        xknx: XKNX,
         communication_channel: int = 0,
         status_code: ErrorCode = ErrorCode.E_NO_ERROR,
         request_type: ConnectRequestType = ConnectRequestType.TUNNEL_CONNECTION,
@@ -36,8 +30,6 @@ class ConnectResponse(KNXIPBodyResponse):
         identifier: int = 0,
     ):
         """Initialize ConnectResponse class."""
-        super().__init__(xknx)
-
         self.communication_channel = communication_channel
         self.status_code = status_code
         self.request_type = request_type
@@ -74,29 +66,24 @@ class ConnectResponse(KNXIPBodyResponse):
             pos = len(raw)
         return pos
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
 
-        def crd_to_knx() -> list[int]:
+        def crd_to_knx() -> bytes:
             """Serialize CRD (Connect Response Data Block)."""
             assert self.identifier is not None
 
-            crd = []
-            crd.append(ConnectResponse.CRD_LENGTH)
-            crd.append(self.request_type.value)
-            crd.append((self.identifier >> 8) & 255)
-            crd.append(self.identifier & 255)
-            return crd
+            return bytes(
+                (ConnectResponse.CRD_LENGTH, self.request_type.value)
+            ) + self.identifier.to_bytes(2, "big")
 
-        data = []
-        data.append(self.communication_channel)
-        data.append(self.status_code.value)
-        data.extend(self.data_endpoint.to_knx())
-        data.extend(crd_to_knx())
+        return (
+            bytes((self.communication_channel, self.status_code.value))
+            + self.data_endpoint.to_knx()
+            + crd_to_knx()
+        )
 
-        return data
-
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return (
             "<ConnectResponse "

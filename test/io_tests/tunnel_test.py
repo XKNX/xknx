@@ -3,14 +3,18 @@ import asyncio
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPTArray
 from xknx.io import UDPTunnel
+from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.knxip import (
     HPAI,
     CEMIFrame,
     ConnectRequest,
     ConnectResponse,
+    DescriptionRequest,
+    DescriptionResponse,
     DisconnectRequest,
     DisconnectResponse,
     KNXIPFrame,
@@ -22,7 +26,6 @@ from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestUDPTunnel:
     """Test class for xknx/io/Tunnel objects."""
 
@@ -49,7 +52,7 @@ class TestUDPTunnel:
         # LDataInd GroupValueWrite from 1.1.22 to to 5/1/22 with DPT9 payload 0C 3F
         # communication_channel_id: 0x02   sequence_counter: 0x21
         raw = bytes.fromhex("0610 0420 0017 04 02 21 00 2900bcd011162916030080 0c 3f")
-        _cemi = CEMIFrame(self.xknx)
+        _cemi = CEMIFrame()
         _cemi.from_knx(raw[10:])
         telegram = _cemi.telegram
         telegram.direction = TelegramDirection.INCOMING
@@ -93,16 +96,13 @@ class TestUDPTunnel:
         self.tunnel.communication_channel = 1
 
         test_telegram = Telegram(payload=GroupValueWrite(DPTArray((1,))))
-        test_ack = KNXIPFrame.init_from_body(
-            TunnellingAck(self.xknx, sequence_counter=23)
-        )
+        test_ack = KNXIPFrame.init_from_body(TunnellingAck(sequence_counter=23))
         confirmation = KNXIPFrame.init_from_body(
             TunnellingRequest(
-                self.xknx,
                 communication_channel_id=1,
                 sequence_counter=23,
                 pdu=CEMIFrame.init_from_telegram(
-                    self.xknx, test_telegram, code=CEMIMessageCode.L_DATA_CON
+                    test_telegram, code=CEMIMessageCode.L_DATA_CON
                 ),
             )
         )
@@ -143,7 +143,6 @@ class TestUDPTunnel:
 
         # Connect
         connect_request = ConnectRequest(
-            self.xknx,
             control_endpoint=local_endpoint,
             data_endpoint=local_endpoint,
         )
@@ -156,7 +155,6 @@ class TestUDPTunnel:
 
         connect_response_frame = KNXIPFrame.init_from_body(
             ConnectResponse(
-                self.xknx,
                 communication_channel=23,
                 data_endpoint=gateway_data_endpoint,
                 identifier=7,
@@ -172,11 +170,9 @@ class TestUDPTunnel:
         test_telegram = Telegram(payload=GroupValueWrite(DPTArray((1,))))
         test_telegram_frame = KNXIPFrame.init_from_body(
             TunnellingRequest(
-                self.xknx,
                 communication_channel_id=23,
                 sequence_counter=0,
                 pdu=CEMIFrame.init_from_telegram(
-                    self.xknx,
                     test_telegram,
                     code=CEMIMessageCode.L_DATA_REQ,
                     src_addr=IndividualAddress(7),
@@ -193,7 +189,8 @@ class TestUDPTunnel:
         # Disconnect
         self.tunnel.transport.send.reset_mock()
         disconnect_request = DisconnectRequest(
-            self.xknx, communication_channel_id=23, control_endpoint=local_endpoint
+            communication_channel_id=23,
+            control_endpoint=local_endpoint,
         )
         disconnect_frame = KNXIPFrame.init_from_body(disconnect_request)
 
@@ -202,12 +199,30 @@ class TestUDPTunnel:
         self.tunnel.transport.send.assert_called_once_with(disconnect_frame)
 
         disconnect_response_frame = KNXIPFrame.init_from_body(
-            DisconnectResponse(
-                self.xknx,
-                communication_channel_id=23,
-            )
+            DisconnectResponse(communication_channel_id=23)
         )
         self.tunnel.transport.handle_knxipframe(disconnect_response_frame, remote_addr)
         await disconnection_task
         assert self.tunnel._data_endpoint_addr is None
         self.tunnel.transport.stop.assert_called_once()
+
+    async def test_tunnel_request_description(self, time_travel):
+        """Test tunnel requesting and returning description of connected interface."""
+        local_addr = ("192.168.1.1", 12345)
+        self.tunnel.transport.send = Mock()
+        self.tunnel.transport.getsockname = Mock(return_value=local_addr)
+
+        description_request = KNXIPFrame.init_from_body(
+            DescriptionRequest(control_endpoint=self.tunnel.local_hpai)
+        )
+        description_response = KNXIPFrame.init_from_body(DescriptionResponse())
+
+        task = asyncio.create_task(self.tunnel.request_description())
+        await time_travel(0)
+        self.tunnel.transport.send.assert_called_once_with(description_request)
+        self.tunnel.transport.handle_knxipframe(description_response, HPAI())
+        await time_travel(0)
+        assert task.done()
+        assert isinstance(task.result(), GatewayDescriptor)
+        assert self.tunnel.transport.send.call_count == 1
+        await task

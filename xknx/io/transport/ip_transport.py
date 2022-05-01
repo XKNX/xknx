@@ -9,7 +9,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 import logging
-from typing import Callable, Tuple, cast
+from typing import Callable, cast
 
 from xknx.exceptions import CommunicationError
 from xknx.knxip import HPAI, KNXIPFrame, KNXIPServiceType
@@ -24,6 +24,7 @@ class KNXIPTransport(ABC):
 
     callbacks: list[KNXIPTransport.Callback]
     local_hpai: HPAI
+    remote_addr: tuple[str, int]
     transport: asyncio.BaseTransport | None
 
     class Callback:
@@ -87,7 +88,7 @@ class KNXIPTransport(ABC):
             raise CommunicationError(
                 "No transport defined. Socket information not resolveable"
             )
-        return cast(Tuple[str, int], self.transport.get_extra_info("sockname"))
+        return cast(tuple[str, int], self.transport.get_extra_info("sockname"))
 
     def getremote(self) -> str | None:
         """Return peername."""
@@ -101,3 +102,4 @@ class KNXIPTransport(ABC):
         """Stop socket."""
         if self.transport is not None:
             self.transport.close()
+            self.transport = None

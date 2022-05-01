@@ -1,5 +1,113 @@
 # Changelog
 
+## Unreleased changes
+
+## 0.21.1 Fix Task Registry 2022-05-01
+
+### Bugfixes
+
+- Fix exposure of datetime, time and date objects to the Bus again
+
+### Internals
+
+- TaskRegistry takes functions returning coroutines instead of coroutines directly
+
+## 0.21.0 Search and connect 2022-04-30
+
+### Discovery
+
+- Use unicast discovery endpoint to receive SearchRespones frames
+- Send SearchRequest and SearchRequestExtended simultaneously when using GatewayScanner
+- Skip SearchResponse results for Core-V2 devices - wait for SearchResponseExtended
+- Identify interfaces having KNX IP Secure Tunneling required and skip if using Automatic connection mode
+- Only send SearchRequests from one interface for each `scan()` call
+- Connect to next found interface in case of unsuccessful initial connection when using "automatic" mode
+
+### Internals
+
+- Use `ifaddr` instead of `netifaces`
+- make HPAI hashable and add `addr_tuple` convenice property
+
+## 0.20.4 Fix exposure of time and date 2022-04-20
+
+### Bugfixes
+
+- Fix exposure of datetime, time and date objects to the Bus
+
+### Protocol
+
+- Add DIBSecuredServiceFamilies and DIBTunnelingInfo parser
+
+### Internal
+
+- Include base class in `DPTBase.parse_transcoder()` lookup
+- Move `levels` instance attribute form `GroupAddress` to `address_format` class variable
+- Remove xknx form every class in the knxip package: CEMIFrame, KNXIPFrame and KNXIPBody (and subclasses)
+- Remove xknx form every class in the io.request_response package
+- Remove xknx form io.transport package and io.secure_session and io.self_description modules
+
+## 0.20.3 Threading fixes 2022-04-15
+
+### Devices
+
+- Notification: add `value_type` argument to set "string" or "latin_1" text encoding
+
+### Bug fixes
+
+- Fix call from wrong thread in ConnectionManager
+- Fix thread leak when restarting XKNX
+
+### Internal
+
+- Change RemoteValueString to _RemoteValueGeneric subclass
+
+## 0.20.2 Handle shutdown properly 2022-04-11
+
+### Bug fixes
+
+- Properly shutdown climate mode if climate.shutdown() is called and ClimateMode exists
+
+## 0.20.1 Add support for DPT 16.001 and SearchRequestExtended 2022-04-05
+
+### Features
+
+- Add support for SearchRequestExtended to find interfaces that allow IP Secure
+- Use XKNX `state_updater` argument to set default method for StateUpdater. StateUpdater is always started - Device / RemoteValue can always opt in to use it, even if default is `False`.
+- Add support for DPT 16.001 (DPT_String_8859_1) as `DPTLatin1` with value_type "latin_1".
+
+### Bug fixes
+
+- Stop SecureSession keepalive_task when session is stopped (and don't restart it from sending STATUS_CLOSE)
+- Fix encoding invalid characters for DPTString (value_type "string")
+
+## 0.20.0 IP Secure 2022-03-29
+
+### Features
+
+- We now support IP Secure!
+  Thanks to MDT for providing us an interface for testing purposes!
+- Add support for requesting tunnel interface information
+
+### Protocol
+
+- add SessionRequest, SessionResponse, SessionAuthenticate, SessionStatus, SecureWrapper Frame parser
+
+### Internals
+
+- Drop support for Python 3.8 to follow Home Assistant changes
+- Return `bytes` from to_knx() in knxip package instead of `list[int]`
+- Add a callback for `connection_lost` of TCP transports to Tunnel
+
+## 0.19.2 TCP Heartbeat 2022-02-06
+
+### Connection
+
+- Do a ConnectionStateRequest heartbeat on TCP tunnel connections too
+
+### Devices
+
+- Handle invalid payloads per RemoteValue, log a readable warning
+
 ## 0.19.1 Bugfix for route_back 2022-01-31
 
 ### Connection

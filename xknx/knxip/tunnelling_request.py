@@ -6,7 +6,6 @@ Tunnelling requests are used to transmit a KNX telegram within an existing KNX t
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
 from xknx.exceptions import CouldNotParseKNXIP, UnsupportedCEMIMessage
 from xknx.knxip.tpdu import TPDU
@@ -14,9 +13,6 @@ from xknx.knxip.tpdu import TPDU
 from .body import KNXIPBody
 from .cemi_frame import CEMIFrame, CEMIMessageCode
 from .knxip_enum import KNXIPServiceType
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
 
@@ -29,18 +25,15 @@ class TunnellingRequest(KNXIPBody):
 
     def __init__(
         self,
-        xknx: XKNX,
         communication_channel_id: int = 1,
         sequence_counter: int = 0,
         pdu: CEMIFrame | TPDU | None = None,
     ):
         """Initialize TunnellingRequest object."""
-        super().__init__(xknx)
-
         self.communication_channel_id = communication_channel_id
         self.sequence_counter = sequence_counter
         self.pdu: CEMIFrame | TPDU | None = (
-            pdu if pdu is not None else CEMIFrame(xknx, code=CEMIMessageCode.L_DATA_REQ)
+            pdu if pdu is not None else CEMIFrame(code=CEMIMessageCode.L_DATA_REQ)
         )
 
     def calculated_length(self) -> int:
@@ -76,26 +69,23 @@ class TunnellingRequest(KNXIPBody):
 
         return pos
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
         if self.pdu is None:
             raise CouldNotParseKNXIP("No CEMIFrame defined.")
+        return (
+            bytes(
+                (
+                    TunnellingRequest.HEADER_LENGTH,
+                    self.communication_channel_id,
+                    self.sequence_counter,
+                    0x00,  # Reserved
+                )
+            )
+            + self.pdu.to_knx()
+        )
 
-        def header_to_knx() -> list[int]:
-            """Serialize header."""
-            cri = []
-            cri.append(TunnellingRequest.HEADER_LENGTH)
-            cri.append(self.communication_channel_id)
-            cri.append(self.sequence_counter)
-            cri.append(0x00)  # Reserved
-            return cri
-
-        data = []
-        data.extend(header_to_knx())
-        data.extend(self.pdu.to_knx())
-        return data
-
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return (
             "<TunnellingRequest "

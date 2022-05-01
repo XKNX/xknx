@@ -2,21 +2,17 @@
 import asyncio
 from unittest.mock import MagicMock, patch
 
-import pytest
 from xknx import XKNX
 from xknx.core import PayloadReader
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import MemoryRead, MemoryResponse
 
 
-@pytest.mark.asyncio
 class TestPayloadReader:
     """Test class for payload reader."""
 
     def create_telegram_queue_mock(self, xknx: XKNX, response_telegram: Telegram):
-        """
-        Create a TelegramQueue mock that returns a specific response telegram.
-        """
+        """Create a TelegramQueue mock that returns a specific response telegram."""
         xknx.telegram_queue = MagicMock()
 
         def _register_telegram_received_cb(func):

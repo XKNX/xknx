@@ -9,14 +9,9 @@ by the KNXnet/IP Server in response to the KNXnet/IP Clients DESCRIPTION_REQUEST
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from .body import KNXIPBody
 from .dib import DIB, DIBDeviceInformation
 from .knxip_enum import KNXIPServiceType
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class DescriptionResponse(KNXIPBody):
@@ -24,14 +19,13 @@ class DescriptionResponse(KNXIPBody):
 
     SERVICE_TYPE = KNXIPServiceType.DESCRIPTION_RESPONSE
 
-    def __init__(self, xknx: XKNX):
+    def __init__(self) -> None:
         """Initialize SearchResponse object."""
-        super().__init__(xknx)
         self.dibs: list[DIB] = []
 
     def calculated_length(self) -> int:
         """Get length of KNX/IP body."""
-        return sum([dib.calculated_length() for dib in self.dibs])
+        return sum(dib.calculated_length() for dib in self.dibs)
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
@@ -50,14 +44,11 @@ class DescriptionResponse(KNXIPBody):
                 return dib.name
         return "UNKNOWN"
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
-        data = []
-        for dib in self.dibs:
-            data.extend(dib.to_knx())
-        return data
+        return b"".join(dib.to_knx() for dib in self.dibs)
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
-        _dibs_str = ",\n".join(dib.__str__() for dib in self.dibs)
+        _dibs_str = ",\n".join(dib.__repr__() for dib in self.dibs)
         return "<DescriptionResponse " f'dibs="[\n{_dibs_str}\n]" />'

@@ -1,16 +1,13 @@
 """Unit test for Notification objects."""
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
-import pytest
 from xknx import XKNX
 from xknx.devices import Notification
 from xknx.dpt import DPTArray, DPTBinary, DPTString
-from xknx.exceptions import CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestNotification:
     """Test class for Notification object."""
 
@@ -69,24 +66,34 @@ class TestNotification:
     async def test_process_payload_invalid_length(self):
         """Test process wrong telegram (wrong payload length)."""
         xknx = XKNX()
-        notification = Notification(xknx, "Warning", group_address="1/2/3")
+        cb_mock = AsyncMock()
+        notification = Notification(
+            xknx, "Warning", group_address="1/2/3", device_updated_cb=cb_mock
+        )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((23, 24))),
         )
-        with pytest.raises(CouldNotParseTelegram):
+        with patch("logging.Logger.warning") as log_mock:
             await notification.process(telegram)
+            log_mock.assert_called_once()
+            cb_mock.assert_not_called()
 
     async def test_process_wrong_payload(self):
         """Test process wrong telegram (wrong payload type)."""
         xknx = XKNX()
-        notification = Notification(xknx, "Warning", group_address="1/2/3")
+        cb_mock = AsyncMock()
+        notification = Notification(
+            xknx, "Warning", group_address="1/2/3", device_updated_cb=cb_mock
+        )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        with pytest.raises(CouldNotParseTelegram):
+        with patch("logging.Logger.warning") as log_mock:
             await notification.process(telegram)
+            log_mock.assert_called_once()
+            cb_mock.assert_not_called()
 
     #
     # TEST SET MESSAGE

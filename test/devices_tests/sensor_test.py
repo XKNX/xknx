@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+
 from xknx import XKNX
 from xknx.devices import Sensor
 from xknx.dpt import DPTArray
@@ -9,7 +10,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestSensor:
     """Test class for Sensor objects."""
 

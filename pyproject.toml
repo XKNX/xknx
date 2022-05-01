@@ -1,3 +1,82 @@
 [tool.black]
-target-version = ["py38"]
+target-version = ["py39", "py310"]
 exclude = "generated"
+
+[tool.isort]
+profile = "black"
+# will group `import x` and `from x import` of the same module.
+force_sort_within_sections = true
+combine_as_imports = true
+
+[tool.mypy]
+python_version = "3.9"
+strict = true
+ignore_missing_imports = true
+implicit_reexport = true
+warn_unreachable = true
+
+[tool.pylint.master]
+ignore = "test"
+persistent = "no"
+reports = "no"
+
+[tool.pylint.message_control]
+# Reasons disabled:
+# format - handled by black
+# locally-disabled - it spams too much
+# duplicate-code - unavoidable
+# cyclic-import - doesn't test if both import on load
+# abstract-class-little-used - prevents from setting right foundation
+# unused-argument - generic callbacks and setup methods create a lot of warnings
+# raise-missing-from - we use this in order to avoid too generic exception to the user
+# too-many-* - are not enforced for the sake of readability
+# too-few-* - same as too-many-*
+# abstract-method - with intro of async there are always methods missing
+# inconsistent-return-statements - doesn't handle raise
+# too-many-ancestors - it's too strict.
+# wrong-import-order - isort guards this
+# fixme - TODO
+disable = [
+  "format",
+  "abstract-class-little-used",
+  "abstract-method",
+  "cyclic-import",
+  "duplicate-code",
+  "fixme",
+  "inconsistent-return-statements",
+  "locally-disabled",
+  "not-context-manager",
+  "raise-missing-from",
+  "too-few-public-methods",
+  "too-many-ancestors",
+  "too-many-arguments",
+  "too-many-branches",
+  "too-many-instance-attributes",
+  "too-many-lines",
+  "too-many-locals",
+  "too-many-public-methods",
+  "too-many-return-statements",
+  "too-many-statements",
+  "too-many-boolean-expressions",
+  "unused-argument",
+  "wrong-import-order",
+  ]
+# disabled for tests via command line options in Makefile:
+#   - no-self-use
+#   - protected-access
+#   - abstract-class-instantiated
+enable = [
+  "use-symbolic-message-instead",
+]
+
+[tool.pylint.format]
+expected-line-ending-format = "LF"
+
+[tool.pylint.reports]
+score = "no"
+output-format = "colorized"
+
+
+[tool.pytest.ini_options]
+testpaths = "test"
+asyncio_mode = "auto"

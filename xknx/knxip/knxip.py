@@ -6,8 +6,6 @@ Depending on the service_type_ident different types of body classes are instanci
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from xknx.exceptions import CouldNotParseKNXIP, IncompleteKNXIPFrame
 
 from .body import KNXIPBody
@@ -23,20 +21,23 @@ from .header import KNXIPHeader
 from .knxip_enum import KNXIPServiceType
 from .routing_indication import RoutingIndication
 from .search_request import SearchRequest
+from .search_request_extended import SearchRequestExtended
 from .search_response import SearchResponse
+from .search_response_extended import SearchResponseExtended
+from .secure_wrapper import SecureWrapper
+from .session_authenticate import SessionAuthenticate
+from .session_request import SessionRequest
+from .session_response import SessionResponse
+from .session_status import SessionStatus
 from .tunnelling_ack import TunnellingAck
 from .tunnelling_request import TunnellingRequest
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class KNXIPFrame:
     """Class for KNX/IP Frames."""
 
-    def __init__(self, xknx: XKNX):
+    def __init__(self) -> None:
         """Initialize object."""
-        self.xknx = xknx
         self.header = KNXIPHeader()
         self.body: KNXIPBody | None = None
 
@@ -45,32 +46,50 @@ class KNXIPFrame:
         self.header.service_type_ident = service_type_ident
 
         body: KNXIPBody
-        if service_type_ident == KNXIPServiceType.ROUTING_INDICATION:
-            body = RoutingIndication(self.xknx)
-        elif service_type_ident == KNXIPServiceType.CONNECT_REQUEST:
-            body = ConnectRequest(self.xknx)
-        elif service_type_ident == KNXIPServiceType.CONNECT_RESPONSE:
-            body = ConnectResponse(self.xknx)
-        elif service_type_ident == KNXIPServiceType.TUNNELLING_REQUEST:
-            body = TunnellingRequest(self.xknx)
-        elif service_type_ident == KNXIPServiceType.TUNNELLING_ACK:
-            body = TunnellingAck(self.xknx)
-        elif service_type_ident == KNXIPServiceType.DESCRIPTION_REQUEST:
-            body = DescriptionRequest(self.xknx)
-        elif service_type_ident == KNXIPServiceType.DESCRIPTION_RESPONSE:
-            body = DescriptionResponse(self.xknx)
-        elif service_type_ident == KNXIPServiceType.SEARCH_REQUEST:
-            body = SearchRequest(self.xknx)
+        # Core
+        if service_type_ident == KNXIPServiceType.SEARCH_REQUEST:
+            body = SearchRequest()
+        elif service_type_ident == KNXIPServiceType.SEARCH_REQUEST_EXTENDED:
+            body = SearchRequestExtended()
         elif service_type_ident == KNXIPServiceType.SEARCH_RESPONSE:
-            body = SearchResponse(self.xknx)
-        elif service_type_ident == KNXIPServiceType.DISCONNECT_REQUEST:
-            body = DisconnectRequest(self.xknx)
-        elif service_type_ident == KNXIPServiceType.DISCONNECT_RESPONSE:
-            body = DisconnectResponse(self.xknx)
+            body = SearchResponse()
+        elif service_type_ident == KNXIPServiceType.SEARCH_RESPONSE_EXTENDED:
+            body = SearchResponseExtended()
+        elif service_type_ident == KNXIPServiceType.DESCRIPTION_REQUEST:
+            body = DescriptionRequest()
+        elif service_type_ident == KNXIPServiceType.DESCRIPTION_RESPONSE:
+            body = DescriptionResponse()
+        elif service_type_ident == KNXIPServiceType.CONNECT_REQUEST:
+            body = ConnectRequest()
+        elif service_type_ident == KNXIPServiceType.CONNECT_RESPONSE:
+            body = ConnectResponse()
         elif service_type_ident == KNXIPServiceType.CONNECTIONSTATE_REQUEST:
-            body = ConnectionStateRequest(self.xknx)
+            body = ConnectionStateRequest()
         elif service_type_ident == KNXIPServiceType.CONNECTIONSTATE_RESPONSE:
-            body = ConnectionStateResponse(self.xknx)
+            body = ConnectionStateResponse()
+        elif service_type_ident == KNXIPServiceType.DISCONNECT_REQUEST:
+            body = DisconnectRequest()
+        elif service_type_ident == KNXIPServiceType.DISCONNECT_RESPONSE:
+            body = DisconnectResponse()
+        # Tunneling
+        elif service_type_ident == KNXIPServiceType.TUNNELLING_REQUEST:
+            body = TunnellingRequest()
+        elif service_type_ident == KNXIPServiceType.TUNNELLING_ACK:
+            body = TunnellingAck()
+        # Routing
+        elif service_type_ident == KNXIPServiceType.ROUTING_INDICATION:
+            body = RoutingIndication()
+        # Secure
+        elif service_type_ident == KNXIPServiceType.SECURE_WRAPPER:
+            body = SecureWrapper()
+        elif service_type_ident == KNXIPServiceType.SESSION_AUTHENTICATE:
+            body = SessionAuthenticate()
+        elif service_type_ident == KNXIPServiceType.SESSION_REQUEST:
+            body = SessionRequest()
+        elif service_type_ident == KNXIPServiceType.SESSION_RESPONSE:
+            body = SessionResponse()
+        elif service_type_ident == KNXIPServiceType.SESSION_STATUS:
+            body = SessionStatus()
         else:
             raise CouldNotParseKNXIP(
                 f"KNXIPServiceType not implemented: {service_type_ident.name}"
@@ -81,7 +100,7 @@ class KNXIPFrame:
     @staticmethod
     def init_from_body(knxip_body: KNXIPBody) -> KNXIPFrame:
         """Return KNXIPFrame from KNXIPBody."""
-        knxipframe = KNXIPFrame(knxip_body.xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.header.service_type_ident = knxip_body.__class__.SERVICE_TYPE
         knxipframe.body = knxip_body
         knxipframe.header.set_length(knxip_body)
@@ -98,14 +117,11 @@ class KNXIPFrame:
         )
         return self.header.total_length
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
         if self.body is None:
             raise CouldNotParseKNXIP("No body defined in KNXIPFrame.")
-        data = []
-        data.extend(self.header.to_knx())
-        data.extend(self.body.to_knx())
-        return data
+        return self.header.to_knx() + self.body.to_knx()
 
     def __repr__(self) -> str:
         """Return object as readable string."""

@@ -8,15 +8,12 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import TYPE_CHECKING, Callable, cast
+from typing import Callable, cast
 
-from xknx.exceptions import CouldNotParseKNXIP, IncompleteKNXIPFrame, XKNXException
+from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, IncompleteKNXIPFrame
 from xknx.knxip import HPAI, HostProtocol, KNXIPFrame
 
 from .ip_transport import KNXIPTransport
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 raw_socket_logger = logging.getLogger("xknx.raw_socket")
 logger = logging.getLogger("xknx.log")
@@ -50,19 +47,20 @@ class TCPTransport(KNXIPTransport):
 
         def connection_lost(self, exc: Exception | None) -> None:
             """Log error. Callback for connection lost."""
-            logger.debug("Closing transport. %s", exc)
+            logger.debug("Closing TCP transport. %s", exc)
             self.connection_lost_callback()
 
     def __init__(
         self,
-        xknx: XKNX,
         remote_addr: tuple[str, int],
+        connection_lost_cb: Callable[[], None] | None = None,
     ):
-        """Initialize UDPTransport class."""
-        self.xknx = xknx
+        """Initialize TCPTransport class."""
+        self.remote_addr = remote_addr
         self.remote_hpai = HPAI(*remote_addr, protocol=HostProtocol.IPV4_TCP)
 
         self.callbacks = []
+        self._connection_lost_cb = connection_lost_cb
         self.transport: asyncio.Transport | None = None
         self._buffer = bytes()
 
@@ -70,11 +68,11 @@ class TCPTransport(KNXIPTransport):
         """Parse and process KNXIP frame. Callback for having received data over TCP."""
         if self._buffer:
             raw = self._buffer + raw
-            self._buffer = bytes()
+            self._buffer = b""
         if not raw:
             return
         try:
-            knxipframe = KNXIPFrame(self.xknx)
+            knxipframe = KNXIPFrame()
             frame_length = knxipframe.from_knx(raw)
         except IncompleteKNXIPFrame:
             self._buffer = raw
@@ -108,7 +106,7 @@ class TCPTransport(KNXIPTransport):
         """Connect TCP socket."""
         tcp_transport_factory = TCPTransport.TCPTransportFactory(
             data_received_callback=self.data_received_callback,
-            connection_lost_callback=self.stop,
+            connection_lost_callback=self._connection_lost,
         )
         loop = asyncio.get_running_loop()
         (transport, _) = await loop.create_connection(
@@ -119,6 +117,14 @@ class TCPTransport(KNXIPTransport):
         # TODO: typing - remove cast - loop.create_connection should return a asyncio.Transport
         self.transport = cast(asyncio.Transport, transport)
 
+    def _connection_lost(self) -> None:
+        """Call assigned callback. Callback for connection lost."""
+        # avoid calling the callback when the transport was stopped intentionally
+        if self.transport is not None:
+            self.stop()
+            if self._connection_lost_cb:
+                self._connection_lost_cb()
+
     def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
         """Send KNXIPFrame to socket. `addr` is ignored on TCP."""
         knx_logger.debug(
@@ -128,6 +134,6 @@ class TCPTransport(KNXIPTransport):
             knxipframe,
         )
         if self.transport is None:
-            raise XKNXException("Transport not connected")
+            raise CommunicationError("Transport not connected")
 
-        self.transport.write(bytes(knxipframe.to_knx()))
+        self.transport.write(knxipframe.to_knx())

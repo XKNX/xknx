@@ -1,12 +1,10 @@
 """Unit test for task registry."""
 import asyncio
 
-import pytest
 from xknx import XKNX
 from xknx.core import XknxConnectionState
 
 
-@pytest.mark.asyncio
 class TestTaskRegistry:
     """Test class for task registry."""
 
@@ -24,7 +22,7 @@ class TestTaskRegistry:
 
         task = xknx.task_registry.register(
             name="test",
-            task=callback(),
+            task=callback,
         )
         assert len(xknx.task_registry.tasks) == 1
         task.start()
@@ -41,7 +39,7 @@ class TestTaskRegistry:
 
         task = xknx.task_registry.register(
             name="test",
-            task=callback(),
+            task=callback,
         )
         assert len(xknx.task_registry.tasks) == 1
         task.start()
@@ -62,7 +60,7 @@ class TestTaskRegistry:
 
         task = xknx.task_registry.register(
             name="test",
-            task=callback(),
+            task=callback,
         )
         assert len(xknx.task_registry.tasks) == 1
         task.start()
@@ -72,7 +70,7 @@ class TestTaskRegistry:
     #
     # TEST CONNECTION HANDLING
     #
-    async def test_reconnect_handling(self):
+    async def test_reconnect_handling(self, time_travel):
         """Test reconnect handling."""
 
         xknx = XKNX()
@@ -81,27 +79,43 @@ class TestTaskRegistry:
         await xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTED
         )
+        # pylint: disable=attribute-defined-outside-init
+        self.test = 0
 
         async def callback() -> None:
             """Reset tasks."""
-            await asyncio.sleep(100)
+            try:
+                while True:
+                    await asyncio.sleep(100)
+                    self.test += 1
+            except asyncio.CancelledError:
+                self.test -= 1
 
         task = xknx.task_registry.register(
-            name="test", task=callback(), restart_after_reconnect=True
+            name="test", task=callback, restart_after_reconnect=True
         )
         assert len(xknx.task_registry.tasks) == 1
         task.start()
+        assert task._task is not None
+        await time_travel(100)
+        assert self.test == 1
         await xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
         assert task._task is None
+        assert self.test == 0
         await xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTED
         )
         assert task._task is not None
+        assert self.test == 0
+        await time_travel(100)
+        assert self.test == 1
         assert len(xknx.task_registry.tasks) == 1
 
         xknx.task_registry.stop()
         assert len(xknx.task_registry.tasks) == 0
         assert task._task is None
+        await asyncio.sleep(0)  # iterate loop to cancel task
+        assert self.test == 0
         assert len(xknx.connection_manager._connection_state_changed_cbs) == 0

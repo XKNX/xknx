@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Awaitable, Generator, Union
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Generator
 
 from xknx.core import XknxConnectionState
 
-AsyncCallbackType = Union[Generator[Any, None, Any], Awaitable]
+AsyncCallbackType = Callable[[], Coroutine[Any, Any, None]]
 
 if TYPE_CHECKING:
     from xknx import XKNX
@@ -32,7 +32,7 @@ class Task:
 
     def start(self) -> None:
         """Start a task."""
-        self._task = asyncio.create_task(self.task, name=self.name)
+        self._task = asyncio.create_task(self.task(), name=self.name)
 
     def __await__(self) -> Generator[None, None, None]:
         """Wait for task to be finished."""

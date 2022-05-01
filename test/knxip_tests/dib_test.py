@@ -1,12 +1,15 @@
 """Unit test for KNX/IP DIB objects."""
 import pytest
+
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import (
     DIB,
     DIBDeviceInformation,
     DIBGeneric,
+    DIBSecuredServiceFamilies,
     DIBServiceFamily,
     DIBSuppSVCFamilies,
+    DIBTunnelingInfo,
     DIBTypeCode,
     KNXMedium,
 )
@@ -18,11 +21,13 @@ class TestKNXIPDIB:
 
     def test_dib_base(self):
         """Test parsing and streaming KNX/IP DIB packet."""
-        raw = (0x0C, 0x02, 0x02, 0x01, 0x03, 0x02, 0x04, 0x01, 0x05, 0x01, 0x07, 0x01)
+        raw = bytes(
+            (0x0C, 0x02, 0x02, 0x01, 0x03, 0x02, 0x04, 0x01, 0x05, 0x01, 0x07, 0x01)
+        )
         dib = DIBGeneric()
         assert dib.from_knx(raw) == 12
         assert dib.dtc == DIBTypeCode.SUPP_SVC_FAMILIES
-        assert dib.to_knx() == list(raw)
+        assert dib.to_knx() == raw
         assert dib.calculated_length() == 12
 
     def test_dib_wrong_input(self):
@@ -33,61 +38,11 @@ class TestKNXIPDIB:
 
     def test_device_info(self):
         """Test parsing of device info."""
-        raw = (
-            0x36,
-            0x01,
-            0x02,
-            0x00,
-            0x11,
-            0x00,
-            0x23,
-            0x42,
-            0x13,
-            0x37,
-            0x13,
-            0x37,
-            0x13,
-            0x37,
-            0xE0,
-            0x00,
-            0x17,
-            0x0C,
-            0x00,
-            0x01,
-            0x02,
-            0x03,
-            0x04,
-            0x05,
-            0x47,
-            0x69,
-            0x72,
-            0x61,
-            0x20,
-            0x4B,
-            0x4E,
-            0x58,
-            0x2F,
-            0x49,
-            0x50,
-            0x2D,
-            0x52,
-            0x6F,
-            0x75,
-            0x74,
-            0x65,
-            0x72,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
+        raw = bytes.fromhex(
+            "36 01 02 00 11 00 23 42 13 37 13 37 13 37 E0 00"
+            "17 0C 00 01 02 03 04 05 47 69 72 61 20 4B 4E 58"
+            "2F 49 50 2D 52 6F 75 74 65 72 00 00 00 00 00 00"
+            "00 00 00 00 00 00"
         )
 
         dib = DIB.determine_dib(raw)
@@ -102,11 +57,13 @@ class TestKNXIPDIB:
         assert dib.serial_number == "13:37:13:37:13:37"
         assert dib.project_number == 564
         assert dib.installation_number == 2
-        assert dib.to_knx() == list(raw)
+        assert dib.to_knx() == raw
 
     def test_dib_sup_svc_families_router(self):
         """Test parsing of svc families."""
-        raw = (0x0C, 0x02, 0x02, 0x01, 0x03, 0x02, 0x04, 0x01, 0x05, 0x01, 0x07, 0x01)
+        raw = bytes(
+            (0x0C, 0x02, 0x02, 0x01, 0x03, 0x02, 0x04, 0x01, 0x05, 0x01, 0x07, 0x01)
+        )
 
         dib = DIB.determine_dib(raw)
         assert isinstance(dib, DIBSuppSVCFamilies)
@@ -122,7 +79,7 @@ class TestKNXIPDIB:
             ),
         ]
 
-        assert dib.to_knx() == list(raw)
+        assert dib.to_knx() == raw
 
         assert dib.supports(DIBServiceFamily.CORE)
         assert dib.supports(DIBServiceFamily.DEVICE_MANAGEMENT)
@@ -133,7 +90,7 @@ class TestKNXIPDIB:
 
     def test_dib_sup_svc_families_interface(self):
         """Test parsing of svc families."""
-        raw = (0x0A, 0x02, 0x02, 0x02, 0x03, 0x02, 0x04, 0x02, 0x07, 0x01)
+        raw = bytes((0x0A, 0x02, 0x02, 0x02, 0x03, 0x02, 0x04, 0x02, 0x07, 0x01))
 
         dib = DIB.determine_dib(raw)
         assert isinstance(dib, DIBSuppSVCFamilies)
@@ -148,9 +105,56 @@ class TestKNXIPDIB:
             ),
         ]
 
-        assert dib.to_knx() == list(raw)
+        assert dib.to_knx() == raw
 
         assert dib.supports(DIBServiceFamily.TUNNELING)
         assert dib.supports(DIBServiceFamily.TUNNELING, version=2)
         assert not dib.supports(DIBServiceFamily.ROUTING)
         assert not dib.supports(DIBServiceFamily.ROUTING, version=2)
+
+    def test_dib_secured_service_families(self):
+        """Test parsing of secured service families."""
+        raw = bytes((0x08, 0x06, 0x03, 0x01, 0x04, 0x01, 0x05, 0x01))
+
+        dib = DIB.determine_dib(raw)
+        assert isinstance(dib, DIBSecuredServiceFamilies)
+        assert dib.from_knx(raw) == 8
+
+        assert dib.families == [
+            DIBSuppSVCFamilies.Family(DIBServiceFamily.DEVICE_MANAGEMENT, 1),
+            DIBSuppSVCFamilies.Family(DIBServiceFamily.TUNNELING, 1),
+            DIBSuppSVCFamilies.Family(DIBServiceFamily.ROUTING, 1),
+        ]
+
+        assert dib.to_knx() == raw
+
+        assert dib.supports(DIBServiceFamily.TUNNELING)
+        assert dib.supports(DIBServiceFamily.TUNNELING, version=1)
+        assert dib.supports(DIBServiceFamily.ROUTING)
+        assert not dib.supports(DIBServiceFamily.ROUTING, version=2)
+        assert dib.supports(DIBServiceFamily.DEVICE_MANAGEMENT)
+
+    def test_dib_tunneling_info(self):
+        """Test parsing of tunneling info."""
+        raw = (
+            b"\x24\x07\x00\xf8\x40\x01\x00\x05\x40\x02\x00\x05\x40\x03\x00\x05"
+            b"\x40\x04\x00\x05\x40\x05\x00\x05\x40\x06\x00\x05\x40\x07\x00\x05"
+            b"\x40\x08\x00\x06"
+        )
+
+        dib = DIB.determine_dib(raw)
+        assert isinstance(dib, DIBTunnelingInfo)
+        assert dib.from_knx(raw) == 36
+
+        assert dib.max_apdu_length == 248
+
+        assert len(dib.slots) == 8
+        for address in ["4.0.1", "4.0.2", "4.0.3", "4.0.4", "4.0.5", "4.0.6", "4.0.7"]:
+            assert dib.slots[IndividualAddress(address)].usable
+            assert not dib.slots[IndividualAddress(address)].authorized
+            assert dib.slots[IndividualAddress(address)].free
+        assert dib.slots[IndividualAddress("4.0.8")].usable
+        assert dib.slots[IndividualAddress("4.0.8")].authorized
+        assert not dib.slots[IndividualAddress("4.0.8")].free
+
+        assert dib.to_knx() == raw

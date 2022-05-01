@@ -13,20 +13,12 @@ Documentation within:
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
-
-# from _ast import Continue
-# from xknx import telegram
 from xknx.telegram.telegram import Priority
 
 from .knxip_enum import CEMIFlags, CEMIMessageCode
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class CEMIFrame:
@@ -34,7 +26,6 @@ class CEMIFrame:
 
     def __init__(
         self,
-        xknx: XKNX,
         code: CEMIMessageCode = CEMIMessageCode.L_DATA_IND,
         flags: int = 0,
         src_addr: IndividualAddress = IndividualAddress(None),
@@ -43,7 +34,6 @@ class CEMIFrame:
         payload: APCI | None = None,
     ):
         """Initialize CEMIFrame object."""
-        self.xknx = xknx
         self.code = code
         self.flags = flags
         self.src_addr = src_addr
@@ -51,21 +41,17 @@ class CEMIFrame:
         self.mpdu_len = mpdu_len
         self.payload = payload
 
-        if payload and payload.additional_flags and hasattr(payload, 'sequence_number'):
-            #self.code = CEMIMessageCode.L_DATA_CON
-            pass 
-        #print("__init__....", payload, self.code)
+        if payload and payload.additional_flags and hasattr(payload, "sequence_number"):
+            pass
 
     @staticmethod
     def init_from_telegram(
-        xknx: XKNX,
         telegram: Telegram,
         code: CEMIMessageCode = CEMIMessageCode.L_DATA_IND,
         src_addr: IndividualAddress = IndividualAddress(None),
     ) -> CEMIFrame:
         """Return CEMIFrame from a Telegram."""
-        #print("init_from_telegram....")
-        cemi = CEMIFrame(xknx, code=code, src_addr=src_addr)
+        cemi = CEMIFrame(code=code, src_addr=src_addr)
         # dst_addr, payload and cmd are set by telegram.setter - mpdu_len not needed for outgoing telegram
         cemi.telegram = telegram
         return cemi
@@ -115,7 +101,10 @@ class CEMIFrame:
         self.dst_addr = telegram.destination_address
         self.payload = telegram.payload
 
-        print(f"##### CEMIFrame-telegram {self.code}", " ".join(f"{b:02x}" for b in self.payload.to_knx()))
+        print(
+            f"##### CEMIFrame-telegram {self.code}",
+            " ".join(f"{b:02x}" for b in self.payload.to_knx()),
+        )
 
     def set_hops(self, hops: int) -> None:
         """Set hops."""
@@ -169,9 +158,7 @@ class CEMIFrame:
         self.src_addr = IndividualAddress((cemi[4 + addil], cemi[5 + addil]))
 
         if self.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS:
-            self.dst_addr = GroupAddress(
-                (cemi[6 + addil], cemi[7 + addil]), levels=self.xknx.address_format
-            )
+            self.dst_addr = GroupAddress((cemi[6 + addil], cemi[7 + addil]))
         else:
             self.dst_addr = IndividualAddress((cemi[6 + addil], cemi[7 + addil]))
 
@@ -199,7 +186,7 @@ class CEMIFrame:
 
         return 10 + addil + self.mpdu_len
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
         if not isinstance(self.payload, APCI):
             raise TypeError()
@@ -208,20 +195,25 @@ class CEMIFrame:
         if not isinstance(self.dst_addr, (GroupAddress, IndividualAddress)):
             raise ConversionError("dst_addr not set")
 
-        data = []
+        return (
+            bytes(
+                (
+                    self.code.value,
+                    0x00,  # Additional information length
+                )
+            )
+            + self.flags.to_bytes(2, "big")
+            + bytes(
+                (
+                    *self.src_addr.to_knx(),
+                    *self.dst_addr.to_knx(),
+                    self.payload.calculated_length(),
+                )
+            )
+            + self.payload.to_knx()
+        )
 
-        data.append(self.code.value)
-        data.append(0x00)
-        data.append((self.flags >> 8) & 255)
-        data.append(self.flags & 255)
-        data.extend(self.src_addr.to_knx())
-        data.extend(self.dst_addr.to_knx())
-        data.append(self.payload.calculated_length())
-        data.extend(self.payload.to_knx())
-
-        return data
-
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return (
             "<CEMIFrame "

@@ -13,12 +13,15 @@ A KNX/IP Search Response may contain several DIBs of different types:
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Iterator
+import socket
+from typing import NamedTuple
 
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.telegram import IndividualAddress
 
 from .knxip_enum import DIBServiceFamily, DIBTypeCode, KNXMedium
+
+DIB_HEADER_LENGTH = 2  # structure length and description type code
 
 
 class DIB(ABC):
@@ -30,19 +33,17 @@ class DIB(ABC):
     """
 
     @abstractmethod
-    def __init__(self) -> None:
-        """Initialize DIB class."""
-
-    @abstractmethod
     def calculated_length(self) -> int:
         """Get length of KNX/IP object."""
+        # The structure shall always have an even number of octets which may have to be
+        # achieved by padding with 00h in the last octet of the DIB structure.
 
     @abstractmethod
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
 
     @abstractmethod
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
 
     @staticmethod
@@ -56,6 +57,10 @@ class DIB(ABC):
             return DIBDeviceInformation()
         if dtc == DIBTypeCode.SUPP_SVC_FAMILIES:
             return DIBSuppSVCFamilies()
+        if dtc == DIBTypeCode.SECURED_SERVICE_FAMILIES:
+            return DIBSecuredServiceFamilies()
+        if dtc == DIBTypeCode.TUNNELING_INFO:
+            return DIBTunnelingInfo()
         return DIBGeneric()
 
 
@@ -68,15 +73,15 @@ class DIBGeneric(DIB):
 
     def __init__(self) -> None:
         """Initialize DIBGeneric class."""
-        super().__init__()
         # DTC Description Type Code
         self.dtc: DIBTypeCode | int = 0
         # IBD Information Block Data
-        self.data: list[int] | bytes = []
+        self.data = bytes()
 
     def calculated_length(self) -> int:
         """Get length of KNX/IP object."""
-        return len(self.data)
+        data_length = len(self.data)
+        return DIB_HEADER_LENGTH + data_length + data_length % 2
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
@@ -90,96 +95,26 @@ class DIBGeneric(DIB):
             self.dtc = DIBTypeCode(raw[1])
         except ValueError:
             self.dtc = raw[1]
-        self.data = raw[:dib_length]
+        self.data = raw[2:dib_length]
 
         return dib_length
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
         if not isinstance(self.dtc, DIBTypeCode):
             try:
                 self.dtc = DIBTypeCode(self.dtc)
             except ValueError:
                 raise CouldNotParseKNXIP("DTC invalid")
-        data = []
-        data.append(len(self.data))
-        data.append(self.dtc.value)
-        data.extend(self.data[2:])
-        return data
+        return (
+            bytes((self.calculated_length(), self.dtc.value))
+            + self.data
+            + bytes(len(self.data) % 2)  # padding
+        )
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return f'<DIB dtc="{self.dtc}" data="{", ".join(f"0x{i:02x}" for i in self.data)}" />'
-
-
-class DIBSuppSVCFamilies(DIB):
-    """Class for serialization and deserialization of KNX DIB Supported Services."""
-
-    class Family:
-        """Class for storing a supported device family."""
-
-        def __init__(self, name: DIBServiceFamily, version: int):
-            """Initialize DIBSuppSVCFamilies.Family."""
-            self.name = name
-            self.version = version
-
-        def __str__(self) -> str:
-            """Return object as readable string."""
-            return f'<Family name="{self.name}" version="{self.version}" />'
-
-        def __eq__(self, other: object) -> bool:
-            """Equal operator."""
-            return self.__dict__ == other.__dict__
-
-    def __init__(self) -> None:
-        """Initialize DIBSuppSVCFamilies class."""
-        super().__init__()
-        self.families: list[DIBSuppSVCFamilies.Family] = []
-
-    def supports(self, name: DIBServiceFamily, version: int | None = None) -> bool:
-        """Return if device supports a given service family by name and optional minimum version."""
-        for family in self.families:
-            if name == family.name:
-                if version is None or family.version >= version:
-                    return True
-        return False
-
-    def calculated_length(self) -> int:
-        """Get length of KNX/IP object."""
-        return len(self.families) * 2 + 2
-
-    def from_knx(self, raw: bytes) -> int:
-        """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) < 2:
-            raise CouldNotParseKNXIP("DIB header too small")
-        length = raw[0]
-        if len(raw) < length:
-            raise CouldNotParseKNXIP("DIB wrong size")
-        if DIBTypeCode(raw[1]) != DIBTypeCode.SUPP_SVC_FAMILIES:
-            raise CouldNotParseKNXIP("DIB is no device info")
-
-        for i in range(0, int((length - 2) / 2)):
-            name = DIBServiceFamily(raw[i * 2 + 2])
-            version = raw[i * 2 + 3]
-            self.families.append(DIBSuppSVCFamilies.Family(name, version))
-        return length
-
-    def to_knx(self) -> list[int]:
-        """Serialize to KNX/IP raw data."""
-        data = []
-        data.append(len(self.families) * 2 + 2)
-        data.append(DIBTypeCode.SUPP_SVC_FAMILIES.value)
-        for family in self.families:
-            data.append(family.name.value)
-            data.append(family.version)
-        return data
-
-    def __str__(self) -> str:
-        """Return object as readable string."""
-        _families_str = ", ".join(
-            f"{family.name} version: {family.version}" for family in self.families
-        )
-        return f'<DIBSuppSVCFamilies families="[{_families_str}]" />'
 
 
 class DIBDeviceInformation(DIB):
@@ -189,7 +124,6 @@ class DIBDeviceInformation(DIB):
 
     def __init__(self) -> None:
         """Initialize DIBDeviceInformation class."""
-        super().__init__()
         self.knx_medium: KNXMedium = KNXMedium.TP1
         self.programming_mode: bool = False
         self.individual_address: IndividualAddress = IndividualAddress(None)
@@ -220,52 +154,50 @@ class DIBDeviceInformation(DIB):
         installation_project_identifier = raw[6] * 256 + raw[7]
         self.project_number = installation_project_identifier >> 4
         self.installation_number = installation_project_identifier & 15
-        self.serial_number = ":".join(f"{i:02x}" for i in raw[8:14])
-        self.multicast_address = ".".join(f"{i:d}" for i in raw[14:18])
-        self.mac_address = ":".join(f"{i:02x}" for i in raw[18:24])
-        self.name = "".join(map(chr, raw[24:54])).rstrip("\0")
+        self.serial_number = raw[8:14].hex(":")
+        self.multicast_address = socket.inet_ntoa(raw[14:18])
+        self.mac_address = raw[18:24].hex(":")
+        self.name = raw[24:54].decode(encoding="latin_1", errors="replace").rstrip("\0")
         return DIBDeviceInformation.LENGTH
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
 
-        def hex_notation_to_knx(serial_number: str) -> Iterator[int]:
+        def hex_notation_to_knx(colon_hex: str) -> bytes:
             """Serialize hex notation."""
-            for part in serial_number.split(":"):
-                yield int(part, 16)
+            return bytes.fromhex(colon_hex.replace(":", ""))
 
-        def ip_to_knx(ip_addr: str) -> Iterator[int]:
+        def ip_to_knx(ip_addr: str) -> bytes:
             """Serialize ip."""
-            for part in ip_addr.split("."):
-                yield int(part)
+            return socket.inet_aton(ip_addr)
 
-        def str_to_knx(string: str, length: int) -> Iterator[int]:
-            """Serialize string."""
-            if len(string) > length - 1:
-                string = string[: length - 1]
-            for char in string:
-                yield ord(char)
-            for _ in range(0, 30 - len(string)):
-                yield 0x00
+        def name_str_to_knx(string: str) -> bytes:
+            """Serialize name string."""
+            # pad with null bytes to length 30; ISO 8859-1 (latin_1) according to KNX specification
+            return bytes(string[:30], "latin_1").ljust(30, b"\0")
 
         installation_project_identifier = (
-            self.project_number * 16
-        ) + self.installation_number
-        data = []
-        data.append(DIBDeviceInformation.LENGTH)
-        data.append(DIBTypeCode.DEVICE_INFO.value)
-        data.append(self.knx_medium.value)
-        data.append(int(self.programming_mode))
-        data.extend(self.individual_address.to_knx())
-        data.append((installation_project_identifier >> 8) & 255)
-        data.append(installation_project_identifier & 255)
-        data.extend(hex_notation_to_knx(self.serial_number))
-        data.extend(ip_to_knx(self.multicast_address))
-        data.extend(hex_notation_to_knx(self.mac_address))
-        data.extend(str_to_knx(self.name, 30))
-        return data
+            (self.project_number * 16) + self.installation_number
+        ).to_bytes(2, "big")
 
-    def __str__(self) -> str:
+        return (
+            bytes(
+                (
+                    DIBDeviceInformation.LENGTH,
+                    DIBTypeCode.DEVICE_INFO.value,
+                    self.knx_medium.value,
+                    self.programming_mode,
+                )
+            )
+            + bytes(self.individual_address.to_knx())
+            + installation_project_identifier
+            + hex_notation_to_knx(self.serial_number)
+            + ip_to_knx(self.multicast_address)
+            + hex_notation_to_knx(self.mac_address)
+            + name_str_to_knx(self.name)
+        )
+
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return (
             "<DIBDeviceInformation "
@@ -278,4 +210,159 @@ class DIBDeviceInformation(DIB):
             f'\n\tmulticast_address="{self.multicast_address}" '
             f'\n\tmac_address="{self.mac_address}" '
             f'\n\tname="{self.name}" />'
+        )
+
+
+class DIBSuppSVCFamilies(DIB):
+    """Class for serialization and deserialization of KNX DIB Supported Services."""
+
+    type_code = DIBTypeCode.SUPP_SVC_FAMILIES
+
+    class Family:
+        """Class for storing a supported device family."""
+
+        def __init__(self, name: DIBServiceFamily, version: int):
+            """Initialize DIBSuppSVCFamilies.Family."""
+            self.name = name
+            self.version = version
+
+        def to_knx(self) -> bytes:
+            """Serialize to KNX/IP raw data."""
+            return bytes((self.name.value, self.version))
+
+        def __repr__(self) -> str:
+            """Return object as readable string."""
+            return f'<Family name="{self.name}" version="{self.version}" />'
+
+        def __eq__(self, other: object) -> bool:
+            """Equal operator."""
+            return self.__dict__ == other.__dict__
+
+    def __init__(self) -> None:
+        """Initialize DIBSuppSVCFamilies class."""
+        self.families: list[DIBSuppSVCFamilies.Family] = []
+
+    def supports(self, name: DIBServiceFamily, version: int | None = None) -> bool:
+        """Return if device supports a given service family by name and optional minimum version."""
+        for family in self.families:
+            if name == family.name:
+                if version is None or family.version >= version:
+                    return True
+        return False
+
+    def calculated_length(self) -> int:
+        """Get length of KNX/IP object."""
+        return len(self.families) * 2 + DIB_HEADER_LENGTH
+
+    def from_knx(self, raw: bytes) -> int:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 2:
+            raise CouldNotParseKNXIP("DIB header too small")
+        length = raw[0]
+        if (len(raw) < length) or (length % 2):
+            raise CouldNotParseKNXIP("DIB wrong size")
+        if DIBTypeCode(raw[1]) != self.type_code:
+            raise CouldNotParseKNXIP(
+                f"DIB has wrong type code for {self.__class__.__name__}"
+            )
+
+        for pos in range(2, length, 2):
+            name = DIBServiceFamily(raw[pos])
+            version = raw[pos + 1]
+            self.families.append(DIBSuppSVCFamilies.Family(name, version))
+        return length
+
+    def to_knx(self) -> bytes:
+        """Serialize to KNX/IP raw data."""
+        return bytes(
+            (
+                self.calculated_length(),
+                self.type_code.value,
+            )
+        ) + b"".join(family.to_knx() for family in self.families)
+
+    def __repr__(self) -> str:
+        """Return object as readable string."""
+        _families_str = ", ".join(
+            f"{family.name} version: {family.version}" for family in self.families
+        )
+        return f'<{self.__class__.__name__} families="[{_families_str}]" />'
+
+
+class DIBSecuredServiceFamilies(DIBSuppSVCFamilies):
+    """Class for serialization and deserialization of KNX DIB Secured Service Families."""
+
+    type_code = DIBTypeCode.SECURED_SERVICE_FAMILIES
+
+
+class TunnelingSlotStatus(NamedTuple):
+    """Class for storing tunneling slot status."""
+
+    usable: bool
+    authorized: bool
+    free: bool
+
+    def __bytes__(self) -> bytes:
+        """Serialize to KNX/IP raw data."""
+        return bytes(
+            (
+                0x00,  # reserved
+                self.usable << 2 | self.authorized << 1 | self.free,
+            )
+        )
+
+
+class DIBTunnelingInfo(DIB):
+    """Class for serialization and deserialization of KNX DIB Tunneling Info."""
+
+    def __init__(
+        self, slots: dict[IndividualAddress, TunnelingSlotStatus] | None = None
+    ) -> None:
+        """Initialize DIBTunnelingInfo class."""
+        self.max_apdu_length = 248
+        self.slots = slots or {}
+
+    def calculated_length(self) -> int:
+        """Get length of KNX/IP object."""
+        return 2 + 2 + len(self.slots) * 4
+
+    def from_knx(self, raw: bytes) -> int:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 4:
+            raise CouldNotParseKNXIP("DIB header too small")
+        length = raw[0]
+        if (len(raw) < length) or (length % 4):
+            raise CouldNotParseKNXIP("DIB wrong size")
+        if DIBTypeCode(raw[1]) != DIBTypeCode.TUNNELING_INFO:
+            raise CouldNotParseKNXIP(
+                f"DIB has wrong type code for {self.__class__.__name__}"
+            )
+
+        self.max_apdu_length = int.from_bytes(raw[2:4], "big")
+        for pos in range(4, length, 4):
+            address = IndividualAddress((raw[pos], raw[pos + 1]))
+            status = TunnelingSlotStatus(
+                usable=bool(raw[pos + 3] >> 2 & 0b1),
+                authorized=bool(raw[pos + 3] >> 1 & 0b1),
+                free=bool(raw[pos + 3] & 0b1),
+            )
+            self.slots[address] = status
+        return length
+
+    def to_knx(self) -> bytes:
+        """Serialize to KNX/IP raw data."""
+        return (
+            bytes((self.calculated_length(), DIBTypeCode.TUNNELING_INFO.value))
+            + self.max_apdu_length.to_bytes(2, "big")
+            + b"".join(
+                bytes(address.to_knx()) + bytes(status)
+                for address, status in self.slots.items()
+            )
+        )
+
+    def __repr__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f"<{self.__class__.__name__} max_adpu_lenght={self.max_apdu_length} "
+            f"slots={self.slots}/>"
         )

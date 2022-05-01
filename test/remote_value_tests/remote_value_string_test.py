@@ -1,22 +1,21 @@
 """Unit test for RemoteValueString objects."""
 import pytest
+
 from xknx import XKNX
-from xknx.dpt import DPTArray, DPTBinary
-from xknx.exceptions import ConversionError, CouldNotParseTelegram
+from xknx.dpt import DPTArray, DPTBinary, DPTLatin1, DPTString
+from xknx.exceptions import ConversionError
 from xknx.remote_value import RemoteValueString
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestRemoteValueString:
     """Test class for RemoteValueString objects."""
 
     def test_to_knx(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
-        remote_value = RemoteValueString(xknx)
-        assert remote_value.to_knx("KNX is OK") == DPTArray(
+        dpt_array_string = DPTArray(
             (
                 0x4B,
                 0x4E,
@@ -34,6 +33,17 @@ class TestRemoteValueString:
                 0x00,
             )
         )
+        remote_value_default = RemoteValueString(xknx)
+        assert remote_value_default.dpt_class == DPTString
+        assert remote_value_default.to_knx("KNX is OK") == dpt_array_string
+
+        remote_value_ascii = RemoteValueString(xknx, value_type="string")
+        assert remote_value_ascii.dpt_class == DPTString
+        assert remote_value_ascii.to_knx("KNX is OK") == dpt_array_string
+
+        remote_value_latin1 = RemoteValueString(xknx, value_type="latin_1")
+        assert remote_value_latin1.dpt_class == DPTLatin1
+        assert remote_value_latin1.to_knx("KNX is OK") == dpt_array_string
 
     def test_from_knx(self):
         """Test from_knx function with normal operation."""
@@ -127,15 +137,17 @@ class TestRemoteValueString:
         """Test process errornous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueString(xknx, group_address=GroupAddress("1/2/3"))
-        with pytest.raises(CouldNotParseTelegram):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTBinary(1)),
-            )
-            await remote_value.process(telegram)
-        with pytest.raises(CouldNotParseTelegram):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTArray((0x64, 0x65))),
-            )
-            await remote_value.process(telegram)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        assert await remote_value.process(telegram) is False
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray((0x64, 0x65))),
+        )
+        assert await remote_value.process(telegram) is False
+
+        assert remote_value.value is None

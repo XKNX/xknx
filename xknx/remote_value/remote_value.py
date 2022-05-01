@@ -10,16 +10,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import logging
-from typing import (
-    TYPE_CHECKING,
-    Awaitable,
-    Callable,
-    Generic,
-    Iterator,
-    List,
-    TypeVar,
-    Union,
-)
+from typing import TYPE_CHECKING, Awaitable, Callable, Generic, Iterator, TypeVar, Union
 
 from xknx.dpt.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -38,14 +29,12 @@ if TYPE_CHECKING:
 logger = logging.getLogger("xknx.log")
 
 AsyncCallbackType = Callable[[], Awaitable[None]]
-DPTPayloadType = TypeVar(
-    "DPTPayloadType", DPTArray, DPTBinary, Union[DPTArray, DPTBinary]
-)
-GroupAddressesType = Union["DeviceAddressableType", List["DeviceAddressableType"]]
-ValueType = TypeVar("ValueType")
+DPTPayloadT = TypeVar("DPTPayloadT", DPTArray, DPTBinary, Union[DPTArray, DPTBinary])
+GroupAddressesType = Union["DeviceAddressableType", list["DeviceAddressableType"]]
+ValueT = TypeVar("ValueT")
 
 
-class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
+class RemoteValue(ABC, Generic[DPTPayloadT, ValueT]):
     """Class for managing remote knx value."""
 
     def __init__(
@@ -53,7 +42,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
         xknx: XKNX,
         group_address: GroupAddressesType | None = None,
         group_address_state: GroupAddressesType | None = None,
-        sync_state: bool | int | float | str = True,
+        sync_state: None | bool | int | float | str = None,
         device_name: str | None = None,
         feature_name: str | None = None,
         after_update_cb: AsyncCallbackType | None = None,
@@ -79,10 +68,12 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
 
         self.device_name: str = "Unknown" if device_name is None else device_name
         self.feature_name: str = "Unknown" if feature_name is None else feature_name
-        self._value: ValueType | None = None
+        self._value: ValueT | None = None
         self.telegram: Telegram | None = None
         self.after_update_cb: AsyncCallbackType | None = after_update_cb
 
+        if sync_state is None:
+            sync_state = xknx.state_updater.default_use_updater
         if sync_state and self.group_address_state:
             self.xknx.state_updater.register_remote_value(
                 self, tracker_options=sync_state
@@ -98,19 +89,19 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
             pass
 
     @property
-    def value(self) -> ValueType | None:
+    def value(self) -> ValueT | None:
         """Get current value."""
         return self._value
 
     @value.setter
-    def value(self, value: ValueType | None) -> None:
+    def value(self, value: ValueT | None) -> None:
         """Set new value without creating a Telegram or calling after_update_cb. Raises ConversionError on invalid value."""
         if value is not None:
             # raises ConversionError on invalid value
             self.to_knx(value)
         self._value = value
 
-    async def update_value(self, value: ValueType | None) -> None:
+    async def update_value(self, value: ValueT | None) -> None:
         """Set new value without creating a Telegram. Awaits after_update_cb. Raises ConversionError on invalid value."""
         self.value = value
         if self.after_update_cb is not None:
@@ -147,18 +138,16 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
         return group_address in remote_value_addresses()
 
     @abstractmethod
-    # TODO: typing - remove Optional
-    def payload_valid(
-        self, payload: DPTArray | DPTBinary | None
-    ) -> DPTPayloadType | None:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTPayloadT:
         """Return payload if telegram payload may be parsed - to be implemented in derived class."""
+        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
 
     @abstractmethod
-    def from_knx(self, payload: DPTPayloadType) -> ValueType:
+    def from_knx(self, payload: DPTPayloadT) -> ValueT:
         """Convert current payload to value - to be implemented in derived class."""
 
     @abstractmethod
-    def to_knx(self, value: ValueType) -> DPTPayloadType:
+    def to_knx(self, value: ValueT) -> DPTPayloadT:
         """Convert value to payload - to be implemented in derived class."""
 
     async def process(self, telegram: Telegram, always_callback: bool = False) -> bool:
@@ -182,19 +171,11 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
                 device_name=self.device_name,
                 feature_name=self.feature_name,
             )
-        _new_payload = self.payload_valid(telegram.payload.value)
-        if _new_payload is None:
-            raise CouldNotParseTelegram(
-                "payload invalid",
-                payload=str(telegram.payload),
-                destination_address=str(telegram.destination_address),
-                source_address=str(telegram.source_address),
-                device_name=self.device_name,
-                feature_name=self.feature_name,
-            )
+
         try:
+            _new_payload = self.payload_valid(telegram.payload.value)
             decoded_payload = self.from_knx(_new_payload)
-        except ConversionError as err:
+        except (ConversionError, CouldNotParseTelegram) as err:
             logger.warning(
                 "Can not process %s for %s - %s: %s",
                 telegram,
@@ -227,7 +208,7 @@ class RemoteValue(ABC, Generic[DPTPayloadType, ValueType]):
             )
             await self.xknx.telegrams.put(telegram)
 
-    async def set(self, value: ValueType, response: bool = False) -> None:
+    async def set(self, value: ValueT, response: bool = False) -> None:
         """Set new value."""
         if not self.initialized:
             logger.info(

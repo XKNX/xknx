@@ -1,5 +1,6 @@
 """Unit test for KNX DPT HVAC Operation modes."""
 import pytest
+
 from xknx.dpt import DPTControllerStatus, DPTHVACMode
 from xknx.dpt.dpt_hvac_mode import HVACOperationMode
 from xknx.exceptions import ConversionError
