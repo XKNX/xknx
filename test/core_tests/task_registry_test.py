@@ -22,7 +22,7 @@ class TestTaskRegistry:
 
         task = xknx.task_registry.register(
             name="test",
-            task=callback,
+            async_func=callback,
         )
         assert len(xknx.task_registry.tasks) == 1
         task.start()
@@ -39,7 +39,7 @@ class TestTaskRegistry:
 
         task = xknx.task_registry.register(
             name="test",
-            task=callback,
+            async_func=callback,
         )
         assert len(xknx.task_registry.tasks) == 1
         task.start()
@@ -60,7 +60,7 @@ class TestTaskRegistry:
 
         task = xknx.task_registry.register(
             name="test",
-            task=callback,
+            async_func=callback,
         )
         assert len(xknx.task_registry.tasks) == 1
         task.start()
@@ -92,7 +92,7 @@ class TestTaskRegistry:
                 self.test -= 1
 
         task = xknx.task_registry.register(
-            name="test", task=callback, restart_after_reconnect=True
+            name="test", async_func=callback, restart_after_reconnect=True
         )
         assert len(xknx.task_registry.tasks) == 1
         task.start()

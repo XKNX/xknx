@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Internals
+
+- Rename TaskRegistry.register and Task `task` attribute to `async_func` to avoid confusion; return Task from `start()`
+
 ## 0.21.1 Fix Task Registry 2022-05-01
 
 ### Bugfixes
