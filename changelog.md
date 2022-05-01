@@ -2,6 +2,14 @@
 
 ## Unreleased changes
 
+### Bugfixes
+
+- Fix exposure of datetime, time and date objects to the Bus again
+
+### Internals
+
+- TaskRegistry takes functions returning coroutines instead of coroutines directly
+
 ## 0.21.0 Search and connect 2022-04-30
 
 ### Discovery

@@ -115,7 +115,7 @@ class XKNX:
         """Start XKNX module. Connect to KNX/IP devices and start state updater."""
         if self.connection_config.threaded:
             await self.connection_manager.register_loop()
-            await self.task_registry.register_loop()
+        self.task_registry.start()
         self.knxip_interface = knx_interface_factory(
             xknx=self,
             connection_config=self.connection_config,
@@ -128,7 +128,6 @@ class XKNX:
         await self.knxip_interface.start()
         await self.telegram_queue.start()
         self.state_updater.start()
-        self.task_registry.start()
         self.started.set()
         if self.daemon_mode:
             await self.loop_until_sigint()
