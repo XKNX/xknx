@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Bugfixes
+
+- IP Secure: Fix MAC calculation for 22-byte payloads
+
 ### Internals
 
 - Rename TaskRegistry.register and Task `task` attribute to `async_func` to avoid confusion; return Task from `start()`
