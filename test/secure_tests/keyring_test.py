@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from xknx.exceptions.exception import InvalidSignature
+from xknx.exceptions.exception import InvalidSecureConfiguration, InvalidSignature
 from xknx.secure import Keyring, load_key_ring
 from xknx.secure.keyring import XMLDevice, XMLInterface, verify_keyring_signature
 
@@ -51,13 +51,19 @@ class TestKeyRing:
         with pytest.raises(InvalidSignature):
             load_key_ring(self.testcase_file, "wrong_password")
 
+    def test_raises_error(self):
+        """Test raises error if password is wrong."""
+        with pytest.raises(InvalidSecureConfiguration):
+            load_key_ring(
+                self.testcase_file, "wrong_password", validate_signature=False
+            )
+
     @staticmethod
     def assert_interface(keyring: Keyring, password: str, user: int) -> None:
         """Verify password for given user."""
         matched = False
-        for interface in keyring.interfaces:
-            if interface.user_id == user:
-                matched = True
-                assert interface.decrypted_password == password
+        if interface := keyring.get_interface_by_user_id(user):
+            matched = True
+            assert interface.decrypted_password == password
 
         assert matched
