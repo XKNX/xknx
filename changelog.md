@@ -2,9 +2,12 @@
 
 ## Unreleased changes
 
+## 0.21.2 IP Secure Bug fixes
+
 ### Bugfixes
 
 - IP Secure: Fix MAC calculation for 22-byte payloads
+- IP Secure: Fix Keyring loading
 
 ### Internals
 
