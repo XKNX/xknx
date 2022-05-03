@@ -6,6 +6,7 @@ from abc import ABC
 import base64
 import enum
 from itertools import chain
+import logging
 from typing import Any
 from xml.dom.minidom import Attr, Document, parse
 from xml.etree.ElementTree import Element, ElementTree
@@ -17,10 +18,12 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-from xknx.exceptions.exception import InvalidSignature
+from xknx.exceptions.exception import InvalidSecureConfiguration, InvalidSignature
 from xknx.telegram import GroupAddress, IndividualAddress
 
 from .util import sha256_hash
+
+logger = logging.getLogger("xknx.core")
 
 
 class InterfaceType(enum.Enum):
@@ -127,7 +130,7 @@ class XMLBackbone(AttributeReader):
     """Backbone in a knxkeys file."""
 
     multicast_address: str
-    latency: int
+    latency: str
     key: str
     decrypted_key: bytes
 
@@ -137,16 +140,17 @@ class XMLBackbone(AttributeReader):
         self.multicast_address = self.get_attribute_value(
             attributes.get("MulticastAddress")
         )
-        self.latency = int(self.get_attribute_value(attributes["Latency"]))
+        self.latency = self.get_attribute_value(attributes.get("Latency"))
         self.key = self.get_attribute_value(attributes.get("Key"))
 
     def decrypt_attributes(
         self, password_hash: bytes, initialization_vector: bytes
     ) -> None:
         """Decrypt attribute data."""
-        self.decrypted_key = decrypt_aes128cbc(
-            base64.b64decode(self.key), password_hash, initialization_vector
-        )
+        if self.key:
+            self.decrypted_key = decrypt_aes128cbc(
+                base64.b64decode(self.key), password_hash, initialization_vector
+            )
 
 
 class XMLGroupAddress(AttributeReader):
@@ -193,9 +197,10 @@ class XMLDevice(AttributeReader):
         self, password_hash: bytes, initialization_vector: bytes
     ) -> None:
         """Decrypt attributes."""
-        self.decrypted_tool_key = decrypt_aes128cbc(
-            base64.b64decode(self.tool_key), password_hash, initialization_vector
-        )
+        if self.tool_key is not None:
+            self.decrypted_tool_key = decrypt_aes128cbc(
+                base64.b64decode(self.tool_key), password_hash, initialization_vector
+            )
 
         if self.authentication is not None:
             self.decrypted_authentication = extract_password(
@@ -264,7 +269,8 @@ class Keyring(AttributeReader):
             if sub_node.nodeName == "Interface":
                 interface: XMLInterface = XMLInterface()
                 interface.parse_xml(sub_node)
-                self.interfaces.append(interface)
+                if interface.password is not None:
+                    self.interfaces.append(interface)
             if sub_node.nodeName == "Backbone":
                 backbone: XMLBackbone = XMLBackbone()
                 backbone.parse_xml(sub_node)
@@ -304,12 +310,23 @@ def load_key_ring(path: str, password: str, validate_signature: bool = True) -> 
             raise InvalidSignature()
 
     keyring: Keyring = Keyring()
-    with open(path, encoding="utf-8") as file:
-        dom: Document = parse(file)
-        keyring.parse_xml(dom.getElementsByTagName("Keyring")[0])
+    try:
+        with open(path, encoding="utf-8") as file:
+            dom: Document = parse(file)
+            keyring.parse_xml(dom.getElementsByTagName("Keyring")[0])
 
-    keyring.decrypt(password)
-    return keyring
+        keyring.decrypt(password)
+
+        # MDT interfaces have a bug where the user ID starts with 3 instead of 2.
+        # Remove me once MDT fixes their device.
+        if not any(interface.user_id == 2 for interface in keyring.interfaces):
+            for interface in keyring.interfaces:
+                interface.user_id = interface.user_id - 1
+
+        return keyring
+    except Exception as exception:
+        logger.exception("There was an error during loading the knxkeys file.")
+        raise InvalidSecureConfiguration() from exception
 
 
 class KeyringSAXContentHandler(ContentHandler):

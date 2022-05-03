@@ -22,18 +22,18 @@ class TestKeyRing:
     def test_load_keyring(self):
         """Test load keyring from knxkeys file."""
         keyring: Keyring = load_key_ring(self.keyring_test_file, "pwd")
-        TestKeyRing.assert_interface(keyring, "user2", "5")
-        TestKeyRing.assert_interface(keyring, "user1", "1")
-        TestKeyRing.assert_interface(keyring, "user4", "2")
-        TestKeyRing.assert_interface(keyring, "@zvI1G&_", "3")
+        TestKeyRing.assert_interface(keyring, "user4", 2)
+        TestKeyRing.assert_interface(keyring, "@zvI1G&_", 3)
+        TestKeyRing.assert_interface(keyring, "ZvDY-:g#", 4)
+        TestKeyRing.assert_interface(keyring, "user2", 5)
 
     def test_load_keyring_real(self):
         """Test load keyring from knxkeys file."""
         keyring: Keyring = load_key_ring(self.testcase_file, "password")
-        TestKeyRing.assert_interface(keyring, "user1", "3")
-        TestKeyRing.assert_interface(keyring, "user2", "4")
-        TestKeyRing.assert_interface(keyring, "user3", "5")
-        TestKeyRing.assert_interface(keyring, "user4", "6")
+        TestKeyRing.assert_interface(keyring, "user1", 2)
+        TestKeyRing.assert_interface(keyring, "user2", 3)
+        TestKeyRing.assert_interface(keyring, "user3", 4)
+        TestKeyRing.assert_interface(keyring, "user4", 5)
         assert keyring.devices[0].decrypted_management_password == "commissioning"
 
         interface: XMLInterface = keyring.interfaces[0]
@@ -52,8 +52,12 @@ class TestKeyRing:
             load_key_ring(self.testcase_file, "wrong_password")
 
     @staticmethod
-    def assert_interface(keyring: Keyring, password: str, user: str) -> None:
+    def assert_interface(keyring: Keyring, password: str, user: int) -> None:
         """Verify password for given user."""
+        matched = False
         for interface in keyring.interfaces:
             if interface.user_id == user:
+                matched = True
                 assert interface.decrypted_password == password
+
+        assert matched
