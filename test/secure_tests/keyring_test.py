@@ -30,10 +30,10 @@ class TestKeyRing:
     def test_load_keyring_real(self):
         """Test load keyring from knxkeys file."""
         keyring: Keyring = load_key_ring(self.testcase_file, "password")
-        TestKeyRing.assert_interface(keyring, "user1", 2)
-        TestKeyRing.assert_interface(keyring, "user2", 3)
-        TestKeyRing.assert_interface(keyring, "user3", 4)
-        TestKeyRing.assert_interface(keyring, "user4", 5)
+        TestKeyRing.assert_interface(keyring, "user1", 3)
+        TestKeyRing.assert_interface(keyring, "user2", 4)
+        TestKeyRing.assert_interface(keyring, "user3", 5)
+        TestKeyRing.assert_interface(keyring, "user4", 6)
         assert keyring.devices[0].decrypted_management_password == "commissioning"
 
         interface: XMLInterface = keyring.interfaces[0]

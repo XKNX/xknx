@@ -130,7 +130,6 @@ class XMLBackbone(AttributeReader):
     """Backbone in a knxkeys file."""
 
     multicast_address: str
-    latency: str
     key: str
     decrypted_key: bytes
 
@@ -140,7 +139,6 @@ class XMLBackbone(AttributeReader):
         self.multicast_address = self.get_attribute_value(
             attributes.get("MulticastAddress")
         )
-        self.latency = self.get_attribute_value(attributes.get("Latency"))
         self.key = self.get_attribute_value(attributes.get("Key"))
 
     def decrypt_attributes(
@@ -316,12 +314,6 @@ def load_key_ring(path: str, password: str, validate_signature: bool = True) -> 
             keyring.parse_xml(dom.getElementsByTagName("Keyring")[0])
 
         keyring.decrypt(password)
-
-        # MDT interfaces have a bug where the user ID starts with 3 instead of 2.
-        # Remove me once MDT fixes their device.
-        if not any(interface.user_id == 2 for interface in keyring.interfaces):
-            for interface in keyring.interfaces:
-                interface.user_id = interface.user_id - 1
 
         return keyring
     except Exception as exception:
