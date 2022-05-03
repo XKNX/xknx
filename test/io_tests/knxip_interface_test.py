@@ -219,7 +219,7 @@ class TestKNXIPInterface:
             connection_type=ConnectionType.TUNNELING_TCP_SECURE,
             gateway_ip=gateway_ip,
             secure_config=SecureConfig(
-                user_id=2, knxkeys_file_path=knxkeys_file, knxkeys_password="password"
+                user_id=3, knxkeys_file_path=knxkeys_file, knxkeys_password="password"
             ),
         )
         with patch(
@@ -230,7 +230,7 @@ class TestKNXIPInterface:
             start_secure_tunnel.assert_called_once_with(
                 gateway_ip="192.168.1.1",
                 gateway_port=3671,
-                user_id=2,
+                user_id=3,
                 user_password="user1",
                 device_authentication_password="authenticationcode",
             )
@@ -242,7 +242,7 @@ class TestKNXIPInterface:
             assert interface._interface.gateway_port == 3671
             assert interface._interface.auto_reconnect is True
             assert interface._interface.auto_reconnect_wait == 3
-            assert interface._interface._user_id == 2
+            assert interface._interface._user_id == 3
             assert interface._interface._user_password == "user1"
             assert (
                 interface._interface._device_authentication_password
@@ -275,7 +275,7 @@ class TestKNXIPInterface:
             start_secure_tunnel.assert_called_once_with(
                 gateway_ip="192.168.1.1",
                 gateway_port=3671,
-                user_id=2,
+                user_id=3,
                 user_password="user1",
                 device_authentication_password="authenticationcode",
             )
@@ -287,7 +287,7 @@ class TestKNXIPInterface:
             assert interface._interface.gateway_port == 3671
             assert interface._interface.auto_reconnect is True
             assert interface._interface.auto_reconnect_wait == 3
-            assert interface._interface._user_id == 2
+            assert interface._interface._user_id == 3
             assert interface._interface._user_password == "user1"
             assert (
                 interface._interface._device_authentication_password
