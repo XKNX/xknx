@@ -52,13 +52,17 @@ def test_byte_xor_error():
         (
             4,
             bytes([1, 23, 0, 0]),
-            bytes([1, 23, 0, 0, 0, 0, 0, 0]),
+            bytes([1, 23, 0, 0]),
         ),
         (
             16,
             bytes([123]),
             bytes([123, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
         ),
+        (16, bytes(16), bytes(16)),
+        (16, bytes(17), bytes(32)),
+        (16, bytes(32), bytes(32)),
+        (16, bytes(47), bytes(48)),
     ],
 )
 def test_byte_pad(block_size, data, result):
