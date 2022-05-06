@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Protocol
+
+- Parse and encode different TPCI in a CEMIFrame
+
 ## 0.21.2 IP Secure Bug fixes
 
 ### Bugfixes
