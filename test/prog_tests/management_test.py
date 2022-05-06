@@ -21,15 +21,19 @@ class TestProgrammingInterface:
         if self.called == 1:
             return
         self.called += 1
-        await asyncio.sleep(60.0)
+        await self.time_travel(60.0)
 
     @patch("xknx.prog.device.ProgDevice.individualaddress_read_response", autospec=True)
     @patch("xknx.prog.device.ProgDevice.devicedescriptor_read_response", autospec=True)
     async def test_write_individual_address_success(
-        self, mock_devicedescriptor_read_response, mock_individualaddress_read_response
+        self,
+        mock_devicedescriptor_read_response,
+        mock_individualaddress_read_response,
+        time_travel,
     ):
         """Test IndividualAddress_Write with success."""
         xknx = XKNX()
+        self.time_travel = time_travel
         mock_devicedescriptor_read_response.side_effect = (
             self.fake_devicedescriptor_read_response
         )

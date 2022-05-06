@@ -1,32 +1,23 @@
 """
-Created on 14.01.2021.
-
-@author: bonzius
+TPDU is a more general KNX protocol frame for non T_DATA requests.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from xknx.exceptions import UnsupportedCEMIMessage
-from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TPDUType
+from xknx.telegram import Telegram, TPDUType
+from xknx.telegram.address import GroupAddress, IndividualAddress, InternalGroupAddress
 
 from .knxip_enum import CEMIMessageCode
 
-if TYPE_CHECKING:
-    from xknx.telegram.address import InternalGroupAddress
-    from xknx.xknx import XKNX
-
 
 class TPDU:
-    """alternative class to CEMIFrame for non T_DATA requests."""
+    """Alternative class to CEMIFrame for non T_DATA requests."""
 
     def __init__(
         self,
-        xknx: XKNX,
         src_addr: IndividualAddress = IndividualAddress(None),
     ):
         """Initialize TPDU."""
-        self.xknx = xknx
         self.src_addr = src_addr
         self.destination_address: GroupAddress | IndividualAddress | InternalGroupAddress = IndividualAddress(
             None
@@ -37,12 +28,11 @@ class TPDU:
 
     @staticmethod
     def init_from_telegram(
-        xknx: XKNX,
         telegram: Telegram,
         src_addr: IndividualAddress = IndividualAddress(None),
     ) -> TPDU:
         """Return TPDU from a Telegram."""
-        tpdu = TPDU(xknx, src_addr)
+        tpdu = TPDU(src_addr)
         tpdu.telegram = telegram
         return tpdu
 

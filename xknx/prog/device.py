@@ -151,7 +151,7 @@ class ProgDevice:
     async def individualaddress_read(self) -> None:
         """Perform a IndividualAddress_Read."""
         telegram = Telegram(
-            GroupAddress(0, self.group_address_type),
+            GroupAddress(0),
             TelegramDirection.OUTGOING,
             IndividualAddressRead(),
             priority=Priority.SYSTEM,
@@ -174,7 +174,7 @@ class ProgDevice:
     async def individualaddress_write(self) -> None:
         """Perform a IndividualAddress_Write."""
         telegram = Telegram(
-            GroupAddress(0, self.group_address_type),
+            GroupAddress(0),
             TelegramDirection.OUTGOING,
             IndividualAddressWrite(self.ind_add),
             priority=Priority.SYSTEM,

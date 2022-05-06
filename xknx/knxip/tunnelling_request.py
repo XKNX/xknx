@@ -58,7 +58,7 @@ class TunnellingRequest(KNXIPBody):
         pos = header_from_knx(raw)
         if len(raw[pos:]) == 10:
             # TPDU
-            self.pdu = TPDU(self.xknx)
+            self.pdu = TPDU()
         try:
             pos += self.pdu.from_knx(raw[pos:])
         except UnsupportedCEMIMessage as unsupported_cemi_err:
