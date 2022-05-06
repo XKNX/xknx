@@ -52,3 +52,9 @@ def test_invalid_tpci(tpci_int, dst_is_group_address):
     """Test resolving TPCI classes."""
     with pytest.raises(ConversionError):
         TPCI.resolve(raw_tpci=tpci_int, dst_is_group_address=dst_is_group_address)
+
+
+def test_equality():
+    """Test equality."""
+    assert TDataGroup() == TDataGroup()
+    assert TDataGroup() != TDataIndividual()

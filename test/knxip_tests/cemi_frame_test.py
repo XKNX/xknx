@@ -41,6 +41,7 @@ def test_valid_command():
     assert frame.payload == GroupValueRead()
     assert frame.tpci == TDataGroup()
     assert packet_len == 11
+    assert frame.calculated_length() == 11
     assert frame.to_knx() == raw
 
 
@@ -56,6 +57,7 @@ def test_valid_tpci_control():
     assert frame.dst_addr == IndividualAddress(0)
     assert frame.tpci == TConnect()
     assert packet_len == 10
+    assert frame.calculated_length() == 10
     assert frame.to_knx() == raw
 
 
