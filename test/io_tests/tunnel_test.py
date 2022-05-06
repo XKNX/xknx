@@ -46,12 +46,21 @@ class TestUDPTunnel:
             route_back=False,
         )
 
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            # LDataInd GroupValueWrite from 1.1.22 to to 5/1/22 with DPT9 payload 0C 3F
+            # communication_channel_id: 0x02   sequence_counter: 0x21
+            bytes.fromhex("0610 0420 0017 04 02 21 00 2900bcd011162916030080 0c 3f"),
+            # LDataInd T_Connect from 1.0.250 to 1.0.255 (xknx tunnel endpoint) - ETS Line-Scan
+            # <UnsupportedCEMIMessage description="CEMI too small. Length: 10; CEMI: 2900b06010fa10ff0080" />
+            # communication_channel_id: 0x02   sequence_counter: 0x81
+            bytes.fromhex("0610 0420 0014 04 02 81 00 2900b06010fa10ff0080"),
+        ],
+    )
     @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
-    def test_tunnel_request_received(self, send_ack_mock):
+    def test_tunnel_request_received(self, send_ack_mock, raw):
         """Test Tunnel for calling send_ack on normal frames."""
-        # LDataInd GroupValueWrite from 1.1.22 to to 5/1/22 with DPT9 payload 0C 3F
-        # communication_channel_id: 0x02   sequence_counter: 0x21
-        raw = bytes.fromhex("0610 0420 0017 04 02 21 00 2900bcd011162916030080 0c 3f")
         _cemi = CEMIFrame()
         _cemi.from_knx(raw[10:])
         telegram = _cemi.telegram
@@ -59,15 +68,14 @@ class TestUDPTunnel:
 
         self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
         self.tg_received_mock.assert_called_once_with(telegram)
-        send_ack_mock.assert_called_once_with(0x02, 0x21)
+        send_ack_mock.assert_called_once_with(raw[7], raw[8])
 
     @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
     def test_tunnel_request_received_cemi_too_small(self, send_ack_mock):
         """Test Tunnel sending ACK for unsupported frames."""
-        # LDataInd T_Connect from 1.0.250 to 1.0.255 (xknx tunnel endpoint) - ETS Line-Scan
-        # <UnsupportedCEMIMessage description="CEMI too small. Length: 10; CEMI: 2900b06010fa10ff0080" />
+        # <UnsupportedCEMIMessage description="CEMI too small. Length: 9; CEMI: 2900b06010fa10ff00" />
         # communication_channel_id: 0x02   sequence_counter: 0x81
-        raw = bytes.fromhex("0610 0420 0014 04 02 81 00 2900b06010fa10ff0080")
+        raw = bytes.fromhex("0610 0420 0013 04 02 81 00 2900b06010fa10ff00")
 
         self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
         self.tg_received_mock.assert_not_called()
