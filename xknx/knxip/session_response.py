@@ -6,15 +6,12 @@ client's control endpoint in response to a received secure session request frame
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from xknx.exceptions import CouldNotParseKNXIP
 
 from .body import KNXIPBody
 from .knxip_enum import KNXIPServiceType
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class SessionResponse(KNXIPBody):
@@ -28,13 +25,11 @@ class SessionResponse(KNXIPBody):
 
     def __init__(
         self,
-        xknx: XKNX,
         secure_session_id: int = 0,
         ecdh_server_public_key: bytes = bytes(32),
         message_authentication_code: bytes = bytes(16),
     ):
         """Initialize SessionResponse object."""
-        super().__init__(xknx)
         self.ecdh_server_public_key = ecdh_server_public_key
         # secure session identifier 0 shall in general be reserved for
         # multicast data and shall not be used for unicast connections
@@ -62,7 +57,7 @@ class SessionResponse(KNXIPBody):
             + self.message_authentication_code
         )
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return (
             f"<SessionResponse "

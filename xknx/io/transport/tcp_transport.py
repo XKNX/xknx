@@ -8,15 +8,12 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import TYPE_CHECKING, Callable, cast
+from typing import Callable, cast
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, IncompleteKNXIPFrame
 from xknx.knxip import HPAI, HostProtocol, KNXIPFrame
 
 from .ip_transport import KNXIPTransport
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 raw_socket_logger = logging.getLogger("xknx.raw_socket")
 logger = logging.getLogger("xknx.log")
@@ -50,17 +47,15 @@ class TCPTransport(KNXIPTransport):
 
         def connection_lost(self, exc: Exception | None) -> None:
             """Log error. Callback for connection lost."""
-            logger.debug("Closing transport. %s", exc)
+            logger.debug("Closing TCP transport. %s", exc)
             self.connection_lost_callback()
 
     def __init__(
         self,
-        xknx: XKNX,
         remote_addr: tuple[str, int],
         connection_lost_cb: Callable[[], None] | None = None,
     ):
         """Initialize TCPTransport class."""
-        self.xknx = xknx
         self.remote_addr = remote_addr
         self.remote_hpai = HPAI(*remote_addr, protocol=HostProtocol.IPV4_TCP)
 
@@ -77,7 +72,7 @@ class TCPTransport(KNXIPTransport):
         if not raw:
             return
         try:
-            knxipframe = KNXIPFrame(self.xknx)
+            knxipframe = KNXIPFrame()
             frame_length = knxipframe.from_knx(raw)
         except IncompleteKNXIPFrame:
             self._buffer = raw

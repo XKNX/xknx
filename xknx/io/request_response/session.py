@@ -9,18 +9,19 @@ from .request_response import RequestResponse
 
 if TYPE_CHECKING:
     from xknx.io.transport import KNXIPTransport
-    from xknx.xknx import XKNX
 
 
 class Session(RequestResponse):
     """Class to send a SessionRequest and wait for SessionResponse."""
 
     def __init__(
-        self, xknx: XKNX, transport: KNXIPTransport, ecdh_client_public_key: bytes
+        self,
+        transport: KNXIPTransport,
+        ecdh_client_public_key: bytes,
     ):
         """Initialize Session class."""
         # TODO: increase timeout to timeoutAuthentication: 10sec ?
-        super().__init__(xknx, transport, SessionResponse)
+        super().__init__(transport, SessionResponse)
         self.ecdh_client_public_key = ecdh_client_public_key
         # TODO: make RequestResponse generic for response class
         # maybe replace self.success with self.response None check
@@ -30,10 +31,7 @@ class Session(RequestResponse):
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
         return KNXIPFrame.init_from_body(
-            SessionRequest(
-                self.xknx,
-                ecdh_client_public_key=self.ecdh_client_public_key,
-            )
+            SessionRequest(ecdh_client_public_key=self.ecdh_client_public_key)
         )
 
     def on_success_hook(self, knxipframe: KNXIPFrame) -> None:

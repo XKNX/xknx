@@ -33,6 +33,11 @@ class HPAI:
         """Return True if HPAI is a route back address information."""
         return self.ip_addr == "0.0.0.0"
 
+    @property
+    def addr_tuple(self) -> tuple[str, int]:
+        """Return tuple of ip address and port."""
+        return self.ip_addr, self.port
+
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         if len(raw) < HPAI.LENGTH:
@@ -73,3 +78,7 @@ class HPAI:
     def __eq__(self, other: object) -> bool:
         """Equal operator."""
         return self.__dict__ == other.__dict__
+
+    def __hash__(self) -> int:
+        """Hash function."""
+        return hash((self.ip_addr, self.port, self.protocol))

@@ -1,7 +1,6 @@
 """Unit test for KNX/IP Authenticate Request/Response."""
 from unittest.mock import Mock, patch
 
-from xknx import XKNX
 from xknx.io.request_response import Authenticate
 from xknx.knxip import (
     HPAI,
@@ -18,12 +17,10 @@ class TestAuthenticate:
 
     async def test_authenticate(self):
         """Test authenticating to secure KNX device."""
-        xknx = XKNX()
         transport_mock = Mock()
         user_id = 123
         mac = bytes(16)
         authenticate = Authenticate(
-            xknx,
             transport_mock,
             user_id=user_id,
             message_authentication_code=mac,
@@ -35,7 +32,6 @@ class TestAuthenticate:
         # Expected KNX/IP-Frame:
         exp_knxipframe = KNXIPFrame.init_from_body(
             SessionAuthenticate(
-                xknx,
                 user_id=user_id,
                 message_authentication_code=mac,
             )
@@ -45,7 +41,7 @@ class TestAuthenticate:
         transport_mock.send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type
-        wrong_knxipframe = KNXIPFrame(xknx)
+        wrong_knxipframe = KNXIPFrame()
         wrong_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_REQUEST)
         with patch("logging.Logger.warning") as mock_warning:
             authenticate.response_rec_callback(wrong_knxipframe, HPAI(), None)
@@ -53,7 +49,7 @@ class TestAuthenticate:
             assert authenticate.success is False
 
         # Correct Response KNX/IP-Frame:
-        res_knxipframe = KNXIPFrame(xknx)
+        res_knxipframe = KNXIPFrame()
         res_knxipframe.init(KNXIPServiceType.SESSION_STATUS)
         res_knxipframe.body.status = (
             SecureSessionStatusCode.STATUS_AUTHENTICATION_SUCCESS

@@ -6,16 +6,11 @@ With a Tunnelling ACK the receiving party acknowledges the valid processing of t
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from xknx.exceptions import CouldNotParseKNXIP
 
 from .body import KNXIPBodyResponse
 from .error_code import ErrorCode
 from .knxip_enum import KNXIPServiceType
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class TunnellingAck(KNXIPBodyResponse):
@@ -24,11 +19,8 @@ class TunnellingAck(KNXIPBodyResponse):
     SERVICE_TYPE = KNXIPServiceType.TUNNELLING_ACK
     BODY_LENGTH = 4
 
-    def __init__(
-        self, xknx: XKNX, communication_channel_id: int = 1, sequence_counter: int = 0
-    ):
+    def __init__(self, communication_channel_id: int = 1, sequence_counter: int = 0):
         """Initialize TunnellingAck object."""
-        super().__init__(xknx)
         self.communication_channel_id = communication_channel_id
         self.sequence_counter = sequence_counter
         self.status_code = ErrorCode.E_NO_ERROR
@@ -59,7 +51,7 @@ class TunnellingAck(KNXIPBodyResponse):
             )
         )
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return (
             "<TunnellingAck "

@@ -159,6 +159,33 @@ class TestClimate:
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
+    def test_remove_climate_removes_climate_mode(self):
+        """Test shutting down climate will also shut down related ClimateMode."""
+
+        xknx = XKNX()
+        climate_mode = ClimateMode(
+            xknx,
+            name=None,
+            group_address_operation_mode="1/2/4",
+            group_address_operation_mode_state="1/2/5",
+            group_address_operation_mode_protection="1/2/6",
+            group_address_operation_mode_night="1/2/7",
+            group_address_operation_mode_comfort="1/2/8",
+            group_address_operation_mode_standby="1/2/9",
+            group_address_controller_status="1/2/10",
+            group_address_controller_status_state="1/2/11",
+            group_address_controller_mode="1/2/12",
+            group_address_controller_mode_state="1/2/13",
+            group_address_heat_cool="1/2/14",
+            group_address_heat_cool_state="1/2/15",
+        )
+
+        climate = Climate(xknx, name="TestClimate", mode=climate_mode)
+
+        assert len(xknx.devices) == 2
+        climate.shutdown()
+        assert len(xknx.devices) == 0
+
     async def test_process_callback_mode(self):
         """Test if after_update_callback is called after update of Climate object was changed."""
 

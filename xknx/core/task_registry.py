@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Awaitable, Generator, Union
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Generator
 
 from xknx.core import XknxConnectionState
 
-AsyncCallbackType = Union[Generator[Any, None, Any], Awaitable]
+AsyncCallbackType = Callable[[], Coroutine[Any, Any, None]]
 
 if TYPE_CHECKING:
     from xknx import XKNX
@@ -21,18 +21,19 @@ class Task:
     def __init__(
         self,
         name: str,
-        task: AsyncCallbackType,
+        async_func: AsyncCallbackType,
         restart_after_reconnect: bool = False,
     ) -> None:
         """Initialize Task class."""
         self.name = name
-        self.task = task
+        self.async_func = async_func
         self.restart_after_reconnect = restart_after_reconnect
         self._task: asyncio.Task[None] | None = None
 
-    def start(self) -> None:
+    def start(self) -> Task:
         """Start a task."""
-        self._task = asyncio.create_task(self.task, name=self.name)
+        self._task = asyncio.create_task(self.async_func(), name=self.name)
+        return self
 
     def __await__(self) -> Generator[None, None, None]:
         """Wait for task to be finished."""
@@ -72,7 +73,7 @@ class TaskRegistry:
     def register(
         self,
         name: str,
-        task: AsyncCallbackType,
+        async_func: AsyncCallbackType,
         track_task: bool = True,
         restart_after_reconnect: bool = False,
     ) -> Task:
@@ -80,7 +81,9 @@ class TaskRegistry:
         self.unregister(name)
 
         _task: Task = Task(
-            name=name, task=task, restart_after_reconnect=restart_after_reconnect
+            name=name,
+            async_func=async_func,
+            restart_after_reconnect=restart_after_reconnect,
         )
 
         if track_task:

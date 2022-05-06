@@ -5,7 +5,6 @@ from unittest.mock import Mock, patch
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 import pytest
 
-from xknx import XKNX
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP
 from xknx.io.const import SESSION_KEEPALIVE_RATE
 from xknx.io.secure_session import SecureSession
@@ -57,9 +56,7 @@ class TestSecureSession:
         )
         self.patch_message_tag.start()
 
-        self.xknx = XKNX()
         self.session = SecureSession(
-            self.xknx,
             remote_addr=self.mock_addr,
             user_id=self.mock_user_id,
             user_password=self.mock_user_password,
@@ -91,7 +88,7 @@ class TestSecureSession:
         mock_super_connect.assert_called_once()
         # outgoing
         session_request_frame = KNXIPFrame.init_from_body(
-            SessionRequest(self.xknx, ecdh_client_public_key=self.mock_public_key)
+            SessionRequest(ecdh_client_public_key=self.mock_public_key)
         )
         mock_super_send.assert_called_once_with(
             session_request_frame, None  # None for addr in TCP transport
@@ -100,7 +97,6 @@ class TestSecureSession:
         # incoming
         session_response_frame = KNXIPFrame.init_from_body(
             SessionResponse(
-                self.xknx,
                 secure_session_id=1,
                 ecdh_server_public_key=self.mock_server_public_key,
                 message_authentication_code=bytes.fromhex(
@@ -113,7 +109,6 @@ class TestSecureSession:
         # outgoing
         encrypted_authenticate_frame = KNXIPFrame.init_from_body(
             SecureWrapper(
-                self.xknx,
                 secure_session_id=self.mock_session_id,
                 sequence_information=bytes.fromhex("00 00 00 00 00 00"),
                 serial_number=self.mock_serial_number,
@@ -135,7 +130,6 @@ class TestSecureSession:
         # incoming
         encrypted_session_status_frame = KNXIPFrame.init_from_body(
             SecureWrapper(
-                self.xknx,
                 secure_session_id=self.mock_session_id,
                 sequence_information=bytes.fromhex("00 00 00 00 00 00"),
                 serial_number=bytes.fromhex("00 fa aa aa aa aa"),
@@ -156,7 +150,7 @@ class TestSecureSession:
 
         # handle incoming SessionStatus (unencrypted for sake of simplicity)
         session_status_close_frame = KNXIPFrame.init_from_body(
-            SessionStatus(self.xknx, status=SecureSessionStatusCode.STATUS_CLOSE)
+            SessionStatus(status=SecureSessionStatusCode.STATUS_CLOSE)
         )
         with patch.object(self.session, "transport") as mock_transport:
             self.session.handle_knxipframe(
@@ -183,7 +177,6 @@ class TestSecureSession:
         """Test for raising when an encrypted Frame arrives at an uninitialized Session."""
         secure_wrapper_frame = KNXIPFrame.init_from_body(
             SecureWrapper(
-                self.xknx,
                 secure_session_id=self.mock_session_id,
                 sequence_information=bytes.fromhex("00 00 00 00 00 00"),
                 serial_number=bytes.fromhex("00 fa aa aa aa aa"),
@@ -218,7 +211,6 @@ class TestSecureSession:
         await time_travel(0)
         session_response_frame = KNXIPFrame.init_from_body(
             SessionResponse(
-                self.xknx,
                 secure_session_id=1,
                 ecdh_server_public_key=self.mock_server_public_key,
                 message_authentication_code=bytes.fromhex(
@@ -231,7 +223,6 @@ class TestSecureSession:
         callback_mock.reset_mock()
         encrypted_session_status_frame = KNXIPFrame.init_from_body(
             SecureWrapper(
-                self.xknx,
                 secure_session_id=self.mock_session_id,
                 sequence_information=bytes.fromhex("00 00 00 00 00 00"),
                 serial_number=bytes.fromhex("00 fa aa aa aa aa"),
@@ -261,7 +252,6 @@ class TestSecureSession:
         # (which is invalid brecause the sequence_information is changed)
         wrong_session_status_frame = KNXIPFrame.init_from_body(
             SecureWrapper(
-                self.xknx,
                 secure_session_id=self.mock_session_id,
                 sequence_information=bytes.fromhex("00 00 00 00 00 01"),
                 serial_number=bytes.fromhex("00 fa aa aa aa aa"),
@@ -296,7 +286,6 @@ class TestSecureSession:
         await time_travel(0)
         session_response_frame = KNXIPFrame.init_from_body(
             SessionResponse(
-                self.xknx,
                 secure_session_id=1,
                 ecdh_server_public_key=self.mock_server_public_key,
                 message_authentication_code=bytes.fromhex(
@@ -332,7 +321,6 @@ class TestSecureSession:
         mock_super_send.reset_mock()
         invalid_session_response_frame = KNXIPFrame.init_from_body(
             SessionResponse(
-                self.xknx,
                 secure_session_id=1,
                 ecdh_server_public_key=self.mock_server_public_key,
                 message_authentication_code=bytes.fromhex(
@@ -347,7 +335,6 @@ class TestSecureSession:
         # outgoing
         encrypted_authenticate_frame = KNXIPFrame.init_from_body(
             SecureWrapper(
-                self.xknx,
                 secure_session_id=self.mock_session_id,
                 sequence_information=bytes.fromhex("00 00 00 00 00 00"),
                 serial_number=self.mock_serial_number,
@@ -368,7 +355,6 @@ class TestSecureSession:
         # incoming
         encrypted_session_status_frame = KNXIPFrame.init_from_body(
             SecureWrapper(
-                self.xknx,
                 secure_session_id=self.mock_session_id,
                 sequence_information=bytes.fromhex("00 00 00 00 00 00"),
                 serial_number=bytes.fromhex("00 fa aa aa aa aa"),
@@ -403,7 +389,6 @@ class TestSecureSession:
         await time_travel(0)
         session_response_frame = KNXIPFrame.init_from_body(
             SessionResponse(
-                self.xknx,
                 secure_session_id=1,
                 ecdh_server_public_key=self.mock_server_public_key,
                 message_authentication_code=bytes.fromhex(

@@ -1,7 +1,6 @@
 """Unit test for KNX/IP base class."""
 import pytest
 
-from xknx import XKNX
 from xknx.exceptions import CouldNotParseKNXIP, IncompleteKNXIPFrame
 from xknx.knxip import KNXIPFrame
 from xknx.knxip.knxip_enum import KNXIPServiceType
@@ -12,8 +11,7 @@ class TestKNXIPFrame:
 
     def test_wrong_init(self):
         """Testing init method with wrong service_type_ident."""
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         with pytest.raises(AttributeError):
             knxipframe.init(23)
 
@@ -23,8 +21,7 @@ class TestKNXIPFrame:
 
     def test_double_frame(self):
         """Test parsing KNX/IP frame from streaming data containing two frames."""
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         raw = bytes.fromhex(
             "06 10 04 20 00 15 04 02 51 00 29 00 bc e0 10 fa"
             "09 2d 01 00 80"
@@ -37,14 +34,12 @@ class TestKNXIPFrame:
     def test_parsing_too_short_knxip(self):
         """Test parsing and streaming connection state request KNX/IP packet."""
         raw = bytes.fromhex("06 10 02 07 00 10 15 00 08 01 C0 A8 C8 0C C3")
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         with pytest.raises(IncompleteKNXIPFrame):
             knxipframe.from_knx(raw)
 
     def test_to_knx_no_body(self):
         """Test to_knx method without body raises exception."""
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         with pytest.raises(CouldNotParseKNXIP):
             knxipframe.to_knx()

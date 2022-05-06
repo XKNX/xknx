@@ -5,14 +5,9 @@ Search Requests are used to search for KNX/IP devices within the network.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from .body import KNXIPBody
 from .hpai import HPAI
 from .knxip_enum import KNXIPServiceType
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class SearchRequest(KNXIPBody):
@@ -20,14 +15,9 @@ class SearchRequest(KNXIPBody):
 
     SERVICE_TYPE = KNXIPServiceType.SEARCH_REQUEST
 
-    def __init__(self, xknx: XKNX, discovery_endpoint: HPAI | None = None):
+    def __init__(self, discovery_endpoint: HPAI = HPAI()):
         """Initialize SearchRequest object."""
-        super().__init__(xknx)
-        self.discovery_endpoint = (
-            discovery_endpoint
-            if discovery_endpoint is not None
-            else HPAI(ip_addr=xknx.multicast_group, port=xknx.multicast_port)
-        )
+        self.discovery_endpoint = discovery_endpoint
 
     def calculated_length(self) -> int:
         """Get length of KNX/IP body."""
@@ -41,6 +31,6 @@ class SearchRequest(KNXIPBody):
         """Serialize to KNX/IP raw data."""
         return self.discovery_endpoint.to_knx()
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return f'<SearchRequest discovery_endpoint="{self.discovery_endpoint}" />'

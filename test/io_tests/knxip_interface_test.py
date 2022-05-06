@@ -7,12 +7,14 @@ import pytest
 
 from xknx import XKNX
 from xknx.exceptions.exception import (
+    CommunicationError,
     InterfaceWithUserIdNotFound,
     InvalidSecureConfiguration,
 )
 from xknx.io import (
     ConnectionConfig,
     ConnectionType,
+    GatewayDescriptor,
     SecureConfig,
     knx_interface_factory,
 )
@@ -32,11 +34,41 @@ class TestKNXIPInterface:
         """Test starting automatic connection."""
         connection_config = ConnectionConfig()
         assert connection_config.connection_type == ConnectionType.AUTOMATIC
+        interface = knx_interface_factory(self.xknx, connection_config)
         with patch("xknx.io.KNXIPInterface._start_automatic") as start_automatic_mock:
-            interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
             start_automatic_mock.assert_called_once_with()
             assert threading.active_count() == 1
+
+        async def gateway_generator_mock(_):
+            yield GatewayDescriptor(
+                ip_addr="10.1.2.3", port=3671, supports_tunnelling_tcp=True
+            )
+            yield GatewayDescriptor(
+                ip_addr="10.1.2.3", port=3671, supports_tunnelling=True
+            )
+            yield GatewayDescriptor(
+                ip_addr="10.1.2.3", port=3671, supports_routing=True
+            )
+
+        with patch(
+            "xknx.io.knxip_interface.GatewayScanner.async_scan",
+            new=gateway_generator_mock,
+        ), patch(
+            "xknx.io.KNXIPInterface._start_tunnelling_tcp",
+            side_effect=CommunicationError("Error"),
+        ) as start_tunnelling_tcp_mock, patch(
+            "xknx.io.KNXIPInterface._start_tunnelling_udp",
+            side_effect=CommunicationError("Error"),
+        ) as start_tunnelling_udp_mock, patch(
+            "xknx.io.KNXIPInterface._start_routing",
+            side_effect=CommunicationError("Error"),
+        ) as start_routing_mock:
+            with pytest.raises(CommunicationError):
+                await interface.start()
+            start_tunnelling_tcp_mock.assert_called_once()
+            start_tunnelling_udp_mock.assert_called_once()
+            start_routing_mock.assert_called_once()
 
     async def test_start_udp_tunnel_connection(self):
         """Test starting UDP tunnel connection."""
@@ -51,13 +83,8 @@ class TestKNXIPInterface:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
             start_tunnelling_udp.assert_called_once_with(
-                local_ip=None,
-                local_port=0,
                 gateway_ip=gateway_ip,
                 gateway_port=3671,
-                auto_reconnect=True,
-                auto_reconnect_wait=3,
-                route_back=False,
             )
         with patch("xknx.io.tunnel.UDPTunnel.connect") as connect_udp:
             interface = knx_interface_factory(self.xknx, connection_config)
@@ -91,8 +118,6 @@ class TestKNXIPInterface:
             start_tunnelling_tcp.assert_called_once_with(
                 gateway_ip=gateway_ip,
                 gateway_port=3671,
-                auto_reconnect=True,
-                auto_reconnect_wait=3,
             )
         with patch("xknx.io.tunnel.TCPTunnel.connect") as connect_tcp:
             interface = knx_interface_factory(self.xknx, connection_config)
@@ -194,7 +219,7 @@ class TestKNXIPInterface:
             connection_type=ConnectionType.TUNNELING_TCP_SECURE,
             gateway_ip=gateway_ip,
             secure_config=SecureConfig(
-                user_id=4, knxkeys_file_path=knxkeys_file, knxkeys_password="password"
+                user_id=3, knxkeys_file_path=knxkeys_file, knxkeys_password="password"
             ),
         )
         with patch(
@@ -205,10 +230,8 @@ class TestKNXIPInterface:
             start_secure_tunnel.assert_called_once_with(
                 gateway_ip="192.168.1.1",
                 gateway_port=3671,
-                auto_reconnect=True,
-                auto_reconnect_wait=3,
-                user_id=4,
-                user_password="user2",
+                user_id=3,
+                user_password="user1",
                 device_authentication_password="authenticationcode",
             )
         with patch("xknx.io.tunnel.SecureTunnel.connect") as connect_secure:
@@ -219,8 +242,8 @@ class TestKNXIPInterface:
             assert interface._interface.gateway_port == 3671
             assert interface._interface.auto_reconnect is True
             assert interface._interface.auto_reconnect_wait == 3
-            assert interface._interface._user_id == 4
-            assert interface._interface._user_password == "user2"
+            assert interface._interface._user_id == 3
+            assert interface._interface._user_password == "user1"
             assert (
                 interface._interface._device_authentication_password
                 == "authenticationcode"
@@ -252,8 +275,6 @@ class TestKNXIPInterface:
             start_secure_tunnel.assert_called_once_with(
                 gateway_ip="192.168.1.1",
                 gateway_port=3671,
-                auto_reconnect=True,
-                auto_reconnect_wait=3,
                 user_id=3,
                 user_password="user1",
                 device_authentication_password="authenticationcode",
@@ -298,8 +319,6 @@ class TestKNXIPInterface:
             start_secure_tunnel.assert_called_once_with(
                 gateway_ip="192.168.1.1",
                 gateway_port=3671,
-                auto_reconnect=True,
-                auto_reconnect_wait=3,
                 user_id=3,
                 user_password="user1",
                 device_authentication_password="authenticationcode",

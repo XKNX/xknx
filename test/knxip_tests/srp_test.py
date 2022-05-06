@@ -27,7 +27,7 @@ class TestKNXIPSRP:
             DIBTypeCode.SUPP_SVC_FAMILIES,
             DIBTypeCode.ADDITIONAL_DEVICE_INFO,
         ]
-        srp: SRP = SRP.with_device_description(dibs)
+        srp: SRP = SRP.request_device_description(dibs)
         assert len(srp) == SRP.SRP_HEADER_SIZE + len(dibs)
         assert srp.type == SearchRequestParameterType.REQUEST_DIBS
 
@@ -68,14 +68,14 @@ class TestKNXIPSRP:
                 bytes.fromhex("02 81"),
             ),
             (
-                SRP.with_device_description(
+                SRP.request_device_description(
                     [DIBTypeCode.SUPP_SVC_FAMILIES, DIBTypeCode.TUNNELING_INFO]
                 ),
-                bytes.fromhex("04 84 02 07"),
+                bytes.fromhex("04 04 02 07"),
             ),
             (
-                SRP.with_device_description([DIBTypeCode.SUPP_SVC_FAMILIES]),
-                bytes.fromhex("04 84 02 00"),
+                SRP.request_device_description([DIBTypeCode.SUPP_SVC_FAMILIES]),
+                bytes.fromhex("04 04 02 00"),
             ),
         ],
     )

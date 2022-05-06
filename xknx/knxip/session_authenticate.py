@@ -7,15 +7,12 @@ to authenticate the user against the server device.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from xknx.exceptions import CouldNotParseKNXIP
 
 from .body import KNXIPBody
 from .knxip_enum import KNXIPServiceType
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class SessionAuthenticate(KNXIPBody):
@@ -26,12 +23,10 @@ class SessionAuthenticate(KNXIPBody):
 
     def __init__(
         self,
-        xknx: XKNX,
         user_id: int = 0x02,
         message_authentication_code: bytes = bytes(16),
     ):
         """Initialize SessionAuthenticate object."""
-        super().__init__(xknx)
         # 00h: Reserved, shall not be used
         # 01h: Management level access
         # 02h – 7Fh: User level access
@@ -65,7 +60,7 @@ class SessionAuthenticate(KNXIPBody):
             + self.message_authentication_code
         )
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return (
             f"<SessionAuthenticate "

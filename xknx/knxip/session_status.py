@@ -7,15 +7,12 @@ secure session handshake to indicate an error condition or status information.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from xknx.exceptions import CouldNotParseKNXIP
 
 from .body import KNXIPBody
 from .knxip_enum import KNXIPServiceType, SecureSessionStatusCode
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class SessionStatus(KNXIPBody):
@@ -26,11 +23,9 @@ class SessionStatus(KNXIPBody):
 
     def __init__(
         self,
-        xknx: XKNX,
         status: SecureSessionStatusCode = SecureSessionStatusCode.STATUS_KEEPALIVE,
     ):
         """Initialize SessionStatus object."""
-        super().__init__(xknx)
         self.status = status
 
     def calculated_length(self) -> int:
@@ -58,6 +53,6 @@ class SessionStatus(KNXIPBody):
             )
         )
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return f'<SessionStatus status="{self.status}" />'

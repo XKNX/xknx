@@ -1,5 +1,4 @@
 """Unit test for KNX/IP SearchRequest Extended objects."""
-from xknx import XKNX
 from xknx.knxip import HPAI, KNXIPFrame, SearchRequestExtended
 from xknx.knxip.srp import SRP
 
@@ -10,8 +9,7 @@ class TestKNXIPSearchRequestExtended:
     def test_search_request_extended(self):
         """Test parsing and streaming SearchRequest Extended KNX/IP packet."""
         raw = bytes.fromhex("06 10 02 0b 00 0e 08 01 e0 00 17 0C 0E 57")
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
 
         assert isinstance(knxipframe.body, SearchRequestExtended)
@@ -21,7 +19,7 @@ class TestKNXIPSearchRequestExtended:
 
         knxipframe2 = KNXIPFrame.init_from_body(
             SearchRequestExtended(
-                xknx, discovery_endpoint=HPAI(ip_addr="224.0.23.12", port=3671)
+                discovery_endpoint=HPAI(ip_addr="224.0.23.12", port=3671)
             )
         )
 
@@ -30,8 +28,7 @@ class TestKNXIPSearchRequestExtended:
     def test_search_request_extended_srp(self):
         """Test parsing and streaming SearchRequest Extended with SRPs KNX/IP packet."""
         raw = bytes.fromhex("06 10 02 0b 00 10 08 01 e0 00 17 0c 0e 57 02 81")
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
 
         assert isinstance(knxipframe.body, SearchRequestExtended)
@@ -43,9 +40,8 @@ class TestKNXIPSearchRequestExtended:
 
         knxipframe2 = KNXIPFrame.init_from_body(
             SearchRequestExtended(
-                xknx,
-                srps=[SRP.with_programming_mode()],
                 discovery_endpoint=HPAI(ip_addr="224.0.23.12", port=3671),
+                srps=[SRP.with_programming_mode()],
             )
         )
 
@@ -56,8 +52,7 @@ class TestKNXIPSearchRequestExtended:
         raw = bytes.fromhex(
             "06 10 02 0b 00 18 08 01 e0 00 17 0c 0e 57 02 81 08 82 01 02 03 04 05 06"
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
 
         assert isinstance(knxipframe.body, SearchRequestExtended)
@@ -72,12 +67,11 @@ class TestKNXIPSearchRequestExtended:
 
         knxipframe2 = KNXIPFrame.init_from_body(
             SearchRequestExtended(
-                xknx,
+                discovery_endpoint=HPAI(ip_addr="224.0.23.12", port=3671),
                 srps=[
                     SRP.with_programming_mode(),
                     SRP.with_mac_address(bytes([1, 2, 3, 4, 5, 6])),
                 ],
-                discovery_endpoint=HPAI(ip_addr="224.0.23.12", port=3671),
             )
         )
 

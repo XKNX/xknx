@@ -6,8 +6,6 @@ Depending on the service_type_ident different types of body classes are instanci
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from xknx.exceptions import CouldNotParseKNXIP, IncompleteKNXIPFrame
 
 from .body import KNXIPBody
@@ -34,16 +32,12 @@ from .session_status import SessionStatus
 from .tunnelling_ack import TunnellingAck
 from .tunnelling_request import TunnellingRequest
 
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
-
 
 class KNXIPFrame:
     """Class for KNX/IP Frames."""
 
-    def __init__(self, xknx: XKNX):
+    def __init__(self) -> None:
         """Initialize object."""
-        self.xknx = xknx
         self.header = KNXIPHeader()
         self.body: KNXIPBody | None = None
 
@@ -54,48 +48,48 @@ class KNXIPFrame:
         body: KNXIPBody
         # Core
         if service_type_ident == KNXIPServiceType.SEARCH_REQUEST:
-            body = SearchRequest(self.xknx)
+            body = SearchRequest()
         elif service_type_ident == KNXIPServiceType.SEARCH_REQUEST_EXTENDED:
-            body = SearchRequestExtended(self.xknx)
+            body = SearchRequestExtended()
         elif service_type_ident == KNXIPServiceType.SEARCH_RESPONSE:
-            body = SearchResponse(self.xknx)
+            body = SearchResponse()
         elif service_type_ident == KNXIPServiceType.SEARCH_RESPONSE_EXTENDED:
-            body = SearchResponseExtended(self.xknx)
+            body = SearchResponseExtended()
         elif service_type_ident == KNXIPServiceType.DESCRIPTION_REQUEST:
-            body = DescriptionRequest(self.xknx)
+            body = DescriptionRequest()
         elif service_type_ident == KNXIPServiceType.DESCRIPTION_RESPONSE:
-            body = DescriptionResponse(self.xknx)
+            body = DescriptionResponse()
         elif service_type_ident == KNXIPServiceType.CONNECT_REQUEST:
-            body = ConnectRequest(self.xknx)
+            body = ConnectRequest()
         elif service_type_ident == KNXIPServiceType.CONNECT_RESPONSE:
-            body = ConnectResponse(self.xknx)
+            body = ConnectResponse()
         elif service_type_ident == KNXIPServiceType.CONNECTIONSTATE_REQUEST:
-            body = ConnectionStateRequest(self.xknx)
+            body = ConnectionStateRequest()
         elif service_type_ident == KNXIPServiceType.CONNECTIONSTATE_RESPONSE:
-            body = ConnectionStateResponse(self.xknx)
+            body = ConnectionStateResponse()
         elif service_type_ident == KNXIPServiceType.DISCONNECT_REQUEST:
-            body = DisconnectRequest(self.xknx)
+            body = DisconnectRequest()
         elif service_type_ident == KNXIPServiceType.DISCONNECT_RESPONSE:
-            body = DisconnectResponse(self.xknx)
+            body = DisconnectResponse()
         # Tunneling
         elif service_type_ident == KNXIPServiceType.TUNNELLING_REQUEST:
-            body = TunnellingRequest(self.xknx)
+            body = TunnellingRequest()
         elif service_type_ident == KNXIPServiceType.TUNNELLING_ACK:
-            body = TunnellingAck(self.xknx)
+            body = TunnellingAck()
         # Routing
         elif service_type_ident == KNXIPServiceType.ROUTING_INDICATION:
-            body = RoutingIndication(self.xknx)
+            body = RoutingIndication()
         # Secure
         elif service_type_ident == KNXIPServiceType.SECURE_WRAPPER:
-            body = SecureWrapper(self.xknx)
+            body = SecureWrapper()
         elif service_type_ident == KNXIPServiceType.SESSION_AUTHENTICATE:
-            body = SessionAuthenticate(self.xknx)
+            body = SessionAuthenticate()
         elif service_type_ident == KNXIPServiceType.SESSION_REQUEST:
-            body = SessionRequest(self.xknx)
+            body = SessionRequest()
         elif service_type_ident == KNXIPServiceType.SESSION_RESPONSE:
-            body = SessionResponse(self.xknx)
+            body = SessionResponse()
         elif service_type_ident == KNXIPServiceType.SESSION_STATUS:
-            body = SessionStatus(self.xknx)
+            body = SessionStatus()
         else:
             raise CouldNotParseKNXIP(
                 f"KNXIPServiceType not implemented: {service_type_ident.name}"
@@ -106,7 +100,7 @@ class KNXIPFrame:
     @staticmethod
     def init_from_body(knxip_body: KNXIPBody) -> KNXIPFrame:
         """Return KNXIPFrame from KNXIPBody."""
-        knxipframe = KNXIPFrame(knxip_body.xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.header.service_type_ident = knxip_body.__class__.SERVICE_TYPE
         knxipframe.body = knxip_body
         knxipframe.header.set_length(knxip_body)

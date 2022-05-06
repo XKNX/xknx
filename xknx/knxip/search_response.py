@@ -8,15 +8,10 @@ a search response and one device supporting multiple KNX connections may send mu
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from .body import KNXIPBody
 from .dib import DIB, DIBDeviceInformation
 from .hpai import HPAI
 from .knxip_enum import KNXIPServiceType
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class SearchResponse(KNXIPBody):
@@ -24,9 +19,8 @@ class SearchResponse(KNXIPBody):
 
     SERVICE_TYPE = KNXIPServiceType.SEARCH_RESPONSE
 
-    def __init__(self, xknx: XKNX, control_endpoint: HPAI = HPAI()):
+    def __init__(self, control_endpoint: HPAI = HPAI()):
         """Initialize SearchResponse object."""
-        super().__init__(xknx)
         self.control_endpoint = control_endpoint
         self.dibs: list[DIB] = []
 
@@ -57,7 +51,7 @@ class SearchResponse(KNXIPBody):
             dib.to_knx() for dib in self.dibs
         )
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         _dibs_str = ",\n".join(dib.__str__() for dib in self.dibs)
         return (

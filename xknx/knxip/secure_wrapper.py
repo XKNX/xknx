@@ -8,15 +8,12 @@ for ensuring data integrity and freshness.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from xknx.exceptions import CouldNotParseKNXIP
 
 from .body import KNXIPBody
 from .knxip_enum import KNXIPServiceType
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 # 2 octets secure session identifier
 # 6 octets sequence information
@@ -42,7 +39,6 @@ class SecureWrapper(KNXIPBody):
 
     def __init__(
         self,
-        xknx: XKNX,
         secure_session_id: int = 0,
         sequence_information: bytes = bytes(6),
         serial_number: bytes = bytes(6),
@@ -51,7 +47,6 @@ class SecureWrapper(KNXIPBody):
         message_authentication_code: bytes = bytes(16),
     ):
         """Initialize SecureWrapper object."""
-        super().__init__(xknx)
         self.secure_session_id = secure_session_id
         self.sequence_information = sequence_information
         self.serial_number = serial_number
@@ -90,7 +85,7 @@ class SecureWrapper(KNXIPBody):
             + self.message_authentication_code
         )
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return (
             f"<SecureWrapper "

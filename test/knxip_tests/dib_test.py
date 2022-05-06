@@ -6,8 +6,10 @@ from xknx.knxip import (
     DIB,
     DIBDeviceInformation,
     DIBGeneric,
+    DIBSecuredServiceFamilies,
     DIBServiceFamily,
     DIBSuppSVCFamilies,
+    DIBTunnelingInfo,
     DIBTypeCode,
     KNXMedium,
 )
@@ -109,3 +111,50 @@ class TestKNXIPDIB:
         assert dib.supports(DIBServiceFamily.TUNNELING, version=2)
         assert not dib.supports(DIBServiceFamily.ROUTING)
         assert not dib.supports(DIBServiceFamily.ROUTING, version=2)
+
+    def test_dib_secured_service_families(self):
+        """Test parsing of secured service families."""
+        raw = bytes((0x08, 0x06, 0x03, 0x01, 0x04, 0x01, 0x05, 0x01))
+
+        dib = DIB.determine_dib(raw)
+        assert isinstance(dib, DIBSecuredServiceFamilies)
+        assert dib.from_knx(raw) == 8
+
+        assert dib.families == [
+            DIBSuppSVCFamilies.Family(DIBServiceFamily.DEVICE_MANAGEMENT, 1),
+            DIBSuppSVCFamilies.Family(DIBServiceFamily.TUNNELING, 1),
+            DIBSuppSVCFamilies.Family(DIBServiceFamily.ROUTING, 1),
+        ]
+
+        assert dib.to_knx() == raw
+
+        assert dib.supports(DIBServiceFamily.TUNNELING)
+        assert dib.supports(DIBServiceFamily.TUNNELING, version=1)
+        assert dib.supports(DIBServiceFamily.ROUTING)
+        assert not dib.supports(DIBServiceFamily.ROUTING, version=2)
+        assert dib.supports(DIBServiceFamily.DEVICE_MANAGEMENT)
+
+    def test_dib_tunneling_info(self):
+        """Test parsing of tunneling info."""
+        raw = (
+            b"\x24\x07\x00\xf8\x40\x01\x00\x05\x40\x02\x00\x05\x40\x03\x00\x05"
+            b"\x40\x04\x00\x05\x40\x05\x00\x05\x40\x06\x00\x05\x40\x07\x00\x05"
+            b"\x40\x08\x00\x06"
+        )
+
+        dib = DIB.determine_dib(raw)
+        assert isinstance(dib, DIBTunnelingInfo)
+        assert dib.from_knx(raw) == 36
+
+        assert dib.max_apdu_length == 248
+
+        assert len(dib.slots) == 8
+        for address in ["4.0.1", "4.0.2", "4.0.3", "4.0.4", "4.0.5", "4.0.6", "4.0.7"]:
+            assert dib.slots[IndividualAddress(address)].usable
+            assert not dib.slots[IndividualAddress(address)].authorized
+            assert dib.slots[IndividualAddress(address)].free
+        assert dib.slots[IndividualAddress("4.0.8")].usable
+        assert dib.slots[IndividualAddress("4.0.8")].authorized
+        assert not dib.slots[IndividualAddress("4.0.8")].free
+
+        assert dib.to_knx() == raw

@@ -1,2 +1,2 @@
-cryptography==35.0.0
-netifaces==0.11.0
+cryptography==37.0.2
+ifaddr==0.1.7

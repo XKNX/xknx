@@ -30,6 +30,8 @@ class TestRemoteValueSensor:
         with pytest.raises(ConversionError):
             RemoteValueSensor(xknx=xknx, value_type=2)
         with pytest.raises(ConversionError):
+            RemoteValueSensor(xknx=xknx, value_type=None)
+        with pytest.raises(ConversionError):
             RemoteValueSensor(xknx=xknx)
 
     def test_payload_length_defined(self):

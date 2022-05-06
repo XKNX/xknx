@@ -1,5 +1,4 @@
 """Unit test for KNX/IP SessionStatus objects."""
-from xknx import XKNX
 from xknx.knxip import KNXIPFrame, SessionStatus
 from xknx.knxip.knxip_enum import SecureSessionStatusCode
 
@@ -14,8 +13,7 @@ class TestKNXIPSessionStatus:
             "00"  # status code 00h STATUS_AUTHENTICATION_SUCCESS
             "00"  # reserved
         )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
 
         assert isinstance(knxipframe.body, SessionStatus)
@@ -27,8 +25,7 @@ class TestKNXIPSessionStatus:
         assert knxipframe.to_knx() == raw
 
         session_status = SessionStatus(
-            xknx,
-            status=SecureSessionStatusCode.STATUS_AUTHENTICATION_SUCCESS,
+            status=SecureSessionStatusCode.STATUS_AUTHENTICATION_SUCCESS
         )
         knxipframe2 = KNXIPFrame.init_from_body(session_status)
 

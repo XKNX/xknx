@@ -1,6 +1,84 @@
 # Changelog
 
-## 0.20.1 Add support for DPT 16.001 and SearchRequestExtended
+## Unreleased changes
+
+## 0.21.2 IP Secure Bug fixes
+
+### Bugfixes
+
+- IP Secure: Fix MAC calculation for 22-byte payloads
+- IP Secure: Fix Keyring loading
+
+### Internals
+
+- Rename TaskRegistry.register and Task `task` attribute to `async_func` to avoid confusion; return Task from `start()`
+
+## 0.21.1 Fix Task Registry 2022-05-01
+
+### Bugfixes
+
+- Fix exposure of datetime, time and date objects to the Bus again
+
+### Internals
+
+- TaskRegistry takes functions returning coroutines instead of coroutines directly
+
+## 0.21.0 Search and connect 2022-04-30
+
+### Discovery
+
+- Use unicast discovery endpoint to receive SearchRespones frames
+- Send SearchRequest and SearchRequestExtended simultaneously when using GatewayScanner
+- Skip SearchResponse results for Core-V2 devices - wait for SearchResponseExtended
+- Identify interfaces having KNX IP Secure Tunneling required and skip if using Automatic connection mode
+- Only send SearchRequests from one interface for each `scan()` call
+- Connect to next found interface in case of unsuccessful initial connection when using "automatic" mode
+
+### Internals
+
+- Use `ifaddr` instead of `netifaces`
+- make HPAI hashable and add `addr_tuple` convenice property
+
+## 0.20.4 Fix exposure of time and date 2022-04-20
+
+### Bugfixes
+
+- Fix exposure of datetime, time and date objects to the Bus
+
+### Protocol
+
+- Add DIBSecuredServiceFamilies and DIBTunnelingInfo parser
+
+### Internal
+
+- Include base class in `DPTBase.parse_transcoder()` lookup
+- Move `levels` instance attribute form `GroupAddress` to `address_format` class variable
+- Remove xknx form every class in the knxip package: CEMIFrame, KNXIPFrame and KNXIPBody (and subclasses)
+- Remove xknx form every class in the io.request_response package
+- Remove xknx form io.transport package and io.secure_session and io.self_description modules
+
+## 0.20.3 Threading fixes 2022-04-15
+
+### Devices
+
+- Notification: add `value_type` argument to set "string" or "latin_1" text encoding
+
+### Bug fixes
+
+- Fix call from wrong thread in ConnectionManager
+- Fix thread leak when restarting XKNX
+
+### Internal
+
+- Change RemoteValueString to _RemoteValueGeneric subclass
+
+## 0.20.2 Handle shutdown properly 2022-04-11
+
+### Bug fixes
+
+- Properly shutdown climate mode if climate.shutdown() is called and ClimateMode exists
+
+## 0.20.1 Add support for DPT 16.001 and SearchRequestExtended 2022-04-05
 
 ### Features
 

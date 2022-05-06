@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from xknx.exceptions.exception import InvalidSignature
+from xknx.exceptions.exception import InvalidSecureConfiguration, InvalidSignature
 from xknx.secure import Keyring, load_key_ring
 from xknx.secure.keyring import XMLDevice, XMLInterface, verify_keyring_signature
 
@@ -22,18 +22,18 @@ class TestKeyRing:
     def test_load_keyring(self):
         """Test load keyring from knxkeys file."""
         keyring: Keyring = load_key_ring(self.keyring_test_file, "pwd")
-        TestKeyRing.assert_interface(keyring, "user2", "5")
-        TestKeyRing.assert_interface(keyring, "user1", "1")
-        TestKeyRing.assert_interface(keyring, "user4", "2")
-        TestKeyRing.assert_interface(keyring, "@zvI1G&_", "3")
+        TestKeyRing.assert_interface(keyring, "user4", 2)
+        TestKeyRing.assert_interface(keyring, "@zvI1G&_", 3)
+        TestKeyRing.assert_interface(keyring, "ZvDY-:g#", 4)
+        TestKeyRing.assert_interface(keyring, "user2", 5)
 
     def test_load_keyring_real(self):
         """Test load keyring from knxkeys file."""
         keyring: Keyring = load_key_ring(self.testcase_file, "password")
-        TestKeyRing.assert_interface(keyring, "user1", "3")
-        TestKeyRing.assert_interface(keyring, "user2", "4")
-        TestKeyRing.assert_interface(keyring, "user3", "5")
-        TestKeyRing.assert_interface(keyring, "user4", "6")
+        TestKeyRing.assert_interface(keyring, "user1", 3)
+        TestKeyRing.assert_interface(keyring, "user2", 4)
+        TestKeyRing.assert_interface(keyring, "user3", 5)
+        TestKeyRing.assert_interface(keyring, "user4", 6)
         assert keyring.devices[0].decrypted_management_password == "commissioning"
 
         interface: XMLInterface = keyring.interfaces[0]
@@ -51,9 +51,19 @@ class TestKeyRing:
         with pytest.raises(InvalidSignature):
             load_key_ring(self.testcase_file, "wrong_password")
 
+    def test_raises_error(self):
+        """Test raises error if password is wrong."""
+        with pytest.raises(InvalidSecureConfiguration):
+            load_key_ring(
+                self.testcase_file, "wrong_password", validate_signature=False
+            )
+
     @staticmethod
-    def assert_interface(keyring: Keyring, password: str, user: str) -> None:
+    def assert_interface(keyring: Keyring, password: str, user: int) -> None:
         """Verify password for given user."""
-        for interface in keyring.interfaces:
-            if interface.user_id == user:
-                assert interface.decrypted_password == password
+        matched = False
+        if interface := keyring.get_interface_by_user_id(user):
+            matched = True
+            assert interface.decrypted_password == password
+
+        assert matched

@@ -31,7 +31,7 @@ class RemoteValueRaw(RemoteValue[Union[DPTArray, DPTBinary], int]):
         feature_name: str = "Raw",
         after_update_cb: AsyncCallbackType | None = None,
     ):
-        """Initialize RemoteValueSensor class."""
+        """Initialize RemoteValueRaw class."""
         self.payload_length = payload_length
         super().__init__(
             xknx,

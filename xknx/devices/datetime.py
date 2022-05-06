@@ -7,6 +7,7 @@ broadcasting localtime periodically.
 from __future__ import annotations
 
 import asyncio
+from functools import partial
 import time
 from typing import TYPE_CHECKING, Iterator
 
@@ -64,13 +65,11 @@ class DateTime(Device):
                 await asyncio.sleep(minutes * 60)
 
         if self.localtime:
-            task: Task = self.xknx.task_registry.register(
-                f"datetime.broadcast_{id(self)}",
-                broadcast_loop(self, minutes=minutes),
+            return self.xknx.task_registry.register(
+                name=f"datetime.broadcast_{id(self)}",
+                async_func=partial(broadcast_loop, self, minutes),
                 restart_after_reconnect=True,
-            )
-            task.start()
-            return task
+            ).start()
         return None
 
     async def broadcast_localtime(self, response: bool = False) -> None:
