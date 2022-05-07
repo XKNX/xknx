@@ -61,6 +61,7 @@ class CEMIFrame:
             destination_address=self.dst_addr,
             payload=self.payload,
             source_address=self.src_addr,
+            tpci=self.tpci,
         )
 
     @telegram.setter

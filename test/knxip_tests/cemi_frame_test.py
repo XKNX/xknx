@@ -180,32 +180,41 @@ def test_from_knx_individual_address():
 def test_telegram_group_address():
     """Test telegram conversion flags with a group address."""
     frame = CEMIFrame()
-    frame.telegram = Telegram(destination_address=GroupAddress(0))
-
+    _telegram = Telegram(destination_address=GroupAddress(0))
+    # test CEMIFrame.telegram setter
+    frame.telegram = _telegram
     assert frame.flags & 0x0080 == CEMIFlags.DESTINATION_GROUP_ADDRESS
     assert frame.flags & 0x0C00 == CEMIFlags.PRIORITY_LOW
+    # test CEMIFrame.telegram property
+    assert frame.telegram == _telegram
 
 
 def test_telegram_individual_address():
     """Test telegram conversion flags with a individual address."""
     frame = CEMIFrame()
-    frame.telegram = Telegram(destination_address=IndividualAddress(0), tpci=TConnect())
-
+    _telegram = Telegram(destination_address=IndividualAddress(0), tpci=TConnect())
+    # test CEMIFrame.telegram setter
+    frame.telegram = _telegram
     assert frame.flags & 0x0080 == CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
     assert frame.flags & 0x0C00 == CEMIFlags.PRIORITY_SYSTEM
     assert frame.flags & 0x0200 == CEMIFlags.ACK_REQUESTED
+    # test CEMIFrame.telegram property
+    assert frame.telegram == _telegram
 
 
 def test_telegram_individual_address_ack():
     """Test telegram conversion flags with a individual address."""
     frame = CEMIFrame()
-    frame.telegram = Telegram(
+    _telegram = Telegram(
         destination_address=IndividualAddress(0), tpci=TAck(sequence_number=2)
     )
-
+    # test CEMIFrame.telegram setter
+    frame.telegram = _telegram
     assert frame.flags & 0x0080 == CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
     assert frame.flags & 0x0C00 == CEMIFlags.PRIORITY_SYSTEM
     assert frame.flags & 0x0200 == CEMIFlags.NO_ACK_REQUESTED
+    # test CEMIFrame.telegram property
+    assert frame.telegram == _telegram
 
 
 def test_telegram_unsupported_address():
