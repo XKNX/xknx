@@ -20,6 +20,7 @@ from enum import Enum
 
 from .address import GroupAddress, IndividualAddress, InternalGroupAddress
 from .apci import APCI
+from .tpci import TPCI, TDataGroup
 
 
 class TelegramDirection(Enum):
@@ -40,6 +41,7 @@ class Telegram:
         direction: TelegramDirection = TelegramDirection.OUTGOING,
         payload: APCI | None = None,
         source_address: IndividualAddress = IndividualAddress(0),
+        tpci: TPCI = TDataGroup(),
     ) -> None:
         """Initialize Telegram class."""
         self.destination_address = destination_address
@@ -47,6 +49,7 @@ class Telegram:
         self.payload = payload
         self.source_address = source_address
         self.timestamp = datetime.now()
+        self.tpci = tpci
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -57,6 +60,18 @@ class Telegram:
             f'destination_address="{self.destination_address}" '
             f'payload="{self.payload}" '
             "/>"
+        )
+
+    def __repr__(self) -> str:
+        """Return object as string representation."""
+        return (
+            "Telegram("
+            f"destination_address={self.destination_address}, "
+            f"direction={self.direction}, "
+            f"payload={self.payload}, "
+            f"source_address={self.source_address}, "
+            f"tpci={self.tpci}"
+            ")"
         )
 
     def __eq__(self, other: object) -> bool:
@@ -76,4 +91,4 @@ class Telegram:
     def __hash__(self) -> int:
         """Hash function."""
         # used to turn lists of Telegram into sets in unittests
-        return hash(str(self))
+        return hash(repr(self))

@@ -72,20 +72,26 @@ class CEMIFrame:
             CEMIFlags.FRAME_TYPE_STANDARD
             | CEMIFlags.DO_NOT_REPEAT
             | CEMIFlags.BROADCAST
-            | CEMIFlags.PRIORITY_LOW
-            | CEMIFlags.NO_ACK_REQUESTED
+            | (
+                CEMIFlags.ACK_REQUESTED
+                if telegram.tpci.ack_request
+                else CEMIFlags.NO_ACK_REQUESTED
+            )
             | CEMIFlags.CONFIRM_NO_ERROR
             | CEMIFlags.HOP_COUNT_1ST
         )
 
         if isinstance(telegram.destination_address, GroupAddress):
-            self.flags |= CEMIFlags.DESTINATION_GROUP_ADDRESS
+            self.flags |= CEMIFlags.DESTINATION_GROUP_ADDRESS | CEMIFlags.PRIORITY_LOW
         elif isinstance(telegram.destination_address, IndividualAddress):
-            self.flags |= CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
+            self.flags |= (
+                CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS | CEMIFlags.PRIORITY_SYSTEM
+            )
         else:
             raise TypeError()
 
         self.dst_addr = telegram.destination_address
+        self.tpci = telegram.tpci
         self.payload = telegram.payload
 
     def set_hops(self, hops: int) -> None:

@@ -6,7 +6,7 @@ from xknx.knxip.cemi_frame import CEMIFrame
 from xknx.knxip.knxip_enum import CEMIFlags, CEMIMessageCode
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import GroupValueRead
-from xknx.telegram.tpci import TConnect, TDataGroup
+from xknx.telegram.tpci import TAck, TConnect, TDataGroup
 
 
 def get_data(code, adil, flags, src, dst, npdu_len, tpci_apci, payload):
@@ -182,19 +182,30 @@ def test_telegram_group_address():
     frame = CEMIFrame()
     frame.telegram = Telegram(destination_address=GroupAddress(0))
 
-    assert (
-        frame.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS
-    ) == CEMIFlags.DESTINATION_GROUP_ADDRESS
+    assert frame.flags & 0x0080 == CEMIFlags.DESTINATION_GROUP_ADDRESS
+    assert frame.flags & 0x0C00 == CEMIFlags.PRIORITY_LOW
 
 
 def test_telegram_individual_address():
     """Test telegram conversion flags with a individual address."""
     frame = CEMIFrame()
-    frame.telegram = Telegram(destination_address=IndividualAddress(0))
+    frame.telegram = Telegram(destination_address=IndividualAddress(0), tpci=TConnect())
 
-    assert (
-        frame.flags & CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
-    ) == CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
+    assert frame.flags & 0x0080 == CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
+    assert frame.flags & 0x0C00 == CEMIFlags.PRIORITY_SYSTEM
+    assert frame.flags & 0x0200 == CEMIFlags.ACK_REQUESTED
+
+
+def test_telegram_individual_address_ack():
+    """Test telegram conversion flags with a individual address."""
+    frame = CEMIFrame()
+    frame.telegram = Telegram(
+        destination_address=IndividualAddress(0), tpci=TAck(sequence_number=2)
+    )
+
+    assert frame.flags & 0x0080 == CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
+    assert frame.flags & 0x0C00 == CEMIFlags.PRIORITY_SYSTEM
+    assert frame.flags & 0x0200 == CEMIFlags.NO_ACK_REQUESTED
 
 
 def test_telegram_unsupported_address():
