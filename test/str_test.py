@@ -627,8 +627,8 @@ class TestStringRepresentations:
         assert (
             str(tunnelling_request)
             == '<TunnellingRequest communication_channel_id="23" sequence_counter="42" '
-            'cemi="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")" DestinationAddress="GroupAddress("0/0/0")" '
-            'Flags="               0" code="L_DATA_REQ" payload="None" />" />'
+            'cemi="<CEMIFrame code="L_DATA_REQ" src_addr="IndividualAddress("0.0.0")" dst_addr="GroupAddress("0/0/0")" '
+            'flags="               0" tpci="TDataGroup()" payload="None" />" />'
         )
 
     def test_tunnelling_ack(self):
@@ -651,8 +651,8 @@ class TestStringRepresentations:
         )
         assert (
             str(cemi_frame)
-            == '<CEMIFrame SourceAddress="GroupAddress("1/2/3")" DestinationAddress="GroupAddress("1/2/5")" '
-            'Flags="1011110011100000" code="L_DATA_IND" payload="<GroupValueWrite value="<DPTBinary value="7" />" />" />'
+            == '<CEMIFrame code="L_DATA_IND" src_addr="GroupAddress("1/2/3")" dst_addr="GroupAddress("1/2/5")" '
+            'flags="1011110011100000" tpci="TDataGroup()" payload="<GroupValueWrite value="<DPTBinary value="7" />" />" />'
         )
 
     def test_knxip_frame(self):
@@ -691,6 +691,6 @@ class TestStringRepresentations:
         routing_indication = RoutingIndication()
         assert (
             str(routing_indication)
-            == '<RoutingIndication cemi="<CEMIFrame SourceAddress="IndividualAddress("0.0.0")" '
-            'DestinationAddress="GroupAddress("0/0/0")" Flags="               0" code="L_DATA_IND" payload="None" />" />'
+            == '<RoutingIndication cemi="<CEMIFrame code="L_DATA_IND" src_addr="IndividualAddress("0.0.0")" '
+            'dst_addr="GroupAddress("0/0/0")" flags="               0" tpci="TDataGroup()" payload="None" />" />'
         )

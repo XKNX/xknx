@@ -2,6 +2,11 @@
 
 ## Unreleased changes
 
+### Protocol
+
+- Parse and encode different TPCI in a CEMIFrame or Telegram
+- Set priority "System" flag for point-to-point CEMI frames initialized by a Telegram
+
 ## 0.21.2 IP Secure Bug fixes
 
 ### Bugfixes
