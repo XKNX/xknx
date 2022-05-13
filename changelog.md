@@ -4,6 +4,7 @@
 
 ### Devices
 
+- Cover: call `device_updated_cb` periodically when cover is moving
 - Cover: fix travel time prediction when receiving updates from bus while moving
 
 ### Protocol

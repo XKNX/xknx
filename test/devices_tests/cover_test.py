@@ -905,9 +905,9 @@ class TestCover:
             assert not cover.is_closing()
 
     #
-    # TEST AUTO STOP
+    # TEST TASKS
     #
-    async def test_auto_stop(self):
+    async def test_auto_stop(self, time_travel):
         """Test auto stop functionality."""
         xknx = XKNX()
         cover = Cover(
@@ -927,14 +927,77 @@ class TestCover:
 
             await cover.set_position(50)
 
+            await time_travel(1)
             mock_time.return_value = 1517000001.0
-            await cover.auto_stop_if_necessary()
             mock_stop.assert_not_called()
 
+            await time_travel(4)
             mock_time.return_value = 1517000005.0
-            await cover.auto_stop_if_necessary()
             mock_stop.assert_called_with()
             mock_stop.reset_mock()
+
+    async def test_periodic_update(self, time_travel):
+        """Test periodic update functionality."""
+        xknx = XKNX()
+        callback_mock = AsyncMock()
+        cover = Cover(
+            xknx,
+            "TestCover",
+            group_address_long="1/2/1",
+            group_address_stop="1/2/2",
+            group_address_position="1/2/3",
+            group_address_position_state="1/2/4",
+            travel_time_down=10,
+            travel_time_up=10,
+            device_updated_cb=callback_mock,
+        )
+        with patch("time.time") as mock_time:
+            mock_time.return_value = 1517000000.0
+            # state telegram updates current position - we are not moving so this is new state - not moving
+            telegram = Telegram(
+                GroupAddress("1/2/4"), payload=GroupValueWrite(DPTArray(0))
+            )
+            await cover.process(telegram)
+            assert (
+                callback_mock.call_count == 2
+            )  # 1 additional form _stop_position_update because previous state was None
+            callback_mock.reset_mock()
+            # move to 50%
+            telegram = Telegram(
+                GroupAddress("1/2/3"), payload=GroupValueWrite(DPTArray(125))
+            )
+            await cover.process(telegram)
+            await time_travel(0)
+            assert callback_mock.call_count == 1
+
+            mock_time.return_value = 1517000001.0
+            await time_travel(cover.traveling_callback_interval)
+            assert callback_mock.call_count == 2
+
+            # state telegram from bus too early
+            mock_time.return_value = 1517000001.6
+            await time_travel(0.6)
+            assert callback_mock.call_count == 2
+            telegram = Telegram(
+                GroupAddress("1/2/4"), payload=GroupValueWrite(DPTArray(42))
+            )
+            await cover.process(telegram)
+            assert callback_mock.call_count == 3
+            # next update 1 second after last received state telegram
+            mock_time.return_value = 1517000002.0
+            await time_travel(0.4)
+            assert callback_mock.call_count == 3
+            mock_time.return_value = 1517000002.6
+            await time_travel(0.6)
+            assert callback_mock.call_count == 4
+            # last callback - auto updater is removed
+            mock_time.return_value = 1517000005.0
+            await time_travel(2.4)
+            assert (
+                callback_mock.call_count == 6
+            )  # 1 additional form _stop_position_update
+            assert cover.position_reached()
+            assert cover.periodic_update_task is None
 
     #
     # HAS GROUP ADDRESS
