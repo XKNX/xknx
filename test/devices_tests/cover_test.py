@@ -526,11 +526,11 @@ class TestCover:
             destination_address=GroupAddress("1/2/1"),
             payload=GroupValueWrite(DPTBinary(0)),
         )
-        assert cover.travelcalculator.travel_to_position == 50
+        assert cover.travelcalculator._travel_to_position == 50
         assert cover.is_opening()
         # process the outgoing telegram to make sure it doesn't overwrite the target position
         await cover.process(telegram)
-        assert cover.travelcalculator.travel_to_position == 50
+        assert cover.travelcalculator._travel_to_position == 50
         assert xknx.telegrams.qsize() == 0
 
     async def test_position_without_position_address_down(self):
@@ -551,11 +551,11 @@ class TestCover:
             destination_address=GroupAddress("1/2/1"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        assert cover.travelcalculator.travel_to_position == 80
+        assert cover.travelcalculator._travel_to_position == 80
         assert cover.is_closing()
         # process the outgoing telegram to make sure it doesn't overwrite the target position
         await cover.process(telegram)
-        assert cover.travelcalculator.travel_to_position == 80
+        assert cover.travelcalculator._travel_to_position == 80
 
     async def test_position_without_position_address_uninitialized_up(self):
         """Test moving uninitialized cover to absolute position - with no absolute positioning supported."""
@@ -674,7 +674,7 @@ class TestCover:
         await cover.process(telegram)
         assert cover.current_position() == 16
         assert not cover.is_traveling()
-        assert cover.travelcalculator.travel_to_position == 16
+        assert cover.travelcalculator._travel_to_position == 16
         # new position - movement starts
         telegram = Telegram(
             GroupAddress("1/2/3"), payload=GroupValueWrite(DPTArray(255))
@@ -682,7 +682,7 @@ class TestCover:
         await cover.process(telegram)
         assert cover.current_position() == 16
         assert cover.is_closing()
-        assert cover.travelcalculator.travel_to_position == 100
+        assert cover.travelcalculator._travel_to_position == 100
         # new state while moving - movement goes on; travelcalculator updated
         telegram = Telegram(
             GroupAddress("1/2/4"), payload=GroupValueWrite(DPTArray(213))
@@ -690,7 +690,7 @@ class TestCover:
         await cover.process(telegram)
         assert cover.current_position() == 84
         assert cover.is_closing()
-        assert cover.travelcalculator.travel_to_position == 100
+        assert cover.travelcalculator._travel_to_position == 100
 
     async def test_process_angle(self):
         """Test process / reading telegrams from telegram queue. Test if position is processed correctly."""
