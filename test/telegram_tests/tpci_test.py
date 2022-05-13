@@ -16,7 +16,7 @@ from xknx.telegram.tpci import (
 
 
 @pytest.mark.parametrize(
-    "tpci_int,dst_is_group_address,expected",
+    "tpci_int,dst_is_group_address,tpci_expected",
     [
         (0b00000000, True, TDataGroup()),
         (0b00000100, True, TDataTagGroup()),
@@ -28,12 +28,13 @@ from xknx.telegram.tpci import (
         (0b11010011, False, TNak(sequence_number=4)),
     ],
 )
-def test_resolve_tpci(tpci_int, dst_is_group_address, expected):
-    """Test resolving TPCI classes."""
+def test_tpci_resolve_encode(tpci_int, dst_is_group_address, tpci_expected):
+    """Test resolving and encoding TPCI classes."""
     assert (
         TPCI.resolve(raw_tpci=tpci_int, dst_is_group_address=dst_is_group_address)
-        == expected
+        == tpci_expected
     )
+    assert tpci_expected.to_knx() == tpci_int
 
 
 @pytest.mark.parametrize(
