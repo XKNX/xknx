@@ -20,7 +20,7 @@ from enum import Enum
 
 from .address import GroupAddress, IndividualAddress, InternalGroupAddress
 from .apci import APCI
-from .tpci import TPCI, TDataGroup
+from .tpci import TPCI, TDataGroup, TDataIndividual
 
 
 class TelegramDirection(Enum):
@@ -41,7 +41,7 @@ class Telegram:
         direction: TelegramDirection = TelegramDirection.OUTGOING,
         payload: APCI | None = None,
         source_address: IndividualAddress = IndividualAddress(0),
-        tpci: TPCI = TDataGroup(),
+        tpci: TPCI | None = None,
     ) -> None:
         """Initialize Telegram class."""
         self.destination_address = destination_address
@@ -49,7 +49,11 @@ class Telegram:
         self.payload = payload
         self.source_address = source_address
         self.timestamp = datetime.now()
-        self.tpci = tpci
+        self.tpci = tpci or (
+            TDataIndividual()
+            if isinstance(destination_address, IndividualAddress)
+            else TDataGroup()
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""
