@@ -49,6 +49,7 @@ class TravelCalculator:
     def update_position(self, position: int) -> None:
         """Update known position of cover."""
         self._last_known_position = position
+        self._last_known_postion_timestamp = time.time()
         if position == self._travel_to_position:
             self._position_confirmed = True
 

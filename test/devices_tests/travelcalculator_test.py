@@ -40,7 +40,7 @@ class TestTravelCalculator:
         assert travelcalculator.current_position() == 80
 
     def test_travel_down(self):
-        """Test travel up."""
+        """Test travel down."""
         travelcalculator = TravelCalculator(25, 50)
         with patch("time.time") as mock_time:
             mock_time.return_value = 1580000000.0
@@ -74,7 +74,7 @@ class TestTravelCalculator:
             assert travelcalculator.position_reached()
 
     def test_travel_up(self):
-        """Test travel down."""
+        """Test travel up."""
         travelcalculator = TravelCalculator(25, 50)
         with patch("time.time") as mock_time:
             mock_time.return_value = 1580000000.0
@@ -135,6 +135,62 @@ class TestTravelCalculator:
 
             mock_time.return_value = 1580000009.0
             assert travelcalculator.current_position() == 68
+            assert travelcalculator.position_reached()
+
+    def test_travel_down_with_updates(self):
+        """Test travel down with position updates from bus."""
+        travelcalculator = TravelCalculator(25, 50)
+        with patch("time.time") as mock_time:
+            mock_time.return_value = 1580000000.0
+            travelcalculator.set_position(40)
+            travelcalculator.start_travel(100)  # 15 seconds to reach 100
+
+            # time not changed, still at beginning
+            assert travelcalculator.current_position() == 40
+            assert not travelcalculator.position_reached()
+            assert travelcalculator.travel_direction == TravelStatus.DIRECTION_DOWN
+
+            mock_time.return_value = 1580000002.0
+            assert travelcalculator.current_position() == 48
+            assert not travelcalculator.position_reached()
+            # update from bus matching calculation
+            travelcalculator.update_position(48)
+            assert travelcalculator.current_position() == 48
+            assert not travelcalculator.position_reached()
+
+            mock_time.return_value = 1580000010.0
+            assert travelcalculator.current_position() == 80
+            assert not travelcalculator.position_reached()
+            # update from bus not matching calculation takes precedence (1 second slower)
+            travelcalculator.update_position(76)
+            assert travelcalculator.current_position() == 76
+            assert not travelcalculator.position_reached()
+            # travel time extended by 1 second due to update from bus
+            mock_time.return_value = 1580000015.0
+            assert travelcalculator.current_position() == 96
+            assert not travelcalculator.position_reached()
+            mock_time.return_value = 1580000015.0 + 1
+            assert travelcalculator.current_position() == 100
+            assert travelcalculator.position_reached()
+
+    def test_travel_up_with_updates(self):
+        """Test travel up with position updates from bus."""
+        travelcalculator = TravelCalculator(25, 50)
+        with patch("time.time") as mock_time:
+            mock_time.return_value = 1580000000.0
+            travelcalculator.set_position(70)
+            travelcalculator.start_travel(50)  # 10 seconds to reach 50
+
+            mock_time.return_value = 1580000005.0
+            assert travelcalculator.current_position() == 60
+            assert not travelcalculator.position_reached()
+            # update from bus not matching calculation takes precedence (1 second faster)
+            travelcalculator.update_position(58)
+            assert travelcalculator.current_position() == 58
+            assert not travelcalculator.position_reached()
+            # position reached 1 second earlier than predicted
+            mock_time.return_value = 1580000010.0 - 1
+            assert travelcalculator.current_position() == 50
             assert travelcalculator.position_reached()
 
     def test_change_direction(self):
