@@ -234,8 +234,9 @@ class Cover(Device):
         # or fully closed state.
         if (
             self.supports_stop
-            and position > self.travelcalculator.position_open
-            and position < self.travelcalculator.position_closed
+            and self.travelcalculator.position_open
+            < position
+            < self.travelcalculator.position_closed
         ):
             stop_in_seconds = self.travelcalculator.calculate_travel_time(
                 from_position=current_position, to_position=position
@@ -265,7 +266,9 @@ class Cover(Device):
             """Run callback periodically while traveling."""
             while self.travelcalculator.is_traveling():
                 await asyncio.sleep(self.traveling_callback_interval)
-                await self.after_update()
+                if self.travelcalculator.is_traveling():
+                    # else _stop_position_update will call after_update
+                    await self.after_update()
             await self._stop_position_update()
 
         # restarts when already running

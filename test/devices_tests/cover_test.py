@@ -993,9 +993,7 @@ class TestCover:
             # last callback - auto updater is removed
             mock_time.return_value = 1517000005.0
             await time_travel(2.4)
-            assert (
-                callback_mock.call_count == 6
-            )  # 1 additional form _stop_position_update
+            assert callback_mock.call_count == 5
             assert cover.position_reached()
             assert cover.periodic_update_task is None
 
