@@ -2,6 +2,10 @@
 
 ## Unreleased changes
 
+### Devices
+
+- Cover: fix travel time prediction when receiving updates from bus while moving
+
 ### Protocol
 
 - Parse and encode different TPCI in a CEMIFrame or Telegram
