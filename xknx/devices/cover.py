@@ -244,8 +244,8 @@ class Cover(Device):
 
             async def auto_stopper() -> None:
                 await asyncio.sleep(stop_in_seconds)
-                await self.stop()
-                await self._stop_position_update()
+                # stop() calls stop_position_update() which cancels this task
+                asyncio.shield(self.stop())
 
             self.auto_stop_task = self.xknx.task_registry.register(
                 name=f"cover.auto_stopper_{id(self)}",
@@ -267,9 +267,9 @@ class Cover(Device):
             while self.travelcalculator.is_traveling():
                 await asyncio.sleep(self.traveling_callback_interval)
                 if self.travelcalculator.is_traveling():
-                    # else _stop_position_update will call after_update
+                    # else _stop_position_update will call after_update a second time
                     await self.after_update()
-            await self._stop_position_update()
+            asyncio.shield(self._stop_position_update())
 
         # restarts when already running
         self.periodic_update_task = self.xknx.task_registry.register(
@@ -307,7 +307,7 @@ class Cover(Device):
         else:
             self.travelcalculator.set_position(new_position)
         if position_before_update != self.travelcalculator.current_position():
-            self._start_auto_updater()
+            self._start_auto_updater()  # to restart the periodic updater
             await self.after_update()
 
     async def set_angle(self, angle: int) -> None:
