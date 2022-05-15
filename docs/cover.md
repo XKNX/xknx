@@ -26,8 +26,9 @@ Shutters are simple representations of blind/roller cover actuators. With XKNX y
 - `sync_state` defines if and how often the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
 - `travel_time_down` seconds to reach lower end position. Default: 22
 - `travel_time_up` seconds to reach upper end position. Default: 22
-- `invert_position` invert position (payload for eg. set_up() and relative position). Default: False
-- `invert_angle` invert angle. Default: False
+- `invert_updown` invert up/down binary payload. Default: False
+- `invert_position` invert position percentage from / to KNX bus. Default: False
+- `invert_angle` invert angle from / to KNX bus. Default: False
 - `device_updated_cb` awaitable callback for each update.
 
 ## [](#header-2)Example

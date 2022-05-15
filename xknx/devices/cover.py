@@ -54,6 +54,7 @@ class Cover(Device):
         sync_state: bool | int | float | str = True,
         travel_time_down: float = DEFAULT_TRAVEL_TIME_DOWN,
         travel_time_up: float = DEFAULT_TRAVEL_TIME_UP,
+        invert_updown: bool = False,
         invert_position: bool = False,
         invert_angle: bool = False,
         device_updated_cb: DeviceCallbackType | None = None,
@@ -68,7 +69,7 @@ class Cover(Device):
             group_address_long,
             device_name=self.name,
             after_update_cb=None,
-            invert=invert_position,
+            invert=invert_updown,
         )
 
         self.step = RemoteValueStep(
@@ -76,7 +77,7 @@ class Cover(Device):
             group_address_short,
             device_name=self.name,
             after_update_cb=self.after_update,
-            invert=invert_position,
+            invert=invert_updown,
         )
 
         self.stop_ = RemoteValueSwitch(
