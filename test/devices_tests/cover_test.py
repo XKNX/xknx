@@ -253,7 +253,7 @@ class TestCover:
             group_address_short="1/2/2",
             group_address_position="1/2/3",
             group_address_position_state="1/2/4",
-            invert_position=True,
+            invert_updown=True,
         )
         await cover.set_down()
         assert xknx.telegrams.qsize() == 1
@@ -299,7 +299,7 @@ class TestCover:
             group_address_short="1/2/2",
             group_address_position="1/2/3",
             group_address_position_state="1/2/4",
-            invert_position=True,
+            invert_updown=True,
         )
         await cover.set_short_up()
         assert xknx.telegrams.qsize() == 1

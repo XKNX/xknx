@@ -4,6 +4,7 @@
 
 ### Devices
 
+- Cover: add `invert_updown` option to decouple updown from position
 - Cover: fix travel time prediction when receiving updates from bus while moving
 
 ### Protocol
