@@ -137,12 +137,11 @@ class Cover(Device):
 
         self.travel_time_down = travel_time_down
         self.travel_time_up = travel_time_up
-
         self.travelcalculator = TravelCalculator(travel_time_down, travel_time_up)
-        self.travel_direction_tilt: TravelStatus | None = None
 
-        self.auto_stop_task: Task | None = None
-        self.periodic_update_task: Task | None = None
+        self._auto_stop_task: Task | None = None
+        self._periodic_update_task: Task | None = None
+        self._travel_direction_tilt: TravelStatus | None = None
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
@@ -158,7 +157,7 @@ class Cover(Device):
         """Move cover down."""
         if self.updown.writable:
             await self.updown.down()
-            self.travel_direction_tilt = None
+            self._travel_direction_tilt = None
             await self._start_position_update(
                 target_position=self.travelcalculator.position_closed
             )
@@ -169,7 +168,7 @@ class Cover(Device):
         """Move cover up."""
         if self.updown.writable:
             await self.updown.up()
-            self.travel_direction_tilt = None
+            self._travel_direction_tilt = None
             await self._start_position_update(
                 target_position=self.travelcalculator.position_open
             )
@@ -191,18 +190,18 @@ class Cover(Device):
         elif self.step.writable:
             if TravelStatus.DIRECTION_UP in (
                 self.travelcalculator.travel_direction,
-                self.travel_direction_tilt,
+                self._travel_direction_tilt,
             ):
                 await self.step.decrease()
             elif TravelStatus.DIRECTION_DOWN in (
                 self.travelcalculator.travel_direction,
-                self.travel_direction_tilt,
+                self._travel_direction_tilt,
             ):
                 await self.step.increase()
         else:
             logger.warning("Stop not supported for device %s", self.get_name())
             return
-        self.travel_direction_tilt = None
+        self._travel_direction_tilt = None
         await self._stop_position_update()
 
     async def set_position(self, position: int) -> None:
@@ -249,7 +248,7 @@ class Cover(Device):
                 # stop() calls stop_position_update() which cancels this task
                 asyncio.shield(self.stop())
 
-            self.auto_stop_task = self.xknx.task_registry.register(
+            self._auto_stop_task = self.xknx.task_registry.register(
                 name=f"cover.auto_stopper_{id(self)}",
                 async_func=auto_stopper,
             ).start()
@@ -274,7 +273,7 @@ class Cover(Device):
             asyncio.shield(self._stop_position_update())
 
         # restarts when already running
-        self.periodic_update_task = self.xknx.task_registry.register(
+        self._periodic_update_task = self.xknx.task_registry.register(
             name=f"cover.periodic_update_{id(self)}",
             async_func=periodic_updater,
         ).start()
@@ -283,12 +282,12 @@ class Cover(Device):
         """Stop the travel calculator and periodic device callbacks."""
         if not self.travelcalculator.position_reached():
             self.travelcalculator.stop()
-        if self.periodic_update_task:
-            self.periodic_update_task.cancel()
-            self.periodic_update_task = None
-        if self.auto_stop_task:
-            self.auto_stop_task.cancel()
-            self.auto_stop_task = None
+        if self._periodic_update_task:
+            self._periodic_update_task.cancel()
+            self._periodic_update_task = None
+        if self._auto_stop_task:
+            self._auto_stop_task.cancel()
+            self._auto_stop_task = None
         await self.after_update()
 
     async def _target_position_from_rv(self) -> None:
@@ -319,7 +318,7 @@ class Cover(Device):
             return
 
         current_angle = self.current_angle()
-        self.travel_direction_tilt = (
+        self._travel_direction_tilt = (
             TravelStatus.DIRECTION_DOWN
             if current_angle is not None and angle >= current_angle
             else TravelStatus.DIRECTION_UP

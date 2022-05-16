@@ -995,7 +995,7 @@ class TestCover:
             await time_travel(2.4)
             assert callback_mock.call_count == 5
             assert cover.position_reached()
-            assert cover.periodic_update_task is None
+            assert cover._periodic_update_task is None
 
     #
     # HAS GROUP ADDRESS
