@@ -153,6 +153,11 @@ class Cover(Device):
         yield self.angle
         yield self.locked
 
+    def _iter_tasks(self) -> Iterator[Task | None]:
+        """Iterate the device tasks."""
+        yield self._auto_stop_task
+        yield self._periodic_update_task
+
     async def set_down(self) -> None:
         """Move cover down."""
         if self.updown.writable:
