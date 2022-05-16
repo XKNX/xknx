@@ -971,7 +971,7 @@ class TestCover:
             assert callback_mock.call_count == 1
 
             mock_time.return_value = 1517000001.0
-            await time_travel(cover.traveling_callback_interval)
+            await time_travel(1)
             assert callback_mock.call_count == 2
 
             # state telegram from bus too early

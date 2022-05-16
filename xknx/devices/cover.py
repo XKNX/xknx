@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING, Any, Final, Iterator
 
 from xknx.core import Task
 from xknx.remote_value import (
@@ -33,11 +33,13 @@ if TYPE_CHECKING:
 logger = logging.getLogger("xknx.log")
 
 
+DEFAULT_TRAVEL_TIME_DOWN: Final = 25
+DEFAULT_TRAVEL_TIME_UP: Final = 25
+TRAVELING_CALLBACK_INTERVAL: Final = 1
+
+
 class Cover(Device):
     """Class for managing a cover."""
-
-    DEFAULT_TRAVEL_TIME_DOWN = 22
-    DEFAULT_TRAVEL_TIME_UP = 22
 
     def __init__(
         self,
@@ -141,7 +143,6 @@ class Cover(Device):
 
         self.auto_stop_task: Task | None = None
         self.periodic_update_task: Task | None = None
-        self.traveling_callback_interval: float = 1.0
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
@@ -266,7 +267,7 @@ class Cover(Device):
         async def periodic_updater() -> None:
             """Run callback periodically while traveling."""
             while self.travelcalculator.is_traveling():
-                await asyncio.sleep(self.traveling_callback_interval)
+                await asyncio.sleep(TRAVELING_CALLBACK_INTERVAL)
                 if self.travelcalculator.is_traveling():
                     # else _stop_position_update will call after_update a second time
                     await self.after_update()
