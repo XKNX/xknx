@@ -33,8 +33,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger("xknx.log")
 
 
-DEFAULT_TRAVEL_TIME_DOWN: Final = 25
-DEFAULT_TRAVEL_TIME_UP: Final = 25
+DEFAULT_TRAVEL_TIME: Final = 25
 TRAVELING_CALLBACK_INTERVAL: Final = 1
 
 
@@ -54,8 +53,8 @@ class Cover(Device):
         group_address_angle_state: GroupAddressesType | None = None,
         group_address_locked_state: GroupAddressesType | None = None,
         sync_state: bool | int | float | str = True,
-        travel_time_down: float = DEFAULT_TRAVEL_TIME_DOWN,
-        travel_time_up: float = DEFAULT_TRAVEL_TIME_UP,
+        travel_time_down: float = DEFAULT_TRAVEL_TIME,
+        travel_time_up: float = DEFAULT_TRAVEL_TIME,
         invert_updown: bool = False,
         invert_position: bool = False,
         invert_angle: bool = False,
