@@ -60,7 +60,7 @@ class Climate(Device):
         min_temp: float | None = None,
         max_temp: float | None = None,
         mode: ClimateMode | None = None,
-        device_updated_cb: DeviceCallbackType | None = None,
+        device_updated_cb: DeviceCallbackType[Climate] | None = None,
     ):
         """Initialize Climate class."""
         super().__init__(xknx, name, device_updated_cb)

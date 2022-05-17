@@ -31,7 +31,7 @@ class DateTime(Device):
         broadcast_type: str = "TIME",
         localtime: bool = True,
         group_address: GroupAddressesType | None = None,
-        device_updated_cb: DeviceCallbackType | None = None,
+        device_updated_cb: DeviceCallbackType[DateTime] | None = None,
     ):
         """Initialize DateTime class."""
         super().__init__(xknx, name, device_updated_cb)

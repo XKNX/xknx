@@ -48,7 +48,7 @@ class Fan(Device):
         group_address_oscillation: GroupAddressesType | None = None,
         group_address_oscillation_state: GroupAddressesType | None = None,
         sync_state: bool | int | float | str = True,
-        device_updated_cb: DeviceCallbackType | None = None,
+        device_updated_cb: DeviceCallbackType[Fan] | None = None,
         max_step: int | None = None,
     ):
         """Initialize fan class."""

@@ -161,7 +161,7 @@ class Light(Device):
         sync_state: bool | int | float | str = True,
         min_kelvin: int | None = None,
         max_kelvin: int | None = None,
-        device_updated_cb: DeviceCallbackType | None = None,
+        device_updated_cb: DeviceCallbackType[Light] | None = None,
     ):
         """Initialize Light class."""
         super().__init__(xknx, name, device_updated_cb)
