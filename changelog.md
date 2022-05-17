@@ -2,9 +2,12 @@
 
 ## Unreleased changes
 
+## 0.21.3 Cover updates 2022-05-17
+
 ### Devices
 
 - Cover: call `device_updated_cb` periodically when cover is moving
+- Cover: auto-send a stop for covers not supporting setting position
 - Cover: add `invert_updown` option to decouple updown from position
 - Cover: fix travel time prediction when receiving updates from bus while moving
 
