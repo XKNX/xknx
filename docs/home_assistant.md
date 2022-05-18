@@ -15,7 +15,7 @@ XKNX is shipped within [Home Assistant (HA)](https://www.home-assistant.io/), th
 Running HA with local XKNX library
 ------------------------------------
 
-When running HA with the KNX integrated component once, HA will automatically install a `xknx` library version within `[hass-dependency-directory]/lib/python[python-version]/site-packages` via pip. In order to test new features before a release you can run with a local xknx installation as follows:
+When running HA with the KNX integrated component once, HA will automatically install a `xknx` library version within `[hass-dependency-directory]/lib/python[python-version]/site-packages` via pip. In order to test new features before a release you can run HA with a local xknx installation as follows:
 
 Delete the automatically installed version of the library:
 
