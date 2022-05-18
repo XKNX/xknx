@@ -10,7 +10,7 @@ assignees: ''
 **Description of problem:**
 
 - [ ] using xknx standalone
-- [ ] using Home-Assistant knx plugin (please use the Home Assistant Issue Tracker)
+- [ ] using Home-Assistant knx integration
 
 **Version information:**
 - xknx / Home-Assistant release with the issue:
@@ -26,5 +26,7 @@ Please provide details about your installation.
 -->
 
 **Problem-relevant `configuration.yaml` entries (fill out even if it seems unimportant):**
+
+**Diagnostic data of the config entry (only when Home Assistant is used)**
 
 **Traceback (if applicable):**
