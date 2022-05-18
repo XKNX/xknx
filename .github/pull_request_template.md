@@ -30,5 +30,4 @@ that your change is to big and it is suggested to split it into several smaller 
 - [ ] The documentation has been adjusted accordingly
 - [ ] The changes generate no new warnings
 - [ ] Tests have been added that prove the fix is effective or that the feature works
-- [ ] The changes are documented in the changelog
-- [ ] The Homeassistant plugin has been adjusted in case of new config options
+- [ ] The changes are documented in the changelog (docs/changelog.md)
