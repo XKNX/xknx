@@ -12,7 +12,7 @@ repos:
         args:
           - --safe
           - --quiet
-        files: ^((xknx|test|examples|home-assistant-plugin|docs)/.+)?[^/]+\.py$
+        files: ^((xknx|test|examples|docs)/.+)?[^/]+\.py$
   - repo: https://github.com/pycqa/flake8
     rev: 4.0.1
     hooks:

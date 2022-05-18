@@ -10,7 +10,7 @@ nav_order: 3
 
 The `XKNX()` object is the core element of any XKNX installation. It should be only initialized once per implementation. The XKNX object is responsible for:
 
-- connectiong to a KNX/IP device and managing the connection
+- connecting to a KNX/IP device and managing the connection
 - processing all incoming KNX telegrams
 - organizing all connected devices and keeping their state
 - updating all connected devices from time to time

@@ -3,7 +3,7 @@ try:
     from xknx.dpt import DPTBase
 except ModuleNotFoundError:
     exit(
-        "Add the `xknx` directory to pythons path via `export PYTHONPATH=$HOME/directory/to/xknx`"
+        "Add the `xknx` directory to python path via `export PYTHONPATH=$HOME/directory/to/xknx`"
     )
 
 

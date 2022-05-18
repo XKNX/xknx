@@ -1,6 +1,6 @@
 ---
-name: Bug report
-about: Create a report to help us improve
+name: XKNX Library bug report
+about: Report a bug in our library
 title: ''
 labels: ''
 assignees: ''
@@ -10,7 +10,7 @@ assignees: ''
 **Description of problem:**
 
 - [ ] using xknx standalone
-- [ ] using Home-Assistant knx plugin
+- [ ] using Home-Assistant knx plugin (please use the Home Assistant Issue Tracker)
 
 **Version information:**
 - xknx / Home-Assistant release with the issue:
