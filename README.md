@@ -24,9 +24,9 @@ Setting up your local environment:
 1. Install requirements: `pip install -r requirements/testing.txt`
 2. Install pre-commit hook: `pre-commit install`
 
-## Home-Assistant Plugin
+## Home-Assistant
 
-XKNX contains a [plugin](https://xknx.io/home_assistant) for the [Home Assistant](https://home-assistant.io/) automation platform
+XKNX is the underlying library for the KNX integration in [Home Assistant](https://home-assistant.io/).
 
 ## Example
 
