@@ -14,9 +14,10 @@ def bytes_xor(a: bytes, b: bytes) -> bytes:  # pylint: disable=invalid-name
 
 
 def byte_pad(data: bytes, block_size: int) -> bytes:
-    """Padd data with 0x00 until its length is a multiple of block_size."""
-    padding = bytes(block_size - (len(data) % block_size))
-    return data + padding
+    """Pad data with 0x00 until its length is a multiple of block_size."""
+    if remainder := len(data) % block_size:
+        return data + bytes(block_size - remainder)
+    return data
 
 
 def sha256_hash(data: bytes) -> bytes:
