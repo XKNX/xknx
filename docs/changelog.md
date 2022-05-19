@@ -8,6 +8,10 @@ nav_order: 2
 
 ## Unreleased changes
 
+### Internals
+
+- Use device subclass for `device_updated_cb` callback argument type hint
+
 ## 0.21.3 Cover updates 2022-05-17
 
 ### Devices

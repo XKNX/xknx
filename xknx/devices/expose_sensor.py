@@ -37,7 +37,7 @@ class ExposeSensor(Device):
         name: str,
         group_address: GroupAddressesType | None = None,
         value_type: int | str | None = None,
-        device_updated_cb: DeviceCallbackType | None = None,
+        device_updated_cb: DeviceCallbackType[ExposeSensor] | None = None,
     ):
         """Initialize Sensor class."""
         super().__init__(xknx, name, device_updated_cb)

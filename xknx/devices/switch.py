@@ -38,7 +38,7 @@ class Switch(Device):
         sync_state: bool | int | float | str = True,
         invert: bool = False,
         reset_after: float | None = None,
-        device_updated_cb: DeviceCallbackType | None = None,
+        device_updated_cb: DeviceCallbackType[Switch] | None = None,
     ):
         """Initialize Switch class."""
         super().__init__(xknx, name, device_updated_cb)

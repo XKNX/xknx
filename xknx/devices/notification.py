@@ -26,7 +26,7 @@ class Notification(Device):
         group_address_state: GroupAddressesType | None = None,
         sync_state: bool | int | float | str = True,
         value_type: str | None = None,
-        device_updated_cb: DeviceCallbackType | None = None,
+        device_updated_cb: DeviceCallbackType[Notification] | None = None,
     ):
         """Initialize notification class."""
         super().__init__(xknx, name, device_updated_cb)
