@@ -72,6 +72,7 @@ class _Tunnel(Interface):
         self._is_reconnecting = False
         self._reconnect_task: asyncio.Task[None] | None = None
         self._src_address = xknx.own_address
+        self._send_telegram_lock = asyncio.Lock()
         self._tunnelling_request_confirmation_event = asyncio.Event()
 
         self._init_transport()
@@ -247,35 +248,37 @@ class _Tunnel(Interface):
 
     async def send_telegram(self, telegram: Telegram) -> None:
         """
-        Send Telegram to routing tunnelling device - retry mechanism.
+        Send Telegram to tunnelling server - retry mechanism.
 
-        If a TUNNELLING_REQUEST frame is not confirmed within the TUNNELLING_REQUEST_TIME_- OUT
+        A transport layer confirmation shall be awaited before sending the next telegram.
+
+        If a TUNNELLING_REQUEST frame is not confirmed within the TUNNELLING_REQUEST_TIMEOUT
         time of one (1) second then the frame shall be repeated once with the same sequence counter
         value by the sending KNXnet/IP device.
 
         If the KNXnet/IP device does not receive a TUNNELLING_ACK frame within the
-        TUNNELLING_- REQUEST_TIMEOUT (= 1 second) or the status of a received
+        TUNNELLING_REQUEST_TIMEOUT (= 1 second) or the status of a received
         TUNNELLING_ACK frame signals any kind of error condition, the sending device
         shall repeat the TUNNELLING_REQUEST frame once and then terminate the
-        connection by sending a DISCONNECT_REQUEST frame to the other device’s
+        connection by sending a DISCONNECT_REQUEST frame to the other devices
         control endpoint.
         """
-        success = await self._tunnelling_request(telegram)
-        if not success:
-            logger.debug("Sending of telegram failed. Retrying a second time.")
+        async with self._send_telegram_lock:
             success = await self._tunnelling_request(telegram)
             if not success:
-                logger.debug("Resending telegram failed. Reconnecting to tunnel.")
-                # TODO: How to test this?
-                if self._reconnect_task is None or self._reconnect_task.done():
-                    self._tunnel_lost()
-                await self.xknx.connection_manager.connected.wait()
+                logger.debug("Sending of telegram failed. Retrying a second time.")
                 success = await self._tunnelling_request(telegram)
                 if not success:
-                    raise CommunicationError(
-                        "Resending the telegram repeatedly failed.", True
-                    )
-        self._increase_sequence_number()
+                    logger.debug("Resending telegram failed. Reconnecting to tunnel.")
+                    if self._reconnect_task is None or self._reconnect_task.done():
+                        self._tunnel_lost()
+                    await self.xknx.connection_manager.connected.wait()
+                    success = await self._tunnelling_request(telegram)
+                    if not success:
+                        raise CommunicationError(
+                            "Resending the telegram repeatedly failed.", True
+                        )
+            self._increase_sequence_number()
 
     @abstractmethod
     async def _tunnelling_request(self, telegram: Telegram) -> bool:
@@ -292,7 +295,8 @@ class _Tunnel(Interface):
         )
         try:
             await asyncio.wait_for(
-                send_and_wait_for_confirmation, timeout=REQUEST_TO_CONFIRMATION_TIMEOUT
+                send_and_wait_for_confirmation,
+                timeout=REQUEST_TO_CONFIRMATION_TIMEOUT,
             )
         except asyncio.TimeoutError:
             # REQUEST_TO_CONFIRMATION_TIMEOUT is longer than tunnelling timeout of 1 second
