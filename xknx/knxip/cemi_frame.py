@@ -73,11 +73,7 @@ class CEMIFrame:
             CEMIFlags.FRAME_TYPE_STANDARD
             | CEMIFlags.DO_NOT_REPEAT
             | CEMIFlags.BROADCAST
-            | (
-                CEMIFlags.ACK_REQUESTED
-                if telegram.tpci.ack_request
-                else CEMIFlags.NO_ACK_REQUESTED
-            )
+            | CEMIFlags.NO_ACK_REQUESTED
             | CEMIFlags.CONFIRM_NO_ERROR
             | CEMIFlags.HOP_COUNT_1ST
         )
