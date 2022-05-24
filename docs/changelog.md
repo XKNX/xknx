@@ -10,6 +10,7 @@ nav_order: 2
 
 ### Internals
 
+- Lock sending telegrams via a Tunnel until a confirmation is received
 - Use device subclass for `device_updated_cb` callback argument type hint
 - Fix CEMI Frame Ack-request flag set wrongly
 
