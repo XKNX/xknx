@@ -11,6 +11,7 @@ nav_order: 2
 ### Internals
 
 - Use device subclass for `device_updated_cb` callback argument type hint
+- Fix CEMI Frame Ack-request flag set wrongly
 
 ## 0.21.3 Cover updates 2022-05-17
 
