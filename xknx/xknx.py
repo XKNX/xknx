@@ -25,6 +25,7 @@ from xknx.io import (
     KNXIPInterface,
     knx_interface_factory,
 )
+from xknx.management import Management
 from xknx.telegram import GroupAddress, GroupAddressType, IndividualAddress, Telegram
 
 from .__version__ import __version__ as VERSION
@@ -56,6 +57,7 @@ class XKNX:
     ) -> None:
         """Initialize XKNX class."""
         self.devices = Devices()
+        self.management = Management(self)
         self.telegrams: asyncio.Queue[Telegram | None] = asyncio.Queue()
         self.sigint_received = asyncio.Event()
         self.telegram_queue = TelegramQueue(self)
@@ -127,6 +129,7 @@ class XKNX:
         )
         await self.knxip_interface.start()
         await self.telegram_queue.start()
+        await self.management.start()
         self.state_updater.start()
         self.started.set()
         if self.daemon_mode:
@@ -148,6 +151,7 @@ class XKNX:
         self.state_updater.stop()
         await self.join()
         await self.telegram_queue.stop()
+        await self.management.stop()
         await self._stop_knxip_interface_if_exists()
         self.started.clear()
 

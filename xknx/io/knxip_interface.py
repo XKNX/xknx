@@ -21,6 +21,7 @@ from xknx.exceptions import (
 )
 from xknx.io import util
 from xknx.secure import Keyring, load_key_ring
+from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 
 from .connection import ConnectionConfig, ConnectionType
 from .gateway_scanner import GatewayDescriptor, GatewayScanner
@@ -30,7 +31,6 @@ from .tunnel import SecureTunnel, TCPTunnel, UDPTunnel, _Tunnel
 if TYPE_CHECKING:
     import concurrent
 
-    from xknx.telegram import Telegram
     from xknx.xknx import XKNX
 
     from .interface import Interface
@@ -277,9 +277,12 @@ class KNXIPInterface:
 
     def telegram_received(self, telegram: Telegram) -> None:
         """Put received telegram into queue. Callback for having received telegram."""
-        self.xknx.telegrams.put_nowait(telegram)
+        if isinstance(telegram.destination_address, GroupAddress):
+            self.xknx.telegrams.put_nowait(telegram)
+        elif isinstance(telegram.destination_address, IndividualAddress):
+            self.xknx.management.incoming_queue.put_nowait(telegram)
 
-    async def send_telegram(self, telegram: "Telegram") -> None:
+    async def send_telegram(self, telegram: Telegram) -> None:
         """Send telegram to connected device (either Tunneling or Routing)."""
         if self._interface is None:
             raise CommunicationError("KNX/IP interface not connected")
@@ -358,7 +361,7 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
         """Put received telegram into queue. Callback for having received telegram."""
         self._main_loop.call_soon_threadsafe(self.xknx.telegrams.put_nowait, telegram)
 
-    async def send_telegram(self, telegram: "Telegram") -> None:
+    async def send_telegram(self, telegram: Telegram) -> None:
         """Send telegram to connected device (either Tunneling or Routing)."""
         if self._interface is None:
             raise CommunicationError("KNX/IP interface not connected")

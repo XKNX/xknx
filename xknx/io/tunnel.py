@@ -11,7 +11,7 @@ import logging
 from typing import TYPE_CHECKING, Awaitable, Callable
 
 from xknx.core import XknxConnectionState
-from xknx.exceptions import CommunicationError
+from xknx.exceptions import CommunicationError, ConfirmationError
 from xknx.knxip import (
     HPAI,
     CEMIFrame,
@@ -264,21 +264,24 @@ class _Tunnel(Interface):
         control endpoint.
         """
         async with self._send_telegram_lock:
-            success = await self._tunnelling_request(telegram)
-            if not success:
+            try:
+                if await self._tunnelling_request(telegram):
+                    return
+
                 logger.debug("Sending of telegram failed. Retrying a second time.")
-                success = await self._tunnelling_request(telegram)
-                if not success:
-                    logger.debug("Resending telegram failed. Reconnecting to tunnel.")
-                    if self._reconnect_task is None or self._reconnect_task.done():
-                        self._tunnel_lost()
-                    await self.xknx.connection_manager.connected.wait()
-                    success = await self._tunnelling_request(telegram)
-                    if not success:
-                        raise CommunicationError(
-                            "Resending the telegram repeatedly failed.", True
-                        )
-            self._increase_sequence_number()
+                if await self._tunnelling_request(telegram):
+                    return
+
+                logger.debug("Resending telegram failed. Reconnecting to tunnel.")
+                if self._reconnect_task is None or self._reconnect_task.done():
+                    self._tunnel_lost()
+                await self.xknx.connection_manager.connected.wait()
+                if not await self._tunnelling_request(telegram):
+                    raise CommunicationError(
+                        "Resending the telegram repeatedly failed.", True
+                    )
+            finally:
+                self._increase_sequence_number()
 
     @abstractmethod
     async def _tunnelling_request(self, telegram: Telegram) -> bool:
@@ -301,16 +304,13 @@ class _Tunnel(Interface):
         except asyncio.TimeoutError:
             # REQUEST_TO_CONFIRMATION_TIMEOUT is longer than tunnelling timeout of 1 second
             # so exception should always be from self._tunnelling_request_confirmation_event
-            logger.warning(
-                "L_DATA_CON Data Link Layer confirmation timed out for %s", telegram
+            raise ConfirmationError(
+                f"L_DATA_CON Data Link Layer confirmation timed out for {telegram}"
             )
-            # could return False here to retry sending the telegram (tcp without ACK)
 
     def _increase_sequence_number(self) -> None:
         """Increase sequence number."""
-        self.sequence_number += 1
-        if self.sequence_number == 256:
-            self.sequence_number = 0
+        self.sequence_number = self.sequence_number + 1 & 0xFF
 
     ####################
     #

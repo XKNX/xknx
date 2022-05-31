@@ -1,11 +1,12 @@
 """
-Module for queing telegrams.
+Module for queing telegrams addressed to group addresses.
 
-When a device wants to sends a telegram to the KNX bus, it has to queue it to the TelegramQueue within XKNX.
-
-The underlaying KNXIPInterface will poll the queue and send the packets to the correct KNX/IP abstraction (Tunneling or Routing).
-
+When a device wants to send a telegram to the KNX bus, it has to queue it to the
+TelegramQueue within XKNX. The underlaying KNXIPInterface will poll the queue and
+send the packets to the correct KNX/IP abstraction (Tunneling or Routing).
 You may register callbacks to be notified if a telegram was pushed to the queue.
+
+Telegrams addressed to IndividualAddresses are not processed by this queue.
 """
 from __future__ import annotations
 
