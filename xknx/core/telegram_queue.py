@@ -200,8 +200,7 @@ class TelegramQueue:
         """Process outgoing telegram."""
         telegram_logger.debug(telegram)
         if not isinstance(telegram.destination_address, InternalGroupAddress):
-            if self.xknx.knxip_interface is None:
-                raise CommunicationError("No KNXIP interface defined")
+            # raises CommunicationError when interface is not connected
             await self.xknx.knxip_interface.send_telegram(telegram)
 
         await self.xknx.devices.process(telegram)
