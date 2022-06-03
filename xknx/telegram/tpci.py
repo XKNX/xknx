@@ -29,8 +29,6 @@ class TPCI(ABC):
     sequence_number: int = 0
     control_flags: ClassVar[int | None] = None
 
-    ack_request: ClassVar[bool] = False
-
     def to_knx(self) -> int:
         """Serialize to KNX/IP raw data."""
         return (
@@ -137,8 +135,6 @@ class TDataConnected(TPCI):
     control = False
     numbered = True
 
-    ack_request = True
-
     def __init__(self, sequence_number: int):
         """Initialize TDataConnected."""
         self.sequence_number = sequence_number
@@ -151,8 +147,6 @@ class TConnect(TPCI):
     numbered = False
     control_flags = 0b00
 
-    ack_request = True
-
 
 class TDisconnect(TPCI):
     """T_Disconnect class."""
@@ -160,8 +154,6 @@ class TDisconnect(TPCI):
     control = True
     numbered = False
     control_flags = 0b01
-
-    ack_request = True
 
 
 class TAck(TPCI):

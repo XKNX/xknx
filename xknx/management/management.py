@@ -67,7 +67,7 @@ class Management:
 
     async def process(self, telegram: Telegram) -> None:
         """Process incoming telegrams."""
-        if telegram.tpci.ack_request:
+        if isinstance(telegram.tpci, TDataConnected):
             await self._send_ack(telegram)
         if conn := self._connections.get(telegram.source_address):
             conn.process(telegram)
