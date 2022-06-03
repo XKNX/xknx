@@ -93,7 +93,4 @@ class TestDPTString:
     
     def test_no_unit_of_measurement(self):
         """Test for no unit set for DPT 16"""
-        assert DPTString.unit == None
-        assert DPTString.unit != ""
-        assert DPTLatin1.unit == None
-        assert DPTLatin1.unit != ""
+        assert DPTString.unit is None
