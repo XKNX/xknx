@@ -81,8 +81,7 @@ class Management:
         if isinstance(telegram.tpci, TConnect):
             # refuse incoming connections
             # TODO: handle incoming telegrams for connections not initiated by us, or connection-less
-            # TODO: maybe use telegram queue to not stall the consumer task
-            # or build outgoing queue
+            # TODO: maybe use outgoing telegram queue or new task to not stall the consumer task
             disconnect = Telegram(
                 destination_address=telegram.source_address, tpci=TDisconnect()
             )
@@ -96,6 +95,7 @@ class Management:
             destination_address=telegram.source_address,
             tpci=TAck(sequence_number=telegram.tpci.sequence_number),
         )
+        # TODO: maybe use outgoing telegram queue or new task to not stall the consumer task
         await self.xknx.knxip_interface.send_telegram(ack)
 
     async def connect(self, address: IndividualAddress) -> P2PConnection:
