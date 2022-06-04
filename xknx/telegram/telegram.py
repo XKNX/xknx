@@ -57,13 +57,13 @@ class Telegram:
 
     def __str__(self) -> str:
         """Return object as readable string."""
+        data = f'payload="{self.payload}"' if self.payload else f'tpci="{self.tpci}"'
         return (
             "<Telegram "
             f'direction="{self.direction.value}" '
             f'source_address="{self.source_address}" '
             f'destination_address="{self.destination_address}" '
-            f'payload="{self.payload}" '
-            "/>"
+            f"{data} />"
         )
 
     def __repr__(self) -> str:
