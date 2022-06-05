@@ -43,10 +43,12 @@ class Fan(Device):
         self,
         xknx: XKNX,
         name: str,
-        group_address_speed: GroupAddressesType | None = None,
-        group_address_speed_state: GroupAddressesType | None = None,
+        group_address: GroupAddressesType | None = None,
+        group_address_state: GroupAddressesType | None = None,
         group_address_oscillation: GroupAddressesType | None = None,
         group_address_oscillation_state: GroupAddressesType | None = None,
+        group_address_speed: GroupAddressesType | None = None,
+        group_address_speed_state: GroupAddressesType | None = None,
         sync_state: bool | int | float | str = True,
         device_updated_cb: DeviceCallbackType[Fan] | None = None,
         max_step: int | None = None,
@@ -57,12 +59,30 @@ class Fan(Device):
         self.speed: RemoteValueDptValue1Ucount | RemoteValueScaling
         self.mode = FanSpeedMode.STEP if max_step else FanSpeedMode.PERCENT
         self.max_step = max_step
+        # If there is no dedicated speed GA, then the main GA of the fan serves
+        # as speed GA (and implicitely on/off as well).
+        self.separate_speed_ga = True if group_address_speed is not None else False
+
+        if self.separate_speed_ga is True:
+            # If we have a separate speed GA, the regular state GA becomes an on/off switch
+            self.switch = RemoteValueSwitch(
+                xknx,
+                group_address,
+                group_address_state,
+                sync_state=sync_state,
+                device_name=self.name,
+                after_update_cb=self.after_update,
+            )
 
         if self.mode == FanSpeedMode.STEP:
             self.speed = RemoteValueDptValue1Ucount(
                 xknx,
-                group_address_speed,
-                group_address_speed_state,
+                group_address_speed
+                if self.separate_speed_ga is True
+                else group_address,
+                group_address_speed_state
+                if self.separate_speed_ga is True
+                else group_address_state,
                 sync_state=sync_state,
                 device_name=self.name,
                 feature_name="Speed",
@@ -71,8 +91,12 @@ class Fan(Device):
         else:
             self.speed = RemoteValueScaling(
                 xknx,
-                group_address_speed,
-                group_address_speed_state,
+                group_address_speed
+                if self.separate_speed_ga is True
+                else group_address,
+                group_address_speed_state
+                if self.separate_speed_ga is True
+                else group_address_state,
                 sync_state=sync_state,
                 device_name=self.name,
                 feature_name="Speed",
@@ -99,6 +123,30 @@ class Fan(Device):
     def supports_oscillation(self) -> bool:
         """Return if fan supports oscillation."""
         return self.oscillation.initialized
+
+    @property
+    def has_separate_speed_ga(self) -> bool:
+        """Return if fan has separate speed GA."""
+        return self.separate_speed_ga
+
+    @property
+    def is_on(self) -> bool:
+        """Return the current fan state of the device."""
+        return (
+            bool(self.switch.value)
+            if self.separate_speed_ga is True
+            else True
+            if self.current_speed is not None and self.current_speed > 0
+            else False
+        )
+
+    async def set_on(self) -> None:
+        """Switch on fan."""
+        await self.switch.on()
+
+    async def set_off(self) -> None:
+        """Switch off fan."""
+        await self.switch.off()
 
     async def set_speed(self, speed: int) -> None:
         """Set the fan to a desginated speed."""
