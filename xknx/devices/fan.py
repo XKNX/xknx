@@ -70,6 +70,7 @@ class Fan(Device):
                 group_address_state,
                 sync_state=sync_state,
                 device_name=self.name,
+                feature_name="State",
                 after_update_cb=self.after_update,
             )
 
@@ -116,7 +117,7 @@ class Fan(Device):
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes."""
-        yield from (self.speed, self.oscillation)
+        yield from (self.switch, self.speed, self.oscillation)
 
     @property
     def supports_oscillation(self) -> bool:
@@ -125,19 +126,15 @@ class Fan(Device):
 
     @property
     def has_on_off_switch(self) -> bool:
-        """Return if fan has separate speed GA."""
+        """Return if fan has separate speed GA, which in turns means a separate on/off switch GA."""
         return self.switch.initialized
 
     @property
     def is_on(self) -> bool:
         """Return the current fan state of the device."""
-        return (
-            bool(self.switch.value)
-            if self.switch.initialized is True
-            else True
-            if self.current_speed is not None and self.current_speed > 0
-            else False
-        )
+        if self.switch.initialized:
+            return bool(self.switch.value)
+        return bool(self.current_speed)
 
     async def set_on(self) -> None:
         """Switch on fan."""
@@ -157,6 +154,7 @@ class Fan(Device):
 
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
+        await self.switch.process(telegram)
         await self.speed.process(telegram)
         await self.oscillation.process(telegram)
 
