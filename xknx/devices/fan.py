@@ -59,12 +59,11 @@ class Fan(Device):
         self.speed: RemoteValueDptValue1Ucount | RemoteValueScaling
         self.mode = FanSpeedMode.STEP if max_step else FanSpeedMode.PERCENT
         self.max_step = max_step
-        # If there is no dedicated speed GA, then the main GA of the fan serves
-        # as speed GA (and implicitely on/off as well).
-        self.separate_speed_ga = True if group_address_speed is not None else False
 
-        if self.separate_speed_ga is True:
-            # If we have a separate speed GA, the regular state GA becomes an on/off switch
+        # If there is no dedicated speed GA, then the main GA of the fan serves
+        # as speed GA (and implicitely on/off as well). If however there is a dedicated GA,
+        # then the regular state GA becomes an on/off switch.
+        if group_address_speed is not None:
             self.switch = RemoteValueSwitch(
                 xknx,
                 group_address,
@@ -78,10 +77,10 @@ class Fan(Device):
             self.speed = RemoteValueDptValue1Ucount(
                 xknx,
                 group_address_speed
-                if self.separate_speed_ga is True
+                if self.switch.initialized is True
                 else group_address,
                 group_address_speed_state
-                if self.separate_speed_ga is True
+                if self.switch.initialized is True
                 else group_address_state,
                 sync_state=sync_state,
                 device_name=self.name,
@@ -92,10 +91,10 @@ class Fan(Device):
             self.speed = RemoteValueScaling(
                 xknx,
                 group_address_speed
-                if self.separate_speed_ga is True
+                if self.switch.initialized is True
                 else group_address,
                 group_address_speed_state
-                if self.separate_speed_ga is True
+                if self.switch.initialized is True
                 else group_address_state,
                 sync_state=sync_state,
                 device_name=self.name,
@@ -125,16 +124,16 @@ class Fan(Device):
         return self.oscillation.initialized
 
     @property
-    def has_separate_speed_ga(self) -> bool:
+    def has_on_off_switch(self) -> bool:
         """Return if fan has separate speed GA."""
-        return self.separate_speed_ga
+        return self.switch.initialized
 
     @property
     def is_on(self) -> bool:
         """Return the current fan state of the device."""
         return (
             bool(self.switch.value)
-            if self.separate_speed_ga is True
+            if self.switch.initialized is True
             else True
             if self.current_speed is not None and self.current_speed > 0
             else False
