@@ -60,8 +60,9 @@ class Fan(Device):
         self.mode = FanSpeedMode.STEP if max_step else FanSpeedMode.PERCENT
         self.max_step = max_step
 
-        # If there is no dedicated switch GA, then the speed GA of the fan
-        # controls the on/off behavior as well.
+        # If there is a dedicated switch GA, it controls the on/off behavior of the fan.
+        # Otherwise the speed GA of the fan implicitely controls the on/off behavior instead.
+        # `self.switch.initialized`` can be used to check which setup is used.
         self.switch = RemoteValueSwitch(
             xknx,
             group_address_switch,
@@ -113,11 +114,6 @@ class Fan(Device):
     def supports_oscillation(self) -> bool:
         """Return if fan supports oscillation."""
         return self.oscillation.initialized
-
-    @property
-    def has_on_off_switch(self) -> bool:
-        """Return if fan has separate speed GA, which in turns means a separate on/off switch GA."""
-        return self.switch.initialized
 
     @property
     def is_on(self) -> bool:
