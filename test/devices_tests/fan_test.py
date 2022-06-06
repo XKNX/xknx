@@ -111,6 +111,50 @@ class TestFan:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray(140)),
         )
+        await fan.process(telegram)
+        assert fan.is_on == True
+
+        # A speed of 0 will turn off the fan implicitly if there is no
+        # dedicated switch GA
+        await fan.set_speed(0)
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        # 140 is 55% as byte (0...255)
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(0)),
+        )
+        await fan.process(telegram)
+        assert fan.is_on == False
+
+        fan_with_switch = Fan(
+            xknx,
+            name="TestFan",
+            group_address_speed="1/2/3",
+            group_address_switch="4/5/6",
+        )
+        await fan_with_switch.turn_on()
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("4/5/6"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        await fan_with_switch.process(telegram)
+        assert fan_with_switch.is_on == True
+
+        # A speed of 0 will not turn off the fan implicitly if there is a
+        # dedicated switch GA defined. So we only expect a speed change telegram,
+        # but no state switch one.
+        await fan_with_switch.set_speed(0)
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(0)),
+        )
+        await fan_with_switch.process(telegram)
+        assert fan_with_switch.is_on == True
 
     #
     # TEST SET SPEED STEP

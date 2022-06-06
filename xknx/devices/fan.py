@@ -61,7 +61,7 @@ class Fan(Device):
         self.max_step = max_step
 
         # If there is a dedicated switch GA, it controls the on/off behavior of the fan.
-        # Otherwise the speed GA of the fan implicitely controls the on/off behavior instead.
+        # Otherwise the speed GA of the fan implicitly controls the on/off behavior instead.
         # `self.switch.initialized`` can be used to check which setup is used.
         self.switch = RemoteValueSwitch(
             xknx,
