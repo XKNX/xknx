@@ -60,6 +60,43 @@ class TestFan:
         )
 
     #
+    # TEST SWITCH ON/OFF
+    #
+    async def test_swith_on_off(self):
+        """Test switching on/off of a Fan."""
+        xknx = XKNX()
+        fan = Fan(xknx, name="TestFan", group_address_switch="1/2/3")
+
+        # Turn the fan on
+        await fan.turn_on()
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+
+        # Turn the fan off
+        await fan.turn_off()
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(0)),
+        )
+
+        # Turn the fan on again this time with a provided speed, which however has no
+        # additional effect, since in the switch GA mode, the speed during switching on
+        # will not be considered since that is controlled independently in this mode
+        await fan.turn_on(55)
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+
+    #
     # TEST SET SPEED
     #
     async def test_set_speed(self):
