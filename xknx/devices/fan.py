@@ -61,18 +61,17 @@ class Fan(Device):
         self.max_step = max_step
 
         # If there is no dedicated speed GA, then the main GA of the fan serves
-        # as speed GA (and implicitely on/off as well). If however there is a dedicated GA,
-        # then the regular state GA becomes an on/off switch.
-        if group_address_speed is not None:
-            self.switch = RemoteValueSwitch(
-                xknx,
-                group_address,
-                group_address_state,
-                sync_state=sync_state,
-                device_name=self.name,
-                feature_name="State",
-                after_update_cb=self.after_update,
-            )
+        # as speed GA (and implicitely on/off as well). If however there is a dedicated
+        # speed GA, then the regular state GA becomes an on/off switch.
+        self.switch = RemoteValueSwitch(
+            xknx,
+            group_address if group_address_speed is not None else None,
+            group_address_state if group_address_speed_state is not None else None,
+            sync_state=sync_state,
+            device_name=self.name,
+            feature_name="State",
+            after_update_cb=self.after_update,
+        )
 
         if self.mode == FanSpeedMode.STEP:
             self.speed = RemoteValueDptValue1Ucount(
