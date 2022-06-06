@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from contextlib import asynccontextmanager
 import logging
-from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Generator
+from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Callable, Generator
 
 from xknx.exceptions import (
     CommunicationError,
@@ -109,17 +109,26 @@ class Management:
             logger.error("Establishing connection to %s failed: %s", address, exc)
             raise
         self._connections[address] = p2p_connection
+
+        def remove_connection_hook() -> None:
+            """Remove connection from management."""
+            try:
+                del self._connections[address]
+            except KeyError:
+                logger.error("Connection to %s already closed.", address)
+
+        p2p_connection.disconnect_hook = remove_connection_hook
         return p2p_connection
 
-    async def disconnect(self, connection: P2PConnection) -> None:
+    async def disconnect(self, address: IndividualAddress) -> None:
         """Close a point-to-point connection to a KNX device."""
-        if connection.address not in self._connections:
+        connection = self._connections.get(address)
+        if connection is None:
             logger.error(
                 "Closing connection to %s failed - connection does not exist.",
-                connection.address,
+                address,
             )
             return
-        del self._connections[connection.address]
         try:
             await connection.disconnect()
         except ManagementConnectionError as exc:
@@ -135,7 +144,7 @@ class Management:
         try:
             yield conn
         finally:
-            await self.disconnect(conn)
+            await self.disconnect(address)
 
 
 class P2PConnection:
@@ -145,6 +154,7 @@ class P2PConnection:
         """Initialize P2PConnection class."""
         self.xknx = xknx
         self.address = address
+        self.disconnect_hook: Callable[[], None]
 
         self.sequence_number = self._sequence_number_generator()
         self._expected_sequence_number = 0
@@ -185,6 +195,7 @@ class P2PConnection:
     async def disconnect(self) -> None:
         """Disconnect from the KNX device."""
         if not self._connected:
+            self.disconnect_hook()  # remove connection from management class
             raise ManagementConnectionRefused(
                 "Management connection disconnected by the peer."
             )
@@ -207,6 +218,7 @@ class P2PConnection:
             if self._ack_waiter:
                 self._ack_waiter.cancel()
             self._response_waiter.cancel()
+            self.disconnect_hook()  # remove connection from management class
 
     def process(self, telegram: Telegram) -> None:
         """Process incoming telegrams."""
