@@ -406,9 +406,13 @@ class TestFan:
             group_address_speed_state="1/7/2",
             group_address_oscillation="1/6/1",
             group_address_oscillation_state="1/6/2",
+            group_address_switch="1/5/1",
+            group_address_switch_state="1/5/2",
         )
         assert fan.has_group_address(GroupAddress("1/7/1"))
         assert fan.has_group_address(GroupAddress("1/7/2"))
         assert not fan.has_group_address(GroupAddress("1/7/3"))
         assert fan.has_group_address(GroupAddress("1/6/1"))
         assert fan.has_group_address(GroupAddress("1/6/2"))
+        assert fan.has_group_address(GroupAddress("1/5/1"))
+        assert fan.has_group_address(GroupAddress("1/5/2"))

@@ -28,12 +28,14 @@ Fans are simple representations of KNX controlled fans. They support switching o
 ## [](#header-2)Example
 
 ```python
-fan = Fan(xknx,
-              'TestFan',
-              group_address='1/2/1',
-              group_address_state='1/2/2',
-              group_address_oscillation='1/2/3',
-              group_address_oscillation_state='1/2/4')
+fan = Fan(
+    xknx,
+    'TestFan',
+    group_address_speed='1/2/1',
+    group_address_speed_state='1/2/2',
+    group_address_oscillation='1/2/3',
+    group_address_oscillation_state='1/2/4'
+)
 
 # Set the fan speed
 await fan.set_speed(50)
@@ -44,8 +46,11 @@ print(fan.current_speed)
 # Set the oscillation
 await fan.set_oscillation(True)
 
-# Accessing speed
+# Accessing oscillation
 print(fan.current_oscillation)
+
+# Accessing on/off state
+print(fan.is_on)
 
 # Requesting state via KNX GroupValueRead
 await fan.sync()
