@@ -62,37 +62,68 @@ class TestFan:
     #
     # TEST SWITCH ON/OFF
     #
-    async def test_swith_on_off(self):
+    async def test_switch_on_off(self):
         """Test switching on/off of a Fan."""
         xknx = XKNX()
-        fan = Fan(xknx, name="TestFan", group_address_switch="1/2/3")
+        fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
 
-        # Turn the fan on
+        # Turn the fan on via speed GA. First try without providing a speed,
+        # which will not work for fans without a switch GA.
         await fan.turn_on()
+        assert xknx.telegrams.qsize() == 0
+
+        # Try again, but this time with a speed provided
+        await fan.turn_on(55)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
+        # 140 is 55% as byte (0...255)
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
-            payload=GroupValueWrite(DPTBinary(1)),
+            payload=GroupValueWrite(DPTArray(140)),
         )
 
-        # Turn the fan off
+        # Turn the fan off via the speed GA
         await fan.turn_off()
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(0)),
+        )
+
+        fan_with_switch = Fan(
+            xknx,
+            name="TestFan",
+            group_address_speed="1/2/3",
+            group_address_switch="4/5/6",
+        )
+
+        # Turn the fan on via the switch GA
+        await fan_with_switch.turn_on()
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("4/5/6"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+
+        # Turn the fan off via the switch GA
+        await fan_with_switch.turn_off()
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("4/5/6"),
             payload=GroupValueWrite(DPTBinary(0)),
         )
 
         # Turn the fan on again this time with a provided speed, which however has no
         # additional effect, since in the switch GA mode, the speed during switching on
         # will not be considered since that is controlled independently in this mode
-        await fan.turn_on(55)
+        await fan_with_switch.turn_on(55)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
-            destination_address=GroupAddress("1/2/3"),
+            destination_address=GroupAddress("4/5/6"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
 
