@@ -8,12 +8,18 @@ nav_order: 2
 
 ## Unreleased changes
 
+## 0.21.4 Fan out 2022-06-07
+
+### Devices
+
+- Fan: Add support for dedicated on/off switch GA
+- Sensor: Set `unit_of_measurement` for DPTString to `None`
+
 ### Internals
 
 - Lock sending telegrams via a Tunnel until a confirmation is received
 - Use device subclass for `device_updated_cb` callback argument type hint
 - Fix CEMI Frame Ack-request flag set wrongly
-- Fan: Add support for dedicated on/off switch GA
 
 ## 0.21.3 Cover updates 2022-05-17
 
@@ -29,7 +35,7 @@ nav_order: 2
 - Parse and encode different TPCI in a CEMIFrame or Telegram
 - Set priority "System" flag for point-to-point CEMI frames initialized by a Telegram
 
-## 0.21.2 IP Secure Bug fixes
+## 0.21.2 IP Secure Bug fixes 2022-05-04
 
 ### Bugfixes
 
