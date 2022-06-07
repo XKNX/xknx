@@ -125,24 +125,16 @@ class Fan(Device):
     async def turn_on(self, speed: int | None = None) -> None:
         """Turn on fan."""
         if self.switch.initialized:
-            await self.set_on()
+            await self.switch.on()
         else:
             await self.set_speed(speed)
 
     async def turn_off(self) -> None:
         """Turn off fan."""
         if self.switch.initialized:
-            await self.set_off()
+            await self.switch.off()
         else:
             await self.set_speed(0)
-
-    async def set_on(self) -> None:
-        """Switch on fan."""
-        await self.switch.on()
-
-    async def set_off(self) -> None:
-        """Switch off fan."""
-        await self.switch.off()
 
     async def set_speed(self, speed: int | None) -> None:
         """Set the fan to a designated speed."""
