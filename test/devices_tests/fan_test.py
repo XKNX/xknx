@@ -68,9 +68,15 @@ class TestFan:
         fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
 
         # Turn the fan on via speed GA. First try without providing a speed,
-        # which will not work for fans without a switch GA.
+        # which will set it to the default 50% percentage.
         await fan.turn_on()
-        assert xknx.telegrams.qsize() == 0
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        # 128 is 50% as byte (0...255)
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(128)),
+        )
 
         # Try again, but this time with a speed provided
         await fan.turn_on(55)
@@ -93,12 +99,12 @@ class TestFan:
 
         fan_with_switch = Fan(
             xknx,
-            name="TestFan",
+            name="TestFanSwitch",
             group_address_speed="1/2/3",
             group_address_switch="4/5/6",
         )
 
-        # Turn the fan on via the switch GA
+        # Turn the fan on via the switch GA, which should not adjust the speed
         await fan_with_switch.turn_on()
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
@@ -116,15 +122,19 @@ class TestFan:
             payload=GroupValueWrite(DPTBinary(0)),
         )
 
-        # Turn the fan on again this time with a provided speed, which however has no
-        # additional effect, since in the switch GA mode, the speed during switching on
-        # will not be considered since that is controlled independently in this mode
+        # Turn the fan on again this time with a provided speed, which for a switch GA fan
+        # should result in separate telegrams to switch on the fan and then set the speed.
         await fan_with_switch.turn_on(55)
-        assert xknx.telegrams.qsize() == 1
+        assert xknx.telegrams.qsize() == 2
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("4/5/6"),
             payload=GroupValueWrite(DPTBinary(1)),
+        )
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(140)),
         )
 
     #

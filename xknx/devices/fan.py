@@ -26,6 +26,8 @@ if TYPE_CHECKING:
     from xknx.telegram import Telegram
     from xknx.xknx import XKNX
 
+DEFAULT_TURN_ON_PERCENTAGE = 50
+
 logger = logging.getLogger("xknx.log")
 
 
@@ -126,8 +128,11 @@ class Fan(Device):
         """Turn on fan."""
         if self.switch.initialized:
             await self.switch.on()
-        else:
+            # For a switch GA fan, we only use an explicitly provided speed, but not
+            # arbitrarily set a default percentage here, compared to the speed GA based fans below.
             await self.set_speed(speed)
+        else:
+            await self.set_speed(speed or DEFAULT_TURN_ON_PERCENTAGE)
 
     async def turn_off(self) -> None:
         """Turn off fan."""
