@@ -38,7 +38,6 @@ reports = "no"
 # fixme - TODO
 disable = [
   "format",
-  "abstract-class-little-used",
   "abstract-method",
   "cyclic-import",
   "duplicate-code",
@@ -61,8 +60,7 @@ disable = [
   "unused-argument",
   "wrong-import-order",
   ]
-# disabled for tests via command line options in Makefile:
-#   - no-self-use
+# disabled for tests via command line options in tox.ini:
 #   - protected-access
 #   - abstract-class-instantiated
 enable = [
