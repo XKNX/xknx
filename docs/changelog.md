@@ -8,6 +8,12 @@ nav_order: 2
 
 ## Unreleased changes
 
+### Management
+
+- Add support for creating point-to-point connections to do device management
+- Add `nm_individual_address_check` procedure to check if an individual address is in use on the network
+- Remove PayloadReader class. Management procedure functions should be used to request data from individual devices.
+
 ### Internals
 
 - Lock sending telegrams via a Tunnel until a confirmation is received

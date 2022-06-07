@@ -278,7 +278,7 @@ class P2PConnection:
             logger.debug(
                 "%s: timeout while waiting for ACK. Resending Telegram.", self.address
             )
-            # resend once after 3 seconds withoug ACK
+            # resend once after 3 seconds without ACK
             # on timeout the Future is cancelled so create a new
             self._ack_waiter = asyncio.get_event_loop().create_future()
             await self.xknx.knxip_interface.send_telegram(telegram)
@@ -313,6 +313,7 @@ class P2PConnection:
         except asyncio.TimeoutError:
             raise ManagementConnectionTimeout()
         finally:
+            # set up new Future for the next request
             self._response_waiter = asyncio.get_event_loop().create_future()
 
         if expected_payload and not isinstance(telegram.payload, expected_payload):
