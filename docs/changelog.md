@@ -13,6 +13,7 @@ nav_order: 2
 - Lock sending telegrams via a Tunnel until a confirmation is received
 - Use device subclass for `device_updated_cb` callback argument type hint
 - Fix CEMI Frame Ack-request flag set wrongly
+- Fan: Add support for dedicated on/off switch GA
 
 ## 0.21.3 Cover updates 2022-05-17
 
