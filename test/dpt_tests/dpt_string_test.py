@@ -89,3 +89,7 @@ class TestDPTString:
         """Test parsing of KNX string with wrong elements length."""
         with pytest.raises(ConversionError):
             DPTString.from_knx(raw)
+
+    def test_no_unit_of_measurement(self):
+        """Test for no unit set for DPT 16"""
+        assert DPTString.unit is None

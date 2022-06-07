@@ -55,7 +55,7 @@ class Device(ABC):
         self.xknx.devices.remove(self)
         self.device_updated_cbs = []
         for remote_value in self._iter_remote_values():
-            remote_value.__del__()
+            remote_value.__del__()  # pylint: disable=unnecessary-dunder-call
         for task in self._iter_tasks():
             if task:
                 self.xknx.task_registry.unregister(task.name)
@@ -67,7 +67,7 @@ class Device(ABC):
         # yield from (<list all used RemoteValue instances>)
         yield from ()
 
-    def _iter_tasks(self) -> Iterator[Task | None]:  # pylint: disable=no-self-use
+    def _iter_tasks(self) -> Iterator[Task | None]:
         """Iterate the device tasks."""
         yield from ()
 

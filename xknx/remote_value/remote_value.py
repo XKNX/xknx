@@ -271,7 +271,7 @@ class RemoteValue(ABC, Generic[DPTPayloadT, ValueT]):
             f"<{self.group_address}, "
             f"{self.group_address_state}, "
             f"{list(map(str, self.passive_group_addresses))}, "
-            f"{self.value.__repr__()} />"
+            f"{self.value!r} />"
         )
 
     def __str__(self) -> str:
