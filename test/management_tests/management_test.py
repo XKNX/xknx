@@ -9,7 +9,9 @@ from xknx.exceptions import (
     CommunicationError,
     ConfirmationError,
     ManagementConnectionError,
+    ManagementConnectionTimeout,
 )
+from xknx.management.management import MANAGAMENT_ACK_TIMEOUT
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
 
 
@@ -37,7 +39,7 @@ async def test_connect(_if_mock):
             tpci=tpci.TDisconnect(),
         )
 
-    conn_1 = await xknx.management.connect(ia_1)
+    await xknx.management.connect(ia_1)
     conn_2 = await xknx.management.connect(ia_2)
 
     with pytest.raises(ManagementConnectionError):
@@ -61,6 +63,46 @@ async def test_connect(_if_mock):
     # connect again doesn't raise
     await xknx.management.connect(ia_1)
 
+    await xknx.management.stop()
+
+
+@patch("xknx.io.knxip_interface.KNXIPInterface", autospec=True)
+async def test_ack_timeout(_if_mock, time_travel):
+    """Test ACK timeout handling."""
+    xknx = XKNX()
+    await xknx.management.start()
+    _ia = IndividualAddress("4.0.1")
+
+    conn = await xknx.management.connect(_ia)
+    xknx.knxip_interface.send_telegram.reset_mock()
+
+    device_desc_read = Telegram(
+        destination_address=_ia,
+        tpci=tpci.TDataConnected(0),
+        payload=apci.DeviceDescriptorRead(descriptor=0),
+    )
+    task = asyncio.create_task(
+        conn.request(
+            payload=apci.DeviceDescriptorRead(descriptor=0),
+            expected=apci.DeviceDescriptorResponse,
+        )
+    )
+    await asyncio.sleep(0)
+    assert xknx.knxip_interface.send_telegram.call_args_list == [
+        call(device_desc_read),
+    ]
+    await time_travel(MANAGAMENT_ACK_TIMEOUT)
+    # telegram repeated
+    assert xknx.knxip_interface.send_telegram.call_args_list == [
+        call(device_desc_read),
+        call(device_desc_read),
+    ]
+    await time_travel(MANAGAMENT_ACK_TIMEOUT)
+    with pytest.raises(ManagementConnectionTimeout):
+        # still no ACK -> timeout
+        await task
+
+    await conn.disconnect()
     await xknx.management.stop()
 
 

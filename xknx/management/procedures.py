@@ -18,9 +18,10 @@ async def nm_individual_address_check(
     xknx: XKNX, individual_address: IndividualAddressableType
 ) -> bool:
     """Check if the individual address is occupied on the network."""
-    _ia = IndividualAddress(individual_address)
     try:
-        async with xknx.management.connection(address=_ia) as connection:
+        async with xknx.management.connection(
+            address=IndividualAddress(individual_address)
+        ) as connection:
             try:
                 response = await connection.request(
                     payload=apci.DeviceDescriptorRead(descriptor=0),
