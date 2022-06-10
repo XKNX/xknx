@@ -126,7 +126,6 @@ class XKNX:
         )
         await self.knxip_interface.start()
         await self.telegram_queue.start()
-        await self.management.start()
         self.state_updater.start()
         self.started.set()
         if self.daemon_mode:
@@ -142,7 +141,6 @@ class XKNX:
         self.state_updater.stop()
         await self.join()
         await self.telegram_queue.stop()
-        await self.management.stop()
         await self.knxip_interface.stop()
         self.started.clear()
 

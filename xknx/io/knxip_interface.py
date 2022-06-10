@@ -21,7 +21,7 @@ from xknx.exceptions import (
 )
 from xknx.io import util
 from xknx.secure import Keyring, load_key_ring
-from xknx.telegram import GroupAddress, IndividualAddress, Telegram
+from xknx.telegram import IndividualAddress, Telegram
 
 from .connection import ConnectionConfig, ConnectionType
 from .gateway_scanner import GatewayDescriptor, GatewayScanner
@@ -275,12 +275,13 @@ class KNXIPInterface:
             await self._interface.disconnect()
             self._interface = None
 
-    def telegram_received(self, telegram: Telegram) -> None:
+    async def telegram_received(self, telegram: Telegram) -> list[Telegram] | None:
         """Put received telegram into queue. Callback for having received telegram."""
-        if isinstance(telegram.destination_address, GroupAddress):
-            self.xknx.telegrams.put_nowait(telegram)
-        elif isinstance(telegram.destination_address, IndividualAddress):
-            self.xknx.management.incoming_queue.put_nowait(telegram)
+        if isinstance(telegram.destination_address, IndividualAddress):
+            return self.xknx.management.process(telegram)
+
+        self.xknx.telegrams.put_nowait(telegram)
+        return None
 
     async def send_telegram(self, telegram: Telegram) -> None:
         """Send telegram to connected device (either Tunneling or Routing)."""
@@ -327,9 +328,13 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
         loop_loaded.set()
         self._thread_loop.run_forever()
 
-    async def _await_from_connection_thread(self, coro: Awaitable[T]) -> T:
+    async def _await_from_different_thread(
+        self,
+        coro: Awaitable[T],
+        target_loop: asyncio.AbstractEventLoop,
+    ) -> T:
         """Await coroutine in different thread."""
-        fut = asyncio.run_coroutine_threadsafe(coro, self._thread_loop)
+        fut = asyncio.run_coroutine_threadsafe(coro, target_loop)
         finished = threading.Event()
 
         def fut_finished_cb(_: concurrent.futures.Future[T]) -> None:
@@ -338,12 +343,12 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
 
         fut.add_done_callback(fut_finished_cb)
         # wait on that event in an executor, yielding control to _main_loop
-        await self._main_loop.run_in_executor(None, finished.wait)
+        await asyncio.get_running_loop().run_in_executor(None, finished.wait)
         return fut.result()
 
     async def start(self) -> None:
         """Start KNX/IP interface."""
-        return await self._await_from_connection_thread(self._start())
+        return await self._await_from_different_thread(self._start(), self._thread_loop)
 
     async def stop(self) -> None:
         """
@@ -352,22 +357,27 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
         Can not be restarted, create a new instance instead.
         """
         if self._interface is not None:
-            await self._await_from_connection_thread(self._interface.disconnect())
+            await self._await_from_different_thread(
+                self._interface.disconnect(), self._thread_loop
+            )
             self._interface = None
         self._thread_loop.call_soon_threadsafe(self._thread_loop.stop)
         self.connection_thread.join()
 
-    def telegram_received(self, telegram: Telegram) -> None:
+    async def telegram_received(self, telegram: Telegram) -> list[Telegram] | None:
         """Put received telegram into queue. Callback for having received telegram."""
-        self._main_loop.call_soon_threadsafe(self.xknx.telegrams.put_nowait, telegram)
+        # self._main_loop.call_soon_threadsafe(super().telegram_received, telegram)
+        return await self._await_from_different_thread(
+            super().telegram_received(telegram), self._main_loop
+        )
 
     async def send_telegram(self, telegram: Telegram) -> None:
         """Send telegram to connected device (either Tunneling or Routing)."""
         if self._interface is None:
             raise CommunicationError("KNX/IP interface not connected")
 
-        return await self._await_from_connection_thread(
-            self._interface.send_telegram(telegram)
+        return await self._await_from_different_thread(
+            self._interface.send_telegram(telegram), self._thread_loop
         )
 
     async def gateway_info(self) -> GatewayDescriptor | None:
@@ -375,7 +385,7 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
         if self._gateway_info is not None:
             return self._gateway_info
         if isinstance(self._interface, _Tunnel):
-            return await self._await_from_connection_thread(
-                self._interface.request_description()
+            return await self._await_from_different_thread(
+                self._interface.request_description(), self._thread_loop
             )
         return None

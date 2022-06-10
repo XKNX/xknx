@@ -33,7 +33,7 @@ class TestUDPTunnel:
         """Set up test class."""
         # pylint: disable=attribute-defined-outside-init
         self.xknx = XKNX()
-        self.tg_received_mock = Mock()
+        self.tg_received_mock = AsyncMock()
         self.tunnel = UDPTunnel(
             self.xknx,
             gateway_ip="192.168.1.2",
@@ -59,7 +59,7 @@ class TestUDPTunnel:
         ],
     )
     @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
-    def test_tunnel_request_received(self, send_ack_mock, raw):
+    async def test_tunnel_request_received(self, send_ack_mock, raw):
         """Test Tunnel for calling send_ack on normal frames."""
         _cemi = CEMIFrame()
         _cemi.from_knx(raw[10:])
@@ -67,6 +67,7 @@ class TestUDPTunnel:
         telegram.direction = TelegramDirection.INCOMING
 
         self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
+        await asyncio.sleep(0)
         self.tg_received_mock.assert_called_once_with(telegram)
         send_ack_mock.assert_called_once_with(raw[7], raw[8])
 

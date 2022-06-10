@@ -6,13 +6,14 @@ from xknx.io.request_response import Tunnelling
 from xknx.io.transport import UDPTransport
 from xknx.knxip import (
     HPAI,
+    CEMIFrame,
     ErrorCode,
     KNXIPFrame,
     KNXIPServiceType,
     TunnellingAck,
     TunnellingRequest,
 )
-from xknx.telegram import GroupAddress, IndividualAddress, Telegram
+from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
@@ -24,17 +25,17 @@ class TestTunnelling:
         communication_channel_id = 23
         data_endpoint = ("192.168.1.2", 4567)
         udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
-        telegram = Telegram(
-            destination_address=GroupAddress("1/2/3"),
-            payload=GroupValueWrite(DPTArray((0x1, 0x2, 0x3))),
+        cemi = CEMIFrame.init_from_telegram(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray((0x1, 0x2, 0x3))),
+            )
         )
         sequence_counter = 42
-        src_address = IndividualAddress("2.2.2")
         tunnelling = Tunnelling(
             udp_transport,
             data_endpoint,
-            telegram,
-            src_address,
+            cemi,
             sequence_counter,
             communication_channel_id,
         )
@@ -48,8 +49,7 @@ class TestTunnelling:
             communication_channel_id=communication_channel_id,
             sequence_counter=sequence_counter,
         )
-        tunnelling_request.cemi.telegram = telegram
-        tunnelling_request.cemi.src_addr = src_address
+        tunnelling_request.cemi = cemi
         exp_knxipframe = KNXIPFrame.init_from_body(tunnelling_request)
         with patch("xknx.io.transport.UDPTransport.send") as mock_udp_send, patch(
             "xknx.io.transport.UDPTransport.getsockname"

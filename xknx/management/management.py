@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from contextlib import asynccontextmanager
 import logging
-from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Callable, Generator
+from typing import TYPE_CHECKING, AsyncIterator, Callable, Generator
 
 from xknx.exceptions import (
     CommunicationError,
@@ -31,53 +31,26 @@ class Management:
     def __init__(self, xknx: XKNX) -> None:
         """Initialize Management class."""
         self.xknx = xknx
-        self.incoming_queue: asyncio.Queue[Telegram | None] = asyncio.Queue()
         self._connections: dict[IndividualAddress, P2PConnection] = {}
-        self._consumer_task: Awaitable[None] | None = None
 
-    async def start(self) -> None:
-        """Start the management telegram queue consumer."""
-        self._consumer_task = asyncio.create_task(
-            self._telegram_consumer(), name="management_telegram_consumer"
-        )
-
-    async def stop(self) -> None:
-        """Stop management telegram queue consumer."""
-        await self.incoming_queue.put(None)
-        if self._consumer_task is not None:
-            await self._consumer_task
-
-    async def _telegram_consumer(self) -> None:
-        """Endless loop for processing telegrams."""
-        while True:
-            telegram = await self.incoming_queue.get()
-            try:
-                # Breaking up queue if None is pushed to the queue
-                if telegram is None:
-                    break
-                await self.process(telegram)
-            except Exception:  # pylint: disable=broad-except
-                # prevent the consumer Task from stalling when unexpected errors occur
-                logger.exception(
-                    "Unexpected error while processing incoming telegram %s",
-                    telegram,
-                )
-            finally:
-                self.incoming_queue.task_done()
-
-    async def process(self, telegram: Telegram) -> None:
+    def process(self, telegram: Telegram) -> list[Telegram]:
         """Process incoming telegrams."""
+        response = []
         if isinstance(telegram.tpci, TDataConnected):
-            await self._send_ack(telegram)
+            ack = Telegram(
+                destination_address=telegram.source_address,
+                tpci=TAck(sequence_number=telegram.tpci.sequence_number),
+            )
+            response.append(ack)
         if conn := self._connections.get(telegram.source_address):
             conn.process(telegram)
-            return
+            return response
         if telegram.tpci.numbered:
             logger.warning(
                 "No active point-to-point connection for received telegram: %s",
                 telegram,
             )
-            return
+            return response
         if isinstance(telegram.tpci, TConnect):
             # refuse incoming connections
             # TODO: handle incoming telegrams for connections not initiated by us, or connection-less
@@ -85,18 +58,10 @@ class Management:
             disconnect = Telegram(
                 destination_address=telegram.source_address, tpci=TDisconnect()
             )
-            await self.xknx.knxip_interface.send_telegram(disconnect)
-            return
+            response.append(disconnect)
+            return response
         logger.warning("Unhandled management telegram: %r", telegram)
-
-    async def _send_ack(self, telegram: Telegram) -> None:
-        """Send an ack to the telegram source."""
-        ack = Telegram(
-            destination_address=telegram.source_address,
-            tpci=TAck(sequence_number=telegram.tpci.sequence_number),
-        )
-        # TODO: maybe use outgoing telegram queue or new task to not stall the consumer task
-        await self.xknx.knxip_interface.send_telegram(ack)
+        return response
 
     async def connect(self, address: IndividualAddress) -> P2PConnection:
         """Open a point-to-point connection to a KNX device."""

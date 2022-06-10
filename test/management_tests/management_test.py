@@ -19,7 +19,6 @@ from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, 
 async def test_connect(_if_mock):
     """Test establishing connections."""
     xknx = XKNX()
-    await xknx.management.start()
     ia_1 = IndividualAddress("4.0.1")
     ia_2 = IndividualAddress("4.0.2")
 
@@ -63,14 +62,11 @@ async def test_connect(_if_mock):
     # connect again doesn't raise
     await xknx.management.connect(ia_1)
 
-    await xknx.management.stop()
-
 
 @patch("xknx.io.knxip_interface.KNXIPInterface", autospec=True)
 async def test_ack_timeout(_if_mock, time_travel):
     """Test ACK timeout handling."""
     xknx = XKNX()
-    await xknx.management.start()
     _ia = IndividualAddress("4.0.1")
 
     conn = await xknx.management.connect(_ia)
@@ -103,14 +99,12 @@ async def test_ack_timeout(_if_mock, time_travel):
         await task
 
     await conn.disconnect()
-    await xknx.management.stop()
 
 
 @patch("xknx.io.knxip_interface.KNXIPInterface", autospec=True)
 async def test_failed_connect_disconnect(_if_mock):
     """Test failing connections."""
     xknx = XKNX()
-    await xknx.management.start()
     ia_1 = IndividualAddress("4.0.1")
 
     xknx.knxip_interface.send_telegram.side_effect = ConfirmationError("")
@@ -133,16 +127,12 @@ async def test_failed_connect_disconnect(_if_mock):
     with pytest.raises(ManagementConnectionError):
         await conn_1.disconnect()
 
-    await xknx.management.stop()
 
-
-@patch("xknx.io.knxip_interface.KNXIPInterface", autospec=True)
-async def test_reject_incoming_connection(_if_mock):
+async def test_reject_incoming_connection():
     """Test rejecting incoming transport connections."""
     # Note: incoming L_DATA.ind indication connection requests are rejected
     # L_DATA.req frames received from a tunnelling server are not yet supported
     xknx = XKNX()
-    await xknx.management.start()
     individual_address = IndividualAddress("4.0.10")
 
     connect = Telegram(
@@ -156,18 +146,12 @@ async def test_reject_incoming_connection(_if_mock):
         destination_address=individual_address,
         tpci=tpci.TDisconnect(),
     )
-
-    xknx.management.incoming_queue.put_nowait(connect)
-    await asyncio.sleep(0)
-    xknx.knxip_interface.send_telegram.assert_called_once_with(disconnect)
-    await xknx.management.stop()
+    assert await xknx.knxip_interface.telegram_received(connect) == [disconnect]
 
 
-@patch("xknx.io.knxip_interface.KNXIPInterface", autospec=True)
-async def test_incoming_unexpected_numbered_telegram(_if_mock):
+async def test_incoming_unexpected_numbered_telegram():
     """Test incoming unexpected numbered telegram is acked."""
     xknx = XKNX()
-    await xknx.management.start()
     individual_address = IndividualAddress("4.0.10")
 
     device_desc_read = Telegram(
@@ -183,7 +167,4 @@ async def test_incoming_unexpected_numbered_telegram(_if_mock):
         direction=TelegramDirection.OUTGOING,
         tpci=tpci.TAck(0),
     )
-    xknx.management.incoming_queue.put_nowait(device_desc_read)
-    await asyncio.sleep(0)
-    xknx.knxip_interface.send_telegram.assert_called_once_with(ack)
-    await xknx.management.stop()
+    assert await xknx.knxip_interface.telegram_received(device_desc_read) == [ack]
