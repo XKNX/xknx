@@ -369,7 +369,7 @@ class _Tunnel(Interface):
             )
             for response in response_tgs:
                 await self._send_cemi(
-                    cemi=CEMIFrame.init_from_telegram(
+                    CEMIFrame.init_from_telegram(
                         telegram=response,
                         code=response_code,
                         src_addr=self._src_address,

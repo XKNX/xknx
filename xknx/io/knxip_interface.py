@@ -342,7 +342,7 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
             finished.set()
 
         fut.add_done_callback(fut_finished_cb)
-        # wait on that event in an executor, yielding control to _main_loop
+        # wait on that event in an executor, yielding control to current loop
         await asyncio.get_running_loop().run_in_executor(None, finished.wait)
         return fut.result()
 
@@ -366,7 +366,6 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
 
     async def telegram_received(self, telegram: Telegram) -> list[Telegram] | None:
         """Put received telegram into queue. Callback for having received telegram."""
-        # self._main_loop.call_soon_threadsafe(super().telegram_received, telegram)
         return await self._await_from_different_thread(
             super().telegram_received(telegram), self._main_loop
         )
