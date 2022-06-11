@@ -1,4 +1,4 @@
-"""Unit test for KNX/IP Tunnelling Request/Response."""
+"""Test for KNX/IP Tunnelling connections."""
 import asyncio
 from unittest.mock import AsyncMock, Mock, call, patch
 
@@ -91,7 +91,7 @@ class TestUDPTunnel:
 
         async def tg_received_mock(telegram):
             """Mock for telegram_received_callback."""
-            assert telegram is not test_telegram
+            assert telegram == test_telegram
             return [response_telegram]
 
         self.tunnel.telegram_received_callback = tg_received_mock

@@ -67,6 +67,7 @@ class Routing(Interface):
         elif knxipframe.body.cemi.src_addr == self.xknx.own_address:
             logger.debug("Ignoring own packet")
         else:
+            # TODO: is cemi message code L_DATA.req or .con valid for routing? if not maybe warn and ignore
             asyncio.create_task(self.handle_cemi_frame(knxipframe.body.cemi))
 
     async def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
@@ -75,9 +76,8 @@ class Routing(Interface):
         telegram.direction = TelegramDirection.INCOMING
 
         if response_tgs := await self.telegram_received_callback(telegram):
-            # TODO: is cemi message code L_DATA.req needed for device management?
             for response in response_tgs:
-                await self.send_telegram(telegram=response)
+                await self.send_telegram(response)
 
     async def send_telegram(self, telegram: "Telegram") -> None:
         """Send Telegram to routing connected device."""
