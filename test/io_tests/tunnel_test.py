@@ -1,6 +1,6 @@
-"""Unit test for KNX/IP Tunnelling Request/Response."""
+"""Test for KNX/IP Tunnelling connections."""
 import asyncio
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 
@@ -33,7 +33,7 @@ class TestUDPTunnel:
         """Set up test class."""
         # pylint: disable=attribute-defined-outside-init
         self.xknx = XKNX()
-        self.tg_received_mock = Mock()
+        self.tg_received_mock = AsyncMock()
         self.tunnel = UDPTunnel(
             self.xknx,
             gateway_ip="192.168.1.2",
@@ -49,17 +49,16 @@ class TestUDPTunnel:
     @pytest.mark.parametrize(
         "raw",
         [
-            # LDataInd GroupValueWrite from 1.1.22 to to 5/1/22 with DPT9 payload 0C 3F
+            # L_Data.ind GroupValueWrite from 1.1.22 to to 5/1/22 with DPT9 payload 0C 3F
             # communication_channel_id: 0x02   sequence_counter: 0x21
             bytes.fromhex("0610 0420 0017 04 02 21 00 2900bcd011162916030080 0c 3f"),
-            # LDataInd T_Connect from 1.0.250 to 1.0.255 (xknx tunnel endpoint) - ETS Line-Scan
-            # <UnsupportedCEMIMessage description="CEMI too small. Length: 10; CEMI: 2900b06010fa10ff0080" />
+            # L_Data.ind T_Connect from 1.0.250 to 1.0.255 (xknx tunnel endpoint)
             # communication_channel_id: 0x02   sequence_counter: 0x81
             bytes.fromhex("0610 0420 0014 04 02 81 00 2900b06010fa10ff0080"),
         ],
     )
     @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
-    def test_tunnel_request_received(self, send_ack_mock, raw):
+    async def test_tunnel_request_received(self, send_ack_mock, raw):
         """Test Tunnel for calling send_ack on normal frames."""
         _cemi = CEMIFrame()
         _cemi.from_knx(raw[10:])
@@ -67,8 +66,50 @@ class TestUDPTunnel:
         telegram.direction = TelegramDirection.INCOMING
 
         self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
+        await asyncio.sleep(0)
         self.tg_received_mock.assert_called_once_with(telegram)
         send_ack_mock.assert_called_once_with(raw[7], raw[8])
+
+    @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
+    @patch("xknx.io.UDPTunnel._send_cemi")
+    async def test_tunnel_request_received_callback(
+        self,
+        send_cemi_mock,
+        send_ack_mock,
+    ):
+        """Test Tunnel for responding to L_DATA.req with confirmation and indication."""
+        # L_Data.req T_Connect from 1.0.250 to 1.0.255 (xknx tunnel endpoint) - ETS Line-Scan
+        # communication_channel_id: 0x02   sequence_counter: 0x81
+        raw_req = bytes.fromhex("0610 0420 0014 04 02 81 00 1100b06010fa10ff0080")
+
+        _cemi = CEMIFrame()
+        _cemi.from_knx(raw_req[10:])
+        test_telegram = _cemi.telegram
+        test_telegram.direction = TelegramDirection.INCOMING
+
+        response_telegram = Telegram(source_address=self.tunnel._src_address)
+
+        async def tg_received_mock(telegram):
+            """Mock for telegram_received_callback."""
+            assert telegram == test_telegram
+            return [response_telegram]
+
+        self.tunnel.telegram_received_callback = tg_received_mock
+        self.tunnel.transport.data_received_callback(raw_req, ("192.168.1.2", 3671))
+
+        await asyncio.sleep(0)
+        confirmation_cemi = _cemi
+        confirmation_cemi.code = CEMIMessageCode.L_DATA_CON
+        response_cemi = CEMIFrame.init_from_telegram(
+            response_telegram,
+            code=CEMIMessageCode.L_DATA_IND,
+            src_addr=self.tunnel._src_address,
+        )
+        assert send_cemi_mock.call_args_list == [
+            call(confirmation_cemi),
+            call(response_cemi),
+        ]
+        send_ack_mock.assert_called_once_with(raw_req[7], raw_req[8])
 
     @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
     def test_tunnel_request_received_cemi_too_small(self, send_ack_mock):

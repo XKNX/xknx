@@ -14,6 +14,11 @@ nav_order: 2
 - Add `nm_individual_address_check` procedure to check if an individual address is in use on the network
 - Remove PayloadReader class. Management procedure functions should be used to request data from individual devices.
 
+### Internals
+
+- Optionally return a list of Telegrams to be sent to an incoming request as reply. This is used for incoming device management requests. Callbacks for incoming requests (in Interface subclasses) are now handled in an asyncio Task.
+- Incoming L_DATA.req frames are confirmed (L_DATA.con) and replies / acks are sent as L_DATA.ind
+
 ## 0.21.4 Fan out 2022-06-07
 
 ### Devices

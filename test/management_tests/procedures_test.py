@@ -11,7 +11,6 @@ from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, 
 async def test_nm_individual_address_check_success(_if_mock):
     """Test nm_individual_address_check."""
     xknx = XKNX()
-    await xknx.management.start()
     individual_address = IndividualAddress("4.0.10")
 
     connect = Telegram(destination_address=individual_address, tpci=tpci.TConnect())
@@ -41,17 +40,16 @@ async def test_nm_individual_address_check_success(_if_mock):
         call(connect),
         call(device_desc_read),
     ]
-    xknx.management.incoming_queue.put_nowait(ack)
-    xknx.management.incoming_queue.put_nowait(device_desc_resp)
+    # receive response
+    xknx.management.process(ack)
+    xknx.management.process(device_desc_resp)
     assert await task
-    await xknx.management.stop()
 
 
 @patch("xknx.io.knxip_interface.KNXIPInterface", autospec=True)
 async def test_nm_individual_address_check_refused(_if_mock):
     """Test nm_individual_address_check."""
     xknx = XKNX()
-    await xknx.management.start()
     individual_address = IndividualAddress("4.0.10")
 
     connect = Telegram(destination_address=individual_address, tpci=tpci.TConnect())
@@ -80,7 +78,6 @@ async def test_nm_individual_address_check_refused(_if_mock):
         call(connect),
         call(device_desc_read),
     ]
-    xknx.management.incoming_queue.put_nowait(disconnect)
-    xknx.management.incoming_queue.put_nowait(ack)
+    xknx.management.process(disconnect)
+    xknx.management.process(ack)
     assert await task
-    await xknx.management.stop()
