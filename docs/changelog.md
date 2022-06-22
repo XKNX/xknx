@@ -8,6 +8,10 @@ nav_order: 2
 
 ## Unreleased changes
 
+### Bugfix
+
+- Fix GatewayDescriptor parsing when SearchResponseExtended DIBs are in unexpected order
+
 ## 0.21.4 Fan out 2022-06-07
 
 ### Devices
