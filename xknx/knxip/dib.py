@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import socket
-from typing import NamedTuple
+from typing import NamedTuple, final
 
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.telegram import IndividualAddress
@@ -117,6 +117,7 @@ class DIBGeneric(DIB):
         return f'<DIB dtc="{self.dtc}" data="{", ".join(f"0x{i:02x}" for i in self.data)}" />'
 
 
+@final
 class DIBDeviceInformation(DIB):
     """Class for serialization and deserialization of KNX DIB Device Information Block."""
 
@@ -213,10 +214,10 @@ class DIBDeviceInformation(DIB):
         )
 
 
-class DIBSuppSVCFamilies(DIB):
-    """Class for serialization and deserialization of KNX DIB Supported Services."""
+class _DIBServiceFamilies(DIB):
+    """Base class for serialization and deserialization of KNX DIB Service Families."""
 
-    type_code = DIBTypeCode.SUPP_SVC_FAMILIES
+    type_code: DIBTypeCode
 
     class Family:
         """Class for storing a supported device family."""
@@ -289,7 +290,15 @@ class DIBSuppSVCFamilies(DIB):
         return f'<{self.__class__.__name__} families="[{_families_str}]" />'
 
 
-class DIBSecuredServiceFamilies(DIBSuppSVCFamilies):
+@final
+class DIBSuppSVCFamilies(_DIBServiceFamilies):
+    """Class for serialization and deserialization of KNX DIB Supported Services."""
+
+    type_code = DIBTypeCode.SUPP_SVC_FAMILIES
+
+
+@final
+class DIBSecuredServiceFamilies(_DIBServiceFamilies):
     """Class for serialization and deserialization of KNX DIB Secured Service Families."""
 
     type_code = DIBTypeCode.SECURED_SERVICE_FAMILIES
@@ -312,6 +321,7 @@ class TunnelingSlotStatus(NamedTuple):
         )
 
 
+@final
 class DIBTunnelingInfo(DIB):
     """Class for serialization and deserialization of KNX DIB Tunneling Info."""
 
