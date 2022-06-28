@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-## Unreleased changes
+## 0.21.5 Secure discovery bugfix 2022-06-28
 
 ### Bugfix
 
