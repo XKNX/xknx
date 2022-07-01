@@ -5,9 +5,14 @@ Abstract base for a specific KNX/IP connection (Tunneling or Routing).
 * It starts and stops a udp transport
 * It packs Telegrams into KNX Frames and passes them to a udp transport
 """
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from typing import Awaitable, Callable, Optional
 
 from xknx.telegram import Telegram
+
+TelegramCallbackType = Callable[[Telegram], Awaitable[Optional[list[Telegram]]]]
 
 
 class Interface(ABC):

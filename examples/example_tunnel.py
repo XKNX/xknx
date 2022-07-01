@@ -8,6 +8,11 @@ from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
+async def received_callback(telegram: Telegram) -> None:
+    """Received Telegram callback."""
+    print(f"Received: {telegram}")
+
+
 async def main():
     """Connect to a tunnel, send 2 telegrams and disconnect."""
     xknx = XKNX()
@@ -26,6 +31,7 @@ async def main():
 
     tunnel = UDPTunnel(
         xknx,
+        telegram_received_callback=received_callback,
         gateway_ip=gateway.ip_addr,
         gateway_port=gateway.port,
         local_ip=gateway.local_ip,

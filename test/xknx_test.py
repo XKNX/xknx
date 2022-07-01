@@ -59,10 +59,8 @@ class TestXknxModule:
         self, start_mock
     ):
         """Test xknx start and stop with connection config."""
-        xknx = XKNX()
-
         connection_config = ConnectionConfig(connection_type=ConnectionType.TUNNELING)
-        xknx.connection_config = connection_config
+        xknx = XKNX(connection_config=connection_config)
 
         await xknx.start()
 
@@ -70,7 +68,7 @@ class TestXknxModule:
         assert xknx.knxip_interface.connection_config == connection_config
 
         await xknx.stop()
-        assert xknx.knxip_interface is None
+        assert xknx.knxip_interface._interface is None
         assert xknx.telegram_queue._consumer_task.done()
         assert not xknx.state_updater.started
 

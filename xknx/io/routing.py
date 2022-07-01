@@ -5,8 +5,9 @@ Routing uses UDP Multicast to broadcast and receive KNX/IP messages.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from xknx.core import XknxConnectionState
 from xknx.exceptions import CommunicationError
@@ -20,14 +21,12 @@ from xknx.knxip import (
 )
 from xknx.telegram import TelegramDirection
 
-from .interface import Interface
+from .interface import Interface, TelegramCallbackType
 from .transport import KNXIPTransport, UDPTransport
 
 if TYPE_CHECKING:
     from xknx.telegram import Telegram
     from xknx.xknx import XKNX
-
-    TelegramCallbackType = Callable[[Telegram], None]
 
 logger = logging.getLogger("xknx.log")
 
@@ -68,11 +67,17 @@ class Routing(Interface):
         elif knxipframe.body.cemi.src_addr == self.xknx.own_address:
             logger.debug("Ignoring own packet")
         else:
-            telegram = knxipframe.body.cemi.telegram
-            telegram.direction = TelegramDirection.INCOMING
+            # TODO: is cemi message code L_DATA.req or .con valid for routing? if not maybe warn and ignore
+            asyncio.create_task(self.handle_cemi_frame(knxipframe.body.cemi))
 
-            if self.telegram_received_callback is not None:
-                self.telegram_received_callback(telegram)
+    async def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
+        """Handle incoming telegram and send responses if applicable (device management)."""
+        telegram = cemi.telegram
+        telegram.direction = TelegramDirection.INCOMING
+
+        if response_tgs := await self.telegram_received_callback(telegram):
+            for response in response_tgs:
+                await self.send_telegram(response)
 
     async def send_telegram(self, telegram: "Telegram") -> None:
         """Send Telegram to routing connected device."""

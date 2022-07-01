@@ -2,6 +2,7 @@
 # flake8: noqa
 from .exception import (
     CommunicationError,
+    ConfirmationError,
     ConversionError,
     CouldNotParseAddress,
     CouldNotParseKNXIP,
@@ -12,6 +13,9 @@ from .exception import (
     InvalidSecureConfiguration,
     InvalidSignature,
     KNXSecureValidationError,
+    ManagementConnectionError,
+    ManagementConnectionRefused,
+    ManagementConnectionTimeout,
     SecureException,
     UnsupportedCEMIMessage,
     XKNXException,
@@ -19,11 +23,15 @@ from .exception import (
 
 __all__ = [
     "CommunicationError",
+    "ConfirmationError",
     "ConversionError",
     "CouldNotParseAddress",
     "CouldNotParseKNXIP",
     "CouldNotParseTelegram",
     "DeviceIllegalValue",
+    "ManagementConnectionError",
+    "ManagementConnectionRefused",
+    "ManagementConnectionTimeout",
     "IncompleteKNXIPFrame",
     "InterfaceWithUserIdNotFound",
     "InvalidSecureConfiguration",

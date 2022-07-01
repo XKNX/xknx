@@ -22,9 +22,9 @@ from xknx.io import (
     DEFAULT_MCAST_GRP,
     DEFAULT_MCAST_PORT,
     ConnectionConfig,
-    KNXIPInterface,
     knx_interface_factory,
 )
+from xknx.management import Management
 from xknx.telegram import GroupAddress, GroupAddressType, IndividualAddress, Telegram
 
 from .__version__ import __version__ as VERSION
@@ -55,23 +55,26 @@ class XKNX:
         connection_config: ConnectionConfig = ConnectionConfig(),
     ) -> None:
         """Initialize XKNX class."""
+        self.connection_manager = ConnectionManager()
         self.devices = Devices()
+        self.knxip_interface = knx_interface_factory(
+            self, connection_config=connection_config
+        )
+        self.management = Management(self)
         self.telegrams: asyncio.Queue[Telegram | None] = asyncio.Queue()
-        self.sigint_received = asyncio.Event()
         self.telegram_queue = TelegramQueue(self)
         self.state_updater = StateUpdater(self, default_tracker_option=state_updater)
-        self.connection_manager = ConnectionManager()
         self.task_registry = TaskRegistry(self)
-        self.knxip_interface: KNXIPInterface | None = None
-        self.started = asyncio.Event()
-        self.own_address = IndividualAddress(own_address)
-        self.rate_limit = rate_limit
+
+        self.current_address = IndividualAddress(0)
+        self.daemon_mode = daemon_mode
         self.multicast_group = multicast_group
         self.multicast_port = multicast_port
-        self.connection_config = connection_config
-        self.daemon_mode = daemon_mode
+        self.own_address = IndividualAddress(own_address)
+        self.rate_limit = rate_limit
+        self.sigint_received = asyncio.Event()
+        self.started = asyncio.Event()
         self.version = VERSION
-        self.current_address = IndividualAddress(0)
 
         GroupAddress.address_format = address_format  # for global string representation
         if log_directory is not None:
@@ -113,17 +116,13 @@ class XKNX:
 
     async def start(self) -> None:
         """Start XKNX module. Connect to KNX/IP devices and start state updater."""
-        if self.connection_config.threaded:
+        if self.knxip_interface.connection_config.threaded:
             await self.connection_manager.register_loop()
         self.task_registry.start()
-        self.knxip_interface = knx_interface_factory(
-            xknx=self,
-            connection_config=self.connection_config,
-        )
         logger.info(
             "XKNX v%s starting %s connection to KNX bus.",
             VERSION,
-            self.connection_config.connection_type.name.lower(),
+            self.knxip_interface.connection_config.connection_type.name.lower(),
         )
         await self.knxip_interface.start()
         await self.telegram_queue.start()
@@ -136,19 +135,13 @@ class XKNX:
         """Wait until all telegrams were processed."""
         await self.telegrams.join()
 
-    async def _stop_knxip_interface_if_exists(self) -> None:
-        """Stop KNXIPInterface if initialized."""
-        if self.knxip_interface is not None:
-            await self.knxip_interface.stop()
-            self.knxip_interface = None
-
     async def stop(self) -> None:
         """Stop XKNX module."""
         self.task_registry.stop()
         self.state_updater.stop()
         await self.join()
         await self.telegram_queue.stop()
-        await self._stop_knxip_interface_if_exists()
+        await self.knxip_interface.stop()
         self.started.clear()
 
     async def loop_until_sigint(self) -> None:
