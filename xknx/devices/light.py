@@ -16,7 +16,7 @@ import asyncio
 from enum import Enum
 from itertools import chain
 import logging
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterator, Tuple, cast
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterator, cast
 
 from xknx.dpt.dpt_color import XYYColor
 from xknx.remote_value import (
@@ -161,7 +161,7 @@ class Light(Device):
         sync_state: bool | int | float | str = True,
         min_kelvin: int | None = None,
         max_kelvin: int | None = None,
-        device_updated_cb: DeviceCallbackType | None = None,
+        device_updated_cb: DeviceCallbackType[Light] | None = None,
     ):
         """Initialize Light class."""
         super().__init__(xknx, name, device_updated_cb)
@@ -368,7 +368,8 @@ class Light(Device):
         if self._individual_color_debounce_telegram_counter > 0:
             # task registry cancels existing task
             self.xknx.task_registry.register(
-                self._individual_color_debounce_task_name, debouncer()
+                name=self._individual_color_debounce_task_name,
+                async_func=debouncer,
             ).start()
             return
         self.xknx.task_registry.unregister(self._individual_color_debounce_task_name)
@@ -473,7 +474,7 @@ class Light(Device):
         )
         if None in colors:
             return None, self.white.brightness.value
-        return cast(Tuple[int, int, int], colors), self.white.brightness.value
+        return cast(tuple[int, int, int], colors), self.white.brightness.value
 
     async def set_color(
         self, color: tuple[int, int, int], white: int | None = None

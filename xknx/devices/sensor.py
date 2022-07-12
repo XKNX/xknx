@@ -35,7 +35,7 @@ class Sensor(Device):
         sync_state: bool | int | float | str = True,
         always_callback: bool = False,
         value_type: int | str | None = None,
-        device_updated_cb: DeviceCallbackType | None = None,
+        device_updated_cb: DeviceCallbackType[Sensor] | None = None,
     ):
         """Initialize Sensor class."""
         super().__init__(xknx, name, device_updated_cb)

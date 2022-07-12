@@ -2,9 +2,10 @@
 import time
 
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPTArray
-from xknx.exceptions import ConversionError
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.remote_value import RemoteValueDateTime
 
 
@@ -46,6 +47,7 @@ class TestRemoteValueDateTime:
         """Testing KNX/Byte representation of DPTDateTime object."""
         xknx = XKNX()
         rv_datetime = RemoteValueDateTime(xknx, value_type="datetime")
-        assert not rv_datetime.payload_valid(
-            DPTArray((0x0B, 0x1C, 0x57, 0x07, 0x18, 0x20, 0x80))
-        )
+        with pytest.raises(CouldNotParseTelegram):
+            rv_datetime.payload_valid(
+                DPTArray((0x0B, 0x1C, 0x57, 0x07, 0x18, 0x20, 0x80))
+            )

@@ -1,7 +1,7 @@
 """Unit test for KNX/IP base class."""
 import pytest
-from xknx import XKNX
-from xknx.exceptions import CouldNotParseKNXIP
+
+from xknx.exceptions import CouldNotParseKNXIP, IncompleteKNXIPFrame
 from xknx.knxip import KNXIPFrame
 from xknx.knxip.knxip_enum import KNXIPServiceType
 
@@ -11,37 +11,35 @@ class TestKNXIPFrame:
 
     def test_wrong_init(self):
         """Testing init method with wrong service_type_ident."""
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
+        knxipframe = KNXIPFrame()
         with pytest.raises(AttributeError):
             knxipframe.init(23)
 
         with pytest.raises(CouldNotParseKNXIP):
             # this is not yet implemented in xknx
-            knxipframe.init(KNXIPServiceType.SEARCH_REQUEST_EXTENDED)
+            knxipframe.init(KNXIPServiceType.REMOTE_DIAG_RESPONSE)
 
-    def test_parsing_too_long_knxip(self):
+    def test_double_frame(self):
+        """Test parsing KNX/IP frame from streaming data containing two frames."""
+        knxipframe = KNXIPFrame()
+        raw = bytes.fromhex(
+            "06 10 04 20 00 15 04 02 51 00 29 00 bc e0 10 fa"
+            "09 2d 01 00 80"
+            "06 10 04 20 00 15 04 02 52 00 29 00 bc e0 10 1f"
+            "08 2d 01 00 80"
+        )  # both frames have lenght 21
+        assert knxipframe.from_knx(raw) == 21
+        assert knxipframe.from_knx(raw[21:]) == 21
+
+    def test_parsing_too_short_knxip(self):
         """Test parsing and streaming connection state request KNX/IP packet."""
-        raw = (
-            0x06,
-            0x10,
-            0x02,
-            0x07,
-            0x00,
-            0x10,
-            0x15,
-            0x00,
-            0x08,
-            0x01,
-            0xC0,
-            0xA8,
-            0xC8,
-            0x0C,
-            0xC3,
-            0xB4,
-            0x00,
-        )
-        xknx = XKNX()
-        knxipframe = KNXIPFrame(xknx)
-        with pytest.raises(CouldNotParseKNXIP):
+        raw = bytes.fromhex("06 10 02 07 00 10 15 00 08 01 C0 A8 C8 0C C3")
+        knxipframe = KNXIPFrame()
+        with pytest.raises(IncompleteKNXIPFrame):
             knxipframe.from_knx(raw)
+
+    def test_to_knx_no_body(self):
+        """Test to_knx method without body raises exception."""
+        knxipframe = KNXIPFrame()
+        with pytest.raises(CouldNotParseKNXIP):
+            knxipframe.to_knx()

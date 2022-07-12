@@ -18,14 +18,14 @@ from __future__ import annotations
 from abc import ABC
 from enum import Enum
 from re import compile as re_compile
-from typing import Optional, Tuple, Union
+from typing import ClassVar, Optional, Union
 
 from xknx.exceptions import CouldNotParseAddress
 
 # TODO: typing - remove need for Optional here
-GroupAddressableType = Optional[Union["GroupAddress", str, int, Tuple[int, int]]]
+GroupAddressableType = Optional[Union["GroupAddress", str, int, tuple[int, int]]]
 IndividualAddressableType = Optional[
-    Union["IndividualAddress", str, int, Tuple[int, int]]
+    Union["IndividualAddress", str, int, tuple[int, int]]
 ]
 InternalGroupAddressableType = Union["InternalGroupAddress", str]
 DeviceAddressableType = Union[GroupAddressableType, InternalGroupAddressableType]
@@ -197,6 +197,9 @@ class GroupAddressType(Enum):
 class GroupAddress(BaseAddress):
     """Class for handling KNX group addresses."""
 
+    # overridden by XKNX class on initialization to have consistent global string representation
+    address_format: ClassVar[GroupAddressType] = GroupAddressType.LONG
+
     MAX_MAIN = 31
     MAX_MIDDLE = 7
     MAX_SUB_LONG = 255
@@ -207,14 +210,9 @@ class GroupAddress(BaseAddress):
         r"^(?P<main>\d{1,2})(/(?P<middle>\d{1,2}))?/(?P<sub>\d{1,4})$"
     )
 
-    def __init__(
-        self,
-        address: GroupAddressableType,
-        levels: GroupAddressType = GroupAddressType.LONG,
-    ) -> None:
+    def __init__(self, address: GroupAddressableType) -> None:
         """Initialize GroupAddress class."""
         super().__init__()
-        self.levels = levels
 
         if isinstance(address, GroupAddress):
             self.raw = address.raw
@@ -279,7 +277,7 @@ class GroupAddress(BaseAddress):
         """
         return (
             (self.raw >> 11) & self.MAX_MAIN
-            if self.levels != GroupAddressType.FREE
+            if self.address_format != GroupAddressType.FREE
             else None
         )
 
@@ -293,7 +291,7 @@ class GroupAddress(BaseAddress):
         """
         return (
             (self.raw >> 8) & self.MAX_MIDDLE
-            if self.levels == GroupAddressType.LONG
+            if self.address_format == GroupAddressType.LONG
             else None
         )
 
@@ -304,9 +302,9 @@ class GroupAddress(BaseAddress):
 
         Works with any `GroupAddressType`, as we always have sub groups.
         """
-        if self.levels == GroupAddressType.SHORT:
+        if self.address_format == GroupAddressType.SHORT:
             return self.raw & self.MAX_SUB_SHORT
-        if self.levels == GroupAddressType.LONG:
+        if self.address_format == GroupAddressType.LONG:
             return self.raw & self.MAX_SUB_LONG
         return self.raw
 
@@ -316,9 +314,9 @@ class GroupAddress(BaseAddress):
 
         Honors the used `GroupAddressType` of this group.
         """
-        if self.levels == GroupAddressType.LONG:
+        if self.address_format == GroupAddressType.LONG:
             return f"{self.main}/{self.middle}/{self.sub}"
-        if self.levels == GroupAddressType.SHORT:
+        if self.address_format == GroupAddressType.SHORT:
             return f"{self.main}/{self.sub}"
         return f"{self.sub}"
 

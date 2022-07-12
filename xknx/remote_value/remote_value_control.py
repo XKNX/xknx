@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from xknx.dpt import DPTArray, DPTBinary, DPTControlStepCode
-from xknx.exceptions import ConversionError
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
@@ -50,9 +50,11 @@ class RemoteValueControl(RemoteValue[DPTBinary, Any]):
             after_update_cb=after_update_cb,
         )
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTBinary | None:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTBinary:
         """Test if telegram payload may be parsed."""
-        return payload if isinstance(payload, DPTBinary) else None
+        if isinstance(payload, DPTBinary):
+            return payload
+        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
 
     def to_knx(self, value: Any) -> DPTBinary:
         """Convert value to payload."""

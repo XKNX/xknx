@@ -12,21 +12,21 @@ from typing import Awaitable, Callable
 
 from xknx.core import (
     ConnectionManager,
-    StateUpdater,
     TaskRegistry,
     TelegramQueue,
     XknxConnectionState,
 )
+from xknx.core.state_updater import StateUpdater, TrackerOptionType
 from xknx.devices import Device, Devices
 from xknx.io import (
     DEFAULT_MCAST_GRP,
     DEFAULT_MCAST_PORT,
     ConnectionConfig,
-    KNXIPInterface,
+    ConnectionConfigUSB,
+    knx_interface_factory,
 )
-from xknx.io.connection import ConnectionConfigUSB
-from xknx.io.usb_interface import USBInterface
-from xknx.telegram import GroupAddressType, IndividualAddress, Telegram
+from xknx.management import Management
+from xknx.telegram import GroupAddress, GroupAddressType, IndividualAddress, Telegram
 
 from .__version__ import __version__ as VERSION
 
@@ -51,31 +51,33 @@ class XKNX:
         multicast_group: str = DEFAULT_MCAST_GRP,
         multicast_port: int = DEFAULT_MCAST_PORT,
         log_directory: str | None = None,
-        state_updater: bool = False,
+        state_updater: TrackerOptionType = False,
         daemon_mode: bool = False,
         connection_config: ConnectionConfig | ConnectionConfigUSB = ConnectionConfig(),
     ) -> None:
         """Initialize XKNX class."""
-        self.devices = Devices()
-        self.telegrams: asyncio.Queue[Telegram | None] = asyncio.Queue()
-        self.sigint_received = asyncio.Event()
-        self.telegram_queue = TelegramQueue(self)
-        self.state_updater = StateUpdater(self)
         self.connection_manager = ConnectionManager()
+        self.devices = Devices()
+        self.knxip_interface = knx_interface_factory(
+            self, connection_config=connection_config
+        )
+        self.management = Management(self)
+        self.telegrams: asyncio.Queue[Telegram | None] = asyncio.Queue()
+        self.telegram_queue = TelegramQueue(self)
+        self.state_updater = StateUpdater(self, default_tracker_option=state_updater)
         self.task_registry = TaskRegistry(self)
-        self.start_state_updater = state_updater
-        self.knxip_interface: KNXIPInterface | None = None
-        self.started = asyncio.Event()
-        self.address_format = address_format
-        self.own_address = IndividualAddress(own_address)
-        self.rate_limit = rate_limit
+
+        self.current_address = IndividualAddress(0)
+        self.daemon_mode = daemon_mode
         self.multicast_group = multicast_group
         self.multicast_port = multicast_port
-        self.connection_config = connection_config
-        self.daemon_mode = daemon_mode
+        self.own_address = IndividualAddress(own_address)
+        self.rate_limit = rate_limit
+        self.sigint_received = asyncio.Event()
+        self.started = asyncio.Event()
         self.version = VERSION
-        self.current_address = IndividualAddress(0)
 
+        GroupAddress.address_format = address_format  # for global string representation
         if log_directory is not None:
             self.setup_logging(log_directory)
 
@@ -115,24 +117,17 @@ class XKNX:
 
     async def start(self) -> None:
         """Start XKNX module. Connect to KNX/IP devices and start state updater."""
+        if self.knxip_interface.connection_config.threaded:
+            await self.connection_manager.register_loop()
         self.task_registry.start()
-        if isinstance(self.connection_config, ConnectionConfig):
-            self.knxip_interface = KNXIPInterface(
-                self, connection_config=self.connection_config
-            )
-            logger.info(
-                "XKNX v%s starting %s connection to KNX bus.",
-                VERSION,
-                self.connection_config.connection_type.name.lower(),
-            )
-        if isinstance(self.connection_config, ConnectionConfigUSB):
-            self.knxip_interface = USBInterface(self, connection_config=self.connection_config)
-            logger.info("XKNX start logging on USB device (idVendor: 0x%04x, idProduct: 0x%04x)",
-                        self.connection_config.idVendor, self.connection_config.idProduct)
+        logger.info(
+            "XKNX v%s starting %s connection to KNX bus.",
+            VERSION,
+            self.knxip_interface.connection_config.connection_type.name.lower(),
+        )
         await self.knxip_interface.start()
         await self.telegram_queue.start()
-        if self.start_state_updater:
-            self.state_updater.start()
+        self.state_updater.start()
         self.started.set()
         if self.daemon_mode:
             await self.loop_until_sigint()
@@ -141,19 +136,13 @@ class XKNX:
         """Wait until all telegrams were processed."""
         await self.telegrams.join()
 
-    async def _stop_knxip_interface_if_exists(self) -> None:
-        """Stop KNXIPInterface if initialized."""
-        if self.knxip_interface is not None:
-            await self.knxip_interface.stop()
-            self.knxip_interface = None
-
     async def stop(self) -> None:
         """Stop XKNX module."""
         self.task_registry.stop()
         self.state_updater.stop()
         await self.join()
         await self.telegram_queue.stop()
-        await self._stop_knxip_interface_if_exists()
+        await self.knxip_interface.stop()
         self.started.clear()
 
     async def loop_until_sigint(self) -> None:
@@ -197,7 +186,6 @@ class XKNX:
             "xknx.raw_socket",
             "xknx.telegram",
             "xknx.state_updater",
-            "xknx.usb"
         ]:
             _logger = logging.getLogger(log_namespace)
             _logger.addHandler(_handler)

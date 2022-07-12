@@ -1,8 +1,9 @@
 """Unit test for RemoteValueSensor objects."""
 import pytest
+
 from xknx import XKNX
-from xknx.dpt import DPTBase
-from xknx.exceptions import ConversionError
+from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTValue1Ucount
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.remote_value import RemoteValueNumeric, RemoteValueSensor
 
 
@@ -29,12 +30,29 @@ class TestRemoteValueSensor:
         with pytest.raises(ConversionError):
             RemoteValueSensor(xknx=xknx, value_type=2)
         with pytest.raises(ConversionError):
+            RemoteValueSensor(xknx=xknx, value_type=None)
+        with pytest.raises(ConversionError):
             RemoteValueSensor(xknx=xknx)
 
     def test_payload_length_defined(self):
         """Test if all members of DPTMAP implement payload_length."""
         for dpt_class in DPTBase.__recursive_subclasses__():
             assert isinstance(dpt_class.payload_length, int)
+
+    def test_payload_valid(self):
+        """Test payload_valid method."""
+        xknx = XKNX()
+        remote_value = RemoteValueSensor(xknx=xknx, value_type="pulse")
+        valid_payload = DPTArray(DPTValue1Ucount.to_knx(1))
+
+        assert remote_value.dpt_class == DPTValue1Ucount
+        with pytest.raises(CouldNotParseTelegram):
+            remote_value.payload_valid(None)
+        with pytest.raises(CouldNotParseTelegram):
+            remote_value.payload_valid(DPTArray((1, 2, 3, 4)))
+        with pytest.raises(CouldNotParseTelegram):
+            remote_value.payload_valid(DPTBinary(1))
+        assert remote_value.payload_valid(valid_payload) == valid_payload
 
 
 class TestRemoteValueNumeric:

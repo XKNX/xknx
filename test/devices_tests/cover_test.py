@@ -1,7 +1,6 @@
 """Unit test for Cover objects."""
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from xknx import XKNX
 from xknx.devices import Cover
 from xknx.dpt import DPTArray, DPTBinary
@@ -9,7 +8,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestCover:
     """Test class for Cover objects."""
 
@@ -127,7 +125,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverSync",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position_state="1/2/3",
@@ -144,7 +142,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverSyncState",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
@@ -162,7 +160,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverSyncAngle",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position_state="1/2/3",
@@ -184,7 +182,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverSyncAngleState",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_angle="1/2/3",
@@ -205,7 +203,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverSetUp",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
@@ -228,7 +226,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverShortDown",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
@@ -250,12 +248,12 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverSetDownInverted",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
             group_address_position_state="1/2/4",
-            invert_position=True,
+            invert_updown=True,
         )
         await cover.set_down()
         assert xknx.telegrams.qsize() == 1
@@ -273,7 +271,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverSetShortUp",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
@@ -296,12 +294,12 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverSetUpInverted",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
             group_address_position_state="1/2/4",
-            invert_position=True,
+            invert_updown=True,
         )
         await cover.set_short_up()
         assert xknx.telegrams.qsize() == 1
@@ -320,7 +318,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverSetDown",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
@@ -343,7 +341,7 @@ class TestCover:
         xknx = XKNX()
         cover_short_stop = Cover(
             xknx,
-            "TestCover",
+            "TestCoverStop",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
@@ -387,7 +385,7 @@ class TestCover:
 
         cover_manual_stop = Cover(
             xknx,
-            "TestCover",
+            "TestCoverManualStop",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_stop="1/2/0",
@@ -407,7 +405,7 @@ class TestCover:
         xknx = XKNX()
         cover_short_stop = Cover(
             xknx,
-            "TestCover",
+            "TestCoverStopAngle",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_angle="1/2/5",
@@ -465,7 +463,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverPosition",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
@@ -478,13 +476,14 @@ class TestCover:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray(0x80)),
         )
+        await cover.stop()  # clean up tasks
 
     async def test_position_without_binary(self):
         """Test moving cover - with no binary positioning supported."""
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverPositionWithoutBinary",
             group_address_position="1/2/3",
         )
         await cover.set_down()
@@ -514,7 +513,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverPWPAD",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position_state="1/2/4",
@@ -528,19 +527,21 @@ class TestCover:
             destination_address=GroupAddress("1/2/1"),
             payload=GroupValueWrite(DPTBinary(0)),
         )
-        assert cover.travelcalculator.travel_to_position == 50
+        assert cover.travelcalculator._travel_to_position == 50
         assert cover.is_opening()
         # process the outgoing telegram to make sure it doesn't overwrite the target position
         await cover.process(telegram)
-        assert cover.travelcalculator.travel_to_position == 50
+        assert cover.travelcalculator._travel_to_position == 50
         assert xknx.telegrams.qsize() == 0
+
+        await cover.stop()  # clean up tasks
 
     async def test_position_without_position_address_down(self):
         """Test moving cover down - with no absolute positioning supported."""
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverPWPAD",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position_state="1/2/4",
@@ -553,18 +554,20 @@ class TestCover:
             destination_address=GroupAddress("1/2/1"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        assert cover.travelcalculator.travel_to_position == 80
+        assert cover.travelcalculator._travel_to_position == 80
         assert cover.is_closing()
         # process the outgoing telegram to make sure it doesn't overwrite the target position
         await cover.process(telegram)
-        assert cover.travelcalculator.travel_to_position == 80
+        assert cover.travelcalculator._travel_to_position == 80
+
+        await cover.stop()  # clean up tasks
 
     async def test_position_without_position_address_uninitialized_up(self):
         """Test moving uninitialized cover to absolute position - with no absolute positioning supported."""
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverPWPAUU",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position_state="1/2/4",
@@ -584,13 +587,14 @@ class TestCover:
             destination_address=GroupAddress("1/2/1"),
             payload=GroupValueWrite(DPTBinary(0)),
         )
+        await cover.stop()  # clean up tasks
 
     async def test_position_without_position_address_uninitialized_down(self):
         """Test moving uninitialized cover to absolute position - with no absolute positioning supported."""
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverPWPAUD",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position_state="1/2/4",
@@ -610,6 +614,7 @@ class TestCover:
             destination_address=GroupAddress("1/2/1"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
+        await cover.stop()  # clean up tasks
 
     async def test_angle(self):
         """Test changing angle."""
@@ -656,7 +661,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverProcessPosition",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
@@ -676,7 +681,7 @@ class TestCover:
         await cover.process(telegram)
         assert cover.current_position() == 16
         assert not cover.is_traveling()
-        assert cover.travelcalculator.travel_to_position == 16
+        assert cover.travelcalculator._travel_to_position == 16
         # new position - movement starts
         telegram = Telegram(
             GroupAddress("1/2/3"), payload=GroupValueWrite(DPTArray(255))
@@ -684,7 +689,7 @@ class TestCover:
         await cover.process(telegram)
         assert cover.current_position() == 16
         assert cover.is_closing()
-        assert cover.travelcalculator.travel_to_position == 100
+        assert cover.travelcalculator._travel_to_position == 100
         # new state while moving - movement goes on; travelcalculator updated
         telegram = Telegram(
             GroupAddress("1/2/4"), payload=GroupValueWrite(DPTArray(213))
@@ -692,14 +697,16 @@ class TestCover:
         await cover.process(telegram)
         assert cover.current_position() == 84
         assert cover.is_closing()
-        assert cover.travelcalculator.travel_to_position == 100
+        assert cover.travelcalculator._travel_to_position == 100
+
+        await cover.stop()  # clean up tasks
 
     async def test_process_angle(self):
         """Test process / reading telegrams from telegram queue. Test if position is processed correctly."""
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverProcessAngle",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_angle="1/2/3",
@@ -716,7 +723,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverProcessLocked",
             group_address_long="1/2/1",
             group_address_locked_state="1/2/4",
         )
@@ -730,7 +737,10 @@ class TestCover:
         """Test process / reading telegrams from telegram queue. Test if up/down is processed correctly."""
         xknx = XKNX()
         cover = Cover(
-            xknx, "TestCover", group_address_long="1/2/1", group_address_short="1/2/2"
+            xknx,
+            "TestCoverProcessUp",
+            group_address_long="1/2/1",
+            group_address_short="1/2/2",
         )
         cover.travelcalculator.set_position(50)
         assert not cover.is_traveling()
@@ -740,11 +750,16 @@ class TestCover:
         await cover.process(telegram)
         assert cover.is_opening()
 
+        await cover.stop()  # clean up tasks
+
     async def test_process_down(self):
         """Test process / reading telegrams from telegram queue. Test if up/down is processed correctly."""
         xknx = XKNX()
         cover = Cover(
-            xknx, "TestCover", group_address_long="1/2/1", group_address_short="1/2/2"
+            xknx,
+            "TestCoverProcessDown",
+            group_address_long="1/2/1",
+            group_address_short="1/2/2",
         )
         cover.travelcalculator.set_position(50)
         assert not cover.is_traveling()
@@ -754,12 +769,14 @@ class TestCover:
         await cover.process(telegram)
         assert cover.is_closing()
 
+        await cover.stop()  # clean up tasks
+
     async def test_process_stop(self):
         """Test process / reading telegrams from telegram queue. Test if stop is processed correctly."""
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverProcessStop",
             group_address_long="1/2/1",
             group_address_stop="1/2/2",
         )
@@ -777,7 +794,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverProcessShortStop",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
         )
@@ -796,7 +813,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverProcessCallback",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_stop="1/2/3",
@@ -834,6 +851,8 @@ class TestCover:
         await cover.process(telegram)
         after_update_callback.assert_called_with(cover)
 
+        await cover.stop()  # clean up tasks
+
     #
     # IS TRAVELING / IS UP / IS DOWN
     #
@@ -842,7 +861,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverIsTraveling",
             group_address_long="1/2/1",
             group_address_stop="1/2/2",
             group_address_position="1/2/3",
@@ -907,36 +926,106 @@ class TestCover:
             assert not cover.is_closing()
 
     #
-    # TEST AUTO STOP
+    # TEST TASKS
     #
-    async def test_auto_stop(self):
+    async def test_auto_stop(self, time_travel):
         """Test auto stop functionality."""
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverAutoStop",
             group_address_long="1/2/1",
             group_address_stop="1/2/2",
             travel_time_down=10,
             travel_time_up=10,
         )
-        with patch(
-            "xknx.devices.Cover.stop", new_callable=AsyncMock
-        ) as mock_stop, patch("time.time") as mock_time:
+        with patch("time.time") as mock_time:
             mock_time.return_value = 1517000000.0
             # we start with state 0 - open covers (up) this is assumed immediately
             await cover.set_position(0)
+            assert xknx.telegrams.qsize() == 1
+            _ = xknx.telegrams.get_nowait()
 
             await cover.set_position(50)
 
+            await time_travel(1)
             mock_time.return_value = 1517000001.0
-            await cover.auto_stop_if_necessary()
-            mock_stop.assert_not_called()
+            assert xknx.telegrams.qsize() == 1
+            telegram1 = xknx.telegrams.get_nowait()
+            assert telegram1 == Telegram(
+                destination_address=GroupAddress("1/2/1"),
+                payload=GroupValueWrite(DPTBinary(True)),
+            )
 
+            await time_travel(4)
             mock_time.return_value = 1517000005.0
-            await cover.auto_stop_if_necessary()
-            mock_stop.assert_called_with()
-            mock_stop.reset_mock()
+            assert xknx.telegrams.qsize() == 1
+            telegram1 = xknx.telegrams.get_nowait()
+            assert telegram1 == Telegram(
+                destination_address=GroupAddress("1/2/2"),
+                payload=GroupValueWrite(DPTBinary(True)),
+            )
+
+    async def test_periodic_update(self, time_travel):
+        """Test periodic update functionality."""
+        xknx = XKNX()
+        callback_mock = AsyncMock()
+        cover = Cover(
+            xknx,
+            "TestCoverPeriodicUpdate",
+            group_address_long="1/2/1",
+            group_address_stop="1/2/2",
+            group_address_position="1/2/3",
+            group_address_position_state="1/2/4",
+            travel_time_down=10,
+            travel_time_up=10,
+            device_updated_cb=callback_mock,
+        )
+        with patch("time.time") as mock_time:
+            mock_time.return_value = 1517000000.0
+            # state telegram updates current position - we are not moving so this is new state - not moving
+            telegram = Telegram(
+                GroupAddress("1/2/4"), payload=GroupValueWrite(DPTArray(0))
+            )
+            await cover.process(telegram)
+            assert (
+                callback_mock.call_count == 2
+            )  # 1 additional form _stop_position_update because previous state was None
+            callback_mock.reset_mock()
+            # move to 50%
+            telegram = Telegram(
+                GroupAddress("1/2/3"), payload=GroupValueWrite(DPTArray(125))
+            )
+            await cover.process(telegram)
+            await time_travel(0)
+            assert callback_mock.call_count == 1
+
+            mock_time.return_value = 1517000001.0
+            await time_travel(1)
+            assert callback_mock.call_count == 2
+
+            # state telegram from bus too early
+            mock_time.return_value = 1517000001.6
+            await time_travel(0.6)
+            assert callback_mock.call_count == 2
+            telegram = Telegram(
+                GroupAddress("1/2/4"), payload=GroupValueWrite(DPTArray(42))
+            )
+            await cover.process(telegram)
+            assert callback_mock.call_count == 3
+            # next update 1 second after last received state telegram
+            mock_time.return_value = 1517000002.0
+            await time_travel(0.4)
+            assert callback_mock.call_count == 3
+            mock_time.return_value = 1517000002.6
+            await time_travel(0.6)
+            assert callback_mock.call_count == 4
+            # last callback - auto updater is removed
+            mock_time.return_value = 1517000005.0
+            await time_travel(2.4)
+            assert callback_mock.call_count == 5
+            assert cover.position_reached()
+            assert cover._periodic_update_task is None
 
     #
     # HAS GROUP ADDRESS
@@ -946,7 +1035,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCover",
+            "TestCoverHasGroupAddress",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",

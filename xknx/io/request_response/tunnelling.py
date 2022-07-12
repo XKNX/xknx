@@ -3,57 +3,45 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from xknx.knxip import (
-    CEMIFrame,
-    CEMIMessageCode,
-    KNXIPFrame,
-    TunnellingAck,
-    TunnellingRequest,
-)
+from xknx.knxip import CEMIFrame, KNXIPFrame, TunnellingAck, TunnellingRequest
 
 from .request_response import RequestResponse
 
 if TYPE_CHECKING:
-    from xknx.io.udp_client import UDPClient
-    from xknx.telegram import IndividualAddress, Telegram
-    from xknx.xknx import XKNX
+    from xknx.io.transport import UDPTransport
 
 
 class Tunnelling(RequestResponse):
-    """Class to TunnelingRequest and wait for TunnelingResponse."""
+    """Class to TunnelingRequest and wait for TunnelingACK (UDP only)."""
+
+    transport: UDPTransport
 
     def __init__(
         self,
-        xknx: XKNX,
-        udp_client: UDPClient,
-        telegram: Telegram,
-        src_address: IndividualAddress,
+        transport: UDPTransport,
+        data_endpoint: tuple[str, int] | None,
+        cemi: CEMIFrame,
         sequence_counter: int,
         communication_channel_id: int,
     ):
         """Initialize Tunnelling class."""
-        self.xknx = xknx
-        self.udp_client = udp_client
-        self.src_address = src_address
+        self.data_endpoint_addr = data_endpoint
 
-        super().__init__(xknx, self.udp_client, TunnellingAck)
+        super().__init__(transport, TunnellingAck)
 
-        self.telegram = telegram
+        self.cemi_frame = cemi
         self.sequence_counter = sequence_counter
         self.communication_channel_id = communication_channel_id
 
+    async def send_request(self) -> None:
+        """Build knxipframe (within derived class) and send via UDP."""
+        self.transport.send(self.create_knxipframe(), addr=self.data_endpoint_addr)
+
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
-        cemi = CEMIFrame.init_from_telegram(
-            self.xknx,
-            telegram=self.telegram,
-            code=CEMIMessageCode.L_DATA_REQ,
-            src_addr=self.src_address,
-        )
         tunnelling_request = TunnellingRequest(
-            self.xknx,
             communication_channel_id=self.communication_channel_id,
             sequence_counter=self.sequence_counter,
-            cemi=cemi,
+            cemi=self.cemi_frame,
         )
         return KNXIPFrame.init_from_body(tunnelling_request)

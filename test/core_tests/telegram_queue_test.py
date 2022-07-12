@@ -3,6 +3,7 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPTBinary
 from xknx.exceptions import CommunicationError, CouldNotParseTelegram
@@ -11,7 +12,6 @@ from xknx.telegram.address import GroupAddress, InternalGroupAddress
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestTelegramQueue:
     """Test class for telegram queue."""
 
@@ -207,8 +207,7 @@ class TestTelegramQueue:
         async_telegram_received_callback.assert_called_once_with(telegram)
         devices_process.assert_called_once_with(telegram)
 
-    @patch("xknx.io.KNXIPInterface", new_callable=AsyncMock)
-    async def test_outgoing(self, if_mock):
+    async def test_outgoing(self):
         """Test outgoing telegrams in telegram queue."""
         xknx = XKNX()
 
@@ -222,12 +221,10 @@ class TestTelegramQueue:
         with pytest.raises(CommunicationError):
             await xknx.telegram_queue.process_telegram_outgoing(telegram)
 
-        if_mock.send_telegram.assert_not_called()
-
-        # if we have an interface send the telegram
-        xknx.knxip_interface = if_mock
+        # if we have an interface send the telegram (doesn't raise)
+        xknx.knxip_interface.send_telegram = AsyncMock()
         await xknx.telegram_queue.process_telegram_outgoing(telegram)
-        if_mock.send_telegram.assert_called_once_with(telegram)
+        xknx.knxip_interface.send_telegram.assert_called_once_with(telegram)
 
     @patch("logging.Logger.error")
     @patch("xknx.core.TelegramQueue.process_telegram_incoming", new_callable=MagicMock)

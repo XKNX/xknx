@@ -94,6 +94,8 @@ await climate.set_setpoint_shift(1)
 # Reading climate device
 await climate.sync(wait_for_result=True)
 print("Current temperature: ", climate.temperature)
+# Shutdown the Climate and the underlying ClimateMode!
+climate.shutdown()
 ```
 
 ## [](#header-2)Example

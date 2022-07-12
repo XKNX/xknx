@@ -21,13 +21,17 @@ class XKNXException(Exception):
 
 
 class CommunicationError(XKNXException):
-    """Unable to communicate with KNX Bus."""
+    """Unable to communicate with KNX bus."""
 
     def __init__(self, message: str, should_log: bool = True) -> None:
         """Instantiate exception."""
         super().__init__(message)
 
         self.should_log = should_log
+
+
+class ConfirmationError(CommunicationError):
+    """No confirmation received from KNX server for sent Telegram."""
 
 
 class USBDeviceNotFoundError(XKNXException):
@@ -74,6 +78,27 @@ class CouldNotParseKNXIP(XKNXException):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<CouldNotParseKNXIP description="{self.description}" />'
+
+
+class KNXSecureValidationError(CouldNotParseKNXIP):
+    """Exception class for invalid KNX Secure data."""
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<KNXSecureValidationError description="{self.description}" />'
+
+
+class IncompleteKNXIPFrame(CouldNotParseKNXIP):
+    """
+    Exception class for incomplete KNXIP data.
+
+    Used for TCP connections to indicate to buffer the data until the complete frame is received.
+    UDP connections should just handle CouldNotParseKNXIP.
+    """
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<IncompleteKNXIPFrame description="{self.description}" />'
 
 
 class UnsupportedCEMIMessage(XKNXException):
@@ -135,3 +160,31 @@ class DeviceIllegalValue(XKNXException):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<DeviceIllegalValue description="{self.value}" value="{self.description}" />'
+
+
+class SecureException(XKNXException):
+    """Exception class for ip secure handling."""
+
+
+class InvalidSignature(SecureException):
+    """Exception class used when the signature of a knxkeys file is invalid."""
+
+
+class InterfaceWithUserIdNotFound(SecureException):
+    """Exception class used when requesting an interface with a user id that does not exist."""
+
+
+class InvalidSecureConfiguration(SecureException):
+    """Exception class used when the secure configuration is invalid."""
+
+
+class ManagementConnectionError(XKNXException):
+    """Exception class used when a management connection fails."""
+
+
+class ManagementConnectionRefused(ManagementConnectionError):
+    """Exception class used when a management connection request is refused."""
+
+
+class ManagementConnectionTimeout(ManagementConnectionError):
+    """Exception class used when a management connection timed out."""

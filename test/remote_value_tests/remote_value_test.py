@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPT2ByteFloat, DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -10,7 +11,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 @patch.multiple(RemoteValue, __abstractmethods__=set())
 class TestRemoteValue:
     """Test class for RemoteValue objects."""
@@ -71,9 +71,9 @@ class TestRemoteValue:
         """Test for warning if RemoteValue is read only."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx, group_address_state=GroupAddress("1/2/3"))
-        with patch("logging.Logger.warning") as mock_info:
+        with patch("logging.Logger.warning") as mock_warning:
             await remote_value.set(23)
-            mock_info.assert_called_with(
+            mock_warning.assert_called_with(
                 "Attempted to set value for non-writable device: %s - %s (value: %s)",
                 "Unknown",
                 "Unknown",
@@ -86,8 +86,8 @@ class TestRemoteValue:
         remote_value = RemoteValue(xknx)
         assert remote_value.unit_of_measurement is None
 
-    async def test_process_unsupported_payload(self):
-        """Test if exception is raised when processing telegram with unsupported payload."""
+    async def test_process_unsupported_payload_type(self):
+        """Test if exception is raised when processing telegram with unsupported payload type."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
         with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_valid, patch(
@@ -109,18 +109,43 @@ class TestRemoteValue:
         """Test if exception is raised when processing telegram with invalid payload."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
-        with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_valid, patch(
-            "xknx.remote_value.RemoteValue.has_group_address"
-        ) as patch_has_group_address:
-            patch_valid.return_value = None
-            patch_has_group_address.return_value = True
+        with patch(
+            "xknx.remote_value.RemoteValue.has_group_address", remote_value=True
+        ):
 
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/1"),
                 payload=GroupValueWrite(DPTArray((0x01, 0x02))),
             )
-            with pytest.raises(CouldNotParseTelegram, match=r".*payload invalid.*"):
-                await remote_value.process(telegram)
+            assert await remote_value.process(telegram) is False
+
+    async def test_process_unsupported_payload(self):
+        """Test warning is logged when processing telegram with unsupported payload."""
+        xknx = XKNX()
+        remote_value = RemoteValue(xknx)
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/1"),
+            payload=GroupValueWrite(DPTArray((0x01, 0x02))),
+        )
+        with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_valid, patch(
+            "xknx.remote_value.RemoteValue.has_group_address"
+        ) as patch_has_group_address, patch(
+            "xknx.remote_value.RemoteValue.from_knx"
+        ) as patch_from, patch(
+            "logging.Logger.warning"
+        ) as mock_warning:
+            patch_valid.return_value = telegram.payload.value
+            patch_has_group_address.return_value = True
+            patch_from.side_effect = ConversionError("TestError")
+
+            assert await remote_value.process(telegram) is False
+            mock_warning.assert_called_once_with(
+                "Can not process %s for %s - %s: %s",
+                telegram,
+                "Unknown",
+                "Unknown",
+                ConversionError("TestError"),
+            )
 
     async def test_read_state(self):
         """Test read state while waiting for the result."""
@@ -149,12 +174,12 @@ class TestRemoteValue:
 
         with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_valid, patch(
             "xknx.core.ValueReader.read", new_callable=AsyncMock
-        ) as patch_read, patch("logging.Logger.warning") as mock_info:
+        ) as patch_read, patch("logging.Logger.warning") as mock_warning:
             patch_valid.return_value = False
             patch_read.return_value = None
 
             await remote_value.read_state(wait_for_result=True)
-            mock_info.assert_called_with(
+            mock_warning.assert_called_once_with(
                 "Could not sync group address '%s' (%s - %s)",
                 GroupAddress("1/2/3"),
                 "Unknown",

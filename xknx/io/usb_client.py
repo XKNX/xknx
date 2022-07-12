@@ -52,7 +52,6 @@ class USBClient:
         emi_code = CEMIMessageCode.L_DATA_REQ
         # create a cEMI frame from the telegram
         cemi = CEMIFrame.init_from_telegram(
-            self.xknx,
             telegram=telegram,
             code=emi_code,
             src_addr=self.xknx.own_address,

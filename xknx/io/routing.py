@@ -5,10 +5,12 @@ Routing uses UDP Multicast to broadcast and receive KNX/IP messages.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from xknx.core import XknxConnectionState
+from xknx.exceptions import CommunicationError
 from xknx.knxip import (
     HPAI,
     CEMIFrame,
@@ -19,14 +21,12 @@ from xknx.knxip import (
 )
 from xknx.telegram import TelegramDirection
 
-from .interface import Interface
-from .udp_client import UDPClient
+from .interface import Interface, TelegramCallbackType
+from .transport import KNXIPTransport, UDPTransport
 
 if TYPE_CHECKING:
     from xknx.telegram import Telegram
     from xknx.xknx import XKNX
-
-    TelegramCallbackType = Callable[[Telegram], None]
 
 logger = logging.getLogger("xknx.log")
 
@@ -45,21 +45,20 @@ class Routing(Interface):
         self.telegram_received_callback = telegram_received_callback
         self.local_ip = local_ip
 
-        self.udpclient = UDPClient(
-            self.xknx,
-            (local_ip, 0),
-            (self.xknx.multicast_group, self.xknx.multicast_port),
+        self.udp_transport = UDPTransport(
+            local_addr=(local_ip, 0),
+            remote_addr=(self.xknx.multicast_group, self.xknx.multicast_port),
             multicast=True,
         )
 
-        self.udpclient.register_callback(
+        self.udp_transport.register_callback(
             self.response_rec_callback, [KNXIPServiceType.ROUTING_INDICATION]
         )
 
     def response_rec_callback(
-        self, knxipframe: KNXIPFrame, source: HPAI, _: UDPClient
+        self, knxipframe: KNXIPFrame, source: HPAI, _: KNXIPTransport
     ) -> None:
-        """Verify and handle knxipframe. Callback from internal udpclient."""
+        """Verify and handle knxipframe. Callback from internal udp_transport."""
         if not isinstance(knxipframe.body, RoutingIndication):
             logger.warning("Service type not implemented: %s", knxipframe)
         elif knxipframe.body.cemi is None:
@@ -68,26 +67,31 @@ class Routing(Interface):
         elif knxipframe.body.cemi.src_addr == self.xknx.own_address:
             logger.debug("Ignoring own packet")
         else:
-            telegram = knxipframe.body.cemi.telegram
-            telegram.direction = TelegramDirection.INCOMING
+            # TODO: is cemi message code L_DATA.req or .con valid for routing? if not maybe warn and ignore
+            asyncio.create_task(self.handle_cemi_frame(knxipframe.body.cemi))
 
-            if self.telegram_received_callback is not None:
-                self.telegram_received_callback(telegram)
+    async def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
+        """Handle incoming telegram and send responses if applicable (device management)."""
+        telegram = cemi.telegram
+        telegram.direction = TelegramDirection.INCOMING
+
+        if response_tgs := await self.telegram_received_callback(telegram):
+            for response in response_tgs:
+                await self.send_telegram(response)
 
     async def send_telegram(self, telegram: "Telegram") -> None:
         """Send Telegram to routing connected device."""
         cemi = CEMIFrame.init_from_telegram(
-            self.xknx,
             telegram=telegram,
             code=CEMIMessageCode.L_DATA_IND,
             src_addr=self.xknx.own_address,
         )
-        routing_indication = RoutingIndication(self.xknx, cemi=cemi)
+        routing_indication = RoutingIndication(cemi=cemi)
         await self.send_knxipframe(KNXIPFrame.init_from_body(routing_indication))
 
     async def send_knxipframe(self, knxipframe: KNXIPFrame) -> None:
         """Send KNXIPFrame to connected routing device."""
-        self.udpclient.send(knxipframe)
+        self.udp_transport.send(knxipframe)
 
     async def connect(self) -> bool:
         """Start routing."""
@@ -95,7 +99,7 @@ class Routing(Interface):
             XknxConnectionState.CONNECTING
         )
         try:
-            await self.udpclient.connect()
+            await self.udp_transport.connect()
         except OSError as ex:
             logger.debug(
                 "Could not establish connection to KNX/IP network. %s: %s",
@@ -105,9 +109,9 @@ class Routing(Interface):
             await self.xknx.connection_manager.connection_state_changed(
                 XknxConnectionState.DISCONNECTED
             )
-            # close udp client to prevent open file descriptors
-            await self.udpclient.stop()
-            raise ex
+            # close udp transport to prevent open file descriptors
+            self.udp_transport.stop()
+            raise CommunicationError("Routing could not be started") from ex
         await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTED
         )
@@ -115,7 +119,7 @@ class Routing(Interface):
 
     async def disconnect(self) -> None:
         """Stop routing."""
-        await self.udpclient.stop()
+        self.udp_transport.stop()
         await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )

@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.dpt.dpt_color import DPTColorXYY, XYYColor
+from xknx.exceptions import CouldNotParseTelegram
 
 from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
@@ -42,14 +43,11 @@ class RemoteValueColorXYY(RemoteValue[DPTArray, XYYColor]):
             after_update_cb=after_update_cb,
         )
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray | None:
+    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray:
         """Test if telegram payload may be parsed."""
-        return (
-            payload
-            if isinstance(payload, DPTArray)
-            and len(payload.value) == self.PAYLOAD_LENGTH
-            else None
-        )
+        if isinstance(payload, DPTArray) and len(payload.value) == self.PAYLOAD_LENGTH:
+            return payload
+        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
 
     def to_knx(self, value: XYYColor) -> DPTArray:
         """Convert value to payload."""

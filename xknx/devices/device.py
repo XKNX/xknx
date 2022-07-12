@@ -8,7 +8,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterator
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterator, TypeVar
 
 from xknx.core import Task
 from xknx.remote_value import RemoteValue
@@ -19,7 +19,8 @@ from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWri
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
-DeviceCallbackType = Callable[["Device"], Awaitable[None]]
+T = TypeVar("T", bound="Device")
+DeviceCallbackType = Callable[[T], Coroutine[Any, Any, None]]
 
 logger = logging.getLogger("xknx.log")
 
@@ -28,15 +29,15 @@ class Device(ABC):
     """Base class for devices."""
 
     def __init__(
-        self,
+        self: T,
         xknx: XKNX,
         name: str,
-        device_updated_cb: DeviceCallbackType | None = None,
+        device_updated_cb: DeviceCallbackType[T] | None = None,
     ):
         """Initialize Device class."""
         self.xknx = xknx
         self.name = name
-        self.device_updated_cbs: list[DeviceCallbackType] = []
+        self.device_updated_cbs: list[DeviceCallbackType[T]] = []
         if device_updated_cb is not None:
             self.register_device_updated_cb(device_updated_cb)
 
@@ -54,7 +55,7 @@ class Device(ABC):
         self.xknx.devices.remove(self)
         self.device_updated_cbs = []
         for remote_value in self._iter_remote_values():
-            remote_value.__del__()
+            remote_value.__del__()  # pylint: disable=unnecessary-dunder-call
         for task in self._iter_tasks():
             if task:
                 self.xknx.task_registry.unregister(task.name)
@@ -66,21 +67,24 @@ class Device(ABC):
         # yield from (<list all used RemoteValue instances>)
         yield from ()
 
-    def _iter_tasks(self) -> Iterator[Task | None]:  # pylint: disable=no-self-use
+    def _iter_tasks(self) -> Iterator[Task | None]:
         """Iterate the device tasks."""
         yield from ()
 
-    def register_device_updated_cb(self, device_updated_cb: DeviceCallbackType) -> None:
+    def register_device_updated_cb(
+        self: T, device_updated_cb: DeviceCallbackType[T]
+    ) -> None:
         """Register device updated callback."""
         self.device_updated_cbs.append(device_updated_cb)
 
     def unregister_device_updated_cb(
-        self, device_updated_cb: DeviceCallbackType
+        self: T, device_updated_cb: DeviceCallbackType[T]
     ) -> None:
         """Unregister device updated callback."""
-        self.device_updated_cbs.remove(device_updated_cb)
+        if device_updated_cb in self.device_updated_cbs:
+            self.device_updated_cbs.remove(device_updated_cb)
 
-    async def after_update(self) -> None:
+    async def after_update(self: T) -> None:
         """Execute callbacks after internal state has been changed."""
         try:
             await asyncio.gather(*[cb(self) for cb in self.device_updated_cbs])

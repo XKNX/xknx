@@ -9,6 +9,7 @@ It provides functionality for
 from __future__ import annotations
 
 import asyncio
+from functools import partial
 import logging
 from typing import TYPE_CHECKING, Iterator
 
@@ -37,7 +38,7 @@ class Switch(Device):
         sync_state: bool | int | float | str = True,
         invert: bool = False,
         reset_after: float | None = None,
-        device_updated_cb: DeviceCallbackType | None = None,
+        device_updated_cb: DeviceCallbackType[Switch] | None = None,
     ):
         """Initialize Switch class."""
         super().__init__(xknx, name, device_updated_cb)
@@ -87,11 +88,10 @@ class Switch(Device):
         if await self.switch.process(telegram):
             if self.reset_after is not None and self.switch.value:
                 self._reset_task = self.xknx.task_registry.register(
-                    self._reset_task_name,
-                    self._reset_state(self.reset_after),
+                    name=self._reset_task_name,
+                    async_func=partial(self._reset_state, self.reset_after),
                     track_task=True,
-                )
-                self._reset_task.start()
+                ).start()
 
     async def process_group_read(self, telegram: "Telegram") -> None:
         """Process incoming GroupValueResponse telegrams."""

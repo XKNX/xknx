@@ -33,7 +33,7 @@ class RawValue(Device):
         respond_to_read: bool = False,
         sync_state: bool | int | float | str = True,
         always_callback: bool = False,
-        device_updated_cb: DeviceCallbackType | None = None,
+        device_updated_cb: DeviceCallbackType[RawValue] | None = None,
     ):
         """Initialize Sensor class."""
         super().__init__(xknx, name, device_updated_cb)

@@ -49,7 +49,7 @@ class ClimateMode(Device):
         sync_state: bool | int | float | str = True,
         operation_modes: list[str | HVACOperationMode] | None = None,
         controller_modes: list[str | HVACControllerMode] | None = None,
-        device_updated_cb: DeviceCallbackType | None = None,
+        device_updated_cb: DeviceCallbackType[ClimateMode] | None = None,
     ):
         """Initialize ClimateMode class."""
         super().__init__(xknx, name, device_updated_cb)

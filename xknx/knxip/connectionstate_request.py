@@ -5,16 +5,11 @@ Connectionstate requests are used to determine if a tunnel connection is still a
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from xknx.exceptions import CouldNotParseKNXIP
 
 from .body import KNXIPBody
 from .hpai import HPAI
 from .knxip_enum import KNXIPServiceType
-
-if TYPE_CHECKING:
-    from xknx.xknx import XKNX
 
 
 class ConnectionStateRequest(KNXIPBody):
@@ -24,12 +19,10 @@ class ConnectionStateRequest(KNXIPBody):
 
     def __init__(
         self,
-        xknx: XKNX,
         communication_channel_id: int = 1,
         control_endpoint: HPAI = HPAI(),
     ):
         """Initialize ConnectionStateRequest object."""
-        super().__init__(xknx)
         self.communication_channel_id = communication_channel_id
         self.control_endpoint = control_endpoint
 
@@ -52,25 +45,17 @@ class ConnectionStateRequest(KNXIPBody):
         pos += self.control_endpoint.from_knx(raw[pos:])
         return pos
 
-    def to_knx(self) -> list[int]:
+    def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
+        return (
+            bytes((self.communication_channel_id, 0x00))  # 2nd byte is reserved
+            + self.control_endpoint.to_knx()
+        )
 
-        def info_to_knx() -> list[int]:
-            """Serialize information bytes."""
-            info = []
-            info.append(self.communication_channel_id)
-            info.append(0x00)  # Reserved
-            return info
-
-        data = []
-        data.extend(info_to_knx())
-        data.extend(self.control_endpoint.to_knx())
-        return data
-
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return object as readable string."""
         return (
             "<ConnectionStateRequest "
-            f'CommunicationChannelID="{self.communication_channel_id}", '
+            f'communication_channel_id="{self.communication_channel_id}", '
             f'control_endpoint="{self.control_endpoint}" />'
         )

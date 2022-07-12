@@ -98,7 +98,7 @@ class Weather(Device):
         group_address_air_pressure: GroupAddressesType | None = None,
         group_address_humidity: GroupAddressesType | None = None,
         sync_state: bool | int | float | str = True,
-        device_updated_cb: DeviceCallbackType | None = None,
+        device_updated_cb: DeviceCallbackType[Weather] | None = None,
     ) -> None:
         """Initialize Weather class."""
         super().__init__(xknx, name, device_updated_cb)

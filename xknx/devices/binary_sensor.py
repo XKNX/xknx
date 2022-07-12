@@ -11,6 +11,7 @@ A BinarySensor may also have Actions attached which are executed after state was
 from __future__ import annotations
 
 import asyncio
+from functools import partial
 import time
 from typing import TYPE_CHECKING, Iterator, cast
 
@@ -37,7 +38,7 @@ class BinarySensor(Device):
         ignore_internal_state: bool = False,
         reset_after: float | None = None,
         context_timeout: float | None = None,
-        device_updated_cb: DeviceCallbackType | None = None,
+        device_updated_cb: DeviceCallbackType[BinarySensor] | None = None,
     ):
         """Initialize BinarySensor class."""
         super().__init__(xknx, name, device_updated_cb)
@@ -92,9 +93,9 @@ class BinarySensor(Device):
             if self.ignore_internal_state and self._context_timeout:
                 self.bump_and_get_counter(state)
                 self._context_task = self.xknx.task_registry.register(
-                    self._context_task_name, self._counter_task(self._context_timeout)
-                )
-                self._context_task.start()
+                    name=self._context_task_name,
+                    async_func=partial(self._counter_task, self._context_timeout),
+                ).start()
             else:
                 await self.after_update()
 
@@ -156,11 +157,10 @@ class BinarySensor(Device):
         """Create Task for resetting state if 'reset_after' is configured."""
         if self.reset_after is not None and self.state:
             self._reset_task = self.xknx.task_registry.register(
-                self._reset_task_name,
-                self._reset_state(self.reset_after),
+                name=self._reset_task_name,
+                async_func=partial(self._reset_state, self.reset_after),
                 track_task=True,
-            )
-            self._reset_task.start()
+            ).start()
 
     async def _reset_state(self, wait_seconds: float) -> None:
         await asyncio.sleep(wait_seconds)

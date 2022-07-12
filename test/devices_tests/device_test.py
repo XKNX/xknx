@@ -1,7 +1,6 @@
 """Unit test for Switch objects."""
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from xknx import XKNX
 from xknx.devices import Device, Sensor
 from xknx.dpt import DPTArray
@@ -9,7 +8,6 @@ from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
-@pytest.mark.asyncio
 @patch.multiple(Device, __abstractmethods__=set())
 class TestDevice:
     """Test class for Switch object."""
@@ -62,7 +60,7 @@ class TestDevice:
 
     @patch("logging.Logger.exception")
     async def test_bad_callback(self, logging_exception_mock):
-        """Test handling callback raising an exception"""
+        """Test handling callback raising an exception."""
         xknx = XKNX()
         device = Device(xknx, "TestDevice")
         good_callback_1 = AsyncMock()

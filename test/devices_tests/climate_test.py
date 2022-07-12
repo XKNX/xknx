@@ -1,7 +1,8 @@
 """Unit test for Climate objects."""
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from xknx import XKNX
 from xknx.devices import Climate, ClimateMode
 from xknx.devices.climate import SetpointShiftMode
@@ -16,7 +17,7 @@ from xknx.dpt import (
     DPTValue1Count,
 )
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
-from xknx.exceptions import ConversionError, CouldNotParseTelegram, DeviceIllegalValue
+from xknx.exceptions import ConversionError, DeviceIllegalValue
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
@@ -29,7 +30,6 @@ DPT_20102_MODES = [
 ]
 
 
-@pytest.mark.asyncio
 class TestClimate:
     """Test class for Climate objects."""
 
@@ -146,14 +146,8 @@ class TestClimate:
             group_address_setpoint_shift_state="1/2/4",
             setpoint_shift_mode=SetpointShiftMode.DPT6010,
         )
-
-        after_update_callback = Mock()
-
-        async def async_after_update_callback(device):
-            """Async callback."""
-            after_update_callback(device)
-
-        climate.register_device_updated_cb(async_after_update_callback)
+        after_update_callback = AsyncMock()
+        climate.register_device_updated_cb(after_update_callback)
 
         await climate.target_temperature.set(23.00)
         await xknx.devices.process(xknx.telegrams.get_nowait())
@@ -165,21 +159,44 @@ class TestClimate:
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
+    def test_remove_climate_removes_climate_mode(self):
+        """Test shutting down climate will also shut down related ClimateMode."""
+
+        xknx = XKNX()
+        climate_mode = ClimateMode(
+            xknx,
+            name=None,
+            group_address_operation_mode="1/2/4",
+            group_address_operation_mode_state="1/2/5",
+            group_address_operation_mode_protection="1/2/6",
+            group_address_operation_mode_night="1/2/7",
+            group_address_operation_mode_comfort="1/2/8",
+            group_address_operation_mode_standby="1/2/9",
+            group_address_controller_status="1/2/10",
+            group_address_controller_status_state="1/2/11",
+            group_address_controller_mode="1/2/12",
+            group_address_controller_mode_state="1/2/13",
+            group_address_heat_cool="1/2/14",
+            group_address_heat_cool_state="1/2/15",
+        )
+
+        climate = Climate(xknx, name="TestClimate", mode=climate_mode)
+
+        assert len(xknx.devices) == 2
+        climate.shutdown()
+        assert len(xknx.devices) == 0
+
     async def test_process_callback_mode(self):
         """Test if after_update_callback is called after update of Climate object was changed."""
 
         xknx = XKNX()
+        after_update_callback = AsyncMock()
         climate_mode = ClimateMode(
-            xknx, "TestClimate", group_address_operation_mode="1/2/5"
+            xknx,
+            "TestClimate",
+            group_address_operation_mode="1/2/5",
+            device_updated_cb=after_update_callback,
         )
-
-        after_update_callback = Mock()
-
-        async def async_after_update_callback(device):
-            """Async callback."""
-            after_update_callback(device)
-
-        climate_mode.register_device_updated_cb(async_after_update_callback)
 
         await climate_mode.set_operation_mode(HVACOperationMode.COMFORT)
         after_update_callback.assert_called_with(climate_mode)
@@ -204,14 +221,8 @@ class TestClimate:
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
         )
-
-        after_update_callback = Mock()
-
-        async def async_after_update_callback(device):
-            """Async callback."""
-            after_update_callback(device)
-
-        climate.register_device_updated_cb(async_after_update_callback)
+        after_update_callback = AsyncMock()
+        climate.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/1"),
@@ -244,16 +255,10 @@ class TestClimate:
         climate_mode = ClimateMode(
             xknx, "TestClimateMode", group_address_operation_mode="1/2/4"
         )
-
-        after_update_callback = Mock()
+        after_update_callback = AsyncMock()
 
         climate = Climate(xknx, "TestClimate", mode=climate_mode)
-
-        async def async_after_update_callback(device):
-            """Async callback."""
-            after_update_callback(device)
-
-        climate_mode.register_device_updated_cb(async_after_update_callback)
+        climate_mode.register_device_updated_cb(after_update_callback)
 
         # Note: the climate object processes the telegram, but the cb
         # is called with the climate_mode object.
@@ -1075,80 +1080,90 @@ class TestClimate:
     async def test_process_controller_status_wrong_payload(self):
         """Test process wrong telegram for controller status (wrong payload type)."""
         xknx = XKNX()
+        updated_cb = AsyncMock()
         climate_mode = ClimateMode(
             xknx,
             "TestClimate",
             group_address_operation_mode="1/2/5",
             group_address_controller_status="1/2/3",
+            device_updated_cb=updated_cb,
         )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        with pytest.raises(CouldNotParseTelegram):
+        with patch("logging.Logger.warning") as log_mock:
             await climate_mode.process(telegram)
+            log_mock.assert_called_once()
+            updated_cb.assert_not_called()
 
     async def test_process_controller_status_payload_invalid_length(self):
         """Test process wrong telegram for controller status (wrong payload length)."""
         xknx = XKNX()
+        updated_cb = AsyncMock()
         climate_mode = ClimateMode(
             xknx,
             "TestClimate",
             group_address_operation_mode="1/2/5",
             group_address_controller_status="1/2/3",
+            device_updated_cb=updated_cb,
         )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((23, 24))),
         )
-        with pytest.raises(CouldNotParseTelegram):
+        with patch("logging.Logger.warning") as log_mock:
             await climate_mode.process(telegram)
+            log_mock.assert_called_once()
+            updated_cb.assert_not_called()
 
     async def test_process_operation_mode_wrong_payload(self):
         """Test process wrong telegram for operation mode (wrong payload type)."""
         xknx = XKNX()
+        updated_cb = AsyncMock()
         climate_mode = ClimateMode(
             xknx,
             "TestClimate",
             group_address_operation_mode="1/2/5",
             group_address_controller_status="1/2/3",
+            device_updated_cb=updated_cb,
         )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        with pytest.raises(CouldNotParseTelegram):
+        with patch("logging.Logger.warning") as log_mock:
             await climate_mode.process(telegram)
+            log_mock.assert_called_once()
+            updated_cb.assert_not_called()
 
     async def test_process_operation_mode_payload_invalid_length(self):
         """Test process wrong telegram for operation mode (wrong payload length)."""
         xknx = XKNX()
+        updated_cb = AsyncMock()
         climate_mode = ClimateMode(
             xknx,
             "TestClimate",
             group_address_operation_mode="1/2/5",
             group_address_controller_status="1/2/3",
+            device_updated_cb=updated_cb,
         )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
             payload=GroupValueWrite(DPTArray((23, 24))),
         )
-        with pytest.raises(CouldNotParseTelegram):
+        with patch("logging.Logger.warning") as log_mock:
             await climate_mode.process(telegram)
+            log_mock.assert_called_once()
+            updated_cb.assert_not_called()
 
     async def test_process_callback_temp(self):
         """Test process / reading telegrams from telegram queue. Test if callback is executed when receiving temperature."""
 
         xknx = XKNX()
         climate = Climate(xknx, "TestClimate", group_address_temperature="1/2/3")
-
-        after_update_callback = Mock()
-
-        async def async_after_update_callback(device):
-            """Async callback."""
-            after_update_callback(device)
-
-        climate.register_device_updated_cb(async_after_update_callback)
+        after_update_callback = AsyncMock()
+        climate.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),

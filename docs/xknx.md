@@ -10,7 +10,7 @@ nav_order: 3
 
 The `XKNX()` object is the core element of any XKNX installation. It should be only initialized once per implementation. The XKNX object is responsible for:
 
-- connectiong to a KNX/IP device and managing the connection
+- connecting to a KNX/IP device and managing the connection
 - processing all incoming KNX telegrams
 - organizing all connected devices and keeping their state
 - updating all connected devices from time to time
@@ -49,7 +49,7 @@ The constructor of the XKNX object takes several parameters:
 - `multicast_group` is the multicast IP address - can be used to override the default multicast address (`224.0.23.12`)
 - `multicast_port` is the multicast port - can be used to override the default multicast port (`3671`)
 - `log_directory` is the path to the log directory - when set to a valid directory we log to a dedicated file in this directory called `xknx.log`. The log files are rotated each night and will exist for 7 days. After that the oldest one will be deleted.
-- if `state_updater` is set, XKNX will start (once `start() is called) an asynchronous process for syncing the states of all connected devices every hour
+- `state_updater` is used to set the default state-updating mechanism used by devices. `False` to  disable state-updating by default, `True` to use default 60 minutes expire-interval, a number between 2 to 1440 to configure expire-time or a string "expire 50", "every 90" for strict periodically update or "init" for update when a connection is established. Default: `False`.
 - if `daemon_mode` is set, start will only stop if Control-X is pressed. This function is useful for using XKNX as a daemon, e.g. for using the callback functions or using the internal action logic.
 - `connection_config` replaces a ConnectionConfig() that was read from a yaml config file.
 
@@ -146,7 +146,7 @@ async def main():
 asyncio.run(main())
 ```
 
-An awaitable `connection_state_change_cb` will be called every time the connection state to the gateway changes. Example:
+An awaitable `connection_state_changed_cb` will be called every time the connection state to the gateway changes. Example:
 
 ```python
 import asyncio
@@ -154,40 +154,14 @@ from xknx import XKNX
 from xknx.core import XknxConnectionState
 
 
-async def connection_state_change_cb(state: XknxConnectionState):
+async def connection_state_changed_cb(state: XknxConnectionState):
     print("Callback received with state {0}".format(state.name))
 
 
 async def main():
-    xknx = XKNX(connection_state_change_cb=connection_state_change_cb, daemon_mode=True)
+    xknx = XKNX(connection_state_changed_cb=connection_state_changed_cb, daemon_mode=True)
     await xknx.start()
     await xknx.stop()
 
 asyncio.run(main())
-```
-
-# [](#header-2)Dockerised xknx's app
-
-To run xknx from a container, set 'route_back=true' or use host network mode.
-
-Available env variables are:
-
-- XKNX_GENERAL_OWN_ADDRESS
-- XKNX_GENERAL_RATE_LIMIT
-- XKNX_GENERAL_MULTICAST_GROUP
-- XKNX_GENERAL_MULTICAST_PORT
-- XKNX_CONNECTION_GATEWAY_IP: Your KNX Gateway IP address
-- XKNX_CONNECTION_GATEWAY_PORT: Your KNX Gateway UDP port
-- XKNX_CONNECTION_LOCAL_IP
-- XKNX_CONNECTION_ROUTE_BACK: Set 'true' to be able to work in a container
-
-Example of a `docker run` with an xknx based app:
-
-```bash
-docker run --name myapp -d \
-  -e XKNX_CONNECTION_GATEWAY_IP='192.168.0.123' \
-  -e XKNX_CONNECTION_LOCAL_PORT=12399 \
-  -e XKNX_CONNECTION_ROUTE_BACK=true \
-  -p 12300:12399/udp \
-  myapp:latest
 ```

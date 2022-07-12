@@ -1,11 +1,12 @@
 """
-Module for queing telegrams.
+Module for queing telegrams addressed to group addresses.
 
-When a device wants to sends a telegram to the KNX bus, it has to queue it to the TelegramQueue within XKNX.
-
-The underlaying KNXIPInterface will poll the queue and send the packets to the correct KNX/IP abstraction (Tunneling or Routing).
-
+When a device wants to send a telegram to the KNX bus, it has to queue it to the
+TelegramQueue within XKNX. The underlaying KNXIPInterface will poll the queue and
+send the packets to the correct KNX/IP abstraction (Tunneling or Routing).
 You may register callbacks to be notified if a telegram was pushed to the queue.
+
+Telegrams addressed to IndividualAddresses are not processed by this queue.
 """
 from __future__ import annotations
 
@@ -72,6 +73,7 @@ class TelegramQueue:
         self.telegram_received_cbs: list[TelegramQueue.Callback] = []
         self.outgoing_queue: asyncio.Queue[Telegram | None] = asyncio.Queue()
         self._consumer_task: Awaitable[tuple[None, None]] | None = None
+        self._rate_limiter: asyncio.Task[None] | None = None
 
     def register_telegram_received_cb(
         self,
@@ -148,7 +150,19 @@ class TelegramQueue:
             # Breaking up queue if None is pushed to the queue
             if telegram is None:
                 self.outgoing_queue.task_done()
+                if self._rate_limiter:
+                    self._rate_limiter.cancel()
                 break
+
+            # limit rate to knx bus - defaults to 20 per second
+            if self.xknx.rate_limit and not isinstance(
+                telegram.destination_address, InternalGroupAddress
+            ):
+                if self._rate_limiter is not None:
+                    await self._rate_limiter
+                self._rate_limiter = asyncio.create_task(
+                    asyncio.sleep(1 / self.xknx.rate_limit)
+                )
 
             try:
                 await self.process_telegram_outgoing(telegram)
@@ -165,12 +179,6 @@ class TelegramQueue:
             finally:
                 self.outgoing_queue.task_done()
                 self.xknx.telegrams.task_done()
-
-            # limit rate to knx bus - defaults to 20 per second
-            if self.xknx.rate_limit and not isinstance(
-                telegram.destination_address, InternalGroupAddress
-            ):
-                await asyncio.sleep(1 / self.xknx.rate_limit)
 
     async def _process_all_telegrams(self) -> None:
         """Process all telegrams being queued. Used in unit tests."""
@@ -192,8 +200,7 @@ class TelegramQueue:
         """Process outgoing telegram."""
         telegram_logger.debug(telegram)
         if not isinstance(telegram.destination_address, InternalGroupAddress):
-            if self.xknx.knxip_interface is None:
-                raise CommunicationError("No KNXIP interface defined")
+            # raises CommunicationError when interface is not connected
             await self.xknx.knxip_interface.send_telegram(telegram)
 
         await self.xknx.devices.process(telegram)

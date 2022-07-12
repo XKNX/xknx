@@ -1,14 +1,14 @@
 """Unit test for RemoteValueStep objects."""
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.exceptions import ConversionError, CouldNotParseTelegram
+from xknx.exceptions import ConversionError
 from xknx.remote_value import RemoteValueStep
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 
 
-@pytest.mark.asyncio
 class TestRemoteValueStep:
     """Test class for RemoteValueStep objects."""
 
@@ -82,17 +82,17 @@ class TestRemoteValueStep:
         """Test process errornous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueStep(xknx, group_address=GroupAddress("1/2/3"))
-        with pytest.raises(CouldNotParseTelegram):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTArray(0x01)),
-            )
-            await remote_value.process(telegram)
-        with pytest.raises(CouldNotParseTelegram):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTBinary(3)),
-            )
-            await remote_value.process(telegram)
-            # pylint: disable=pointless-statement
-            remote_value.value
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(0x01)),
+        )
+        assert await remote_value.process(telegram) is False
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(3)),
+        )
+        assert await remote_value.process(telegram) is False
+
+        assert remote_value.value is None

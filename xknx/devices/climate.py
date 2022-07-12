@@ -60,7 +60,7 @@ class Climate(Device):
         min_temp: float | None = None,
         max_temp: float | None = None,
         mode: ClimateMode | None = None,
-        device_updated_cb: DeviceCallbackType | None = None,
+        device_updated_cb: DeviceCallbackType[Climate] | None = None,
     ):
         """Initialize Climate class."""
         super().__init__(xknx, name, device_updated_cb)
@@ -172,6 +172,12 @@ class Climate(Device):
     async def turn_off(self) -> None:
         """Set power status to off."""
         await self.on.off()
+
+    def shutdown(self) -> None:
+        """Shutdown this device and the underlying mode."""
+        super().shutdown()
+        if self.mode:
+            self.mode.shutdown()
 
     @property
     def initialized_for_setpoint_shift_calculations(self) -> bool:

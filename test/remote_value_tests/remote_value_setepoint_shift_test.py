@@ -1,8 +1,9 @@
 """Unit test for RemoteValueSetpointShift objects."""
 import pytest
+
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary, DPTTemperature, DPTValue1Count
-from xknx.exceptions import ConversionError
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.remote_value.remote_value_setpoint_shift import (
     RemoteValueSetpointShift,
     SetpointShiftMode,
@@ -19,22 +20,26 @@ class TestRemoteValueSetpointShift:
         dpt_6_payload = DPTArray(DPTValue1Count.to_knx(1))
         dpt_9_payload = DPTArray(DPTTemperature.to_knx(1))
 
-        assert remote_value.payload_valid(DPTBinary(0)) is None
-        assert remote_value.payload_valid(DPTArray((0, 1, 2))) is None
+        with pytest.raises(CouldNotParseTelegram):
+            remote_value.payload_valid(DPTBinary(0))
+        with pytest.raises(CouldNotParseTelegram):
+            remote_value.payload_valid(DPTArray((0, 1, 2)))
 
         # DPT 6 - payload_length 1
         assert remote_value.dpt_class is None
         assert remote_value.payload_valid(dpt_6_payload) == dpt_6_payload
         assert remote_value.dpt_class == SetpointShiftMode.DPT6010.value
-        #   DPT 9 is invalid now
-        assert remote_value.payload_valid(dpt_9_payload) is None
+        with pytest.raises(CouldNotParseTelegram):
+            # DPT 9 is invalid now
+            remote_value.payload_valid(dpt_9_payload)
 
         remote_value.dpt_class = None
         # DPT 9 - payload_length 2
         assert remote_value.payload_valid(dpt_9_payload) == dpt_9_payload
         assert remote_value.dpt_class == SetpointShiftMode.DPT9002.value
-        #   DPT 6 is invalid now
-        assert remote_value.payload_valid(dpt_6_payload) is None
+        with pytest.raises(CouldNotParseTelegram):
+            # DPT 6 is invalid now
+            remote_value.payload_valid(dpt_6_payload)
 
     def test_payload_valid_preassigned_mode(self):
         """Test if setpoint_shift_mode is assigned properly by payload length."""
@@ -49,17 +54,25 @@ class TestRemoteValueSetpointShift:
         dpt_9_payload = DPTArray(DPTTemperature.to_knx(1))
 
         assert remote_value_6.dpt_class == DPTValue1Count
-        assert remote_value_6.payload_valid(None) is None
-        assert remote_value_6.payload_valid(dpt_9_payload) is None
-        assert remote_value_6.payload_valid(DPTArray((1, 2, 3, 4))) is None
-        assert remote_value_6.payload_valid(DPTBinary(1)) is None
+        with pytest.raises(CouldNotParseTelegram):
+            remote_value_6.payload_valid(None)
+        with pytest.raises(CouldNotParseTelegram):
+            remote_value_6.payload_valid(dpt_9_payload)
+        with pytest.raises(CouldNotParseTelegram):
+            remote_value_6.payload_valid(DPTArray((1, 2, 3, 4)))
+        with pytest.raises(CouldNotParseTelegram):
+            remote_value_6.payload_valid(DPTBinary(1))
         assert remote_value_6.payload_valid(dpt_6_payload) == dpt_6_payload
 
         assert remote_value_9.dpt_class == DPTTemperature
-        assert remote_value_9.payload_valid(None) is None
-        assert remote_value_9.payload_valid(dpt_6_payload) is None
-        assert remote_value_9.payload_valid(DPTArray((1, 2, 3))) is None
-        assert remote_value_9.payload_valid(DPTBinary(1)) is None
+        with pytest.raises(CouldNotParseTelegram):
+            remote_value_9.payload_valid(None)
+        with pytest.raises(CouldNotParseTelegram):
+            remote_value_9.payload_valid(dpt_6_payload)
+        with pytest.raises(CouldNotParseTelegram):
+            remote_value_9.payload_valid(DPTArray((1, 2, 3)))
+        with pytest.raises(CouldNotParseTelegram):
+            remote_value_9.payload_valid(DPTBinary(1))
         assert remote_value_9.payload_valid(dpt_9_payload) == dpt_9_payload
 
     def test_to_knx_uninitialized(self):

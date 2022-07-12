@@ -14,40 +14,37 @@ from xknx.knxip import (
 from .request_response import RequestResponse
 
 if TYPE_CHECKING:
-    from xknx.io.udp_client import UDPClient
-    from xknx.xknx import XKNX
+    from xknx.io.transport import KNXIPTransport
 
 
 class Connect(RequestResponse):
-    """Class to send a ConnectRequest and wait for ConnectResponse.."""
+    """Class to send a ConnectRequest and wait for ConnectResponse."""
 
-    def __init__(self, xknx: XKNX, udp_client: UDPClient, route_back: bool = False):
+    def __init__(
+        self,
+        transport: KNXIPTransport,
+        local_hpai: HPAI,
+    ):
         """Initialize Connect class."""
-        self.udp_client = udp_client
-        self.route_back = route_back
-        super().__init__(xknx, self.udp_client, ConnectResponse)
+        super().__init__(transport, ConnectResponse)
         self.communication_channel = 0
+        self.data_endpoint = HPAI()
         self.identifier = 0
+        self.local_hpai = local_hpai
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
-        # set control_endpoint and data_endpoint to the same udp_connection
-        if self.route_back:
-            endpoint = HPAI()
-        else:
-            (local_addr, local_port) = self.udp_client.getsockname()
-            endpoint = HPAI(ip_addr=local_addr, port=local_port)
+        # use the same HPAI for control_endpoint and data_endpoint
         connect_request = ConnectRequest(
-            self.xknx,
             request_type=ConnectRequestType.TUNNEL_CONNECTION,
-            control_endpoint=endpoint,
-            data_endpoint=endpoint,
+            control_endpoint=self.local_hpai,
+            data_endpoint=self.local_hpai,
         )
         return KNXIPFrame.init_from_body(connect_request)
 
     def on_success_hook(self, knxipframe: KNXIPFrame) -> None:
         """Set communication channel and identifier after having received a valid answer."""
         assert isinstance(knxipframe.body, ConnectResponse)
-        assert isinstance(knxipframe.body.identifier, int)
         self.communication_channel = knxipframe.body.communication_channel
+        self.data_endpoint = knxipframe.body.data_endpoint
         self.identifier = knxipframe.body.identifier

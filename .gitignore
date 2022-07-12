@@ -19,3 +19,4 @@ venv
 .python-version
 *.iml
 *.log
+main.py
