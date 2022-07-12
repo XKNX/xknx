@@ -85,7 +85,7 @@ class USBDevice:
     def use(self) -> None:
         """ """
         if self._device:
-            self._device.set_configuration()
+            #self._device.set_configuration()
             # if we have an interrupt port, use that one to communicate (3.3.2.3 HID class pipes)
             # here we assume there is one
             self._active_configuration = self._device.get_active_configuration()
@@ -99,7 +99,7 @@ class USBDevice:
                         usb.util.ENDPOINT_IN)
             self._ep_out = usb.util.find_descriptor(
                 self._interface,
-                # match the first IN endpoint
+                # match the first OUT endpoint
                 custom_match= \
                     lambda e: \
                         usb.util.endpoint_direction(e.bEndpointAddress) == \
@@ -110,19 +110,22 @@ class USBDevice:
         """ """
         if self._device and self._interface:
             usb.util.release_interface(self._device, self._interface)
-            self._device.attach_kernel_driver(self._interface)
+            #self._device.attach_kernel_driver(self._interface)
 
     def read(self) -> bytes:
         """ """
         response = bytes()
         if self._ep_in and self._device:
-            response = self._device.read(self._ep_in, self._ep_in.wMaxPacketSize, timeout=3000).tobytes()
+            response = self._ep_in.read(self._ep_in, self._ep_in.wMaxPacketSize, timeout=3000).tobytes()
+            logger.debug(f"read {len(response)} bytes: {response.hex()}")
+            #response = self._device.read(self._ep_in, self._ep_in.wMaxPacketSize, timeout=3000).tobytes()
         return response
 
     def write(self, data: bytes):
         """ """
         if self._device and self._ep_out:
-            self._device.write(self._ep_out, data, timeout=3000)
+            logger.debug(f"write {len(data)} bytes: {data.hex()}")
+            self._ep_out.write(data)
 
     def _claim_interface(self) -> None:
         """ """

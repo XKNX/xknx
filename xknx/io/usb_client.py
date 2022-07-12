@@ -32,6 +32,7 @@ class USBClient:
             raise USBDeviceNotFoundError(
                 "USBInterface could not find USB device with idVendor: 0x{0:0{1}X}, idProduct: 0x{2:0{3}X}".format(
                     self.connection_config.idVendor, 4, self.connection_config.idProduct, 4))
+        self.usb_device.use()
 
     def stop(self) -> None:
         """ """
@@ -49,6 +50,7 @@ class USBClient:
 
     def send_telegram(self, telegram: Telegram) -> None:
         """ """
+        logger.debug(f"sending: {telegram}")
         emi_code = CEMIMessageCode.L_DATA_REQ
         # create a cEMI frame from the telegram
         cemi = CEMIFrame.init_from_telegram(
