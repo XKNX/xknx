@@ -13,11 +13,13 @@ usb_logger = logging.getLogger("xknx.usb")
 class USBVendorId(IntEnum):
     """ Vendor ID's """
     SIEMENS_OCI702 = 0x0908
+    JUNG_2130USBREG = 0x135e
 
 
 class USBProductId(IntEnum):
     """ Product ID's """
     SIEMENS_OCI702 = 0x02dc
+    JUNG_2130USBREG = 0X0023
 
 
 class USBKNXInterfaceData:
@@ -85,7 +87,7 @@ class USBDevice:
     def use(self) -> None:
         """ """
         if self._device:
-            #self._device.set_configuration()
+            usb.logging.info(f"Using device: \n{self._device}")
             # if we have an interrupt port, use that one to communicate (3.3.2.3 HID class pipes)
             # here we assume there is one
             self._active_configuration = self._device.get_active_configuration()
