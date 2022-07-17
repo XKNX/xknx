@@ -4,17 +4,16 @@ from xknx import XKNX
 
 from xknx.devices import Light
 from xknx.io.connection import ConnectionConfigUSB
-import xknx.usb.util as usb_util
+from xknx.usb.util import USBVendorId, USBProductId
 
 
 logging.basicConfig(level=logging.DEBUG)
 
 
-async def main(vendor_id, product_id):
-    usb_config = ConnectionConfigUSB(vendor_id, product_id)
-    xknx = XKNX(connection_config=usb_config)
+async def main(config, switch_group_address):
+    xknx = XKNX(connection_config=config)
     await xknx.start()
-    light = Light(xknx, name="TestOutlet", group_address_switch="1/2/10")
+    light = Light(xknx, name="TestOutlet", group_address_switch=switch_group_address)
     await light.set_on()
     await asyncio.sleep(2)
     await light.set_off()
@@ -22,6 +21,9 @@ async def main(vendor_id, product_id):
 
 
 if __name__ == "__main__":
-    vendor = usb_util.USBVendorId.JUNG_2130USBREG
-    product = usb_util.USBProductId.JUNG_2130USBREG
-    asyncio.run(main(vendor, product))
+    vendor_id = USBVendorId.JUNG_2130USBREG
+    product_id = USBProductId.JUNG_2130USBREG
+    usb_config = ConnectionConfigUSB(vendor_id, product_id)
+    switch_group_address = "1/2/10"
+
+    asyncio.run(main(usb_config, switch_group_address))
