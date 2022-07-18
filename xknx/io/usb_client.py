@@ -19,19 +19,22 @@ class USBClient:
     def __init__(self, xknx, connection_config: ConnectionConfigUSB) -> None:
         self.xknx = xknx
         self.connection_config = connection_config
+        self.idVendor = self.connection_config.idVendor
+        self.idProduct = self.connection_config.idProduct
         self.usb_device: USBDevice | None = None
 
+    @property
+    def interface_data(self):
+        return USBKNXInterfaceData(self.idVendor, self.idProduct)
+
     def start(self) -> None:
-        """ """
-        self.usb_device = get_first_matching_usb_device(  # search device by providing vendor and product id
-            USBKNXInterfaceData(self.connection_config.idVendor, self.connection_config.idProduct)
-        )
+        self.usb_device = get_first_matching_usb_device(self.interface_data)
+
         if not self.usb_device:
-            logger.error("USBInterface could not find USB device with idVendor: 0x%04x, idProduct: 0x%04x",
-                         self.connection_config.idVendor, self.connection_config.idProduct)
-            raise USBDeviceNotFoundError(
-                "USBInterface could not find USB device with idVendor: 0x{0:0{1}X}, idProduct: 0x{2:0{3}X}".format(
-                    self.connection_config.idVendor, 4, self.connection_config.idProduct, 4))
+            message = f"Device with idVendor: {self.idVendor}, idProduct: {self.idProduct} not found"
+            logger.error(message)
+            raise USBDeviceNotFoundError(message)
+
         self.usb_device.use()
 
     def stop(self) -> None:
