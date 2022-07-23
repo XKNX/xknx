@@ -155,9 +155,12 @@ class KNXUSBTransferProtocolHeader:
             self._emi_id,
             self._manufacturer_code,
         ) = struct.unpack(self._data_format, data)
-        self._protocol_id = ProtocolID(self._protocol_id)
-        self._emi_id = EMIID(self._emi_id)
-        self._valid = True
+        try:
+            self._protocol_id = ProtocolID(self._protocol_id)
+            self._emi_id = EMIID(self._emi_id)
+            self._valid = True
+        except ValueError as e:
+            usb_logger.error(str(e))
 
 
 class KNXUSBTransferProtocolBody:
