@@ -33,7 +33,7 @@ class USBInterface(Interface):
 
     async def connect(self) -> bool:
         """Connect to KNX bus. Returns True on success."""
-        self.usb_client.connect()
+        return self.usb_client.connect()
 
     async def disconnect(self) -> None:
         """Disconnect from KNX bus."""
@@ -42,7 +42,3 @@ class USBInterface(Interface):
     async def send_telegram(self, telegram: Telegram) -> None:
         """Send Telegram to KNX bus."""
         self.usb_client.send_telegram(telegram=telegram)
-
-    async def _receive_telegram(self, telegram: Telegram) -> None:
-        """ """
-        self.xknx.telegrams.put_nowait(telegram)

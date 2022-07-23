@@ -37,14 +37,14 @@ class USBDevice:
 
     def __init__(self):
         """"""
-        self._device: Optional[usb.Device] = None
+        self._device: Optional[usb.core.Device] = None
         self._manufacturer = ""
         self._product = ""
         self._serial_number = ""
-        self._interface: Optional[usb.Interface] = None
+        self._interface: Optional[usb.core.Interface] = None
         self._active_configuration = None
-        self._ep_in: Optional[usb.Endpoint] = None
-        self._ep_out: Optional[usb.Endpoint] = None
+        self._ep_in: Optional[usb.core.Endpoint] = None
+        self._ep_out: Optional[usb.core.Endpoint] = None
 
     @property
     def device(self) -> Optional[usb.core.Device]:
@@ -112,22 +112,30 @@ class USBDevice:
         """ """
         if self._device and self._interface:
             usb.util.release_interface(self._device, self._interface)
-            #self._device.attach_kernel_driver(self._interface)
+            # self._device.attach_kernel_driver(self._interface)
 
     def read(self) -> bytes:
         """ """
         response = bytes()
         if self._ep_in and self._device:
-            response = self._ep_in.read(self._ep_in, self._ep_in.wMaxPacketSize, timeout=3000).tobytes()
-            logger.debug(f"read {len(response)} bytes: {response.hex()}")
-            #response = self._device.read(self._ep_in, self._ep_in.wMaxPacketSize, timeout=3000).tobytes()
+            try:
+                response = self._ep_in.read(size_or_buffer=64).tobytes()
+                logger.debug(f"read {len(response)} bytes: {response.hex()}")
+            except usb.core.USBTimeoutError:
+                pass
+        else:
+            logger.warning("no USB IN endpoint to read from")
         return response
 
     def write(self, data: bytes):
         """ """
         if self._device and self._ep_out:
             logger.debug(f"write {len(data)} bytes: {data.hex()}")
-            self._ep_out.write(data)
+            write_count = self._ep_out.write(data)
+            if write_count != len(data):
+                logger.warning(f"{write_count} bytes instead of {len(data)} were written")
+        else:
+            logger.warning("no USB OUT endpoint to write to")
 
     def _claim_interface(self) -> None:
         """ """

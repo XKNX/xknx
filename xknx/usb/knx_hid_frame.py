@@ -12,6 +12,7 @@ usb_logger = logging.getLogger("xknx.usb")
 
 class PacketInfoData:
     """ """
+
     def __init__(self, sequence_number: SequenceNumber, packet_type: PacketType) -> None:
         self.sequence_number = sequence_number
         self.packet_type = packet_type
@@ -88,12 +89,17 @@ class PacketInfo:
         if len(data) != 1:
             logger.error(f"received {len(data)} bytes, expected one byte")
             return
-        self._sequence_number = SequenceNumber(data[0] >> 4)
-        self._packet_type = PacketType(data[0] & 0x0F)
+        try:
+            self._sequence_number = SequenceNumber(data[0] >> 4)
+            self._packet_type = PacketType(data[0] & 0x0F)
+        except ValueError as e:
+            logger.error(str(e))
+            return
 
 
 class KNXHIDReportHeaderData:
     """ """
+
     def __init__(self, packet_info: PacketInfo, data_length: int) -> None:
         self.packet_info = packet_info
         self.data_length = data_length
@@ -187,11 +193,13 @@ class KNXHIDReportHeader:
         self._packet_info = PacketInfo.from_knx(data[1:2])
         self._data_length = data[2]
         if self._report_id == 0x01:
-            self._valid = True
+            if self._packet_info.packet_type and self._packet_info.sequence_number:
+                self._valid = True
 
 
 class KNXHIDReportBodyData:
     """ """
+
     def __init__(self, protocol_id: ProtocolID, emi_id: EMIID, emi_data: bytes, partial: bool) -> None:
         self.protocol_id = protocol_id
         self.emi_id = emi_id
@@ -217,7 +225,8 @@ class KNXHIDReportBody:
         if data.partial:
             obj._is_valid = obj._body.is_valid
         else:
-            obj._header = KNXUSBTransferProtocolHeader.from_data(KNXUSBTransferProtocolHeaderData(obj._body.length, data.protocol_id, data.emi_id))
+            obj._header = KNXUSBTransferProtocolHeader.from_data(
+                KNXUSBTransferProtocolHeaderData(obj._body.length, data.protocol_id, data.emi_id))
             obj._is_valid = obj._header.is_valid and obj._body.is_valid
         return obj
 
@@ -277,7 +286,7 @@ class KNXHIDReportBody:
             self._body = KNXUSBTransferProtocolBody.from_knx(data)
             self._is_valid = self._body.is_valid
         else:
-            self._header = KNXUSBTransferProtocolHeader.from_knx(data[:8])  # only in the start packet has a header
+            self._header = KNXUSBTransferProtocolHeader.from_knx(data[:8])  # only the start packet has a header
             self._body = KNXUSBTransferProtocolBody.from_knx(data[8:])
             self._is_valid = self._header.is_valid and self._body.is_valid
 
