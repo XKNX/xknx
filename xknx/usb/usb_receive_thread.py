@@ -32,7 +32,7 @@ class USBReceiveThread(BaseThread):
                                         :knx_hid_frame.report_body.transfer_protocol_header.body_length])
                     telegram = cemi_frame.telegram
                     telegram.direction = TelegramDirection.INCOMING
-                    logger.debug(f"receiving: {cemi_frame.telegram}")
+                    logger.debug(f"receiving: {telegram}")
                     self._xknx.telegrams.put_nowait(telegram)
                 else:
                     logger.debug(f"ignoring invalid USB HID frame: {usb_data.hex()}")
