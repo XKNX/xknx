@@ -8,6 +8,30 @@ from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, 
 
 
 @patch("xknx.io.knxip_interface.KNXIPInterface", autospec=True)
+async def test_dm_restart(_if_mock):
+    """Test dm_restart."""
+    xknx = XKNX()
+    individual_address = IndividualAddress("4.0.10")
+
+    connect = Telegram(destination_address=individual_address, tpci=tpci.TConnect())
+    restart = Telegram(
+        destination_address=individual_address,
+        tpci=tpci.TDataConnected(0),
+        payload=apci.Restart(),
+    )
+    disconnect = Telegram(
+        destination_address=individual_address,
+        tpci=tpci.TDisconnect(),
+    )
+    await procedures.dm_restart(xknx, individual_address)
+    assert xknx.knxip_interface.send_telegram.call_args_list == [
+        call(connect),
+        call(restart),
+        call(disconnect),
+    ]
+
+
+@patch("xknx.io.knxip_interface.KNXIPInterface", autospec=True)
 async def test_nm_individual_address_check_success(_if_mock):
     """Test nm_individual_address_check."""
     xknx = XKNX()

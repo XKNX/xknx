@@ -712,6 +712,9 @@ class Restart(APCI):
     Does not take any payload.
     """
 
+    # Requests a Basic Restart of the communication partner.
+    # Master reset is not implemented yet.
+
     CODE = APCIService.RESTART
 
     def calculated_length(self) -> int:
