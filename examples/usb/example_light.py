@@ -4,7 +4,6 @@ from xknx import XKNX
 
 from xknx.devices import Light
 from xknx.io.connection import ConnectionConfigUSB
-from xknx.usb.util import USBVendorId, USBProductId
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -21,9 +20,5 @@ async def main(config, switch_group_address):
 
 
 if __name__ == "__main__":
-    vendor_id = USBVendorId.JUNG_2130USBREG
-    product_id = USBProductId.JUNG_2130USBREG
-    usb_config = ConnectionConfigUSB(vendor_id, product_id)
     switch_group_address = "1/2/10"
-
-    asyncio.run(main(usb_config, switch_group_address))
+    asyncio.run(main(ConnectionConfigUSB(), switch_group_address))

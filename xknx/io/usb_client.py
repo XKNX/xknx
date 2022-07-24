@@ -5,7 +5,7 @@ from xknx.exceptions.exception import USBDeviceNotFoundError
 from xknx.io.connection import ConnectionConfigUSB
 from xknx.telegram import Telegram
 from xknx.usb.util import USBDevice
-from xknx.usb import get_first_matching_usb_device, USBKNXInterfaceData, USBSendThread, USBReceiveThread
+from xknx.usb import get_all_known_knx_usb_devices, get_first_matching_usb_device, USBKNXInterfaceData, USBSendThread, USBReceiveThread
 
 logger = logging.getLogger("xknx.log")
 
@@ -28,10 +28,15 @@ class USBClient:
         return USBKNXInterfaceData(self.idVendor, self.idProduct)
 
     def start(self) -> None:
-        self.usb_device = get_first_matching_usb_device(self.interface_data)
+        if self.idVendor == 0x0000 and self.idProduct == 0x0000:
+            all_knx_usb_devices = get_all_known_knx_usb_devices()
+            if len(all_knx_usb_devices) > 0:
+                self.usb_device = all_knx_usb_devices[0]
+        else:
+            self.usb_device = get_first_matching_usb_device(self.interface_data)
 
         if not self.usb_device:
-            message = f"Device with idVendor: {self.idVendor}, idProduct: {self.idProduct} not found"
+            message = f"Could not find a/any KNX device (idVendor: {self.idVendor}, idProduct: {self.idProduct})"
             logger.error(message)
             raise USBDeviceNotFoundError(message)
 

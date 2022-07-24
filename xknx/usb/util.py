@@ -10,16 +10,92 @@ knx_logger = logging.getLogger("xknx.knx")
 usb_logger = logging.getLogger("xknx.usb")
 
 
-class USBVendorId(IntEnum):
-    """ Vendor ID's """
-    SIEMENS_OCI702 = 0x0908
-    JUNG_2130USBREG = 0x135e
-
-
-class USBProductId(IntEnum):
-    """ Product ID's """
-    SIEMENS_OCI702 = 0x02dc
-    JUNG_2130USBREG = 0X0023
+# https://raw.githubusercontent.com/calimero-project/calimero-core/master/resources/knxUsbVendorProductIds
+KNOWN_DEVICES = [
+    # KNX USB interfaces by Vendor ID
+    # Created 2020-06-20
+    #  VID ,   PID
+    (0x0111, 0x1022),  # Makel Elektrik
+    # Future Technology Devices International Limited
+    (0x0403, 0x6898),  # Tokka
+    # b+b
+    (0x04cc, 0x0301),  # b+b Automations- und Steuerungstechnik
+    # Siemens OCI700 interface (Synco family)
+    (0x0681, 0x0014),  # Siemens HVAC
+    # Siemens Automation & Drives
+    (0x0908, 0x02DD),  # Siemens
+    (0x0908, 0x02DC),  # Siemens HVAC
+    (0x0908, 0x02E6),  # Schrack Technik GmbH
+    # Weinzierl Engineering GmbH
+    (0x0e77, 0x0111),  # Siemens
+    (0x0e77, 0x0112),
+    (0x0e77, 0x6910),  # Busch-Jaeger Elektro
+    (0x0e77, 0x0104),  # GEWISS
+    (0x0e77, 0x0104),  # Somfy
+    (0x0e77, 0x0115),  # CONTROLtronic
+    (0x0e77, 0x0102),  # Weinzierl Engineering GmbH
+    (0x0e77, 0x0103),
+    (0x0e77, 0x0104),
+    (0x0e77, 0x2001),
+    (0x0e77, 0x0121),  # Gustav Hensel GmbH & Co. KG
+    (0x0e77, 0x0141),  # Schneider Electric (MG)
+    # Insta
+    (0x135e, 0x0023),  # Albrecht Jung
+    (0x135e, 0x0123),
+    (0x135e, 0x0323),
+    (0x135e, 0x0021),  # Berker
+    (0x135e, 0x0022),  # GIRA Giersiepen
+    (0x135e, 0x0122),
+    (0x135e, 0x0322),
+    (0x135e, 0x0025),  # Hager Electro
+    (0x135e, 0x0020),  # Insta GmbH
+    (0x135e, 0x0320),
+    (0x135e, 0x0024),  # Merten
+    (0x135e, 0x0026),  # Feller
+    (0x135e, 0x0326),
+    (0x135e, 0x0028),  # Glamox AS
+    (0x135e, 0x0027),  # Panasonic
+    (0x135e, 0x0329),  # B.E.G.
+    # Busch-Jaeger
+    (0x145c, 0x1330),  # Busch-Jaeger Elektro
+    (0x145c, 0x1490),
+    # ABB STOTZ‐KONTAKT GmbH
+    (0x147b, 0x2200),  # ABB
+    (0x147b, 0x5120),
+    # MCS Electronics ‐ OBSOLETE
+    (0x16d0, 0x0490),  # TAPKO Technologies
+    (0x16d0, 0x0491),  # MDT technologies
+    (0x16d0, 0x0492),  # preussen automation
+    # SATEL Ltd.
+    (0x24d5, 0x0106),  # Satel sp. z o.o.
+    # Tapko Technologies GmbH
+    (0x28c2, 0x001A),  # VIMAR
+    (0x28c2, 0x0002),  # Zennio
+    (0x28c2, 0x0004),  # TAPKO Technologies
+    (0x28c2, 0x0008),
+    (0x28c2, 0x0006),  # HDL
+    (0x28c2, 0x0007),  # Niko-Zublin
+    (0x28c2, 0x000C),  # ESYLUX
+    (0x28c2, 0x0010),  # Video-Star
+    (0x28c2, 0x0015),  # Bes – Ingenium
+    (0x28c2, 0x000E),  # APRICUM
+    (0x28c2, 0x000F),
+    (0x28c2, 0x0005),  # Philips Controls
+    (0x28c2, 0x0003),  # Ekinex S.p.A.
+    (0x28c2, 0x0011),  # Griesser AG
+    (0x28c2, 0x0012),
+    (0x28c2, 0x000B),  # VIVO
+    (0x28c2, 0x000D),
+    (0x28c2, 0x0017),  # Interra
+    (0x28c2, 0x0013),  # MEAN WELL Enterprises Co. Ltd.
+    (0x28c2, 0x0014),  # Ergo3 Sarl
+    # ise GmbH
+    (0x2a07, 0x0001),  # ise GmbH
+    (0x2a07, 0x0002),  # Elsner Elektronik GmbH
+    # DOGAWIST ‐ Investment GmbH
+    (0x2d72, 0x0002),  # PEAKnx a DOGAWIST company
+    (0x7660, 0x0002),  # KNX Association
+]
 
 
 class USBKNXInterfaceData:
@@ -198,6 +274,19 @@ def get_connected_usb_device_list(interface_data: USBKNXInterfaceData) -> List[U
         usb_device_list = list(
             usb.core.find(find_all=True, idVendor=interface_data.idVendor, idProduct=interface_data.idProduct,
                           backend=_get_usb_backend()))
+        device_list = _create_usb_device_list(usb_device_list)
+    except usb.core.NoBackendError as e:
+        usb_logger.error(str(e))
+        raise
+    return device_list
+
+
+def get_all_known_knx_usb_devices() -> List[USBDevice]:
+    """ """
+    device_list = []
+    try:
+        usb_device_list = list(usb.core.find(find_all=True, backend=_get_usb_backend()))
+        usb_device_list = list(filter(lambda device: bool((device.idVendor, device.idProduct) in KNOWN_DEVICES), usb_device_list))
         device_list = _create_usb_device_list(usb_device_list)
     except usb.core.NoBackendError as e:
         usb_logger.error(str(e))
