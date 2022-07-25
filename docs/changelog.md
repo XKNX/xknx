@@ -6,6 +6,8 @@ nav_order: 2
 
 # Changelog
 
+## 0.22.0 Management 2022-07-26
+
 ### Management
 
 - Add support for creating point-to-point connections to do device management
