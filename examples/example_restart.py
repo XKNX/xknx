@@ -3,8 +3,8 @@ import asyncio
 import sys
 
 from xknx import XKNX
-from xknx.telegram import IndividualAddress, Telegram
-from xknx.telegram.apci import Restart
+from xknx.management.procedures import dm_restart
+from xknx.telegram import IndividualAddress
 
 
 async def main(argv: list[str]):
@@ -15,13 +15,8 @@ async def main(argv: list[str]):
 
     address = IndividualAddress(argv[1])
 
-    xknx = XKNX()
-    await xknx.start()
-
-    await xknx.telegrams.put(Telegram(address, payload=Restart()))
-    await asyncio.sleep(2)
-
-    await xknx.stop()
+    async with XKNX() as xknx:
+        await dm_restart(xknx, address)
 
 
 if __name__ == "__main__":
