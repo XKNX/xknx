@@ -6,6 +6,10 @@ nav_order: 2
 
 # Changelog
 
+### Management
+
+- Ignore received telegrams addressed to individual addresses other than XKNXs current address
+
 ## 0.22.0 Management 2022-07-26
 
 ### Management
