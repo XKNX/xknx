@@ -14,9 +14,10 @@ It provides functionality for
 """
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date, datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable, Iterator
+from typing import TYPE_CHECKING, Any, Callable
 
 from xknx.remote_value import (
     GroupAddressesType,

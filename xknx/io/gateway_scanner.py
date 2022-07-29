@@ -7,9 +7,10 @@ SearchRequest and SearchRequestExtended frames.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncGenerator
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, AsyncGenerator
+from typing import TYPE_CHECKING
 
 from xknx.exceptions import XKNXException
 from xknx.io import util

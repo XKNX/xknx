@@ -9,7 +9,8 @@ It provides functionality for
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterator
+from collections.abc import Iterator
+from typing import TYPE_CHECKING
 
 from xknx.remote_value import GroupAddressesType, RemoteValueRaw
 

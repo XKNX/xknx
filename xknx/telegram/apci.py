@@ -955,7 +955,7 @@ class FunctionPropertyCommand(APCI):
     ) -> None:
         """Initialize a new instance of FunctionPropertyCommand."""
         if data is None:
-            data = bytes()
+            data = b""
 
         self.object_index = object_index
         self.property_id = property_id
@@ -997,7 +997,7 @@ class FunctionPropertyStateRead(APCI):
     ) -> None:
         """Initialize a new instance of FunctionPropertyStateRead."""
         if data is None:
-            data = bytes()
+            data = b""
 
         self.object_index = object_index
         self.property_id = property_id
@@ -1043,7 +1043,7 @@ class FunctionPropertyStateResponse(APCI):
     ) -> None:
         """Initialize a new instance of FunctionPropertyStateResponse."""
         if data is None:
-            data = bytes()
+            data = b""
 
         self.object_index = object_index
         self.property_id = property_id

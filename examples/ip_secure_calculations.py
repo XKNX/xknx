@@ -30,7 +30,7 @@ def sha256_hash(data: bytes) -> bytes:
 def calculate_message_authentication_code_cbc(
     key: bytes,
     additional_data: bytes,
-    payload: bytes = bytes(),
+    payload: bytes = b"",
     block_0: bytes = bytes(16),
     # counter_0: bytes = bytes(16),
 ) -> bytes:
@@ -53,7 +53,7 @@ def calculate_message_authentication_code_cbc(
 def encrypt_data_ctr(
     key: bytes,
     mac_cbc: bytes,
-    payload: bytes = bytes(),
+    payload: bytes = b"",
     counter_0: bytes = bytes(16),
 ) -> bytes:
     """

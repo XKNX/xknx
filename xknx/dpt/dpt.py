@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from inspect import isabstract
-from typing import Any, Iterator, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from xknx.exceptions import ConversionError
 
