@@ -6,6 +6,8 @@ nav_order: 2
 
 # Changelog
 
+## 0.22.1 Wrong delivery 2022-07-29
+
 ### Management
 
 - Ignore received telegrams addressed to individual addresses other than XKNXs current address
