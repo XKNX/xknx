@@ -29,7 +29,7 @@ class SRP:
         self,
         srp_type: SearchRequestParameterType,
         mandatory: bool = True,
-        data: bytes = bytes(),
+        data: bytes = b"",
     ):
         """Initialize a SRP."""
         self.type = srp_type

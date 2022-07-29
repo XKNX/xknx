@@ -7,9 +7,10 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
+from collections.abc import Awaitable
 from copy import copy
 import logging
-from typing import TYPE_CHECKING, Awaitable
+from typing import TYPE_CHECKING
 
 from xknx.core import XknxConnectionState
 from xknx.exceptions import CommunicationError, ConfirmationError

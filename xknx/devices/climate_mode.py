@@ -6,8 +6,9 @@ Controller modes use DPT 20.105.
 """
 from __future__ import annotations
 
+from collections.abc import Iterator
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING, Any
 
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
 from xknx.exceptions import DeviceIllegalValue

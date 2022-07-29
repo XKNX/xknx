@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterator, Generator
 from contextlib import asynccontextmanager
 import logging
-from typing import TYPE_CHECKING, AsyncIterator, Callable, Generator
+from typing import TYPE_CHECKING, Callable
 
 from xknx.exceptions import (
     CommunicationError,

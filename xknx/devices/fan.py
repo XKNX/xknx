@@ -8,9 +8,10 @@ It provides functionality for
 """
 from __future__ import annotations
 
+from collections.abc import Iterator
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING, Any
 
 from xknx.remote_value import (
     GroupAddressesType,

@@ -1,8 +1,9 @@
 """Module for managing a notification via KNX."""
 from __future__ import annotations
 
+from collections.abc import Iterator
 import logging
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING
 
 from xknx.remote_value import GroupAddressesType, RemoteValueString
 

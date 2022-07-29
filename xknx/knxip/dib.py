@@ -76,7 +76,7 @@ class DIBGeneric(DIB):
         # DTC Description Type Code
         self.dtc: DIBTypeCode | int = 0
         # IBD Information Block Data
-        self.data = bytes()
+        self.data = b""
 
     def calculated_length(self) -> int:
         """Get length of KNX/IP object."""

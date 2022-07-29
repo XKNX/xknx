@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, NamedTuple, Union
+from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Union
 
 from xknx.core import XknxConnectionState
 from xknx.remote_value import RemoteValue

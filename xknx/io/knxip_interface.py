@@ -9,9 +9,10 @@ KNXIPInterface manages KNX/IP Tunneling or Routing connections.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 import logging
 import threading
-from typing import TYPE_CHECKING, Awaitable, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from xknx.exceptions import (
     CommunicationError,
