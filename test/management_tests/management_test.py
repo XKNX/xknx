@@ -168,3 +168,33 @@ async def test_incoming_unexpected_numbered_telegram():
         tpci=tpci.TAck(0),
     )
     assert await xknx.knxip_interface.telegram_received(device_desc_read) == [ack]
+
+
+async def test_incoming_wrong_address():
+    """Test incoming telegrams addressed to different devices."""
+    xknx = XKNX()
+    individual_address = IndividualAddress("4.0.10")
+    other_address = IndividualAddress("4.0.11")
+    assert xknx.current_address != other_address
+
+    connect = Telegram(
+        source_address=individual_address,
+        destination_address=other_address,
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TConnect(),
+    )
+    ack = Telegram(
+        source_address=individual_address,
+        destination_address=other_address,
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TAck(0),
+    )
+    disconnect = Telegram(
+        source_address=individual_address,
+        destination_address=other_address,
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TDisconnect(),
+    )
+    assert await xknx.knxip_interface.telegram_received(connect) is None
+    assert await xknx.knxip_interface.telegram_received(ack) is None
+    assert await xknx.knxip_interface.telegram_received(disconnect) is None

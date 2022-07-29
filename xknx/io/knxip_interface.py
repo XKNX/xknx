@@ -278,6 +278,8 @@ class KNXIPInterface:
     async def telegram_received(self, telegram: Telegram) -> list[Telegram] | None:
         """Put received telegram into queue. Callback for having received telegram."""
         if isinstance(telegram.destination_address, IndividualAddress):
+            if telegram.destination_address != self.xknx.current_address:
+                return None
             return self.xknx.management.process(telegram)
 
         self.xknx.telegrams.put_nowait(telegram)
