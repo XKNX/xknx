@@ -72,6 +72,7 @@ class CEMIMessageCode(Enum):
     # that a frame was sent
     # (does not indicate a successful receive though)
     L_RAW_CON = 0x2F
+    M_PROPINFO_IND = 0xF7
 
 
 class CEMIFlags:

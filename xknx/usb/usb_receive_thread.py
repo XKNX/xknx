@@ -1,7 +1,8 @@
 import logging
 import asyncio
 from xknx.core.thread import BaseThread
-from xknx.knxip import CEMIFrame, CEMIMessageCode
+from xknx.exceptions import UnsupportedCEMIMessage
+from xknx.knxip import CEMIFrame
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.usb.util import USBDevice
 from xknx.usb.knx_hid_frame import KNXHIDFrame
@@ -50,7 +51,11 @@ class USBReceiveThread(BaseThread):
     def create_telegram_and_put_in_queue(self):
         """ """
         cemi_frame = CEMIFrame()
-        cemi_frame.from_knx(self._knx_raw)
+        try:
+            cemi_frame.from_knx(self._knx_raw)
+        except UnsupportedCEMIMessage as e:
+            logger.warning(str(e))
+            return
         telegram = cemi_frame.telegram
         telegram.direction = TelegramDirection.INCOMING
         logger.debug(f"receiving: {telegram}")
