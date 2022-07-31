@@ -9,9 +9,10 @@ KNXIPInterface manages KNX/IP Tunneling or Routing connections.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 import logging
 import threading
-from typing import TYPE_CHECKING, Awaitable, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from xknx.exceptions import (
     CommunicationError,
@@ -283,6 +284,8 @@ class KNXIPInterface:
     async def telegram_received(self, telegram: Telegram) -> list[Telegram] | None:
         """Put received telegram into queue. Callback for having received telegram."""
         if isinstance(telegram.destination_address, IndividualAddress):
+            if telegram.destination_address != self.xknx.current_address:
+                return None
             return self.xknx.management.process(telegram)
 
         self.xknx.telegrams.put_nowait(telegram)

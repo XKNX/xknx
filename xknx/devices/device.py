@@ -7,8 +7,9 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
+from collections.abc import Coroutine, Iterator
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterator, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 from xknx.core import Task
 from xknx.remote_value import RemoteValue

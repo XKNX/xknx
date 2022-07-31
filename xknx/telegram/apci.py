@@ -712,6 +712,9 @@ class Restart(APCI):
     Does not take any payload.
     """
 
+    # Requests a Basic Restart of the communication partner.
+    # Master reset is not implemented yet.
+
     CODE = APCIService.RESTART
 
     def calculated_length(self) -> int:
@@ -952,7 +955,7 @@ class FunctionPropertyCommand(APCI):
     ) -> None:
         """Initialize a new instance of FunctionPropertyCommand."""
         if data is None:
-            data = bytes()
+            data = b""
 
         self.object_index = object_index
         self.property_id = property_id
@@ -994,7 +997,7 @@ class FunctionPropertyStateRead(APCI):
     ) -> None:
         """Initialize a new instance of FunctionPropertyStateRead."""
         if data is None:
-            data = bytes()
+            data = b""
 
         self.object_index = object_index
         self.property_id = property_id
@@ -1040,7 +1043,7 @@ class FunctionPropertyStateResponse(APCI):
     ) -> None:
         """Initialize a new instance of FunctionPropertyStateResponse."""
         if data is None:
-            data = bytes()
+            data = b""
 
         self.object_index = object_index
         self.property_id = property_id

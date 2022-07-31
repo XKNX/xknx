@@ -62,7 +62,7 @@ class TCPTransport(KNXIPTransport):
         self.callbacks = []
         self._connection_lost_cb = connection_lost_cb
         self.transport: asyncio.Transport | None = None
-        self._buffer = bytes()
+        self._buffer = b""
 
     def data_received_callback(self, raw: bytes) -> None:
         """Parse and process KNXIP frame. Callback for having received data over TCP."""

@@ -8,7 +8,8 @@ Abstract base for a specific KNX/IP connection (Tunneling or Routing).
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Awaitable, Callable, Optional
+from collections.abc import Awaitable
+from typing import Callable, Optional
 
 from xknx.telegram import Telegram
 

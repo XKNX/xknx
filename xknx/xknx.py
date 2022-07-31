@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
 import signal
 from sys import platform
 from types import TracebackType
-from typing import Awaitable, Callable
+from typing import Callable
 
 from xknx.core import (
     ConnectionManager,

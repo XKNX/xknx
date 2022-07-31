@@ -10,8 +10,9 @@ It provides functionality for
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterator
 import logging
-from typing import TYPE_CHECKING, Any, Final, Iterator
+from typing import TYPE_CHECKING, Any, Final
 
 from xknx.core import Task
 from xknx.remote_value import (

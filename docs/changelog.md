@@ -6,22 +6,31 @@ nav_order: 2
 
 # Changelog
 
-## 0.21.5 Secure discovery bugfix 2022-06-28
+## 0.22.1 Wrong delivery 2022-07-29
 
-### Bugfix
+### Management
 
-- Fix GatewayDescriptor parsing when SearchResponseExtended DIBs are in unexpected order
+- Ignore received telegrams addressed to individual addresses other than XKNXs current address
+
+## 0.22.0 Management 2022-07-26
 
 ### Management
 
 - Add support for creating point-to-point connections to do device management
 - Add `nm_individual_address_check` procedure to check if an individual address is in use on the network
+- Add `dm_restart` procedure to request a basic restart of a device
 - Remove PayloadReader class. Management procedure functions should be used to request data from individual devices.
 
 ### Internals
 
 - Optionally return a list of Telegrams to be sent to an incoming request as reply. This is used for incoming device management requests. Callbacks for incoming requests (in Interface subclasses) are now handled in an asyncio Task.
 - Incoming L_DATA.req frames are confirmed (L_DATA.con) and replies / acks are sent as L_DATA.ind
+
+## 0.21.5 Secure discovery bugfix 2022-06-28
+
+### Bugfix
+
+- Fix GatewayDescriptor parsing when SearchResponseExtended DIBs are in unexpected order
 
 ## 0.21.4 Fan out 2022-06-07
 
