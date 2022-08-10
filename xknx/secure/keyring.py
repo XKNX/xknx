@@ -222,7 +222,7 @@ class XMLDevice(AttributeReader):
 class Keyring(AttributeReader):
     """Class for loading and decrypting knxkeys XML files."""
 
-    backbone: XMLBackbone
+    backbone: XMLBackbone | None = None
     interfaces: list[XMLInterface]
     group_addresses: list[XMLGroupAddress]
     devices: list[XMLDevice]
