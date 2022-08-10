@@ -233,6 +233,7 @@ class Keyring(AttributeReader):
 
     def __init__(self) -> None:
         """Initialize the Keyring."""
+        self.backbone = None
         self.interfaces = []
         self.devices = []
         self.group_addresses = []
