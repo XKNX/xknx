@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+## Unreleased changes
+
+### Internal
+
+- Fix DPT2ByteFloat numeric range issues
+
 ## 0.22.1 Wrong delivery 2022-07-29
 
 ### Management
