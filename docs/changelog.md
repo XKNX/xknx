@@ -6,11 +6,13 @@ nav_order: 2
 
 # Changelog
 
-## Unreleased changes
+## 1.0.0 Support for lukewarm temperatures 2022-08-13
 
 ### Internal
 
 - Fix DPT2ByteFloat numeric range issues
+- Fix keyring parsing
+- We can now correctly parse 20,48 °C thus xknx is now a stable library
 
 ## 0.22.1 Wrong delivery 2022-07-29
 
