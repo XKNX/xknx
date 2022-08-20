@@ -50,3 +50,7 @@ async def main():
 
 asyncio.run(main())
 ```
+
+# Attributions
+
+Many thanks to [Weinzierl Engineering GmbH](https://weinzierl.de) and [MDT technologies GmbH](https://www.mdt.de) for providing us each an IP Secure Router to support testing and development of xknx.
