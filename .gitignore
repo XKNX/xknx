@@ -1,3 +1,9 @@
+.idea/
+.vscode/
+.vs/
+
+env/
+
 *.pyc
 docs/_site/
 docs/vendor/

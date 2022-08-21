@@ -146,6 +146,10 @@ class XKNX:
         await self.knxip_interface.stop()
         self.started.clear()
 
+    async def idle(self) -> None:
+        while True:
+            await asyncio.sleep(1.0)
+
     async def loop_until_sigint(self) -> None:
         """Loop until Crtl-C was pressed."""
 
@@ -155,6 +159,8 @@ class XKNX:
 
         if platform == "win32":
             logger.warning("Windows does not support signals")
+            await self.idle()
+            return
         else:
             loop = asyncio.get_running_loop()
             loop.add_signal_handler(signal.SIGINT, sigint_handler)

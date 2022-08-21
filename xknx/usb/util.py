@@ -1,4 +1,3 @@
-from enum import IntEnum
 import logging
 from typing import List, Optional
 import platform
@@ -216,12 +215,15 @@ class USBDevice:
     def _claim_interface(self) -> None:
         """ """
         if self._device:  # if no device is connected, this will be None
-            if self._device.is_kernel_driver_active(0):
-                try:
-                    self._device.detach_kernel_driver(0)
-                    usb.util.claim_interface(self._device, self._interface)
-                except usb.core.USBError as e:
-                    usb_logger.error(f"Could not detach kernel driver: {str(e)}")
+            try:  # on Windows this doesn't work, but also does not seem necessary
+                if self._device.is_kernel_driver_active(0):
+                    try:
+                        self._device.detach_kernel_driver(0)
+                        usb.util.claim_interface(self._device, self._interface)
+                    except usb.core.USBError as e:
+                        usb_logger.error(f"Could not detach kernel driver: {str(e)}")
+            except Exception as e:
+                usb_logger.debug(str(e))
 
 
 def get_first_matching_usb_device(interface_data: USBKNXInterfaceData) -> Optional[USBDevice]:
@@ -355,7 +357,12 @@ def _get_usb_backend():
     if platform.system() == 'Windows':
         # TODO: here we loaded libusb dll and use it as backend
         #       libusb as backend on windows supports almost no function (install WinUSB with Zadig?)
-        usb_logger.warning("TODO: load libusb dll on Windows")
+        import os
+        import usb.backend.libusb1
+        dll_location = os.environ.get("XKNX_LIBUSB", "C:\\Windows\\System32\\libusb-1.0.dll")
+        backend = usb.backend.libusb1.get_backend(find_library=lambda x: f"{dll_location}")
+        if not backend:
+            usb_logger.info("No USB backend found. Set XKNX_LIBUSB environment variable pointing to libusb-1.0.dll or install it to C:\\Windows\\System32")
     return backend
 
 
