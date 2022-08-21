@@ -61,3 +61,7 @@ For more examples please check out the [examples page](https://github.com/XKNX/x
 # [](#header-1)Getting Help
 
 For questions, feature requests, bugreports either join the [XKNX chat on Discord](https://discord.gg/EuAQDXU), open an issue at [GitHub](https://github.com/XKNX/xknx) or write an [email](mailto:xknx@xknx.io).
+
+# [](#header-1)Attributions
+
+Many thanks to [MDT technologies GmbH](https://www.mdt.de) and [Weinzierl Engineering GmbH](https://weinzierl.de) for providing us each an IP Secure Router to support testing and development of xknx.

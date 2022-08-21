@@ -79,6 +79,13 @@ class TestDPTFloat:
         assert DPT2ByteFloat.to_knx(DPT2ByteFloat.value_max) == (0x7F, 0xFF)
         assert DPT2ByteFloat.from_knx((0x7F, 0xFF)) == DPT2ByteFloat.value_max
 
+    def test_close_to_limit(self):
+        """Test parsing and streaming of DPT2ByteFloat with numeric limit."""
+        assert DPT2ByteFloat.to_knx(20.48) == (0x0C, 0x00)
+        assert DPT2ByteFloat.from_knx((0x0C, 0x00)) == 20.48
+        assert DPT2ByteFloat.to_knx(-20.48) == (0x80, 0x00)
+        assert DPT2ByteFloat.from_knx((0x80, 0x00)) == -20.48
+
     def test_min(self):
         """Test parsing and streaming of DPT2ByteFloat with minimum value."""
         assert DPT2ByteFloat.to_knx(DPT2ByteFloat.value_min) == (0xF8, 0x00)

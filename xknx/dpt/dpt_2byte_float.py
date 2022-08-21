@@ -49,33 +49,23 @@ class DPT2ByteFloat(DPTNumeric):
     @classmethod
     def to_knx(cls, value: float) -> tuple[int, int]:
         """Serialize to KNX/IP raw data."""
-
-        def calc_exponent(float_value: float, sign: bool) -> tuple[int, int]:
-            """Return float exponent."""
-            exponent = 0
-            significand = abs(int(float_value * 100))
-
-            while significand < -2048 or significand > 2048:
-                exponent += 1
-                significand >>= 1
-
-            if sign:
-                significand ^= 0x7FF  # invert
-                significand += 1  # and add 1
-
-            return exponent, significand
-
         try:
             knx_value = float(value)
             if not cls._test_boundaries(knx_value):
                 raise ValueError
 
-            sign = knx_value < 0
-            exponent, significand = calc_exponent(knx_value, sign)
+            value = knx_value * 100
+            exponent = 0
+            while value < -2048 or value > 2047:
+                exponent += 1
+                value /= 2
 
-            return (sign << 7) | (exponent << 3) | (
-                significand >> 8
-            ), significand & 0xFF
+            mantisse = int(round(value)) & 0x7FF
+            msb = exponent << 3 | mantisse >> 8
+            if value < 0:
+                msb |= 0x80
+
+            return msb, mantisse & 0xFF
         except ValueError:
             raise ConversionError(f"Could not serialize {cls.__name__}", value=value)
 
