@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+## Unreleased changes
+
+### Bugfixes
+
+- Correctly retry sending a TunnellingRequest if no TunnellingAck was received for the first time for UDP tunnelling connections.
+
 ## 1.0.0 Support for lukewarm temperatures 2022-08-13
 
 ### Internal
