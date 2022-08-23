@@ -6,7 +6,8 @@ import pytest
 
 from xknx import XKNX
 from xknx.dpt import DPTArray
-from xknx.io import UDPTunnel
+from xknx.exceptions import CommunicationError
+from xknx.io import TCPTunnel, UDPTunnel
 from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.knxip import (
     HPAI,
@@ -134,7 +135,7 @@ class TestUDPTunnel:
         self.tg_received_mock.assert_not_called()
         send_ack_mock.assert_called_once_with(0x02, 0x4F)
 
-    async def test_tunnel_wait_for_l2_confirmation(self, time_travel):
+    async def test_tunnel_send_and_wait_for_l2_confirmation(self, time_travel):
         """Test tunnel waits for L_DATA.con before sending another L_DATA.req."""
         self.tunnel.transport.send = Mock()
         self.tunnel.communication_channel = 1
@@ -162,6 +163,70 @@ class TestUDPTunnel:
         # one call for the outgoing request and one for the ACK for the confirmation
         assert self.tunnel.transport.send.call_count == 2
         await task
+
+    async def test_tunnel_send_retry(self, time_travel):
+        """Test tunnel resends the telegram when no ACK was received."""
+        self.tunnel.transport.send = Mock()
+        self.tunnel.communication_channel = 1
+        self.tunnel.sequence_number = 23
+
+        test_telegram = Telegram(payload=GroupValueWrite(DPTArray((1,))))
+        request = KNXIPFrame.init_from_body(
+            TunnellingRequest(
+                communication_channel_id=self.tunnel.communication_channel,
+                sequence_counter=self.tunnel.sequence_number,
+                cemi=CEMIFrame.init_from_telegram(
+                    test_telegram,
+                    code=CEMIMessageCode.L_DATA_REQ,
+                    src_addr=self.tunnel._src_address,
+                ),
+            )
+        )
+        test_ack = KNXIPFrame.init_from_body(
+            TunnellingAck(sequence_counter=self.tunnel.sequence_number)
+        )
+        confirmation = KNXIPFrame.init_from_body(
+            TunnellingRequest(
+                communication_channel_id=1,
+                sequence_counter=self.tunnel.sequence_number,
+                cemi=CEMIFrame.init_from_telegram(
+                    test_telegram, code=CEMIMessageCode.L_DATA_CON
+                ),
+            )
+        )
+        confirmation_ack = KNXIPFrame.init_from_body(
+            TunnellingAck(sequence_counter=self.tunnel.sequence_number)
+        )
+
+        task = asyncio.create_task(self.tunnel.send_telegram(test_telegram))
+        await time_travel(0)
+        assert self.tunnel.transport.send.call_args_list == [call(request, addr=None)]
+        self.tunnel.transport.send.reset_mock()
+        # no ACK received, resend same telegram
+        await time_travel(1)
+        assert self.tunnel.transport.send.call_args_list == [call(request, addr=None)]
+        self.tunnel.transport.send.reset_mock()
+        self.tunnel.transport.handle_knxipframe(test_ack, HPAI())
+        await time_travel(0)
+        assert not task.done()
+        self.tunnel.transport.handle_knxipframe(confirmation, HPAI())
+        await time_travel(0)
+        assert task.done()
+        assert self.tunnel.transport.send.call_args_list == [
+            call(confirmation_ack, addr=None)
+        ]
+        self.tunnel.transport.send.reset_mock()
+        await task
+
+        # Test raise after 2 missed ACKs (reconnect if `auto_reconnect` was True)
+        with pytest.raises(CommunicationError):
+            task = asyncio.create_task(self.tunnel.send_telegram(test_telegram))
+            # no ACKs received, for 2x wait time (with advancing the loop in between)
+            await time_travel(1)
+            await time_travel(1)
+            assert self.tunnel.transport.send.call_count == 2
+            self.tunnel.transport.send.reset_mock()
+            await task
 
     @pytest.mark.parametrize(
         "route_back,data_endpoint_addr,local_endpoint",
@@ -268,5 +333,49 @@ class TestUDPTunnel:
         await time_travel(0)
         assert task.done()
         assert isinstance(task.result(), GatewayDescriptor)
+        assert self.tunnel.transport.send.call_count == 1
+        await task
+
+
+class TestTCPTunnel:
+    """Test class for xknx/io/TCPTunnel objects."""
+
+    def setup_method(self):
+        """Set up test class."""
+        # pylint: disable=attribute-defined-outside-init
+        self.xknx = XKNX()
+        self.tg_received_mock = AsyncMock()
+        self.tunnel = TCPTunnel(
+            self.xknx,
+            gateway_ip="192.168.1.2",
+            gateway_port=3671,
+            telegram_received_callback=self.tg_received_mock,
+            auto_reconnect=False,
+            auto_reconnect_wait=3,
+        )
+
+    async def test_tunnel_send_and_wait_for_l2_confirmation(self, time_travel):
+        """Test tunnel waits for L_DATA.con before sending another L_DATA.req."""
+        self.tunnel.transport.send = Mock()
+        self.tunnel.communication_channel = 1
+
+        test_telegram = Telegram(payload=GroupValueWrite(DPTArray((1,))))
+        confirmation = KNXIPFrame.init_from_body(
+            TunnellingRequest(
+                communication_channel_id=1,
+                sequence_counter=23,
+                cemi=CEMIFrame.init_from_telegram(
+                    test_telegram, code=CEMIMessageCode.L_DATA_CON
+                ),
+            )
+        )
+        task = asyncio.create_task(self.tunnel.send_telegram(test_telegram))
+        await time_travel(0)
+        assert not task.done()
+        assert self.tunnel.transport.send.call_count == 1
+        self.tunnel.transport.handle_knxipframe(confirmation, HPAI())
+        await time_travel(0)
+        assert task.done()
+        # one call for the outgoing request. No Acks for TCP.
         assert self.tunnel.transport.send.call_count == 1
         await task
