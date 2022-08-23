@@ -206,7 +206,7 @@ class _Tunnel(Interface):
             f"ConnectRequest failed. Status code: {connect.response_status_code}"
         )
 
-    async def _connectionstate_request(self) -> bool:
+    async def _connectionstate_request(self) -> tuple[bool, str | None]:
         """Return state of tunnel. True if tunnel is in good shape."""
         if self.communication_channel is None:
             raise CommunicationError("No active communication channel.")
@@ -216,7 +216,11 @@ class _Tunnel(Interface):
             local_hpai=self.local_hpai,
         )
         await conn_state.start()
-        return conn_state.success
+
+        status_code: str | None = None
+        if error_code := conn_state.response_status_code:
+            status_code = error_code.name
+        return conn_state.success, status_code
 
     async def _disconnect_request(self, ignore_error: bool = False) -> None:
         """Disconnect from tunnel device. Delete communication_channel."""
@@ -402,7 +406,8 @@ class _Tunnel(Interface):
         while True:
             try:
                 await asyncio.sleep(HEARTBEAT_RATE)
-                if not await self._connectionstate_request():
+                success, _ = await self._connectionstate_request()
+                if not success:
                     await self._do_heartbeat_failed()
             except CommunicationError as err:
                 logger.warning("Heartbeat to KNX bus failed. %s", err)
@@ -412,10 +417,17 @@ class _Tunnel(Interface):
         """Heartbeat: handling error."""
         # first heartbeat failed - try 3 more times before disconnecting.
         for _heartbeats_failed in range(3):
-            if await self._connectionstate_request():
+            success, status = await self._connectionstate_request()
+            if success:
                 return
         # 3 retries failed
-        raise CommunicationError("No answer from tunneling server.")
+        if status is None:
+            raise CommunicationError(
+                "Heartbeat failed. No answer from tunnelling server."
+            )
+        raise CommunicationError(
+            f"Heartbeat failed. Tunnelling server repeatedly responded with status: {status}"
+        )
 
 
 class UDPTunnel(_Tunnel):
