@@ -410,7 +410,7 @@ class _Tunnel(Interface):
                 if not success:
                     await self._do_heartbeat_failed()
             except CommunicationError as err:
-                logger.warning("Heartbeat to KNX bus failed. %s", err)
+                logger.warning(err)
                 self._tunnel_lost()
 
     async def _do_heartbeat_failed(self) -> None:
