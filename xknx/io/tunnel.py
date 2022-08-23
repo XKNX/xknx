@@ -447,6 +447,7 @@ class UDPTunnel(_Tunnel):
             auto_reconnect=auto_reconnect,
             auto_reconnect_wait=auto_reconnect_wait,
         )
+        self.expected_sequence_number = 0
 
     def _init_transport(self) -> None:
         """Initialize transport transport."""
@@ -463,6 +464,7 @@ class UDPTunnel(_Tunnel):
             return
         (local_addr, local_port) = self.transport.getsockname()
         self.local_hpai = HPAI(ip_addr=local_addr, port=local_port)
+        self.expected_sequence_number = 0
 
     # OUTGOING REQUESTS
 
@@ -539,15 +541,33 @@ class UDPTunnel(_Tunnel):
     def _tunnelling_request_received(
         self, tunneling_request: TunnellingRequest
     ) -> None:
-        """Handle incoming tunnel request."""
-        # we should only ACK if the request matches the expected sequence number or one less
-        # we should not ACK and discard the request if the sequence number is higher than the expected sequence number
-        #   or if the sequence number lower thatn (expected -1)
-        self._send_tunnelling_ack(
-            tunneling_request.communication_channel_id,
-            tunneling_request.sequence_counter,
+        """Handle incoming tunnelling request."""
+        if tunneling_request.sequence_counter == self.expected_sequence_number:
+            self._send_tunnelling_ack(
+                tunneling_request.communication_channel_id,
+                tunneling_request.sequence_counter,
+            )
+            super()._tunnelling_request_received(tunneling_request)
+            self.expected_sequence_number = self.expected_sequence_number + 1 & 0xFF
+            return
+        if (
+            tunneling_request.sequence_counter
+            == self.expected_sequence_number - 1 & 0xFF
+        ):
+            self._send_tunnelling_ack(
+                tunneling_request.communication_channel_id,
+                tunneling_request.sequence_counter,
+            )
+            logger.debug(
+                "Received TunnellingRequest with sequence number one less than expected. "
+                "Discarding frame: %s",
+                tunneling_request,
+            )
+            return
+        logger.warning(
+            "Received TunnellingRequest with unexpected sequence number. Discarding frame: %s",
+            tunneling_request,
         )
-        super()._tunnelling_request_received(tunneling_request)
 
     def _send_tunnelling_ack(
         self, communication_channel_id: int, sequence_counter: int
