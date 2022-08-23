@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from xknx.knxip import CEMIFrame, KNXIPFrame, TunnellingAck, TunnellingRequest
+from xknx.knxip import KNXIPFrame, TunnellingAck, TunnellingRequest
 
 from .request_response import RequestResponse
 
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class Tunnelling(RequestResponse):
-    """Class to TunnelingRequest and wait for TunnelingACK (UDP only)."""
+    """Class to send TunnelingRequest and wait for TunnelingACK (UDP only)."""
 
     transport: UDPTransport
 
@@ -20,18 +20,12 @@ class Tunnelling(RequestResponse):
         self,
         transport: UDPTransport,
         data_endpoint: tuple[str, int] | None,
-        cemi: CEMIFrame,
-        sequence_counter: int,
-        communication_channel_id: int,
+        tunnelling_request: TunnellingRequest,
     ):
         """Initialize Tunnelling class."""
         self.data_endpoint_addr = data_endpoint
-
+        self.tunnelling_request = tunnelling_request
         super().__init__(transport, TunnellingAck)
-
-        self.cemi_frame = cemi
-        self.sequence_counter = sequence_counter
-        self.communication_channel_id = communication_channel_id
 
     async def send_request(self) -> None:
         """Build knxipframe (within derived class) and send via UDP."""
@@ -39,9 +33,4 @@ class Tunnelling(RequestResponse):
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
-        tunnelling_request = TunnellingRequest(
-            communication_channel_id=self.communication_channel_id,
-            sequence_counter=self.sequence_counter,
-            cemi=self.cemi_frame,
-        )
-        return KNXIPFrame.init_from_body(tunnelling_request)
+        return KNXIPFrame.init_from_body(self.tunnelling_request)
