@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-## Unreleased changes
+## 1.0.1 Handle UDP hickups
 
 ### Bugfixes
 

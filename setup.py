@@ -26,7 +26,7 @@ setup(
     author_email="julius@mittenzwei.com",
     license="MIT",
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: End Users/Desktop",
         "Intended Audience :: Developers",
         "Topic :: System :: Hardware :: Hardware Drivers",
