@@ -9,21 +9,25 @@ from xknx import XKNX
 from xknx.dpt import DPTArray
 from xknx.exceptions import CommunicationError
 from xknx.io import TCPTunnel, UDPTunnel
+from xknx.io.const import CONNECTIONSTATE_REQUEST_TIMEOUT, HEARTBEAT_RATE
 from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.knxip import (
     HPAI,
     CEMIFrame,
+    ConnectionStateRequest,
+    ConnectionStateResponse,
     ConnectRequest,
     ConnectResponse,
     DescriptionRequest,
     DescriptionResponse,
     DisconnectRequest,
     DisconnectResponse,
+    ErrorCode,
     KNXIPFrame,
     TunnellingAck,
     TunnellingRequest,
 )
-from xknx.knxip.knxip_enum import CEMIMessageCode
+from xknx.knxip.knxip_enum import CEMIMessageCode, HostProtocol
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueWrite
 
@@ -426,3 +430,171 @@ class TestTCPTunnel:
         # one call for the outgoing request. No Acks for TCP.
         assert self.tunnel.transport.send.call_count == 1
         await task
+
+    async def test_tunnel_heartbeat(self, time_travel):
+        """Test tunnel sends heartbeat frame."""
+        local_addr = ("192.168.1.1", 12345)
+        remote_hpai = HPAI(
+            ip_addr="192.168.1.2", port=3671, protocol=HostProtocol.IPV4_TCP
+        )
+        self.tunnel.transport.connect = AsyncMock()
+        self.tunnel.transport.getsockname = Mock(return_value=(local_addr))
+        self.tunnel.transport.send = Mock()
+        self.tunnel.transport.stop = Mock()
+        self.tunnel._tunnel_lost = Mock()
+
+        # Connect
+        connection_task = asyncio.create_task(self.tunnel.connect())
+        await time_travel(0)
+        self.tunnel.transport.connect.assert_called_once()
+
+        connect_response_frame = KNXIPFrame.init_from_body(
+            ConnectResponse(
+                communication_channel=23,
+                data_endpoint=HPAI(protocol=HostProtocol.IPV4_TCP),
+                identifier=7,
+            )
+        )
+        self.tunnel.transport.handle_knxipframe(connect_response_frame, remote_hpai)
+        await connection_task
+        self.tunnel.transport.send.reset_mock()
+
+        # Send heartbeat
+        heartbeat_request = KNXIPFrame.init_from_body(
+            ConnectionStateRequest(
+                communication_channel_id=23,
+                control_endpoint=HPAI(protocol=HostProtocol.IPV4_TCP),
+            )
+        )
+        heartbeat_response = KNXIPFrame.init_from_body(
+            ConnectionStateResponse(
+                communication_channel_id=23,
+                status_code=ErrorCode.E_NO_ERROR,
+            )
+        )
+        await time_travel(HEARTBEAT_RATE)
+        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
+        self.tunnel.transport.send.reset_mock()
+        self.tunnel.transport.handle_knxipframe(heartbeat_response, remote_hpai)
+        # test no retry-heartbeat was sent
+        await time_travel(CONNECTIONSTATE_REQUEST_TIMEOUT)
+        self.tunnel.transport.send.assert_not_called()
+        # next regular heartbeat
+        await time_travel(HEARTBEAT_RATE - CONNECTIONSTATE_REQUEST_TIMEOUT)
+        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
+        self.tunnel.transport.send.reset_mock()
+        self.tunnel._tunnel_lost.assert_not_called()
+
+    async def test_tunnel_heartbeat_no_answer(self, time_travel):
+        """Test tunnel sends heartbeat frame."""
+        local_addr = ("192.168.1.1", 12345)
+        remote_hpai = HPAI(
+            ip_addr="192.168.1.2", port=3671, protocol=HostProtocol.IPV4_TCP
+        )
+        self.tunnel.transport.connect = AsyncMock()
+        self.tunnel.transport.getsockname = Mock(return_value=(local_addr))
+        self.tunnel.transport.send = Mock()
+        self.tunnel.transport.stop = Mock()
+        self.tunnel._tunnel_lost = Mock()
+
+        # Connect
+        connection_task = asyncio.create_task(self.tunnel.connect())
+        await time_travel(0)
+        self.tunnel.transport.connect.assert_called_once()
+
+        connect_response_frame = KNXIPFrame.init_from_body(
+            ConnectResponse(
+                communication_channel=23,
+                data_endpoint=HPAI(protocol=HostProtocol.IPV4_TCP),
+                identifier=7,
+            )
+        )
+        self.tunnel.transport.handle_knxipframe(connect_response_frame, remote_hpai)
+        await connection_task
+        self.tunnel.transport.send.reset_mock()
+
+        # Send heartbeat
+        heartbeat_request = KNXIPFrame.init_from_body(
+            ConnectionStateRequest(
+                communication_channel_id=23,
+                control_endpoint=HPAI(protocol=HostProtocol.IPV4_TCP),
+            )
+        )
+        await time_travel(HEARTBEAT_RATE)
+        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
+        self.tunnel.transport.send.reset_mock()
+        # no answer - repeat 3 times
+        await time_travel(CONNECTIONSTATE_REQUEST_TIMEOUT)
+        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
+        self.tunnel.transport.send.reset_mock()
+        await time_travel(CONNECTIONSTATE_REQUEST_TIMEOUT)
+        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
+        self.tunnel.transport.send.reset_mock()
+        await time_travel(CONNECTIONSTATE_REQUEST_TIMEOUT)
+        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
+        self.tunnel.transport.send.reset_mock()
+        await time_travel(CONNECTIONSTATE_REQUEST_TIMEOUT)
+        # no answer - tunnel lost
+        self.tunnel._tunnel_lost.assert_called_once()
+
+    async def test_tunnel_heartbeat_error(self, time_travel):
+        """Test tunnel sends heartbeat frame."""
+        local_addr = ("192.168.1.1", 12345)
+        remote_hpai = HPAI(
+            ip_addr="192.168.1.2", port=3671, protocol=HostProtocol.IPV4_TCP
+        )
+        self.tunnel.transport.connect = AsyncMock()
+        self.tunnel.transport.getsockname = Mock(return_value=(local_addr))
+        self.tunnel.transport.send = Mock()
+        self.tunnel.transport.stop = Mock()
+        self.tunnel._tunnel_lost = Mock()
+
+        # Connect
+        connection_task = asyncio.create_task(self.tunnel.connect())
+        await time_travel(0)
+        self.tunnel.transport.connect.assert_called_once()
+
+        connect_response_frame = KNXIPFrame.init_from_body(
+            ConnectResponse(
+                communication_channel=23,
+                data_endpoint=HPAI(protocol=HostProtocol.IPV4_TCP),
+                identifier=7,
+            )
+        )
+        self.tunnel.transport.handle_knxipframe(connect_response_frame, remote_hpai)
+        await connection_task
+        self.tunnel.transport.send.reset_mock()
+
+        # Send heartbeat
+        heartbeat_request = KNXIPFrame.init_from_body(
+            ConnectionStateRequest(
+                communication_channel_id=23,
+                control_endpoint=HPAI(protocol=HostProtocol.IPV4_TCP),
+            )
+        )
+        heartbeat_error_response = KNXIPFrame.init_from_body(
+            ConnectionStateResponse(
+                communication_channel_id=23,
+                status_code=ErrorCode.E_CONNECTION_ID,
+            )
+        )
+        await time_travel(HEARTBEAT_RATE)
+        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
+        self.tunnel.transport.send.reset_mock()
+        self.tunnel.transport.handle_knxipframe(heartbeat_error_response, remote_hpai)
+        # repeat 3 times
+        await time_travel(0)
+        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
+        self.tunnel.transport.send.reset_mock()
+        self.tunnel.transport.handle_knxipframe(heartbeat_error_response, remote_hpai)
+        await time_travel(0)
+        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
+        self.tunnel.transport.send.reset_mock()
+        self.tunnel.transport.handle_knxipframe(heartbeat_error_response, remote_hpai)
+        await time_travel(0)
+        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
+        self.tunnel.transport.send.reset_mock()
+        self.tunnel.transport.handle_knxipframe(heartbeat_error_response, remote_hpai)
+        await time_travel(0)
+        # third retry had an error - tunnel lost
+        self.tunnel._tunnel_lost.assert_called_once()

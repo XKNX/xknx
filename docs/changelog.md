@@ -12,6 +12,7 @@ nav_order: 2
 
 - Correctly retry sending a TunnellingRequest if no TunnellingAck was received for the first time for UDP tunnelling connections.
 - Ignore repeated TunnellingRequests received from UDP tunnelling connections.
+- Properly log repeated heartbeat errors
 
 ## 1.0.0 Support for lukewarm temperatures 2022-08-13
 
