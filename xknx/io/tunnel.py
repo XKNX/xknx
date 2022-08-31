@@ -471,12 +471,13 @@ class UDPTunnel(_Tunnel):
 
     async def setup_tunnel(self) -> None:
         """Set up tunnel before sending a ConnectionRequest."""
+        self.expected_sequence_number = 0
+
         if self.route_back:
             self.local_hpai = HPAI()
             return
         (local_addr, local_port) = self.transport.getsockname()
         self.local_hpai = HPAI(ip_addr=local_addr, port=local_port)
-        self.expected_sequence_number = 0
 
     # OUTGOING REQUESTS
 
@@ -555,12 +556,12 @@ class UDPTunnel(_Tunnel):
     ) -> None:
         """Handle incoming tunnelling request."""
         if tunneling_request.sequence_counter == self.expected_sequence_number:
+            self.expected_sequence_number = self.expected_sequence_number + 1 & 0xFF
             self._send_tunnelling_ack(
                 tunneling_request.communication_channel_id,
                 tunneling_request.sequence_counter,
             )
             super()._tunnelling_request_received(tunneling_request)
-            self.expected_sequence_number = self.expected_sequence_number + 1 & 0xFF
             return
         if (
             tunneling_request.sequence_counter
@@ -577,7 +578,9 @@ class UDPTunnel(_Tunnel):
             )
             return
         logger.warning(
-            "Received TunnellingRequest with unexpected sequence number. Discarding frame: %s",
+            "Received TunnellingRequest with sequence number not equal to expected: %s. "
+            "Discarding frame: %s",
+            self.expected_sequence_number,
             tunneling_request,
         )
 
