@@ -6,13 +6,13 @@ nav_order: 2
 
 # Changelog
 
-## Unreleased changes
+## 1.0.2 Route-back reconnect 2022-08-31
 
 ### Bugfixes
 
 - Fix expected sequence counter reset for UDP Tunnelling connections with route_back enabled.
 
-## 1.0.1 Handle UDP hickups
+## 1.0.1 Handle UDP hickups 2022-08-24
 
 ### Bugfixes
 
