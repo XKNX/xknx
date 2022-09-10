@@ -25,7 +25,7 @@ async def group_value_read(
         payload=GroupValueRead(),
     )
 
-    logger.debug("Sening GroupValueRead telegram to %s", group_address)
+    logger.debug("Sending GroupValueRead telegram to %s", group_address)
     await xknx.telegrams.put(telegram)
 
 
@@ -42,8 +42,9 @@ async def group_value_response(
         payload=GroupValueResponse(payload),
     )
     logger.debug(
-        "Sening GroupValueResponse telegram with payload %s to %s.",
-        payload,
+        "Sending GroupValueResponse telegram with value '%s' of type '%s' to %s.",
+        value,
+        value_type or "raw",
         group_address,
     )
     await xknx.telegrams.put(telegram)
@@ -62,8 +63,9 @@ async def group_value_write(
         payload=GroupValueWrite(payload),
     )
     logger.debug(
-        "Sening GroupValueWrite telegram with payload %s to %s.",
-        payload,
+        "Sending GroupValueWrite telegram with value '%s' of type '%s' to %s.",
+        value,
+        value_type or "raw",
         group_address,
     )
     await xknx.telegrams.put(telegram)

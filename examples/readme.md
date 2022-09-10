@@ -10,7 +10,7 @@
 |[Disconnect](./example_disconnect.py)|Example on how to disconnect/reset all available tunneling channels|
 |[Gateway scanner](./example_gatewayscanner.py)|Example for GatewayScanner|
 |[Secure Tunnel](./example_secure.py)|Example for connecting to a KNX IP Secure Tunnel|
-|[Send telegrams](./example_send_telegrams.py)|Example for sending arbitrary telegrams|
+|[Send telegrams](./example_send_telegrams.py)|Example for sending generic telegrams|
 |[Telegram monitor](./example_telegram_monitor.py)|An example telegram monitor|
 |[Value reader](./example_value_reader.py)|Example on how to read a value from KNX bus|
 |[MQTT powermeter](./example_powermeter_mqtt.py)|Example of a daemon listening for values from my main power-meter and resend them on a MQTT bus|
@@ -35,4 +35,4 @@
 |Example|Description|
 |-|-|
 |[Restart](./example_restart.py)|Example on how to restart an KNX device|
-|[Tunnel](./example_tunnel.py)|Example on how to connecto to a KNX/IP tunneling device|
+|[Tunnel](./example_tunnel.py)|Example on how to connect to a KNX/IP tunneling device|
