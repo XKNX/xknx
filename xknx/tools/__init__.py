@@ -1,4 +1,4 @@
-"""Package for convenience functions for KNX communication."""
+"""Package for convenience functions for KNX group communication."""
 from __future__ import annotations
 
 import logging

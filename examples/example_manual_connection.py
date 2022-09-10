@@ -1,18 +1,18 @@
-"""Example for requesting a temperature."""
+"""Example for connecting to a specific KNX interface."""
 import asyncio
 import logging
 import time
 
 from xknx import XKNX
-from xknx.devices import Sensor
 from xknx.io import ConnectionConfig, ConnectionType
+from xknx.tools import read_group_value
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("xknx.log").level = logging.DEBUG
 logging.getLogger("xknx.knx").level = logging.DEBUG
 
 
-async def main():
+async def main() -> None:
     """Connect to specific tunnelling server, time a request for a group address value."""
     connection_config = ConnectionConfig(
         connection_type=ConnectionType.TUNNELING,
@@ -22,19 +22,10 @@ async def main():
     )
     xknx = XKNX(connection_config=connection_config)
 
-    sensor = Sensor(
-        xknx,
-        name="Sensor",
-        group_address_state="1/2/3",
-        value_type="temperature",
-    )
-
     async with xknx:
         start_time = time.time()
-        await sensor.sync(wait_for_result=True)
-        print(
-            f"Value: {sensor.resolve_state()} - took {(time.time() - start_time):0.3f} seconds"
-        )
+        result = await read_group_value(xknx, "5/1/20", value_type="temperature")
+        print(f"Value: {result} - took {(time.time() - start_time):0.3f} seconds")
 
 
 asyncio.run(main())

@@ -4,22 +4,21 @@ import asyncio
 from xknx import XKNX
 from xknx.core import ValueReader
 from xknx.telegram import GroupAddress
+from xknx.tools import read_group_value
 
 
-async def main():
+async def main() -> None:
     """Connect and read value from KNX bus."""
     xknx = XKNX()
     await xknx.start()
 
-    value_reader = ValueReader(xknx, GroupAddress("2/0/8"))
-    telegram = await value_reader.read()
-    if telegram is not None:
-        print(telegram)
+    # get the value only (can be decoded when passing `value_type`)
+    result = await read_group_value(xknx, "5/1/20")
+    print(f"Value: {result}")
 
-    value_reader = ValueReader(xknx, GroupAddress("2/1/8"))
-    telegram = await value_reader.read()
-    if telegram is not None:
-        print(telegram)
+    # get the whole telegram
+    telegram = await ValueReader(xknx, GroupAddress("5/1/20")).read()
+    print(f"Telegram: {telegram}")
 
     await xknx.stop()
 
