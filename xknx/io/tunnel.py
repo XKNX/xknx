@@ -7,13 +7,12 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Awaitable
 from copy import copy
 import logging
 from typing import TYPE_CHECKING
 
 from xknx.core import XknxConnectionState
-from xknx.exceptions import CommunicationError, ConfirmationError
+from xknx.exceptions import CommunicationError, ConfirmationError, TunnellingAckError
 from xknx.knxip import (
     HPAI,
     CEMIFrame,
@@ -207,7 +206,7 @@ class _Tunnel(Interface):
             f"ConnectRequest failed. Status code: {connect.response_status_code}"
         )
 
-    async def _connectionstate_request(self) -> bool:
+    async def _connectionstate_request(self) -> tuple[bool, str | None]:
         """Return state of tunnel. True if tunnel is in good shape."""
         if self.communication_channel is None:
             raise CommunicationError("No active communication channel.")
@@ -217,7 +216,11 @@ class _Tunnel(Interface):
             local_hpai=self.local_hpai,
         )
         await conn_state.start()
-        return conn_state.success
+
+        status_code: str | None = None
+        if error_code := conn_state.response_status_code:
+            status_code = error_code.name
+        return conn_state.success, status_code
 
     async def _disconnect_request(self, ignore_error: bool = False) -> None:
         """Disconnect from tunnel device. Delete communication_channel."""
@@ -257,52 +260,40 @@ class _Tunnel(Interface):
 
     async def _send_cemi(self, cemi: CEMIFrame) -> None:
         """
-        Send CEMI Frame to tunnelling server - retry mechanism.
+        Send CEMI Frame to tunnelling server.
 
         A transport layer confirmation shall be awaited before sending the next telegram.
-
-        If a TUNNELLING_REQUEST frame is not confirmed within the TUNNELLING_REQUEST_TIMEOUT
-        time of one (1) second then the frame shall be repeated once with the same sequence counter
-        value by the sending KNXnet/IP device.
-
-        If the KNXnet/IP device does not receive a TUNNELLING_ACK frame within the
-        TUNNELLING_REQUEST_TIMEOUT (= 1 second) or the status of a received
-        TUNNELLING_ACK frame signals any kind of error condition, the sending device
-        shall repeat the TUNNELLING_REQUEST frame once and then terminate the
-        connection by sending a DISCONNECT_REQUEST frame to the other devices
-        control endpoint.
         """
         async with self._send_telegram_lock:
             try:
-                if await self._tunnelling_request(cemi):
-                    return
-
-                logger.debug("Sending of telegram failed. Retrying a second time.")
-                if await self._tunnelling_request(cemi):
-                    return
-
-                logger.debug("Resending telegram failed. Reconnecting to tunnel.")
-                if self._reconnect_task is None or self._reconnect_task.done():
-                    self._tunnel_lost()
-                await self.xknx.connection_manager.connected.wait()
-                if not await self._tunnelling_request(cemi):
-                    raise CommunicationError(
-                        "Resending the telegram repeatedly failed.", True
-                    )
+                await self._tunnelling_request(cemi)
             finally:
                 self._increase_sequence_number()
 
-    @abstractmethod
-    async def _tunnelling_request(self, cemi: CEMIFrame) -> bool:
-        """Send Telegram to tunnelling device."""
+    async def _tunnelling_request(self, cemi: CEMIFrame) -> None:
+        """Send CEMI Frame to tunnelling server."""
+        if self.communication_channel is None:
+            raise CommunicationError(
+                "Sending telegram failed. No active communication channel."
+            )
+        tunnelling_request = TunnellingRequest(
+            communication_channel_id=self.communication_channel,
+            sequence_counter=self.sequence_number,
+            cemi=cemi,
+        )
+
+        if cemi.code is CEMIMessageCode.L_DATA_REQ:
+            await self._wait_for_tunnelling_request_confirmation(tunnelling_request)
+        else:
+            await self._send_tunnelling_request(tunnelling_request)
 
     async def _wait_for_tunnelling_request_confirmation(
-        self, send_tunneling_request_aw: Awaitable[None], cemi: CEMIFrame
+        self, frame: TunnellingRequest
     ) -> None:
         """Wait for confirmation of tunnelling request."""
         self._tunnelling_request_confirmation_event.clear()
         send_and_wait_for_confirmation = asyncio.gather(
-            send_tunneling_request_aw,
+            self._send_tunnelling_request(frame),
             self._tunnelling_request_confirmation_event.wait(),
         )
         try:
@@ -311,11 +302,13 @@ class _Tunnel(Interface):
                 timeout=REQUEST_TO_CONFIRMATION_TIMEOUT,
             )
         except asyncio.TimeoutError:
-            # REQUEST_TO_CONFIRMATION_TIMEOUT is longer than tunnelling timeout of 1 second
-            # so exception should always be from self._tunnelling_request_confirmation_event
             raise ConfirmationError(
-                f"L_DATA_CON Data Link Layer confirmation timed out for {cemi.telegram}"
+                f"L_DATA_CON Data Link Layer confirmation timed out for {frame}"
             )
+
+    @abstractmethod
+    async def _send_tunnelling_request(self, frame: TunnellingRequest) -> None:
+        """Send TunnellingRequest frame to tunnelling device."""
 
     def _increase_sequence_number(self) -> None:
         """Increase sequence number."""
@@ -413,20 +406,28 @@ class _Tunnel(Interface):
         while True:
             try:
                 await asyncio.sleep(HEARTBEAT_RATE)
-                if not await self._connectionstate_request():
+                success, _ = await self._connectionstate_request()
+                if not success:
                     await self._do_heartbeat_failed()
             except CommunicationError as err:
-                logger.warning("Heartbeat to KNX bus failed. %s", err)
+                logger.warning(err)
                 self._tunnel_lost()
 
     async def _do_heartbeat_failed(self) -> None:
         """Heartbeat: handling error."""
         # first heartbeat failed - try 3 more times before disconnecting.
         for _heartbeats_failed in range(3):
-            if await self._connectionstate_request():
+            success, status = await self._connectionstate_request()
+            if success:
                 return
         # 3 retries failed
-        raise CommunicationError("No answer from tunneling server.")
+        if status is None:
+            raise CommunicationError(
+                "Heartbeat failed. No answer from tunnelling server."
+            )
+        raise CommunicationError(
+            f"Heartbeat failed. Tunnelling server repeatedly responded with status: {status}"
+        )
 
 
 class UDPTunnel(_Tunnel):
@@ -458,6 +459,7 @@ class UDPTunnel(_Tunnel):
             auto_reconnect=auto_reconnect,
             auto_reconnect_wait=auto_reconnect_wait,
         )
+        self.expected_sequence_number = 0
 
     def _init_transport(self) -> None:
         """Initialize transport transport."""
@@ -469,6 +471,8 @@ class UDPTunnel(_Tunnel):
 
     async def setup_tunnel(self) -> None:
         """Set up tunnel before sending a ConnectionRequest."""
+        self.expected_sequence_number = 0
+
         if self.route_back:
             self.local_hpai = HPAI()
             return
@@ -477,41 +481,108 @@ class UDPTunnel(_Tunnel):
 
     # OUTGOING REQUESTS
 
-    async def _tunnelling_request(self, cemi: CEMIFrame) -> bool:
+    async def _send_cemi(self, cemi: CEMIFrame) -> None:
+        """
+        Send CEMI Frame to tunnelling server - with retry mechanism for UDP connection.
+
+        A transport layer confirmation shall be awaited before sending the next telegram.
+
+        If a TUNNELLING_REQUEST frame is not confirmed within the TUNNELLING_REQUEST_TIMEOUT
+        time of one (1) second then the frame shall be repeated once with the same sequence counter
+        value by the sending KNXnet/IP device.
+
+        If the KNXnet/IP device does not receive a TUNNELLING_ACK frame within the
+        TUNNELLING_REQUEST_TIMEOUT (= 1 second) or the status of a received
+        TUNNELLING_ACK frame signals any kind of error condition, the sending device
+        shall repeat the TUNNELLING_REQUEST frame once and then terminate the
+        connection by sending a DISCONNECT_REQUEST frame to the other devices
+        control endpoint.
+        """
+        async with self._send_telegram_lock:
+            try:
+                try:
+                    await self._tunnelling_request(cemi)
+                except TunnellingAckError as err:
+                    logger.debug("%s. Retrying a second time.", err)
+                else:
+                    return
+
+                try:
+                    await self._tunnelling_request(cemi)
+                except TunnellingAckError as err:
+                    logger.debug("%s. Reconnecting tunnel.", err)
+                else:
+                    return
+
+                if self._reconnect_task is None or self._reconnect_task.done():
+                    self._tunnel_lost()
+                await self.xknx.connection_manager.connected.wait()
+                try:
+                    await self._tunnelling_request(cemi)
+                except TunnellingAckError as err:
+                    raise CommunicationError(
+                        f"Resending the telegram repeatedly failed. {err}", True
+                    )
+
+            finally:
+                self._increase_sequence_number()
+
+    async def _send_tunnelling_request(self, frame: TunnellingRequest) -> None:
         """Send Telegram to tunnelling device."""
-        if self.communication_channel is None:
-            raise CommunicationError(
-                "Sending telegram failed. No active communication channel."
-            )
         tunnelling = Tunnelling(
             transport=self.transport,
             data_endpoint=self._data_endpoint_addr,
-            cemi=cemi,
-            sequence_counter=self.sequence_number,
-            communication_channel_id=self.communication_channel,
+            tunnelling_request=frame,
         )
-        if cemi.code is CEMIMessageCode.L_DATA_REQ:
-            await self._wait_for_tunnelling_request_confirmation(
-                send_tunneling_request_aw=tunnelling.start(), cemi=cemi
-            )
-        else:
-            await tunnelling.start()
-        return tunnelling.success
+        await tunnelling.start()
+
+        if not tunnelling.success:
+            if error_code := tunnelling.response_status_code:
+                reason = (
+                    f"Received TUNNELLING_ACK with error code: {error_code.name} "
+                    f"for frame {frame}"
+                )
+            else:
+                reason = (
+                    "Did not receive a TUNNELLING_ACK within 1 second for "
+                    f"frame with sequence_counter={frame.sequence_counter}"
+                )
+            raise TunnellingAckError(reason)
 
     # INCOMING REQUESTS
 
     def _tunnelling_request_received(
         self, tunneling_request: TunnellingRequest
     ) -> None:
-        """Handle incoming tunnel request."""
-        # we should only ACK if the request matches the expected sequence number or one less
-        # we should not ACK and discard the request if the sequence number is higher than the expected sequence number
-        #   or if the sequence number lower thatn (expected -1)
-        self._send_tunnelling_ack(
-            tunneling_request.communication_channel_id,
-            tunneling_request.sequence_counter,
+        """Handle incoming tunnelling request."""
+        if tunneling_request.sequence_counter == self.expected_sequence_number:
+            self.expected_sequence_number = self.expected_sequence_number + 1 & 0xFF
+            self._send_tunnelling_ack(
+                tunneling_request.communication_channel_id,
+                tunneling_request.sequence_counter,
+            )
+            super()._tunnelling_request_received(tunneling_request)
+            return
+        if (
+            tunneling_request.sequence_counter
+            == self.expected_sequence_number - 1 & 0xFF
+        ):
+            self._send_tunnelling_ack(
+                tunneling_request.communication_channel_id,
+                tunneling_request.sequence_counter,
+            )
+            logger.debug(
+                "Received TunnellingRequest with sequence number one less than expected. "
+                "Discarding frame: %s",
+                tunneling_request,
+            )
+            return
+        logger.warning(
+            "Received TunnellingRequest with sequence number not equal to expected: %s. "
+            "Discarding frame: %s",
+            self.expected_sequence_number,
+            tunneling_request,
         )
-        super()._tunnelling_request_received(tunneling_request)
 
     def _send_tunnelling_ack(
         self, communication_channel_id: int, sequence_counter: int
@@ -562,31 +633,9 @@ class TCPTunnel(_Tunnel):
     async def setup_tunnel(self) -> None:
         """Set up tunnel before sending a ConnectionRequest."""
 
-    async def _tunnelling_request(self, cemi: CEMIFrame) -> bool:
+    async def _send_tunnelling_request(self, frame: TunnellingRequest) -> None:
         """Send Telegram to tunnelling device."""
-        if self.communication_channel is None:
-            raise CommunicationError(
-                "Sending telegram failed. No active communication channel."
-            )
-        tunnelling_request = TunnellingRequest(
-            communication_channel_id=self.communication_channel,
-            sequence_counter=self.sequence_number,
-            cemi=cemi,
-        )
-
-        if cemi.code is CEMIMessageCode.L_DATA_REQ:
-
-            async def _async_wrapper() -> None:
-                self.transport.send(KNXIPFrame.init_from_body(tunnelling_request))
-
-            await self._wait_for_tunnelling_request_confirmation(
-                send_tunneling_request_aw=_async_wrapper(),
-                cemi=cemi,
-            )
-        else:
-            self.transport.send(KNXIPFrame.init_from_body(tunnelling_request))
-
-        return True
+        self.transport.send(KNXIPFrame.init_from_body(frame))
 
 
 class SecureTunnel(TCPTunnel):

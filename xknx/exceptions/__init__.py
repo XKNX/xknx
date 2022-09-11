@@ -17,6 +17,7 @@ from .exception import (
     ManagementConnectionRefused,
     ManagementConnectionTimeout,
     SecureException,
+    TunnellingAckError,
     UnsupportedCEMIMessage,
     XKNXException,
 )
@@ -38,6 +39,7 @@ __all__ = [
     "InvalidSignature",
     "KNXSecureValidationError",
     "SecureException",
+    "TunnellingAckError",
     "UnsupportedCEMIMessage",
     "XKNXException",
 ]

@@ -34,6 +34,10 @@ class ConfirmationError(CommunicationError):
     """No confirmation received from KNX server for sent Telegram."""
 
 
+class TunnellingAckError(CommunicationError):
+    """No ACK or error status received from UDP KNX server for sent Telegram."""
+
+
 class USBDeviceNotFoundError(XKNXException):
     """ """
 

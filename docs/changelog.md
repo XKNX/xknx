@@ -6,6 +6,20 @@ nav_order: 2
 
 # Changelog
 
+## 1.0.2 Route-back reconnect 2022-08-31
+
+### Bugfixes
+
+- Fix expected sequence counter reset for UDP Tunnelling connections with route_back enabled.
+
+## 1.0.1 Handle UDP hickups 2022-08-24
+
+### Bugfixes
+
+- Correctly retry sending a TunnellingRequest if no TunnellingAck was received for the first time for UDP tunnelling connections.
+- Ignore repeated TunnellingRequests received from UDP tunnelling connections.
+- Properly log repeated heartbeat errors
+
 ## 1.0.0 Support for lukewarm temperatures 2022-08-13
 
 ### Internal

@@ -22,7 +22,6 @@ class TestTunnelling:
 
     async def test_tunnelling(self):
         """Test tunnelling from KNX bus."""
-        communication_channel_id = 23
         data_endpoint = ("192.168.1.2", 4567)
         udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
         cemi = CEMIFrame.init_from_telegram(
@@ -31,25 +30,16 @@ class TestTunnelling:
                 payload=GroupValueWrite(DPTArray((0x1, 0x2, 0x3))),
             )
         )
-        sequence_counter = 42
-        tunnelling = Tunnelling(
-            udp_transport,
-            data_endpoint,
-            cemi,
-            sequence_counter,
-            communication_channel_id,
+        tunnelling_request = TunnellingRequest(
+            communication_channel_id=23,
+            sequence_counter=42,
+            cemi=cemi,
         )
+        tunnelling = Tunnelling(udp_transport, data_endpoint, tunnelling_request)
         tunnelling.timeout_in_seconds = 0
 
         assert tunnelling.awaited_response_class == TunnellingAck
-        assert tunnelling.communication_channel_id == communication_channel_id
 
-        # Expected KNX/IP-Frame:
-        tunnelling_request = TunnellingRequest(
-            communication_channel_id=communication_channel_id,
-            sequence_counter=sequence_counter,
-        )
-        tunnelling_request.cemi = cemi
         exp_knxipframe = KNXIPFrame.init_from_body(tunnelling_request)
         with patch("xknx.io.transport.UDPTransport.send") as mock_udp_send, patch(
             "xknx.io.transport.UDPTransport.getsockname"
