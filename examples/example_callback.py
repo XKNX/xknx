@@ -1,4 +1,4 @@
-"""Example for reading the state from the KNX bus."""
+"""Example for running a callback when a devices state changed."""
 import asyncio
 
 from xknx import XKNX
@@ -12,7 +12,7 @@ async def light_callback(light: Light) -> None:
 
 
 async def main() -> None:
-    """Connect to KNX/IP bus and read the state of a Light device."""
+    """Connect to KNX/IP bus, turn on Light device and wait."""
     xknx = XKNX(
         connection_config=ConnectionConfig(
             gateway_ip="10.1.0.41",
