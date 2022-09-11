@@ -1,8 +1,11 @@
 """Test xknx tools package."""
 from unittest.mock import patch
 
+import pytest
+
 from xknx import XKNX
-from xknx.dpt.dpt import DPTArray, DPTBinary
+from xknx.dpt import DPTArray, DPTBinary, DPTTemperature
+from xknx.exceptions import ConversionError
 from xknx.telegram import GroupAddress, Telegram, TelegramDirection, apci
 from xknx.tools import (
     group_value_read,
@@ -40,34 +43,71 @@ async def test_group_value_response():
     assert xknx.telegrams.get_nowait() == response
 
 
-async def test_group_value_write():
+@pytest.mark.parametrize(
+    "value,value_type,expected",
+    [
+        (50, "percent", DPTArray((0x80,))),
+        (True, None, DPTBinary(1)),
+        (False, None, DPTBinary(0)),
+        (20.48, DPTTemperature, DPTArray((0x0C, 0x00))),
+        (-100, 6, DPTArray((0x9C,))),
+        ((0x0C, 0x00), None, DPTArray((0x0C, 0x00))),
+        (DPTBinary(1), None, DPTBinary(1)),
+    ],
+)
+async def test_group_value_write(value, value_type, expected):
     """Test group_value_write."""
     xknx = XKNX()
     group_address = "1/2/3"
 
     write = Telegram(
         destination_address=GroupAddress(group_address),
-        payload=apci.GroupValueWrite(DPTArray([0x80])),
+        payload=apci.GroupValueWrite(expected),
     )
-    await group_value_write(xknx, "1/2/3", 50, value_type="percent")
+    await group_value_write(xknx, "1/2/3", value, value_type=value_type)
     assert xknx.telegrams.qsize() == 1
     assert xknx.telegrams.get_nowait() == write
 
 
+@pytest.mark.parametrize(
+    "value,value_type,error_type",
+    [
+        (50, "unknown", ValueError),
+        (50, 9.001, ValueError),  # float is invalid
+        (101, "percent", ConversionError),  # too big
+    ],
+)
+async def test_group_value_write_invalid(value, value_type, error_type):
+    """Test group_value_write."""
+    xknx = XKNX()
+    with pytest.raises(error_type):
+        await group_value_write(xknx, "1/2/3", value, value_type=value_type)
+
+
+@pytest.mark.parametrize(
+    "value,value_type,expected",
+    [
+        (50, "percent", DPTArray((0x80,))),
+        ((0x80,), None, DPTArray((0x80,))),
+        (True, None, DPTBinary(1)),
+    ],
+)
 @patch("xknx.core.value_reader.ValueReader.read")
-async def test_read_group_value(value_reader_read_mock):
+async def test_read_group_value(value_reader_read_mock, value, value_type, expected):
     """Test read_group_value."""
     xknx = XKNX()
-    test_group_address = GroupAddress("1/2/3")
+    test_group_address = "1/2/3"
 
     response_telegram = Telegram(
-        destination_address=test_group_address,
+        destination_address=GroupAddress(test_group_address),
         direction=TelegramDirection.INCOMING,
-        payload=apci.GroupValueResponse(DPTArray((0x0C, 0x00))),
+        payload=apci.GroupValueResponse(expected),
     )
     value_reader_read_mock.return_value = response_telegram
 
-    response_value = await read_group_value(xknx, "1/2/3", value_type="temperature")
+    response_value = await read_group_value(
+        xknx, test_group_address, value_type=value_type
+    )
     # GroupValueRead telegram is not in queue because ValueReader.read is mocked.
     # This is tested in ValueReader tests.
-    assert response_value == 20.48
+    assert response_value == value
