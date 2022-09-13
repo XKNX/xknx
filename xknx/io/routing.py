@@ -52,23 +52,29 @@ class Routing(Interface):
         )
 
         self.udp_transport.register_callback(
-            self.response_rec_callback, [KNXIPServiceType.ROUTING_INDICATION]
+            self._handle_frame, [KNXIPServiceType.ROUTING_INDICATION]
         )
 
-    def response_rec_callback(
+    def _handle_frame(
         self, knxipframe: KNXIPFrame, source: HPAI, _: KNXIPTransport
     ) -> None:
-        """Verify and handle knxipframe. Callback from internal udp_transport."""
-        if not isinstance(knxipframe.body, RoutingIndication):
-            logger.warning("Service type not implemented: %s", knxipframe)
-        elif knxipframe.body.cemi is None:
-            # ignore unsupported CEMI frame
-            return
-        elif knxipframe.body.cemi.src_addr == self.xknx.own_address:
-            logger.debug("Ignoring own packet")
+        """Handle incoming KNXIPFrames. Callback from internal udp_transport."""
+        if isinstance(knxipframe.body, RoutingIndication):
+            self._handle_routing_indication(knxipframe.body)
         else:
-            # TODO: is cemi message code L_DATA.req or .con valid for routing? if not maybe warn and ignore
-            asyncio.create_task(self.handle_cemi_frame(knxipframe.body.cemi))
+            logger.warning("Service not implemented: %s", knxipframe)
+
+    def _handle_routing_indication(self, routing_indication: RoutingIndication) -> None:
+        """Handle incoming RoutingIndication."""
+        if routing_indication.cemi is None:
+            # Don't handle invalid cemi frames (None)
+            return
+        if routing_indication.cemi.src_addr == self.xknx.own_address:
+            logger.debug("Ignoring own packet")
+            return
+
+        # TODO: is cemi message code L_DATA.req or .con valid for routing? if not maybe warn and ignore
+        asyncio.create_task(self.handle_cemi_frame(routing_indication.cemi))
 
     async def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
         """Handle incoming telegram and send responses if applicable (device management)."""
