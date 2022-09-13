@@ -1,5 +1,5 @@
 """
-Module for Serialization and Deserialization of KNX Routing Indications.
+Module for Serialization and Deserialization of KNX RoutingIndication frames.
 
 Routing indications are used to transport CEMI Messages.
 """
@@ -17,12 +17,12 @@ logger = logging.getLogger("xknx.log")
 
 
 class RoutingIndication(KNXIPBody):
-    """Representation of a KNX Routing Indication."""
+    """Representation of a KNX RoutingIndication frame."""
 
     SERVICE_TYPE = KNXIPServiceType.ROUTING_INDICATION
 
     def __init__(self, cemi: CEMIFrame | None = None):
-        """Initialize SearchRequest object."""
+        """Initialize RoutingIndication object."""
         self.cemi: CEMIFrame | None = (
             cemi if cemi is not None else CEMIFrame(code=CEMIMessageCode.L_DATA_IND)
         )
