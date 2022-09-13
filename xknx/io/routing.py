@@ -109,9 +109,12 @@ class Routing(Interface):
             src_addr=self.xknx.own_address,
         )
         routing_indication = RoutingIndication(cemi=cemi)
-        await self.send_knxipframe(KNXIPFrame.init_from_body(routing_indication))
+        await self._send_knxipframe(KNXIPFrame.init_from_body(routing_indication))
+        # limit RoutingIndication transmission rate according to
+        # KNX Specifications 3.2.6 Communication Medium KNX IP §2.1
+        await asyncio.sleep(0.02)
 
-    async def send_knxipframe(self, knxipframe: KNXIPFrame) -> None:
+    async def _send_knxipframe(self, knxipframe: KNXIPFrame) -> None:
         """Send KNXIPFrame to connected routing device."""
         self.udp_transport.send(knxipframe)
 
