@@ -52,52 +52,17 @@ class Routing(Interface):
         )
 
         self.udp_transport.register_callback(
-            self._handle_frame, [KNXIPServiceType.ROUTING_INDICATION]
+            self._handle_frame,
+            [
+                KNXIPServiceType.ROUTING_INDICATION,
+            ],
         )
 
-    def _handle_frame(
-        self, knxipframe: KNXIPFrame, source: HPAI, _: KNXIPTransport
-    ) -> None:
-        """Handle incoming KNXIPFrames. Callback from internal udp_transport."""
-        if isinstance(knxipframe.body, RoutingIndication):
-            self._handle_routing_indication(knxipframe.body)
-        else:
-            logger.warning("Service not implemented: %s", knxipframe)
-
-    def _handle_routing_indication(self, routing_indication: RoutingIndication) -> None:
-        """Handle incoming RoutingIndication."""
-        if routing_indication.cemi is None:
-            # Don't handle invalid cemi frames (None)
-            return
-        if routing_indication.cemi.src_addr == self.xknx.own_address:
-            logger.debug("Ignoring own packet")
-            return
-
-        # TODO: is cemi message code L_DATA.req or .con valid for routing? if not maybe warn and ignore
-        asyncio.create_task(self.handle_cemi_frame(routing_indication.cemi))
-
-    async def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
-        """Handle incoming telegram and send responses if applicable (device management)."""
-        telegram = cemi.telegram
-        telegram.direction = TelegramDirection.INCOMING
-
-        if response_tgs := await self.telegram_received_callback(telegram):
-            for response in response_tgs:
-                await self.send_telegram(response)
-
-    async def send_telegram(self, telegram: "Telegram") -> None:
-        """Send Telegram to routing connected device."""
-        cemi = CEMIFrame.init_from_telegram(
-            telegram=telegram,
-            code=CEMIMessageCode.L_DATA_IND,
-            src_addr=self.xknx.own_address,
-        )
-        routing_indication = RoutingIndication(cemi=cemi)
-        await self.send_knxipframe(KNXIPFrame.init_from_body(routing_indication))
-
-    async def send_knxipframe(self, knxipframe: KNXIPFrame) -> None:
-        """Send KNXIPFrame to connected routing device."""
-        self.udp_transport.send(knxipframe)
+    ####################
+    #
+    # CONNECT DISCONNECT
+    #
+    ####################
 
     async def connect(self) -> bool:
         """Start routing."""
@@ -129,3 +94,59 @@ class Routing(Interface):
         await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
+
+    ##################
+    #
+    # OUTGOING FRAMES
+    #
+    ##################
+
+    async def send_telegram(self, telegram: "Telegram") -> None:
+        """Send Telegram to routing connected device."""
+        cemi = CEMIFrame.init_from_telegram(
+            telegram=telegram,
+            code=CEMIMessageCode.L_DATA_IND,
+            src_addr=self.xknx.own_address,
+        )
+        routing_indication = RoutingIndication(cemi=cemi)
+        await self.send_knxipframe(KNXIPFrame.init_from_body(routing_indication))
+
+    async def send_knxipframe(self, knxipframe: KNXIPFrame) -> None:
+        """Send KNXIPFrame to connected routing device."""
+        self.udp_transport.send(knxipframe)
+
+    ##################
+    #
+    # INCOMING FRAMES
+    #
+    ##################
+
+    def _handle_frame(
+        self, knxipframe: KNXIPFrame, source: HPAI, _: KNXIPTransport
+    ) -> None:
+        """Handle incoming KNXIPFrames. Callback from internal udp_transport."""
+        if isinstance(knxipframe.body, RoutingIndication):
+            self._handle_routing_indication(knxipframe.body)
+        else:
+            logger.warning("Service not implemented: %s", knxipframe)
+
+    def _handle_routing_indication(self, routing_indication: RoutingIndication) -> None:
+        """Handle incoming RoutingIndication."""
+        if routing_indication.cemi is None:
+            # Don't handle invalid cemi frames (None)
+            return
+        if routing_indication.cemi.src_addr == self.xknx.own_address:
+            logger.debug("Ignoring own packet")
+            return
+
+        # TODO: is cemi message code L_DATA.req or .con valid for routing? if not maybe warn and ignore
+        asyncio.create_task(self.handle_cemi_frame(routing_indication.cemi))
+
+    async def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
+        """Handle incoming telegram and send responses if applicable (device management)."""
+        telegram = cemi.telegram
+        telegram.direction = TelegramDirection.INCOMING
+
+        if response_tgs := await self.telegram_received_callback(telegram):
+            for response in response_tgs:
+                await self.send_telegram(response)

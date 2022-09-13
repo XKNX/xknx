@@ -77,7 +77,10 @@ class _Tunnel(Interface):
         self._init_transport()
         self.transport.register_callback(
             self._request_received,
-            [KNXIPServiceType.TUNNELLING_REQUEST, KNXIPServiceType.DISCONNECT_REQUEST],
+            [
+                KNXIPServiceType.TUNNELLING_REQUEST,
+                KNXIPServiceType.DISCONNECT_REQUEST,
+            ],
         )
 
     @abstractmethod
