@@ -6,7 +6,11 @@ Routing uses UDP Multicast to broadcast and receive KNX/IP messages.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 import logging
+import random
+import time
 from typing import TYPE_CHECKING
 
 from xknx.core import XknxConnectionState
@@ -17,6 +21,7 @@ from xknx.knxip import (
     CEMIMessageCode,
     KNXIPFrame,
     KNXIPServiceType,
+    RoutingBusy,
     RoutingIndication,
 )
 from xknx.telegram import TelegramDirection
@@ -29,6 +34,74 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
+
+
+class _RoutingFlowControl:
+    """
+    Class for hanling KNX/IP routing flow control.
+
+    See KNX Specifications 3.8.5 Routing §2.3.5 Flow control handling
+    """
+
+    def __init__(self) -> None:
+        self._busy_start_time: float | None = None
+        self._last_busy_frame_time: float = 0.0
+        self._ready = asyncio.Event()
+        self._ready.set()
+        self._received_busy_frames: int = 0
+        self._timer_task: asyncio.Task[None] | None = None
+        self._wait_time_ms: int = 0
+
+    def cancel(self) -> None:
+        """Cancel internal tasks."""
+        if self._timer_task:
+            self._timer_task.cancel()
+
+    @asynccontextmanager
+    async def throttle(self) -> AsyncIterator[None]:
+        """Context manager to wait for ready state and throttle outgoing frames."""
+        await self._ready.wait()
+        yield
+        # limit RoutingIndication transmission rate according to
+        # KNX Specifications 3.2.6 Communication Medium KNX IP §2.1
+        # simplified version - pause 20 ms after transmit a RoutingIndication
+        await asyncio.sleep(0.02)
+
+    def handle_routing_busy(self, routing_busy: RoutingBusy) -> None:
+        """Handle incoming RoutingBusy."""
+        self._ready.clear()
+        now = time.monotonic()
+        logger.warning(
+            "RoutingBusy received: %s - %s in moving time window",
+            routing_busy,
+            self._received_busy_frames + 1,
+        )
+        if self._busy_start_time is not None:
+            # only apply if we have already received a RoutingBusy frame and are still pausing
+            if (now - self._last_busy_frame_time) > 0.01:
+                self._received_busy_frames += 1
+            remaining_ms = (now - self._busy_start_time) * 1000
+            if remaining_ms >= routing_busy.wait_time:
+                return
+        self._wait_time_ms = routing_busy.wait_time
+        self._busy_start_time = now
+
+        if self._timer_task:
+            self._timer_task.cancel()
+        self._timer_task = asyncio.create_task(self._resume_sending())
+
+    async def _resume_sending(self) -> None:
+        """Reset ready flag after wait_time_ms and fade out slowduration."""
+        random_wait_extension_ms = random.random() * self._received_busy_frames * 50
+        slowduration_ms = self._received_busy_frames * 100
+        await asyncio.sleep((self._wait_time_ms + random_wait_extension_ms) / 1000)
+
+        self._ready.set()
+        self._busy_start_time = None
+        await asyncio.sleep(slowduration_ms / 1000)
+        while self._received_busy_frames > 0:
+            await asyncio.sleep(5 / 1000)
+            self._received_busy_frames -= 1
 
 
 class Routing(Interface):
@@ -50,13 +123,14 @@ class Routing(Interface):
             remote_addr=(self.xknx.multicast_group, self.xknx.multicast_port),
             multicast=True,
         )
-
         self.udp_transport.register_callback(
             self._handle_frame,
             [
                 KNXIPServiceType.ROUTING_INDICATION,
+                KNXIPServiceType.ROUTING_BUSY,
             ],
         )
+        self._flow_control = _RoutingFlowControl()
 
     ####################
     #
@@ -94,6 +168,7 @@ class Routing(Interface):
         await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
+        self._flow_control.cancel()
 
     ##################
     #
@@ -109,12 +184,11 @@ class Routing(Interface):
             src_addr=self.xknx.own_address,
         )
         routing_indication = RoutingIndication(cemi=cemi)
-        await self._send_knxipframe(KNXIPFrame.init_from_body(routing_indication))
-        # limit RoutingIndication transmission rate according to
-        # KNX Specifications 3.2.6 Communication Medium KNX IP §2.1
-        await asyncio.sleep(0.02)
 
-    async def _send_knxipframe(self, knxipframe: KNXIPFrame) -> None:
+        async with self._flow_control.throttle():
+            self._send_knxipframe(KNXIPFrame.init_from_body(routing_indication))
+
+    def _send_knxipframe(self, knxipframe: KNXIPFrame) -> None:
         """Send KNXIPFrame to connected routing device."""
         self.udp_transport.send(knxipframe)
 
@@ -130,6 +204,8 @@ class Routing(Interface):
         """Handle incoming KNXIPFrames. Callback from internal udp_transport."""
         if isinstance(knxipframe.body, RoutingIndication):
             self._handle_routing_indication(knxipframe.body)
+        elif isinstance(knxipframe.body, RoutingBusy):
+            self._flow_control.handle_routing_busy(knxipframe.body)
         else:
             logger.warning("Service not implemented: %s", knxipframe)
 

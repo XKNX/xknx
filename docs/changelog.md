@@ -12,6 +12,14 @@ nav_order: 2
 
 - Convenience functions for KNX group communication (`xknx.tools`)
 
+### Routing
+
+- Support flow control for routing
+
+### Protocol
+
+- Add RoutingBusy frame parser
+
 ## 1.0.2 Route-back reconnect 2022-08-31
 
 ### Bugfixes
