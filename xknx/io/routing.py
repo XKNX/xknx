@@ -10,7 +10,6 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 import logging
 import random
-import time
 from typing import TYPE_CHECKING
 
 from xknx.core import XknxConnectionState
@@ -24,13 +23,12 @@ from xknx.knxip import (
     RoutingBusy,
     RoutingIndication,
 )
-from xknx.telegram import TelegramDirection
+from xknx.telegram import Telegram, TelegramDirection
 
 from .interface import Interface, TelegramCallbackType
 from .transport import KNXIPTransport, UDPTransport
 
 if TYPE_CHECKING:
-    from xknx.telegram import Telegram
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
@@ -46,6 +44,8 @@ class _RoutingFlowControl:
     def __init__(self) -> None:
         self._busy_start_time: float | None = None
         self._last_busy_frame_time: float = 0.0
+        self._last_sent_routing_indication_time: float = 0.0
+        self._loop = asyncio.get_running_loop()
         self._ready = asyncio.Event()
         self._ready.set()
         self._received_busy_frames: int = 0
@@ -60,17 +60,21 @@ class _RoutingFlowControl:
     @asynccontextmanager
     async def throttle(self) -> AsyncIterator[None]:
         """Context manager to wait for ready state and throttle outgoing frames."""
-        await self._ready.wait()
-        yield
         # limit RoutingIndication transmission rate according to
         # KNX Specifications 3.2.6 Communication Medium KNX IP §2.1
         # simplified version - pause 20 ms after transmit a RoutingIndication
-        await asyncio.sleep(0.02)
+        elapsed = self._loop.time() - self._last_sent_routing_indication_time
+        if elapsed < 0.02:
+            await asyncio.sleep(0.02 - elapsed)
+
+        await self._ready.wait()
+        yield
+        self._last_sent_routing_indication_time = self._loop.time()
 
     def handle_routing_busy(self, routing_busy: RoutingBusy) -> None:
         """Handle incoming RoutingBusy."""
         self._ready.clear()
-        now = time.monotonic()
+        now = self._loop.time()
         logger.warning(
             "RoutingBusy received: %s - %s in moving time window",
             routing_busy,
@@ -176,7 +180,7 @@ class Routing(Interface):
     #
     ##################
 
-    async def send_telegram(self, telegram: "Telegram") -> None:
+    async def send_telegram(self, telegram: Telegram) -> None:
         """Send Telegram to routing connected device."""
         cemi = CEMIFrame.init_from_telegram(
             telegram=telegram,
