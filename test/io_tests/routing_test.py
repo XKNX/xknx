@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, Mock, call, patch
 
 from xknx import XKNX
 from xknx.io import Routing
-from xknx.io.routing import _RoutingFlowControl
+from xknx.io.routing import ROUTING_INDICATION_WAIT_TIME, _RoutingFlowControl
 from xknx.knxip import CEMIFrame, KNXIPFrame, RoutingIndication
 from xknx.telegram import Telegram, TelegramDirection, tpci
 
@@ -60,8 +60,8 @@ class TestRouting:
 class TestFlowControl:
     """Test class for KNXnet/IP routing flow control."""
 
-    async def test_routing_busy(self, time_travel):
-        """Test throttling on received RoutingBusy frame."""
+    async def test_basic_throttling(self, time_travel):
+        """Test throttling outgoing frames."""
         flow_control = _RoutingFlowControl()
         mock = Mock()
 
@@ -80,15 +80,15 @@ class TestFlowControl:
         task = asyncio.create_task(test_send())
         await asyncio.sleep(0)
         assert mock.call_count == 0
-        await time_travel(0.005)
+        await time_travel(ROUTING_INDICATION_WAIT_TIME / 4)
         assert not task.done()
-        await time_travel(0.015)
+        await time_travel(ROUTING_INDICATION_WAIT_TIME / 4 * 3)
         assert task.done()
         assert mock.call_count == 1
         mock.reset_mock()
 
         # later send is called immediately
-        await time_travel(0.02)
+        await time_travel(ROUTING_INDICATION_WAIT_TIME)
         task = asyncio.create_task(test_send())
         await asyncio.sleep(0)
         assert mock.call_count == 1

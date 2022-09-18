@@ -10,7 +10,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 import logging
 import random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from xknx.core import XknxConnectionState
 from xknx.exceptions import CommunicationError
@@ -32,6 +32,12 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
+
+BUSY_DECREMENT_TIME: Final = 0.005  # 5 ms
+BUSY_INCREMENT_COOLDOWN: Final = 0.01  # 10 ms
+BUSY_RANDOM_TIME_FACTOR: Final = 0.05  # 50 ms
+BUSY_SLOWDURATION_TIME_FACTOR: Final = 0.1  # 100 ms
+ROUTING_INDICATION_WAIT_TIME: Final = 0.02  # 20 ms
 
 
 class _RoutingFlowControl:
@@ -64,8 +70,8 @@ class _RoutingFlowControl:
         # KNX Specifications 3.2.6 Communication Medium KNX IP §2.1
         # simplified version - pause 20 ms after transmit a RoutingIndication
         elapsed = self._loop.time() - self._last_sent_routing_indication_time
-        if elapsed < 0.02:
-            await asyncio.sleep(0.02 - elapsed)
+        if elapsed < ROUTING_INDICATION_WAIT_TIME:
+            await asyncio.sleep(ROUTING_INDICATION_WAIT_TIME - elapsed)
 
         await self._ready.wait()
         yield
@@ -82,7 +88,7 @@ class _RoutingFlowControl:
         )
         if self._busy_start_time is not None:
             # only apply if we have already received a RoutingBusy frame and are still pausing
-            if (now - self._last_busy_frame_time) > 0.01:
+            if (now - self._last_busy_frame_time) > BUSY_INCREMENT_COOLDOWN:
                 self._received_busy_frames += 1
             remaining_ms = (now - self._busy_start_time) * 1000
             if remaining_ms >= routing_busy.wait_time:
@@ -96,15 +102,17 @@ class _RoutingFlowControl:
 
     async def _resume_sending(self) -> None:
         """Reset ready flag after wait_time_ms and fade out slowduration."""
-        random_wait_extension_ms = random.random() * self._received_busy_frames * 50
-        slowduration_ms = self._received_busy_frames * 100
-        await asyncio.sleep((self._wait_time_ms + random_wait_extension_ms) / 1000)
+        random_wait_extension = (
+            random.random() * self._received_busy_frames * BUSY_RANDOM_TIME_FACTOR
+        )
+        slowduration = self._received_busy_frames * BUSY_SLOWDURATION_TIME_FACTOR
+        await asyncio.sleep(self._wait_time_ms / 1000 + random_wait_extension)
 
         self._ready.set()
         self._busy_start_time = None
-        await asyncio.sleep(slowduration_ms / 1000)
+        await asyncio.sleep(slowduration)
         while self._received_busy_frames > 0:
-            await asyncio.sleep(5 / 1000)
+            await asyncio.sleep(BUSY_DECREMENT_TIME)
             self._received_busy_frames -= 1
 
 
