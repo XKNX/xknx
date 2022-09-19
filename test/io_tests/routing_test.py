@@ -4,8 +4,14 @@ from unittest.mock import AsyncMock, Mock, call, patch
 
 from xknx import XKNX
 from xknx.io import Routing
-from xknx.io.routing import ROUTING_INDICATION_WAIT_TIME, _RoutingFlowControl
-from xknx.knxip import CEMIFrame, KNXIPFrame, RoutingIndication
+from xknx.io.routing import (
+    BUSY_DECREMENT_TIME,
+    BUSY_INCREMENT_COOLDOWN,
+    BUSY_SLOWDURATION_TIME_FACTOR,
+    ROUTING_INDICATION_WAIT_TIME,
+    _RoutingFlowControl,
+)
+from xknx.knxip import CEMIFrame, KNXIPFrame, RoutingBusy, RoutingIndication
 from xknx.telegram import Telegram, TelegramDirection, tpci
 
 
@@ -94,3 +100,46 @@ class TestFlowControl:
         assert mock.call_count == 1
         assert task.done()
         mock.reset_mock()
+
+    @patch("random.random")
+    async def test_routing_busy(self, random_mock, time_travel):
+        """Test throttling on received RoutingBusy frame."""
+        flow_control = _RoutingFlowControl()
+        mock = Mock()
+        test_wait_time_ms = 100
+        random_mock.return_value = 0.5
+
+        async def test_send():
+            async with flow_control.throttle():
+                mock()
+
+        test_busy = RoutingBusy(wait_time=test_wait_time_ms)
+
+        flow_control.handle_routing_busy(test_busy)
+        task = asyncio.create_task(test_send())
+        await asyncio.sleep(0)
+        assert mock.call_count == 0
+        await time_travel(test_wait_time_ms / 1000)
+        assert mock.call_count == 1
+        assert task.done()
+        # no slowduration for just 1 RoutingBusy
+        assert flow_control._timer_task.done()
+        mock.reset_mock()
+
+        # multiple RoutingBusy frames
+        flow_control.handle_routing_busy(test_busy)
+        # after cooldown - with different wait times updating wait time for 2x time
+        await time_travel(BUSY_INCREMENT_COOLDOWN)
+        flow_control.handle_routing_busy(RoutingBusy(wait_time=test_wait_time_ms // 2))
+        flow_control.handle_routing_busy(RoutingBusy(wait_time=test_wait_time_ms * 2))
+        task = asyncio.create_task(test_send())
+        assert mock.call_count == 0
+        await time_travel(test_wait_time_ms * 2 / 1000 + 2 * 0.5)  # add random time
+        assert mock.call_count == 1
+        assert task.done()
+        # slowduration
+        assert not flow_control._timer_task.done()
+        await time_travel(2 * BUSY_SLOWDURATION_TIME_FACTOR)
+        await time_travel(BUSY_DECREMENT_TIME)  # and decrement time
+        await time_travel(BUSY_DECREMENT_TIME)  # and second decrement time
+        assert flow_control._timer_task.done()
