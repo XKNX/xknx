@@ -48,7 +48,6 @@ class _RoutingFlowControl:
     """
 
     def __init__(self) -> None:
-        self._busy_start_time: float | None = None
         self._last_busy_frame_time: float = 0.0
         self._last_sent_routing_indication_time: float = 0.0
         self._loop = asyncio.get_running_loop()
@@ -56,6 +55,7 @@ class _RoutingFlowControl:
         self._ready.set()
         self._received_busy_frames: int = 0
         self._timer_task: asyncio.Task[None] | None = None
+        self._wait_start_time: float | None = None
         self._wait_time_ms: int = 0
 
     def cancel(self) -> None:
@@ -81,20 +81,29 @@ class _RoutingFlowControl:
         """Handle incoming RoutingBusy."""
         self._ready.clear()
         now = self._loop.time()
-        logger.warning(
-            "RoutingBusy received: %s - %s in moving time window",
-            routing_busy,
-            self._received_busy_frames + 1,
-        )
-        if self._busy_start_time is not None:
+        previous_busy_frame_time = self._last_busy_frame_time
+        self._last_busy_frame_time = now
+        if self._wait_start_time is None:
+            logger.warning(
+                "RoutingBusy received: %s",
+                routing_busy,
+            )
+        else:
             # only apply if we have already received a RoutingBusy frame and are still pausing
-            if (now - self._last_busy_frame_time) > BUSY_INCREMENT_COOLDOWN:
+            if (now - previous_busy_frame_time) > BUSY_INCREMENT_COOLDOWN:
                 self._received_busy_frames += 1
-            remaining_ms = (now - self._busy_start_time) * 1000
+            logger.debug(
+                "RoutingBusy received: %s - %s ms since previous - number %s in moving time window",
+                routing_busy,
+                round((now - previous_busy_frame_time) * 1000),
+                self._received_busy_frames,
+            )
+            # discard frame if wait time is lower than remaining time
+            remaining_ms = (now - self._wait_start_time) * 1000
             if remaining_ms >= routing_busy.wait_time:
                 return
         self._wait_time_ms = routing_busy.wait_time
-        self._busy_start_time = now
+        self._wait_start_time = now
 
         if self._timer_task:
             self._timer_task.cancel()
@@ -109,7 +118,7 @@ class _RoutingFlowControl:
         await asyncio.sleep(self._wait_time_ms / 1000 + random_wait_extension)
 
         self._ready.set()
-        self._busy_start_time = None
+        self._wait_start_time = None
         await asyncio.sleep(slowduration)
         while self._received_busy_frames > 0:
             await asyncio.sleep(BUSY_DECREMENT_TIME)

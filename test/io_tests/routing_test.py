@@ -129,9 +129,16 @@ class TestFlowControl:
         # multiple RoutingBusy frames
         flow_control.handle_routing_busy(test_busy)
         # after cooldown - with different wait times updating wait time for 2x time
+        # not counting one frame due to cooldown time
         await time_travel(BUSY_INCREMENT_COOLDOWN)
         flow_control.handle_routing_busy(RoutingBusy(wait_time=test_wait_time_ms // 2))
         flow_control.handle_routing_busy(RoutingBusy(wait_time=test_wait_time_ms * 2))
+        assert flow_control._received_busy_frames == 1
+        # add second busy frame after cooldown has passed
+        await time_travel(BUSY_INCREMENT_COOLDOWN)
+        flow_control.handle_routing_busy(RoutingBusy(wait_time=test_wait_time_ms // 2))
+        assert flow_control._received_busy_frames == 2
+
         task = asyncio.create_task(test_send())
         assert mock.call_count == 0
         await time_travel(test_wait_time_ms * 2 / 1000 + 2 * 0.5)  # add random time
@@ -139,7 +146,8 @@ class TestFlowControl:
         assert task.done()
         # slowduration
         assert not flow_control._timer_task.done()
-        await time_travel(2 * BUSY_SLOWDURATION_TIME_FACTOR)
+        await time_travel(2 * BUSY_SLOWDURATION_TIME_FACTOR)  # _received_busy_frames 2
         await time_travel(BUSY_DECREMENT_TIME)  # and decrement time
+        assert not flow_control._timer_task.done()
         await time_travel(BUSY_DECREMENT_TIME)  # and second decrement time
         assert flow_control._timer_task.done()
