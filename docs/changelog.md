@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-## Unreleased changes
+## 1.1.0 Routing flow control 2022-09-26
 
 ### Added
 

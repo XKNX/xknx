@@ -35,4 +35,3 @@
 |Example|Description|
 |-|-|
 |[Restart](./example_restart.py)|Example on how to restart an KNX device|
-|[Tunnel](./example_tunnel.py)|Example on how to connect to a KNX/IP tunneling device|
