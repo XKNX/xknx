@@ -19,6 +19,7 @@ nav_order: 2
 ### Protocol
 
 - Add RoutingBusy frame parser
+- Add RoutingLostMessage frame parser
 
 ## 1.0.2 Route-back reconnect 2022-08-31
 

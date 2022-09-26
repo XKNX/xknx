@@ -22,6 +22,7 @@ from xknx.knxip import (
     KNXIPServiceType,
     RoutingBusy,
     RoutingIndication,
+    RoutingLostMessage,
 )
 from xknx.telegram import Telegram, TelegramDirection
 
@@ -84,7 +85,7 @@ class _RoutingFlowControl:
         previous_busy_frame_time = self._last_busy_frame_time
         self._last_busy_frame_time = now
         if self._wait_start_time is None:
-            logger.warning(
+            logger.info(
                 "RoutingBusy received: %s",
                 routing_busy,
             )
@@ -149,6 +150,7 @@ class Routing(Interface):
             [
                 KNXIPServiceType.ROUTING_INDICATION,
                 KNXIPServiceType.ROUTING_BUSY,
+                KNXIPServiceType.ROUTING_LOST_MESSAGE,
             ],
         )
         self._flow_control = _RoutingFlowControl()
@@ -227,6 +229,12 @@ class Routing(Interface):
             self._handle_routing_indication(knxipframe.body)
         elif isinstance(knxipframe.body, RoutingBusy):
             self._flow_control.handle_routing_busy(knxipframe.body)
+        elif isinstance(knxipframe.body, RoutingLostMessage):
+            logger.warning(
+                "RoutingLostMessage received from %s - %s lost messages.",
+                source.ip_addr,
+                knxipframe.body.lost_messages,
+            )
         else:
             logger.warning("Service not implemented: %s", knxipframe)
 

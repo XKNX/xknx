@@ -62,6 +62,22 @@ class TestRouting:
             call(response_frame),
         ]
 
+    @patch("logging.Logger.warning")
+    async def test_routing_lost_message(self, logging_mock):
+        """Test class for received RoutingLostMessage frames."""
+        routing = Routing(
+            self.xknx,
+            AsyncMock(),
+            local_ip="192.168.1.1",
+        )
+        raw = bytes((0x06, 0x10, 0x05, 0x31, 0x00, 0x0A, 0x04, 0x00, 0x00, 0x05))
+        routing.udp_transport.data_received_callback(raw, ("192.168.1.2", 3671))
+        assert logging_mock.called_once_with(
+            "RoutingLostMessage received from %s - %s lost messages.",
+            "192.168.1.2",
+            5,
+        )
+
 
 class TestFlowControl:
     """Test class for KNXnet/IP routing flow control."""

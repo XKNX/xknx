@@ -21,6 +21,7 @@ from .header import KNXIPHeader
 from .knxip_enum import KNXIPServiceType
 from .routing_busy import RoutingBusy
 from .routing_indication import RoutingIndication
+from .routing_lost_message import RoutingLostMessage
 from .search_request import SearchRequest
 from .search_request_extended import SearchRequestExtended
 from .search_response import SearchResponse
@@ -82,6 +83,8 @@ class KNXIPFrame:
             body = RoutingIndication()
         elif service_type_ident == KNXIPServiceType.ROUTING_BUSY:
             body = RoutingBusy()
+        elif service_type_ident == KNXIPServiceType.ROUTING_LOST_MESSAGE:
+            body = RoutingLostMessage()
         # Secure
         elif service_type_ident == KNXIPServiceType.SECURE_WRAPPER:
             body = SecureWrapper()
