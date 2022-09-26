@@ -1,4 +1,4 @@
-"""Unit test for KNX/IP TunnellingAck objects."""
+"""Unit test for KNX/IP RoutingBusy objects."""
 import pytest
 
 from xknx.exceptions import CouldNotParseKNXIP
