@@ -31,10 +31,10 @@ class TunnellingAck(KNXIPBodyResponse):
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-        if raw[0] != TunnellingAck.BODY_LENGTH:
-            raise CouldNotParseKNXIP("connection header wrong length")
+        if raw[0] != TunnellingAck.BODY_LENGTH:  # structure_length field
+            raise CouldNotParseKNXIP("TunnellingAck body has invalid length")
         if len(raw) != TunnellingAck.BODY_LENGTH:
-            raise CouldNotParseKNXIP("connection header wrong length")
+            raise CouldNotParseKNXIP("TunnellingAck body has wrong length")
         self.communication_channel_id = raw[1]
         self.sequence_counter = raw[2]
         self.status_code = ErrorCode(raw[3])

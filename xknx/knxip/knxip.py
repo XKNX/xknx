@@ -19,6 +19,7 @@ from .disconnect_request import DisconnectRequest
 from .disconnect_response import DisconnectResponse
 from .header import KNXIPHeader
 from .knxip_enum import KNXIPServiceType
+from .routing_busy import RoutingBusy
 from .routing_indication import RoutingIndication
 from .search_request import SearchRequest
 from .search_request_extended import SearchRequestExtended
@@ -79,6 +80,8 @@ class KNXIPFrame:
         # Routing
         elif service_type_ident == KNXIPServiceType.ROUTING_INDICATION:
             body = RoutingIndication()
+        elif service_type_ident == KNXIPServiceType.ROUTING_BUSY:
+            body = RoutingBusy()
         # Secure
         elif service_type_ident == KNXIPServiceType.SECURE_WRAPPER:
             body = SecureWrapper()
