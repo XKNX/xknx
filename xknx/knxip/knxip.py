@@ -31,6 +31,7 @@ from .session_authenticate import SessionAuthenticate
 from .session_request import SessionRequest
 from .session_response import SessionResponse
 from .session_status import SessionStatus
+from .timer_notify import TimerNotify
 from .tunnelling_ack import TunnellingAck
 from .tunnelling_request import TunnellingRequest
 
@@ -96,6 +97,8 @@ class KNXIPFrame:
             body = SessionResponse()
         elif service_type_ident == KNXIPServiceType.SESSION_STATUS:
             body = SessionStatus()
+        elif service_type_ident == KNXIPServiceType.TIMER_NOTIFY:
+            body = TimerNotify()
         else:
             raise CouldNotParseKNXIP(
                 f"KNXIPServiceType not implemented: {service_type_ident.name}"

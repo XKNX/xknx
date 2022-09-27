@@ -53,7 +53,4 @@ class TestKNXIPSecureWrapper:
             message_authentication_code=message_authentication_code,
         )
         knxipframe2 = KNXIPFrame.init_from_body(secure_wrapper)
-
-        print(knxipframe2.to_knx().hex())
-        print(raw.hex())
         assert knxipframe2.to_knx() == raw
