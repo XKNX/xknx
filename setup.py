@@ -12,7 +12,7 @@ VERSION = {}
 with open(path.join(THIS_DIRECTORY, "xknx/__version__.py"), encoding="utf-8") as fp:
     exec(fp.read(), VERSION)
 
-REQUIRES = ["cryptography>=35.0.0", "ifaddr>=0.1.7"]
+REQUIRES = ["cryptography>=35.0.0", "ifaddr>=0.1.7", "pyusb>=1.2.1"]
 
 setup(
     name="xknx",

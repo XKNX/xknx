@@ -3,7 +3,12 @@ import struct
 from typing import Optional
 
 from .knx_hid_datatypes import PacketType, ProtocolID, SequenceNumber, EMIID
-from .knx_hid_transfer import KNXUSBTransferProtocolBody, KNXUSBTransferProtocolBodyData, KNXUSBTransferProtocolHeader, KNXUSBTransferProtocolHeaderData
+from .knx_hid_transfer import (
+    KNXUSBTransferProtocolBody,
+    KNXUSBTransferProtocolBodyData,
+    KNXUSBTransferProtocolHeader,
+    KNXUSBTransferProtocolHeaderData,
+)
 
 logger = logging.getLogger("xknx.log")
 knx_logger = logging.getLogger("xknx.knx")
@@ -187,7 +192,8 @@ class KNXHIDReportHeader:
         """ """
         if len(data) > self._max_expected_data_length:
             logger.error(
-                f"KNX HID Report Header: received {len(data)} bytes, but expected not more than {self._max_expected_data_length}")
+                f"KNX HID Report Header: received {len(data)} bytes, but expected not more than {self._max_expected_data_length}"
+            )
             return
         self._report_id = data[0]
         self._packet_info = PacketInfo.from_knx(data[1:2])
@@ -208,7 +214,7 @@ class KNXHIDReportBodyData:
 
 
 class KNXHIDReportBody:
-    """ Represents `3.4.1.3 Data (KNX HID report body)` of the KNX specification """
+    """Represents `3.4.1.3 Data (KNX HID report body)` of the KNX specification"""
 
     def __init__(self):
         self._max_size = 61  # HID frame has max. size of 64 - 3 octets for the header
@@ -226,19 +232,20 @@ class KNXHIDReportBody:
             obj._is_valid = obj._body.is_valid
         else:
             obj._header = KNXUSBTransferProtocolHeader.from_data(
-                KNXUSBTransferProtocolHeaderData(obj._body.length, data.protocol_id, data.emi_id))
+                KNXUSBTransferProtocolHeaderData(obj._body.length, data.protocol_id, data.emi_id)
+            )
             obj._is_valid = obj._header.is_valid and obj._body.is_valid
         return obj
 
     @classmethod
     def from_knx(cls, data: bytes, partial: bool = False):
-        """ Takes the report body data bytes and create a `KNXHIDReportBody` object """
+        """Takes the report body data bytes and create a `KNXHIDReportBody` object"""
         obj = cls()
         obj._init(data, partial)
         return obj
 
     def to_knx(self) -> bytes:
-        """ Converts the data in the object to its byte representation, ready to be sent over USB. """
+        """Converts the data in the object to its byte representation, ready to be sent over USB."""
         if self._header and self._body:
             return self._header.to_knx() + self._body.to_knx(self._partial)
         else:
@@ -271,7 +278,7 @@ class KNXHIDReportBody:
 
     @property
     def is_valid(self) -> bool:
-        """ Returns true if all fields could be parsed successfully """
+        """Returns true if all fields could be parsed successfully"""
         return self._is_valid
 
     def _init(self, data: bytes, partial: bool) -> None:
@@ -292,7 +299,7 @@ class KNXHIDReportBody:
 
 
 class KNXHIDFrameData:
-    """ Holds the data necessary to initialize a `KNXHIDFrame` object """
+    """Holds the data necessary to initialize a `KNXHIDFrame` object"""
 
     def __init__(self, packet_info: PacketInfo, hid_report_body_data: KNXHIDReportBodyData) -> None:
         self.packet_info = packet_info
@@ -300,7 +307,7 @@ class KNXHIDFrameData:
 
 
 class KNXHIDFrame:
-    """ Represents `3.4.1.1 HID report frame structure` of the KNX specification """
+    """Represents `3.4.1.1 HID report frame structure` of the KNX specification"""
 
     def __init__(self) -> None:
         self._body: Optional[KNXHIDReportBody] = None
@@ -324,13 +331,13 @@ class KNXHIDFrame:
 
     @classmethod
     def from_knx(cls, data: bytes, partial: bool = False):
-        """ Takes USB HID data and creates a `KNXHIDFrame` object. """
+        """Takes USB HID data and creates a `KNXHIDFrame` object."""
         obj = cls()
         obj._init(data, partial)
         return obj
 
     def to_knx(self) -> bytes:
-        """ Converts the data in the object to its byte representation, ready to be sent over USB. """
+        """Converts the data in the object to its byte representation, ready to be sent over USB."""
         return self._header.to_knx() + self._body.to_knx()
 
     @property
