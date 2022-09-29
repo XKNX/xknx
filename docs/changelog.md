@@ -6,6 +6,21 @@ nav_order: 2
 
 # Changelog
 
+## 1.1.0 Routing flow control 2022-09-26
+
+### Added
+
+- Convenience functions for KNX group communication (`xknx.tools`)
+
+### Routing
+
+- Support flow control for routing
+
+### Protocol
+
+- Add RoutingBusy frame parser
+- Add RoutingLostMessage frame parser
+
 ## 1.0.2 Route-back reconnect 2022-08-31
 
 ### Bugfixes

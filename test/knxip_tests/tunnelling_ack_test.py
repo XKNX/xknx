@@ -8,7 +8,7 @@ from xknx.knxip import ErrorCode, KNXIPFrame, TunnellingAck
 class TestKNXIPTunnellingAck:
     """Test class for KNX/IP TunnellingAck objects."""
 
-    def test_connect_request(self):
+    def test_tunnelling_ack(self):
         """Test parsing and streaming tunneling ACK KNX/IP packet."""
         raw = bytes((0x06, 0x10, 0x04, 0x21, 0x00, 0x0A, 0x04, 0x2A, 0x17, 0x00))
         knxipframe = KNXIPFrame()

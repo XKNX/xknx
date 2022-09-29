@@ -39,19 +39,16 @@ pip install xknx
 ```python
 import asyncio
 from xknx import XKNX
-from xknx.devices import Light
+from xknx.tools import group_value_write
 
 async def main():
-    xknx = XKNX()
-    await xknx.start()
-    light = Light(xknx,
-                  name='HelloWorldLight',
-                  group_address_switch='1/0/9')
-    await light.set_on()
-    await asyncio.sleep(2)
-    await light.set_off()
-    await asyncio.sleep(2)
-    await xknx.stop()
+    async with XKNX() as xknx:
+        # send a binary Telegram
+        await group_value_write(xknx, "1/2/3", True)
+        # send a generic 1-byte Telegram
+        await group_value_write(xknx, "1/2/4", [0x80])
+        # send a Telegram with an encoded value
+        await group_value_write(xknx, "1/2/4", 50, value_type="percent")
 
 asyncio.run(main())
 ```
