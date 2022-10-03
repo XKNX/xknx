@@ -304,7 +304,7 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
                 knxipframe.body.sequence_information, "big"
             )
             if not new_sequence_number > self._sequence_number_received:
-                knx_logger.warning(
+                ip_secure_logger.warning(
                     "Discarding SecureWrapper with invalid sequence number: %s",
                     knxipframe,
                 )
@@ -312,7 +312,7 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
             try:
                 knxipframe = self.decrypt_frame(knxipframe)
             except KNXSecureValidationError as err:
-                knx_logger.warning("Could not decrypt KNXIPFrame: %s", err)
+                ip_secure_logger.warning("Could not decrypt KNXIPFrame: %s", err)
                 # Frame shall be discarded
                 return
             except CouldNotParseKNXIP as couldnotparseknxip:
@@ -429,13 +429,13 @@ class SecureGroup(UDPTransport, _IPSecureTransportLayer):
             return
         if isinstance(knxipframe.body, SecureWrapper):
             if not self.secure_timer.validate_secure_wrapper(knxipframe.body):
-                knx_logger.warning(
+                ip_secure_logger.warning(
                     "Discarding SecureWrapper with invalid timer value: %s",
                     knxipframe,
                 )
                 return
             if not self.secure_timer.timer_authenticated:
-                knx_logger.warning(
+                ip_secure_logger.warning(
                     "Discarding received SecureWrapper before timer synchronisazion finished: %s",
                     knxipframe,
                 )
@@ -443,7 +443,7 @@ class SecureGroup(UDPTransport, _IPSecureTransportLayer):
             try:
                 knxipframe = self.decrypt_frame(knxipframe)
             except KNXSecureValidationError as err:
-                knx_logger.warning("Could not decrypt KNXIPFrame: %s", err)
+                ip_secure_logger.warning("Could not decrypt KNXIPFrame: %s", err)
                 # Frame shall be discarded
                 return
             except CouldNotParseKNXIP as couldnotparseknxip:
@@ -592,7 +592,7 @@ class SecureSequenceTimer:
             self.send_timer_notify()
         if not self.timekeeper:
             self.timekeeper = True
-            logger.debug("Becoming timekeeper")
+            ip_secure_logger.debug("Becoming timekeeper")
         self.reschedule()
 
     def send_timer_notify(
@@ -700,11 +700,15 @@ class SecureSequenceTimer:
         # §2.2.2.3.2.5 Events: E1 - E4
         if received_timer_value > local_timer_value:
             self._clock_difference += received_timer_value - local_timer_value
-            self.timekeeper = False
+            if self.timekeeper:
+                ip_secure_logger.debug("Becoming time follower")
+                self.timekeeper = False
             self.reschedule()
             return
         if received_timer_value > local_timer_value - self.sync_latency_tolerance_ms:
-            self.timekeeper = False
+            if self.timekeeper:
+                ip_secure_logger.debug("Becoming time follower")
+                self.timekeeper = False
             self.reschedule()
             return
         if received_timer_value > local_timer_value - self.latency_tolerance_ms:
