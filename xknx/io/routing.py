@@ -1,7 +1,7 @@
 """
 Abstraction for handling KNX/IP routing.
 
-Routing uses UDP Multicast to broadcast and receive KNX/IP messages.
+Routing uses UDP Multicast to send and receive KNX/IP messages.
 """
 from __future__ import annotations
 
@@ -27,6 +27,7 @@ from xknx.knxip import (
 from xknx.telegram import Telegram, TelegramDirection
 
 from .interface import Interface, TelegramCallbackType
+from .secure_session import SecureGroup
 from .transport import KNXIPTransport, UDPTransport
 
 if TYPE_CHECKING:
@@ -39,6 +40,8 @@ BUSY_INCREMENT_COOLDOWN: Final = 0.01  # 10 ms
 BUSY_RANDOM_TIME_FACTOR: Final = 0.05  # 50 ms
 BUSY_SLOWDURATION_TIME_FACTOR: Final = 0.1  # 100 ms
 ROUTING_INDICATION_WAIT_TIME: Final = 0.02  # 20 ms
+
+DEFAULT_LATENCY_TOLERANCE_MS: Final = 1000
 
 
 class _RoutingFlowControl:
@@ -129,6 +132,8 @@ class _RoutingFlowControl:
 class Routing(Interface):
     """Class for handling KNX/IP routing."""
 
+    transport: UDPTransport
+
     def __init__(
         self,
         xknx: XKNX,
@@ -140,12 +145,8 @@ class Routing(Interface):
         self.telegram_received_callback = telegram_received_callback
         self.local_ip = local_ip
 
-        self.udp_transport = UDPTransport(
-            local_addr=(local_ip, 0),
-            remote_addr=(self.xknx.multicast_group, self.xknx.multicast_port),
-            multicast=True,
-        )
-        self.udp_transport.register_callback(
+        self._init_transport()
+        self.transport.register_callback(
             self._handle_frame,
             [
                 KNXIPServiceType.ROUTING_INDICATION,
@@ -154,6 +155,14 @@ class Routing(Interface):
             ],
         )
         self._flow_control = _RoutingFlowControl()
+
+    def _init_transport(self) -> None:
+        """Initialize transport."""
+        self.transport = UDPTransport(
+            local_addr=(self.local_ip, 0),
+            remote_addr=(self.xknx.multicast_group, self.xknx.multicast_port),
+            multicast=True,
+        )
 
     ####################
     #
@@ -167,7 +176,7 @@ class Routing(Interface):
             XknxConnectionState.CONNECTING
         )
         try:
-            await self.udp_transport.connect()
+            await self.transport.connect()
         except OSError as ex:
             logger.debug(
                 "Could not establish connection to KNX/IP network. %s: %s",
@@ -178,7 +187,7 @@ class Routing(Interface):
                 XknxConnectionState.DISCONNECTED
             )
             # close udp transport to prevent open file descriptors
-            self.udp_transport.stop()
+            self.transport.stop()
             raise CommunicationError("Routing could not be started") from ex
         await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTED
@@ -187,7 +196,7 @@ class Routing(Interface):
 
     async def disconnect(self) -> None:
         """Stop routing."""
-        self.udp_transport.stop()
+        self.transport.stop()
         await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
@@ -213,7 +222,7 @@ class Routing(Interface):
 
     def _send_knxipframe(self, knxipframe: KNXIPFrame) -> None:
         """Send KNXIPFrame to connected routing device."""
-        self.udp_transport.send(knxipframe)
+        self.transport.send(knxipframe)
 
     ##################
     #
@@ -224,7 +233,7 @@ class Routing(Interface):
     def _handle_frame(
         self, knxipframe: KNXIPFrame, source: HPAI, _: KNXIPTransport
     ) -> None:
-        """Handle incoming KNXIPFrames. Callback from internal udp_transport."""
+        """Handle incoming KNXIPFrames. Callback from internal transport."""
         if isinstance(knxipframe.body, RoutingIndication):
             self._handle_routing_indication(knxipframe.body)
         elif isinstance(knxipframe.body, RoutingBusy):
@@ -258,3 +267,31 @@ class Routing(Interface):
         if response_tgs := await self.telegram_received_callback(telegram):
             for response in response_tgs:
                 await self.send_telegram(response)
+
+
+class SecureRouting(Routing):
+    """Class for handling KNX/IP secure routing."""
+
+    transport: SecureGroup
+
+    def __init__(
+        self,
+        xknx: XKNX,
+        telegram_received_callback: TelegramCallbackType,
+        local_ip: str,
+        backbone_key: bytes,
+        latency_ms: int | None = None,
+    ):
+        """Initialize SecureRouting class."""
+        self.backbone_key = backbone_key
+        self.latency_ms = latency_ms or DEFAULT_LATENCY_TOLERANCE_MS
+        super().__init__(xknx, telegram_received_callback, local_ip)
+
+    def _init_transport(self) -> None:
+        """Initialize transport."""
+        self.transport = SecureGroup(
+            local_addr=(self.local_ip, 0),
+            remote_addr=(self.xknx.multicast_group, self.xknx.multicast_port),
+            backbone_key=self.backbone_key,
+            latency_ms=self.latency_ms,
+        )

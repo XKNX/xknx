@@ -85,7 +85,7 @@ class _Tunnel(Interface):
 
     @abstractmethod
     def _init_transport(self) -> None:
-        """Initialize transport transport."""
+        """Initialize transport."""
         # set up self.transport
 
     @abstractmethod

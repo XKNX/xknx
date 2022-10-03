@@ -8,6 +8,12 @@ nav_order: 2
 
 # Unreleased changes
 
+### Features
+
+- We now support KNXnet/IP Secure multicast communication (secure routing) in addition to tunnelling!
+  Thanks to Weinzierl for providing us a router for testing purposes!
+- Parse `latency` from a .knxkeys keyring files `backbone` tag.
+
 ### Protocol
 
 - Add TimerNotify frame parser
