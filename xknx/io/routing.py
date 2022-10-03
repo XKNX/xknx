@@ -27,7 +27,7 @@ from xknx.knxip import (
 from xknx.telegram import Telegram, TelegramDirection
 
 from .interface import Interface, TelegramCallbackType
-from .secure_session import SecureGroup
+from .ip_secure import SecureGroup
 from .transport import KNXIPTransport, UDPTransport
 
 if TYPE_CHECKING:

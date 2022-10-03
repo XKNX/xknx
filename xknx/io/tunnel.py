@@ -30,8 +30,8 @@ from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 from .const import HEARTBEAT_RATE
 from .gateway_scanner import GatewayDescriptor
 from .interface import Interface, TelegramCallbackType
+from .ip_secure import SecureSession
 from .request_response import Connect, ConnectionState, Disconnect, Tunnelling
-from .secure_session import SecureSession
 from .self_description import DescriptionQuery
 from .transport import KNXIPTransport, TCPTransport, UDPTransport
 

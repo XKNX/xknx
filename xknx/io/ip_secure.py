@@ -1,4 +1,4 @@
-"""SecureSession is an abstraction for handling a KNXnet/IP Secure session."""
+"""IPSecure is an abstraction for handling a KNXnet/IP Secure layer."""
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
