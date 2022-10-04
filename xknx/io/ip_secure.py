@@ -514,11 +514,11 @@ class SecureSequenceTimer:
         self.min_delay_time_follower_periodic_notify = (
             self.max_delay_time_keeper_periodic_notify
             + _sync_latency_tolerance_seconds * 1
-        ) + 5
+        )
         self.max_delay_time_follower_periodic_notify = (
             self.min_delay_time_follower_periodic_notify
             + _sync_latency_tolerance_seconds * 10
-        ) + 5
+        )
         self.max_delay_time_keeper_update_notify = (
             self.min_delay_time_keeper_update_notify
             + _sync_latency_tolerance_seconds * 1
