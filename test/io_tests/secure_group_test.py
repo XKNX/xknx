@@ -10,7 +10,6 @@ from xknx.io.ip_secure import SecureGroup
 from xknx.knxip import HPAI, KNXIPFrame, SecureWrapper, TimerNotify
 
 ONE_HOUR_MS = 60 * 60 * 1000
-TEN_MINUTES_MS = 10 * 10 * 1000
 
 
 class TestSecureGroup:
@@ -120,11 +119,7 @@ class TestSecureGroup:
         )
         secure_group.handle_knxipframe(timer_update, HPAI(*self.mock_addr))
         await time_travel(0)
-        assert (
-            (ONE_HOUR_MS - TEN_MINUTES_MS)
-            < secure_group.secure_timer._clock_difference
-            < ONE_HOUR_MS
-        )
+        assert 0 < secure_group.secure_timer._clock_difference < ONE_HOUR_MS
         assert connect_task.done()
         # nothing sent until time_follower_periodic
         assert not secure_group.secure_timer.timekeeper
