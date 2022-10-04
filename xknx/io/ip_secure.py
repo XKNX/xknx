@@ -151,7 +151,7 @@ class _IPSecureTransportLayer(ABC):
 
 
 class SecureSession(TCPTransport, _IPSecureTransportLayer):
-    """Class for handling a KNXnet/IP Secure session."""
+    """Class for handling a KNXnet/IP Secure tunnelling session."""
 
     def __init__(
         self,
@@ -388,8 +388,7 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
 class SecureGroup(UDPTransport, _IPSecureTransportLayer):
     """Class for secure KNXnet/IP multicast communication."""
 
-    # Routing uses fixed session id
-    session_id = 0
+    session_id = 0  # Routing uses fixed session id 0
 
     def __init__(
         self,
@@ -435,7 +434,7 @@ class SecureGroup(UDPTransport, _IPSecureTransportLayer):
                 )
                 return
             if not self.secure_timer.timer_authenticated:
-                ip_secure_logger.warning(
+                ip_secure_logger.debug(
                     "Discarding received SecureWrapper before timer synchronisazion finished: %s",
                     knxipframe,
                 )

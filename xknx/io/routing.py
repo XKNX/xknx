@@ -1,7 +1,7 @@
 """
-Abstraction for handling KNX/IP routing.
+Abstraction for handling KNXnet/IP routing.
 
-Routing uses UDP Multicast to send and receive KNX/IP messages.
+Routing uses UDP Multicast to send and receive KNXnet/IP messages.
 """
 from __future__ import annotations
 
@@ -46,7 +46,7 @@ DEFAULT_LATENCY_TOLERANCE_MS: Final = 1000
 
 class _RoutingFlowControl:
     """
-    Class for hanling KNX/IP routing flow control.
+    Class for hanling KNXnet/IP routing flow control.
 
     See KNX Specifications 3.8.5 Routing §2.3.5 Flow control handling
     """
@@ -130,7 +130,7 @@ class _RoutingFlowControl:
 
 
 class Routing(Interface):
-    """Class for handling KNX/IP routing."""
+    """Class for handling KNXnet/IP multicast communication."""
 
     transport: UDPTransport
 
@@ -179,7 +179,7 @@ class Routing(Interface):
             await self.transport.connect()
         except OSError as ex:
             logger.debug(
-                "Could not establish connection to KNX/IP network. %s: %s",
+                "Could not establish connection to KNXnet/IP network. %s: %s",
                 type(ex).__name__,
                 ex,
             )
@@ -270,7 +270,7 @@ class Routing(Interface):
 
 
 class SecureRouting(Routing):
-    """Class for handling KNX/IP secure routing."""
+    """Class for handling KNXnet/IP secure multicast communication."""
 
     transport: SecureGroup
 
