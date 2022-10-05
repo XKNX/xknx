@@ -1,10 +1,7 @@
 """Test Secure Group."""
 import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-import pytest
-
-from xknx.exceptions import CommunicationError, CouldNotParseKNXIP
 from xknx.io.const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT, XKNX_SERIAL_NUMBER
 from xknx.io.ip_secure import SecureGroup
 from xknx.knxip import HPAI, KNXIPFrame, SecureWrapper, TimerNotify
@@ -12,6 +9,8 @@ from xknx.knxip import HPAI, KNXIPFrame, SecureWrapper, TimerNotify
 ONE_HOUR_MS = 60 * 60 * 1000
 
 
+@patch("xknx.io.transport.udp_transport.UDPTransport.connect")
+@patch("xknx.io.transport.udp_transport.UDPTransport.send")
 class TestSecureGroup:
     """Test class for xknx/io/SecureGroup objects."""
 
@@ -41,8 +40,6 @@ class TestSecureGroup:
             assert knxipframe.body.message_authentication_code == mac
         return knxipframe.body.message_tag
 
-    @patch("xknx.io.transport.udp_transport.UDPTransport.connect")
-    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
     async def test_no_synchronize(
         self,
         mock_super_send,
@@ -86,8 +83,6 @@ class TestSecureGroup:
         secure_group.stop()
         assert secure_group.secure_timer._notify_timer_handle is None
 
-    @patch("xknx.io.transport.udp_transport.UDPTransport.connect")
-    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
     async def test_synchronize(
         self,
         mock_super_send,
@@ -119,7 +114,7 @@ class TestSecureGroup:
         )
         secure_group.handle_knxipframe(timer_update, HPAI(*self.mock_addr))
         await time_travel(0)
-        assert 0 < secure_group.secure_timer._clock_difference < ONE_HOUR_MS
+        assert secure_group.secure_timer.current_timer_value() == ONE_HOUR_MS
         assert connect_task.done()
         # nothing sent until time_follower_periodic
         assert not secure_group.secure_timer.timekeeper
@@ -137,3 +132,206 @@ class TestSecureGroup:
         mock_super_send.reset_mock()
         secure_group.stop()
         assert secure_group.secure_timer._notify_timer_handle is None
+
+    @patch("xknx.io.ip_secure.SecureSequenceTimer._notify_timer_expired")
+    @patch("xknx.io.ip_secure.SecureSequenceTimer._monotonic_ms")
+    async def test_received_timer_notify(
+        self,
+        mock_monotonic_ms,
+        _mock_notify_timer_expired,  # we don't want to actually send here
+        mock_super_send,
+        mock_super_connect,
+        time_travel,
+    ):
+        """Test handling of received TimerNotify frames."""
+        mock_monotonic_ms.return_value = 0
+        secure_group = SecureGroup(
+            local_addr=self.mock_addr,
+            remote_addr=(DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+            backbone_key=self.mock_backbone_key,
+            latency_ms=1000,
+        )
+        secure_timer = secure_group.secure_timer
+
+        with patch.object(
+            secure_timer, "reschedule", wraps=secure_timer.reschedule
+        ) as mock_reschedule:
+            # E1
+            timer_newer = KNXIPFrame.init_from_body(
+                TimerNotify(
+                    timer_value=ONE_HOUR_MS,
+                    serial_number=bytes.fromhex("00 fa 12 34 56 78"),
+                    message_tag=bytes.fromhex("12 34"),
+                )
+            )
+            secure_group.handle_knxipframe(timer_newer, HPAI(*self.mock_addr))
+            mock_reschedule.assert_called_once()
+            assert ONE_HOUR_MS == secure_timer.current_timer_value()
+            assert not secure_timer.timekeeper
+            assert not secure_timer.sched_update
+            mock_reschedule.reset_mock()
+            # E2
+            timer_exact = KNXIPFrame.init_from_body(
+                TimerNotify(
+                    timer_value=ONE_HOUR_MS,
+                    serial_number=bytes.fromhex("00 fa 12 34 56 78"),
+                    message_tag=bytes.fromhex("12 34"),
+                )
+            )
+            secure_group.handle_knxipframe(timer_exact, HPAI(*self.mock_addr))
+            mock_reschedule.assert_called_once()
+            assert ONE_HOUR_MS == secure_timer.current_timer_value()
+            assert not secure_timer.timekeeper
+            assert not secure_timer.sched_update
+            mock_reschedule.reset_mock()
+
+            timer_valid = KNXIPFrame.init_from_body(
+                TimerNotify(
+                    timer_value=ONE_HOUR_MS
+                    - secure_timer.sync_latency_tolerance_ms
+                    + 1,
+                    serial_number=bytes.fromhex("00 fa 12 34 56 78"),
+                    message_tag=bytes.fromhex("12 34"),
+                )
+            )
+            secure_group.handle_knxipframe(timer_valid, HPAI(*self.mock_addr))
+            mock_reschedule.assert_called_once()
+            assert ONE_HOUR_MS == secure_timer.current_timer_value()
+            assert not secure_timer.timekeeper
+            assert not secure_timer.sched_update
+            mock_reschedule.reset_mock()
+            # E3
+            timer_tolerable_1 = KNXIPFrame.init_from_body(
+                TimerNotify(
+                    timer_value=ONE_HOUR_MS - secure_timer.sync_latency_tolerance_ms,
+                    serial_number=bytes.fromhex("00 fa 12 34 56 78"),
+                    message_tag=bytes.fromhex("12 34"),
+                )
+            )
+            secure_group.handle_knxipframe(timer_tolerable_1, HPAI(*self.mock_addr))
+            mock_reschedule.assert_not_called()
+
+            timer_tolerable_2 = KNXIPFrame.init_from_body(
+                TimerNotify(
+                    timer_value=ONE_HOUR_MS - secure_timer.latency_tolerance_ms + 1,
+                    serial_number=bytes.fromhex("00 fa 12 34 56 78"),
+                    message_tag=bytes.fromhex("12 34"),
+                )
+            )
+            secure_group.handle_knxipframe(timer_tolerable_2, HPAI(*self.mock_addr))
+            mock_reschedule.assert_not_called()
+            # E4
+            timer_invalid = KNXIPFrame.init_from_body(
+                TimerNotify(
+                    timer_value=ONE_HOUR_MS - secure_timer.latency_tolerance_ms,
+                    serial_number=bytes.fromhex("00 fa 12 34 56 78"),
+                    message_tag=bytes.fromhex("12 34"),
+                )
+            )
+            secure_group.handle_knxipframe(timer_invalid, HPAI(*self.mock_addr))
+            mock_reschedule.assert_called_once_with(
+                update=(bytes.fromhex("12 34"), bytes.fromhex("00 fa 12 34 56 78"))
+            )
+            assert not secure_timer.timekeeper
+            assert secure_timer.sched_update
+            mock_reschedule.reset_mock()
+            # E4 from sched_update
+            secure_group.handle_knxipframe(timer_invalid, HPAI(*self.mock_addr))
+            mock_reschedule.assert_not_called()
+
+    @patch("xknx.io.ip_secure.SecureSequenceTimer._notify_timer_expired")
+    @patch("xknx.io.ip_secure.SecureSequenceTimer._monotonic_ms")
+    async def test_received_secure_wrapper(
+        self,
+        mock_monotonic_ms,
+        _mock_notify_timer_expired,  # we don't want to actually send here
+        mock_super_send,
+        mock_super_connect,
+        time_travel,
+    ):
+        """Test handling of received TimerNotify frames."""
+        mock_monotonic_ms.return_value = 0
+        secure_group = SecureGroup(
+            local_addr=self.mock_addr,
+            remote_addr=(DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+            backbone_key=self.mock_backbone_key,
+            latency_ms=1000,
+        )
+        secure_timer = secure_group.secure_timer
+
+        with patch.object(
+            secure_timer, "reschedule", wraps=secure_timer.reschedule
+        ) as mock_reschedule:
+            # E5
+            wrapper_newer = SecureWrapper(
+                sequence_information=ONE_HOUR_MS.to_bytes(6, "big"),
+            )
+
+            assert secure_timer.validate_secure_wrapper(wrapper_newer)
+            mock_reschedule.assert_called_once()
+            assert ONE_HOUR_MS == secure_timer.current_timer_value()
+            assert not secure_timer.sched_update
+            mock_reschedule.reset_mock()
+            # E6
+            wrapper_exact = SecureWrapper(
+                sequence_information=ONE_HOUR_MS.to_bytes(6, "big")
+            )
+
+            assert secure_timer.validate_secure_wrapper(wrapper_exact)
+            mock_reschedule.assert_called_once()
+            assert ONE_HOUR_MS == secure_timer.current_timer_value()
+            assert not secure_timer.timekeeper
+            assert not secure_timer.sched_update
+            mock_reschedule.reset_mock()
+
+            wrapper_valid = SecureWrapper(
+                sequence_information=(
+                    ONE_HOUR_MS - secure_timer.sync_latency_tolerance_ms + 1
+                ).to_bytes(6, "big")
+            )
+
+            assert secure_timer.validate_secure_wrapper(wrapper_valid)
+            mock_reschedule.assert_called_once()
+            assert ONE_HOUR_MS == secure_timer.current_timer_value()
+            assert not secure_timer.timekeeper
+            assert not secure_timer.sched_update
+            mock_reschedule.reset_mock()
+            # E7
+            wrapper_tolerable_1 = SecureWrapper(
+                sequence_information=(
+                    ONE_HOUR_MS - secure_timer.sync_latency_tolerance_ms
+                ).to_bytes(6, "big"),
+            )
+
+            assert secure_timer.validate_secure_wrapper(wrapper_tolerable_1)
+            mock_reschedule.assert_not_called()
+
+            wrapper_tolerable_2 = SecureWrapper(
+                sequence_information=(
+                    ONE_HOUR_MS - secure_timer.latency_tolerance_ms + 1
+                ).to_bytes(6, "big"),
+                serial_number=bytes.fromhex("00 fa 12 34 56 78"),
+                message_tag=bytes.fromhex("12 34"),
+            )
+
+            assert secure_timer.validate_secure_wrapper(wrapper_tolerable_2)
+            mock_reschedule.assert_not_called()
+            # E8
+            wrapper_invalid = SecureWrapper(
+                sequence_information=(
+                    ONE_HOUR_MS - secure_timer.latency_tolerance_ms
+                ).to_bytes(6, "big"),
+                serial_number=bytes.fromhex("00 fa 12 34 56 78"),
+                message_tag=bytes.fromhex("12 34"),
+            )
+
+            assert not secure_timer.validate_secure_wrapper(wrapper_invalid)
+            mock_reschedule.assert_called_once_with(
+                update=(bytes.fromhex("12 34"), bytes.fromhex("00 fa 12 34 56 78"))
+            )
+            assert not secure_timer.timekeeper
+            assert secure_timer.sched_update
+            mock_reschedule.reset_mock()
+            # E8 from sched_update
+            assert not secure_timer.validate_secure_wrapper(wrapper_invalid)
+            mock_reschedule.assert_not_called()
