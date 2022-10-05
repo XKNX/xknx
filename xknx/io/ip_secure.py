@@ -180,9 +180,9 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
         self._key: bytes  # Session Key
         self.session_id: int
 
-        self._sequence_number = 0
-        self._sequence_number_received = -1
-        self.initialized = False
+        self._sequence_number: int = 0
+        self._sequence_number_received: int = -1
+        self.initialized: bool = False
         self._keepalive_task: asyncio.Task[None] | None = None
         self._session_status_handler: KNXIPTransport.Callback | None = None
 
@@ -498,9 +498,9 @@ class SecureSequenceTimer:
         self._notify_timer_handle: asyncio.TimerHandle | None = None
         self._transport_send = transport_send
 
-        self.sched_update = False
-        self.timekeeper = False
-        self.timer_authenticated = False
+        self.sched_update: bool = False
+        self.timekeeper: bool = False
+        self.timer_authenticated: bool = False
 
         self.latency_tolerance_ms = latency_ms
         self.sync_latency_tolerance_ms: int = round(
