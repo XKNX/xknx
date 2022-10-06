@@ -18,7 +18,7 @@ from xknx.io import (
     SecureConfig,
     knx_interface_factory,
 )
-from xknx.io.routing import Routing
+from xknx.io.routing import Routing, SecureGroup, SecureRouting
 from xknx.io.tunnel import SecureTunnel, TCPTunnel, UDPTunnel
 
 
@@ -373,3 +373,73 @@ class TestKNXIPInterface:
         with pytest.raises(InvalidSecureConfiguration):
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
+
+    async def test_start_secure_routing_knx_keys(self):
+        """Test starting a secure routing connection from a knxkeys file."""
+        backbone_key = bytes.fromhex("cf89fd0f18f4889783c7ef44ee1f5e14")
+        knxkeys_file = os.path.join(
+            os.path.dirname(__file__), "resources/testcase.knxkeys"
+        )
+        connection_config = ConnectionConfig(
+            connection_type=ConnectionType.ROUTING_SECURE,
+            secure_config=SecureConfig(
+                knxkeys_file_path=knxkeys_file, knxkeys_password="password"
+            ),
+        )
+        with patch(
+            "xknx.io.KNXIPInterface._start_secure_routing"
+        ) as start_secure_tunnel:
+            interface = knx_interface_factory(self.xknx, connection_config)
+            await interface.start()
+            start_secure_tunnel.assert_called_once_with(
+                backbone_key, latency_ms=1000, local_ip=None
+            )
+        with patch("xknx.io.routing.SecureRouting.connect") as connect_secure:
+            interface = knx_interface_factory(self.xknx, connection_config)
+            await interface.start()
+            assert isinstance(interface._interface, SecureRouting)
+            assert interface._interface.backbone_key == backbone_key
+            assert interface._interface.latency_ms == 1000
+            assert isinstance(interface._interface.transport, SecureGroup)
+            assert interface._interface.transport.remote_addr == (
+                self.xknx.multicast_group,
+                3671,
+            )
+            assert (  # pylint: disable=comparison-with-callable
+                interface._interface.telegram_received_callback
+                == interface.telegram_received
+            )
+            connect_secure.assert_called_once_with()
+
+    async def test_start_secure_routing_manual(self):
+        """Test starting a secure routing connection from a knxkeys file."""
+        backbone_key_str = "cf89fd0f18f4889783c7ef44ee1f5e14"
+        backbone_key = bytes.fromhex(backbone_key_str)
+        connection_config = ConnectionConfig(
+            connection_type=ConnectionType.ROUTING_SECURE,
+            secure_config=SecureConfig(backbone_key=backbone_key_str, latency_ms=2000),
+        )
+        with patch(
+            "xknx.io.KNXIPInterface._start_secure_routing"
+        ) as start_secure_tunnel:
+            interface = knx_interface_factory(self.xknx, connection_config)
+            await interface.start()
+            start_secure_tunnel.assert_called_once_with(
+                backbone_key, latency_ms=2000, local_ip=None
+            )
+        with patch("xknx.io.routing.SecureRouting.connect") as connect_secure:
+            interface = knx_interface_factory(self.xknx, connection_config)
+            await interface.start()
+            assert isinstance(interface._interface, SecureRouting)
+            assert interface._interface.backbone_key == backbone_key
+            assert interface._interface.latency_ms == 2000
+            assert isinstance(interface._interface.transport, SecureGroup)
+            assert interface._interface.transport.remote_addr == (
+                self.xknx.multicast_group,
+                3671,
+            )
+            assert (  # pylint: disable=comparison-with-callable
+                interface._interface.telegram_received_callback
+                == interface.telegram_received
+            )
+            connect_secure.assert_called_once_with()
