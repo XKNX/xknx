@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Protocol
+
+- Add TimerNotify frame parser
+
 ## 1.1.0 Routing flow control 2022-09-26
 
 ### Added

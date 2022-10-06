@@ -46,6 +46,7 @@ from .session_request import SessionRequest
 from .session_response import SessionResponse
 from .session_status import SessionStatus
 from .srp import SRP
+from .timer_notify import TimerNotify
 from .tunnelling_ack import TunnellingAck
 from .tunnelling_request import TunnellingRequest
 
@@ -93,6 +94,7 @@ __all__ = [
     "SessionResponse",
     "SessionStatus",
     "SRP",
+    "TimerNotify",
     "TunnellingAck",
     "TunnellingRequest",
 ]
