@@ -26,6 +26,11 @@ class TestKeyRing:
         TestKeyRing.assert_interface(keyring, "@zvI1G&_", 3)
         TestKeyRing.assert_interface(keyring, "ZvDY-:g#", 4)
         TestKeyRing.assert_interface(keyring, "user2", 5)
+        assert keyring.backbone.multicast_address == "224.0.23.12"
+        assert keyring.backbone.latency == 1000
+        assert keyring.backbone.decrypted_key == bytes.fromhex(
+            "96f034fccf510760cbd63da0f70d4a9d"
+        )
 
     def test_load_keyring_real(self):
         """Test load keyring from knxkeys file."""
@@ -35,6 +40,11 @@ class TestKeyRing:
         TestKeyRing.assert_interface(keyring, "user3", 5)
         TestKeyRing.assert_interface(keyring, "user4", 6)
         assert keyring.devices[0].decrypted_management_password == "commissioning"
+        assert keyring.backbone.multicast_address == "224.0.23.12"
+        assert keyring.backbone.latency == 1000
+        assert keyring.backbone.decrypted_key == bytes.fromhex(
+            "cf89fd0f18f4889783c7ef44ee1f5e14"
+        )
 
         interface: XMLInterface = keyring.interfaces[0]
         device: XMLDevice = keyring.get_device_by_interface(interface)

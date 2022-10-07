@@ -12,7 +12,8 @@ nav_order: 2
 
 - We now support KNXnet/IP Secure multicast communication (secure routing) in addition to tunnelling!
   Thanks to Weinzierl for providing us a router for testing purposes!
-- Parse `latency` from a .knxkeys keyring files `backbone` tag.
+- Parse `latency` from a .knxkeys keyring files `Backbone` tag.
+- Use `multicast_group` from a .knxkeys keyring files `MulticastAddress` tag (Routing).
 
 ### Protocol
 
