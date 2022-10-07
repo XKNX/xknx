@@ -92,6 +92,8 @@ class KNXIPInterface:
                     )
                 backbone_key = backbone_key or keyring.backbone.decrypted_key
                 latency_ms = latency_ms or keyring.backbone.latency
+                if keyring.backbone.multicast_address:
+                    self.xknx.multicast_group = keyring.backbone.multicast_address
             if not backbone_key:
                 raise InvalidSecureConfiguration(
                     "No backbone key found in secure configuration"
@@ -295,7 +297,12 @@ class KNXIPInterface:
             raise XKNXException("No network interface found.")
         util.validate_ip(local_ip, address_name="Local IP address")
 
-        logger.debug("Starting Routing from %s as %s", local_ip, self.xknx.own_address)
+        logger.debug(
+            "Starting Routing from %s as %s via %s",
+            local_ip,
+            self.xknx.own_address,
+            self.xknx.multicast_group,
+        )
         self._interface = Routing(self.xknx, self.telegram_received, local_ip)
         await self._interface.connect()
 
@@ -312,7 +319,10 @@ class KNXIPInterface:
         util.validate_ip(local_ip, address_name="Local IP address")
 
         logger.debug(
-            "Starting Secure Routing from %s as %s", local_ip, self.xknx.own_address
+            "Starting Secure Routing from %s as %s via %s",
+            local_ip,
+            self.xknx.own_address,
+            self.xknx.multicast_group,
         )
         self._interface = SecureRouting(
             self.xknx, self.telegram_received, local_ip, backbone_key, latency_ms
