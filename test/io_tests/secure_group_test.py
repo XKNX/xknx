@@ -137,7 +137,12 @@ class TestSecureGroup:
         )
         secure_group.handle_knxipframe(timer_update, HPAI(*self.mock_addr))
         await time_travel(0)
-        assert secure_timer.current_timer_value() == ONE_HOUR_MS
+        _leeway_for_ci = 50  # ms
+        assert (
+            ONE_HOUR_MS
+            <= secure_timer.current_timer_value()
+            <= ONE_HOUR_MS + _leeway_for_ci
+        )
         assert connect_task.done()
         # nothing sent until time_follower_periodic
         assert not secure_timer.timekeeper
