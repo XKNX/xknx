@@ -77,9 +77,9 @@ class TestSecureSession:
     )
     async def test_lifecycle(
         self,
-        mock_super_connect,
-        mock_super_send,
         _mock_generate,
+        mock_super_send,
+        mock_super_connect,
         time_travel,
     ):
         """Test connection, handshake, keepalive and shutdown."""
@@ -198,9 +198,9 @@ class TestSecureSession:
     )
     async def test_invalid_frames(
         self,
-        mock_super_connect,
-        mock_super_send,
         _mock_generate,
+        mock_super_send,
+        mock_super_connect,
         time_travel,
     ):
         """Test handling invalid frames."""
@@ -276,9 +276,9 @@ class TestSecureSession:
     )
     async def test_invalid_session_response(
         self,
-        mock_super_connect,
-        mock_super_send,
         _mock_generate,
+        mock_super_send,
+        mock_super_connect,
         time_travel,
     ):
         """Test handling invalid session response."""
@@ -309,9 +309,9 @@ class TestSecureSession:
     )
     async def test_no_authentication(
         self,
-        mock_super_connect,
-        mock_super_send,
         _mock_generate,
+        mock_super_send,
+        mock_super_connect,
         time_travel,
     ):
         """Test handling initializing session without verifying server authenticity."""
@@ -379,9 +379,9 @@ class TestSecureSession:
     )
     async def test_invalid_authentication(
         self,
-        mock_super_connect,
-        mock_super_send,
         _mock_generate,
+        mock_super_send,
+        mock_super_connect,
         time_travel,
     ):
         """Test handling no session status while authenticating."""
