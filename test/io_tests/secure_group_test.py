@@ -5,6 +5,9 @@ from unittest.mock import patch
 from xknx.io.const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT, XKNX_SERIAL_NUMBER
 from xknx.io.ip_secure import SecureGroup
 from xknx.knxip import HPAI, KNXIPFrame, SecureWrapper, TimerNotify
+from xknx.knxip.cemi_frame import CEMIFrame
+from xknx.knxip.routing_indication import RoutingIndication
+from xknx.telegram import GroupAddress, Telegram, apci
 
 ONE_HOUR_MS = 60 * 60 * 1000
 
@@ -53,6 +56,7 @@ class TestSecureGroup:
             backbone_key=self.mock_backbone_key,
             latency_ms=1000,
         )
+        secure_timer = secure_group.secure_timer
         connect_task = asyncio.create_task(secure_group.connect())
         await time_travel(0)
         mock_super_connect.assert_called_once()
@@ -63,25 +67,43 @@ class TestSecureGroup:
         mock_super_send.reset_mock()
         # synchronize timed out
         await time_travel(
-            secure_group.secure_timer.max_delay_time_follower_update_notify
-            + 2 * secure_group.secure_timer.latency_tolerance_ms / 1000
+            secure_timer.max_delay_time_follower_update_notify
+            + 2 * secure_timer.latency_tolerance_ms / 1000
         )
         assert connect_task.done()
         # we are timekeeper so we send TimerNotify after time_keeper_periodic
-        assert secure_group.secure_timer.timekeeper
-        await time_travel(
-            secure_group.secure_timer.min_delay_time_keeper_periodic_notify - 0.01
-        )
+        assert secure_timer.timekeeper
+        assert not secure_timer.sched_update
+        await time_travel(secure_timer.min_delay_time_keeper_periodic_notify - 0.01)
         mock_super_send.assert_not_called()
-        await time_travel(
-            secure_group.secure_timer.sync_latency_tolerance_ms / 1000 * 3 + 0.02
-        )
+        await time_travel(secure_timer.sync_latency_tolerance_ms / 1000 * 3 + 0.02)
         self.assert_timer_notify(
             mock_super_send.call_args[0][0],
             serial_number=XKNX_SERIAL_NUMBER,
         )
+        mock_super_send.reset_mock()
+        # test response to invalid timer as timekeeper
+        timer_invalid = KNXIPFrame.init_from_body(
+            TimerNotify(
+                timer_value=0,
+                serial_number=bytes.fromhex("00 fa 12 34 56 78"),
+                message_tag=bytes.fromhex("12 34"),
+            )
+        )
+        secure_group.handle_knxipframe(timer_invalid, HPAI(*self.mock_addr))
+        assert secure_timer.timekeeper
+        assert secure_timer.sched_update
+        await time_travel(secure_timer.min_delay_time_keeper_update_notify - 0.01)
+        mock_super_send.assert_not_called()
+        await time_travel(secure_timer.sync_latency_tolerance_ms / 1000 * 1 + 0.02)
+        self.assert_timer_notify(
+            mock_super_send.call_args[0][0],
+            message_tag=bytes.fromhex("12 34"),
+            serial_number=bytes.fromhex("00 fa 12 34 56 78"),
+        )
+        # stop
         secure_group.stop()
-        assert secure_group.secure_timer._notify_timer_handle is None
+        assert secure_timer._notify_timer_handle is None
 
     async def test_synchronize(
         self,
@@ -96,6 +118,7 @@ class TestSecureGroup:
             backbone_key=self.mock_backbone_key,
             latency_ms=1000,
         )
+        secure_timer = secure_group.secure_timer
         connect_task = asyncio.create_task(secure_group.connect())
         await time_travel(0)
         mock_super_connect.assert_called_once()
@@ -114,24 +137,20 @@ class TestSecureGroup:
         )
         secure_group.handle_knxipframe(timer_update, HPAI(*self.mock_addr))
         await time_travel(0)
-        assert secure_group.secure_timer.current_timer_value() == ONE_HOUR_MS
+        assert secure_timer.current_timer_value() == ONE_HOUR_MS
         assert connect_task.done()
         # nothing sent until time_follower_periodic
-        assert not secure_group.secure_timer.timekeeper
-        await time_travel(
-            secure_group.secure_timer.min_delay_time_follower_periodic_notify - 0.01
-        )
+        assert not secure_timer.timekeeper
+        await time_travel(secure_timer.min_delay_time_follower_periodic_notify - 0.01)
         mock_super_send.assert_not_called()
-        await time_travel(
-            secure_group.secure_timer.sync_latency_tolerance_ms / 1000 * 10 + 0.02
-        )
+        await time_travel(secure_timer.sync_latency_tolerance_ms / 1000 * 10 + 0.02)
         self.assert_timer_notify(
             mock_super_send.call_args[0][0],
             serial_number=XKNX_SERIAL_NUMBER,
         )
         mock_super_send.reset_mock()
         secure_group.stop()
-        assert secure_group.secure_timer._notify_timer_handle is None
+        assert secure_timer._notify_timer_handle is None
 
     @patch("xknx.io.ip_secure.SecureSequenceTimer._notify_timer_expired")
     @patch("xknx.io.ip_secure.SecureSequenceTimer._monotonic_ms")
@@ -361,4 +380,48 @@ class TestSecureGroup:
             # E8 from sched_update
             secure_group.handle_knxipframe(wrapper_invalid, HPAI(*self.mock_addr))
             mock_super_handle_knxipframe.assert_not_called()
+            mock_reschedule.assert_not_called()
+
+    @patch("xknx.io.ip_secure.SecureSequenceTimer._notify_timer_expired")
+    @patch("xknx.io.ip_secure.SecureSequenceTimer._monotonic_ms")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.handle_knxipframe")
+    async def test_send_secure_wrapper(
+        self,
+        mock_super_handle_knxipframe,
+        mock_monotonic_ms,
+        _mock_notify_timer_expired,  # we don't want to actually send here
+        mock_super_send,
+        mock_super_connect,
+        time_travel,
+    ):
+        """Test handling of received TimerNotify frames."""
+        mock_monotonic_ms.return_value = 0
+        secure_group = SecureGroup(
+            local_addr=self.mock_addr,
+            remote_addr=(DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+            backbone_key=self.mock_backbone_key,
+            latency_ms=1000,
+        )
+        secure_timer = secure_group.secure_timer
+        secure_timer.timer_authenticated = True
+
+        test_cemi = CEMIFrame.init_from_telegram(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=apci.GroupValueRead(),
+            )
+        )
+
+        with patch.object(
+            secure_timer, "reschedule", wraps=secure_timer.reschedule
+        ) as mock_reschedule:
+            assert not secure_timer.sched_update
+            secure_group.send(KNXIPFrame.init_from_body(RoutingIndication(test_cemi)))
+            mock_reschedule.assert_called_once()
+            mock_reschedule.reset_mock()
+            # no reschedule when sched_update is true
+            secure_timer.reschedule(update=(bytes(2), bytes(6)))
+            assert secure_timer.sched_update
+            mock_reschedule.reset_mock()
+            secure_group.send(KNXIPFrame.init_from_body(RoutingIndication(test_cemi)))
             mock_reschedule.assert_not_called()
