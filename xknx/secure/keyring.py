@@ -129,17 +129,19 @@ class XMLInterface(AttributeReader):
 class XMLBackbone(AttributeReader):
     """Backbone in a knxkeys file."""
 
-    multicast_address: str
-    key: str
     decrypted_key: bytes
+    key: str
+    latency: int
+    multicast_address: str
 
     def parse_xml(self, node: Document) -> None:
         """Parse all needed attributes from the given node map."""
         attributes = node.attributes
+        self.key = self.get_attribute_value(attributes.get("Key"))
+        self.latency = int(self.get_attribute_value(attributes.get("Latency")))
         self.multicast_address = self.get_attribute_value(
             attributes.get("MulticastAddress")
         )
-        self.key = self.get_attribute_value(attributes.get("Key"))
 
     def decrypt_attributes(
         self, password_hash: bytes, initialization_vector: bytes

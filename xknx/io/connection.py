@@ -12,6 +12,7 @@ class ConnectionType(Enum):
 
     AUTOMATIC = auto()
     ROUTING = auto()
+    ROUTING_SECURE = auto()
     TUNNELING = auto()
     TUNNELING_TCP = auto()
     TUNNELING_TCP_SECURE = auto()
@@ -78,6 +79,8 @@ class SecureConfig:
     Secure configuration.
 
     Handles:
+    * backbone_key: Key used for KNX Secure Routing in hex representation.
+    * latency_ms: Latency in milliseconds for KNX Secure Routing.
     * user_id: The user id to use when initializing the secure tunnel.
     * device_authentication_password: the authentication password to use when connecting to the tunnel.
     * user_password: the user password for knx secure.
@@ -88,6 +91,8 @@ class SecureConfig:
     def __init__(
         self,
         *,
+        backbone_key: str | None = None,
+        latency_ms: int | None = None,
         user_id: int | None = None,
         device_authentication_password: str | None = None,
         user_password: str | None = None,
@@ -95,6 +100,8 @@ class SecureConfig:
         knxkeys_password: str | None = None,
     ):
         """Initialize SecureConfig class."""
+        self.backbone_key = bytes.fromhex(backbone_key) if backbone_key else None
+        self.latency_ms = latency_ms
         self.user_id = user_id
         self.device_authentication_password = device_authentication_password
         self.user_password = user_password

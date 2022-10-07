@@ -56,7 +56,7 @@ class TestRouting:
             return [response_telegram]
 
         routing.telegram_received_callback = tg_received_mock
-        routing.udp_transport.data_received_callback(raw_ind, ("192.168.1.2", 3671))
+        routing.transport.data_received_callback(raw_ind, ("192.168.1.2", 3671))
         await asyncio.sleep(0)
         assert send_knxipframe_mock.call_args_list == [
             call(response_frame),
@@ -71,7 +71,7 @@ class TestRouting:
             local_ip="192.168.1.1",
         )
         raw = bytes((0x06, 0x10, 0x05, 0x31, 0x00, 0x0A, 0x04, 0x00, 0x00, 0x05))
-        routing.udp_transport.data_received_callback(raw, ("192.168.1.2", 3671))
+        routing.transport.data_received_callback(raw, ("192.168.1.2", 3671))
         assert logging_mock.called_once_with(
             "RoutingLostMessage received from %s - %s lost messages.",
             "192.168.1.2",

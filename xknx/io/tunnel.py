@@ -30,8 +30,8 @@ from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 from .const import HEARTBEAT_RATE
 from .gateway_scanner import GatewayDescriptor
 from .interface import Interface, TelegramCallbackType
+from .ip_secure import SecureSession
 from .request_response import Connect, ConnectionState, Disconnect, Tunnelling
-from .secure_session import SecureSession
 from .self_description import DescriptionQuery
 from .transport import KNXIPTransport, TCPTransport, UDPTransport
 
@@ -85,7 +85,7 @@ class _Tunnel(Interface):
 
     @abstractmethod
     def _init_transport(self) -> None:
-        """Initialize transport transport."""
+        """Initialize transport."""
         # set up self.transport
 
     @abstractmethod

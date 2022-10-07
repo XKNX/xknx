@@ -21,12 +21,12 @@ from xknx.exceptions import (
     XKNXException,
 )
 from xknx.io import util
-from xknx.secure import Keyring, load_key_ring
+from xknx.secure import load_key_ring
 from xknx.telegram import IndividualAddress, Telegram
 
 from .connection import ConnectionConfig, ConnectionType
 from .gateway_scanner import GatewayDescriptor, GatewayScanner
-from .routing import Routing
+from .routing import Routing, SecureRouting
 from .tunnel import SecureTunnel, TCPTunnel, UDPTunnel, _Tunnel
 
 if TYPE_CHECKING:
@@ -73,6 +73,35 @@ class KNXIPInterface:
         if self.connection_config.connection_type == ConnectionType.ROUTING:
             await self._start_routing(local_ip=self.connection_config.local_ip)
         elif (
+            self.connection_config.connection_type == ConnectionType.ROUTING_SECURE
+            and self.connection_config.secure_config is not None
+        ):
+            secure_config = self.connection_config.secure_config
+            backbone_key = secure_config.backbone_key
+            latency_ms = secure_config.latency_ms
+            if (
+                secure_config.knxkeys_file_path is not None
+                and secure_config.knxkeys_password is not None
+            ):
+                keyring = load_key_ring(
+                    secure_config.knxkeys_file_path, secure_config.knxkeys_password
+                )
+                if keyring.backbone is None:
+                    raise InvalidSecureConfiguration(
+                        "No backbone key found in knxkeys file"
+                    )
+                backbone_key = backbone_key or keyring.backbone.decrypted_key
+                latency_ms = latency_ms or keyring.backbone.latency
+            if not backbone_key:
+                raise InvalidSecureConfiguration(
+                    "No backbone key found in secure configuration"
+                )
+            await self._start_secure_routing(
+                backbone_key,
+                latency_ms=latency_ms,
+                local_ip=self.connection_config.local_ip,
+            )
+        elif (
             self.connection_config.connection_type == ConnectionType.TUNNELING
             and self.connection_config.gateway_ip is not None
         ):
@@ -102,7 +131,7 @@ class KNXIPInterface:
                 secure_config.knxkeys_file_path is not None
                 and secure_config.knxkeys_password is not None
             ):
-                keyring: Keyring = load_key_ring(
+                keyring = load_key_ring(
                     secure_config.knxkeys_file_path, secure_config.knxkeys_password
                 )
                 if secure_config.user_id is not None:
@@ -268,6 +297,26 @@ class KNXIPInterface:
 
         logger.debug("Starting Routing from %s as %s", local_ip, self.xknx.own_address)
         self._interface = Routing(self.xknx, self.telegram_received, local_ip)
+        await self._interface.connect()
+
+    async def _start_secure_routing(
+        self,
+        backbone_key: bytes,
+        latency_ms: int | None = None,
+        local_ip: str | None = None,
+    ) -> None:
+        """Start KNX/IP Routing."""
+        local_ip = local_ip or await util.get_default_local_ip()
+        if local_ip is None:
+            raise XKNXException("No network interface found.")
+        util.validate_ip(local_ip, address_name="Local IP address")
+
+        logger.debug(
+            "Starting Secure Routing from %s as %s", local_ip, self.xknx.own_address
+        )
+        self._interface = SecureRouting(
+            self.xknx, self.telegram_received, local_ip, backbone_key, latency_ms
+        )
         await self._interface.connect()
 
     async def stop(self) -> None:

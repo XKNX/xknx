@@ -7,7 +7,7 @@ import pytest
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP
 from xknx.io.const import SESSION_KEEPALIVE_RATE
-from xknx.io.secure_session import SecureSession
+from xknx.io.ip_secure import SecureSession
 from xknx.knxip import (
     HPAI,
     KNXIPFrame,
@@ -48,11 +48,11 @@ class TestSecureSession:
         """Set up test class."""
         # pylint: disable=attribute-defined-outside-init
         self.patch_serial_number = patch(
-            "xknx.io.secure_session.XKNX_SERIAL_NUMBER", self.mock_serial_number
+            "xknx.io.ip_secure.XKNX_SERIAL_NUMBER", self.mock_serial_number
         )
         self.patch_serial_number.start()
         self.patch_message_tag = patch(
-            "xknx.io.secure_session.MESSAGE_TAG_TUNNELLING", self.mock_message_tag
+            "xknx.io.ip_secure.MESSAGE_TAG_TUNNELLING", self.mock_message_tag
         )
         self.patch_message_tag.start()
 
@@ -72,7 +72,7 @@ class TestSecureSession:
     @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
     @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
     @patch(
-        "xknx.io.secure_session.generate_ecdh_key_pair",
+        "xknx.io.ip_secure.generate_ecdh_key_pair",
         return_value=(mock_private_key, mock_public_key),
     )
     async def test_lifecycle(
@@ -193,7 +193,7 @@ class TestSecureSession:
     @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
     @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
     @patch(
-        "xknx.io.secure_session.generate_ecdh_key_pair",
+        "xknx.io.ip_secure.generate_ecdh_key_pair",
         return_value=(mock_private_key, mock_public_key),
     )
     async def test_invalid_frames(
@@ -271,7 +271,7 @@ class TestSecureSession:
     @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
     @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
     @patch(
-        "xknx.io.secure_session.generate_ecdh_key_pair",
+        "xknx.io.ip_secure.generate_ecdh_key_pair",
         return_value=(mock_private_key, mock_public_key),
     )
     async def test_invalid_session_response(
@@ -304,7 +304,7 @@ class TestSecureSession:
     @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
     @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
     @patch(
-        "xknx.io.secure_session.generate_ecdh_key_pair",
+        "xknx.io.ip_secure.generate_ecdh_key_pair",
         return_value=(mock_private_key, mock_public_key),
     )
     async def test_no_authentication(
@@ -374,7 +374,7 @@ class TestSecureSession:
     @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
     @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
     @patch(
-        "xknx.io.secure_session.generate_ecdh_key_pair",
+        "xknx.io.ip_secure.generate_ecdh_key_pair",
         return_value=(mock_private_key, mock_public_key),
     )
     async def test_invalid_authentication(
