@@ -14,6 +14,7 @@ nav_order: 2
   Thanks to Weinzierl for providing us a router for testing purposes!
 - Parse `latency` from a .knxkeys keyring files `Backbone` tag.
 - Use `multicast_group` from a .knxkeys keyring files `MulticastAddress` tag (Routing).
+- Support InternalGroupAddress in xknx.tools package.
 
 ### Protocol
 

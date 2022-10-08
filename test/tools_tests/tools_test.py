@@ -1,9 +1,10 @@
 """Test xknx tools package."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from xknx import XKNX
+from xknx.devices import NumericValue
 from xknx.dpt import DPTArray, DPTBinary, DPTTemperature
 from xknx.exceptions import ConversionError
 from xknx.telegram import GroupAddress, Telegram, TelegramDirection, apci
@@ -111,3 +112,31 @@ async def test_read_group_value(value_reader_read_mock, value, value_type, expec
     # GroupValueRead telegram is not in queue because ValueReader.read is mocked.
     # This is tested in ValueReader tests.
     assert response_value == value
+
+
+async def test_tools_with_internal_addresses():
+    """Test tools using internal addresses."""
+    xknx = XKNX()
+    xknx.knxip_interface = AsyncMock()
+    await xknx.start()
+
+    internal_address = "i-test"
+    test_type = "1byte_unsigned"
+    number = NumericValue(
+        xknx,
+        "Test",
+        group_address=internal_address,
+        value_type=test_type,
+        respond_to_read=True,
+    )
+
+    assert number.resolve_state() is None
+    await group_value_write(xknx, internal_address, 1, value_type=test_type)
+    await xknx.telegrams.join()
+    assert number.resolve_state() == 1
+
+    response_value = await read_group_value(
+        xknx, internal_address, value_type=test_type
+    )
+    assert response_value == 1
+    await xknx.stop()

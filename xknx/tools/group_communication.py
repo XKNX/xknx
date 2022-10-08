@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, Any
 
 from xknx.core.value_reader import ValueReader
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
-from xknx.telegram import GroupAddress, Telegram
-from xknx.telegram.address import GroupAddressableType
+from xknx.telegram import Telegram
+from xknx.telegram.address import DeviceAddressableType, parse_device_group_address
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 if TYPE_CHECKING:
@@ -17,11 +17,11 @@ logger = logging.getLogger("xknx.tools")
 
 async def group_value_read(
     xknx: XKNX,
-    group_address: GroupAddressableType,
+    group_address: DeviceAddressableType,
 ) -> None:
     """Send a GroupValueRead telegram."""
     telegram = Telegram(
-        destination_address=GroupAddress(group_address),
+        destination_address=parse_device_group_address(group_address),
         payload=GroupValueRead(),
     )
 
@@ -31,14 +31,14 @@ async def group_value_read(
 
 async def group_value_response(
     xknx: XKNX,
-    group_address: GroupAddressableType,
+    group_address: DeviceAddressableType,
     value: Any,
     value_type: int | str | type[DPTBase] | None = None,
 ) -> None:
     """Send a GroupValueResponse telegram."""
     payload = _parse_payload(value, value_type)
     telegram = Telegram(
-        destination_address=GroupAddress(group_address),
+        destination_address=parse_device_group_address(group_address),
         payload=GroupValueResponse(payload),
     )
     logger.debug(
@@ -52,14 +52,14 @@ async def group_value_response(
 
 async def group_value_write(
     xknx: XKNX,
-    group_address: GroupAddressableType,
+    group_address: DeviceAddressableType,
     value: Any,
     value_type: int | str | type[DPTBase] | None = None,
 ) -> None:
     """Send a GroupValueWrite telegram."""
     payload = _parse_payload(value, value_type)
     telegram = Telegram(
-        destination_address=GroupAddress(group_address),
+        destination_address=parse_device_group_address(group_address),
         payload=GroupValueWrite(payload),
     )
     logger.debug(
@@ -73,12 +73,12 @@ async def group_value_write(
 
 async def read_group_value(
     xknx: XKNX,
-    group_address: GroupAddressableType,
+    group_address: DeviceAddressableType,
     value_type: int | str | type[DPTBase] | None = None,
 ) -> DPTArray | DPTBinary | Any | None:
     """Read a value from a KNX group address."""
     transcoder = _parse_dpt(value_type)
-    value_reader = ValueReader(xknx, GroupAddress(group_address))
+    value_reader = ValueReader(xknx, parse_device_group_address(group_address))
     response = await value_reader.read()
     if response is not None:
         assert isinstance(response.payload, (GroupValueWrite, GroupValueResponse))
