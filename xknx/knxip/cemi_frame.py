@@ -152,7 +152,9 @@ class CEMIFrame:
 
         npdu_len = cemi[8 + addil]
 
-        apdu = cemi[9 + addil :]
+        tpdu = cemi[9 + addil :]
+        apdu = bytes([tpdu[0] & 0b11]) + tpdu[1:]  # clear TPCI bits
+
         if len(apdu) != (npdu_len + 1):  # TCPI octet not included in NPDU length
             raise CouldNotParseKNXIP(
                 f"APDU LEN should be {npdu_len} but is {len(apdu) - 1} in CEMI: {cemi.hex()}"
@@ -164,12 +166,10 @@ class CEMIFrame:
         # APCI (application layer control information) -> Last  10 bit of TPCI/APCI
         try:
             self.tpci = TPCI.resolve(
-                raw_tpci=cemi[9 + addil], dst_is_group_address=dst_is_group_address
+                raw_tpci=tpdu[0], dst_is_group_address=dst_is_group_address
             )
         except ConversionError as err:
-            raise UnsupportedCEMIMessage(
-                f"TPCI not supported: {cemi[9 + addil]:#10b}"
-            ) from err
+            raise UnsupportedCEMIMessage(f"TPCI not supported: {tpdu[0]:#10b}") from err
 
         if self.tpci.control:
             if npdu_len:
