@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 1.2.0 Secure Routing 2022-10-10
 
 ### Features
 
