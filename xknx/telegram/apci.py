@@ -1094,7 +1094,7 @@ class AuthorizeRequest(APCI):
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 5
+        return 6
 
     def from_knx(self, raw: bytes) -> None:
         """Parse/deserialize from KNX/IP raw data."""
