@@ -6,6 +6,16 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Management
+
+- Fix APCI service parsing for 10bit control fileds.
+- Set reasonable default count values for APCI classes.
+- Set xknx.current_address for routing connections so management frames received over Routing are handled properly.
+- Fix wrong length of AuthorizeRequest.
+- Raise sane error messages in Management.
+
 # 1.2.0 Secure Routing 2022-10-10
 
 ### Features
