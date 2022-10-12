@@ -172,6 +172,7 @@ class Routing(Interface):
 
     async def connect(self) -> bool:
         """Start routing."""
+        self.xknx.current_address = self.xknx.own_address
         await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTING
         )

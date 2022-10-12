@@ -420,7 +420,7 @@ class ADCRead(APCI):
 
     CODE = APCIService.ADC_READ
 
-    def __init__(self, channel: int = 0, count: int = 0) -> None:
+    def __init__(self, channel: int = 0, count: int = 1) -> None:
         """Initialize a new instance of ADCRead."""
         self.channel = channel
         self.count = count
@@ -495,7 +495,7 @@ class MemoryRead(APCI):
 
     CODE = APCIService.MEMORY_READ
 
-    def __init__(self, address: int = 0, count: int = 0) -> None:
+    def __init__(self, address: int = 0, count: int = 1) -> None:
         """Initialize a new instance of MemoryRead."""
         self.address = address
         self.count = count
@@ -538,7 +538,7 @@ class MemoryWrite(APCI):
     CODE = APCIService.MEMORY_WRITE
 
     def __init__(
-        self, address: int = 0, count: int = 0, data: bytes | None = None
+        self, address: int = 0, count: int = 1, data: bytes | None = None
     ) -> None:
         """Initialize a new instance of MemoryWrite."""
 
@@ -590,7 +590,7 @@ class MemoryResponse(APCI):
     CODE = APCIService.MEMORY_RESPONSE
 
     def __init__(
-        self, address: int = 0, count: int = 0, data: bytes | None = None
+        self, address: int = 0, count: int = 1, data: bytes | None = None
     ) -> None:
         """Initialize a new instance of MemoryResponse."""
 
@@ -745,7 +745,7 @@ class UserMemoryRead(APCI):
 
     CODE = APCIUserService.USER_MEMORY_READ
 
-    def __init__(self, address: int = 0, count: int = 0) -> None:
+    def __init__(self, address: int = 0, count: int = 1) -> None:
         """Initialize a new instance of UserMemoryRead."""
         self.address = address
         self.count = count
@@ -790,7 +790,7 @@ class UserMemoryWrite(APCI):
     CODE = APCIUserService.USER_MEMORY_WRITE
 
     def __init__(
-        self, address: int = 0, count: int = 0, data: bytes | None = None
+        self, address: int = 0, count: int = 1, data: bytes | None = None
     ) -> None:
         """Initialize a new instance of UserMemoryWrite."""
 
@@ -844,7 +844,7 @@ class UserMemoryResponse(APCI):
     CODE = APCIUserService.USER_MEMORY_RESPONSE
 
     def __init__(
-        self, address: int = 0, count: int = 0, data: bytes | None = None
+        self, address: int = 0, count: int = 1, data: bytes | None = None
     ) -> None:
         """Initialize a new instance of UserMemoryResponse."""
 
@@ -1094,7 +1094,7 @@ class AuthorizeRequest(APCI):
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 5
+        return 6
 
     def from_knx(self, raw: bytes) -> None:
         """Parse/deserialize from KNX/IP raw data."""
@@ -1152,7 +1152,7 @@ class PropertyValueRead(APCI):
         self,
         object_index: int = 0,
         property_id: int = 0,
-        count: int = 0,
+        count: int = 1,
         start_index: int = 1,
     ) -> None:
         """Initialize a new instance of PropertyValueRead."""
@@ -1216,7 +1216,7 @@ class PropertyValueWrite(APCI):
         self,
         object_index: int = 0,
         property_id: int = 0,
-        count: int = 0,
+        count: int = 1,
         start_index: int = 0,
         data: bytes | None = None,
     ) -> None:
@@ -1295,7 +1295,7 @@ class PropertyValueResponse(APCI):
         self,
         object_index: int = 0,
         property_id: int = 0,
-        count: int = 0,
+        count: int = 1,
         start_index: int = 0,
         data: bytes | None = None,
     ) -> None:
@@ -1407,7 +1407,7 @@ class PropertyDescriptionResponse(APCI):
         property_id: int = 0,
         property_index: int = 0,
         type_: int = 0,
-        max_count: int = 0,
+        max_count: int = 1,
         access: int = 0,
     ) -> None:
         """Initialize a new instance of PropertyDescriptionRead."""

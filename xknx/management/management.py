@@ -152,7 +152,7 @@ class P2PConnection:
             self._response_waiter.cancel()
             raise ManagementConnectionError(
                 f"Connection to {self.address} failed: {exc}"
-            )
+            ) from exc
         except CommunicationError as exc:
             self._response_waiter.cancel()
             raise ManagementConnectionError("Error while sending Telegram") from exc
@@ -177,7 +177,7 @@ class P2PConnection:
         except ConfirmationError as exc:
             raise ManagementConnectionError(
                 f"Disconnect from {self.address} failed: {exc}"
-            )
+            ) from exc
         except CommunicationError as exc:
             raise ManagementConnectionError("Error while sending Telegram") from exc
         finally:
@@ -253,9 +253,11 @@ class P2PConnection:
             except asyncio.TimeoutError:
                 raise ManagementConnectionTimeout(
                     "No ACK received for repeated telegram."
-                )
+                ) from None
         except ConfirmationError as exc:
-            raise ManagementConnectionError(f"Error while sending Telegram: {exc}")
+            raise ManagementConnectionError(
+                f"Error while sending Telegram: {exc}"
+            ) from exc
         except CommunicationError as exc:
             raise ManagementConnectionError("Error while sending Telegram") from exc
         finally:
@@ -277,7 +279,9 @@ class P2PConnection:
                 self._response_waiter, timeout=MANAGAMENT_CONNECTION_TIMEOUT
             )
         except asyncio.TimeoutError:
-            raise ManagementConnectionTimeout()
+            raise ManagementConnectionTimeout(
+                f"Timeout while waiting for {expected_payload}"
+            ) from None
         finally:
             # set up new Future for the next request
             self._response_waiter = asyncio.get_event_loop().create_future()
