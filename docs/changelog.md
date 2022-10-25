@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### Features
+
+- Add support for python 3.11
+
 ### Management
 
 - Fix APCI service parsing for 10bit control fileds.
