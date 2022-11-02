@@ -85,7 +85,7 @@ class DPTVolumeLiquidLitre(DPT4ByteUnsigned):
     dpt_main_number = 12
     dpt_sub_number = 1200
     value_type = "volume_liquid_litre"
-    unit = "l"
+    unit = "L"
 
 
 class DPTVolumeM3(DPT4ByteUnsigned):
