@@ -244,21 +244,21 @@ class DPTPower2Byte(DPT2ByteFloat):
 
 
 class DPTVolumeFlow(DPT2ByteFloat):
-    """DPT 9.025 DPT_Value_Volume_Flow (l/h)."""
+    """DPT 9.025 DPT_Value_Volume_Flow (L/h)."""
 
     dpt_main_number = 9
     dpt_sub_number = 25
     value_type = "volume_flow"
-    unit = "l/h"
+    unit = "L/h"
 
 
 class DPTRainAmount(DPT2ByteFloat):
-    """DPT 9.026 DPT_Rain_Amount (l/m²)."""
+    """DPT 9.026 DPT_Rain_Amount (L/m²)."""
 
     dpt_main_number = 9
     dpt_sub_number = 26
     value_type = "rain_amount"
-    unit = "l/m²"
+    unit = "L/m²"
 
     value_min = -671088.64
     value_max = 670760.96
