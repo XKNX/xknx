@@ -11,7 +11,6 @@ the server shall only reply to those requests if it can fulfill the requirements
 """
 from __future__ import annotations
 
-from .hpai import HPAI
 from .knxip_enum import KNXIPServiceType
 from .search_response import SearchResponse
 
@@ -20,10 +19,6 @@ class SearchResponseExtended(SearchResponse):
     """Representation of a KNX Search Extended."""
 
     SERVICE_TYPE = KNXIPServiceType.SEARCH_RESPONSE_EXTENDED
-
-    def __init__(self, control_endpoint: HPAI = HPAI()):
-        """Initialize SearchResponse object."""
-        super().__init__(control_endpoint)
 
     def __repr__(self) -> str:
         """Return object as readable string."""

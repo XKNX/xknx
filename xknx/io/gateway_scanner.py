@@ -186,14 +186,14 @@ class GatewayScanner:
         local_ip: str | None = None,
         timeout_in_seconds: float = 3.0,
         stop_on_found: int | None = None,
-        scan_filter: GatewayScanFilter = GatewayScanFilter(),
+        scan_filter: GatewayScanFilter | None = None,
     ):
         """Initialize GatewayScanner class."""
         self.xknx = xknx
         self.local_ip = local_ip
         self.timeout_in_seconds = timeout_in_seconds
         self.stop_on_found = stop_on_found
-        self.scan_filter = scan_filter
+        self.scan_filter = scan_filter or GatewayScanFilter()
         self.found_gateways: dict[HPAI, GatewayDescriptor] = {}
         self._response_received_event = asyncio.Event()
 

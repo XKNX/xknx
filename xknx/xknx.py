@@ -53,13 +53,13 @@ class XKNX:
         log_directory: str | None = None,
         state_updater: TrackerOptionType = False,
         daemon_mode: bool = False,
-        connection_config: ConnectionConfig = ConnectionConfig(),
+        connection_config: ConnectionConfig | None = None,
     ) -> None:
         """Initialize XKNX class."""
         self.connection_manager = ConnectionManager()
         self.devices = Devices()
         self.knxip_interface = knx_interface_factory(
-            self, connection_config=connection_config
+            self, connection_config=connection_config or ConnectionConfig()
         )
         self.management = Management(self)
         self.telegrams: asyncio.Queue[Telegram | None] = asyncio.Queue()

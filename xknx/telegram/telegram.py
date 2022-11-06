@@ -37,17 +37,18 @@ class Telegram:
         self,
         destination_address: GroupAddress
         | IndividualAddress
-        | InternalGroupAddress = GroupAddress(0),
+        | InternalGroupAddress
+        | None = None,
         direction: TelegramDirection = TelegramDirection.OUTGOING,
         payload: APCI | None = None,
-        source_address: IndividualAddress = IndividualAddress(0),
+        source_address: IndividualAddress | None = None,
         tpci: TPCI | None = None,
     ) -> None:
         """Initialize Telegram class."""
-        self.destination_address = destination_address
+        self.destination_address = destination_address or GroupAddress(0)
         self.direction = direction
         self.payload = payload
-        self.source_address = source_address
+        self.source_address = source_address or IndividualAddress(0)
         self.timestamp = datetime.now()
         self.tpci = tpci or (
             TDataIndividual()

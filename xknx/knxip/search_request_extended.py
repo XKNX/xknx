@@ -20,11 +20,11 @@ class SearchRequestExtended(KNXIPBody):
 
     def __init__(
         self,
-        discovery_endpoint: HPAI = HPAI(),
+        discovery_endpoint: HPAI | None = None,
         srps: list[SRP] | None = None,
     ):
         """Initialize SearchRequestExtended object."""
-        self.discovery_endpoint = discovery_endpoint
+        self.discovery_endpoint = discovery_endpoint or HPAI()
         self.srps = srps or []
 
     def calculated_length(self) -> int:
