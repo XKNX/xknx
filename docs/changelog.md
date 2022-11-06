@@ -20,6 +20,10 @@ nav_order: 2
 - Fix wrong length of AuthorizeRequest.
 - Raise sane error messages in Management.
 
+# Bugfixes
+
+- No mutable default arguments. Fixes unexpected behaviour like GatewayScanner not finding all interfaces.
+
 # 1.2.0 Secure Routing 2022-10-10
 
 ### Features
