@@ -31,9 +31,7 @@ class TunnellingRequest(KNXIPBody):
         """Initialize TunnellingRequest object."""
         self.communication_channel_id = communication_channel_id
         self.sequence_counter = sequence_counter
-        self.cemi: CEMIFrame | None = (
-            cemi if cemi is not None else CEMIFrame(code=CEMIMessageCode.L_DATA_REQ)
-        )
+        self.cemi: CEMIFrame | None = cemi or CEMIFrame(code=CEMIMessageCode.L_DATA_REQ)
 
     def calculated_length(self) -> int:
         """Get length of KNX/IP body."""

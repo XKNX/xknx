@@ -19,9 +19,9 @@ class SearchResponse(KNXIPBody):
 
     SERVICE_TYPE = KNXIPServiceType.SEARCH_RESPONSE
 
-    def __init__(self, control_endpoint: HPAI = HPAI()):
+    def __init__(self, control_endpoint: HPAI | None = None) -> None:
         """Initialize SearchResponse object."""
-        self.control_endpoint = control_endpoint
+        self.control_endpoint = control_endpoint or HPAI()
         self.dibs: list[DIB] = []
 
     def calculated_length(self) -> int:

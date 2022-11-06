@@ -42,7 +42,8 @@ T = TypeVar("T")  # pylint: disable=invalid-name
 
 
 def knx_interface_factory(
-    xknx: XKNX, connection_config: ConnectionConfig
+    xknx: XKNX,
+    connection_config: ConnectionConfig,
 ) -> KNXIPInterface:
     """Create KNX/IP interface from config."""
     if connection_config.threaded:
@@ -56,11 +57,11 @@ class KNXIPInterface:
     def __init__(
         self,
         xknx: XKNX,
-        connection_config: ConnectionConfig = ConnectionConfig(),
+        connection_config: ConnectionConfig | None = None,
     ):
         """Initialize KNXIPInterface class."""
         self.xknx = xknx
-        self.connection_config = connection_config
+        self.connection_config = connection_config or ConnectionConfig()
         self._gateway_info: GatewayDescriptor | None = None
         self._interface: Interface | None = None
 
@@ -290,7 +291,10 @@ class KNXIPInterface:
         )
         await self._interface.connect()
 
-    async def _start_routing(self, local_ip: str | None = None) -> None:
+    async def _start_routing(
+        self,
+        local_ip: str | None = None,
+    ) -> None:
         """Start KNX/IP Routing."""
         local_ip = local_ip or await util.get_default_local_ip()
         if local_ip is None:
@@ -366,7 +370,7 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
     def __init__(
         self,
         xknx: XKNX,
-        connection_config: ConnectionConfig = ConnectionConfig(),
+        connection_config: ConnectionConfig | None = None,
     ):
         """Initialize KNXIPInterface class."""
         super().__init__(xknx, connection_config)

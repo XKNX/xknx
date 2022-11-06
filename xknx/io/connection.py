@@ -52,7 +52,7 @@ class ConnectionConfig:
         route_back: bool = False,
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
-        scan_filter: GatewayScanFilter = GatewayScanFilter(),
+        scan_filter: GatewayScanFilter | None = None,
         threaded: bool = False,
         secure_config: SecureConfig | None = None,
     ):
@@ -65,7 +65,7 @@ class ConnectionConfig:
         self.route_back = route_back
         self.auto_reconnect = auto_reconnect
         self.auto_reconnect_wait = auto_reconnect_wait
-        self.scan_filter = scan_filter
+        self.scan_filter = scan_filter or GatewayScanFilter()
         self.threaded = threaded
         self.secure_config = secure_config
 

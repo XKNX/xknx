@@ -26,14 +26,14 @@ class ConnectResponse(KNXIPBodyResponse):
         communication_channel: int = 0,
         status_code: ErrorCode = ErrorCode.E_NO_ERROR,
         request_type: ConnectRequestType = ConnectRequestType.TUNNEL_CONNECTION,
-        data_endpoint: HPAI = HPAI(),
+        data_endpoint: HPAI | None = None,
         identifier: int = 0,
     ):
         """Initialize ConnectResponse class."""
         self.communication_channel = communication_channel
         self.status_code = status_code
         self.request_type = request_type
-        self.data_endpoint = data_endpoint
+        self.data_endpoint = data_endpoint or HPAI()
         # identifier shall contain KNX Individual Address assigned to this KNXnet/IP Tunnelling connection
         self.identifier = identifier
 

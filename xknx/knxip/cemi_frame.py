@@ -28,27 +28,30 @@ class CEMIFrame:
         self,
         code: CEMIMessageCode = CEMIMessageCode.L_DATA_IND,
         flags: int = 0,
-        src_addr: IndividualAddress = IndividualAddress(None),
-        dst_addr: GroupAddress | IndividualAddress = GroupAddress(None),
-        tpci: TPCI = TDataGroup(),
+        src_addr: IndividualAddress | None = None,
+        dst_addr: GroupAddress | IndividualAddress | None = None,
+        tpci: TPCI | None = None,
         payload: APCI | None = None,
     ):
         """Initialize CEMIFrame object."""
         self.code = code
         self.flags = flags
-        self.src_addr = src_addr
-        self.dst_addr = dst_addr
-        self.tpci = tpci
+        self.src_addr = src_addr or IndividualAddress(None)
+        self.dst_addr = dst_addr or GroupAddress(None)
+        self.tpci = tpci or TDataGroup()
         self.payload = payload
 
     @staticmethod
     def init_from_telegram(
         telegram: Telegram,
         code: CEMIMessageCode = CEMIMessageCode.L_DATA_IND,
-        src_addr: IndividualAddress = IndividualAddress(None),
+        src_addr: IndividualAddress | None = None,
     ) -> CEMIFrame:
         """Return CEMIFrame from a Telegram."""
-        cemi = CEMIFrame(code=code, src_addr=src_addr)
+        cemi = CEMIFrame(
+            code=code,
+            src_addr=src_addr or IndividualAddress(None),
+        )
         # dst_addr, payload and cmd are set by telegram.setter
         cemi.telegram = telegram
         return cemi

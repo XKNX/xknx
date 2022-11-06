@@ -21,13 +21,13 @@ class ConnectRequest(KNXIPBody):
     def __init__(
         self,
         request_type: ConnectRequestType = ConnectRequestType.TUNNEL_CONNECTION,
-        control_endpoint: HPAI = HPAI(),
-        data_endpoint: HPAI = HPAI(),
+        control_endpoint: HPAI | None = None,
+        data_endpoint: HPAI | None = None,
     ):
         """Initialize ConnectRequest object."""
         self.request_type = request_type
-        self.control_endpoint = control_endpoint
-        self.data_endpoint = data_endpoint
+        self.control_endpoint = control_endpoint or HPAI()
+        self.data_endpoint = data_endpoint or HPAI()
         # KNX layer, 0x02 = TUNNEL_LINKLAYER
         self.flags = 0x02
 

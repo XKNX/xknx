@@ -16,9 +16,9 @@ class DescriptionRequest(KNXIPBody):
 
     SERVICE_TYPE = KNXIPServiceType.DESCRIPTION_REQUEST
 
-    def __init__(self, control_endpoint: HPAI = HPAI()):
+    def __init__(self, control_endpoint: HPAI | None = None) -> None:
         """Initialize SearchRequest object."""
-        self.control_endpoint = control_endpoint
+        self.control_endpoint = control_endpoint or HPAI()
 
     def calculated_length(self) -> int:
         """Get length of KNX/IP body."""
