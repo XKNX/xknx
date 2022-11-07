@@ -144,7 +144,7 @@ class TestKNXIPInterface:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
             start_routing.assert_called_once_with(
-                local_ip=local_ip,
+                local_ip=local_ip, multicast_group="224.0.23.12", multicast_port=3671
             )
         with patch("xknx.io.routing.Routing.connect") as connect_routing:
             interface = knx_interface_factory(self.xknx, connection_config)
@@ -392,7 +392,11 @@ class TestKNXIPInterface:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
             start_secure_tunnel.assert_called_once_with(
-                backbone_key, latency_ms=1000, local_ip=None
+                backbone_key,
+                latency_ms=1000,
+                local_ip=None,
+                multicast_group="224.0.23.12",
+                multicast_port=3671,
             )
         with patch("xknx.io.routing.SecureRouting.connect") as connect_secure:
             interface = knx_interface_factory(self.xknx, connection_config)
@@ -402,7 +406,7 @@ class TestKNXIPInterface:
             assert interface._interface.latency_ms == 1000
             assert isinstance(interface._interface.transport, SecureGroup)
             assert interface._interface.transport.remote_addr == (
-                self.xknx.multicast_group,
+                "224.0.23.12",
                 3671,
             )
             assert (  # pylint: disable=comparison-with-callable
@@ -425,7 +429,11 @@ class TestKNXIPInterface:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
             start_secure_tunnel.assert_called_once_with(
-                backbone_key, latency_ms=2000, local_ip=None
+                backbone_key,
+                latency_ms=2000,
+                local_ip=None,
+                multicast_group="224.0.23.12",
+                multicast_port=3671,
             )
         with patch("xknx.io.routing.SecureRouting.connect") as connect_secure:
             interface = knx_interface_factory(self.xknx, connection_config)
@@ -435,7 +443,7 @@ class TestKNXIPInterface:
             assert interface._interface.latency_ms == 2000
             assert isinstance(interface._interface.transport, SecureGroup)
             assert interface._interface.transport.remote_addr == (
-                self.xknx.multicast_group,
+                "224.0.23.12",
                 3671,
             )
             assert (  # pylint: disable=comparison-with-callable

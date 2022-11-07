@@ -25,6 +25,7 @@ from xknx.secure import load_key_ring
 from xknx.telegram import IndividualAddress, Telegram
 
 from .connection import ConnectionConfig, ConnectionType
+from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .gateway_scanner import GatewayDescriptor, GatewayScanner
 from .routing import Routing, SecureRouting
 from .tunnel import SecureTunnel, TCPTunnel, UDPTunnel, _Tunnel
@@ -72,7 +73,11 @@ class KNXIPInterface:
     async def _start(self) -> None:
         """Start interface. Connecting KNX/IP device with the selected method."""
         if self.connection_config.connection_type == ConnectionType.ROUTING:
-            await self._start_routing(local_ip=self.connection_config.local_ip)
+            await self._start_routing(
+                local_ip=self.connection_config.local_ip,
+                multicast_group=self.connection_config.multicast_group,
+                multicast_port=self.connection_config.multicast_port,
+            )
         elif (
             self.connection_config.connection_type == ConnectionType.ROUTING_SECURE
             and self.connection_config.secure_config is not None
@@ -80,6 +85,7 @@ class KNXIPInterface:
             secure_config = self.connection_config.secure_config
             backbone_key = secure_config.backbone_key
             latency_ms = secure_config.latency_ms
+            multicast_group = self.connection_config.multicast_group
             if (
                 secure_config.knxkeys_file_path is not None
                 and secure_config.knxkeys_password is not None
@@ -94,7 +100,7 @@ class KNXIPInterface:
                 backbone_key = backbone_key or keyring.backbone.decrypted_key
                 latency_ms = latency_ms or keyring.backbone.latency
                 if keyring.backbone.multicast_address:
-                    self.xknx.multicast_group = keyring.backbone.multicast_address
+                    multicast_group = keyring.backbone.multicast_address
             if not backbone_key:
                 raise InvalidSecureConfiguration(
                     "No backbone key found in secure configuration"
@@ -103,6 +109,8 @@ class KNXIPInterface:
                 backbone_key,
                 latency_ms=latency_ms,
                 local_ip=self.connection_config.local_ip,
+                multicast_group=multicast_group,
+                multicast_port=self.connection_config.multicast_port,
             )
         elif (
             self.connection_config.connection_type == ConnectionType.TUNNELING
@@ -294,6 +302,8 @@ class KNXIPInterface:
     async def _start_routing(
         self,
         local_ip: str | None = None,
+        multicast_group: str = DEFAULT_MCAST_GRP,
+        multicast_port: int = DEFAULT_MCAST_PORT,
     ) -> None:
         """Start KNX/IP Routing."""
         local_ip = local_ip or await util.get_default_local_ip()
@@ -302,12 +312,19 @@ class KNXIPInterface:
         util.validate_ip(local_ip, address_name="Local IP address")
 
         logger.debug(
-            "Starting Routing from %s as %s via %s",
+            "Starting Routing from %s as %s via %s:%s",
             local_ip,
             self.xknx.own_address,
-            self.xknx.multicast_group,
+            multicast_group,
+            multicast_port,
         )
-        self._interface = Routing(self.xknx, self.telegram_received, local_ip)
+        self._interface = Routing(
+            self.xknx,
+            self.telegram_received,
+            local_ip=local_ip,
+            multicast_group=multicast_group,
+            multicast_port=multicast_port,
+        )
         await self._interface.connect()
 
     async def _start_secure_routing(
@@ -315,6 +332,8 @@ class KNXIPInterface:
         backbone_key: bytes,
         latency_ms: int | None = None,
         local_ip: str | None = None,
+        multicast_group: str = DEFAULT_MCAST_GRP,
+        multicast_port: int = DEFAULT_MCAST_PORT,
     ) -> None:
         """Start KNX/IP Routing."""
         local_ip = local_ip or await util.get_default_local_ip()
@@ -323,13 +342,20 @@ class KNXIPInterface:
         util.validate_ip(local_ip, address_name="Local IP address")
 
         logger.debug(
-            "Starting Secure Routing from %s as %s via %s",
+            "Starting Secure Routing from %s as %s via %s:%s",
             local_ip,
             self.xknx.own_address,
-            self.xknx.multicast_group,
+            multicast_group,
+            multicast_port,
         )
         self._interface = SecureRouting(
-            self.xknx, self.telegram_received, local_ip, backbone_key, latency_ms
+            self.xknx,
+            self.telegram_received,
+            local_ip=local_ip,
+            backbone_key=backbone_key,
+            latency_ms=latency_ms,
+            multicast_group=multicast_group,
+            multicast_port=multicast_port,
         )
         await self._interface.connect()
 
