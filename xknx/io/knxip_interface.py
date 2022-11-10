@@ -175,20 +175,26 @@ class KNXIPInterface:
         async for gateway in GatewayScanner(
             self.xknx,
             local_ip=self.connection_config.local_ip,
-            scan_filter=self.connection_config.scan_filter,  # secure disabled by default
+            scan_filter=self.connection_config.scan_filter,
         ).async_scan():
             try:
-                if gateway.supports_tunnelling_tcp:
+                if (
+                    gateway.supports_tunnelling_tcp
+                    and not gateway.tunnelling_requires_secure
+                ):
                     await self._start_tunnelling_tcp(
                         gateway_ip=gateway.ip_addr,
                         gateway_port=gateway.port,
                     )
-                elif gateway.supports_tunnelling:
+                elif (
+                    gateway.supports_tunnelling
+                    and not gateway.tunnelling_requires_secure
+                ):
                     await self._start_tunnelling_udp(
                         gateway_ip=gateway.ip_addr,
                         gateway_port=gateway.port,
                     )
-                elif gateway.supports_routing:
+                elif gateway.supports_routing and not gateway.routing_requires_secure:
                     await self._start_routing(
                         local_ip=self.connection_config.local_ip,
                     )
