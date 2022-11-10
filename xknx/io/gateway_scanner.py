@@ -130,51 +130,66 @@ class GatewayDescriptor:
 
 
 class GatewayScanFilter:
-    """Filter to limit gateway scan attempts.
+    """Filter to limit gateway scan results.
 
-    If `tunnelling` and `routing` are set it is treated as AND.
-    KNX/IP devices that don't support `tunnelling` or `routing` aren't matched.
+    If `name` doesn't match the gateway name, the gateway will be ignored.
+
+    Connection methods are treated as OR if `True` is set for multiple methods.
+    Non-secure methods don't match if secure is required.
     """
 
     def __init__(
         self,
         name: str | None = None,
-        tunnelling: bool | None = None,
-        tunnelling_tcp: bool | None = None,
-        routing: bool | None = None,
-        secure: bool | None = False,
+        tunnelling: bool | None = True,
+        tunnelling_tcp: bool | None = True,
+        routing: bool | None = True,
+        secure_tunnelling: bool | None = True,
+        secure_routing: bool | None = True,
     ):
         """Initialize GatewayScanFilter class."""
         self.name = name
         self.tunnelling = tunnelling
         self.tunnelling_tcp = tunnelling_tcp
         self.routing = routing
-        self.secure = secure
+        self.secure_tunnelling = secure_tunnelling
+        self.secure_routing = secure_routing
 
     def match(self, gateway: GatewayDescriptor) -> bool:
         """Check whether the device is a gateway and given GatewayDescriptor matches the filter."""
         if self.name is not None and self.name != gateway.name:
             return False
         if (
-            self.tunnelling is not None
-            and self.tunnelling != gateway.supports_tunnelling
+            self.tunnelling
+            and gateway.supports_tunnelling
+            and not gateway.tunnelling_requires_secure
         ):
-            return False
+            return True
         if (
-            self.tunnelling_tcp is not None
-            and self.tunnelling_tcp != gateway.supports_tunnelling_tcp
+            self.tunnelling_tcp
+            and gateway.supports_tunnelling_tcp
+            and not gateway.tunnelling_requires_secure
         ):
-            return False
-        if self.routing is not None and self.routing != gateway.supports_routing:
-            return False
-        if self.secure is not None:
-            if self.secure is not bool(gateway.tunnelling_requires_secure):
-                return False
-        return (
-            gateway.supports_tunnelling
-            or gateway.supports_tunnelling_tcp
-            or gateway.supports_routing
-        )
+            return True
+        if (
+            self.routing
+            and gateway.supports_routing
+            and not gateway.routing_requires_secure
+        ):
+            return True
+        if (
+            self.secure_tunnelling
+            and gateway.supports_tunnelling_tcp
+            and gateway.tunnelling_requires_secure
+        ):
+            return True
+        if (
+            self.secure_routing
+            and gateway.supports_routing
+            and gateway.routing_requires_secure
+        ):
+            return True
+        return False
 
 
 class GatewayScanner:
