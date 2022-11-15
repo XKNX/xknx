@@ -79,8 +79,8 @@ class XMLInterface(AttributeReader):
     host: IndividualAddress
     user_id: int
     password: str
-    decrypted_password: str
-    decrypted_authentication: str
+    decrypted_password: str | None = None
+    decrypted_authentication: str | None = None
     individual_address: IndividualAddress
     authentication: str
     group_addresses: list[XMLAssignedGroupAddress] = []
@@ -107,23 +107,29 @@ class XMLInterface(AttributeReader):
     ) -> None:
         """Decryt attributes."""
 
-        if self.password is not None:
-            self.decrypted_password = extract_password(
+        self.decrypted_password = (
+            extract_password(
                 decrypt_aes128cbc(
                     base64.b64decode(self.password),
                     password_hash,
                     initialization_vector,
                 )
             )
+            if self.password is not None
+            else None
+        )
 
-        if self.authentication is not None:
-            self.decrypted_authentication = extract_password(
+        self.decrypted_authentication = (
+            extract_password(
                 decrypt_aes128cbc(
                     base64.b64decode(self.authentication),
                     password_hash,
                     initialization_vector,
                 )
             )
+            if self.authentication is not None
+            else None
+        )
 
 
 class XMLBackbone(AttributeReader):
@@ -171,10 +177,10 @@ class XMLDevice(AttributeReader):
 
     individual_address: IndividualAddress
     tool_key: str
-    decrypted_tool_key: bytes
+    decrypted_tool_key: bytes | None = None
     management_password: str
-    decrypted_management_password: str
-    decrypted_authentication: str
+    decrypted_management_password: str | None = None
+    decrypted_authentication: str | None = None
     authentication: str
     sequence_number: int
 
@@ -197,28 +203,38 @@ class XMLDevice(AttributeReader):
         self, password_hash: bytes, initialization_vector: bytes
     ) -> None:
         """Decrypt attributes."""
-        if self.tool_key is not None:
-            self.decrypted_tool_key = decrypt_aes128cbc(
+
+        self.decrypted_tool_key = (
+            decrypt_aes128cbc(
                 base64.b64decode(self.tool_key), password_hash, initialization_vector
             )
+            if self.tool_key is not None
+            else None
+        )
 
-        if self.authentication is not None:
-            self.decrypted_authentication = extract_password(
+        self.decrypted_authentication = (
+            extract_password(
                 decrypt_aes128cbc(
                     base64.b64decode(self.authentication),
                     password_hash,
                     initialization_vector,
                 )
             )
+            if self.authentication is not None
+            else None
+        )
 
-        if self.management_password is not None:
-            self.decrypted_management_password = extract_password(
+        self.decrypted_management_password = (
+            extract_password(
                 decrypt_aes128cbc(
                     base64.b64decode(self.management_password),
                     password_hash,
                     initialization_vector,
                 )
             )
+            if self.management_password is not None
+            else None
+        )
 
 
 class Keyring(AttributeReader):
@@ -248,7 +264,7 @@ class Keyring(AttributeReader):
         return None
 
     def get_interface_by_user_id(self, user_id: int) -> XMLInterface | None:
-        """Get the interface with the given user id."""
+        """Get the first found interface with the given user id."""
         for interface in self.interfaces:
             if interface.user_id == user_id:
                 return interface

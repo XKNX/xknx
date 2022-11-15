@@ -139,6 +139,15 @@ class KNXIPInterface:
             user_password: str
             device_authentication_password: str | None
             if (
+                secure_config.user_id is not None
+                and secure_config.user_password is not None
+            ):
+                user_id = secure_config.user_id
+                user_password = secure_config.user_password
+                device_authentication_password = (
+                    secure_config.device_authentication_password
+                )
+            elif (
                 secure_config.knxkeys_file_path is not None
                 and secure_config.knxkeys_password is not None
             ):
@@ -151,22 +160,19 @@ class KNXIPInterface:
                     if interface is None:
                         raise InterfaceWithUserIdNotFound()
 
-                    user_password = interface.decrypted_password
+                    _user_password = interface.decrypted_password
                     device_authentication_password = interface.decrypted_authentication
                 else:
                     interface = keyring.interfaces[0]
                     user_id = interface.user_id
-                    user_password = interface.decrypted_password
+                    _user_password = interface.decrypted_password
                     device_authentication_password = interface.decrypted_authentication
-            else:
-                user_id = secure_config.user_id or 2
-                if secure_config.user_password is None:
-                    raise InvalidSecureConfiguration()
 
-                user_password = secure_config.user_password
-                device_authentication_password = (
-                    secure_config.device_authentication_password
-                )
+                if _user_password is None:
+                    raise InvalidSecureConfiguration(
+                        f"No password found for tunnel {interface.individual_address} user_id {user_id}"
+                    )
+                user_password = _user_password
 
             await self._start_secure_tunnelling_tcp(
                 gateway_ip=self.connection_config.gateway_ip,

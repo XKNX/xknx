@@ -16,6 +16,10 @@ nav_order: 2
 
 - Add support for python 3.11
 
+### Internal
+
+- Use manually configured IP secure tunnel password over loading it from keyring.
+
 ### Management
 
 - Fix APCI service parsing for 10bit control fileds.
