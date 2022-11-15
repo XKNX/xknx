@@ -271,6 +271,43 @@ class Keyring(AttributeReader):
 
         return None
 
+    def get_tunnel_interfaces_by_host(
+        self, host: IndividualAddress
+    ) -> list[XMLInterface]:
+        """Get all tunnel interfaces of a given host individual address."""
+        return [
+            tunnel
+            for tunnel in self.interfaces
+            if tunnel.type is InterfaceType.TUNNELING and tunnel.host == host
+        ]
+
+    def get_tunnel_interface_by_host_and_user_id(
+        self, host: IndividualAddress, user_id: int
+    ) -> XMLInterface | None:
+        """Get the tunnel interface with the given host and user id."""
+        return next(
+            (
+                tunnel
+                for tunnel in self.get_tunnel_interfaces_by_host(host)
+                if tunnel.user_id == user_id
+            ),
+            None,
+        )
+
+    def get_tunnel_interface_by_individual_address(
+        self, tunnelling_slot: IndividualAddress
+    ) -> XMLInterface | None:
+        """Get the interface with the given tunneling address."""
+        return next(
+            (
+                tunnel
+                for tunnel in self.interfaces
+                if tunnel.type is InterfaceType.TUNNELING
+                and tunnel.individual_address == tunnelling_slot
+            ),
+            None,
+        )
+
     def parse_xml(self, node: Document) -> None:
         """Parse all needed attributes from the given node map."""
         attributes = node.attributes

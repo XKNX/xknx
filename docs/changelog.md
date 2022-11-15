@@ -19,6 +19,7 @@ nav_order: 2
 ### Internal
 
 - Use manually configured IP secure tunnel password over loading it from keyring.
+- Add methods to Keyring to get interfaces by individual address (host or tunnel).
 
 ### Management
 
