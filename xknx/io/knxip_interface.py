@@ -173,7 +173,10 @@ class KNXIPInterface:
                         f"No password found for tunnel {interface.individual_address} user_id {user_id}"
                     )
                 user_password = _user_password
-
+            else:
+                raise InvalidSecureConfiguration(
+                    "No `user_id` or `knxkeys_file_path` and password found in secure configuration"
+                )
             await self._start_secure_tunnelling_tcp(
                 gateway_ip=self.connection_config.gateway_ip,
                 gateway_port=self.connection_config.gateway_port,
