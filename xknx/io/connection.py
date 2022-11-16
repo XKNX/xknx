@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from enum import Enum, auto
 
-from .const import DEFAULT_MCAST_PORT
+from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .gateway_scanner import GatewayScanFilter
 
 
@@ -34,6 +34,8 @@ class ConnectionConfig:
     * route_back: For TUNNELING connection.
         The KNXnet/IP Server shall use the IP address and port in the received IP package
         as the target IP address or port number for the response to the KNXnet/IP Client.
+    * multicast_group: Multicast group for KNXnet/IP routing.
+    * multicast_port: Multicast port for KNXnet/IP routing.
     * auto_reconnect: Auto reconnect to KNX/IP tunneling device if connection cannot be established.
     * auto_reconnect_wait: Wait n seconds before trying to reconnect to KNX/IP tunneling device.
     * scan_filter: For AUTOMATIC connection, limit scan with the given filter
@@ -50,6 +52,8 @@ class ConnectionConfig:
         gateway_ip: str | None = None,
         gateway_port: int = DEFAULT_MCAST_PORT,
         route_back: bool = False,
+        multicast_group: str = DEFAULT_MCAST_GRP,
+        multicast_port: int = DEFAULT_MCAST_PORT,
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
         scan_filter: GatewayScanFilter | None = None,
@@ -63,6 +67,8 @@ class ConnectionConfig:
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
         self.route_back = route_back
+        self.multicast_group = multicast_group
+        self.multicast_port = multicast_port
         self.auto_reconnect = auto_reconnect
         self.auto_reconnect_wait = auto_reconnect_wait
         self.scan_filter = scan_filter or GatewayScanFilter()
