@@ -222,18 +222,6 @@ class TestKNXIPInterface:
                 user_id=3, knxkeys_file_path=knxkeys_file, knxkeys_password="password"
             ),
         )
-        with patch(
-            "xknx.io.KNXIPInterface._start_secure_tunnelling_tcp"
-        ) as start_secure_tunnel:
-            interface = knx_interface_factory(self.xknx, connection_config)
-            await interface.start()
-            start_secure_tunnel.assert_called_once_with(
-                gateway_ip="192.168.1.1",
-                gateway_port=3671,
-                user_id=3,
-                user_password="user1",
-                device_authentication_password="authenticationcode",
-            )
         with patch("xknx.io.tunnel.SecureTunnel.connect") as connect_secure:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
@@ -267,18 +255,6 @@ class TestKNXIPInterface:
                 knxkeys_file_path=knxkeys_file, knxkeys_password="password"
             ),
         )
-        with patch(
-            "xknx.io.KNXIPInterface._start_secure_tunnelling_tcp"
-        ) as start_secure_tunnel:
-            interface = knx_interface_factory(self.xknx, connection_config)
-            await interface.start()
-            start_secure_tunnel.assert_called_once_with(
-                gateway_ip="192.168.1.1",
-                gateway_port=3671,
-                user_id=3,
-                user_password="user1",
-                device_authentication_password="authenticationcode",
-            )
         with patch("xknx.io.tunnel.SecureTunnel.connect") as connect_secure:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
@@ -311,18 +287,6 @@ class TestKNXIPInterface:
                 user_password="user1",
             ),
         )
-        with patch(
-            "xknx.io.KNXIPInterface._start_secure_tunnelling_tcp"
-        ) as start_secure_tunnel:
-            interface = knx_interface_factory(self.xknx, connection_config)
-            await interface.start()
-            start_secure_tunnel.assert_called_once_with(
-                gateway_ip="192.168.1.1",
-                gateway_port=3671,
-                user_id=3,
-                user_password="user1",
-                device_authentication_password="authenticationcode",
-            )
         with patch("xknx.io.tunnel.SecureTunnel.connect") as connect_secure:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
@@ -386,18 +350,6 @@ class TestKNXIPInterface:
                 knxkeys_file_path=knxkeys_file, knxkeys_password="password"
             ),
         )
-        with patch(
-            "xknx.io.KNXIPInterface._start_secure_routing"
-        ) as start_secure_routing:
-            interface = knx_interface_factory(self.xknx, connection_config)
-            await interface.start()
-            start_secure_routing.assert_called_once_with(
-                backbone_key,
-                latency_ms=1000,
-                local_ip=None,
-                multicast_group="224.0.23.12",
-                multicast_port=3671,
-            )
         with patch("xknx.io.routing.SecureRouting.connect") as connect_secure:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
@@ -423,18 +375,6 @@ class TestKNXIPInterface:
             connection_type=ConnectionType.ROUTING_SECURE,
             secure_config=SecureConfig(backbone_key=backbone_key_str, latency_ms=2000),
         )
-        with patch(
-            "xknx.io.KNXIPInterface._start_secure_routing"
-        ) as start_secure_routing:
-            interface = knx_interface_factory(self.xknx, connection_config)
-            await interface.start()
-            start_secure_routing.assert_called_once_with(
-                backbone_key,
-                latency_ms=2000,
-                local_ip=None,
-                multicast_group="224.0.23.12",
-                multicast_port=3671,
-            )
         with patch("xknx.io.routing.SecureRouting.connect") as connect_secure:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
