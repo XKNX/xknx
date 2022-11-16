@@ -388,10 +388,10 @@ class TestKNXIPInterface:
         )
         with patch(
             "xknx.io.KNXIPInterface._start_secure_routing"
-        ) as start_secure_tunnel:
+        ) as start_secure_routing:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
-            start_secure_tunnel.assert_called_once_with(
+            start_secure_routing.assert_called_once_with(
                 backbone_key,
                 latency_ms=1000,
                 local_ip=None,
@@ -425,10 +425,10 @@ class TestKNXIPInterface:
         )
         with patch(
             "xknx.io.KNXIPInterface._start_secure_routing"
-        ) as start_secure_tunnel:
+        ) as start_secure_routing:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
-            start_secure_tunnel.assert_called_once_with(
+            start_secure_routing.assert_called_once_with(
                 backbone_key,
                 latency_ms=2000,
                 local_ip=None,
