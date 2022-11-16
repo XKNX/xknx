@@ -24,7 +24,7 @@ from xknx.io import util
 from xknx.secure import load_key_ring
 from xknx.telegram import IndividualAddress, Telegram
 
-from .connection import ConnectionConfig, ConnectionType, SecureConfig
+from .connection import ConnectionConfig, ConnectionType
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .gateway_scanner import GatewayDescriptor, GatewayScanner
 from .routing import Routing, SecureRouting
@@ -78,13 +78,8 @@ class KNXIPInterface:
                 multicast_group=self.connection_config.multicast_group,
                 multicast_port=self.connection_config.multicast_port,
             )
-        elif (
-            self.connection_config.connection_type == ConnectionType.ROUTING_SECURE
-            and self.connection_config.secure_config is not None
-        ):
-            await self._start_secure_routing(
-                secure_config=self.connection_config.secure_config,
-            )
+        elif self.connection_config.connection_type == ConnectionType.ROUTING_SECURE:
+            await self._start_secure_routing()
         elif (
             self.connection_config.connection_type == ConnectionType.TUNNELING
             and self.connection_config.gateway_ip is not None
@@ -105,12 +100,10 @@ class KNXIPInterface:
             self.connection_config.connection_type
             == ConnectionType.TUNNELING_TCP_SECURE
             and self.connection_config.gateway_ip is not None
-            and self.connection_config.secure_config is not None
         ):
             await self._start_secure_tunnelling_tcp(
                 gateway_ip=self.connection_config.gateway_ip,
                 gateway_port=self.connection_config.gateway_port,
-                secure_config=self.connection_config.secure_config,
             )
         else:
             await self._start_automatic()
@@ -178,30 +171,32 @@ class KNXIPInterface:
         self,
         gateway_ip: str,
         gateway_port: int,
-        secure_config: SecureConfig,
     ) -> None:
         """Start KNX/IP TCP tunnel."""
+        if self.connection_config.secure_config is None:
+            raise InvalidSecureConfiguration("SecureConfig missing in ConnectionConfig")
         user_id: int
         user_password: str
         device_authentication_password: str | None
         if (
-            secure_config.user_id is not None
-            and secure_config.user_password is not None
+            self.connection_config.secure_config.user_id is not None
+            and self.connection_config.secure_config.user_password is not None
         ):
-            user_id = secure_config.user_id
-            user_password = secure_config.user_password
+            user_id = self.connection_config.secure_config.user_id
+            user_password = self.connection_config.secure_config.user_password
             device_authentication_password = (
-                secure_config.device_authentication_password
+                self.connection_config.secure_config.device_authentication_password
             )
         elif (
-            secure_config.knxkeys_file_path is not None
-            and secure_config.knxkeys_password is not None
+            self.connection_config.secure_config.knxkeys_file_path is not None
+            and self.connection_config.secure_config.knxkeys_password is not None
         ):
             keyring = load_key_ring(
-                secure_config.knxkeys_file_path, secure_config.knxkeys_password
+                self.connection_config.secure_config.knxkeys_file_path,
+                self.connection_config.secure_config.knxkeys_password,
             )
-            if secure_config.user_id is not None:
-                user_id = secure_config.user_id
+            if self.connection_config.secure_config.user_id is not None:
+                user_id = self.connection_config.secure_config.user_id
                 interface = keyring.get_interface_by_user_id(user_id)
                 if interface is None:
                     raise InterfaceWithUserIdNotFound()
@@ -312,23 +307,25 @@ class KNXIPInterface:
 
     async def _start_secure_routing(
         self,
-        secure_config: SecureConfig,
         latency_ms: int | None = None,
         local_ip: str | None = None,
         multicast_group: str = DEFAULT_MCAST_GRP,
         multicast_port: int = DEFAULT_MCAST_PORT,
     ) -> None:
         """Start KNX/IP Routing."""
-        backbone_key = secure_config.backbone_key
-        latency_ms = secure_config.latency_ms
+        if self.connection_config.secure_config is None:
+            raise InvalidSecureConfiguration("SecureConfig missing in ConnectionConfig")
+        backbone_key = self.connection_config.secure_config.backbone_key
+        latency_ms = self.connection_config.secure_config.latency_ms
         multicast_group = self.connection_config.multicast_group
         multicast_port = self.connection_config.multicast_port
         if (
-            secure_config.knxkeys_file_path is not None
-            and secure_config.knxkeys_password is not None
+            self.connection_config.secure_config.knxkeys_file_path is not None
+            and self.connection_config.secure_config.knxkeys_password is not None
         ):
             keyring = load_key_ring(
-                secure_config.knxkeys_file_path, secure_config.knxkeys_password
+                self.connection_config.secure_config.knxkeys_file_path,
+                self.connection_config.secure_config.knxkeys_password,
             )
             if keyring.backbone is None:
                 raise InvalidSecureConfiguration(
