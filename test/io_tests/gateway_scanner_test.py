@@ -214,72 +214,99 @@ class TestGatewayScanner:
         supports_secure=True,
     )
     gateway_desc_secure_tunnel.tunnelling_requires_secure = True
+    gateway_desc_secure_router = GatewayDescriptor(
+        name="KNX-Secure-Router",
+        ip_addr="10.1.1.12",
+        port=3761,
+        local_interface="en1",
+        local_ip="10.1.1.100",
+        supports_tunnelling=False,
+        supports_routing=True,
+    )
+    gateway_desc_secure_router.routing_requires_secure = True
 
     def test_gateway_scan_filter_match(self):
         """Test match function of gateway filter."""
         filter_default = GatewayScanFilter()
-        filter_tunnel = GatewayScanFilter(tunnelling=True)
-        filter_tcp_tunnel = GatewayScanFilter(tunnelling_tcp=True, secure=None)
-        filter_secure_tunnel = GatewayScanFilter(tunnelling_tcp=True, secure=True)
-        filter_router = GatewayScanFilter(routing=True)
+        filter_tunnel = GatewayScanFilter(routing=False, secure_routing=False)
+        filter_tcp_tunnel = GatewayScanFilter(
+            tunnelling=False,
+            tunnelling_tcp=True,
+            secure_tunnelling=None,
+            routing=False,
+            secure_routing=False,
+        )
+        filter_secure_tunnel = GatewayScanFilter(
+            tunnelling=False,
+            tunnelling_tcp=False,
+            secure_tunnelling=True,
+            routing=False,
+            secure_routing=False,
+        )
+        filter_router = GatewayScanFilter(
+            tunnelling=False,
+            tunnelling_tcp=False,
+            secure_tunnelling=False,
+            routing=True,
+            secure_routing=False,
+        )
         filter_name = GatewayScanFilter(name="KNX-Router")
-        filter_no_tunnel = GatewayScanFilter(tunnelling=False)
-        filter_no_router = GatewayScanFilter(routing=False)
-        filter_tunnel_and_router = GatewayScanFilter(tunnelling=True, routing=True)
+        filter_secure_router = GatewayScanFilter(
+            tunnelling=False,
+            tunnelling_tcp=False,
+            secure_tunnelling=False,
+            routing=False,
+            secure_routing=True,
+        )
 
         assert filter_default.match(self.gateway_desc_interface)
         assert filter_default.match(self.gateway_desc_router)
         assert filter_default.match(self.gateway_desc_both)
         assert not filter_default.match(self.gateway_desc_neither)
-        assert not filter_default.match(self.gateway_desc_secure_tunnel)
+        assert filter_default.match(self.gateway_desc_secure_tunnel)
+        assert filter_default.match(self.gateway_desc_secure_router)
 
         assert filter_tunnel.match(self.gateway_desc_interface)
         assert not filter_tunnel.match(self.gateway_desc_router)
         assert filter_tunnel.match(self.gateway_desc_both)
         assert not filter_tunnel.match(self.gateway_desc_neither)
-        assert not filter_tunnel.match(self.gateway_desc_secure_tunnel)
+        assert filter_tunnel.match(self.gateway_desc_secure_tunnel)
+        assert not filter_tunnel.match(self.gateway_desc_secure_router)
 
         assert not filter_tcp_tunnel.match(self.gateway_desc_interface)
         assert not filter_tcp_tunnel.match(self.gateway_desc_router)
         assert filter_tcp_tunnel.match(self.gateway_desc_both)
         assert not filter_tcp_tunnel.match(self.gateway_desc_neither)
-        assert filter_tcp_tunnel.match(self.gateway_desc_secure_tunnel)
+        assert not filter_tcp_tunnel.match(self.gateway_desc_secure_tunnel)
+        assert not filter_tcp_tunnel.match(self.gateway_desc_secure_router)
 
         assert not filter_secure_tunnel.match(self.gateway_desc_interface)
         assert not filter_secure_tunnel.match(self.gateway_desc_router)
         assert not filter_secure_tunnel.match(self.gateway_desc_both)
         assert not filter_secure_tunnel.match(self.gateway_desc_neither)
         assert filter_secure_tunnel.match(self.gateway_desc_secure_tunnel)
+        assert not filter_secure_tunnel.match(self.gateway_desc_secure_router)
 
         assert not filter_router.match(self.gateway_desc_interface)
         assert filter_router.match(self.gateway_desc_router)
         assert filter_router.match(self.gateway_desc_both)
         assert not filter_router.match(self.gateway_desc_neither)
         assert not filter_router.match(self.gateway_desc_secure_tunnel)
+        assert not filter_router.match(self.gateway_desc_secure_router)
 
         assert not filter_name.match(self.gateway_desc_interface)
         assert filter_name.match(self.gateway_desc_router)
         assert not filter_name.match(self.gateway_desc_both)
         assert not filter_name.match(self.gateway_desc_neither)
         assert not filter_name.match(self.gateway_desc_secure_tunnel)
+        assert not filter_name.match(self.gateway_desc_secure_router)
 
-        assert not filter_no_tunnel.match(self.gateway_desc_interface)
-        assert filter_no_tunnel.match(self.gateway_desc_router)
-        assert not filter_no_tunnel.match(self.gateway_desc_both)
-        assert not filter_no_tunnel.match(self.gateway_desc_neither)
-        assert not filter_no_tunnel.match(self.gateway_desc_secure_tunnel)
-
-        assert filter_no_router.match(self.gateway_desc_interface)
-        assert not filter_no_router.match(self.gateway_desc_router)
-        assert not filter_no_router.match(self.gateway_desc_both)
-        assert not filter_no_router.match(self.gateway_desc_neither)
-        assert not filter_no_router.match(self.gateway_desc_secure_tunnel)
-
-        assert not filter_tunnel_and_router.match(self.gateway_desc_interface)
-        assert not filter_tunnel_and_router.match(self.gateway_desc_router)
-        assert filter_tunnel_and_router.match(self.gateway_desc_both)
-        assert not filter_tunnel_and_router.match(self.gateway_desc_neither)
-        assert not filter_tunnel_and_router.match(self.gateway_desc_secure_tunnel)
+        assert not filter_secure_router.match(self.gateway_desc_interface)
+        assert not filter_secure_router.match(self.gateway_desc_router)
+        assert not filter_secure_router.match(self.gateway_desc_both)
+        assert not filter_secure_router.match(self.gateway_desc_neither)
+        assert not filter_secure_router.match(self.gateway_desc_secure_tunnel)
+        assert filter_secure_router.match(self.gateway_desc_secure_router)
 
     def test_search_response_reception(self):
         """Test function of gateway scanner."""
