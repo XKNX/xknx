@@ -6,11 +6,7 @@ from unittest.mock import DEFAULT, Mock, patch
 import pytest
 
 from xknx import XKNX
-from xknx.exceptions.exception import (
-    CommunicationError,
-    InterfaceWithUserIdNotFound,
-    InvalidSecureConfiguration,
-)
+from xknx.exceptions.exception import CommunicationError, InvalidSecureConfiguration
 from xknx.io import (
     ConnectionConfig,
     ConnectionType,
@@ -320,7 +316,7 @@ class TestKNXIPInterface:
                 user_id=12, knxkeys_file_path=knxkeys_file, knxkeys_password="password"
             ),
         )
-        with pytest.raises(InterfaceWithUserIdNotFound):
+        with pytest.raises(InvalidSecureConfiguration):
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
 

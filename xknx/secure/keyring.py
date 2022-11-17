@@ -18,7 +18,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-from xknx.exceptions.exception import InvalidSecureConfiguration, InvalidSignature
+from xknx.exceptions.exception import InvalidSecureConfiguration
 from xknx.telegram import GroupAddress, IndividualAddress
 
 from .util import sha256_hash
@@ -360,7 +360,7 @@ def load_key_ring(path: str, password: str, validate_signature: bool = True) -> 
 
     if validate_signature:
         if not verify_keyring_signature(path, password):
-            raise InvalidSignature()
+            raise InvalidSecureConfiguration("Invalid signature for keyring file")
 
     keyring: Keyring = Keyring()
     try:

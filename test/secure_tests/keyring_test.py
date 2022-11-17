@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from xknx.exceptions.exception import InvalidSecureConfiguration, InvalidSignature
+from xknx.exceptions.exception import InvalidSecureConfiguration
 from xknx.secure import Keyring, load_key_ring
 from xknx.secure.keyring import XMLDevice, XMLInterface, verify_keyring_signature
 
@@ -58,7 +58,7 @@ class TestKeyRing:
 
     def test_invalid_signature(self):
         """Test invalid signature throws error."""
-        with pytest.raises(InvalidSignature):
+        with pytest.raises(InvalidSecureConfiguration):
             load_key_ring(self.testcase_file, "wrong_password")
 
     def test_raises_error(self):

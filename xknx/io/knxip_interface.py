@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING, TypeVar
 
 from xknx.exceptions import (
     CommunicationError,
-    InterfaceWithUserIdNotFound,
     InvalidSecureConfiguration,
     XKNXException,
 )
@@ -199,7 +198,9 @@ class KNXIPInterface:
                 user_id = self.connection_config.secure_config.user_id
                 interface = keyring.get_interface_by_user_id(user_id)
                 if interface is None:
-                    raise InterfaceWithUserIdNotFound()
+                    raise InvalidSecureConfiguration(
+                        f"Interface with user_id {user_id} not found in keyfile"
+                    )
 
                 _user_password = interface.decrypted_password
                 device_authentication_password = interface.decrypted_authentication
