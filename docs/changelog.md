@@ -24,6 +24,10 @@ nav_order: 2
 - Fix wrong length of AuthorizeRequest.
 - Raise sane error messages in Management.
 
+# Internal
+
+- Self description queries more information from Core v2 devices via SearchRequestExtended.
+
 # Bugfixes
 
 - No mutable default arguments. Fixes unexpected behaviour like GatewayScanner not finding all interfaces.
