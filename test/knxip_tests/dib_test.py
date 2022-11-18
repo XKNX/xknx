@@ -88,6 +88,11 @@ class TestKNXIPDIB:
         assert not dib.supports(DIBServiceFamily.TUNNELING, version=2)
         assert dib.supports(DIBServiceFamily.ROUTING, version=1)
 
+        assert dib.version(DIBServiceFamily.CORE) == 1
+        assert dib.version(DIBServiceFamily.DEVICE_MANAGEMENT) == 2
+        assert dib.version(DIBServiceFamily.TUNNELING) == 1
+        assert dib.version(DIBServiceFamily.ROUTING) == 1
+
     def test_dib_sup_svc_families_interface(self):
         """Test parsing of svc families."""
         raw = bytes((0x0A, 0x02, 0x02, 0x02, 0x03, 0x02, 0x04, 0x02, 0x07, 0x01))
@@ -111,6 +116,11 @@ class TestKNXIPDIB:
         assert dib.supports(DIBServiceFamily.TUNNELING, version=2)
         assert not dib.supports(DIBServiceFamily.ROUTING)
         assert not dib.supports(DIBServiceFamily.ROUTING, version=2)
+
+        assert dib.version(DIBServiceFamily.CORE) == 2
+        assert dib.version(DIBServiceFamily.DEVICE_MANAGEMENT) == 2
+        assert dib.version(DIBServiceFamily.TUNNELING) == 2
+        assert dib.version(DIBServiceFamily.ROUTING) is None
 
     def test_dib_secured_service_families(self):
         """Test parsing of secured service families."""
