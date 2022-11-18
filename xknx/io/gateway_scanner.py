@@ -89,9 +89,7 @@ class GatewayDescriptor:
                 self.supports_routing = dib.supports(DIBServiceFamily.ROUTING)
                 if _tunnelling_version := dib.version(DIBServiceFamily.TUNNELING):
                     self.supports_tunnelling = True
-                    self.supports_tunnelling_tcp = (
-                        True if _tunnelling_version >= 2 else False
-                    )
+                    self.supports_tunnelling_tcp = _tunnelling_version >= 2
                 self.supports_secure = dib.supports(
                     DIBServiceFamily.SECURITY, version=1
                 )
