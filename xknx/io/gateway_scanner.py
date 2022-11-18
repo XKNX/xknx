@@ -72,6 +72,7 @@ class GatewayDescriptor:
         self.supports_tunnelling_tcp = supports_tunnelling_tcp
         self.supports_secure = supports_secure
 
+        self.core_version: int = 0
         self.routing_requires_secure: bool | None = None
         self.tunnelling_requires_secure: bool | None = None
         self.tunnelling_slots: dict[IndividualAddress, TunnelingSlotStatus] = {}
@@ -84,11 +85,12 @@ class GatewayDescriptor:
                 self.individual_address = dib.individual_address
                 continue
             if isinstance(dib, DIBSuppSVCFamilies):
+                self.core_version = dib.version(DIBServiceFamily.CORE) or 0
                 self.supports_routing = dib.supports(DIBServiceFamily.ROUTING)
-                if dib.supports(DIBServiceFamily.TUNNELING):
+                if _tunnelling_version := dib.version(DIBServiceFamily.TUNNELING):
                     self.supports_tunnelling = True
-                    self.supports_tunnelling_tcp = dib.supports(
-                        DIBServiceFamily.TUNNELING, version=2
+                    self.supports_tunnelling_tcp = (
+                        True if _tunnelling_version >= 2 else False
                     )
                 self.supports_secure = dib.supports(
                     DIBServiceFamily.SECURITY, version=1
@@ -114,6 +116,7 @@ class GatewayDescriptor:
             f"    individual_address={self.individual_address}\n"
             f"    local_interface={self.local_interface},\n"
             f"    local_ip={self.local_ip},\n"
+            f"    core_version={self.core_version},\n"
             f"    supports_routing={self.supports_routing},\n"
             f"    supports_tunnelling={self.supports_tunnelling},\n"
             f"    supports_tunnelling_tcp={self.supports_tunnelling_tcp},\n"

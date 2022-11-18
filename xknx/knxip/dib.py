@@ -251,6 +251,13 @@ class _DIBServiceFamilies(DIB):
                     return True
         return False
 
+    def version(self, name: DIBServiceFamily) -> int | None:
+        """Return version of a given service family."""
+        return next(
+            (family.version for family in self.families if name == family.name),
+            None,
+        )
+
     def calculated_length(self) -> int:
         """Get length of KNX/IP object."""
         return len(self.families) * 2 + DIB_HEADER_LENGTH
