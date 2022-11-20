@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock, call, patch
 
 from xknx import XKNX
 from xknx.io import Routing
+from xknx.io.const import DEFAULT_INDIVIDUAL_ADDRESS
 from xknx.io.routing import (
     BUSY_DECREMENT_TIME,
     BUSY_INCREMENT_COOLDOWN,
@@ -12,7 +13,7 @@ from xknx.io.routing import (
     _RoutingFlowControl,
 )
 from xknx.knxip import CEMIFrame, KNXIPFrame, RoutingBusy, RoutingIndication
-from xknx.telegram import Telegram, TelegramDirection, tpci
+from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, tpci
 
 
 class TestRouting:
@@ -29,7 +30,8 @@ class TestRouting:
         """Test Routing for responding to a transport layer connection."""
         routing = Routing(
             self.xknx,
-            self.tg_received_mock,
+            individual_address=None,
+            telegram_received_callback=self.tg_received_mock,
             local_ip="192.168.1.1",
         )
         # L_Data.ind T_Connect from 1.0.250 to 1.0.255 (xknx tunnel endpoint)
@@ -45,7 +47,8 @@ class TestRouting:
         response_frame = KNXIPFrame.init_from_body(
             RoutingIndication(
                 cemi=CEMIFrame.init_from_telegram(
-                    telegram=response_telegram, src_addr=self.xknx.own_address
+                    telegram=response_telegram,
+                    src_addr=DEFAULT_INDIVIDUAL_ADDRESS,
                 )
             )
         )
@@ -67,7 +70,8 @@ class TestRouting:
         """Test class for received RoutingLostMessage frames."""
         routing = Routing(
             self.xknx,
-            AsyncMock(),
+            individual_address=None,
+            telegram_received_callback=AsyncMock(),
             local_ip="192.168.1.1",
         )
         raw = bytes((0x06, 0x10, 0x05, 0x31, 0x00, 0x0A, 0x04, 0x00, 0x00, 0x05))

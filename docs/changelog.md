@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### Internal
+
+- Removed `own_address` from `XKNX` class. `ConnectionConfig` `individual_address` can be used to set a source address for routing instead.
+
 ### Connection
 
 - GatewayScanFilter now also matches secure enabled gateways by default. The `secure` argument as been replaced by `secure_tunnelling` and `secure_routing` arguments. When multiple methods are `True` a gateway is matched if one of them is supported. Non-secure methods don't match if secure is required for that gateway.
