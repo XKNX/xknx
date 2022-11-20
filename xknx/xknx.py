@@ -36,8 +36,6 @@ logger = logging.getLogger("xknx.log")
 class XKNX:
     """Class for reading and writing KNX/IP packets."""
 
-    DEFAULT_RATE_LIMIT = 20
-
     def __init__(
         self,
         address_format: GroupAddressType = GroupAddressType.LONG,
@@ -45,7 +43,7 @@ class XKNX:
         device_updated_cb: Callable[[Device], Awaitable[None]] | None = None,
         connection_state_changed_cb: Callable[[XknxConnectionState], Awaitable[None]]
         | None = None,
-        rate_limit: int = DEFAULT_RATE_LIMIT,
+        rate_limit: int = 0,
         multicast_group: str = DEFAULT_MCAST_GRP,
         multicast_port: int = DEFAULT_MCAST_PORT,
         log_directory: str | None = None,

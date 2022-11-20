@@ -183,7 +183,6 @@ class TestSensorExposeLoop:
         """Test sensor and expose_sensor with different values."""
         xknx = XKNX()
         xknx.knxip_interface = AsyncMock()
-        xknx.rate_limit = False
         await xknx.telegram_queue.start()
 
         expose = ExposeSensor(
@@ -254,7 +253,6 @@ class TestBinarySensorExposeLoop:
         """Test binary_sensor and expose_sensor with binary values."""
         xknx = XKNX()
         xknx.knxip_interface = AsyncMock()
-        xknx.rate_limit = False
         await xknx.telegram_queue.start()
 
         expose = ExposeSensor(
@@ -317,7 +315,6 @@ class TestBinarySensorInternalGroupAddressExposeLoop:
         """Test binary_sensor and expose_sensor with binary values."""
         xknx = XKNX()
         xknx.knxip_interface = AsyncMock()
-        xknx.rate_limit = False
 
         telegram_callback = AsyncMock()
         xknx.telegram_queue.register_telegram_received_cb(

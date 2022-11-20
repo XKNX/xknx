@@ -24,7 +24,7 @@ xknx = XKNX(
     connection_state_changed_cb=None,
     telegram_received_cb=None,
     device_updated_cb=None,
-    rate_limit=DEFAULT_RATE_LIMIT,
+    rate_limit=0,
     multicast_group=DEFAULT_MCAST_GRP,
     multicast_port=DEFAULT_MCAST_PORT,
     log_directory=None,
@@ -43,7 +43,7 @@ The constructor of the XKNX object takes several parameters:
 - `connection_state_changed_cb` is a callback which is called every time the connection state to the gateway changes. See [callbacks](#callbacks) documentation for details.
 - `telegram_received_cb` is a callback which is called after every received KNX telegram. See [callbacks](#callbacks) documentation for details.
 - `device_updated_cb` is an async callback after a [XKNX device](#devices) was updated. See [callbacks](#callbacks) documentation for details.
-- `rate_limit` in telegrams per second - can be used to limit the outgoing traffic to the KNX/IP interface. The default value is 20 packets per second.
+- `rate_limit` in telegrams per second - can be used to limit the outgoing traffic to the KNX/IP interface by the telegram queue. `0` disables rate limiter. Disabled by default.
 - `multicast_group` is the multicast group used for discovery - can be used to override the default multicast address (`224.0.23.12`)
 - `multicast_port` is the multicast port used for discovery - can be used to override the default multicast port (`3671`)
 - `log_directory` is the path to the log directory - when set to a valid directory we log to a dedicated file in this directory called `xknx.log`. The log files are rotated each night and will exist for 7 days. After that the oldest one will be deleted.
