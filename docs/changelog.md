@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# 1.2.1 Hotfix release 2022-11-20
+
+### Bugfixes
+
+- Fix Latency parsing in .knxkeys keyring files
+
 # 1.2.0 Secure Routing 2022-10-10
 
 ### Features
