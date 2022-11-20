@@ -377,7 +377,7 @@ class _Tunnel(Interface):
         self, disconnect_request: DisconnectRequest
     ) -> None:
         """Handle incoming disconnect request."""
-        logger.warning("Received DisconnectRequest from tunnelling sever.")
+        logger.warning("Received DisconnectRequest from tunnelling server.")
         # We should not receive DisconnectRequest for other communication_channels
         # If we do we close our communication_channel before reconnection.
         if disconnect_request.communication_channel_id == self.communication_channel:
