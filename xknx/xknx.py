@@ -36,12 +36,10 @@ logger = logging.getLogger("xknx.log")
 class XKNX:
     """Class for reading and writing KNX/IP packets."""
 
-    DEFAULT_ADDRESS = "15.15.250"
     DEFAULT_RATE_LIMIT = 20
 
     def __init__(
         self,
-        own_address: str | IndividualAddress = DEFAULT_ADDRESS,
         address_format: GroupAddressType = GroupAddressType.LONG,
         telegram_received_cb: Callable[[Telegram], Awaitable[None]] | None = None,
         device_updated_cb: Callable[[Device], Awaitable[None]] | None = None,
@@ -71,7 +69,6 @@ class XKNX:
         self.daemon_mode = daemon_mode
         self.multicast_group = multicast_group
         self.multicast_port = multicast_port
-        self.own_address = IndividualAddress(own_address)
         self.rate_limit = rate_limit
         self.sigint_received = asyncio.Event()
         self.started = asyncio.Event()

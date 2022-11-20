@@ -20,7 +20,6 @@ The `XKNX()` object is the core element of any XKNX installation. It should be o
 
 ```python
 xknx = XKNX(
-    own_address=DEFAULT_ADDRESS,
     address_format=GroupAddressType.LONG,
     connection_state_changed_cb=None,
     telegram_received_cb=None,
@@ -37,7 +36,6 @@ xknx = XKNX(
 
 The constructor of the XKNX object takes several parameters:
 
-- `own_address` may be used to specify the individual (physical) KNX address of the XKNX daemon. If not speficied it uses `15.15.250`.
 - `address_format` may be used to specify the type of group addresses to use. Possible values are:
   - FREE: integer or hex representation
   - SHORT: representation like '1/34' without middle groups
