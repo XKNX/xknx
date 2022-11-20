@@ -29,6 +29,12 @@ nav_order: 2
 - No mutable default arguments. Fixes unexpected behaviour like GatewayScanner not finding all interfaces.
 - Separate discovery multicast group from routing group. Add `multicast_group` and `multicast_port` `ConnectionConfig` parameters.
 
+# 1.2.1 Hotfix release 2022-11-20
+
+### Bugfixes
+
+- Fix Latency parsing in .knxkeys keyring files
+
 # 1.2.0 Secure Routing 2022-10-10
 
 ### Features
