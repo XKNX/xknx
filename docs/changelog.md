@@ -8,13 +8,16 @@ nav_order: 2
 
 # Unreleased changes
 
-### Internal
+### Interface changes
 
 - Removed `own_address` from `XKNX` class. `ConnectionConfig` `individual_address` can be used to set a source address for routing instead.
+- Disable TelegramQueue rate limiting by default.
+- Separate discovery multicast group from routing group. Add `multicast_group` and `multicast_port` `ConnectionConfig` parameters.
 
-### Connection
+### Connection and Discovery
 
 - GatewayScanFilter now also matches secure enabled gateways by default. The `secure` argument as been replaced by `secure_tunnelling` and `secure_routing` arguments. When multiple methods are `True` a gateway is matched if one of them is supported. Non-secure methods don't match if secure is required for that gateway.
+- Self description queries more information from Core v2 devices via SearchRequestExtended.
 
 ### Features
 
@@ -34,14 +37,9 @@ nav_order: 2
 - Fix wrong length of AuthorizeRequest.
 - Raise sane error messages in Management.
 
-# Internal
-
-- Self description queries more information from Core v2 devices via SearchRequestExtended.
-
 # Bugfixes
 
 - No mutable default arguments. Fixes unexpected behaviour like GatewayScanner not finding all interfaces.
-- Separate discovery multicast group from routing group. Add `multicast_group` and `multicast_port` `ConnectionConfig` parameters.
 
 # 1.2.1 Hotfix release 2022-11-20
 
