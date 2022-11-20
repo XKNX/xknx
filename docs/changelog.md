@@ -11,6 +11,7 @@ nav_order: 2
 ### Internal
 
 - Removed `own_address` from `XKNX` class. `ConnectionConfig` `individual_address` can be used to set a source address for routing instead.
+- Disable TelegramQueue rate limiting by default.
 
 ### Connection
 

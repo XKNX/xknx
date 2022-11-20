@@ -49,8 +49,9 @@ class TestTelegramQueue:
     @patch("asyncio.sleep", new_callable=AsyncMock)
     async def test_rate_limit(self, async_sleep_mock):
         """Test rate limit."""
-        xknx = XKNX()
-        xknx.rate_limit = 20  # 50 ms per outgoing telegram
+        xknx = XKNX(
+            rate_limit=20,  # 50 ms per outgoing telegram
+        )
         sleep_time = 0.05  # 1 / 20
 
         telegram_in = Telegram(
