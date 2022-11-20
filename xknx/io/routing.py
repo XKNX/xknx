@@ -26,6 +26,7 @@ from xknx.knxip import (
 )
 from xknx.telegram import Telegram, TelegramDirection
 
+from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .interface import Interface, TelegramCallbackType
 from .ip_secure import SecureGroup
 from .transport import KNXIPTransport, UDPTransport
@@ -139,11 +140,15 @@ class Routing(Interface):
         xknx: XKNX,
         telegram_received_callback: TelegramCallbackType,
         local_ip: str,
+        multicast_group: str = DEFAULT_MCAST_GRP,
+        multicast_port: int = DEFAULT_MCAST_PORT,
     ):
         """Initialize Routing class."""
         self.xknx = xknx
         self.telegram_received_callback = telegram_received_callback
         self.local_ip = local_ip
+        self.multicast_group = multicast_group
+        self.multicast_port = multicast_port
 
         self._init_transport()
         self.transport.register_callback(
@@ -160,7 +165,7 @@ class Routing(Interface):
         """Initialize transport."""
         self.transport = UDPTransport(
             local_addr=(self.local_ip, 0),
-            remote_addr=(self.xknx.multicast_group, self.xknx.multicast_port),
+            remote_addr=(self.multicast_group, self.multicast_port),
             multicast=True,
         )
 
@@ -172,6 +177,7 @@ class Routing(Interface):
 
     async def connect(self) -> bool:
         """Start routing."""
+        self.xknx.current_address = self.xknx.own_address
         await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTING
         )
@@ -281,17 +287,25 @@ class SecureRouting(Routing):
         local_ip: str,
         backbone_key: bytes,
         latency_ms: int | None = None,
+        multicast_group: str = DEFAULT_MCAST_GRP,
+        multicast_port: int = DEFAULT_MCAST_PORT,
     ):
         """Initialize SecureRouting class."""
         self.backbone_key = backbone_key
         self.latency_ms = latency_ms or DEFAULT_LATENCY_TOLERANCE_MS
-        super().__init__(xknx, telegram_received_callback, local_ip)
+        super().__init__(
+            xknx,
+            telegram_received_callback,
+            local_ip=local_ip,
+            multicast_group=multicast_group,
+            multicast_port=multicast_port,
+        )
 
     def _init_transport(self) -> None:
         """Initialize transport."""
         self.transport = SecureGroup(
             local_addr=(self.local_ip, 0),
-            remote_addr=(self.xknx.multicast_group, self.xknx.multicast_port),
+            remote_addr=(self.multicast_group, self.multicast_port),
             backbone_key=self.backbone_key,
             latency_ms=self.latency_ms,
         )

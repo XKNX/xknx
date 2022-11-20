@@ -6,6 +6,29 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Connection
+
+- GatewayScanFilter now also matches secure enabled gateways by default. The `secure` argument as been replaced by `secure_tunnelling` and `secure_routing` arguments. When multiple methods are `True` a gateway is matched if one of them is supported. Non-secure methods don't match if secure is required for that gateway.
+
+### Features
+
+- Add support for python 3.11
+
+### Management
+
+- Fix APCI service parsing for 10bit control fileds.
+- Set reasonable default count values for APCI classes.
+- Set xknx.current_address for routing connections so management frames received over Routing are handled properly.
+- Fix wrong length of AuthorizeRequest.
+- Raise sane error messages in Management.
+
+# Bugfixes
+
+- No mutable default arguments. Fixes unexpected behaviour like GatewayScanner not finding all interfaces.
+- Separate discovery multicast group from routing group. Add `multicast_group` and `multicast_port` `ConnectionConfig` parameters.
+
 # 1.2.1 Hotfix release 2022-11-20
 
 ### Bugfixes

@@ -1014,7 +1014,7 @@ class TestAuthorizeRequest:
         """Test the test_calculated_length method."""
         payload = AuthorizeRequest(key=12345678)
 
-        assert payload.calculated_length() == 5
+        assert payload.calculated_length() == 6
 
     def test_from_knx(self):
         """Test the from_knx method."""
