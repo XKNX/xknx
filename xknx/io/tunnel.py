@@ -70,7 +70,7 @@ class _Tunnel(Interface):
         self._initial_connection = True
         self._is_reconnecting = False
         self._reconnect_task: asyncio.Task[None] | None = None
-        self._src_address = xknx.own_address
+        self._src_address = IndividualAddress(0)
         self._send_telegram_lock = asyncio.Lock()
         self._tunnelling_request_confirmation_event = asyncio.Event()
 
@@ -200,7 +200,7 @@ class _Tunnel(Interface):
             self._src_address = IndividualAddress(connect.identifier)
             self.xknx.current_address = self._src_address
             logger.debug(
-                "Tunnel established communication_channel=%s, address=%s",
+                "Tunnel established. communication_channel=%s, address=%s",
                 connect.communication_channel,
                 self._src_address,
             )

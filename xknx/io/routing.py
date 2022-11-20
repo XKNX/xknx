@@ -24,9 +24,9 @@ from xknx.knxip import (
     RoutingIndication,
     RoutingLostMessage,
 )
-from xknx.telegram import Telegram, TelegramDirection
+from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 
-from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
+from .const import DEFAULT_INDIVIDUAL_ADDRESS, DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .interface import Interface, TelegramCallbackType
 from .ip_secure import SecureGroup
 from .transport import KNXIPTransport, UDPTransport
@@ -138,6 +138,7 @@ class Routing(Interface):
     def __init__(
         self,
         xknx: XKNX,
+        individual_address: IndividualAddress | None,
         telegram_received_callback: TelegramCallbackType,
         local_ip: str,
         multicast_group: str = DEFAULT_MCAST_GRP,
@@ -145,6 +146,7 @@ class Routing(Interface):
     ):
         """Initialize Routing class."""
         self.xknx = xknx
+        self.individual_address = individual_address or DEFAULT_INDIVIDUAL_ADDRESS
         self.telegram_received_callback = telegram_received_callback
         self.local_ip = local_ip
         self.multicast_group = multicast_group
@@ -177,7 +179,7 @@ class Routing(Interface):
 
     async def connect(self) -> bool:
         """Start routing."""
-        self.xknx.current_address = self.xknx.own_address
+        self.xknx.current_address = self.individual_address
         await self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTING
         )
@@ -219,7 +221,7 @@ class Routing(Interface):
         cemi = CEMIFrame.init_from_telegram(
             telegram=telegram,
             code=CEMIMessageCode.L_DATA_IND,
-            src_addr=self.xknx.own_address,
+            src_addr=self.individual_address,
         )
         routing_indication = RoutingIndication(cemi=cemi)
 
@@ -258,7 +260,7 @@ class Routing(Interface):
         if routing_indication.cemi is None:
             # Don't handle invalid cemi frames (None)
             return
-        if routing_indication.cemi.src_addr == self.xknx.own_address:
+        if routing_indication.cemi.src_addr == self.individual_address:
             logger.debug("Ignoring own packet")
             return
 
@@ -283,6 +285,7 @@ class SecureRouting(Routing):
     def __init__(
         self,
         xknx: XKNX,
+        individual_address: IndividualAddress | None,
         telegram_received_callback: TelegramCallbackType,
         local_ip: str,
         backbone_key: bytes,
@@ -295,7 +298,8 @@ class SecureRouting(Routing):
         self.latency_ms = latency_ms or DEFAULT_LATENCY_TOLERANCE_MS
         super().__init__(
             xknx,
-            telegram_received_callback,
+            individual_address=individual_address,
+            telegram_received_callback=telegram_received_callback,
             local_ip=local_ip,
             multicast_group=multicast_group,
             multicast_port=multicast_port,

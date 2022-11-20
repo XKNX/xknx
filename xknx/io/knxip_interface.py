@@ -25,7 +25,7 @@ from xknx.secure import load_key_ring
 from xknx.telegram import IndividualAddress, Telegram
 
 from .connection import ConnectionConfig, ConnectionType
-from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
+from .const import DEFAULT_INDIVIDUAL_ADDRESS, DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .gateway_scanner import GatewayDescriptor, GatewayScanner
 from .routing import Routing, SecureRouting
 from .tunnel import SecureTunnel, TCPTunnel, UDPTunnel, _Tunnel
@@ -316,17 +316,21 @@ class KNXIPInterface:
         if local_ip is None:
             raise XKNXException("No network interface found.")
         util.validate_ip(local_ip, address_name="Local IP address")
+        individual_address = (
+            self.connection_config.individual_address or DEFAULT_INDIVIDUAL_ADDRESS
+        )
 
         logger.debug(
             "Starting Routing from %s as %s via %s:%s",
             local_ip,
-            self.xknx.own_address,
+            individual_address,
             multicast_group,
             multicast_port,
         )
         self._interface = Routing(
             self.xknx,
-            self.telegram_received,
+            individual_address=individual_address,
+            telegram_received_callback=self.telegram_received,
             local_ip=local_ip,
             multicast_group=multicast_group,
             multicast_port=multicast_port,
@@ -346,17 +350,21 @@ class KNXIPInterface:
         if local_ip is None:
             raise XKNXException("No network interface found.")
         util.validate_ip(local_ip, address_name="Local IP address")
+        individual_address = (
+            self.connection_config.individual_address or DEFAULT_INDIVIDUAL_ADDRESS
+        )
 
         logger.debug(
             "Starting Secure Routing from %s as %s via %s:%s",
             local_ip,
-            self.xknx.own_address,
+            individual_address,
             multicast_group,
             multicast_port,
         )
         self._interface = SecureRouting(
             self.xknx,
-            self.telegram_received,
+            individual_address=individual_address,
+            telegram_received_callback=self.telegram_received,
             local_ip=local_ip,
             backbone_key=backbone_key,
             latency_ms=latency_ms,
