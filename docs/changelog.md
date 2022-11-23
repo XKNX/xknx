@@ -11,22 +11,23 @@ nav_order: 2
 ### Interface changes
 
 - Removed `own_address` from `XKNX` class. `ConnectionConfig` `individual_address` can be used to set a source address for routing instead.
+  If set for a secure tunnelling connection, a tunnel with this IA will be read from the knxkeys file.
 - Disable TelegramQueue rate limiting by default.
 - Separate discovery multicast group from routing group. Add `multicast_group` and `multicast_port` `ConnectionConfig` parameters.
 
 ### Connection and Discovery
 
+- Use manually configured IP secure tunnel password over loading it from keyring.
 - GatewayScanFilter now also matches secure enabled gateways by default. The `secure` argument as been replaced by `secure_tunnelling` and `secure_routing` arguments. When multiple methods are `True` a gateway is matched if one of them is supported. Non-secure methods don't match if secure is required for that gateway.
 - Self description queries more information from Core v2 devices via SearchRequestExtended.
 
 ### Features
 
 - Add support for python 3.11
+- Add methods to Keyring to get interfaces by individual address (host or tunnel).
 
 ### Internal
 
-- Use manually configured IP secure tunnel password over loading it from keyring.
-- Add methods to Keyring to get interfaces by individual address (host or tunnel).
 - Remove `InterfaceWithUserIdNotFound` and `InvalidSignature` errors in favor of `InvalidSecureConfiguration`.
 
 ### Management
