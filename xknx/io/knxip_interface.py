@@ -16,18 +16,18 @@ from typing import TYPE_CHECKING, TypeVar
 
 from xknx.exceptions import (
     CommunicationError,
-    InterfaceWithUserIdNotFound,
     InvalidSecureConfiguration,
     XKNXException,
 )
 from xknx.io import util
-from xknx.secure import load_key_ring
+from xknx.secure.keyring import XMLInterface, load_key_ring
 from xknx.telegram import IndividualAddress, Telegram
 
 from .connection import ConnectionConfig, ConnectionType
 from .const import DEFAULT_INDIVIDUAL_ADDRESS, DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .gateway_scanner import GatewayDescriptor, GatewayScanner
 from .routing import Routing, SecureRouting
+from .self_description import request_description
 from .tunnel import SecureTunnel, TCPTunnel, UDPTunnel, _Tunnel
 
 if TYPE_CHECKING:
@@ -78,40 +78,8 @@ class KNXIPInterface:
                 multicast_group=self.connection_config.multicast_group,
                 multicast_port=self.connection_config.multicast_port,
             )
-        elif (
-            self.connection_config.connection_type == ConnectionType.ROUTING_SECURE
-            and self.connection_config.secure_config is not None
-        ):
-            secure_config = self.connection_config.secure_config
-            backbone_key = secure_config.backbone_key
-            latency_ms = secure_config.latency_ms
-            multicast_group = self.connection_config.multicast_group
-            if (
-                secure_config.knxkeys_file_path is not None
-                and secure_config.knxkeys_password is not None
-            ):
-                keyring = load_key_ring(
-                    secure_config.knxkeys_file_path, secure_config.knxkeys_password
-                )
-                if keyring.backbone is None:
-                    raise InvalidSecureConfiguration(
-                        "No backbone key found in knxkeys file"
-                    )
-                backbone_key = backbone_key or keyring.backbone.decrypted_key
-                latency_ms = latency_ms or keyring.backbone.latency
-                if keyring.backbone.multicast_address:
-                    multicast_group = keyring.backbone.multicast_address
-            if not backbone_key:
-                raise InvalidSecureConfiguration(
-                    "No backbone key found in secure configuration"
-                )
-            await self._start_secure_routing(
-                backbone_key,
-                latency_ms=latency_ms,
-                local_ip=self.connection_config.local_ip,
-                multicast_group=multicast_group,
-                multicast_port=self.connection_config.multicast_port,
-            )
+        elif self.connection_config.connection_type == ConnectionType.ROUTING_SECURE:
+            await self._start_secure_routing()
         elif (
             self.connection_config.connection_type == ConnectionType.TUNNELING
             and self.connection_config.gateway_ip is not None
@@ -132,48 +100,10 @@ class KNXIPInterface:
             self.connection_config.connection_type
             == ConnectionType.TUNNELING_TCP_SECURE
             and self.connection_config.gateway_ip is not None
-            and self.connection_config.secure_config is not None
         ):
-            secure_config = self.connection_config.secure_config
-            user_id: int
-            user_password: str
-            device_authentication_password: str | None
-            if (
-                secure_config.knxkeys_file_path is not None
-                and secure_config.knxkeys_password is not None
-            ):
-                keyring = load_key_ring(
-                    secure_config.knxkeys_file_path, secure_config.knxkeys_password
-                )
-                if secure_config.user_id is not None:
-                    user_id = secure_config.user_id
-                    interface = keyring.get_interface_by_user_id(user_id)
-                    if interface is None:
-                        raise InterfaceWithUserIdNotFound()
-
-                    user_password = interface.decrypted_password
-                    device_authentication_password = interface.decrypted_authentication
-                else:
-                    interface = keyring.interfaces[0]
-                    user_id = interface.user_id
-                    user_password = interface.decrypted_password
-                    device_authentication_password = interface.decrypted_authentication
-            else:
-                user_id = secure_config.user_id or 2
-                if secure_config.user_password is None:
-                    raise InvalidSecureConfiguration()
-
-                user_password = secure_config.user_password
-                device_authentication_password = (
-                    secure_config.device_authentication_password
-                )
-
             await self._start_secure_tunnelling_tcp(
                 gateway_ip=self.connection_config.gateway_ip,
                 gateway_port=self.connection_config.gateway_port,
-                user_id=user_id,
-                user_password=user_password,
-                device_authentication_password=device_authentication_password,
             )
         else:
             await self._start_automatic()
@@ -186,14 +116,18 @@ class KNXIPInterface:
             scan_filter=self.connection_config.scan_filter,
         ).async_scan():
             try:
-                if (
-                    gateway.supports_tunnelling_tcp
-                    and not gateway.tunnelling_requires_secure
-                ):
-                    await self._start_tunnelling_tcp(
-                        gateway_ip=gateway.ip_addr,
-                        gateway_port=gateway.port,
-                    )
+                if gateway.supports_tunnelling_tcp:
+                    if gateway.tunnelling_requires_secure:
+                        await self._start_secure_tunnelling_tcp(
+                            gateway_ip=gateway.ip_addr,
+                            gateway_port=gateway.port,
+                            gateway_descriptor=gateway,
+                        )
+                    else:
+                        await self._start_tunnelling_tcp(
+                            gateway_ip=gateway.ip_addr,
+                            gateway_port=gateway.port,
+                        )
                 elif (
                     gateway.supports_tunnelling
                     and not gateway.tunnelling_requires_secure
@@ -241,11 +175,46 @@ class KNXIPInterface:
         self,
         gateway_ip: str,
         gateway_port: int,
-        user_id: int,
-        user_password: str,
-        device_authentication_password: str | None,
+        gateway_descriptor: GatewayDescriptor | None = None,
     ) -> None:
-        """Start KNX/IP TCP tunnel."""
+        """Start KNX/IP Secure TCP tunnel."""
+        if (secure_config := self.connection_config.secure_config) is None:
+            raise InvalidSecureConfiguration("SecureConfig missing in ConnectionConfig")
+
+        if (
+            secure_config.user_id is not None
+            and secure_config.user_password is not None
+        ):
+            user_id = secure_config.user_id
+            user_password = secure_config.user_password
+            device_authentication_password = (
+                secure_config.device_authentication_password
+            )
+        elif (
+            secure_config.knxkeys_file_path is not None
+            and secure_config.knxkeys_password is not None
+        ):
+            _gateway = gateway_descriptor or await request_description(
+                gateway_ip=gateway_ip, gateway_port=gateway_port
+            )
+            xml_interface = self._get_tunnel_interface_from_keyfile(
+                keyfile_path=secure_config.knxkeys_file_path,
+                keyfile_password=secure_config.knxkeys_password,
+                gateway_descriptor=_gateway,
+                config_user_id=secure_config.user_id,
+            )
+            user_id = xml_interface.user_id
+            if (_user_password := xml_interface.decrypted_password) is None:
+                raise InvalidSecureConfiguration(
+                    f"No password found for tunnel {xml_interface.individual_address} user_id {user_id}"
+                )
+            user_password = _user_password
+            device_authentication_password = xml_interface.decrypted_authentication
+        else:
+            raise InvalidSecureConfiguration(
+                "No `user_id` or `knxkeys_file_path` and password found in secure configuration"
+            )
+
         util.validate_ip(gateway_ip, address_name="Gateway IP address")
         logger.debug(
             "Starting secure tunnel to %s:%s over TCP",
@@ -264,6 +233,61 @@ class KNXIPInterface:
             telegram_received_callback=self.telegram_received,
         )
         await self._interface.connect()
+
+    def _get_tunnel_interface_from_keyfile(
+        self,
+        keyfile_path: str,
+        keyfile_password: str,
+        gateway_descriptor: GatewayDescriptor,
+        config_user_id: int | None = None,
+    ) -> XMLInterface:
+        """
+        Get tunnel interface from keyfile.
+
+        Precedence: configured individual address > configured user id > first free tunnel interface
+        """
+        keyring = load_key_ring(
+            keyfile_path,
+            keyfile_password,
+        )
+        if _ia := self.connection_config.individual_address:
+            if xml_interface := keyring.get_tunnel_interface_by_individual_address(_ia):
+                return xml_interface
+            raise InvalidSecureConfiguration(
+                f"Interface with individual address {_ia} not found in keyfile"
+            )
+
+        if not (host_ia := gateway_descriptor.individual_address):
+            raise InvalidSecureConfiguration(
+                "Gateway does not provide individual address"
+            )
+        if config_user_id:
+            if xml_interface := keyring.get_tunnel_interface_by_host_and_user_id(
+                host=host_ia, user_id=config_user_id
+            ):
+                return xml_interface
+            raise InvalidSecureConfiguration(
+                f"Interface of host {host_ia} with user_id {config_user_id} not found in keyfile"
+            )
+
+        _free_slots = [
+            tunnel_ia
+            for tunnel_ia, slot in gateway_descriptor.tunnelling_slots.items()
+            if slot.usable and slot.free
+        ]
+        if not _free_slots:
+            raise InvalidSecureConfiguration(
+                f"No free tunnelling slots found on gateway {host_ia}"
+            )
+        for _tunnel_ia in _free_slots:
+            if xml_interface := keyring.get_tunnel_interface_by_individual_address(
+                tunnelling_slot=_tunnel_ia
+            ):
+                return xml_interface
+
+        raise InvalidSecureConfiguration(
+            "No credentials for any free tunnelling slot found in keyfile"
+        )
 
     async def _start_tunnelling_udp(
         self,
@@ -339,14 +363,41 @@ class KNXIPInterface:
 
     async def _start_secure_routing(
         self,
-        backbone_key: bytes,
         latency_ms: int | None = None,
         local_ip: str | None = None,
         multicast_group: str = DEFAULT_MCAST_GRP,
         multicast_port: int = DEFAULT_MCAST_PORT,
     ) -> None:
         """Start KNX/IP Routing."""
-        local_ip = local_ip or await util.get_default_local_ip()
+        if self.connection_config.secure_config is None:
+            raise InvalidSecureConfiguration("SecureConfig missing in ConnectionConfig")
+        backbone_key = self.connection_config.secure_config.backbone_key
+        latency_ms = self.connection_config.secure_config.latency_ms
+        multicast_group = self.connection_config.multicast_group
+        multicast_port = self.connection_config.multicast_port
+        if (
+            self.connection_config.secure_config.knxkeys_file_path is not None
+            and self.connection_config.secure_config.knxkeys_password is not None
+        ):
+            keyring = load_key_ring(
+                self.connection_config.secure_config.knxkeys_file_path,
+                self.connection_config.secure_config.knxkeys_password,
+            )
+            if keyring.backbone is None:
+                raise InvalidSecureConfiguration(
+                    "No backbone key found in knxkeys file"
+                )
+            # default to manually configured values
+            backbone_key = backbone_key or keyring.backbone.decrypted_key
+            latency_ms = latency_ms or keyring.backbone.latency
+            if keyring.backbone.multicast_address:
+                multicast_group = keyring.backbone.multicast_address
+        if not backbone_key:
+            raise InvalidSecureConfiguration(
+                "No backbone key found in secure configuration"
+            )
+
+        local_ip = self.connection_config.local_ip or await util.get_default_local_ip()
         if local_ip is None:
             raise XKNXException("No network interface found.")
         util.validate_ip(local_ip, address_name="Local IP address")

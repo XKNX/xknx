@@ -3,9 +3,10 @@ import os
 
 import pytest
 
-from xknx.exceptions.exception import InvalidSecureConfiguration, InvalidSignature
+from xknx.exceptions.exception import InvalidSecureConfiguration
 from xknx.secure import Keyring, load_key_ring
 from xknx.secure.keyring import XMLDevice, XMLInterface, verify_keyring_signature
+from xknx.telegram import IndividualAddress
 
 
 class TestKeyRing:
@@ -19,13 +20,25 @@ class TestKeyRing:
         os.path.dirname(__file__), "resources/testcase.knxkeys"
     )
 
+    @staticmethod
+    def assert_interface(
+        keyring: Keyring, password: str, ia: IndividualAddress
+    ) -> None:
+        """Verify password for given user."""
+        matched = False
+        if interface := keyring.get_tunnel_interface_by_individual_address(ia):
+            matched = True
+            assert interface.decrypted_password == password
+
+        assert matched
+
     def test_load_keyring(self):
         """Test load keyring from knxkeys file."""
         keyring: Keyring = load_key_ring(self.keyring_test_file, "pwd")
-        TestKeyRing.assert_interface(keyring, "user4", 2)
-        TestKeyRing.assert_interface(keyring, "@zvI1G&_", 3)
-        TestKeyRing.assert_interface(keyring, "ZvDY-:g#", 4)
-        TestKeyRing.assert_interface(keyring, "user2", 5)
+        TestKeyRing.assert_interface(keyring, "user4", IndividualAddress("1.1.4"))
+        TestKeyRing.assert_interface(keyring, "@zvI1G&_", IndividualAddress("1.1.6"))
+        TestKeyRing.assert_interface(keyring, "ZvDY-:g#", IndividualAddress("1.1.7"))
+        TestKeyRing.assert_interface(keyring, "user2", IndividualAddress("1.1.2"))
         assert keyring.backbone.multicast_address == "224.0.23.12"
         assert keyring.backbone.latency == 1000
         assert keyring.backbone.decrypted_key == bytes.fromhex(
@@ -35,10 +48,10 @@ class TestKeyRing:
     def test_load_keyring_real(self):
         """Test load keyring from knxkeys file."""
         keyring: Keyring = load_key_ring(self.testcase_file, "password")
-        TestKeyRing.assert_interface(keyring, "user1", 3)
-        TestKeyRing.assert_interface(keyring, "user2", 4)
-        TestKeyRing.assert_interface(keyring, "user3", 5)
-        TestKeyRing.assert_interface(keyring, "user4", 6)
+        TestKeyRing.assert_interface(keyring, "user1", IndividualAddress("1.0.1"))
+        TestKeyRing.assert_interface(keyring, "user2", IndividualAddress("1.0.11"))
+        TestKeyRing.assert_interface(keyring, "user3", IndividualAddress("1.0.12"))
+        TestKeyRing.assert_interface(keyring, "user4", IndividualAddress("1.0.13"))
         assert keyring.devices[0].decrypted_management_password == "commissioning"
         assert keyring.backbone.multicast_address == "224.0.23.12"
         assert keyring.backbone.latency == 1000
@@ -58,7 +71,7 @@ class TestKeyRing:
 
     def test_invalid_signature(self):
         """Test invalid signature throws error."""
-        with pytest.raises(InvalidSignature):
+        with pytest.raises(InvalidSecureConfiguration):
             load_key_ring(self.testcase_file, "wrong_password")
 
     def test_raises_error(self):
@@ -67,13 +80,3 @@ class TestKeyRing:
             load_key_ring(
                 self.testcase_file, "wrong_password", validate_signature=False
             )
-
-    @staticmethod
-    def assert_interface(keyring: Keyring, password: str, user: int) -> None:
-        """Verify password for given user."""
-        matched = False
-        if interface := keyring.get_interface_by_user_id(user):
-            matched = True
-            assert interface.decrypted_password == password
-
-        assert matched

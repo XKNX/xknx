@@ -18,7 +18,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-from xknx.exceptions.exception import InvalidSecureConfiguration, InvalidSignature
+from xknx.exceptions.exception import InvalidSecureConfiguration
 from xknx.telegram import GroupAddress, IndividualAddress
 
 from .util import sha256_hash
@@ -79,8 +79,8 @@ class XMLInterface(AttributeReader):
     host: IndividualAddress
     user_id: int
     password: str
-    decrypted_password: str
-    decrypted_authentication: str
+    decrypted_password: str | None = None
+    decrypted_authentication: str | None = None
     individual_address: IndividualAddress
     authentication: str
     group_addresses: list[XMLAssignedGroupAddress] = []
@@ -107,23 +107,29 @@ class XMLInterface(AttributeReader):
     ) -> None:
         """Decryt attributes."""
 
-        if self.password is not None:
-            self.decrypted_password = extract_password(
+        self.decrypted_password = (
+            extract_password(
                 decrypt_aes128cbc(
                     base64.b64decode(self.password),
                     password_hash,
                     initialization_vector,
                 )
             )
+            if self.password is not None
+            else None
+        )
 
-        if self.authentication is not None:
-            self.decrypted_authentication = extract_password(
+        self.decrypted_authentication = (
+            extract_password(
                 decrypt_aes128cbc(
                     base64.b64decode(self.authentication),
                     password_hash,
                     initialization_vector,
                 )
             )
+            if self.authentication is not None
+            else None
+        )
 
 
 class XMLBackbone(AttributeReader):
@@ -172,10 +178,10 @@ class XMLDevice(AttributeReader):
 
     individual_address: IndividualAddress
     tool_key: str
-    decrypted_tool_key: bytes
+    decrypted_tool_key: bytes | None = None
     management_password: str
-    decrypted_management_password: str
-    decrypted_authentication: str
+    decrypted_management_password: str | None = None
+    decrypted_authentication: str | None = None
     authentication: str
     sequence_number: int
 
@@ -198,28 +204,38 @@ class XMLDevice(AttributeReader):
         self, password_hash: bytes, initialization_vector: bytes
     ) -> None:
         """Decrypt attributes."""
-        if self.tool_key is not None:
-            self.decrypted_tool_key = decrypt_aes128cbc(
+
+        self.decrypted_tool_key = (
+            decrypt_aes128cbc(
                 base64.b64decode(self.tool_key), password_hash, initialization_vector
             )
+            if self.tool_key is not None
+            else None
+        )
 
-        if self.authentication is not None:
-            self.decrypted_authentication = extract_password(
+        self.decrypted_authentication = (
+            extract_password(
                 decrypt_aes128cbc(
                     base64.b64decode(self.authentication),
                     password_hash,
                     initialization_vector,
                 )
             )
+            if self.authentication is not None
+            else None
+        )
 
-        if self.management_password is not None:
-            self.decrypted_management_password = extract_password(
+        self.decrypted_management_password = (
+            extract_password(
                 decrypt_aes128cbc(
                     base64.b64decode(self.management_password),
                     password_hash,
                     initialization_vector,
                 )
             )
+            if self.management_password is not None
+            else None
+        )
 
 
 class Keyring(AttributeReader):
@@ -248,13 +264,42 @@ class Keyring(AttributeReader):
 
         return None
 
-    def get_interface_by_user_id(self, user_id: int) -> XMLInterface | None:
-        """Get the interface with the given user id."""
-        for interface in self.interfaces:
-            if interface.user_id == user_id:
-                return interface
+    def get_tunnel_interfaces_by_host(
+        self, host: IndividualAddress
+    ) -> list[XMLInterface]:
+        """Get all tunnel interfaces of a given host individual address."""
+        return [
+            tunnel
+            for tunnel in self.interfaces
+            if tunnel.type is InterfaceType.TUNNELING and tunnel.host == host
+        ]
 
-        return None
+    def get_tunnel_interface_by_host_and_user_id(
+        self, host: IndividualAddress, user_id: int
+    ) -> XMLInterface | None:
+        """Get the tunnel interface with the given host and user id."""
+        return next(
+            (
+                tunnel
+                for tunnel in self.get_tunnel_interfaces_by_host(host)
+                if tunnel.user_id == user_id
+            ),
+            None,
+        )
+
+    def get_tunnel_interface_by_individual_address(
+        self, tunnelling_slot: IndividualAddress
+    ) -> XMLInterface | None:
+        """Get the interface with the given tunneling address."""
+        return next(
+            (
+                tunnel
+                for tunnel in self.interfaces
+                if tunnel.type is InterfaceType.TUNNELING
+                and tunnel.individual_address == tunnelling_slot
+            ),
+            None,
+        )
 
     def parse_xml(self, node: Document) -> None:
         """Parse all needed attributes from the given node map."""
@@ -308,7 +353,7 @@ def load_key_ring(path: str, password: str, validate_signature: bool = True) -> 
 
     if validate_signature:
         if not verify_keyring_signature(path, password):
-            raise InvalidSignature()
+            raise InvalidSecureConfiguration("Invalid signature for keyring file")
 
     keyring: Keyring = Keyring()
     try:

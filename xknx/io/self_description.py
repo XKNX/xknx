@@ -37,14 +37,16 @@ async def request_description(
     local_ip: str | None = None,
     local_port: int = 0,
     route_back: bool = False,
-) -> GatewayDescriptor | None:
+) -> GatewayDescriptor:
     """Set up a UDP transport to request a description from a KNXnet/IP device."""
     local_ip = local_ip or util.find_local_ip(gateway_ip)
     if local_ip is None:
         # Fall back to default interface and use route back
         local_ip = await util.get_default_local_ip(gateway_ip)
         if local_ip is None:
-            return None
+            raise CommunicationError(
+                f"No network interface found to request gateway info from {gateway_ip}:{gateway_port}"
+            )
         route_back = True
 
     transport = UDPTransport(
@@ -55,8 +57,9 @@ async def request_description(
     try:
         await transport.connect()
     except OSError as err:
-        logger.warning("Could not setup socket: %s", err)
-        return None
+        raise CommunicationError(
+            "Could not setup socket to request gatway info"
+        ) from err
     else:
         local_hpai: HPAI
         if route_back:
@@ -72,7 +75,9 @@ async def request_description(
         await description_query.start()
         gateway = description_query.gateway_descriptor
         if gateway is None:
-            return None
+            raise CommunicationError(
+                f"Could not fetch gateway info from {gateway_ip}:{gateway_port}"
+            )
         if gateway.core_version >= 2:
             search_extended_query = SearchExtendedQuery(
                 transport=transport,
@@ -80,7 +85,10 @@ async def request_description(
             )
             await search_extended_query.start()
             gateway = search_extended_query.gateway_descriptor
-
+            if gateway is None:
+                raise CommunicationError(
+                    f"Could not fetch extended gateway info from {gateway_ip}:{gateway_port}"
+                )
         return gateway
     finally:
         transport.stop()
@@ -162,7 +170,11 @@ class DescriptionQuery(_SelfDescriptionQuery):
 
 
 class SearchExtendedQuery(_SelfDescriptionQuery):
-    """Class to send a SearchRequestExtended and wait for SearchResponseExtended to a single device."""
+    """
+    Class to send a SearchRequestExtended and wait for SearchResponseExtended to a single device.
+
+    Does only work with UDP transports.
+    """
 
     expected_response_class = SearchResponseExtended
 
