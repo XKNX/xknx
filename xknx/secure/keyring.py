@@ -264,14 +264,6 @@ class Keyring(AttributeReader):
 
         return None
 
-    def get_interface_by_user_id(self, user_id: int) -> XMLInterface | None:
-        """Get the first found interface with the given user id."""
-        for interface in self.interfaces:
-            if interface.user_id == user_id:
-                return interface
-
-        return None
-
     def get_tunnel_interfaces_by_host(
         self, host: IndividualAddress
     ) -> list[XMLInterface]:
