@@ -20,7 +20,7 @@ from xknx.exceptions import (
     XKNXException,
 )
 from xknx.io import util
-from xknx.secure.keyring import XMLInterface, load_key_ring
+from xknx.secure.keyring import XMLInterface, load_keyring
 from xknx.telegram import IndividualAddress, Telegram
 
 from .connection import ConnectionConfig, ConnectionType
@@ -197,7 +197,7 @@ class KNXIPInterface:
             _gateway = gateway_descriptor or await request_description(
                 gateway_ip=gateway_ip, gateway_port=gateway_port
             )
-            xml_interface = self._get_tunnel_interface_from_keyfile(
+            xml_interface = await self._get_tunnel_interface_from_keyfile(
                 keyfile_path=secure_config.knxkeys_file_path,
                 keyfile_password=secure_config.knxkeys_password,
                 gateway_descriptor=_gateway,
@@ -234,7 +234,7 @@ class KNXIPInterface:
         )
         await self._interface.connect()
 
-    def _get_tunnel_interface_from_keyfile(
+    async def _get_tunnel_interface_from_keyfile(
         self,
         keyfile_path: str,
         keyfile_password: str,
@@ -246,7 +246,7 @@ class KNXIPInterface:
 
         Precedence: configured individual address > configured user id > first free tunnel interface
         """
-        keyring = load_key_ring(
+        keyring = await load_keyring(
             keyfile_path,
             keyfile_password,
         )
@@ -379,7 +379,7 @@ class KNXIPInterface:
             self.connection_config.secure_config.knxkeys_file_path is not None
             and self.connection_config.secure_config.knxkeys_password is not None
         ):
-            keyring = load_key_ring(
+            keyring = await load_keyring(
                 self.connection_config.secure_config.knxkeys_file_path,
                 self.connection_config.secure_config.knxkeys_password,
             )
