@@ -23,6 +23,8 @@ from xknx.telegram import IndividualAddress
 class TestKNXIPInterface:
     """Test class for KNX interface objects."""
 
+    knxkeys_file = os.path.join(os.path.dirname(__file__), "resources/testcase.knxkeys")
+
     def setup_method(self):
         """Set up test class."""
         # pylint: disable=attribute-defined-outside-init
@@ -210,14 +212,13 @@ class TestKNXIPInterface:
     async def test_start_secure_connection_knx_keys_user_id(self):
         """Test starting a secure connection from a knxkeys file with user_id."""
         gateway_ip = "192.168.1.1"
-        knxkeys_file = os.path.join(
-            os.path.dirname(__file__), "resources/testcase.knxkeys"
-        )
         connection_config = ConnectionConfig(
             connection_type=ConnectionType.TUNNELING_TCP_SECURE,
             gateway_ip=gateway_ip,
             secure_config=SecureConfig(
-                user_id=3, knxkeys_file_path=knxkeys_file, knxkeys_password="password"
+                user_id=3,
+                knxkeys_file_path=self.knxkeys_file,
+                knxkeys_password="password",
             ),
         )
         gateway_description = GatewayDescriptor(
@@ -254,15 +255,12 @@ class TestKNXIPInterface:
     async def test_start_secure_connection_knx_keys_ia(self):
         """Test starting a secure connection from a knxkeys file with individual address."""
         gateway_ip = "192.168.1.1"
-        knxkeys_file = os.path.join(
-            os.path.dirname(__file__), "resources/testcase.knxkeys"
-        )
         connection_config = ConnectionConfig(
             connection_type=ConnectionType.TUNNELING_TCP_SECURE,
             gateway_ip=gateway_ip,
             individual_address="1.0.12",
             secure_config=SecureConfig(
-                knxkeys_file_path=knxkeys_file, knxkeys_password="password"
+                knxkeys_file_path=self.knxkeys_file, knxkeys_password="password"
             ),
         )
         # result of request_description is currently not used when IA is defined
@@ -291,14 +289,11 @@ class TestKNXIPInterface:
     async def test_start_secure_connection_knx_keys_first_interface(self):
         """Test starting a secure connection from a knxkeys file."""
         gateway_ip = "192.168.1.1"
-        knxkeys_file = os.path.join(
-            os.path.dirname(__file__), "resources/testcase.knxkeys"
-        )
         connection_config = ConnectionConfig(
             connection_type=ConnectionType.TUNNELING_TCP_SECURE,
             gateway_ip=gateway_ip,
             secure_config=SecureConfig(
-                knxkeys_file_path=knxkeys_file, knxkeys_password="password"
+                knxkeys_file_path=self.knxkeys_file, knxkeys_password="password"
             ),
         )
         gateway_description = GatewayDescriptor(
@@ -378,19 +373,45 @@ class TestKNXIPInterface:
             )
             connect_secure.assert_called_once_with()
 
-    async def test_invalid_user_id_secure_error(self):
-        """Test ip secure."""
-        gateway_ip = "192.168.1.1"
-        knxkeys_file = os.path.join(
-            os.path.dirname(__file__), "resources/testcase.knxkeys"
-        )
-        connection_config = ConnectionConfig(
-            connection_type=ConnectionType.TUNNELING_TCP_SECURE,
-            gateway_ip=gateway_ip,
-            secure_config=SecureConfig(
-                user_id=12, knxkeys_file_path=knxkeys_file, knxkeys_password="password"
+    @pytest.mark.parametrize(
+        "connection_config",
+        [
+            ConnectionConfig(  # invalid user_id
+                connection_type=ConnectionType.TUNNELING_TCP_SECURE,
+                gateway_ip="192.168.1.1",
+                secure_config=SecureConfig(
+                    user_id=12,
+                    knxkeys_file_path=knxkeys_file,
+                    knxkeys_password="password",
+                ),
             ),
-        )
+            ConnectionConfig(  # invalid IA
+                connection_type=ConnectionType.TUNNELING_TCP_SECURE,
+                gateway_ip="192.168.1.1",
+                individual_address="9.9.9",
+                secure_config=SecureConfig(
+                    knxkeys_file_path=knxkeys_file,
+                    knxkeys_password="password",
+                ),
+            ),
+            ConnectionConfig(  # no secure_config
+                connection_type=ConnectionType.TUNNELING_TCP_SECURE,
+                gateway_ip="192.168.1.1",
+                individual_address="9.9.9",
+            ),
+            ConnectionConfig(  # no password
+                connection_type=ConnectionType.TUNNELING_TCP_SECURE,
+                gateway_ip="192.168.1.1",
+                secure_config=SecureConfig(
+                    user_id=3,
+                    knxkeys_file_path=knxkeys_file,
+                ),
+            ),
+        ],
+    )
+    async def test_invalid_secure_error(self, connection_config):
+        """Test ip secure invalid configurations."""
+        gateway_ip = "192.168.1.1"
         gateway_description = GatewayDescriptor(
             ip_addr=gateway_ip,
             port=3671,
@@ -423,13 +444,10 @@ class TestKNXIPInterface:
     async def test_start_secure_routing_knx_keys(self):
         """Test starting a secure routing connection from a knxkeys file."""
         backbone_key = bytes.fromhex("cf89fd0f18f4889783c7ef44ee1f5e14")
-        knxkeys_file = os.path.join(
-            os.path.dirname(__file__), "resources/testcase.knxkeys"
-        )
         connection_config = ConnectionConfig(
             connection_type=ConnectionType.ROUTING_SECURE,
             secure_config=SecureConfig(
-                knxkeys_file_path=knxkeys_file, knxkeys_password="password"
+                knxkeys_file_path=self.knxkeys_file, knxkeys_password="password"
             ),
         )
         with patch("xknx.io.routing.SecureRouting.connect") as connect_secure:
