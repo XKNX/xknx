@@ -1,8 +1,8 @@
 """Keyring class for loading and decrypting knxkeys files."""
 from __future__ import annotations
 
-import abc
-from abc import ABC
+from abc import ABC, abstractmethod
+import asyncio
 import base64
 import enum
 from itertools import chain
@@ -37,7 +37,7 @@ class InterfaceType(enum.Enum):
 class AttributeReader(ABC):
     """Abstract base class for modelling attribute reader capabilities."""
 
-    @abc.abstractmethod
+    @abstractmethod
     def parse_xml(self, node: Document) -> None:
         """Parse all needed attributes from the given node map."""
 
@@ -348,7 +348,19 @@ class Keyring(AttributeReader):
             self.backbone.decrypt_attributes(hashed_password, initialization_vector)
 
 
-def load_key_ring(path: str, password: str, validate_signature: bool = True) -> Keyring:
+async def load_keyring(
+    path: str, password: str, validate_signature: bool = True
+) -> Keyring:
+    """Load a .knxkeys file from the given path in an executor."""
+    return await asyncio.to_thread(
+        _load_keyring,
+        path,
+        password,
+        validate_signature=validate_signature,
+    )
+
+
+def _load_keyring(path: str, password: str, validate_signature: bool = True) -> Keyring:
     """Load a .knxkeys file from the given path."""
 
     if validate_signature:

@@ -4,8 +4,13 @@ import os
 import pytest
 
 from xknx.exceptions.exception import InvalidSecureConfiguration
-from xknx.secure import Keyring, load_key_ring
-from xknx.secure.keyring import XMLDevice, XMLInterface, verify_keyring_signature
+from xknx.secure.keyring import (
+    Keyring,
+    XMLDevice,
+    XMLInterface,
+    _load_keyring,
+    verify_keyring_signature,
+)
 from xknx.telegram import IndividualAddress
 
 
@@ -34,7 +39,7 @@ class TestKeyRing:
 
     def test_load_keyring(self):
         """Test load keyring from knxkeys file."""
-        keyring: Keyring = load_key_ring(self.keyring_test_file, "pwd")
+        keyring: Keyring = _load_keyring(self.keyring_test_file, "pwd")
         TestKeyRing.assert_interface(keyring, "user4", IndividualAddress("1.1.4"))
         TestKeyRing.assert_interface(keyring, "@zvI1G&_", IndividualAddress("1.1.6"))
         TestKeyRing.assert_interface(keyring, "ZvDY-:g#", IndividualAddress("1.1.7"))
@@ -47,7 +52,7 @@ class TestKeyRing:
 
     def test_load_keyring_real(self):
         """Test load keyring from knxkeys file."""
-        keyring: Keyring = load_key_ring(self.testcase_file, "password")
+        keyring: Keyring = _load_keyring(self.testcase_file, "password")
         TestKeyRing.assert_interface(keyring, "user1", IndividualAddress("1.0.1"))
         TestKeyRing.assert_interface(keyring, "user2", IndividualAddress("1.0.11"))
         TestKeyRing.assert_interface(keyring, "user3", IndividualAddress("1.0.12"))
@@ -72,11 +77,11 @@ class TestKeyRing:
     def test_invalid_signature(self):
         """Test invalid signature throws error."""
         with pytest.raises(InvalidSecureConfiguration):
-            load_key_ring(self.testcase_file, "wrong_password")
+            _load_keyring(self.testcase_file, "wrong_password")
 
     def test_raises_error(self):
         """Test raises error if password is wrong."""
         with pytest.raises(InvalidSecureConfiguration):
-            load_key_ring(
+            _load_keyring(
                 self.testcase_file, "wrong_password", validate_signature=False
             )

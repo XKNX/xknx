@@ -29,6 +29,7 @@ nav_order: 2
 ### Internal
 
 - Remove `InterfaceWithUserIdNotFound` and `InvalidSignature` errors in favor of `InvalidSecureConfiguration`.
+- Keyring: rename `load_key_ring` to `load_keyring` and make it a coroutine.
 
 ### Management
 
