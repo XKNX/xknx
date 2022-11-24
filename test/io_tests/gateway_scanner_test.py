@@ -466,6 +466,11 @@ class TestGatewayScanner:
         assert isinstance(frame_2.body, SearchRequest)
         assert frame_1.body.discovery_endpoint == HPAI(ip_addr="10.1.1.2", port=56789)
 
+    def test_gateway_scan_filter_compare(self):
+        """Test GatewayScanFilter comparison."""
+        assert GatewayScanFilter() == GatewayScanFilter()
+        assert GatewayScanFilter() != GatewayScanFilter(tunnelling=False)
+
 
 def fake_router_search_response() -> KNXIPFrame:
     """Return the KNXIPFrame of a KNX/IP Router with a SearchResponse body."""
