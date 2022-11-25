@@ -365,7 +365,9 @@ def _load_keyring(path: str, password: str, validate_signature: bool = True) -> 
 
     if validate_signature:
         if not verify_keyring_signature(path, password):
-            raise InvalidSecureConfiguration("Invalid signature for keyring file")
+            raise InvalidSecureConfiguration(
+                "Signature verification of keyring file failed. Invalid password or malformed file content."
+            )
 
     keyring: Keyring = Keyring()
     try:

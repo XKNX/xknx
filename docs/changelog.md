@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 2.0.0 Find and Connect 2022-11-25
 
 ### Interface changes
 
