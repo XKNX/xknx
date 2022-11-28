@@ -1,8 +1,7 @@
-"""Module for managing a notification via KNX."""
+"""Module for managing a text via KNX."""
 from __future__ import annotations
 
 from collections.abc import Iterator
-import logging
 from typing import TYPE_CHECKING
 
 from xknx.remote_value import GroupAddressesType, RemoteValueString
@@ -12,8 +11,6 @@ from .device import Device, DeviceCallbackType
 if TYPE_CHECKING:
     from xknx.telegram import Telegram
     from xknx.xknx import XKNX
-
-logger = logging.getLogger("xknx.log")
 
 
 class Notification(Device):
@@ -25,42 +22,52 @@ class Notification(Device):
         name: str,
         group_address: GroupAddressesType | None = None,
         group_address_state: GroupAddressesType | None = None,
+        respond_to_read: bool = False,
         sync_state: bool | int | float | str = True,
-        value_type: str | None = None,
+        value_type: int | str | None = None,
         device_updated_cb: DeviceCallbackType[Notification] | None = None,
     ):
         """Initialize notification class."""
         super().__init__(xknx, name, device_updated_cb)
 
-        self._message = RemoteValueString(
+        self.respond_to_read = respond_to_read
+        self.remote_value = RemoteValueString(
             xknx,
             group_address=group_address,
             group_address_state=group_address_state,
             sync_state=sync_state,
             value_type=value_type,
             device_name=name,
-            feature_name="Message",
+            feature_name="Text",
             after_update_cb=self.after_update,
         )
 
     def _iter_remote_values(self) -> Iterator[RemoteValueString]:
         """Iterate the devices RemoteValue classes."""
-        yield self._message
+        yield self.remote_value
 
     @property
     def message(self) -> str | None:
         """Return the current message."""
-        return self._message.value
+        return self.remote_value.value
 
     async def set(self, message: str) -> None:
         """Set message."""
         cropped_message = message[:14]
-        await self._message.set(cropped_message)
+        await self.remote_value.set(cropped_message)
 
-    async def process_group_write(self, telegram: "Telegram") -> None:
+    async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        await self._message.process(telegram)
+        await self.remote_value.process(telegram)
+
+    async def process_group_read(self, telegram: Telegram) -> None:
+        """Process incoming GroupValueResponse telegrams."""
+        if (
+            self.respond_to_read
+            and telegram.destination_address == self.remote_value.group_address
+        ):
+            await self.remote_value.respond()
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return f'<Notification name="{self.name}" message={self._message.group_addr_str()} />'
+        return f'<Notification name="{self.name}" message={self.remote_value.group_addr_str()} />'
