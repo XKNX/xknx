@@ -5,7 +5,7 @@ from xknx import XKNX
 from xknx.devices import Notification
 from xknx.dpt import DPTArray, DPTBinary, DPTString
 from xknx.telegram import GroupAddress, Telegram
-from xknx.telegram.apci import GroupValueRead, GroupValueWrite
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
 class TestNotification:
@@ -94,6 +94,65 @@ class TestNotification:
             await notification.process(telegram)
             log_mock.assert_called_once()
             cb_mock.assert_not_called()
+
+    #
+    # TEST RESPOND
+    #
+    async def test_respond_to_read(self):
+        """Test respond_to_read function."""
+        xknx = XKNX()
+        responding = Notification(
+            xknx,
+            "TestSensor1",
+            group_address="1/1/1",
+            respond_to_read=True,
+            value_type="latin_1",
+        )
+        non_responding = Notification(
+            xknx,
+            "TestSensor2",
+            group_address="1/1/1",
+            respond_to_read=False,
+            value_type="latin_1",
+        )
+        #  set initial payload of Notification
+        responding.remote_value.value = "Halli Hallo"
+        non_responding.remote_value.value = "Halli Hallo"
+
+        read_telegram = Telegram(
+            destination_address=GroupAddress("1/1/1"), payload=GroupValueRead()
+        )
+        # verify no response when respond_to_read is False
+        await non_responding.process(read_telegram)
+        assert xknx.telegrams.qsize() == 0
+
+        # verify response when respond_to_read is True
+        await responding.process(read_telegram)
+        assert xknx.telegrams.qsize() == 1
+        response = xknx.telegrams.get_nowait()
+        assert response == Telegram(
+            destination_address=GroupAddress("1/1/1"),
+            payload=GroupValueResponse(
+                DPTArray(
+                    (
+                        0x48,
+                        0x61,
+                        0x6C,
+                        0x6C,
+                        0x69,
+                        0x20,
+                        0x48,
+                        0x61,
+                        0x6C,
+                        0x6C,
+                        0x6F,
+                        0x0,
+                        0x0,
+                        0x0,
+                    ),
+                ),
+            ),
+        )
 
     #
     # TEST SET MESSAGE

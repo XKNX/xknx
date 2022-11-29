@@ -6,6 +6,13 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Devices
+
+- Notification: Add `respond_to_read` option.
+- Notification: Rename `self._message` to `self.remote_value`.
+
 # 2.0.0 Find and Connect 2022-11-25
 
 ### Interface changes
