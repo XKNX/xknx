@@ -8,6 +8,8 @@ nav_order: 2
 
 # Unreleased changes
 
+# 2.1.0 Enhance notification device
+
 ### Devices
 
 - Notification: Add `respond_to_read` option.
