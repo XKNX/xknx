@@ -25,8 +25,12 @@ class TestTaskRegistry:
             async_func=callback,
         )
         assert len(xknx.task_registry.tasks) == 1
+
         task.start()
+        assert not task.done()
+
         await xknx.task_registry.block_till_done()
+        assert task.done()
         assert len(xknx.task_registry.tasks) == 0
 
     async def test_unregister(self):
@@ -45,6 +49,7 @@ class TestTaskRegistry:
         task.start()
         xknx.task_registry.unregister(task.name)
         assert len(xknx.task_registry.tasks) == 0
+        assert task.done()
 
     #
     # TEST START/STOP

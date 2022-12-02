@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### Internals
+
+- Add `task.done()` to TaskRegistry tasks.
+
 # 2.1.0 Enhance notification device
 
 ### Devices
