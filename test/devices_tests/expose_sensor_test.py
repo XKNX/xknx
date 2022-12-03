@@ -119,13 +119,7 @@ class TestExposeSensor:
         expose_sensor = ExposeSensor(
             xknx, "TestSensor", value_type="binary", group_address="1/2/3"
         )
-
-        await expose_sensor.process(
-            Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTBinary(True)),
-            )
-        )
+        expose_sensor.sensor_value.value = True
 
         telegram = Telegram(GroupAddress("1/2/3"), payload=GroupValueRead())
         await expose_sensor.process(telegram)
@@ -165,13 +159,7 @@ class TestExposeSensor:
         expose_sensor = ExposeSensor(
             xknx, "TestSensor", value_type="temperature", group_address="1/2/3"
         )
-
-        await expose_sensor.process(
-            Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTArray((0x0C, 0x1A))),
-            )
-        )
+        expose_sensor.sensor_value.value = 21.0
 
         telegram = Telegram(GroupAddress("1/2/3"), payload=GroupValueRead())
         await expose_sensor.process(telegram)
@@ -181,6 +169,22 @@ class TestExposeSensor:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueResponse(DPTArray((0x0C, 0x1A))),
         )
+
+    async def test_process_no_respond_to_read(self):
+        """Test expose sensor with respond_to_read set to False."""
+        xknx = XKNX()
+        expose_sensor = ExposeSensor(
+            xknx,
+            "TestSensor",
+            value_type="temperature",
+            group_address="1/2/3",
+            respond_to_read=False,
+        )
+        expose_sensor.sensor_value.value = 21.0
+
+        telegram = Telegram(GroupAddress("1/2/3"), payload=GroupValueRead())
+        await expose_sensor.process(telegram)
+        assert xknx.telegrams.qsize() == 0
 
     #
     # HAS GROUP ADDRESS
