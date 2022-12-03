@@ -10,7 +10,7 @@ nav_order: 2
 
 ### Devices
 
-- ExposeSensor: Add `cooldown` option to allow rate-limiting of sent GroupValueWrite telegrams.
+- ExposeSensor: Add `cooldown` option to allow rate-limiting of sent telegrams.
 
 ### Internals
 

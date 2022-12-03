@@ -114,7 +114,7 @@ class ExposeSensor(Device):
             await asyncio.sleep(self.cooldown)
             if self.sensor_value.value == self._cooldown_latest_value:
                 break
-            await self.sensor_value.set(self._cooldown_latest_value)
+            await self.sensor_value.set(self._cooldown_latest_value)  # type: ignore[arg-type]
 
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
