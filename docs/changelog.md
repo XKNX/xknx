@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### Devices
+
+- ExposeSensor: Add `cooldown` option to allow rate-limiting of sent GroupValueWrite telegrams.
+
 ### Internals
 
 - Add `task.done()` to TaskRegistry tasks.
