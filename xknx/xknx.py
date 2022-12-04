@@ -37,30 +37,26 @@ logger = logging.getLogger("xknx.log")
 class XKNX:
     """Class for reading and writing KNX/IP packets."""
 
-    DEFAULT_ADDRESS = "15.15.250"
-    DEFAULT_RATE_LIMIT = 20
-
     def __init__(
         self,
-        own_address: str | IndividualAddress = DEFAULT_ADDRESS,
         address_format: GroupAddressType = GroupAddressType.LONG,
         telegram_received_cb: Callable[[Telegram], Awaitable[None]] | None = None,
         device_updated_cb: Callable[[Device], Awaitable[None]] | None = None,
         connection_state_changed_cb: Callable[[XknxConnectionState], Awaitable[None]]
         | None = None,
-        rate_limit: int = DEFAULT_RATE_LIMIT,
+        rate_limit: int = 0,
         multicast_group: str = DEFAULT_MCAST_GRP,
         multicast_port: int = DEFAULT_MCAST_PORT,
         log_directory: str | None = None,
         state_updater: TrackerOptionType = False,
         daemon_mode: bool = False,
-        connection_config: ConnectionConfig | ConnectionConfigUSB = ConnectionConfig(),
+        connection_config: ConnectionConfig | ConnectionConfigUSB | None = None,
     ) -> None:
         """Initialize XKNX class."""
         self.connection_manager = ConnectionManager()
         self.devices = Devices()
         self.knxip_interface = knx_interface_factory(
-            self, connection_config=connection_config
+            self, connection_config=connection_config or ConnectionConfig()
         )
         self.management = Management(self)
         self.telegrams: asyncio.Queue[Telegram | None] = asyncio.Queue()
@@ -72,7 +68,6 @@ class XKNX:
         self.daemon_mode = daemon_mode
         self.multicast_group = multicast_group
         self.multicast_port = multicast_port
-        self.own_address = IndividualAddress(own_address)
         self.rate_limit = rate_limit
         self.sigint_received = asyncio.Event()
         self.started = asyncio.Event()

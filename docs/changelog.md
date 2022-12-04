@@ -8,6 +8,66 @@ nav_order: 2
 
 # Unreleased changes
 
+# 2.1.0 Enhance notification device
+
+### Devices
+
+- ExposeSensor and Notification: Add `respond_to_read` option.
+- Notification: Rename `self._message` to `self.remote_value`.
+
+# 2.0.0 Find and Connect 2022-11-25
+
+### Interface changes
+
+- Removed `own_address` from `XKNX` class. `ConnectionConfig` `individual_address` can be used to set a source address for routing instead.
+  If set for a secure tunnelling connection, a tunnel with this IA will be read from the knxkeys file.
+- Disable TelegramQueue rate limiting by default.
+- Separate discovery multicast group from routing group. Add `multicast_group` and `multicast_port` `ConnectionConfig` parameters.
+
+### Connection and Discovery
+
+- Use manually configured IP secure tunnel password over loading it from keyring.
+- GatewayScanFilter now also matches secure enabled gateways by default. The `secure` argument as been replaced by `secure_tunnelling` and `secure_routing` arguments. When multiple methods are `True` a gateway is matched if one of them is supported. Non-secure methods don't match if secure is required for that gateway.
+- Self description queries more information from Core v2 devices via SearchRequestExtended.
+
+### Features
+
+- Add support for python 3.11
+- Add methods to Keyring to get interfaces by individual address (host or tunnel).
+
+### Internal
+
+- Remove `InterfaceWithUserIdNotFound` and `InvalidSignature` errors in favor of `InvalidSecureConfiguration`.
+- Keyring: rename `load_key_ring` to `load_keyring` and make it a coroutine.
+
+### Management
+
+- Fix APCI service parsing for 10bit control fileds.
+- Set reasonable default count values for APCI classes.
+- Set xknx.current_address for routing connections so management frames received over Routing are handled properly.
+- Fix wrong length of AuthorizeRequest.
+- Raise sane error messages in Management.
+
+# Bugfixes
+
+- No mutable default arguments. Fixes unexpected behaviour like GatewayScanner not finding all interfaces.
+
+# 1.2.1 Hotfix release 2022-11-20
+
+### Bugfixes
+
+- Fix Latency parsing in .knxkeys keyring files
+
+# 1.2.0 Secure Routing 2022-10-10
+
+### Features
+
+- We now support KNXnet/IP Secure multicast communication (secure routing) in addition to tunnelling!
+  Thanks to Weinzierl for providing us a router for testing purposes!
+- Parse `latency` from a .knxkeys keyring files `Backbone` tag.
+- Use `multicast_group` from a .knxkeys keyring files `MulticastAddress` tag (Routing).
+- Support InternalGroupAddress in xknx.tools package.
+
 ### Protocol
 
 - Add TimerNotify frame parser

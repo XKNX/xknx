@@ -72,6 +72,7 @@ class GatewayDescriptor:
         self.supports_tunnelling_tcp = supports_tunnelling_tcp
         self.supports_secure = supports_secure
 
+        self.core_version: int = 0
         self.routing_requires_secure: bool | None = None
         self.tunnelling_requires_secure: bool | None = None
         self.tunnelling_slots: dict[IndividualAddress, TunnelingSlotStatus] = {}
@@ -84,12 +85,11 @@ class GatewayDescriptor:
                 self.individual_address = dib.individual_address
                 continue
             if isinstance(dib, DIBSuppSVCFamilies):
+                self.core_version = dib.version(DIBServiceFamily.CORE) or 0
                 self.supports_routing = dib.supports(DIBServiceFamily.ROUTING)
-                if dib.supports(DIBServiceFamily.TUNNELING):
+                if _tunnelling_version := dib.version(DIBServiceFamily.TUNNELING):
                     self.supports_tunnelling = True
-                    self.supports_tunnelling_tcp = dib.supports(
-                        DIBServiceFamily.TUNNELING, version=2
-                    )
+                    self.supports_tunnelling_tcp = _tunnelling_version >= 2
                 self.supports_secure = dib.supports(
                     DIBServiceFamily.SECURITY, version=1
                 )
@@ -114,6 +114,7 @@ class GatewayDescriptor:
             f"    individual_address={self.individual_address}\n"
             f"    local_interface={self.local_interface},\n"
             f"    local_ip={self.local_ip},\n"
+            f"    core_version={self.core_version},\n"
             f"    supports_routing={self.supports_routing},\n"
             f"    supports_tunnelling={self.supports_tunnelling},\n"
             f"    supports_tunnelling_tcp={self.supports_tunnelling_tcp},\n"
@@ -130,51 +131,70 @@ class GatewayDescriptor:
 
 
 class GatewayScanFilter:
-    """Filter to limit gateway scan attempts.
+    """Filter to limit gateway scan results.
 
-    If `tunnelling` and `routing` are set it is treated as AND.
-    KNX/IP devices that don't support `tunnelling` or `routing` aren't matched.
+    If `name` doesn't match the gateway name, the gateway will be ignored.
+
+    Connection methods are treated as OR if `True` is set for multiple methods.
+    Non-secure methods don't match if secure is required.
     """
 
     def __init__(
         self,
         name: str | None = None,
-        tunnelling: bool | None = None,
-        tunnelling_tcp: bool | None = None,
-        routing: bool | None = None,
-        secure: bool | None = False,
+        tunnelling: bool | None = True,
+        tunnelling_tcp: bool | None = True,
+        routing: bool | None = True,
+        secure_tunnelling: bool | None = True,
+        secure_routing: bool | None = True,
     ):
         """Initialize GatewayScanFilter class."""
         self.name = name
         self.tunnelling = tunnelling
         self.tunnelling_tcp = tunnelling_tcp
         self.routing = routing
-        self.secure = secure
+        self.secure_tunnelling = secure_tunnelling
+        self.secure_routing = secure_routing
 
     def match(self, gateway: GatewayDescriptor) -> bool:
         """Check whether the device is a gateway and given GatewayDescriptor matches the filter."""
         if self.name is not None and self.name != gateway.name:
             return False
         if (
-            self.tunnelling is not None
-            and self.tunnelling != gateway.supports_tunnelling
+            self.tunnelling
+            and gateway.supports_tunnelling
+            and not gateway.tunnelling_requires_secure
         ):
-            return False
+            return True
         if (
-            self.tunnelling_tcp is not None
-            and self.tunnelling_tcp != gateway.supports_tunnelling_tcp
+            self.tunnelling_tcp
+            and gateway.supports_tunnelling_tcp
+            and not gateway.tunnelling_requires_secure
         ):
-            return False
-        if self.routing is not None and self.routing != gateway.supports_routing:
-            return False
-        if self.secure is not None:
-            if self.secure is not bool(gateway.tunnelling_requires_secure):
-                return False
-        return (
-            gateway.supports_tunnelling
-            or gateway.supports_tunnelling_tcp
-            or gateway.supports_routing
-        )
+            return True
+        if (
+            self.routing
+            and gateway.supports_routing
+            and not gateway.routing_requires_secure
+        ):
+            return True
+        if (
+            self.secure_tunnelling
+            and gateway.supports_tunnelling_tcp
+            and gateway.tunnelling_requires_secure
+        ):
+            return True
+        if (
+            self.secure_routing
+            and gateway.supports_routing
+            and gateway.routing_requires_secure
+        ):
+            return True
+        return False
+
+    def __eq__(self, other: object) -> bool:
+        """Equality for GatewayScanFilter class."""
+        return self.__dict__ == other.__dict__
 
 
 class GatewayScanner:
@@ -186,14 +206,14 @@ class GatewayScanner:
         local_ip: str | None = None,
         timeout_in_seconds: float = 3.0,
         stop_on_found: int | None = None,
-        scan_filter: GatewayScanFilter = GatewayScanFilter(),
+        scan_filter: GatewayScanFilter | None = None,
     ):
         """Initialize GatewayScanner class."""
         self.xknx = xknx
         self.local_ip = local_ip
         self.timeout_in_seconds = timeout_in_seconds
         self.stop_on_found = stop_on_found
-        self.scan_filter = scan_filter
+        self.scan_filter = scan_filter or GatewayScanFilter()
         self.found_gateways: dict[HPAI, GatewayDescriptor] = {}
         self._response_received_event = asyncio.Event()
 

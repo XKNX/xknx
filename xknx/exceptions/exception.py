@@ -170,14 +170,6 @@ class SecureException(XKNXException):
     """Exception class for ip secure handling."""
 
 
-class InvalidSignature(SecureException):
-    """Exception class used when the signature of a knxkeys file is invalid."""
-
-
-class InterfaceWithUserIdNotFound(SecureException):
-    """Exception class used when requesting an interface with a user id that does not exist."""
-
-
 class InvalidSecureConfiguration(SecureException):
     """Exception class used when the secure configuration is invalid."""
 

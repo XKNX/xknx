@@ -20,12 +20,11 @@ The `XKNX()` object is the core element of any XKNX installation. It should be o
 
 ```python
 xknx = XKNX(
-    own_address=DEFAULT_ADDRESS,
     address_format=GroupAddressType.LONG,
     connection_state_changed_cb=None,
     telegram_received_cb=None,
     device_updated_cb=None,
-    rate_limit=DEFAULT_RATE_LIMIT,
+    rate_limit=0,
     multicast_group=DEFAULT_MCAST_GRP,
     multicast_port=DEFAULT_MCAST_PORT,
     log_directory=None,
@@ -37,7 +36,6 @@ xknx = XKNX(
 
 The constructor of the XKNX object takes several parameters:
 
-- `own_address` may be used to specify the individual (physical) KNX address of the XKNX daemon. If not speficied it uses `15.15.250`.
 - `address_format` may be used to specify the type of group addresses to use. Possible values are:
   - FREE: integer or hex representation
   - SHORT: representation like '1/34' without middle groups
@@ -45,9 +43,9 @@ The constructor of the XKNX object takes several parameters:
 - `connection_state_changed_cb` is a callback which is called every time the connection state to the gateway changes. See [callbacks](#callbacks) documentation for details.
 - `telegram_received_cb` is a callback which is called after every received KNX telegram. See [callbacks](#callbacks) documentation for details.
 - `device_updated_cb` is an async callback after a [XKNX device](#devices) was updated. See [callbacks](#callbacks) documentation for details.
-- `rate_limit` in telegrams per second - can be used to limit the outgoing traffic to the KNX/IP interface. The default value is 20 packets per second.
-- `multicast_group` is the multicast IP address - can be used to override the default multicast address (`224.0.23.12`)
-- `multicast_port` is the multicast port - can be used to override the default multicast port (`3671`)
+- `rate_limit` in telegrams per second - can be used to limit the outgoing traffic to the KNX/IP interface by the telegram queue. `0` disables rate limiter. Disabled by default.
+- `multicast_group` is the multicast group used for discovery - can be used to override the default multicast address (`224.0.23.12`)
+- `multicast_port` is the multicast port used for discovery - can be used to override the default multicast port (`3671`)
 - `log_directory` is the path to the log directory - when set to a valid directory we log to a dedicated file in this directory called `xknx.log`. The log files are rotated each night and will exist for 7 days. After that the oldest one will be deleted.
 - `state_updater` is used to set the default state-updating mechanism used by devices. `False` to  disable state-updating by default, `True` to use default 60 minutes expire-interval, a number between 2 to 1440 to configure expire-time or a string "expire 50", "every 90" for strict periodically update or "init" for update when a connection is established. Default: `False`.
 - if `daemon_mode` is set, start will only stop if Control-X is pressed. This function is useful for using XKNX as a daemon, e.g. for using the callback functions or using the internal action logic.

@@ -30,8 +30,8 @@ from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
 from .const import HEARTBEAT_RATE
 from .gateway_scanner import GatewayDescriptor
 from .interface import Interface, TelegramCallbackType
+from .ip_secure import SecureSession
 from .request_response import Connect, ConnectionState, Disconnect, Tunnelling
-from .secure_session import SecureSession
 from .self_description import DescriptionQuery
 from .transport import KNXIPTransport, TCPTransport, UDPTransport
 
@@ -70,7 +70,7 @@ class _Tunnel(Interface):
         self._initial_connection = True
         self._is_reconnecting = False
         self._reconnect_task: asyncio.Task[None] | None = None
-        self._src_address = xknx.own_address
+        self._src_address = IndividualAddress(0)
         self._send_telegram_lock = asyncio.Lock()
         self._tunnelling_request_confirmation_event = asyncio.Event()
 
@@ -85,7 +85,7 @@ class _Tunnel(Interface):
 
     @abstractmethod
     def _init_transport(self) -> None:
-        """Initialize transport transport."""
+        """Initialize transport."""
         # set up self.transport
 
     @abstractmethod
@@ -200,7 +200,7 @@ class _Tunnel(Interface):
             self._src_address = IndividualAddress(connect.identifier)
             self.xknx.current_address = self._src_address
             logger.debug(
-                "Tunnel established communication_channel=%s, address=%s",
+                "Tunnel established. communication_channel=%s, address=%s",
                 connect.communication_channel,
                 self._src_address,
             )
@@ -377,7 +377,7 @@ class _Tunnel(Interface):
         self, disconnect_request: DisconnectRequest
     ) -> None:
         """Handle incoming disconnect request."""
-        logger.warning("Received DisconnectRequest from tunnelling sever.")
+        logger.warning("Received DisconnectRequest from tunnelling server.")
         # We should not receive DisconnectRequest for other communication_channels
         # If we do we close our communication_channel before reconnection.
         if disconnect_request.communication_channel_id == self.communication_channel:

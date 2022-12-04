@@ -18,8 +18,8 @@ async def main() -> None:
     connection_config = ConnectionConfig(
         connection_type=ConnectionType.TUNNELING_TCP_SECURE,
         gateway_ip="192.168.1.188",
+        individual_address="1.0.11",
         secure_config=SecureConfig(
-            user_id=4,
             knxkeys_file_path="/home/marvin/testcase.knxkeys",
             knxkeys_password="password",
         ),
