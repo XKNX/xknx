@@ -198,6 +198,8 @@ class USBDevice:
                 logger.debug(f"read {len(response)} bytes: {response.hex()}")
             except usb.core.USBTimeoutError:
                 pass
+            except usb.core.USBError as error:
+                logger.warning(f"{str(error)}")
         else:
             logger.warning("no USB IN endpoint to read from")
         return response
@@ -332,7 +334,7 @@ def get_all_hid_devices() -> List[USBDevice]:
     The USB Core Specification defines the HID class code. The bInterfaceClass
     member of an Interface descriptor is always 3 for HID class devices.
     (Source: https://www.usb.org/sites/default/files/hid1_11.pdf)
-    
+
     5.1 Device Descriptor Structure
     Note The bDeviceClass and bDeviceSubClass fields in the Device Descriptor
     should not be used to identify a device as belonging to the HID class. Instead use

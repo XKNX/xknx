@@ -46,7 +46,7 @@ class USBReceiveThread(BaseThread):
                         self._knx_raw = self._knx_raw[:self._knx_data_length]
                         self.create_telegram_and_put_in_queue()
                 else:
-                    logger.debug(f"ignoring invalid USB HID frame: {usb_data.hex()}")
+                    logger.warning(f"ignoring invalid USB HID frame: {usb_data.hex()}")
 
     def create_telegram_and_put_in_queue(self):
         """ """
@@ -59,6 +59,9 @@ class USBReceiveThread(BaseThread):
         telegram = cemi_frame.telegram
         telegram.direction = TelegramDirection.INCOMING
         logger.debug(f"receiving: {telegram}")
-        self._xknx.telegrams.put_nowait(telegram)
+        try:
+            self._xknx.telegrams.put_nowait(telegram)
+        except asyncio.QueueFull:
+            logger.warning(f"queue full, dropping {telegram}")
         self._knx_data_length = 0
         self._knx_raw = bytes()
