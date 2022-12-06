@@ -12,7 +12,13 @@ import logging
 from typing import TYPE_CHECKING
 
 from xknx.core import XknxConnectionState
-from xknx.exceptions import CommunicationError, ConfirmationError, TunnellingAckError
+from xknx.exceptions import (
+    CommunicationError,
+    ConfirmationError,
+    ConversionError,
+    TunnellingAckError,
+    UnsupportedCEMIMessage,
+)
 from xknx.knxip import (
     HPAI,
     CEMIFrame,
@@ -268,9 +274,17 @@ class _Tunnel(Interface):
         A transport layer confirmation shall be awaited before sending the next telegram.
         """
         async with self._send_telegram_lock:
+            skip_increase_sequence_number = False
             try:
                 await self._tunnelling_request(cemi)
+            except ConversionError as ex:
+                # invalid CEMIFrame configurations preventing sending any frame
+                # shall not increase the sequence number
+                logger.warning("Could not send CEMI frame: %s", ex)
+                skip_increase_sequence_number = True
             finally:
+                if skip_increase_sequence_number:
+                    return
                 self._increase_sequence_number()
 
     async def _tunnelling_request(self, cemi: CEMIFrame) -> None:
@@ -282,7 +296,7 @@ class _Tunnel(Interface):
         tunnelling_request = TunnellingRequest(
             communication_channel_id=self.communication_channel,
             sequence_counter=self.sequence_number,
-            cemi=cemi,
+            raw_cemi=cemi.to_knx(),
         )
 
         if cemi.code is CEMIMessageCode.L_DATA_REQ:
@@ -338,20 +352,24 @@ class _Tunnel(Interface):
         self, tunneling_request: TunnellingRequest
     ) -> None:
         """Handle incoming tunnel request."""
-        if tunneling_request.cemi is None:
-            # Don't handle invalid cemi frames (None)
+        cemi = CEMIFrame()
+        try:
+            cemi.from_knx(tunneling_request.raw_cemi)
+        except UnsupportedCEMIMessage as unsupported_cemi_err:
+            logger.warning("CEMI not supported: %s", unsupported_cemi_err)
             return
-        if tunneling_request.cemi.code is CEMIMessageCode.L_DATA_CON:
+
+        if cemi.code is CEMIMessageCode.L_DATA_CON:
             # L_DATA_CON confirmation frame signals ready to send next telegram
             self._tunnelling_request_confirmation_event.set()
             return
 
-        if tunneling_request.cemi.code is CEMIMessageCode.L_DATA_REQ:
-            confirmation = copy(tunneling_request.cemi)
+        if cemi.code is CEMIMessageCode.L_DATA_REQ:
+            confirmation = copy(cemi)
             confirmation.code = CEMIMessageCode.L_DATA_CON
             asyncio.create_task(self._send_cemi(confirmation))
 
-        asyncio.create_task(self.handle_cemi_frame(tunneling_request.cemi))
+        asyncio.create_task(self.handle_cemi_frame(cemi))
 
     async def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
         """Handle incoming telegram and send responses if applicable (device management)."""
