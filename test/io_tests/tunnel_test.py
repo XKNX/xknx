@@ -126,13 +126,14 @@ class TestUDPTunnel:
         self.tunnel.expected_sequence_number = 10
 
         test_telegram = Telegram(payload=GroupValueWrite(DPTArray((1,))))
+        cemi = CEMIFrame.init_from_telegram(
+            test_telegram, code=CEMIMessageCode.L_DATA_IND
+        )
         test_frame = KNXIPFrame.init_from_body(
             TunnellingRequest(
                 communication_channel_id=1,
                 sequence_counter=10,
-                cemi=CEMIFrame.init_from_telegram(
-                    test_telegram, code=CEMIMessageCode.L_DATA_IND
-                ),
+                raw_cemi=cemi.to_knx(),
             )
         )
         test_ack = KNXIPFrame.init_from_body(TunnellingAck(sequence_counter=10))
@@ -193,14 +194,15 @@ class TestUDPTunnel:
         self.tunnel.expected_sequence_number = 23
 
         test_telegram = Telegram(payload=GroupValueWrite(DPTArray((1,))))
+        cemi = CEMIFrame.init_from_telegram(
+            test_telegram, code=CEMIMessageCode.L_DATA_CON
+        )
         test_ack = KNXIPFrame.init_from_body(TunnellingAck(sequence_counter=23))
         confirmation = KNXIPFrame.init_from_body(
             TunnellingRequest(
                 communication_channel_id=1,
                 sequence_counter=23,
-                cemi=CEMIFrame.init_from_telegram(
-                    test_telegram, code=CEMIMessageCode.L_DATA_CON
-                ),
+                raw_cemi=cemi.to_knx(),
             )
         )
         task = asyncio.create_task(self.tunnel.send_telegram(test_telegram))
@@ -224,27 +226,29 @@ class TestUDPTunnel:
         self.tunnel.expected_sequence_number = 15
 
         test_telegram = Telegram(payload=GroupValueWrite(DPTArray((1,))))
+        cemi = CEMIFrame.init_from_telegram(
+            test_telegram,
+            code=CEMIMessageCode.L_DATA_REQ,
+            src_addr=self.tunnel._src_address,
+        )
         request = KNXIPFrame.init_from_body(
             TunnellingRequest(
                 communication_channel_id=self.tunnel.communication_channel,
                 sequence_counter=self.tunnel.sequence_number,
-                cemi=CEMIFrame.init_from_telegram(
-                    test_telegram,
-                    code=CEMIMessageCode.L_DATA_REQ,
-                    src_addr=self.tunnel._src_address,
-                ),
+                raw_cemi=cemi.to_knx(),
             )
         )
         test_ack = KNXIPFrame.init_from_body(
             TunnellingAck(sequence_counter=self.tunnel.sequence_number)
         )
+        confirmation_cemi = CEMIFrame.init_from_telegram(
+            test_telegram, code=CEMIMessageCode.L_DATA_CON
+        )
         confirmation = KNXIPFrame.init_from_body(
             TunnellingRequest(
                 communication_channel_id=1,
                 sequence_counter=15,
-                cemi=CEMIFrame.init_from_telegram(
-                    test_telegram, code=CEMIMessageCode.L_DATA_CON
-                ),
+                raw_cemi=confirmation_cemi.to_knx(),
             )
         )
         confirmation_ack = KNXIPFrame.init_from_body(TunnellingAck(sequence_counter=15))
@@ -328,15 +332,16 @@ class TestUDPTunnel:
         # Send - use data endpoint
         self.tunnel.transport.send.reset_mock()
         test_telegram = Telegram(payload=GroupValueWrite(DPTArray((1,))))
+        cemi = CEMIFrame.init_from_telegram(
+            test_telegram,
+            code=CEMIMessageCode.L_DATA_REQ,
+            src_addr=IndividualAddress(7),
+        )
         test_telegram_frame = KNXIPFrame.init_from_body(
             TunnellingRequest(
                 communication_channel_id=23,
                 sequence_counter=0,
-                cemi=CEMIFrame.init_from_telegram(
-                    test_telegram,
-                    code=CEMIMessageCode.L_DATA_REQ,
-                    src_addr=IndividualAddress(7),
-                ),
+                raw_cemi=cemi.to_knx(),
             )
         )
         asyncio.create_task(self.tunnel.send_telegram(test_telegram))
@@ -411,13 +416,14 @@ class TestTCPTunnel:
         self.tunnel.communication_channel = 1
 
         test_telegram = Telegram(payload=GroupValueWrite(DPTArray((1,))))
+        cemi = CEMIFrame.init_from_telegram(
+            test_telegram, code=CEMIMessageCode.L_DATA_CON
+        )
         confirmation = KNXIPFrame.init_from_body(
             TunnellingRequest(
                 communication_channel_id=1,
                 sequence_counter=23,
-                cemi=CEMIFrame.init_from_telegram(
-                    test_telegram, code=CEMIMessageCode.L_DATA_CON
-                ),
+                raw_cemi=cemi.to_knx(),
             )
         )
         task = asyncio.create_task(self.tunnel.send_telegram(test_telegram))

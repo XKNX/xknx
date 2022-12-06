@@ -410,23 +410,27 @@ class TestSecureGroup:
         secure_timer = secure_group.secure_timer
         secure_timer.timer_authenticated = True
 
-        test_cemi = CEMIFrame.init_from_telegram(
+        raw_test_cemi = CEMIFrame.init_from_telegram(
             Telegram(
                 destination_address=GroupAddress("1/2/3"),
                 payload=apci.GroupValueRead(),
             )
-        )
+        ).to_knx()
 
         with patch.object(
             secure_timer, "reschedule", wraps=secure_timer.reschedule
         ) as mock_reschedule:
             assert not secure_timer.sched_update
-            secure_group.send(KNXIPFrame.init_from_body(RoutingIndication(test_cemi)))
+            secure_group.send(
+                KNXIPFrame.init_from_body(RoutingIndication(raw_cemi=raw_test_cemi))
+            )
             mock_reschedule.assert_called_once()
             mock_reschedule.reset_mock()
             # no reschedule when sched_update is true
             secure_timer.reschedule(update=(bytes(2), bytes(6)))
             assert secure_timer.sched_update
             mock_reschedule.reset_mock()
-            secure_group.send(KNXIPFrame.init_from_body(RoutingIndication(test_cemi)))
+            secure_group.send(
+                KNXIPFrame.init_from_body(RoutingIndication(raw_cemi=raw_test_cemi))
+            )
             mock_reschedule.assert_not_called()
