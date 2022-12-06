@@ -64,6 +64,23 @@ class TestRouting:
         ]
 
     @patch("logging.Logger.warning")
+    async def test_routing_indication_received_apci_unsupported(self, logging_mock):
+        """Test Tunnel sending ACK for unsupported frames."""
+        routing = Routing(
+            self.xknx,
+            individual_address=None,
+            telegram_received_callback=self.tg_received_mock,
+            local_ip="192.168.1.1",
+        )
+        # LDataInd Unsupported Extended APCI from 0.0.1 to 0/0/0 broadcast
+        # <UnsupportedCEMIMessage description="APCI not supported: 0b1111111000 in CEMI: 2900b0d0000100000103f8" />
+        raw = bytes.fromhex("0610 0530 0010 2900b0d0000100000103f8")
+
+        routing.transport.data_received_callback(raw, ("192.168.1.2", 3671))
+        self.tg_received_mock.assert_not_called()
+        logging_mock.assert_called_once()
+
+    @patch("logging.Logger.warning")
     async def test_routing_lost_message(self, logging_mock):
         """Test class for received RoutingLostMessage frames."""
         routing = Routing(
