@@ -283,9 +283,8 @@ class _Tunnel(Interface):
                 logger.warning("Could not send CEMI frame: %s", ex)
                 skip_increase_sequence_number = True
             finally:
-                if skip_increase_sequence_number:
-                    return
-                self._increase_sequence_number()
+                if not skip_increase_sequence_number:
+                    self._increase_sequence_number()
 
     async def _tunnelling_request(self, cemi: CEMIFrame) -> None:
         """Send CEMI Frame to tunnelling server."""
