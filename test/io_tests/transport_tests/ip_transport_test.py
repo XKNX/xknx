@@ -2,7 +2,13 @@
 from unittest.mock import Mock, patch
 
 from xknx.io.transport import KNXIPTransport
-from xknx.knxip import HPAI, KNXIPFrame, KNXIPServiceType
+from xknx.knxip import (
+    HPAI,
+    ConnectionStateRequest,
+    ConnectionStateResponse,
+    KNXIPFrame,
+    KNXIPServiceType,
+)
 
 
 class TestKNXIPTransport:
@@ -20,16 +26,14 @@ class TestKNXIPTransport:
         )
         assert len(transport.callbacks) == 1
         # Handle KNX/IP frame with different service type
-        wrong_service_type_frame = KNXIPFrame()
-        wrong_service_type_frame.header.service_type_ident = (
-            KNXIPServiceType.CONNECTIONSTATE_REQUEST
+        wrong_service_type_frame = KNXIPFrame.init_from_body(
+            ConnectionStateRequest(),
         )
         transport.handle_knxipframe(wrong_service_type_frame, HPAI())
         callback_mock.assert_not_called()
         # Handle KNX/IP frame with correct service type
-        correct_service_type_frame = KNXIPFrame()
-        correct_service_type_frame.header.service_type_ident = (
-            KNXIPServiceType.CONNECTIONSTATE_RESPONSE
+        correct_service_type_frame = KNXIPFrame.init_from_body(
+            ConnectionStateResponse(),
         )
         transport.handle_knxipframe(correct_service_type_frame, HPAI())
         callback_mock.assert_called_once_with(

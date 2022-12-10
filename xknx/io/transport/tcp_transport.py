@@ -72,8 +72,7 @@ class TCPTransport(KNXIPTransport):
         if not raw:
             return
         try:
-            knxipframe = KNXIPFrame()
-            frame_length = knxipframe.from_knx(raw)
+            knxipframe, next_frame_part = KNXIPFrame.from_knx(raw)
         except IncompleteKNXIPFrame:
             self._buffer = raw
             raw_socket_logger.debug(
@@ -88,8 +87,6 @@ class TCPTransport(KNXIPTransport):
                 couldnotparseknxip.description,
                 raw.hex(),
             )
-            if not (frame_length := knxipframe.header.total_length):
-                return
         else:
             knx_logger.debug(
                 "Received from %s at %s:\n%s",
@@ -99,8 +96,8 @@ class TCPTransport(KNXIPTransport):
             )
             self.handle_knxipframe(knxipframe, self.remote_hpai)
         # parse data after current KNX/IP frame
-        if len(raw) > frame_length:
-            self.data_received_callback(raw[frame_length:])
+        if next_frame_part:
+            self.data_received_callback(next_frame_part)
 
     async def connect(self) -> None:
         """Connect TCP socket."""

@@ -154,7 +154,7 @@ class _SelfDescriptionQuery(ABC):
             port=self.transport.remote_addr[1],
             local_ip=self.transport.getsockname()[0],
         )
-        gateway.parse_dibs(knxipframe.body.dibs)  # type: ignore[union-attr]
+        gateway.parse_dibs(knxipframe.body.dibs)  # type: ignore[attr-defined]
         self.gateway_descriptor = gateway
 
 

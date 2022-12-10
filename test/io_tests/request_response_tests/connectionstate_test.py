@@ -9,7 +9,6 @@ from xknx.knxip import (
     ConnectionStateResponse,
     ErrorCode,
     KNXIPFrame,
-    KNXIPServiceType,
 )
 
 
@@ -44,16 +43,15 @@ class TestConnectionState:
             mock_udp_send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type
-        wrong_knxipframe = KNXIPFrame()
-        wrong_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_REQUEST)
+        wrong_knxipframe = KNXIPFrame.init_from_body(ConnectionStateRequest())
         with patch("logging.Logger.warning") as mock_warning:
             connectionstate.response_rec_callback(wrong_knxipframe, HPAI(), None)
             mock_warning.assert_called_with("Could not understand knxipframe")
 
         # Response KNX/IP-Frame with error:
-        err_knxipframe = KNXIPFrame()
-        err_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_RESPONSE)
-        err_knxipframe.body.status_code = ErrorCode.E_CONNECTION_ID
+        err_knxipframe = KNXIPFrame.init_from_body(
+            ConnectionStateResponse(status_code=ErrorCode.E_CONNECTION_ID)
+        )
         with patch("logging.Logger.debug") as mock_warning:
             connectionstate.response_rec_callback(err_knxipframe, HPAI(), None)
             mock_warning.assert_called_with(
@@ -64,8 +62,7 @@ class TestConnectionState:
             )
 
         # Correct Response KNX/IP-Frame:
-        res_knxipframe = KNXIPFrame()
-        res_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_RESPONSE)
+        res_knxipframe = KNXIPFrame.init_from_body(ConnectionStateResponse())
         connectionstate.response_rec_callback(res_knxipframe, HPAI(), None)
         assert connectionstate.success
 
@@ -96,16 +93,15 @@ class TestConnectionState:
             mock_udp_send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type
-        wrong_knxipframe = KNXIPFrame()
-        wrong_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_REQUEST)
+        wrong_knxipframe = KNXIPFrame.init_from_body(ConnectionStateRequest())
         with patch("logging.Logger.warning") as mock_warning:
             connectionstate.response_rec_callback(wrong_knxipframe, HPAI(), None)
             mock_warning.assert_called_with("Could not understand knxipframe")
 
         # Response KNX/IP-Frame with error:
-        err_knxipframe = KNXIPFrame()
-        err_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_RESPONSE)
-        err_knxipframe.body.status_code = ErrorCode.E_CONNECTION_ID
+        err_knxipframe = KNXIPFrame.init_from_body(
+            ConnectionStateResponse(status_code=ErrorCode.E_CONNECTION_ID)
+        )
         with patch("logging.Logger.debug") as mock_warning:
             connectionstate.response_rec_callback(err_knxipframe, HPAI(), None)
             mock_warning.assert_called_with(
@@ -116,7 +112,6 @@ class TestConnectionState:
             )
 
         # Correct Response KNX/IP-Frame:
-        res_knxipframe = KNXIPFrame()
-        res_knxipframe.init(KNXIPServiceType.CONNECTIONSTATE_RESPONSE)
+        res_knxipframe = KNXIPFrame.init_from_body(ConnectionStateResponse())
         connectionstate.response_rec_callback(res_knxipframe, HPAI(), None)
         assert connectionstate.success

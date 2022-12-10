@@ -137,8 +137,7 @@ class TestGatewayDescriptor:
     )
     def test_parser(self, raw, expected):
         """Test parsing GatewayDescriptor objects from real-world responses."""
-        response = KNXIPFrame()
-        response.from_knx(raw)
+        response, _ = KNXIPFrame.from_knx(raw)
         assert isinstance(response.body, (SearchResponse, SearchResponseExtended))
 
         descriptor = GatewayDescriptor(

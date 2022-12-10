@@ -11,8 +11,7 @@ class TestKNXIPConnectionStateResponse:
     def test_disconnect_response(self):
         """Test parsing and streaming connection state response KNX/IP packet."""
         raw = bytes((0x06, 0x10, 0x02, 0x08, 0x00, 0x08, 0x15, 0x21))
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
+        knxipframe, _ = KNXIPFrame.from_knx(raw)
 
         assert isinstance(knxipframe.body, ConnectionStateResponse)
 
@@ -30,6 +29,5 @@ class TestKNXIPConnectionStateResponse:
     def test_from_knx_wrong_header(self):
         """Test parsing and streaming wrong ConnectionStateResponse (wrong header length)."""
         raw = bytes((0x06, 0x10, 0x02, 0x08, 0x00, 0x08, 0x15))
-        knxipframe = KNXIPFrame()
         with pytest.raises(CouldNotParseKNXIP):
-            knxipframe.from_knx(raw)
+            KNXIPFrame.from_knx(raw)

@@ -9,8 +9,7 @@ class TestKNXIPSearchRequestExtended:
     def test_search_request_extended(self):
         """Test parsing and streaming SearchRequest Extended KNX/IP packet."""
         raw = bytes.fromhex("06 10 02 0b 00 0e 08 01 e0 00 17 0C 0E 57")
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
+        knxipframe, _ = KNXIPFrame.from_knx(raw)
 
         assert isinstance(knxipframe.body, SearchRequestExtended)
         assert knxipframe.body.discovery_endpoint == HPAI(
@@ -28,8 +27,7 @@ class TestKNXIPSearchRequestExtended:
     def test_search_request_extended_srp(self):
         """Test parsing and streaming SearchRequest Extended with SRPs KNX/IP packet."""
         raw = bytes.fromhex("06 10 02 0b 00 10 08 01 e0 00 17 0c 0e 57 02 81")
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
+        knxipframe, _ = KNXIPFrame.from_knx(raw)
 
         assert isinstance(knxipframe.body, SearchRequestExtended)
         assert knxipframe.body.discovery_endpoint == HPAI(
@@ -52,8 +50,7 @@ class TestKNXIPSearchRequestExtended:
         raw = bytes.fromhex(
             "06 10 02 0b 00 18 08 01 e0 00 17 0c 0e 57 02 81 08 82 01 02 03 04 05 06"
         )
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
+        knxipframe, _ = KNXIPFrame.from_knx(raw)
 
         assert isinstance(knxipframe.body, SearchRequestExtended)
         assert knxipframe.body.discovery_endpoint == HPAI(

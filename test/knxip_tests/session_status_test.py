@@ -13,8 +13,7 @@ class TestKNXIPSessionStatus:
             "00"  # status code 00h STATUS_AUTHENTICATION_SUCCESS
             "00"  # reserved
         )
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
+        knxipframe, _ = KNXIPFrame.from_knx(raw)
 
         assert isinstance(knxipframe.body, SessionStatus)
         assert (
