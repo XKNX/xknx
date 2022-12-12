@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### Internal
+
+- Decouple KNXIPFrame parsing from CEMIFrame parsing. TunnellingRequest and RoutingIndication now carry the raw cemi frame payload as bytes. This allows decoupled CEMIFrame parsing at a later time (in Interface class rather than in KNXIPTransport class) for better error handling and upcoming features.
+
 # 2.1.0 Enhance notification device
 
 ### Devices

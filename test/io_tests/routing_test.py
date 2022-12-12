@@ -37,20 +37,18 @@ class TestRouting:
         # L_Data.ind T_Connect from 1.0.250 to 1.0.255 (xknx tunnel endpoint)
         # communication_channel_id: 0x02   sequence_counter: 0x81
         raw_ind = bytes.fromhex("0610 0530 0010 2900b06010fa10ff0080")
-
         _cemi = CEMIFrame()
         _cemi.from_knx(raw_ind[6:])
         test_telegram = _cemi.telegram
         test_telegram.direction = TelegramDirection.INCOMING
 
         response_telegram = Telegram(tpci=tpci.TDisconnect())
+        response_cemi = CEMIFrame.init_from_telegram(
+            telegram=response_telegram,
+            src_addr=DEFAULT_INDIVIDUAL_ADDRESS,
+        )
         response_frame = KNXIPFrame.init_from_body(
-            RoutingIndication(
-                cemi=CEMIFrame.init_from_telegram(
-                    telegram=response_telegram,
-                    src_addr=DEFAULT_INDIVIDUAL_ADDRESS,
-                )
-            )
+            RoutingIndication(raw_cemi=response_cemi.to_knx())
         )
 
         async def tg_received_mock(telegram):
@@ -64,6 +62,23 @@ class TestRouting:
         assert send_knxipframe_mock.call_args_list == [
             call(response_frame),
         ]
+
+    @patch("logging.Logger.warning")
+    async def test_routing_indication_received_apci_unsupported(self, logging_mock):
+        """Test Tunnel sending ACK for unsupported frames."""
+        routing = Routing(
+            self.xknx,
+            individual_address=None,
+            telegram_received_callback=self.tg_received_mock,
+            local_ip="192.168.1.1",
+        )
+        # LDataInd Unsupported Extended APCI from 0.0.1 to 0/0/0 broadcast
+        # <UnsupportedCEMIMessage description="APCI not supported: 0b1111111000 in CEMI: 2900b0d0000100000103f8" />
+        raw = bytes.fromhex("0610 0530 0010 2900b0d0000100000103f8")
+
+        routing.transport.data_received_callback(raw, ("192.168.1.2", 3671))
+        self.tg_received_mock.assert_not_called()
+        logging_mock.assert_called_once()
 
     @patch("logging.Logger.warning")
     async def test_routing_lost_message(self, logging_mock):

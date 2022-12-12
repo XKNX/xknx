@@ -1,7 +1,7 @@
 """Tests for the CEMIFrame object."""
 import pytest
 
-from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage
+from xknx.exceptions import ConversionError, UnsupportedCEMIMessage
 from xknx.knxip.cemi_frame import CEMIFrame
 from xknx.knxip.knxip_enum import CEMIFlags, CEMIMessageCode
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
@@ -88,7 +88,7 @@ def test_invalid_tpci_apci(raw, err_msg):
 def test_invalid_apdu_len():
     """Test for invalid apdu len."""
     frame = CEMIFrame()
-    with pytest.raises(CouldNotParseKNXIP, match=r".*APDU LEN should be .*"):
+    with pytest.raises(UnsupportedCEMIMessage, match=r".*APDU LEN should be .*"):
         frame.from_knx(get_data(0x29, 0, 0, 0, 0, 2, 0, []))
 
 

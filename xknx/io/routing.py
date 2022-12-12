@@ -13,7 +13,7 @@ import random
 from typing import TYPE_CHECKING, Final
 
 from xknx.core import XknxConnectionState
-from xknx.exceptions import CommunicationError
+from xknx.exceptions import CommunicationError, UnsupportedCEMIMessage
 from xknx.knxip import (
     HPAI,
     CEMIFrame,
@@ -223,7 +223,7 @@ class Routing(Interface):
             code=CEMIMessageCode.L_DATA_IND,
             src_addr=self.individual_address,
         )
-        routing_indication = RoutingIndication(cemi=cemi)
+        routing_indication = RoutingIndication(raw_cemi=cemi.to_knx())
 
         async with self._flow_control.throttle():
             self._send_knxipframe(KNXIPFrame.init_from_body(routing_indication))
@@ -257,15 +257,17 @@ class Routing(Interface):
 
     def _handle_routing_indication(self, routing_indication: RoutingIndication) -> None:
         """Handle incoming RoutingIndication."""
-        if routing_indication.cemi is None:
-            # Don't handle invalid cemi frames (None)
+        cemi = CEMIFrame()
+        try:
+            cemi.from_knx(routing_indication.raw_cemi)
+        except UnsupportedCEMIMessage as unsupported_cemi_err:
+            logger.warning("CEMI not supported: %s", unsupported_cemi_err)
             return
-        if routing_indication.cemi.src_addr == self.individual_address:
+        if cemi.src_addr == self.individual_address:
             logger.debug("Ignoring own packet")
             return
-
         # TODO: is cemi message code L_DATA.req or .con valid for routing? if not maybe warn and ignore
-        asyncio.create_task(self.handle_cemi_frame(routing_indication.cemi))
+        asyncio.create_task(self.handle_cemi_frame(cemi))
 
     async def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
         """Handle incoming telegram and send responses if applicable (device management)."""

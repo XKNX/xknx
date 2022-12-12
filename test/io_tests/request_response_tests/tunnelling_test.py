@@ -24,16 +24,16 @@ class TestTunnelling:
         """Test tunnelling from KNX bus."""
         data_endpoint = ("192.168.1.2", 4567)
         udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
-        cemi = CEMIFrame.init_from_telegram(
+        raw_cemi = CEMIFrame.init_from_telegram(
             Telegram(
                 destination_address=GroupAddress("1/2/3"),
                 payload=GroupValueWrite(DPTArray((0x1, 0x2, 0x3))),
             )
-        )
+        ).to_knx()
         tunnelling_request = TunnellingRequest(
             communication_channel_id=23,
             sequence_counter=42,
-            cemi=cemi,
+            raw_cemi=raw_cemi,
         )
         tunnelling = Tunnelling(udp_transport, data_endpoint, tunnelling_request)
         tunnelling.timeout_in_seconds = 0

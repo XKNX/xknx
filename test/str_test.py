@@ -626,9 +626,7 @@ class TestStringRepresentations:
         tunnelling_request.sequence_counter = 42
         assert (
             str(tunnelling_request)
-            == '<TunnellingRequest communication_channel_id="23" sequence_counter="42" '
-            'cemi="<CEMIFrame code="L_DATA_REQ" src_addr="IndividualAddress("0.0.0")" dst_addr="GroupAddress("0/0/0")" '
-            'flags="               0" tpci="TDataGroup()" payload="None" />" />'
+            == '<TunnellingRequest communication_channel_id="23" sequence_counter="42" cemi="" />'
         )
 
     def test_tunnelling_ack(self):
@@ -689,8 +687,4 @@ class TestStringRepresentations:
     def test_routing_indication_str(self):
         """Test string representation of GatewayDescriptor."""
         routing_indication = RoutingIndication()
-        assert (
-            str(routing_indication)
-            == '<RoutingIndication cemi="<CEMIFrame code="L_DATA_IND" src_addr="IndividualAddress("0.0.0")" '
-            'dst_addr="GroupAddress("0/0/0")" flags="               0" tpci="TDataGroup()" payload="None" />" />'
-        )
+        assert str(routing_indication) == '<RoutingIndication cemi="" />'
