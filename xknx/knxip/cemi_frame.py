@@ -13,7 +13,7 @@ Documentation within:
 """
 from __future__ import annotations
 
-from xknx.exceptions import ConversionError, CouldNotParseKNXIP, UnsupportedCEMIMessage
+from xknx.exceptions import ConversionError, UnsupportedCEMIMessage
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
 from xknx.telegram.tpci import TPCI, TDataGroup
@@ -159,7 +159,7 @@ class CEMIFrame:
         apdu = bytes([tpdu[0] & 0b11]) + tpdu[1:]  # clear TPCI bits
 
         if len(apdu) != (npdu_len + 1):  # TCPI octet not included in NPDU length
-            raise CouldNotParseKNXIP(
+            raise UnsupportedCEMIMessage(
                 f"APDU LEN should be {npdu_len} but is {len(apdu) - 1} in CEMI: {cemi.hex()}"
             )
 

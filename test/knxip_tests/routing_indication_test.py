@@ -17,13 +17,8 @@ class TestKNXIPRountingIndication:
         knxipframe.from_knx(raw)
 
         assert isinstance(knxipframe.body, RoutingIndication)
-        assert isinstance(knxipframe.body.cemi, CEMIFrame)
-
-        assert knxipframe.body.cemi.src_addr == IndividualAddress("1.2.2")
-        assert knxipframe.body.cemi.dst_addr == GroupAddress(337)
-
-        assert len(knxipframe.body.cemi.payload.value.value) == 1
-        assert knxipframe.body.cemi.payload.value.value[0] == 0xF0
+        assert isinstance(knxipframe.body.raw_cemi, bytes)
+        assert len(knxipframe.body.raw_cemi) == 12
 
     def test_from_knx_to_knx(self):
         """Test parsing and streaming CEMIFrame KNX/IP."""
@@ -46,7 +41,7 @@ class TestKNXIPRountingIndication:
         cemi = CEMIFrame(src_addr=IndividualAddress("1.2.2"))
         cemi.telegram = telegram
         cemi.set_hops(5)
-        routing_indication = RoutingIndication(cemi=cemi)
+        routing_indication = RoutingIndication(raw_cemi=cemi.to_knx())
         knxipframe = KNXIPFrame.init_from_body(routing_indication)
 
         raw = bytes.fromhex(
@@ -57,187 +52,20 @@ class TestKNXIPRountingIndication:
         assert knxipframe.body.to_knx() == raw[6:]
         assert knxipframe.to_knx() == raw
 
-    def test_telegram_get(self):
-        """Test parsing and streaming CEMIFrame KNX/IP packet, group read."""
-        raw = bytes.fromhex("06 10 05 30 00 12 29 00 bc d0 12 02 01 51 02 00 40 f0")
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
-
-        telegram = knxipframe.body.cemi.telegram
-
-        assert telegram.destination_address == GroupAddress(337)
-
-        assert len(telegram.payload.value.value) == 1
-        assert telegram.payload.value.value[0] == 0xF0
-
-    #
-    # end-to-end tests:
-    #
-    #   - parsing KNX telegram and check the result
-    #   - reassembling scond KNXIPFrame
-    #   - comparing both
-    #
-
-    def test_end_to_end_group_write_binary_on(self):
-        """Test parsing and streaming CEMIFrame KNX/IP packet, switch on light in my kitchen."""
-        # Switch on Kitchen-L1
-        raw = bytes.fromhex("06 10 05 30 00 11 29 00 bc d0 ff f9 01 49 01 00 81")
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
-        telegram = knxipframe.body.cemi.telegram
-        assert telegram == Telegram(
-            destination_address=GroupAddress("329"),
-            payload=GroupValueWrite(DPTBinary(1)),
-            source_address=IndividualAddress("15.15.249"),
-        )
-
-        cemi = CEMIFrame(src_addr=IndividualAddress("15.15.249"))
-        cemi.telegram = telegram
-        cemi.set_hops(5)
-        routing_indication = RoutingIndication(cemi=cemi)
-        knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
-
-        assert knxipframe2.header.to_knx() == raw[0:6]
-        assert knxipframe2.body.to_knx() == raw[6:]
-        assert knxipframe2.to_knx() == raw
-
-    def test_end_to_end_group_write_binary_off(self):
-        """Test parsing and streaming CEMIFrame KNX/IP packet, switch off light in my kitchen."""
+    def test_end_to_end_routing_indication(self):
+        """Test parsing and streaming RoutingIndication KNX/IP packet."""
         # Switch off Kitchen-L1
         raw = bytes.fromhex("06 10 05 30 00 11 29 00 bc d0 ff f9 01 49 01 00 80")
         knxipframe = KNXIPFrame()
         knxipframe.from_knx(raw)
-        telegram = knxipframe.body.cemi.telegram
-        assert telegram == Telegram(
-            destination_address=GroupAddress("329"),
-            payload=GroupValueWrite(DPTBinary(0)),
-            source_address=IndividualAddress("15.15.249"),
-        )
+        raw_cemi = knxipframe.body.raw_cemi
 
-        cemi = CEMIFrame(src_addr=IndividualAddress("15.15.249"))
-        cemi.telegram = telegram
-        cemi.set_hops(5)
-        routing_indication = RoutingIndication(cemi=cemi)
+        routing_indication = RoutingIndication(raw_cemi=raw_cemi)
         knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
 
         assert knxipframe2.header.to_knx() == raw[0:6]
         assert knxipframe2.body.to_knx() == raw[6:]
         assert knxipframe2.to_knx() == raw
-
-    def test_end_to_end_group_write_1byte(self):
-        """Test parsing and streaming CEMIFrame KNX/IP packet, dimm light in my kitchen."""
-        # Dimm Kitchen L1 to 0x65
-        raw = bytes.fromhex("06 10 05 30 00 12 29 00 bc d0 ff f9 01 4b 02 00 80 65")
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
-        telegram = knxipframe.body.cemi.telegram
-        assert telegram == Telegram(
-            destination_address=GroupAddress("331"),
-            payload=GroupValueWrite(DPTArray(0x65)),
-            source_address=IndividualAddress("15.15.249"),
-        )
-
-        cemi = CEMIFrame(src_addr=IndividualAddress("15.15.249"))
-        cemi.telegram = telegram
-        cemi.set_hops(5)
-        routing_indication = RoutingIndication(cemi=cemi)
-        knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
-
-        assert knxipframe2.header.to_knx() == raw[0:6]
-        assert knxipframe2.body.to_knx() == raw[6:]
-        assert knxipframe2.to_knx() == raw
-
-    def test_end_to_end_group_write_2bytes(self):
-        """Test parsing and streaming CEMIFrame KNX/IP packet, setting value of thermostat."""
-        # Incoming Temperature from thermostat
-        raw = bytes.fromhex("06 10 05 30 00 13 29 00 bc d0 14 02 08 01 03 00 80 07 c1")
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
-        telegram = knxipframe.body.cemi.telegram
-        assert telegram == Telegram(
-            destination_address=GroupAddress("2049"),
-            payload=GroupValueWrite(DPTArray(DPTTemperature().to_knx(19.85))),
-            source_address=IndividualAddress("1.4.2"),
-        )
-
-        cemi = CEMIFrame(src_addr=IndividualAddress("1.4.2"))
-        cemi.telegram = telegram
-        cemi.set_hops(5)
-        routing_indication = RoutingIndication(cemi=cemi)
-        knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
-
-        assert knxipframe2.header.to_knx() == raw[0:6]
-        assert knxipframe2.body.to_knx() == raw[6:]
-        assert knxipframe2.to_knx() == raw
-
-    def test_end_to_end_group_read(self):
-        """Test parsing and streaming CEMIFrame KNX/IP packet, group read."""
-        # State request
-        raw = bytes.fromhex("06 10 05 30 00 11 29 00 bc d0 ff f9 01 b8 01 00 00")
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
-        telegram = knxipframe.body.cemi.telegram
-        assert telegram == Telegram(
-            destination_address=GroupAddress("440"),
-            payload=GroupValueRead(),
-            source_address=IndividualAddress("15.15.249"),
-        )
-
-        cemi = CEMIFrame(src_addr=IndividualAddress("15.15.249"))
-        cemi.telegram = telegram
-        cemi.set_hops(5)
-        routing_indication = RoutingIndication(cemi=cemi)
-        knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
-
-        assert knxipframe2.header.to_knx() == raw[0:6]
-        assert knxipframe2.body.to_knx() == raw[6:]
-        assert knxipframe2.to_knx() == raw
-
-    def test_end_to_end_group_response(self):
-        """Test parsing and streaming CEMIFrame KNX/IP packet, group response."""
-        # Incoming state
-        raw = bytes.fromhex("06 10 05 30 00 11 29 00 bc d0 13 01 01 88 01 00 41")
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
-        telegram = knxipframe.body.cemi.telegram
-        assert telegram == Telegram(
-            destination_address=GroupAddress("392"),
-            payload=GroupValueResponse(DPTBinary(1)),
-            source_address=IndividualAddress("1.3.1"),
-        )
-
-        cemi = CEMIFrame(src_addr=IndividualAddress("1.3.1"))
-        cemi.telegram = telegram
-        cemi.set_hops(5)
-        routing_indication = RoutingIndication(cemi=cemi)
-        knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
-
-        assert knxipframe2.header.to_knx() == raw[0:6]
-        assert knxipframe2.body.to_knx() == raw[6:]
-        assert knxipframe2.to_knx() == raw
-
-    def test_maximum_apci(self):
-        """Test parsing and streaming CEMIFrame KNX/IP packet, testing maximum APCI."""
-        telegram = Telegram(
-            destination_address=GroupAddress(337),
-            payload=GroupValueWrite(DPTBinary(DPTBinary.APCI_MAX_VALUE)),
-            source_address=IndividualAddress("1.3.1"),
-        )
-
-        cemi = CEMIFrame(src_addr=IndividualAddress("1.3.1"))
-        cemi.telegram = telegram
-        cemi.set_hops(5)
-        routing_indication = RoutingIndication(cemi=cemi)
-        knxipframe = KNXIPFrame.init_from_body(routing_indication)
-
-        raw = bytes.fromhex("06 10 05 30 00 11 29 00 bc d0 13 01 01 51 01 00 bf")
-
-        assert knxipframe.to_knx() == raw
-
-        knxipframe2 = KNXIPFrame()
-        knxipframe2.init(KNXIPServiceType.ROUTING_INDICATION)
-        knxipframe2.from_knx(knxipframe.to_knx())
-        assert knxipframe2.body.cemi.telegram == telegram
 
     def test_from_knx_invalid_cemi(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet with unsupported CEMICode."""
