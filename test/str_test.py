@@ -642,25 +642,25 @@ class TestStringRepresentations:
     def test_cemi_frame(self):
         """Test string representation of KNX/IP CEMI Frame."""
         cemi_frame = CEMIFrame()
-        cemi_frame.src_addr = GroupAddress("1/2/3")
+        cemi_frame.src_addr = IndividualAddress("1.2.3")
         cemi_frame.telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
             payload=GroupValueWrite(DPTBinary(7)),
         )
         assert (
             str(cemi_frame)
-            == '<CEMIFrame code="L_DATA_IND" src_addr="GroupAddress("1/2/3")" dst_addr="GroupAddress("1/2/5")" '
+            == '<CEMIFrame code="L_DATA_IND" src_addr="IndividualAddress("1.2.3")" dst_addr="GroupAddress("1/2/5")" '
             'flags="1011110011100000" tpci="TDataGroup()" payload="<GroupValueWrite value="<DPTBinary value="7" />" />" />'
         )
 
     def test_knxip_frame(self):
         """Test string representation of KNX/IP Frame."""
-        knxipframe = KNXIPFrame()
-        knxipframe.init(KNXIPServiceType.SEARCH_REQUEST)
+        search_request = SearchRequest()
+        knxipframe = KNXIPFrame.init_from_body(search_request)
         assert (
             str(knxipframe)
             == '<KNXIPFrame <KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="SEARCH_REQUEST" '
-            'Reserve="0" TotalLength="0" />\n'
+            'Reserve="0" TotalLength="14" />\n'
             ' body="<SearchRequest discovery_endpoint="0.0.0.0:0/udp" />" />'
         )
 

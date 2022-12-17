@@ -20,8 +20,9 @@ class TestKNXIPDescriptionResponse:
             "00 00 00 00 00 00 00 00 00 00 00 00 0c 02 02 02"
             "03 02 04 02 05 02 07 01",
         )
-        knxipframe = KNXIPFrame()
-        assert knxipframe.from_knx(raw) == 72
+        knxipframe, rest = KNXIPFrame.from_knx(raw)
+        assert not rest
+        assert knxipframe.header.total_length == 72
         assert knxipframe.to_knx() == raw
 
         assert isinstance(knxipframe.body, DescriptionResponse)

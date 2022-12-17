@@ -2,13 +2,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import logging
 from typing import ClassVar, cast
 
 from .error_code import ErrorCode
 from .knxip_enum import KNXIPServiceType
-
-logger = logging.getLogger("xknx.log")
 
 
 class KNXIPBody(ABC):

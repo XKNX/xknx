@@ -21,8 +21,9 @@ class TestKNXIPSearchResponseExtended:
             "50 2D 52 6F 75 74 65 72 00 00 00 00 00 00 00 00"
             "00 00 00 00 0C 02 02 01 03 02 04 01 05 01 07 01"
         )
-        knxipframe = KNXIPFrame()
-        assert knxipframe.from_knx(raw) == 80
+        knxipframe, rest = KNXIPFrame.from_knx(raw)
+        assert knxipframe.header.total_length == 80
+        assert not rest
         assert knxipframe.to_knx() == raw
 
         assert isinstance(knxipframe.body, SearchResponseExtended)

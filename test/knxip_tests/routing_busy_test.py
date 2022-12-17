@@ -13,8 +13,7 @@ class TestKNXIPRoutingBusy:
         raw = bytes(
             (0x06, 0x10, 0x05, 0x32, 0x00, 0x0C, 0x06, 0x00, 0x00, 0x64, 0x00, 0x00)
         )
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
+        knxipframe, _ = KNXIPFrame.from_knx(raw)
 
         assert isinstance(knxipframe.body, RoutingBusy)
         assert knxipframe.body.device_state == 0
@@ -31,13 +30,11 @@ class TestKNXIPRoutingBusy:
         raw = bytes(
             (0x06, 0x10, 0x05, 0x32, 0x00, 0x0C, 0x08, 0x00, 0x00, 0x64, 0x00, 0x00)
         )
-        knxipframe = KNXIPFrame()
         with pytest.raises(CouldNotParseKNXIP):
-            knxipframe.from_knx(raw)
+            KNXIPFrame.from_knx(raw)
 
     def test_from_knx_wrong_busy_information2(self):
         """Test parsing and streaming wrong RoutingBusy (wrong length)."""
         raw = bytes((0x06, 0x10, 0x05, 0x32, 0x00, 0x0C, 0x06, 0x00, 0x00, 0x64, 0x00))
-        knxipframe = KNXIPFrame()
         with pytest.raises(CouldNotParseKNXIP):
-            knxipframe.from_knx(raw)
+            KNXIPFrame.from_knx(raw)

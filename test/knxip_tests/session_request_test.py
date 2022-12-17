@@ -21,8 +21,7 @@ class TestKNXIPSessionRequest:
             )
             + public_key
         )
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
+        knxipframe, _ = KNXIPFrame.from_knx(raw)
 
         assert isinstance(knxipframe.body, SessionRequest)
         assert knxipframe.body.control_endpoint == HPAI(protocol=HostProtocol.IPV4_TCP)

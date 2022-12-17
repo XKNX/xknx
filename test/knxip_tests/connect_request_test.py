@@ -14,8 +14,7 @@ class TestKNXIPConnectRequest:
             "06 10 02 05 00 1A 08 01 C0 A8 2A 01 84 95 08 01"
             "C0 A8 2A 01 CC A9 04 04 02 00"
         )
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
+        knxipframe, _ = KNXIPFrame.from_knx(raw)
 
         assert isinstance(knxipframe.body, ConnectRequest)
         assert knxipframe.body.request_type == ConnectRequestType.TUNNEL_CONNECTION
@@ -39,9 +38,8 @@ class TestKNXIPConnectRequest:
             "06 10 02 05 00 1A 08 01 C0 A8 2A 01 84 95 08 01"
             "C0 A8 2A 01 CC A9 02 04 02 00"
         )
-        knxipframe = KNXIPFrame()
         with pytest.raises(CouldNotParseKNXIP):
-            knxipframe.from_knx(raw)
+            KNXIPFrame.from_knx(raw)
 
     def test_from_knx_wrong_cri(self):
         """Test parsing and streaming wrong ConnectRequest."""
@@ -49,6 +47,5 @@ class TestKNXIPConnectRequest:
             "06 10 02 05 00 1A 08 01 C0 A8 2A 01 84 95 08 01"
             "C0 A8 2A 01 CC A9 04 04 02"
         )
-        knxipframe = KNXIPFrame()
         with pytest.raises(CouldNotParseKNXIP):
-            knxipframe.from_knx(raw)
+            KNXIPFrame.from_knx(raw)
