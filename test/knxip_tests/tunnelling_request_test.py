@@ -22,22 +22,24 @@ class TestKNXIPTunnellingRequest:
         assert isinstance(knxipframe.body, TunnellingRequest)
         assert knxipframe.body.communication_channel_id == 1
         assert knxipframe.body.sequence_counter == 23
-        assert isinstance(knxipframe.body.cemi, CEMIFrame)
+        assert isinstance(knxipframe.body.raw_cemi, bytes)
 
-        assert knxipframe.body.cemi.telegram == Telegram(
+        incoming_cemi = CEMIFrame()
+        incoming_cemi.from_knx(knxipframe.body.raw_cemi)
+        assert incoming_cemi.telegram == Telegram(
             destination_address=GroupAddress("9/0/8"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
 
-        cemi = CEMIFrame(code=CEMIMessageCode.L_DATA_REQ)
-        cemi.telegram = Telegram(
+        outgoing_cemi = CEMIFrame(code=CEMIMessageCode.L_DATA_REQ)
+        outgoing_cemi.telegram = Telegram(
             destination_address=GroupAddress("9/0/8"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
         tunnelling_request = TunnellingRequest(
             communication_channel_id=1,
             sequence_counter=23,
-            cemi=cemi,
+            raw_cemi=outgoing_cemi.to_knx(),
         )
         knxipframe2 = KNXIPFrame.init_from_body(tunnelling_request)
 
