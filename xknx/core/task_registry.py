@@ -47,6 +47,10 @@ class Task:
             self._task.cancel()
             self._task = None
 
+    def done(self) -> bool:
+        """Return if task is finished."""
+        return self._task is None or self._task.done()
+
     def connection_lost(self) -> None:
         """Cancel a task if connection was lost and the task should be cancelled if no connection is established."""
         if self.restart_after_reconnect and self._task:

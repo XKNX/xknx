@@ -8,8 +8,13 @@ nav_order: 2
 
 # Unreleased changes
 
-### Internal
+### Devices
 
+- ExposeSensor: Add `cooldown` option to allow rate-limiting of sent telegrams.
+
+### Internals
+
+- Add `task.done()` to TaskRegistry tasks.
 - Decouple KNXIPFrame parsing from CEMIFrame parsing. TunnellingRequest and RoutingIndication now carry the raw cemi frame payload as bytes. This allows decoupled CEMIFrame parsing at a later time (in Interface class rather than in KNXIPTransport class) for better error handling and upcoming features.
 - Make KNXIPFrame body non-optional. Return KNXIPFrame object and remaining bytes from `KNXIPFrame.from_knx()` staticmethod.
 
