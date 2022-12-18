@@ -45,6 +45,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
+cemi_logger = logging.getLogger("xknx.cemi")
 
 # See 3/6/3 EMI_IMI §4.1.5 Data Link Layer messages
 REQUEST_TO_CONFIRMATION_TIMEOUT = 3
@@ -274,6 +275,7 @@ class _Tunnel(Interface):
         A transport layer confirmation shall be awaited before sending the next telegram.
         """
         async with self._send_telegram_lock:
+            cemi_logger.debug("Outgoing CEMI: %s", cemi)
             skip_increase_sequence_number = False
             try:
                 await self._tunnelling_request(cemi)
@@ -354,6 +356,7 @@ class _Tunnel(Interface):
         cemi = CEMIFrame()
         try:
             cemi.from_knx(tunneling_request.raw_cemi)
+            cemi_logger.debug("Incoming CEMI: %s", cemi)
         except UnsupportedCEMIMessage as unsupported_cemi_err:
             logger.warning("CEMI not supported: %s", unsupported_cemi_err)
             return
@@ -519,6 +522,7 @@ class UDPTunnel(_Tunnel):
         control endpoint.
         """
         async with self._send_telegram_lock:
+            cemi_logger.debug("Outgoing CEMI: %s", cemi)
             try:
                 try:
                     await self._tunnelling_request(cemi)
