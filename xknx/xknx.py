@@ -176,6 +176,7 @@ class XKNX:
         _handler.setLevel(logging.DEBUG)
 
         for log_namespace in [
+            "xknx.cemi",
             "xknx.log",
             "xknx.knx",
             "xknx.raw_socket",
