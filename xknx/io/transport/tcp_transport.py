@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import time
 from typing import Callable, cast
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, IncompleteKNXIPFrame
@@ -81,17 +80,15 @@ class TCPTransport(KNXIPTransport):
             return
         except CouldNotParseKNXIP as couldnotparseknxip:
             knx_logger.debug(
-                "Unsupported KNXIPFrame from %s at %s: %s in %s",
+                "Unsupported KNXIPFrame from %s: %s in %s",
                 self.remote_hpai,
-                time.time(),
                 couldnotparseknxip.description,
                 raw.hex(),
             )
         else:
             knx_logger.debug(
-                "Received from %s at %s:\n%s",
+                "Received from %s: %s",
                 self.remote_hpai,
-                time.time(),
                 knxipframe,
             )
             self.handle_knxipframe(knxipframe, self.remote_hpai)
@@ -125,9 +122,8 @@ class TCPTransport(KNXIPTransport):
     def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
         """Send KNXIPFrame to socket. `addr` is ignored on TCP."""
         knx_logger.debug(
-            "Sending to %s at %s:\n%s",
+            "Sending to %s: %s",
             self.remote_hpai,
-            time.time(),
             knxipframe,
         )
         if self.transport is None:

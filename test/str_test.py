@@ -660,8 +660,7 @@ class TestStringRepresentations:
         assert (
             str(knxipframe)
             == '<KNXIPFrame <KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="SEARCH_REQUEST" '
-            'Reserve="0" TotalLength="14" />\n'
-            ' body="<SearchRequest discovery_endpoint="0.0.0.0:0/udp" />" />'
+            'Reserve="0" TotalLength="14" /> body="<SearchRequest discovery_endpoint="0.0.0.0:0/udp" />" />'
         )
 
     #

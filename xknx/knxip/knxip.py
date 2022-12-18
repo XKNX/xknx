@@ -133,7 +133,7 @@ class KNXIPFrame:
 
     def __repr__(self) -> str:
         """Return object as readable string."""
-        return f'<KNXIPFrame {self.header}\n body="{self.body}" />'
+        return f'<KNXIPFrame {self.header} body="{self.body}" />'
 
     def __eq__(self, other: object) -> bool:
         """Equal operator."""
