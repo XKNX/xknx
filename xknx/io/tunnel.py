@@ -607,6 +607,9 @@ class UDPTunnel(_Tunnel):
             self.expected_sequence_number,
             tunneling_request,
         )
+        # Tunnelling server should repeat that frame and disconnect after that was also not ACKed.
+        # some don't seem to initiate disconnection here so we take a shortcut and disconnect ourselves
+        self._tunnel_lost()
 
     def _send_tunnelling_ack(
         self, communication_channel_id: int, sequence_counter: int

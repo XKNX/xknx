@@ -12,6 +12,10 @@ nav_order: 2
 
 - ExposeSensor: Add `cooldown` option to allow rate-limiting of sent telegrams.
 
+### Connection
+
+- Disconnect when tunnelling sequence number (UDP) gets out of sync.
+
 ### Internals
 
 - Add `task.done()` to TaskRegistry tasks.
