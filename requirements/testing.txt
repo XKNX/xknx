@@ -1,6 +1,6 @@
 -r production.txt
 pre-commit==2.20.0
-isort==5.11.3
+isort==5.11.4
 flake8==6.0.0
 flake8-isort==5.0.3
 pydocstyle==6.1.1
