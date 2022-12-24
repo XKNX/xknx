@@ -16,8 +16,7 @@ class TestKNXIPTunnellingRequest:
         raw = bytes.fromhex(
             "06 10 04 20 00 15 04 01 17 00 11 00 BC E0 00 00 48 08 01 00 81"
         )
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
+        knxipframe, _ = KNXIPFrame.from_knx(raw)
 
         assert isinstance(knxipframe.body, TunnellingRequest)
         assert knxipframe.body.communication_channel_id == 1
@@ -48,13 +47,11 @@ class TestKNXIPTunnellingRequest:
     def test_from_knx_wrong_header(self):
         """Test parsing and streaming wrong TunnellingRequest (wrong header length byte)."""
         raw = bytes((0x06, 0x10, 0x04, 0x20, 0x00, 0x15, 0x03))
-        knxipframe = KNXIPFrame()
         with pytest.raises(CouldNotParseKNXIP):
-            knxipframe.from_knx(raw)
+            KNXIPFrame.from_knx(raw)
 
     def test_from_knx_wrong_header2(self):
         """Test parsing and streaming wrong TunnellingRequest (wrong header length)."""
         raw = bytes((0x06, 0x10, 0x04, 0x20, 0x00, 0x15, 0x04))
-        knxipframe = KNXIPFrame()
         with pytest.raises(CouldNotParseKNXIP):
-            knxipframe.from_knx(raw)
+            KNXIPFrame.from_knx(raw)

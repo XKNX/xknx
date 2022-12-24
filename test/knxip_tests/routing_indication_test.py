@@ -13,8 +13,7 @@ class TestKNXIPRountingIndication:
     def test_from_knx(self):
         """Test parsing and streaming CEMIFrame KNX/IP packet (payload=0xf0)."""
         raw = bytes.fromhex("06 10 05 30 00 12 29 00 bc d0 12 02 01 51 02 00 40 f0")
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
+        knxipframe, _ = KNXIPFrame.from_knx(raw)
 
         assert isinstance(knxipframe.body, RoutingIndication)
         assert isinstance(knxipframe.body.raw_cemi, bytes)
@@ -23,8 +22,7 @@ class TestKNXIPRountingIndication:
     def test_from_knx_to_knx(self):
         """Test parsing and streaming CEMIFrame KNX/IP."""
         raw = bytes.fromhex("06 10 05 30 00 12 29 00 bc d0 12 02 01 51 02 00 40 f0")
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
+        knxipframe, _ = KNXIPFrame.from_knx(raw)
 
         assert knxipframe.header.to_knx() == raw[0:6]
         assert knxipframe.body.to_knx() == raw[6:]
@@ -56,8 +54,7 @@ class TestKNXIPRountingIndication:
         """Test parsing and streaming RoutingIndication KNX/IP packet."""
         # Switch off Kitchen-L1
         raw = bytes.fromhex("06 10 05 30 00 11 29 00 bc d0 ff f9 01 49 01 00 80")
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
+        knxipframe, _ = KNXIPFrame.from_knx(raw)
         raw_cemi = knxipframe.body.raw_cemi
 
         routing_indication = RoutingIndication(raw_cemi=raw_cemi)

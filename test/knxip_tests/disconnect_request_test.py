@@ -11,8 +11,7 @@ class TestKNXIPDisconnectRequest:
     def test_disconnect_request(self):
         """Test parsing and streaming DisconnectRequest KNX/IP packet."""
         raw = bytes.fromhex("06 10 02 09 00 10 15 00 08 01 C0 A8 C8 0C C3 B4")
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
+        knxipframe, _ = KNXIPFrame.from_knx(raw)
 
         assert isinstance(knxipframe.body, DisconnectRequest)
 
@@ -32,6 +31,5 @@ class TestKNXIPDisconnectRequest:
     def test_from_knx_wrong_length(self):
         """Test parsing and streaming wrong DisconnectRequest."""
         raw = bytes((0x06, 0x10, 0x02, 0x09, 0x00, 0x10))
-        knxipframe = KNXIPFrame()
         with pytest.raises(CouldNotParseKNXIP):
-            knxipframe.from_knx(raw)
+            KNXIPFrame.from_knx(raw)

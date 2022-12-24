@@ -15,8 +15,7 @@ class TestKNXIPSessionAuthenticate:
             bytes.fromhex("06 10 09 53 00 18" "00 01")  # KNXnet/IP header  # User ID
             + message_authentication_code
         )
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
+        knxipframe, _ = KNXIPFrame.from_knx(raw)
 
         assert isinstance(knxipframe.body, SessionAuthenticate)
         assert knxipframe.body.user_id == 1

@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
+cemi_logger = logging.getLogger("xknx.cemi")
 
 BUSY_DECREMENT_TIME: Final = 0.005  # 5 ms
 BUSY_INCREMENT_COOLDOWN: Final = 0.01  # 10 ms
@@ -223,6 +224,7 @@ class Routing(Interface):
             code=CEMIMessageCode.L_DATA_IND,
             src_addr=self.individual_address,
         )
+        cemi_logger.debug("Outgoing CEMI: %s", cemi)
         routing_indication = RoutingIndication(raw_cemi=cemi.to_knx())
 
         async with self._flow_control.throttle():
@@ -260,6 +262,7 @@ class Routing(Interface):
         cemi = CEMIFrame()
         try:
             cemi.from_knx(routing_indication.raw_cemi)
+            cemi_logger.debug("Incoming CEMI: %s", cemi)
         except UnsupportedCEMIMessage as unsupported_cemi_err:
             logger.warning("CEMI not supported: %s", unsupported_cemi_err)
             return

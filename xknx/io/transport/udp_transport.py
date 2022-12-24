@@ -10,7 +10,6 @@ import asyncio
 import logging
 import socket
 from sys import platform
-import time
 from typing import Callable, cast
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP
@@ -78,23 +77,20 @@ class UDPTransport(KNXIPTransport):
         """Parse and process KNXIP frame. Callback for having received an UDP packet."""
         if raw:
             try:
-                knxipframe = KNXIPFrame()
-                knxipframe.from_knx(raw)
+                knxipframe, _ = KNXIPFrame.from_knx(raw)
             except CouldNotParseKNXIP as couldnotparseknxip:
                 knx_logger.debug(
-                    "Unsupported KNXIPFrame from %s:%s at %s: %s in %s",
+                    "Unsupported KNXIPFrame from %s:%s: %s in %s",
                     source[0],
                     source[1],
-                    time.time(),
                     couldnotparseknxip.description,
                     raw.hex(),
                 )
             else:
                 knx_logger.debug(
-                    "Received from %s:%s at %s:\n %s",
+                    "Received from %s:%s: %s",
                     source[0],
                     source[1],
-                    time.time(),
                     knxipframe,
                 )
                 self.handle_knxipframe(knxipframe, HPAI(*source))
@@ -160,9 +156,7 @@ class UDPTransport(KNXIPTransport):
     def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
         """Send KNXIPFrame to socket."""
         _addr = addr or self.remote_addr
-        knx_logger.debug(
-            "Sending to %s:%s at %s:\n %s", _addr[0], _addr[1], time.time(), knxipframe
-        )
+        knx_logger.debug("Sending to %s:%s: %s", _addr[0], _addr[1], knxipframe)
         if self.transport is None:
             raise CommunicationError("Transport not connected")
 

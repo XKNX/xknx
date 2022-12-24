@@ -29,8 +29,7 @@ class TestKNXIPSecureWrapper:
             + encrypted_data
             + message_authentication_code
         )
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
+        knxipframe, _ = KNXIPFrame.from_knx(raw)
 
         assert isinstance(knxipframe.body, SecureWrapper)
         assert knxipframe.body.secure_session_id == 1

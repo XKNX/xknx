@@ -19,8 +19,7 @@ class TestKNXIPTimerNotify:
             )
             + message_authentication_code
         )
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(raw)
+        knxipframe, _ = KNXIPFrame.from_knx(raw)
 
         assert isinstance(knxipframe.body, TimerNotify)
         assert knxipframe.body.timer_value == 211938428830917

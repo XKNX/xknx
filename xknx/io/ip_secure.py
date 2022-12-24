@@ -104,8 +104,7 @@ class _IPSecureTransportLayer(ABC):
                 "Verification of message authentication code failed"
             )
 
-        knxipframe = KNXIPFrame()
-        knxipframe.from_knx(dec_frame)
+        knxipframe, _ = KNXIPFrame.from_knx(dec_frame)
         return knxipframe
 
     def encrypt_frame(self, plain_frame: KNXIPFrame) -> KNXIPFrame:

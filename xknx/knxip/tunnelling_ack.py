@@ -19,11 +19,16 @@ class TunnellingAck(KNXIPBodyResponse):
     SERVICE_TYPE = KNXIPServiceType.TUNNELLING_ACK
     BODY_LENGTH = 4
 
-    def __init__(self, communication_channel_id: int = 1, sequence_counter: int = 0):
+    def __init__(
+        self,
+        communication_channel_id: int = 1,
+        sequence_counter: int = 0,
+        status_code: ErrorCode = ErrorCode.E_NO_ERROR,
+    ):
         """Initialize TunnellingAck object."""
         self.communication_channel_id = communication_channel_id
         self.sequence_counter = sequence_counter
-        self.status_code = ErrorCode.E_NO_ERROR
+        self.status_code = status_code
 
     def calculated_length(self) -> int:
         """Get length of KNX/IP body."""
