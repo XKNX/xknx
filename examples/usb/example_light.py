@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from xknx import XKNX
+from xknx.xknx import XKNX
 
 from xknx.devices import Light
 from xknx.io.connection import ConnectionConfigUSB

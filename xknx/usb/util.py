@@ -362,9 +362,12 @@ def _get_usb_backend():
         import os
         import usb.backend.libusb1
         dll_location = os.environ.get("XKNX_LIBUSB", "C:\\Windows\\System32\\libusb-1.0.dll")
-        backend = usb.backend.libusb1.get_backend(find_library=lambda x: f"{dll_location}")
+        try:
+            backend = usb.backend.libusb1.get_backend(find_library=lambda x: f"{dll_location}")
+        except usb.core.NoBackendError as ex:
+            logger.error(str(ex))
         if not backend:
-            usb_logger.info("No USB backend found. Set XKNX_LIBUSB environment variable pointing to libusb-1.0.dll or install it to C:\\Windows\\System32")
+            usb_logger.error("No USB backend found. Set XKNX_LIBUSB environment variable pointing to libusb-1.0.dll or install it to C:\\Windows\\System32")
     return backend
 
 

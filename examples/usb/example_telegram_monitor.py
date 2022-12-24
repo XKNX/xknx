@@ -4,7 +4,7 @@ import asyncio
 import logging
 import textwrap
 
-from xknx import XKNX
+from xknx.xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary, DPTTemperature
 from xknx.io.connection import ConnectionConfigUSB
 from xknx.telegram import AddressFilter, Telegram
